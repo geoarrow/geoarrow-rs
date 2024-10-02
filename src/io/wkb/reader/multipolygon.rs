@@ -8,29 +8,20 @@ use crate::geo_traits::MultiPolygonTrait;
 use crate::io::wkb::reader::geometry::Endianness;
 use crate::io::wkb::reader::polygon::WKBPolygon;
 
+/// skip endianness and wkb type
 const HEADER_BYTES: u64 = 5;
 
+/// A WKB MultiPolygon
 #[derive(Debug, Clone)]
 pub struct WKBMultiPolygon<'a> {
-    // buf: &'a [u8],
-    // byte_order: Endianness,
-
-    // /// The number of polygons in this MultiPolygon
-    // num_polygons: usize,
-
-    // /// The offset in the buffer where each WKBPolygon object begins
-    // ///
-    // /// The length of this vec must match the number of polygons
-    // // polygon_offsets: Vec<usize>,
     /// A WKBPolygon object for each of the internal line strings
     wkb_polygons: Vec<WKBPolygon<'a>>,
 
-    #[allow(dead_code)]
     dim: Dimension,
 }
 
 impl<'a> WKBMultiPolygon<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
+    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
         let mut reader = Cursor::new(buf);
         reader.set_position(HEADER_BYTES);
         let num_polygons = match byte_order {
@@ -59,6 +50,18 @@ impl<'a> WKBMultiPolygon<'a> {
     /// Check if this WKBMultiLineString has equal coordinates as some other MultiLineString object
     pub fn equals_multi_polygon(&self, other: &impl MultiPolygonTrait<T = f64>) -> bool {
         multi_polygon_eq(self, other)
+    }
+
+    /// The number of bytes in this object, including any header
+    ///
+    /// Note that this is not the same as the length of the underlying buffer
+    pub fn size(&self) -> u64 {
+        // - 1: byteOrder
+        // - 4: wkbType
+        // - 4: numPolygons
+        self.wkb_polygons
+            .iter()
+            .fold(1 + 4 + 4, |acc, x| acc + x.size())
     }
 
     pub fn dimension(&self) -> Dimension {

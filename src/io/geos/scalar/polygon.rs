@@ -2,13 +2,12 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::PolygonTrait;
 use crate::io::geos::scalar::GEOSConstLinearRing;
 use crate::scalar::Polygon;
-use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<'a, O: OffsetSizeTrait, const D: usize> TryFrom<&'a Polygon<'_, O, D>> for geos::Geometry {
+impl<'a, const D: usize> TryFrom<&'a Polygon<'_, D>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: &'a Polygon<'_, O, D>) -> std::result::Result<geos::Geometry, geos::Error> {
+    fn try_from(value: &'a Polygon<'_, D>) -> std::result::Result<geos::Geometry, geos::Error> {
         if let Some(exterior) = value.exterior() {
             let exterior = exterior.to_geos_linear_ring()?;
             let interiors = value

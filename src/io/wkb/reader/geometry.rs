@@ -1,13 +1,11 @@
 use std::io::Cursor;
 
 use arrow_array::OffsetSizeTrait;
-use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
+use byteorder::ReadBytesExt;
 
 use crate::datatypes::Dimension;
-use crate::geo_traits::{
-    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
-    MultiPolygonTrait, PointTrait, PolygonTrait,
-};
+use crate::error::Result;
+use crate::geo_traits::GeometryTrait;
 use crate::io::wkb::common::WKBType;
 use crate::io::wkb::reader::geometry_collection::WKBGeometryCollection;
 use crate::io::wkb::reader::rect::WKBRect;
@@ -18,97 +16,20 @@ use crate::io::wkb::reader::{
 use crate::scalar::WKB;
 
 impl<'a, O: OffsetSizeTrait> WKB<'a, O> {
+    /// Convert this WKB scalar to a [WKBGeometry]
+    ///
+    /// This "prepares" the WKB input for constant-time coordinate access.
     pub fn to_wkb_object(&'a self) -> WKBGeometry<'a> {
-        let buf = self.arr.value(self.geom_index);
-        let mut reader = Cursor::new(buf);
-        let byte_order = reader.read_u8().unwrap();
-        let geometry_type_u32 = match byte_order {
-            0 => reader.read_u32::<BigEndian>().unwrap(),
-            1 => reader.read_u32::<LittleEndian>().unwrap(),
-            _ => panic!("Unexpected byte order."),
-        };
-        let geometry_type = WKBType::try_from(geometry_type_u32).unwrap();
-
-        match geometry_type {
-            WKBType::Point => {
-                WKBGeometry::Point(WKBPoint::new(buf, byte_order.into(), 0, Dimension::XY))
-            }
-            WKBType::LineString => WKBGeometry::LineString(WKBLineString::new(
-                buf,
-                byte_order.into(),
-                0,
-                Dimension::XY,
-            )),
-            WKBType::Polygon => {
-                WKBGeometry::Polygon(WKBPolygon::new(buf, byte_order.into(), 0, Dimension::XY))
-            }
-            WKBType::MultiPoint => {
-                WKBGeometry::MultiPoint(WKBMultiPoint::new(buf, byte_order.into(), Dimension::XY))
-            }
-            WKBType::MultiLineString => WKBGeometry::MultiLineString(WKBMultiLineString::new(
-                buf,
-                byte_order.into(),
-                Dimension::XY,
-            )),
-            WKBType::MultiPolygon => WKBGeometry::MultiPolygon(WKBMultiPolygon::new(
-                buf,
-                byte_order.into(),
-                Dimension::XY,
-            )),
-            WKBType::GeometryCollection => WKBGeometry::GeometryCollection(
-                WKBGeometryCollection::new(buf, byte_order.into(), Dimension::XY),
-            ),
-            WKBType::PointZ => {
-                WKBGeometry::Point(WKBPoint::new(buf, byte_order.into(), 0, Dimension::XYZ))
-            }
-            WKBType::LineStringZ => WKBGeometry::LineString(WKBLineString::new(
-                buf,
-                byte_order.into(),
-                0,
-                Dimension::XYZ,
-            )),
-            WKBType::PolygonZ => {
-                WKBGeometry::Polygon(WKBPolygon::new(buf, byte_order.into(), 0, Dimension::XYZ))
-            }
-            WKBType::MultiPointZ => {
-                WKBGeometry::MultiPoint(WKBMultiPoint::new(buf, byte_order.into(), Dimension::XYZ))
-            }
-            WKBType::MultiLineStringZ => WKBGeometry::MultiLineString(WKBMultiLineString::new(
-                buf,
-                byte_order.into(),
-                Dimension::XYZ,
-            )),
-            WKBType::MultiPolygonZ => WKBGeometry::MultiPolygon(WKBMultiPolygon::new(
-                buf,
-                byte_order.into(),
-                Dimension::XYZ,
-            )),
-            WKBType::GeometryCollectionZ => WKBGeometry::GeometryCollection(
-                WKBGeometryCollection::new(buf, byte_order.into(), Dimension::XYZ),
-            ),
-        }
+        WKBGeometry::try_new(self.as_slice()).unwrap()
     }
 
-    pub fn get_wkb_geometry_type(&'a self) -> WKBType {
-        let buf = self.arr.value(self.geom_index);
-        let mut reader = Cursor::new(buf);
-        let byte_order = reader.read_u8().unwrap();
-        let geometry_type = match byte_order {
-            0 => reader.read_u32::<BigEndian>().unwrap(),
-            1 => reader.read_u32::<LittleEndian>().unwrap(),
-            _ => panic!("Unexpected byte order."),
-        };
-        geometry_type.try_into().unwrap()
-    }
-
-    pub fn to_wkb_line_string(&'a self) -> WKBLineString<'a> {
-        match self.to_wkb_object() {
-            WKBGeometry::LineString(geom) => geom,
-            _ => panic!(),
-        }
+    /// Access the [WKBType] of this WKB object.
+    pub fn wkb_type(&'a self) -> Result<WKBType> {
+        WKBType::from_buffer(self.as_ref())
     }
 }
 
+/// Endianness
 #[derive(Debug, Clone, Copy)]
 pub enum Endianness {
     BigEndian,
@@ -147,6 +68,56 @@ pub enum WKBGeometry<'a> {
 }
 
 impl<'a> WKBGeometry<'a> {
+    pub fn try_new(buf: &'a [u8]) -> Result<Self> {
+        let mut reader = Cursor::new(buf);
+        let byte_order = reader.read_u8().unwrap();
+        let wkb_type = WKBType::from_buffer(buf)?;
+
+        use Dimension::*;
+
+        let out = match wkb_type {
+            WKBType::Point => WKBGeometry::Point(WKBPoint::new(buf, byte_order.into(), 0, XY)),
+            WKBType::LineString => {
+                WKBGeometry::LineString(WKBLineString::new(buf, byte_order.into(), 0, XY))
+            }
+            WKBType::Polygon => {
+                WKBGeometry::Polygon(WKBPolygon::new(buf, byte_order.into(), 0, XY))
+            }
+            WKBType::MultiPoint => {
+                WKBGeometry::MultiPoint(WKBMultiPoint::new(buf, byte_order.into(), XY))
+            }
+            WKBType::MultiLineString => {
+                WKBGeometry::MultiLineString(WKBMultiLineString::new(buf, byte_order.into(), XY))
+            }
+            WKBType::MultiPolygon => {
+                WKBGeometry::MultiPolygon(WKBMultiPolygon::new(buf, byte_order.into(), XY))
+            }
+            WKBType::GeometryCollection => WKBGeometry::GeometryCollection(
+                WKBGeometryCollection::try_new(buf, byte_order.into(), XY)?,
+            ),
+            WKBType::PointZ => WKBGeometry::Point(WKBPoint::new(buf, byte_order.into(), 0, XYZ)),
+            WKBType::LineStringZ => {
+                WKBGeometry::LineString(WKBLineString::new(buf, byte_order.into(), 0, XYZ))
+            }
+            WKBType::PolygonZ => {
+                WKBGeometry::Polygon(WKBPolygon::new(buf, byte_order.into(), 0, XYZ))
+            }
+            WKBType::MultiPointZ => {
+                WKBGeometry::MultiPoint(WKBMultiPoint::new(buf, byte_order.into(), XYZ))
+            }
+            WKBType::MultiLineStringZ => {
+                WKBGeometry::MultiLineString(WKBMultiLineString::new(buf, byte_order.into(), XYZ))
+            }
+            WKBType::MultiPolygonZ => {
+                WKBGeometry::MultiPolygon(WKBMultiPolygon::new(buf, byte_order.into(), XYZ))
+            }
+            WKBType::GeometryCollectionZ => WKBGeometry::GeometryCollection(
+                WKBGeometryCollection::try_new(buf, byte_order.into(), XYZ)?,
+            ),
+        };
+        Ok(out)
+    }
+
     pub fn into_point(self) -> WKBPoint<'a> {
         match self {
             WKBGeometry::Point(geom) => geom,
@@ -224,13 +195,17 @@ impl<'a> WKBGeometry<'a> {
             GeometryCollection(g) => g.dimension(),
         }
     }
-}
 
-impl<'a> From<WKBGeometry<'a>> for WKBLineString<'a> {
-    fn from(value: WKBGeometry<'a>) -> Self {
-        match value {
-            WKBGeometry::LineString(geom) => geom,
-            _ => panic!(),
+    pub fn size(&self) -> u64 {
+        use WKBGeometry::*;
+        match self {
+            Point(g) => g.size(),
+            LineString(g) => g.size(),
+            Polygon(g) => g.size(),
+            MultiPoint(g) => g.size(),
+            MultiLineString(g) => g.size(),
+            MultiPolygon(g) => g.size(),
+            GeometryCollection(g) => g.size(),
         }
     }
 }
@@ -247,15 +222,49 @@ impl<'a> GeometryTrait for WKBGeometry<'a> {
     type Rect<'b> = WKBRect<'a> where Self: 'b;
 
     fn dim(&self) -> usize {
+        self.dimension().size()
+    }
+
+    fn as_type(
+        &self,
+    ) -> crate::geo_traits::GeometryType<
+        '_,
+        WKBPoint<'a>,
+        WKBLineString<'a>,
+        WKBPolygon<'a>,
+        WKBMultiPoint<'a>,
+        WKBMultiLineString<'a>,
+        WKBMultiPolygon<'a>,
+        WKBGeometryCollection<'a>,
+        WKBRect<'a>,
+    > {
+        use crate::geo_traits::GeometryType as B;
+        use WKBGeometry as A;
         match self {
-            WKBGeometry::Point(g) => PointTrait::dim(g),
-            WKBGeometry::LineString(g) => LineStringTrait::dim(g),
-            WKBGeometry::Polygon(g) => PolygonTrait::dim(g),
-            WKBGeometry::MultiPoint(g) => MultiPointTrait::dim(g),
-            WKBGeometry::MultiLineString(g) => MultiLineStringTrait::dim(g),
-            WKBGeometry::MultiPolygon(g) => MultiPolygonTrait::dim(g),
-            WKBGeometry::GeometryCollection(g) => GeometryCollectionTrait::dim(g),
+            A::Point(p) => B::Point(p),
+            A::LineString(ls) => B::LineString(ls),
+            A::Polygon(ls) => B::Polygon(ls),
+            A::MultiPoint(ls) => B::MultiPoint(ls),
+            A::MultiLineString(ls) => B::MultiLineString(ls),
+            A::MultiPolygon(ls) => B::MultiPolygon(ls),
+            A::GeometryCollection(gc) => B::GeometryCollection(gc),
         }
+    }
+}
+
+impl<'a> GeometryTrait for &'a WKBGeometry<'a> {
+    type T = f64;
+    type Point<'b> = WKBPoint<'a> where Self: 'b;
+    type LineString<'b> = WKBLineString<'a> where Self: 'b;
+    type Polygon<'b> = WKBPolygon<'a> where Self: 'b;
+    type MultiPoint<'b> = WKBMultiPoint<'a> where Self: 'b;
+    type MultiLineString<'b> = WKBMultiLineString<'a> where Self: 'b;
+    type MultiPolygon<'b> = WKBMultiPolygon<'a> where Self: 'b;
+    type GeometryCollection<'b> = WKBGeometryCollection<'a> where Self: 'b;
+    type Rect<'b> = WKBRect<'a> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        self.dimension().size()
     }
 
     fn as_type(

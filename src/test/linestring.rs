@@ -17,10 +17,10 @@ pub(crate) fn ls1() -> LineString {
 }
 
 #[allow(dead_code)]
-pub(crate) fn ls_array() -> LineStringArray<i32, 2> {
+pub(crate) fn ls_array() -> LineStringArray<2> {
     vec![ls0(), ls1()].as_slice().into()
 }
 
-pub(crate) fn large_ls_array() -> LineStringArray<i64, 2> {
+pub(crate) fn large_ls_array() -> LineStringArray<2> {
     vec![ls0(), ls1()].as_slice().into()
 }

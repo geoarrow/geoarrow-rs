@@ -11,7 +11,7 @@ use crate::scalar::Polygon;
 #[derive(Debug, Clone)]
 pub enum BroadcastablePolygon<'a, O: OffsetSizeTrait> {
     Scalar(Polygon<'a, O>),
-    Array(PolygonArray<O, 2>),
+    Array(PolygonArray<2>),
 }
 
 pub enum BroadcastPolygonIter<'a, O: OffsetSizeTrait> {

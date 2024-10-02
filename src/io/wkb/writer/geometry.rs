@@ -11,8 +11,8 @@ use crate::io::wkb::writer::{
     write_line_string_as_wkb, write_multi_line_string_as_wkb, write_multi_point_as_wkb,
     write_multi_polygon_as_wkb, write_point_as_wkb, write_polygon_as_wkb,
 };
-use crate::trait_::GeometryArrayAccessor;
-use crate::trait_::GeometryArrayTrait;
+use crate::trait_::ArrayAccessor;
+use crate::ArrayBase;
 use std::io::{Cursor, Write};
 
 /// The byte length of a Geometry
@@ -54,11 +54,9 @@ pub fn write_geometry_as_wkb<W: Write>(
     }
 }
 
-impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&MixedGeometryArray<A, D>>
-    for WKBArray<B>
-{
-    fn from(value: &MixedGeometryArray<A, D>) -> Self {
-        let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
+impl<O: OffsetSizeTrait, const D: usize> From<&MixedGeometryArray<D>> for WKBArray<O> {
+    fn from(value: &MixedGeometryArray<D>) -> Self {
+        let mut offsets: OffsetsBuilder<O> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
         for maybe_geom in value.iter() {

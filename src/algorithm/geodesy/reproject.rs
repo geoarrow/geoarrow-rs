@@ -4,7 +4,6 @@ use crate::array::geometry::GeometryArray;
 use crate::array::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
 use crate::error::Result;
 use crate::trait_::GeometryArraySelfMethods;
-use arrow_array::OffsetSizeTrait;
 use geodesy::prelude::*;
 use geodesy::Coor4D;
 use geodesy::Direction;
@@ -58,11 +57,7 @@ impl CoordinateSet for SeparatedCoordsGeodesy<'_> {
     }
 }
 
-fn reproject_coords(
-    coords: &CoordBuffer<2>,
-    definition: &str,
-    direction: Direction,
-) -> Result<CoordBuffer<2>> {
+fn reproject_coords(coords: &CoordBuffer<2>, definition: &str, direction: Direction) -> Result<CoordBuffer<2>> {
     let mut context = Minimal::new();
     // TODO: fix error handling
     let operation = context.op(definition).unwrap();
@@ -72,9 +67,7 @@ fn reproject_coords(
             let mut cloned_coords = coords.coords.to_vec();
 
             let mut geodesy_coords = InterleavedCoordsGeodesy(&mut cloned_coords);
-            context
-                .apply(operation, direction, &mut geodesy_coords)
-                .unwrap();
+            context.apply(operation, direction, &mut geodesy_coords).unwrap();
 
             CoordBuffer::Interleaved(InterleavedCoordBuffer::new(cloned_coords.into()))
         }
@@ -82,17 +75,9 @@ fn reproject_coords(
             let mut x_coords = separated_coords.buffers[0].to_vec();
             let mut y_coords = separated_coords.buffers[1].to_vec();
 
-            let mut geodesy_coords = SeparatedCoordsGeodesy {
-                x: &mut x_coords,
-                y: &mut y_coords,
-            };
-            context
-                .apply(operation, direction, &mut geodesy_coords)
-                .unwrap();
-            CoordBuffer::Separated(SeparatedCoordBuffer::new([
-                x_coords.into(),
-                y_coords.into(),
-            ]))
+            let mut geodesy_coords = SeparatedCoordsGeodesy { x: &mut x_coords, y: &mut y_coords };
+            context.apply(operation, direction, &mut geodesy_coords).unwrap();
+            CoordBuffer::Separated(SeparatedCoordBuffer::new([x_coords.into(), y_coords.into()]))
         }
     };
 
@@ -103,11 +88,7 @@ fn reproject_coords(
 ///
 
 // NOTE: In the future this should probably take care to _not_ reproject coordinates that are set to null via the arrow validity bitmask. That could probably lead to
-pub fn reproject<O: OffsetSizeTrait>(
-    array: &GeometryArray<O>,
-    definition: &str,
-    direction: Direction,
-) -> Result<GeometryArray<O>> {
+pub fn reproject<O: OffsetSizeTrait>(array: &GeometryArray<O>, definition: &str, direction: Direction) -> Result<GeometryArray<O>> {
     match array {
         GeometryArray::Point(arr) => {
             let new_coords = reproject_coords(&arr.coords, definition, direction)?;
@@ -115,9 +96,7 @@ pub fn reproject<O: OffsetSizeTrait>(
         }
         GeometryArray::LineString(arr) => {
             let new_coords = reproject_coords(&arr.coords, definition, direction)?;
-            Ok(GeometryArray::LineString(
-                arr.clone().with_coords(new_coords),
-            ))
+            Ok(GeometryArray::LineString(arr.clone().with_coords(new_coords)))
         }
         GeometryArray::Polygon(arr) => {
             let new_coords = reproject_coords(&arr.coords, definition, direction)?;
@@ -125,21 +104,15 @@ pub fn reproject<O: OffsetSizeTrait>(
         }
         GeometryArray::MultiPoint(arr) => {
             let new_coords = reproject_coords(&arr.coords, definition, direction)?;
-            Ok(GeometryArray::MultiPoint(
-                arr.clone().with_coords(new_coords),
-            ))
+            Ok(GeometryArray::MultiPoint(arr.clone().with_coords(new_coords)))
         }
         GeometryArray::MultiLineString(arr) => {
             let new_coords = reproject_coords(&arr.coords, definition, direction)?;
-            Ok(GeometryArray::MultiLineString(
-                arr.clone().with_coords(new_coords),
-            ))
+            Ok(GeometryArray::MultiLineString(arr.clone().with_coords(new_coords)))
         }
         GeometryArray::MultiPolygon(arr) => {
             let new_coords = reproject_coords(&arr.coords, definition, direction)?;
-            Ok(GeometryArray::MultiPolygon(
-                arr.clone().with_coords(new_coords),
-            ))
+            Ok(GeometryArray::MultiPolygon(arr.clone().with_coords(new_coords)))
         }
         GeometryArray::Rect(_arr) => todo!(),
     }

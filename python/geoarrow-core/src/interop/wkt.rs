@@ -3,14 +3,18 @@ use std::sync::Arc;
 use arrow::datatypes::DataType;
 use arrow_array::cast::AsArray;
 use geoarrow::array::metadata::ArrayMetadata;
-use geoarrow::array::MixedGeometryArray;
 use geoarrow::chunked_array::{ChunkedArray, ChunkedMixedGeometryArray};
 use geoarrow::io::geozero::FromWKT;
+use geoarrow::io::wkt::reader::ParseWKT;
+use geoarrow::io::wkt::ToWKT;
+use geoarrow::ArrayBase;
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 use pyo3_arrow::input::AnyArray;
+use pyo3_arrow::{PyArray, PyChunkedArray};
 
-use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_to_pyobject};
+use crate::ffi::from_python::AnyNativeInput;
+use crate::ffi::to_python::{chunked_native_array_to_pyobject, native_array_to_pyobject};
 use pyo3_geoarrow::{PyCoordType, PyGeoArrowResult};
 
 #[pyfunction]
@@ -28,26 +32,22 @@ pub fn from_wkt(
         AnyArray::Array(arr) => {
             let (array, field) = arr.into_inner();
             let metadata = Arc::new(ArrayMetadata::try_from(field.as_ref())?);
-            let geo_array: MixedGeometryArray<i32, 2> = match array.data_type() {
-                DataType::Utf8 => {
-                    FromWKT::from_wkt(array.as_string::<i32>(), coord_type, metadata, false)?
-                }
-                DataType::LargeUtf8 => {
-                    FromWKT::from_wkt(array.as_string::<i64>(), coord_type, metadata, false)?
-                }
+            let geo_array = match array.data_type() {
+                DataType::Utf8 => array.as_string::<i32>().parse_wkt(coord_type, metadata),
+                DataType::LargeUtf8 => array.as_string::<i64>().parse_wkt(coord_type, metadata),
                 other => {
                     return Err(
                         PyTypeError::new_err(format!("Unexpected array type {:?}", other)).into(),
                     )
                 }
             };
-            geometry_array_to_pyobject(py, Arc::new(geo_array))
+            native_array_to_pyobject(py, geo_array)
         }
         AnyArray::Stream(s) => {
             let chunked_arr = s.into_chunked_array()?;
             let (chunks, field) = chunked_arr.into_inner();
             let metadata = Arc::new(ArrayMetadata::try_from(field.as_ref())?);
-            let geo_array: ChunkedMixedGeometryArray<i32, 2> = match field.data_type() {
+            let geo_array: ChunkedMixedGeometryArray<2> = match field.data_type() {
                 DataType::Utf8 => {
                     let string_chunks = chunks
                         .iter()
@@ -78,7 +78,36 @@ pub fn from_wkt(
                     )
                 }
             };
-            chunked_geometry_array_to_pyobject(py, Arc::new(geo_array))
+            chunked_native_array_to_pyobject(py, Arc::new(geo_array))
         }
     }
+}
+
+#[pyfunction]
+pub fn to_wkt(py: Python, input: AnyNativeInput) -> PyGeoArrowResult<PyObject> {
+    match input {
+        AnyNativeInput::Array(array) => {
+            let wkt_arr = array.as_ref().to_wkt::<i32>();
+            let field = wkt_arr.extension_field();
+            return_array(py, PyArray::new(wkt_arr.into_array_ref(), field))
+        }
+        AnyNativeInput::Chunked(array) => {
+            let out = array.as_ref().to_wkt::<i32>();
+            let field = out.extension_field();
+            let chunks = out
+                .into_inner()
+                .into_iter()
+                .map(|chunk| chunk.to_array_ref())
+                .collect();
+            return_chunked_array(py, PyChunkedArray::try_new(chunks, field)?)
+        }
+    }
+}
+
+pub(crate) fn return_array(py: Python, arr: PyArray) -> PyGeoArrowResult<PyObject> {
+    Ok(arr.to_arro3(py)?.to_object(py))
+}
+
+pub(crate) fn return_chunked_array(py: Python, arr: PyChunkedArray) -> PyGeoArrowResult<PyObject> {
+    Ok(arr.to_arro3(py)?.to_object(py))
 }

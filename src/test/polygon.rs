@@ -29,6 +29,6 @@ pub(crate) fn p1() -> Polygon {
     )
 }
 
-pub(crate) fn p_array() -> PolygonArray<i32, 2> {
+pub(crate) fn p_array() -> PolygonArray<2> {
     vec![p0(), p1()].as_slice().into()
 }

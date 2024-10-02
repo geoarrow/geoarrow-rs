@@ -29,12 +29,12 @@ geoarrow_data_impl!(example_point_wkb, "point-wkb", WKBArray<i64>);
 geoarrow_data_impl!(
     example_linestring_interleaved,
     "linestring-interleaved",
-    LineStringArray<i64, 2>
+    LineStringArray<2>
 );
 geoarrow_data_impl!(
     example_linestring_separated,
     "linestring",
-    LineStringArray<i64, 2>
+    LineStringArray<2>
 );
 geoarrow_data_impl!(example_linestring_wkb, "linestring-wkb", WKBArray<i64>);
 
@@ -42,21 +42,21 @@ geoarrow_data_impl!(example_linestring_wkb, "linestring-wkb", WKBArray<i64>);
 geoarrow_data_impl!(
     example_polygon_interleaved,
     "polygon-interleaved",
-    PolygonArray<i64, 2>
+    PolygonArray<2>
 );
-geoarrow_data_impl!(example_polygon_separated, "polygon", PolygonArray<i64, 2>);
+geoarrow_data_impl!(example_polygon_separated, "polygon", PolygonArray<2>);
 geoarrow_data_impl!(example_polygon_wkb, "polygon-wkb", WKBArray<i64>);
 
 // MultiPoint
 geoarrow_data_impl!(
     example_multipoint_interleaved,
     "multipoint-interleaved",
-    MultiPointArray<i64, 2>
+    MultiPointArray<2>
 );
 geoarrow_data_impl!(
     example_multipoint_separated,
     "multipoint",
-    MultiPointArray<i64, 2>
+    MultiPointArray<2>
 );
 geoarrow_data_impl!(example_multipoint_wkb, "multipoint-wkb", WKBArray<i64>);
 
@@ -64,12 +64,12 @@ geoarrow_data_impl!(example_multipoint_wkb, "multipoint-wkb", WKBArray<i64>);
 geoarrow_data_impl!(
     example_multilinestring_interleaved,
     "multilinestring-interleaved",
-    MultiLineStringArray<i64, 2>
+    MultiLineStringArray<2>
 );
 geoarrow_data_impl!(
     example_multilinestring_separated,
     "multilinestring",
-    MultiLineStringArray<i64, 2>
+    MultiLineStringArray<2>
 );
 geoarrow_data_impl!(
     example_multilinestring_wkb,
@@ -81,11 +81,11 @@ geoarrow_data_impl!(
 geoarrow_data_impl!(
     example_multipolygon_interleaved,
     "multipolygon-interleaved",
-    MultiPolygonArray<i64, 2>
+    MultiPolygonArray<2>
 );
 geoarrow_data_impl!(
     example_multipolygon_separated,
     "multipolygon",
-    MultiPolygonArray<i64, 2>
+    MultiPolygonArray<2>
 );
 geoarrow_data_impl!(example_multipolygon_wkb, "multipolygon-wkb", WKBArray<i64>);

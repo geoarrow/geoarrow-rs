@@ -15,7 +15,7 @@ impl<'a> FromPyObject<'a> for PyGeometry {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         let py = ob.py();
         // TODO: direct shapely conversion not via __geo_interface__
-        if let Ok(geo_arr) = ob.extract::<PyGeometryArray>() {
+        if let Ok(geo_arr) = ob.extract::<PyNativeArray>() {
             let scalar = GeometryScalar::try_new(geo_arr.0.into_inner()).unwrap();
             Ok(PyGeometry::new(scalar))
         } else if ob.hasattr(intern!(py, "__geo_interface__"))? {
@@ -25,7 +25,7 @@ impl<'a> FromPyObject<'a> for PyGeometry {
             let reader = GeoJsonString(json_string);
 
             // TODO: we need a dynamic dimensionality reader
-            let arr: MixedGeometryArray<i32, 2> = reader
+            let arr: MixedGeometryArray<2> = reader
                 .to_mixed_geometry_array()
                 .map_err(|err| PyValueError::new_err(err.to_string()))?;
             Ok(Self(

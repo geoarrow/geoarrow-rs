@@ -39,23 +39,23 @@ AffineTransform = Union[
 
 AreaMethodT = Literal["ellipsoidal", "euclidean", "spherical"]
 """Acceptable strings to be passed into the `method` parameter for
-[`area`][geoarrow.rust.core.area] and
-[`signed_area`][geoarrow.rust.core.signed_area].
+[`area`][geoarrow.rust.compute.area] and
+[`signed_area`][geoarrow.rust.compute.signed_area].
 """
 
 LengthMethodT = Literal["ellipsoidal", "euclidean", "haversine", "vincenty"]
 """Acceptable strings to be passed into the `method` parameter for
-[`length`][geoarrow.rust.core.length].
+[`length`][geoarrow.rust.compute.length].
 """
 
 RotateOriginT = Literal["center", "centroid"]
 """Acceptable strings to be passed into the `origin` parameter for
-[`rotate`][geoarrow.rust.core.rotate].
+[`rotate`][geoarrow.rust.compute.rotate].
 """
 
 SimplifyMethodT = Literal["rdp", "vw", "vw_preserve"]
 """Acceptable strings to be passed into the `method` parameter for
-[`simplify`][geoarrow.rust.core.simplify].
+[`simplify`][geoarrow.rust.compute.simplify].
 """
 
 

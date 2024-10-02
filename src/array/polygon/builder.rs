@@ -15,14 +15,14 @@ use crate::geo_traits::{
 };
 use crate::io::wkb::reader::WKBPolygon;
 use crate::scalar::WKB;
-use crate::trait_::{GeometryArrayAccessor, GeometryArrayBuilder, IntoArrow};
+use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 
-pub type MutablePolygonParts<O, const D: usize> = (
+pub type MutablePolygonParts<const D: usize> = (
     CoordBufferBuilder<D>,
-    OffsetsBuilder<O>,
-    OffsetsBuilder<O>,
+    OffsetsBuilder<i32>,
+    OffsetsBuilder<i32>,
     NullBufferBuilder,
 );
 
@@ -30,22 +30,22 @@ pub type MutablePolygonParts<O, const D: usize> = (
 ///
 /// Converting an [`PolygonBuilder`] into a [`PolygonArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct PolygonBuilder<O: OffsetSizeTrait, const D: usize> {
+pub struct PolygonBuilder<const D: usize> {
     metadata: Arc<ArrayMetadata>,
 
     pub(crate) coords: CoordBufferBuilder<D>,
 
     /// OffsetsBuilder into the ring array where each geometry starts
-    pub(crate) geom_offsets: OffsetsBuilder<O>,
+    pub(crate) geom_offsets: OffsetsBuilder<i32>,
 
     /// OffsetsBuilder into the coordinate array where each ring starts
-    pub(crate) ring_offsets: OffsetsBuilder<O>,
+    pub(crate) ring_offsets: OffsetsBuilder<i32>,
 
     /// Validity is only defined at the geometry level
     pub(crate) validity: NullBufferBuilder,
 }
 
-impl<O: OffsetSizeTrait, const D: usize> PolygonBuilder<O, D> {
+impl<const D: usize> PolygonBuilder<D> {
     /// Creates a new empty [`PolygonBuilder`].
     pub fn new() -> Self {
         Self::new_with_options(Default::default(), Default::default())
@@ -140,8 +140,8 @@ impl<O: OffsetSizeTrait, const D: usize> PolygonBuilder<O, D> {
     /// - if the largest geometry offset does not match the size of ring offsets
     pub fn try_new(
         coords: CoordBufferBuilder<D>,
-        geom_offsets: OffsetsBuilder<O>,
-        ring_offsets: OffsetsBuilder<O>,
+        geom_offsets: OffsetsBuilder<i32>,
+        ring_offsets: OffsetsBuilder<i32>,
         validity: NullBufferBuilder,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
@@ -161,7 +161,7 @@ impl<O: OffsetSizeTrait, const D: usize> PolygonBuilder<O, D> {
     }
 
     /// Extract the low-level APIs from the [`PolygonBuilder`].
-    pub fn into_inner(self) -> MutablePolygonParts<O, D> {
+    pub fn into_inner(self) -> MutablePolygonParts<D> {
         (
             self.coords,
             self.geom_offsets,
@@ -199,7 +199,7 @@ impl<O: OffsetSizeTrait, const D: usize> PolygonBuilder<O, D> {
         Ok(())
     }
 
-    pub fn finish(self) -> PolygonArray<O, D> {
+    pub fn finish(self) -> PolygonArray<D> {
         self.into()
     }
 
@@ -409,13 +409,13 @@ impl<O: OffsetSizeTrait, const D: usize> PolygonBuilder<O, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> Default for PolygonBuilder<O, D> {
+impl<const D: usize> Default for PolygonBuilder<D> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for PolygonBuilder<O, D> {
+impl<const D: usize> GeometryArrayBuilder for PolygonBuilder<D> {
     fn new() -> Self {
         Self::new()
     }
@@ -429,7 +429,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for PolygonBuilder
         Self::with_capacity_and_options(capacity, coord_type, metadata)
     }
 
-    fn finish(self) -> Arc<dyn crate::GeometryArrayTrait> {
+    fn finish(self) -> Arc<dyn crate::NativeArray> {
         Arc::new(self.finish())
     }
 
@@ -458,21 +458,21 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for PolygonBuilder
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> IntoArrow for PolygonBuilder<O, D> {
-    type ArrowArray = GenericListArray<O>;
+impl<const D: usize> IntoArrow for PolygonBuilder<D> {
+    type ArrowArray = GenericListArray<i32>;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let polygon_array: PolygonArray<O, D> = self.into();
+        let polygon_array: PolygonArray<D> = self.into();
         polygon_array.into_arrow()
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> From<PolygonBuilder<O, D>> for PolygonArray<O, D> {
-    fn from(mut other: PolygonBuilder<O, D>) -> Self {
+impl<const D: usize> From<PolygonBuilder<D>> for PolygonArray<D> {
+    fn from(mut other: PolygonBuilder<D>) -> Self {
         let validity = other.validity.finish();
 
-        let geom_offsets: OffsetBuffer<O> = other.geom_offsets.into();
-        let ring_offsets: OffsetBuffer<O> = other.ring_offsets.into();
+        let geom_offsets: OffsetBuffer<i32> = other.geom_offsets.into();
+        let ring_offsets: OffsetBuffer<i32> = other.ring_offsets.into();
 
         Self::new(
             other.coords.into(),
@@ -484,23 +484,19 @@ impl<O: OffsetSizeTrait, const D: usize> From<PolygonBuilder<O, D>> for PolygonA
     }
 }
 
-impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>, const D: usize> From<&[G]>
-    for PolygonBuilder<O, D>
-{
+impl<G: PolygonTrait<T = f64>, const D: usize> From<&[G]> for PolygonBuilder<D> {
     fn from(geoms: &[G]) -> Self {
         Self::from_polygons(geoms, Default::default(), Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>, const D: usize> From<Vec<Option<G>>>
-    for PolygonBuilder<O, D>
-{
+impl<G: PolygonTrait<T = f64>, const D: usize> From<Vec<Option<G>>> for PolygonBuilder<D> {
     fn from(geoms: Vec<Option<G>>) -> Self {
         Self::from_nullable_polygons(&geoms, Default::default(), Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for PolygonBuilder<O, D> {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for PolygonBuilder<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
@@ -512,10 +508,8 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for PolygonBuilder
 
 /// Polygon and MultiLineString have the same layout, so enable conversions between the two to
 /// change the semantic type
-impl<O: OffsetSizeTrait, const D: usize> From<PolygonBuilder<O, D>>
-    for MultiLineStringBuilder<O, D>
-{
-    fn from(value: PolygonBuilder<O, D>) -> Self {
+impl<const D: usize> From<PolygonBuilder<D>> for MultiLineStringBuilder<D> {
+    fn from(value: PolygonBuilder<D>) -> Self {
         Self::try_new(
             value.coords,
             value.geom_offsets,

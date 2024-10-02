@@ -4,29 +4,28 @@ use crate::array::MixedGeometryArray;
 use crate::geo_traits::GeometryCollectionTrait;
 use crate::io::geo::geometry_collection_to_geo;
 use crate::scalar::Geometry;
-use crate::trait_::GeometryArrayAccessor;
-use crate::trait_::GeometryScalarTrait;
-use arrow_array::OffsetSizeTrait;
+use crate::trait_::ArrayAccessor;
+use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a GeometryCollection
 #[derive(Debug, Clone)]
-pub struct GeometryCollection<'a, O: OffsetSizeTrait, const D: usize> {
-    pub(crate) array: &'a MixedGeometryArray<O, D>,
+pub struct GeometryCollection<'a, const D: usize> {
+    pub(crate) array: &'a MixedGeometryArray<D>,
 
     /// Offsets into the geometry array where each geometry starts
-    pub(crate) geom_offsets: &'a OffsetBuffer<O>,
+    pub(crate) geom_offsets: &'a OffsetBuffer<i32>,
 
     pub(crate) geom_index: usize,
 
     start_offset: usize,
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> GeometryCollection<'a, O, D> {
+impl<'a, const D: usize> GeometryCollection<'a, D> {
     pub fn new(
-        array: &'a MixedGeometryArray<O, D>,
-        geom_offsets: &'a OffsetBuffer<O>,
+        array: &'a MixedGeometryArray<D>,
+        geom_offsets: &'a OffsetBuffer<i32>,
         geom_index: usize,
     ) -> Self {
         let (start_offset, _) = geom_offsets.start_end(geom_index);
@@ -38,12 +37,12 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryCollection<'a, O, D> {
         }
     }
 
-    pub fn into_inner(&self) -> (&MixedGeometryArray<O, D>, &OffsetBuffer<O>, usize) {
+    pub fn into_inner(&self) -> (&MixedGeometryArray<D>, &OffsetBuffer<i32>, usize) {
         (self.array, self.geom_offsets, self.geom_index)
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> GeometryScalarTrait for GeometryCollection<'a, O, D> {
+impl<'a, const D: usize> NativeScalar for GeometryCollection<'a, D> {
     type ScalarGeo = geo::GeometryCollection;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -60,11 +59,9 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryScalarTrait for GeometryCol
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> GeometryCollectionTrait
-    for GeometryCollection<'a, O, D>
-{
+impl<'a, const D: usize> GeometryCollectionTrait for GeometryCollection<'a, D> {
     type T = f64;
-    type ItemType<'b> = Geometry<'a, O, D> where Self: 'b;
+    type ItemType<'b> = Geometry<'a, D> where Self: 'b;
 
     fn dim(&self) -> usize {
         D
@@ -80,11 +77,9 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryCollectionTrait
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> GeometryCollectionTrait
-    for &'a GeometryCollection<'a, O, D>
-{
+impl<'a, const D: usize> GeometryCollectionTrait for &'a GeometryCollection<'a, D> {
     type T = f64;
-    type ItemType<'b> = Geometry<'a, O, D> where Self: 'b;
+    type ItemType<'b> = Geometry<'a, D> where Self: 'b;
 
     fn dim(&self) -> usize {
         D
@@ -100,27 +95,25 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryCollectionTrait
     }
 }
 
-// impl<O: OffsetSizeTrait> From<GeometryCollection<'_, O, 2>> for geo::GeometryCollection {
-//     fn from(value: GeometryCollection<'_, O, 2>) -> Self {
+// impl<O: OffsetSizeTrait> From<GeometryCollection<'_, 2>> for geo::GeometryCollection {
+//     fn from(value: GeometryCollection<'_, 2>) -> Self {
 //         (&value).into()
 //     }
 // }
 
-impl<O: OffsetSizeTrait, const D: usize> From<&GeometryCollection<'_, O, D>>
-    for geo::GeometryCollection
-{
-    fn from(value: &GeometryCollection<'_, O, D>) -> Self {
+impl<const D: usize> From<&GeometryCollection<'_, D>> for geo::GeometryCollection {
+    fn from(value: &GeometryCollection<'_, D>) -> Self {
         geometry_collection_to_geo(value)
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> From<GeometryCollection<'_, O, D>> for geo::Geometry {
-    fn from(value: GeometryCollection<'_, O, D>) -> Self {
+impl<const D: usize> From<GeometryCollection<'_, D>> for geo::Geometry {
+    fn from(value: GeometryCollection<'_, D>) -> Self {
         geo::Geometry::GeometryCollection(value.into())
     }
 }
 
-impl<O: OffsetSizeTrait> RTreeObject for GeometryCollection<'_, O, 2> {
+impl RTreeObject for GeometryCollection<'_, 2> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -130,8 +123,8 @@ impl<O: OffsetSizeTrait> RTreeObject for GeometryCollection<'_, O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize, G: GeometryCollectionTrait<T = f64>> PartialEq<G>
-    for GeometryCollection<'_, O, D>
+impl<const D: usize, G: GeometryCollectionTrait<T = f64>> PartialEq<G>
+    for GeometryCollection<'_, D>
 {
     fn eq(&self, other: &G) -> bool {
         geometry_collection_eq(self, other)

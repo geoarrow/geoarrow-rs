@@ -2,11 +2,11 @@ use crate::algorithm::geo::utils::zeroes;
 use crate::algorithm::native::Unary;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
-use crate::datatypes::{Dimension, GeoDataType};
-use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryScalarTrait;
-use crate::GeometryArrayTrait;
-use arrow_array::{Float64Array, OffsetSizeTrait};
+use crate::datatypes::{Dimension, NativeType};
+use crate::error::Result;
+use crate::trait_::NativeScalar;
+use crate::NativeArray;
+use arrow_array::Float64Array;
 use geos::Geom;
 
 /// Unsigned planar area of a geometry.
@@ -16,19 +16,10 @@ pub trait Area {
     fn area(&self) -> Self::Output;
 }
 
-// Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl Area for PointArray<2> {
-    type Output = Result<Float64Array>;
-
-    fn area(&self) -> Self::Output {
-        Ok(zeroes(self.len(), self.nulls()))
-    }
-}
-
 /// Implementation where the result is zero.
 macro_rules! zero_impl {
     ($type:ty) => {
-        impl<O: OffsetSizeTrait> Area for $type {
+        impl<const D: usize> Area for $type {
             type Output = Result<Float64Array>;
 
             fn area(&self) -> Self::Output {
@@ -38,13 +29,14 @@ macro_rules! zero_impl {
     };
 }
 
-zero_impl!(LineStringArray<O, 2>);
-zero_impl!(MultiPointArray<O, 2>);
-zero_impl!(MultiLineStringArray<O, 2>);
+zero_impl!(PointArray<D>);
+zero_impl!(LineStringArray<D>);
+zero_impl!(MultiPointArray<D>);
+zero_impl!(MultiLineStringArray<D>);
 
 macro_rules! iter_geos_impl {
     ($type:ty) => {
-        impl<O: OffsetSizeTrait> Area for $type {
+        impl<const D: usize> Area for $type {
             type Output = Result<Float64Array>;
 
             fn area(&self) -> Self::Output {
@@ -54,41 +46,43 @@ macro_rules! iter_geos_impl {
     };
 }
 
-iter_geos_impl!(PolygonArray<O, 2>);
-iter_geos_impl!(MultiPolygonArray<O, 2>);
-iter_geos_impl!(MixedGeometryArray<O, 2>);
-iter_geos_impl!(GeometryCollectionArray<O, 2>);
-iter_geos_impl!(WKBArray<O>);
+iter_geos_impl!(PolygonArray<D>);
+iter_geos_impl!(MultiPolygonArray<D>);
+iter_geos_impl!(MixedGeometryArray<D>);
+iter_geos_impl!(GeometryCollectionArray<D>);
+iter_geos_impl!(RectArray<D>);
 
-impl Area for &dyn GeometryArrayTrait {
+impl Area for &dyn NativeArray {
     type Output = Result<Float64Array>;
 
     fn area(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().area(),
             LineString(_, XY) => self.as_line_string::<2>().area(),
-            LargeLineString(_, XY) => self.as_large_line_string::<2>().area(),
             Polygon(_, XY) => self.as_polygon::<2>().area(),
-            LargePolygon(_, XY) => self.as_large_polygon::<2>().area(),
             MultiPoint(_, XY) => self.as_multi_point::<2>().area(),
-            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().area(),
             MultiLineString(_, XY) => self.as_multi_line_string::<2>().area(),
-            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().area(),
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().area(),
-            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().area(),
             Mixed(_, XY) => self.as_mixed::<2>().area(),
-            LargeMixed(_, XY) => self.as_large_mixed::<2>().area(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().area(),
-            LargeGeometryCollection(_, XY) => self.as_large_geometry_collection::<2>().area(),
-            _ => Err(GeoArrowError::IncorrectType("".into())),
+            Rect(XY) => self.as_rect::<2>().area(),
+            Point(_, XYZ) => self.as_point::<3>().area(),
+            LineString(_, XYZ) => self.as_line_string::<3>().area(),
+            Polygon(_, XYZ) => self.as_polygon::<3>().area(),
+            MultiPoint(_, XYZ) => self.as_multi_point::<3>().area(),
+            MultiLineString(_, XYZ) => self.as_multi_line_string::<3>().area(),
+            MultiPolygon(_, XYZ) => self.as_multi_polygon::<3>().area(),
+            Mixed(_, XYZ) => self.as_mixed::<3>().area(),
+            GeometryCollection(_, XYZ) => self.as_geometry_collection::<3>().area(),
+            Rect(XYZ) => self.as_rect::<3>().area(),
         }
     }
 }
 
-impl<G: GeometryArrayTrait> Area for ChunkedGeometryArray<G> {
+impl<G: NativeArray> Area for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn area(&self) -> Self::Output {

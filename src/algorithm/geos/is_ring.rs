@@ -1,12 +1,11 @@
+use crate::algorithm::native::Unary;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
-use crate::datatypes::{Dimension, GeoDataType};
-use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
-use crate::trait_::GeometryScalarTrait;
-use crate::GeometryArrayTrait;
-use arrow_array::builder::BooleanBuilder;
-use arrow_array::{BooleanArray, OffsetSizeTrait};
+use crate::datatypes::{Dimension, NativeType};
+use crate::error::Result;
+use crate::trait_::NativeScalar;
+use crate::NativeArray;
+use arrow_array::BooleanArray;
 use geos::Geom;
 
 /// Returns `true` if the geometry is a ring.
@@ -16,85 +15,59 @@ pub trait IsRing {
     fn is_ring(&self) -> Self::Output;
 }
 
-// Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl IsRing for PointArray<2> {
-    type Output = Result<BooleanArray>;
-
-    fn is_ring(&self) -> Self::Output {
-        let mut output_array = BooleanBuilder::with_capacity(self.len());
-
-        for maybe_g in self.iter() {
-            if let Some(g) = maybe_g {
-                output_array.append_value(g.to_geos()?.is_ring()?);
-            } else {
-                output_array.append_null();
-            }
-        }
-
-        Ok(output_array.finish())
-    }
-}
-
 macro_rules! iter_geos_impl {
     ($type:ty) => {
-        impl<O: OffsetSizeTrait> IsRing for $type {
+        impl<const D: usize> IsRing for $type {
             type Output = Result<BooleanArray>;
 
             fn is_ring(&self) -> Self::Output {
-                let mut output_array = BooleanBuilder::with_capacity(self.len());
-
-                for maybe_g in self.iter() {
-                    if let Some(g) = maybe_g {
-                        output_array.append_value(g.to_geos()?.is_ring()?);
-                    } else {
-                        output_array.append_null();
-                    }
-                }
-
-                Ok(output_array.finish())
+                Ok(self.try_unary_boolean(|geom| geom.to_geos()?.is_ring())?)
             }
         }
     };
 }
 
-iter_geos_impl!(LineStringArray<O, 2>);
-iter_geos_impl!(MultiPointArray<O, 2>);
-iter_geos_impl!(MultiLineStringArray<O, 2>);
-iter_geos_impl!(PolygonArray<O, 2>);
-iter_geos_impl!(MultiPolygonArray<O, 2>);
-iter_geos_impl!(MixedGeometryArray<O, 2>);
-iter_geos_impl!(GeometryCollectionArray<O, 2>);
-iter_geos_impl!(WKBArray<O>);
+iter_geos_impl!(PointArray<D>);
+iter_geos_impl!(LineStringArray<D>);
+iter_geos_impl!(MultiPointArray<D>);
+iter_geos_impl!(MultiLineStringArray<D>);
+iter_geos_impl!(PolygonArray<D>);
+iter_geos_impl!(MultiPolygonArray<D>);
+iter_geos_impl!(MixedGeometryArray<D>);
+iter_geos_impl!(GeometryCollectionArray<D>);
+iter_geos_impl!(RectArray<D>);
 
-impl IsRing for &dyn GeometryArrayTrait {
+impl IsRing for &dyn NativeArray {
     type Output = Result<BooleanArray>;
 
     fn is_ring(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().is_ring(),
             LineString(_, XY) => self.as_line_string::<2>().is_ring(),
-            LargeLineString(_, XY) => self.as_large_line_string::<2>().is_ring(),
             Polygon(_, XY) => self.as_polygon::<2>().is_ring(),
-            LargePolygon(_, XY) => self.as_large_polygon::<2>().is_ring(),
             MultiPoint(_, XY) => self.as_multi_point::<2>().is_ring(),
-            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().is_ring(),
             MultiLineString(_, XY) => self.as_multi_line_string::<2>().is_ring(),
-            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().is_ring(),
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().is_ring(),
-            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().is_ring(),
             Mixed(_, XY) => self.as_mixed::<2>().is_ring(),
-            LargeMixed(_, XY) => self.as_large_mixed::<2>().is_ring(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().is_ring(),
-            LargeGeometryCollection(_, XY) => self.as_large_geometry_collection::<2>().is_ring(),
-            _ => Err(GeoArrowError::IncorrectType("".into())),
+            Rect(XY) => self.as_rect::<2>().is_ring(),
+            Point(_, XYZ) => self.as_point::<3>().is_ring(),
+            LineString(_, XYZ) => self.as_line_string::<3>().is_ring(),
+            Polygon(_, XYZ) => self.as_polygon::<3>().is_ring(),
+            MultiPoint(_, XYZ) => self.as_multi_point::<3>().is_ring(),
+            MultiLineString(_, XYZ) => self.as_multi_line_string::<3>().is_ring(),
+            MultiPolygon(_, XYZ) => self.as_multi_polygon::<3>().is_ring(),
+            Mixed(_, XYZ) => self.as_mixed::<3>().is_ring(),
+            GeometryCollection(_, XYZ) => self.as_geometry_collection::<3>().is_ring(),
+            Rect(XYZ) => self.as_rect::<3>().is_ring(),
         }
     }
 }
 
-impl<G: GeometryArrayTrait> IsRing for ChunkedGeometryArray<G> {
+impl<G: NativeArray> IsRing for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedArray<BooleanArray>>;
 
     fn is_ring(&self) -> Self::Output {

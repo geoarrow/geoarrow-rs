@@ -11,7 +11,7 @@ from typing import (
     overload,
 )
 
-from arro3.core import RecordBatchReader, Table
+from arro3.core import Array, ChunkedArray, RecordBatchReader, Table
 from arro3.core.types import (
     ArrowArrayExportable,
     ArrowSchemaExportable,
@@ -63,7 +63,7 @@ class Geometry:
     def _repr_svg_(self) -> str:
         """Render as SVG in IPython/Jupyter."""
 
-class GeometryArray:
+class NativeArray:
     """An immutable array of geometries using GeoArrow's in-memory representation."""
     def __init__(self, data: ArrowArrayExportable) -> None: ...
     def __arrow_c_array__(
@@ -107,10 +107,48 @@ class GeometryArray:
     ) -> Self:
         """Construct this object from raw Arrow capsules."""
     @property
-    def type(self) -> GeometryType:
+    def type(self) -> NativeType:
         """Get the geometry type of this array."""
 
-class ChunkedGeometryArray:
+class SerializedArray:
+    """An immutable array of serialized geometries (WKB or WKT)."""
+    def __init__(self, data: ArrowArrayExportable) -> None: ...
+    def __arrow_c_array__(
+        self, requested_schema: object | None = None
+    ) -> Tuple[object, object]:
+        """
+        An implementation of the [Arrow PyCapsule
+        Interface](https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html).
+        This dunder method should not be called directly, but enables zero-copy data
+        transfer to other Python libraries that understand Arrow memory.
+
+        For example, you can call [`pyarrow.array()`][pyarrow.array] to convert this
+        array into a pyarrow array, without copying memory.
+        """
+    def __len__(self) -> int:
+        """The number of rows."""
+    def __repr__(self) -> str:
+        """Text representation"""
+    @classmethod
+    def from_arrow(cls, data: ArrowArrayExportable) -> Self:
+        """Construct this object from existing Arrow data
+
+        Args:
+            input: Arrow array to use for constructing this object
+
+        Returns:
+            Self
+        """
+    @classmethod
+    def from_arrow_pycapsule(
+        cls, schema_capsule: object, array_capsule: object
+    ) -> Self:
+        """Construct this object from raw Arrow capsules."""
+    @property
+    def type(self) -> SerializedType:
+        """Get the type of this array."""
+
+class ChunkedNativeArray:
     """
     An immutable chunked array of geometries using GeoArrow's in-memory representation.
     """
@@ -131,9 +169,9 @@ class ChunkedGeometryArray:
         """The number of rows."""
     def __repr__(self) -> str:
         """Text representation."""
-    def chunk(self, i: int) -> GeometryArray:
+    def chunk(self, i: int) -> NativeArray:
         """Access a single underlying chunk."""
-    def chunks(self) -> List[GeometryArray]:
+    def chunks(self) -> List[NativeArray]:
         """Convert to a list of single-chunked arrays."""
     def num_chunks(self) -> int:
         """Number of underlying chunks."""
@@ -153,10 +191,10 @@ class ChunkedGeometryArray:
     ) -> Self:
         """Construct this object from raw Arrow capsules."""
     @property
-    def type(self) -> GeometryType:
+    def type(self) -> NativeType:
         """Get the geometry type of this array."""
 
-class GeometryType:
+class NativeType:
     @overload
     def __init__(
         self,
@@ -176,13 +214,6 @@ class GeometryType:
     @overload
     def __init__(
         self,
-        type: Literal["wkb"],
-        dimension: None = None,
-        coord_type: None = None,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
         type: Literal["box"],
         dimension: Dimension | DimensionT,
         coord_type: None = None,
@@ -198,18 +229,17 @@ class GeometryType:
             "multipolygon",
             "geometry",
             "geometrycollection",
-            "wkb",
             "box",
         ],
         dimension: Dimension | DimensionT | None = None,
         coord_type: CoordType | CoordTypeT | None = None,
     ) -> None:
-        """Create a new GeometryType
+        """Create a new NativeType
 
         Args:
             type: The string type of the geometry. One of `"point"`, `"linestring"`,
                 `"polygon"`, `"multipoint"`, `"multilinestring"`, `"multipolygon"`,
-                `"geometry"`, `"geometrycollection"`, `"wkb"`, `"box"`.
+                `"geometry"`, `"geometrycollection"`, `"box"`.
             dimension: The coordinate dimension. Either "XY" or "XYZ". Defaults to None.
             coord_type: The coordinate type. Defaults to None.
         """
@@ -239,19 +269,55 @@ class GeometryType:
     def from_arrow_pycapsule(cls, capsule: object) -> Self:
         """Construct this object from a raw Arrow schema capsule."""
     @property
-    def coord_type(self) -> CoordType | None:
+    def coord_type(self) -> CoordType:
         """Get the coordinate type of this geometry type"""
     @property
-    def dimension(self) -> Dimension | None:
+    def dimension(self) -> Dimension:
         """Get the dimension of this geometry type"""
 
+class SerializedType:
+    def __init__(
+        self,
+        type: Literal["wkb", "wkt"],
+    ) -> None:
+        """Create a new SerializedType
+
+        Args:
+            type: The string type of the geometry. One of `"wkb"`.
+        """
+    def __arrow_c_schema__(self) -> object:
+        """
+        An implementation of the [Arrow PyCapsule
+        Interface](https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html).
+        This dunder method should not be called directly, but enables zero-copy data
+        transfer to other Python libraries that understand Arrow memory.
+
+        For example, you can call [`pyarrow.field()`][pyarrow.field] to
+        convert this type into a pyarrow Field.
+        """
+    def __eq__(self, value: object) -> bool: ...
+    def __repr__(self) -> str: ...
+    @classmethod
+    def from_arrow(cls, data: ArrowSchemaExportable) -> Self:
+        """Construct this object from existing Arrow data
+
+        Args:
+            input: Arrow field to use for constructing this object
+
+        Returns:
+            Self
+        """
+    @classmethod
+    def from_arrow_pycapsule(cls, capsule: object) -> Self:
+        """Construct this object from a raw Arrow schema capsule."""
+
 @overload
-def geometry_col(input: ArrowArrayExportable) -> GeometryArray: ...
+def geometry_col(input: ArrowArrayExportable) -> NativeArray: ...
 @overload
-def geometry_col(input: ArrowStreamExportable) -> ChunkedGeometryArray: ...
+def geometry_col(input: ArrowStreamExportable) -> ChunkedNativeArray: ...
 def geometry_col(
     input: ArrowArrayExportable | ArrowStreamExportable,
-) -> GeometryArray | ChunkedGeometryArray:
+) -> NativeArray | ChunkedNativeArray:
     """Access the geometry column of a Table or RecordBatch
 
     Args:
@@ -372,7 +438,7 @@ def read_pyogrio(
         Table
     """
 
-def from_ewkb(input: ArrowArrayExportable) -> GeometryArray:
+def from_ewkb(input: ArrowArrayExportable) -> NativeArray:
     """
     Parse an Arrow BinaryArray from EWKB to its GeoArrow-native counterpart.
 
@@ -399,23 +465,22 @@ def from_geopandas(input: gpd.GeoDataFrame) -> Table:
         A GeoArrow Table
     """
 
-def from_shapely(input, *, crs: Any | None = None) -> GeometryArray:
+def from_shapely(input, *, crs: Any | None = None) -> NativeArray:
     """
     Create a GeoArrow array from an array of Shapely geometries.
 
     ### Notes:
 
-    - Currently this will always generate a non-chunked GeoArrow array. Use the `from_shapely`
-    method on a chunked GeoArrow array class to construct a chunked array.
-    - This will first call [`to_ragged_array`][shapely.to_ragged_array], falling back to
-    [`to_wkb`][shapely.to_wkb] if necessary. If you know you have mixed-type geometries in your
-    column, use
-    [`MixedGeometryArray.from_shapely`][geoarrow.rust.core.MixedGeometryArray.from_shapely].
+    - Currently this will always generate a non-chunked GeoArrow array.
+    - Under the hood, this will first call
+        [`shapely.to_ragged_array`][], falling back to [`shapely.to_wkb`][] if
+        necessary.
 
-    This is because `to_ragged_array` is the fastest approach but fails on mixed-type geometries.
-    It supports combining Multi-* geometries with non-multi-geometries in the same array, so you
-    can combine e.g. Point and MultiPoint geometries in the same array, but `to_ragged_array`
-    doesn't work if you have Point and Polygon geometries in the same array.
+        This is because `to_ragged_array` is the fastest approach but fails on
+        mixed-type geometries. It supports combining Multi-* geometries with
+        non-multi-geometries in the same array, so you can combine e.g. Point and
+        MultiPoint geometries in the same array, but `to_ragged_array` doesn't work if
+        you have Point and Polygon geometries in the same array.
 
     Args:
 
@@ -432,18 +497,18 @@ def from_wkb(
     input: ArrowArrayExportable,
     *,
     coord_type: CoordType | CoordTypeT = CoordType.Interleaved,
-) -> GeometryArray: ...
+) -> NativeArray: ...
 @overload
 def from_wkb(
     input: ArrowStreamExportable,
     *,
     coord_type: CoordType | CoordTypeT = CoordType.Interleaved,
-) -> ChunkedGeometryArray: ...
+) -> ChunkedNativeArray: ...
 def from_wkb(
     input: ArrowArrayExportable | ArrowStreamExportable,
     *,
     coord_type: CoordType | CoordTypeT = CoordType.Interleaved,
-) -> GeometryArray | ChunkedGeometryArray:
+) -> NativeArray | ChunkedNativeArray:
     """
     Parse an Arrow BinaryArray from WKB to its GeoArrow-native counterpart.
 
@@ -464,18 +529,18 @@ def from_wkt(
     input: ArrowArrayExportable,
     *,
     coord_type: CoordType | CoordTypeT = CoordType.Interleaved,
-) -> GeometryArray: ...
+) -> NativeArray: ...
 @overload
 def from_wkt(
     input: ArrowStreamExportable,
     *,
     coord_type: CoordType | CoordTypeT = CoordType.Interleaved,
-) -> ChunkedGeometryArray: ...
+) -> ChunkedNativeArray: ...
 def from_wkt(
     input: ArrowArrayExportable | ArrowStreamExportable,
     *,
     coord_type: CoordType | CoordTypeT = CoordType.Interleaved,
-) -> GeometryArray | ChunkedGeometryArray:
+) -> NativeArray | ChunkedNativeArray:
     """
     Parse an Arrow StringArray from WKT to its GeoArrow-native counterpart.
 
@@ -484,6 +549,21 @@ def from_wkt(
 
     Other args:
         coord_type: Specify the coordinate type of the generated GeoArrow data.
+
+    Returns:
+        A GeoArrow-native geometry array
+    """
+
+@overload
+def to_wkt(input: ArrowArrayExportable) -> Array: ...
+@overload
+def to_wkt(input: ArrowStreamExportable) -> ChunkedArray: ...
+def to_wkt(input: ArrowArrayExportable | ArrowStreamExportable) -> Array | ChunkedArray:
+    """
+    Encode a geometry array to WKT.
+
+    Args:
+        input: An Arrow array of string type holding WKT-formatted geometries.
 
     Returns:
         A GeoArrow-native geometry array
@@ -518,10 +598,10 @@ def to_shapely(
     """
 
 @overload
-def to_wkb(input: ArrowArrayExportable) -> GeometryArray: ...
+def to_wkb(input: ArrowArrayExportable) -> NativeArray: ...
 @overload
-def to_wkb(input: ArrowStreamExportable) -> ChunkedGeometryArray: ...
-def to_wkb(input: ArrowArrayExportable) -> GeometryArray:
+def to_wkb(input: ArrowStreamExportable) -> ChunkedNativeArray: ...
+def to_wkb(input: ArrowArrayExportable) -> NativeArray:
     """
     Encode a GeoArrow-native geometry array to a WKBArray, holding ISO-formatted WKB geometries.
 

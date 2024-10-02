@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Breaking changes
+
+- Split `GeometryArray` into `NativeArray` and `SerializedArray`. `NativeArray` encompasses any "native" GeoArrow array types, which are efficient to compute on, while `SerializedArray` encompasses any "serialized" GeoArrow types, like WKB and WKT, which must be parsed before they can be passed to any compute functions.
+
 ## [0.3.0] - 2024-09-07
 
 ### New Features :magic_wand:

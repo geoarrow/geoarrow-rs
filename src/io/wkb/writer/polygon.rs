@@ -4,8 +4,8 @@ use crate::error::Result;
 use crate::geo_traits::{CoordTrait, LineStringTrait, PolygonTrait};
 use crate::io::wkb::common::WKBType;
 use crate::io::wkb::reader::Endianness;
-use crate::trait_::GeometryArrayAccessor;
-use crate::trait_::GeometryArrayTrait;
+use crate::trait_::ArrayAccessor;
+use crate::ArrayBase;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use arrow_buffer::Buffer;
 use byteorder::{LittleEndian, WriteBytesExt};
@@ -91,11 +91,9 @@ pub fn write_polygon_as_wkb<W: Write>(
     Ok(())
 }
 
-impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&PolygonArray<A, D>>
-    for WKBArray<B>
-{
-    fn from(value: &PolygonArray<A, D>) -> Self {
-        let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
+impl<O: OffsetSizeTrait, const D: usize> From<&PolygonArray<D>> for WKBArray<O> {
+    fn from(value: &PolygonArray<D>) -> Self {
+        let mut offsets: OffsetsBuilder<O> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
         for maybe_geom in value.iter() {
@@ -130,14 +128,14 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&PolygonArray<
 mod test {
     use super::*;
     use crate::test::polygon::{p0, p1};
-    use crate::trait_::GeometryArrayAccessor;
+    use crate::trait_::ArrayAccessor;
     use geozero::{CoordDimensions, ToWkb};
 
     #[test]
     fn round_trip() {
-        let orig_arr: PolygonArray<i32, 2> = vec![Some(p0()), Some(p1()), None].into();
+        let orig_arr: PolygonArray<2> = vec![Some(p0()), Some(p1()), None].into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: PolygonArray<i32, 2> = wkb_arr.clone().try_into().unwrap();
+        let new_arr: PolygonArray<2> = wkb_arr.clone().try_into().unwrap();
 
         let wkb0 = geo::Geometry::Polygon(p0())
             .to_wkb(CoordDimensions::xy())

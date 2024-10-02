@@ -1,10 +1,10 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use geoarrow::algorithm::geo::Area;
-use geoarrow::array::{AsChunkedGeometryArray, MultiPolygonArray};
+use geoarrow::array::{AsChunkedNativeArray, MultiPolygonArray};
 use geoarrow::io::flatgeobuf::read_flatgeobuf;
 use std::fs::File;
 
-fn load_file() -> MultiPolygonArray<i32, 2> {
+fn load_file() -> MultiPolygonArray<2> {
     let mut file = File::open("fixtures/flatgeobuf/countries.fgb").unwrap();
     let table = read_flatgeobuf(&mut file, Default::default()).unwrap();
     table

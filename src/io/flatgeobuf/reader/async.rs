@@ -65,37 +65,34 @@ pub async fn read_flatgeobuf_async(
             builder.finish()
         }
         GeometryType::LineString => {
-            let mut builder =
-                GeoTableBuilder::<LineStringBuilder<i32, 2>>::new_with_options(options);
+            let mut builder = GeoTableBuilder::<LineStringBuilder<2>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             builder.finish()
         }
         GeometryType::Polygon => {
-            let mut builder = GeoTableBuilder::<PolygonBuilder<i32, 2>>::new_with_options(options);
+            let mut builder = GeoTableBuilder::<PolygonBuilder<2>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             builder.finish()
         }
         GeometryType::MultiPoint => {
-            let mut builder =
-                GeoTableBuilder::<MultiPointBuilder<i32, 2>>::new_with_options(options);
+            let mut builder = GeoTableBuilder::<MultiPointBuilder<2>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             builder.finish()
         }
         GeometryType::MultiLineString => {
             let mut builder =
-                GeoTableBuilder::<MultiLineStringBuilder<i32, 2>>::new_with_options(options);
+                GeoTableBuilder::<MultiLineStringBuilder<2>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             builder.finish()
         }
         GeometryType::MultiPolygon => {
-            let mut builder =
-                GeoTableBuilder::<MultiPolygonBuilder<i32, 2>>::new_with_options(options);
+            let mut builder = GeoTableBuilder::<MultiPolygonBuilder<2>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             builder.finish()
         }
         GeometryType::Unknown => {
             let mut builder =
-                GeoTableBuilder::<MixedGeometryStreamBuilder<i32, 2>>::new_with_options(options);
+                GeoTableBuilder::<MixedGeometryStreamBuilder<2>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             let table = builder.finish()?;
             table.downcast(true)

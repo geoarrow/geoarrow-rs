@@ -1,12 +1,8 @@
-use arrow_array::OffsetSizeTrait;
-
 use crate::array::{GeometryCollectionArray, GeometryCollectionBuilder};
 use crate::error::GeoArrowError;
 use crate::io::geos::scalar::GEOSGeometryCollection;
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<geos::Geometry>>
-    for GeometryCollectionBuilder<O, D>
-{
+impl<const D: usize> TryFrom<Vec<geos::Geometry>> for GeometryCollectionBuilder<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<geos::Geometry>) -> std::result::Result<Self, Self::Error> {
@@ -18,13 +14,11 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<geos::Geometry>>
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<geos::Geometry>>
-    for GeometryCollectionArray<O, D>
-{
+impl<const D: usize> TryFrom<Vec<geos::Geometry>> for GeometryCollectionArray<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<geos::Geometry>) -> std::result::Result<Self, Self::Error> {
-        let mutable_arr: GeometryCollectionBuilder<O, D> = value.try_into()?;
+        let mutable_arr: GeometryCollectionBuilder<D> = value.try_into()?;
         Ok(mutable_arr.into())
     }
 }

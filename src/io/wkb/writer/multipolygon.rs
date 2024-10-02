@@ -5,8 +5,8 @@ use crate::geo_traits::MultiPolygonTrait;
 use crate::io::wkb::common::WKBType;
 use crate::io::wkb::reader::Endianness;
 use crate::io::wkb::writer::polygon::{polygon_wkb_size, write_polygon_as_wkb};
-use crate::trait_::GeometryArrayAccessor;
-use crate::trait_::GeometryArrayTrait;
+use crate::trait_::ArrayAccessor;
+use crate::ArrayBase;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use arrow_buffer::Buffer;
 use byteorder::{LittleEndian, WriteBytesExt};
@@ -56,11 +56,9 @@ pub fn write_multi_polygon_as_wkb<W: Write>(
     Ok(())
 }
 
-impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&MultiPolygonArray<A, D>>
-    for WKBArray<B>
-{
-    fn from(value: &MultiPolygonArray<A, D>) -> Self {
-        let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
+impl<O: OffsetSizeTrait, const D: usize> From<&MultiPolygonArray<D>> for WKBArray<O> {
+    fn from(value: &MultiPolygonArray<D>) -> Self {
+        let mut offsets: OffsetsBuilder<O> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
         for maybe_geom in value.iter() {
@@ -100,9 +98,9 @@ mod test {
 
     #[test]
     fn round_trip() {
-        let orig_arr: MultiPolygonArray<i32, 2> = vec![Some(mp0()), Some(mp1()), None].into();
+        let orig_arr: MultiPolygonArray<2> = vec![Some(mp0()), Some(mp1()), None].into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: MultiPolygonArray<i32, 2> = wkb_arr.try_into().unwrap();
+        let new_arr: MultiPolygonArray<2> = wkb_arr.try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }

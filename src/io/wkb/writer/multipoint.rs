@@ -5,8 +5,8 @@ use crate::geo_traits::MultiPointTrait;
 use crate::io::wkb::common::WKBType;
 use crate::io::wkb::reader::Endianness;
 use crate::io::wkb::writer::point::{point_wkb_size, write_point_as_wkb};
-use crate::trait_::GeometryArrayAccessor;
-use crate::trait_::GeometryArrayTrait;
+use crate::trait_::ArrayAccessor;
+use crate::ArrayBase;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use arrow_buffer::Buffer;
 use byteorder::{LittleEndian, WriteBytesExt};
@@ -51,11 +51,9 @@ pub fn write_multi_point_as_wkb<W: Write>(
     Ok(())
 }
 
-impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&MultiPointArray<A, D>>
-    for WKBArray<B>
-{
-    fn from(value: &MultiPointArray<A, D>) -> Self {
-        let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
+impl<O: OffsetSizeTrait, const D: usize> From<&MultiPointArray<D>> for WKBArray<O> {
+    fn from(value: &MultiPointArray<D>) -> Self {
+        let mut offsets: OffsetsBuilder<O> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
         for maybe_geom in value.iter() {
@@ -93,9 +91,9 @@ mod test {
 
     #[test]
     fn round_trip() {
-        let orig_arr: MultiPointArray<i32, 2> = vec![Some(mp0()), Some(mp1()), None].into();
+        let orig_arr: MultiPointArray<2> = vec![Some(mp0()), Some(mp1()), None].into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: MultiPointArray<i32, 2> = wkb_arr.try_into().unwrap();
+        let new_arr: MultiPointArray<2> = wkb_arr.try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }

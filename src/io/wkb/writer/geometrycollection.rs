@@ -5,8 +5,8 @@ use crate::geo_traits::GeometryCollectionTrait;
 use crate::io::wkb::common::WKBType;
 use crate::io::wkb::reader::Endianness;
 use crate::io::wkb::writer::geometry::{geometry_wkb_size, write_geometry_as_wkb};
-use crate::trait_::GeometryArrayAccessor;
-use crate::trait_::GeometryArrayTrait;
+use crate::trait_::ArrayAccessor;
+use crate::ArrayBase;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use arrow_buffer::Buffer;
 use byteorder::{LittleEndian, WriteBytesExt};
@@ -57,11 +57,9 @@ pub fn write_geometry_collection_as_wkb<W: Write>(
     Ok(())
 }
 
-impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&GeometryCollectionArray<A, D>>
-    for WKBArray<B>
-{
-    fn from(value: &GeometryCollectionArray<A, D>) -> Self {
-        let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
+impl<O: OffsetSizeTrait, const D: usize> From<&GeometryCollectionArray<D>> for WKBArray<O> {
+    fn from(value: &GeometryCollectionArray<D>) -> Self {
+        let mut offsets: OffsetsBuilder<O> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
         for maybe_geom in value.iter() {
@@ -75,7 +73,7 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&GeometryColle
         }
 
         let values = {
-            let values = Vec::with_capacity(offsets.last().to_usize().unwrap());
+            let values = Vec::with_capacity(offsets.last().as_usize());
             let mut writer = Cursor::new(values);
 
             for geom in value.iter().flatten() {

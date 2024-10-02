@@ -1,7 +1,5 @@
 use std::ops::Range;
 
-use arrow_array::OffsetSizeTrait;
-
 use crate::algorithm::native::Take;
 use crate::array::*;
 use crate::chunked_array::ChunkedGeometryArray;
@@ -44,7 +42,7 @@ impl Rechunk for PointArray<2> {
 
 macro_rules! rechunk_impl {
     ($array_type:ty) => {
-        impl<O: OffsetSizeTrait> Rechunk for $array_type {
+        impl Rechunk for $array_type {
             type Output = Result<ChunkedGeometryArray<Self>>;
 
             fn rechunk(&self, ranges: &[Range<usize>]) -> Self::Output {
@@ -58,15 +56,15 @@ macro_rules! rechunk_impl {
     };
 }
 
-rechunk_impl!(LineStringArray<O, 2>);
-rechunk_impl!(PolygonArray<O, 2>);
-rechunk_impl!(MultiPointArray<O, 2>);
-rechunk_impl!(MultiLineStringArray<O, 2>);
-rechunk_impl!(MultiPolygonArray<O, 2>);
-rechunk_impl!(MixedGeometryArray<O, 2>);
-rechunk_impl!(GeometryCollectionArray<O, 2>);
+rechunk_impl!(LineStringArray<2>);
+rechunk_impl!(PolygonArray<2>);
+rechunk_impl!(MultiPointArray<2>);
+rechunk_impl!(MultiLineStringArray<2>);
+rechunk_impl!(MultiPolygonArray<2>);
+rechunk_impl!(MixedGeometryArray<2>);
+rechunk_impl!(GeometryCollectionArray<2>);
 
-// impl<O: OffsetSizeTrait> Rechunk for LineStringArray<O, 2> {
+// impl<O: OffsetSizeTrait> Rechunk for LineStringArray<2> {
 //     type Output = Result<ChunkedGeometryArray<Self>>;
 
 //     fn rechunk(&self, ranges: &[Range<usize>]) -> Self::Output {

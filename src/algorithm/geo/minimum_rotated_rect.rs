@@ -1,11 +1,10 @@
 use crate::array::polygon::PolygonCapacity;
 use crate::array::*;
-use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait, ChunkedPolygonArray};
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray, ChunkedPolygonArray};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
-use arrow_array::OffsetSizeTrait;
+use crate::trait_::ArrayAccessor;
+use crate::NativeArray;
 use geo::MinimumRotatedRect as _MinimumRotatedRect;
 
 /// Return the minimum bounding rectangle(MBR) of geometry
@@ -32,47 +31,17 @@ use geo::MinimumRotatedRect as _MinimumRotatedRect;
 ///     ])
 /// );
 /// ```
-pub trait MinimumRotatedRect<O: OffsetSizeTrait> {
+pub trait MinimumRotatedRect {
     type Output;
 
     fn minimum_rotated_rect(&self) -> Self::Output;
 }
 
-// Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl<O: OffsetSizeTrait> MinimumRotatedRect<O> for PointArray<2> {
-    type Output = PolygonArray<O, 2>;
-
-    fn minimum_rotated_rect(&self) -> Self::Output {
-        // The number of output geoms is the same as the input
-        let geom_capacity = self.len();
-
-        // Each output polygon is a simple polygon with only one ring
-        let ring_capacity = geom_capacity;
-
-        // Each output polygon has exactly 5 coordinates
-        let coord_capacity = ring_capacity * 5;
-
-        let capacity = PolygonCapacity::new(coord_capacity, ring_capacity, geom_capacity);
-
-        let mut output_array = PolygonBuilder::with_capacity(capacity);
-
-        self.iter_geo().for_each(|maybe_g| {
-            output_array
-                .push_polygon(maybe_g.and_then(|g| g.minimum_rotated_rect()).as_ref())
-                .unwrap()
-        });
-
-        output_array.into()
-    }
-}
-
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty) => {
-        impl<OOutput: OffsetSizeTrait, OInput: OffsetSizeTrait> MinimumRotatedRect<OOutput>
-            for $type
-        {
-            type Output = PolygonArray<OOutput, 2>;
+        impl MinimumRotatedRect for $type {
+            type Output = PolygonArray<2>;
 
             fn minimum_rotated_rect(&self) -> Self::Output {
                 // The number of output geoms is the same as the input
@@ -100,49 +69,39 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<OInput, 2>);
-iter_geo_impl!(PolygonArray<OInput, 2>);
-iter_geo_impl!(MultiPointArray<OInput, 2>);
-iter_geo_impl!(MultiLineStringArray<OInput, 2>);
-iter_geo_impl!(MultiPolygonArray<OInput, 2>);
-iter_geo_impl!(MixedGeometryArray<OInput, 2>);
-iter_geo_impl!(GeometryCollectionArray<OInput, 2>);
+iter_geo_impl!(PointArray<2>);
+iter_geo_impl!(LineStringArray<2>);
+iter_geo_impl!(PolygonArray<2>);
+iter_geo_impl!(MultiPointArray<2>);
+iter_geo_impl!(MultiLineStringArray<2>);
+iter_geo_impl!(MultiPolygonArray<2>);
+iter_geo_impl!(MixedGeometryArray<2>);
+iter_geo_impl!(GeometryCollectionArray<2>);
 
-impl<O: OffsetSizeTrait> MinimumRotatedRect<O> for &dyn GeometryArrayTrait {
-    type Output = Result<PolygonArray<O, 2>>;
+impl MinimumRotatedRect for &dyn NativeArray {
+    type Output = Result<PolygonArray<2>>;
 
     fn minimum_rotated_rect(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result = match self.data_type() {
             Point(_, XY) => self.as_point::<2>().minimum_rotated_rect(),
             LineString(_, XY) => self.as_line_string::<2>().minimum_rotated_rect(),
-            LargeLineString(_, XY) => self.as_large_line_string::<2>().minimum_rotated_rect(),
             Polygon(_, XY) => self.as_polygon::<2>().minimum_rotated_rect(),
-            LargePolygon(_, XY) => self.as_large_polygon::<2>().minimum_rotated_rect(),
             MultiPoint(_, XY) => self.as_multi_point::<2>().minimum_rotated_rect(),
-            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().minimum_rotated_rect(),
             MultiLineString(_, XY) => self.as_multi_line_string::<2>().minimum_rotated_rect(),
-            LargeMultiLineString(_, XY) => self
-                .as_large_multi_line_string::<2>()
-                .minimum_rotated_rect(),
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().minimum_rotated_rect(),
-            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().minimum_rotated_rect(),
             Mixed(_, XY) => self.as_mixed::<2>().minimum_rotated_rect(),
-            LargeMixed(_, XY) => self.as_large_mixed::<2>().minimum_rotated_rect(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().minimum_rotated_rect(),
-            LargeGeometryCollection(_, XY) => self
-                .as_large_geometry_collection::<2>()
-                .minimum_rotated_rect(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryArrayTrait> MinimumRotatedRect<O> for ChunkedGeometryArray<G> {
-    type Output = Result<ChunkedGeometryArray<PolygonArray<O, 2>>>;
+impl<G: NativeArray> MinimumRotatedRect for ChunkedGeometryArray<G> {
+    type Output = Result<ChunkedGeometryArray<PolygonArray<2>>>;
 
     fn minimum_rotated_rect(&self) -> Self::Output {
         self.try_map(|chunk| chunk.as_ref().minimum_rotated_rect())?
@@ -150,33 +109,22 @@ impl<O: OffsetSizeTrait, G: GeometryArrayTrait> MinimumRotatedRect<O> for Chunke
     }
 }
 
-impl<O: OffsetSizeTrait> MinimumRotatedRect<O> for &dyn ChunkedGeometryArrayTrait {
-    type Output = Result<ChunkedPolygonArray<O, 2>>;
+impl MinimumRotatedRect for &dyn ChunkedNativeArray {
+    type Output = Result<ChunkedPolygonArray<2>>;
 
     fn minimum_rotated_rect(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().minimum_rotated_rect(),
             LineString(_, XY) => self.as_line_string::<2>().minimum_rotated_rect(),
-            LargeLineString(_, XY) => self.as_large_line_string::<2>().minimum_rotated_rect(),
             Polygon(_, XY) => self.as_polygon::<2>().minimum_rotated_rect(),
-            LargePolygon(_, XY) => self.as_large_polygon::<2>().minimum_rotated_rect(),
             MultiPoint(_, XY) => self.as_multi_point::<2>().minimum_rotated_rect(),
-            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().minimum_rotated_rect(),
             MultiLineString(_, XY) => self.as_multi_line_string::<2>().minimum_rotated_rect(),
-            LargeMultiLineString(_, XY) => self
-                .as_large_multi_line_string::<2>()
-                .minimum_rotated_rect(),
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().minimum_rotated_rect(),
-            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().minimum_rotated_rect(),
             Mixed(_, XY) => self.as_mixed::<2>().minimum_rotated_rect(),
-            LargeMixed(_, XY) => self.as_large_mixed::<2>().minimum_rotated_rect(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().minimum_rotated_rect(),
-            LargeGeometryCollection(_, XY) => self
-                .as_large_geometry_collection::<2>()
-                .minimum_rotated_rect(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

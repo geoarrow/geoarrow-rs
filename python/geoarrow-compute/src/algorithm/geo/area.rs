@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::ffi::from_python::AnyGeometryInput;
+use crate::ffi::from_python::AnyNativeInput;
 use crate::util::{return_array, return_chunked_array};
 use geoarrow::algorithm::geo::{Area, ChamberlainDuquetteArea, GeodesicArea};
 use pyo3::exceptions::PyValueError;
@@ -31,9 +31,9 @@ impl<'a> FromPyObject<'a> for AreaMethod {
     signature = (input, *, method = AreaMethod::Euclidean),
     text_signature = "(input, *, method = 'euclidean')")
 ]
-pub fn area(py: Python, input: AnyGeometryInput, method: AreaMethod) -> PyGeoArrowResult<PyObject> {
+pub fn area(py: Python, input: AnyNativeInput, method: AreaMethod) -> PyGeoArrowResult<PyObject> {
     match input {
-        AnyGeometryInput::Array(arr) => {
+        AnyNativeInput::Array(arr) => {
             let out = match method {
                 AreaMethod::ChamberlainDuquette => {
                     arr.as_ref().chamberlain_duquette_unsigned_area()?
@@ -43,7 +43,7 @@ pub fn area(py: Python, input: AnyGeometryInput, method: AreaMethod) -> PyGeoArr
             };
             return_array(py, PyArray::from_array_ref(Arc::new(out)))
         }
-        AnyGeometryInput::Chunked(arr) => {
+        AnyNativeInput::Chunked(arr) => {
             let out = match method {
                 AreaMethod::ChamberlainDuquette => {
                     arr.as_ref().chamberlain_duquette_unsigned_area()?
@@ -63,11 +63,11 @@ pub fn area(py: Python, input: AnyGeometryInput, method: AreaMethod) -> PyGeoArr
 ]
 pub fn signed_area(
     py: Python,
-    input: AnyGeometryInput,
+    input: AnyNativeInput,
     method: AreaMethod,
 ) -> PyGeoArrowResult<PyObject> {
     match input {
-        AnyGeometryInput::Array(arr) => {
+        AnyNativeInput::Array(arr) => {
             let out = match method {
                 AreaMethod::ChamberlainDuquette => {
                     arr.as_ref().chamberlain_duquette_signed_area()?
@@ -77,7 +77,7 @@ pub fn signed_area(
             };
             return_array(py, PyArray::from_array_ref(Arc::new(out)))
         }
-        AnyGeometryInput::Chunked(arr) => {
+        AnyNativeInput::Chunked(arr) => {
             let out = match method {
                 AreaMethod::ChamberlainDuquette => {
                     arr.as_ref().chamberlain_duquette_signed_area()?

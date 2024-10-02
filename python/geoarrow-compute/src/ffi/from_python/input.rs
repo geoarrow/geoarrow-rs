@@ -10,19 +10,19 @@ use pyo3::prelude::*;
 use pyo3::{PyAny, PyResult};
 use pyo3_arrow::input::AnyArray;
 use pyo3_arrow::PyArray;
-use pyo3_geoarrow::{PyChunkedGeometryArray, PyGeometry, PyGeometryArray};
+use pyo3_geoarrow::{PyChunkedNativeArray, PyGeometry, PyNativeArray};
 
-pub enum AnyGeometryInput {
-    Array(PyGeometryArray),
-    Chunked(PyChunkedGeometryArray),
+pub enum AnyNativeInput {
+    Array(PyNativeArray),
+    Chunked(PyChunkedNativeArray),
 }
 
-impl<'a> FromPyObject<'a> for AnyGeometryInput {
+impl<'a> FromPyObject<'a> for AnyNativeInput {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         if ob.hasattr("__arrow_c_array__")? {
-            Ok(Self::Array(PyGeometryArray::extract_bound(ob)?))
+            Ok(Self::Array(PyNativeArray::extract_bound(ob)?))
         } else if ob.hasattr("__arrow_c_stream__")? {
-            Ok(Self::Chunked(PyChunkedGeometryArray::extract_bound(ob)?))
+            Ok(Self::Chunked(PyChunkedNativeArray::extract_bound(ob)?))
         } else {
             Err(PyValueError::new_err(
                 "Expected object with __arrow_c_array__ or __arrow_c_stream__ method",
@@ -31,19 +31,19 @@ impl<'a> FromPyObject<'a> for AnyGeometryInput {
     }
 }
 
-pub enum AnyGeometryBroadcastInput {
-    Array(PyGeometryArray),
-    Chunked(PyChunkedGeometryArray),
+pub enum AnyNativeBroadcastInput {
+    Array(PyNativeArray),
+    Chunked(PyChunkedNativeArray),
     Scalar(PyGeometry),
 }
 
-impl<'a> FromPyObject<'a> for AnyGeometryBroadcastInput {
+impl<'a> FromPyObject<'a> for AnyNativeBroadcastInput {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         if let Ok(scalar) = ob.extract::<PyGeometry>() {
             Ok(Self::Scalar(scalar))
-        } else if let Ok(array) = ob.extract::<PyGeometryArray>() {
+        } else if let Ok(array) = ob.extract::<PyNativeArray>() {
             Ok(Self::Array(array))
-        } else if let Ok(chunked) = ob.extract::<PyChunkedGeometryArray>() {
+        } else if let Ok(chunked) = ob.extract::<PyChunkedNativeArray>() {
             Ok(Self::Chunked(chunked))
         } else {
             Err(PyValueError::new_err(

@@ -3,12 +3,11 @@ use std::sync::Arc;
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::LineStringArray;
 use crate::array::*;
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::Result;
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::ArrayAccessor;
+use crate::NativeArray;
 use arrow_array::types::Float64Type;
-use arrow_array::OffsetSizeTrait;
 use geo::Skew as _Skew;
 
 /// An affine transformation which skews a geometry, sheared by angles along x and y dimensions.
@@ -179,7 +178,7 @@ impl Skew for PointArray<2> {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty, $builder_type:ty, $push_func:ident) => {
-        impl<O: OffsetSizeTrait> Skew for $type {
+        impl Skew for $type {
             type Output = Self;
 
             fn skew_xy(
@@ -236,22 +235,22 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<O, 2>, LineStringBuilder<O, 2>, push_line_string);
-iter_geo_impl!(PolygonArray<O, 2>, PolygonBuilder<O, 2>, push_polygon);
-iter_geo_impl!(MultiPointArray<O, 2>, MultiPointBuilder<O, 2>, push_multi_point);
+iter_geo_impl!(LineStringArray<2>, LineStringBuilder<2>, push_line_string);
+iter_geo_impl!(PolygonArray<2>, PolygonBuilder<2>, push_polygon);
+iter_geo_impl!(MultiPointArray<2>, MultiPointBuilder<2>, push_multi_point);
 iter_geo_impl!(
-    MultiLineStringArray<O, 2>,
-    MultiLineStringBuilder<O, 2>,
+    MultiLineStringArray<2>,
+    MultiLineStringBuilder<2>,
     push_multi_line_string
 );
 iter_geo_impl!(
-    MultiPolygonArray<O, 2>,
-    MultiPolygonBuilder<O, 2>,
+    MultiPolygonArray<2>,
+    MultiPolygonBuilder<2>,
     push_multi_polygon
 );
 
-impl Skew for &dyn GeometryArrayTrait {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+impl Skew for &dyn NativeArray {
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn skew_xy(
         &self,
@@ -265,30 +264,19 @@ impl Skew for &dyn GeometryArrayTrait {
         }
 
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
-        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => impl_method!(as_point),
             LineString(_, XY) => impl_method!(as_line_string),
-            LargeLineString(_, XY) => impl_method!(as_large_line_string),
             Polygon(_, XY) => impl_method!(as_polygon),
-            LargePolygon(_, XY) => impl_method!(as_large_polygon),
             MultiPoint(_, XY) => impl_method!(as_multi_point),
-            LargeMultiPoint(_, XY) => impl_method!(as_large_multi_point),
             MultiLineString(_, XY) => impl_method!(as_multi_line_string),
-            LargeMultiLineString(_, XY) => {
-                impl_method!(as_large_multi_line_string)
-            }
             MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
-            LargeMultiPolygon(_, XY) => impl_method!(as_large_multi_polygon),
             // Mixed(_, XY) => impl_method!(as_mixed),
-            // LargeMixed(_, XY) => impl_method!(as_large_mixed),
             // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
-            // LargeGeometryCollection(_, XY) => {
             //     impl_method!(as_large_geometry_collection)
             // }
-            // WKB => impl_method!(as_wkb),
-            // LargeWKB => impl_method!(as_large_wkb),
             // Rect(XY) => impl_method!(as_rect),
             _ => todo!("unsupported data type"),
         };
@@ -312,30 +300,17 @@ impl Skew for &dyn GeometryArrayTrait {
         }
 
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
-        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => impl_method!(as_point),
             LineString(_, XY) => impl_method!(as_line_string),
-            LargeLineString(_, XY) => impl_method!(as_large_line_string),
             Polygon(_, XY) => impl_method!(as_polygon),
-            LargePolygon(_, XY) => impl_method!(as_large_polygon),
             MultiPoint(_, XY) => impl_method!(as_multi_point),
-            LargeMultiPoint(_, XY) => impl_method!(as_large_multi_point),
             MultiLineString(_, XY) => impl_method!(as_multi_line_string),
-            LargeMultiLineString(_, XY) => {
-                impl_method!(as_large_multi_line_string)
-            }
             MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
-            LargeMultiPolygon(_, XY) => impl_method!(as_large_multi_polygon),
             // Mixed(_, XY) => impl_method!(as_mixed),
-            // LargeMixed(_, XY) => impl_method!(as_large_mixed),
             // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
-            // LargeGeometryCollection(_, XY) => {
-            //     impl_method!(as_large_geometry_collection)
-            // }
-            // WKB => impl_method!(as_wkb),
-            // LargeWKB => impl_method!(as_large_wkb),
             // Rect(XY) => impl_method!(as_rect),
             _ => todo!("unsupported data type"),
         };

@@ -1,12 +1,12 @@
 use crate::algorithm::geo::utils::zeroes;
 use crate::algorithm::native::Unary;
 use crate::array::*;
-use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedGeometryArrayTrait};
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryScalarTrait;
-use crate::GeometryArrayTrait;
-use arrow_array::{Float64Array, OffsetSizeTrait};
+use crate::trait_::NativeScalar;
+use crate::NativeArray;
+use arrow_array::Float64Array;
 use geo::prelude::Area as GeoArea;
 
 /// Signed and unsigned planar area of a geometry.
@@ -32,8 +32,8 @@ use geo::prelude::Area as GeoArea;
 ///     line_string.0.reverse();
 /// });
 ///
-/// let polygon_array: PolygonArray<i32, 2> = vec![polygon].as_slice().into();
-/// let reversed_polygon_array: PolygonArray<i32, 2> = vec![reversed_polygon].as_slice().into();
+/// let polygon_array: PolygonArray<2> = vec![polygon].as_slice().into();
+/// let reversed_polygon_array: PolygonArray<2> = vec![reversed_polygon].as_slice().into();
 ///
 /// assert_eq!(polygon_array.signed_area().value(0), 30.);
 /// assert_eq!(polygon_array.unsigned_area().value(0), 30.);
@@ -64,29 +64,16 @@ macro_rules! zero_impl {
             }
         }
     };
-    ($type:ty, "O") => {
-        impl<O: OffsetSizeTrait> Area for $type {
-            type Output = Float64Array;
-
-            fn signed_area(&self) -> Self::Output {
-                zeroes(self.len(), self.nulls())
-            }
-
-            fn unsigned_area(&self) -> Self::Output {
-                zeroes(self.len(), self.nulls())
-            }
-        }
-    };
 }
 
 zero_impl!(PointArray<2>);
-zero_impl!(LineStringArray<O, 2>, "O");
-zero_impl!(MultiPointArray<O, 2>, "O");
-zero_impl!(MultiLineStringArray<O, 2>, "O");
+zero_impl!(LineStringArray<2>);
+zero_impl!(MultiPointArray<2>);
+zero_impl!(MultiLineStringArray<2>);
 
 macro_rules! iter_geo_impl {
     ($type:ty) => {
-        impl<O: OffsetSizeTrait> Area for $type {
+        impl Area for $type {
             type Output = Float64Array;
 
             fn signed_area(&self) -> Self::Output {
@@ -100,37 +87,29 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(PolygonArray<O, 2>);
-iter_geo_impl!(MultiPolygonArray<O, 2>);
-iter_geo_impl!(MixedGeometryArray<O, 2>);
-iter_geo_impl!(GeometryCollectionArray<O, 2>);
-iter_geo_impl!(WKBArray<O>);
+iter_geo_impl!(PolygonArray<2>);
+iter_geo_impl!(MultiPolygonArray<2>);
+iter_geo_impl!(MixedGeometryArray<2>);
+iter_geo_impl!(GeometryCollectionArray<2>);
+iter_geo_impl!(RectArray<2>);
 
-impl Area for &dyn GeometryArrayTrait {
+impl Area for &dyn NativeArray {
     type Output = Result<Float64Array>;
 
     fn signed_area(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result = match self.data_type() {
             Point(_, XY) => self.as_point::<2>().signed_area(),
             LineString(_, XY) => self.as_line_string::<2>().signed_area(),
-            LargeLineString(_, XY) => self.as_large_line_string::<2>().signed_area(),
             Polygon(_, XY) => self.as_polygon::<2>().signed_area(),
-            LargePolygon(_, XY) => self.as_large_polygon::<2>().signed_area(),
             MultiPoint(_, XY) => self.as_multi_point::<2>().signed_area(),
-            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().signed_area(),
             MultiLineString(_, XY) => self.as_multi_line_string::<2>().signed_area(),
-            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().signed_area(),
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().signed_area(),
-            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().signed_area(),
             Mixed(_, XY) => self.as_mixed::<2>().signed_area(),
-            LargeMixed(_, XY) => self.as_large_mixed::<2>().signed_area(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().signed_area(),
-            LargeGeometryCollection(_, XY) => {
-                self.as_large_geometry_collection::<2>().signed_area()
-            }
+            Rect(XY) => self.as_rect::<2>().signed_area(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -138,33 +117,25 @@ impl Area for &dyn GeometryArrayTrait {
 
     fn unsigned_area(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result = match self.data_type() {
             Point(_, XY) => self.as_point::<2>().unsigned_area(),
             LineString(_, XY) => self.as_line_string::<2>().unsigned_area(),
-            LargeLineString(_, XY) => self.as_large_line_string::<2>().unsigned_area(),
             Polygon(_, XY) => self.as_polygon::<2>().unsigned_area(),
-            LargePolygon(_, XY) => self.as_large_polygon::<2>().unsigned_area(),
             MultiPoint(_, XY) => self.as_multi_point::<2>().unsigned_area(),
-            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().unsigned_area(),
             MultiLineString(_, XY) => self.as_multi_line_string::<2>().unsigned_area(),
-            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().unsigned_area(),
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().unsigned_area(),
-            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().unsigned_area(),
             Mixed(_, XY) => self.as_mixed::<2>().unsigned_area(),
-            LargeMixed(_, XY) => self.as_large_mixed::<2>().unsigned_area(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().unsigned_area(),
-            LargeGeometryCollection(_, XY) => {
-                self.as_large_geometry_collection::<2>().unsigned_area()
-            }
+            Rect(XY) => self.as_rect::<2>().unsigned_area(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
     }
 }
 
-impl<G: GeometryArrayTrait> Area for ChunkedGeometryArray<G> {
+impl<G: NativeArray> Area for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn signed_area(&self) -> Self::Output {
@@ -178,57 +149,41 @@ impl<G: GeometryArrayTrait> Area for ChunkedGeometryArray<G> {
     }
 }
 
-impl Area for &dyn ChunkedGeometryArrayTrait {
+impl Area for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn signed_area(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().signed_area(),
             LineString(_, XY) => self.as_line_string::<2>().signed_area(),
-            LargeLineString(_, XY) => self.as_large_line_string::<2>().signed_area(),
             Polygon(_, XY) => self.as_polygon::<2>().signed_area(),
-            LargePolygon(_, XY) => self.as_large_polygon::<2>().signed_area(),
             MultiPoint(_, XY) => self.as_multi_point::<2>().signed_area(),
-            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().signed_area(),
             MultiLineString(_, XY) => self.as_multi_line_string::<2>().signed_area(),
-            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().signed_area(),
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().signed_area(),
-            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().signed_area(),
             Mixed(_, XY) => self.as_mixed::<2>().signed_area(),
-            LargeMixed(_, XY) => self.as_large_mixed::<2>().signed_area(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().signed_area(),
-            LargeGeometryCollection(_, XY) => {
-                self.as_large_geometry_collection::<2>().signed_area()
-            }
+            Rect(XY) => self.as_rect::<2>().signed_area(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
 
     fn unsigned_area(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().unsigned_area(),
             LineString(_, XY) => self.as_line_string::<2>().unsigned_area(),
-            LargeLineString(_, XY) => self.as_large_line_string::<2>().unsigned_area(),
             Polygon(_, XY) => self.as_polygon::<2>().unsigned_area(),
-            LargePolygon(_, XY) => self.as_large_polygon::<2>().unsigned_area(),
             MultiPoint(_, XY) => self.as_multi_point::<2>().unsigned_area(),
-            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().unsigned_area(),
             MultiLineString(_, XY) => self.as_multi_line_string::<2>().unsigned_area(),
-            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().unsigned_area(),
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().unsigned_area(),
-            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().unsigned_area(),
             Mixed(_, XY) => self.as_mixed::<2>().unsigned_area(),
-            LargeMixed(_, XY) => self.as_large_mixed::<2>().unsigned_area(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().unsigned_area(),
-            LargeGeometryCollection(_, XY) => {
-                self.as_large_geometry_collection::<2>().unsigned_area()
-            }
+            Rect(XY) => self.as_rect::<2>().unsigned_area(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

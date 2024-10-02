@@ -1,15 +1,16 @@
 use std::sync::Arc;
 
+use crate::data_type::PySerializedType;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
-use crate::{PyGeometry, PyGeometryType};
+use crate::{PyGeometry, PyNativeType};
 use arrow::datatypes::Schema;
 use arrow_array::RecordBatch;
-use geoarrow::array::{from_arrow_array, GeometryArrayDyn};
-
+use geoarrow::array::{NativeArrayDyn, SerializedArray, SerializedArrayDyn};
 use geoarrow::error::GeoArrowError;
 use geoarrow::scalar::GeometryScalar;
-use geoarrow::trait_::GeometryArrayRef;
-use geoarrow::GeometryArrayTrait;
+use geoarrow::trait_::NativeArrayRef;
+use geoarrow::ArrayBase;
+use geoarrow::NativeArray;
 use geozero::ProcessToJson;
 use pyo3::exceptions::PyIndexError;
 use pyo3::intern;
@@ -18,11 +19,11 @@ use pyo3::types::{PyCapsule, PyTuple, PyType};
 use pyo3_arrow::ffi::to_array_pycapsules;
 use pyo3_arrow::PyArray;
 
-#[pyclass(module = "geoarrow.rust.core._rust", name = "GeometryArray", subclass)]
-pub struct PyGeometryArray(pub(crate) GeometryArrayDyn);
+#[pyclass(module = "geoarrow.rust.core._rust", name = "NativeArray", subclass)]
+pub struct PyNativeArray(pub(crate) NativeArrayDyn);
 
-impl PyGeometryArray {
-    pub fn new(array: GeometryArrayDyn) -> Self {
+impl PyNativeArray {
+    pub fn new(array: NativeArrayDyn) -> Self {
         Self(array)
     }
 
@@ -35,21 +36,21 @@ impl PyGeometryArray {
     }
 
     #[allow(clippy::should_implement_trait)]
-    pub fn as_ref(&self) -> &dyn GeometryArrayTrait {
+    pub fn as_ref(&self) -> &dyn NativeArray {
         self.0.as_ref()
     }
 
-    pub fn into_inner(self) -> GeometryArrayDyn {
+    pub fn into_inner(self) -> NativeArrayDyn {
         self.0
     }
 
-    /// Export to a geoarrow.rust.core.GeometryArray.
+    /// Export to a geoarrow.rust.core.NativeArray.
     ///
     /// This requires that you depend on geoarrow-rust-core from your Python package.
     pub fn to_geoarrow<'py>(&'py self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let geoarrow_mod = py.import_bound(intern!(py, "geoarrow.rust.core"))?;
         geoarrow_mod
-            .getattr(intern!(py, "GeometryArray"))?
+            .getattr(intern!(py, "NativeArray"))?
             .call_method1(
                 intern!(py, "from_arrow_pycapsule"),
                 self.__arrow_c_array__(py, None)?,
@@ -58,7 +59,7 @@ impl PyGeometryArray {
 }
 
 #[pymethods]
-impl PyGeometryArray {
+impl PyNativeArray {
     #[new]
     fn py_new(data: &Bound<PyAny>) -> PyResult<Self> {
         data.extract()
@@ -76,7 +77,7 @@ impl PyGeometryArray {
     }
 
     // /// Check for equality with other object.
-    // fn __eq__(&self, other: &PyGeometryArray) -> bool {
+    // fn __eq__(&self, other: &PyNativeArray) -> bool {
     //     self.0 == other.0
     // }
 
@@ -123,7 +124,7 @@ impl PyGeometryArray {
     }
 
     fn __repr__(&self) -> String {
-        "geoarrow.rust.core.GeometryArray".to_string()
+        "geoarrow.rust.core.NativeArray".to_string()
     }
 
     #[classmethod]
@@ -142,41 +143,123 @@ impl PyGeometryArray {
     }
 
     #[getter]
-    fn r#type(&self) -> PyGeometryType {
+    fn r#type(&self) -> PyNativeType {
         self.0.data_type().into()
     }
 }
 
-impl From<GeometryArrayDyn> for PyGeometryArray {
-    fn from(value: GeometryArrayDyn) -> Self {
+impl From<NativeArrayDyn> for PyNativeArray {
+    fn from(value: NativeArrayDyn) -> Self {
         Self(value)
     }
 }
 
-impl From<GeometryArrayRef> for PyGeometryArray {
-    fn from(value: GeometryArrayRef) -> Self {
-        Self(GeometryArrayDyn::new(value))
+impl From<NativeArrayRef> for PyNativeArray {
+    fn from(value: NativeArrayRef) -> Self {
+        Self(NativeArrayDyn::new(value))
     }
 }
 
-impl From<PyGeometryArray> for GeometryArrayDyn {
-    fn from(value: PyGeometryArray) -> Self {
+impl From<PyNativeArray> for NativeArrayDyn {
+    fn from(value: PyNativeArray) -> Self {
         value.0
     }
 }
 
-impl<'a> FromPyObject<'a> for PyGeometryArray {
+impl<'a> FromPyObject<'a> for PyNativeArray {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         ob.extract::<PyArray>()?.try_into().map_err(PyErr::from)
     }
 }
 
-impl TryFrom<PyArray> for PyGeometryArray {
+impl TryFrom<PyArray> for PyNativeArray {
     type Error = PyGeoArrowError;
 
     fn try_from(value: PyArray) -> Result<Self, Self::Error> {
         let (array, field) = value.into_inner();
-        let geo_array = from_arrow_array(&array, &field)?;
-        Ok(Self(geo_array.into()))
+        Ok(Self(NativeArrayDyn::from_arrow_array(&array, &field)?))
+    }
+}
+
+#[pyclass(
+    module = "geoarrow.rust.core._rust",
+    name = "SerializedArray",
+    subclass
+)]
+pub struct PySerializedArray(pub(crate) SerializedArrayDyn);
+
+impl PySerializedArray {
+    pub fn new(array: SerializedArrayDyn) -> Self {
+        Self(array)
+    }
+
+    /// Import from raw Arrow capsules
+    pub fn from_arrow_pycapsule(
+        schema_capsule: &Bound<PyCapsule>,
+        array_capsule: &Bound<PyCapsule>,
+    ) -> PyGeoArrowResult<Self> {
+        PyArray::from_arrow_pycapsule(schema_capsule, array_capsule)?.try_into()
+    }
+}
+
+#[pymethods]
+impl PySerializedArray {
+    #[new]
+    fn py_new(data: &Bound<PyAny>) -> PyResult<Self> {
+        data.extract()
+    }
+
+    #[allow(unused_variables)]
+    fn __arrow_c_array__<'py>(
+        &'py self,
+        py: Python<'py>,
+        requested_schema: Option<Bound<'py, PyCapsule>>,
+    ) -> PyGeoArrowResult<Bound<PyTuple>> {
+        let field = self.0.extension_field();
+        let array = self.0.to_array_ref();
+        Ok(to_array_pycapsules(py, field, &array, requested_schema)?)
+    }
+
+    fn __len__(&self) -> usize {
+        self.0.len()
+    }
+
+    fn __repr__(&self) -> String {
+        "geoarrow.rust.core.SerializedArray".to_string()
+    }
+
+    #[classmethod]
+    fn from_arrow(_cls: &Bound<PyType>, data: &Bound<PyAny>) -> PyResult<Self> {
+        data.extract()
+    }
+
+    #[classmethod]
+    #[pyo3(name = "from_arrow_pycapsule")]
+    fn from_arrow_pycapsule_py(
+        _cls: &Bound<PyType>,
+        schema_capsule: &Bound<PyCapsule>,
+        array_capsule: &Bound<PyCapsule>,
+    ) -> PyGeoArrowResult<Self> {
+        Self::from_arrow_pycapsule(schema_capsule, array_capsule)
+    }
+
+    #[getter]
+    fn r#type(&self) -> PySerializedType {
+        self.0.data_type().into()
+    }
+}
+
+impl<'a> FromPyObject<'a> for PySerializedArray {
+    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
+        ob.extract::<PyArray>()?.try_into().map_err(PyErr::from)
+    }
+}
+
+impl TryFrom<PyArray> for PySerializedArray {
+    type Error = PyGeoArrowError;
+
+    fn try_from(value: PyArray) -> Result<Self, Self::Error> {
+        let (array, field) = value.into_inner();
+        Ok(Self(SerializedArrayDyn::from_arrow_array(&array, &field)?))
     }
 }

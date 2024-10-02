@@ -1,7 +1,9 @@
+#![allow(non_snake_case)]
+
 use crate::data::*;
 use crate::error::WasmResult;
 use arrow_wasm::ffi::{FFIArrowSchema, FFIData};
-use geoarrow::GeometryArrayTrait;
+use geoarrow::ArrayBase;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_data {

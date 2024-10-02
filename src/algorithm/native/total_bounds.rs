@@ -1,11 +1,9 @@
-use arrow_array::OffsetSizeTrait;
-
 use crate::algorithm::native::bounding_rect::BoundingRect;
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::datatypes::{Dimension, GeoDataType};
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::datatypes::{Dimension, NativeType};
+use crate::trait_::ArrayAccessor;
+use crate::NativeArray;
 
 /// Computes the total bounds (extent) of the input.
 pub trait TotalBounds {
@@ -34,7 +32,7 @@ impl<const D: usize> TotalBounds for RectArray<D> {
 
 macro_rules! impl_array {
     ($type:ty, $func:ident) => {
-        impl<O: OffsetSizeTrait, const D: usize> TotalBounds for $type {
+        impl<const D: usize> TotalBounds for $type {
             fn total_bounds(&self) -> BoundingRect {
                 let mut bounds = BoundingRect::new();
                 for geom in self.iter().flatten() {
@@ -46,73 +44,55 @@ macro_rules! impl_array {
     };
 }
 
-impl_array!(LineStringArray<O, D>, add_line_string);
-impl_array!(PolygonArray<O, D>, add_polygon);
-impl_array!(MultiPointArray<O, D>, add_multi_point);
-impl_array!(MultiLineStringArray<O, D>, add_multi_line_string);
-impl_array!(MultiPolygonArray<O, D>, add_multi_polygon);
-impl_array!(MixedGeometryArray<O, D>, add_geometry);
-impl_array!(GeometryCollectionArray<O, D>, add_geometry_collection);
+impl_array!(LineStringArray<D>, add_line_string);
+impl_array!(PolygonArray<D>, add_polygon);
+impl_array!(MultiPointArray<D>, add_multi_point);
+impl_array!(MultiLineStringArray<D>, add_multi_line_string);
+impl_array!(MultiPolygonArray<D>, add_multi_polygon);
+impl_array!(MixedGeometryArray<D>, add_geometry);
+impl_array!(GeometryCollectionArray<D>, add_geometry_collection);
 
-impl<O: OffsetSizeTrait> TotalBounds for WKBArray<O> {
-    fn total_bounds(&self) -> BoundingRect {
-        let mut bounds = BoundingRect::new();
-        for geom in self.iter().flatten() {
-            bounds.add_geometry(&geom.to_wkb_object());
-        }
-        bounds
-    }
-}
+// impl<O: OffsetSizeTrait> TotalBounds for WKBArray<O> {
+//     fn total_bounds(&self) -> BoundingRect {
+//         let mut bounds = BoundingRect::new();
+//         for geom in self.iter().flatten() {
+//             bounds.add_geometry(&geom.to_wkb_object());
+//         }
+//         bounds
+//     }
+// }
 
-impl TotalBounds for &dyn GeometryArrayTrait {
+impl TotalBounds for &dyn NativeArray {
     fn total_bounds(&self) -> BoundingRect {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().total_bounds(),
             LineString(_, XY) => self.as_line_string::<2>().total_bounds(),
-            LargeLineString(_, XY) => self.as_large_line_string::<2>().total_bounds(),
             Polygon(_, XY) => self.as_polygon::<2>().total_bounds(),
-            LargePolygon(_, XY) => self.as_large_polygon::<2>().total_bounds(),
             MultiPoint(_, XY) => self.as_multi_point::<2>().total_bounds(),
-            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().total_bounds(),
             MultiLineString(_, XY) => self.as_multi_line_string::<2>().total_bounds(),
-            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().total_bounds(),
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().total_bounds(),
-            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().total_bounds(),
             Mixed(_, XY) => self.as_mixed::<2>().total_bounds(),
-            LargeMixed(_, XY) => self.as_large_mixed::<2>().total_bounds(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().total_bounds(),
-            LargeGeometryCollection(_, XY) => {
-                self.as_large_geometry_collection::<2>().total_bounds()
-            }
             Rect(XY) => self.as_rect::<2>().total_bounds(),
             Point(_, XYZ) => self.as_point::<3>().total_bounds(),
             LineString(_, XYZ) => self.as_line_string::<3>().total_bounds(),
-            LargeLineString(_, XYZ) => self.as_large_line_string::<3>().total_bounds(),
             Polygon(_, XYZ) => self.as_polygon::<3>().total_bounds(),
-            LargePolygon(_, XYZ) => self.as_large_polygon::<3>().total_bounds(),
             MultiPoint(_, XYZ) => self.as_multi_point::<3>().total_bounds(),
-            LargeMultiPoint(_, XYZ) => self.as_large_multi_point::<3>().total_bounds(),
             MultiLineString(_, XYZ) => self.as_multi_line_string::<3>().total_bounds(),
-            LargeMultiLineString(_, XYZ) => self.as_large_multi_line_string::<3>().total_bounds(),
             MultiPolygon(_, XYZ) => self.as_multi_polygon::<3>().total_bounds(),
-            LargeMultiPolygon(_, XYZ) => self.as_large_multi_polygon::<3>().total_bounds(),
             Mixed(_, XYZ) => self.as_mixed::<3>().total_bounds(),
-            LargeMixed(_, XYZ) => self.as_large_mixed::<3>().total_bounds(),
             GeometryCollection(_, XYZ) => self.as_geometry_collection::<3>().total_bounds(),
-            LargeGeometryCollection(_, XYZ) => {
-                self.as_large_geometry_collection::<3>().total_bounds()
-            }
             Rect(XYZ) => self.as_rect::<3>().total_bounds(),
-            WKB => self.as_wkb().total_bounds(),
-            LargeWKB => self.as_large_wkb().total_bounds(),
+            // WKB => self.as_wkb().total_bounds(),
+            // LargeWKB => self.as_large_wkb().total_bounds(),
         }
     }
 }
 
-impl<G: GeometryArrayTrait> TotalBounds for ChunkedGeometryArray<G> {
+impl<G: NativeArray> TotalBounds for ChunkedGeometryArray<G> {
     fn total_bounds(&self) -> BoundingRect {
         let bounding_rects = self.map(|chunk| chunk.as_ref().total_bounds());
         bounding_rects
@@ -121,50 +101,31 @@ impl<G: GeometryArrayTrait> TotalBounds for ChunkedGeometryArray<G> {
     }
 }
 
-impl TotalBounds for &dyn ChunkedGeometryArrayTrait {
+impl TotalBounds for &dyn ChunkedNativeArray {
     fn total_bounds(&self) -> BoundingRect {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().total_bounds(),
             LineString(_, XY) => self.as_line_string::<2>().total_bounds(),
-            LargeLineString(_, XY) => self.as_large_line_string::<2>().total_bounds(),
             Polygon(_, XY) => self.as_polygon::<2>().total_bounds(),
-            LargePolygon(_, XY) => self.as_large_polygon::<2>().total_bounds(),
             MultiPoint(_, XY) => self.as_multi_point::<2>().total_bounds(),
-            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().total_bounds(),
             MultiLineString(_, XY) => self.as_multi_line_string::<2>().total_bounds(),
-            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().total_bounds(),
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().total_bounds(),
-            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().total_bounds(),
             Mixed(_, XY) => self.as_mixed::<2>().total_bounds(),
-            LargeMixed(_, XY) => self.as_large_mixed::<2>().total_bounds(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().total_bounds(),
-            LargeGeometryCollection(_, XY) => {
-                self.as_large_geometry_collection::<2>().total_bounds()
-            }
             Rect(XY) => self.as_rect::<2>().total_bounds(),
+
             Point(_, XYZ) => self.as_point::<3>().total_bounds(),
             LineString(_, XYZ) => self.as_line_string::<3>().total_bounds(),
-            LargeLineString(_, XYZ) => self.as_large_line_string::<3>().total_bounds(),
             Polygon(_, XYZ) => self.as_polygon::<3>().total_bounds(),
-            LargePolygon(_, XYZ) => self.as_large_polygon::<3>().total_bounds(),
             MultiPoint(_, XYZ) => self.as_multi_point::<3>().total_bounds(),
-            LargeMultiPoint(_, XYZ) => self.as_large_multi_point::<3>().total_bounds(),
             MultiLineString(_, XYZ) => self.as_multi_line_string::<3>().total_bounds(),
-            LargeMultiLineString(_, XYZ) => self.as_large_multi_line_string::<3>().total_bounds(),
             MultiPolygon(_, XYZ) => self.as_multi_polygon::<3>().total_bounds(),
-            LargeMultiPolygon(_, XYZ) => self.as_large_multi_polygon::<3>().total_bounds(),
             Mixed(_, XYZ) => self.as_mixed::<3>().total_bounds(),
-            LargeMixed(_, XYZ) => self.as_large_mixed::<3>().total_bounds(),
             GeometryCollection(_, XYZ) => self.as_geometry_collection::<3>().total_bounds(),
-            LargeGeometryCollection(_, XYZ) => {
-                self.as_large_geometry_collection::<3>().total_bounds()
-            }
             Rect(XYZ) => self.as_rect::<3>().total_bounds(),
-            WKB => self.as_wkb().total_bounds(),
-            LargeWKB => self.as_large_wkb().total_bounds(),
         }
     }
 }
@@ -178,20 +139,19 @@ mod test {
 
     #[test]
     fn test_dyn_chunked_array() {
-        let chunked_array: Arc<dyn ChunkedGeometryArrayTrait> =
-            Arc::new(ChunkedGeometryArray::new(vec![
-                polygon::p_array(),
-                polygon::p_array(),
-            ]));
+        let chunked_array: Arc<dyn ChunkedNativeArray> = Arc::new(ChunkedGeometryArray::new(vec![
+            polygon::p_array(),
+            polygon::p_array(),
+        ]));
         let total_bounds = chunked_array.as_ref().total_bounds();
         dbg!(total_bounds);
     }
 
     // #[test]
     // fn test_dyn_chunked_array_dyn_array() {
-    //     let dyn_arrs: Vec<Arc<dyn GeometryArrayTrait>> =
+    //     let dyn_arrs: Vec<Arc<dyn NativeArray>> =
     //         vec![Arc::new(polygon::p_array()), Arc::new(polygon::p_array())];
-    //     let chunked_array: Arc<dyn ChunkedGeometryArrayTrait> =
+    //     let chunked_array: Arc<dyn ChunkedNativeArray> =
     //         Arc::new(ChunkedGeometryArray::new(dyn_arrs));
     //     let total_bounds = chunked_array.as_ref().total_bounds();
     //     dbg!(total_bounds);

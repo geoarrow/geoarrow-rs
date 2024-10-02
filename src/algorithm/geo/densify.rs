@@ -2,11 +2,10 @@ use std::sync::Arc;
 
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
-use arrow_array::OffsetSizeTrait;
+use crate::trait_::ArrayAccessor;
+use crate::NativeArray;
 use geo::Densify as _Densify;
 
 /// Return a new linear geometry containing both existing and new interpolated coordinates with
@@ -34,7 +33,7 @@ pub trait Densify {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty, $geo_type:ty) => {
-        impl<O: OffsetSizeTrait> Densify for $type {
+        impl Densify for $type {
             type Output = $type;
 
             fn densify(&self, max_distance: f64) -> Self::Output {
@@ -49,35 +48,25 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<O, 2>, geo::LineString);
-iter_geo_impl!(PolygonArray<O, 2>, geo::Polygon);
-iter_geo_impl!(MultiLineStringArray<O, 2>, geo::MultiLineString);
-iter_geo_impl!(MultiPolygonArray<O, 2>, geo::MultiPolygon);
+iter_geo_impl!(LineStringArray<2>, geo::LineString);
+iter_geo_impl!(PolygonArray<2>, geo::Polygon);
+iter_geo_impl!(MultiLineStringArray<2>, geo::MultiLineString);
+iter_geo_impl!(MultiPolygonArray<2>, geo::MultiPolygon);
 
-impl Densify for &dyn GeometryArrayTrait {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+impl Densify for &dyn NativeArray {
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn densify(&self, max_distance: f64) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
-        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn NativeArray> = match self.data_type() {
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().densify(max_distance)),
-            LargeLineString(_, XY) => {
-                Arc::new(self.as_large_line_string::<2>().densify(max_distance))
-            }
             Polygon(_, XY) => Arc::new(self.as_polygon::<2>().densify(max_distance)),
-            LargePolygon(_, XY) => Arc::new(self.as_large_polygon::<2>().densify(max_distance)),
             MultiLineString(_, XY) => {
                 Arc::new(self.as_multi_line_string::<2>().densify(max_distance))
             }
-            LargeMultiLineString(_, XY) => {
-                Arc::new(self.as_large_multi_line_string::<2>().densify(max_distance))
-            }
             MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon::<2>().densify(max_distance)),
-            LargeMultiPolygon(_, XY) => {
-                Arc::new(self.as_large_multi_polygon::<2>().densify(max_distance))
-            }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -86,7 +75,7 @@ impl Densify for &dyn GeometryArrayTrait {
 
 macro_rules! impl_chunked {
     ($struct_name:ty) => {
-        impl<O: OffsetSizeTrait> Densify for $struct_name {
+        impl Densify for $struct_name {
             type Output = $struct_name;
 
             fn densify(&self, max_distance: f64) -> Self::Output {
@@ -98,35 +87,25 @@ macro_rules! impl_chunked {
     };
 }
 
-impl_chunked!(ChunkedLineStringArray<O, 2>);
-impl_chunked!(ChunkedPolygonArray<O, 2>);
-impl_chunked!(ChunkedMultiLineStringArray<O, 2>);
-impl_chunked!(ChunkedMultiPolygonArray<O, 2>);
+impl_chunked!(ChunkedLineStringArray<2>);
+impl_chunked!(ChunkedPolygonArray<2>);
+impl_chunked!(ChunkedMultiLineStringArray<2>);
+impl_chunked!(ChunkedMultiPolygonArray<2>);
 
-impl Densify for &dyn ChunkedGeometryArrayTrait {
-    type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
+impl Densify for &dyn ChunkedNativeArray {
+    type Output = Result<Arc<dyn ChunkedNativeArray>>;
 
     fn densify(&self, max_distance: f64) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
-        let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().densify(max_distance)),
-            LargeLineString(_, XY) => {
-                Arc::new(self.as_large_line_string::<2>().densify(max_distance))
-            }
             Polygon(_, XY) => Arc::new(self.as_polygon::<2>().densify(max_distance)),
-            LargePolygon(_, XY) => Arc::new(self.as_large_polygon::<2>().densify(max_distance)),
             MultiLineString(_, XY) => {
                 Arc::new(self.as_multi_line_string::<2>().densify(max_distance))
             }
-            LargeMultiLineString(_, XY) => {
-                Arc::new(self.as_large_multi_line_string::<2>().densify(max_distance))
-            }
             MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon::<2>().densify(max_distance)),
-            LargeMultiPolygon(_, XY) => {
-                Arc::new(self.as_large_multi_polygon::<2>().densify(max_distance))
-            }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
