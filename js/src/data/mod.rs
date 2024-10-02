@@ -1,6 +1,7 @@
 pub mod coord;
 
 use arrow_array::BinaryArray;
+use arrow_buffer::Buffer;
 pub use coord::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
 
 use crate::error::WasmResult;
@@ -187,7 +188,8 @@ impl MultiPolygonData {
 impl WKBData {
     #[wasm_bindgen(constructor)]
     pub fn new(values: Vec<u8>, offsets: Vec<i32>) -> Self {
-        let binary_array = BinaryArray::new(vec_to_offsets(offsets), values.into(), None);
+        let binary_array =
+            BinaryArray::new(vec_to_offsets(offsets), Buffer::from_vec(values), None);
 
         Self(geoarrow::array::WKBArray::new(
             binary_array,

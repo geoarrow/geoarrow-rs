@@ -1,8 +1,9 @@
 use crate::data::*;
 use crate::error::WasmResult;
 use crate::vector::*;
-use arrow_wasm::data::BooleanData;
-use arrow_wasm::vector::BooleanVector;
+use arrow_wasm::data::Data;
+use arrow_wasm::vector::Vector;
+use geoarrow::algorithm::geo::HasDimensions;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_alg {
@@ -15,9 +16,8 @@ macro_rules! impl_alg {
             /// Types like `Point`, which have at least one coordinate by construction, can never
             /// be considered empty.
             #[wasm_bindgen(js_name = isEmpty)]
-            pub fn is_empty(&self) -> BooleanData {
-                use geoarrow::algorithm::geo::HasDimensions;
-                BooleanData::new(HasDimensions::is_empty(&self.0))
+            pub fn is_empty(&self) -> Data {
+                Data::from_array(HasDimensions::is_empty(&self.0))
             }
         }
     };
@@ -42,11 +42,9 @@ macro_rules! impl_vector {
             /// Types like `Point`, which have at least one coordinate by construction, can never
             /// be considered empty.
             #[wasm_bindgen(js_name = isEmpty)]
-            pub fn is_empty(&self) -> WasmResult<BooleanVector> {
-                use geoarrow::algorithm::geo::HasDimensions;
-                Ok(BooleanVector::new(
-                    HasDimensions::is_empty(&self.0)?.into_inner(),
-                ))
+            pub fn is_empty(&self) -> WasmResult<Vector> {
+                let chunks = HasDimensions::is_empty(&self.0)?.chunk_refs();
+                Ok(Vector::from_array_refs(chunks)?)
             }
         }
     };

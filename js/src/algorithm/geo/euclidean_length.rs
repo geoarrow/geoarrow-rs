@@ -1,7 +1,9 @@
 use crate::data::*;
+use crate::error::WasmResult;
 use crate::vector::*;
-use arrow_wasm::data::Float64Data;
-use arrow_wasm::vector::Float64Vector;
+use arrow_wasm::data::Data;
+use arrow_wasm::vector::Vector;
+use geoarrow::algorithm::geo::EuclideanLength;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_euclidean_length {
@@ -10,9 +12,8 @@ macro_rules! impl_euclidean_length {
         impl $struct_name {
             /// Calculation of the length of a Line
             #[wasm_bindgen(js_name = euclideanLength)]
-            pub fn euclidean_length(&self) -> Float64Data {
-                use geoarrow::algorithm::geo::EuclideanLength;
-                Float64Data::new(EuclideanLength::euclidean_length(&self.0))
+            pub fn euclidean_length(&self) -> Data {
+                Data::from_array(EuclideanLength::euclidean_length(&self.0))
             }
         }
     };
@@ -29,13 +30,9 @@ macro_rules! impl_vector {
         impl $struct_name {
             /// Calculation of the length of a Line
             #[wasm_bindgen(js_name = euclideanLength)]
-            pub fn euclidean_length(&self) -> Float64Vector {
-                use geoarrow::algorithm::geo::EuclideanLength;
-                Float64Vector::new(
-                    EuclideanLength::euclidean_length(&self.0)
-                        .unwrap()
-                        .into_inner(),
-                )
+            pub fn euclidean_length(&self) -> WasmResult<Vector> {
+                let chunks = EuclideanLength::euclidean_length(&self.0)?.chunk_refs();
+                Ok(Vector::from_array_refs(chunks)?)
             }
         }
     };

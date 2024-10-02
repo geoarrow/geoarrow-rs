@@ -1,5 +1,6 @@
 use crate::data::*;
-use arrow_wasm::data::Float64Data;
+use arrow_wasm::data::Data;
+use geoarrow::algorithm::geo::HaversineLength;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_haversine_length {
@@ -13,9 +14,8 @@ macro_rules! impl_haversine_length {
             /// *Note*: this implementation uses a mean earth radius of 6371.088 km, based on the
             /// [recommendation of the IUGG](ftp://athena.fsv.cvut.cz/ZFG/grs80-Moritz.pdf)
             #[wasm_bindgen(js_name = haversineLength)]
-            pub fn haversine_length(&self) -> Float64Data {
-                use geoarrow::algorithm::geo::HaversineLength;
-                HaversineLength::haversine_length(&self.0).into()
+            pub fn haversine_length(&self) -> Data {
+                Data::from_array(HaversineLength::haversine_length(&self.0))
             }
         }
     };
