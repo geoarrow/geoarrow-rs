@@ -21,6 +21,7 @@ arrow-schema = "53"
 geoarrow = { path = "../", features = ["geozero"] }
 geozero = "0.14"
 indexmap = "2.5.0"
+parquet = "53"
 pyo3 = { version = "0.21.0", features = ["hashbrown", "serde", "anyhow"] }
 pyo3-arrow = { git = "https://github.com/kylebarron/arro3", rev = "7cf67d35ec9c3e3f90f83641b456d4026ec5c7aa" }
 serde_json = "1"

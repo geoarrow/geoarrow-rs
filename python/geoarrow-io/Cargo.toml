@@ -42,7 +42,7 @@ object_store = { version = "0.10", features = [
     "gcp",
     "http",
 ], optional = true }
-parquet = "52"
+parquet = { workspace = true }
 pyo3 = { workspace = true }
 pyo3-arrow = { workspace = true }
 pyo3-asyncio-0-21 = { version = "0.21", features = [
