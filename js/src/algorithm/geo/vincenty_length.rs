@@ -1,6 +1,7 @@
 use crate::data::*;
 use crate::error::WasmResult;
-use arrow_wasm::data::Float64Data;
+use arrow_wasm::data::Data;
+use geoarrow::algorithm::geo::VincentyLength;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_vincenty_length {
@@ -11,9 +12,8 @@ macro_rules! impl_vincenty_length {
             ///
             /// [Vincenty’s formulae]: https://en.wikipedia.org/wiki/Vincenty%27s_formulae
             #[wasm_bindgen(js_name = vincentyLength)]
-            pub fn vincenty_length(&self) -> WasmResult<Float64Data> {
-                use geoarrow::algorithm::geo::VincentyLength;
-                Ok(Float64Data::new(VincentyLength::vincenty_length(&self.0)?))
+            pub fn vincenty_length(&self) -> WasmResult<Data> {
+                Ok(Data::from_array(VincentyLength::vincenty_length(&self.0)?))
             }
         }
     };

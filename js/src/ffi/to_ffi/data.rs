@@ -2,7 +2,7 @@
 
 use crate::data::*;
 use crate::error::WasmResult;
-use arrow_wasm::ffi::{FFIArrowSchema, FFIData};
+use arrow_wasm::ffi::FFIData;
 use geoarrow::ArrayBase;
 use wasm_bindgen::prelude::*;
 
@@ -18,9 +18,8 @@ macro_rules! impl_data {
             #[wasm_bindgen(js_name = toFFI)]
             pub fn to_ffi(&self) -> WasmResult<FFIData> {
                 let field = self.0.extension_field();
-                let arr = self.0.clone().into_array_ref();
-                let ffi_schema: FFIArrowSchema = field.as_ref().try_into()?;
-                Ok(FFIData::from_arrow(arr.as_ref(), Some(ffi_schema))?)
+                let arr = self.0.to_array_ref();
+                Ok(FFIData::from_arrow(arr.as_ref(), &field)?)
             }
 
             /// Export this Data to FFI structs according to the Arrow C Data Interface.
@@ -32,8 +31,7 @@ macro_rules! impl_data {
             pub fn into_ffi(self) -> WasmResult<FFIData> {
                 let field = self.0.extension_field();
                 let arr = self.0.into_array_ref();
-                let ffi_schema: FFIArrowSchema = field.as_ref().try_into()?;
-                Ok(FFIData::from_arrow(arr.as_ref(), Some(ffi_schema))?)
+                Ok(FFIData::from_arrow(arr.as_ref(), &field)?)
             }
         }
     };

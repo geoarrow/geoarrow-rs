@@ -1,5 +1,6 @@
 use crate::data::*;
-use arrow_wasm::data::Float64Data;
+use arrow_wasm::data::Data;
+use geoarrow::algorithm::geo::GeodesicLength;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_geodesic_length {
@@ -14,9 +15,8 @@ macro_rules! impl_geodesic_length {
             ///
             /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
             #[wasm_bindgen(js_name = geodesicLength)]
-            pub fn geodesic_length(&self) -> Float64Data {
-                use geoarrow::algorithm::geo::GeodesicLength;
-                GeodesicLength::geodesic_length(&self.0).into()
+            pub fn geodesic_length(&self) -> Data {
+                Data::from_array(GeodesicLength::geodesic_length(&self.0))
             }
         }
     };

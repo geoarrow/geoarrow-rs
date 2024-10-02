@@ -64,7 +64,7 @@ impl PyChunkedNativeArray {
         let arrow_chunks = self.0.array_refs();
 
         let array_reader = Box::new(ArrayIterator::new(arrow_chunks.into_iter().map(Ok), field));
-        to_stream_pycapsule(py, array_reader, requested_schema)
+        Ok(to_stream_pycapsule(py, array_reader, requested_schema)?)
     }
 
     // /// Check for equality with other object.

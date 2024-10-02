@@ -8,6 +8,7 @@ use crate::io::wkb::writer::linestring::{line_string_wkb_size, write_line_string
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
+use arrow_buffer::Buffer;
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
@@ -81,8 +82,11 @@ impl<O: OffsetSizeTrait, const D: usize> From<&MultiLineStringArray<D>> for WKBA
             writer.into_inner()
         };
 
-        let binary_arr =
-            GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
+        let binary_arr = GenericBinaryArray::new(
+            offsets.into(),
+            Buffer::from_vec(values),
+            value.nulls().cloned(),
+        );
         WKBArray::new(binary_arr, value.metadata())
     }
 }

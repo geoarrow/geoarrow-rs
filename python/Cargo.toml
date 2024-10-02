@@ -14,19 +14,16 @@ categories = ["wasm", "science::geo"]
 rust-version = "1.80"
 
 [workspace.dependencies]
-arrow = "52"
-arrow-array = "52"
-arrow-buffer = "52"
-arrow-schema = "52"
+arrow = "53"
+arrow-array = "53"
+arrow-buffer = "53"
+arrow-schema = "53"
 geoarrow = { path = "../", features = ["geozero"] }
 geozero = "0.14"
 indexmap = "2.5.0"
-pyo3 = { version = "0.21.0", features = [
-    "abi3-py38",
-    "hashbrown",
-    "serde",
-    "anyhow",
-] }
-pyo3-arrow = "0.2.1"
+object_store = "0.11"
+parquet = "53"
+pyo3 = { version = "0.21.0", features = ["hashbrown", "serde", "anyhow"] }
+pyo3-arrow = { git = "https://github.com/kylebarron/arro3", rev = "7cf67d35ec9c3e3f90f83641b456d4026ec5c7aa" }
 serde_json = "1"
 thiserror = "1"

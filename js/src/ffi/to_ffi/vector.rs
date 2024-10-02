@@ -2,7 +2,7 @@
 
 use crate::error::WasmResult;
 use crate::vector::*;
-use arrow_wasm::ffi::{FFIArrowSchema, FFIVector};
+use arrow_wasm::ffi::{FFISchema, FFIStream};
 use geoarrow::ArrayBase;
 use wasm_bindgen::prelude::*;
 
@@ -18,7 +18,7 @@ macro_rules! impl_vector {
             #[wasm_bindgen(js_name = toFFI)]
             pub fn to_ffi(&self) -> WasmResult<FFIVector> {
                 let field = self.0.extension_field();
-                let ffi_schema: FFIArrowSchema = field.as_ref().try_into()?;
+                let ffi_schema: FFISchema = field.as_ref().try_into()?;
                 let arrays = self
                     .0
                     .clone()
@@ -37,7 +37,7 @@ macro_rules! impl_vector {
             #[wasm_bindgen(js_name = intoFFI)]
             pub fn into_ffi(self) -> WasmResult<FFIVector> {
                 let field = self.0.extension_field();
-                let ffi_schema: FFIArrowSchema = field.as_ref().try_into()?;
+                let ffi_schema: FFISchema = field.as_ref().try_into()?;
                 let arrays = self
                     .0
                     .into_inner()

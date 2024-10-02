@@ -7,6 +7,7 @@ use crate::io::wkb::reader::Endianness;
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
+use arrow_buffer::Buffer;
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
@@ -83,8 +84,11 @@ impl<O: OffsetSizeTrait, const D: usize> From<&LineStringArray<D>> for WKBArray<
             writer.into_inner()
         };
 
-        let binary_arr =
-            GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
+        let binary_arr = GenericBinaryArray::new(
+            offsets.into(),
+            Buffer::from_vec(values),
+            value.nulls().cloned(),
+        );
         WKBArray::new(binary_arr, value.metadata())
     }
 }
