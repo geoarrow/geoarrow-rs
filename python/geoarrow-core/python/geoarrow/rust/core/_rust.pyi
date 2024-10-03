@@ -11,7 +11,7 @@ from typing import (
     overload,
 )
 
-from arro3.core import Array, ChunkedArray, RecordBatchReader, Table
+from arro3.core import Array, ChunkedArray, Table
 from arro3.core.types import (
     ArrowArrayExportable,
     ArrowSchemaExportable,
@@ -347,7 +347,7 @@ def read_pyogrio(
     return_fids=False,
     batch_size=65536,
     **kwargs,
-) -> RecordBatchReader:
+) -> Table:
     """
     Read from an OGR data source to an Arrow Table
 
