@@ -1026,7 +1026,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow"
-version = "0.3.0"
+version = "0.4.0-beta.1"
 dependencies = [
  "arrow",
  "arrow-array",
@@ -1075,7 +1075,7 @@ dependencies = [
  "geo",
  "geoarrow",
  "geozero",
- "numpy 0.21.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "numpy",
  "pyo3",
  "pyo3-arrow",
  "pyo3-geoarrow",
@@ -1094,7 +1094,7 @@ dependencies = [
  "geo",
  "geoarrow",
  "geozero",
- "numpy 0.21.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "numpy",
  "pyo3",
  "pyo3-arrow",
  "pyo3-geoarrow",
@@ -1899,20 +1899,6 @@ version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec170733ca37175f5d75a5bea5911d6ff45d2cd52849ce98b685394e4f2f37f4"
 dependencies = [
- "libc",
- "ndarray",
- "num-complex",
- "num-integer",
- "num-traits",
- "pyo3",
- "rustc-hash 1.1.0",
-]
-
-[[package]]
-name = "numpy"
-version = "0.21.0"
-source = "git+https://github.com/stinodego/rust-numpy.git?rev=9ba9962ae57ba26e35babdce6f179edf5fe5b9c8#9ba9962ae57ba26e35babdce6f179edf5fe5b9c8"
-dependencies = [
  "half",
  "libc",
  "ndarray",
@@ -2290,8 +2276,9 @@ dependencies = [
 
 [[package]]
 name = "pyo3-arrow"
-version = "0.3.0"
-source = "git+https://github.com/kylebarron/arro3?rev=7cf67d35ec9c3e3f90f83641b456d4026ec5c7aa#7cf67d35ec9c3e3f90f83641b456d4026ec5c7aa"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e23a03fb0bc2b06103d4bc6948424292ad410ef31ed14b1af620c5937f6fac37"
 dependencies = [
  "arrow",
  "arrow-array",
@@ -2299,7 +2286,7 @@ dependencies = [
  "arrow-schema",
  "half",
  "indexmap",
- "numpy 0.21.0 (git+https://github.com/stinodego/rust-numpy.git?rev=9ba9962ae57ba26e35babdce6f179edf5fe5b9c8)",
+ "numpy",
  "pyo3",
  "thiserror",
 ]
@@ -2339,7 +2326,7 @@ dependencies = [
 
 [[package]]
 name = "pyo3-geoarrow"
-version = "0.1.0"
+version = "0.1.0-beta.1"
 dependencies = [
  "arrow",
  "arrow-array",
