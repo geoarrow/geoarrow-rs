@@ -1053,6 +1053,8 @@ dependencies = [
  "object_store",
  "parquet",
  "phf",
+ "polylabel",
+ "rayon",
  "rstar",
  "serde",
  "serde_json",
@@ -1064,39 +1066,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "geoarrow"
-version = "0.4.0-beta.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f74fea52cea0d624c98eb72d67c59578d7234cef1cd796831c568bb83e02caa4"
-dependencies = [
- "arrow",
- "arrow-array",
- "arrow-buffer",
- "arrow-cast",
- "arrow-data",
- "arrow-ipc",
- "arrow-schema",
- "byteorder",
- "chrono",
- "geo",
- "geo-index",
- "geozero",
- "half",
- "indexmap",
- "lexical-core",
- "num_enum",
- "phf",
- "polylabel",
- "rayon",
- "rstar",
- "serde",
- "serde_json",
- "shapefile",
- "thiserror",
- "wkt",
-]
-
-[[package]]
 name = "geoarrow-rust-compute"
 version = "0.3.0"
 dependencies = [
@@ -1104,7 +1073,7 @@ dependencies = [
  "arrow-array",
  "arrow-buffer",
  "geo",
- "geoarrow 0.4.0-beta.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "geoarrow",
  "geozero",
  "numpy",
  "pyo3",
@@ -1123,7 +1092,7 @@ dependencies = [
  "arrow-array",
  "arrow-buffer",
  "geo",
- "geoarrow 0.4.0-beta.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "geoarrow",
  "geozero",
  "numpy",
  "pyo3",
@@ -1143,7 +1112,7 @@ dependencies = [
  "flatgeobuf",
  "futures",
  "geo",
- "geoarrow 0.4.0-beta.1",
+ "geoarrow",
  "object_store",
  "openssl",
  "parquet",
@@ -2364,7 +2333,7 @@ dependencies = [
  "arrow-buffer",
  "arrow-schema",
  "geo",
- "geoarrow 0.4.0-beta.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "geoarrow",
  "geozero",
  "indexmap",
  "pyo3",
