@@ -149,16 +149,6 @@ impl AffineOps<&AffineTransform> for &dyn NativeArray {
     }
 }
 
-impl AffineOps<&AffineTransform> for ChunkedPointArray<2> {
-    type Output = Self;
-
-    fn affine_transform(&self, transform: &AffineTransform) -> Self::Output {
-        self.map(|chunk| chunk.affine_transform(transform))
-            .try_into()
-            .unwrap()
-    }
-}
-
 macro_rules! impl_chunked {
     ($struct_name:ty) => {
         impl AffineOps<&AffineTransform> for $struct_name {
@@ -173,6 +163,7 @@ macro_rules! impl_chunked {
     };
 }
 
+impl_chunked!(ChunkedPointArray<2>);
 impl_chunked!(ChunkedLineStringArray<2>);
 impl_chunked!(ChunkedPolygonArray<2>);
 impl_chunked!(ChunkedMultiPointArray<2>);
