@@ -12,8 +12,8 @@ use crate::array::{CoordBuffer, CoordType, SeparatedCoordBuffer};
 use crate::datatypes::{rect_fields, NativeType};
 use crate::error::GeoArrowError;
 use crate::geo_traits::RectTrait;
-use crate::scalar::Rect;
-use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::scalar::{Geometry, Rect};
+use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
 use crate::util::owned_slice_validity;
 use crate::{ArrayBase, NativeArray};
 
@@ -175,6 +175,15 @@ impl<const D: usize> GeometryArraySelfMethods<D> for RectArray<D> {
 
     fn into_coord_type(self, _coord_type: CoordType) -> Self {
         unimplemented!()
+    }
+}
+
+impl<'a, const D: usize> NativeGeometryAccessor<'a, D> for RectArray<D> {
+    unsafe fn value_as_geometry_unchecked(
+        &'a self,
+        index: usize,
+    ) -> crate::scalar::Geometry<'a, D> {
+        Geometry::Rect(Rect::new(&self.lower, &self.upper, index))
     }
 }
 

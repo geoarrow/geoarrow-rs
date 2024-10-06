@@ -139,6 +139,12 @@ impl<const D: usize> From<Point<'_, D>> for geo::Geometry {
     }
 }
 
+impl<const D: usize> From<&Point<'_, D>> for geo::Geometry {
+    fn from(value: &Point<'_, D>) -> Self {
+        geo::Geometry::Point(value.into())
+    }
+}
+
 impl<const D: usize> RTreeObject for Point<'_, D> {
     type Envelope = AABB<[f64; 2]>;
 
