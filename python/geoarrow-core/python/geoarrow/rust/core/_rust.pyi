@@ -32,6 +32,13 @@ except ImportError:
 from .enums import CoordType, Dimension
 from .types import CoordTypeT, DimensionT
 
+from geoarrow.rust.core._constructors import points as points
+from geoarrow.rust.core._constructors import linestrings as linestrings
+from geoarrow.rust.core._constructors import polygons as polygons
+from geoarrow.rust.core._constructors import multipoints as multipoints
+from geoarrow.rust.core._constructors import multilinestrings as multilinestrings
+from geoarrow.rust.core._constructors import multipolygons as multipolygons
+
 class Geometry:
     """
     An immutable geometry scalar using GeoArrow's in-memory representation.

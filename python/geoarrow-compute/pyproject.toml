@@ -5,7 +5,7 @@ build-backend = "maturin"
 [project]
 name = "geoarrow-rust-compute"
 requires-python = ">=3.8"
-dependencies = ["arro3-core", "geoarrow-rust-core", "pyproj"]
+dependencies = ["arro3-core>=0.4", "geoarrow-rust-core", "pyproj"]
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",

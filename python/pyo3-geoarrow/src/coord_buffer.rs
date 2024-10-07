@@ -5,6 +5,7 @@ use arrow_schema::DataType;
 use geoarrow::array::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
+use pyo3::types::{PyList, PyTuple};
 use pyo3_arrow::PyArray;
 
 pub enum PyCoordBuffer {
@@ -14,8 +15,9 @@ pub enum PyCoordBuffer {
 
 impl<'py> FromPyObject<'py> for PyCoordBuffer {
     fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
-        if let Ok(arrays) = ob.extract::<Vec<PyArray>>() {
-            // Separated arrays
+        if ob.is_instance_of::<PyTuple>() || ob.is_instance_of::<PyList>() {
+            let arrays = ob.extract::<Vec<PyArray>>()?;
+
             if arrays.len() < 2 || arrays.len() > 3 {
                 return Err(PyValueError::new_err(format!(
                     "Expected 2 or 3 arrays for each dimension, got {}.",
@@ -87,7 +89,9 @@ impl<'py> FromPyObject<'py> for PyCoordBuffer {
                     SeparatedCoordBuffer::new([x.clone(), y.clone()]).into(),
                 ))
             }
-        } else if let Ok(coords) = ob.extract::<PyArray>() {
+        } else {
+            let coords = ob.extract::<PyArray>()?;
+
             match coords.field().data_type() {
                 DataType::FixedSizeList(inner_field, list_size) => {
                     if !matches!(inner_field.data_type(), DataType::Float64) {
@@ -125,25 +129,17 @@ impl<'py> FromPyObject<'py> for PyCoordBuffer {
                         3 => Ok(Self::ThreeD(
                             InterleavedCoordBuffer::<3>::new(values.values().clone()).into(),
                         )),
-                        _ => {
-                            return Err(PyValueError::new_err(format!(
-                                "Unsupported fixed size list size {}",
-                                list_size
-                            )));
-                        }
+                        _ => Err(PyValueError::new_err(format!(
+                            "Unsupported fixed size list size {}",
+                            list_size
+                        ))),
                     }
                 }
-                dt => {
-                    return Err(PyValueError::new_err(format!(
-                        "Expected coords to be FixedSizeList data type, got {}",
-                        dt
-                    )));
-                }
+                dt => Err(PyValueError::new_err(format!(
+                    "Expected coords to be FixedSizeList data type, got {}",
+                    dt
+                ))),
             }
-        } else {
-            Err(PyValueError::new_err(
-                "Expected array-like or iterable of array-like for coordinate buffer.",
-            ))
         }
     }
 }
