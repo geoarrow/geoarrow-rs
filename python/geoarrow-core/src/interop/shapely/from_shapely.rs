@@ -1,19 +1,18 @@
 use std::sync::Arc;
 
+use crate::constructors::{
+    linestrings, multilinestrings, multipoints, multipolygons, points, polygons,
+};
 use crate::crs::CRS;
 use crate::ffi::to_python::native_array_to_pyobject;
 use crate::interop::shapely::utils::import_shapely;
-use arrow_array::builder::{BinaryBuilder, Int32BufferBuilder};
-use arrow_buffer::OffsetBuffer;
+use arrow_array::builder::BinaryBuilder;
 use geoarrow::array::metadata::ArrayMetadata;
-use geoarrow::array::InterleavedCoordBuffer;
 use geoarrow::datatypes::{Dimension, NativeType};
-use geoarrow::NativeArray;
-use numpy::{PyReadonlyArray1, PyReadonlyArray2, PyUntypedArrayMethods};
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
-use pyo3::types::{PyBytes, PyDict, PyString};
+use pyo3::types::{PyBytes, PyDict, PyString, PyTuple};
 use pyo3::PyAny;
 use pyo3_geoarrow::PyGeoArrowResult;
 
@@ -83,35 +82,68 @@ pub fn from_shapely(
     input: &Bound<PyAny>,
     crs: Option<CRS>,
 ) -> PyGeoArrowResult<PyObject> {
+    let numpy_mod = py.import_bound(intern!(py, "numpy"))?;
     let shapely_mod = import_shapely(py)?;
-
-    let metadata = Arc::new(ArrayMetadata {
-        crs: crs.map(|c| c.into_inner()),
-        ..Default::default()
-    });
 
     let kwargs = PyDict::new_bound(py);
     if let Ok(ragged_array_output) =
         shapely_mod.call_method(intern!(py, "to_ragged_array"), (input,), Some(&kwargs))
     {
         let (geom_type, coords, offsets) =
-            ragged_array_output.extract::<(&PyAny, PyReadonlyArray2<'_, f64>, PyObject)>()?;
-        let dim = Dimension::try_from(coords.shape()[1])?;
+            ragged_array_output.extract::<(&PyAny, Bound<PyAny>, PyObject)>()?;
+        let coords = numpy_mod.call_method1(
+            intern!(py, "ascontiguousarray"),
+            PyTuple::new_bound(py, vec![coords]),
+        )?;
 
         let geometry_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
 
         let arr = if geom_type.eq(geometry_type_enum.getattr(intern!(py, "POINT"))?)? {
-            make_point_arr(coords, offsets, dim, metadata)?
+            points(coords.extract()?, crs)?.into_inner().into_inner()
         } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "LINESTRING"))?)? {
-            make_linestring_arr(py, coords, offsets, dim, metadata)?
+            let (geom_offsets,) = offsets.extract::<(Bound<PyAny>,)>(py)?;
+            linestrings(coords.extract()?, geom_offsets.extract()?, crs)?
+                .into_inner()
+                .into_inner()
         } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "POLYGON"))?)? {
-            make_polygon_arr(py, coords, offsets, dim, metadata)?
+            let (ring_offsets, geom_offsets) =
+                offsets.extract::<(Bound<PyAny>, Bound<PyAny>)>(py)?;
+            polygons(
+                coords.extract()?,
+                geom_offsets.extract()?,
+                ring_offsets.extract()?,
+                crs,
+            )?
+            .into_inner()
+            .into_inner()
         } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "MULTIPOINT"))?)? {
-            make_multipoint_arr(py, coords, offsets, dim, metadata)?
+            let (geom_offsets,) = offsets.extract::<(Bound<PyAny>,)>(py)?;
+            multipoints(coords.extract()?, geom_offsets.extract()?, crs)?
+                .into_inner()
+                .into_inner()
         } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "MULTILINESTRING"))?)? {
-            make_multilinestring_arr(py, coords, offsets, dim, metadata)?
+            let (ring_offsets, geom_offsets) =
+                offsets.extract::<(Bound<PyAny>, Bound<PyAny>)>(py)?;
+            multilinestrings(
+                coords.extract()?,
+                geom_offsets.extract()?,
+                ring_offsets.extract()?,
+                crs,
+            )?
+            .into_inner()
+            .into_inner()
         } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "MULTIPOLYGON"))?)? {
-            make_multipolygon_arr(py, coords, offsets, dim, metadata)?
+            let (ring_offsets, polygon_offsets, geom_offsets) =
+                offsets.extract::<(Bound<PyAny>, Bound<PyAny>, Bound<PyAny>)>(py)?;
+            multipolygons(
+                coords.extract()?,
+                geom_offsets.extract()?,
+                polygon_offsets.extract()?,
+                ring_offsets.extract()?,
+                crs,
+            )?
+            .into_inner()
+            .into_inner()
         } else {
             return Err(PyValueError::new_err(format!(
                 "unexpected geometry type from to_ragged_array {}",
@@ -122,6 +154,11 @@ pub fn from_shapely(
 
         native_array_to_pyobject(py, arr)
     } else {
+        let metadata = Arc::new(ArrayMetadata {
+            crs: crs.map(|c| c.into_inner()),
+            ..Default::default()
+        });
+
         // TODO: support 3d WKB
         let wkb_arr = make_wkb_arr(py, input, metadata)?;
         let geom_arr = geoarrow::io::wkb::from_wkb(
@@ -130,231 +167,6 @@ pub fn from_shapely(
             false,
         )?;
         native_array_to_pyobject(py, geom_arr)
-    }
-}
-
-fn coords_to_buffer<const D: usize>(
-    coords: PyReadonlyArray2<'_, f64>,
-) -> PyGeoArrowResult<InterleavedCoordBuffer<D>> {
-    let shape = coords.shape();
-    assert_eq!(shape.len(), 2);
-    let capacity = shape[0] * shape[1];
-
-    let mut builder = Vec::with_capacity(capacity);
-    for c in coords.as_array().into_iter() {
-        builder.push(*c)
-    }
-    Ok(builder.try_into()?)
-}
-
-fn numpy_to_offsets(offsets: &PyReadonlyArray1<'_, i64>) -> PyGeoArrowResult<OffsetBuffer<i32>> {
-    let mut builder = Int32BufferBuilder::new(offsets.len());
-    for o in offsets.as_array().into_iter() {
-        builder.append((*o).try_into().unwrap());
-    }
-    Ok(OffsetBuffer::new(builder.finish().into()))
-}
-
-fn make_point_arr(
-    coords: PyReadonlyArray2<'_, f64>,
-    _offsets: PyObject,
-    dim: Dimension,
-    metadata: Arc<ArrayMetadata>,
-) -> PyGeoArrowResult<Arc<dyn NativeArray>> {
-    match dim {
-        Dimension::XY => {
-            let cb = coords_to_buffer(coords)?;
-            Ok(Arc::new(geoarrow::array::PointArray::<2>::new(
-                cb.into(),
-                None,
-                metadata,
-            )))
-        }
-        Dimension::XYZ => {
-            let cb = coords_to_buffer(coords)?;
-            Ok(Arc::new(geoarrow::array::PointArray::<3>::new(
-                cb.into(),
-                None,
-                metadata,
-            )))
-        }
-    }
-}
-
-fn make_linestring_arr(
-    py: Python,
-    coords: PyReadonlyArray2<'_, f64>,
-    offsets: PyObject,
-    dim: Dimension,
-    metadata: Arc<ArrayMetadata>,
-) -> PyGeoArrowResult<Arc<dyn NativeArray>> {
-    let (geom_offsets,) = offsets.extract::<(PyReadonlyArray1<'_, i64>,)>(py)?;
-    let geom_offsets = numpy_to_offsets(&geom_offsets)?;
-    match dim {
-        Dimension::XY => {
-            let cb = coords_to_buffer(coords)?;
-            Ok(Arc::new(geoarrow::array::LineStringArray::<2>::new(
-                cb.into(),
-                geom_offsets,
-                None,
-                metadata,
-            )))
-        }
-        Dimension::XYZ => {
-            let cb = coords_to_buffer(coords)?;
-            Ok(Arc::new(geoarrow::array::LineStringArray::<3>::new(
-                cb.into(),
-                geom_offsets,
-                None,
-                metadata,
-            )))
-        }
-    }
-}
-
-fn make_polygon_arr(
-    py: Python,
-    coords: PyReadonlyArray2<'_, f64>,
-    offsets: PyObject,
-    dim: Dimension,
-    metadata: Arc<ArrayMetadata>,
-) -> PyGeoArrowResult<Arc<dyn NativeArray>> {
-    let (ring_offsets, geom_offsets) =
-        offsets.extract::<(PyReadonlyArray1<'_, i64>, PyReadonlyArray1<'_, i64>)>(py)?;
-    let ring_offsets = numpy_to_offsets(&ring_offsets)?;
-    let geom_offsets = numpy_to_offsets(&geom_offsets)?;
-
-    match dim {
-        Dimension::XY => {
-            let cb = coords_to_buffer(coords)?;
-            Ok(Arc::new(geoarrow::array::PolygonArray::<2>::new(
-                cb.into(),
-                geom_offsets,
-                ring_offsets,
-                None,
-                metadata,
-            )))
-        }
-        Dimension::XYZ => {
-            let cb = coords_to_buffer(coords)?;
-            Ok(Arc::new(geoarrow::array::PolygonArray::<3>::new(
-                cb.into(),
-                geom_offsets,
-                ring_offsets,
-                None,
-                metadata,
-            )))
-        }
-    }
-}
-
-fn make_multipoint_arr(
-    py: Python,
-    coords: PyReadonlyArray2<'_, f64>,
-    offsets: PyObject,
-    dim: Dimension,
-    metadata: Arc<ArrayMetadata>,
-) -> PyGeoArrowResult<Arc<dyn NativeArray>> {
-    let (geom_offsets,) = offsets.extract::<(PyReadonlyArray1<'_, i64>,)>(py)?;
-    let geom_offsets = numpy_to_offsets(&geom_offsets)?;
-
-    match dim {
-        Dimension::XY => {
-            let cb = coords_to_buffer(coords)?;
-            Ok(Arc::new(geoarrow::array::MultiPointArray::<2>::new(
-                cb.into(),
-                geom_offsets,
-                None,
-                metadata,
-            )))
-        }
-        Dimension::XYZ => {
-            let cb = coords_to_buffer(coords)?;
-            Ok(Arc::new(geoarrow::array::MultiPointArray::<3>::new(
-                cb.into(),
-                geom_offsets,
-                None,
-                metadata,
-            )))
-        }
-    }
-}
-
-fn make_multilinestring_arr(
-    py: Python,
-    coords: PyReadonlyArray2<'_, f64>,
-    offsets: PyObject,
-    dim: Dimension,
-    metadata: Arc<ArrayMetadata>,
-) -> PyGeoArrowResult<Arc<dyn NativeArray>> {
-    let (ring_offsets, geom_offsets) =
-        offsets.extract::<(PyReadonlyArray1<'_, i64>, PyReadonlyArray1<'_, i64>)>(py)?;
-    let ring_offsets = numpy_to_offsets(&ring_offsets)?;
-    let geom_offsets = numpy_to_offsets(&geom_offsets)?;
-
-    match dim {
-        Dimension::XY => {
-            let cb = coords_to_buffer(coords)?;
-            Ok(Arc::new(geoarrow::array::MultiLineStringArray::<2>::new(
-                cb.into(),
-                geom_offsets,
-                ring_offsets,
-                None,
-                metadata,
-            )))
-        }
-        Dimension::XYZ => {
-            let cb = coords_to_buffer(coords)?;
-            Ok(Arc::new(geoarrow::array::MultiLineStringArray::<3>::new(
-                cb.into(),
-                geom_offsets,
-                ring_offsets,
-                None,
-                metadata,
-            )))
-        }
-    }
-}
-
-fn make_multipolygon_arr(
-    py: Python,
-    coords: PyReadonlyArray2<'_, f64>,
-    offsets: PyObject,
-    dim: Dimension,
-    metadata: Arc<ArrayMetadata>,
-) -> PyGeoArrowResult<Arc<dyn NativeArray>> {
-    let (ring_offsets, polygon_offsets, geom_offsets) = offsets.extract::<(
-        PyReadonlyArray1<'_, i64>,
-        PyReadonlyArray1<'_, i64>,
-        PyReadonlyArray1<'_, i64>,
-    )>(py)?;
-    let ring_offsets = numpy_to_offsets(&ring_offsets)?;
-    let polygon_offsets = numpy_to_offsets(&polygon_offsets)?;
-    let geom_offsets = numpy_to_offsets(&geom_offsets)?;
-
-    match dim {
-        Dimension::XY => {
-            let cb = coords_to_buffer(coords)?;
-            Ok(Arc::new(geoarrow::array::MultiPolygonArray::<2>::new(
-                cb.into(),
-                geom_offsets,
-                polygon_offsets,
-                ring_offsets,
-                None,
-                metadata,
-            )))
-        }
-        Dimension::XYZ => {
-            let cb = coords_to_buffer(coords)?;
-            Ok(Arc::new(geoarrow::array::MultiPolygonArray::<3>::new(
-                cb.into(),
-                geom_offsets,
-                polygon_offsets,
-                ring_offsets,
-                None,
-                metadata,
-            )))
-        }
     }
 }
 
