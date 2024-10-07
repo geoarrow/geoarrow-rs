@@ -11,11 +11,11 @@ use pyo3_geoarrow::{PyCoordBuffer, PyGeoArrowResult, PyNativeArray, PyOffsetBuff
 pub fn points(coords: PyCoordBuffer) -> PyGeoArrowResult<PyNativeArray> {
     match coords {
         PyCoordBuffer::TwoD(coords) => {
-            let array = PointArray::new(coords.into(), None, Default::default());
+            let array = PointArray::new(coords, None, Default::default());
             Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
         }
         PyCoordBuffer::ThreeD(coords) => {
-            let array = PointArray::new(coords.into(), None, Default::default());
+            let array = PointArray::new(coords, None, Default::default());
             Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
         }
     }
@@ -28,21 +28,13 @@ pub fn linestrings(
 ) -> PyGeoArrowResult<PyNativeArray> {
     match coords {
         PyCoordBuffer::TwoD(coords) => {
-            let array = LineStringArray::new(
-                coords.into(),
-                geom_offsets.into_inner(),
-                None,
-                Default::default(),
-            );
+            let array =
+                LineStringArray::new(coords, geom_offsets.into_inner(), None, Default::default());
             Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
         }
         PyCoordBuffer::ThreeD(coords) => {
-            let array = LineStringArray::new(
-                coords.into(),
-                geom_offsets.into_inner(),
-                None,
-                Default::default(),
-            );
+            let array =
+                LineStringArray::new(coords, geom_offsets.into_inner(), None, Default::default());
             Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
         }
     }
@@ -57,7 +49,7 @@ pub fn polygons(
     match coords {
         PyCoordBuffer::TwoD(coords) => {
             let array = PolygonArray::new(
-                coords.into(),
+                coords,
                 geom_offsets.into_inner(),
                 ring_offsets.into_inner(),
                 None,
@@ -67,7 +59,7 @@ pub fn polygons(
         }
         PyCoordBuffer::ThreeD(coords) => {
             let array = PolygonArray::new(
-                coords.into(),
+                coords,
                 geom_offsets.into_inner(),
                 ring_offsets.into_inner(),
                 None,
@@ -85,21 +77,13 @@ pub fn multipoints(
 ) -> PyGeoArrowResult<PyNativeArray> {
     match coords {
         PyCoordBuffer::TwoD(coords) => {
-            let array = MultiPointArray::new(
-                coords.into(),
-                geom_offsets.into_inner(),
-                None,
-                Default::default(),
-            );
+            let array =
+                MultiPointArray::new(coords, geom_offsets.into_inner(), None, Default::default());
             Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
         }
         PyCoordBuffer::ThreeD(coords) => {
-            let array = MultiPointArray::new(
-                coords.into(),
-                geom_offsets.into_inner(),
-                None,
-                Default::default(),
-            );
+            let array =
+                MultiPointArray::new(coords, geom_offsets.into_inner(), None, Default::default());
             Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
         }
     }
@@ -114,7 +98,7 @@ pub fn multilinestrings(
     match coords {
         PyCoordBuffer::TwoD(coords) => {
             let array = MultiLineStringArray::new(
-                coords.into(),
+                coords,
                 geom_offsets.into_inner(),
                 ring_offsets.into_inner(),
                 None,
@@ -124,7 +108,7 @@ pub fn multilinestrings(
         }
         PyCoordBuffer::ThreeD(coords) => {
             let array = MultiLineStringArray::new(
-                coords.into(),
+                coords,
                 geom_offsets.into_inner(),
                 ring_offsets.into_inner(),
                 None,
@@ -145,7 +129,7 @@ pub fn multipolygons(
     match coords {
         PyCoordBuffer::TwoD(coords) => {
             let array = MultiPolygonArray::new(
-                coords.into(),
+                coords,
                 geom_offsets.into_inner(),
                 polygon_offsets.into_inner(),
                 ring_offsets.into_inner(),
@@ -156,7 +140,7 @@ pub fn multipolygons(
         }
         PyCoordBuffer::ThreeD(coords) => {
             let array = MultiPolygonArray::new(
-                coords.into(),
+                coords,
                 geom_offsets.into_inner(),
                 polygon_offsets.into_inner(),
                 ring_offsets.into_inner(),
