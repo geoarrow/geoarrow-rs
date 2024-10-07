@@ -1,8 +1,8 @@
 use pyo3::prelude::*;
+mod constructors;
 pub(crate) mod crs;
 pub mod ffi;
 pub mod interop;
-// pub mod scalar;
 pub mod table;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -24,6 +24,15 @@ fn _rust(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
 
     m.add_class::<pyo3_geoarrow::PySerializedArray>()?;
     m.add_class::<pyo3_geoarrow::PySerializedType>()?;
+
+    // Constructors
+
+    m.add_function(wrap_pyfunction!(crate::constructors::points, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::constructors::linestrings, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::constructors::polygons, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::constructors::multipoints, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::constructors::multilinestrings, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::constructors::multipolygons, m)?)?;
 
     // Top-level table functions
 
