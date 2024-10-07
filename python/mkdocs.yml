@@ -27,6 +27,7 @@ nav:
           - api/core/geometry/array.md
           - api/core/geometry/chunked.md
           - api/core/geometry/scalar.md
+          - api/core/constructors.md
           - api/core/functions.md
           - api/core/enums.md
           - api/core/types.md
