@@ -57,7 +57,7 @@ pub use euclidean_length::EuclideanLength;
 
 /// Calculate the minimum Euclidean distance between two `Geometries`.
 mod euclidean_distance;
-pub use euclidean_distance::EuclideanDistance;
+pub use euclidean_distance::{EuclideanDistance, EuclideanDistanceScalar};
 
 mod frechet_distance;
 pub use frechet_distance::{FrechetDistance, FrechetDistanceLineString};

@@ -1,4 +1,5 @@
-use crate::algorithm::native::{Binary, Unary};
+use crate::algorithm::native::binary::try_binary_boolean_native_geometry;
+use crate::algorithm::native::Unary;
 use crate::array::*;
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::GeoArrowError;
@@ -10,7 +11,7 @@ use crate::io::geo::{
     geometry_collection_to_geo, geometry_to_geo, line_string_to_geo, multi_line_string_to_geo,
     multi_point_to_geo, multi_polygon_to_geo, point_to_geo, polygon_to_geo,
 };
-use crate::trait_::{ArrayAccessor, NativeScalar};
+use crate::trait_::{ArrayAccessor, NativeGeometryAccessor, NativeScalar};
 use crate::NativeArray;
 use arrow_array::builder::BooleanBuilder;
 use arrow_array::BooleanArray;
@@ -50,31 +51,16 @@ use geo::Contains as _Contains;
 /// // Point in Polygon
 /// assert!(polygon.contains(&point!(x: 1., y: 1.)));
 /// ```
-pub trait Contains<Rhs = Self> {
-    fn contains(&self, rhs: &Rhs) -> BooleanArray;
+pub trait Contains<'a, Rhs> {
+    fn contains(&'a self, rhs: &'a Rhs) -> BooleanArray;
 }
 
-// ┌────────────────────────────────┐
-// │ Implementations for RHS arrays │
-// └────────────────────────────────┘
-
-// Note: this implementation is outside the macro because it is not generic over O
-impl Contains for PointArray<2> {
-    fn contains(&self, rhs: &Self) -> BooleanArray {
-        self.try_binary_boolean(rhs, |left, right| {
-            Ok(left.to_geo().contains(&right.to_geo()))
-        })
-        .unwrap()
-    }
-}
-
-// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
-    ($first:ty, $second:ty) => {
-        impl<'a> Contains<$second> for $first {
-            fn contains(&self, rhs: &$second) -> BooleanArray {
-                self.try_binary_boolean(rhs, |left, right| {
-                    Ok(left.to_geo().contains(&right.to_geo()))
+    ($array_type:ty) => {
+        impl<'a, R: NativeGeometryAccessor<'a, 2>> Contains<'a, R> for $array_type {
+            fn contains(&'a self, rhs: &'a R) -> BooleanArray {
+                try_binary_boolean_native_geometry(self, rhs, |l, r| {
+                    Ok(l.to_geo().contains(&r.to_geo()))
                 })
                 .unwrap()
             }
@@ -82,52 +68,15 @@ macro_rules! iter_geo_impl {
     };
 }
 
-// Implementations on PointArray
-iter_geo_impl!(PointArray<2>, LineStringArray<2>);
-iter_geo_impl!(PointArray<2>, PolygonArray<2>);
-iter_geo_impl!(PointArray<2>, MultiPointArray<2>);
-iter_geo_impl!(PointArray<2>, MultiLineStringArray<2>);
-iter_geo_impl!(PointArray<2>, MultiPolygonArray<2>);
-
-// Implementations on LineStringArray
-iter_geo_impl!(LineStringArray<2>, PointArray<2>);
-iter_geo_impl!(LineStringArray<2>, LineStringArray<2>);
-iter_geo_impl!(LineStringArray<2>, PolygonArray<2>);
-iter_geo_impl!(LineStringArray<2>, MultiPointArray<2>);
-iter_geo_impl!(LineStringArray<2>, MultiLineStringArray<2>);
-iter_geo_impl!(LineStringArray<2>, MultiPolygonArray<2>);
-
-// Implementations on PolygonArray
-iter_geo_impl!(PolygonArray<2>, PointArray<2>);
-iter_geo_impl!(PolygonArray<2>, LineStringArray<2>);
-iter_geo_impl!(PolygonArray<2>, PolygonArray<2>);
-iter_geo_impl!(PolygonArray<2>, MultiPointArray<2>);
-iter_geo_impl!(PolygonArray<2>, MultiLineStringArray<2>);
-iter_geo_impl!(PolygonArray<2>, MultiPolygonArray<2>);
-
-// Implementations on MultiPointArray
-iter_geo_impl!(MultiPointArray<2>, PointArray<2>);
-iter_geo_impl!(MultiPointArray<2>, LineStringArray<2>);
-iter_geo_impl!(MultiPointArray<2>, PolygonArray<2>);
-iter_geo_impl!(MultiPointArray<2>, MultiPointArray<2>);
-iter_geo_impl!(MultiPointArray<2>, MultiLineStringArray<2>);
-iter_geo_impl!(MultiPointArray<2>, MultiPolygonArray<2>);
-
-// Implementations on MultiLineStringArray
-iter_geo_impl!(MultiLineStringArray<2>, PointArray<2>);
-iter_geo_impl!(MultiLineStringArray<2>, LineStringArray<2>);
-iter_geo_impl!(MultiLineStringArray<2>, PolygonArray<2>);
-iter_geo_impl!(MultiLineStringArray<2>, MultiPointArray<2>);
-iter_geo_impl!(MultiLineStringArray<2>, MultiLineStringArray<2>);
-iter_geo_impl!(MultiLineStringArray<2>, MultiPolygonArray<2>);
-
-// Implementations on MultiPolygonArray
-iter_geo_impl!(MultiPolygonArray<2>, PointArray<2>);
-iter_geo_impl!(MultiPolygonArray<2>, LineStringArray<2>);
-iter_geo_impl!(MultiPolygonArray<2>, PolygonArray<2>);
-iter_geo_impl!(MultiPolygonArray<2>, MultiPointArray<2>);
-iter_geo_impl!(MultiPolygonArray<2>, MultiLineStringArray<2>);
-iter_geo_impl!(MultiPolygonArray<2>, MultiPolygonArray<2>);
+iter_geo_impl!(PointArray<2>);
+iter_geo_impl!(LineStringArray<2>);
+iter_geo_impl!(PolygonArray<2>);
+iter_geo_impl!(MultiPointArray<2>);
+iter_geo_impl!(MultiLineStringArray<2>);
+iter_geo_impl!(MultiPolygonArray<2>);
+iter_geo_impl!(MixedGeometryArray<2>);
+iter_geo_impl!(GeometryCollectionArray<2>);
+iter_geo_impl!(RectArray<2>);
 
 // ┌─────────────────────────────────┐
 // │ Implementations for RHS scalars │
