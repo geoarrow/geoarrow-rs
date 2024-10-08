@@ -18,6 +18,6 @@ it("read FlatGeobuf", () => {
   const geometryFieldMetadata = geometryField.metadata;
   console.log(geometryFieldMetadata);
   expect(geometryFieldMetadata.get("ARROW:extension:name")).toStrictEqual(
-    "geoarrow.polygon"
+    "geoarrow.multipolygon"
   );
 });
