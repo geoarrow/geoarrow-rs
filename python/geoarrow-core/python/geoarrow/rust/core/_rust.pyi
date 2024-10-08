@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import (
-    Any,
     List,
     Literal,
     Self,
@@ -29,15 +28,16 @@ try:
 except ImportError:
     pass
 
+from geoarrow.rust.core._constructors import linestrings as linestrings
+from geoarrow.rust.core._constructors import multilinestrings as multilinestrings
+from geoarrow.rust.core._constructors import multipoints as multipoints
+from geoarrow.rust.core._constructors import multipolygons as multipolygons
+from geoarrow.rust.core._constructors import points as points
+from geoarrow.rust.core._constructors import polygons as polygons
+from geoarrow.rust.core.types import CRSInput
+
 from .enums import CoordType, Dimension
 from .types import CoordTypeT, DimensionT
-
-from geoarrow.rust.core._constructors import points as points
-from geoarrow.rust.core._constructors import linestrings as linestrings
-from geoarrow.rust.core._constructors import polygons as polygons
-from geoarrow.rust.core._constructors import multipoints as multipoints
-from geoarrow.rust.core._constructors import multilinestrings as multilinestrings
-from geoarrow.rust.core._constructors import multipolygons as multipolygons
 
 class Geometry:
     """
@@ -472,7 +472,7 @@ def from_geopandas(input: gpd.GeoDataFrame) -> Table:
         A GeoArrow Table
     """
 
-def from_shapely(input, *, crs: Any | None = None) -> NativeArray:
+def from_shapely(input, *, crs: CRSInput | None = None) -> NativeArray:
     """
     Create a GeoArrow array from an array of Shapely geometries.
 
