@@ -5,7 +5,6 @@ use arrow_array::RecordBatch;
 use arrow_schema::Schema;
 use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
 
-use crate::algorithm::native::DowncastTable;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::CoordType;
 use crate::chunked_array::ChunkedNativeArrayDyn;

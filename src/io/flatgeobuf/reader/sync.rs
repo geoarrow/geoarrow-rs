@@ -66,38 +66,21 @@ pub fn read_flatgeobuf<R: Read + Seek>(
         Default::default(),
     );
 
+    macro_rules! impl_read {
+        ($builder:ty) => {{
+            let mut builder = GeoTableBuilder::<$builder>::new_with_options(options);
+            selection.process_features(&mut builder)?;
+            builder.finish()
+        }};
+    }
+
     match (geometry_type, has_z) {
-        (GeometryType::Point, false) => {
-            let mut builder = GeoTableBuilder::<PointBuilder<2>>::new_with_options(options);
-            selection.process_features(&mut builder)?;
-            builder.finish()
-        }
-        (GeometryType::LineString, false) => {
-            let mut builder = GeoTableBuilder::<LineStringBuilder<2>>::new_with_options(options);
-            selection.process_features(&mut builder)?;
-            builder.finish()
-        }
-        (GeometryType::Polygon, false) => {
-            let mut builder = GeoTableBuilder::<PolygonBuilder<2>>::new_with_options(options);
-            selection.process_features(&mut builder)?;
-            builder.finish()
-        }
-        (GeometryType::MultiPoint, false) => {
-            let mut builder = GeoTableBuilder::<MultiPointBuilder<2>>::new_with_options(options);
-            selection.process_features(&mut builder)?;
-            builder.finish()
-        }
-        (GeometryType::MultiLineString, false) => {
-            let mut builder =
-                GeoTableBuilder::<MultiLineStringBuilder<2>>::new_with_options(options);
-            selection.process_features(&mut builder)?;
-            builder.finish()
-        }
-        (GeometryType::MultiPolygon, false) => {
-            let mut builder = GeoTableBuilder::<MultiPolygonBuilder<2>>::new_with_options(options);
-            selection.process_features(&mut builder)?;
-            builder.finish()
-        }
+        (GeometryType::Point, false) => impl_read!(PointBuilder<2>),
+        (GeometryType::LineString, false) => impl_read!(LineStringBuilder<2>),
+        (GeometryType::Polygon, false) => impl_read!(PolygonBuilder<2>),
+        (GeometryType::MultiPoint, false) => impl_read!(MultiPointBuilder<2>),
+        (GeometryType::MultiLineString, false) => impl_read!(MultiLineStringBuilder<2>),
+        (GeometryType::MultiPolygon, false) => impl_read!(MultiPolygonBuilder<2>),
         (GeometryType::Unknown, false) => {
             let mut builder =
                 GeoTableBuilder::<MixedGeometryStreamBuilder<2>>::new_with_options(options);
@@ -105,37 +88,12 @@ pub fn read_flatgeobuf<R: Read + Seek>(
             let table = builder.finish()?;
             table.downcast(true)
         }
-        (GeometryType::Point, true) => {
-            let mut builder = GeoTableBuilder::<PointBuilder<3>>::new_with_options(options);
-            selection.process_features(&mut builder)?;
-            builder.finish()
-        }
-        (GeometryType::LineString, true) => {
-            let mut builder = GeoTableBuilder::<LineStringBuilder<3>>::new_with_options(options);
-            selection.process_features(&mut builder)?;
-            builder.finish()
-        }
-        (GeometryType::Polygon, true) => {
-            let mut builder = GeoTableBuilder::<PolygonBuilder<3>>::new_with_options(options);
-            selection.process_features(&mut builder)?;
-            builder.finish()
-        }
-        (GeometryType::MultiPoint, true) => {
-            let mut builder = GeoTableBuilder::<MultiPointBuilder<3>>::new_with_options(options);
-            selection.process_features(&mut builder)?;
-            builder.finish()
-        }
-        (GeometryType::MultiLineString, true) => {
-            let mut builder =
-                GeoTableBuilder::<MultiLineStringBuilder<3>>::new_with_options(options);
-            selection.process_features(&mut builder)?;
-            builder.finish()
-        }
-        (GeometryType::MultiPolygon, true) => {
-            let mut builder = GeoTableBuilder::<MultiPolygonBuilder<3>>::new_with_options(options);
-            selection.process_features(&mut builder)?;
-            builder.finish()
-        }
+        (GeometryType::Point, true) => impl_read!(PointBuilder<3>),
+        (GeometryType::LineString, true) => impl_read!(LineStringBuilder<3>),
+        (GeometryType::Polygon, true) => impl_read!(PolygonBuilder<3>),
+        (GeometryType::MultiPoint, true) => impl_read!(MultiPointBuilder<3>),
+        (GeometryType::MultiLineString, true) => impl_read!(MultiLineStringBuilder<3>),
+        (GeometryType::MultiPolygon, true) => impl_read!(MultiPolygonBuilder<3>),
         (GeometryType::Unknown, true) => {
             let mut builder =
                 GeoTableBuilder::<MixedGeometryStreamBuilder<3>>::new_with_options(options);
