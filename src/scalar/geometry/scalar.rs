@@ -6,8 +6,6 @@ use crate::trait_::NativeScalar;
 use rstar::{RTreeObject, AABB};
 
 /// A Geometry is an enum over the various underlying _zero copy_ GeoArrow scalar types.
-///
-/// Notably this does _not_ include [`WKB`] as a variant, because that is not zero-copy to parse.
 #[derive(Debug)]
 pub enum Geometry<'a, const D: usize> {
     Point(crate::scalar::Point<'a, D>),
