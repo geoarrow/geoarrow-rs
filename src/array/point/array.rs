@@ -236,11 +236,8 @@ impl<const D: usize> GeometryArraySelfMethods<D> for PointArray<D> {
     }
 }
 
-impl<'a, const D: usize> NativeGeometryAccessor<'a, D> for PointArray<D> {
-    unsafe fn value_as_geometry_unchecked(
-        &'a self,
-        index: usize,
-    ) -> crate::scalar::Geometry<'a, D> {
+impl<const D: usize> NativeGeometryAccessor<D> for PointArray<D> {
+    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry<D> {
         Geometry::Point(Point::new(&self.coords, index))
     }
 }

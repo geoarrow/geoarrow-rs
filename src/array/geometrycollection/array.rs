@@ -221,11 +221,8 @@ impl<const D: usize> GeometryArraySelfMethods<D> for GeometryCollectionArray<D> 
     }
 }
 
-impl<'a, const D: usize> NativeGeometryAccessor<'a, D> for GeometryCollectionArray<D> {
-    unsafe fn value_as_geometry_unchecked(
-        &'a self,
-        index: usize,
-    ) -> crate::scalar::Geometry<'a, D> {
+impl<const D: usize> NativeGeometryAccessor<D> for GeometryCollectionArray<D> {
+    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry<D> {
         Geometry::GeometryCollection(GeometryCollection::new(
             &self.array,
             &self.geom_offsets,

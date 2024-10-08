@@ -403,11 +403,8 @@ impl<const D: usize> GeometryArraySelfMethods<D> for MultiPolygonArray<D> {
     }
 }
 
-impl<'a, const D: usize> NativeGeometryAccessor<'a, D> for MultiPolygonArray<D> {
-    unsafe fn value_as_geometry_unchecked(
-        &'a self,
-        index: usize,
-    ) -> crate::scalar::Geometry<'a, D> {
+impl<const D: usize> NativeGeometryAccessor<D> for MultiPolygonArray<D> {
+    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry<D> {
         Geometry::MultiPolygon(MultiPolygon::new(
             &self.coords,
             &self.geom_offsets,

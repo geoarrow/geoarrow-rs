@@ -396,9 +396,9 @@ pub trait SerializedArray: ArrayBase {
 pub type SerializedArrayRef = Arc<dyn SerializedArray>;
 
 /// Trait for accessing generic `Geometry` scalars
-pub trait NativeGeometryAccessor<'a, const D: usize>: NativeArray {
+pub trait NativeGeometryAccessor<const D: usize>: NativeArray {
     /// Returns the element at index `i` as a `Geometry`, not considering validity.
-    fn value_as_geometry(&'a self, index: usize) -> Geometry<'a, D> {
+    fn value_as_geometry(&self, index: usize) -> Geometry<'_, D> {
         assert!(index <= self.len());
         unsafe { self.value_as_geometry_unchecked(index) }
     }
@@ -408,10 +408,10 @@ pub trait NativeGeometryAccessor<'a, const D: usize>: NativeArray {
     /// # Safety
     ///
     /// Caller is responsible for ensuring that the index is within the bounds of the array
-    unsafe fn value_as_geometry_unchecked(&'a self, index: usize) -> Geometry<'a, D>;
+    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> Geometry<'_, D>;
 
     /// Returns the value at slot `i` as a `Geometry`, considering validity.
-    fn get_as_geometry(&'a self, index: usize) -> Option<Geometry<'a, D>> {
+    fn get_as_geometry(&self, index: usize) -> Option<Geometry<'_, D>> {
         if self.is_null(index) {
             return None;
         }
@@ -424,7 +424,7 @@ pub trait NativeGeometryAccessor<'a, const D: usize>: NativeArray {
     /// # Safety
     ///
     /// Caller is responsible for ensuring that the index is within the bounds of the array
-    unsafe fn get_as_geometry_unchecked(&'a self, index: usize) -> Option<Geometry<'a, D>> {
+    unsafe fn get_as_geometry_unchecked(&self, index: usize) -> Option<Geometry<'_, D>> {
         if self.is_null(index) {
             return None;
         }

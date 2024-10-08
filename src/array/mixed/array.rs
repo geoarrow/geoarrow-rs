@@ -420,11 +420,8 @@ impl<const D: usize> GeometryArraySelfMethods<D> for MixedGeometryArray<D> {
     }
 }
 
-impl<'a, const D: usize> NativeGeometryAccessor<'a, D> for MixedGeometryArray<D> {
-    unsafe fn value_as_geometry_unchecked(
-        &'a self,
-        index: usize,
-    ) -> crate::scalar::Geometry<'a, D> {
+impl<const D: usize> NativeGeometryAccessor<D> for MixedGeometryArray<D> {
+    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry<D> {
         let type_id = self.type_ids[index];
         let offset = self.offsets[index] as usize;
 
