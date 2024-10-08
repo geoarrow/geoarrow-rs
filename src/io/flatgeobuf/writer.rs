@@ -3,7 +3,7 @@ use std::io::Write;
 use flatgeobuf::{FgbWriter, FgbWriterOptions};
 use geozero::GeozeroDatasource;
 
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::Result;
 use crate::io::stream::RecordBatchReader;
 use crate::schema::GeoSchemaExt;
@@ -49,44 +49,44 @@ fn infer_flatgeobuf_geometry_type(
     }
 
     let geometry_field = &fields[geom_col_idxs[0]];
-    let geo_data_type = GeoDataType::try_from(geometry_field.as_ref())?;
+    let geo_data_type = NativeType::try_from(geometry_field.as_ref())?;
 
-    use GeoDataType::*;
+    use NativeType::*;
     let (geometry_type, has_z) = match geo_data_type {
         Point(_, dim) => (
             flatgeobuf::GeometryType::Point,
             matches!(dim, Dimension::XYZ),
         ),
-        LineString(_, dim) | LargeLineString(_, dim) => (
+        LineString(_, dim) => (
             flatgeobuf::GeometryType::LineString,
             matches!(dim, Dimension::XYZ),
         ),
-        Polygon(_, dim) | LargePolygon(_, dim) => (
+        Polygon(_, dim) => (
             flatgeobuf::GeometryType::Polygon,
             matches!(dim, Dimension::XYZ),
         ),
-        MultiPoint(_, dim) | LargeMultiPoint(_, dim) => (
+        MultiPoint(_, dim) => (
             flatgeobuf::GeometryType::MultiPoint,
             matches!(dim, Dimension::XYZ),
         ),
-        MultiLineString(_, dim) | LargeMultiLineString(_, dim) => (
+        MultiLineString(_, dim) => (
             flatgeobuf::GeometryType::MultiLineString,
             matches!(dim, Dimension::XYZ),
         ),
-        MultiPolygon(_, dim) | LargeMultiPolygon(_, dim) => (
+        MultiPolygon(_, dim) => (
             flatgeobuf::GeometryType::MultiPolygon,
             matches!(dim, Dimension::XYZ),
         ),
-        Mixed(_, dim) | LargeMixed(_, dim) | Rect(dim) => (
+        Mixed(_, dim) | Rect(dim) => (
             flatgeobuf::GeometryType::Unknown,
             matches!(dim, Dimension::XYZ),
         ),
-        GeometryCollection(_, dim) | LargeGeometryCollection(_, dim) => (
+        GeometryCollection(_, dim) => (
             flatgeobuf::GeometryType::GeometryCollection,
             matches!(dim, Dimension::XYZ),
         ),
         // TODO: how to know when WKB has 3d geometries?
-        WKB | LargeWKB => (flatgeobuf::GeometryType::Unknown, false),
+        // WKB | LargeWKB => (flatgeobuf::GeometryType::Unknown, false),
     };
     Ok((geometry_type, has_z))
 }

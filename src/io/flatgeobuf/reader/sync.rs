@@ -160,7 +160,7 @@ mod test {
 
     use arrow_schema::DataType;
 
-    use crate::datatypes::GeoDataType;
+    use crate::datatypes::NativeType;
 
     use super::*;
 
@@ -184,7 +184,7 @@ mod test {
         let table = read_flatgeobuf(&mut filein, Default::default()).unwrap();
 
         let geom_col = table.geometry_column(None).unwrap();
-        assert!(matches!(geom_col.data_type(), GeoDataType::Polygon(_, _)));
+        assert!(matches!(geom_col.data_type(), NativeType::Polygon(_, _)));
 
         let (batches, schema) = table.into_inner();
         assert_eq!(batches[0].num_rows(), 10);
@@ -210,7 +210,7 @@ mod test {
         let table = read_flatgeobuf(&mut filein, Default::default()).unwrap();
 
         let _geom_col = table.geometry_column(None).unwrap();
-        // assert!(matches!(geom_col.data_type(), GeoDataType::Polygon(_, _)));
+        // assert!(matches!(geom_col.data_type(), NativeType::Polygon(_, _)));
 
         // let (batches, schema) = table.into_inner();
         // assert_eq!(batches[0].num_rows(), 10);

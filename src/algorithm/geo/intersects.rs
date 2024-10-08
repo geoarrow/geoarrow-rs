@@ -54,14 +54,6 @@ pub trait Intersects<Rhs = Self> {
     fn intersects(&self, rhs: &Rhs) -> Self::Output;
 }
 
-impl Intersects for IndexedGeometryArray<2> {
-    type Output = Result<BooleanArray>;
-
-    fn intersects(&self, rhs: &Self) -> Self::Output {
-        self.try_binary_boolean(other, op)
-    }
-}
-
 // Note: this implementation is outside the macro because it is not generic over O
 impl Intersects for IndexedPointArray<2> {
     type Output = BooleanArray;
