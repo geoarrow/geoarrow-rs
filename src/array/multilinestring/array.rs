@@ -339,11 +339,8 @@ impl<const D: usize> GeometryArraySelfMethods<D> for MultiLineStringArray<D> {
     }
 }
 
-impl<'a, const D: usize> NativeGeometryAccessor<'a, D> for MultiLineStringArray<D> {
-    unsafe fn value_as_geometry_unchecked(
-        &'a self,
-        index: usize,
-    ) -> crate::scalar::Geometry<'a, D> {
+impl<const D: usize> NativeGeometryAccessor<D> for MultiLineStringArray<D> {
+    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry<D> {
         Geometry::MultiLineString(MultiLineString::new(
             &self.coords,
             &self.geom_offsets,

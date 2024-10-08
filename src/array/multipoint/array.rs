@@ -299,11 +299,8 @@ impl<const D: usize> GeometryArraySelfMethods<D> for MultiPointArray<D> {
     }
 }
 
-impl<'a, const D: usize> NativeGeometryAccessor<'a, D> for MultiPointArray<D> {
-    unsafe fn value_as_geometry_unchecked(
-        &'a self,
-        index: usize,
-    ) -> crate::scalar::Geometry<'a, D> {
+impl<const D: usize> NativeGeometryAccessor<D> for MultiPointArray<D> {
+    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry<D> {
         Geometry::MultiPoint(MultiPoint::new(&self.coords, &self.geom_offsets, index))
     }
 }
