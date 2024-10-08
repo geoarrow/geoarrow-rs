@@ -1,6 +1,50 @@
 # Changelog
 
-**This is the changelog for the core Rust library**. There's a [separate changelog](./python/core/CHANGELOG.md) for the Python bindings, and there will be another for the JS bindings.
+**This is the changelog for the core Rust library**. There's a [separate changelog](./python/CHANGELOG.md) for the Python bindings, and there will be another for the JS bindings.
+
+## Unreleased
+
+### Breaking changes
+
+- Renames:
+  - `GeometryArrayTrait` renamed to `NativeArray`.
+  - `GeometryArrayRef` renamed to `NativeArrayRef`.
+  - `GeometryArrayTrait` renamed to `NativeScalar`.
+  - `GeometryArrayDyn` renamed to `NativeArrayDyn`.
+  - `AsGeometryArray` renamed to `AsNativeArray`.
+  - `AsChunkedGeometryArray` renamed to `AsChunkedNativeArray`.
+  - `ChunkedGeometryArrayTrait` renamed to `ChunkedNativeArray`.
+- `GeometryArrayTrait`/`NativeArray` no longer implemented on coordinate buffers
+
+## [0.3.0] - 2024-09-07
+
+### New Features :magic_wand:
+
+- Preliminary support for 3D (XYZ) geometries
+- Support for reading and writing GeoParquet 1.1
+  - Support for reading and writing GeoArrow (native) geometry encoding
+  - Support for reading with spatial filtering
+- Both synchronous and asynchronous readers for GeoParquet. Readers will stream a RecordBatch at a time by default.
+- Accept `RecordBatchReader` as input to all
+- New support for `geoarrow.box` array (equivalent to `Vec<Option<geo::Rect>>`). `RectArray` is now laid out as a `StructArray` internally instead of a `FixedSizeListArray`.
+- Improved documentation
+
+### Performance Improvements 🏎️
+
+- Remove `Cow` around scalar buffers by @kylebarron in https://github.com/geoarrow/geoarrow-rs/pull/720
+
+### Bug fixes :bug:
+
+- Don't serialize empty array metadata by @kylebarron in https://github.com/geoarrow/geoarrow-rs/pull/678
+- Fixed `MixedGeometryArray` handling. Exported Arrow `UnionArrays` always have same data layout.
+- Support MapArrays when exporting to geozero by @kylebarron in https://github.com/geoarrow/geoarrow-rs/pull/721
+
+## New Contributors
+
+- @H-Plus-Time made their first contribution in https://github.com/geoarrow/geoarrow-rs/pull/607
+- @gadomski made their first contribution in https://github.com/geoarrow/geoarrow-rs/pull/640
+
+**Full Changelog**: https://github.com/geoarrow/geoarrow-rs/compare/rust-v0.2.0...rust-v0.3.0
 
 ## [0.3.0-beta.2] - 2024-08-23
 

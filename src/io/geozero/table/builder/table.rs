@@ -8,11 +8,11 @@ use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
 use crate::algorithm::native::DowncastTable;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::CoordType;
-use crate::chunked_array::from_geoarrow_chunks;
+use crate::chunked_array::ChunkedNativeArrayDyn;
 use crate::error::{GeoArrowError, Result};
 use crate::io::geozero::table::builder::properties::PropertiesBatchBuilder;
 use crate::table::Table;
-use crate::trait_::{GeometryArrayBuilder, GeometryArrayTrait};
+use crate::trait_::{GeometryArrayBuilder, NativeArray};
 
 /// Options for creating a GeoTableBuilder.
 #[derive(Debug, Clone, PartialEq)]
@@ -93,7 +93,7 @@ pub struct GeoTableBuilder<G: GeometryArrayBuilder + GeomProcessor> {
     /// Geometry Array chunks that have already been finished
     /// This is kept separate so that schema resolution among batches can be handled without the
     /// geometry, and then the geometry column can be added at the end.
-    geom_arrays: Vec<Arc<dyn GeometryArrayTrait>>,
+    geom_arrays: Vec<Arc<dyn NativeArray>>,
 
     /// Builder for the geometries of the current batch
     geom_builder: G,
@@ -211,7 +211,7 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
             .iter()
             .map(|chunk| chunk.as_ref())
             .collect::<Vec<_>>();
-        let geom_col = from_geoarrow_chunks(&geom_slices)?;
+        let geom_col = ChunkedNativeArrayDyn::from_geoarrow_chunks(&geom_slices)?.into_inner();
         let geom_field = geom_col.extension_field();
 
         table.append_column(geom_field, geom_col.array_refs())?;

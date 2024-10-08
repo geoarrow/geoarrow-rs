@@ -16,11 +16,18 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: python/core
+        working-directory: python
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: "recursive"
+
+      - name: Set up Python
+        id: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -34,6 +41,41 @@ jobs:
         run: cargo check
       - name: Test
         run: cargo test
+
+  emscripten:
+    name: Build pyodide wheel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install pyodide-build
+      - name: Get Emscripten and Python version info
+        shell: bash
+        run: |
+          echo EMSCRIPTEN_VERSION=$(pyodide config get emscripten_version) >> $GITHUB_ENV
+          echo PYTHON_VERSION=$(pyodide config get python_version | cut -d '.' -f 1-2) >> $GITHUB_ENV
+          pip uninstall -y pyodide-build
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: ${{ env.EMSCRIPTEN_VERSION }}
+          actions-cache-folder: emsdk-cache
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: pip install pyodide-build
+
+      - name: Build wheels (core)
+        uses: PyO3/maturin-action@v1
+        with:
+          target: wasm32-unknown-emscripten
+          args: --no-default-features -m python/geoarrow-core/Cargo.toml -i python${{ env.PYTHON_VERSION }}
+          rust-toolchain: nightly
+
+      - name: Build wheels (io)
+        uses: PyO3/maturin-action@v1
+        with:
+          target: wasm32-unknown-emscripten
+          args: --no-default-features -m python/geoarrow-io/Cargo.toml -i python${{ env.PYTHON_VERSION }}
+          rust-toolchain: nightly
 
   # lint-python:
   #   name: Lint Python code
@@ -60,19 +102,23 @@ jobs:
         python-version: ["3.9", "3.12"]
     defaults:
       run:
-        working-directory: python/core
+        working-directory: python
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: "recursive"
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+
       - uses: Swatinem/rust-cache@v2
+
       - name: Set up Python
         id: setup-python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+
       - name: Install and configure Poetry
         uses: snok/install-poetry@v1
         with:
@@ -80,21 +126,33 @@ jobs:
           virtualenvs-create: true
           virtualenvs-in-project: true
           installer-parallel: true
+
       - name: Check Poetry lockfile up to date
         run: |
           poetry check --lock
+
       - name: Load cached venv
         id: cached-poetry-dependencies
         uses: actions/cache@v4
         with:
-          path: python/core/.venv
+          path: .venv
           key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root
+
       - name: Install root project
         run: poetry install --no-interaction
+
+      - name: Build rust submodules
+        run: |
+          # Note: core module should be first, because it could be depended on
+          # by others in the future
+          poetry run maturin develop -m geoarrow-core/Cargo.toml
+          poetry run maturin develop -m geoarrow-compute/Cargo.toml
+          poetry run maturin develop -m geoarrow-io/Cargo.toml
+
       - name: Run python tests
         run: |
-          poetry run maturin develop
           poetry run pytest tests

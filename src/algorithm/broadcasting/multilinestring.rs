@@ -11,7 +11,7 @@ use crate::scalar::MultiLineString;
 #[derive(Debug, Clone)]
 pub enum BroadcastableMultiLineString<'a, O: OffsetSizeTrait> {
     Scalar(MultiLineString<'a, O>),
-    Array(MultiLineStringArray<O, 2>),
+    Array(MultiLineStringArray<2>),
 }
 
 pub enum BroadcastMultiLineStringIter<'a, O: OffsetSizeTrait> {

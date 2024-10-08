@@ -1,7 +1,5 @@
 use std::ops::Add;
 
-use arrow_array::OffsetSizeTrait;
-
 use crate::array::mixed::MixedCapacity;
 use crate::error::Result;
 use crate::geo_traits::{
@@ -141,10 +139,10 @@ impl GeometryCollectionCapacity {
     }
 
     /// The number of bytes an array with this capacity would occupy.
-    pub fn num_bytes<O: OffsetSizeTrait>(&self) -> usize {
-        let offsets_byte_width = if O::IS_LARGE { 8 } else { 4 };
+    pub fn num_bytes(&self) -> usize {
+        let offsets_byte_width = 4;
         let num_offsets = self.geom_capacity;
-        (offsets_byte_width * num_offsets) + self.mixed_capacity.num_bytes::<O>()
+        (offsets_byte_width * num_offsets) + self.mixed_capacity.num_bytes()
     }
 }
 

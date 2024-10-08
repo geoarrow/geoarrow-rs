@@ -7,26 +7,22 @@
 
 A Rust implementation of the [GeoArrow](https://github.com/geoarrow/geoarrow) specification and bindings to [GeoRust algorithms](https://github.com/georust/geo) for efficient spatial operations on GeoArrow memory.
 
-This repository also includes [Python bindings](https://github.com/geoarrow/geoarrow-rs/blob/main/python/core/README.md) and [JavaScript (WebAssembly) bindings](https://github.com/geoarrow/geoarrow-rs/blob/main/js/README.md), wrapping the GeoArrow memory layout and offering vectorized geometry operations.
+This repository also includes [Python bindings](https://github.com/geoarrow/geoarrow-rs/blob/main/python/README.md) and [JavaScript (WebAssembly) bindings](https://github.com/geoarrow/geoarrow-rs/blob/main/js/README.md), wrapping the GeoArrow memory layout and offering vectorized geometry operations.
 
 ## Documentation
 
+[**Documentation Website**](https://geoarrow.org/geoarrow-rs/)
+
+<!--
 - [Use from Rust](https://docs.rs/geoarrow/latest/geoarrow/)
-- [Use from Python](https://geoarrow.github.io/geoarrow-rs/python)
-- [Use from JavaScript](https://geoarrow.github.io/geoarrow-rs/js)
-- [Create your own Rust-JavaScript library with `wasm-bindgen`](https://docs.rs/geoarrow-wasm/latest/geoarrow_wasm/)
+- [Use from Python](https://geoarrow.org/geoarrow-rs/python)
+- [Use from JavaScript](https://geoarrow.org/geoarrow-rs/js)
+- [Create your own Rust-JavaScript library with `wasm-bindgen`](https://docs.rs/geoarrow-wasm/latest/geoarrow_wasm/) -->
+<!-- - [Create your own Rust-Python library with `pyo3-geoarrow`](https://docs.rs/geoarrow-wasm/latest/geoarrow_wasm/) -->
 
 ## Examples
 
 - [Rust examples](examples/README.md)
-
-## Install
-
-Add this to your `Cargo.toml`:
-
-```toml
-geoarrow = "0.2"
-```
 
 ## References
 

@@ -1,10 +1,12 @@
+//! Strongly-typed structs corresponding to the metadata provided by the GeoParquet specification.
+
 use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
 use std::str::FromStr;
 
 use crate::array::metadata::{ArrayMetadata, Edges};
 use crate::array::CoordType;
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::GeoParquetWriterEncoding;
 
@@ -20,43 +22,43 @@ use serde_json::Value;
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
 #[allow(clippy::upper_case_acronyms)]
 pub enum GeoParquetColumnEncoding {
+    /// Serialized Well-known Binary encoding
     WKB,
+    /// Native Point encoding
     #[serde(rename = "point")]
     Point,
+    /// Native LineString encoding
     #[serde(rename = "linestring")]
     LineString,
+    /// Native Polygon encoding
     #[serde(rename = "polygon")]
     Polygon,
+    /// Native MultiPoint encoding
     #[serde(rename = "multipoint")]
     MultiPoint,
+    /// Native MultiLineString encoding
     #[serde(rename = "multilinestring")]
     MultiLineString,
+    /// Native MultiPolygon encoding
     #[serde(rename = "multipolygon")]
     MultiPolygon,
 }
 
 impl GeoParquetColumnEncoding {
-    pub fn try_new(
+    /// Construct a new column encoding based on the user's desired encoding
+    pub(crate) fn try_new(
         writer_encoding: GeoParquetWriterEncoding,
-        data_type: &GeoDataType,
+        data_type: &NativeType,
     ) -> Result<Self> {
         let new_encoding = match writer_encoding {
             GeoParquetWriterEncoding::WKB => Self::WKB,
             GeoParquetWriterEncoding::Native => match data_type {
-                GeoDataType::Point(_, _) => Self::Point,
-                GeoDataType::LineString(_, _) | GeoDataType::LargeLineString(_, _) => {
-                    Self::LineString
-                }
-                GeoDataType::Polygon(_, _) | GeoDataType::LargePolygon(_, _) => Self::Polygon,
-                GeoDataType::MultiPoint(_, _) | GeoDataType::LargeMultiPoint(_, _) => {
-                    Self::MultiPoint
-                }
-                GeoDataType::MultiLineString(_, _) | GeoDataType::LargeMultiLineString(_, _) => {
-                    Self::MultiLineString
-                }
-                GeoDataType::MultiPolygon(_, _) | GeoDataType::LargeMultiPolygon(_, _) => {
-                    Self::MultiPolygon
-                }
+                NativeType::Point(_, _) => Self::Point,
+                NativeType::LineString(_, _) => Self::LineString,
+                NativeType::Polygon(_, _) => Self::Polygon,
+                NativeType::MultiPoint(_, _) => Self::MultiPoint,
+                NativeType::MultiLineString(_, _) => Self::MultiLineString,
+                NativeType::MultiPolygon(_, _) => Self::MultiPolygon,
                 dt => {
                     return Err(GeoArrowError::General(format!(
                         "unsupported data type for native encoding: {:?}",
@@ -87,25 +89,39 @@ impl Display for GeoParquetColumnEncoding {
 /// Geometry types that are valid to write to GeoParquet 1.1
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub enum GeoParquetGeometryType {
+    /// Point geometry type
     Point,
+    /// LineString geometry type
     LineString,
+    /// Polygon geometry type
     Polygon,
+    /// MultiPoint geometry type
     MultiPoint,
+    /// MultiLineString geometry type
     MultiLineString,
+    /// MultiPolygon geometry type
     MultiPolygon,
+    /// GeometryCollection geometry type
     GeometryCollection,
+    /// Point Z geometry type
     #[serde(rename = "Point Z")]
     PointZ,
+    /// LineString Z geometry type
     #[serde(rename = "LineString Z")]
     LineStringZ,
+    /// Polygon Z geometry type
     #[serde(rename = "Polygon Z")]
     PolygonZ,
+    /// MultiPoint Z geometry type
     #[serde(rename = "MultiPoint Z")]
     MultiPointZ,
+    /// MultiLineString Z geometry type
     #[serde(rename = "MultiLineString Z")]
     MultiLineStringZ,
+    /// MultiPolygon Z geometry type
     #[serde(rename = "MultiPolygon Z")]
     MultiPolygonZ,
+    /// GeometryCollection Z geometry type
     #[serde(rename = "GeometryCollection Z")]
     GeometryCollectionZ,
 }
@@ -183,6 +199,189 @@ impl GeoParquetGeometryType {
             | Self::GeometryCollectionZ => false,
         }
     }
+}
+
+/// Bounding-box covering
+///
+/// Including a per-row bounding box can be useful for accelerating spatial queries by allowing
+/// consumers to inspect row group and page index bounding box summary statistics. Furthermore a
+/// bounding box may be used to avoid complex spatial operations by first checking for bounding box
+/// overlaps. This field captures the column name and fields containing the bounding box of the
+/// geometry for every row.
+///
+/// The format of the bbox encoding is
+/// ```json
+/// {
+///     "xmin": ["column_name", "xmin"],
+///     "ymin": ["column_name", "ymin"],
+///     "xmax": ["column_name", "xmax"],
+///     "ymax": ["column_name", "ymax"]
+/// }
+/// ```
+///
+/// The arrays represent Parquet schema paths for nested groups. In this example, column_name is a
+/// Parquet group with fields xmin, ymin, xmax, ymax. The value in column_name MUST exist in the
+/// Parquet file and meet the criteria in the Bounding Box Column definition. In order to constrain
+/// this value to a single bounding group field, the second item in each element MUST be xmin,
+/// ymin, etc. All values MUST use the same column name.
+///
+/// The value specified in this field should not be confused with the top-level bbox field which
+/// contains the single bounding box of this geometry over the whole GeoParquet file.
+///
+/// Note: This technique to use the bounding box to improve spatial queries does not apply to
+/// geometries that cross the antimeridian. Such geometries are unsupported by this method.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct GeoParquetBboxCovering {
+    /// The path in the Parquet schema of the column that contains the xmin
+    pub xmin: Vec<String>,
+
+    /// The path in the Parquet schema of the column that contains the ymin
+    pub ymin: Vec<String>,
+
+    /// The path in the Parquet schema of the column that contains the zmin
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub zmin: Option<Vec<String>>,
+
+    /// The path in the Parquet schema of the column that contains the xmax
+    pub xmax: Vec<String>,
+
+    /// The path in the Parquet schema of the column that contains the ymax
+    pub ymax: Vec<String>,
+
+    /// The path in the Parquet schema of the column that contains the zmax
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub zmax: Option<Vec<String>>,
+}
+
+impl GeoParquetBboxCovering {
+    /// Infer a bbox covering from a native geoarrow encoding
+    ///
+    /// Note: for now this infers 2D boxes only
+    pub(crate) fn infer_from_native(
+        column_name: &str,
+        column_metadata: &GeoParquetColumnMetadata,
+    ) -> Option<Self> {
+        use GeoParquetColumnEncoding::*;
+        let (x, y) = match column_metadata.encoding {
+            WKB => return None,
+            Point => {
+                let x = vec![column_name.to_string(), "x".to_string()];
+                let y = vec![column_name.to_string(), "y".to_string()];
+                (x, y)
+            }
+            LineString => {
+                let x = vec![
+                    column_name.to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "x".to_string(),
+                ];
+                let y = vec![
+                    column_name.to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "y".to_string(),
+                ];
+                (x, y)
+            }
+            Polygon => {
+                let x = vec![
+                    column_name.to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "x".to_string(),
+                ];
+                let y = vec![
+                    column_name.to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "y".to_string(),
+                ];
+                (x, y)
+            }
+            MultiPoint => {
+                let x = vec![
+                    column_name.to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "x".to_string(),
+                ];
+                let y = vec![
+                    column_name.to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "y".to_string(),
+                ];
+                (x, y)
+            }
+            MultiLineString => {
+                let x = vec![
+                    column_name.to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "x".to_string(),
+                ];
+                let y = vec![
+                    column_name.to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "y".to_string(),
+                ];
+                (x, y)
+            }
+            MultiPolygon => {
+                let x = vec![
+                    column_name.to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "x".to_string(),
+                ];
+                let y = vec![
+                    column_name.to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "y".to_string(),
+                ];
+                (x, y)
+            }
+        };
+
+        Some(Self {
+            xmin: x.clone(),
+            ymin: y.clone(),
+            zmin: None,
+            xmax: x,
+            ymax: y,
+            zmax: None,
+        })
+    }
+}
+
+/// Object containing bounding box column names to help accelerate spatial data retrieval
+///
+/// The covering field specifies optional simplified representations of each geometry. The keys of
+/// the "covering" object MUST be a supported encoding. Currently the only supported encoding is
+/// "bbox" which specifies the names of bounding box columns
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct GeoParquetCovering {
+    /// Bounding-box covering
+    pub bbox: GeoParquetBboxCovering,
 }
 
 /// Top-level GeoParquet file metadata
@@ -264,7 +463,7 @@ pub struct GeoParquetColumnMetadata {
 
     /// Object containing bounding box column names to help accelerate spatial data retrieval
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub covering: Option<HashMap<String, Value>>,
+    pub covering: Option<GeoParquetCovering>,
 }
 
 impl GeoParquetMetadata {
@@ -417,6 +616,30 @@ impl GeoParquetMetadata {
 
         Ok(())
     }
+
+    /// Get the bounding box covering for a geometry column
+    ///
+    /// If the desired column does not have covering metadata, if it is a native encoding its
+    /// covering will be inferred.
+    pub(crate) fn bbox_covering(
+        &self,
+        column_name: Option<&str>,
+    ) -> Result<Option<GeoParquetBboxCovering>> {
+        let column_name = column_name.unwrap_or(&self.primary_column);
+        let column_meta = self
+            .columns
+            .get(column_name)
+            .ok_or(GeoArrowError::General(format!(
+                "Column name {column_name} not found in metadata"
+            )))?;
+        if let Some(covering) = &column_meta.covering {
+            Ok(Some(covering.bbox.clone()))
+        } else {
+            let inferred_covering =
+                GeoParquetBboxCovering::infer_from_native(column_name, column_meta);
+            Ok(inferred_covering)
+        }
+    }
 }
 
 impl From<GeoParquetColumnMetadata> for ArrayMetadata {
@@ -446,27 +669,27 @@ impl From<&GeoParquetColumnMetadata> for ArrayMetadata {
 pub(crate) fn infer_geo_data_type(
     geometry_types: &HashSet<GeoParquetGeometryType>,
     coord_type: CoordType,
-) -> Result<Option<GeoDataType>> {
+) -> Result<Option<NativeType>> {
     use GeoParquetGeometryType::*;
 
     match geometry_types.len() {
         // TODO: for unknown geometry type, should we leave it as WKB?
         0 => Ok(None),
         1 => Ok(Some(match *geometry_types.iter().next().unwrap() {
-            Point => GeoDataType::Point(coord_type, Dimension::XY),
-            LineString => GeoDataType::LineString(coord_type, Dimension::XY),
-            Polygon => GeoDataType::Polygon(coord_type, Dimension::XY),
-            MultiPoint => GeoDataType::MultiPoint(coord_type, Dimension::XY),
-            MultiLineString => GeoDataType::MultiLineString(coord_type, Dimension::XY),
-            MultiPolygon => GeoDataType::MultiPolygon(coord_type, Dimension::XY),
-            GeometryCollection => GeoDataType::GeometryCollection(coord_type, Dimension::XY),
-            PointZ => GeoDataType::Point(coord_type, Dimension::XYZ),
-            LineStringZ => GeoDataType::LineString(coord_type, Dimension::XYZ),
-            PolygonZ => GeoDataType::Polygon(coord_type, Dimension::XYZ),
-            MultiPointZ => GeoDataType::MultiPoint(coord_type, Dimension::XYZ),
-            MultiLineStringZ => GeoDataType::MultiLineString(coord_type, Dimension::XYZ),
-            MultiPolygonZ => GeoDataType::MultiPolygon(coord_type, Dimension::XYZ),
-            GeometryCollectionZ => GeoDataType::GeometryCollection(coord_type, Dimension::XYZ),
+            Point => NativeType::Point(coord_type, Dimension::XY),
+            LineString => NativeType::LineString(coord_type, Dimension::XY),
+            Polygon => NativeType::Polygon(coord_type, Dimension::XY),
+            MultiPoint => NativeType::MultiPoint(coord_type, Dimension::XY),
+            MultiLineString => NativeType::MultiLineString(coord_type, Dimension::XY),
+            MultiPolygon => NativeType::MultiPolygon(coord_type, Dimension::XY),
+            GeometryCollection => NativeType::GeometryCollection(coord_type, Dimension::XY),
+            PointZ => NativeType::Point(coord_type, Dimension::XYZ),
+            LineStringZ => NativeType::LineString(coord_type, Dimension::XYZ),
+            PolygonZ => NativeType::Polygon(coord_type, Dimension::XYZ),
+            MultiPointZ => NativeType::MultiPoint(coord_type, Dimension::XYZ),
+            MultiLineStringZ => NativeType::MultiLineString(coord_type, Dimension::XYZ),
+            MultiPolygonZ => NativeType::MultiPolygon(coord_type, Dimension::XYZ),
+            GeometryCollectionZ => NativeType::GeometryCollection(coord_type, Dimension::XYZ),
         })),
         _ => {
             // Check if we can cast to MultiPoint
@@ -479,7 +702,7 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == point_count {
-                return Ok(Some(GeoDataType::MultiPoint(coord_type, Dimension::XY)));
+                return Ok(Some(NativeType::MultiPoint(coord_type, Dimension::XY)));
             }
 
             // Check if we can cast to MultiPointZ
@@ -491,7 +714,7 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == point_count {
-                return Ok(Some(GeoDataType::MultiPoint(coord_type, Dimension::XYZ)));
+                return Ok(Some(NativeType::MultiPoint(coord_type, Dimension::XYZ)));
             }
 
             // Check if we can cast to MultiLineString
@@ -504,10 +727,7 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == linestring_count {
-                return Ok(Some(GeoDataType::MultiLineString(
-                    coord_type,
-                    Dimension::XY,
-                )));
+                return Ok(Some(NativeType::MultiLineString(coord_type, Dimension::XY)));
             }
 
             // Check if we can cast to MultiLineStringZ
@@ -519,7 +739,7 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == linestring_count {
-                return Ok(Some(GeoDataType::MultiLineString(
+                return Ok(Some(NativeType::MultiLineString(
                     coord_type,
                     Dimension::XYZ,
                 )));
@@ -535,7 +755,7 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == polygon_count {
-                return Ok(Some(GeoDataType::MultiPolygon(coord_type, Dimension::XY)));
+                return Ok(Some(NativeType::MultiPolygon(coord_type, Dimension::XY)));
             }
 
             // Check if we can cast to MultiPolygonZ
@@ -547,24 +767,24 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == polygon_count {
-                return Ok(Some(GeoDataType::MultiPolygon(coord_type, Dimension::XYZ)));
+                return Ok(Some(NativeType::MultiPolygon(coord_type, Dimension::XYZ)));
             }
 
             if geometry_types.iter().any(|t| t.has_z()) {
-                Ok(Some(GeoDataType::Mixed(coord_type, Dimension::XYZ)))
+                Ok(Some(NativeType::Mixed(coord_type, Dimension::XYZ)))
             } else {
-                Ok(Some(GeoDataType::Mixed(coord_type, Dimension::XY)))
+                Ok(Some(NativeType::Mixed(coord_type, Dimension::XY)))
             }
         }
     }
 }
 
-/// Find all geometry columns in the Arrow schema, constructing their GeoDataTypes
+/// Find all geometry columns in the Arrow schema, constructing their NativeTypes
 pub(crate) fn find_geoparquet_geom_columns(
     metadata: &FileMetaData,
     schema: &Schema,
     coord_type: CoordType,
-) -> Result<Vec<(usize, Option<GeoDataType>)>> {
+) -> Result<Vec<(usize, Option<NativeType>)>> {
     let meta = GeoParquetMetadata::from_parquet_meta(metadata)?;
 
     meta.columns

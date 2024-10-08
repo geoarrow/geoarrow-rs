@@ -10,6 +10,9 @@ use crate::io::wkb::reader::linearring::WKBLinearRing;
 
 const WKB_POLYGON_TYPE: u32 = 3;
 
+/// A WKB Polygon
+///
+/// This has been preprocessed, so access to any internal coordinate is `O(1)`.
 #[derive(Debug, Clone)]
 pub struct WKBPolygon<'a> {
     wkb_linear_rings: Vec<WKBLinearRing<'a>>,
@@ -78,6 +81,10 @@ impl<'a> WKBPolygon<'a> {
     /// Check if this WKBPolygon has equal coordinates as some other Polygon object
     pub fn equals_polygon(&self, other: &impl PolygonTrait<T = f64>) -> bool {
         polygon_eq(self, other)
+    }
+
+    pub fn dimension(&self) -> Dimension {
+        self.dim
     }
 }
 

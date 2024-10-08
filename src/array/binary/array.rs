@@ -4,13 +4,13 @@ use crate::array::binary::WKBCapacity;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 use crate::array::{CoordType, WKBBuilder};
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{NativeType, SerializedType};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::GeometryTrait;
 use crate::scalar::WKB;
 // use crate::util::{owned_slice_offsets, owned_slice_validity};
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
-use crate::GeometryArrayTrait;
+use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, SerializedArray};
+use arrow::array::AsArray;
 use arrow_array::OffsetSizeTrait;
 use arrow_array::{Array, BinaryArray, GenericBinaryArray, LargeBinaryArray};
 use arrow_buffer::NullBuffer;
@@ -20,13 +20,12 @@ use arrow_schema::{DataType, Field};
 ///
 /// This is semantically equivalent to `Vec<Option<WKB>>` due to the internal validity bitmap.
 ///
-/// This array _can_ be used directly for operations, but that will incur costly encoding to and
-/// from WKB on every operation. Instead, you usually want to use the WKBArray only for
-/// serialization purposes (e.g. to and from [GeoParquet](https://geoparquet.org/)) but convert to
-/// strongly-typed arrays (such as the [`PointArray`][crate::array::PointArray]) for computations.
+/// This array implements [`SerializedArray`], not [`NativeArray`]. This means that you'll need to
+/// parse the `WKBArray` into a native-typed GeoArrow array (such as
+/// [`PointArray`][crate::array::PointArray]) before using it for computations.
 #[derive(Debug, Clone, PartialEq)]
 pub struct WKBArray<O: OffsetSizeTrait> {
-    pub(crate) data_type: GeoDataType,
+    pub(crate) data_type: SerializedType,
     pub(crate) metadata: Arc<ArrayMetadata>,
     pub(crate) array: GenericBinaryArray<O>,
 }
@@ -36,8 +35,8 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
     /// Create a new WKBArray from a BinaryArray
     pub fn new(array: GenericBinaryArray<O>, metadata: Arc<ArrayMetadata>) -> Self {
         let data_type = match O::IS_LARGE {
-            true => GeoDataType::LargeWKB,
-            false => GeoDataType::WKB,
+            true => SerializedType::LargeWKB,
+            false => SerializedType::WKB,
         };
 
         Self {
@@ -52,16 +51,12 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         self.len() == 0
     }
 
-    /// Infer the minimal GeoDataType that this WKBArray can be casted to.
+    /// Infer the minimal NativeType that this WKBArray can be casted to.
     #[allow(dead_code)]
     // TODO: is this obsolete with new from_wkb approach that uses downcasting?
-    pub(crate) fn infer_geo_data_type(
-        &self,
-        large_type: bool,
-        coord_type: CoordType,
-    ) -> Result<GeoDataType> {
+    pub(crate) fn infer_geo_data_type(&self, coord_type: CoordType) -> Result<NativeType> {
         use crate::io::wkb::reader::r#type::infer_geometry_type;
-        infer_geometry_type(self.iter().flatten(), large_type, coord_type)
+        infer_geometry_type(self.iter().flatten(), coord_type)
     }
 
     /// The lengths of each buffer contained in this array.
@@ -81,15 +76,58 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
     pub fn into_inner(self) -> GenericBinaryArray<O> {
         self.array
     }
-}
 
-impl<O: OffsetSizeTrait> GeometryArrayTrait for WKBArray<O> {
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
+    /// Slices this [`WKBArray`] in place.
+    /// # Panic
+    /// This function panics iff `offset + length > self.len()`.
+    #[inline]
+    pub fn slice(&self, offset: usize, length: usize) -> Self {
+        assert!(
+            offset + length <= self.len(),
+            "offset + length may not exceed length of array"
+        );
+        Self {
+            array: self.array.slice(offset, length),
+            data_type: self.data_type,
+            metadata: self.metadata(),
+        }
     }
 
-    fn data_type(&self) -> GeoDataType {
-        self.data_type
+    pub fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
+        todo!()
+        // assert!(
+        //     offset + length <= self.len(),
+        //     "offset + length may not exceed length of array"
+        // );
+        // assert!(length >= 1, "length must be at least 1");
+
+        // // Find the start and end of the ring offsets
+        // let (start_idx, _) = self.array.offsets().start_end(offset);
+        // let (_, end_idx) = self.array.offsets().start_end(offset + length - 1);
+
+        // let new_offsets = owned_slice_offsets(self.array.offsets(), offset, length);
+
+        // let mut values = self.array.slice(start_idx, end_idx - start_idx);
+
+        // let validity = owned_slice_validity(self.array.nulls(), offset, length);
+
+        // Self::new(GenericBinaryArray::new(
+        //     new_offsets,
+        //     values.as_slice().to_vec().into(),
+        //     validity,
+        // ))
+    }
+
+    pub fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> Self {
+        let mut arr = self.clone();
+        arr.metadata = metadata;
+        arr
+    }
+}
+
+impl<O: OffsetSizeTrait> ArrayBase for WKBArray<O> {
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
     }
 
     fn storage_type(&self) -> DataType {
@@ -115,22 +153,8 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for WKBArray<O> {
         self.clone().into_array_ref()
     }
 
-    fn coord_type(&self) -> CoordType {
-        CoordType::Interleaved
-    }
-
-    fn to_coord_type(&self, _coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
-        Arc::new(self.clone())
-    }
-
     fn metadata(&self) -> Arc<ArrayMetadata> {
         self.metadata.clone()
-    }
-
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::GeometryArrayRef {
-        let mut arr = self.clone();
-        arr.metadata = metadata;
-        Arc::new(arr)
     }
 
     /// Returns the number of geometries in this array
@@ -143,64 +167,23 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for WKBArray<O> {
     fn nulls(&self) -> Option<&NullBuffer> {
         self.array.nulls()
     }
+}
 
-    fn as_ref(&self) -> &dyn GeometryArrayTrait {
+impl<O: OffsetSizeTrait> SerializedArray for WKBArray<O> {
+    fn data_type(&self) -> SerializedType {
+        self.data_type
+    }
+
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> Arc<dyn SerializedArray> {
+        Arc::new(self.with_metadata(metadata))
+    }
+
+    fn as_ref(&self) -> &dyn SerializedArray {
         self
     }
 }
 
-impl<O: OffsetSizeTrait> GeometryArraySelfMethods<2> for WKBArray<O> {
-    fn with_coords(self, _coords: crate::array::CoordBuffer<2>) -> Self {
-        unimplemented!()
-    }
-
-    fn into_coord_type(self, _coord_type: CoordType) -> Self {
-        self
-    }
-
-    /// Slices this [`WKBArray`] in place.
-    /// # Panic
-    /// This function panics iff `offset + length > self.len()`.
-    #[inline]
-    fn slice(&self, offset: usize, length: usize) -> Self {
-        assert!(
-            offset + length <= self.len(),
-            "offset + length may not exceed length of array"
-        );
-        Self {
-            array: self.array.slice(offset, length),
-            data_type: self.data_type,
-            metadata: self.metadata(),
-        }
-    }
-
-    fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
-        todo!()
-        // assert!(
-        //     offset + length <= self.len(),
-        //     "offset + length may not exceed length of array"
-        // );
-        // assert!(length >= 1, "length must be at least 1");
-
-        // // Find the start and end of the ring offsets
-        // let (start_idx, _) = self.array.offsets().start_end(offset);
-        // let (_, end_idx) = self.array.offsets().start_end(offset + length - 1);
-
-        // let new_offsets = owned_slice_offsets(self.array.offsets(), offset, length);
-
-        // let mut values = self.array.slice(start_idx, end_idx - start_idx);
-
-        // let validity = owned_slice_validity(self.array.nulls(), offset, length);
-
-        // Self::new(GenericBinaryArray::new(
-        //     new_offsets,
-        //     values.as_slice().to_vec().into(),
-        //     validity,
-        // ))
-    }
-}
-
-impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for WKBArray<O> {
+impl<'a, O: OffsetSizeTrait> ArrayAccessor<'a> for WKBArray<O> {
     type Item = WKB<'a, O>;
     type ItemGeo = geo::Geometry;
 
@@ -253,12 +236,12 @@ impl TryFrom<&dyn Array> for WKBArray<i64> {
     fn try_from(value: &dyn Array) -> Result<Self> {
         match value.data_type() {
             DataType::Binary => {
-                let downcasted = value.as_any().downcast_ref::<BinaryArray>().unwrap();
+                let downcasted = value.as_binary::<i32>();
                 let geom_array: WKBArray<i32> = downcasted.clone().into();
                 Ok(geom_array.into())
             }
             DataType::LargeBinary => {
-                let downcasted = value.as_any().downcast_ref::<LargeBinaryArray>().unwrap();
+                let downcasted = value.as_binary::<i64>();
                 Ok(downcasted.clone().into())
             }
             _ => Err(GeoArrowError::General(format!(

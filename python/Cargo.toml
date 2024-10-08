@@ -1,0 +1,31 @@
+[workspace]
+members = ["geoarrow-compute", "geoarrow-core", "geoarrow-io", "pyo3-geoarrow"]
+resolver = "2"
+
+[workspace.package]
+authors = ["Kyle Barron <kylebarron2@gmail.com>"]
+version = "0.3.0"
+edition = "2021"
+homepage = "https://geoarrow.org/geoarrow-rs/"
+repository = "https://github.com/geoarrow/geoarrow-rs"
+license = "MIT OR Apache-2.0"
+keywords = ["python", "arrow", "geospatial"]
+categories = ["wasm", "science::geo"]
+rust-version = "1.80"
+
+[workspace.dependencies]
+arrow = "53"
+arrow-array = "53"
+arrow-buffer = "53"
+arrow-schema = "53"
+geoarrow = { path = "../", features = ["geozero"] }
+# Uncomment when publishing
+# geoarrow = { version = "0.4.0-beta.1", features = ["geozero"] }
+geozero = "0.14"
+indexmap = "2.5.0"
+object_store = "0.11"
+parquet = "53"
+pyo3 = { version = "0.21.0", features = ["hashbrown", "serde", "anyhow"] }
+pyo3-arrow = "0.4"
+serde_json = "1"
+thiserror = "1"

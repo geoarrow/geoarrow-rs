@@ -2,6 +2,7 @@ use geo::{Coord, CoordNum, Point};
 
 /// A trait for accessing data from a generic Coord.
 pub trait CoordTrait {
+    /// The coordinate type of this geometry
     type T: CoordNum;
 
     /// Access the n'th (0-based) element of the CoordinateTuple.

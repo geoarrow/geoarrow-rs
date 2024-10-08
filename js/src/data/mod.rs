@@ -1,6 +1,7 @@
 pub mod coord;
 
 use arrow_array::BinaryArray;
+use arrow_buffer::Buffer;
 pub use coord::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
 
 use crate::error::WasmResult;
@@ -49,37 +50,37 @@ impl_data! {
 impl_data! {
     /// An immutable array of LineString geometries in WebAssembly memory using GeoArrow's
     /// in-memory representation.
-    pub struct LineStringData(pub(crate) geoarrow::array::LineStringArray<i32, 2>);
+    pub struct LineStringData(pub(crate) geoarrow::array::LineStringArray<2>);
 }
 impl_data! {
     /// An immutable array of Polygon geometries in WebAssembly memory using GeoArrow's
     /// in-memory representation.
-    pub struct PolygonData(pub(crate) geoarrow::array::PolygonArray<i32, 2>);
+    pub struct PolygonData(pub(crate) geoarrow::array::PolygonArray<2>);
 }
 impl_data! {
     /// An immutable array of MultiPoint geometries in WebAssembly memory using GeoArrow's
     /// in-memory representation.
-    pub struct MultiPointData(pub(crate) geoarrow::array::MultiPointArray<i32, 2>);
+    pub struct MultiPointData(pub(crate) geoarrow::array::MultiPointArray<2>);
 }
 impl_data! {
     /// An immutable array of MultiLineString geometries in WebAssembly memory using GeoArrow's
     /// in-memory representation.
-    pub struct MultiLineStringData(pub(crate) geoarrow::array::MultiLineStringArray<i32, 2>);
+    pub struct MultiLineStringData(pub(crate) geoarrow::array::MultiLineStringArray<2>);
 }
 impl_data! {
     /// An immutable array of MultiPolygon geometries in WebAssembly memory using GeoArrow's
     /// in-memory representation.
-    pub struct MultiPolygonData(pub(crate) geoarrow::array::MultiPolygonArray<i32, 2>);
+    pub struct MultiPolygonData(pub(crate) geoarrow::array::MultiPolygonArray<2>);
 }
 impl_data! {
     /// An immutable array of Geometry geometries in WebAssembly memory using GeoArrow's
     /// in-memory representation.
-    pub struct MixedGeometryData(pub(crate) geoarrow::array::MixedGeometryArray<i32, 2>);
+    pub struct MixedGeometryData(pub(crate) geoarrow::array::MixedGeometryArray<2>);
 }
 impl_data! {
     /// An immutable array of GeometryCollection geometries in WebAssembly memory using GeoArrow's
     /// in-memory representation.
-    pub struct GeometryCollectionData(pub(crate) geoarrow::array::GeometryCollectionArray<i32, 2>);
+    pub struct GeometryCollectionData(pub(crate) geoarrow::array::GeometryCollectionArray<2>);
 }
 impl_data! {
     /// An immutable array of WKB-encoded geometries in WebAssembly memory using GeoArrow's
@@ -187,7 +188,8 @@ impl MultiPolygonData {
 impl WKBData {
     #[wasm_bindgen(constructor)]
     pub fn new(values: Vec<u8>, offsets: Vec<i32>) -> Self {
-        let binary_array = BinaryArray::new(vec_to_offsets(offsets), values.into(), None);
+        let binary_array =
+            BinaryArray::new(vec_to_offsets(offsets), Buffer::from_vec(values), None);
 
         Self(geoarrow::array::WKBArray::new(
             binary_array,
@@ -215,7 +217,7 @@ impl WKBData {
     /// and the original wkb array's memory does not need to be freed manually.
     #[wasm_bindgen(js_name = intoLineStringArray)]
     pub fn into_line_string_array(self) -> WasmResult<LineStringData> {
-        let arr: geoarrow::array::LineStringArray<i32, 2> = self.0.try_into().unwrap();
+        let arr: geoarrow::array::LineStringArray<2> = self.0.try_into().unwrap();
         Ok(arr.into())
     }
 
@@ -227,7 +229,7 @@ impl WKBData {
     /// and the original wkb array's memory does not need to be freed manually.
     #[wasm_bindgen(js_name = intoPolygonArray)]
     pub fn into_polygon_array(self) -> WasmResult<PolygonData> {
-        let arr: geoarrow::array::PolygonArray<i32, 2> = self.0.try_into().unwrap();
+        let arr: geoarrow::array::PolygonArray<2> = self.0.try_into().unwrap();
         Ok(arr.into())
     }
 
@@ -239,7 +241,7 @@ impl WKBData {
     /// and the original wkb array's memory does not need to be freed manually.
     #[wasm_bindgen(js_name = intoMultiPointArray)]
     pub fn into_multi_point_array(self) -> WasmResult<MultiPointData> {
-        let arr: geoarrow::array::MultiPointArray<i32, 2> = self.0.try_into().unwrap();
+        let arr: geoarrow::array::MultiPointArray<2> = self.0.try_into().unwrap();
         Ok(arr.into())
     }
 
@@ -251,7 +253,7 @@ impl WKBData {
     /// and the original wkb array's memory does not need to be freed manually.
     #[wasm_bindgen(js_name = intoMultiLineStringArray)]
     pub fn into_multi_line_string_array(self) -> WasmResult<MultiLineStringData> {
-        let arr: geoarrow::array::MultiLineStringArray<i32, 2> = self.0.try_into().unwrap();
+        let arr: geoarrow::array::MultiLineStringArray<2> = self.0.try_into().unwrap();
         Ok(arr.into())
     }
 
@@ -263,7 +265,7 @@ impl WKBData {
     /// and the original wkb array's memory does not need to be freed manually.
     #[wasm_bindgen(js_name = intoMultiPolygonArray)]
     pub fn into_multi_polygon_array(self) -> WasmResult<MultiPolygonData> {
-        let arr: geoarrow::array::MultiPolygonArray<i32, 2> = self.0.try_into().unwrap();
+        let arr: geoarrow::array::MultiPolygonArray<2> = self.0.try_into().unwrap();
         Ok(arr.into())
     }
 }

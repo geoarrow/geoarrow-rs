@@ -1,8 +1,7 @@
 //! Bindings to the [`rstar`] crate for dynamic R-Trees.
 
 use crate::array::*;
-use crate::trait_::GeometryArrayAccessor;
-use arrow_array::OffsetSizeTrait;
+use crate::trait_::ArrayAccessor;
 use rstar::primitives::CachedEnvelope;
 
 /// Construct an R-Tree from a geometry array.
@@ -34,7 +33,7 @@ impl<'a> RTree<'a> for RectArray<2> {
 
 macro_rules! iter_cached_impl {
     ($type:ty, $scalar_type:ty) => {
-        impl<'a, O: OffsetSizeTrait> RTree<'a> for $type {
+        impl<'a> RTree<'a> for $type {
             type RTreeObject = CachedEnvelope<$scalar_type>;
 
             fn rstar_tree(&'a self) -> rstar::RTree<Self::RTreeObject> {
@@ -44,17 +43,16 @@ macro_rules! iter_cached_impl {
     };
 }
 
-iter_cached_impl!(LineStringArray<O, 2>, crate::scalar::LineString<'a, O, 2>);
-iter_cached_impl!(PolygonArray<O, 2>, crate::scalar::Polygon<'a, O, 2>);
-iter_cached_impl!(MultiPointArray<O, 2>, crate::scalar::MultiPoint<'a, O, 2>);
+iter_cached_impl!(LineStringArray<2>, crate::scalar::LineString<'a, 2>);
+iter_cached_impl!(PolygonArray<2>, crate::scalar::Polygon<'a, 2>);
+iter_cached_impl!(MultiPointArray<2>, crate::scalar::MultiPoint<'a, 2>);
 iter_cached_impl!(
-    MultiLineStringArray<O, 2>,
-    crate::scalar::MultiLineString<'a, O, 2>
+    MultiLineStringArray<2>,
+    crate::scalar::MultiLineString<'a, 2>
 );
-iter_cached_impl!(MultiPolygonArray<O, 2>, crate::scalar::MultiPolygon<'a, O, 2>);
-iter_cached_impl!(WKBArray<O>, crate::scalar::WKB<'a, O>);
-iter_cached_impl!(MixedGeometryArray<O, 2>, crate::scalar::Geometry<'a, O, 2>);
+iter_cached_impl!(MultiPolygonArray<2>, crate::scalar::MultiPolygon<'a, 2>);
+iter_cached_impl!(MixedGeometryArray<2>, crate::scalar::Geometry<'a, 2>);
 iter_cached_impl!(
-    GeometryCollectionArray<O, 2>,
-    crate::scalar::GeometryCollection<'a, O, 2>
+    GeometryCollectionArray<2>,
+    crate::scalar::GeometryCollection<'a, 2>
 );

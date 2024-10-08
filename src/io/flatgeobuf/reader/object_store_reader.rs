@@ -1,17 +1,19 @@
+use std::sync::Arc;
+
 use async_trait::async_trait;
 use bytes::Bytes;
 use http_range_client::{AsyncHttpRangeClient, Result as HTTPRangeClientResult};
 use object_store::path::Path;
 use object_store::ObjectStore;
 
-pub struct ObjectStoreWrapper<T: ObjectStore> {
+pub struct ObjectStoreWrapper {
     pub location: Path,
-    pub reader: T,
+    pub reader: Arc<dyn ObjectStore>,
     pub size: usize,
 }
 
 #[async_trait]
-impl<T: ObjectStore> AsyncHttpRangeClient for ObjectStoreWrapper<T> {
+impl AsyncHttpRangeClient for ObjectStoreWrapper {
     /// Send a GET range request
     async fn get_range(&self, _url: &str, range: &str) -> HTTPRangeClientResult<Bytes> {
         assert!(range.starts_with("bytes="));

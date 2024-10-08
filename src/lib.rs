@@ -58,7 +58,7 @@
 #![cfg_attr(not(test), deny(unused_crate_dependencies))]
 #![deny(missing_docs)] // FIXME some modules allow missing docs
 
-pub use trait_::GeometryArrayTrait;
+pub use trait_::{ArrayBase, NativeArray};
 
 pub mod algorithm;
 pub mod array;
@@ -66,7 +66,8 @@ pub mod chunked_array;
 pub mod datatypes;
 pub mod error;
 pub mod geo_traits;
-pub mod indexed;
+// Long-term we want this to be part of the public API, but not yet stabilized in v0.3.
+pub(crate) mod indexed;
 pub mod io;
 pub mod scalar;
 pub mod schema;

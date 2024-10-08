@@ -1,3 +1,4 @@
+mod dynamic;
 mod geometrycollection;
 mod linestring;
 mod mixed;

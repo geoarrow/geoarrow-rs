@@ -10,6 +10,9 @@ use crate::io::wkb::reader::geometry::Endianness;
 
 const HEADER_BYTES: u64 = 5;
 
+/// A WKB LineString
+///
+/// This has been preprocessed, so access to any internal coordinate is `O(1)`.
 #[derive(Debug, Clone, Copy)]
 pub struct WKBLineString<'a> {
     buf: &'a [u8],
@@ -70,6 +73,10 @@ impl<'a> WKBLineString<'a> {
     /// Check if this WKBLineString has equal coordinates as some other MultiLineString object
     pub fn equals_multi_line_string(&self, other: &impl MultiLineStringTrait<T = f64>) -> bool {
         multi_line_string_eq(self, other)
+    }
+
+    pub fn dimension(&self) -> Dimension {
+        self.dim
     }
 }
 

@@ -3,7 +3,7 @@ use rayon::prelude::*;
 
 use crate::chunked_array::*;
 use crate::error::Result;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 
 pub trait MapChunks {
     type Chunk;
@@ -46,7 +46,7 @@ pub trait MapChunks {
         R: Send;
 }
 
-impl<G: GeometryArrayTrait> MapChunks for ChunkedGeometryArray<G> {
+impl<G: NativeArray> MapChunks for ChunkedGeometryArray<G> {
     type Chunk = G;
 
     fn map<F, R>(&self, map_op: F) -> Vec<R>

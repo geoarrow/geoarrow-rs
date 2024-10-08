@@ -1,11 +1,11 @@
 use crate::array::*;
-use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedGeometryArrayTrait};
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::ArrayAccessor;
+use crate::NativeArray;
 use arrow_array::builder::BooleanBuilder;
-use arrow_array::{BooleanArray, OffsetSizeTrait};
+use arrow_array::BooleanArray;
 use geo::dimensions::HasDimensions as GeoHasDimensions;
 
 /// Operate on the dimensionality of geometries.
@@ -35,22 +35,10 @@ pub trait HasDimensions {
     fn is_empty(&self) -> Self::Output;
 }
 
-// Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl HasDimensions for PointArray<2> {
-    type Output = BooleanArray;
-
-    fn is_empty(&self) -> Self::Output {
-        let mut output_array = BooleanBuilder::with_capacity(self.len());
-        self.iter_geo()
-            .for_each(|maybe_g| output_array.append_option(maybe_g.map(|g| g.is_empty())));
-        output_array.finish()
-    }
-}
-
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty) => {
-        impl<O: OffsetSizeTrait> HasDimensions for $type {
+        impl HasDimensions for $type {
             type Output = BooleanArray;
 
             fn is_empty(&self) -> Self::Output {
@@ -63,58 +51,32 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<O, 2>);
-iter_geo_impl!(PolygonArray<O, 2>);
-iter_geo_impl!(MultiPointArray<O, 2>);
-iter_geo_impl!(MultiLineStringArray<O, 2>);
-iter_geo_impl!(MultiPolygonArray<O, 2>);
-iter_geo_impl!(MixedGeometryArray<O, 2>);
-iter_geo_impl!(GeometryCollectionArray<O, 2>);
-iter_geo_impl!(WKBArray<O>);
+iter_geo_impl!(PointArray<2>);
+iter_geo_impl!(LineStringArray<2>);
+iter_geo_impl!(PolygonArray<2>);
+iter_geo_impl!(MultiPointArray<2>);
+iter_geo_impl!(MultiLineStringArray<2>);
+iter_geo_impl!(MultiPolygonArray<2>);
+iter_geo_impl!(MixedGeometryArray<2>);
+iter_geo_impl!(GeometryCollectionArray<2>);
 
-impl HasDimensions for &dyn GeometryArrayTrait {
+impl HasDimensions for &dyn NativeArray {
     type Output = Result<BooleanArray>;
 
     fn is_empty(&self) -> Self::Output {
+        use Dimension::*;
+        use NativeType::*;
+
         let result = match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => HasDimensions::is_empty(self.as_point_2d()),
-            GeoDataType::LineString(_, Dimension::XY) => {
-                HasDimensions::is_empty(self.as_line_string_2d())
-            }
-            GeoDataType::LargeLineString(_, Dimension::XY) => {
-                HasDimensions::is_empty(self.as_large_line_string_2d())
-            }
-            GeoDataType::Polygon(_, Dimension::XY) => HasDimensions::is_empty(self.as_polygon_2d()),
-            GeoDataType::LargePolygon(_, Dimension::XY) => {
-                HasDimensions::is_empty(self.as_large_polygon_2d())
-            }
-            GeoDataType::MultiPoint(_, Dimension::XY) => {
-                HasDimensions::is_empty(self.as_multi_point_2d())
-            }
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                HasDimensions::is_empty(self.as_large_multi_point_2d())
-            }
-            GeoDataType::MultiLineString(_, Dimension::XY) => {
-                HasDimensions::is_empty(self.as_multi_line_string_2d())
-            }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
-                HasDimensions::is_empty(self.as_large_multi_line_string_2d())
-            }
-            GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                HasDimensions::is_empty(self.as_multi_polygon_2d())
-            }
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
-                HasDimensions::is_empty(self.as_large_multi_polygon_2d())
-            }
-            GeoDataType::Mixed(_, Dimension::XY) => HasDimensions::is_empty(self.as_mixed_2d()),
-            GeoDataType::LargeMixed(_, Dimension::XY) => {
-                HasDimensions::is_empty(self.as_large_mixed_2d())
-            }
-            GeoDataType::GeometryCollection(_, Dimension::XY) => {
-                HasDimensions::is_empty(self.as_geometry_collection_2d())
-            }
-            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
-                HasDimensions::is_empty(self.as_large_geometry_collection_2d())
+            Point(_, XY) => HasDimensions::is_empty(self.as_point::<2>()),
+            LineString(_, XY) => HasDimensions::is_empty(self.as_line_string::<2>()),
+            Polygon(_, XY) => HasDimensions::is_empty(self.as_polygon::<2>()),
+            MultiPoint(_, XY) => HasDimensions::is_empty(self.as_multi_point::<2>()),
+            MultiLineString(_, XY) => HasDimensions::is_empty(self.as_multi_line_string::<2>()),
+            MultiPolygon(_, XY) => HasDimensions::is_empty(self.as_multi_polygon::<2>()),
+            Mixed(_, XY) => HasDimensions::is_empty(self.as_mixed::<2>()),
+            GeometryCollection(_, XY) => {
+                HasDimensions::is_empty(self.as_geometry_collection::<2>())
             }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -122,7 +84,7 @@ impl HasDimensions for &dyn GeometryArrayTrait {
     }
 }
 
-impl<G: GeometryArrayTrait> HasDimensions for ChunkedGeometryArray<G> {
+impl<G: NativeArray> HasDimensions for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedArray<BooleanArray>>;
 
     fn is_empty(&self) -> Self::Output {
@@ -131,49 +93,23 @@ impl<G: GeometryArrayTrait> HasDimensions for ChunkedGeometryArray<G> {
     }
 }
 
-impl HasDimensions for &dyn ChunkedGeometryArrayTrait {
+impl HasDimensions for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<BooleanArray>>;
 
     fn is_empty(&self) -> Self::Output {
+        use Dimension::*;
+        use NativeType::*;
+
         match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => HasDimensions::is_empty(self.as_point_2d()),
-            GeoDataType::LineString(_, Dimension::XY) => {
-                HasDimensions::is_empty(self.as_line_string_2d())
-            }
-            GeoDataType::LargeLineString(_, Dimension::XY) => {
-                HasDimensions::is_empty(self.as_large_line_string_2d())
-            }
-            GeoDataType::Polygon(_, Dimension::XY) => HasDimensions::is_empty(self.as_polygon_2d()),
-            GeoDataType::LargePolygon(_, Dimension::XY) => {
-                HasDimensions::is_empty(self.as_large_polygon_2d())
-            }
-            GeoDataType::MultiPoint(_, Dimension::XY) => {
-                HasDimensions::is_empty(self.as_multi_point_2d())
-            }
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                HasDimensions::is_empty(self.as_large_multi_point_2d())
-            }
-            GeoDataType::MultiLineString(_, Dimension::XY) => {
-                HasDimensions::is_empty(self.as_multi_line_string_2d())
-            }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
-                HasDimensions::is_empty(self.as_large_multi_line_string_2d())
-            }
-            GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                HasDimensions::is_empty(self.as_multi_polygon_2d())
-            }
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
-                HasDimensions::is_empty(self.as_large_multi_polygon_2d())
-            }
-            GeoDataType::Mixed(_, Dimension::XY) => HasDimensions::is_empty(self.as_mixed_2d()),
-            GeoDataType::LargeMixed(_, Dimension::XY) => {
-                HasDimensions::is_empty(self.as_large_mixed_2d())
-            }
-            GeoDataType::GeometryCollection(_, Dimension::XY) => {
-                HasDimensions::is_empty(self.as_geometry_collection_2d())
-            }
-            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
-                HasDimensions::is_empty(self.as_large_geometry_collection_2d())
+            Point(_, XY) => HasDimensions::is_empty(self.as_point::<2>()),
+            LineString(_, XY) => HasDimensions::is_empty(self.as_line_string::<2>()),
+            Polygon(_, XY) => HasDimensions::is_empty(self.as_polygon::<2>()),
+            MultiPoint(_, XY) => HasDimensions::is_empty(self.as_multi_point::<2>()),
+            MultiLineString(_, XY) => HasDimensions::is_empty(self.as_multi_line_string::<2>()),
+            MultiPolygon(_, XY) => HasDimensions::is_empty(self.as_multi_polygon::<2>()),
+            Mixed(_, XY) => HasDimensions::is_empty(self.as_mixed::<2>()),
+            GeometryCollection(_, XY) => {
+                HasDimensions::is_empty(self.as_geometry_collection::<2>())
             }
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }

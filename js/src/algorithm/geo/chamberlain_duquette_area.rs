@@ -1,7 +1,9 @@
 use crate::data::*;
+use crate::error::WasmResult;
 use crate::vector::*;
-use arrow_wasm::data::Float64Data;
-use arrow_wasm::vector::Float64Vector;
+use arrow_wasm::data::Data;
+use arrow_wasm::vector::Vector;
+use geoarrow::algorithm::geo::ChamberlainDuquetteArea;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_alg {
@@ -10,16 +12,18 @@ macro_rules! impl_alg {
         impl $struct_name {
             /// Calculate the unsigned approximate geodesic area of a `Geometry`.
             #[wasm_bindgen(js_name = chamberlainDuquetteUnsignedArea)]
-            pub fn chamberlain_duquette_unsigned_area(&self) -> Float64Data {
-                use geoarrow::algorithm::geo::ChamberlainDuquetteArea;
-                ChamberlainDuquetteArea::chamberlain_duquette_unsigned_area(&self.0).into()
+            pub fn chamberlain_duquette_unsigned_area(&self) -> Data {
+                Data::from_array(ChamberlainDuquetteArea::chamberlain_duquette_unsigned_area(
+                    &self.0,
+                ))
             }
 
             /// Calculate the signed approximate geodesic area of a `Geometry`.
             #[wasm_bindgen(js_name = chamberlainDuquetteSignedArea)]
-            pub fn chamberlain_duquette_signed_area(&self) -> Float64Data {
-                use geoarrow::algorithm::geo::ChamberlainDuquetteArea;
-                ChamberlainDuquetteArea::chamberlain_duquette_signed_area(&self.0).into()
+            pub fn chamberlain_duquette_signed_area(&self) -> Data {
+                Data::from_array(ChamberlainDuquetteArea::chamberlain_duquette_signed_area(
+                    &self.0,
+                ))
             }
         }
     };
@@ -40,24 +44,18 @@ macro_rules! impl_vector {
         impl $struct_name {
             /// Calculate the unsigned approximate geodesic area of a `Geometry`.
             #[wasm_bindgen(js_name = chamberlainDuquetteUnsignedArea)]
-            pub fn chamberlain_duquette_unsigned_area(&self) -> Float64Vector {
-                use geoarrow::algorithm::geo::ChamberlainDuquetteArea;
-                Float64Vector::new(
-                    ChamberlainDuquetteArea::chamberlain_duquette_unsigned_area(&self.0)
-                        .unwrap()
-                        .into_inner(),
-                )
+            pub fn chamberlain_duquette_unsigned_area(&self) -> WasmResult<Vector> {
+                let chunks = ChamberlainDuquetteArea::chamberlain_duquette_unsigned_area(&self.0)?
+                    .chunk_refs();
+                Ok(Vector::from_array_refs(chunks)?)
             }
 
             /// Calculate the signed approximate geodesic area of a `Geometry`.
             #[wasm_bindgen(js_name = chamberlainDuquetteSignedArea)]
-            pub fn chamberlain_duquette_signed_area(&self) -> Float64Vector {
-                use geoarrow::algorithm::geo::ChamberlainDuquetteArea;
-                Float64Vector::new(
-                    ChamberlainDuquetteArea::chamberlain_duquette_signed_area(&self.0)
-                        .unwrap()
-                        .into_inner(),
-                )
+            pub fn chamberlain_duquette_signed_area(&self) -> WasmResult<Vector> {
+                let chunks = ChamberlainDuquetteArea::chamberlain_duquette_signed_area(&self.0)?
+                    .chunk_refs();
+                Ok(Vector::from_array_refs(chunks)?)
             }
         }
     };

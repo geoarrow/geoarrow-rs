@@ -9,13 +9,13 @@ use arrow_schema::{DataType, Field};
 use crate::array::metadata::ArrayMetadata;
 use crate::array::rect::RectBuilder;
 use crate::array::{CoordBuffer, CoordType, SeparatedCoordBuffer};
-use crate::datatypes::{rect_fields, GeoDataType};
+use crate::datatypes::{rect_fields, NativeType};
 use crate::error::GeoArrowError;
 use crate::geo_traits::RectTrait;
 use crate::scalar::Rect;
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::util::owned_slice_validity;
-use crate::GeometryArrayTrait;
+use crate::{ArrayBase, NativeArray};
 
 /// An immutable array of Rect geometries.
 ///
@@ -26,8 +26,8 @@ use crate::GeometryArrayTrait;
 /// Internally this is implemented as a FixedSizeList, laid out as minx, miny, maxx, maxy.
 #[derive(Debug, Clone, PartialEq)]
 pub struct RectArray<const D: usize> {
-    // Always GeoDataType::Rect
-    data_type: GeoDataType,
+    // Always NativeType::Rect
+    data_type: NativeType,
 
     metadata: Arc<ArrayMetadata>,
 
@@ -47,7 +47,7 @@ impl<const D: usize> RectArray<D> {
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
-        let data_type = GeoDataType::Rect(D.try_into().unwrap());
+        let data_type = NativeType::Rect(D.try_into().unwrap());
         Self {
             data_type,
             lower,
@@ -64,15 +64,37 @@ impl<const D: usize> RectArray<D> {
     pub fn upper(&self) -> &SeparatedCoordBuffer<D> {
         &self.upper
     }
-}
 
-impl<const D: usize> GeometryArrayTrait for RectArray<D> {
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
+    /// Slices this [`RectArray`] in place.
+    /// # Panic
+    /// This function panics iff `offset + length > self.len()`.
+    #[inline]
+    pub fn slice(&self, offset: usize, length: usize) -> Self {
+        assert!(
+            offset + length <= self.len(),
+            "offset + length may not exceed length of array"
+        );
+
+        Self {
+            data_type: self.data_type,
+            lower: self.lower().slice(offset, length),
+            upper: self.upper().slice(offset, length),
+            validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
+            metadata: self.metadata(),
+        }
     }
 
-    fn data_type(&self) -> GeoDataType {
-        self.data_type
+    pub fn owned_slice(&self, offset: usize, length: usize) -> Self {
+        let lower = self.lower.owned_slice(offset, length);
+        let upper = self.upper.owned_slice(offset, length);
+        let validity = owned_slice_validity(self.nulls(), offset, length);
+        Self::new(lower, upper, validity, self.metadata())
+    }
+}
+
+impl<const D: usize> ArrayBase for RectArray<D> {
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
     }
 
     fn storage_type(&self) -> DataType {
@@ -97,22 +119,8 @@ impl<const D: usize> GeometryArrayTrait for RectArray<D> {
         self.clone().into_array_ref()
     }
 
-    fn coord_type(&self) -> CoordType {
-        unimplemented!()
-    }
-
-    fn to_coord_type(&self, _coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
-        todo!()
-    }
-
     fn metadata(&self) -> Arc<ArrayMetadata> {
         self.metadata.clone()
-    }
-
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::GeometryArrayRef {
-        let mut arr = self.clone();
-        arr.metadata = metadata;
-        Arc::new(arr)
     }
 
     /// Returns the number of geometries in this array
@@ -126,9 +134,37 @@ impl<const D: usize> GeometryArrayTrait for RectArray<D> {
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
     }
+}
 
-    fn as_ref(&self) -> &dyn GeometryArrayTrait {
+impl<const D: usize> NativeArray for RectArray<D> {
+    fn data_type(&self) -> NativeType {
+        self.data_type
+    }
+
+    fn coord_type(&self) -> CoordType {
+        CoordType::Separated
+    }
+
+    fn to_coord_type(&self, _coord_type: CoordType) -> Arc<dyn NativeArray> {
+        Arc::new(self.clone())
+    }
+
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
+        let mut arr = self.clone();
+        arr.metadata = metadata;
+        Arc::new(arr)
+    }
+
+    fn as_ref(&self) -> &dyn NativeArray {
         self
+    }
+
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
+        Arc::new(self.slice(offset, length))
+    }
+
+    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
+        Arc::new(self.owned_slice(offset, length))
     }
 }
 
@@ -140,35 +176,9 @@ impl<const D: usize> GeometryArraySelfMethods<D> for RectArray<D> {
     fn into_coord_type(self, _coord_type: CoordType) -> Self {
         unimplemented!()
     }
-
-    /// Slices this [`RectArray`] in place.
-    /// # Panic
-    /// This function panics iff `offset + length > self.len()`.
-    #[inline]
-    fn slice(&self, offset: usize, length: usize) -> Self {
-        assert!(
-            offset + length <= self.len(),
-            "offset + length may not exceed length of array"
-        );
-
-        Self {
-            data_type: self.data_type,
-            lower: self.lower().slice(offset, length),
-            upper: self.upper().slice(offset, length),
-            validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
-            metadata: self.metadata(),
-        }
-    }
-
-    fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        let lower = self.lower.owned_slice(offset, length);
-        let upper = self.upper.owned_slice(offset, length);
-        let validity = owned_slice_validity(self.nulls(), offset, length);
-        Self::new(lower, upper, validity, self.metadata())
-    }
 }
 
-impl<'a, const D: usize> GeometryArrayAccessor<'a> for RectArray<D> {
+impl<'a, const D: usize> ArrayAccessor<'a> for RectArray<D> {
     type Item = Rect<'a, D>;
     type ItemGeo = geo::Rect;
 

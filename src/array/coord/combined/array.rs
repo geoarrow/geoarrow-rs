@@ -6,11 +6,9 @@ use crate::array::{
 };
 use crate::error::GeoArrowError;
 use crate::scalar::Coord;
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
-use crate::GeometryArrayTrait;
+use crate::trait_::IntoArrow;
 use arrow_array::{Array, FixedSizeListArray, StructArray};
-use arrow_buffer::NullBuffer;
-use arrow_schema::{DataType, Field};
+use arrow_schema::DataType;
 
 /// An Arrow representation of an array of coordinates.
 ///
@@ -44,85 +42,69 @@ impl<const D: usize> CoordBuffer<D> {
             CoordBuffer::Separated(c) => c.get_y(i),
         }
     }
-}
 
-impl<const D: usize> GeometryArrayTrait for CoordBuffer<D> {
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
-
-    fn data_type(&self) -> crate::datatypes::GeoDataType {
-        panic!("Coordinate arrays do not have a GeoDataType.")
-    }
-
-    fn storage_type(&self) -> DataType {
+    pub fn slice(&self, offset: usize, length: usize) -> Self {
         match self {
-            CoordBuffer::Interleaved(c) => c.storage_type(),
-            CoordBuffer::Separated(c) => c.storage_type(),
+            CoordBuffer::Interleaved(c) => CoordBuffer::Interleaved(c.slice(offset, length)),
+            CoordBuffer::Separated(c) => CoordBuffer::Separated(c.slice(offset, length)),
         }
     }
 
-    fn extension_field(&self) -> Arc<Field> {
-        panic!("Coordinate arrays do not have an extension name.")
+    pub fn owned_slice(&self, offset: usize, length: usize) -> Self {
+        match self {
+            CoordBuffer::Interleaved(cb) => {
+                CoordBuffer::Interleaved(cb.owned_slice(offset, length))
+            }
+            CoordBuffer::Separated(cb) => CoordBuffer::Separated(cb.owned_slice(offset, length)),
+        }
     }
 
-    fn extension_name(&self) -> &str {
-        panic!("Coordinate arrays do not have an extension name.")
-    }
-
-    fn metadata(&self) -> Arc<crate::array::metadata::ArrayMetadata> {
-        panic!()
-    }
-
-    fn with_metadata(
-        &self,
-        _metadata: Arc<crate::array::metadata::ArrayMetadata>,
-    ) -> crate::trait_::GeometryArrayRef {
-        panic!()
-    }
-
-    fn into_array_ref(self) -> Arc<dyn Array> {
-        self.into_arrow()
-    }
-
-    fn to_array_ref(&self) -> arrow_array::ArrayRef {
-        self.clone().into_array_ref()
-    }
-
-    fn coord_type(&self) -> CoordType {
+    pub fn coord_type(&self) -> CoordType {
         match self {
             CoordBuffer::Interleaved(cb) => cb.coord_type(),
             CoordBuffer::Separated(cb) => cb.coord_type(),
         }
     }
 
-    fn to_coord_type(&self, _coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
-        panic!()
+    pub fn storage_type(&self) -> DataType {
+        match self {
+            CoordBuffer::Interleaved(c) => c.storage_type(),
+            CoordBuffer::Separated(c) => c.storage_type(),
+        }
     }
 
-    fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         match self {
             CoordBuffer::Interleaved(c) => c.len(),
             CoordBuffer::Separated(c) => c.len(),
         }
     }
 
-    fn nulls(&self) -> Option<&NullBuffer> {
-        panic!("coordinate arrays don't have their own validity arrays")
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
-    fn as_ref(&self) -> &dyn GeometryArrayTrait {
-        self
+    pub fn value(&self, index: usize) -> Coord<'_, D> {
+        match self {
+            CoordBuffer::Interleaved(c) => Coord::Interleaved(c.value(index)),
+            CoordBuffer::Separated(c) => Coord::Separated(c.value(index)),
+        }
     }
-}
 
-impl<const D: usize> GeometryArraySelfMethods<D> for CoordBuffer<D> {
-    fn with_coords(self, coords: CoordBuffer<D>) -> Self {
+    pub fn into_array_ref(self) -> Arc<dyn Array> {
+        self.into_arrow()
+    }
+
+    pub fn to_array_ref(&self) -> arrow_array::ArrayRef {
+        self.clone().into_array_ref()
+    }
+
+    pub fn with_coords(self, coords: CoordBuffer<D>) -> Self {
         assert_eq!(coords.len(), self.len());
         coords
     }
 
-    fn into_coord_type(self, coord_type: CoordType) -> Self {
+    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
         match (self, coord_type) {
             (CoordBuffer::Interleaved(cb), CoordType::Interleaved) => CoordBuffer::Interleaved(cb),
             (CoordBuffer::Interleaved(cb), CoordType::Separated) => {
@@ -141,34 +123,6 @@ impl<const D: usize> GeometryArraySelfMethods<D> for CoordBuffer<D> {
                 }
                 CoordBuffer::Interleaved(new_buffer.into())
             }
-        }
-    }
-
-    fn slice(&self, offset: usize, length: usize) -> Self {
-        match self {
-            CoordBuffer::Interleaved(c) => CoordBuffer::Interleaved(c.slice(offset, length)),
-            CoordBuffer::Separated(c) => CoordBuffer::Separated(c.slice(offset, length)),
-        }
-    }
-
-    fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        match self {
-            CoordBuffer::Interleaved(cb) => {
-                CoordBuffer::Interleaved(cb.owned_slice(offset, length))
-            }
-            CoordBuffer::Separated(cb) => CoordBuffer::Separated(cb.owned_slice(offset, length)),
-        }
-    }
-}
-
-impl<'a, const D: usize> GeometryArrayAccessor<'a> for CoordBuffer<D> {
-    type Item = Coord<'a, D>;
-    type ItemGeo = geo::Coord;
-
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        match self {
-            CoordBuffer::Interleaved(c) => Coord::Interleaved(c.value(index)),
-            CoordBuffer::Separated(c) => Coord::Separated(c.value(index)),
         }
     }
 }

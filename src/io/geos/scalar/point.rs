@@ -1,25 +1,32 @@
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{CoordTrait, PointTrait};
+use crate::geo_traits::PointTrait;
 use crate::scalar::Point;
 use geos::{CoordDimensions, CoordSeq, Geom, GeometryTypes};
-
-impl<const D: usize> TryFrom<Point<'_, D>> for geos::Geometry {
-    type Error = geos::Error;
-
-    fn try_from(value: Point<'_, D>) -> std::result::Result<geos::Geometry, geos::Error> {
-        geos::Geometry::try_from(&value)
-    }
-}
 
 impl<'a, const D: usize> TryFrom<&'a Point<'_, D>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: &'a Point<'_, D>) -> std::result::Result<geos::Geometry, geos::Error> {
-        let mut coord_seq = CoordSeq::new(1, CoordDimensions::TwoD)?;
-        coord_seq.set_x(0, PointTrait::x(&value))?;
-        coord_seq.set_y(0, PointTrait::y(&value))?;
+    fn try_from(point: &'a Point<'_, D>) -> std::result::Result<geos::Geometry, geos::Error> {
+        match point.dim() {
+            2 => {
+                let mut coord_seq = CoordSeq::new(1, CoordDimensions::TwoD)?;
+                coord_seq.set_x(0, point.x())?;
+                coord_seq.set_y(0, point.y())?;
 
-        geos::Geometry::create_point(coord_seq)
+                Ok(geos::Geometry::create_point(coord_seq)?)
+            }
+            3 => {
+                let mut coord_seq = CoordSeq::new(1, CoordDimensions::ThreeD)?;
+                coord_seq.set_x(0, point.x())?;
+                coord_seq.set_y(0, point.y())?;
+                coord_seq.set_z(0, point.nth(2).unwrap())?;
+
+                Ok(geos::Geometry::create_point(coord_seq)?)
+            }
+            _ => Err(geos::Error::GenericError(
+                "Unexpected dimension".to_string(),
+            )),
+        }
     }
 }
 
@@ -100,7 +107,7 @@ impl PointTrait for &GEOSPoint {
     }
 }
 
-impl CoordTrait for GEOSPoint {
+impl crate::geo_traits::CoordTrait for GEOSPoint {
     type T = f64;
 
     fn dim(&self) -> usize {
@@ -129,7 +136,7 @@ impl CoordTrait for GEOSPoint {
     }
 }
 
-impl CoordTrait for &GEOSPoint {
+impl crate::geo_traits::CoordTrait for &GEOSPoint {
     type T = f64;
 
     fn dim(&self) -> usize {
@@ -234,7 +241,7 @@ impl<'a> PointTrait for &GEOSConstPoint<'a> {
     }
 }
 
-impl<'a> CoordTrait for GEOSConstPoint<'a> {
+impl<'a> crate::geo_traits::CoordTrait for GEOSConstPoint<'a> {
     type T = f64;
 
     fn dim(&self) -> usize {
@@ -263,7 +270,7 @@ impl<'a> CoordTrait for GEOSConstPoint<'a> {
     }
 }
 
-impl<'a> CoordTrait for &GEOSConstPoint<'a> {
+impl<'a> crate::geo_traits::CoordTrait for &GEOSConstPoint<'a> {
     type T = f64;
 
     fn dim(&self) -> usize {
@@ -295,5 +302,31 @@ impl<'a> CoordTrait for &GEOSConstPoint<'a> {
 impl Clone for GEOSConstPoint<'_> {
     fn clone(&self) -> Self {
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::algorithm::native::eq::point_eq;
+    use crate::test::point;
+    use crate::trait_::ArrayAccessor;
+
+    #[test]
+    fn round_trip_point() {
+        let arr = point::point_array();
+        let scalar = arr.value(0);
+        let geom = geos::Geometry::try_from(&scalar).unwrap();
+        let geos_pt = GEOSPoint::new_unchecked(geom);
+        assert!(point_eq(&scalar, &geos_pt, false))
+    }
+
+    #[test]
+    fn round_trip_point_z() {
+        let arr = point::point_z_array();
+        let scalar = arr.value(0);
+        let geom = geos::Geometry::try_from(&scalar).unwrap();
+        let geos_pt = GEOSPoint::new_unchecked(geom);
+        assert!(point_eq(&scalar, &geos_pt, false))
     }
 }

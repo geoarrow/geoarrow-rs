@@ -4,7 +4,7 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use geoarrow::algorithm::geo::Translate;
 use geoarrow::array::PolygonArray;
 
-fn create_data() -> PolygonArray<i32, 2> {
+fn create_data() -> PolygonArray<2> {
     // An L shape
     // https://github.com/georust/geo/blob/7cb7d0ffa6bf1544c5ca9922bd06100c36f815d7/README.md?plain=1#L40
     let poly = polygon![

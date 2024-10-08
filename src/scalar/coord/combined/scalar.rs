@@ -3,7 +3,7 @@ use rstar::{RTreeObject, AABB};
 use crate::geo_traits::CoordTrait;
 use crate::io::geo::coord_to_geo;
 use crate::scalar::{InterleavedCoord, SeparatedCoord};
-use crate::trait_::GeometryScalarTrait;
+use crate::trait_::NativeScalar;
 
 #[derive(Debug, Clone)]
 pub enum Coord<'a, const D: usize> {
@@ -11,7 +11,7 @@ pub enum Coord<'a, const D: usize> {
     Interleaved(InterleavedCoord<'a, D>),
 }
 
-impl<'a, const D: usize> GeometryScalarTrait for Coord<'a, D> {
+impl<'a, const D: usize> NativeScalar for Coord<'a, D> {
     type ScalarGeo = geo::Coord;
 
     fn to_geo(&self) -> Self::ScalarGeo {

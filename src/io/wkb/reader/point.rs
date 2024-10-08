@@ -4,7 +4,9 @@ use crate::geo_traits::{CoordTrait, MultiPointTrait, PointTrait};
 use crate::io::wkb::reader::coord::WKBCoord;
 use crate::io::wkb::reader::geometry::Endianness;
 
-/// A 2D Point in WKB
+/// A WKB Point.
+///
+/// This has been preprocessed, so access to any internal coordinate is `O(1)`.
 ///
 /// See page 66 of <https://portal.ogc.org/files/?artifact_id=25355>.
 #[derive(Debug, Clone, Copy)]
@@ -37,6 +39,10 @@ impl<'a> WKBPoint<'a> {
     pub fn equals_point(&self, other: &impl PointTrait<T = f64>) -> bool {
         // TODO: how is an empty point stored in WKB?
         point_eq(self, other, true)
+    }
+
+    pub fn dimension(&self) -> Dimension {
+        self.dim
     }
 }
 

@@ -1,0 +1,77 @@
+[package]
+name = "geoarrow-rust-io"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+description = "Read and write geospatial file formats to and from GeoArrow."
+readme = "README.md"
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+keywords = { workspace = true }
+categories = { workspace = true }
+rust-version = { workspace = true }
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "_io"
+crate-type = ["cdylib"]
+
+[features]
+default = ["async"]
+async = [
+    "dep:futures",
+    "dep:object_store",
+    "parquet/object_store",
+    "dep:pyo3-asyncio-0-21",
+    "geoarrow/flatgeobuf_async",
+    "geoarrow/parquet_async",
+    "geoarrow/postgis",
+    "dep:sqlx",
+    "dep:tokio",
+]
+
+[dependencies]
+arrow = { workspace = true }
+bytes = "1"
+flatgeobuf = { version = "4.4.0", default-features = false }
+futures = { version = "0.3", optional = true }
+object_store = { workspace = true, features = [
+    "aws",
+    "azure",
+    "gcp",
+    "http",
+], optional = true }
+parquet = { workspace = true }
+pyo3 = { workspace = true }
+pyo3-arrow = { workspace = true }
+pyo3-asyncio-0-21 = { version = "0.21", features = [
+    "tokio-runtime",
+], optional = true }
+pythonize = "0.21"
+geo = "0.28"
+geoarrow = { path = "../../", features = [
+    "csv",
+    "flatgeobuf",
+    "geozero",
+    "ipc_compression",
+    "parquet_compression",
+    "parquet",
+] }
+serde_json = { workspace = true }
+sqlx = { version = "0.7", default-features = false, features = [
+    "postgres",
+], optional = true }
+thiserror = { workspace = true }
+tokio = { version = "1.9", features = ["rt"], optional = true }
+url = "2.5"
+
+# reqwest is pulled in by object store, but not used by python binding itself
+# We statically link the rust-native rustls. For a binary wheel we want a
+# static-compiled openssl anyways, and having it be native rust seems to make
+# things simpler.
+# See native roots discussion here:
+# https://github.com/rustls/rustls-native-certs/blob/0ebeee01ed61ebeacd5ebb98e7f5694b0ee70a08/README.md#should-i-use-this-or-webpki-roots
+reqwest = { version = "*", features = ["rustls-tls-native-roots"] }
+# Compile openssl from source
+openssl = { version = "0.10", features = ["vendored"] }

@@ -3,7 +3,6 @@ use crate::array::{CoordBuffer, PointArray};
 use crate::geo_traits::{CoordTrait, PointTrait};
 use crate::io::geo::point_to_geo;
 use crate::scalar::{Coord, Point};
-use crate::trait_::GeometryArrayAccessor;
 
 #[derive(Clone, Debug)]
 pub struct OwnedPoint<const D: usize> {

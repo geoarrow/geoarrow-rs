@@ -10,6 +10,8 @@ mod multipolygon;
 mod point;
 mod polygon;
 
+pub use geometry::GEOSGeometry;
+pub use geometrycollection::GEOSGeometryCollection;
 pub use linearring::GEOSConstLinearRing;
 pub use linestring::{GEOSConstLineString, GEOSLineString};
 pub use multilinestring::GEOSMultiLineString;

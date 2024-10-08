@@ -6,10 +6,9 @@ use crate::datatypes::coord_type_to_data_type;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::CoordTrait;
 use crate::scalar::InterleavedCoord;
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
-use crate::GeometryArrayTrait;
+use crate::trait_::IntoArrow;
 use arrow_array::{Array, FixedSizeListArray, Float64Array};
-use arrow_buffer::{Buffer, NullBuffer, ScalarBuffer};
+use arrow_buffer::{Buffer, ScalarBuffer};
 use arrow_schema::{DataType, Field};
 
 /// A an array of XY coordinates stored interleaved in a single buffer.
@@ -49,6 +48,11 @@ impl<const D: usize> InterleavedCoordBuffer<D> {
         Ok(Self { coords })
     }
 
+    /// Access the underlying coordinate buffer.
+    pub fn coords(&self) -> &ScalarBuffer<f64> {
+        &self.coords
+    }
+
     pub fn values_array(&self) -> Float64Array {
         Float64Array::new(self.coords.clone(), None)
     }
@@ -70,79 +74,8 @@ impl<const D: usize> InterleavedCoordBuffer<D> {
         let c = self.value(i);
         c.y()
     }
-}
 
-impl<const D: usize> GeometryArrayTrait for InterleavedCoordBuffer<D> {
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
-
-    fn data_type(&self) -> crate::datatypes::GeoDataType {
-        panic!("Coordinate arrays do not have a GeoDataType.")
-    }
-
-    fn storage_type(&self) -> DataType {
-        coord_type_to_data_type(CoordType::Interleaved, D.try_into().unwrap())
-    }
-
-    fn extension_field(&self) -> Arc<Field> {
-        panic!("Coordinate arrays do not have an extension name.")
-    }
-
-    fn extension_name(&self) -> &str {
-        panic!("Coordinate arrays do not have an extension name.")
-    }
-
-    fn metadata(&self) -> Arc<crate::array::metadata::ArrayMetadata> {
-        panic!()
-    }
-
-    fn with_metadata(
-        &self,
-        _metadata: Arc<crate::array::metadata::ArrayMetadata>,
-    ) -> crate::trait_::GeometryArrayRef {
-        panic!()
-    }
-
-    fn into_array_ref(self) -> Arc<dyn Array> {
-        Arc::new(self.into_arrow())
-    }
-
-    fn to_array_ref(&self) -> arrow_array::ArrayRef {
-        self.clone().into_array_ref()
-    }
-
-    fn coord_type(&self) -> CoordType {
-        CoordType::Interleaved
-    }
-
-    fn to_coord_type(&self, _coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
-        panic!()
-    }
-
-    fn len(&self) -> usize {
-        self.coords.len() / D
-    }
-
-    fn nulls(&self) -> Option<&NullBuffer> {
-        panic!("coordinate arrays don't have their own validity arrays")
-    }
-
-    fn as_ref(&self) -> &dyn GeometryArrayTrait {
-        self
-    }
-}
-
-impl<const D: usize> GeometryArraySelfMethods<D> for InterleavedCoordBuffer<D> {
-    fn with_coords(self, _coords: crate::array::CoordBuffer<D>) -> Self {
-        unimplemented!();
-    }
-
-    fn into_coord_type(self, _coord_type: CoordType) -> Self {
-        panic!("into_coord_type only implemented on CoordBuffer");
-    }
-
-    fn slice(&self, offset: usize, length: usize) -> Self {
+    pub fn slice(&self, offset: usize, length: usize) -> Self {
         assert!(
             offset + length <= self.len(),
             "offset + length may not exceed length of array"
@@ -152,17 +85,44 @@ impl<const D: usize> GeometryArraySelfMethods<D> for InterleavedCoordBuffer<D> {
         }
     }
 
-    fn owned_slice(&self, offset: usize, length: usize) -> Self {
+    pub fn owned_slice(&self, offset: usize, length: usize) -> Self {
         let buffer = self.slice(offset, length);
         Self::new(buffer.coords.to_vec().into())
     }
-}
 
-impl<'a, const D: usize> GeometryArrayAccessor<'a> for InterleavedCoordBuffer<D> {
-    type Item = InterleavedCoord<'a, D>;
-    type ItemGeo = geo::Coord;
+    pub fn into_array_ref(self) -> Arc<dyn Array> {
+        Arc::new(self.into_arrow())
+    }
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+    pub fn to_array_ref(&self) -> arrow_array::ArrayRef {
+        self.clone().into_array_ref()
+    }
+
+    pub fn storage_type(&self) -> DataType {
+        coord_type_to_data_type(CoordType::Interleaved, D.try_into().unwrap())
+    }
+
+    // todo switch to:
+    // pub const coord_type: CoordType = CoordType::Interleaved;
+
+    pub fn coord_type(&self) -> CoordType {
+        CoordType::Interleaved
+    }
+
+    pub fn len(&self) -> usize {
+        self.coords.len() / D
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    pub fn value(&self, index: usize) -> InterleavedCoord<'_, D> {
+        assert!(index <= self.len());
+        self.value_unchecked(index)
+    }
+
+    pub fn value_unchecked(&self, index: usize) -> InterleavedCoord<'_, D> {
         InterleavedCoord {
             coords: &self.coords,
             i: index,

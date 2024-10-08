@@ -7,8 +7,8 @@ use serde_json::Value;
 
 use crate::algorithm::native::bounding_rect::BoundingRect;
 use crate::array::metadata::{ArrayMetadata, Edges};
-use crate::array::{from_arrow_array, AsGeometryArray, CoordType};
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::array::{AsNativeArray, CoordType, NativeArrayDyn};
+use crate::datatypes::{Dimension, NativeType, SerializedType};
 use crate::error::Result;
 use crate::io::parquet::metadata::{
     GeoParquetColumnEncoding, GeoParquetColumnMetadata, GeoParquetGeometryType, GeoParquetMetadata,
@@ -41,7 +41,7 @@ impl ColumnInfo {
     pub fn try_new(
         name: String,
         writer_encoding: GeoParquetWriterEncoding,
-        data_type: &GeoDataType,
+        data_type: &NativeType,
         array_meta: ArrayMetadata,
     ) -> Result<Self> {
         let encoding = GeoParquetColumnEncoding::try_new(writer_encoding, data_type)?;
@@ -75,13 +75,13 @@ impl ColumnInfo {
     // and single polygons.
 
     pub fn update_geometry_types(&mut self, array: &ArrayRef, field: &Field) -> Result<()> {
-        let array = from_arrow_array(array, field)?;
+        let array = NativeArrayDyn::from_arrow_array(array, field)?.into_inner();
         let array_ref = array.as_ref();
 
         // We only have to do this for mixed arrays because other arrays are statically known
         match array_ref.data_type() {
-            GeoDataType::Mixed(_, Dimension::XY) => {
-                let mixed_arr = array_ref.as_mixed_2d();
+            NativeType::Mixed(_, Dimension::XY) => {
+                let mixed_arr = array_ref.as_mixed::<2>();
                 if mixed_arr.has_points() {
                     self.geometry_types.insert(GeoParquetGeometryType::Point);
                 }
@@ -105,8 +105,8 @@ impl ColumnInfo {
                         .insert(GeoParquetGeometryType::MultiPolygon);
                 }
             }
-            GeoDataType::Mixed(_, Dimension::XYZ) => {
-                let mixed_arr = array_ref.as_mixed_3d();
+            NativeType::Mixed(_, Dimension::XYZ) => {
+                let mixed_arr = array_ref.as_mixed::<3>();
                 if mixed_arr.has_points() {
                     self.geometry_types.insert(GeoParquetGeometryType::Point);
                 }
@@ -243,71 +243,56 @@ impl GeoParquetMetadataBuilder {
     }
 }
 
-pub fn get_geometry_types(data_type: &GeoDataType) -> HashSet<GeoParquetGeometryType> {
+pub fn get_geometry_types(data_type: &NativeType) -> HashSet<GeoParquetGeometryType> {
     use GeoParquetGeometryType::*;
     let mut geometry_types = HashSet::new();
 
     match data_type {
-        GeoDataType::Point(_, Dimension::XY) => {
+        NativeType::Point(_, Dimension::XY) => {
             geometry_types.insert(Point);
         }
-        GeoDataType::Point(_, Dimension::XYZ) => {
+        NativeType::Point(_, Dimension::XYZ) => {
             geometry_types.insert(PointZ);
         }
-        GeoDataType::LineString(_, Dimension::XY)
-        | GeoDataType::LargeLineString(_, Dimension::XY) => {
+        NativeType::LineString(_, Dimension::XY) => {
             geometry_types.insert(LineString);
         }
-        GeoDataType::LineString(_, Dimension::XYZ)
-        | GeoDataType::LargeLineString(_, Dimension::XYZ) => {
+        NativeType::LineString(_, Dimension::XYZ) => {
             geometry_types.insert(LineStringZ);
         }
-        GeoDataType::Polygon(_, Dimension::XY)
-        | GeoDataType::LargePolygon(_, Dimension::XY)
-        | GeoDataType::Rect(Dimension::XY) => {
+        NativeType::Polygon(_, Dimension::XY) | NativeType::Rect(Dimension::XY) => {
             geometry_types.insert(Polygon);
         }
-        GeoDataType::Polygon(_, Dimension::XYZ)
-        | GeoDataType::LargePolygon(_, Dimension::XYZ)
-        | GeoDataType::Rect(Dimension::XYZ) => {
+        NativeType::Polygon(_, Dimension::XYZ) | NativeType::Rect(Dimension::XYZ) => {
             geometry_types.insert(PolygonZ);
         }
-        GeoDataType::MultiPoint(_, Dimension::XY)
-        | GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+        NativeType::MultiPoint(_, Dimension::XY) => {
             geometry_types.insert(MultiPoint);
         }
-        GeoDataType::MultiPoint(_, Dimension::XYZ)
-        | GeoDataType::LargeMultiPoint(_, Dimension::XYZ) => {
+        NativeType::MultiPoint(_, Dimension::XYZ) => {
             geometry_types.insert(MultiPointZ);
         }
-        GeoDataType::MultiLineString(_, Dimension::XY)
-        | GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+        NativeType::MultiLineString(_, Dimension::XY) => {
             geometry_types.insert(MultiLineString);
         }
-        GeoDataType::MultiLineString(_, Dimension::XYZ)
-        | GeoDataType::LargeMultiLineString(_, Dimension::XYZ) => {
+        NativeType::MultiLineString(_, Dimension::XYZ) => {
             geometry_types.insert(MultiLineStringZ);
         }
-        GeoDataType::MultiPolygon(_, Dimension::XY)
-        | GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+        NativeType::MultiPolygon(_, Dimension::XY) => {
             geometry_types.insert(MultiPolygon);
         }
-        GeoDataType::MultiPolygon(_, Dimension::XYZ)
-        | GeoDataType::LargeMultiPolygon(_, Dimension::XYZ) => {
+        NativeType::MultiPolygon(_, Dimension::XYZ) => {
             geometry_types.insert(MultiPolygonZ);
         }
-        GeoDataType::Mixed(_, _) | GeoDataType::LargeMixed(_, _) => {
+        NativeType::Mixed(_, _) => {
             // We don't have access to the actual data here, so we can't inspect better than this.
         }
-        GeoDataType::GeometryCollection(_, Dimension::XY)
-        | GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+        NativeType::GeometryCollection(_, Dimension::XY) => {
             geometry_types.insert(GeometryCollection);
         }
-        GeoDataType::GeometryCollection(_, Dimension::XYZ)
-        | GeoDataType::LargeGeometryCollection(_, Dimension::XYZ) => {
+        NativeType::GeometryCollection(_, Dimension::XYZ) => {
             geometry_types.insert(GeometryCollectionZ);
         }
-        GeoDataType::WKB | GeoDataType::LargeWKB => {}
     };
 
     geometry_types
@@ -340,54 +325,52 @@ fn create_output_field(column_info: &ColumnInfo, name: String, nullable: bool) -
     use GeoParquetGeometryType::*;
 
     match column_info.encoding {
-        Encoding::WKB => GeoDataType::WKB.to_field(name, nullable),
+        Encoding::WKB => SerializedType::WKB.to_field(name, nullable),
         Encoding::Point => {
             if column_info.geometry_types.contains(&PointZ) {
-                GeoDataType::Point(CoordType::Separated, Dimension::XYZ).to_field(name, nullable)
+                NativeType::Point(CoordType::Separated, Dimension::XYZ).to_field(name, nullable)
             } else {
-                GeoDataType::Point(CoordType::Separated, Dimension::XY).to_field(name, nullable)
+                NativeType::Point(CoordType::Separated, Dimension::XY).to_field(name, nullable)
             }
         }
         Encoding::LineString => {
             if column_info.geometry_types.contains(&LineStringZ) {
-                GeoDataType::LineString(CoordType::Separated, Dimension::XYZ)
+                NativeType::LineString(CoordType::Separated, Dimension::XYZ)
                     .to_field(name, nullable)
             } else {
-                GeoDataType::LineString(CoordType::Separated, Dimension::XY)
-                    .to_field(name, nullable)
+                NativeType::LineString(CoordType::Separated, Dimension::XY).to_field(name, nullable)
             }
         }
         Encoding::Polygon => {
             if column_info.geometry_types.contains(&PolygonZ) {
-                GeoDataType::Polygon(CoordType::Separated, Dimension::XYZ).to_field(name, nullable)
+                NativeType::Polygon(CoordType::Separated, Dimension::XYZ).to_field(name, nullable)
             } else {
-                GeoDataType::Polygon(CoordType::Separated, Dimension::XY).to_field(name, nullable)
+                NativeType::Polygon(CoordType::Separated, Dimension::XY).to_field(name, nullable)
             }
         }
         Encoding::MultiPoint => {
             if column_info.geometry_types.contains(&MultiPointZ) {
-                GeoDataType::MultiPoint(CoordType::Separated, Dimension::XYZ)
+                NativeType::MultiPoint(CoordType::Separated, Dimension::XYZ)
                     .to_field(name, nullable)
             } else {
-                GeoDataType::MultiPoint(CoordType::Separated, Dimension::XY)
-                    .to_field(name, nullable)
+                NativeType::MultiPoint(CoordType::Separated, Dimension::XY).to_field(name, nullable)
             }
         }
         Encoding::MultiLineString => {
             if column_info.geometry_types.contains(&MultiLineStringZ) {
-                GeoDataType::MultiLineString(CoordType::Separated, Dimension::XYZ)
+                NativeType::MultiLineString(CoordType::Separated, Dimension::XYZ)
                     .to_field(name, nullable)
             } else {
-                GeoDataType::MultiLineString(CoordType::Separated, Dimension::XY)
+                NativeType::MultiLineString(CoordType::Separated, Dimension::XY)
                     .to_field(name, nullable)
             }
         }
         Encoding::MultiPolygon => {
             if column_info.geometry_types.contains(&MultiPolygonZ) {
-                GeoDataType::MultiPolygon(CoordType::Separated, Dimension::XYZ)
+                NativeType::MultiPolygon(CoordType::Separated, Dimension::XYZ)
                     .to_field(name, nullable)
             } else {
-                GeoDataType::MultiPolygon(CoordType::Separated, Dimension::XY)
+                NativeType::MultiPolygon(CoordType::Separated, Dimension::XY)
                     .to_field(name, nullable)
             }
         }

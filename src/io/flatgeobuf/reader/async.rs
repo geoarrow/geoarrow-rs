@@ -14,8 +14,8 @@ use crate::io::geozero::array::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
 use crate::table::Table;
 
-pub async fn read_flatgeobuf_async<T: ObjectStore>(
-    reader: T,
+pub async fn read_flatgeobuf_async(
+    reader: Arc<dyn ObjectStore>,
     location: Path,
     options: FlatGeobufReaderOptions,
 ) -> Result<Table> {
@@ -66,37 +66,34 @@ pub async fn read_flatgeobuf_async<T: ObjectStore>(
             builder.finish()
         }
         (GeometryType::LineString, false) => {
-            let mut builder =
-                GeoTableBuilder::<LineStringBuilder<i32, 2>>::new_with_options(options);
+            let mut builder = GeoTableBuilder::<LineStringBuilder<2>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             builder.finish()
         }
         (GeometryType::Polygon, false) => {
-            let mut builder = GeoTableBuilder::<PolygonBuilder<i32, 2>>::new_with_options(options);
+            let mut builder = GeoTableBuilder::<PolygonBuilder<2>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             builder.finish()
         }
         (GeometryType::MultiPoint, false) => {
-            let mut builder =
-                GeoTableBuilder::<MultiPointBuilder<i32, 2>>::new_with_options(options);
+            let mut builder = GeoTableBuilder::<MultiPointBuilder<2>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             builder.finish()
         }
         (GeometryType::MultiLineString, false) => {
             let mut builder =
-                GeoTableBuilder::<MultiLineStringBuilder<i32, 2>>::new_with_options(options);
+                GeoTableBuilder::<MultiLineStringBuilder<2>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             builder.finish()
         }
         (GeometryType::MultiPolygon, false) => {
-            let mut builder =
-                GeoTableBuilder::<MultiPolygonBuilder<i32, 2>>::new_with_options(options);
+            let mut builder = GeoTableBuilder::<MultiPolygonBuilder<2>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             builder.finish()
         }
         (GeometryType::Unknown, false) => {
             let mut builder =
-                GeoTableBuilder::<MixedGeometryStreamBuilder<i32, 2>>::new_with_options(options);
+                GeoTableBuilder::<MixedGeometryStreamBuilder<2>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             let table = builder.finish()?;
             table.downcast(true)
@@ -107,37 +104,34 @@ pub async fn read_flatgeobuf_async<T: ObjectStore>(
             builder.finish()
         }
         (GeometryType::LineString, true) => {
-            let mut builder =
-                GeoTableBuilder::<LineStringBuilder<i32, 3>>::new_with_options(options);
+            let mut builder = GeoTableBuilder::<LineStringBuilder<3>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             builder.finish()
         }
         (GeometryType::Polygon, true) => {
-            let mut builder = GeoTableBuilder::<PolygonBuilder<i32, 3>>::new_with_options(options);
+            let mut builder = GeoTableBuilder::<PolygonBuilder<3>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             builder.finish()
         }
         (GeometryType::MultiPoint, true) => {
-            let mut builder =
-                GeoTableBuilder::<MultiPointBuilder<i32, 3>>::new_with_options(options);
+            let mut builder = GeoTableBuilder::<MultiPointBuilder<3>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             builder.finish()
         }
         (GeometryType::MultiLineString, true) => {
             let mut builder =
-                GeoTableBuilder::<MultiLineStringBuilder<i32, 3>>::new_with_options(options);
+                GeoTableBuilder::<MultiLineStringBuilder<3>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             builder.finish()
         }
         (GeometryType::MultiPolygon, true) => {
-            let mut builder =
-                GeoTableBuilder::<MultiPolygonBuilder<i32, 3>>::new_with_options(options);
+            let mut builder = GeoTableBuilder::<MultiPolygonBuilder<3>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             builder.finish()
         }
         (GeometryType::Unknown, true) => {
             let mut builder =
-                GeoTableBuilder::<MixedGeometryStreamBuilder<i32, 3>>::new_with_options(options);
+                GeoTableBuilder::<MixedGeometryStreamBuilder<3>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             let table = builder.finish()?;
             table.downcast(true)
@@ -159,7 +153,7 @@ mod test {
 
     #[tokio::test]
     async fn test_countries() {
-        let fs = LocalFileSystem::new_with_prefix(current_dir().unwrap()).unwrap();
+        let fs = Arc::new(LocalFileSystem::new_with_prefix(current_dir().unwrap()).unwrap());
         let options = FlatGeobufReaderOptions::default();
         let table =
             read_flatgeobuf_async(fs, Path::from("fixtures/flatgeobuf/countries.fgb"), options)
@@ -170,7 +164,7 @@ mod test {
 
     #[tokio::test]
     async fn test_countries_bbox() {
-        let fs = LocalFileSystem::new_with_prefix(current_dir().unwrap()).unwrap();
+        let fs = Arc::new(LocalFileSystem::new_with_prefix(current_dir().unwrap()).unwrap());
         let options = FlatGeobufReaderOptions {
             bbox: Some((0., -90., 180., 90.)),
             ..Default::default()
@@ -184,7 +178,7 @@ mod test {
 
     #[tokio::test]
     async fn test_nz_buildings() {
-        let fs = LocalFileSystem::new_with_prefix(current_dir().unwrap()).unwrap();
+        let fs = Arc::new(LocalFileSystem::new_with_prefix(current_dir().unwrap()).unwrap());
         let options = FlatGeobufReaderOptions::default();
         let _table = read_flatgeobuf_async(
             fs,

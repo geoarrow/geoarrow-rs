@@ -1,6 +1,5 @@
 use crate::array::*;
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::ArrayAccessor;
 use arrow::array::Int16Builder;
 use arrow_array::{Int16Array, OffsetSizeTrait};
 use std::collections::HashSet;
@@ -53,7 +52,7 @@ impl TypeIds for PointArray<2> {
 
 macro_rules! constant_impl {
     ($type:ty, $value:expr) => {
-        impl<O: OffsetSizeTrait> TypeIds for $type {
+        impl TypeIds for $type {
             fn get_type_ids(&self) -> Int16Array {
                 let values = vec![$value; self.len()];
                 Int16Array::new(values.into(), self.nulls().cloned())
@@ -68,13 +67,13 @@ macro_rules! constant_impl {
     };
 }
 
-constant_impl!(LineStringArray<O, 2>, 1);
-constant_impl!(PolygonArray<O, 2>, 3);
-constant_impl!(MultiPointArray<O, 2>, 4);
-constant_impl!(MultiLineStringArray<O, 2>, 5);
-constant_impl!(MultiPolygonArray<O, 2>, 6);
+constant_impl!(LineStringArray<2>, 1);
+constant_impl!(PolygonArray<2>, 3);
+constant_impl!(MultiPointArray<2>, 4);
+constant_impl!(MultiLineStringArray<2>, 5);
+constant_impl!(MultiPolygonArray<2>, 6);
 
-impl<O: OffsetSizeTrait> TypeIds for MixedGeometryArray<O, 2> {
+impl TypeIds for MixedGeometryArray<2> {
     fn get_type_ids(&self) -> Int16Array {
         use crate::scalar::Geometry::*;
 
@@ -119,10 +118,9 @@ impl<O: OffsetSizeTrait> TypeIds for MixedGeometryArray<O, 2> {
 impl<O: OffsetSizeTrait> TypeIds for WKBArray<O> {
     fn get_type_ids(&self) -> Int16Array {
         let mut output_array = Int16Builder::with_capacity(self.len());
-
         self.iter().for_each(|maybe_wkb| {
             output_array.append_option(maybe_wkb.map(|wkb| {
-                let type_id = u32::from(wkb.get_wkb_geometry_type());
+                let type_id = u32::from(wkb.wkb_type().unwrap());
                 type_id.try_into().unwrap()
             }))
         });
@@ -133,7 +131,7 @@ impl<O: OffsetSizeTrait> TypeIds for WKBArray<O> {
     fn get_unique_type_ids(&self) -> HashSet<i16> {
         let mut values = HashSet::new();
         self.iter().flatten().for_each(|wkb| {
-            let type_id = u32::from(wkb.get_wkb_geometry_type());
+            let type_id = u32::from(wkb.wkb_type().unwrap());
             values.insert(type_id.try_into().unwrap());
         });
 

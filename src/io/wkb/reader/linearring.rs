@@ -9,6 +9,8 @@ use crate::io::wkb::reader::geometry::Endianness;
 
 /// A linear ring in a WKB buffer.
 ///
+/// This has been preprocessed, so access to any internal coordinate is `O(1)`.
+///
 /// See page 65 of <https://portal.ogc.org/files/?artifact_id=25355>.
 #[derive(Debug, Clone, Copy)]
 pub struct WKBLinearRing<'a> {

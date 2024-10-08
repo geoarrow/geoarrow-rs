@@ -5,7 +5,7 @@ use geo::MapCoordsInPlace;
 use geozero::ToWkt;
 
 use crate::scalar::*;
-use crate::trait_::GeometryScalarTrait;
+use crate::trait_::NativeScalar;
 
 /// Write geometry to display formatter
 /// This takes inspiration from Shapely, which prints a max of 80 characters for the geometry:
@@ -51,7 +51,7 @@ impl fmt::Display for Rect<'_, 2> {
 
 macro_rules! impl_fmt {
     ($struct_name:ty) => {
-        impl<O: OffsetSizeTrait> fmt::Display for $struct_name {
+        impl fmt::Display for $struct_name {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write_geometry(f, self.to_geo_geometry(), 80)
             }
@@ -59,14 +59,14 @@ macro_rules! impl_fmt {
     };
 }
 
-impl_fmt!(LineString<'_, O, 2>);
-impl_fmt!(Polygon<'_, O, 2>);
-impl_fmt!(MultiPoint<'_, O, 2>);
-impl_fmt!(MultiLineString<'_, O, 2>);
-impl_fmt!(MultiPolygon<'_, O, 2>);
-impl_fmt!(GeometryCollection<'_, O, 2>);
+impl_fmt!(LineString<'_, 2>);
+impl_fmt!(Polygon<'_, 2>);
+impl_fmt!(MultiPoint<'_, 2>);
+impl_fmt!(MultiLineString<'_, 2>);
+impl_fmt!(MultiPolygon<'_, 2>);
+impl_fmt!(GeometryCollection<'_, 2>);
 
-impl<O: OffsetSizeTrait> fmt::Display for Geometry<'_, O, 2> {
+impl fmt::Display for Geometry<'_, 2> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write_geometry(f, self.to_geo_geometry(), 80)
     }
@@ -86,8 +86,8 @@ mod test {
     use crate::array::PointArray;
     use crate::io::wkb::ToWKB;
     use crate::test::{multipolygon, point};
-    use crate::trait_::GeometryArrayAccessor;
-    use crate::GeometryArrayTrait;
+    use crate::trait_::ArrayAccessor;
+    use crate::NativeArray;
 
     #[test]
     fn test_display_point() {

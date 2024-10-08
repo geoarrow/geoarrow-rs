@@ -1,7 +1,5 @@
 use std::ops::Add;
 
-use arrow_array::OffsetSizeTrait;
-
 use crate::array::linestring::LineStringCapacity;
 use crate::array::multilinestring::MultiLineStringCapacity;
 use crate::array::multipoint::MultiPointCapacity;
@@ -221,13 +219,13 @@ impl MixedCapacity {
     }
 
     /// The number of bytes an array with this capacity would occupy.
-    pub fn num_bytes<O: OffsetSizeTrait>(&self) -> usize {
+    pub fn num_bytes(&self) -> usize {
         let mut count = self.point * 2 * 8;
-        count += self.line_string.num_bytes::<O>();
-        count += self.polygon.num_bytes::<O>();
-        count += self.multi_point.num_bytes::<O>();
-        count += self.multi_line_string.num_bytes::<O>();
-        count += self.multi_polygon.num_bytes::<O>();
+        count += self.line_string.num_bytes();
+        count += self.polygon.num_bytes();
+        count += self.multi_point.num_bytes();
+        count += self.multi_line_string.num_bytes();
+        count += self.multi_polygon.num_bytes();
         count
     }
 }

@@ -1,6 +1,7 @@
 mod binary;
 mod coord;
 mod geometry;
+mod geometry_array;
 mod geometry_collection;
 mod linestring;
 mod multilinestring;

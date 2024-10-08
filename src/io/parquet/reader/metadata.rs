@@ -10,16 +10,14 @@ use parquet::file::reader::ChunkReader;
 use parquet::schema::types::SchemaDescriptor;
 use serde_json::Value;
 
-use crate::array::{CoordType, PolygonArray, RectBuilder};
+use crate::array::{CoordType, RectArray, RectBuilder};
 use crate::error::{GeoArrowError, Result};
-use crate::io::parquet::metadata::GeoParquetMetadata;
+use crate::io::parquet::metadata::{GeoParquetBboxCovering, GeoParquetMetadata};
 use crate::io::parquet::reader::parse::infer_target_schema;
 use crate::io::parquet::reader::spatial_filter::ParquetBboxStatistics;
 #[cfg(feature = "parquet_async")]
 use crate::io::parquet::GeoParquetRecordBatchStreamBuilder;
-use crate::io::parquet::{
-    GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder, ParquetBboxPaths,
-};
+use crate::io::parquet::{GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder};
 
 /// An extension trait
 trait ArrowReaderMetadataExt {
@@ -138,8 +136,20 @@ impl GeoParquetReaderMetadata {
     pub fn row_group_bounds(
         &self,
         row_group_idx: usize,
-        paths: &ParquetBboxPaths,
+        paths: Option<&GeoParquetBboxCovering>,
     ) -> Result<Option<geo::Rect>> {
+        let paths = if let Some(paths) = paths {
+            paths
+        } else {
+            let geo_meta = self
+                .geo_meta
+                .as_ref()
+                .ok_or(GeoArrowError::General("No geospatial metadata".to_string()))?;
+            &geo_meta.bbox_covering(None)?.ok_or(GeoArrowError::General(
+                "No covering metadata found".to_string(),
+            ))?
+        };
+
         let geo_statistics = ParquetBboxStatistics::try_new(self.meta.parquet_schema(), paths)?;
         let row_group_meta = self.meta.metadata().row_group(row_group_idx);
         Ok(Some(geo_statistics.get_bbox(row_group_meta)?))
@@ -149,7 +159,22 @@ impl GeoParquetReaderMetadata {
     ///
     /// As of GeoParquet 1.1 you won't need to pass in these column names, as they'll be specified
     /// in the metadata.
-    pub fn row_groups_bounds(&self, paths: &ParquetBboxPaths) -> Result<PolygonArray<i32, 2>> {
+    pub fn row_groups_bounds(
+        &self,
+        paths: Option<&GeoParquetBboxCovering>,
+    ) -> Result<RectArray<2>> {
+        let paths = if let Some(paths) = paths {
+            paths
+        } else {
+            let geo_meta = self
+                .geo_meta
+                .as_ref()
+                .ok_or(GeoArrowError::General("No geospatial metadata".to_string()))?;
+            &geo_meta.bbox_covering(None)?.ok_or(GeoArrowError::General(
+                "No covering metadata found".to_string(),
+            ))?
+        };
+
         let geo_statistics = ParquetBboxStatistics::try_new(self.meta.parquet_schema(), paths)?;
         let rects = self
             .meta
@@ -159,7 +184,7 @@ impl GeoParquetReaderMetadata {
             .map(|rg_meta| geo_statistics.get_bbox(rg_meta))
             .collect::<Result<Vec<_>>>()?;
         let rect_array = RectBuilder::from_rects(rects.iter(), Default::default()).finish();
-        Ok(rect_array.into())
+        Ok(rect_array)
     }
 
     /// Access the bounding box of the given column for the entire file

@@ -1,18 +1,20 @@
 use arrow::ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream};
 use arrow::record_batch::RecordBatchReader;
-use arrow_array::RecordBatch;
-use arrow_schema::ArrowError;
 use gdal::cpl::CslStringList;
 use gdal::vector::Layer;
 use gdal::vector::LayerAccess;
 
 use crate::error::Result;
-use crate::table::Table;
 
-/// Read a GDAL layer to a Table
+/// Read a GDAL layer to an Arrow [RecordBatchReader].
+///
+/// The output stream will contain geometries in WKB encoding.
 ///
 /// Note that this expects GDAL 3.8 or later to propagate the CRS information correctly.
-pub fn read_gdal(layer: &mut Layer, batch_size: Option<usize>) -> Result<Table> {
+pub fn read_gdal(
+    layer: &mut Layer,
+    batch_size: Option<usize>,
+) -> Result<Box<dyn RecordBatchReader + Send>> {
     // Instantiate an `ArrowArrayStream` for OGR to write into
     let mut output_stream = FFI_ArrowArrayStream::empty();
 
@@ -34,13 +36,7 @@ pub fn read_gdal(layer: &mut Layer, batch_size: Option<usize>) -> Result<Table> 
     unsafe { layer.read_arrow_stream(gdal_pointer, &options)? }
 
     let arrow_stream_reader = ArrowArrayStreamReader::try_new(output_stream)?;
-
-    let schema = arrow_stream_reader.schema();
-    let batches = arrow_stream_reader
-        .into_iter()
-        .collect::<std::result::Result<Vec<RecordBatch>, ArrowError>>()?;
-
-    Table::try_new(batches, schema)
+    Ok(Box::new(arrow_stream_reader))
 }
 
 #[cfg(test)]

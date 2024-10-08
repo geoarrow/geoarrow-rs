@@ -1,10 +1,13 @@
 use crate::io::geo::geometry_to_geo;
-use crate::trait_::GeometryScalarTrait;
+use crate::trait_::NativeScalar;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use geo::BoundingRect;
 use rstar::{RTreeObject, AABB};
 
-/// An Arrow equivalent of a Point
+/// A scalar WKB reference on a WKBArray
+///
+/// This is zero-cost to _create_ from a [WKBArray] but the WKB has not been preprocessed yet, so
+/// it's not constant-time to access coordinate values.
 #[derive(Debug, Clone)]
 pub struct WKB<'a, O: OffsetSizeTrait> {
     pub(crate) arr: &'a GenericBinaryArray<O>,
@@ -12,8 +15,14 @@ pub struct WKB<'a, O: OffsetSizeTrait> {
 }
 
 impl<'a, O: OffsetSizeTrait> WKB<'a, O> {
-    pub fn new(arr: &'a GenericBinaryArray<O>, geom_index: usize) -> Self {
+    /// Construct a new WKB.
+    pub(crate) fn new(arr: &'a GenericBinaryArray<O>, geom_index: usize) -> Self {
         Self { arr, geom_index }
+    }
+
+    /// Access the byte slice of this WKB object.
+    pub fn as_slice(&self) -> &[u8] {
+        self.arr.value(self.geom_index)
     }
 
     pub fn into_owned_inner(self) -> (GenericBinaryArray<O>, usize) {
@@ -23,7 +32,7 @@ impl<'a, O: OffsetSizeTrait> WKB<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for WKB<'a, O> {
+impl<'a, O: OffsetSizeTrait> NativeScalar for WKB<'a, O> {
     type ScalarGeo = geo::Geometry;
 
     fn to_geo(&self) -> Self::ScalarGeo {

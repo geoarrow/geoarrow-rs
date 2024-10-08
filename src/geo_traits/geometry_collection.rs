@@ -4,11 +4,15 @@ use geo::{CoordNum, Geometry, GeometryCollection};
 
 /// A trait for accessing data from a generic GeometryCollection.
 pub trait GeometryCollectionTrait: Sized {
+    /// The coordinate type of this geometry
     type T: CoordNum;
+
+    /// The type of each underlying geometry, which implements [GeometryTrait]
     type ItemType<'a>: 'a + GeometryTrait<T = Self::T>
     where
         Self: 'a;
 
+    /// The number of dimensions in this geometry
     fn dim(&self) -> usize;
 
     /// An iterator over the geometries in this GeometryCollection

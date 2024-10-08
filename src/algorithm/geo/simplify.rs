@@ -1,12 +1,11 @@
 use std::sync::Arc;
 
 use crate::array::*;
-use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait};
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
-use arrow_array::OffsetSizeTrait;
+use crate::trait_::ArrayAccessor;
+use crate::NativeArray;
 use geo::Simplify as _Simplify;
 
 /// Simplifies a geometry.
@@ -29,7 +28,7 @@ pub trait Simplify {
     /// ```
     /// use geoarrow::algorithm::geo::Simplify;
     /// use geoarrow::array::LineStringArray;
-    /// use geoarrow::trait_::GeometryArrayAccessor;
+    /// use geoarrow::trait_::ArrayAccessor;
     /// use geo::line_string;
     ///
     /// let line_string = line_string![
@@ -39,7 +38,7 @@ pub trait Simplify {
     ///     (x: 17.3, y: 3.2),
     ///     (x: 27.8, y: 0.1),
     /// ];
-    /// let line_string_array: LineStringArray<i32, 2> = vec![line_string].as_slice().into();
+    /// let line_string_array: LineStringArray<2> = vec![line_string].as_slice().into();
     ///
     /// let simplified_array = line_string_array.simplify(&1.0);
     ///
@@ -55,19 +54,10 @@ pub trait Simplify {
     fn simplify(&self, epsilon: &f64) -> Self::Output;
 }
 
-// Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl Simplify for PointArray<2> {
-    type Output = Self;
-
-    fn simplify(&self, _epsilon: &f64) -> Self {
-        self.clone()
-    }
-}
-
 /// Implementation that returns the identity
 macro_rules! identity_impl {
     ($type:ty) => {
-        impl<O: OffsetSizeTrait> Simplify for $type {
+        impl Simplify for $type {
             type Output = Self;
 
             fn simplify(&self, _epsilon: &f64) -> Self {
@@ -77,12 +67,13 @@ macro_rules! identity_impl {
     };
 }
 
-identity_impl!(MultiPointArray<O, 2>);
+identity_impl!(PointArray<2>);
+identity_impl!(MultiPointArray<2>);
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty, $geo_type:ty) => {
-        impl<O: OffsetSizeTrait> Simplify for $type {
+        impl Simplify for $type {
             type Output = Self;
 
             fn simplify(&self, epsilon: &f64) -> Self {
@@ -97,55 +88,29 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<O, 2>, geo::LineString);
-iter_geo_impl!(PolygonArray<O, 2>, geo::Polygon);
-iter_geo_impl!(MultiLineStringArray<O, 2>, geo::MultiLineString);
-iter_geo_impl!(MultiPolygonArray<O, 2>, geo::MultiPolygon);
-// iter_geo_impl!(MixedGeometryArray<O, 2>, geo::Geometry);
-// iter_geo_impl!(GeometryCollectionArray<O, 2>, geo::GeometryCollection);
+iter_geo_impl!(LineStringArray<2>, geo::LineString);
+iter_geo_impl!(PolygonArray<2>, geo::Polygon);
+iter_geo_impl!(MultiLineStringArray<2>, geo::MultiLineString);
+iter_geo_impl!(MultiPolygonArray<2>, geo::MultiPolygon);
+// iter_geo_impl!(MixedGeometryArray<2>, geo::Geometry);
+// iter_geo_impl!(GeometryCollectionArray<2>, geo::GeometryCollection);
 
-impl Simplify for &dyn GeometryArrayTrait {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+impl Simplify for &dyn NativeArray {
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn simplify(&self, epsilon: &f64) -> Self::Output {
-        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => Arc::new(self.as_point_2d().simplify(epsilon)),
-            GeoDataType::LineString(_, Dimension::XY) => {
-                Arc::new(self.as_line_string_2d().simplify(epsilon))
-            }
-            GeoDataType::LargeLineString(_, Dimension::XY) => {
-                Arc::new(self.as_large_line_string_2d().simplify(epsilon))
-            }
-            GeoDataType::Polygon(_, Dimension::XY) => {
-                Arc::new(self.as_polygon_2d().simplify(epsilon))
-            }
-            GeoDataType::LargePolygon(_, Dimension::XY) => {
-                Arc::new(self.as_large_polygon_2d().simplify(epsilon))
-            }
-            GeoDataType::MultiPoint(_, Dimension::XY) => {
-                Arc::new(self.as_multi_point_2d().simplify(epsilon))
-            }
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                Arc::new(self.as_large_multi_point_2d().simplify(epsilon))
-            }
-            GeoDataType::MultiLineString(_, Dimension::XY) => {
-                Arc::new(self.as_multi_line_string_2d().simplify(epsilon))
-            }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
-                Arc::new(self.as_large_multi_line_string_2d().simplify(epsilon))
-            }
-            GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                Arc::new(self.as_multi_polygon_2d().simplify(epsilon))
-            }
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
-                Arc::new(self.as_large_multi_polygon_2d().simplify(epsilon))
-            }
-            // GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().simplify(epsilon),
-            // GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().simplify(),
-            // GeoDataType::GeometryCollection(_, Dimension::XY) => self.as_geometry_collection_2d().simplify(),
-            // GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
-            //     self.as_large_geometry_collection_2d().simplify()
-            // }
+        use Dimension::*;
+        use NativeType::*;
+
+        let result: Arc<dyn NativeArray> = match self.data_type() {
+            Point(_, XY) => Arc::new(self.as_point::<2>().simplify(epsilon)),
+            LineString(_, XY) => Arc::new(self.as_line_string::<2>().simplify(epsilon)),
+            Polygon(_, XY) => Arc::new(self.as_polygon::<2>().simplify(epsilon)),
+            MultiPoint(_, XY) => Arc::new(self.as_multi_point::<2>().simplify(epsilon)),
+            MultiLineString(_, XY) => Arc::new(self.as_multi_line_string::<2>().simplify(epsilon)),
+            MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon::<2>().simplify(epsilon)),
+            // Mixed(_, XY) => self.as_mixed::<2>().simplify(epsilon),
+            // GeometryCollection(_, XY) => self.as_geometry_collection::<2>().simplify(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -165,7 +130,7 @@ impl Simplify for ChunkedGeometryArray<PointArray<2>> {
 /// Implementation that iterates over chunks
 macro_rules! chunked_impl {
     ($type:ty) => {
-        impl<O: OffsetSizeTrait> Simplify for $type {
+        impl Simplify for $type {
             type Output = Self;
 
             fn simplify(&self, epsilon: &f64) -> Self {
@@ -177,54 +142,28 @@ macro_rules! chunked_impl {
     };
 }
 
-chunked_impl!(ChunkedGeometryArray<LineStringArray<O, 2>>);
-chunked_impl!(ChunkedGeometryArray<PolygonArray<O, 2>>);
-chunked_impl!(ChunkedGeometryArray<MultiPointArray<O, 2>>);
-chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<O, 2>>);
-chunked_impl!(ChunkedGeometryArray<MultiPolygonArray<O, 2>>);
+chunked_impl!(ChunkedGeometryArray<LineStringArray<2>>);
+chunked_impl!(ChunkedGeometryArray<PolygonArray<2>>);
+chunked_impl!(ChunkedGeometryArray<MultiPointArray<2>>);
+chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<2>>);
+chunked_impl!(ChunkedGeometryArray<MultiPolygonArray<2>>);
 
-impl Simplify for &dyn ChunkedGeometryArrayTrait {
-    type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
+impl Simplify for &dyn ChunkedNativeArray {
+    type Output = Result<Arc<dyn ChunkedNativeArray>>;
 
     fn simplify(&self, epsilon: &f64) -> Self::Output {
-        let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => Arc::new(self.as_point_2d().simplify(epsilon)),
-            GeoDataType::LineString(_, Dimension::XY) => {
-                Arc::new(self.as_line_string_2d().simplify(epsilon))
-            }
-            GeoDataType::LargeLineString(_, Dimension::XY) => {
-                Arc::new(self.as_large_line_string_2d().simplify(epsilon))
-            }
-            GeoDataType::Polygon(_, Dimension::XY) => {
-                Arc::new(self.as_polygon_2d().simplify(epsilon))
-            }
-            GeoDataType::LargePolygon(_, Dimension::XY) => {
-                Arc::new(self.as_large_polygon_2d().simplify(epsilon))
-            }
-            GeoDataType::MultiPoint(_, Dimension::XY) => {
-                Arc::new(self.as_multi_point_2d().simplify(epsilon))
-            }
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                Arc::new(self.as_large_multi_point_2d().simplify(epsilon))
-            }
-            GeoDataType::MultiLineString(_, Dimension::XY) => {
-                Arc::new(self.as_multi_line_string_2d().simplify(epsilon))
-            }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
-                Arc::new(self.as_large_multi_line_string_2d().simplify(epsilon))
-            }
-            GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                Arc::new(self.as_multi_polygon_2d().simplify(epsilon))
-            }
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
-                Arc::new(self.as_large_multi_polygon_2d().simplify(epsilon))
-            }
-            // GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().simplify(epsilon),
-            // GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().simplify(),
-            // GeoDataType::GeometryCollection(_, Dimension::XY) => self.as_geometry_collection_2d().simplify(),
-            // GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
-            //     self.as_large_geometry_collection_2d().simplify()
-            // }
+        use Dimension::*;
+        use NativeType::*;
+
+        let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
+            Point(_, XY) => Arc::new(self.as_point::<2>().simplify(epsilon)),
+            LineString(_, XY) => Arc::new(self.as_line_string::<2>().simplify(epsilon)),
+            Polygon(_, XY) => Arc::new(self.as_polygon::<2>().simplify(epsilon)),
+            MultiPoint(_, XY) => Arc::new(self.as_multi_point::<2>().simplify(epsilon)),
+            MultiLineString(_, XY) => Arc::new(self.as_multi_line_string::<2>().simplify(epsilon)),
+            MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon::<2>().simplify(epsilon)),
+            // Mixed(_, XY) => self.as_mixed::<2>().simplify(epsilon),
+            // GeometryCollection(_, XY) => self.as_geometry_collection::<2>().simplify(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -235,7 +174,7 @@ impl Simplify for &dyn ChunkedGeometryArrayTrait {
 mod tests {
     use super::*;
     use crate::array::{LineStringArray, PolygonArray};
-    use crate::trait_::GeometryArrayAccessor;
+    use crate::trait_::ArrayAccessor;
     use geo::{line_string, polygon};
 
     #[test]
@@ -247,7 +186,7 @@ mod tests {
             (x: 17.3, y: 3.2 ),
             (x: 27.8, y: 0.1 ),
         ];
-        let input_array: LineStringArray<i64, 2> = vec![input_geom].as_slice().into();
+        let input_array: LineStringArray<2> = vec![input_geom].as_slice().into();
         let result_array = input_array.simplify(&1.0);
 
         let expected = line_string![
@@ -270,7 +209,7 @@ mod tests {
             (x: 10., y: 0.),
             (x: 0., y: 0.),
         ];
-        let input_array: PolygonArray<i64, 2> = vec![input_geom].as_slice().into();
+        let input_array: PolygonArray<2> = vec![input_geom].as_slice().into();
         let result_array = input_array.simplify(&2.0);
 
         let expected = polygon![

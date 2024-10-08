@@ -4,11 +4,15 @@ use geo::{CoordNum, MultiPolygon, Polygon};
 
 /// A trait for accessing data from a generic MultiPolygon.
 pub trait MultiPolygonTrait: Sized {
+    /// The coordinate type of this geometry
     type T: CoordNum;
+
+    /// The type of each underlying Polygon, which implements [PolygonTrait]
     type ItemType<'a>: 'a + PolygonTrait<T = Self::T>
     where
         Self: 'a;
 
+    /// The number of dimensions in this geometry
     fn dim(&self) -> usize;
 
     /// An iterator over the Polygons in this MultiPolygon

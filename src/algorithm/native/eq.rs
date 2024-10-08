@@ -11,14 +11,41 @@ pub fn coord_eq_allow_nan<T: CoordFloat>(
     left: &impl CoordTrait<T = T>,
     right: &impl CoordTrait<T = T>,
 ) -> bool {
+    let left_dim = left.dim();
+    if left_dim != right.dim() {
+        return false;
+    }
+
     // Specifically check for NaN because two points defined to be
     // TODO: in the future add an `is_empty` to the PointTrait and then you shouldn't check for
     // NaN manually
-    if left.x().is_nan() && right.x().is_nan() && left.y().is_nan() && right.y().is_nan() {
-        return true;
+    match left_dim {
+        2 => {
+            if left.x().is_nan() && right.x().is_nan() && left.y().is_nan() && right.y().is_nan() {
+                return true;
+            }
+        }
+        3 => {
+            if left.x().is_nan()
+                && right.x().is_nan()
+                && left.y().is_nan()
+                && right.y().is_nan()
+                && left.nth_unchecked(2).is_nan()
+                && right.nth_unchecked(2).is_nan()
+            {
+                return true;
+            }
+        }
+        _ => panic!(),
     }
 
-    left.x_y() == right.x_y()
+    for i in 0..left_dim {
+        if left.nth_unchecked(i) != right.nth_unchecked(i) {
+            return false;
+        }
+    }
+
+    true
 }
 
 #[inline]
@@ -26,6 +53,10 @@ pub fn coord_eq<T: CoordFloat>(
     left: &impl CoordTrait<T = T>,
     right: &impl CoordTrait<T = T>,
 ) -> bool {
+    if left.dim() != right.dim() {
+        return false;
+    }
+
     left.x_y() == right.x_y()
 }
 
@@ -35,16 +66,47 @@ pub fn point_eq<T: CoordFloat>(
     right: &impl PointTrait<T = T>,
     allow_nan_equal: bool,
 ) -> bool {
+    let left_dim = left.dim();
+    if left_dim != right.dim() {
+        return false;
+    }
+
     if allow_nan_equal {
         // Specifically check for NaN because two points defined to be
         // TODO: in the future add an `is_empty` to the PointTrait and then you shouldn't check for
         // NaN manually
-        if left.x().is_nan() && right.x().is_nan() && left.y().is_nan() && right.y().is_nan() {
-            return true;
+        match left_dim {
+            2 => {
+                if left.x().is_nan()
+                    && right.x().is_nan()
+                    && left.y().is_nan()
+                    && right.y().is_nan()
+                {
+                    return true;
+                }
+            }
+            3 => {
+                if left.x().is_nan()
+                    && right.x().is_nan()
+                    && left.y().is_nan()
+                    && right.y().is_nan()
+                    && left.nth_unchecked(2).is_nan()
+                    && right.nth_unchecked(2).is_nan()
+                {
+                    return true;
+                }
+            }
+            _ => panic!(),
         }
     }
 
-    left.x_y() == right.x_y()
+    for i in 0..left_dim {
+        if left.nth_unchecked(i) != right.nth_unchecked(i) {
+            return false;
+        }
+    }
+
+    true
 }
 
 #[inline]
@@ -52,6 +114,10 @@ pub fn line_string_eq<T: CoordFloat>(
     left: &impl LineStringTrait<T = T>,
     right: &impl LineStringTrait<T = T>,
 ) -> bool {
+    if left.dim() != right.dim() {
+        return false;
+    }
+
     if left.num_coords() != right.num_coords() {
         return false;
     }
@@ -70,6 +136,10 @@ pub fn polygon_eq<T: CoordFloat>(
     left: &impl PolygonTrait<T = T>,
     right: &impl PolygonTrait<T = T>,
 ) -> bool {
+    if left.dim() != right.dim() {
+        return false;
+    }
+
     if left.num_interiors() != right.num_interiors() {
         return false;
     }
@@ -103,6 +173,10 @@ pub fn multi_point_eq<T: CoordFloat>(
     left: &impl MultiPointTrait<T = T>,
     right: &impl MultiPointTrait<T = T>,
 ) -> bool {
+    if left.dim() != right.dim() {
+        return false;
+    }
+
     if left.num_points() != right.num_points() {
         return false;
     }
@@ -121,6 +195,10 @@ pub fn multi_line_string_eq<T: CoordFloat>(
     left: &impl MultiLineStringTrait<T = T>,
     right: &impl MultiLineStringTrait<T = T>,
 ) -> bool {
+    if left.dim() != right.dim() {
+        return false;
+    }
+
     if left.num_lines() != right.num_lines() {
         return false;
     }
@@ -139,6 +217,10 @@ pub fn multi_polygon_eq<T: CoordFloat>(
     left: &impl MultiPolygonTrait<T = T>,
     right: &impl MultiPolygonTrait<T = T>,
 ) -> bool {
+    if left.dim() != right.dim() {
+        return false;
+    }
+
     if left.num_polygons() != right.num_polygons() {
         return false;
     }
@@ -154,6 +236,10 @@ pub fn multi_polygon_eq<T: CoordFloat>(
 
 #[inline]
 pub fn rect_eq<T: CoordFloat>(left: &impl RectTrait<T = T>, right: &impl RectTrait<T = T>) -> bool {
+    if left.dim() != right.dim() {
+        return false;
+    }
+
     if !coord_eq(&left.lower(), &right.lower()) {
         return false;
     }
@@ -170,6 +256,10 @@ pub fn geometry_eq<T: CoordFloat>(
     left: &impl GeometryTrait<T = T>,
     right: &impl GeometryTrait<T = T>,
 ) -> bool {
+    if left.dim() != right.dim() {
+        return false;
+    }
+
     match (left.as_type(), right.as_type()) {
         (GeometryType::Point(l), GeometryType::Point(r)) => {
             if !point_eq(l, r, false) {
@@ -224,6 +314,10 @@ pub fn geometry_collection_eq<T: CoordFloat>(
     left: &impl GeometryCollectionTrait<T = T>,
     right: &impl GeometryCollectionTrait<T = T>,
 ) -> bool {
+    if left.dim() != right.dim() {
+        return false;
+    }
+
     if left.num_geometries() != right.num_geometries() {
         return false;
     }

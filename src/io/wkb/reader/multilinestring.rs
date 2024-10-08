@@ -10,6 +10,9 @@ use crate::io::wkb::reader::linestring::WKBLineString;
 
 const HEADER_BYTES: u64 = 5;
 
+/// A WKB MultiLineString
+///
+/// This has been preprocessed, so access to any internal coordinate is `O(1)`.
 #[derive(Debug, Clone)]
 pub struct WKBMultiLineString<'a> {
     /// A WKBLineString object for each of the internal line strings
@@ -19,7 +22,7 @@ pub struct WKBMultiLineString<'a> {
 }
 
 impl<'a> WKBMultiLineString<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
+    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
         let mut reader = Cursor::new(buf);
         reader.set_position(HEADER_BYTES);
         let num_line_strings = match byte_order {
@@ -64,6 +67,10 @@ impl<'a> WKBMultiLineString<'a> {
     /// Check if this WKBMultiLineString has equal coordinates as some other MultiLineString object
     pub fn equals_multi_line_string(&self, other: &impl MultiLineStringTrait<T = f64>) -> bool {
         multi_line_string_eq(self, other)
+    }
+
+    pub fn dimension(&self) -> Dimension {
+        self.dim
     }
 }
 

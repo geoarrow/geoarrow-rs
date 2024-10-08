@@ -4,9 +4,10 @@ use crate::error::Result;
 use crate::geo_traits::{CoordTrait, LineStringTrait};
 use crate::io::wkb::common::WKBType;
 use crate::io::wkb::reader::Endianness;
-use crate::trait_::GeometryArrayAccessor;
-use crate::trait_::GeometryArrayTrait;
+use crate::trait_::ArrayAccessor;
+use crate::ArrayBase;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
+use arrow_buffer::Buffer;
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
@@ -59,11 +60,9 @@ pub fn write_line_string_as_wkb<W: Write>(
     Ok(())
 }
 
-impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&LineStringArray<A, D>>
-    for WKBArray<B>
-{
-    fn from(value: &LineStringArray<A, D>) -> Self {
-        let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
+impl<O: OffsetSizeTrait, const D: usize> From<&LineStringArray<D>> for WKBArray<O> {
+    fn from(value: &LineStringArray<D>) -> Self {
+        let mut offsets: OffsetsBuilder<O> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
         for maybe_geom in value.iter() {
@@ -85,8 +84,11 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&LineStringArr
             writer.into_inner()
         };
 
-        let binary_arr =
-            GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
+        let binary_arr = GenericBinaryArray::new(
+            offsets.into(),
+            Buffer::from_vec(values),
+            value.nulls().cloned(),
+        );
         WKBArray::new(binary_arr, value.metadata())
     }
 }
@@ -98,9 +100,9 @@ mod test {
 
     #[test]
     fn round_trip() {
-        let orig_arr: LineStringArray<i32, 2> = vec![Some(ls0()), Some(ls1()), None].into();
+        let orig_arr: LineStringArray<2> = vec![Some(ls0()), Some(ls1()), None].into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: LineStringArray<i32, 2> = wkb_arr.try_into().unwrap();
+        let new_arr: LineStringArray<2> = wkb_arr.try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }

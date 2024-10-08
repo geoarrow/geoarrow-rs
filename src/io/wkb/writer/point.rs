@@ -4,9 +4,10 @@ use crate::error::Result;
 use crate::geo_traits::PointTrait;
 use crate::io::wkb::common::WKBType;
 use crate::io::wkb::reader::Endianness;
-use crate::trait_::GeometryArrayAccessor;
-use crate::trait_::GeometryArrayTrait;
+use crate::trait_::ArrayAccessor;
+use crate::ArrayBase;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
+use arrow_buffer::Buffer;
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
@@ -82,7 +83,8 @@ impl<O: OffsetSizeTrait, const D: usize> From<&PointArray<D>> for WKBArray<O> {
             writer.into_inner()
         };
 
-        let binary_arr = GenericBinaryArray::new(offsets.into(), values.into(), validity);
+        let binary_arr =
+            GenericBinaryArray::new(offsets.into(), Buffer::from_vec(values), validity);
         WKBArray::new(binary_arr, value.metadata())
     }
 }

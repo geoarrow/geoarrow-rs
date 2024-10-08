@@ -1,7 +1,9 @@
 use crate::data::*;
+use crate::error::WasmResult;
 use crate::vector::*;
-use arrow_wasm::data::Float64Data;
-use arrow_wasm::vector::Float64Vector;
+use arrow_wasm::data::Data;
+use arrow_wasm::vector::Vector;
+use geoarrow::algorithm::geo::GeodesicArea;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_geodesic_area {
@@ -32,9 +34,8 @@ macro_rules! impl_geodesic_area {
             ///
             /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
             #[wasm_bindgen(js_name = geodesicAreaSigned)]
-            pub fn geodesic_area_signed(&self) -> Float64Data {
-                use geoarrow::algorithm::geo::GeodesicArea;
-                GeodesicArea::geodesic_area_signed(&self.0).into()
+            pub fn geodesic_area_signed(&self) -> Data {
+                Data::from_array(GeodesicArea::geodesic_area_signed(&self.0))
             }
 
             /// Determine the area of a geometry on an ellipsoidal model of the earth. Supports very large geometries that cover a significant portion of the earth.
@@ -53,9 +54,8 @@ macro_rules! impl_geodesic_area {
             ///
             /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
             #[wasm_bindgen(js_name = geodesicAreaUnsigned)]
-            pub fn geodesic_area_unsigned(&self) -> Float64Data {
-                use geoarrow::algorithm::geo::GeodesicArea;
-                GeodesicArea::geodesic_area_unsigned(&self.0).into()
+            pub fn geodesic_area_unsigned(&self) -> Data {
+                Data::from_array(GeodesicArea::geodesic_area_unsigned(&self.0))
             }
 
             /// Determine the perimeter of a geometry on an ellipsoidal model of the earth.
@@ -71,9 +71,8 @@ macro_rules! impl_geodesic_area {
             ///
             /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
             #[wasm_bindgen(js_name = geodesicPerimeter)]
-            pub fn geodesic_perimeter(&self) -> Float64Data {
-                use geoarrow::algorithm::geo::GeodesicArea;
-                GeodesicArea::geodesic_perimeter(&self.0).into()
+            pub fn geodesic_perimeter(&self) -> Data {
+                Data::from_array(GeodesicArea::geodesic_perimeter(&self.0))
             }
         }
     };
@@ -116,13 +115,9 @@ macro_rules! impl_vector {
             ///
             /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
             #[wasm_bindgen(js_name = geodesicAreaSigned)]
-            pub fn geodesic_area_signed(&self) -> Float64Vector {
-                use geoarrow::algorithm::geo::GeodesicArea;
-                Float64Vector::new(
-                    GeodesicArea::geodesic_area_signed(&self.0)
-                        .unwrap()
-                        .into_inner(),
-                )
+            pub fn geodesic_area_signed(&self) -> WasmResult<Vector> {
+                let chunks = GeodesicArea::geodesic_area_signed(&self.0)?.chunk_refs();
+                Ok(Vector::from_array_refs(chunks)?)
             }
 
             /// Determine the area of a geometry on an ellipsoidal model of the earth. Supports very large geometries that cover a significant portion of the earth.
@@ -141,13 +136,9 @@ macro_rules! impl_vector {
             ///
             /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
             #[wasm_bindgen(js_name = geodesicAreaUnsigned)]
-            pub fn geodesic_area_unsigned(&self) -> Float64Vector {
-                use geoarrow::algorithm::geo::GeodesicArea;
-                Float64Vector::new(
-                    GeodesicArea::geodesic_area_unsigned(&self.0)
-                        .unwrap()
-                        .into_inner(),
-                )
+            pub fn geodesic_area_unsigned(&self) -> WasmResult<Vector> {
+                let chunks = GeodesicArea::geodesic_area_unsigned(&self.0)?.chunk_refs();
+                Ok(Vector::from_array_refs(chunks)?)
             }
 
             /// Determine the perimeter of a geometry on an ellipsoidal model of the earth.
@@ -163,13 +154,9 @@ macro_rules! impl_vector {
             ///
             /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
             #[wasm_bindgen(js_name = geodesicPerimeter)]
-            pub fn geodesic_perimeter(&self) -> Float64Vector {
-                use geoarrow::algorithm::geo::GeodesicArea;
-                Float64Vector::new(
-                    GeodesicArea::geodesic_perimeter(&self.0)
-                        .unwrap()
-                        .into_inner(),
-                )
+            pub fn geodesic_perimeter(&self) -> WasmResult<Vector> {
+                let chunks = GeodesicArea::geodesic_perimeter(&self.0)?.chunk_refs();
+                Ok(Vector::from_array_refs(chunks)?)
             }
         }
     };
