@@ -3,6 +3,8 @@
 use crate::array::metadata::ArrayMetadata;
 use crate::array::{CoordBuffer, CoordType};
 use crate::datatypes::{NativeType, SerializedType};
+use crate::error::Result;
+use crate::geo_traits::GeometryTrait;
 use crate::scalar::Geometry;
 use arrow_array::{Array, ArrayRef};
 use arrow_buffer::{NullBuffer, NullBufferBuilder};
@@ -897,6 +899,9 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
             Default::default(),
         )
     }
+
+    /// Push a geometry onto this array.
+    fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()>;
 
     /// Sets this builders metadata.
     ///

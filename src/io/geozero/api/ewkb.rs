@@ -61,14 +61,15 @@ impl FromEWKB for GeometryCollectionArray<2> {
     ) -> Result<Self> {
         // TODO: Add GeometryCollectionStreamBuilder and use that instead of going through geo
         let arr = arr.clone().into_inner();
-        let mut builder = GeometryCollectionBuilder::new_with_options(coord_type, metadata);
+        let mut builder =
+            GeometryCollectionBuilder::new_with_options(coord_type, metadata, prefer_multi);
         for i in 0..arr.len() {
             if arr.is_valid(i) {
                 let buf = arr.value(i);
                 let mut geo = GeoWriter::new();
                 process_ewkb_geom(&mut Cursor::new(buf), &mut geo).unwrap();
                 let geo_geom = geo.take_geometry().unwrap();
-                builder.push_geometry(Some(&geo_geom), prefer_multi)?;
+                builder.push_geometry(Some(&geo_geom))?;
             } else {
                 builder.push_null();
             }

@@ -58,12 +58,13 @@ impl FromWKT for GeometryCollectionArray<2> {
         prefer_multi: bool,
     ) -> Result<Self> {
         // TODO: Add GeometryCollectionStreamBuilder and use that instead of going through geo
-        let mut builder = GeometryCollectionBuilder::new_with_options(coord_type, metadata);
+        let mut builder =
+            GeometryCollectionBuilder::new_with_options(coord_type, metadata, prefer_multi);
         for i in 0..arr.len() {
             if arr.is_valid(i) {
                 let wkt_str = geozero::wkt::Wkt(arr.value(i));
                 let geo_geom = wkt_str.to_geo()?;
-                builder.push_geometry(Some(&geo_geom), prefer_multi)?;
+                builder.push_geometry(Some(&geo_geom))?;
             } else {
                 builder.push_null();
             }
