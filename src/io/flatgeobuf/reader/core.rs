@@ -32,19 +32,19 @@ impl<'a> PointTrait for Point<'a> {
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
         match n {
-            0 => self.geom.xy().unwrap().get(self.offset),
-            1 => self.geom.xy().unwrap().get(self.offset + 1),
+            0 => self.geom.xy().unwrap().get(self.offset * 2),
+            1 => self.geom.xy().unwrap().get((self.offset * 2) + 1),
             2 => self.geom.z().unwrap().get(self.offset),
             _ => panic!("Unexpected dim {n}"),
         }
     }
 
     fn x(&self) -> Self::T {
-        self.geom.xy().unwrap().get(self.offset)
+        self.geom.xy().unwrap().get(self.offset * 2)
     }
 
     fn y(&self) -> Self::T {
-        self.geom.xy().unwrap().get(self.offset + 1)
+        self.geom.xy().unwrap().get((self.offset * 2) + 1)
     }
 }
 
@@ -57,19 +57,19 @@ impl<'a> CoordTrait for Point<'a> {
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
         match n {
-            0 => self.geom.xy().unwrap().get(self.offset),
-            1 => self.geom.xy().unwrap().get(self.offset + 1),
+            0 => self.geom.xy().unwrap().get(self.offset * 2),
+            1 => self.geom.xy().unwrap().get((self.offset * 2) + 1),
             2 => self.geom.z().unwrap().get(self.offset),
             _ => panic!("Unexpected dim {n}"),
         }
     }
 
     fn x(&self) -> Self::T {
-        self.geom.xy().unwrap().get(self.offset)
+        self.geom.xy().unwrap().get(self.offset * 2)
     }
 
     fn y(&self) -> Self::T {
-        self.geom.xy().unwrap().get(self.offset + 1)
+        self.geom.xy().unwrap().get((self.offset * 2) + 1)
     }
 }
 
@@ -170,7 +170,7 @@ impl<'a> PolygonTrait for Polygon<'a> {
             geom: self.geom,
             dim: self.dim,
             offset: start.try_into().unwrap(),
-            length: end.try_into().unwrap(),
+            length: (end - start).try_into().unwrap(),
         }
     }
 }
@@ -244,9 +244,9 @@ impl<'a> MultiLineStringTrait for MultiLineString<'a> {
 
     fn num_lines(&self) -> usize {
         if let Some(ends) = self.geom.ends() {
-            ends.len() - 1
+            ends.len()
         } else {
-            0
+            1
         }
     }
 
@@ -258,7 +258,7 @@ impl<'a> MultiLineStringTrait for MultiLineString<'a> {
                 geom: self.geom,
                 dim: self.dim,
                 offset: start.try_into().unwrap(),
-                length: end.try_into().unwrap(),
+                length: (end - start).try_into().unwrap(),
             }
         } else {
             assert_eq!(i, 0);
