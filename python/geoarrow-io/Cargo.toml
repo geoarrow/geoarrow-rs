@@ -53,7 +53,6 @@ geo = "0.28"
 geoarrow = { path = "../../", features = [
     "csv",
     "flatgeobuf",
-    "geozero",
     "ipc_compression",
     "parquet_compression",
     "parquet",

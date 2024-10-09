@@ -27,7 +27,7 @@ data = []
 geodesy = ["dep:geodesy"]
 debug = ["console_error_panic_hook"]
 io_flatgeobuf = ["geoarrow/flatgeobuf", "table"]
-io_geojson = ["geoarrow/geozero", "table"]
+io_geojson = ["table"]
 io_http = []
 io_object_store = [
     "dep:async-trait",
