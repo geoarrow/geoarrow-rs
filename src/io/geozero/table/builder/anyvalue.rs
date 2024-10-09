@@ -138,11 +138,12 @@ impl AnyBuilder {
             DataType::Float32 => Float32(Float32Builder::with_capacity(capacity)),
             DataType::Float64 => Float64(Float64Builder::with_capacity(capacity)),
             DataType::Utf8 => String(StringBuilder::with_capacity(capacity, 0)),
+            DataType::Binary => Binary(BinaryBuilder::with_capacity(capacity, 0)),
             DataType::Timestamp(_time_unit, tz) => DateTime((
                 TimestampMicrosecondBuilder::with_capacity(capacity),
                 tz.clone(),
             )),
-            _ => todo!(),
+            _ => todo!("Unsupported type {data_type}"),
         }
     }
 

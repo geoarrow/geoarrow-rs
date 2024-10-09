@@ -5,11 +5,11 @@ use arrow_array::RecordBatch;
 use arrow_schema::Schema;
 use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
 
-use crate::algorithm::native::DowncastTable;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::CoordType;
 use crate::chunked_array::ChunkedNativeArrayDyn;
 use crate::error::{GeoArrowError, Result};
+use crate::geo_traits::GeometryTrait;
 use crate::io::geozero::table::builder::properties::PropertiesBatchBuilder;
 use crate::table::Table;
 use crate::trait_::{GeometryArrayBuilder, NativeArray};
@@ -156,6 +156,10 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
         &mut self.prop_builder
     }
 
+    pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+        self.geom_builder.push_geometry(value)
+    }
+
     fn flush_batch(&mut self) -> geozero::error::Result<()> {
         let next_schema = self.prop_builder.schema();
         let coord_type = self.geom_builder.coord_type();
@@ -215,7 +219,9 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
         let geom_field = geom_col.extension_field();
 
         table.append_column(geom_field, geom_col.array_refs())?;
-        table.downcast(false)
+        Ok(table)
+        // TODO: 3d downcasting not yet supported
+        // table.downcast(false)
     }
 }
 

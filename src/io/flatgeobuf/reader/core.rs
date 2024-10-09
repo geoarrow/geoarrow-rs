@@ -10,7 +10,11 @@ use crate::geo_traits::{
 pub(super) struct Point<'a> {
     geom: flatgeobuf::Geometry<'a>,
     dim: Dimension,
-    offset: usize,
+    /// The coordinate offset
+    ///
+    /// Note each coord_offset points to an xy coordinate pair, and must be multiplied by 2 to get
+    /// the buffer coord_offset
+    coord_offset: usize,
 }
 
 impl<'a> Point<'a> {
@@ -18,7 +22,7 @@ impl<'a> Point<'a> {
         Self {
             geom,
             dim,
-            offset: 0,
+            coord_offset: 0,
         }
     }
 }
@@ -32,19 +36,19 @@ impl<'a> PointTrait for Point<'a> {
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
         match n {
-            0 => self.geom.xy().unwrap().get(self.offset),
-            1 => self.geom.xy().unwrap().get(self.offset + 1),
-            2 => self.geom.z().unwrap().get(self.offset),
+            0 => self.geom.xy().unwrap().get(self.coord_offset * 2),
+            1 => self.geom.xy().unwrap().get((self.coord_offset * 2) + 1),
+            2 => self.geom.z().unwrap().get(self.coord_offset),
             _ => panic!("Unexpected dim {n}"),
         }
     }
 
     fn x(&self) -> Self::T {
-        self.geom.xy().unwrap().get(self.offset)
+        self.geom.xy().unwrap().get(self.coord_offset * 2)
     }
 
     fn y(&self) -> Self::T {
-        self.geom.xy().unwrap().get(self.offset + 1)
+        self.geom.xy().unwrap().get((self.coord_offset * 2) + 1)
     }
 }
 
@@ -57,19 +61,19 @@ impl<'a> CoordTrait for Point<'a> {
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
         match n {
-            0 => self.geom.xy().unwrap().get(self.offset),
-            1 => self.geom.xy().unwrap().get(self.offset + 1),
-            2 => self.geom.z().unwrap().get(self.offset),
+            0 => self.geom.xy().unwrap().get(self.coord_offset * 2),
+            1 => self.geom.xy().unwrap().get((self.coord_offset * 2) + 1),
+            2 => self.geom.z().unwrap().get(self.coord_offset),
             _ => panic!("Unexpected dim {n}"),
         }
     }
 
     fn x(&self) -> Self::T {
-        self.geom.xy().unwrap().get(self.offset)
+        self.geom.xy().unwrap().get(self.coord_offset * 2)
     }
 
     fn y(&self) -> Self::T {
-        self.geom.xy().unwrap().get(self.offset + 1)
+        self.geom.xy().unwrap().get((self.coord_offset * 2) + 1)
     }
 }
 
@@ -78,9 +82,9 @@ pub(super) struct LineString<'a> {
     geom: flatgeobuf::Geometry<'a>,
     dim: Dimension,
 
-    /// This offset will be non-zero when the LineString is a reference onto an external geometry,
+    /// This coord_offset will be non-zero when the LineString is a reference onto an external geometry,
     /// e.g. a Polygon
-    offset: usize,
+    coord_offset: usize,
 
     /// This length cannot be inferred from the underlying buffer when this LineString is a
     /// reference on e.g. a Polygon
@@ -93,7 +97,7 @@ impl<'a> LineString<'a> {
         Self {
             geom,
             dim,
-            offset: 0,
+            coord_offset: 0,
             length,
         }
     }
@@ -115,7 +119,7 @@ impl<'a> LineStringTrait for LineString<'a> {
         Point {
             geom: self.geom,
             dim: self.dim,
-            offset: self.offset + i,
+            coord_offset: self.coord_offset + i,
         }
     }
 }
@@ -154,7 +158,7 @@ impl<'a> PolygonTrait for Polygon<'a> {
             Some(LineString {
                 geom: self.geom,
                 dim: self.dim,
-                offset: 0,
+                coord_offset: 0,
                 length: exterior_end.try_into().unwrap(),
             })
         } else {
@@ -169,8 +173,8 @@ impl<'a> PolygonTrait for Polygon<'a> {
         LineString {
             geom: self.geom,
             dim: self.dim,
-            offset: start.try_into().unwrap(),
-            length: end.try_into().unwrap(),
+            coord_offset: start.try_into().unwrap(),
+            length: (end - start).try_into().unwrap(),
         }
     }
 }
@@ -180,9 +184,9 @@ pub(super) struct MultiPoint<'a> {
     geom: flatgeobuf::Geometry<'a>,
     dim: Dimension,
 
-    /// This offset will be non-zero when the MultiPoint is a reference onto an external geometry,
+    /// This coord_offset will be non-zero when the MultiPoint is a reference onto an external geometry,
     /// e.g. a GeometryCollection
-    offset: usize,
+    coord_offset: usize,
 
     /// This length is not inferred from the underlying buffer because this MultiPoint could be a
     /// reference on e.g. a GeometryCollection
@@ -195,7 +199,7 @@ impl<'a> MultiPoint<'a> {
         Self {
             geom,
             dim,
-            offset: 0,
+            coord_offset: 0,
             length,
         }
     }
@@ -217,7 +221,7 @@ impl<'a> MultiPointTrait for MultiPoint<'a> {
         Point {
             geom: self.geom,
             dim: self.dim,
-            offset: self.offset + i,
+            coord_offset: self.coord_offset + i,
         }
     }
 }
@@ -244,9 +248,9 @@ impl<'a> MultiLineStringTrait for MultiLineString<'a> {
 
     fn num_lines(&self) -> usize {
         if let Some(ends) = self.geom.ends() {
-            ends.len() - 1
+            ends.len()
         } else {
-            0
+            1
         }
     }
 
@@ -257,8 +261,8 @@ impl<'a> MultiLineStringTrait for MultiLineString<'a> {
             LineString {
                 geom: self.geom,
                 dim: self.dim,
-                offset: start.try_into().unwrap(),
-                length: end.try_into().unwrap(),
+                coord_offset: start.try_into().unwrap(),
+                length: (end - start).try_into().unwrap(),
             }
         } else {
             assert_eq!(i, 0);
@@ -329,6 +333,48 @@ impl<'a> Geometry<'a> {
             }
             t => panic!("Unexpected type {t:?}"),
         }
+    }
+}
+
+impl<'a> From<Point<'a>> for Geometry<'a> {
+    fn from(value: Point<'a>) -> Self {
+        Self::Point(value)
+    }
+}
+
+impl<'a> From<LineString<'a>> for Geometry<'a> {
+    fn from(value: LineString<'a>) -> Self {
+        Self::LineString(value)
+    }
+}
+
+impl<'a> From<Polygon<'a>> for Geometry<'a> {
+    fn from(value: Polygon<'a>) -> Self {
+        Self::Polygon(value)
+    }
+}
+
+impl<'a> From<MultiPoint<'a>> for Geometry<'a> {
+    fn from(value: MultiPoint<'a>) -> Self {
+        Self::MultiPoint(value)
+    }
+}
+
+impl<'a> From<MultiLineString<'a>> for Geometry<'a> {
+    fn from(value: MultiLineString<'a>) -> Self {
+        Self::MultiLineString(value)
+    }
+}
+
+impl<'a> From<MultiPolygon<'a>> for Geometry<'a> {
+    fn from(value: MultiPolygon<'a>) -> Self {
+        Self::MultiPolygon(value)
+    }
+}
+
+impl<'a> From<GeometryCollection<'a>> for Geometry<'a> {
+    fn from(value: GeometryCollection<'a>) -> Self {
+        Self::GeometryCollection(value)
     }
 }
 
