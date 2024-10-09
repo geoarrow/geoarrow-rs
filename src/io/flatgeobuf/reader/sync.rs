@@ -89,23 +89,6 @@ pub fn read_flatgeobuf<R: Read + Seek>(
 
     match (geometry_type, has_z) {
         (GeometryType::Point, false) => {
-            let mut builder = GeoTableBuilder::<PointBuilder<2>>::new_with_options(options);
-            while let Some(feature) = selection.next()? {
-                feature.process_properties(&mut builder)?;
-                builder.properties_end()?;
-
-                let geom: Option<super::core::Geometry<'_>> = feature
-                    .geometry()
-                    .map(|g| super::core::Point::new(g, Dimension::XY))
-                    .map(|g| g.into());
-                builder.push_geometry(geom.as_ref())?;
-
-                builder.feature_end(0)?;
-            }
-            selection.process_features(&mut builder)?;
-            builder.finish()
-        }
-        (GeometryType::Point, false) => {
             impl_read!(PointBuilder<2>, super::core::Point, Dimension::XY)
         }
         (GeometryType::LineString, false) => {
