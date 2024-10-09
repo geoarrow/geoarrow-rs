@@ -5,7 +5,8 @@ use crate::array::*;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{CoordTrait, RectTrait};
-use crate::trait_::ArrayAccessor;
+use crate::scalar::Geometry;
+use crate::trait_::{ArrayAccessor, NativeGeometryAccessor};
 use crate::NativeArray;
 use arrow_array::builder::BooleanBuilder;
 use arrow_array::BooleanArray;
@@ -17,16 +18,16 @@ use geo_index::rtree::{OwnedRTree, RTreeIndex};
 // GeometryArray is able to store missing and empty geometries. So we need a mapping from _valid_
 // geometry in the tree back to the actual row index it came from.
 #[allow(dead_code)]
-pub struct IndexedGeometryArray<G: NativeArray> {
-    pub(crate) array: G,
+pub struct IndexedGeometryArray<const D: usize> {
+    pub(crate) array: Arc<dyn NativeGeometryAccessor<D>>,
     pub(crate) index: OwnedRTree<f64>,
 }
 
-impl<G: NativeArray> IndexedGeometryArray<G> {
+impl<const D: usize> IndexedGeometryArray<D> {
     #[allow(dead_code)]
-    pub fn new(array: G) -> Self {
+    pub fn new<A: NativeGeometryAccessor<D>>(array: Arc<dyn NativeGeometryAccessor<D>>) -> Self {
         assert_eq!(array.null_count(), 0);
-        let index = array.as_ref().create_rtree();
+        let index = array.as_native_array().create_rtree();
         Self { array, index }
     }
 
@@ -47,20 +48,20 @@ impl<G: NativeArray> IndexedGeometryArray<G> {
         self.index.search(min_x, min_y, max_x, max_y)
     }
 
-    pub fn intersection_candidates_with_other<'a, G2: NativeArray>(
+    pub fn intersection_candidates_with_other<'a, const D2: usize>(
         &'a self,
-        other: &'a IndexedGeometryArray<G2>,
+        other: &'a IndexedGeometryArray<D2>,
     ) -> impl Iterator<Item = (usize, usize)> + 'a {
         self.index
             .intersection_candidates_with_other_tree(&other.index)
     }
 }
 
-impl<'a, G: NativeArray + ArrayAccessor<'a>> IndexedGeometryArray<G> {
+impl<'a, const D: usize> IndexedGeometryArray<D> {
     /// Intended for e.g. intersects against a scalar with a single bounding box
     pub fn unary_boolean<F>(&'a self, rhs_rect: &impl RectTrait<T = f64>, op: F) -> BooleanArray
     where
-        F: Fn(G::Item) -> bool,
+        F: Fn(&Geometry<D>) -> bool,
     {
         let len = self.len();
 
@@ -75,7 +76,10 @@ impl<'a, G: NativeArray + ArrayAccessor<'a>> IndexedGeometryArray<G> {
             rhs_rect.upper().x(),
             rhs_rect.upper().y(),
         ) {
-            buffer.set_bit(candidate_idx, op(self.array.value(candidate_idx)));
+            buffer.set_bit(
+                candidate_idx,
+                op(&self.array.value_as_geometry(candidate_idx)),
+            );
         }
 
         BooleanArray::new(buffer.finish(), nulls)
@@ -85,14 +89,13 @@ impl<'a, G: NativeArray + ArrayAccessor<'a>> IndexedGeometryArray<G> {
     /// boxes intersect.
     ///
     /// Note that this only compares pairs at the same row index.
-    pub fn try_binary_boolean<F, G2>(
+    pub fn try_binary_boolean<F, const D2: usize>(
         &'a self,
-        other: &'a IndexedGeometryArray<G2>,
+        other: &'a IndexedGeometryArray<D2>,
         op: F,
     ) -> Result<BooleanArray>
     where
-        G2: NativeArray + ArrayAccessor<'a>,
-        F: Fn(G::Item, G2::Item) -> Result<bool>,
+        F: Fn(&Geometry<D>, &Geometry<D2>) -> Result<bool>,
     {
         if self.len() != other.len() {
             return Err(GeoArrowError::General(
@@ -115,34 +118,17 @@ impl<'a, G: NativeArray + ArrayAccessor<'a>> IndexedGeometryArray<G> {
                 continue;
             }
 
-            let left = self.array.value(left_candidate_idx);
-            let right = other.array.value(right_candidate_idx);
+            let left = self.array.value_as_geometry(left_candidate_idx);
+            let right = other.array.value_as_geometry(right_candidate_idx);
 
-            builder_buffer.set_bit(left_candidate_idx, op(left, right)?);
+            builder_buffer.set_bit(left_candidate_idx, op(&left, &right)?);
         }
 
         Ok(BooleanArray::new(builder_buffer.finish(), nulls))
     }
 }
 
-pub type IndexedPointArray<const D: usize> = IndexedGeometryArray<PointArray<D>>;
-pub type IndexedLineStringArray<const D: usize> = IndexedGeometryArray<LineStringArray<D>>;
-pub type IndexedPolygonArray<const D: usize> = IndexedGeometryArray<PolygonArray<D>>;
-pub type IndexedMultiPointArray<const D: usize> = IndexedGeometryArray<MultiPointArray<D>>;
-pub type IndexedMultiLineStringArray<const D: usize> =
-    IndexedGeometryArray<MultiLineStringArray<D>>;
-pub type IndexedMultiPolygonArray<const D: usize> = IndexedGeometryArray<MultiPolygonArray<D>>;
-pub type IndexedMixedGeometryArray<const D: usize> = IndexedGeometryArray<MixedGeometryArray<D>>;
-pub type IndexedGeometryCollectionArray<const D: usize> =
-    IndexedGeometryArray<GeometryCollectionArray<D>>;
-#[allow(dead_code)]
-pub type IndexedWKBArray<O> = IndexedGeometryArray<WKBArray<O>>;
-#[allow(dead_code)]
-pub type IndexedRectArray<const D: usize> = IndexedGeometryArray<RectArray<D>>;
-#[allow(dead_code)]
-pub type IndexedUnknownGeometryArray = IndexedGeometryArray<Arc<dyn NativeArray>>;
-
-impl<G: NativeArray> RTreeIndex<f64> for IndexedGeometryArray<G> {
+impl<const D: usize> RTreeIndex<f64> for IndexedGeometryArray<D> {
     fn boxes(&self) -> &[f64] {
         self.index.boxes()
     }
