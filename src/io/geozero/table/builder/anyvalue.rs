@@ -7,14 +7,15 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use arrow_array::builder::{
-    ArrayBuilder, BinaryBuilder, BooleanBuilder, Float32Builder, Float64Builder, Int16Builder,
-    Int32Builder, Int64Builder, Int8Builder, StringBuilder, TimestampMicrosecondBuilder,
-    UInt16Builder, UInt32Builder, UInt64Builder, UInt8Builder,
+    ArrayBuilder, BinaryBuilder, BooleanBuilder, Date32Builder, Float32Builder, Float64Builder,
+    Int16Builder, Int32Builder, Int64Builder, Int8Builder, StringBuilder,
+    TimestampMicrosecondBuilder, UInt16Builder, UInt32Builder, UInt64Builder, UInt8Builder,
 };
 use arrow_array::ArrayRef;
 use arrow_cast::parse::string_to_datetime;
 use arrow_schema::{DataType, Field, TimeUnit};
 use chrono::{DateTime, Utc};
+use enum_as_inner::EnumAsInner;
 use geozero::ColumnValue;
 
 use crate::error::{GeoArrowError, Result};
@@ -23,7 +24,7 @@ use crate::error::{GeoArrowError, Result};
 /// Builder for a single column's properties
 ///
 /// This holds a contiguous chunk of data. To create an [ArrayRef], call `finish()`.
-#[derive(Debug)]
+#[derive(Debug, EnumAsInner)]
 pub enum AnyBuilder {
     Bool(BooleanBuilder),
     Int8(Int8Builder),
@@ -38,6 +39,7 @@ pub enum AnyBuilder {
     Float64(Float64Builder),
     String(StringBuilder),
     Json(StringBuilder),
+    Date32(Date32Builder),
     DateTime((TimestampMicrosecondBuilder, Option<Arc<str>>)),
     Binary(BinaryBuilder),
 }
@@ -139,6 +141,7 @@ impl AnyBuilder {
             DataType::Float64 => Float64(Float64Builder::with_capacity(capacity)),
             DataType::Utf8 => String(StringBuilder::with_capacity(capacity, 0)),
             DataType::Binary => Binary(BinaryBuilder::with_capacity(capacity, 0)),
+            DataType::Date32 => Date32(Date32Builder::with_capacity(capacity)),
             DataType::Timestamp(_time_unit, tz) => DateTime((
                 TimestampMicrosecondBuilder::with_capacity(capacity),
                 tz.clone(),
@@ -165,60 +168,36 @@ impl AnyBuilder {
 
     /// Add a geozero [ColumnValue]. The type of the value must match the type of the builder.
     pub fn add_value(&mut self, value: &ColumnValue) -> geozero::error::Result<()> {
-        match (self, value) {
-            (AnyBuilder::Bool(arr), ColumnValue::Bool(val)) => {
-                arr.append_value(*val);
-            }
-            (AnyBuilder::Int8(arr), ColumnValue::Byte(val)) => {
-                arr.append_value(*val);
-            }
-            (AnyBuilder::Uint8(arr), ColumnValue::UByte(val)) => {
-                arr.append_value(*val);
-            }
-            (AnyBuilder::Int16(arr), ColumnValue::Short(val)) => {
-                arr.append_value(*val);
-            }
-            (AnyBuilder::Uint16(arr), ColumnValue::UShort(val)) => {
-                arr.append_value(*val);
-            }
-            (AnyBuilder::Int32(arr), ColumnValue::Int(val)) => {
-                arr.append_value(*val);
-            }
-            (AnyBuilder::Uint32(arr), ColumnValue::UInt(val)) => {
-                arr.append_value(*val);
-            }
-            (AnyBuilder::Int64(arr), ColumnValue::Long(val)) => {
-                arr.append_value(*val);
-            }
-            (AnyBuilder::Uint64(arr), ColumnValue::ULong(val)) => {
-                arr.append_value(*val);
-            }
-            (AnyBuilder::Float32(arr), ColumnValue::Float(val)) => {
-                arr.append_value(*val);
-            }
-            (AnyBuilder::Float64(arr), ColumnValue::Double(val)) => {
-                arr.append_value(*val);
-            }
-            (AnyBuilder::String(arr), ColumnValue::String(val)) => {
-                arr.append_value(val);
-            }
-            (AnyBuilder::Json(arr), ColumnValue::Json(val)) => {
-                arr.append_value(*val);
-            }
-            (AnyBuilder::DateTime((arr, _tz)), ColumnValue::DateTime(val)) => {
-                let naive = string_to_datetime(&Utc, val).unwrap().naive_utc();
+        use ColumnValue::*;
+
+        macro_rules! impl_add_value {
+            ($downcast_func:ident, $v:ident) => {{
+                self.$downcast_func().unwrap().append_value(*$v);
+            }};
+        }
+
+        match value {
+            Bool(v) => impl_add_value!(as_bool_mut, v),
+            Byte(v) => impl_add_value!(as_int8_mut, v),
+            Short(v) => impl_add_value!(as_int16_mut, v),
+            Int(v) => impl_add_value!(as_int32_mut, v),
+            Long(v) => impl_add_value!(as_int64_mut, v),
+            UByte(v) => impl_add_value!(as_uint8_mut, v),
+            UShort(v) => impl_add_value!(as_uint16_mut, v),
+            UInt(v) => impl_add_value!(as_uint32_mut, v),
+            ULong(v) => impl_add_value!(as_uint64_mut, v),
+            Float(v) => impl_add_value!(as_float32_mut, v),
+            Double(v) => impl_add_value!(as_float64_mut, v),
+            String(v) => impl_add_value!(as_string_mut, v),
+            Json(v) => impl_add_value!(as_json_mut, v),
+            Binary(v) => impl_add_value!(as_binary_mut, v),
+            DateTime(v) => {
+                let (arr, _tz) = self.as_date_time_mut().unwrap();
+                let naive = string_to_datetime(&Utc, v).unwrap().naive_utc();
                 arr.append_value(naive.and_utc().timestamp_micros());
             }
-            (AnyBuilder::Binary(arr), ColumnValue::Binary(val)) => {
-                arr.append_value(*val);
-            }
-            (s, v) => {
-                return Err(geozero::error::GeozeroError::Property(format!(
-                    "Trying to insert a column value {} in the wrong type column {:?}",
-                    v, s
-                )))
-            }
-        };
+        }
+
         Ok(())
     }
 
@@ -239,6 +218,7 @@ impl AnyBuilder {
             Float64(arr) => arr.append_null(),
             String(arr) => arr.append_null(),
             Json(arr) => arr.append_null(),
+            Date32(arr) => arr.append_null(),
             DateTime((arr, _tz)) => arr.append_null(),
             Binary(arr) => arr.append_null(),
         }
@@ -273,6 +253,7 @@ impl AnyBuilder {
                 metadata.insert("ARROW:extension:name".to_string(), "arrow.json".to_string());
                 Field::new("", DataType::Utf8, true).with_metadata(metadata)
             }
+            Date32(_) => Field::new("", DataType::Date32, true),
             DateTime((_, tz)) => Field::new(
                 "",
                 DataType::Timestamp(TimeUnit::Microsecond, tz.clone()),
@@ -298,6 +279,7 @@ impl AnyBuilder {
             Float64(arr) => arr.len(),
             String(arr) => arr.len(),
             Json(arr) => arr.len(),
+            Date32(arr) => arr.len(),
             DateTime((arr, _tz)) => arr.len(),
             Binary(arr) => arr.len(),
         }
@@ -319,6 +301,7 @@ impl AnyBuilder {
             Float64(mut arr) => Arc::new(arr.finish()),
             String(mut arr) => Arc::new(arr.finish()),
             Json(mut arr) => Arc::new(arr.finish()),
+            Date32(mut arr) => Arc::new(arr.finish()),
             // TODO: how to support timezones? Or is this always naive tz?
             DateTime((mut arr, _tz)) => Arc::new(arr.finish()),
             Binary(mut arr) => Arc::new(arr.finish()),

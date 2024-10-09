@@ -527,6 +527,13 @@ async def read_postgis_async(connection_url: str, sql: str) -> Optional[Table]:
         Table from query.
     """
 
+def read_shapefile(
+    shp_file: Union[str, Path, BinaryIO], dbf_file: Union[str, Path, BinaryIO]
+) -> Table:
+    """
+    Read a Shapefile into an Arrow Table.
+    """
+
 def write_csv(table: ArrowStreamExportable, file: str | Path | BinaryIO) -> None:
     """
     Write a Table to a CSV file on disk.

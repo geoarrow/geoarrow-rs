@@ -17,7 +17,7 @@ arrow-array = { workspace = true }
 arrow-buffer = { workspace = true }
 arrow-schema = { workspace = true }
 geo = "0.28"
-geoarrow = { workspace = true, features = ["geozero"] }
+geoarrow = { workspace = true }
 geozero = { workspace = true }
 indexmap = { workspace = true }
 pyo3 = { workspace = true, features = ["chrono", "indexmap"] }

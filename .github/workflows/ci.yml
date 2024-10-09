@@ -52,7 +52,6 @@ jobs:
           - "-F csv"
           - "-F flatgeobuf"
           - "-F flatgeobuf_async"
-          - "-F geozero"
           - "-F ipc_compression"
           - "-F parquet"
           - "-F parquet_async"

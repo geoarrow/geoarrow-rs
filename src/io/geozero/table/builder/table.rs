@@ -156,6 +156,11 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
         &mut self.prop_builder
     }
 
+    /// Access the underlying geometry builder
+    pub(crate) fn geom_builder(&mut self) -> &mut G {
+        &mut self.geom_builder
+    }
+
     pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
         self.geom_builder.push_geometry(value)
     }

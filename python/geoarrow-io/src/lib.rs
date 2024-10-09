@@ -58,6 +58,7 @@ fn _io(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
         crate::io::geojson_lines::write_geojson_lines,
         m
     )?)?;
+    m.add_function(wrap_pyfunction!(crate::io::shapefile::read_shapefile, m)?)?;
 
     Ok(())
 }

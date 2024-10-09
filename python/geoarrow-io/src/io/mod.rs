@@ -10,3 +10,4 @@ pub mod object_store;
 pub mod parquet;
 #[cfg(feature = "async")]
 pub mod postgis;
+pub mod shapefile;

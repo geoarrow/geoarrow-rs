@@ -5,27 +5,23 @@
 
 #[cfg(feature = "csv")]
 pub mod csv;
-#[cfg(feature = "geozero")]
 pub mod display;
 #[cfg(feature = "flatgeobuf")]
 pub mod flatgeobuf;
 #[cfg(feature = "gdal")]
 pub mod gdal;
 pub mod geo;
-#[cfg(feature = "geozero")]
 pub mod geojson;
-#[cfg(feature = "geozero")]
 pub mod geojson_lines;
 #[cfg(feature = "geos")]
 pub mod geos;
-#[cfg(feature = "geozero")]
 pub mod geozero;
 pub mod ipc;
 #[cfg(feature = "parquet")]
 pub mod parquet;
 #[cfg(feature = "postgis")]
 pub mod postgis;
-mod shapefile;
+pub mod shapefile;
 mod stream;
 pub mod wkb;
 pub mod wkt;

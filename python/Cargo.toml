@@ -18,9 +18,9 @@ arrow = "53"
 arrow-array = "53"
 arrow-buffer = "53"
 arrow-schema = "53"
-geoarrow = { path = "../", features = ["geozero"] }
+geoarrow = { path = "../" }
 # Uncomment when publishing
-# geoarrow = { version = "0.4.0-beta.1", features = ["geozero"] }
+# geoarrow = { version = "0.4.0-beta.1" }
 geozero = "0.14"
 indexmap = "2.5.0"
 object_store = "0.11"

@@ -41,7 +41,6 @@ pub enum GeoArrowError {
     GdalError(#[from] gdal::errors::GdalError),
 
     /// [geozero::error::GeozeroError]
-    #[cfg(feature = "geozero")]
     #[error(transparent)]
     GeozeroError(#[from] geozero::error::GeozeroError),
 

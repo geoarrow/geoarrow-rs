@@ -1,4 +1,4 @@
-mod builder;
+pub(crate) mod builder;
 mod data_source;
 mod json_encoder;
 
