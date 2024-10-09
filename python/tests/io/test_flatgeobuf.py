@@ -43,11 +43,11 @@ def test_round_trip_3d():
     table = from_geopandas(gdf)
 
     buf = BytesIO()
-    write_flatgeobuf(table, buf)
+    write_flatgeobuf(table, buf, write_index=False)
     buf.seek(0)
     table_back = read_flatgeobuf(buf)
 
-    assert table == table_back  # type: ignore
+    assert pa.table(table) == pa.table(table_back)
 
 
 @pytest.mark.xfail(reason="fix propagate CRS")
