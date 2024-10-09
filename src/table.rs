@@ -140,7 +140,6 @@ impl Table {
     /// # Examples
     ///
     /// ```
-    /// # #[cfg(feature = "geozero")]
     /// # {
     /// use std::fs::File;
     /// use geoarrow::{array::CoordType, datatypes::{NativeType, Dimension}};
@@ -275,7 +274,6 @@ impl Table {
     /// # Examples
     ///
     /// ```
-    /// # #[cfg(feature = "geozero")]
     /// # {
     /// use std::fs::File;
     ///
@@ -293,7 +291,6 @@ impl Table {
     /// # Examples
     ///
     /// ```
-    /// # #[cfg(feature = "geozero")]
     /// # {
     /// use std::fs::File;
     ///
@@ -311,7 +308,6 @@ impl Table {
     /// # Examples
     ///
     /// ```
-    /// # #[cfg(feature = "geozero")]
     /// # {
     /// use std::fs::File;
     ///
@@ -329,7 +325,6 @@ impl Table {
     /// # Examples
     ///
     /// ```
-    /// # #[cfg(feature = "geozero")]
     /// # {
     /// use std::fs::File;
     ///
@@ -347,7 +342,6 @@ impl Table {
     /// # Examples
     ///
     /// ```
-    /// # #[cfg(feature = "geozero")]
     /// # {
     /// use std::fs::File;
     ///
@@ -369,7 +363,6 @@ impl Table {
     /// # Examples
     ///
     /// ```
-    /// # #[cfg(feature = "geozero")]
     /// # {
     /// use std::fs::File;
     ///
@@ -398,7 +391,6 @@ impl Table {
     /// # Examples
     ///
     /// ```
-    /// # #[cfg(feature = "geozero")]
     /// # {
     /// use std::fs::File;
     ///
@@ -441,7 +433,6 @@ impl Table {
     /// # Examples
     ///
     /// ```
-    /// # #[cfg(feature = "geozero")]
     /// # {
     /// use std::fs::File;
     ///
@@ -465,7 +456,6 @@ impl Table {
     /// # Examples
     ///
     /// ```
-    /// # #[cfg(feature = "geozero")]
     /// # {
     /// use std::fs::File;
     ///
@@ -483,7 +473,6 @@ impl Table {
     /// # Examples
     ///
     /// ```
-    /// # #[cfg(feature = "geozero")]
     /// # {
     /// use std::{sync::Arc, fs::File};
     /// use arrow_schema::{DataType, Field};
@@ -548,7 +537,6 @@ impl Table {
     /// # Examples
     ///
     /// ```
-    /// # #[cfg(feature = "geozero")]
     /// # {
     /// use std::{sync::Arc, fs::File};
     /// use arrow_schema::{DataType, Field};

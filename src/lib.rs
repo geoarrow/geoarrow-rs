@@ -9,13 +9,12 @@
 //!
 //! ```toml
 //! [dependencies]
-//! geoarrow = { version = "*", features = ["geozero"] }
+//! geoarrow = { version = "*" }
 //! ```
 //!
 //! Then:
 //!
 //! ```
-//! # #[cfg(feature = "geozero")]
 //! # {
 //! use std::{io::Cursor, fs::File};
 //!
