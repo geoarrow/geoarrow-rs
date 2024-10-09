@@ -3,6 +3,7 @@
 // Inspired by polars
 // https://github.com/pola-rs/polars/blob/main/crates/polars-core/src/frame/row/av_buffer.rs#L12
 
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use arrow_array::builder::{
@@ -10,141 +11,82 @@ use arrow_array::builder::{
     Int32Builder, Int64Builder, Int8Builder, StringBuilder, TimestampMicrosecondBuilder,
     UInt16Builder, UInt32Builder, UInt64Builder, UInt8Builder,
 };
-use arrow_array::Array;
+use arrow_array::ArrayRef;
 use arrow_cast::parse::string_to_datetime;
-use arrow_schema::{DataType, TimeUnit};
+use arrow_schema::{DataType, Field, TimeUnit};
 use chrono::{DateTime, Utc};
 use geozero::ColumnValue;
 
 use crate::error::{GeoArrowError, Result};
 
 // Types implemented by FlatGeobuf/Geozero
+/// Builder for a single column's properties
+///
+/// This holds a contiguous chunk of data. To create an [ArrayRef], call `finish()`.
 #[derive(Debug)]
 pub enum AnyBuilder {
     Bool(BooleanBuilder),
     Int8(Int8Builder),
-    Uint8(UInt8Builder),
     Int16(Int16Builder),
-    Uint16(UInt16Builder),
     Int32(Int32Builder),
+    Uint64(UInt64Builder),
+    Uint8(UInt8Builder),
+    Uint16(UInt16Builder),
     Uint32(UInt32Builder),
     Int64(Int64Builder),
-    Uint64(UInt64Builder),
     Float32(Float32Builder),
     Float64(Float64Builder),
     String(StringBuilder),
     Json(StringBuilder),
-    DateTime(TimestampMicrosecondBuilder),
+    DateTime((TimestampMicrosecondBuilder, Option<Arc<str>>)),
     Binary(BinaryBuilder),
 }
-
-// TODO: I think unused; remove
-// /// Convert a geozero [ColumnValue] to an arrow [DataType]
-// pub fn column_value_to_data_type(value: &ColumnValue) -> DataType {
-//     match value {
-//         ColumnValue::Bool(_) => DataType::Boolean,
-//         ColumnValue::Byte(_) => DataType::Int8,
-//         ColumnValue::UByte(_) => DataType::UInt8,
-//         ColumnValue::Short(_) => DataType::Int16,
-//         ColumnValue::UShort(_) => DataType::UInt16,
-//         ColumnValue::Int(_) => DataType::Int32,
-//         ColumnValue::UInt(_) => DataType::UInt32,
-//         ColumnValue::Long(_) => DataType::Int64,
-//         ColumnValue::ULong(_) => DataType::UInt64,
-//         ColumnValue::Float(_) => DataType::Float32,
-//         ColumnValue::Double(_) => DataType::Float64,
-//         ColumnValue::String(_) => DataType::Utf8,
-//         ColumnValue::Json(_) => DataType::Utf8,
-//         ColumnValue::DateTime(_) => DataType::Utf8,
-//         ColumnValue::Binary(_) => DataType::Binary,
-//     }
-// }
 
 impl AnyBuilder {
     /// Create a new builder from a timestamp value at position `i`
     ///
     /// This is a relative hack around the geozero type system because we have an already-parsed
     /// datetime value and geozero only supports string-formatted timestamps.
-    pub(crate) fn from_timestamp_value_prefill(value: DateTime<Utc>, row_index: usize) -> Self {
+    pub(crate) fn from_timestamp_value_prefill(
+        value: DateTime<Utc>,
+        row_index: usize,
+        tz: Option<Arc<str>>,
+    ) -> Self {
         let mut builder = TimestampMicrosecondBuilder::with_capacity(row_index + 1);
         for _ in 0..row_index {
             builder.append_null();
         }
 
         builder.append_value(value.naive_utc().and_utc().timestamp_micros());
-        AnyBuilder::DateTime(builder)
+        AnyBuilder::DateTime((builder, tz))
     }
 
+    /// Create a new [AnyBuilder], filling nulls for all values prior to the current `row_index`.
+    ///
     /// Row index is the current row index. So a value with no previously-missed values would have
     /// row_index 0. We add 1 so that we have capacity for the current row's value as well.
     pub fn from_value_prefill(value: &ColumnValue, row_index: usize) -> Self {
+        macro_rules! impl_prefill {
+            ($builder:ty, $val:ident, $variant:expr) => {{
+                let mut builder = <$builder>::with_capacity(row_index + 1);
+                builder.append_nulls(row_index);
+                builder.append_value(*$val);
+                $variant(builder)
+            }};
+        }
+
         match value {
-            ColumnValue::Bool(val) => {
-                let mut builder = BooleanBuilder::with_capacity(row_index + 1);
-                builder.append_nulls(row_index);
-                builder.append_value(*val);
-                AnyBuilder::Bool(builder)
-            }
-            ColumnValue::Byte(val) => {
-                let mut builder = Int8Builder::with_capacity(row_index + 1);
-                builder.append_nulls(row_index);
-                builder.append_value(*val);
-                AnyBuilder::Int8(builder)
-            }
-            ColumnValue::UByte(val) => {
-                let mut builder = UInt8Builder::with_capacity(row_index + 1);
-                builder.append_nulls(row_index);
-                builder.append_value(*val);
-                AnyBuilder::Uint8(builder)
-            }
-            ColumnValue::Short(val) => {
-                let mut builder = Int16Builder::with_capacity(row_index + 1);
-                builder.append_nulls(row_index);
-                builder.append_value(*val);
-                AnyBuilder::Int16(builder)
-            }
-            ColumnValue::UShort(val) => {
-                let mut builder = UInt16Builder::with_capacity(row_index + 1);
-                builder.append_nulls(row_index);
-                builder.append_value(*val);
-                AnyBuilder::Uint16(builder)
-            }
-            ColumnValue::Int(val) => {
-                let mut builder = Int32Builder::with_capacity(row_index + 1);
-                builder.append_nulls(row_index);
-                builder.append_value(*val);
-                AnyBuilder::Int32(builder)
-            }
-            ColumnValue::UInt(val) => {
-                let mut builder = UInt32Builder::with_capacity(row_index + 1);
-                builder.append_nulls(row_index);
-                builder.append_value(*val);
-                AnyBuilder::Uint32(builder)
-            }
-            ColumnValue::Long(val) => {
-                let mut builder = Int64Builder::with_capacity(row_index + 1);
-                builder.append_nulls(row_index);
-                builder.append_value(*val);
-                AnyBuilder::Int64(builder)
-            }
-            ColumnValue::ULong(val) => {
-                let mut builder = UInt64Builder::with_capacity(row_index + 1);
-                builder.append_nulls(row_index);
-                builder.append_value(*val);
-                AnyBuilder::Uint64(builder)
-            }
-            ColumnValue::Float(val) => {
-                let mut builder = Float32Builder::with_capacity(row_index + 1);
-                builder.append_nulls(row_index);
-                builder.append_value(*val);
-                AnyBuilder::Float32(builder)
-            }
-            ColumnValue::Double(val) => {
-                let mut builder = Float64Builder::with_capacity(row_index + 1);
-                builder.append_nulls(row_index);
-                builder.append_value(*val);
-                AnyBuilder::Float64(builder)
-            }
+            ColumnValue::Bool(val) => impl_prefill!(BooleanBuilder, val, AnyBuilder::Bool),
+            ColumnValue::Byte(val) => impl_prefill!(Int8Builder, val, AnyBuilder::Int8),
+            ColumnValue::UByte(val) => impl_prefill!(UInt8Builder, val, AnyBuilder::Uint8),
+            ColumnValue::Short(val) => impl_prefill!(Int16Builder, val, AnyBuilder::Int16),
+            ColumnValue::UShort(val) => impl_prefill!(UInt16Builder, val, AnyBuilder::Uint16),
+            ColumnValue::Int(val) => impl_prefill!(Int32Builder, val, AnyBuilder::Int32),
+            ColumnValue::UInt(val) => impl_prefill!(UInt32Builder, val, AnyBuilder::Uint32),
+            ColumnValue::Long(val) => impl_prefill!(Int64Builder, val, AnyBuilder::Int64),
+            ColumnValue::ULong(val) => impl_prefill!(UInt64Builder, val, AnyBuilder::Uint64),
+            ColumnValue::Float(val) => impl_prefill!(Float32Builder, val, AnyBuilder::Float32),
+            ColumnValue::Double(val) => impl_prefill!(Float64Builder, val, AnyBuilder::Float64),
             ColumnValue::String(val) => {
                 let mut builder = StringBuilder::with_capacity(row_index + 1, val.len());
                 for _ in 0..row_index {
@@ -166,10 +108,9 @@ impl AnyBuilder {
                 for _ in 0..row_index {
                     builder.append_null();
                 }
-
                 let naive = string_to_datetime(&Utc, val).unwrap().naive_utc();
                 builder.append_value(naive.and_utc().timestamp_micros());
-                AnyBuilder::DateTime(builder)
+                AnyBuilder::DateTime((builder, None))
             }
             ColumnValue::Binary(val) => {
                 let mut builder = BinaryBuilder::with_capacity(row_index + 1, val.len());
@@ -180,11 +121,6 @@ impl AnyBuilder {
                 AnyBuilder::Binary(builder)
             }
         }
-    }
-
-    #[allow(dead_code)]
-    pub fn from_data_type(data_type: &DataType) -> Self {
-        Self::from_data_type_with_capacity(data_type, 0)
     }
 
     pub fn from_data_type_with_capacity(data_type: &DataType, capacity: usize) -> Self {
@@ -202,20 +138,18 @@ impl AnyBuilder {
             DataType::Float32 => Float32(Float32Builder::with_capacity(capacity)),
             DataType::Float64 => Float64(Float64Builder::with_capacity(capacity)),
             DataType::Utf8 => String(StringBuilder::with_capacity(capacity, 0)),
-            DataType::Timestamp(_time_unit, _) => {
-                DateTime(TimestampMicrosecondBuilder::with_capacity(capacity))
-            }
+            DataType::Timestamp(_time_unit, tz) => DateTime((
+                TimestampMicrosecondBuilder::with_capacity(capacity),
+                tz.clone(),
+            )),
             _ => todo!(),
         }
     }
 
     /// Add a timestamp value
-    ///
-    /// This is a relative hack around the geozero type system because we have an already-parsed
-    /// datetime value and geozero only supports string-formatted timestamps.
     pub(crate) fn add_timestamp_value(&mut self, value: DateTime<Utc>) -> Result<()> {
         match self {
-            AnyBuilder::DateTime(arr) => {
+            AnyBuilder::DateTime((arr, _tz)) => {
                 arr.append_value(value.naive_utc().and_utc().timestamp_micros());
             }
             builder_type => {
@@ -228,7 +162,8 @@ impl AnyBuilder {
         Ok(())
     }
 
-    pub fn add_value(&mut self, value: &ColumnValue) {
+    /// Add a geozero [ColumnValue]. The type of the value must match the type of the builder.
+    pub fn add_value(&mut self, value: &ColumnValue) -> geozero::error::Result<()> {
         match (self, value) {
             (AnyBuilder::Bool(arr), ColumnValue::Bool(val)) => {
                 arr.append_value(*val);
@@ -269,21 +204,24 @@ impl AnyBuilder {
             (AnyBuilder::Json(arr), ColumnValue::Json(val)) => {
                 arr.append_value(*val);
             }
-            (AnyBuilder::DateTime(arr), ColumnValue::DateTime(val)) => {
+            (AnyBuilder::DateTime((arr, _tz)), ColumnValue::DateTime(val)) => {
                 let naive = string_to_datetime(&Utc, val).unwrap().naive_utc();
                 arr.append_value(naive.and_utc().timestamp_micros());
             }
             (AnyBuilder::Binary(arr), ColumnValue::Binary(val)) => {
                 arr.append_value(*val);
             }
-            // Should be unreachable
-            (s, v) => panic!(
-                "Trying to insert a column value {} in the wrong type column {:?}",
-                v, s
-            ),
-        }
+            (s, v) => {
+                return Err(geozero::error::GeozeroError::Property(format!(
+                    "Trying to insert a column value {} in the wrong type column {:?}",
+                    v, s
+                )))
+            }
+        };
+        Ok(())
     }
 
+    /// Append a null value to the builder.
     pub fn append_null(&mut self) {
         use AnyBuilder::*;
         match self {
@@ -300,29 +238,46 @@ impl AnyBuilder {
             Float64(arr) => arr.append_null(),
             String(arr) => arr.append_null(),
             Json(arr) => arr.append_null(),
-            DateTime(arr) => arr.append_null(),
+            DateTime((arr, _tz)) => arr.append_null(),
             Binary(arr) => arr.append_null(),
         }
     }
 
-    pub fn data_type(&self) -> DataType {
+    /// Access the [Field] of the builder
+    ///
+    /// The field is exposed, and not just the data type, to ensure
+    ///
+    /// There isn't a 1:1 mapping between logical type and an Arrow DataType. For example,
+    /// FlatGeobuf and geozero have a "JSON" type, which here gets stored in an Arrow string
+    /// column. The relevant `DataType` is `DataType::Utf8`, which then loses information about the
+    /// data being JSON. By exporting the `Field`, we can tag that type with an [Arrow JSON
+    /// extension type](https://arrow.apache.org/docs/format/CanonicalExtensions.html#json).
+    pub fn field(&self) -> Field {
         use AnyBuilder::*;
         match self {
-            Bool(_) => DataType::Boolean,
-            Int8(_) => DataType::Int8,
-            Uint8(_) => DataType::UInt8,
-            Int16(_) => DataType::Int16,
-            Uint16(_) => DataType::UInt16,
-            Int32(_) => DataType::Int32,
-            Uint32(_) => DataType::UInt32,
-            Int64(_) => DataType::Int64,
-            Uint64(_) => DataType::UInt64,
-            Float32(_) => DataType::Float32,
-            Float64(_) => DataType::Float64,
-            String(_) => DataType::Utf8,
-            Json(_) => DataType::Utf8,
-            DateTime(_) => DataType::Timestamp(TimeUnit::Microsecond, Some("UTC".into())),
-            Binary(_) => DataType::Binary,
+            Bool(_) => Field::new("", DataType::Boolean, true),
+            Int8(_) => Field::new("", DataType::Int8, true),
+            Uint8(_) => Field::new("", DataType::UInt8, true),
+            Int16(_) => Field::new("", DataType::Int16, true),
+            Uint16(_) => Field::new("", DataType::UInt16, true),
+            Int32(_) => Field::new("", DataType::Int32, true),
+            Uint32(_) => Field::new("", DataType::UInt32, true),
+            Int64(_) => Field::new("", DataType::Int64, true),
+            Uint64(_) => Field::new("", DataType::UInt64, true),
+            Float32(_) => Field::new("", DataType::Float32, true),
+            Float64(_) => Field::new("", DataType::Float64, true),
+            String(_) => Field::new("", DataType::Utf8, true),
+            Json(_) => {
+                let mut metadata = HashMap::with_capacity(1);
+                metadata.insert("ARROW:extension:name".to_string(), "arrow.json".to_string());
+                Field::new("", DataType::Utf8, true).with_metadata(metadata)
+            }
+            DateTime((_, tz)) => Field::new(
+                "",
+                DataType::Timestamp(TimeUnit::Microsecond, tz.clone()),
+                true,
+            ),
+            Binary(_) => Field::new("", DataType::Binary, true),
         }
     }
 
@@ -342,14 +297,14 @@ impl AnyBuilder {
             Float64(arr) => arr.len(),
             String(arr) => arr.len(),
             Json(arr) => arr.len(),
-            DateTime(arr) => arr.len(),
+            DateTime((arr, _tz)) => arr.len(),
             Binary(arr) => arr.len(),
         }
     }
 
-    pub fn finish(self) -> Result<Arc<dyn Array>> {
+    pub fn finish(self) -> Result<ArrayRef> {
         use AnyBuilder::*;
-        let arr: Arc<dyn Array> = match self {
+        let arr: ArrayRef = match self {
             Bool(mut arr) => Arc::new(arr.finish()),
             Int8(mut arr) => Arc::new(arr.finish()),
             Uint8(mut arr) => Arc::new(arr.finish()),
@@ -364,7 +319,7 @@ impl AnyBuilder {
             String(mut arr) => Arc::new(arr.finish()),
             Json(mut arr) => Arc::new(arr.finish()),
             // TODO: how to support timezones? Or is this always naive tz?
-            DateTime(mut arr) => Arc::new(arr.finish()),
+            DateTime((mut arr, _tz)) => Arc::new(arr.finish()),
             Binary(mut arr) => Arc::new(arr.finish()),
         };
         Ok(arr)

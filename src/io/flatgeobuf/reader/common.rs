@@ -1,4 +1,7 @@
-use arrow_schema::{DataType, Field, SchemaBuilder, TimeUnit};
+use std::collections::HashMap;
+use std::sync::Arc;
+
+use arrow_schema::{DataType, Field, SchemaBuilder, SchemaRef, TimeUnit};
 use flatgeobuf::{ColumnType, Header};
 
 use crate::array::CoordType;
@@ -28,7 +31,7 @@ impl Default for FlatGeobufReaderOptions {
     }
 }
 
-pub(super) fn infer_schema(header: Header<'_>) -> SchemaBuilder {
+pub(super) fn infer_schema(header: Header<'_>) -> SchemaRef {
     let columns = header.columns().unwrap();
     let mut schema = SchemaBuilder::with_capacity(columns.len());
 
@@ -46,7 +49,11 @@ pub(super) fn infer_schema(header: Header<'_>) -> SchemaBuilder {
             ColumnType::Float => Field::new(col.name(), DataType::Float32, col.nullable()),
             ColumnType::Double => Field::new(col.name(), DataType::Float64, col.nullable()),
             ColumnType::String => Field::new(col.name(), DataType::Utf8, col.nullable()),
-            ColumnType::Json => Field::new(col.name(), DataType::Utf8, col.nullable()),
+            ColumnType::Json => {
+                let mut metadata = HashMap::with_capacity(1);
+                metadata.insert("ARROW:extension:name".to_string(), "arrow.json".to_string());
+                Field::new(col.name(), DataType::Utf8, col.nullable()).with_metadata(metadata)
+            }
             ColumnType::DateTime => Field::new(
                 col.name(),
                 DataType::Timestamp(TimeUnit::Microsecond, None),
@@ -60,5 +67,5 @@ pub(super) fn infer_schema(header: Header<'_>) -> SchemaBuilder {
         schema.push(field);
     }
 
-    schema
+    Arc::new(schema.finish())
 }
