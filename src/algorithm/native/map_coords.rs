@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use crate::array::mixed::builder::DEFAULT_PREFER_MULTI;
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::datatypes::{Dimension, NativeType};
@@ -377,6 +378,7 @@ impl MapCoords for MixedGeometryArray<2> {
             self.buffer_lengths(),
             self.coord_type(),
             self.metadata(),
+            DEFAULT_PREFER_MULTI,
         );
         for maybe_geom in self.iter() {
             if let Some(geom) = maybe_geom {
@@ -402,6 +404,7 @@ impl MapCoords for GeometryCollectionArray<2> {
             self.buffer_lengths(),
             self.coord_type(),
             self.metadata(),
+            DEFAULT_PREFER_MULTI,
         );
         for maybe_geom in self.iter() {
             if let Some(geom) = maybe_geom {

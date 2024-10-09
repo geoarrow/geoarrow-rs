@@ -54,7 +54,7 @@ pub async fn read_flatgeobuf_async(
         options.coord_type,
         true,
         options.batch_size,
-        Some(Arc::new(schema.finish())),
+        Some(schema),
         features_count,
         Default::default(),
     );

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 
-use arrow_schema::{DataType, Field, SchemaBuilder, TimeUnit};
+use arrow_schema::{DataType, Field, SchemaBuilder, SchemaRef, TimeUnit};
 use flatgeobuf::{ColumnType, Header};
 
 use crate::array::CoordType;
@@ -30,7 +31,7 @@ impl Default for FlatGeobufReaderOptions {
     }
 }
 
-pub(super) fn infer_schema(header: Header<'_>) -> SchemaBuilder {
+pub(super) fn infer_schema(header: Header<'_>) -> SchemaRef {
     let columns = header.columns().unwrap();
     let mut schema = SchemaBuilder::with_capacity(columns.len());
 
@@ -66,5 +67,5 @@ pub(super) fn infer_schema(header: Header<'_>) -> SchemaBuilder {
         schema.push(field);
     }
 
-    schema
+    Arc::new(schema.finish())
 }

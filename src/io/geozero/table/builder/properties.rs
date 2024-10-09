@@ -64,7 +64,11 @@ impl PropertiesBatchBuilder {
             any_builder.add_timestamp_value(value)?;
         } else {
             // If this column name doesn't yet exist
-            let builder = AnyBuilder::from_timestamp_value_prefill(value, self.row_counter);
+            let builder = AnyBuilder::from_timestamp_value_prefill(
+                value,
+                self.row_counter,
+                Some("UTC".into()),
+            );
             self.columns.insert(name.to_string(), builder);
         };
         Ok(())
@@ -76,7 +80,7 @@ impl PropertiesBatchBuilder {
         value: &geozero::ColumnValue,
     ) -> geozero::error::Result<()> {
         if let Some(any_builder) = self.columns.get_mut(name) {
-            any_builder.add_value(value);
+            any_builder.add_value(value)?;
         } else {
             // If this column name doesn't yet exist
             let builder = AnyBuilder::from_value_prefill(value, self.row_counter);
@@ -107,7 +111,7 @@ impl PropertiesBatchBuilder {
     pub fn schema(&self) -> Schema {
         let mut schema_builder = SchemaBuilder::with_capacity(self.columns.len());
         for (name, builder) in self.columns.iter() {
-            schema_builder.push(Field::new(name, builder.data_type(), true));
+            schema_builder.push(builder.field().with_name(name));
         }
         schema_builder.finish()
     }

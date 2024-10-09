@@ -3,5 +3,5 @@ pub use builder::MixedGeometryBuilder;
 pub use capacity::MixedCapacity;
 
 pub(crate) mod array;
-mod builder;
+pub(crate) mod builder;
 mod capacity;
