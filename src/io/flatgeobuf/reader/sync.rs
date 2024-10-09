@@ -28,7 +28,6 @@ use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
 use crate::table::Table;
 use flatgeobuf::{FgbReader, GeometryType};
 use std::io::{Read, Seek};
-use std::sync::Arc;
 
 /// Read a FlatGeobuf file to a Table
 pub fn read_flatgeobuf<R: Read + Seek>(
@@ -60,7 +59,7 @@ pub fn read_flatgeobuf<R: Read + Seek>(
         options.coord_type,
         true,
         options.batch_size,
-        Some(Arc::new(schema.finish())),
+        Some(schema),
         features_count,
         Default::default(),
     );
