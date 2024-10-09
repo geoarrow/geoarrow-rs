@@ -1,2 +1,4 @@
+mod reader;
 mod scalar;
-// mod reader;
+
+pub use reader::read_shapefile;

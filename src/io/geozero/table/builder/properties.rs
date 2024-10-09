@@ -12,7 +12,7 @@ use indexmap::IndexMap;
 /// A builder for a single RecordBatch of properties
 // TODO: store an Arc<Schema> on this struct? Especially when known or user-provided?
 // TODO: switch to ordered Vec of builders instead of a hashmap for sources like postgis
-pub struct PropertiesBatchBuilder {
+pub(crate) struct PropertiesBatchBuilder {
     /// A mapping from column name to its builder.
     ///
     /// For now, we use an IndexMap in order to maintain
@@ -23,7 +23,7 @@ pub struct PropertiesBatchBuilder {
     ///
     /// We want to track column ordering
     /// TODO: track column ordering?
-    columns: IndexMap<String, AnyBuilder>,
+    pub(crate) columns: IndexMap<String, AnyBuilder>,
 
     /// A counter for the number of rows that have been added, excluding the current row.
     ///

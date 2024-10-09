@@ -3,7 +3,13 @@ use crate::geo_traits::{
     PointTrait, PolygonTrait,
 };
 
-struct Point<'a>(&'a shapefile::Point);
+pub(super) struct Point<'a>(&'a shapefile::Point);
+
+impl<'a> Point<'a> {
+    pub(super) fn new(geom: &'a shapefile::Point) -> Self {
+        Self(geom)
+    }
+}
 
 impl<'a> PointTrait for Point<'a> {
     type T = f64;
@@ -54,7 +60,13 @@ impl<'a> CoordTrait for Point<'a> {
 }
 
 // Note: PointZ can optionally have M values
-struct PointZ<'a>(&'a shapefile::PointZ);
+pub(super) struct PointZ<'a>(&'a shapefile::PointZ);
+
+impl<'a> PointZ<'a> {
+    pub(super) fn new(geom: &'a shapefile::PointZ) -> Self {
+        Self(geom)
+    }
+}
 
 impl<'a> PointTrait for PointZ<'a> {
     type T = f64;
@@ -106,7 +118,7 @@ impl<'a> CoordTrait for PointZ<'a> {
     }
 }
 
-struct LineString<'a>(&'a [shapefile::Point]);
+pub(super) struct LineString<'a>(&'a [shapefile::Point]);
 
 impl<'a> LineStringTrait for LineString<'a> {
     type T = f64;
@@ -125,7 +137,7 @@ impl<'a> LineStringTrait for LineString<'a> {
     }
 }
 
-struct LineStringZ<'a>(&'a [shapefile::PointZ]);
+pub(super) struct LineStringZ<'a>(&'a [shapefile::PointZ]);
 
 impl<'a> LineStringTrait for LineStringZ<'a> {
     type T = f64;
@@ -144,7 +156,7 @@ impl<'a> LineStringTrait for LineStringZ<'a> {
     }
 }
 
-struct Polygon {
+pub(super) struct Polygon {
     outer: Vec<shapefile::Point>,
     inner: Vec<Vec<shapefile::Point>>,
 }
@@ -170,7 +182,7 @@ impl<'a> PolygonTrait for &'a Polygon {
     }
 }
 
-struct PolygonZ {
+pub(super) struct PolygonZ {
     outer: Vec<shapefile::PointZ>,
     inner: Vec<Vec<shapefile::PointZ>>,
 }
@@ -196,7 +208,13 @@ impl<'a> PolygonTrait for &'a PolygonZ {
     }
 }
 
-struct MultiPoint<'a>(&'a shapefile::Multipoint);
+pub(super) struct MultiPoint<'a>(&'a shapefile::Multipoint);
+
+impl<'a> MultiPoint<'a> {
+    pub(super) fn new(geom: &'a shapefile::Multipoint) -> Self {
+        Self(geom)
+    }
+}
 
 impl<'a> MultiPointTrait for MultiPoint<'a> {
     type T = f64;
@@ -215,8 +233,13 @@ impl<'a> MultiPointTrait for MultiPoint<'a> {
     }
 }
 
-struct MultiPointZ<'a>(&'a shapefile::MultipointZ);
+pub(super) struct MultiPointZ<'a>(&'a shapefile::MultipointZ);
 
+impl<'a> MultiPointZ<'a> {
+    pub(super) fn new(geom: &'a shapefile::MultipointZ) -> Self {
+        Self(geom)
+    }
+}
 impl<'a> MultiPointTrait for MultiPointZ<'a> {
     type T = f64;
     type ItemType<'b> = PointZ<'a> where Self: 'b;
@@ -234,7 +257,13 @@ impl<'a> MultiPointTrait for MultiPointZ<'a> {
     }
 }
 
-struct Polyline<'a>(&'a shapefile::Polyline);
+pub(super) struct Polyline<'a>(&'a shapefile::Polyline);
+
+impl<'a> Polyline<'a> {
+    pub(super) fn new(geom: &'a shapefile::Polyline) -> Self {
+        Self(geom)
+    }
+}
 
 impl<'a> MultiLineStringTrait for Polyline<'a> {
     type T = f64;
@@ -253,7 +282,13 @@ impl<'a> MultiLineStringTrait for Polyline<'a> {
     }
 }
 
-struct PolylineZ<'a>(&'a shapefile::PolylineZ);
+pub(super) struct PolylineZ<'a>(&'a shapefile::PolylineZ);
+
+impl<'a> PolylineZ<'a> {
+    pub(super) fn new(geom: &'a shapefile::PolylineZ) -> Self {
+        Self(geom)
+    }
+}
 
 impl<'a> MultiLineStringTrait for PolylineZ<'a> {
     type T = f64;
@@ -272,13 +307,12 @@ impl<'a> MultiLineStringTrait for PolylineZ<'a> {
     }
 }
 
-struct MultiPolygon(Vec<Polygon>);
+pub(super) struct MultiPolygon(Vec<Polygon>);
 
 impl MultiPolygon {
     /// This is ported from the geo-types From impl
     /// https://github.com/tmontaigu/shapefile-rs/blob/a27a93ec721d954661620d7f451db53e4bf4e5e9/src/record/polygon.rs#L564
-    #[allow(dead_code)]
-    fn new(geom: shapefile::Polygon) -> Self {
+    pub(super) fn new(geom: shapefile::Polygon) -> Self {
         let mut last_poly = None;
         let mut polygons = Vec::new();
         for ring in geom.into_inner() {
@@ -332,13 +366,12 @@ impl MultiPolygonTrait for MultiPolygon {
     }
 }
 
-struct MultiPolygonZ(Vec<PolygonZ>);
+pub(super) struct MultiPolygonZ(Vec<PolygonZ>);
 
 impl MultiPolygonZ {
     /// This is ported from the geo-types From impl
     /// https://github.com/tmontaigu/shapefile-rs/blob/a27a93ec721d954661620d7f451db53e4bf4e5e9/src/record/polygon.rs#L564
-    #[allow(dead_code)]
-    fn new(geom: shapefile::PolygonZ) -> Self {
+    pub(super) fn new(geom: shapefile::PolygonZ) -> Self {
         let mut last_poly = None;
         let mut polygons = Vec::new();
         for ring in geom.into_inner() {
