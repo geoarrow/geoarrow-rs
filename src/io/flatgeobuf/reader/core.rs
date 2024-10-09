@@ -332,6 +332,48 @@ impl<'a> Geometry<'a> {
     }
 }
 
+impl<'a> From<Point<'a>> for Geometry<'a> {
+    fn from(value: Point<'a>) -> Self {
+        Self::Point(value)
+    }
+}
+
+impl<'a> From<LineString<'a>> for Geometry<'a> {
+    fn from(value: LineString<'a>) -> Self {
+        Self::LineString(value)
+    }
+}
+
+impl<'a> From<Polygon<'a>> for Geometry<'a> {
+    fn from(value: Polygon<'a>) -> Self {
+        Self::Polygon(value)
+    }
+}
+
+impl<'a> From<MultiPoint<'a>> for Geometry<'a> {
+    fn from(value: MultiPoint<'a>) -> Self {
+        Self::MultiPoint(value)
+    }
+}
+
+impl<'a> From<MultiLineString<'a>> for Geometry<'a> {
+    fn from(value: MultiLineString<'a>) -> Self {
+        Self::MultiLineString(value)
+    }
+}
+
+impl<'a> From<MultiPolygon<'a>> for Geometry<'a> {
+    fn from(value: MultiPolygon<'a>) -> Self {
+        Self::MultiPolygon(value)
+    }
+}
+
+impl<'a> From<GeometryCollection<'a>> for Geometry<'a> {
+    fn from(value: GeometryCollection<'a>) -> Self {
+        Self::GeometryCollection(value)
+    }
+}
+
 impl<'a> GeometryTrait for Geometry<'a> {
     type T = f64;
     type Point<'b> = Point<'a> where Self: 'b;

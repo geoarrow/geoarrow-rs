@@ -9,6 +9,7 @@ use crate::array::metadata::ArrayMetadata;
 use crate::array::CoordType;
 use crate::chunked_array::ChunkedNativeArrayDyn;
 use crate::error::{GeoArrowError, Result};
+use crate::geo_traits::GeometryTrait;
 use crate::io::geozero::table::builder::properties::PropertiesBatchBuilder;
 use crate::table::Table;
 use crate::trait_::{GeometryArrayBuilder, NativeArray};
@@ -153,6 +154,10 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
 
     pub(crate) fn properties_builder_mut(&mut self) -> &mut PropertiesBatchBuilder {
         &mut self.prop_builder
+    }
+
+    pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+        self.geom_builder.push_geometry(value)
     }
 
     fn flush_batch(&mut self) -> geozero::error::Result<()> {
