@@ -1,6 +1,7 @@
 use std::ops::Range;
 use std::sync::Arc;
 
+use crate::array::mixed::builder::DEFAULT_PREFER_MULTI;
 use crate::array::*;
 use crate::chunked_array::ChunkedGeometryArray;
 use crate::datatypes::{Dimension, NativeType};
@@ -158,6 +159,7 @@ macro_rules! take_impl_fallible {
                     capacity,
                     self.coord_type(),
                     self.metadata(),
+                    DEFAULT_PREFER_MULTI,
                 );
 
                 for index in indices.iter() {
@@ -182,6 +184,7 @@ macro_rules! take_impl_fallible {
                     capacity,
                     self.coord_type(),
                     self.metadata(),
+                    DEFAULT_PREFER_MULTI,
                 );
 
                 for i in range.start..range.end {

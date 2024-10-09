@@ -237,6 +237,10 @@ impl<const D: usize> GeometryArrayBuilder for PointBuilder<D> {
         self.metadata = metadata;
     }
 
+    fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+        self.push_geometry(value)
+    }
+
     fn finish(self) -> Arc<dyn crate::NativeArray> {
         Arc::new(self.finish())
     }

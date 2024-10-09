@@ -982,9 +982,9 @@ mod test {
         assert_eq!(ml_array.data_type(), data_type);
 
         let mut builder = MixedGeometryBuilder::<2>::new();
-        builder.push_point(Some(&crate::test::point::p0()));
-        builder.push_point(Some(&crate::test::point::p1()));
-        builder.push_point(Some(&crate::test::point::p2()));
+        builder.push_point(Some(&crate::test::point::p0())).unwrap();
+        builder.push_point(Some(&crate::test::point::p1())).unwrap();
+        builder.push_point(Some(&crate::test::point::p2())).unwrap();
         builder
             .push_multi_line_string(Some(&crate::test::multilinestring::ml0()))
             .unwrap();
