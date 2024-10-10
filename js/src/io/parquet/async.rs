@@ -3,7 +3,7 @@ use crate::error::{GeoArrowWasmError, WasmResult};
 use crate::io::parquet::options::JsParquetReaderOptions;
 use arrow_wasm::{RecordBatch, Table};
 use futures::stream::StreamExt;
-use geoarrow::geo_traits::{CoordTrait, RectTrait};
+use geoarrow::geo_traits::{PointTrait, RectTrait};
 use geoarrow::io::parquet::metadata::GeoParquetBboxCovering;
 use geoarrow::io::parquet::{
     GeoParquetDatasetMetadata, GeoParquetReaderMetadata, GeoParquetReaderOptions,
