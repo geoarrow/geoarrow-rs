@@ -1,8 +1,8 @@
 use arrow_buffer::ScalarBuffer;
 use rstar::{RTreeObject, AABB};
 
-use crate::algorithm::native::eq::coord_eq;
-use crate::geo_traits::CoordTrait;
+use crate::algorithm::native::eq::point_eq;
+use crate::geo_traits::PointTrait;
 use crate::io::geo::coord_to_geo;
 use crate::scalar::SeparatedCoord;
 use crate::trait_::NativeScalar;
@@ -66,17 +66,17 @@ impl<const D: usize> RTreeObject for InterleavedCoord<'_, D> {
 
 impl<const D: usize> PartialEq for InterleavedCoord<'_, D> {
     fn eq(&self, other: &Self) -> bool {
-        coord_eq(self, other)
+        point_eq(self, other, false)
     }
 }
 
 impl<const D: usize> PartialEq<SeparatedCoord<'_, D>> for InterleavedCoord<'_, D> {
     fn eq(&self, other: &SeparatedCoord<'_, D>) -> bool {
-        coord_eq(self, other)
+        point_eq(self, other, false)
     }
 }
 
-impl<const D: usize> CoordTrait for InterleavedCoord<'_, D> {
+impl<const D: usize> PointTrait for InterleavedCoord<'_, D> {
     type T = f64;
 
     fn dim(&self) -> usize {
@@ -97,7 +97,7 @@ impl<const D: usize> CoordTrait for InterleavedCoord<'_, D> {
     }
 }
 
-impl<const D: usize> CoordTrait for &InterleavedCoord<'_, D> {
+impl<const D: usize> PointTrait for &InterleavedCoord<'_, D> {
     type T = f64;
 
     fn dim(&self) -> usize {

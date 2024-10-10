@@ -1,6 +1,6 @@
 use super::{
-    CoordTrait, GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait,
-    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait,
+    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
+    MultiPolygonTrait, PointTrait, PolygonTrait,
 };
 use geo::CoordNum;
 
@@ -79,7 +79,7 @@ macro_rules! impl_iterator {
 impl_iterator!(
     LineStringIterator,
     LineStringTrait,
-    CoordTrait,
+    PointTrait,
     coord_unchecked
 );
 impl_iterator!(

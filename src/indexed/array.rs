@@ -4,7 +4,7 @@ use crate::algorithm::geo_index::RTree;
 use crate::array::*;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{CoordTrait, RectTrait};
+use crate::geo_traits::{PointTrait, RectTrait};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::builder::BooleanBuilder;

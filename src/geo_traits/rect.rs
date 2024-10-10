@@ -1,14 +1,14 @@
 use geo::{Coord, CoordNum, Rect};
 
-use crate::geo_traits::CoordTrait;
+use crate::geo_traits::PointTrait;
 
 /// A trait for accessing data from a generic Rect.
 pub trait RectTrait {
     /// The coordinate type of this geometry
     type T: CoordNum;
 
-    /// The type of each underlying coordinate, which implements [CoordTrait]
-    type ItemType<'a>: 'a + CoordTrait<T = Self::T>
+    /// The type of each underlying coordinate, which implements [PointTrait]
+    type ItemType<'a>: 'a + PointTrait<T = Self::T>
     where
         Self: 'a;
 

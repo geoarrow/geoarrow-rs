@@ -1,8 +1,8 @@
 use std::ops::Add;
 
 use crate::geo_traits::{
-    CoordTrait, GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait,
-    MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
+    GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
+    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
 };
 use geo::{Coord, Rect};
 
@@ -61,36 +61,6 @@ impl BoundingRect {
         }
     }
 
-    pub fn add_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
-        let x = coord.x();
-        let y = coord.y();
-        let z = coord.nth(2);
-
-        if x < self.minx {
-            self.minx = x;
-        }
-        if y < self.miny {
-            self.miny = y;
-        }
-        if let Some(z) = z {
-            if z < self.minz {
-                self.minz = z;
-            }
-        }
-
-        if x > self.maxx {
-            self.maxx = x;
-        }
-        if y > self.maxy {
-            self.maxy = y;
-        }
-        if let Some(z) = z {
-            if z > self.maxz {
-                self.maxz = z;
-            }
-        }
-    }
-
     pub fn add_point(&mut self, point: &impl PointTrait<T = f64>) {
         let x = point.x();
         let y = point.y();
@@ -123,7 +93,7 @@ impl BoundingRect {
 
     pub fn add_line_string(&mut self, line_string: &impl LineStringTrait<T = f64>) {
         for coord in line_string.coords() {
-            self.add_coord(&coord);
+            self.add_point(&coord);
         }
     }
 
@@ -181,8 +151,8 @@ impl BoundingRect {
     }
 
     pub fn add_rect(&mut self, rect: &impl RectTrait<T = f64>) {
-        self.add_coord(&rect.lower());
-        self.add_coord(&rect.upper());
+        self.add_point(&rect.lower());
+        self.add_point(&rect.upper());
     }
 
     pub fn update(&mut self, other: &BoundingRect) {

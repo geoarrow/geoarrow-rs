@@ -1,6 +1,6 @@
 use crate::algorithm::native::eq::point_eq;
 use crate::datatypes::Dimension;
-use crate::geo_traits::{CoordTrait, MultiPointTrait, PointTrait};
+use crate::geo_traits::{MultiPointTrait, PointTrait};
 use crate::io::wkb::reader::coord::WKBCoord;
 use crate::io::wkb::reader::geometry::Endianness;
 
@@ -54,15 +54,15 @@ impl<'a> PointTrait for WKBPoint<'a> {
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
-        CoordTrait::nth_unchecked(&self.coord, n)
+        self.coord.nth_unchecked(n)
     }
 
     fn x(&self) -> Self::T {
-        CoordTrait::x(&self.coord)
+        self.coord.x()
     }
 
     fn y(&self) -> Self::T {
-        CoordTrait::y(&self.coord)
+        self.coord.y()
     }
 }
 
@@ -74,15 +74,15 @@ impl<'a> PointTrait for &WKBPoint<'a> {
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
-        CoordTrait::nth_unchecked(&self.coord, n)
+        self.coord.nth_unchecked(n)
     }
 
     fn x(&self) -> Self::T {
-        CoordTrait::x(&self.coord)
+        self.coord.x()
     }
 
     fn y(&self) -> Self::T {
-        CoordTrait::y(&self.coord)
+        self.coord.y()
     }
 }
 

@@ -1,7 +1,7 @@
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{LineStringArray, WKBArray};
 use crate::error::Result;
-use crate::geo_traits::{CoordTrait, LineStringTrait};
+use crate::geo_traits::{LineStringTrait, PointTrait};
 use crate::io::wkb::common::WKBType;
 use crate::io::wkb::reader::Endianness;
 use crate::trait_::ArrayAccessor;

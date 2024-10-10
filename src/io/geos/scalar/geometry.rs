@@ -1,6 +1,6 @@
 use crate::geo_traits::{
-    CoordTrait, GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait,
-    MultiPointTrait, MultiPolygonTrait, PolygonTrait, RectTrait,
+    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
+    MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
 };
 use crate::io::geos::scalar::coord::GEOSConstCoord;
 use crate::io::geos::scalar::{

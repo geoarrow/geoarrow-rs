@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::algorithm::native::downcast::can_downcast_multi;
-use crate::algorithm::native::eq::coord_eq_allow_nan;
+use crate::algorithm::native::eq::point_eq;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::{
     CoordBuffer, CoordType, GeometryCollectionArray, InterleavedCoordBuffer, MixedGeometryArray,
@@ -391,7 +391,7 @@ impl<const D: usize> PartialEq for PointArray<D> {
         for coord_idx in 0..self.coords.len() {
             let c1 = self.coords.value(coord_idx);
             let c2 = other.coords.value(coord_idx);
-            if !coord_eq_allow_nan(&c1, &c2) {
+            if !point_eq(&c1, &c2, true) {
                 return false;
             }
         }

@@ -131,3 +131,47 @@ impl<T: CoordNum> PointTrait for &Coord<T> {
         self.y
     }
 }
+
+impl<T: CoordNum> PointTrait for (T, T) {
+    type T = T;
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.x(),
+            1 => self.y(),
+            _ => panic!(),
+        }
+    }
+
+    fn dim(&self) -> usize {
+        2
+    }
+
+    fn x(&self) -> Self::T {
+        self.0
+    }
+
+    fn y(&self) -> Self::T {
+        self.1
+    }
+}
+
+impl<T: CoordNum, const D: usize> PointTrait for [T; D] {
+    type T = T;
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        self[n]
+    }
+
+    fn dim(&self) -> usize {
+        D
+    }
+
+    fn x(&self) -> Self::T {
+        self[0]
+    }
+
+    fn y(&self) -> Self::T {
+        self[1]
+    }
+}
