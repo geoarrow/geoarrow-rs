@@ -1,8 +1,14 @@
-[tool.poetry]
-package-mode = false
+[project]
+name = "docs"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
 
-[tool.poetry.dependencies]
-python = "^3.9"
-mkdocs = "^1.4.3"
-mkdocs-material = { version = "^9.5", extras = ["imaging"] }
-pymdown-extensions = "^10.7"
+[tool.uv]
+dev-dependencies = [
+    "mkdocs>=1.6.1",
+    "mkdocs-material[imaging]>=9.5.40",
+    "pymdown-extensions>=10.11.2",
+]

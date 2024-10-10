@@ -36,33 +36,17 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install and configure Poetry
-        uses: snok/install-poetry@v1
+      - name: Install a specific version of uv
+        uses: astral-sh/setup-uv@v3
         with:
-          version: 1.8.2
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-          installer-parallel: true
-
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v3
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
-
-      - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root
+          enable-cache: true
+          version: "0.4.x"
 
       - name: Build python package
         run: |
-          poetry run maturin develop -m geoarrow-core/Cargo.toml
-          poetry run maturin develop -m geoarrow-compute/Cargo.toml
-          poetry run maturin develop -m geoarrow-io/Cargo.toml
-
-      - name: Install root project
-        run: poetry install --no-interaction
+          uv run maturin develop -m geoarrow-core/Cargo.toml
+          uv run maturin develop -m geoarrow-compute/Cargo.toml
+          uv run maturin develop -m geoarrow-io/Cargo.toml
 
       - name: Deploy docs
         env:
@@ -80,5 +64,5 @@ jobs:
           # Only push docs if no letters in git tag after the first character
           # (usually the git tag will have v as the first character)
           if echo $VERSION | cut -c 1- | grep -q "[A-Za-z]"; then
-            poetry run mike deploy $VERSION latest --update-aliases --push --deploy-prefix python/
+            uv run mike deploy $VERSION latest --update-aliases --push --deploy-prefix python/
           fi
