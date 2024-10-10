@@ -2,9 +2,9 @@ use std::fs::File;
 
 use arrow_ipc::reader::FileReader;
 use criterion::{criterion_group, criterion_main, Criterion};
-use geoarrow::algorithm::geo::EuclideanDistance;
+use geoarrow::algorithm::geo::EuclideanDistanceScalar;
 use geoarrow::array::{MultiPolygonArray, PointArray};
-use geoarrow::trait_::ArrayAccessor;
+use geoarrow::trait_::{ArrayAccessor, NativeGeometryAccessor};
 
 fn load_nybb() -> MultiPolygonArray<2> {
     let file = File::open("fixtures/nybb.arrow").unwrap();
@@ -39,9 +39,9 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("euclidean distance to scalar point", |b| {
         b.iter(|| {
             let point = geo::Point::new(0.0f64, 0.0f64);
-            let point_array = PointArray::from(vec![point].as_slice());
+            let point_array = PointArray::<2>::from(vec![point].as_slice());
 
-            let _distances = array.euclidean_distance(&point_array.value(0));
+            let _distances = array.euclidean_distance(&point_array.value_as_geometry(0));
         })
     });
 }

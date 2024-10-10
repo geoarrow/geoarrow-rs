@@ -23,7 +23,7 @@
 mod primitive;
 mod vec;
 
-// pub use geometry::BroadcastableGeometry;
+// pub use geometry::BroadcastableGeoGeometry;
 // pub use linestring::BroadcastableLineString;
 // pub use multilinestring::BroadcastableMultiLineString;
 // pub use multipoint::BroadcastableMultiPoint;

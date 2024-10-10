@@ -3,7 +3,7 @@
 //! Where possible, operations on scalars are implemented in terms of [geometry
 //! traits](../../geo_traits).
 
-mod binary;
+pub(crate) mod binary;
 pub mod bounding_rect;
 mod cast;
 mod concatenate;

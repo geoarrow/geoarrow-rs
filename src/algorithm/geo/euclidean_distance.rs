@@ -1,12 +1,16 @@
+use crate::algorithm::native::binary::try_binary_primitive_native_geometry;
+use crate::algorithm::native::Unary;
 use crate::array::*;
-use crate::scalar::*;
-use crate::trait_::ArrayAccessor;
+use crate::datatypes::{Dimension, NativeType};
+use crate::error::{GeoArrowError, Result};
+use crate::geo_traits::GeometryTrait;
+use crate::io::geo::geometry_to_geo;
+use crate::trait_::NativeGeometryAccessor;
 use crate::trait_::NativeScalar;
-use arrow_array::builder::Float64Builder;
 use arrow_array::Float64Array;
 use geo::EuclideanDistance as _EuclideanDistance;
 
-pub trait EuclideanDistance<Rhs> {
+pub trait EuclideanDistance<'a, Rhs> {
     /// Returns the distance between two geometries
     ///
     /// If a `Point` is contained by a `Polygon`, the distance is `0.0`
@@ -84,184 +88,116 @@ pub trait EuclideanDistance<Rhs> {
     ///
     /// assert_relative_eq!(distance, 1.1313708498984762);
     /// ```
-    fn euclidean_distance(&self, rhs: &Rhs) -> Float64Array;
+    fn euclidean_distance(&'a self, rhs: &'a Rhs) -> Result<Float64Array>;
 }
 
-// ┌────────────────────────────────┐
-// │ Implementations for RHS arrays │
-// └────────────────────────────────┘
-
-// Note: this implementation is outside the macro because it is not generic over O
-impl EuclideanDistance<PointArray<2>> for PointArray<2> {
-    /// Minimum distance between two Points
-    fn euclidean_distance(&self, other: &PointArray<2>) -> Float64Array {
-        assert_eq!(self.len(), other.len());
-        let mut output_array = Float64Builder::with_capacity(self.len());
-
-        self.iter_geo()
-            .zip(other.iter_geo())
-            .for_each(|(first, second)| match (first, second) {
-                (Some(first), Some(second)) => {
-                    output_array.append_value(first.euclidean_distance(&second))
-                }
-                _ => output_array.append_null(),
-            });
-
-        output_array.finish()
-    }
-}
-
-/// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
-    ($first:ty, $second:ty) => {
-        impl<'a> EuclideanDistance<$second> for $first {
-            fn euclidean_distance(&self, other: &$second) -> Float64Array {
-                assert_eq!(self.len(), other.len());
-                let mut output_array = Float64Builder::with_capacity(self.len());
-
-                self.iter_geo()
-                    .zip(other.iter_geo())
-                    .for_each(|(first, second)| match (first, second) {
-                        (Some(first), Some(second)) => {
-                            output_array.append_value(first.euclidean_distance(&second))
-                        }
-                        _ => output_array.append_null(),
-                    });
-
-                output_array.finish()
+    ($array_type:ty) => {
+        impl<'a, R: NativeGeometryAccessor<'a, 2>> EuclideanDistance<'a, R> for $array_type {
+            fn euclidean_distance(&'a self, rhs: &'a R) -> Result<Float64Array> {
+                try_binary_primitive_native_geometry(self, rhs, |l, r| {
+                    Ok(l.to_geo().euclidean_distance(&r.to_geo()))
+                })
             }
         }
     };
 }
 
-// Implementations on PointArray
-iter_geo_impl!(PointArray<2>, LineStringArray<2>);
-iter_geo_impl!(PointArray<2>, PolygonArray<2>);
-iter_geo_impl!(PointArray<2>, MultiPointArray<2>);
-iter_geo_impl!(PointArray<2>, MultiLineStringArray<2>);
-iter_geo_impl!(PointArray<2>, MultiPolygonArray<2>);
+iter_geo_impl!(PointArray<2>);
+iter_geo_impl!(LineStringArray<2>);
+iter_geo_impl!(PolygonArray<2>);
+iter_geo_impl!(MultiPointArray<2>);
+iter_geo_impl!(MultiLineStringArray<2>);
+iter_geo_impl!(MultiPolygonArray<2>);
+iter_geo_impl!(MixedGeometryArray<2>);
+iter_geo_impl!(GeometryCollectionArray<2>);
+iter_geo_impl!(RectArray<2>);
 
-// Implementations on LineStringArray
-iter_geo_impl!(LineStringArray<2>, PointArray<2>);
-iter_geo_impl!(LineStringArray<2>, LineStringArray<2>);
-iter_geo_impl!(LineStringArray<2>, PolygonArray<2>);
-// iter_geo_impl!(LineStringArray<2>, MultiPointArray<2>);
-// iter_geo_impl!(LineStringArray<2>, MultiLineStringArray<2>);
-// iter_geo_impl!(LineStringArray<2>, MultiPolygonArray<2>);
+impl<'a, R: NativeGeometryAccessor<'a, 2>> EuclideanDistance<'a, R> for &dyn NativeArray {
+    fn euclidean_distance(&'a self, rhs: &'a R) -> Result<Float64Array> {
+        use Dimension::*;
+        use NativeType::*;
 
-// Implementations on PolygonArray
-iter_geo_impl!(PolygonArray<2>, PointArray<2>);
-iter_geo_impl!(PolygonArray<2>, LineStringArray<2>);
-iter_geo_impl!(PolygonArray<2>, PolygonArray<2>);
-// iter_geo_impl!(PolygonArray<2>, MultiPointArray<2>);
-// iter_geo_impl!(PolygonArray<2>, MultiLineStringArray<2>);
-// iter_geo_impl!(PolygonArray<2>, MultiPolygonArray<2>);
-
-// Implementations on MultiPointArray
-iter_geo_impl!(MultiPointArray<2>, PointArray<2>);
-// iter_geo_impl!(MultiPointArray<2>, LineStringArray<2>);
-// iter_geo_impl!(MultiPointArray<2>, PolygonArray<2>);
-// iter_geo_impl!(MultiPointArray<2>, MultiPointArray<2>);
-// iter_geo_impl!(MultiPointArray<2>, MultiLineStringArray<2>);
-// iter_geo_impl!(MultiPointArray<2>, MultiPolygonArray<2>);
-
-// Implementations on MultiLineStringArray
-iter_geo_impl!(MultiLineStringArray<2>, PointArray<2>);
-// iter_geo_impl!(MultiLineStringArray<2>, LineStringArray<2>);
-// iter_geo_impl!(MultiLineStringArray<2>, PolygonArray<2>);
-// iter_geo_impl!(MultiLineStringArray<2>, MultiPointArray<2>);
-// iter_geo_impl!(MultiLineStringArray<2>, MultiLineStringArray<2>);
-// iter_geo_impl!(MultiLineStringArray<2>, MultiPolygonArray<2>);
-
-// Implementations on MultiPolygonArray
-iter_geo_impl!(MultiPolygonArray<2>, PointArray<2>);
-// iter_geo_impl!(MultiPolygonArray<2>, LineStringArray<2>);
-// iter_geo_impl!(MultiPolygonArray<2>, PolygonArray<2>);
-// iter_geo_impl!(MultiPolygonArray<2>, MultiPointArray<2>);
-// iter_geo_impl!(MultiPolygonArray<2>, MultiLineStringArray<2>);
-// iter_geo_impl!(MultiPolygonArray<2>, MultiPolygonArray<2>);
-
-// ┌─────────────────────────────────┐
-// │ Implementations for RHS scalars │
-// └─────────────────────────────────┘
-
-// Note: this implementation is outside the macro because it is not generic over O
-impl<'a> EuclideanDistance<Point<'a, 2>> for PointArray<2> {
-    /// Minimum distance between two Points
-    fn euclidean_distance(&self, other: &Point<'a, 2>) -> Float64Array {
-        let mut output_array = Float64Builder::with_capacity(self.len());
-
-        self.iter_geo().for_each(|maybe_point| {
-            let output = maybe_point.map(|point| point.euclidean_distance(&other.to_geo()));
-            output_array.append_option(output)
-        });
-
-        output_array.finish()
+        match self.data_type() {
+            Point(_, XY) => EuclideanDistance::euclidean_distance(self.as_point::<2>(), rhs),
+            LineString(_, XY) => {
+                EuclideanDistance::euclidean_distance(self.as_line_string::<2>(), rhs)
+            }
+            Polygon(_, XY) => EuclideanDistance::euclidean_distance(self.as_polygon::<2>(), rhs),
+            MultiPoint(_, XY) => {
+                EuclideanDistance::euclidean_distance(self.as_multi_point::<2>(), rhs)
+            }
+            MultiLineString(_, XY) => {
+                EuclideanDistance::euclidean_distance(self.as_multi_line_string::<2>(), rhs)
+            }
+            MultiPolygon(_, XY) => {
+                EuclideanDistance::euclidean_distance(self.as_multi_polygon::<2>(), rhs)
+            }
+            Mixed(_, XY) => EuclideanDistance::euclidean_distance(self.as_mixed::<2>(), rhs),
+            GeometryCollection(_, XY) => {
+                EuclideanDistance::euclidean_distance(self.as_geometry_collection::<2>(), rhs)
+            }
+            Rect(XY) => EuclideanDistance::euclidean_distance(self.as_rect::<2>(), rhs),
+            _ => Err(GeoArrowError::IncorrectType("".into())),
+        }
     }
 }
 
-/// Implementation that iterates over geo objects
-macro_rules! iter_geo_impl_scalar {
-    ($first:ty, $second:ty) => {
-        impl<'a> EuclideanDistance<$second> for $first {
-            fn euclidean_distance(&self, other: &$second) -> Float64Array {
-                let mut output_array = Float64Builder::with_capacity(self.len());
-                let other_geo = other.to_geo();
+pub trait EuclideanDistanceScalar<'a, G: GeometryTrait> {
+    fn euclidean_distance(&'a self, rhs: &'a G) -> Result<Float64Array>;
+}
 
-                self.iter_geo().for_each(|maybe_geom| {
-                    let output = maybe_geom.map(|geom| geom.euclidean_distance(&other_geo));
-                    output_array.append_option(output)
-                });
-
-                output_array.finish()
+macro_rules! scalar_impl {
+    ($array_type:ty) => {
+        impl<'a, G: GeometryTrait<T = f64>> EuclideanDistanceScalar<'a, G> for $array_type {
+            fn euclidean_distance(&'a self, rhs: &'a G) -> Result<Float64Array> {
+                let right = geometry_to_geo(rhs);
+                self.try_unary_primitive(|left| {
+                    Ok::<_, GeoArrowError>(left.to_geo().euclidean_distance(&right))
+                })
             }
         }
     };
 }
 
-// Implementations on PointArray
-iter_geo_impl_scalar!(PointArray<2>, LineString<'a, 2>);
-iter_geo_impl_scalar!(PointArray<2>, Polygon<'a, 2>);
-iter_geo_impl_scalar!(PointArray<2>, MultiPoint<'a, 2>);
-iter_geo_impl_scalar!(PointArray<2>, MultiLineString<'a, 2>);
-iter_geo_impl_scalar!(PointArray<2>, MultiPolygon<'a, 2>);
+scalar_impl!(PointArray<2>);
+scalar_impl!(LineStringArray<2>);
+scalar_impl!(PolygonArray<2>);
+scalar_impl!(MultiPointArray<2>);
+scalar_impl!(MultiLineStringArray<2>);
+scalar_impl!(MultiPolygonArray<2>);
+scalar_impl!(MixedGeometryArray<2>);
+scalar_impl!(GeometryCollectionArray<2>);
+scalar_impl!(RectArray<2>);
 
-// Implementations on LineStringArray
-iter_geo_impl_scalar!(LineStringArray<2>, Point<'a, 2>);
-iter_geo_impl_scalar!(LineStringArray<2>, LineString<'a, 2>);
-iter_geo_impl_scalar!(LineStringArray<2>, Polygon<'a, 2>);
-// iter_geo_impl_scalar!(LineStringArray<2>, MultiPoint<'a, 2>);
-// iter_geo_impl_scalar!(LineStringArray<2>, MultiLineString<'a, 2>);
-// iter_geo_impl_scalar!(LineStringArray<2>, MultiPolygon<'a, 2>);
+impl<'a, G: GeometryTrait<T = f64>> EuclideanDistanceScalar<'a, G> for &dyn NativeArray {
+    fn euclidean_distance(&'a self, rhs: &'a G) -> Result<Float64Array> {
+        use Dimension::*;
+        use NativeType::*;
 
-// Implementations on PolygonArray
-iter_geo_impl_scalar!(PolygonArray<2>, Point<'a, 2>);
-iter_geo_impl_scalar!(PolygonArray<2>, LineString<'a, 2>);
-iter_geo_impl_scalar!(PolygonArray<2>, Polygon<'a, 2>);
-// iter_geo_impl_scalar!(PolygonArray<2>, MultiPoint<'a, 2>);
-// iter_geo_impl_scalar!(PolygonArray<2>, MultiLineString<'a, 2>);
-// iter_geo_impl_scalar!(PolygonArray<2>, MultiPolygon<'a, 2>);
-
-// Implementations on MultiPointArray
-iter_geo_impl_scalar!(MultiPointArray<2>, Point<'a, 2>);
-// iter_geo_impl_scalar!(MultiPointArray<2>, LineString<'a, 2>);
-// iter_geo_impl_scalar!(MultiPointArray<2>, Polygon<'a, 2>);
-// iter_geo_impl_scalar!(MultiPointArray<2>, MultiPoint<'a, 2>);
-// iter_geo_impl_scalar!(MultiPointArray<2>, MultiLineString<'a, 2>);
-// iter_geo_impl_scalar!(MultiPointArray<2>, MultiPolygon<'a, 2>);
-
-// Implementations on MultiLineStringArray
-iter_geo_impl_scalar!(MultiLineStringArray<2>, Point<'a, 2>);
-// iter_geo_impl_scalar!(MultiLineStringArray<2>, LineString<'a, 2>);
-// iter_geo_impl_scalar!(MultiLineStringArray<2>, Polygon<'a, 2>);
-// iter_geo_impl_scalar!(MultiLineStringArray<2>, MultiPoint<'a, 2>);
-// iter_geo_impl_scalar!(MultiLineStringArray<2>, MultiLineString<'a, 2>);
-// iter_geo_impl_scalar!(MultiLineStringArray<2>, MultiPolygon<'a, 2>);
-
-// Implementations on MultiPolygonArray
-iter_geo_impl_scalar!(MultiPolygonArray<2>, Point<'a, 2>);
-// iter_geo_impl_scalar!(MultiPolygonArray<2>, LineString<'a, 2>);
-// iter_geo_impl_scalar!(MultiPolygonArray<2>, Polygon<'a, 2>);
-// iter_geo_impl_scalar!(MultiPolygonArray<2>, MultiPoint<'a, 2>);
-// iter_geo_impl_scalar!(MultiPolygonArray<2>, MultiLineString<'a, 2>);
-// iter_geo_impl_scalar!(MultiPolygonArray<2>, MultiPolygon<'a, 2>);
+        match self.data_type() {
+            Point(_, XY) => EuclideanDistanceScalar::euclidean_distance(self.as_point::<2>(), rhs),
+            LineString(_, XY) => {
+                EuclideanDistanceScalar::euclidean_distance(self.as_line_string::<2>(), rhs)
+            }
+            Polygon(_, XY) => {
+                EuclideanDistanceScalar::euclidean_distance(self.as_polygon::<2>(), rhs)
+            }
+            MultiPoint(_, XY) => {
+                EuclideanDistanceScalar::euclidean_distance(self.as_multi_point::<2>(), rhs)
+            }
+            MultiLineString(_, XY) => {
+                EuclideanDistanceScalar::euclidean_distance(self.as_multi_line_string::<2>(), rhs)
+            }
+            MultiPolygon(_, XY) => {
+                EuclideanDistanceScalar::euclidean_distance(self.as_multi_polygon::<2>(), rhs)
+            }
+            Mixed(_, XY) => EuclideanDistanceScalar::euclidean_distance(self.as_mixed::<2>(), rhs),
+            GeometryCollection(_, XY) => {
+                EuclideanDistanceScalar::euclidean_distance(self.as_geometry_collection::<2>(), rhs)
+            }
+            Rect(XY) => EuclideanDistanceScalar::euclidean_distance(self.as_rect::<2>(), rhs),
+            _ => Err(GeoArrowError::IncorrectType("".into())),
+        }
+    }
+}
