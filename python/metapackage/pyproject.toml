@@ -10,16 +10,13 @@ readme = "README.md"
 requires-python = ">=3.7"
 license = "Apache-2.0"
 keywords = []
-authors = [
-  { name = "Kyle Barron", email = "kylebarron2@gmail.com" },
-]
+authors = [{ name = "Kyle Barron", email = "kylebarron2@gmail.com" }]
 classifiers = [
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3.7",
-  "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
 ]
 dependencies = ["geoarrow-rust-core"]
 
