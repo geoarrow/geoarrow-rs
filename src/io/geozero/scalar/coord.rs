@@ -1,8 +1,8 @@
-use crate::geo_traits::CoordTrait;
+use crate::geo_traits::PointTrait;
 use geozero::GeomProcessor;
 
 pub(crate) fn process_coord<P: GeomProcessor>(
-    coord: &impl CoordTrait<T = f64>,
+    coord: &impl PointTrait<T = f64>,
     coord_idx: usize,
     processor: &mut P,
 ) -> geozero::error::Result<()> {

@@ -10,7 +10,7 @@ use crate::array::{
 };
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{
-    CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait,
+    GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PointTrait, PolygonTrait,
     RectTrait,
 };
 use crate::io::wkb::reader::WKBPolygon;
@@ -238,7 +238,7 @@ impl<const D: usize> PolygonBuilder<D> {
             let ext_ring = polygon.exterior().unwrap();
             self.ring_offsets.try_push_usize(ext_ring.num_coords())?;
             for coord in ext_ring.coords() {
-                self.coords.push_coord(&coord);
+                self.coords.push_point(&coord);
             }
 
             // Total number of rings in this polygon
@@ -252,7 +252,7 @@ impl<const D: usize> PolygonBuilder<D> {
             for int_ring in polygon.interiors() {
                 self.ring_offsets.try_push_usize(int_ring.num_coords())?;
                 for coord in int_ring.coords() {
-                    self.coords.push_coord(&coord);
+                    self.coords.push_point(&coord);
                 }
             }
 
@@ -277,23 +277,23 @@ impl<const D: usize> PolygonBuilder<D> {
             // Ref below because I always forget the ordering
             // https://github.com/georust/geo/blob/76ad2a358bd079e9d47b1229af89608744d2635b/geo-types/src/geometry/rect.rs#L217-L225
 
-            self.coords.push_coord(&geo::Coord {
+            self.coords.push_point(&geo::Coord {
                 x: lower.x(),
                 y: lower.y(),
             });
-            self.coords.push_coord(&geo::Coord {
+            self.coords.push_point(&geo::Coord {
                 x: lower.x(),
                 y: upper.y(),
             });
-            self.coords.push_coord(&geo::Coord {
+            self.coords.push_point(&geo::Coord {
                 x: upper.x(),
                 y: upper.y(),
             });
-            self.coords.push_coord(&geo::Coord {
+            self.coords.push_point(&geo::Coord {
                 x: upper.x(),
                 y: lower.y(),
             });
-            self.coords.push_coord(&geo::Coord {
+            self.coords.push_point(&geo::Coord {
                 x: lower.x(),
                 y: lower.y(),
             });
@@ -341,8 +341,8 @@ impl<const D: usize> PolygonBuilder<D> {
     /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
     /// to the array upholds the necessary invariants of the array.
     #[inline]
-    pub unsafe fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
-        self.coords.push_coord(coord);
+    pub unsafe fn push_coord(&mut self, coord: &impl PointTrait<T = f64>) -> Result<()> {
+        self.coords.push_point(coord);
         Ok(())
     }
 

@@ -2,11 +2,11 @@
 use geo::CoordFloat;
 
 use crate::geo_traits::{
-    CoordTrait, GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait,
-    MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
+    GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
+    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
 };
 
-pub(super) fn coord_to_wkt<T: CoordFloat>(coord: &impl CoordTrait<T = T>) -> wkt::types::Coord<T> {
+pub(super) fn coord_to_wkt<T: CoordFloat>(coord: &impl PointTrait<T = T>) -> wkt::types::Coord<T> {
     let mut out = wkt::types::Coord {
         x: coord.x(),
         y: coord.y(),

@@ -4,7 +4,7 @@ use std::sync::Arc;
 use crate::array::{CoordType, InterleavedCoordBufferBuilder};
 use crate::datatypes::coord_type_to_data_type;
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::CoordTrait;
+use crate::geo_traits::PointTrait;
 use crate::scalar::InterleavedCoord;
 use crate::trait_::IntoArrow;
 use arrow_array::{Array, FixedSizeListArray, Float64Array};
@@ -187,7 +187,7 @@ impl<const D: usize> From<&[f64]> for InterleavedCoordBuffer<D> {
     }
 }
 
-impl<G: CoordTrait<T = f64>> From<&[G]> for InterleavedCoordBuffer<2> {
+impl<G: PointTrait<T = f64>> From<&[G]> for InterleavedCoordBuffer<2> {
     fn from(other: &[G]) -> Self {
         let mut_arr: InterleavedCoordBufferBuilder<2> = other.into();
         mut_arr.into()

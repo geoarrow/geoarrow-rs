@@ -1,14 +1,14 @@
 use geo::CoordNum;
 
 use crate::geo_traits::{
-    CoordTrait, GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait,
-    MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
+    GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
+    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
 };
 
 /// Convert any coordinate to a [`geo::Coord`].
 ///
 /// Only the first two dimensions will be kept.
-pub fn coord_to_geo<T: CoordNum>(coord: &impl CoordTrait<T = T>) -> geo::Coord<T> {
+pub fn coord_to_geo<T: CoordNum>(coord: &impl PointTrait<T = T>) -> geo::Coord<T> {
     geo::Coord {
         x: coord.x(),
         y: coord.y(),

@@ -3,11 +3,11 @@ use std::marker::PhantomData;
 use wkt::WktNum;
 
 use crate::geo_traits::{
-    CoordTrait, GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait,
-    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
+    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
+    MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
 };
 
-impl<T: WktNum> CoordTrait for wkt::types::Coord<T> {
+impl<T: WktNum> PointTrait for wkt::types::Coord<T> {
     type T = T;
 
     fn dim(&self) -> usize {
@@ -56,7 +56,7 @@ impl<T: WktNum> CoordTrait for wkt::types::Coord<T> {
     }
 }
 
-impl<'a, T: WktNum> CoordTrait for &'a wkt::types::Coord<T> {
+impl<'a, T: WktNum> PointTrait for &'a wkt::types::Coord<T> {
     type T = T;
 
     fn dim(&self) -> usize {

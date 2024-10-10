@@ -107,64 +107,6 @@ impl PointTrait for &GEOSPoint {
     }
 }
 
-impl crate::geo_traits::CoordTrait for GEOSPoint {
-    type T = f64;
-
-    fn dim(&self) -> usize {
-        match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => 2,
-            geos::Dimensions::ThreeD => 3,
-            geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
-        }
-    }
-
-    fn nth_unchecked(&self, n: usize) -> Self::T {
-        match n {
-            0 => self.0.get_x().unwrap(),
-            1 => self.0.get_y().unwrap(),
-            2 => self.0.get_z().unwrap(),
-            _ => panic!(),
-        }
-    }
-
-    fn x(&self) -> Self::T {
-        self.0.get_x().unwrap()
-    }
-
-    fn y(&self) -> Self::T {
-        self.0.get_y().unwrap()
-    }
-}
-
-impl crate::geo_traits::CoordTrait for &GEOSPoint {
-    type T = f64;
-
-    fn dim(&self) -> usize {
-        match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => 2,
-            geos::Dimensions::ThreeD => 3,
-            geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
-        }
-    }
-
-    fn nth_unchecked(&self, n: usize) -> Self::T {
-        match n {
-            0 => self.0.get_x().unwrap(),
-            1 => self.0.get_y().unwrap(),
-            2 => self.0.get_z().unwrap(),
-            _ => panic!(),
-        }
-    }
-
-    fn x(&self) -> Self::T {
-        self.0.get_x().unwrap()
-    }
-
-    fn y(&self) -> Self::T {
-        self.0.get_y().unwrap()
-    }
-}
-
 pub struct GEOSConstPoint<'a>(geos::ConstGeometry<'a>);
 
 impl<'a> GEOSConstPoint<'a> {
@@ -213,64 +155,6 @@ impl<'a> PointTrait for GEOSConstPoint<'a> {
 }
 
 impl<'a> PointTrait for &GEOSConstPoint<'a> {
-    type T = f64;
-
-    fn dim(&self) -> usize {
-        match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => 2,
-            geos::Dimensions::ThreeD => 3,
-            geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
-        }
-    }
-
-    fn nth_unchecked(&self, n: usize) -> Self::T {
-        match n {
-            0 => self.0.get_x().unwrap(),
-            1 => self.0.get_y().unwrap(),
-            2 => self.0.get_z().unwrap(),
-            _ => panic!(),
-        }
-    }
-
-    fn x(&self) -> Self::T {
-        self.0.get_x().unwrap()
-    }
-
-    fn y(&self) -> Self::T {
-        self.0.get_y().unwrap()
-    }
-}
-
-impl<'a> crate::geo_traits::CoordTrait for GEOSConstPoint<'a> {
-    type T = f64;
-
-    fn dim(&self) -> usize {
-        match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => 2,
-            geos::Dimensions::ThreeD => 3,
-            geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
-        }
-    }
-
-    fn nth_unchecked(&self, n: usize) -> Self::T {
-        match n {
-            0 => self.0.get_x().unwrap(),
-            1 => self.0.get_y().unwrap(),
-            2 => self.0.get_z().unwrap(),
-            _ => panic!(),
-        }
-    }
-
-    fn x(&self) -> Self::T {
-        self.0.get_x().unwrap()
-    }
-
-    fn y(&self) -> Self::T {
-        self.0.get_y().unwrap()
-    }
-}
-
-impl<'a> crate::geo_traits::CoordTrait for &GEOSConstPoint<'a> {
     type T = f64;
 
     fn dim(&self) -> usize {

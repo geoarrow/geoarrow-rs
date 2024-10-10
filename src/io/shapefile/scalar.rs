@@ -1,6 +1,6 @@
 use crate::geo_traits::{
-    CoordTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait,
-    PointTrait, PolygonTrait,
+    LineStringTrait, MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait,
+    PolygonTrait,
 };
 
 pub(super) struct Point<'a>(&'a shapefile::Point);
@@ -35,30 +35,6 @@ impl<'a> PointTrait for Point<'a> {
     }
 }
 
-impl<'a> CoordTrait for Point<'a> {
-    type T = f64;
-
-    fn dim(&self) -> usize {
-        2
-    }
-
-    fn nth_unchecked(&self, n: usize) -> Self::T {
-        match n {
-            0 => self.0.x,
-            1 => self.0.y,
-            _ => panic!(),
-        }
-    }
-
-    fn x(&self) -> Self::T {
-        self.0.x
-    }
-
-    fn y(&self) -> Self::T {
-        self.0.y
-    }
-}
-
 // Note: PointZ can optionally have M values
 pub(super) struct PointZ<'a>(&'a shapefile::PointZ);
 
@@ -69,31 +45,6 @@ impl<'a> PointZ<'a> {
 }
 
 impl<'a> PointTrait for PointZ<'a> {
-    type T = f64;
-
-    fn dim(&self) -> usize {
-        3
-    }
-
-    fn nth_unchecked(&self, n: usize) -> Self::T {
-        match n {
-            0 => self.0.x,
-            1 => self.0.y,
-            2 => self.0.z,
-            _ => panic!(),
-        }
-    }
-
-    fn x(&self) -> Self::T {
-        self.0.x
-    }
-
-    fn y(&self) -> Self::T {
-        self.0.y
-    }
-}
-
-impl<'a> CoordTrait for PointZ<'a> {
     type T = f64;
 
     fn dim(&self) -> usize {

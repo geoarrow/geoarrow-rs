@@ -1,7 +1,7 @@
 use core::f64;
 
 use crate::array::SeparatedCoordBuffer;
-use crate::geo_traits::{CoordTrait, PointTrait};
+use crate::geo_traits::PointTrait;
 
 /// The GeoArrow equivalent to `Vec<Coord>`: a mutable collection of coordinates.
 ///
@@ -89,12 +89,6 @@ impl<const D: usize> SeparatedCoordBufferBuilder<D> {
             buffer.push(point.nth(i).unwrap_or(f64::NAN))
         }
     }
-
-    pub fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
-        for (i, buffer) in self.buffers.iter_mut().enumerate() {
-            buffer.push(coord.nth(i).unwrap_or(f64::NAN))
-        }
-    }
 }
 
 impl SeparatedCoordBufferBuilder<2> {
@@ -131,11 +125,11 @@ impl<const D: usize> From<SeparatedCoordBufferBuilder<D>> for SeparatedCoordBuff
     }
 }
 
-impl<G: CoordTrait<T = f64>, const D: usize> From<&[G]> for SeparatedCoordBufferBuilder<D> {
+impl<G: PointTrait<T = f64>, const D: usize> From<&[G]> for SeparatedCoordBufferBuilder<D> {
     fn from(value: &[G]) -> Self {
         let mut buffer = SeparatedCoordBufferBuilder::with_capacity(value.len());
         for coord in value {
-            buffer.push_coord(coord);
+            buffer.push_point(coord);
         }
         buffer
     }

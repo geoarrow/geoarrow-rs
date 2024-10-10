@@ -1,6 +1,6 @@
 use rstar::{RTreeObject, AABB};
 
-use crate::geo_traits::CoordTrait;
+use crate::geo_traits::PointTrait;
 use crate::io::geo::coord_to_geo;
 use crate::scalar::{InterleavedCoord, SeparatedCoord};
 use crate::trait_::NativeScalar;
@@ -85,7 +85,7 @@ impl<const D: usize> PartialEq<SeparatedCoord<'_, D>> for Coord<'_, D> {
     }
 }
 
-impl<const D: usize> CoordTrait for Coord<'_, D> {
+impl<const D: usize> PointTrait for Coord<'_, D> {
     type T = f64;
 
     fn dim(&self) -> usize {
@@ -114,7 +114,7 @@ impl<const D: usize> CoordTrait for Coord<'_, D> {
     }
 }
 
-impl<const D: usize> CoordTrait for &Coord<'_, D> {
+impl<const D: usize> PointTrait for &Coord<'_, D> {
     type T = f64;
 
     fn dim(&self) -> usize {

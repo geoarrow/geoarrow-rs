@@ -9,7 +9,7 @@ use arrow_schema::{DataType, Field};
 
 use crate::array::{CoordType, SeparatedCoordBufferBuilder};
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::CoordTrait;
+use crate::geo_traits::PointTrait;
 use crate::scalar::SeparatedCoord;
 use crate::trait_::IntoArrow;
 
@@ -201,7 +201,7 @@ impl TryFrom<(Vec<f64>, Vec<f64>)> for SeparatedCoordBuffer<2> {
     }
 }
 
-impl<G: CoordTrait<T = f64>> From<&[G]> for SeparatedCoordBuffer<2> {
+impl<G: PointTrait<T = f64>> From<&[G]> for SeparatedCoordBuffer<2> {
     fn from(other: &[G]) -> Self {
         let mut_arr: SeparatedCoordBufferBuilder<2> = other.into();
         mut_arr.into()

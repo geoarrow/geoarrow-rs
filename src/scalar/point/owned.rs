@@ -1,6 +1,6 @@
 use crate::algorithm::native::eq::point_eq;
 use crate::array::{CoordBuffer, PointArray};
-use crate::geo_traits::{CoordTrait, PointTrait};
+use crate::geo_traits::PointTrait;
 use crate::io::geo::point_to_geo;
 use crate::scalar::{Coord, Point};
 
@@ -48,7 +48,7 @@ impl<const D: usize> PointTrait for OwnedPoint<D> {
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
         let coord = self.coords.value(self.geom_index);
-        CoordTrait::nth_unchecked(&coord, n)
+        coord.nth_unchecked(n)
     }
 
     fn x(&self) -> f64 {
@@ -56,27 +56,6 @@ impl<const D: usize> PointTrait for OwnedPoint<D> {
     }
 
     fn y(&self) -> f64 {
-        self.coords.get_y(self.geom_index)
-    }
-}
-
-impl<const D: usize> CoordTrait for OwnedPoint<D> {
-    type T = f64;
-
-    fn dim(&self) -> usize {
-        D
-    }
-
-    fn nth_unchecked(&self, n: usize) -> Self::T {
-        let coord = self.coords.value(self.geom_index);
-        CoordTrait::nth_unchecked(&coord, n)
-    }
-
-    fn x(&self) -> Self::T {
-        self.coords.get_x(self.geom_index)
-    }
-
-    fn y(&self) -> Self::T {
         self.coords.get_y(self.geom_index)
     }
 }

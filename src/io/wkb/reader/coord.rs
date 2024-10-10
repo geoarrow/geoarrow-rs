@@ -3,7 +3,7 @@ use std::io::Cursor;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
 use crate::datatypes::Dimension;
-use crate::geo_traits::{CoordTrait, PointTrait};
+use crate::geo_traits::PointTrait;
 use crate::io::wkb::reader::geometry::Endianness;
 
 const F64_WIDTH: u64 = 8;
@@ -80,26 +80,6 @@ impl<'a> WKBCoord<'a> {
     pub fn size(&self) -> u64 {
         // A 2D WKBCoord is just two f64s
         self.dim as u64 * 8
-    }
-}
-
-impl<'a> CoordTrait for WKBCoord<'a> {
-    type T = f64;
-
-    fn dim(&self) -> usize {
-        self.dim.size()
-    }
-
-    fn nth_unchecked(&self, n: usize) -> Self::T {
-        self.get_nth_unchecked(n)
-    }
-
-    fn x(&self) -> Self::T {
-        self.get_x()
-    }
-
-    fn y(&self) -> Self::T {
-        self.get_y()
     }
 }
 

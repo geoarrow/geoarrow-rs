@@ -1,64 +1,10 @@
 use crate::geo_traits::{
-    CoordTrait, GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait,
-    MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
+    GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
+    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
 };
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 use geo::CoordFloat;
-
-#[inline]
-pub fn coord_eq_allow_nan<T: CoordFloat>(
-    left: &impl CoordTrait<T = T>,
-    right: &impl CoordTrait<T = T>,
-) -> bool {
-    let left_dim = left.dim();
-    if left_dim != right.dim() {
-        return false;
-    }
-
-    // Specifically check for NaN because two points defined to be
-    // TODO: in the future add an `is_empty` to the PointTrait and then you shouldn't check for
-    // NaN manually
-    match left_dim {
-        2 => {
-            if left.x().is_nan() && right.x().is_nan() && left.y().is_nan() && right.y().is_nan() {
-                return true;
-            }
-        }
-        3 => {
-            if left.x().is_nan()
-                && right.x().is_nan()
-                && left.y().is_nan()
-                && right.y().is_nan()
-                && left.nth_unchecked(2).is_nan()
-                && right.nth_unchecked(2).is_nan()
-            {
-                return true;
-            }
-        }
-        _ => panic!(),
-    }
-
-    for i in 0..left_dim {
-        if left.nth_unchecked(i) != right.nth_unchecked(i) {
-            return false;
-        }
-    }
-
-    true
-}
-
-#[inline]
-pub fn coord_eq<T: CoordFloat>(
-    left: &impl CoordTrait<T = T>,
-    right: &impl CoordTrait<T = T>,
-) -> bool {
-    if left.dim() != right.dim() {
-        return false;
-    }
-
-    left.x_y() == right.x_y()
-}
 
 #[inline]
 pub fn point_eq<T: CoordFloat>(
@@ -123,7 +69,7 @@ pub fn line_string_eq<T: CoordFloat>(
     }
 
     for (left_coord, right_coord) in left.coords().zip(right.coords()) {
-        if !coord_eq(&left_coord, &right_coord) {
+        if !point_eq(&left_coord, &right_coord, false) {
             return false;
         }
     }
@@ -240,11 +186,11 @@ pub fn rect_eq<T: CoordFloat>(left: &impl RectTrait<T = T>, right: &impl RectTra
         return false;
     }
 
-    if !coord_eq(&left.lower(), &right.lower()) {
+    if !point_eq(&left.lower(), &right.lower(), false) {
         return false;
     }
 
-    if !coord_eq(&left.upper(), &right.upper()) {
+    if !point_eq(&left.upper(), &right.upper(), false) {
         return false;
     }
 

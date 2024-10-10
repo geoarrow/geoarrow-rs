@@ -2,8 +2,8 @@ use std::marker::PhantomData;
 
 use crate::datatypes::Dimension;
 use crate::geo_traits::{
-    CoordTrait, GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait,
-    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
+    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
+    MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
 };
 
 #[derive(Debug, Clone)]
@@ -28,31 +28,6 @@ impl<'a> Point<'a> {
 }
 
 impl<'a> PointTrait for Point<'a> {
-    type T = f64;
-
-    fn dim(&self) -> usize {
-        self.dim.size()
-    }
-
-    fn nth_unchecked(&self, n: usize) -> Self::T {
-        match n {
-            0 => self.geom.xy().unwrap().get(self.coord_offset * 2),
-            1 => self.geom.xy().unwrap().get((self.coord_offset * 2) + 1),
-            2 => self.geom.z().unwrap().get(self.coord_offset),
-            _ => panic!("Unexpected dim {n}"),
-        }
-    }
-
-    fn x(&self) -> Self::T {
-        self.geom.xy().unwrap().get(self.coord_offset * 2)
-    }
-
-    fn y(&self) -> Self::T {
-        self.geom.xy().unwrap().get((self.coord_offset * 2) + 1)
-    }
-}
-
-impl<'a> CoordTrait for Point<'a> {
     type T = f64;
 
     fn dim(&self) -> usize {

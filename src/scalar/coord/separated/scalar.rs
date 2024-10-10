@@ -1,5 +1,5 @@
-use crate::algorithm::native::eq::coord_eq;
-use crate::geo_traits::CoordTrait;
+use crate::algorithm::native::eq::point_eq;
+use crate::geo_traits::PointTrait;
 use crate::io::geo::coord_to_geo;
 use crate::scalar::InterleavedCoord;
 use crate::trait_::NativeScalar;
@@ -64,17 +64,17 @@ impl<const D: usize> RTreeObject for SeparatedCoord<'_, D> {
 
 impl<const D: usize> PartialEq for SeparatedCoord<'_, D> {
     fn eq(&self, other: &SeparatedCoord<D>) -> bool {
-        coord_eq(self, other)
+        point_eq(self, other, false)
     }
 }
 
 impl<const D: usize> PartialEq<InterleavedCoord<'_, D>> for SeparatedCoord<'_, D> {
     fn eq(&self, other: &InterleavedCoord<D>) -> bool {
-        coord_eq(self, other)
+        point_eq(self, other, false)
     }
 }
 
-impl<const D: usize> CoordTrait for SeparatedCoord<'_, D> {
+impl<const D: usize> PointTrait for SeparatedCoord<'_, D> {
     type T = f64;
 
     fn dim(&self) -> usize {
@@ -94,7 +94,7 @@ impl<const D: usize> CoordTrait for SeparatedCoord<'_, D> {
     }
 }
 
-impl<const D: usize> CoordTrait for &SeparatedCoord<'_, D> {
+impl<const D: usize> PointTrait for &SeparatedCoord<'_, D> {
     type T = f64;
 
     fn dim(&self) -> usize {

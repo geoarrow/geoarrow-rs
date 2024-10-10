@@ -10,7 +10,7 @@ use crate::array::{
 };
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{
-    CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait,
+    GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PointTrait, PolygonTrait,
 };
 use crate::io::wkb::reader::WKBMaybeMultiPolygon;
 use crate::scalar::WKB;
@@ -227,7 +227,7 @@ impl<const D: usize> MultiPolygonBuilder<D> {
             // TODO: support empty polygons
             let ext_ring = polygon.exterior().unwrap();
             for coord in ext_ring.coords() {
-                self.coords.push_coord(&coord);
+                self.coords.push_point(&coord);
             }
 
             // Total number of rings in this Multipolygon
@@ -246,7 +246,7 @@ impl<const D: usize> MultiPolygonBuilder<D> {
                     .unwrap();
 
                 for coord in int_ring.coords() {
-                    self.coords.push_coord(&coord);
+                    self.coords.push_point(&coord);
                 }
             }
         } else {
@@ -276,7 +276,7 @@ impl<const D: usize> MultiPolygonBuilder<D> {
                 // never be empty.
                 let ext_ring = polygon.exterior().unwrap();
                 for coord in ext_ring.coords() {
-                    self.coords.push_coord(&coord);
+                    self.coords.push_point(&coord);
                 }
 
                 // Total number of rings in this Multipolygon
@@ -295,7 +295,7 @@ impl<const D: usize> MultiPolygonBuilder<D> {
                         .unwrap();
 
                     for coord in int_ring.coords() {
-                        self.coords.push_coord(&coord);
+                        self.coords.push_point(&coord);
                     }
                 }
             }
@@ -374,8 +374,8 @@ impl<const D: usize> MultiPolygonBuilder<D> {
     /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
     /// to the array upholds the necessary invariants of the array.
     #[inline]
-    pub unsafe fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
-        self.coords.push_coord(coord);
+    pub unsafe fn push_coord(&mut self, coord: &impl PointTrait<T = f64>) -> Result<()> {
+        self.coords.push_point(coord);
         Ok(())
     }
 
