@@ -1,10 +1,10 @@
 # Development
 
 ```
-poetry run maturin develop -m geoarrow-core/Cargo.toml
-poetry run maturin develop -m geoarrow-compute/Cargo.toml
-poetry run maturin develop -m geoarrow-io/Cargo.toml
-poetry run mkdocs serve
+uv run maturin develop -m geoarrow-core/Cargo.toml
+uv run maturin develop -m geoarrow-compute/Cargo.toml
+uv run maturin develop -m geoarrow-io/Cargo.toml
+uv run mkdocs serve
 ```
 
 
@@ -25,10 +25,10 @@ Then enter into the `python` directory:
 
 ```
 cd python
-poetry install
-poetry run maturin develop -m geoarrow-core/Cargo.toml
-poetry run maturin develop -m geoarrow-compute/Cargo.toml
-poetry run maturin develop -m geoarrow-io/Cargo.toml
+uv install
+uv run maturin develop -m geoarrow-core/Cargo.toml
+uv run maturin develop -m geoarrow-compute/Cargo.toml
+uv run maturin develop -m geoarrow-io/Cargo.toml
 ```
 
 ## Documentation
@@ -36,7 +36,7 @@ poetry run maturin develop -m geoarrow-io/Cargo.toml
 Start docs locally:
 
 ```
-poetry run mkdocs serve
+uv run mkdocs serve
 ```
 
 Deploy docs (automatically):
@@ -46,13 +46,13 @@ Push a new tag with the format `py-v*`, such as `py-v0.1.0`.
 Deploy docs (manually):
 
 ```
-poetry run mike deploy VERSION_TAG --update-aliases --push --deploy-prefix python/
+uv run mike deploy VERSION_TAG --update-aliases --push --deploy-prefix python/
 ```
 
 This only needs to be run **once ever**, to set the redirect from `https://geoarrow.org/geoarrow-rs/python/` to `https://geoarrow.org/geoarrow-rs/python/latest/`.
 
 ```
-poetry run mike set-default latest --deploy-prefix python/ --push
+uv run mike set-default latest --deploy-prefix python/ --push
 ```
 
 ## Emscripten Python wheels
