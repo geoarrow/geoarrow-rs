@@ -157,3 +157,28 @@ impl<T: CoordNum> PointTrait for (T, T) {
         self.1
     }
 }
+
+impl<T: CoordNum, const D: usize> PointTrait for [T; D] {
+    type T = T;
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        self[n]
+    }
+
+    fn dim(&self) -> Dimension {
+        // TODO: pass through field information from array
+        match D {
+            2 => Dimension::XY,
+            3 => Dimension::XYZ,
+            _ => todo!(),
+        }
+    }
+
+    fn x(&self) -> Self::T {
+        self[0]
+    }
+
+    fn y(&self) -> Self::T {
+        self[1]
+    }
+}

@@ -43,10 +43,10 @@ impl MultiPolygonTrait for GEOSMultiPolygon {
     type T = f64;
     type ItemType<'a> = GEOSConstPolygon<'a> where Self: 'a;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => 2,
-            geos::Dimensions::ThreeD => 3,
+            geos::Dimensions::TwoD => crate::geo_traits::Dimension::XY,
+            geos::Dimensions::ThreeD => crate::geo_traits::Dimension::XYZ,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }

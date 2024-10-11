@@ -73,16 +73,21 @@ impl<const D: usize> MultiLineStringTrait for OwnedMultiLineString<D> {
     type T = f64;
     type ItemType<'b> = LineString<'b, D> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        D
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        // TODO: pass through field information from array
+        match D {
+            2 => crate::geo_traits::Dimension::XY,
+            3 => crate::geo_traits::Dimension::XYZ,
+            _ => todo!(),
+        }
     }
 
-    fn num_lines(&self) -> usize {
-        MultiLineString::from(self).num_lines()
+    fn num_line_strings(&self) -> usize {
+        MultiLineString::from(self).num_line_strings()
     }
 
-    unsafe fn line_unchecked(&self, i: usize) -> Self::ItemType<'_> {
-        MultiLineString::from(self).line_unchecked(i)
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+        MultiLineString::from(self).line_string_unchecked(i)
     }
 }
 

@@ -8,9 +8,9 @@ pub(crate) fn process_line_string<P: GeomProcessor>(
     geom_idx: usize,
     processor: &mut P,
 ) -> geozero::error::Result<()> {
-    processor.linestring_begin(true, geom.num_coords(), geom_idx)?;
+    processor.linestring_begin(true, geom.num_points(), geom_idx)?;
 
-    for (coord_idx, coord) in geom.coords().enumerate() {
+    for (coord_idx, coord) in geom.points().enumerate() {
         process_coord(&coord, coord_idx, processor)?;
     }
 

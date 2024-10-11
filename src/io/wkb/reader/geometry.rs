@@ -221,8 +221,8 @@ impl<'a> GeometryTrait for WKBGeometry<'a> {
     type GeometryCollection<'b> = WKBGeometryCollection<'a> where Self: 'b;
     type Rect<'b> = WKBRect<'a> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        self.dimension().size()
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        self.dimension().into()
     }
 
     fn as_type(
@@ -263,8 +263,8 @@ impl<'a> GeometryTrait for &'a WKBGeometry<'a> {
     type GeometryCollection<'b> = WKBGeometryCollection<'a> where Self: 'b;
     type Rect<'b> = WKBRect<'a> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        self.dimension().size()
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        self.dimension().into()
     }
 
     fn as_type(

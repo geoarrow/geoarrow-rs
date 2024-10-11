@@ -22,16 +22,18 @@ pub fn write_multi_point_as_wkb<W: Write>(
     mut writer: W,
     geom: &impl MultiPointTrait<T = f64>,
 ) -> Result<()> {
+    use crate::geo_traits::Dimension;
+
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
 
     match geom.dim() {
-        2 => {
+        Dimension::XY | Dimension::Unknown(2) => {
             writer
                 .write_u32::<LittleEndian>(WKBType::MultiPoint.into())
                 .unwrap();
         }
-        3 => {
+        Dimension::XYZ | Dimension::Unknown(3) => {
             writer
                 .write_u32::<LittleEndian>(WKBType::MultiPointZ.into())
                 .unwrap();

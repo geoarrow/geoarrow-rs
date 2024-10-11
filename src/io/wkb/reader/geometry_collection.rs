@@ -63,8 +63,8 @@ impl<'a> GeometryCollectionTrait for WKBGeometryCollection<'a> {
     type T = f64;
     type ItemType<'b> = &'b WKBGeometry<'b> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        self.dim.size()
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        self.dim.into()
     }
 
     fn num_geometries(&self) -> usize {

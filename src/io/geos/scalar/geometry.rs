@@ -70,7 +70,7 @@ impl RectTrait for GEOSRect {
     type T = f64;
     type ItemType<'a> = GEOSConstCoord;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         todo!()
     }
 
@@ -94,7 +94,7 @@ impl GeometryTrait for GEOSGeometry {
     type GeometryCollection<'a> = GEOSGeometryCollection;
     type Rect<'a> = GEOSRect;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         match self {
             Self::Point(g) => g.dim(),
             Self::LineString(g) => g.dim(),

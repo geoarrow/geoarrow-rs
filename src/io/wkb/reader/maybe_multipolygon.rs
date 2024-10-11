@@ -23,7 +23,7 @@ impl<'a> MultiPolygonTrait for WKBMaybeMultiPolygon<'a> {
     type T = f64;
     type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         match self {
             WKBMaybeMultiPolygon::Polygon(geom) => geom.dim(),
             WKBMaybeMultiPolygon::MultiPolygon(geom) => geom.dim(),
@@ -49,7 +49,7 @@ impl<'a> MultiPolygonTrait for &'a WKBMaybeMultiPolygon<'a> {
     type T = f64;
     type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         match self {
             WKBMaybeMultiPolygon::Polygon(geom) => geom.dim(),
             WKBMaybeMultiPolygon::MultiPolygon(geom) => geom.dim(),

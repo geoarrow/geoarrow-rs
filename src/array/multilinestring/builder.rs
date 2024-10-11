@@ -240,10 +240,10 @@ impl<const D: usize> MultiLineStringBuilder<D> {
             // - Push ring's coords to self.coords
 
             self.ring_offsets
-                .try_push_usize(line_string.num_coords())
+                .try_push_usize(line_string.num_points())
                 .unwrap();
 
-            for coord in line_string.coords() {
+            for coord in line_string.points() {
                 self.coords.push_point(&coord);
             }
 
@@ -266,7 +266,7 @@ impl<const D: usize> MultiLineStringBuilder<D> {
     ) -> Result<()> {
         if let Some(multi_line_string) = value {
             // Total number of linestrings in this multilinestring
-            let num_line_strings = multi_line_string.num_lines();
+            let num_line_strings = multi_line_string.num_line_strings();
             self.geom_offsets.try_push_usize(num_line_strings)?;
 
             // For each ring:
@@ -275,12 +275,12 @@ impl<const D: usize> MultiLineStringBuilder<D> {
             // - Push ring's coords to self.coords
 
             // Number of coords for each ring
-            for line_string in multi_line_string.lines() {
+            for line_string in multi_line_string.line_strings() {
                 self.ring_offsets
-                    .try_push_usize(line_string.num_coords())
+                    .try_push_usize(line_string.num_points())
                     .unwrap();
 
-                for coord in line_string.coords() {
+                for coord in line_string.points() {
                     self.coords.push_point(&coord);
                 }
             }

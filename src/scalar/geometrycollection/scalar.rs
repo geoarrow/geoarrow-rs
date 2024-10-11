@@ -63,8 +63,13 @@ impl<'a, const D: usize> GeometryCollectionTrait for GeometryCollection<'a, D> {
     type T = f64;
     type ItemType<'b> = Geometry<'a, D> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        D
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        // TODO: pass through field information from array
+        match D {
+            2 => crate::geo_traits::Dimension::XY,
+            3 => crate::geo_traits::Dimension::XYZ,
+            _ => todo!(),
+        }
     }
 
     fn num_geometries(&self) -> usize {
@@ -81,8 +86,13 @@ impl<'a, const D: usize> GeometryCollectionTrait for &'a GeometryCollection<'a, 
     type T = f64;
     type ItemType<'b> = Geometry<'a, D> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        D
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        // TODO: pass through field information from array
+        match D {
+            2 => crate::geo_traits::Dimension::XY,
+            3 => crate::geo_traits::Dimension::XYZ,
+            _ => todo!(),
+        }
     }
 
     fn num_geometries(&self) -> usize {

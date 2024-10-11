@@ -74,8 +74,8 @@ impl<'a> MultiPointTrait for WKBMultiPoint<'a> {
     type T = f64;
     type ItemType<'b> = WKBPoint<'a> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        self.dim.size()
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        self.dim.into()
     }
 
     fn num_points(&self) -> usize {
@@ -96,8 +96,8 @@ impl<'a> MultiPointTrait for &'a WKBMultiPoint<'a> {
     type T = f64;
     type ItemType<'b> = WKBPoint<'a> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        self.dim.size()
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        self.dim.into()
     }
 
     fn num_points(&self) -> usize {

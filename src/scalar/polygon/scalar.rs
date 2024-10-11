@@ -82,8 +82,13 @@ impl<'a, const D: usize> PolygonTrait for Polygon<'a, D> {
     type T = f64;
     type ItemType<'b> = LineString<'a, D> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        D
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        // TODO: pass through field information from array
+        match D {
+            2 => crate::geo_traits::Dimension::XY,
+            3 => crate::geo_traits::Dimension::XYZ,
+            _ => todo!(),
+        }
     }
 
     fn exterior(&self) -> Option<Self::ItemType<'_>> {
@@ -109,8 +114,13 @@ impl<'a, const D: usize> PolygonTrait for &'a Polygon<'a, D> {
     type T = f64;
     type ItemType<'b> = LineString<'a, D> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        D
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        // TODO: pass through field information from array
+        match D {
+            2 => crate::geo_traits::Dimension::XY,
+            3 => crate::geo_traits::Dimension::XYZ,
+            _ => todo!(),
+        }
     }
 
     fn exterior(&self) -> Option<Self::ItemType<'_>> {

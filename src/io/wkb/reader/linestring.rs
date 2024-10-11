@@ -84,15 +84,15 @@ impl<'a> LineStringTrait for WKBLineString<'a> {
     type T = f64;
     type ItemType<'b> = WKBCoord<'a> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        self.dim.size()
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        self.dim.into()
     }
 
-    fn num_coords(&self) -> usize {
+    fn num_points(&self) -> usize {
         self.num_points
     }
 
-    unsafe fn coord_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         WKBCoord::new(
             self.buf,
             self.byte_order,
@@ -106,15 +106,15 @@ impl<'a> LineStringTrait for &'a WKBLineString<'a> {
     type T = f64;
     type ItemType<'b> = WKBCoord<'a> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        self.dim.size()
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        self.dim.into()
     }
 
-    fn num_coords(&self) -> usize {
+    fn num_points(&self) -> usize {
         self.num_points
     }
 
-    unsafe fn coord_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         WKBCoord::new(
             self.buf,
             self.byte_order,
@@ -128,15 +128,15 @@ impl<'a> MultiLineStringTrait for WKBLineString<'a> {
     type T = f64;
     type ItemType<'b> = WKBLineString<'a> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        self.dim.size()
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        self.dim.into()
     }
 
-    fn num_lines(&self) -> usize {
+    fn num_line_strings(&self) -> usize {
         1
     }
 
-    unsafe fn line_unchecked(&self, _i: usize) -> Self::ItemType<'_> {
+    unsafe fn line_string_unchecked(&self, _i: usize) -> Self::ItemType<'_> {
         *self
     }
 }
@@ -145,15 +145,15 @@ impl<'a> MultiLineStringTrait for &'a WKBLineString<'a> {
     type T = f64;
     type ItemType<'b> = WKBLineString<'a> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        self.dim.size()
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        self.dim.into()
     }
 
-    fn num_lines(&self) -> usize {
+    fn num_line_strings(&self) -> usize {
         1
     }
 
-    unsafe fn line_unchecked(&self, _i: usize) -> Self::ItemType<'_> {
+    unsafe fn line_string_unchecked(&self, _i: usize) -> Self::ItemType<'_> {
         **self
     }
 }
