@@ -15,14 +15,14 @@ use std::io::{Cursor, Write};
 pub fn polygon_wkb_size(geom: &impl PolygonTrait) -> usize {
     let mut sum = 1 + 4 + 4;
 
-    let each_coord = geom.dim() * 8;
+    let each_coord = geom.dim().size() * 8;
 
     // TODO: support empty polygons where this will panic
     let ext_ring = geom.exterior().unwrap();
-    sum += 4 + (ext_ring.num_coords() * each_coord);
+    sum += 4 + (ext_ring.num_points() * each_coord);
 
     for int_ring in geom.interiors() {
-        sum += 4 + (int_ring.num_coords() * each_coord);
+        sum += 4 + (int_ring.num_points() * each_coord);
     }
 
     sum
@@ -33,16 +33,18 @@ pub fn write_polygon_as_wkb<W: Write>(
     mut writer: W,
     geom: &impl PolygonTrait<T = f64>,
 ) -> Result<()> {
+    use crate::geo_traits::Dimension;
+
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
 
     match geom.dim() {
-        2 => {
+        Dimension::XY | Dimension::Unknown(2) => {
             writer
                 .write_u32::<LittleEndian>(WKBType::Polygon.into())
                 .unwrap();
         }
-        3 => {
+        Dimension::XYZ | Dimension::Unknown(3) => {
             writer
                 .write_u32::<LittleEndian>(WKBType::PolygonZ.into())
                 .unwrap();
@@ -59,13 +61,13 @@ pub fn write_polygon_as_wkb<W: Write>(
 
     let ext_ring = geom.exterior().unwrap();
     writer
-        .write_u32::<LittleEndian>(ext_ring.num_coords().try_into().unwrap())
+        .write_u32::<LittleEndian>(ext_ring.num_points().try_into().unwrap())
         .unwrap();
 
-    for coord in ext_ring.coords() {
+    for coord in ext_ring.points() {
         writer.write_f64::<LittleEndian>(coord.x()).unwrap();
         writer.write_f64::<LittleEndian>(coord.y()).unwrap();
-        if geom.dim() == 3 {
+        if geom.dim().size() == 3 {
             writer
                 .write_f64::<LittleEndian>(coord.nth_unchecked(2))
                 .unwrap();
@@ -74,13 +76,13 @@ pub fn write_polygon_as_wkb<W: Write>(
 
     for int_ring in geom.interiors() {
         writer
-            .write_u32::<LittleEndian>(int_ring.num_coords().try_into().unwrap())
+            .write_u32::<LittleEndian>(int_ring.num_points().try_into().unwrap())
             .unwrap();
 
-        for coord in int_ring.coords() {
+        for coord in int_ring.points() {
             writer.write_f64::<LittleEndian>(coord.x()).unwrap();
             writer.write_f64::<LittleEndian>(coord.y()).unwrap();
-            if geom.dim() == 3 {
+            if geom.dim().size() == 3 {
                 writer
                     .write_f64::<LittleEndian>(coord.nth_unchecked(2))
                     .unwrap();

@@ -232,8 +232,8 @@ impl<const D: usize> LineStringBuilder<D> {
         value: Option<&impl LineStringTrait<T = f64>>,
     ) -> Result<()> {
         if let Some(line_string) = value {
-            let num_coords = line_string.num_coords();
-            for coord in line_string.coords() {
+            let num_coords = line_string.num_points();
+            for coord in line_string.points() {
                 self.coords.push_point(&coord);
             }
             self.try_push_length(num_coords)?;
@@ -270,8 +270,8 @@ impl<const D: usize> LineStringBuilder<D> {
             match value.as_type() {
                 GeometryType::LineString(g) => self.push_line_string(Some(g))?,
                 GeometryType::MultiLineString(ml) => {
-                    if ml.num_lines() == 1 {
-                        self.push_line_string(Some(&ml.line(0).unwrap()))?
+                    if ml.num_line_strings() == 1 {
+                        self.push_line_string(Some(&ml.line_string(0).unwrap()))?
                     } else {
                         return Err(GeoArrowError::General("Incorrect type".to_string()));
                     }

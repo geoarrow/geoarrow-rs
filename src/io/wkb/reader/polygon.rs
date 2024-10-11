@@ -92,8 +92,8 @@ impl<'a> PolygonTrait for WKBPolygon<'a> {
     type T = f64;
     type ItemType<'b> = WKBLinearRing<'a>where Self: 'b;
 
-    fn dim(&self) -> usize {
-        self.dim.size()
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        self.dim.into()
     }
 
     fn num_interiors(&self) -> usize {
@@ -122,8 +122,8 @@ impl<'a> PolygonTrait for &'a WKBPolygon<'a> {
     type T = f64;
     type ItemType<'b> = WKBLinearRing<'a> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        self.dim.size()
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        self.dim.into()
     }
 
     fn num_interiors(&self) -> usize {
@@ -152,8 +152,8 @@ impl<'a> MultiPolygonTrait for WKBPolygon<'a> {
     type T = f64;
     type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        self.dim.size()
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        self.dim.into()
     }
 
     fn num_polygons(&self) -> usize {
@@ -169,8 +169,8 @@ impl<'a> MultiPolygonTrait for &'a WKBPolygon<'a> {
     type T = f64;
     type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        self.dim.size()
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        self.dim.into()
     }
 
     fn num_polygons(&self) -> usize {

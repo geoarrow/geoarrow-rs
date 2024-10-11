@@ -15,7 +15,7 @@ use std::io::{Cursor, Write};
 /// The byte length of a WKBMultiLineString
 pub fn multi_line_string_wkb_size(geom: &impl MultiLineStringTrait) -> usize {
     let mut sum = 1 + 4 + 4;
-    for line_string in geom.lines() {
+    for line_string in geom.line_strings() {
         sum += line_string_wkb_size(&line_string);
     }
 
@@ -27,16 +27,18 @@ pub fn write_multi_line_string_as_wkb<W: Write>(
     mut writer: W,
     geom: &impl MultiLineStringTrait<T = f64>,
 ) -> Result<()> {
+    use crate::geo_traits::Dimension;
+
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
 
     match geom.dim() {
-        2 => {
+        Dimension::XY | Dimension::Unknown(2) => {
             writer
                 .write_u32::<LittleEndian>(WKBType::MultiLineString.into())
                 .unwrap();
         }
-        3 => {
+        Dimension::XYZ | Dimension::Unknown(3) => {
             writer
                 .write_u32::<LittleEndian>(WKBType::MultiLineStringZ.into())
                 .unwrap();
@@ -46,10 +48,10 @@ pub fn write_multi_line_string_as_wkb<W: Write>(
 
     // numPoints
     writer
-        .write_u32::<LittleEndian>(geom.num_lines().try_into().unwrap())
+        .write_u32::<LittleEndian>(geom.num_line_strings().try_into().unwrap())
         .unwrap();
 
-    for line_string in geom.lines() {
+    for line_string in geom.line_strings() {
         write_line_string_as_wkb(&mut writer, &line_string).unwrap();
     }
 

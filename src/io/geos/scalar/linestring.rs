@@ -49,19 +49,19 @@ impl LineStringTrait for GEOSLineString {
     type T = f64;
     type ItemType<'b> = GEOSPoint where Self: 'b;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => 2,
-            geos::Dimensions::ThreeD => 3,
+            geos::Dimensions::TwoD => crate::geo_traits::Dimension::XY,
+            geos::Dimensions::ThreeD => crate::geo_traits::Dimension::XYZ,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
 
-    fn num_coords(&self) -> usize {
+    fn num_points(&self) -> usize {
         self.0.get_num_points().unwrap()
     }
 
-    unsafe fn coord_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         let point = self.0.get_point_n(i).unwrap();
         GEOSPoint::new_unchecked(point)
     }
@@ -71,19 +71,19 @@ impl LineStringTrait for &GEOSLineString {
     type T = f64;
     type ItemType<'b> = GEOSPoint where Self: 'b;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => 2,
-            geos::Dimensions::ThreeD => 3,
+            geos::Dimensions::TwoD => crate::geo_traits::Dimension::XY,
+            geos::Dimensions::ThreeD => crate::geo_traits::Dimension::XYZ,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
 
-    fn num_coords(&self) -> usize {
+    fn num_points(&self) -> usize {
         self.0.get_num_points().unwrap()
     }
 
-    unsafe fn coord_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         let point = self.0.get_point_n(i).unwrap();
         GEOSPoint::new_unchecked(point)
     }
@@ -112,19 +112,19 @@ impl<'a> LineStringTrait for GEOSConstLineString<'a> {
     type T = f64;
     type ItemType<'c> = GEOSPoint where Self: 'c;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => 2,
-            geos::Dimensions::ThreeD => 3,
+            geos::Dimensions::TwoD => crate::geo_traits::Dimension::XY,
+            geos::Dimensions::ThreeD => crate::geo_traits::Dimension::XYZ,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
 
-    fn num_coords(&self) -> usize {
+    fn num_points(&self) -> usize {
         self.0.get_num_points().unwrap()
     }
 
-    unsafe fn coord_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         let point = self.0.get_point_n(i).unwrap();
         GEOSPoint::new_unchecked(point)
     }
@@ -134,19 +134,19 @@ impl<'a> LineStringTrait for &'a GEOSConstLineString<'a> {
     type T = f64;
     type ItemType<'c> = GEOSPoint where Self: 'c;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => 2,
-            geos::Dimensions::ThreeD => 3,
+            geos::Dimensions::TwoD => crate::geo_traits::Dimension::XY,
+            geos::Dimensions::ThreeD => crate::geo_traits::Dimension::XYZ,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
 
-    fn num_coords(&self) -> usize {
+    fn num_points(&self) -> usize {
         self.0.get_num_points().unwrap()
     }
 
-    unsafe fn coord_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         let point = self.0.get_point_n(i).unwrap();
         GEOSPoint::new_unchecked(point)
     }

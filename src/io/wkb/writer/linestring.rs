@@ -14,8 +14,8 @@ use std::io::{Cursor, Write};
 /// The byte length of a WKBLineString
 pub fn line_string_wkb_size(geom: &impl LineStringTrait) -> usize {
     let header = 1 + 4 + 4;
-    let each_coord = geom.dim() * 8;
-    let all_coords = geom.num_coords() * each_coord;
+    let each_coord = geom.dim().size() * 8;
+    let all_coords = geom.num_points() * each_coord;
     header + all_coords
 }
 
@@ -24,16 +24,18 @@ pub fn write_line_string_as_wkb<W: Write>(
     mut writer: W,
     geom: &impl LineStringTrait<T = f64>,
 ) -> Result<()> {
+    use crate::geo_traits::Dimension;
+
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
 
     match geom.dim() {
-        2 => {
+        Dimension::XY | Dimension::Unknown(2) => {
             writer
                 .write_u32::<LittleEndian>(WKBType::LineString.into())
                 .unwrap();
         }
-        3 => {
+        Dimension::XYZ | Dimension::Unknown(3) => {
             writer
                 .write_u32::<LittleEndian>(WKBType::LineStringZ.into())
                 .unwrap();
@@ -43,14 +45,14 @@ pub fn write_line_string_as_wkb<W: Write>(
 
     // numPoints
     writer
-        .write_u32::<LittleEndian>(geom.num_coords().try_into().unwrap())
+        .write_u32::<LittleEndian>(geom.num_points().try_into().unwrap())
         .unwrap();
 
-    for coord in geom.coords() {
+    for coord in geom.points() {
         writer.write_f64::<LittleEndian>(coord.x()).unwrap();
         writer.write_f64::<LittleEndian>(coord.y()).unwrap();
 
-        if geom.dim() == 3 {
+        if geom.dim().size() == 3 {
             writer
                 .write_f64::<LittleEndian>(coord.nth_unchecked(2))
                 .unwrap();

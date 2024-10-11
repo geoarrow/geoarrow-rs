@@ -92,7 +92,7 @@ impl BoundingRect {
     }
 
     pub fn add_line_string(&mut self, line_string: &impl LineStringTrait<T = f64>) {
-        for coord in line_string.coords() {
+        for coord in line_string.points() {
             self.add_point(&coord);
         }
     }
@@ -117,7 +117,7 @@ impl BoundingRect {
         &mut self,
         multi_line_string: &impl MultiLineStringTrait<T = f64>,
     ) {
-        for linestring in multi_line_string.lines() {
+        for linestring in multi_line_string.line_strings() {
             self.add_line_string(&linestring);
         }
     }
@@ -185,11 +185,11 @@ impl RectTrait for BoundingRect {
     type T = f64;
     type ItemType<'a> = Coord;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         if self.minz().is_some() && self.maxz().is_some() {
-            3
+            crate::geo_traits::Dimension::XYZ
         } else {
-            2
+            crate::geo_traits::Dimension::XY
         }
     }
 

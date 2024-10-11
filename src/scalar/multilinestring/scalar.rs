@@ -81,16 +81,21 @@ impl<'a, const D: usize> MultiLineStringTrait for MultiLineString<'a, D> {
     type T = f64;
     type ItemType<'b> = LineString<'a, D> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        D
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        // TODO: pass through field information from array
+        match D {
+            2 => crate::geo_traits::Dimension::XY,
+            3 => crate::geo_traits::Dimension::XYZ,
+            _ => todo!(),
+        }
     }
 
-    fn num_lines(&self) -> usize {
+    fn num_line_strings(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
-    unsafe fn line_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         LineString::new(self.coords, self.ring_offsets, self.start_offset + i)
     }
 }
@@ -99,16 +104,21 @@ impl<'a, const D: usize> MultiLineStringTrait for &'a MultiLineString<'a, D> {
     type T = f64;
     type ItemType<'b> = LineString<'a, D> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        D
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        // TODO: pass through field information from array
+        match D {
+            2 => crate::geo_traits::Dimension::XY,
+            3 => crate::geo_traits::Dimension::XYZ,
+            _ => todo!(),
+        }
     }
 
-    fn num_lines(&self) -> usize {
+    fn num_line_strings(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
-    unsafe fn line_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         LineString::new(self.coords, self.ring_offsets, self.start_offset + i)
     }
 }

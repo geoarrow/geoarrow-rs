@@ -64,7 +64,7 @@ impl MapCoords for LineString<'_, 2> {
         GeoArrowError: From<E>,
     {
         let output_coords = self
-            .coords()
+            .points()
             .map(|point| map_op(&point.coord()))
             .collect::<std::result::Result<Vec<_>, E>>()?;
         Ok(geo::LineString::new(output_coords))
@@ -118,7 +118,7 @@ impl MapCoords for MultiLineString<'_, 2> {
         GeoArrowError: From<E>,
     {
         let lines = self
-            .lines()
+            .line_strings()
             .map(|line_string| line_string.try_map_coords(&map_op))
             .collect::<Result<Vec<_>>>()?;
         Ok(geo::MultiLineString::new(lines))

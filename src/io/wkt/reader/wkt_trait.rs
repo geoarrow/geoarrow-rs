@@ -10,15 +10,13 @@ use crate::geo_traits::{
 impl<T: WktNum> PointTrait for wkt::types::Coord<T> {
     type T = T;
 
-    fn dim(&self) -> usize {
-        let mut dim = 2;
-        if self.z.is_some() {
-            dim += 1;
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        match (self.z.is_some(), self.m.is_some()) {
+            (false, false) => crate::geo_traits::Dimension::XY,
+            (true, false) => crate::geo_traits::Dimension::XYZ,
+            (false, true) => crate::geo_traits::Dimension::XYM,
+            (true, true) => crate::geo_traits::Dimension::XYZM,
         }
-        if self.m.is_some() {
-            dim += 1;
-        }
-        dim
     }
 
     fn x(&self) -> Self::T {
@@ -59,15 +57,13 @@ impl<T: WktNum> PointTrait for wkt::types::Coord<T> {
 impl<'a, T: WktNum> PointTrait for &'a wkt::types::Coord<T> {
     type T = T;
 
-    fn dim(&self) -> usize {
-        let mut dim = 2;
-        if self.z.is_some() {
-            dim += 1;
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        match (self.z.is_some(), self.m.is_some()) {
+            (false, false) => crate::geo_traits::Dimension::XY,
+            (true, false) => crate::geo_traits::Dimension::XYZ,
+            (false, true) => crate::geo_traits::Dimension::XYM,
+            (true, true) => crate::geo_traits::Dimension::XYZM,
         }
-        if self.m.is_some() {
-            dim += 1;
-        }
-        dim
     }
 
     fn x(&self) -> Self::T {
@@ -108,7 +104,7 @@ impl<'a, T: WktNum> PointTrait for &'a wkt::types::Coord<T> {
 impl<T: WktNum> PointTrait for wkt::types::Point<T> {
     type T = T;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         self.0.as_ref().unwrap().dim()
     }
 
@@ -128,7 +124,7 @@ impl<T: WktNum> PointTrait for wkt::types::Point<T> {
 impl<'a, T: WktNum> PointTrait for &'a wkt::types::Point<T> {
     type T = T;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         self.0.as_ref().unwrap().dim()
     }
 
@@ -149,19 +145,19 @@ impl<T: WktNum> LineStringTrait for wkt::types::LineString<T> {
     type T = T;
     type ItemType<'a> = &'a wkt::types::Coord<T> where Self: 'a;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         if self.0.is_empty() {
-            2
+            crate::geo_traits::Dimension::XY
         } else {
             self.0[0].dim()
         }
     }
 
-    fn num_coords(&self) -> usize {
+    fn num_points(&self) -> usize {
         self.0.len()
     }
 
-    unsafe fn coord_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         &self.0[i]
     }
 }
@@ -170,19 +166,19 @@ impl<'a, T: WktNum> LineStringTrait for &'a wkt::types::LineString<T> {
     type T = T;
     type ItemType<'b> = &'b wkt::types::Coord<T> where Self: 'b;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         if self.0.is_empty() {
-            2
+            crate::geo_traits::Dimension::XY
         } else {
             self.0[0].dim()
         }
     }
 
-    fn num_coords(&self) -> usize {
+    fn num_points(&self) -> usize {
         self.0.len()
     }
 
-    unsafe fn coord_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         &self.0[i]
     }
 }
@@ -191,9 +187,9 @@ impl<T: WktNum> PolygonTrait for wkt::types::Polygon<T> {
     type T = T;
     type ItemType<'a> = &'a wkt::types::LineString<T> where Self: 'a;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         if self.0.is_empty() {
-            2
+            crate::geo_traits::Dimension::XY
         } else {
             self.0[0].dim()
         }
@@ -216,9 +212,9 @@ impl<'a, T: WktNum> PolygonTrait for &'a wkt::types::Polygon<T> {
     type T = T;
     type ItemType<'b> = &'b wkt::types::LineString<T> where Self: 'b;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         if self.0.is_empty() {
-            2
+            crate::geo_traits::Dimension::XY
         } else {
             self.0[0].dim()
         }
@@ -241,9 +237,9 @@ impl<T: WktNum> MultiPointTrait for wkt::types::MultiPoint<T> {
     type T = T;
     type ItemType<'a> = &'a wkt::types::Point<T> where Self: 'a;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         if self.0.is_empty() {
-            2
+            crate::geo_traits::Dimension::XY
         } else {
             self.0[0].dim()
         }
@@ -262,19 +258,19 @@ impl<T: WktNum> MultiLineStringTrait for wkt::types::MultiLineString<T> {
     type T = T;
     type ItemType<'a> = &'a wkt::types::LineString<T> where Self: 'a;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         if self.0.is_empty() {
-            2
+            crate::geo_traits::Dimension::XY
         } else {
             self.0[0].dim()
         }
     }
 
-    fn num_lines(&self) -> usize {
+    fn num_line_strings(&self) -> usize {
         self.0.len()
     }
 
-    unsafe fn line_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         &self.0[i]
     }
 }
@@ -283,9 +279,9 @@ impl<T: WktNum> MultiPolygonTrait for wkt::types::MultiPolygon<T> {
     type T = T;
     type ItemType<'a> = &'a wkt::types::Polygon<T> where Self: 'a;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         if self.0.is_empty() {
-            2
+            crate::geo_traits::Dimension::XY
         } else {
             self.0[0].dim()
         }
@@ -311,7 +307,7 @@ impl<T: WktNum> GeometryTrait for wkt::Wkt<T> {
     type GeometryCollection<'b> =  wkt::types::GeometryCollection<T> where Self: 'b;
     type Rect<'b> = FakeRect<T> where Self: 'b;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         use wkt::Wkt::*;
         match self {
             Point(geom) => geom.dim(),
@@ -364,7 +360,7 @@ impl<'a, T: WktNum> GeometryTrait for &'a wkt::Wkt<T> {
     type GeometryCollection<'b> =  wkt::types::GeometryCollection<T> where Self: 'b;
     type Rect<'b> = FakeRect<T> where Self: 'b;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         use wkt::Wkt::*;
         match self {
             Point(geom) => geom.dim(),
@@ -410,9 +406,9 @@ impl<T: WktNum> GeometryCollectionTrait for wkt::types::GeometryCollection<T> {
     type T = T;
     type ItemType<'a> = &'a wkt::Wkt<T> where Self: 'a;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         if self.0.is_empty() {
-            2
+            crate::geo_traits::Dimension::XY
         } else {
             self.0[0].dim()
         }
@@ -435,7 +431,7 @@ impl<T: WktNum> RectTrait for FakeRect<T> {
     type T = T;
     type ItemType<'a> = wkt::types::Coord<T> where Self: 'a;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         unimplemented!()
     }
 

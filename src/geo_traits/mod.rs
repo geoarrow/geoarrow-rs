@@ -8,6 +8,7 @@
 //! [here](https://github.com/georust/geo/pull/1019)) but that is vendored into this repository for
 //! use internally, such as in the WKB parser.
 
+pub use dimension::Dimension;
 pub use geometry::{GeometryTrait, GeometryType};
 pub use geometry_collection::GeometryCollectionTrait;
 pub use iterator::{
@@ -22,6 +23,7 @@ pub use point::PointTrait;
 pub use polygon::PolygonTrait;
 pub use rect::RectTrait;
 
+mod dimension;
 mod geometry;
 mod geometry_collection;
 mod iterator;

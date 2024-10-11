@@ -11,7 +11,7 @@ impl<'a> RectTrait for WKBRect<'a> {
     type T = f64;
     type ItemType<'b> = WKBCoord<'a> where Self: 'b;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         todo!()
     }
 

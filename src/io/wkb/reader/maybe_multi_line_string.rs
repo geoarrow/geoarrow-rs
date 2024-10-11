@@ -23,24 +23,24 @@ impl<'a> MultiLineStringTrait for WKBMaybeMultiLineString<'a> {
     type T = f64;
     type ItemType<'b> = WKBLineString<'a> where Self: 'b;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         match self {
             WKBMaybeMultiLineString::LineString(geom) => geom.dim(),
             WKBMaybeMultiLineString::MultiLineString(geom) => geom.dim(),
         }
     }
 
-    fn num_lines(&self) -> usize {
+    fn num_line_strings(&self) -> usize {
         match self {
-            WKBMaybeMultiLineString::LineString(geom) => geom.num_lines(),
-            WKBMaybeMultiLineString::MultiLineString(geom) => geom.num_lines(),
+            WKBMaybeMultiLineString::LineString(geom) => geom.num_line_strings(),
+            WKBMaybeMultiLineString::MultiLineString(geom) => geom.num_line_strings(),
         }
     }
 
-    unsafe fn line_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         match self {
-            WKBMaybeMultiLineString::LineString(geom) => geom.line_unchecked(i),
-            WKBMaybeMultiLineString::MultiLineString(geom) => geom.line_unchecked(i),
+            WKBMaybeMultiLineString::LineString(geom) => geom.line_string_unchecked(i),
+            WKBMaybeMultiLineString::MultiLineString(geom) => geom.line_string_unchecked(i),
         }
     }
 }
@@ -49,24 +49,24 @@ impl<'a> MultiLineStringTrait for &'a WKBMaybeMultiLineString<'a> {
     type T = f64;
     type ItemType<'b> = WKBLineString<'a> where Self: 'b;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         match self {
             WKBMaybeMultiLineString::LineString(geom) => geom.dim(),
             WKBMaybeMultiLineString::MultiLineString(geom) => geom.dim(),
         }
     }
 
-    fn num_lines(&self) -> usize {
+    fn num_line_strings(&self) -> usize {
         match self {
-            WKBMaybeMultiLineString::LineString(geom) => geom.num_lines(),
-            WKBMaybeMultiLineString::MultiLineString(geom) => geom.num_lines(),
+            WKBMaybeMultiLineString::LineString(geom) => geom.num_line_strings(),
+            WKBMaybeMultiLineString::MultiLineString(geom) => geom.num_line_strings(),
         }
     }
 
-    unsafe fn line_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         match self {
-            WKBMaybeMultiLineString::LineString(geom) => geom.line_unchecked(i),
-            WKBMaybeMultiLineString::MultiLineString(geom) => geom.line_unchecked(i),
+            WKBMaybeMultiLineString::LineString(geom) => geom.line_string_unchecked(i),
+            WKBMaybeMultiLineString::MultiLineString(geom) => geom.line_string_unchecked(i),
         }
     }
 }

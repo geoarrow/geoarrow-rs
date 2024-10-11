@@ -1,5 +1,8 @@
 use crate::algorithm::native::eq::geometry_eq;
-use crate::geo_traits::{GeometryTrait, GeometryType};
+use crate::geo_traits::{
+    GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
+    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
+};
 use crate::scalar::*;
 
 #[derive(Clone, Debug)]
@@ -73,8 +76,17 @@ impl<const D: usize> GeometryTrait for OwnedGeometry<D> {
     type GeometryCollection<'b> = OwnedGeometryCollection<D> where Self: 'b;
     type Rect<'b> = OwnedRect<D> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        D
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        match self {
+            Self::Point(p) => p.dim(),
+            Self::LineString(p) => p.dim(),
+            Self::Polygon(p) => p.dim(),
+            Self::MultiPoint(p) => p.dim(),
+            Self::MultiLineString(p) => p.dim(),
+            Self::MultiPolygon(p) => p.dim(),
+            Self::GeometryCollection(p) => p.dim(),
+            Self::Rect(p) => p.dim(),
+        }
     }
 
     fn as_type(

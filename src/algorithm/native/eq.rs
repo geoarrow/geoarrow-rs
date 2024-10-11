@@ -22,7 +22,7 @@ pub fn point_eq<T: CoordFloat>(
         // TODO: in the future add an `is_empty` to the PointTrait and then you shouldn't check for
         // NaN manually
         match left_dim {
-            2 => {
+            crate::geo_traits::Dimension::XY => {
                 if left.x().is_nan()
                     && right.x().is_nan()
                     && left.y().is_nan()
@@ -31,7 +31,7 @@ pub fn point_eq<T: CoordFloat>(
                     return true;
                 }
             }
-            3 => {
+            crate::geo_traits::Dimension::XYZ => {
                 if left.x().is_nan()
                     && right.x().is_nan()
                     && left.y().is_nan()
@@ -46,7 +46,7 @@ pub fn point_eq<T: CoordFloat>(
         }
     }
 
-    for i in 0..left_dim {
+    for i in 0..left_dim.size() {
         if left.nth_unchecked(i) != right.nth_unchecked(i) {
             return false;
         }
@@ -64,11 +64,11 @@ pub fn line_string_eq<T: CoordFloat>(
         return false;
     }
 
-    if left.num_coords() != right.num_coords() {
+    if left.num_points() != right.num_points() {
         return false;
     }
 
-    for (left_coord, right_coord) in left.coords().zip(right.coords()) {
+    for (left_coord, right_coord) in left.points().zip(right.points()) {
         if !point_eq(&left_coord, &right_coord, false) {
             return false;
         }
@@ -145,11 +145,11 @@ pub fn multi_line_string_eq<T: CoordFloat>(
         return false;
     }
 
-    if left.num_lines() != right.num_lines() {
+    if left.num_line_strings() != right.num_line_strings() {
         return false;
     }
 
-    for (left_line, right_line) in left.lines().zip(right.lines()) {
+    for (left_line, right_line) in left.line_strings().zip(right.line_strings()) {
         if !line_string_eq(&left_line, &right_line) {
             return false;
         }

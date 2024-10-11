@@ -8,12 +8,12 @@ pub(crate) fn process_multi_line_string<P: GeomProcessor>(
     geom_idx: usize,
     processor: &mut P,
 ) -> geozero::error::Result<()> {
-    processor.multilinestring_begin(geom.num_lines(), geom_idx)?;
+    processor.multilinestring_begin(geom.num_line_strings(), geom_idx)?;
 
-    for (line_idx, line) in geom.lines().enumerate() {
-        processor.linestring_begin(false, line.num_coords(), line_idx)?;
+    for (line_idx, line) in geom.line_strings().enumerate() {
+        processor.linestring_begin(false, line.num_points(), line_idx)?;
 
-        for (coord_idx, coord) in line.coords().enumerate() {
+        for (coord_idx, coord) in line.points().enumerate() {
             process_coord(&coord, coord_idx, processor)?;
         }
 

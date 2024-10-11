@@ -1,5 +1,8 @@
 use crate::algorithm::native::eq::geometry_eq;
-use crate::geo_traits::{GeometryTrait, GeometryType};
+use crate::geo_traits::{
+    GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
+    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
+};
 use crate::io::geo::geometry_to_geo;
 use crate::scalar::*;
 use crate::trait_::NativeScalar;
@@ -55,8 +58,17 @@ impl<'a, const D: usize> GeometryTrait for Geometry<'a, D> {
     type GeometryCollection<'b> = GeometryCollection<'b, D> where Self: 'b;
     type Rect<'b> = Rect<'b, D> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        D
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        match self {
+            Geometry::Point(p) => p.dim(),
+            Geometry::LineString(p) => p.dim(),
+            Geometry::Polygon(p) => p.dim(),
+            Geometry::MultiPoint(p) => p.dim(),
+            Geometry::MultiLineString(p) => p.dim(),
+            Geometry::MultiPolygon(p) => p.dim(),
+            Geometry::GeometryCollection(p) => p.dim(),
+            Geometry::Rect(p) => p.dim(),
+        }
     }
 
     fn as_type(
@@ -96,8 +108,17 @@ impl<'a, const D: usize> GeometryTrait for &'a Geometry<'a, D> {
     type GeometryCollection<'b> = GeometryCollection<'a, D> where Self: 'b;
     type Rect<'b> = Rect<'a, D> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        D
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        match self {
+            Geometry::Point(p) => p.dim(),
+            Geometry::LineString(p) => p.dim(),
+            Geometry::Polygon(p) => p.dim(),
+            Geometry::MultiPoint(p) => p.dim(),
+            Geometry::MultiLineString(p) => p.dim(),
+            Geometry::MultiPolygon(p) => p.dim(),
+            Geometry::GeometryCollection(p) => p.dim(),
+            Geometry::Rect(p) => p.dim(),
+        }
     }
 
     fn as_type(

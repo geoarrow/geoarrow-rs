@@ -12,9 +12,9 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
 /// The byte length of a WKBPoint
-pub fn point_wkb_size(dim: usize) -> usize {
+pub fn point_wkb_size(dim: crate::geo_traits::Dimension) -> usize {
     let header = 1 + 4;
-    let coords = dim * 8;
+    let coords = dim.size() * 8;
     header + coords
 }
 
@@ -27,16 +27,18 @@ pub fn point_wkb_size_const<const D: usize>() -> usize {
 
 /// Write a Point geometry to a Writer encoded as WKB
 pub fn write_point_as_wkb<W: Write>(mut writer: W, geom: &impl PointTrait<T = f64>) -> Result<()> {
+    use crate::geo_traits::Dimension;
+
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
 
     match geom.dim() {
-        2 => {
+        Dimension::XY | Dimension::Unknown(2) => {
             writer
                 .write_u32::<LittleEndian>(WKBType::Point.into())
                 .unwrap();
         }
-        3 => {
+        Dimension::XYZ | Dimension::Unknown(3) => {
             writer
                 .write_u32::<LittleEndian>(WKBType::PointZ.into())
                 .unwrap();
@@ -47,7 +49,7 @@ pub fn write_point_as_wkb<W: Write>(mut writer: W, geom: &impl PointTrait<T = f6
     writer.write_f64::<LittleEndian>(geom.x()).unwrap();
     writer.write_f64::<LittleEndian>(geom.y()).unwrap();
 
-    if geom.dim() == 3 {
+    if geom.dim().size() == 3 {
         writer
             .write_f64::<LittleEndian>(geom.nth_unchecked(2))
             .unwrap();

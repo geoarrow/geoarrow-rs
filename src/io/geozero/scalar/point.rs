@@ -22,9 +22,11 @@ pub(crate) fn process_point_as_coord<P: GeomProcessor>(
     coord_idx: usize,
     processor: &mut P,
 ) -> geozero::error::Result<()> {
+    use crate::geo_traits::Dimension;
+
     match geom.dim() {
-        2 => processor.xy(geom.x(), geom.y(), coord_idx)?,
-        3 => processor.coordinate(
+        Dimension::XY | Dimension::Unknown(2) => processor.xy(geom.x(), geom.y(), coord_idx)?,
+        Dimension::XYZ | Dimension::Unknown(3) => processor.coordinate(
             geom.x(),
             geom.y(),
             Some(geom.nth_unchecked(2)),
@@ -33,7 +35,25 @@ pub(crate) fn process_point_as_coord<P: GeomProcessor>(
             None,
             coord_idx,
         )?,
-        _ => panic!(),
+        Dimension::XYM => processor.coordinate(
+            geom.x(),
+            geom.y(),
+            None,
+            Some(geom.nth_unchecked(2)),
+            None,
+            None,
+            coord_idx,
+        )?,
+        Dimension::XYZM | Dimension::Unknown(4) => processor.coordinate(
+            geom.x(),
+            geom.y(),
+            Some(geom.nth_unchecked(2)),
+            Some(geom.nth_unchecked(3)),
+            None,
+            None,
+            coord_idx,
+        )?,
+        d => panic!("Unexpected dimension {:?}", d),
     };
     Ok(())
 }
