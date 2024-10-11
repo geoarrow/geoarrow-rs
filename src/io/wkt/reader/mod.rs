@@ -7,7 +7,10 @@ use crate::array::metadata::ArrayMetadata;
 use crate::array::{CoordType, MixedGeometryBuilder};
 use crate::NativeArray;
 
+mod api;
 mod wkt_trait;
+
+pub use api::FromWKT;
 
 // TODO: refactor this trait implementation once a WKTArray exists
 pub trait ParseWKT {
