@@ -7,9 +7,10 @@ use crate::error::Result;
 use crate::geo_traits::{GeometryTrait, GeometryType};
 use crate::io::wkb::writer::{
     geometry_collection_wkb_size, line_string_wkb_size, multi_line_string_wkb_size,
-    multi_point_wkb_size, multi_polygon_wkb_size, point_wkb_size, polygon_wkb_size,
-    write_line_string_as_wkb, write_multi_line_string_as_wkb, write_multi_point_as_wkb,
-    write_multi_polygon_as_wkb, write_point_as_wkb, write_polygon_as_wkb,
+    multi_point_wkb_size, multi_polygon_wkb_size, point_wkb_size, polygon_wkb_size, rect_wkb_size,
+    write_geometry_collection_as_wkb, write_line_string_as_wkb, write_multi_line_string_as_wkb,
+    write_multi_point_as_wkb, write_multi_polygon_as_wkb, write_point_as_wkb, write_polygon_as_wkb,
+    write_rect_as_wkb,
 };
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
@@ -26,7 +27,7 @@ pub fn geometry_wkb_size(geom: &impl GeometryTrait) -> usize {
         MultiLineString(ml) => multi_line_string_wkb_size(ml),
         MultiPolygon(mp) => multi_polygon_wkb_size(mp),
         GeometryCollection(gc) => geometry_collection_wkb_size(gc),
-        Rect(_) => todo!(),
+        Rect(r) => rect_wkb_size(r),
     }
 }
 
@@ -43,14 +44,8 @@ pub fn write_geometry_as_wkb<W: Write>(
         MultiPoint(mp) => write_multi_point_as_wkb(writer, mp),
         MultiLineString(ml) => write_multi_line_string_as_wkb(writer, ml),
         MultiPolygon(mp) => write_multi_polygon_as_wkb(writer, mp),
-        GeometryCollection(_gc) => {
-            todo!()
-            // error[E0275]: overflow evaluating the requirement `&mut std::io::Cursor<std::vec::Vec<u8>>: std::io::Write`
-            // https://stackoverflow.com/a/31197781/7319250
-            // write_geometry_collection_as_wkb(writer, gc)
-        }
-        Rect(_) => todo!(),
-        // _ => todo!(),
+        GeometryCollection(gc) => write_geometry_collection_as_wkb(writer, gc),
+        Rect(r) => write_rect_as_wkb(writer, r),
     }
 }
 
