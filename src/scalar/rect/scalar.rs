@@ -54,8 +54,13 @@ impl<'a, const D: usize> RectTrait for Rect<'a, D> {
     type T = f64;
     type ItemType<'b> = [Self::T; D] where Self: 'b;
 
-    fn dim(&self) -> usize {
-        D
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        // TODO: pass through field information from array
+        match D {
+            2 => crate::geo_traits::Dimension::XY,
+            3 => crate::geo_traits::Dimension::XYZ,
+            _ => todo!(),
+        }
     }
 
     fn lower(&self) -> Self::ItemType<'_> {

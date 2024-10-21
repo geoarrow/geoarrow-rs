@@ -70,6 +70,15 @@ impl TryFrom<i32> for Dimension {
     }
 }
 
+impl From<Dimension> for crate::geo_traits::Dimension {
+    fn from(value: Dimension) -> Self {
+        match value {
+            Dimension::XY => crate::geo_traits::Dimension::XY,
+            Dimension::XYZ => crate::geo_traits::Dimension::XYZ,
+        }
+    }
+}
+
 /// A type enum representing "native" GeoArrow geometry types.
 ///
 /// This is designed to aid in downcasting from dynamically-typed geometry arrays.

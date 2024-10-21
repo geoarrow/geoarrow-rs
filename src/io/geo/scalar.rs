@@ -30,7 +30,7 @@ pub fn line_string_to_geo<T: CoordNum>(
 ) -> geo::LineString<T> {
     geo::LineString::new(
         line_string
-            .coords()
+            .points()
             .map(|coord| coord_to_geo(&coord))
             .collect(),
     )
@@ -70,7 +70,7 @@ pub fn multi_line_string_to_geo<T: CoordNum>(
 ) -> geo::MultiLineString<T> {
     geo::MultiLineString::new(
         multi_line_string
-            .lines()
+            .line_strings()
             .map(|line| line_string_to_geo(&line))
             .collect(),
     )

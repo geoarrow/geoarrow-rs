@@ -8,9 +8,9 @@ fn process_ring<P: GeomProcessor>(
     ring_idx: usize,
     processor: &mut P,
 ) -> geozero::error::Result<()> {
-    processor.linestring_begin(false, ring.num_coords(), ring_idx)?;
+    processor.linestring_begin(false, ring.num_points(), ring_idx)?;
 
-    for (coord_idx, coord) in ring.coords().enumerate() {
+    for (coord_idx, coord) in ring.points().enumerate() {
         process_coord(&coord, coord_idx, processor)?;
     }
 

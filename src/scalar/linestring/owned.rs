@@ -54,16 +54,21 @@ impl<const D: usize> LineStringTrait for OwnedLineString<D> {
     type T = f64;
     type ItemType<'b> = Point<'b, D> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        D
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        // TODO: pass through field information from array
+        match D {
+            2 => crate::geo_traits::Dimension::XY,
+            3 => crate::geo_traits::Dimension::XYZ,
+            _ => todo!(),
+        }
     }
 
-    fn num_coords(&self) -> usize {
-        LineString::from(self).num_coords()
+    fn num_points(&self) -> usize {
+        LineString::from(self).num_points()
     }
 
-    unsafe fn coord_unchecked(&self, i: usize) -> Self::ItemType<'_> {
-        LineString::from(self).coord_unchecked(i)
+    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+        LineString::from(self).point_unchecked(i)
     }
 }
 

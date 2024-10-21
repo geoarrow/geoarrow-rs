@@ -8,13 +8,13 @@ mod separated;
 pub struct GEOSConstCoord {
     pub(crate) coords: geos::CoordSeq,
     pub(crate) geom_index: usize,
-    pub(crate) dim: usize,
+    pub(crate) dim: crate::geo_traits::Dimension,
 }
 
 impl PointTrait for GEOSConstCoord {
     type T = f64;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         self.dim
     }
 

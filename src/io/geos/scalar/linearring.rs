@@ -26,19 +26,19 @@ impl<'a> LineStringTrait for GEOSConstLinearRing<'a> {
     type T = f64;
     type ItemType<'c> = GEOSConstCoord where Self: 'c;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => 2,
-            geos::Dimensions::ThreeD => 3,
+            geos::Dimensions::TwoD => crate::geo_traits::Dimension::XY,
+            geos::Dimensions::ThreeD => crate::geo_traits::Dimension::XYZ,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
 
-    fn num_coords(&self) -> usize {
+    fn num_points(&self) -> usize {
         self.0.get_num_coordinates().unwrap()
     }
 
-    unsafe fn coord_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         let seq = self.0.get_coord_seq().unwrap();
         GEOSConstCoord {
             coords: seq,

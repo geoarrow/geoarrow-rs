@@ -236,8 +236,8 @@ impl<const D: usize> PolygonBuilder<D> {
             // - Add exterior ring's # of coords self.ring_offsets
             // - Push ring's coords to self.coords
             let ext_ring = polygon.exterior().unwrap();
-            self.ring_offsets.try_push_usize(ext_ring.num_coords())?;
-            for coord in ext_ring.coords() {
+            self.ring_offsets.try_push_usize(ext_ring.num_points())?;
+            for coord in ext_ring.points() {
                 self.coords.push_point(&coord);
             }
 
@@ -250,8 +250,8 @@ impl<const D: usize> PolygonBuilder<D> {
             // - Add ring's # of coords to self.ring_offsets
             // - Push ring's coords to self.coords
             for int_ring in polygon.interiors() {
-                self.ring_offsets.try_push_usize(int_ring.num_coords())?;
-                for coord in int_ring.coords() {
+                self.ring_offsets.try_push_usize(int_ring.num_points())?;
+                for coord in int_ring.points() {
                     self.coords.push_point(&coord);
                 }
             }

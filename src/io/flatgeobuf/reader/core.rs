@@ -30,8 +30,8 @@ impl<'a> Point<'a> {
 impl<'a> PointTrait for Point<'a> {
     type T = f64;
 
-    fn dim(&self) -> usize {
-        self.dim.size()
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        self.dim.into()
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
@@ -82,15 +82,15 @@ impl<'a> LineStringTrait for LineString<'a> {
     type T = f64;
     type ItemType<'b> = Point<'a> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        self.dim.size()
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        self.dim.into()
     }
 
-    fn num_coords(&self) -> usize {
+    fn num_points(&self) -> usize {
         self.length
     }
 
-    unsafe fn coord_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         Point {
             geom: self.geom,
             dim: self.dim,
@@ -115,8 +115,8 @@ impl<'a> PolygonTrait for Polygon<'a> {
     type T = f64;
     type ItemType<'b> = LineString<'a> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        self.dim.size()
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        self.dim.into()
     }
 
     fn num_interiors(&self) -> usize {
@@ -184,8 +184,8 @@ impl<'a> MultiPointTrait for MultiPoint<'a> {
     type T = f64;
     type ItemType<'b> = Point<'a> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        self.dim.size()
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        self.dim.into()
     }
 
     fn num_points(&self) -> usize {
@@ -217,11 +217,11 @@ impl<'a> MultiLineStringTrait for MultiLineString<'a> {
     type T = f64;
     type ItemType<'b> = LineString<'a> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        self.dim.size()
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        self.dim.into()
     }
 
-    fn num_lines(&self) -> usize {
+    fn num_line_strings(&self) -> usize {
         if let Some(ends) = self.geom.ends() {
             ends.len()
         } else {
@@ -229,7 +229,7 @@ impl<'a> MultiLineStringTrait for MultiLineString<'a> {
         }
     }
 
-    unsafe fn line_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         if let Some(ends) = self.geom.ends() {
             let start = if i == 0 { 0 } else { ends.get(i - 1) };
             let end = ends.get(i);
@@ -262,8 +262,8 @@ impl<'a> MultiPolygonTrait for MultiPolygon<'a> {
     type T = f64;
     type ItemType<'b> = Polygon<'a> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        self.dim.size()
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        self.dim.into()
     }
 
     fn num_polygons(&self) -> usize {
@@ -364,7 +364,7 @@ impl<'a> GeometryTrait for Geometry<'a> {
     type GeometryCollection<'b> = GeometryCollection<'a> where Self: 'b;
     type Rect<'b> = Rect<'a> where Self: 'b;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         match self {
             Self::Point(g) => PointTrait::dim(g),
             Self::LineString(g) => g.dim(),
@@ -417,8 +417,8 @@ impl<'a> GeometryCollectionTrait for GeometryCollection<'a> {
     type T = f64;
     type ItemType<'b> = Geometry<'a> where Self: 'b;
 
-    fn dim(&self) -> usize {
-        self.dim.size()
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        self.dim.into()
     }
 
     fn num_geometries(&self) -> usize {
@@ -440,7 +440,7 @@ impl<'a> RectTrait for Rect<'a> {
     type T = f64;
     type ItemType<'b> = Point<'a> where Self: 'b;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         unimplemented!()
     }
 

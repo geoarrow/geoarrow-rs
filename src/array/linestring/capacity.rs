@@ -42,7 +42,7 @@ impl LineStringCapacity {
 
     #[inline]
     fn add_valid_line_string(&mut self, line_string: &impl LineStringTrait) {
-        self.coord_capacity += line_string.num_coords();
+        self.coord_capacity += line_string.num_points();
     }
 
     #[inline]

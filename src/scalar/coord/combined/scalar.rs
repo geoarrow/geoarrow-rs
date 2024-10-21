@@ -88,8 +88,13 @@ impl<const D: usize> PartialEq<SeparatedCoord<'_, D>> for Coord<'_, D> {
 impl<const D: usize> PointTrait for Coord<'_, D> {
     type T = f64;
 
-    fn dim(&self) -> usize {
-        D
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        // TODO: pass through field information from array
+        match D {
+            2 => crate::geo_traits::Dimension::XY,
+            3 => crate::geo_traits::Dimension::XYZ,
+            _ => todo!(),
+        }
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
@@ -117,8 +122,13 @@ impl<const D: usize> PointTrait for Coord<'_, D> {
 impl<const D: usize> PointTrait for &Coord<'_, D> {
     type T = f64;
 
-    fn dim(&self) -> usize {
-        D
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        // TODO: pass through field information from array
+        match D {
+            2 => crate::geo_traits::Dimension::XY,
+            3 => crate::geo_traits::Dimension::XYZ,
+            _ => todo!(),
+        }
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {

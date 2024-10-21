@@ -52,7 +52,7 @@ impl MultiLineStringCapacity {
         if let Some(line_string) = maybe_line_string {
             // A single line string
             self.ring_capacity += 1;
-            self.coord_capacity += line_string.num_coords();
+            self.coord_capacity += line_string.num_points();
         }
     }
 
@@ -61,11 +61,11 @@ impl MultiLineStringCapacity {
         self.geom_capacity += 1;
         if let Some(multi_line_string) = multi_line_string {
             // Total number of rings in this polygon
-            let num_line_strings = multi_line_string.num_lines();
+            let num_line_strings = multi_line_string.num_line_strings();
             self.ring_capacity += num_line_strings;
 
-            for line_string in multi_line_string.lines() {
-                self.coord_capacity += line_string.num_coords();
+            for line_string in multi_line_string.line_strings() {
+                self.coord_capacity += line_string.num_points();
             }
         }
     }

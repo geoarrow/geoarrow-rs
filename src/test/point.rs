@@ -42,8 +42,8 @@ struct PointZ {
 impl PointTrait for PointZ {
     type T = f64;
 
-    fn dim(&self) -> usize {
-        3
+    fn dim(&self) -> crate::geo_traits::Dimension {
+        crate::geo_traits::Dimension::XYZ
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {

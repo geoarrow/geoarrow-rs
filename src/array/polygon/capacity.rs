@@ -54,11 +54,11 @@ impl PolygonCapacity {
 
             // Number of coords for each ring
             if let Some(exterior) = polygon.exterior() {
-                self.coord_capacity += exterior.num_coords();
+                self.coord_capacity += exterior.num_points();
             }
 
             for int_ring in polygon.interiors() {
-                self.coord_capacity += int_ring.num_coords();
+                self.coord_capacity += int_ring.num_points();
             }
         }
     }

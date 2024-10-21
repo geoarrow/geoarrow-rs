@@ -12,7 +12,7 @@ impl<'a, const D: usize> TryFrom<&'a MultiLineString<'_, D>> for geos::Geometry 
     ) -> std::result::Result<geos::Geometry, geos::Error> {
         geos::Geometry::create_multiline_string(
             value
-                .lines()
+                .line_strings()
                 .map(|line| (&line).try_into())
                 .collect::<std::result::Result<Vec<_>, geos::Error>>()?,
         )
@@ -58,19 +58,19 @@ impl MultiLineStringTrait for GEOSMultiLineString {
     type T = f64;
     type ItemType<'a> = GEOSConstLineString<'a> where Self: 'a;
 
-    fn dim(&self) -> usize {
+    fn dim(&self) -> crate::geo_traits::Dimension {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => 2,
-            geos::Dimensions::ThreeD => 3,
+            geos::Dimensions::TwoD => crate::geo_traits::Dimension::XY,
+            geos::Dimensions::ThreeD => crate::geo_traits::Dimension::XYZ,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
 
-    fn num_lines(&self) -> usize {
+    fn num_line_strings(&self) -> usize {
         self.0.get_num_geometries().unwrap()
     }
 
-    unsafe fn line_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         GEOSConstLineString::new_unchecked(self.0.get_geometry_n(i).unwrap())
     }
 }

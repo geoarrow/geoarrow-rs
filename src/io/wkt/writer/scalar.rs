@@ -7,14 +7,27 @@ use crate::geo_traits::{
 };
 
 pub(super) fn coord_to_wkt<T: CoordFloat>(coord: &impl PointTrait<T = T>) -> wkt::types::Coord<T> {
+    use crate::geo_traits::Dimension;
+
     let mut out = wkt::types::Coord {
         x: coord.x(),
         y: coord.y(),
         z: None,
         m: None,
     };
-    if coord.dim() == 3 {
-        out.z = Some(coord.nth_unchecked(2));
+    match coord.dim() {
+        Dimension::XY | Dimension::Unknown(2) => {}
+        Dimension::XYZ | Dimension::Unknown(3) => {
+            out.z = Some(coord.nth_unchecked(2));
+        }
+        Dimension::XYM => {
+            out.m = Some(coord.nth_unchecked(2));
+        }
+        Dimension::XYZM | Dimension::Unknown(4) => {
+            out.z = Some(coord.nth_unchecked(2));
+            out.m = Some(coord.nth_unchecked(3));
+        }
+        _ => panic!(),
     }
     out
 }
@@ -24,15 +37,30 @@ pub(super) fn point_to_wkt<T: CoordFloat>(point: &impl PointTrait<T = T>) -> wkt
         return wkt::types::Point(None);
     }
 
+    use crate::geo_traits::Dimension;
+
     let mut coord = wkt::types::Coord {
         x: point.x(),
         y: point.y(),
         z: None,
         m: None,
     };
-    if point.dim() == 3 {
-        coord.z = Some(point.nth_unchecked(2));
+
+    match coord.dim() {
+        Dimension::XY | Dimension::Unknown(2) => {}
+        Dimension::XYZ | Dimension::Unknown(3) => {
+            coord.z = Some(coord.nth_unchecked(2));
+        }
+        Dimension::XYM => {
+            coord.m = Some(coord.nth_unchecked(2));
+        }
+        Dimension::XYZM | Dimension::Unknown(4) => {
+            coord.z = Some(coord.nth_unchecked(2));
+            coord.m = Some(coord.nth_unchecked(3));
+        }
+        _ => panic!(),
     }
+
     wkt::types::Point(Some(coord))
 }
 
@@ -41,7 +69,7 @@ pub(super) fn line_string_to_wkt<T: CoordFloat>(
 ) -> wkt::types::LineString<T> {
     wkt::types::LineString(
         line_string
-            .coords()
+            .points()
             .map(|coord| coord_to_wkt(&coord))
             .collect(),
     )
@@ -76,7 +104,7 @@ pub(super) fn multi_line_string_to_wkt<T: CoordFloat>(
 ) -> wkt::types::MultiLineString<T> {
     wkt::types::MultiLineString(
         multi_line_string
-            .lines()
+            .line_strings()
             .map(|line| line_string_to_wkt(&line))
             .collect(),
     )
