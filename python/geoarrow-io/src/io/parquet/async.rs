@@ -9,7 +9,7 @@ use crate::io::parquet::options::create_options;
 use crate::util::table_to_pytable;
 
 use geoarrow::error::GeoArrowError;
-use geoarrow::geo_traits::{PointTrait, RectTrait};
+use geoarrow::geo_traits::CoordTrait;
 use geoarrow::io::parquet::metadata::GeoParquetBboxCovering;
 use geoarrow::io::parquet::{
     GeoParquetDatasetMetadata, GeoParquetReaderMetadata, GeoParquetReaderOptions,
@@ -148,10 +148,10 @@ impl ParquetFile {
             .row_group_bounds(row_group_idx, paths.as_ref())?
         {
             Ok(Some(vec![
-                bounds.lower().x(),
-                bounds.lower().y(),
-                bounds.upper().x(),
-                bounds.upper().y(),
+                bounds.min().x(),
+                bounds.min().y(),
+                bounds.max().x(),
+                bounds.max().y(),
             ]))
         } else {
             Ok(None)
