@@ -52,13 +52,13 @@ impl<const D: usize> From<OwnedLineString<D>> for LineStringArray<D> {
 
 impl<const D: usize> LineStringTrait for OwnedLineString<D> {
     type T = f64;
-    type ItemType<'b> = Point<'b, D> where Self: 'b;
+    type CoordType<'b> = Point<'b, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimension::XY,
-            3 => crate::geo_traits::Dimension::XYZ,
+            2 => crate::geo_traits::Dimensions::Xy,
+            3 => crate::geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }

@@ -16,8 +16,8 @@ impl<'a> Point<'a> {
 impl<'a> PointTrait for Point<'a> {
     type T = f64;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
-        crate::geo_traits::Dimension::XY
+    fn dim(&self) -> crate::geo_traits::Dimensions {
+        crate::geo_traits::Dimensions::Xy
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
@@ -49,11 +49,11 @@ impl<'a> PointZ<'a> {
 impl<'a> PointTrait for PointZ<'a> {
     type T = f64;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         if self.0.m <= NO_DATA {
-            crate::geo_traits::Dimension::XYZ
+            crate::geo_traits::Dimensions::Xyz
         } else {
-            crate::geo_traits::Dimension::XYZM
+            crate::geo_traits::Dimensions::XYZM
         }
     }
 
@@ -79,17 +79,17 @@ pub(super) struct LineString<'a>(&'a [shapefile::Point]);
 
 impl<'a> LineStringTrait for LineString<'a> {
     type T = f64;
-    type ItemType<'b> = Point<'a> where Self: 'b;
+    type CoordType<'b> = Point<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
-        crate::geo_traits::Dimension::XY
+    fn dim(&self) -> crate::geo_traits::Dimensions {
+        crate::geo_traits::Dimensions::Xy
     }
 
-    fn num_points(&self) -> usize {
+    fn num_coords(&self) -> usize {
         self.0.len()
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
         Point(&self.0[i])
     }
 }
@@ -98,18 +98,18 @@ pub(super) struct LineStringZ<'a>(&'a [shapefile::PointZ]);
 
 impl<'a> LineStringTrait for LineStringZ<'a> {
     type T = f64;
-    type ItemType<'b> = PointZ<'a> where Self: 'b;
+    type CoordType<'b> = PointZ<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: actually check whether M value exists
-        crate::geo_traits::Dimension::XYZ
+        crate::geo_traits::Dimensions::Xyz
     }
 
-    fn num_points(&self) -> usize {
+    fn num_coords(&self) -> usize {
         self.0.len()
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
         PointZ(&self.0[i])
     }
 }
@@ -121,21 +121,21 @@ pub(super) struct Polygon {
 
 impl<'a> PolygonTrait for &'a Polygon {
     type T = f64;
-    type ItemType<'b> = LineString<'a> where Self: 'b;
+    type RingType<'b> = LineString<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
-        crate::geo_traits::Dimension::XY
+    fn dim(&self) -> crate::geo_traits::Dimensions {
+        crate::geo_traits::Dimensions::Xy
     }
 
     fn num_interiors(&self) -> usize {
         self.inner.len()
     }
 
-    fn exterior(&self) -> Option<Self::ItemType<'_>> {
+    fn exterior(&self) -> Option<Self::RingType<'_>> {
         Some(LineString(&self.outer))
     }
 
-    unsafe fn interior_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
         LineString(&self.inner[i])
     }
 }
@@ -147,22 +147,22 @@ pub(super) struct PolygonZ {
 
 impl<'a> PolygonTrait for &'a PolygonZ {
     type T = f64;
-    type ItemType<'b> = LineStringZ<'a> where Self: 'b;
+    type RingType<'b> = LineStringZ<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: actually check whether M value exists
-        crate::geo_traits::Dimension::XYZ
+        crate::geo_traits::Dimensions::Xyz
     }
 
     fn num_interiors(&self) -> usize {
         self.inner.len()
     }
 
-    fn exterior(&self) -> Option<Self::ItemType<'_>> {
+    fn exterior(&self) -> Option<Self::RingType<'_>> {
         Some(LineStringZ(&self.outer))
     }
 
-    unsafe fn interior_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
         LineStringZ(&self.inner[i])
     }
 }
@@ -177,17 +177,17 @@ impl<'a> MultiPoint<'a> {
 
 impl<'a> MultiPointTrait for MultiPoint<'a> {
     type T = f64;
-    type ItemType<'b> = Point<'a> where Self: 'b;
+    type PointType<'b> = Point<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
-        crate::geo_traits::Dimension::XY
+    fn dim(&self) -> crate::geo_traits::Dimensions {
+        crate::geo_traits::Dimensions::Xy
     }
 
     fn num_points(&self) -> usize {
         self.0.points().len()
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
         Point(self.0.point(i).unwrap())
     }
 }
@@ -201,18 +201,18 @@ impl<'a> MultiPointZ<'a> {
 }
 impl<'a> MultiPointTrait for MultiPointZ<'a> {
     type T = f64;
-    type ItemType<'b> = PointZ<'a> where Self: 'b;
+    type PointType<'b> = PointZ<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: actually check whether M value exists
-        crate::geo_traits::Dimension::XYZ
+        crate::geo_traits::Dimensions::Xyz
     }
 
     fn num_points(&self) -> usize {
         self.0.points().len()
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
         PointZ(self.0.point(i).unwrap())
     }
 }
@@ -227,17 +227,17 @@ impl<'a> Polyline<'a> {
 
 impl<'a> MultiLineStringTrait for Polyline<'a> {
     type T = f64;
-    type ItemType<'b> = LineString<'a> where Self: 'b;
+    type LineStringType<'b> = LineString<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
-        crate::geo_traits::Dimension::XY
+    fn dim(&self) -> crate::geo_traits::Dimensions {
+        crate::geo_traits::Dimensions::Xy
     }
 
     fn num_line_strings(&self) -> usize {
         self.0.parts().len()
     }
 
-    unsafe fn line_string_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
         LineString(self.0.part(i).unwrap())
     }
 }
@@ -252,18 +252,18 @@ impl<'a> PolylineZ<'a> {
 
 impl<'a> MultiLineStringTrait for PolylineZ<'a> {
     type T = f64;
-    type ItemType<'b> = LineStringZ<'a> where Self: 'b;
+    type LineStringType<'b> = LineStringZ<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: actually check whether M value exists
-        crate::geo_traits::Dimension::XYZ
+        crate::geo_traits::Dimensions::Xyz
     }
 
     fn num_line_strings(&self) -> usize {
         self.0.parts().len()
     }
 
-    unsafe fn line_string_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
         LineStringZ(self.0.part(i).unwrap())
     }
 }
@@ -312,17 +312,17 @@ impl MultiPolygon {
 
 impl MultiPolygonTrait for MultiPolygon {
     type T = f64;
-    type ItemType<'a> = &'a Polygon;
+    type PolygonType<'a> = &'a Polygon;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
-        crate::geo_traits::Dimension::XY
+    fn dim(&self) -> crate::geo_traits::Dimensions {
+        crate::geo_traits::Dimensions::Xy
     }
 
     fn num_polygons(&self) -> usize {
         self.0.len()
     }
 
-    unsafe fn polygon_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
         &self.0[i]
     }
 }
@@ -371,18 +371,18 @@ impl MultiPolygonZ {
 
 impl MultiPolygonTrait for MultiPolygonZ {
     type T = f64;
-    type ItemType<'a> = &'a PolygonZ;
+    type PolygonType<'a> = &'a PolygonZ;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: actually check whether M value exists
-        crate::geo_traits::Dimension::XYZ
+        crate::geo_traits::Dimensions::Xyz
     }
 
     fn num_polygons(&self) -> usize {
         self.0.len()
     }
 
-    unsafe fn polygon_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
         &self.0[i]
     }
 }

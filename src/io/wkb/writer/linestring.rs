@@ -1,7 +1,7 @@
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{LineStringArray, WKBArray};
 use crate::error::Result;
-use crate::geo_traits::{LineStringTrait, PointTrait};
+use crate::geo_traits::{CoordTrait, LineStringTrait, PointTrait};
 use crate::io::wkb::common::WKBType;
 use crate::io::wkb::reader::Endianness;
 use crate::trait_::ArrayAccessor;
@@ -15,7 +15,7 @@ use std::io::{Cursor, Write};
 pub fn line_string_wkb_size(geom: &impl LineStringTrait) -> usize {
     let header = 1 + 4 + 4;
     let each_coord = geom.dim().size() * 8;
-    let all_coords = geom.num_points() * each_coord;
+    let all_coords = geom.num_coords() * each_coord;
     header + all_coords
 }
 
@@ -24,18 +24,18 @@ pub fn write_line_string_as_wkb<W: Write>(
     mut writer: W,
     geom: &impl LineStringTrait<T = f64>,
 ) -> Result<()> {
-    use crate::geo_traits::Dimension;
+    use crate::geo_traits::Dimensions;
 
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
 
     match geom.dim() {
-        Dimension::XY | Dimension::Unknown(2) => {
+        Dimensions::Xy | Dimensions::Unknown(2) => {
             writer
                 .write_u32::<LittleEndian>(WKBType::LineString.into())
                 .unwrap();
         }
-        Dimension::XYZ | Dimension::Unknown(3) => {
+        Dimensions::Xyz | Dimensions::Unknown(3) => {
             writer
                 .write_u32::<LittleEndian>(WKBType::LineStringZ.into())
                 .unwrap();
@@ -45,10 +45,10 @@ pub fn write_line_string_as_wkb<W: Write>(
 
     // numPoints
     writer
-        .write_u32::<LittleEndian>(geom.num_points().try_into().unwrap())
+        .write_u32::<LittleEndian>(geom.num_coords().try_into().unwrap())
         .unwrap();
 
-    for coord in geom.points() {
+    for coord in geom.coords() {
         writer.write_f64::<LittleEndian>(coord.x()).unwrap();
         writer.write_f64::<LittleEndian>(coord.y()).unwrap();
 

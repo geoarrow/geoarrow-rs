@@ -73,9 +73,9 @@ impl<'a> WKBLinearRing<'a> {
 
 impl<'a> LineStringTrait for WKBLinearRing<'a> {
     type T = f64;
-    type ItemType<'b> = WKBCoord<'a> where Self: 'b;
+    type CoordType<'b> = WKBCoord<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -83,7 +83,7 @@ impl<'a> LineStringTrait for WKBLinearRing<'a> {
         self.num_points
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::CoordType<'_> {
         WKBCoord::new(
             self.buf,
             self.byte_order,

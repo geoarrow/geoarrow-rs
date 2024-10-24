@@ -1,4 +1,4 @@
-use crate::geo_traits::PointTrait;
+use crate::geo_traits::CoordTrait;
 
 mod combined;
 mod interleaved;
@@ -8,13 +8,13 @@ mod separated;
 pub struct GEOSConstCoord {
     pub(crate) coords: geos::CoordSeq,
     pub(crate) geom_index: usize,
-    pub(crate) dim: crate::geo_traits::Dimension,
+    pub(crate) dim: crate::geo_traits::Dimensions,
 }
 
-impl PointTrait for GEOSConstCoord {
+impl CoordTrait for GEOSConstCoord {
     type T = f64;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         self.dim
     }
 

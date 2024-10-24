@@ -27,6 +27,8 @@ pub fn geometry_wkb_size(geom: &impl GeometryTrait) -> usize {
         MultiPolygon(mp) => multi_polygon_wkb_size(mp),
         GeometryCollection(gc) => geometry_collection_wkb_size(gc),
         Rect(_) => todo!(),
+        Triangle(_) => todo!(),
+        Line(_) => todo!(),
     }
 }
 
@@ -50,7 +52,8 @@ pub fn write_geometry_as_wkb<W: Write>(
             // write_geometry_collection_as_wkb(writer, gc)
         }
         Rect(_) => todo!(),
-        // _ => todo!(),
+        Triangle(_) => todo!(),
+        Line(_) => todo!(),
     }
 }
 

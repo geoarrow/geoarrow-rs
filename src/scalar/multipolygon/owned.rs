@@ -84,13 +84,13 @@ impl<const D: usize> From<OwnedMultiPolygon<D>> for MultiPolygonArray<D> {
 
 impl<const D: usize> MultiPolygonTrait for OwnedMultiPolygon<D> {
     type T = f64;
-    type ItemType<'b> = Polygon<'b, D> where Self: 'b;
+    type PolygonType<'b> = Polygon<'b, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimension::XY,
-            3 => crate::geo_traits::Dimension::XYZ,
+            2 => crate::geo_traits::Dimensions::Xy,
+            3 => crate::geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
@@ -99,7 +99,7 @@ impl<const D: usize> MultiPolygonTrait for OwnedMultiPolygon<D> {
         MultiPolygon::from(self).num_polygons()
     }
 
-    unsafe fn polygon_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
         MultiPolygon::from(self).polygon_unchecked(i)
     }
 }

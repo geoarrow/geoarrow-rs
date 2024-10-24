@@ -56,13 +56,13 @@ impl<const D: usize> From<OwnedGeometryCollection<D>> for GeometryCollectionArra
 
 impl<const D: usize> GeometryCollectionTrait for OwnedGeometryCollection<D> {
     type T = f64;
-    type ItemType<'b> = Geometry<'b, D> where Self: 'b;
+    type GeometryType<'b> = Geometry<'b, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimension::XY,
-            3 => crate::geo_traits::Dimension::XYZ,
+            2 => crate::geo_traits::Dimensions::Xy,
+            3 => crate::geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
@@ -71,7 +71,7 @@ impl<const D: usize> GeometryCollectionTrait for OwnedGeometryCollection<D> {
         GeometryCollection::from(self).num_geometries()
     }
 
-    unsafe fn geometry_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn geometry_unchecked(&self, i: usize) -> Self::GeometryType<'_> {
         GeometryCollection::from(self).geometry_unchecked(i)
     }
 }

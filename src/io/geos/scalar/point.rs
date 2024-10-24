@@ -7,7 +7,7 @@ impl<'a, const D: usize> TryFrom<&'a Point<'_, D>> for geos::Geometry {
     type Error = geos::Error;
 
     fn try_from(point: &'a Point<'_, D>) -> std::result::Result<geos::Geometry, geos::Error> {
-        use crate::geo_traits::Dimension;
+        use crate::geo_traits::Dimensions;
 
         match point.dim() {
             Dimension::XY | Dimension::Unknown(2) => {
@@ -54,10 +54,10 @@ impl GEOSPoint {
 impl PointTrait for GEOSPoint {
     type T = f64;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => crate::geo_traits::Dimension::XY,
-            geos::Dimensions::ThreeD => crate::geo_traits::Dimension::XYZ,
+            geos::Dimensions::TwoD => crate::geo_traits::Dimensions::Xy,
+            geos::Dimensions::ThreeD => crate::geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
@@ -83,10 +83,10 @@ impl PointTrait for GEOSPoint {
 impl PointTrait for &GEOSPoint {
     type T = f64;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => crate::geo_traits::Dimension::XY,
-            geos::Dimensions::ThreeD => crate::geo_traits::Dimension::XYZ,
+            geos::Dimensions::TwoD => crate::geo_traits::Dimensions::Xy,
+            geos::Dimensions::ThreeD => crate::geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
@@ -130,10 +130,10 @@ impl<'a> GEOSConstPoint<'a> {
 impl<'a> PointTrait for GEOSConstPoint<'a> {
     type T = f64;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => crate::geo_traits::Dimension::XY,
-            geos::Dimensions::ThreeD => crate::geo_traits::Dimension::XYZ,
+            geos::Dimensions::TwoD => crate::geo_traits::Dimensions::Xy,
+            geos::Dimensions::ThreeD => crate::geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
@@ -159,10 +159,10 @@ impl<'a> PointTrait for GEOSConstPoint<'a> {
 impl<'a> PointTrait for &GEOSConstPoint<'a> {
     type T = f64;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => crate::geo_traits::Dimension::XY,
-            geos::Dimensions::ThreeD => crate::geo_traits::Dimension::XYZ,
+            geos::Dimensions::TwoD => crate::geo_traits::Dimensions::Xy,
+            geos::Dimensions::ThreeD => crate::geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }

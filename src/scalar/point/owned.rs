@@ -42,11 +42,11 @@ impl<const D: usize> From<OwnedPoint<D>> for PointArray<D> {
 impl<const D: usize> PointTrait for OwnedPoint<D> {
     type T = f64;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimension::XY,
-            3 => crate::geo_traits::Dimension::XYZ,
+            2 => crate::geo_traits::Dimensions::Xy,
+            3 => crate::geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
@@ -79,6 +79,6 @@ impl<const D: usize> From<&OwnedPoint<D>> for geo::Point {
 
 impl<const D: usize> PartialEq for OwnedPoint<D> {
     fn eq(&self, other: &Self) -> bool {
-        point_eq(self, other, true)
+        point_eq(self, other)
     }
 }

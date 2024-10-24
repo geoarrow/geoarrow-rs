@@ -71,9 +71,9 @@ impl<'a> WKBMultiPolygon<'a> {
 
 impl<'a> MultiPolygonTrait for WKBMultiPolygon<'a> {
     type T = f64;
-    type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
+    type PolygonType<'b> = WKBPolygon<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -81,16 +81,16 @@ impl<'a> MultiPolygonTrait for WKBMultiPolygon<'a> {
         self.wkb_polygons.len()
     }
 
-    unsafe fn polygon_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
         self.wkb_polygons.get_unchecked(i).clone()
     }
 }
 
 impl<'a> MultiPolygonTrait for &'a WKBMultiPolygon<'a> {
     type T = f64;
-    type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
+    type PolygonType<'b> = WKBPolygon<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -98,7 +98,7 @@ impl<'a> MultiPolygonTrait for &'a WKBMultiPolygon<'a> {
         self.wkb_polygons.len()
     }
 
-    unsafe fn polygon_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
         self.wkb_polygons.get_unchecked(i).clone()
     }
 }

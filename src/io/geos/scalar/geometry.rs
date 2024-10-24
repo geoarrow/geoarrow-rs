@@ -1,6 +1,7 @@
 use crate::geo_traits::{
     GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
-    MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
+    MultiPolygonTrait, PointTrait, PolygonTrait, UnimplementedLine, UnimplementedRect,
+    UnimplementedTriangle,
 };
 use crate::io::geos::scalar::coord::GEOSConstCoord;
 use crate::io::geos::scalar::{
@@ -66,35 +67,20 @@ impl GEOSGeometry {
 
 pub struct GEOSRect {}
 
-impl RectTrait for GEOSRect {
-    type T = f64;
-    type ItemType<'a> = GEOSConstCoord;
-
-    fn dim(&self) -> crate::geo_traits::Dimension {
-        todo!()
-    }
-
-    fn lower(&self) -> Self::ItemType<'_> {
-        todo!()
-    }
-
-    fn upper(&self) -> Self::ItemType<'_> {
-        todo!()
-    }
-}
-
 impl GeometryTrait for GEOSGeometry {
     type T = f64;
-    type Point<'a> = GEOSPoint;
-    type LineString<'a> = GEOSLineString;
-    type Polygon<'a> = GEOSPolygon;
-    type MultiPoint<'a> = GEOSMultiPoint;
-    type MultiLineString<'a> = GEOSMultiLineString;
-    type MultiPolygon<'a> = GEOSMultiPolygon;
-    type GeometryCollection<'a> = GEOSGeometryCollection;
-    type Rect<'a> = GEOSRect;
+    type PointType<'a> = GEOSPoint;
+    type LineStringType<'a> = GEOSLineString;
+    type PolygonType<'a> = GEOSPolygon;
+    type MultiPointType<'a> = GEOSMultiPoint;
+    type MultiLineStringType<'a> = GEOSMultiLineString;
+    type MultiPolygonType<'a> = GEOSMultiPolygon;
+    type GeometryCollectionType<'a> = GEOSGeometryCollection;
+    type RectType<'a> = UnimplementedRect<f64>;
+    type LineType<'a> = UnimplementedLine<f64>;
+    type TriangleType<'a> = UnimplementedTriangle<f64>;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self {
             Self::Point(g) => g.dim(),
             Self::LineString(g) => g.dim(),
@@ -117,7 +103,9 @@ impl GeometryTrait for GEOSGeometry {
         GEOSMultiLineString,
         GEOSMultiPolygon,
         GEOSGeometryCollection,
-        Self::Rect<'_>,
+        UnimplementedRect<f64>,
+        UnimplementedTriangle<f64>,
+        UnimplementedLine<f64>,
     > {
         match self {
             Self::Point(g) => crate::geo_traits::GeometryType::Point(g),

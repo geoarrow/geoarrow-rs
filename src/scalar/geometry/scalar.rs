@@ -58,7 +58,7 @@ impl<'a, const D: usize> GeometryTrait for Geometry<'a, D> {
     type GeometryCollection<'b> = GeometryCollection<'b, D> where Self: 'b;
     type Rect<'b> = Rect<'b, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self {
             Geometry::Point(p) => p.dim(),
             Geometry::LineString(p) => p.dim(),
@@ -108,7 +108,7 @@ impl<'a, const D: usize> GeometryTrait for &'a Geometry<'a, D> {
     type GeometryCollection<'b> = GeometryCollection<'a, D> where Self: 'b;
     type Rect<'b> = Rect<'a, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self {
             Geometry::Point(p) => p.dim(),
             Geometry::LineString(p) => p.dim(),

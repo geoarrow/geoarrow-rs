@@ -41,12 +41,12 @@ impl GEOSMultiPolygon {
 
 impl MultiPolygonTrait for GEOSMultiPolygon {
     type T = f64;
-    type ItemType<'a> = GEOSConstPolygon<'a> where Self: 'a;
+    type PolygonType<'a> = GEOSConstPolygon<'a> where Self: 'a;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => crate::geo_traits::Dimension::XY,
-            geos::Dimensions::ThreeD => crate::geo_traits::Dimension::XYZ,
+            geos::Dimensions::TwoD => crate::geo_traits::Dimensions::Xy,
+            geos::Dimensions::ThreeD => crate::geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
@@ -55,7 +55,7 @@ impl MultiPolygonTrait for GEOSMultiPolygon {
         self.0.get_num_geometries().unwrap()
     }
 
-    unsafe fn polygon_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
         GEOSConstPolygon::new_unchecked(self.0.get_geometry_n(i).unwrap())
     }
 }

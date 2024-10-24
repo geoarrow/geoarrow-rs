@@ -151,8 +151,8 @@ impl BoundingRect {
     }
 
     pub fn add_rect(&mut self, rect: &impl RectTrait<T = f64>) {
-        self.add_point(&rect.lower());
-        self.add_point(&rect.upper());
+        self.add_point(&rect.min());
+        self.add_point(&rect.max());
     }
 
     pub fn update(&mut self, other: &BoundingRect) {
@@ -183,24 +183,24 @@ impl Add for BoundingRect {
 
 impl RectTrait for BoundingRect {
     type T = f64;
-    type ItemType<'a> = Coord;
+    type CoordType<'a> = Coord;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         if self.minz().is_some() && self.maxz().is_some() {
-            crate::geo_traits::Dimension::XYZ
+            crate::geo_traits::Dimensions::Xyz
         } else {
-            crate::geo_traits::Dimension::XY
+            crate::geo_traits::Dimensions::Xy
         }
     }
 
-    fn lower(&self) -> Self::ItemType<'_> {
+    fn min(&self) -> Self::CoordType<'_> {
         Coord {
             x: self.minx,
             y: self.miny,
         }
     }
 
-    fn upper(&self) -> Self::ItemType<'_> {
+    fn max(&self) -> Self::CoordType<'_> {
         Coord {
             x: self.maxx,
             y: self.maxy,

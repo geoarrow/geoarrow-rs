@@ -1,49 +1,19 @@
 use crate::geo_traits::{
-    GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
-    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
+    CoordTrait, GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait,
+    MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
 };
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 use geo::CoordFloat;
 
 #[inline]
-pub fn point_eq<T: CoordFloat>(
-    left: &impl PointTrait<T = T>,
-    right: &impl PointTrait<T = T>,
-    allow_nan_equal: bool,
+pub fn coord_eq<T: CoordFloat>(
+    left: &impl CoordTrait<T = T>,
+    right: &impl CoordTrait<T = T>,
 ) -> bool {
     let left_dim = left.dim();
     if left_dim != right.dim() {
         return false;
-    }
-
-    if allow_nan_equal {
-        // Specifically check for NaN because two points defined to be
-        // TODO: in the future add an `is_empty` to the PointTrait and then you shouldn't check for
-        // NaN manually
-        match left_dim {
-            crate::geo_traits::Dimension::XY => {
-                if left.x().is_nan()
-                    && right.x().is_nan()
-                    && left.y().is_nan()
-                    && right.y().is_nan()
-                {
-                    return true;
-                }
-            }
-            crate::geo_traits::Dimension::XYZ => {
-                if left.x().is_nan()
-                    && right.x().is_nan()
-                    && left.y().is_nan()
-                    && right.y().is_nan()
-                    && left.nth_unchecked(2).is_nan()
-                    && right.nth_unchecked(2).is_nan()
-                {
-                    return true;
-                }
-            }
-            _ => panic!(),
-        }
     }
 
     for i in 0..left_dim.size() {
@@ -56,6 +26,18 @@ pub fn point_eq<T: CoordFloat>(
 }
 
 #[inline]
+pub fn point_eq<T: CoordFloat>(
+    left: &impl PointTrait<T = T>,
+    right: &impl PointTrait<T = T>,
+) -> bool {
+    match (left.coord(), right.coord()) {
+        (Some(left), Some(right)) => coord_eq(&left, &right),
+        (None, None) => true,
+        _ => false,
+    }
+}
+
+#[inline]
 pub fn line_string_eq<T: CoordFloat>(
     left: &impl LineStringTrait<T = T>,
     right: &impl LineStringTrait<T = T>,
@@ -64,12 +46,12 @@ pub fn line_string_eq<T: CoordFloat>(
         return false;
     }
 
-    if left.num_points() != right.num_points() {
+    if left.num_coords() != right.num_coords() {
         return false;
     }
 
-    for (left_coord, right_coord) in left.points().zip(right.points()) {
-        if !point_eq(&left_coord, &right_coord, false) {
+    for (left_coord, right_coord) in left.coords().zip(right.coords()) {
+        if !coord_eq(&left_coord, &right_coord) {
             return false;
         }
     }
@@ -128,7 +110,7 @@ pub fn multi_point_eq<T: CoordFloat>(
     }
 
     for (left_point, right_point) in left.points().zip(right.points()) {
-        if !point_eq(&left_point, &right_point, false) {
+        if !point_eq(&left_point, &right_point) {
             return false;
         }
     }
@@ -186,11 +168,11 @@ pub fn rect_eq<T: CoordFloat>(left: &impl RectTrait<T = T>, right: &impl RectTra
         return false;
     }
 
-    if !point_eq(&left.lower(), &right.lower(), false) {
+    if !coord_eq(&left.min(), &right.min()) {
         return false;
     }
 
-    if !point_eq(&left.upper(), &right.upper(), false) {
+    if !coord_eq(&left.max(), &right.max()) {
         return false;
     }
 
@@ -208,7 +190,7 @@ pub fn geometry_eq<T: CoordFloat>(
 
     match (left.as_type(), right.as_type()) {
         (GeometryType::Point(l), GeometryType::Point(r)) => {
-            if !point_eq(l, r, false) {
+            if !point_eq(l, r) {
                 return false;
             }
         }

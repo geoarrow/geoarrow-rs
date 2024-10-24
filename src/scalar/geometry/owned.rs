@@ -76,7 +76,7 @@ impl<const D: usize> GeometryTrait for OwnedGeometry<D> {
     type GeometryCollection<'b> = OwnedGeometryCollection<D> where Self: 'b;
     type Rect<'b> = OwnedRect<D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self {
             Self::Point(p) => p.dim(),
             Self::LineString(p) => p.dim(),

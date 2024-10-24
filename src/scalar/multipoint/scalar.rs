@@ -70,13 +70,13 @@ impl<'a, const D: usize> NativeScalar for MultiPoint<'a, D> {
 
 impl<'a, const D: usize> MultiPointTrait for MultiPoint<'a, D> {
     type T = f64;
-    type ItemType<'b> = Point<'a, D> where Self: 'b;
+    type PointType<'b> = Point<'a, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimension::XY,
-            3 => crate::geo_traits::Dimension::XYZ,
+            2 => crate::geo_traits::Dimensions::Xy,
+            3 => crate::geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
@@ -86,20 +86,20 @@ impl<'a, const D: usize> MultiPointTrait for MultiPoint<'a, D> {
         end - start
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
         Point::new(self.coords, self.start_offset + i)
     }
 }
 
 impl<'a, const D: usize> MultiPointTrait for &'a MultiPoint<'a, D> {
     type T = f64;
-    type ItemType<'b> = Point<'a, D> where Self: 'b;
+    type PointType<'b> = Point<'a, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimension::XY,
-            3 => crate::geo_traits::Dimension::XYZ,
+            2 => crate::geo_traits::Dimensions::Xy,
+            3 => crate::geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
@@ -109,7 +109,7 @@ impl<'a, const D: usize> MultiPointTrait for &'a MultiPoint<'a, D> {
         end - start
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
         Point::new(self.coords, self.start_offset + i)
     }
 }

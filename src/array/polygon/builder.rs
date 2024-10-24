@@ -271,8 +271,8 @@ impl<const D: usize> PolygonBuilder<D> {
             // ring has 5 coords
             self.ring_offsets.try_push_usize(5)?;
 
-            let lower = rect.lower();
-            let upper = rect.upper();
+            let lower = rect.min();
+            let upper = rect.max();
 
             // Ref below because I always forget the ordering
             // https://github.com/georust/geo/blob/76ad2a358bd079e9d47b1229af89608744d2635b/geo-types/src/geometry/rect.rs#L217-L225

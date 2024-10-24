@@ -1,14 +1,14 @@
 use geo::CoordNum;
 
 use crate::geo_traits::{
-    GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
-    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
+    CoordTrait, GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait,
+    MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
 };
 
 /// Convert any coordinate to a [`geo::Coord`].
 ///
 /// Only the first two dimensions will be kept.
-pub fn coord_to_geo<T: CoordNum>(coord: &impl PointTrait<T = T>) -> geo::Coord<T> {
+pub fn coord_to_geo<T: CoordNum>(coord: &impl CoordTrait<T = T>) -> geo::Coord<T> {
     geo::Coord {
         x: coord.x(),
         y: coord.y(),
@@ -30,7 +30,7 @@ pub fn line_string_to_geo<T: CoordNum>(
 ) -> geo::LineString<T> {
     geo::LineString::new(
         line_string
-            .points()
+            .coords()
             .map(|coord| coord_to_geo(&coord))
             .collect(),
     )
@@ -94,8 +94,8 @@ pub fn multi_polygon_to_geo<T: CoordNum>(
 ///
 /// Only the first two dimensions will be kept.
 pub fn rect_to_geo<T: CoordNum>(rect: &impl RectTrait<T = T>) -> geo::Rect<T> {
-    let c1 = coord_to_geo(&rect.lower());
-    let c2 = coord_to_geo(&rect.upper());
+    let c1 = coord_to_geo(&rect.min());
+    let c2 = coord_to_geo(&rect.max());
     geo::Rect::new(c1, c2)
 }
 

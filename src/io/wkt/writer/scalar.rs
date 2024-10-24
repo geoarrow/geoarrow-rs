@@ -2,12 +2,12 @@
 use geo::CoordFloat;
 
 use crate::geo_traits::{
-    GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
-    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
+    CoordTrait, GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait,
+    MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
 };
 
-pub(super) fn coord_to_wkt<T: CoordFloat>(coord: &impl PointTrait<T = T>) -> wkt::types::Coord<T> {
-    use crate::geo_traits::Dimension;
+pub(super) fn coord_to_wkt<T: CoordFloat>(coord: &impl CoordTrait<T = T>) -> wkt::types::Coord<T> {
+    use crate::geo_traits::Dimensions;
 
     let mut out = wkt::types::Coord {
         x: coord.x(),
@@ -16,14 +16,14 @@ pub(super) fn coord_to_wkt<T: CoordFloat>(coord: &impl PointTrait<T = T>) -> wkt
         m: None,
     };
     match coord.dim() {
-        Dimension::XY | Dimension::Unknown(2) => {}
-        Dimension::XYZ | Dimension::Unknown(3) => {
+        Dimensions::Xy | Dimensions::Unknown(2) => {}
+        Dimensions::Xyz | Dimensions::Unknown(3) => {
             out.z = Some(coord.nth_unchecked(2));
         }
-        Dimension::XYM => {
+        Dimensions::Xym => {
             out.m = Some(coord.nth_unchecked(2));
         }
-        Dimension::XYZM | Dimension::Unknown(4) => {
+        Dimensions::Xyzm | Dimensions::Unknown(4) => {
             out.z = Some(coord.nth_unchecked(2));
             out.m = Some(coord.nth_unchecked(3));
         }
@@ -33,35 +33,11 @@ pub(super) fn coord_to_wkt<T: CoordFloat>(coord: &impl PointTrait<T = T>) -> wkt
 }
 
 pub(super) fn point_to_wkt<T: CoordFloat>(point: &impl PointTrait<T = T>) -> wkt::types::Point<T> {
-    if point.x().is_nan() && point.y().is_nan() {
+    if let Some(coord) = point.coord() {
+        return wkt::types::Point(Some(coord_to_wkt(&coord)));
+    } else {
         return wkt::types::Point(None);
     }
-
-    use crate::geo_traits::Dimension;
-
-    let mut coord = wkt::types::Coord {
-        x: point.x(),
-        y: point.y(),
-        z: None,
-        m: None,
-    };
-
-    match coord.dim() {
-        Dimension::XY | Dimension::Unknown(2) => {}
-        Dimension::XYZ | Dimension::Unknown(3) => {
-            coord.z = Some(coord.nth_unchecked(2));
-        }
-        Dimension::XYM => {
-            coord.m = Some(coord.nth_unchecked(2));
-        }
-        Dimension::XYZM | Dimension::Unknown(4) => {
-            coord.z = Some(coord.nth_unchecked(2));
-            coord.m = Some(coord.nth_unchecked(3));
-        }
-        _ => panic!(),
-    }
-
-    wkt::types::Point(Some(coord))
 }
 
 pub(super) fn line_string_to_wkt<T: CoordFloat>(
@@ -147,6 +123,7 @@ pub(super) fn geometry_to_wkt<T: CoordFloat>(geometry: &impl GeometryTrait<T = T
             wkt::Wkt::GeometryCollection(geometry_collection_to_wkt(geom))
         }
         GeometryType::Rect(geom) => wkt::Wkt::Polygon(rect_to_wkt(geom)),
+        GeometryType::Triangle(_) | GeometryType::Line(_) => todo!(),
     }
 }
 

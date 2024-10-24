@@ -71,12 +71,12 @@ impl GEOSPolygon {
 
 impl PolygonTrait for GEOSPolygon {
     type T = f64;
-    type ItemType<'a> = GEOSConstLinearRing<'a> where Self: 'a;
+    type RingType<'a> = GEOSConstLinearRing<'a> where Self: 'a;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => crate::geo_traits::Dimension::XY,
-            geos::Dimensions::ThreeD => crate::geo_traits::Dimension::XYZ,
+            geos::Dimensions::TwoD => crate::geo_traits::Dimensions::Xy,
+            geos::Dimensions::ThreeD => crate::geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
@@ -85,7 +85,7 @@ impl PolygonTrait for GEOSPolygon {
         self.0.get_num_interior_rings().unwrap()
     }
 
-    fn exterior(&self) -> Option<Self::ItemType<'_>> {
+    fn exterior(&self) -> Option<Self::RingType<'_>> {
         if self.0.is_empty().unwrap() {
             return None;
         }
@@ -95,7 +95,7 @@ impl PolygonTrait for GEOSPolygon {
         ))
     }
 
-    unsafe fn interior_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
         GEOSConstLinearRing::new_unchecked(
             self.0.get_interior_ring_n(i.try_into().unwrap()).unwrap(),
         )
@@ -123,12 +123,12 @@ impl<'a> GEOSConstPolygon<'a> {
 
 impl<'a> PolygonTrait for GEOSConstPolygon<'a> {
     type T = f64;
-    type ItemType<'c> = GEOSConstLinearRing< 'c> where Self: 'c;
+    type RingType<'c> = GEOSConstLinearRing< 'c> where Self: 'c;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => crate::geo_traits::Dimension::XY,
-            geos::Dimensions::ThreeD => crate::geo_traits::Dimension::XYZ,
+            geos::Dimensions::TwoD => crate::geo_traits::Dimensions::Xy,
+            geos::Dimensions::ThreeD => crate::geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
@@ -137,7 +137,7 @@ impl<'a> PolygonTrait for GEOSConstPolygon<'a> {
         self.0.get_num_interior_rings().unwrap()
     }
 
-    fn exterior(&self) -> Option<Self::ItemType<'_>> {
+    fn exterior(&self) -> Option<Self::RingType<'_>> {
         if self.0.is_empty().unwrap() {
             return None;
         }
@@ -147,7 +147,7 @@ impl<'a> PolygonTrait for GEOSConstPolygon<'a> {
         ))
     }
 
-    unsafe fn interior_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
         GEOSConstLinearRing::new_unchecked(
             self.0.get_interior_ring_n(i.try_into().unwrap()).unwrap(),
         )

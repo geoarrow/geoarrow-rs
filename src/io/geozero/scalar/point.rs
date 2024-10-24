@@ -1,4 +1,4 @@
-use crate::geo_traits::PointTrait;
+use crate::geo_traits::{CoordTrait, PointTrait};
 use crate::scalar::Point;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
@@ -22,33 +22,37 @@ pub(crate) fn process_point_as_coord<P: GeomProcessor>(
     coord_idx: usize,
     processor: &mut P,
 ) -> geozero::error::Result<()> {
-    use crate::geo_traits::Dimension;
+    use crate::geo_traits::Dimensions;
 
-    match geom.dim() {
-        Dimension::XY | Dimension::Unknown(2) => processor.xy(geom.x(), geom.y(), coord_idx)?,
-        Dimension::XYZ | Dimension::Unknown(3) => processor.coordinate(
-            geom.x(),
-            geom.y(),
-            Some(geom.nth_unchecked(2)),
+    // TODO: should revisit this now that we have a better separation between coord and point.
+    // (ever since we split the point trait and coord trait again.)
+    let coord = geom.coord().unwrap();
+
+    match coord.dim() {
+        Dimensions::Xy | Dimensions::Unknown(2) => processor.xy(coord.x(), coord.y(), coord_idx)?,
+        Dimensions::Xyz | Dimensions::Unknown(3) => processor.coordinate(
+            coord.x(),
+            coord.y(),
+            Some(coord.nth_unchecked(2)),
             None,
             None,
             None,
             coord_idx,
         )?,
-        Dimension::XYM => processor.coordinate(
-            geom.x(),
-            geom.y(),
+        Dimensions::Xym => processor.coordinate(
+            coord.x(),
+            coord.y(),
             None,
-            Some(geom.nth_unchecked(2)),
+            Some(coord.nth_unchecked(2)),
             None,
             None,
             coord_idx,
         )?,
-        Dimension::XYZM | Dimension::Unknown(4) => processor.coordinate(
-            geom.x(),
-            geom.y(),
-            Some(geom.nth_unchecked(2)),
-            Some(geom.nth_unchecked(3)),
+        Dimensions::Xyzm | Dimensions::Unknown(4) => processor.coordinate(
+            coord.x(),
+            coord.y(),
+            Some(coord.nth_unchecked(2)),
+            Some(coord.nth_unchecked(3)),
             None,
             None,
             coord_idx,
