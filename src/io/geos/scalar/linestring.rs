@@ -2,7 +2,6 @@ use crate::array::util::OffsetBufferUtils;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::LineStringTrait;
 use crate::io::geos::scalar::coord::GEOSConstCoord;
-use crate::io::geos::scalar::GEOSPoint;
 use crate::scalar::LineString;
 use geos::{Geom, GeometryTypes};
 
@@ -48,7 +47,7 @@ impl GEOSLineString {
 
 impl LineStringTrait for GEOSLineString {
     type T = f64;
-    type CoordType<'b> = GEOSPoint where Self: 'b;
+    type CoordType<'b> = GEOSConstCoord where Self: 'b;
 
     fn dim(&self) -> crate::geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
@@ -64,13 +63,17 @@ impl LineStringTrait for GEOSLineString {
 
     unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
         let point = self.0.get_point_n(i).unwrap();
-        GEOSPoint::new_unchecked(point)
+        GEOSConstCoord {
+            coords: point.get_coord_seq().unwrap(),
+            geom_index: 0,
+            dim: self.dim(),
+        }
     }
 }
 
 impl LineStringTrait for &GEOSLineString {
     type T = f64;
-    type CoordType<'b> = GEOSPoint where Self: 'b;
+    type CoordType<'b> = GEOSConstCoord where Self: 'b;
 
     fn dim(&self) -> crate::geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
@@ -86,7 +89,11 @@ impl LineStringTrait for &GEOSLineString {
 
     unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
         let point = self.0.get_point_n(i).unwrap();
-        GEOSPoint::new_unchecked(point)
+        GEOSConstCoord {
+            coords: point.get_coord_seq().unwrap(),
+            geom_index: 0,
+            dim: self.dim(),
+        }
     }
 }
 
@@ -111,7 +118,7 @@ impl<'a> GEOSConstLineString<'a> {
 
 impl<'a> LineStringTrait for GEOSConstLineString<'a> {
     type T = f64;
-    type CoordType<'c> = GEOSPoint where Self: 'c;
+    type CoordType<'b> = GEOSConstCoord where Self: 'b;
 
     fn dim(&self) -> crate::geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
@@ -127,13 +134,17 @@ impl<'a> LineStringTrait for GEOSConstLineString<'a> {
 
     unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
         let point = self.0.get_point_n(i).unwrap();
-        GEOSPoint::new_unchecked(point)
+        GEOSConstCoord {
+            coords: point.get_coord_seq().unwrap(),
+            geom_index: 0,
+            dim: self.dim(),
+        }
     }
 }
 
 impl<'a> LineStringTrait for &'a GEOSConstLineString<'a> {
     type T = f64;
-    type CoordType<'c> = GEOSPoint where Self: 'c;
+    type CoordType<'b> = GEOSConstCoord where Self: 'b;
 
     fn dim(&self) -> crate::geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
@@ -149,6 +160,10 @@ impl<'a> LineStringTrait for &'a GEOSConstLineString<'a> {
 
     unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
         let point = self.0.get_point_n(i).unwrap();
-        GEOSPoint::new_unchecked(point)
+        GEOSConstCoord {
+            coords: point.get_coord_seq().unwrap(),
+            geom_index: 0,
+            dim: self.dim(),
+        }
     }
 }

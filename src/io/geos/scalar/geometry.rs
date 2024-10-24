@@ -3,7 +3,6 @@ use crate::geo_traits::{
     MultiPolygonTrait, PointTrait, PolygonTrait, UnimplementedLine, UnimplementedRect,
     UnimplementedTriangle,
 };
-use crate::io::geos::scalar::coord::GEOSConstCoord;
 use crate::io::geos::scalar::{
     GEOSGeometryCollection, GEOSLineString, GEOSMultiLineString, GEOSMultiPoint, GEOSMultiPolygon,
     GEOSPoint, GEOSPolygon,
