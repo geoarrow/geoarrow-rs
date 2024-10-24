@@ -16,7 +16,7 @@ pub struct InterleavedCoord<'a, const D: usize> {
 impl<'a, const D: usize> InterleavedCoord<'a, D> {
     /// Return `true` if all values in the coordinate are f64::NAN
     pub(crate) fn is_nan(&self) -> bool {
-        (0..D).all(|coord_dim| self.nth_unchecked(coord_dim) == f64::NAN)
+        (0..D).all(|coord_dim| self.nth_unchecked(coord_dim).is_nan())
     }
 }
 

@@ -34,9 +34,9 @@ pub(super) fn coord_to_wkt<T: CoordFloat>(coord: &impl CoordTrait<T = T>) -> wkt
 
 pub(super) fn point_to_wkt<T: CoordFloat>(point: &impl PointTrait<T = T>) -> wkt::types::Point<T> {
     if let Some(coord) = point.coord() {
-        return wkt::types::Point(Some(coord_to_wkt(&coord)));
+        wkt::types::Point(Some(coord_to_wkt(&coord)))
     } else {
-        return wkt::types::Point(None);
+        wkt::types::Point(None)
     }
 }
 

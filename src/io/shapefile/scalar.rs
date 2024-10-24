@@ -47,7 +47,7 @@ impl<'a> PointTrait for Point<'a> {
     }
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
-        Some(Point(&self.0))
+        Some(Point(self.0))
     }
 }
 
@@ -102,7 +102,7 @@ impl<'a> PointTrait for PointZ<'a> {
     }
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
-        Some(PointZ(&self.0))
+        Some(PointZ(self.0))
     }
 }
 

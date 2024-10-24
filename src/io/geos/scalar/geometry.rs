@@ -64,8 +64,6 @@ impl GEOSGeometry {
     }
 }
 
-pub struct GEOSRect {}
-
 impl GeometryTrait for GEOSGeometry {
     type T = f64;
     type PointType<'a> = GEOSPoint;

@@ -23,7 +23,7 @@ impl<'a> WKBPoint<'a> {
         let offset = offset + 5;
         let coord = WKBCoord::new(buf, byte_order, offset, dim);
         let is_empty =
-            (0..coord.dim().size()).all(|coord_dim| coord.nth_unchecked(coord_dim) == f64::NAN);
+            (0..coord.dim().size()).all(|coord_dim| coord.nth_unchecked(coord_dim).is_nan());
         Self {
             coord,
             dim,

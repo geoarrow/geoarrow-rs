@@ -5,8 +5,8 @@ use arrow_array::RecordBatch;
 use arrow_schema::{DataType, Field, Schema};
 use geo::{point, Point};
 
-use crate::array::PointArray;
-use crate::geo_traits::{CoordTrait, PointTrait};
+use crate::array::{PointArray, PointBuilder};
+use crate::geo_traits::CoordTrait;
 use crate::table::Table;
 use crate::test::properties;
 use crate::ArrayBase;
@@ -65,7 +65,8 @@ impl CoordTrait for CoordZ {
 }
 
 pub(crate) fn point_z_array() -> PointArray<3> {
-    vec![
+    let mut builder = PointBuilder::with_capacity(3);
+    let coords = vec![
         CoordZ {
             x: 0.,
             y: 1.,
@@ -81,9 +82,11 @@ pub(crate) fn point_z_array() -> PointArray<3> {
             y: 7.,
             z: 8.,
         },
-    ]
-    .as_slice()
-    .into()
+    ];
+    for coord in &coords {
+        builder.push_coord(Some(coord));
+    }
+    builder.finish()
 }
 
 pub(crate) fn table() -> Table {
