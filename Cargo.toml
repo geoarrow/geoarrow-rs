@@ -10,7 +10,7 @@ categories = ["science::geo"]
 rust-version = "1.80"
 
 [features]
-csv = ["geozero/with-csv"]
+csv = ["dep:arrow-csv", "geozero/with-csv"]
 flatgeobuf = ["dep:flatgeobuf"]
 flatgeobuf_async = [
   "flatgeobuf/http",
@@ -48,6 +48,7 @@ arrow = { version = "53", features = ["ffi"] }
 arrow-array = { version = "53", features = ["chrono-tz"] }
 arrow-buffer = "53"
 arrow-cast = { version = "53" }
+arrow-csv = { version = "53", optional = true }
 arrow-data = "53"
 arrow-ipc = "53"
 arrow-schema = "53"
