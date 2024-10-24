@@ -6,7 +6,7 @@ use arrow_schema::{DataType, Field, Schema};
 use geo::{point, Point};
 
 use crate::array::PointArray;
-use crate::geo_traits::PointTrait;
+use crate::geo_traits::{CoordTrait, PointTrait};
 use crate::table::Table;
 use crate::test::properties;
 use crate::ArrayBase;
@@ -33,13 +33,13 @@ pub(crate) fn point_array() -> PointArray<2> {
     vec![p0(), p1(), p2()].as_slice().into()
 }
 
-struct PointZ {
+struct CoordZ {
     x: f64,
     y: f64,
     z: f64,
 }
 
-impl PointTrait for PointZ {
+impl CoordTrait for CoordZ {
     type T = f64;
 
     fn dim(&self) -> crate::geo_traits::Dimensions {
@@ -66,17 +66,17 @@ impl PointTrait for PointZ {
 
 pub(crate) fn point_z_array() -> PointArray<3> {
     vec![
-        PointZ {
+        CoordZ {
             x: 0.,
             y: 1.,
             z: 2.,
         },
-        PointZ {
+        CoordZ {
             x: 3.,
             y: 4.,
             z: 5.,
         },
-        PointZ {
+        CoordZ {
             x: 6.,
             y: 7.,
             z: 8.,

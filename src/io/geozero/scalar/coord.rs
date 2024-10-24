@@ -1,4 +1,4 @@
-use crate::geo_traits::{CoordTrait, PointTrait};
+use crate::geo_traits::CoordTrait;
 use geozero::GeomProcessor;
 
 pub(crate) fn process_coord<P: GeomProcessor>(

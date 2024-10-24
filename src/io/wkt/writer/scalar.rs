@@ -45,7 +45,7 @@ pub(super) fn line_string_to_wkt<T: CoordFloat>(
 ) -> wkt::types::LineString<T> {
     wkt::types::LineString(
         line_string
-            .points()
+            .coords()
             .map(|coord| coord_to_wkt(&coord))
             .collect(),
     )

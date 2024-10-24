@@ -10,7 +10,7 @@ use crate::array::{
 };
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{
-    GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait, PointTrait,
+    CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
 };
 use crate::io::wkb::reader::WKBMaybeMultiLineString;
 use crate::scalar::WKB;
@@ -323,8 +323,8 @@ impl<const D: usize> MultiLineStringBuilder<D> {
     /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
     /// to the array upholds the necessary invariants of the array.
     #[inline]
-    pub unsafe fn push_coord(&mut self, coord: &impl PointTrait<T = f64>) -> Result<()> {
-        self.coords.push_point(coord);
+    pub unsafe fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+        self.coords.push_coord(coord);
         Ok(())
     }
 

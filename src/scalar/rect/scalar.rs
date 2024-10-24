@@ -94,8 +94,8 @@ impl<const D: usize> RTreeObject for Rect<'_, D> {
     type Envelope = AABB<[f64; D]>;
 
     fn envelope(&self) -> Self::Envelope {
-        let lower = self.lower();
-        let upper = self.upper();
+        let lower = self.min();
+        let upper = self.max();
         AABB::from_corners(lower, upper)
     }
 }
