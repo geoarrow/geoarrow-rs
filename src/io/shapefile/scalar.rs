@@ -1,8 +1,8 @@
 use shapefile::NO_DATA;
 
 use crate::geo_traits::{
-    LineStringTrait, MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait,
-    PolygonTrait,
+    CoordTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait,
+    PointTrait, PolygonTrait,
 };
 
 pub(super) struct Point<'a>(&'a shapefile::Point);
@@ -13,7 +13,8 @@ impl<'a> Point<'a> {
     }
 }
 
-impl<'a> PointTrait for Point<'a> {
+// Shapefile points can't be null, so we implement both traits on them
+impl<'a> CoordTrait for Point<'a> {
     type T = f64;
 
     fn dim(&self) -> crate::geo_traits::Dimensions {
@@ -37,6 +38,19 @@ impl<'a> PointTrait for Point<'a> {
     }
 }
 
+impl<'a> PointTrait for Point<'a> {
+    type T = f64;
+    type CoordType<'b> = Point<'a> where Self: 'b;
+
+    fn dim(&self) -> crate::geo_traits::Dimensions {
+        crate::geo_traits::Dimensions::Xy
+    }
+
+    fn coord(&self) -> Option<Self::CoordType<'_>> {
+        Some(Point(&self.0))
+    }
+}
+
 // Note: PointZ can optionally have M values
 pub(super) struct PointZ<'a>(&'a shapefile::PointZ);
 
@@ -46,14 +60,14 @@ impl<'a> PointZ<'a> {
     }
 }
 
-impl<'a> PointTrait for PointZ<'a> {
+impl<'a> CoordTrait for PointZ<'a> {
     type T = f64;
 
     fn dim(&self) -> crate::geo_traits::Dimensions {
         if self.0.m <= NO_DATA {
             crate::geo_traits::Dimensions::Xyz
         } else {
-            crate::geo_traits::Dimensions::XYZM
+            crate::geo_traits::Dimensions::Xyzm
         }
     }
 
@@ -72,6 +86,23 @@ impl<'a> PointTrait for PointZ<'a> {
 
     fn y(&self) -> Self::T {
         self.0.y
+    }
+}
+
+impl<'a> PointTrait for PointZ<'a> {
+    type T = f64;
+    type CoordType<'b> = PointZ<'a> where Self: 'b;
+
+    fn dim(&self) -> crate::geo_traits::Dimensions {
+        if self.0.m <= NO_DATA {
+            crate::geo_traits::Dimensions::Xyz
+        } else {
+            crate::geo_traits::Dimensions::Xyzm
+        }
+    }
+
+    fn coord(&self) -> Option<Self::CoordType<'_>> {
+        Some(PointZ(&self.0))
     }
 }
 
