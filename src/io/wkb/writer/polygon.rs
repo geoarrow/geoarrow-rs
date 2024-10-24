@@ -1,7 +1,7 @@
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{PolygonArray, WKBArray};
 use crate::error::Result;
-use crate::geo_traits::{LineStringTrait, PointTrait, PolygonTrait};
+use crate::geo_traits::{CoordTrait, LineStringTrait, PolygonTrait};
 use crate::io::wkb::common::WKBType;
 use crate::io::wkb::reader::Endianness;
 use crate::trait_::ArrayAccessor;
@@ -61,10 +61,10 @@ pub fn write_polygon_as_wkb<W: Write>(
 
     let ext_ring = geom.exterior().unwrap();
     writer
-        .write_u32::<LittleEndian>(ext_ring.num_points().try_into().unwrap())
+        .write_u32::<LittleEndian>(ext_ring.num_coords().try_into().unwrap())
         .unwrap();
 
-    for coord in ext_ring.points() {
+    for coord in ext_ring.coords() {
         writer.write_f64::<LittleEndian>(coord.x()).unwrap();
         writer.write_f64::<LittleEndian>(coord.y()).unwrap();
         if geom.dim().size() == 3 {
@@ -76,10 +76,10 @@ pub fn write_polygon_as_wkb<W: Write>(
 
     for int_ring in geom.interiors() {
         writer
-            .write_u32::<LittleEndian>(int_ring.num_points().try_into().unwrap())
+            .write_u32::<LittleEndian>(int_ring.num_coords().try_into().unwrap())
             .unwrap();
 
-        for coord in int_ring.points() {
+        for coord in int_ring.coords() {
             writer.write_f64::<LittleEndian>(coord.x()).unwrap();
             writer.write_f64::<LittleEndian>(coord.y()).unwrap();
             if geom.dim().size() == 3 {

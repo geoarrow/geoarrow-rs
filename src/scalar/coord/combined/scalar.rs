@@ -1,6 +1,6 @@
 use rstar::{RTreeObject, AABB};
 
-use crate::geo_traits::PointTrait;
+use crate::geo_traits::CoordTrait;
 use crate::io::geo::coord_to_geo;
 use crate::scalar::{InterleavedCoord, SeparatedCoord};
 use crate::trait_::NativeScalar;
@@ -9,6 +9,16 @@ use crate::trait_::NativeScalar;
 pub enum Coord<'a, const D: usize> {
     Separated(SeparatedCoord<'a, D>),
     Interleaved(InterleavedCoord<'a, D>),
+}
+
+impl<'a, const D: usize> Coord<'a, D> {
+    /// Return `true` if all values in the coordinate are f64::NAN
+    pub(crate) fn is_nan(&self) -> bool {
+        match self {
+            Coord::Separated(c) => c.is_nan(),
+            Coord::Interleaved(c) => c.is_nan(),
+        }
+    }
 }
 
 impl<'a, const D: usize> NativeScalar for Coord<'a, D> {
@@ -85,7 +95,7 @@ impl<const D: usize> PartialEq<SeparatedCoord<'_, D>> for Coord<'_, D> {
     }
 }
 
-impl<const D: usize> PointTrait for Coord<'_, D> {
+impl<const D: usize> CoordTrait for Coord<'_, D> {
     type T = f64;
 
     fn dim(&self) -> crate::geo_traits::Dimensions {
@@ -119,7 +129,7 @@ impl<const D: usize> PointTrait for Coord<'_, D> {
     }
 }
 
-impl<const D: usize> PointTrait for &Coord<'_, D> {
+impl<const D: usize> CoordTrait for &Coord<'_, D> {
     type T = f64;
 
     fn dim(&self) -> crate::geo_traits::Dimensions {

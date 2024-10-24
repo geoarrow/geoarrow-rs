@@ -37,7 +37,7 @@ impl<'a> MultiPolygonTrait for WKBMaybeMultiPolygon<'a> {
         }
     }
 
-    unsafe fn polygon_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
         match self {
             WKBMaybeMultiPolygon::Polygon(geom) => geom.polygon_unchecked(i),
             WKBMaybeMultiPolygon::MultiPolygon(geom) => geom.polygon_unchecked(i),

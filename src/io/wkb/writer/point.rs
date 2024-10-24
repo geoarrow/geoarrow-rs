@@ -1,7 +1,7 @@
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{PointArray, WKBArray};
 use crate::error::Result;
-use crate::geo_traits::PointTrait;
+use crate::geo_traits::{CoordTrait, PointTrait};
 use crate::io::wkb::common::WKBType;
 use crate::io::wkb::reader::Endianness;
 use crate::trait_::ArrayAccessor;
@@ -9,6 +9,7 @@ use crate::ArrayBase;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use arrow_buffer::Buffer;
 use byteorder::{LittleEndian, WriteBytesExt};
+use core::f64;
 use std::io::{Cursor, Write};
 
 /// The byte length of a WKBPoint
@@ -30,29 +31,30 @@ pub fn write_point_as_wkb<W: Write>(mut writer: W, geom: &impl PointTrait<T = f6
     use crate::geo_traits::Dimensions;
 
     // Byte order
-    writer.write_u8(Endianness::LittleEndian.into()).unwrap();
+    writer.write_u8(Endianness::LittleEndian.into())?;
 
     match geom.dim() {
         Dimensions::Xy | Dimensions::Unknown(2) => {
-            writer
-                .write_u32::<LittleEndian>(WKBType::Point.into())
-                .unwrap();
+            writer.write_u32::<LittleEndian>(WKBType::Point.into())?;
         }
         Dimensions::Xyz | Dimensions::Unknown(3) => {
-            writer
-                .write_u32::<LittleEndian>(WKBType::PointZ.into())
-                .unwrap();
+            writer.write_u32::<LittleEndian>(WKBType::PointZ.into())?;
         }
         _ => panic!(),
     }
 
-    writer.write_f64::<LittleEndian>(geom.x()).unwrap();
-    writer.write_f64::<LittleEndian>(geom.y()).unwrap();
+    if let Some(coord) = geom.coord() {
+        writer.write_f64::<LittleEndian>(coord.x())?;
+        writer.write_f64::<LittleEndian>(coord.y())?;
 
-    if geom.dim().size() == 3 {
-        writer
-            .write_f64::<LittleEndian>(geom.nth_unchecked(2))
-            .unwrap();
+        if coord.dim().size() == 3 {
+            writer.write_f64::<LittleEndian>(coord.nth_unchecked(2))?;
+        }
+    } else {
+        // Write POINT EMPTY as f64::NAN values
+        for _ in 0..geom.dim().size() {
+            writer.write_f64::<LittleEndian>(f64::NAN)?;
+        }
     }
 
     Ok(())

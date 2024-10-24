@@ -1,7 +1,8 @@
 use crate::algorithm::native::eq::geometry_eq;
 use crate::geo_traits::{
     GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
-    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
+    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait, UnimplementedLine,
+    UnimplementedTriangle,
 };
 use crate::scalar::*;
 
@@ -67,14 +68,16 @@ impl<'a, const D: usize> From<Geometry<'a, D>> for OwnedGeometry<D> {
 
 impl<const D: usize> GeometryTrait for OwnedGeometry<D> {
     type T = f64;
-    type Point<'b> = OwnedPoint<D> where Self: 'b;
-    type LineString<'b> = OwnedLineString<D> where Self: 'b;
-    type Polygon<'b> = OwnedPolygon<D> where Self: 'b;
-    type MultiPoint<'b> = OwnedMultiPoint<D> where Self: 'b;
-    type MultiLineString<'b> = OwnedMultiLineString<D> where Self: 'b;
-    type MultiPolygon<'b> = OwnedMultiPolygon<D> where Self: 'b;
-    type GeometryCollection<'b> = OwnedGeometryCollection<D> where Self: 'b;
-    type Rect<'b> = OwnedRect<D> where Self: 'b;
+    type PointType<'b> = OwnedPoint<D> where Self: 'b;
+    type LineStringType<'b> = OwnedLineString<D> where Self: 'b;
+    type PolygonType<'b> = OwnedPolygon<D> where Self: 'b;
+    type MultiPointType<'b> = OwnedMultiPoint<D> where Self: 'b;
+    type MultiLineStringType<'b> = OwnedMultiLineString<D> where Self: 'b;
+    type MultiPolygonType<'b> = OwnedMultiPolygon<D> where Self: 'b;
+    type GeometryCollectionType<'b> = OwnedGeometryCollection<D> where Self: 'b;
+    type RectType<'b> = OwnedRect<D> where Self: 'b;
+    type TriangleType<'b> = UnimplementedTriangle<f64> where Self: 'b;
+    type LineType<'b> = UnimplementedLine<f64> where Self: 'b;
 
     fn dim(&self) -> crate::geo_traits::Dimensions {
         match self {
@@ -101,6 +104,8 @@ impl<const D: usize> GeometryTrait for OwnedGeometry<D> {
         OwnedMultiPolygon<D>,
         OwnedGeometryCollection<D>,
         OwnedRect<D>,
+        UnimplementedTriangle<f64>,
+        UnimplementedLine<f64>,
     > {
         match self {
             Self::Point(p) => GeometryType::Point(p),

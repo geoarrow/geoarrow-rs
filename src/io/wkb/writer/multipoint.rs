@@ -25,29 +25,23 @@ pub fn write_multi_point_as_wkb<W: Write>(
     use crate::geo_traits::Dimensions;
 
     // Byte order
-    writer.write_u8(Endianness::LittleEndian.into()).unwrap();
+    writer.write_u8(Endianness::LittleEndian.into())?;
 
     match geom.dim() {
         Dimensions::Xy | Dimensions::Unknown(2) => {
-            writer
-                .write_u32::<LittleEndian>(WKBType::MultiPoint.into())
-                .unwrap();
+            writer.write_u32::<LittleEndian>(WKBType::MultiPoint.into())?;
         }
         Dimensions::Xyz | Dimensions::Unknown(3) => {
-            writer
-                .write_u32::<LittleEndian>(WKBType::MultiPointZ.into())
-                .unwrap();
+            writer.write_u32::<LittleEndian>(WKBType::MultiPointZ.into())?;
         }
         _ => panic!(),
     }
 
     // numPoints
-    writer
-        .write_u32::<LittleEndian>(geom.num_points().try_into().unwrap())
-        .unwrap();
+    writer.write_u32::<LittleEndian>(geom.num_points().try_into().unwrap())?;
 
     for point in geom.points() {
-        write_point_as_wkb(&mut writer, &point).unwrap();
+        write_point_as_wkb(&mut writer, &point)?;
     }
 
     Ok(())

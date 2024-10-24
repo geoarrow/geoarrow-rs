@@ -2,7 +2,7 @@ use arrow_buffer::ScalarBuffer;
 use rstar::{RTreeObject, AABB};
 
 use crate::algorithm::native::eq::coord_eq;
-use crate::geo_traits::{CoordTrait, PointTrait};
+use crate::geo_traits::CoordTrait;
 use crate::io::geo::coord_to_geo;
 use crate::scalar::SeparatedCoord;
 use crate::trait_::NativeScalar;
@@ -11,6 +11,13 @@ use crate::trait_::NativeScalar;
 pub struct InterleavedCoord<'a, const D: usize> {
     pub(crate) coords: &'a ScalarBuffer<f64>,
     pub(crate) i: usize,
+}
+
+impl<'a, const D: usize> InterleavedCoord<'a, D> {
+    /// Return `true` if all values in the coordinate are f64::NAN
+    pub(crate) fn is_nan(&self) -> bool {
+        (0..D).all(|coord_dim| self.nth_unchecked(coord_dim) == f64::NAN)
+    }
 }
 
 impl<'a, const D: usize> NativeScalar for InterleavedCoord<'a, D> {

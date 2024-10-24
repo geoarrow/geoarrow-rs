@@ -4,7 +4,7 @@ use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, LineStringArray};
 use crate::geo_traits::LineStringTrait;
 use crate::io::geo::line_string_to_geo;
-use crate::scalar::Point;
+use crate::scalar::Coord;
 use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
 use rstar::{RTreeObject, AABB};
@@ -69,7 +69,7 @@ impl<'a, const D: usize> NativeScalar for LineString<'a, D> {
 
 impl<'a, const D: usize> LineStringTrait for LineString<'a, D> {
     type T = f64;
-    type CoordType<'b> = Point<'a, D> where Self: 'b;
+    type CoordType<'b> = Coord<'a, D> where Self: 'b;
 
     fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: pass through field information from array
@@ -86,13 +86,13 @@ impl<'a, const D: usize> LineStringTrait for LineString<'a, D> {
     }
 
     unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
-        Point::new(self.coords, self.start_offset + i)
+        self.coords.value(self.start_offset + i)
     }
 }
 
 impl<'a, const D: usize> LineStringTrait for &'a LineString<'a, D> {
     type T = f64;
-    type CoordType<'b> = Point<'a, D> where Self: 'b;
+    type CoordType<'b> = Coord<'a, D> where Self: 'b;
 
     fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: pass through field information from array
@@ -109,7 +109,7 @@ impl<'a, const D: usize> LineStringTrait for &'a LineString<'a, D> {
     }
 
     unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
-        Point::new(self.coords, self.start_offset + i)
+        self.coords.value(self.start_offset + i)
     }
 }
 

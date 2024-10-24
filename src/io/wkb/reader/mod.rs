@@ -18,7 +18,6 @@ mod multipoint;
 mod multipolygon;
 mod point;
 mod polygon;
-mod rect;
 pub(crate) mod r#type;
 
 pub use geometry::{Endianness, WKBGeometry};

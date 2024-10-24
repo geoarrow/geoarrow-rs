@@ -79,11 +79,11 @@ impl<'a> LineStringTrait for WKBLinearRing<'a> {
         self.dim.into()
     }
 
-    fn num_points(&self) -> usize {
+    fn num_coords(&self) -> usize {
         self.num_points
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::CoordType<'_> {
+    unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
         WKBCoord::new(
             self.buf,
             self.byte_order,

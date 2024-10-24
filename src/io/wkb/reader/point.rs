@@ -1,6 +1,6 @@
 use crate::algorithm::native::eq::point_eq;
 use crate::datatypes::Dimension;
-use crate::geo_traits::{MultiPointTrait, PointTrait};
+use crate::geo_traits::{CoordTrait, MultiPointTrait, PointTrait};
 use crate::io::wkb::reader::coord::WKBCoord;
 use crate::io::wkb::reader::geometry::Endianness;
 
@@ -14,6 +14,7 @@ pub struct WKBPoint<'a> {
     /// The coordinate inside this WKBPoint
     coord: WKBCoord<'a>,
     dim: Dimension,
+    is_empty: bool,
 }
 
 impl<'a> WKBPoint<'a> {
@@ -21,7 +22,13 @@ impl<'a> WKBPoint<'a> {
         // The space of the byte order + geometry type
         let offset = offset + 5;
         let coord = WKBCoord::new(buf, byte_order, offset, dim);
-        Self { coord, dim }
+        let is_empty =
+            (0..coord.dim().size()).all(|coord_dim| coord.nth_unchecked(coord_dim) == f64::NAN);
+        Self {
+            coord,
+            dim,
+            is_empty,
+        }
     }
 
     /// The number of bytes in this object, including any header
@@ -37,8 +44,7 @@ impl<'a> WKBPoint<'a> {
 
     /// Check if this WKBPoint has equal coordinates as some other Point object
     pub fn equals_point(&self, other: &impl PointTrait<T = f64>) -> bool {
-        // TODO: how is an empty point stored in WKB?
-        point_eq(self, other, true)
+        point_eq(self, other)
     }
 
     pub fn dimension(&self) -> Dimension {
@@ -48,41 +54,35 @@ impl<'a> WKBPoint<'a> {
 
 impl<'a> PointTrait for WKBPoint<'a> {
     type T = f64;
+    type CoordType<'b> = WKBCoord<'a> where Self: 'b;
 
     fn dim(&self) -> crate::geo_traits::Dimensions {
         self.dim.into()
     }
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
-        self.coord.nth_unchecked(n)
-    }
-
-    fn x(&self) -> Self::T {
-        self.coord.x()
-    }
-
-    fn y(&self) -> Self::T {
-        self.coord.y()
+    fn coord(&self) -> Option<Self::CoordType<'_>> {
+        if self.is_empty {
+            None
+        } else {
+            Some(self.coord)
+        }
     }
 }
 
 impl<'a> PointTrait for &WKBPoint<'a> {
     type T = f64;
+    type CoordType<'b> = WKBCoord<'a> where Self: 'b;
 
     fn dim(&self) -> crate::geo_traits::Dimensions {
         self.dim.into()
     }
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
-        self.coord.nth_unchecked(n)
-    }
-
-    fn x(&self) -> Self::T {
-        self.coord.x()
-    }
-
-    fn y(&self) -> Self::T {
-        self.coord.y()
+    fn coord(&self) -> Option<Self::CoordType<'_>> {
+        if self.is_empty {
+            None
+        } else {
+            Some(self.coord)
+        }
     }
 }
 

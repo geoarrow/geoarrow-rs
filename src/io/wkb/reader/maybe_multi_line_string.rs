@@ -21,7 +21,7 @@ impl<'a> WKBMaybeMultiLineString<'a> {
 
 impl<'a> MultiLineStringTrait for WKBMaybeMultiLineString<'a> {
     type T = f64;
-    type LineStringtype<'b> = WKBLineString<'a> where Self: 'b;
+    type LineStringType<'b> = WKBLineString<'a> where Self: 'b;
 
     fn dim(&self) -> crate::geo_traits::Dimensions {
         match self {
@@ -37,7 +37,7 @@ impl<'a> MultiLineStringTrait for WKBMaybeMultiLineString<'a> {
         }
     }
 
-    unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringtype<'_> {
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
         match self {
             WKBMaybeMultiLineString::LineString(geom) => geom.line_string_unchecked(i),
             WKBMaybeMultiLineString::MultiLineString(geom) => geom.line_string_unchecked(i),
@@ -47,7 +47,7 @@ impl<'a> MultiLineStringTrait for WKBMaybeMultiLineString<'a> {
 
 impl<'a> MultiLineStringTrait for &'a WKBMaybeMultiLineString<'a> {
     type T = f64;
-    type LineStringtype<'b> = WKBLineString<'a> where Self: 'b;
+    type LineStringType<'b> = WKBLineString<'a> where Self: 'b;
 
     fn dim(&self) -> crate::geo_traits::Dimensions {
         match self {
@@ -63,7 +63,7 @@ impl<'a> MultiLineStringTrait for &'a WKBMaybeMultiLineString<'a> {
         }
     }
 
-    unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringtype<'_> {
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
         match self {
             WKBMaybeMultiLineString::LineString(geom) => geom.line_string_unchecked(i),
             WKBMaybeMultiLineString::MultiLineString(geom) => geom.line_string_unchecked(i),

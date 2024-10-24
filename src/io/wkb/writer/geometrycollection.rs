@@ -31,29 +31,23 @@ pub fn write_geometry_collection_as_wkb<W: Write>(
     use crate::geo_traits::Dimensions;
 
     // Byte order
-    writer.write_u8(Endianness::LittleEndian.into()).unwrap();
+    writer.write_u8(Endianness::LittleEndian.into())?;
 
     match geom.dim() {
         Dimensions::Xy | Dimensions::Unknown(2) => {
-            writer
-                .write_u32::<LittleEndian>(WKBType::GeometryCollection.into())
-                .unwrap();
+            writer.write_u32::<LittleEndian>(WKBType::GeometryCollection.into())?;
         }
         Dimensions::Xyz | Dimensions::Unknown(3) => {
-            writer
-                .write_u32::<LittleEndian>(WKBType::GeometryCollectionZ.into())
-                .unwrap();
+            writer.write_u32::<LittleEndian>(WKBType::GeometryCollectionZ.into())?;
         }
         _ => panic!(),
     }
 
     // numGeometries
-    writer
-        .write_u32::<LittleEndian>(geom.num_geometries().try_into().unwrap())
-        .unwrap();
+    writer.write_u32::<LittleEndian>(geom.num_geometries().try_into().unwrap())?;
 
     for inner_geom in geom.geometries() {
-        write_geometry_as_wkb(&mut writer, &inner_geom).unwrap();
+        write_geometry_as_wkb(&mut writer, &inner_geom)?;
     }
 
     Ok(())

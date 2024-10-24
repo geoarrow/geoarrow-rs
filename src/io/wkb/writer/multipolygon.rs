@@ -30,29 +30,23 @@ pub fn write_multi_polygon_as_wkb<W: Write>(
     use crate::geo_traits::Dimensions;
 
     // Byte order
-    writer.write_u8(Endianness::LittleEndian.into()).unwrap();
+    writer.write_u8(Endianness::LittleEndian.into())?;
 
     match geom.dim() {
         Dimensions::Xy | Dimensions::Unknown(2) => {
-            writer
-                .write_u32::<LittleEndian>(WKBType::MultiPolygon.into())
-                .unwrap();
+            writer.write_u32::<LittleEndian>(WKBType::MultiPolygon.into())?;
         }
         Dimensions::Xyz | Dimensions::Unknown(3) => {
-            writer
-                .write_u32::<LittleEndian>(WKBType::MultiPolygonZ.into())
-                .unwrap();
+            writer.write_u32::<LittleEndian>(WKBType::MultiPolygonZ.into())?;
         }
         _ => panic!(),
     }
 
     // numPolygons
-    writer
-        .write_u32::<LittleEndian>(geom.num_polygons().try_into().unwrap())
-        .unwrap();
+    writer.write_u32::<LittleEndian>(geom.num_polygons().try_into().unwrap())?;
 
     for polygon in geom.polygons() {
-        write_polygon_as_wkb(&mut writer, &polygon).unwrap();
+        write_polygon_as_wkb(&mut writer, &polygon)?;
     }
 
     Ok(())
