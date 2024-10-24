@@ -21,9 +21,9 @@ impl<'a> WKBMaybeMultiPoint<'a> {
 
 impl<'a> MultiPointTrait for WKBMaybeMultiPoint<'a> {
     type T = f64;
-    type ItemType<'b> = WKBPoint<'a> where Self: 'b;
+    type PointType<'b> = WKBPoint<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self {
             WKBMaybeMultiPoint::Point(geom) => geom.dim(),
             WKBMaybeMultiPoint::MultiPoint(geom) => geom.dim(),
@@ -37,7 +37,7 @@ impl<'a> MultiPointTrait for WKBMaybeMultiPoint<'a> {
         }
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
         match self {
             WKBMaybeMultiPoint::Point(geom) => geom.point_unchecked(i),
             WKBMaybeMultiPoint::MultiPoint(geom) => geom.point_unchecked(i),
@@ -47,9 +47,9 @@ impl<'a> MultiPointTrait for WKBMaybeMultiPoint<'a> {
 
 impl<'a> MultiPointTrait for &'a WKBMaybeMultiPoint<'a> {
     type T = f64;
-    type ItemType<'b> = WKBPoint<'a> where Self: 'b;
+    type PointType<'b> = WKBPoint<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self {
             WKBMaybeMultiPoint::Point(geom) => geom.dim(),
             WKBMaybeMultiPoint::MultiPoint(geom) => geom.dim(),
@@ -63,7 +63,7 @@ impl<'a> MultiPointTrait for &'a WKBMaybeMultiPoint<'a> {
         }
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
         match self {
             WKBMaybeMultiPoint::Point(geom) => geom.point_unchecked(i),
             WKBMaybeMultiPoint::MultiPoint(geom) => geom.point_unchecked(i),

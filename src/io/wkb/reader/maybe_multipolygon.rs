@@ -21,9 +21,9 @@ impl<'a> WKBMaybeMultiPolygon<'a> {
 
 impl<'a> MultiPolygonTrait for WKBMaybeMultiPolygon<'a> {
     type T = f64;
-    type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
+    type PolygonType<'b> = WKBPolygon<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self {
             WKBMaybeMultiPolygon::Polygon(geom) => geom.dim(),
             WKBMaybeMultiPolygon::MultiPolygon(geom) => geom.dim(),
@@ -37,7 +37,7 @@ impl<'a> MultiPolygonTrait for WKBMaybeMultiPolygon<'a> {
         }
     }
 
-    unsafe fn polygon_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
         match self {
             WKBMaybeMultiPolygon::Polygon(geom) => geom.polygon_unchecked(i),
             WKBMaybeMultiPolygon::MultiPolygon(geom) => geom.polygon_unchecked(i),
@@ -47,9 +47,9 @@ impl<'a> MultiPolygonTrait for WKBMaybeMultiPolygon<'a> {
 
 impl<'a> MultiPolygonTrait for &'a WKBMaybeMultiPolygon<'a> {
     type T = f64;
-    type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
+    type PolygonType<'b> = WKBPolygon<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self {
             WKBMaybeMultiPolygon::Polygon(geom) => geom.dim(),
             WKBMaybeMultiPolygon::MultiPolygon(geom) => geom.dim(),
@@ -63,7 +63,7 @@ impl<'a> MultiPolygonTrait for &'a WKBMaybeMultiPolygon<'a> {
         }
     }
 
-    unsafe fn polygon_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
         match self {
             WKBMaybeMultiPolygon::Polygon(geom) => geom.polygon_unchecked(i),
             WKBMaybeMultiPolygon::MultiPolygon(geom) => geom.polygon_unchecked(i),

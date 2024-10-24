@@ -5,8 +5,8 @@ use arrow_array::RecordBatch;
 use arrow_schema::{DataType, Field, Schema};
 use geo::{point, Point};
 
-use crate::array::PointArray;
-use crate::geo_traits::PointTrait;
+use crate::array::{PointArray, PointBuilder};
+use crate::geo_traits::CoordTrait;
 use crate::table::Table;
 use crate::test::properties;
 use crate::ArrayBase;
@@ -33,17 +33,17 @@ pub(crate) fn point_array() -> PointArray<2> {
     vec![p0(), p1(), p2()].as_slice().into()
 }
 
-struct PointZ {
+struct CoordZ {
     x: f64,
     y: f64,
     z: f64,
 }
 
-impl PointTrait for PointZ {
+impl CoordTrait for CoordZ {
     type T = f64;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
-        crate::geo_traits::Dimension::XYZ
+    fn dim(&self) -> crate::geo_traits::Dimensions {
+        crate::geo_traits::Dimensions::Xyz
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
@@ -65,25 +65,28 @@ impl PointTrait for PointZ {
 }
 
 pub(crate) fn point_z_array() -> PointArray<3> {
-    vec![
-        PointZ {
+    let mut builder = PointBuilder::with_capacity(3);
+    let coords = vec![
+        CoordZ {
             x: 0.,
             y: 1.,
             z: 2.,
         },
-        PointZ {
+        CoordZ {
             x: 3.,
             y: 4.,
             z: 5.,
         },
-        PointZ {
+        CoordZ {
             x: 6.,
             y: 7.,
             z: 8.,
         },
-    ]
-    .as_slice()
-    .into()
+    ];
+    for coord in &coords {
+        builder.push_coord(Some(coord));
+    }
+    builder.finish()
 }
 
 pub(crate) fn table() -> Table {

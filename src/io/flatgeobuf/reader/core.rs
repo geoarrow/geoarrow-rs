@@ -1,10 +1,45 @@
-use std::marker::PhantomData;
-
 use crate::datatypes::Dimension;
 use crate::geo_traits::{
-    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
-    MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
+    CoordTrait, GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait,
+    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, UnimplementedLine,
+    UnimplementedRect, UnimplementedTriangle,
 };
+
+#[derive(Debug, Clone)]
+pub(super) struct Coord<'a> {
+    geom: flatgeobuf::Geometry<'a>,
+    dim: Dimension,
+    /// The coordinate offset
+    ///
+    /// Note each coord_offset points to an xy coordinate pair, and must be multiplied by 2 to get
+    /// the buffer coord_offset
+    coord_offset: usize,
+}
+
+impl<'a> CoordTrait for Coord<'a> {
+    type T = f64;
+
+    fn dim(&self) -> crate::geo_traits::Dimensions {
+        self.dim.into()
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.geom.xy().unwrap().get(self.coord_offset * 2),
+            1 => self.geom.xy().unwrap().get((self.coord_offset * 2) + 1),
+            2 => self.geom.z().unwrap().get(self.coord_offset),
+            _ => panic!("Unexpected dim {n}"),
+        }
+    }
+
+    fn x(&self) -> Self::T {
+        self.geom.xy().unwrap().get(self.coord_offset * 2)
+    }
+
+    fn y(&self) -> Self::T {
+        self.geom.xy().unwrap().get((self.coord_offset * 2) + 1)
+    }
+}
 
 #[derive(Debug, Clone)]
 pub(super) struct Point<'a> {
@@ -29,26 +64,19 @@ impl<'a> Point<'a> {
 
 impl<'a> PointTrait for Point<'a> {
     type T = f64;
+    type CoordType<'b> = Coord<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         self.dim.into()
     }
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
-        match n {
-            0 => self.geom.xy().unwrap().get(self.coord_offset * 2),
-            1 => self.geom.xy().unwrap().get((self.coord_offset * 2) + 1),
-            2 => self.geom.z().unwrap().get(self.coord_offset),
-            _ => panic!("Unexpected dim {n}"),
-        }
-    }
-
-    fn x(&self) -> Self::T {
-        self.geom.xy().unwrap().get(self.coord_offset * 2)
-    }
-
-    fn y(&self) -> Self::T {
-        self.geom.xy().unwrap().get((self.coord_offset * 2) + 1)
+    fn coord(&self) -> Option<Self::CoordType<'_>> {
+        // FlatGeobuf doesn't support empty geometries
+        Some(Coord {
+            geom: self.geom,
+            dim: self.dim,
+            coord_offset: self.coord_offset,
+        })
     }
 }
 
@@ -80,18 +108,18 @@ impl<'a> LineString<'a> {
 
 impl<'a> LineStringTrait for LineString<'a> {
     type T = f64;
-    type ItemType<'b> = Point<'a> where Self: 'b;
+    type CoordType<'b> = Coord<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         self.dim.into()
     }
 
-    fn num_points(&self) -> usize {
+    fn num_coords(&self) -> usize {
         self.length
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
-        Point {
+    unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
+        Coord {
             geom: self.geom,
             dim: self.dim,
             coord_offset: self.coord_offset + i,
@@ -113,9 +141,9 @@ impl<'a> Polygon<'a> {
 
 impl<'a> PolygonTrait for Polygon<'a> {
     type T = f64;
-    type ItemType<'b> = LineString<'a> where Self: 'b;
+    type RingType<'b> = LineString<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -127,7 +155,7 @@ impl<'a> PolygonTrait for Polygon<'a> {
         }
     }
 
-    fn exterior(&self) -> Option<Self::ItemType<'_>> {
+    fn exterior(&self) -> Option<Self::RingType<'_>> {
         if let Some(ends) = self.geom.ends() {
             let exterior_end = ends.get(0);
             Some(LineString {
@@ -141,7 +169,7 @@ impl<'a> PolygonTrait for Polygon<'a> {
         }
     }
 
-    unsafe fn interior_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
         let ends = self.geom.ends().unwrap();
         let start = ends.get(i);
         let end = ends.get(i + 1);
@@ -182,9 +210,9 @@ impl<'a> MultiPoint<'a> {
 
 impl<'a> MultiPointTrait for MultiPoint<'a> {
     type T = f64;
-    type ItemType<'b> = Point<'a> where Self: 'b;
+    type PointType<'b> = Point<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -192,7 +220,7 @@ impl<'a> MultiPointTrait for MultiPoint<'a> {
         self.length
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
         Point {
             geom: self.geom,
             dim: self.dim,
@@ -215,9 +243,9 @@ impl<'a> MultiLineString<'a> {
 
 impl<'a> MultiLineStringTrait for MultiLineString<'a> {
     type T = f64;
-    type ItemType<'b> = LineString<'a> where Self: 'b;
+    type LineStringType<'b> = LineString<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -229,7 +257,7 @@ impl<'a> MultiLineStringTrait for MultiLineString<'a> {
         }
     }
 
-    unsafe fn line_string_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
         if let Some(ends) = self.geom.ends() {
             let start = if i == 0 { 0 } else { ends.get(i - 1) };
             let end = ends.get(i);
@@ -260,9 +288,9 @@ impl<'a> MultiPolygon<'a> {
 
 impl<'a> MultiPolygonTrait for MultiPolygon<'a> {
     type T = f64;
-    type ItemType<'b> = Polygon<'a> where Self: 'b;
+    type PolygonType<'b> = Polygon<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -270,7 +298,7 @@ impl<'a> MultiPolygonTrait for MultiPolygon<'a> {
         self.geom.parts().unwrap().len()
     }
 
-    unsafe fn polygon_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
         Polygon {
             geom: self.geom.parts().unwrap().get(i),
             dim: self.dim,
@@ -355,16 +383,18 @@ impl<'a> From<GeometryCollection<'a>> for Geometry<'a> {
 
 impl<'a> GeometryTrait for Geometry<'a> {
     type T = f64;
-    type Point<'b> = Point<'a> where Self: 'b;
-    type LineString<'b> = LineString<'a> where Self: 'b;
-    type Polygon<'b> = Polygon<'a> where Self: 'b;
-    type MultiPoint<'b> = MultiPoint<'a> where Self: 'b;
-    type MultiLineString<'b> = MultiLineString<'a> where Self: 'b;
-    type MultiPolygon<'b> = MultiPolygon<'a> where Self: 'b;
-    type GeometryCollection<'b> = GeometryCollection<'a> where Self: 'b;
-    type Rect<'b> = Rect<'a> where Self: 'b;
+    type PointType<'b> = Point<'a> where Self: 'b;
+    type LineStringType<'b> = LineString<'a> where Self: 'b;
+    type PolygonType<'b> = Polygon<'a> where Self: 'b;
+    type MultiPointType<'b> = MultiPoint<'a> where Self: 'b;
+    type MultiLineStringType<'b> = MultiLineString<'a> where Self: 'b;
+    type MultiPolygonType<'b> = MultiPolygon<'a> where Self: 'b;
+    type GeometryCollectionType<'b> = GeometryCollection<'a> where Self: 'b;
+    type RectType<'b> = UnimplementedRect<f64> where Self: 'b;
+    type TriangleType<'b> = UnimplementedTriangle<f64> where Self: 'b;
+    type LineType<'b> = UnimplementedLine<f64> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self {
             Self::Point(g) => PointTrait::dim(g),
             Self::LineString(g) => g.dim(),
@@ -387,7 +417,9 @@ impl<'a> GeometryTrait for Geometry<'a> {
         MultiLineString<'a>,
         MultiPolygon<'a>,
         GeometryCollection<'a>,
-        Self::Rect<'_>,
+        UnimplementedRect<f64>,
+        UnimplementedTriangle<f64>,
+        UnimplementedLine<f64>,
     > {
         match self {
             Self::Point(pt) => crate::geo_traits::GeometryType::Point(pt),
@@ -415,9 +447,9 @@ impl<'a> GeometryCollection<'a> {
 
 impl<'a> GeometryCollectionTrait for GeometryCollection<'a> {
     type T = f64;
-    type ItemType<'b> = Geometry<'a> where Self: 'b;
+    type GeometryType<'b> = Geometry<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -426,29 +458,7 @@ impl<'a> GeometryCollectionTrait for GeometryCollection<'a> {
         parts.len()
     }
 
-    unsafe fn geometry_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn geometry_unchecked(&self, i: usize) -> Self::GeometryType<'_> {
         Geometry::new(self.geom.parts().unwrap().get(i), self.dim)
-    }
-}
-
-/// Dummy that implements RectTrait
-/// This code is never hit because Rect is not in Flatgeobuf's type system
-#[allow(dead_code)]
-pub(super) struct Rect<'a>(&'a PhantomData<u8>);
-
-impl<'a> RectTrait for Rect<'a> {
-    type T = f64;
-    type ItemType<'b> = Point<'a> where Self: 'b;
-
-    fn dim(&self) -> crate::geo_traits::Dimension {
-        unimplemented!()
-    }
-
-    fn lower(&self) -> Self::ItemType<'_> {
-        unimplemented!()
-    }
-
-    fn upper(&self) -> Self::ItemType<'_> {
-        unimplemented!()
     }
 }

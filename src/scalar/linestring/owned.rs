@@ -1,7 +1,7 @@
 use crate::algorithm::native::eq::line_string_eq;
 use crate::array::{CoordBuffer, LineStringArray};
 use crate::geo_traits::LineStringTrait;
-use crate::scalar::{LineString, Point};
+use crate::scalar::{Coord, LineString};
 use arrow_buffer::OffsetBuffer;
 
 #[derive(Clone, Debug)]
@@ -52,23 +52,23 @@ impl<const D: usize> From<OwnedLineString<D>> for LineStringArray<D> {
 
 impl<const D: usize> LineStringTrait for OwnedLineString<D> {
     type T = f64;
-    type ItemType<'b> = Point<'b, D> where Self: 'b;
+    type CoordType<'b> = Coord<'b, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimension::XY,
-            3 => crate::geo_traits::Dimension::XYZ,
+            2 => crate::geo_traits::Dimensions::Xy,
+            3 => crate::geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
 
-    fn num_points(&self) -> usize {
-        LineString::from(self).num_points()
+    fn num_coords(&self) -> usize {
+        LineString::from(self).num_coords()
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
-        LineString::from(self).point_unchecked(i)
+    unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
+        LineString::from(self).coord_unchecked(i)
     }
 }
 

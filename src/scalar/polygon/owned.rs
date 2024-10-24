@@ -71,18 +71,18 @@ impl<const D: usize> From<OwnedPolygon<D>> for PolygonArray<D> {
 
 impl<const D: usize> PolygonTrait for OwnedPolygon<D> {
     type T = f64;
-    type ItemType<'b> = LineString<'b,  D> where Self: 'b;
+    type RingType<'b> = LineString<'b,  D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimension::XY,
-            3 => crate::geo_traits::Dimension::XYZ,
+            2 => crate::geo_traits::Dimensions::Xy,
+            3 => crate::geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
 
-    fn exterior(&self) -> Option<Self::ItemType<'_>> {
+    fn exterior(&self) -> Option<Self::RingType<'_>> {
         Polygon::from(self).exterior()
     }
 
@@ -90,7 +90,7 @@ impl<const D: usize> PolygonTrait for OwnedPolygon<D> {
         Polygon::from(self).num_interiors()
     }
 
-    unsafe fn interior_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
         Polygon::from(self).interior_unchecked(i)
     }
 }

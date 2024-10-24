@@ -45,23 +45,23 @@ impl<const D: usize> From<OwnedRect<D>> for RectArray<D> {
 
 impl<const D: usize> RectTrait for OwnedRect<D> {
     type T = f64;
-    type ItemType<'b> = [Self::T; D] where Self: 'b;
+    type CoordType<'b> = [Self::T; D] where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimension::XY,
-            3 => crate::geo_traits::Dimension::XYZ,
+            2 => crate::geo_traits::Dimensions::Xy,
+            3 => crate::geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
 
-    fn lower(&self) -> Self::ItemType<'_> {
-        Rect::from(self).lower()
+    fn min(&self) -> Self::CoordType<'_> {
+        Rect::from(self).min()
     }
 
-    fn upper(&self) -> Self::ItemType<'_> {
-        Rect::from(self).upper()
+    fn max(&self) -> Self::CoordType<'_> {
+        Rect::from(self).max()
     }
 }
 

@@ -19,7 +19,7 @@ use parquet::schema::types::{ColumnPath, SchemaDescriptor};
 use crate::algorithm::geo::BoundingRect;
 use crate::array::{NativeArrayDyn, RectArray, RectBuilder};
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{PointTrait, RectTrait};
+use crate::geo_traits::{CoordTrait, RectTrait};
 use crate::io::parquet::metadata::GeoParquetBboxCovering;
 use crate::trait_::ArrayAccessor;
 
@@ -233,10 +233,10 @@ fn construct_native_predicate(
         let ymax_col = Float64Array::new(rect_arr.upper().buffers[1].clone(), nulls.cloned());
 
         // Construct the bounding box from user input
-        let minx_scalar = Scalar::new(Float64Array::from(vec![bbox_query.lower().x()]));
-        let miny_scalar = Scalar::new(Float64Array::from(vec![bbox_query.lower().y()]));
-        let maxx_scalar = Scalar::new(Float64Array::from(vec![bbox_query.upper().x()]));
-        let maxy_scalar = Scalar::new(Float64Array::from(vec![bbox_query.upper().y()]));
+        let minx_scalar = Scalar::new(Float64Array::from(vec![bbox_query.min().x()]));
+        let miny_scalar = Scalar::new(Float64Array::from(vec![bbox_query.min().y()]));
+        let maxx_scalar = Scalar::new(Float64Array::from(vec![bbox_query.max().x()]));
+        let maxy_scalar = Scalar::new(Float64Array::from(vec![bbox_query.max().y()]));
 
         // Perform bbox comparison
         // TODO: do this in one pass instead of four?
@@ -355,10 +355,10 @@ fn construct_bbox_columns_predicate(
         };
 
         // Construct the bounding box from user input
-        let minx_scalar = Scalar::new(Float64Array::from(vec![bbox_query.lower().x()]));
-        let miny_scalar = Scalar::new(Float64Array::from(vec![bbox_query.lower().y()]));
-        let maxx_scalar = Scalar::new(Float64Array::from(vec![bbox_query.upper().x()]));
-        let maxy_scalar = Scalar::new(Float64Array::from(vec![bbox_query.upper().y()]));
+        let minx_scalar = Scalar::new(Float64Array::from(vec![bbox_query.min().x()]));
+        let miny_scalar = Scalar::new(Float64Array::from(vec![bbox_query.min().y()]));
+        let maxx_scalar = Scalar::new(Float64Array::from(vec![bbox_query.max().x()]));
+        let maxy_scalar = Scalar::new(Float64Array::from(vec![bbox_query.max().y()]));
 
         // Perform bbox comparison
         // TODO: do this in one pass instead of four?
@@ -421,19 +421,19 @@ fn parse_statistics_f64(column_meta: &ColumnChunkMetaData) -> Result<(f64, f64)>
 
 /// Check whether two [RectTrait] intersect.
 fn rect_intersects<T: CoordNum>(a: &impl RectTrait<T = T>, b: &impl RectTrait<T = T>) -> bool {
-    if a.upper().x() < b.lower().x() {
+    if a.max().x() < b.min().x() {
         return false;
     }
 
-    if a.upper().y() < b.lower().y() {
+    if a.max().y() < b.min().y() {
         return false;
     }
 
-    if a.lower().x() > b.upper().x() {
+    if a.min().x() > b.max().x() {
         return false;
     }
 
-    if a.lower().y() > b.upper().y() {
+    if a.min().y() > b.max().y() {
         return false;
     }
 

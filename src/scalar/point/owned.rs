@@ -41,27 +41,24 @@ impl<const D: usize> From<OwnedPoint<D>> for PointArray<D> {
 
 impl<const D: usize> PointTrait for OwnedPoint<D> {
     type T = f64;
+    type CoordType<'a> = Coord<'a, D>;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimension::XY,
-            3 => crate::geo_traits::Dimension::XYZ,
+            2 => crate::geo_traits::Dimensions::Xy,
+            3 => crate::geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
+    fn coord(&self) -> Option<Self::CoordType<'_>> {
         let coord = self.coords.value(self.geom_index);
-        coord.nth_unchecked(n)
-    }
-
-    fn x(&self) -> f64 {
-        self.coords.get_x(self.geom_index)
-    }
-
-    fn y(&self) -> f64 {
-        self.coords.get_y(self.geom_index)
+        if coord.is_nan() {
+            None
+        } else {
+            Some(coord)
+        }
     }
 }
 
@@ -79,6 +76,6 @@ impl<const D: usize> From<&OwnedPoint<D>> for geo::Point {
 
 impl<const D: usize> PartialEq for OwnedPoint<D> {
     fn eq(&self, other: &Self) -> bool {
-        point_eq(self, other, true)
+        point_eq(self, other)
     }
 }

@@ -79,13 +79,13 @@ impl<'a, const D: usize> NativeScalar for MultiLineString<'a, D> {
 
 impl<'a, const D: usize> MultiLineStringTrait for MultiLineString<'a, D> {
     type T = f64;
-    type ItemType<'b> = LineString<'a, D> where Self: 'b;
+    type LineStringType<'b> = LineString<'a, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimension::XY,
-            3 => crate::geo_traits::Dimension::XYZ,
+            2 => crate::geo_traits::Dimensions::Xy,
+            3 => crate::geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
@@ -95,20 +95,20 @@ impl<'a, const D: usize> MultiLineStringTrait for MultiLineString<'a, D> {
         end - start
     }
 
-    unsafe fn line_string_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
         LineString::new(self.coords, self.ring_offsets, self.start_offset + i)
     }
 }
 
 impl<'a, const D: usize> MultiLineStringTrait for &'a MultiLineString<'a, D> {
     type T = f64;
-    type ItemType<'b> = LineString<'a, D> where Self: 'b;
+    type LineStringType<'b> = LineString<'a, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimension::XY,
-            3 => crate::geo_traits::Dimension::XYZ,
+            2 => crate::geo_traits::Dimensions::Xy,
+            3 => crate::geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
@@ -118,7 +118,7 @@ impl<'a, const D: usize> MultiLineStringTrait for &'a MultiLineString<'a, D> {
         end - start
     }
 
-    unsafe fn line_string_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
         LineString::new(self.coords, self.ring_offsets, self.start_offset + i)
     }
 }

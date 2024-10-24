@@ -1,17 +1,17 @@
 use super::{
-    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
-    MultiPolygonTrait, PointTrait, PolygonTrait,
+    CoordTrait, GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait,
+    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait,
 };
 use geo::CoordNum;
 
 macro_rules! impl_iterator {
-    ($struct_name:ident, $self_trait:ident, $item_trait:ident, $access_method:ident) => {
+    ($struct_name:ident, $self_trait:ident, $item_trait:ident, $access_method:ident, $item_type:ident) => {
         /// An iterator over the parts of this geometry.
-        pub struct $struct_name<
+        pub(crate) struct $struct_name<
             'a,
             T: CoordNum,
-            ItemType: 'a + $item_trait<T = T>,
-            G: $self_trait<T = T, ItemType<'a> = ItemType>,
+            $item_type: 'a + $item_trait<T = T>,
+            G: $self_trait<T = T, $item_type<'a> = $item_type>,
         > {
             geom: &'a G,
             index: usize,
@@ -21,9 +21,9 @@ macro_rules! impl_iterator {
         impl<
                 'a,
                 T: CoordNum,
-                ItemType: 'a + $item_trait<T = T>,
-                G: $self_trait<T = T, ItemType<'a> = ItemType>,
-            > $struct_name<'a, T, ItemType, G>
+                $item_type: 'a + $item_trait<T = T>,
+                G: $self_trait<T = T, $item_type<'a> = $item_type>,
+            > $struct_name<'a, T, $item_type, G>
         {
             /// Create a new iterator
             pub fn new(geom: &'a G, index: usize, end: usize) -> Self {
@@ -34,11 +34,11 @@ macro_rules! impl_iterator {
         impl<
                 'a,
                 T: CoordNum,
-                ItemType: 'a + $item_trait<T = T>,
-                G: $self_trait<T = T, ItemType<'a> = ItemType>,
-            > Iterator for $struct_name<'a, T, ItemType, G>
+                $item_type: 'a + $item_trait<T = T>,
+                G: $self_trait<T = T, $item_type<'a> = $item_type>,
+            > Iterator for $struct_name<'a, T, $item_type, G>
         {
-            type Item = ItemType;
+            type Item = $item_type;
 
             #[inline]
             fn next(&mut self) -> Option<Self::Item> {
@@ -59,9 +59,18 @@ macro_rules! impl_iterator {
         impl<
                 'a,
                 T: CoordNum,
-                ItemType: 'a + $item_trait<T = T>,
-                G: $self_trait<T = T, ItemType<'a> = ItemType>,
-            > DoubleEndedIterator for $struct_name<'a, T, ItemType, G>
+                $item_type: 'a + $item_trait<T = T>,
+                G: $self_trait<T = T, $item_type<'a> = $item_type>,
+            > ExactSizeIterator for $struct_name<'a, T, $item_type, G>
+        {
+        }
+
+        impl<
+                'a,
+                T: CoordNum,
+                $item_type: 'a + $item_trait<T = T>,
+                G: $self_trait<T = T, $item_type<'a> = $item_type>,
+            > DoubleEndedIterator for $struct_name<'a, T, $item_type, G>
         {
             #[inline]
             fn next_back(&mut self) -> Option<Self::Item> {
@@ -79,36 +88,42 @@ macro_rules! impl_iterator {
 impl_iterator!(
     LineStringIterator,
     LineStringTrait,
-    PointTrait,
-    point_unchecked
+    CoordTrait,
+    coord_unchecked,
+    CoordType
 );
 impl_iterator!(
     PolygonInteriorIterator,
     PolygonTrait,
     LineStringTrait,
-    interior_unchecked
+    interior_unchecked,
+    RingType
 );
 impl_iterator!(
     MultiPointIterator,
     MultiPointTrait,
     PointTrait,
-    point_unchecked
+    point_unchecked,
+    PointType
 );
 impl_iterator!(
     MultiLineStringIterator,
     MultiLineStringTrait,
     LineStringTrait,
-    line_string_unchecked
+    line_string_unchecked,
+    LineStringType
 );
 impl_iterator!(
     MultiPolygonIterator,
     MultiPolygonTrait,
     PolygonTrait,
-    polygon_unchecked
+    polygon_unchecked,
+    PolygonType
 );
 impl_iterator!(
     GeometryCollectionIterator,
     GeometryCollectionTrait,
     GeometryTrait,
-    geometry_unchecked
+    geometry_unchecked,
+    GeometryType
 );

@@ -11,9 +11,9 @@ pub(crate) fn process_multi_line_string<P: GeomProcessor>(
     processor.multilinestring_begin(geom.num_line_strings(), geom_idx)?;
 
     for (line_idx, line) in geom.line_strings().enumerate() {
-        processor.linestring_begin(false, line.num_points(), line_idx)?;
+        processor.linestring_begin(false, line.num_coords(), line_idx)?;
 
-        for (coord_idx, coord) in line.points().enumerate() {
+        for (coord_idx, coord) in line.coords().enumerate() {
             process_coord(&coord, coord_idx, processor)?;
         }
 

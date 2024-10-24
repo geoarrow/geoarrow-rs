@@ -29,12 +29,12 @@ impl GEOSGeometryCollection {
 
 impl GeometryCollectionTrait for GEOSGeometryCollection {
     type T = f64;
-    type ItemType<'a> = GEOSGeometry;
+    type GeometryType<'a> = GEOSGeometry;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => crate::geo_traits::Dimension::XY,
-            geos::Dimensions::ThreeD => crate::geo_traits::Dimension::Unknown(3),
+            geos::Dimensions::TwoD => crate::geo_traits::Dimensions::Xy,
+            geos::Dimensions::ThreeD => crate::geo_traits::Dimensions::Unknown(3),
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
@@ -43,7 +43,7 @@ impl GeometryCollectionTrait for GEOSGeometryCollection {
         self.0.get_num_geometries().unwrap()
     }
 
-    unsafe fn geometry_unchecked(&self, _i: usize) -> Self::ItemType<'_> {
+    unsafe fn geometry_unchecked(&self, _i: usize) -> Self::GeometryType<'_> {
         // self.0.get_geometry_n(n)
         todo!()
     }

@@ -61,9 +61,9 @@ impl<'a> WKBGeometryCollection<'a> {
 
 impl<'a> GeometryCollectionTrait for WKBGeometryCollection<'a> {
     type T = f64;
-    type ItemType<'b> = &'b WKBGeometry<'b> where Self: 'b;
+    type GeometryType<'b> = &'b WKBGeometry<'b> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -71,7 +71,7 @@ impl<'a> GeometryCollectionTrait for WKBGeometryCollection<'a> {
         self.geometries.len()
     }
 
-    unsafe fn geometry_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn geometry_unchecked(&self, i: usize) -> Self::GeometryType<'_> {
         &self.geometries[i]
     }
 }

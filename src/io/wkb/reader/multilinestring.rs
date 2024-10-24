@@ -76,9 +76,9 @@ impl<'a> WKBMultiLineString<'a> {
 
 impl<'a> MultiLineStringTrait for WKBMultiLineString<'a> {
     type T = f64;
-    type ItemType<'b> = WKBLineString<'a> where Self: 'b;
+    type LineStringType<'b> = WKBLineString<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -86,16 +86,16 @@ impl<'a> MultiLineStringTrait for WKBMultiLineString<'a> {
         self.wkb_line_strings.len()
     }
 
-    unsafe fn line_string_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
         *self.wkb_line_strings.get_unchecked(i)
     }
 }
 
 impl<'a> MultiLineStringTrait for &'a WKBMultiLineString<'a> {
     type T = f64;
-    type ItemType<'b> = WKBLineString<'a> where Self: 'b;
+    type LineStringType<'b> = WKBLineString<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -103,7 +103,7 @@ impl<'a> MultiLineStringTrait for &'a WKBMultiLineString<'a> {
         self.wkb_line_strings.len()
     }
 
-    unsafe fn line_string_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
         *self.wkb_line_strings.get_unchecked(i)
     }
 }

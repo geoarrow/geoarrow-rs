@@ -9,7 +9,7 @@ use crate::array::{
     MultiPointArray, SeparatedCoordBufferBuilder, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
+use crate::geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
 use crate::io::wkb::reader::WKBMaybeMultiPoint;
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
@@ -245,8 +245,8 @@ impl<const D: usize> MultiPointBuilder<D> {
     /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
     /// to the array upholds the necessary invariants of the array.
     #[inline]
-    pub unsafe fn push_coord(&mut self, coord: &impl PointTrait<T = f64>) -> Result<()> {
-        self.coords.push_point(coord);
+    pub unsafe fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+        self.coords.push_coord(coord);
         Ok(())
     }
 

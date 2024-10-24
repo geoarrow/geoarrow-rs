@@ -80,18 +80,18 @@ impl<'a, const D: usize> NativeScalar for Polygon<'a, D> {
 
 impl<'a, const D: usize> PolygonTrait for Polygon<'a, D> {
     type T = f64;
-    type ItemType<'b> = LineString<'a, D> where Self: 'b;
+    type RingType<'b> = LineString<'a, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimension::XY,
-            3 => crate::geo_traits::Dimension::XYZ,
+            2 => crate::geo_traits::Dimensions::Xy,
+            3 => crate::geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
 
-    fn exterior(&self) -> Option<Self::ItemType<'_>> {
+    fn exterior(&self) -> Option<Self::RingType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if start == end {
             None
@@ -105,25 +105,25 @@ impl<'a, const D: usize> PolygonTrait for Polygon<'a, D> {
         end - start - 1
     }
 
-    unsafe fn interior_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
         LineString::new(self.coords, self.ring_offsets, self.start_offset + 1 + i)
     }
 }
 
 impl<'a, const D: usize> PolygonTrait for &'a Polygon<'a, D> {
     type T = f64;
-    type ItemType<'b> = LineString<'a, D> where Self: 'b;
+    type RingType<'b> = LineString<'a, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimension::XY,
-            3 => crate::geo_traits::Dimension::XYZ,
+            2 => crate::geo_traits::Dimensions::Xy,
+            3 => crate::geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
 
-    fn exterior(&self) -> Option<Self::ItemType<'_>> {
+    fn exterior(&self) -> Option<Self::RingType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if start == end {
             None
@@ -137,7 +137,7 @@ impl<'a, const D: usize> PolygonTrait for &'a Polygon<'a, D> {
         end - start - 1
     }
 
-    unsafe fn interior_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
         LineString::new(self.coords, self.ring_offsets, self.start_offset + 1 + i)
     }
 }

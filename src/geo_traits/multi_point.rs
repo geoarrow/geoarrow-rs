@@ -1,23 +1,28 @@
+use std::marker::PhantomData;
+
 use super::iterator::MultiPointIterator;
-use super::point::PointTrait;
-use super::Dimension;
+use super::{Dimensions, PointTrait, UnimplementedPoint};
 use geo::{CoordNum, MultiPoint, Point};
 
 /// A trait for accessing data from a generic MultiPoint.
+///
+/// A MultiPoint is a collection of [`Point`s][PointTrait].
+///
+/// Refer to [geo_types::MultiPoint] for information about semantics and validity.
 pub trait MultiPointTrait: Sized {
     /// The coordinate type of this geometry
     type T: CoordNum;
 
     /// The type of each underlying Point, which implements [PointTrait]
-    type ItemType<'a>: 'a + PointTrait<T = Self::T>
+    type PointType<'a>: 'a + PointTrait<T = Self::T>
     where
         Self: 'a;
 
     /// The dimension of this geometry
-    fn dim(&self) -> Dimension;
+    fn dim(&self) -> Dimensions;
 
     /// An iterator over the points in this MultiPoint
-    fn points(&self) -> MultiPointIterator<'_, Self::T, Self::ItemType<'_>, Self> {
+    fn points(&self) -> impl DoubleEndedIterator + ExactSizeIterator<Item = Self::PointType<'_>> {
         MultiPointIterator::new(self, 0, self.num_points())
     }
 
@@ -26,7 +31,7 @@ pub trait MultiPointTrait: Sized {
 
     /// Access to a specified point in this MultiPoint
     /// Will return None if the provided index is out of bounds
-    fn point(&self, i: usize) -> Option<Self::ItemType<'_>> {
+    fn point(&self, i: usize) -> Option<Self::PointType<'_>> {
         if i >= self.num_points() {
             None
         } else {
@@ -39,56 +44,62 @@ pub trait MultiPointTrait: Sized {
     /// # Safety
     ///
     /// Accessing an index out of bounds is UB.
-    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_>;
+    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_>;
 }
 
 impl<T: CoordNum> MultiPointTrait for MultiPoint<T> {
     type T = T;
-    type ItemType<'a> = &'a Point<Self::T> where Self: 'a;
+    type PointType<'a> = &'a Point<Self::T> where Self: 'a;
 
-    fn dim(&self) -> Dimension {
-        Dimension::XY
+    fn dim(&self) -> Dimensions {
+        Dimensions::Xy
     }
 
     fn num_points(&self) -> usize {
         self.0.len()
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
         self.0.get_unchecked(i)
     }
 }
 
 impl<'a, T: CoordNum> MultiPointTrait for &'a MultiPoint<T> {
     type T = T;
-    type ItemType<'b> = &'a Point<Self::T> where Self: 'b;
+    type PointType<'b> = &'a Point<Self::T> where Self: 'b;
 
-    fn dim(&self) -> Dimension {
-        Dimension::XY
+    fn dim(&self) -> Dimensions {
+        Dimensions::Xy
     }
 
     fn num_points(&self) -> usize {
         self.0.len()
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
         self.0.get_unchecked(i)
     }
 }
 
-#[cfg(test)]
-mod test {
-    use super::*;
+/// An empty struct that implements [MultiPointTrait].
+///
+/// This can be used as the `MultiPointType` of the `GeometryTrait` by implementations that don't
+/// have a MultiPoint concept
+pub struct UnimplementedMultiPoint<T: CoordNum>(PhantomData<T>);
 
-    #[test]
-    fn tmp() {
-        let mp = MultiPoint::new(vec![
-            Point::new(0.0, 1.0),
-            Point::new(2.0, 3.0),
-            Point::new(4.0, 5.0),
-        ]);
-        MultiPointTrait::points(&mp).for_each(|p| {
-            dbg!(p);
-        });
+impl<T: CoordNum> MultiPointTrait for UnimplementedMultiPoint<T> {
+    type T = T;
+    type PointType<'a> = UnimplementedPoint<Self::T> where Self: 'a;
+
+    fn dim(&self) -> Dimensions {
+        unimplemented!()
+    }
+
+    fn num_points(&self) -> usize {
+        unimplemented!()
+    }
+
+    unsafe fn point_unchecked(&self, _i: usize) -> Self::PointType<'_> {
+        unimplemented!()
     }
 }

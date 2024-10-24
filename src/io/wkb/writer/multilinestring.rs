@@ -27,32 +27,26 @@ pub fn write_multi_line_string_as_wkb<W: Write>(
     mut writer: W,
     geom: &impl MultiLineStringTrait<T = f64>,
 ) -> Result<()> {
-    use crate::geo_traits::Dimension;
+    use crate::geo_traits::Dimensions;
 
     // Byte order
-    writer.write_u8(Endianness::LittleEndian.into()).unwrap();
+    writer.write_u8(Endianness::LittleEndian.into())?;
 
     match geom.dim() {
-        Dimension::XY | Dimension::Unknown(2) => {
-            writer
-                .write_u32::<LittleEndian>(WKBType::MultiLineString.into())
-                .unwrap();
+        Dimensions::Xy | Dimensions::Unknown(2) => {
+            writer.write_u32::<LittleEndian>(WKBType::MultiLineString.into())?;
         }
-        Dimension::XYZ | Dimension::Unknown(3) => {
-            writer
-                .write_u32::<LittleEndian>(WKBType::MultiLineStringZ.into())
-                .unwrap();
+        Dimensions::Xyz | Dimensions::Unknown(3) => {
+            writer.write_u32::<LittleEndian>(WKBType::MultiLineStringZ.into())?;
         }
         _ => panic!(),
     }
 
     // numPoints
-    writer
-        .write_u32::<LittleEndian>(geom.num_line_strings().try_into().unwrap())
-        .unwrap();
+    writer.write_u32::<LittleEndian>(geom.num_line_strings().try_into().unwrap())?;
 
     for line_string in geom.line_strings() {
-        write_line_string_as_wkb(&mut writer, &line_string).unwrap();
+        write_line_string_as_wkb(&mut writer, &line_string)?;
     }
 
     Ok(())

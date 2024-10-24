@@ -52,7 +52,7 @@ impl MultiLineStringCapacity {
         if let Some(line_string) = maybe_line_string {
             // A single line string
             self.ring_capacity += 1;
-            self.coord_capacity += line_string.num_points();
+            self.coord_capacity += line_string.num_coords();
         }
     }
 
@@ -65,7 +65,7 @@ impl MultiLineStringCapacity {
             self.ring_capacity += num_line_strings;
 
             for line_string in multi_line_string.line_strings() {
-                self.coord_capacity += line_string.num_points();
+                self.coord_capacity += line_string.num_coords();
             }
         }
     }

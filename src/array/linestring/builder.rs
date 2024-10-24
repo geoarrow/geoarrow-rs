@@ -8,7 +8,7 @@ use crate::array::{
 };
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{
-    GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait, PointTrait,
+    CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
 };
 use crate::io::wkb::reader::WKBLineString;
 use crate::scalar::WKB;
@@ -232,9 +232,9 @@ impl<const D: usize> LineStringBuilder<D> {
         value: Option<&impl LineStringTrait<T = f64>>,
     ) -> Result<()> {
         if let Some(line_string) = value {
-            let num_coords = line_string.num_points();
-            for coord in line_string.points() {
-                self.coords.push_point(&coord);
+            let num_coords = line_string.num_coords();
+            for coord in line_string.coords() {
+                self.coords.push_coord(&coord);
             }
             self.try_push_length(num_coords)?;
         } else {
@@ -260,8 +260,8 @@ impl<const D: usize> LineStringBuilder<D> {
     /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
     /// to the array upholds the necessary invariants of the array.
     #[inline]
-    pub unsafe fn push_coord(&mut self, coord: &impl PointTrait<T = f64>) {
-        self.coords.push_point(coord)
+    pub unsafe fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
+        self.coords.push_coord(coord)
     }
 
     #[inline]

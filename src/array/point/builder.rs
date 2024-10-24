@@ -8,7 +8,7 @@ use crate::array::{
     SeparatedCoordBufferBuilder, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
+use crate::geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
 use crate::io::wkb::reader::WKBPoint;
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
@@ -117,6 +117,17 @@ impl<const D: usize> PointBuilder<D> {
 
     pub fn finish(self) -> PointArray<D> {
         self.into()
+    }
+
+    /// Add a new coord to the end of this array, where the coord is a non-empty point
+    #[inline]
+    pub fn push_coord(&mut self, value: Option<&impl CoordTrait<T = f64>>) {
+        if let Some(value) = value {
+            self.coords.push_coord(value);
+            self.validity.append(true);
+        } else {
+            self.push_null()
+        }
     }
 
     /// Add a new point to the end of this array.

@@ -10,7 +10,7 @@ use crate::array::{
 };
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{
-    GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait, PointTrait,
+    CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
 };
 use crate::io::wkb::reader::WKBMaybeMultiLineString;
 use crate::scalar::WKB;
@@ -240,11 +240,11 @@ impl<const D: usize> MultiLineStringBuilder<D> {
             // - Push ring's coords to self.coords
 
             self.ring_offsets
-                .try_push_usize(line_string.num_points())
+                .try_push_usize(line_string.num_coords())
                 .unwrap();
 
-            for coord in line_string.points() {
-                self.coords.push_point(&coord);
+            for coord in line_string.coords() {
+                self.coords.push_coord(&coord);
             }
 
             self.validity.append(true);
@@ -277,11 +277,11 @@ impl<const D: usize> MultiLineStringBuilder<D> {
             // Number of coords for each ring
             for line_string in multi_line_string.line_strings() {
                 self.ring_offsets
-                    .try_push_usize(line_string.num_points())
+                    .try_push_usize(line_string.num_coords())
                     .unwrap();
 
-                for coord in line_string.points() {
-                    self.coords.push_point(&coord);
+                for coord in line_string.coords() {
+                    self.coords.push_coord(&coord);
                 }
             }
 
@@ -323,8 +323,8 @@ impl<const D: usize> MultiLineStringBuilder<D> {
     /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
     /// to the array upholds the necessary invariants of the array.
     #[inline]
-    pub unsafe fn push_coord(&mut self, coord: &impl PointTrait<T = f64>) -> Result<()> {
-        self.coords.push_point(coord);
+    pub unsafe fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+        self.coords.push_coord(coord);
         Ok(())
     }
 

@@ -2,7 +2,7 @@ use crate::algorithm::native::bounding_rect::bounding_rect_point;
 use crate::algorithm::native::eq::point_eq;
 use crate::array::CoordBuffer;
 use crate::geo_traits::PointTrait;
-use crate::io::geo::{coord_to_geo, point_to_geo};
+use crate::io::geo::point_to_geo;
 use crate::scalar::Coord;
 use crate::trait_::NativeScalar;
 use rstar::{RTreeObject, AABB};
@@ -46,55 +46,49 @@ impl<'a, const D: usize> NativeScalar for Point<'a, D> {
     }
 }
 
-impl<const D: usize> PointTrait for Point<'_, D> {
+impl<'a, const D: usize> PointTrait for Point<'a, D> {
     type T = f64;
+    type CoordType<'b> = Coord<'a, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimension::XY,
-            3 => crate::geo_traits::Dimension::XYZ,
+            2 => crate::geo_traits::Dimensions::Xy,
+            3 => crate::geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
+    fn coord(&self) -> Option<Self::CoordType<'_>> {
         let coord = self.coords.value(self.geom_index);
-        coord.nth_unchecked(n)
-    }
-
-    fn x(&self) -> f64 {
-        self.coords.get_x(self.geom_index)
-    }
-
-    fn y(&self) -> f64 {
-        self.coords.get_y(self.geom_index)
+        if coord.is_nan() {
+            None
+        } else {
+            Some(coord)
+        }
     }
 }
 
-impl<const D: usize> PointTrait for &Point<'_, D> {
+impl<'a, const D: usize> PointTrait for &Point<'a, D> {
     type T = f64;
+    type CoordType<'b> = Coord<'a, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimension::XY,
-            3 => crate::geo_traits::Dimension::XYZ,
+            2 => crate::geo_traits::Dimensions::Xy,
+            3 => crate::geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
+    fn coord(&self) -> Option<Self::CoordType<'_>> {
         let coord = self.coords.value(self.geom_index);
-        coord.nth_unchecked(n)
-    }
-
-    fn x(&self) -> f64 {
-        self.coords.get_x(self.geom_index)
-    }
-
-    fn y(&self) -> f64 {
-        self.coords.get_y(self.geom_index)
+        if coord.is_nan() {
+            None
+        } else {
+            Some(coord)
+        }
     }
 }
 
@@ -107,18 +101,6 @@ impl<const D: usize> From<Point<'_, D>> for geo::Point {
 impl<const D: usize> From<&Point<'_, D>> for geo::Point {
     fn from(value: &Point<'_, D>) -> Self {
         point_to_geo(value)
-    }
-}
-
-impl<const D: usize> From<Point<'_, D>> for geo::Coord {
-    fn from(value: Point<'_, D>) -> Self {
-        (&value).into()
-    }
-}
-
-impl<const D: usize> From<&Point<'_, D>> for geo::Coord {
-    fn from(value: &Point<'_, D>) -> Self {
-        coord_to_geo(value)
     }
 }
 
@@ -139,7 +121,7 @@ impl<const D: usize> RTreeObject for Point<'_, D> {
 
 impl<G: PointTrait<T = f64>, const D: usize> PartialEq<G> for Point<'_, D> {
     fn eq(&self, other: &G) -> bool {
-        point_eq(self, other, true)
+        point_eq(self, other)
     }
 }
 

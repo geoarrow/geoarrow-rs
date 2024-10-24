@@ -1,5 +1,5 @@
-use crate::algorithm::native::eq::point_eq;
-use crate::geo_traits::PointTrait;
+use crate::algorithm::native::eq::coord_eq;
+use crate::geo_traits::CoordTrait;
 use crate::io::geo::coord_to_geo;
 use crate::scalar::InterleavedCoord;
 use crate::trait_::NativeScalar;
@@ -10,6 +10,13 @@ use rstar::{RTreeObject, AABB};
 pub struct SeparatedCoord<'a, const D: usize> {
     pub(crate) buffers: &'a [ScalarBuffer<f64>; D],
     pub(crate) i: usize,
+}
+
+impl<'a, const D: usize> SeparatedCoord<'a, D> {
+    /// Return `true` if all values in the coordinate are f64::NAN
+    pub(crate) fn is_nan(&self) -> bool {
+        (0..D).all(|coord_dim| self.nth_unchecked(coord_dim).is_nan())
+    }
 }
 
 impl<'a, const D: usize> NativeScalar for SeparatedCoord<'a, D> {
@@ -64,24 +71,24 @@ impl<const D: usize> RTreeObject for SeparatedCoord<'_, D> {
 
 impl<const D: usize> PartialEq for SeparatedCoord<'_, D> {
     fn eq(&self, other: &SeparatedCoord<D>) -> bool {
-        point_eq(self, other, false)
+        coord_eq(self, other)
     }
 }
 
 impl<const D: usize> PartialEq<InterleavedCoord<'_, D>> for SeparatedCoord<'_, D> {
     fn eq(&self, other: &InterleavedCoord<D>) -> bool {
-        point_eq(self, other, false)
+        coord_eq(self, other)
     }
 }
 
-impl<const D: usize> PointTrait for SeparatedCoord<'_, D> {
+impl<const D: usize> CoordTrait for SeparatedCoord<'_, D> {
     type T = f64;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimension::XY,
-            3 => crate::geo_traits::Dimension::XYZ,
+            2 => crate::geo_traits::Dimensions::Xy,
+            3 => crate::geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
@@ -99,14 +106,14 @@ impl<const D: usize> PointTrait for SeparatedCoord<'_, D> {
     }
 }
 
-impl<const D: usize> PointTrait for &SeparatedCoord<'_, D> {
+impl<const D: usize> CoordTrait for &SeparatedCoord<'_, D> {
     type T = f64;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimension::XY,
-            3 => crate::geo_traits::Dimension::XYZ,
+            2 => crate::geo_traits::Dimensions::Xy,
+            3 => crate::geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }

@@ -1,8 +1,8 @@
 use arrow_buffer::ScalarBuffer;
 use rstar::{RTreeObject, AABB};
 
-use crate::algorithm::native::eq::point_eq;
-use crate::geo_traits::PointTrait;
+use crate::algorithm::native::eq::coord_eq;
+use crate::geo_traits::CoordTrait;
 use crate::io::geo::coord_to_geo;
 use crate::scalar::SeparatedCoord;
 use crate::trait_::NativeScalar;
@@ -11,6 +11,13 @@ use crate::trait_::NativeScalar;
 pub struct InterleavedCoord<'a, const D: usize> {
     pub(crate) coords: &'a ScalarBuffer<f64>,
     pub(crate) i: usize,
+}
+
+impl<'a, const D: usize> InterleavedCoord<'a, D> {
+    /// Return `true` if all values in the coordinate are f64::NAN
+    pub(crate) fn is_nan(&self) -> bool {
+        (0..D).all(|coord_dim| self.nth_unchecked(coord_dim).is_nan())
+    }
 }
 
 impl<'a, const D: usize> NativeScalar for InterleavedCoord<'a, D> {
@@ -66,24 +73,24 @@ impl<const D: usize> RTreeObject for InterleavedCoord<'_, D> {
 
 impl<const D: usize> PartialEq for InterleavedCoord<'_, D> {
     fn eq(&self, other: &Self) -> bool {
-        point_eq(self, other, false)
+        coord_eq(self, other)
     }
 }
 
 impl<const D: usize> PartialEq<SeparatedCoord<'_, D>> for InterleavedCoord<'_, D> {
     fn eq(&self, other: &SeparatedCoord<'_, D>) -> bool {
-        point_eq(self, other, false)
+        coord_eq(self, other)
     }
 }
 
-impl<const D: usize> PointTrait for InterleavedCoord<'_, D> {
+impl<const D: usize> CoordTrait for InterleavedCoord<'_, D> {
     type T = f64;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimension::XY,
-            3 => crate::geo_traits::Dimension::XYZ,
+            2 => crate::geo_traits::Dimensions::Xy,
+            3 => crate::geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
@@ -102,14 +109,14 @@ impl<const D: usize> PointTrait for InterleavedCoord<'_, D> {
     }
 }
 
-impl<const D: usize> PointTrait for &InterleavedCoord<'_, D> {
+impl<const D: usize> CoordTrait for &InterleavedCoord<'_, D> {
     type T = f64;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimension::XY,
-            3 => crate::geo_traits::Dimension::XYZ,
+            2 => crate::geo_traits::Dimensions::Xy,
+            3 => crate::geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }

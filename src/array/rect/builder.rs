@@ -124,11 +124,11 @@ impl<const D: usize> RectBuilder<D> {
     #[inline]
     pub fn push_rect(&mut self, value: Option<&impl RectTrait<T = f64>>) {
         if let Some(value) = value {
-            let min_coord = value.lower();
-            let max_coord = value.upper();
+            let min_coord = value.min();
+            let max_coord = value.max();
 
-            self.lower.push_point(&min_coord);
-            self.upper.push_point(&max_coord);
+            self.lower.push_coord(&min_coord);
+            self.upper.push_coord(&max_coord);
             self.validity.append_non_null()
         } else {
             // Since it's a struct, we still need to push coords when null

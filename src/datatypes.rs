@@ -70,11 +70,11 @@ impl TryFrom<i32> for Dimension {
     }
 }
 
-impl From<Dimension> for crate::geo_traits::Dimension {
+impl From<Dimension> for crate::geo_traits::Dimensions {
     fn from(value: Dimension) -> Self {
         match value {
-            Dimension::XY => crate::geo_traits::Dimension::XY,
-            Dimension::XYZ => crate::geo_traits::Dimension::XYZ,
+            Dimension::XY => crate::geo_traits::Dimensions::Xy,
+            Dimension::XYZ => crate::geo_traits::Dimensions::Xyz,
         }
     }
 }

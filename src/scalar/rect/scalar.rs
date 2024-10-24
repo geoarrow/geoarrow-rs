@@ -52,22 +52,22 @@ impl<'a, const D: usize> NativeScalar for Rect<'a, D> {
 // TODO: support 3d rects
 impl<'a, const D: usize> RectTrait for Rect<'a, D> {
     type T = f64;
-    type ItemType<'b> = [Self::T; D] where Self: 'b;
+    type CoordType<'b> = [Self::T; D] where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimension::XY,
-            3 => crate::geo_traits::Dimension::XYZ,
+            2 => crate::geo_traits::Dimensions::Xy,
+            3 => crate::geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
 
-    fn lower(&self) -> Self::ItemType<'_> {
+    fn min(&self) -> Self::CoordType<'_> {
         core::array::from_fn(|i| self.lower.buffers[i][self.geom_index])
     }
 
-    fn upper(&self) -> Self::ItemType<'_> {
+    fn max(&self) -> Self::CoordType<'_> {
         core::array::from_fn(|i| self.upper.buffers[i][self.geom_index])
     }
 }
@@ -94,8 +94,8 @@ impl<const D: usize> RTreeObject for Rect<'_, D> {
     type Envelope = AABB<[f64; D]>;
 
     fn envelope(&self) -> Self::Envelope {
-        let lower = self.lower();
-        let upper = self.upper();
+        let lower = self.min();
+        let upper = self.max();
         AABB::from_corners(lower, upper)
     }
 }

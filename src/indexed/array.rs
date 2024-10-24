@@ -4,7 +4,7 @@ use crate::algorithm::geo_index::RTree;
 use crate::array::*;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{PointTrait, RectTrait};
+use crate::geo_traits::{CoordTrait, RectTrait};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::builder::BooleanBuilder;
@@ -70,10 +70,10 @@ impl<'a, G: NativeArray + ArrayAccessor<'a>> IndexedGeometryArray<G> {
 
         // TODO: ensure this is only on valid indexes
         for candidate_idx in self.search(
-            rhs_rect.lower().x(),
-            rhs_rect.lower().y(),
-            rhs_rect.upper().x(),
-            rhs_rect.upper().y(),
+            rhs_rect.min().x(),
+            rhs_rect.min().y(),
+            rhs_rect.max().x(),
+            rhs_rect.max().y(),
         ) {
             buffer.set_bit(candidate_idx, op(self.array.value(candidate_idx)));
         }

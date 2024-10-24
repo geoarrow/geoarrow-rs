@@ -5,10 +5,11 @@ use byteorder::ReadBytesExt;
 
 use crate::datatypes::Dimension;
 use crate::error::Result;
-use crate::geo_traits::GeometryTrait;
+use crate::geo_traits::{
+    GeometryTrait, UnimplementedLine, UnimplementedRect, UnimplementedTriangle,
+};
 use crate::io::wkb::common::WKBType;
 use crate::io::wkb::reader::geometry_collection::WKBGeometryCollection;
-use crate::io::wkb::reader::rect::WKBRect;
 use crate::io::wkb::reader::{
     WKBLineString, WKBMaybeMultiLineString, WKBMaybeMultiPoint, WKBMaybeMultiPolygon,
     WKBMultiLineString, WKBMultiPoint, WKBMultiPolygon, WKBPoint, WKBPolygon,
@@ -212,16 +213,18 @@ impl<'a> WKBGeometry<'a> {
 
 impl<'a> GeometryTrait for WKBGeometry<'a> {
     type T = f64;
-    type Point<'b> = WKBPoint<'a> where Self: 'b;
-    type LineString<'b> = WKBLineString<'a> where Self: 'b;
-    type Polygon<'b> = WKBPolygon<'a> where Self: 'b;
-    type MultiPoint<'b> = WKBMultiPoint<'a> where Self: 'b;
-    type MultiLineString<'b> = WKBMultiLineString<'a> where Self: 'b;
-    type MultiPolygon<'b> = WKBMultiPolygon<'a> where Self: 'b;
-    type GeometryCollection<'b> = WKBGeometryCollection<'a> where Self: 'b;
-    type Rect<'b> = WKBRect<'a> where Self: 'b;
+    type PointType<'b> = WKBPoint<'a> where Self: 'b;
+    type LineStringType<'b> = WKBLineString<'a> where Self: 'b;
+    type PolygonType<'b> = WKBPolygon<'a> where Self: 'b;
+    type MultiPointType<'b> = WKBMultiPoint<'a> where Self: 'b;
+    type MultiLineStringType<'b> = WKBMultiLineString<'a> where Self: 'b;
+    type MultiPolygonType<'b> = WKBMultiPolygon<'a> where Self: 'b;
+    type GeometryCollectionType<'b> = WKBGeometryCollection<'a> where Self: 'b;
+    type RectType<'b> = UnimplementedRect<f64> where Self: 'b;
+    type TriangleType<'b> = UnimplementedTriangle<f64> where Self: 'b;
+    type LineType<'b> = UnimplementedLine<f64> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         self.dimension().into()
     }
 
@@ -236,7 +239,9 @@ impl<'a> GeometryTrait for WKBGeometry<'a> {
         WKBMultiLineString<'a>,
         WKBMultiPolygon<'a>,
         WKBGeometryCollection<'a>,
-        WKBRect<'a>,
+        UnimplementedRect<f64>,
+        UnimplementedTriangle<f64>,
+        UnimplementedLine<f64>,
     > {
         use crate::geo_traits::GeometryType as B;
         use WKBGeometry as A;
@@ -254,16 +259,18 @@ impl<'a> GeometryTrait for WKBGeometry<'a> {
 
 impl<'a> GeometryTrait for &'a WKBGeometry<'a> {
     type T = f64;
-    type Point<'b> = WKBPoint<'a> where Self: 'b;
-    type LineString<'b> = WKBLineString<'a> where Self: 'b;
-    type Polygon<'b> = WKBPolygon<'a> where Self: 'b;
-    type MultiPoint<'b> = WKBMultiPoint<'a> where Self: 'b;
-    type MultiLineString<'b> = WKBMultiLineString<'a> where Self: 'b;
-    type MultiPolygon<'b> = WKBMultiPolygon<'a> where Self: 'b;
-    type GeometryCollection<'b> = WKBGeometryCollection<'a> where Self: 'b;
-    type Rect<'b> = WKBRect<'a> where Self: 'b;
+    type PointType<'b> = WKBPoint<'a> where Self: 'b;
+    type LineStringType<'b> = WKBLineString<'a> where Self: 'b;
+    type PolygonType<'b> = WKBPolygon<'a> where Self: 'b;
+    type MultiPointType<'b> = WKBMultiPoint<'a> where Self: 'b;
+    type MultiLineStringType<'b> = WKBMultiLineString<'a> where Self: 'b;
+    type MultiPolygonType<'b> = WKBMultiPolygon<'a> where Self: 'b;
+    type GeometryCollectionType<'b> = WKBGeometryCollection<'a> where Self: 'b;
+    type RectType<'b> = UnimplementedRect<f64> where Self: 'b;
+    type TriangleType<'b> = UnimplementedTriangle<f64> where Self: 'b;
+    type LineType<'b> = UnimplementedLine<f64> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         self.dimension().into()
     }
 
@@ -278,7 +285,9 @@ impl<'a> GeometryTrait for &'a WKBGeometry<'a> {
         WKBMultiLineString<'a>,
         WKBMultiPolygon<'a>,
         WKBGeometryCollection<'a>,
-        WKBRect<'a>,
+        UnimplementedRect<f64>,
+        UnimplementedTriangle<f64>,
+        UnimplementedLine<f64>,
     > {
         use crate::geo_traits::GeometryType as B;
         use WKBGeometry as A;

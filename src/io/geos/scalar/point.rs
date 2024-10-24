@@ -1,33 +1,18 @@
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::PointTrait;
+use crate::io::geos::scalar::coord::GEOSConstCoord;
 use crate::scalar::Point;
-use geos::{CoordDimensions, CoordSeq, Geom, GeometryTypes};
+use geos::{Geom, GeometryTypes};
 
 impl<'a, const D: usize> TryFrom<&'a Point<'_, D>> for geos::Geometry {
     type Error = geos::Error;
 
     fn try_from(point: &'a Point<'_, D>) -> std::result::Result<geos::Geometry, geos::Error> {
-        use crate::geo_traits::Dimension;
-
-        match point.dim() {
-            Dimension::XY | Dimension::Unknown(2) => {
-                let mut coord_seq = CoordSeq::new(1, CoordDimensions::TwoD)?;
-                coord_seq.set_x(0, point.x())?;
-                coord_seq.set_y(0, point.y())?;
-
-                Ok(geos::Geometry::create_point(coord_seq)?)
-            }
-            Dimension::XYZ | Dimension::Unknown(3) => {
-                let mut coord_seq = CoordSeq::new(1, CoordDimensions::ThreeD)?;
-                coord_seq.set_x(0, point.x())?;
-                coord_seq.set_y(0, point.y())?;
-                coord_seq.set_z(0, point.nth(2).unwrap())?;
-
-                Ok(geos::Geometry::create_point(coord_seq)?)
-            }
-            _ => Err(geos::Error::GenericError(
-                "Unexpected dimension".to_string(),
-            )),
+        if let Some(coord) = PointTrait::coord(&point) {
+            let coord_seq = (&coord).try_into()?;
+            Ok(geos::Geometry::create_point(coord_seq)?)
+        } else {
+            Ok(geos::Geometry::create_empty_point()?)
         }
     }
 }
@@ -53,59 +38,53 @@ impl GEOSPoint {
 
 impl PointTrait for GEOSPoint {
     type T = f64;
+    type CoordType<'a> = GEOSConstCoord where Self: 'a;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => crate::geo_traits::Dimension::XY,
-            geos::Dimensions::ThreeD => crate::geo_traits::Dimension::XYZ,
+            geos::Dimensions::TwoD => crate::geo_traits::Dimensions::Xy,
+            geos::Dimensions::ThreeD => crate::geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
-        match n {
-            0 => self.0.get_x().unwrap(),
-            1 => self.0.get_y().unwrap(),
-            2 => self.0.get_z().unwrap(),
-            _ => panic!(),
+    fn coord(&self) -> Option<Self::CoordType<'_>> {
+        let is_empty = self.0.is_empty().unwrap();
+        if is_empty {
+            None
+        } else {
+            Some(GEOSConstCoord {
+                coords: self.0.get_coord_seq().unwrap(),
+                geom_index: 0,
+                dim: self.dim(),
+            })
         }
-    }
-
-    fn x(&self) -> Self::T {
-        self.0.get_x().unwrap()
-    }
-
-    fn y(&self) -> Self::T {
-        self.0.get_y().unwrap()
     }
 }
 
 impl PointTrait for &GEOSPoint {
     type T = f64;
+    type CoordType<'a> = GEOSConstCoord where Self: 'a;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => crate::geo_traits::Dimension::XY,
-            geos::Dimensions::ThreeD => crate::geo_traits::Dimension::XYZ,
+            geos::Dimensions::TwoD => crate::geo_traits::Dimensions::Xy,
+            geos::Dimensions::ThreeD => crate::geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
-        match n {
-            0 => self.0.get_x().unwrap(),
-            1 => self.0.get_y().unwrap(),
-            2 => self.0.get_z().unwrap(),
-            _ => panic!(),
+    fn coord(&self) -> Option<Self::CoordType<'_>> {
+        let is_empty = self.0.is_empty().unwrap();
+        if is_empty {
+            None
+        } else {
+            Some(GEOSConstCoord {
+                coords: self.0.get_coord_seq().unwrap(),
+                geom_index: 0,
+                dim: self.dim(),
+            })
         }
-    }
-
-    fn x(&self) -> Self::T {
-        self.0.get_x().unwrap()
-    }
-
-    fn y(&self) -> Self::T {
-        self.0.get_y().unwrap()
     }
 }
 
@@ -129,59 +108,53 @@ impl<'a> GEOSConstPoint<'a> {
 
 impl<'a> PointTrait for GEOSConstPoint<'a> {
     type T = f64;
+    type CoordType<'b> = GEOSConstCoord where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => crate::geo_traits::Dimension::XY,
-            geos::Dimensions::ThreeD => crate::geo_traits::Dimension::XYZ,
+            geos::Dimensions::TwoD => crate::geo_traits::Dimensions::Xy,
+            geos::Dimensions::ThreeD => crate::geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
-        match n {
-            0 => self.0.get_x().unwrap(),
-            1 => self.0.get_y().unwrap(),
-            2 => self.0.get_z().unwrap(),
-            _ => panic!(),
+    fn coord(&self) -> Option<Self::CoordType<'_>> {
+        let is_empty = self.0.is_empty().unwrap();
+        if is_empty {
+            None
+        } else {
+            Some(GEOSConstCoord {
+                coords: self.0.get_coord_seq().unwrap(),
+                geom_index: 0,
+                dim: self.dim(),
+            })
         }
-    }
-
-    fn x(&self) -> Self::T {
-        self.0.get_x().unwrap()
-    }
-
-    fn y(&self) -> Self::T {
-        self.0.get_y().unwrap()
     }
 }
 
 impl<'a> PointTrait for &GEOSConstPoint<'a> {
     type T = f64;
+    type CoordType<'b> = GEOSConstCoord where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => crate::geo_traits::Dimension::XY,
-            geos::Dimensions::ThreeD => crate::geo_traits::Dimension::XYZ,
+            geos::Dimensions::TwoD => crate::geo_traits::Dimensions::Xy,
+            geos::Dimensions::ThreeD => crate::geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
-        match n {
-            0 => self.0.get_x().unwrap(),
-            1 => self.0.get_y().unwrap(),
-            2 => self.0.get_z().unwrap(),
-            _ => panic!(),
+    fn coord(&self) -> Option<Self::CoordType<'_>> {
+        let is_empty = self.0.is_empty().unwrap();
+        if is_empty {
+            None
+        } else {
+            Some(GEOSConstCoord {
+                coords: self.0.get_coord_seq().unwrap(),
+                geom_index: 0,
+                dim: self.dim(),
+            })
         }
-    }
-
-    fn x(&self) -> Self::T {
-        self.0.get_x().unwrap()
-    }
-
-    fn y(&self) -> Self::T {
-        self.0.get_y().unwrap()
     }
 }
 
@@ -204,7 +177,7 @@ mod test {
         let scalar = arr.value(0);
         let geom = geos::Geometry::try_from(&scalar).unwrap();
         let geos_pt = GEOSPoint::new_unchecked(geom);
-        assert!(point_eq(&scalar, &geos_pt, false))
+        assert!(point_eq(&scalar, &geos_pt))
     }
 
     #[test]
@@ -213,6 +186,6 @@ mod test {
         let scalar = arr.value(0);
         let geom = geos::Geometry::try_from(&scalar).unwrap();
         let geos_pt = GEOSPoint::new_unchecked(geom);
-        assert!(point_eq(&scalar, &geos_pt, false))
+        assert!(point_eq(&scalar, &geos_pt))
     }
 }

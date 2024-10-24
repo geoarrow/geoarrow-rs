@@ -72,9 +72,9 @@ impl<'a> WKBMultiPoint<'a> {
 
 impl<'a> MultiPointTrait for WKBMultiPoint<'a> {
     type T = f64;
-    type ItemType<'b> = WKBPoint<'a> where Self: 'b;
+    type PointType<'b> = WKBPoint<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -82,7 +82,7 @@ impl<'a> MultiPointTrait for WKBMultiPoint<'a> {
         self.num_points
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
         WKBPoint::new(
             self.buf,
             self.byte_order,
@@ -94,9 +94,9 @@ impl<'a> MultiPointTrait for WKBMultiPoint<'a> {
 
 impl<'a> MultiPointTrait for &'a WKBMultiPoint<'a> {
     type T = f64;
-    type ItemType<'b> = WKBPoint<'a> where Self: 'b;
+    type PointType<'b> = WKBPoint<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -104,7 +104,7 @@ impl<'a> MultiPointTrait for &'a WKBMultiPoint<'a> {
         self.num_points
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
         WKBPoint::new(
             self.buf,
             self.byte_order,

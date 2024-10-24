@@ -43,12 +43,12 @@ impl GEOSMultiPoint {
 
 impl MultiPointTrait for GEOSMultiPoint {
     type T = f64;
-    type ItemType<'a> = GEOSConstPoint<'a> where Self: 'a;
+    type PointType<'a> = GEOSConstPoint<'a> where Self: 'a;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => crate::geo_traits::Dimension::XY,
-            geos::Dimensions::ThreeD => crate::geo_traits::Dimension::XYZ,
+            geos::Dimensions::TwoD => crate::geo_traits::Dimensions::Xy,
+            geos::Dimensions::ThreeD => crate::geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
@@ -57,7 +57,7 @@ impl MultiPointTrait for GEOSMultiPoint {
         self.0.get_num_geometries().unwrap()
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
         let point = self.0.get_geometry_n(i).unwrap();
         GEOSConstPoint::new_unchecked(point)
     }
@@ -65,12 +65,12 @@ impl MultiPointTrait for GEOSMultiPoint {
 
 impl MultiPointTrait for &GEOSMultiPoint {
     type T = f64;
-    type ItemType<'a> = GEOSConstPoint<'a> where Self: 'a;
+    type PointType<'a> = GEOSConstPoint<'a> where Self: 'a;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => crate::geo_traits::Dimension::XY,
-            geos::Dimensions::ThreeD => crate::geo_traits::Dimension::XYZ,
+            geos::Dimensions::TwoD => crate::geo_traits::Dimensions::Xy,
+            geos::Dimensions::ThreeD => crate::geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
@@ -79,7 +79,7 @@ impl MultiPointTrait for &GEOSMultiPoint {
         self.0.get_num_geometries().unwrap()
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
         let point = self.0.get_geometry_n(i).unwrap();
         GEOSConstPoint::new_unchecked(point)
     }

@@ -1,7 +1,8 @@
 use crate::algorithm::native::eq::geometry_eq;
 use crate::geo_traits::{
     GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
-    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
+    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait, UnimplementedLine,
+    UnimplementedTriangle,
 };
 use crate::io::geo::geometry_to_geo;
 use crate::scalar::*;
@@ -49,16 +50,18 @@ impl<'a, const D: usize> NativeScalar for Geometry<'a, D> {
 
 impl<'a, const D: usize> GeometryTrait for Geometry<'a, D> {
     type T = f64;
-    type Point<'b> = Point<'b, D> where Self: 'b;
-    type LineString<'b> = LineString<'b, D> where Self: 'b;
-    type Polygon<'b> = Polygon<'b, D> where Self: 'b;
-    type MultiPoint<'b> = MultiPoint<'b, D> where Self: 'b;
-    type MultiLineString<'b> = MultiLineString<'b, D> where Self: 'b;
-    type MultiPolygon<'b> = MultiPolygon<'b, D> where Self: 'b;
-    type GeometryCollection<'b> = GeometryCollection<'b, D> where Self: 'b;
-    type Rect<'b> = Rect<'b, D> where Self: 'b;
+    type PointType<'b> = Point<'b, D> where Self: 'b;
+    type LineStringType<'b> = LineString<'b, D> where Self: 'b;
+    type PolygonType<'b> = Polygon<'b, D> where Self: 'b;
+    type MultiPointType<'b> = MultiPoint<'b, D> where Self: 'b;
+    type MultiLineStringType<'b> = MultiLineString<'b, D> where Self: 'b;
+    type MultiPolygonType<'b> = MultiPolygon<'b, D> where Self: 'b;
+    type GeometryCollectionType<'b> = GeometryCollection<'b, D> where Self: 'b;
+    type RectType<'b> = Rect<'b, D> where Self: 'b;
+    type LineType<'b> = UnimplementedLine<f64> where Self: 'b;
+    type TriangleType<'b> = UnimplementedTriangle<f64> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self {
             Geometry::Point(p) => p.dim(),
             Geometry::LineString(p) => p.dim(),
@@ -83,6 +86,8 @@ impl<'a, const D: usize> GeometryTrait for Geometry<'a, D> {
         MultiPolygon<'_, D>,
         GeometryCollection<'_, D>,
         Rect<'_, D>,
+        UnimplementedTriangle<f64>,
+        UnimplementedLine<f64>,
     > {
         match self {
             Geometry::Point(p) => GeometryType::Point(p),
@@ -99,16 +104,18 @@ impl<'a, const D: usize> GeometryTrait for Geometry<'a, D> {
 
 impl<'a, const D: usize> GeometryTrait for &'a Geometry<'a, D> {
     type T = f64;
-    type Point<'b> = Point<'a, D> where Self: 'b;
-    type LineString<'b> = LineString<'a, D> where Self: 'b;
-    type Polygon<'b> = Polygon<'a, D> where Self: 'b;
-    type MultiPoint<'b> = MultiPoint<'a, D> where Self: 'b;
-    type MultiLineString<'b> = MultiLineString<'a, D> where Self: 'b;
-    type MultiPolygon<'b> = MultiPolygon<'a, D> where Self: 'b;
-    type GeometryCollection<'b> = GeometryCollection<'a, D> where Self: 'b;
-    type Rect<'b> = Rect<'a, D> where Self: 'b;
+    type PointType<'b> = Point<'b, D> where Self: 'b;
+    type LineStringType<'b> = LineString<'b, D> where Self: 'b;
+    type PolygonType<'b> = Polygon<'b, D> where Self: 'b;
+    type MultiPointType<'b> = MultiPoint<'b, D> where Self: 'b;
+    type MultiLineStringType<'b> = MultiLineString<'b, D> where Self: 'b;
+    type MultiPolygonType<'b> = MultiPolygon<'b, D> where Self: 'b;
+    type GeometryCollectionType<'b> = GeometryCollection<'b, D> where Self: 'b;
+    type RectType<'b> = Rect<'b, D> where Self: 'b;
+    type LineType<'b> = UnimplementedLine<f64> where Self: 'b;
+    type TriangleType<'b> = UnimplementedTriangle<f64> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimension {
+    fn dim(&self) -> crate::geo_traits::Dimensions {
         match self {
             Geometry::Point(p) => p.dim(),
             Geometry::LineString(p) => p.dim(),
@@ -133,6 +140,8 @@ impl<'a, const D: usize> GeometryTrait for &'a Geometry<'a, D> {
         MultiPolygon<'a, D>,
         GeometryCollection<'a, D>,
         Rect<'a, D>,
+        UnimplementedTriangle<f64>,
+        UnimplementedLine<f64>,
     > {
         match self {
             Geometry::Point(p) => GeometryType::Point(p),

@@ -388,10 +388,11 @@ impl<const D: usize> PartialEq for PointArray<D> {
             return false;
         }
 
-        for coord_idx in 0..self.coords.len() {
-            let c1 = self.coords.value(coord_idx);
-            let c2 = other.coords.value(coord_idx);
-            if !point_eq(&c1, &c2, true) {
+        // TODO: this should check for point equal.
+        for point_idx in 0..self.len() {
+            let c1 = self.value(point_idx);
+            let c2 = other.value(point_idx);
+            if !point_eq(&c1, &c2) {
                 return false;
             }
         }
