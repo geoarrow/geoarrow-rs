@@ -1,184 +1,78 @@
+use std::marker::PhantomData;
+
 use geo::{Coord, CoordNum, Point};
 
-use super::Dimension;
+use super::{CoordTrait, Dimensions, UnimplementedCoord};
 
 /// A trait for accessing data from a generic Point.
+///
+/// Refer to [geo_types::Point] for information about semantics and validity.
 pub trait PointTrait {
     /// The coordinate type of this geometry
     type T: CoordNum;
 
-    /// Access the n'th (0-based) element of the CoordinateTuple.
-    /// May panic if n >= DIMENSION.
-    /// See also [`nth()`](Self::nth).
-    fn nth_unchecked(&self, n: usize) -> Self::T;
+    /// The type of the underlying coordinate, which implements [CoordTrait]
+    type CoordType<'a>: 'a + CoordTrait<T = Self::T>
+    where
+        Self: 'a;
 
-    /// Dimension of the coordinate tuple
-    fn dim(&self) -> Dimension;
+    /// Dimensions of the coordinate tuple
+    fn dim(&self) -> Dimensions;
 
-    /// Access the n'th (0-based) element of the CoordinateTuple.
-    /// Returns NaN if `n >= DIMENSION`.
-    /// See also [`nth()`](Self::nth_unchecked).
-    fn nth(&self, n: usize) -> Option<Self::T> {
-        if n < self.dim().size() {
-            Some(self.nth_unchecked(n))
-        } else {
-            None
-        }
-    }
-
-    /// x component of this point.
-    fn x(&self) -> Self::T;
-
-    /// y component of this point.
-    fn y(&self) -> Self::T;
-
-    /// Returns a tuple that contains the x/horizontal & y/vertical component of the point.
-    fn x_y(&self) -> (Self::T, Self::T) {
-        (self.x(), self.y())
-    }
+    /// Whether this point is `empty` or not.
+    ///
+    /// According to Simple Features, a Point can have zero coordinates and be considered `empty`.
+    ///
+    /// If `is_empty` returns `true`, then the values of `x()`, `y()`, `nth()` and `nth_unchecked`
+    /// have no semantic meaning.
+    ///
+    /// Only a top-level geometry can be empty. That is, when this point is contained within
+    /// another geometry, such as a [`LineStringTrait`][crate::LineStringTrait], those points
+    /// can never be empty, and a consumer does not need to check this method.
+    fn coord(&self) -> Option<Self::CoordType<'_>>;
 }
 
 impl<T: CoordNum> PointTrait for Point<T> {
     type T = T;
+    type CoordType<'a> = &'a Coord<Self::T> where Self: 'a;
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
-        match n {
-            0 => self.x(),
-            1 => self.y(),
-            _ => panic!(),
-        }
+    fn coord(&self) -> Option<Self::CoordType<'_>> {
+        Some(&self.0)
     }
 
-    fn dim(&self) -> Dimension {
-        Dimension::XY
-    }
-
-    fn x(&self) -> Self::T {
-        self.0.x
-    }
-
-    fn y(&self) -> Self::T {
-        self.0.y
+    fn dim(&self) -> Dimensions {
+        Dimensions::Xy
     }
 }
 
 impl<T: CoordNum> PointTrait for &Point<T> {
     type T = T;
+    type CoordType<'a> = &'a Coord<Self::T> where Self: 'a;
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
-        match n {
-            0 => self.x(),
-            1 => self.y(),
-            _ => panic!(),
-        }
+    fn coord(&self) -> Option<Self::CoordType<'_>> {
+        Some(&self.0)
     }
 
-    fn dim(&self) -> Dimension {
-        Dimension::XY
-    }
-
-    fn x(&self) -> Self::T {
-        self.0.x
-    }
-
-    fn y(&self) -> Self::T {
-        self.0.y
+    fn dim(&self) -> Dimensions {
+        Dimensions::Xy
     }
 }
 
-impl<T: CoordNum> PointTrait for Coord<T> {
+/// An empty struct that implements [PointTrait].
+///
+/// This can be used as the `PointType` of the `GeometryTrait` by implementations that don't have a
+/// Point concept
+pub struct UnimplementedPoint<T: CoordNum>(PhantomData<T>);
+
+impl<T: CoordNum> PointTrait for UnimplementedPoint<T> {
     type T = T;
+    type CoordType<'a> = UnimplementedCoord<Self::T> where Self: 'a;
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
-        match n {
-            0 => self.x(),
-            1 => self.y(),
-            _ => panic!(),
-        }
+    fn coord(&self) -> Option<Self::CoordType<'_>> {
+        unimplemented!()
     }
 
-    fn dim(&self) -> Dimension {
-        Dimension::XY
-    }
-
-    fn x(&self) -> Self::T {
-        self.x
-    }
-
-    fn y(&self) -> Self::T {
-        self.y
-    }
-}
-
-impl<T: CoordNum> PointTrait for &Coord<T> {
-    type T = T;
-
-    fn nth_unchecked(&self, n: usize) -> Self::T {
-        match n {
-            0 => self.x(),
-            1 => self.y(),
-            _ => panic!(),
-        }
-    }
-
-    fn dim(&self) -> Dimension {
-        Dimension::XY
-    }
-
-    fn x(&self) -> Self::T {
-        self.x
-    }
-
-    fn y(&self) -> Self::T {
-        self.y
-    }
-}
-
-impl<T: CoordNum> PointTrait for (T, T) {
-    type T = T;
-
-    fn nth_unchecked(&self, n: usize) -> Self::T {
-        match n {
-            0 => self.x(),
-            1 => self.y(),
-            _ => panic!(),
-        }
-    }
-
-    fn dim(&self) -> Dimension {
-        Dimension::XY
-    }
-
-    fn x(&self) -> Self::T {
-        self.0
-    }
-
-    fn y(&self) -> Self::T {
-        self.1
-    }
-}
-
-impl<T: CoordNum, const D: usize> PointTrait for [T; D] {
-    type T = T;
-
-    fn nth_unchecked(&self, n: usize) -> Self::T {
-        self[n]
-    }
-
-    fn dim(&self) -> Dimension {
-        // TODO: pass through field information from array
-        match D {
-            2 => Dimension::XY,
-            3 => Dimension::XYZ,
-            _ => todo!(),
-        }
-    }
-
-    fn x(&self) -> Self::T {
-        self[0]
-    }
-
-    fn y(&self) -> Self::T {
-        self[1]
+    fn dim(&self) -> Dimensions {
+        unimplemented!()
     }
 }

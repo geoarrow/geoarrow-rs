@@ -1,26 +1,34 @@
+use std::marker::PhantomData;
+
 use super::iterator::PolygonInteriorIterator;
-use super::line_string::LineStringTrait;
-use super::Dimension;
+use super::line_string::UnimplementedLineString;
+use super::{Dimensions, LineStringTrait};
 use geo::{CoordNum, LineString, Polygon};
 
 /// A trait for accessing data from a generic Polygon.
+///
+/// A `Polygon`’s outer boundary (_exterior ring_) is represented by a
+/// [`LineString`][LineStringTrait]. It may contain zero or more holes (_interior rings_), also
+/// represented by `LineString`s.
+///
+/// Refer to [geo_types::Polygon] for information about semantics and validity.
 pub trait PolygonTrait: Sized {
     /// The coordinate type of this geometry
     type T: CoordNum;
 
     /// The type of each underlying ring, which implements [LineStringTrait]
-    type ItemType<'a>: 'a + LineStringTrait<T = Self::T>
+    type RingType<'a>: 'a + LineStringTrait<T = Self::T>
     where
         Self: 'a;
 
     /// The dimension of this geometry
-    fn dim(&self) -> Dimension;
+    fn dim(&self) -> Dimensions;
 
     /// The exterior ring of the polygon
-    fn exterior(&self) -> Option<Self::ItemType<'_>>;
+    fn exterior(&self) -> Option<Self::RingType<'_>>;
 
     /// An iterator of the interior rings of this Polygon
-    fn interiors(&self) -> PolygonInteriorIterator<'_, Self::T, Self::ItemType<'_>, Self> {
+    fn interiors(&self) -> impl DoubleEndedIterator + ExactSizeIterator<Item = Self::RingType<'_>> {
         PolygonInteriorIterator::new(self, 0, self.num_interiors())
     }
 
@@ -29,7 +37,7 @@ pub trait PolygonTrait: Sized {
 
     /// Access to a specified interior ring in this Polygon
     /// Will return None if the provided index is out of bounds
-    fn interior(&self, i: usize) -> Option<Self::ItemType<'_>> {
+    fn interior(&self, i: usize) -> Option<Self::RingType<'_>> {
         if i >= self.num_interiors() {
             None
         } else {
@@ -42,50 +50,85 @@ pub trait PolygonTrait: Sized {
     /// # Safety
     ///
     /// Accessing an index out of bounds is UB.
-    unsafe fn interior_unchecked(&self, i: usize) -> Self::ItemType<'_>;
+    unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_>;
 }
 
 impl<T: CoordNum> PolygonTrait for Polygon<T> {
     type T = T;
-    type ItemType<'a> = &'a LineString<Self::T> where Self: 'a;
+    type RingType<'a> = &'a LineString<Self::T> where Self: 'a;
 
-    fn dim(&self) -> Dimension {
-        Dimension::XY
+    fn dim(&self) -> Dimensions {
+        Dimensions::Xy
     }
 
-    fn exterior(&self) -> Option<Self::ItemType<'_>> {
-        // geo-types doesn't really have a way to describe an empty polygon
-        Some(Polygon::exterior(self))
+    fn exterior(&self) -> Option<Self::RingType<'_>> {
+        let ext_ring = Polygon::exterior(self);
+        if LineStringTrait::num_coords(&ext_ring) == 0 {
+            None
+        } else {
+            Some(ext_ring)
+        }
     }
 
     fn num_interiors(&self) -> usize {
         Polygon::interiors(self).len()
     }
 
-    unsafe fn interior_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
         unsafe { Polygon::interiors(self).get_unchecked(i) }
     }
 }
 
 impl<'a, T: CoordNum> PolygonTrait for &'a Polygon<T> {
     type T = T;
-    type ItemType<'b> = &'a LineString<Self::T> where
+    type RingType<'b> = &'a LineString<Self::T> where
         Self: 'b;
 
-    fn dim(&self) -> Dimension {
-        Dimension::XY
+    fn dim(&self) -> Dimensions {
+        Dimensions::Xy
     }
 
-    fn exterior(&self) -> Option<Self::ItemType<'_>> {
-        // geo-types doesn't really have a way to describe an empty polygon
-        Some(Polygon::exterior(self))
+    fn exterior(&self) -> Option<Self::RingType<'_>> {
+        let ext_ring = Polygon::exterior(self);
+        if LineStringTrait::num_coords(&ext_ring) == 0 {
+            None
+        } else {
+            Some(ext_ring)
+        }
     }
 
     fn num_interiors(&self) -> usize {
         Polygon::interiors(self).len()
     }
 
-    unsafe fn interior_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
         unsafe { Polygon::interiors(self).get_unchecked(i) }
+    }
+}
+
+/// An empty struct that implements [PolygonTrait].
+///
+/// This can be used as the `PolygonType` of the `GeometryTrait` by implementations that don't have a
+/// Polygon concept
+pub struct UnimplementedPolygon<T: CoordNum>(PhantomData<T>);
+
+impl<T: CoordNum> PolygonTrait for UnimplementedPolygon<T> {
+    type T = T;
+    type RingType<'a> = UnimplementedLineString<Self::T> where Self: 'a;
+
+    fn dim(&self) -> Dimensions {
+        unimplemented!()
+    }
+
+    fn exterior(&self) -> Option<Self::RingType<'_>> {
+        unimplemented!()
+    }
+
+    fn num_interiors(&self) -> usize {
+        unimplemented!()
+    }
+
+    unsafe fn interior_unchecked(&self, _i: usize) -> Self::RingType<'_> {
+        unimplemented!()
     }
 }

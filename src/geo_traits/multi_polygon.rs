@@ -1,23 +1,29 @@
+use std::marker::PhantomData;
+
 use super::iterator::MultiPolygonIterator;
-use super::polygon::PolygonTrait;
-use super::Dimension;
+use super::polygon::UnimplementedPolygon;
+use super::{Dimensions, PolygonTrait};
 use geo::{CoordNum, MultiPolygon, Polygon};
 
 /// A trait for accessing data from a generic MultiPolygon.
+///
+/// Refer to [geo_types::MultiPolygon] for information about semantics and validity.
 pub trait MultiPolygonTrait: Sized {
     /// The coordinate type of this geometry
     type T: CoordNum;
 
     /// The type of each underlying Polygon, which implements [PolygonTrait]
-    type ItemType<'a>: 'a + PolygonTrait<T = Self::T>
+    type PolygonType<'a>: 'a + PolygonTrait<T = Self::T>
     where
         Self: 'a;
 
     /// The dimension of this geometry
-    fn dim(&self) -> Dimension;
+    fn dim(&self) -> Dimensions;
 
     /// An iterator over the Polygons in this MultiPolygon
-    fn polygons(&self) -> MultiPolygonIterator<'_, Self::T, Self::ItemType<'_>, Self> {
+    fn polygons(
+        &self,
+    ) -> impl DoubleEndedIterator + ExactSizeIterator<Item = Self::PolygonType<'_>> {
         MultiPolygonIterator::new(self, 0, self.num_polygons())
     }
 
@@ -26,7 +32,7 @@ pub trait MultiPolygonTrait: Sized {
 
     /// Access to a specified polygon in this MultiPolygon
     /// Will return None if the provided index is out of bounds
-    fn polygon(&self, i: usize) -> Option<Self::ItemType<'_>> {
+    fn polygon(&self, i: usize) -> Option<Self::PolygonType<'_>> {
         if i >= self.num_polygons() {
             None
         } else {
@@ -39,39 +45,62 @@ pub trait MultiPolygonTrait: Sized {
     /// # Safety
     ///
     /// Accessing an index out of bounds is UB.
-    unsafe fn polygon_unchecked(&self, i: usize) -> Self::ItemType<'_>;
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_>;
 }
 
 impl<T: CoordNum> MultiPolygonTrait for MultiPolygon<T> {
     type T = T;
-    type ItemType<'a> = &'a Polygon<Self::T> where Self: 'a;
+    type PolygonType<'a> = &'a Polygon<Self::T> where Self: 'a;
 
-    fn dim(&self) -> Dimension {
-        Dimension::XY
+    fn dim(&self) -> Dimensions {
+        Dimensions::Xy
     }
 
     fn num_polygons(&self) -> usize {
         self.0.len()
     }
 
-    unsafe fn polygon_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
         self.0.get_unchecked(i)
     }
 }
 
 impl<'a, T: CoordNum> MultiPolygonTrait for &'a MultiPolygon<T> {
     type T = T;
-    type ItemType<'b> = &'a Polygon<Self::T> where Self: 'b;
+    type PolygonType<'b> = &'a Polygon<Self::T> where Self: 'b;
 
-    fn dim(&self) -> Dimension {
-        Dimension::XY
+    fn dim(&self) -> Dimensions {
+        Dimensions::Xy
     }
 
     fn num_polygons(&self) -> usize {
         self.0.len()
     }
 
-    unsafe fn polygon_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
         self.0.get_unchecked(i)
+    }
+}
+
+/// An empty struct that implements [MultiPolygonTrait].
+///
+/// This can be used as the `MultiPolygonType` of the `GeometryTrait` by implementations that don't
+/// have a MultiPolygon concept
+pub struct UnimplementedMultiPolygon<T: CoordNum>(PhantomData<T>);
+
+impl<T: CoordNum> MultiPolygonTrait for UnimplementedMultiPolygon<T> {
+    type T = T;
+    type PolygonType<'a> = UnimplementedPolygon<Self::T> where Self: 'a;
+
+    fn dim(&self) -> Dimensions {
+        unimplemented!()
+    }
+
+    fn num_polygons(&self) -> usize {
+        unimplemented!()
+    }
+
+    unsafe fn polygon_unchecked(&self, _i: usize) -> Self::PolygonType<'_> {
+        unimplemented!()
     }
 }
