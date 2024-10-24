@@ -507,13 +507,14 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{trait_::ArrayAccessor, array::PointArray, geo_traits::PointTrait};
+    /// use geoarrow::{trait_::ArrayAccessor, array::PointArray};
+    /// use geoarrow::geo_traits::{PointTrait, CoordTrait};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
     /// let value = array.value(0); // geoarrow::scalar::Point<2>
-    /// assert_eq!(value.x(), 1.);
-    /// assert_eq!(value.y(), 2.);
+    /// assert_eq!(value.coord().x(), 1.);
+    /// assert_eq!(value.coord().y(), 2.);
     /// ```
     ///
     /// # Panics
@@ -593,12 +594,13 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     ///
     /// ```
     /// use geoarrow::{trait_::ArrayAccessor, array::PointArray};
+    /// use geoarrow::geo_traits::{PointTrait, CoordTrait};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
     /// let value = array.value_as_geo(0); // geo::Point
-    /// assert_eq!(value.x(), 1.);
-    /// assert_eq!(value.y(), 2.);
+    /// assert_eq!(value.coord().unwrap().x(), 1.);
+    /// assert_eq!(value.coord().unwrap().y(), 2.);
     /// ```
     fn value_as_geo(&'a self, i: usize) -> Self::ItemGeo {
         self.value(i).into()
