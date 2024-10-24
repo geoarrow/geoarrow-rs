@@ -232,9 +232,9 @@ impl<const D: usize> LineStringBuilder<D> {
         value: Option<&impl LineStringTrait<T = f64>>,
     ) -> Result<()> {
         if let Some(line_string) = value {
-            let num_coords = line_string.num_points();
-            for coord in line_string.points() {
-                self.coords.push_point(&coord);
+            let num_coords = line_string.num_coords();
+            for coord in line_string.coords() {
+                self.coords.push_coord(&coord);
             }
             self.try_push_length(num_coords)?;
         } else {

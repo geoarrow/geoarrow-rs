@@ -226,8 +226,8 @@ impl<const D: usize> MultiPolygonBuilder<D> {
 
             // TODO: support empty polygons
             let ext_ring = polygon.exterior().unwrap();
-            for coord in ext_ring.points() {
-                self.coords.push_point(&coord);
+            for coord in ext_ring.coords() {
+                self.coords.push_coord(&coord);
             }
 
             // Total number of rings in this Multipolygon
@@ -237,16 +237,16 @@ impl<const D: usize> MultiPolygonBuilder<D> {
 
             // Number of coords for each ring
             self.ring_offsets
-                .try_push_usize(ext_ring.num_points())
+                .try_push_usize(ext_ring.num_coords())
                 .unwrap();
 
             for int_ring in polygon.interiors() {
                 self.ring_offsets
-                    .try_push_usize(int_ring.num_points())
+                    .try_push_usize(int_ring.num_coords())
                     .unwrap();
 
-                for coord in int_ring.points() {
-                    self.coords.push_point(&coord);
+                for coord in int_ring.coords() {
+                    self.coords.push_coord(&coord);
                 }
             }
         } else {
@@ -275,8 +275,8 @@ impl<const D: usize> MultiPolygonBuilder<D> {
                 // Here we unwrap the exterior ring because a polygon inside a multi polygon should
                 // never be empty.
                 let ext_ring = polygon.exterior().unwrap();
-                for coord in ext_ring.points() {
-                    self.coords.push_point(&coord);
+                for coord in ext_ring.coords() {
+                    self.coords.push_coord(&coord);
                 }
 
                 // Total number of rings in this Multipolygon
@@ -286,16 +286,16 @@ impl<const D: usize> MultiPolygonBuilder<D> {
 
                 // Number of coords for each ring
                 self.ring_offsets
-                    .try_push_usize(ext_ring.num_points())
+                    .try_push_usize(ext_ring.num_coords())
                     .unwrap();
 
                 for int_ring in polygon.interiors() {
                     self.ring_offsets
-                        .try_push_usize(int_ring.num_points())
+                        .try_push_usize(int_ring.num_coords())
                         .unwrap();
 
-                    for coord in int_ring.points() {
-                        self.coords.push_point(&coord);
+                    for coord in int_ring.coords() {
+                        self.coords.push_coord(&coord);
                     }
                 }
             }

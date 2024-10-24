@@ -110,20 +110,18 @@ impl WKBCapacity {
     /// Add a Geometry to this capacity counter.
     #[inline]
     pub fn add_geometry<'a>(&mut self, geom: Option<&'a (impl GeometryTrait + 'a)>) {
+        use crate::geo_traits::GeometryType::*;
+
         if let Some(geom) = geom {
             match geom.as_type() {
-                crate::geo_traits::GeometryType::Point(g) => self.add_point(Some(g)),
-                crate::geo_traits::GeometryType::LineString(g) => self.add_line_string(Some(g)),
-                crate::geo_traits::GeometryType::Polygon(g) => self.add_polygon(Some(g)),
-                crate::geo_traits::GeometryType::MultiPoint(p) => self.add_multi_point(Some(p)),
-                crate::geo_traits::GeometryType::MultiLineString(p) => {
-                    self.add_multi_line_string(Some(p))
-                }
-                crate::geo_traits::GeometryType::MultiPolygon(p) => self.add_multi_polygon(Some(p)),
-                crate::geo_traits::GeometryType::GeometryCollection(p) => {
-                    self.add_geometry_collection(Some(p))
-                }
-                crate::geo_traits::GeometryType::Rect(_) => todo!(),
+                Point(g) => self.add_point(Some(g)),
+                LineString(g) => self.add_line_string(Some(g)),
+                Polygon(g) => self.add_polygon(Some(g)),
+                MultiPoint(p) => self.add_multi_point(Some(p)),
+                MultiLineString(p) => self.add_multi_line_string(Some(p)),
+                MultiPolygon(p) => self.add_multi_polygon(Some(p)),
+                GeometryCollection(p) => self.add_geometry_collection(Some(p)),
+                Rect(_) | Line(_) | Triangle(_) => todo!(),
             }
         } else {
             self.offsets_capacity += 1;

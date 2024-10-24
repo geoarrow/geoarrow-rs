@@ -394,7 +394,7 @@ impl<'a, const D: usize> MixedGeometryBuilder<D> {
                         ));
                     }
                 }
-                Rect(_) => todo!(),
+                Rect(_) | Triangle(_) | Line(_) => todo!(),
             };
         } else {
             self.push_null();

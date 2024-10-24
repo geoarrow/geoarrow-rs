@@ -240,11 +240,11 @@ impl<const D: usize> MultiLineStringBuilder<D> {
             // - Push ring's coords to self.coords
 
             self.ring_offsets
-                .try_push_usize(line_string.num_points())
+                .try_push_usize(line_string.num_coords())
                 .unwrap();
 
-            for coord in line_string.points() {
-                self.coords.push_point(&coord);
+            for coord in line_string.coords() {
+                self.coords.push_coord(&coord);
             }
 
             self.validity.append(true);
@@ -277,11 +277,11 @@ impl<const D: usize> MultiLineStringBuilder<D> {
             // Number of coords for each ring
             for line_string in multi_line_string.line_strings() {
                 self.ring_offsets
-                    .try_push_usize(line_string.num_points())
+                    .try_push_usize(line_string.num_coords())
                     .unwrap();
 
-                for coord in line_string.points() {
-                    self.coords.push_point(&coord);
+                for coord in line_string.coords() {
+                    self.coords.push_coord(&coord);
                 }
             }
 

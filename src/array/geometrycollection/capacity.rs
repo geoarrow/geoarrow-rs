@@ -77,16 +77,17 @@ impl GeometryCollectionCapacity {
     /// Add a Geometry to this capacity counter.
     #[inline]
     pub fn add_geometry(&mut self, geom: Option<&impl GeometryTrait>) -> Result<()> {
+        use GeometryType::*;
         if let Some(geom) = geom {
             match geom.as_type() {
-                GeometryType::Point(p) => self.add_valid_point(p),
-                GeometryType::LineString(p) => self.add_valid_line_string(p),
-                GeometryType::Polygon(p) => self.add_valid_polygon(p),
-                GeometryType::MultiPoint(p) => self.add_valid_multi_point(p),
-                GeometryType::MultiLineString(p) => self.add_valid_multi_line_string(p),
-                GeometryType::MultiPolygon(p) => self.add_valid_multi_polygon(p),
-                GeometryType::GeometryCollection(p) => self.add_valid_geometry_collection(p)?,
-                GeometryType::Rect(_) => todo!(),
+                Point(p) => self.add_valid_point(p),
+                LineString(p) => self.add_valid_line_string(p),
+                Polygon(p) => self.add_valid_polygon(p),
+                MultiPoint(p) => self.add_valid_multi_point(p),
+                MultiLineString(p) => self.add_valid_multi_line_string(p),
+                MultiPolygon(p) => self.add_valid_multi_polygon(p),
+                GeometryCollection(p) => self.add_valid_geometry_collection(p)?,
+                Rect(_) | Line(_) | Triangle(_) => todo!(),
             }
         };
         Ok(())

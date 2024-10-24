@@ -157,22 +157,22 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     /// Push a Geometry onto the end of this builder
     #[inline]
     pub fn push_geometry(&mut self, geom: Option<&impl GeometryTrait<T = f64>>) {
+        use GeometryType::*;
+
         if let Some(geom) = geom {
             match geom.as_type() {
-                GeometryType::Point(point) => self.push_point(Some(point)),
-                GeometryType::LineString(line_string) => self.push_line_string(Some(line_string)),
-                GeometryType::Polygon(polygon) => self.push_polygon(Some(polygon)),
-                GeometryType::MultiPoint(multi_point) => self.push_multi_point(Some(multi_point)),
-                GeometryType::MultiLineString(multi_line_string) => {
+                Point(point) => self.push_point(Some(point)),
+                LineString(line_string) => self.push_line_string(Some(line_string)),
+                Polygon(polygon) => self.push_polygon(Some(polygon)),
+                MultiPoint(multi_point) => self.push_multi_point(Some(multi_point)),
+                MultiLineString(multi_line_string) => {
                     self.push_multi_line_string(Some(multi_line_string))
                 }
-                GeometryType::MultiPolygon(multi_polygon) => {
-                    self.push_multi_polygon(Some(multi_polygon))
-                }
-                GeometryType::GeometryCollection(geometry_collection) => {
+                MultiPolygon(multi_polygon) => self.push_multi_polygon(Some(multi_polygon)),
+                GeometryCollection(geometry_collection) => {
                     self.push_geometry_collection(Some(geometry_collection))
                 }
-                GeometryType::Rect(_) => todo!(),
+                Rect(_) | Line(_) | Triangle(_) => todo!(),
             }
         } else {
             self.0.append_null()

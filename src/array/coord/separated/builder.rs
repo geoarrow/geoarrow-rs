@@ -1,7 +1,7 @@
 use core::f64;
 
 use crate::array::SeparatedCoordBuffer;
-use crate::geo_traits::PointTrait;
+use crate::geo_traits::{CoordTrait, PointTrait};
 
 /// The GeoArrow equivalent to `Vec<Coord>`: a mutable collection of coordinates.
 ///
@@ -84,9 +84,18 @@ impl<const D: usize> SeparatedCoordBufferBuilder<D> {
         }
     }
 
-    pub fn push_point(&mut self, point: &impl PointTrait<T = f64>) {
+    pub fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
+        // TODO: how to handle when coord dimensions and store dimensions don't line up?
         for (i, buffer) in self.buffers.iter_mut().enumerate() {
-            buffer.push(point.nth(i).unwrap_or(f64::NAN))
+            buffer.push(coord.nth(i).unwrap_or(f64::NAN))
+        }
+    }
+
+    pub fn push_point(&mut self, point: &impl PointTrait<T = f64>) {
+        if let Some(coord) = point.coord() {
+            self.push_coord(&coord);
+        } else {
+            self.push([f64::NAN; D]);
         }
     }
 }

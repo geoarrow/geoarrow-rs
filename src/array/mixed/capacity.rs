@@ -192,7 +192,7 @@ impl MixedCapacity {
                 crate::geo_traits::GeometryType::GeometryCollection(_) => {
                     panic!("nested geometry collections not supported")
                 }
-                crate::geo_traits::GeometryType::Rect(_) => todo!(),
+                _ => todo!(), // crate::geo_traits::GeometryType::Rect(_) => todo!(),
             };
         };
         Ok(())

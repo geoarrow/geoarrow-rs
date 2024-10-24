@@ -4,7 +4,7 @@ use std::sync::Arc;
 use crate::array::{CoordType, InterleavedCoordBufferBuilder};
 use crate::datatypes::coord_type_to_data_type;
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::PointTrait;
+use crate::geo_traits::{CoordTrait, PointTrait};
 use crate::scalar::InterleavedCoord;
 use crate::trait_::IntoArrow;
 use arrow_array::{Array, FixedSizeListArray, Float64Array};

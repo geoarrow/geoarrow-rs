@@ -3,7 +3,7 @@ use core::f64;
 use crate::array::{
     CoordBuffer, CoordType, InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder,
 };
-use crate::geo_traits::PointTrait;
+use crate::geo_traits::{CoordTrait, PointTrait};
 
 /// The GeoArrow equivalent to `Vec<Coord>`: a mutable collection of coordinates.
 ///
@@ -83,6 +83,14 @@ impl<const D: usize> CoordBufferBuilder<D> {
         match self {
             CoordBufferBuilder::Interleaved(_) => CoordType::Interleaved,
             CoordBufferBuilder::Separated(_) => CoordType::Separated,
+        }
+    }
+
+    // TODO: how should this handle coords that don't have the same dimension D?
+    pub fn push_coord(&mut self, point: &impl CoordTrait<T = f64>) {
+        match self {
+            CoordBufferBuilder::Interleaved(cb) => cb.push_coord(point),
+            CoordBufferBuilder::Separated(cb) => cb.push_coord(point),
         }
     }
 

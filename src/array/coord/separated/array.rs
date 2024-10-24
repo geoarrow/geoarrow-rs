@@ -2,14 +2,13 @@ use std::sync::Arc;
 
 use arrow::array::AsArray;
 use arrow::datatypes::Float64Type;
-// use arrow2::array::{Array, PrimitiveArray, StructArray};
 use arrow_array::{Array, ArrayRef, Float64Array, StructArray};
 use arrow_buffer::ScalarBuffer;
 use arrow_schema::{DataType, Field};
 
 use crate::array::{CoordType, SeparatedCoordBufferBuilder};
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::PointTrait;
+use crate::geo_traits::{CoordTrait, PointTrait};
 use crate::scalar::SeparatedCoord;
 use crate::trait_::IntoArrow;
 

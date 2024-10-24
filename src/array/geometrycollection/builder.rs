@@ -243,9 +243,7 @@ impl<'a, const D: usize> GeometryCollectionBuilder<D> {
                 MultiLineString(p) => self.push_multi_line_string(Some(p))?,
                 MultiPolygon(p) => self.push_multi_polygon(Some(p))?,
                 GeometryCollection(p) => self.push_geometry_collection(Some(p))?,
-                Rect(_p) => {
-                    todo!()
-                }
+                Rect(_) | Triangle(_) | Line(_) => todo!(),
             }
         } else {
             self.push_null();

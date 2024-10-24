@@ -1,8 +1,8 @@
 use std::ops::Add;
 
 use crate::geo_traits::{
-    GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
-    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
+    CoordTrait, GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait,
+    MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
 };
 use geo::{Coord, Rect};
 
@@ -61,10 +61,10 @@ impl BoundingRect {
         }
     }
 
-    pub fn add_point(&mut self, point: &impl PointTrait<T = f64>) {
-        let x = point.x();
-        let y = point.y();
-        let z = point.nth(2);
+    pub fn add_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
+        let x = coord.x();
+        let y = coord.y();
+        let z = coord.nth(2);
 
         if x < self.minx {
             self.minx = x;
@@ -91,9 +91,15 @@ impl BoundingRect {
         }
     }
 
+    pub fn add_point(&mut self, point: &impl PointTrait<T = f64>) {
+        if let Some(coord) = point.coord() {
+            self.add_coord(&coord);
+        }
+    }
+
     pub fn add_line_string(&mut self, line_string: &impl LineStringTrait<T = f64>) {
-        for coord in line_string.points() {
-            self.add_point(&coord);
+        for coord in line_string.coords() {
+            self.add_coord(&coord);
         }
     }
 
@@ -129,15 +135,18 @@ impl BoundingRect {
     }
 
     pub fn add_geometry(&mut self, geometry: &impl GeometryTrait<T = f64>) {
+        use GeometryType::*;
+
         match geometry.as_type() {
-            GeometryType::Point(g) => self.add_point(g),
-            GeometryType::LineString(g) => self.add_line_string(g),
-            GeometryType::Polygon(g) => self.add_polygon(g),
-            GeometryType::MultiPoint(g) => self.add_multi_point(g),
-            GeometryType::MultiLineString(g) => self.add_multi_line_string(g),
-            GeometryType::MultiPolygon(g) => self.add_multi_polygon(g),
-            GeometryType::GeometryCollection(g) => self.add_geometry_collection(g),
-            GeometryType::Rect(g) => self.add_rect(g),
+            Point(g) => self.add_point(g),
+            LineString(g) => self.add_line_string(g),
+            Polygon(g) => self.add_polygon(g),
+            MultiPoint(g) => self.add_multi_point(g),
+            MultiLineString(g) => self.add_multi_line_string(g),
+            MultiPolygon(g) => self.add_multi_polygon(g),
+            GeometryCollection(g) => self.add_geometry_collection(g),
+            Rect(g) => self.add_rect(g),
+            Triangle(_) | Line(_) => todo!(),
         }
     }
 
@@ -151,8 +160,8 @@ impl BoundingRect {
     }
 
     pub fn add_rect(&mut self, rect: &impl RectTrait<T = f64>) {
-        self.add_point(&rect.min());
-        self.add_point(&rect.max());
+        self.add_coord(&rect.min());
+        self.add_coord(&rect.max());
     }
 
     pub fn update(&mut self, other: &BoundingRect) {
