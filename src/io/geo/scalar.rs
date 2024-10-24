@@ -19,7 +19,11 @@ pub fn coord_to_geo<T: CoordNum>(coord: &impl CoordTrait<T = T>) -> geo::Coord<T
 ///
 /// Only the first two dimensions will be kept.
 pub fn point_to_geo<T: CoordNum>(point: &impl PointTrait<T = T>) -> geo::Point<T> {
-    geo::Point::new(point.x(), point.y())
+    if let Some(coord) = point.coord() {
+        geo::Point(coord_to_geo(&coord))
+    } else {
+        todo!("converting empty point to geo not implemented")
+    }
 }
 
 /// Convert any LineString to a [`geo::LineString`].

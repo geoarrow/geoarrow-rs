@@ -1,9 +1,45 @@
 use crate::datatypes::Dimension;
 use crate::geo_traits::{
-    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
-    MultiPolygonTrait, PointTrait, PolygonTrait, UnimplementedLine, UnimplementedRect,
-    UnimplementedTriangle,
+    CoordTrait, GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait,
+    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, UnimplementedLine,
+    UnimplementedRect, UnimplementedTriangle,
 };
+
+#[derive(Debug, Clone)]
+pub(super) struct Coord<'a> {
+    geom: flatgeobuf::Geometry<'a>,
+    dim: Dimension,
+    /// The coordinate offset
+    ///
+    /// Note each coord_offset points to an xy coordinate pair, and must be multiplied by 2 to get
+    /// the buffer coord_offset
+    coord_offset: usize,
+}
+
+impl<'a> CoordTrait for Coord<'a> {
+    type T = f64;
+
+    fn dim(&self) -> crate::geo_traits::Dimensions {
+        self.dim.into()
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.geom.xy().unwrap().get(self.coord_offset * 2),
+            1 => self.geom.xy().unwrap().get((self.coord_offset * 2) + 1),
+            2 => self.geom.z().unwrap().get(self.coord_offset),
+            _ => panic!("Unexpected dim {n}"),
+        }
+    }
+
+    fn x(&self) -> Self::T {
+        self.geom.xy().unwrap().get(self.coord_offset * 2)
+    }
+
+    fn y(&self) -> Self::T {
+        self.geom.xy().unwrap().get((self.coord_offset * 2) + 1)
+    }
+}
 
 #[derive(Debug, Clone)]
 pub(super) struct Point<'a> {
@@ -28,26 +64,19 @@ impl<'a> Point<'a> {
 
 impl<'a> PointTrait for Point<'a> {
     type T = f64;
+    type CoordType<'b> = Coord<'a> where Self: 'b;
 
     fn dim(&self) -> crate::geo_traits::Dimensions {
         self.dim.into()
     }
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
-        match n {
-            0 => self.geom.xy().unwrap().get(self.coord_offset * 2),
-            1 => self.geom.xy().unwrap().get((self.coord_offset * 2) + 1),
-            2 => self.geom.z().unwrap().get(self.coord_offset),
-            _ => panic!("Unexpected dim {n}"),
-        }
-    }
-
-    fn x(&self) -> Self::T {
-        self.geom.xy().unwrap().get(self.coord_offset * 2)
-    }
-
-    fn y(&self) -> Self::T {
-        self.geom.xy().unwrap().get((self.coord_offset * 2) + 1)
+    fn coord(&self) -> Option<Self::CoordType<'_>> {
+        // FlatGeobuf doesn't support empty geometries
+        Some(Coord {
+            geom: self.geom,
+            dim: self.dim,
+            coord_offset: self.coord_offset,
+        })
     }
 }
 
@@ -79,7 +108,7 @@ impl<'a> LineString<'a> {
 
 impl<'a> LineStringTrait for LineString<'a> {
     type T = f64;
-    type CoordType<'b> = Point<'a> where Self: 'b;
+    type CoordType<'b> = Coord<'a> where Self: 'b;
 
     fn dim(&self) -> crate::geo_traits::Dimensions {
         self.dim.into()
@@ -90,7 +119,7 @@ impl<'a> LineStringTrait for LineString<'a> {
     }
 
     unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
-        Point {
+        Coord {
             geom: self.geom,
             dim: self.dim,
             coord_offset: self.coord_offset + i,

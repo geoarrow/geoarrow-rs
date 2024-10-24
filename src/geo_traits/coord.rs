@@ -114,6 +114,31 @@ impl<T: CoordNum> CoordTrait for (T, T) {
     }
 }
 
+impl<const D: usize, T: CoordNum> CoordTrait for [T; D] {
+    type T = T;
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        self[n]
+    }
+
+    fn dim(&self) -> Dimensions {
+        match D {
+            2 => Dimensions::Xy,
+            3 => Dimensions::Xyz,
+            4 => Dimensions::Xyzm,
+            _ => todo!(),
+        }
+    }
+
+    fn x(&self) -> Self::T {
+        self[0]
+    }
+
+    fn y(&self) -> Self::T {
+        self[1]
+    }
+}
+
 /// An empty struct that implements [CoordTrait].
 ///
 /// This can be used as the `CoordType` of the `GeometryTrait` by implementations that don't have a
