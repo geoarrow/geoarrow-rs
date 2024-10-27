@@ -688,10 +688,10 @@ impl<G: GeometryTrait<T = f64>, const D: usize> TryFrom<&[G]> for MixedGeometryA
     }
 }
 
-impl<G: GeometryTrait<T = f64>, const D: usize> TryFrom<&[Option<G>]> for MixedGeometryArray<D> {
+impl<G: GeometryTrait<T = f64>, const D: usize> TryFrom<Vec<Option<G>>> for MixedGeometryArray<D> {
     type Error = GeoArrowError;
 
-    fn try_from(geoms: &[Option<G>]) -> Result<Self> {
+    fn try_from(geoms: Vec<Option<G>>) -> Result<Self> {
         let mut_arr: MixedGeometryBuilder<D> = geoms.try_into()?;
         Ok(mut_arr.into())
     }

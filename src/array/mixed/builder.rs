@@ -503,11 +503,13 @@ impl<G: GeometryTrait<T = f64>, const D: usize> TryFrom<&[G]> for MixedGeometryB
     }
 }
 
-impl<G: GeometryTrait<T = f64>, const D: usize> TryFrom<&[Option<G>]> for MixedGeometryBuilder<D> {
+impl<G: GeometryTrait<T = f64>, const D: usize> TryFrom<Vec<Option<G>>>
+    for MixedGeometryBuilder<D>
+{
     type Error = GeoArrowError;
 
-    fn try_from(geoms: &[Option<G>]) -> Result<Self> {
-        Self::from_nullable_geometries(geoms, Default::default(), Default::default(), true)
+    fn try_from(geoms: Vec<Option<G>>) -> Result<Self> {
+        Self::from_nullable_geometries(&geoms, Default::default(), Default::default(), true)
     }
 }
 

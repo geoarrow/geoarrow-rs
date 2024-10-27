@@ -10,7 +10,7 @@ use crate::array::{CoordType, SeparatedCoordBufferBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::SeparatedCoord;
 use crate::trait_::IntoArrow;
-use geo_traits::{CoordTrait, PointTrait};
+use geo_traits::CoordTrait;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SeparatedCoordBuffer<const D: usize> {
@@ -200,7 +200,7 @@ impl TryFrom<(Vec<f64>, Vec<f64>)> for SeparatedCoordBuffer<2> {
     }
 }
 
-impl<G: PointTrait<T = f64>> From<&[G]> for SeparatedCoordBuffer<2> {
+impl<G: CoordTrait<T = f64>> From<&[G]> for SeparatedCoordBuffer<2> {
     fn from(other: &[G]) -> Self {
         let mut_arr: SeparatedCoordBufferBuilder<2> = other.into();
         mut_arr.into()

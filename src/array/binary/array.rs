@@ -334,10 +334,10 @@ impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for WKBArray<O
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[Option<G>]> for WKBArray<O> {
+impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<Vec<Option<G>>> for WKBArray<O> {
     type Error = GeoArrowError;
 
-    fn try_from(geoms: &[Option<G>]) -> Result<Self> {
+    fn try_from(geoms: Vec<Option<G>>) -> Result<Self> {
         let mut_arr: WKBBuilder<O> = geoms.try_into()?;
         Ok(mut_arr.into())
     }

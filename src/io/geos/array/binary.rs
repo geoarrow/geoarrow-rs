@@ -3,12 +3,10 @@ use arrow_array::OffsetSizeTrait;
 use geos::Geom;
 
 use crate::array::WKBArray;
-use crate::error::GeoArrowError;
+use crate::error::Result;
 
-impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for WKBArray<O> {
-    type Error = GeoArrowError;
-
-    fn try_from(value: Vec<Option<geos::Geometry>>) -> std::result::Result<Self, Self::Error> {
+impl<O: OffsetSizeTrait> WKBArray<O> {
+    pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         let mut builder = GenericBinaryBuilder::new();
         for maybe_geom in value {
             if let Some(geom) = maybe_geom {

@@ -134,11 +134,11 @@ impl<const D: usize> From<SeparatedCoordBufferBuilder<D>> for SeparatedCoordBuff
     }
 }
 
-impl<G: PointTrait<T = f64>, const D: usize> From<&[G]> for SeparatedCoordBufferBuilder<D> {
+impl<G: CoordTrait<T = f64>, const D: usize> From<&[G]> for SeparatedCoordBufferBuilder<D> {
     fn from(value: &[G]) -> Self {
         let mut buffer = SeparatedCoordBufferBuilder::with_capacity(value.len());
         for coord in value {
-            buffer.push_point(coord);
+            buffer.push_coord(coord);
         }
         buffer
     }

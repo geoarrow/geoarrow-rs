@@ -3,7 +3,7 @@ use crate::error::Result;
 use crate::io::geos::scalar::GEOSLineString;
 
 impl<const D: usize> LineStringBuilder<D> {
-    fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
+    pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         // TODO: don't use new_unchecked
         let geos_objects: Vec<Option<GEOSLineString>> = value
             .into_iter()
@@ -14,7 +14,7 @@ impl<const D: usize> LineStringBuilder<D> {
 }
 
 impl<const D: usize> LineStringArray<D> {
-    fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
+    pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         let mutable_arr = LineStringBuilder::from_geos(value)?;
         Ok(mutable_arr.into())
     }

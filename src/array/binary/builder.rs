@@ -232,11 +232,11 @@ impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for WKBBuilder
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[Option<G>]> for WKBBuilder<O> {
+impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<Vec<Option<G>>> for WKBBuilder<O> {
     type Error = GeoArrowError;
 
-    fn try_from(geoms: &[Option<G>]) -> Result<Self> {
-        Ok(Self::from_nullable_geometries(geoms))
+    fn try_from(geoms: Vec<Option<G>>) -> Result<Self> {
+        Ok(Self::from_nullable_geometries(&geoms))
     }
 }
 
