@@ -50,6 +50,7 @@ pyo3-asyncio-0-21 = { version = "0.21", features = [
 ], optional = true }
 pythonize = "0.21"
 geo = "0.28"
+geo-traits = { workspace = true }
 geoarrow = { path = "../../", features = [
     "csv",
     "flatgeobuf",
