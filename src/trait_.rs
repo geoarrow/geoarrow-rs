@@ -508,7 +508,7 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     ///
     /// ```
     /// use geoarrow::{trait_::ArrayAccessor, array::PointArray};
-    /// use geoarrow::geo_traits::{PointTrait, CoordTrait};
+    /// use geo_traits::{PointTrait, CoordTrait};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -594,7 +594,7 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     ///
     /// ```
     /// use geoarrow::{trait_::ArrayAccessor, array::PointArray};
-    /// use geoarrow::geo_traits::{PointTrait, CoordTrait};
+    /// use geo_traits::{PointTrait, CoordTrait};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
