@@ -111,7 +111,7 @@ impl AnyBuilder {
                     builder.append_null();
                 }
                 let dt = string_to_datetime(&Utc, val).unwrap();
-                builder.append_value(naive.timestamp_micros());
+                builder.append_value(dt.timestamp_micros());
                 AnyBuilder::DateTime((builder, None))
             }
             ColumnValue::Binary(val) => {
