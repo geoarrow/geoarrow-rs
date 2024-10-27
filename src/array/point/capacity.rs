@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{GeometryTrait, GeometryType, PointTrait};
+use geo_traits::{GeometryTrait, GeometryType, PointTrait};
 use std::ops::Add;
 
 /// A counter for the buffer sizes of a [`PointArray`][crate::array::PointArray].

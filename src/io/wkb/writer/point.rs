@@ -1,7 +1,6 @@
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{PointArray, WKBArray};
 use crate::error::Result;
-use crate::geo_traits::{CoordTrait, PointTrait};
 use crate::io::wkb::common::WKBType;
 use crate::io::wkb::reader::Endianness;
 use crate::trait_::ArrayAccessor;
@@ -10,10 +9,11 @@ use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use arrow_buffer::Buffer;
 use byteorder::{LittleEndian, WriteBytesExt};
 use core::f64;
+use geo_traits::{CoordTrait, PointTrait};
 use std::io::{Cursor, Write};
 
 /// The byte length of a WKBPoint
-pub fn point_wkb_size(dim: crate::geo_traits::Dimensions) -> usize {
+pub fn point_wkb_size(dim: geo_traits::Dimensions) -> usize {
     let header = 1 + 4;
     let coords = dim.size() * 8;
     header + coords
@@ -28,7 +28,7 @@ pub fn point_wkb_size_const<const D: usize>() -> usize {
 
 /// Write a Point geometry to a Writer encoded as WKB
 pub fn write_point_as_wkb<W: Write>(mut writer: W, geom: &impl PointTrait<T = f64>) -> Result<()> {
-    use crate::geo_traits::Dimensions;
+    use geo_traits::Dimensions;
 
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into())?;

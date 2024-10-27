@@ -1,7 +1,7 @@
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::MultiLineStringTrait;
 use crate::io::geos::scalar::GEOSConstLineString;
 use crate::scalar::MultiLineString;
+use geo_traits::MultiLineStringTrait;
 use geos::{Geom, GeometryTypes};
 
 impl<'a, const D: usize> TryFrom<&'a MultiLineString<'_, D>> for geos::Geometry {
@@ -58,10 +58,10 @@ impl MultiLineStringTrait for GEOSMultiLineString {
     type T = f64;
     type LineStringType<'a> = GEOSConstLineString<'a> where Self: 'a;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => crate::geo_traits::Dimensions::Xy,
-            geos::Dimensions::ThreeD => crate::geo_traits::Dimensions::Xyz,
+            geos::Dimensions::TwoD => geo_traits::Dimensions::Xy,
+            geos::Dimensions::ThreeD => geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }

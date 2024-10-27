@@ -4,9 +4,9 @@ use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
 use crate::algorithm::native::eq::multi_line_string_eq;
 use crate::datatypes::Dimension;
-use crate::geo_traits::MultiLineStringTrait;
 use crate::io::wkb::reader::geometry::Endianness;
 use crate::io::wkb::reader::linestring::WKBLineString;
+use geo_traits::MultiLineStringTrait;
 
 const HEADER_BYTES: u64 = 5;
 
@@ -78,7 +78,7 @@ impl<'a> MultiLineStringTrait for WKBMultiLineString<'a> {
     type T = f64;
     type LineStringType<'b> = WKBLineString<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -95,7 +95,7 @@ impl<'a> MultiLineStringTrait for &'a WKBMultiLineString<'a> {
     type T = f64;
     type LineStringType<'b> = WKBLineString<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 

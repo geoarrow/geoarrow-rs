@@ -3,7 +3,7 @@ use core::f64;
 use crate::array::{
     CoordBuffer, CoordType, InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder,
 };
-use crate::geo_traits::{CoordTrait, PointTrait};
+use geo_traits::{CoordTrait, PointTrait};
 
 /// The GeoArrow equivalent to `Vec<Coord>`: a mutable collection of coordinates.
 ///

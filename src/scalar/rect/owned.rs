@@ -1,7 +1,7 @@
 use crate::algorithm::native::eq::rect_eq;
 use crate::array::{RectArray, SeparatedCoordBuffer};
-use crate::geo_traits::RectTrait;
-use crate::scalar::Rect;
+use crate::scalar::{Rect, SeparatedCoord};
+use geo_traits::RectTrait;
 
 #[derive(Clone, Debug)]
 pub struct OwnedRect<const D: usize> {
@@ -45,23 +45,23 @@ impl<const D: usize> From<OwnedRect<D>> for RectArray<D> {
 
 impl<const D: usize> RectTrait for OwnedRect<D> {
     type T = f64;
-    type CoordType<'b> = [Self::T; D] where Self: 'b;
+    type CoordType<'b> = SeparatedCoord<'b, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimensions::Xy,
-            3 => crate::geo_traits::Dimensions::Xyz,
+            2 => geo_traits::Dimensions::Xy,
+            3 => geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
 
     fn min(&self) -> Self::CoordType<'_> {
-        Rect::from(self).min()
+        self.lower.value(self.geom_index)
     }
 
     fn max(&self) -> Self::CoordType<'_> {
-        Rect::from(self).max()
+        self.upper.value(self.geom_index)
     }
 }
 

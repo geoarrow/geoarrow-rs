@@ -1,10 +1,10 @@
-use crate::geo_traits::{
-    CoordTrait, GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait,
-    MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
-};
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 use geo::CoordFloat;
+use geo_traits::{
+    CoordTrait, GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait,
+    MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
+};
 
 #[inline]
 pub fn coord_eq<T: CoordFloat>(

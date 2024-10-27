@@ -1,5 +1,5 @@
 use crate::datatypes::Dimension;
-use crate::geo_traits::{
+use geo_traits::{
     CoordTrait, GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait,
     MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, UnimplementedLine,
     UnimplementedRect, UnimplementedTriangle,
@@ -19,7 +19,7 @@ pub(super) struct Coord<'a> {
 impl<'a> CoordTrait for Coord<'a> {
     type T = f64;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -66,7 +66,7 @@ impl<'a> PointTrait for Point<'a> {
     type T = f64;
     type CoordType<'b> = Coord<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -110,7 +110,7 @@ impl<'a> LineStringTrait for LineString<'a> {
     type T = f64;
     type CoordType<'b> = Coord<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -143,7 +143,7 @@ impl<'a> PolygonTrait for Polygon<'a> {
     type T = f64;
     type RingType<'b> = LineString<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -212,7 +212,7 @@ impl<'a> MultiPointTrait for MultiPoint<'a> {
     type T = f64;
     type PointType<'b> = Point<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -245,7 +245,7 @@ impl<'a> MultiLineStringTrait for MultiLineString<'a> {
     type T = f64;
     type LineStringType<'b> = LineString<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -290,7 +290,7 @@ impl<'a> MultiPolygonTrait for MultiPolygon<'a> {
     type T = f64;
     type PolygonType<'b> = Polygon<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -394,7 +394,7 @@ impl<'a> GeometryTrait for Geometry<'a> {
     type TriangleType<'b> = UnimplementedTriangle<f64> where Self: 'b;
     type LineType<'b> = UnimplementedLine<f64> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         match self {
             Self::Point(g) => PointTrait::dim(g),
             Self::LineString(g) => g.dim(),
@@ -408,7 +408,7 @@ impl<'a> GeometryTrait for Geometry<'a> {
 
     fn as_type(
         &self,
-    ) -> crate::geo_traits::GeometryType<
+    ) -> geo_traits::GeometryType<
         '_,
         Point<'a>,
         LineString<'a>,
@@ -422,13 +422,13 @@ impl<'a> GeometryTrait for Geometry<'a> {
         UnimplementedLine<f64>,
     > {
         match self {
-            Self::Point(pt) => crate::geo_traits::GeometryType::Point(pt),
-            Self::LineString(pt) => crate::geo_traits::GeometryType::LineString(pt),
-            Self::Polygon(pt) => crate::geo_traits::GeometryType::Polygon(pt),
-            Self::MultiPoint(pt) => crate::geo_traits::GeometryType::MultiPoint(pt),
-            Self::MultiLineString(pt) => crate::geo_traits::GeometryType::MultiLineString(pt),
-            Self::MultiPolygon(pt) => crate::geo_traits::GeometryType::MultiPolygon(pt),
-            Self::GeometryCollection(pt) => crate::geo_traits::GeometryType::GeometryCollection(pt),
+            Self::Point(pt) => geo_traits::GeometryType::Point(pt),
+            Self::LineString(pt) => geo_traits::GeometryType::LineString(pt),
+            Self::Polygon(pt) => geo_traits::GeometryType::Polygon(pt),
+            Self::MultiPoint(pt) => geo_traits::GeometryType::MultiPoint(pt),
+            Self::MultiLineString(pt) => geo_traits::GeometryType::MultiLineString(pt),
+            Self::MultiPolygon(pt) => geo_traits::GeometryType::MultiPolygon(pt),
+            Self::GeometryCollection(pt) => geo_traits::GeometryType::GeometryCollection(pt),
         }
     }
 }
@@ -449,7 +449,7 @@ impl<'a> GeometryCollectionTrait for GeometryCollection<'a> {
     type T = f64;
     type GeometryType<'b> = Geometry<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 

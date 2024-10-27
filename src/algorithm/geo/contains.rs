@@ -2,10 +2,6 @@ use crate::algorithm::native::{Binary, Unary};
 use crate::array::*;
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::GeoArrowError;
-use crate::geo_traits::{
-    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
-    MultiPolygonTrait, PointTrait, PolygonTrait,
-};
 use crate::io::geo::{
     geometry_collection_to_geo, geometry_to_geo, line_string_to_geo, multi_line_string_to_geo,
     multi_point_to_geo, multi_polygon_to_geo, point_to_geo, polygon_to_geo,
@@ -15,6 +11,10 @@ use crate::NativeArray;
 use arrow_array::builder::BooleanBuilder;
 use arrow_array::BooleanArray;
 use geo::Contains as _Contains;
+use geo_traits::{
+    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
+    MultiPolygonTrait, PointTrait, PolygonTrait,
+};
 
 /// Checks if `rhs` is completely contained within `self`.
 /// More formally, the interior of `rhs` has non-empty

@@ -1,8 +1,8 @@
 use crate::algorithm::native::eq::line_string_eq;
 use crate::array::{CoordBuffer, LineStringArray};
-use crate::geo_traits::LineStringTrait;
 use crate::scalar::{Coord, LineString};
 use arrow_buffer::OffsetBuffer;
+use geo_traits::LineStringTrait;
 
 #[derive(Clone, Debug)]
 pub struct OwnedLineString<const D: usize> {
@@ -54,11 +54,11 @@ impl<const D: usize> LineStringTrait for OwnedLineString<D> {
     type T = f64;
     type CoordType<'b> = Coord<'b, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimensions::Xy,
-            3 => crate::geo_traits::Dimensions::Xyz,
+            2 => geo_traits::Dimensions::Xy,
+            3 => geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }

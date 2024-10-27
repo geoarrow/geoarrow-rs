@@ -1,11 +1,9 @@
 use crate::array::{LineStringArray, LineStringBuilder};
-use crate::error::{GeoArrowError, Result};
+use crate::error::Result;
 use crate::io::geos::scalar::GEOSLineString;
 
-impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>> for LineStringBuilder<D> {
-    type Error = GeoArrowError;
-
-    fn try_from(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
+impl<const D: usize> LineStringBuilder<D> {
+    pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         // TODO: don't use new_unchecked
         let geos_objects: Vec<Option<GEOSLineString>> = value
             .into_iter()
@@ -15,11 +13,9 @@ impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>> for LineStringBuilder<
     }
 }
 
-impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>> for LineStringArray<D> {
-    type Error = GeoArrowError;
-
-    fn try_from(value: Vec<Option<geos::Geometry>>) -> std::result::Result<Self, Self::Error> {
-        let mutable_arr: LineStringBuilder<D> = value.try_into()?;
+impl<const D: usize> LineStringArray<D> {
+    pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
+        let mutable_arr = LineStringBuilder::from_geos(value)?;
         Ok(mutable_arr.into())
     }
 }
@@ -38,7 +34,7 @@ mod test {
             .iter()
             .map(|opt_x| opt_x.map(|x| x.to_geos().unwrap()))
             .collect();
-        let round_trip: LineStringArray<2> = geos_geoms.try_into().unwrap();
+        let round_trip = LineStringArray::<2>::from_geos(geos_geoms).unwrap();
         assert_eq!(arr, round_trip);
     }
 }

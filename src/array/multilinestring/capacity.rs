@@ -1,7 +1,7 @@
 use std::ops::{Add, AddAssign};
 
 use crate::array::linestring::LineStringCapacity;
-use crate::geo_traits::{LineStringTrait, MultiLineStringTrait};
+use geo_traits::{LineStringTrait, MultiLineStringTrait};
 
 /// A counter for the buffer sizes of a
 /// [`MultiLineStringArray`][crate::array::MultiLineStringArray].

@@ -4,8 +4,8 @@ use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
 use crate::datatypes::Dimension;
 use crate::error::Result;
-use crate::geo_traits::GeometryCollectionTrait;
 use crate::io::wkb::reader::geometry::{Endianness, WKBGeometry};
+use geo_traits::GeometryCollectionTrait;
 
 /// skip endianness and wkb type
 const HEADER_BYTES: u64 = 5;
@@ -63,7 +63,7 @@ impl<'a> GeometryCollectionTrait for WKBGeometryCollection<'a> {
     type T = f64;
     type GeometryType<'b> = &'b WKBGeometry<'b> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 

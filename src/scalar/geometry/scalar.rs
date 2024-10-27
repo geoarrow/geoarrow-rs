@@ -1,12 +1,12 @@
 use crate::algorithm::native::eq::geometry_eq;
-use crate::geo_traits::{
+use crate::io::geo::geometry_to_geo;
+use crate::scalar::*;
+use crate::trait_::NativeScalar;
+use geo_traits::{
     GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
     MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait, UnimplementedLine,
     UnimplementedTriangle,
 };
-use crate::io::geo::geometry_to_geo;
-use crate::scalar::*;
-use crate::trait_::NativeScalar;
 use rstar::{RTreeObject, AABB};
 
 /// A Geometry is an enum over the various underlying _zero copy_ GeoArrow scalar types.
@@ -61,7 +61,7 @@ impl<'a, const D: usize> GeometryTrait for Geometry<'a, D> {
     type LineType<'b> = UnimplementedLine<f64> where Self: 'b;
     type TriangleType<'b> = UnimplementedTriangle<f64> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         match self {
             Geometry::Point(p) => p.dim(),
             Geometry::LineString(p) => p.dim(),
@@ -76,7 +76,7 @@ impl<'a, const D: usize> GeometryTrait for Geometry<'a, D> {
 
     fn as_type(
         &self,
-    ) -> crate::geo_traits::GeometryType<
+    ) -> geo_traits::GeometryType<
         '_,
         Point<'_, D>,
         LineString<'_, D>,
@@ -115,7 +115,7 @@ impl<'a, const D: usize> GeometryTrait for &'a Geometry<'a, D> {
     type LineType<'b> = UnimplementedLine<f64> where Self: 'b;
     type TriangleType<'b> = UnimplementedTriangle<f64> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         match self {
             Geometry::Point(p) => p.dim(),
             Geometry::LineString(p) => p.dim(),
@@ -130,7 +130,7 @@ impl<'a, const D: usize> GeometryTrait for &'a Geometry<'a, D> {
 
     fn as_type(
         &self,
-    ) -> crate::geo_traits::GeometryType<
+    ) -> geo_traits::GeometryType<
         'a,
         Point<'a, D>,
         LineString<'a, D>,

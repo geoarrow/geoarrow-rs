@@ -1,6 +1,6 @@
-use crate::geo_traits::{LineStringTrait, PolygonTrait};
 use crate::io::geozero::scalar::process_coord;
 use crate::scalar::Polygon;
+use geo_traits::{LineStringTrait, PolygonTrait};
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 fn process_ring<P: GeomProcessor>(

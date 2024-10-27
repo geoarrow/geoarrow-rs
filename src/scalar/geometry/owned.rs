@@ -1,10 +1,10 @@
 use crate::algorithm::native::eq::geometry_eq;
-use crate::geo_traits::{
+use crate::scalar::*;
+use geo_traits::{
     GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
     MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait, UnimplementedLine,
     UnimplementedTriangle,
 };
-use crate::scalar::*;
 
 #[derive(Clone, Debug)]
 // TODO: come back to this in #449
@@ -79,7 +79,7 @@ impl<const D: usize> GeometryTrait for OwnedGeometry<D> {
     type TriangleType<'b> = UnimplementedTriangle<f64> where Self: 'b;
     type LineType<'b> = UnimplementedLine<f64> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         match self {
             Self::Point(p) => p.dim(),
             Self::LineString(p) => p.dim(),
@@ -94,7 +94,7 @@ impl<const D: usize> GeometryTrait for OwnedGeometry<D> {
 
     fn as_type(
         &self,
-    ) -> crate::geo_traits::GeometryType<
+    ) -> geo_traits::GeometryType<
         '_,
         OwnedPoint<D>,
         OwnedLineString<D>,

@@ -16,7 +16,7 @@ impl CoordinateSet for InterleavedCoordsGeodesy<'_> {
         self.0.len() / 2
     }
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         2
     }
 
@@ -43,7 +43,7 @@ impl CoordinateSet for SeparatedCoordsGeodesy<'_> {
         self.x.len()
     }
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         2
     }
 

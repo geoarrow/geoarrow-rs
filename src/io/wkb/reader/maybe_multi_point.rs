@@ -1,7 +1,7 @@
 use crate::algorithm::native::eq::multi_point_eq;
-use crate::geo_traits::MultiPointTrait;
 use crate::io::wkb::reader::multipoint::WKBMultiPoint;
 use crate::io::wkb::reader::point::WKBPoint;
+use geo_traits::MultiPointTrait;
 
 /// An WKB object that can be either a WKBPoint or a WKBMultiPoint.
 ///
@@ -23,7 +23,7 @@ impl<'a> MultiPointTrait for WKBMaybeMultiPoint<'a> {
     type T = f64;
     type PointType<'b> = WKBPoint<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         match self {
             WKBMaybeMultiPoint::Point(geom) => geom.dim(),
             WKBMaybeMultiPoint::MultiPoint(geom) => geom.dim(),
@@ -49,7 +49,7 @@ impl<'a> MultiPointTrait for &'a WKBMaybeMultiPoint<'a> {
     type T = f64;
     type PointType<'b> = WKBPoint<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         match self {
             WKBMaybeMultiPoint::Point(geom) => geom.dim(),
             WKBMaybeMultiPoint::MultiPoint(geom) => geom.dim(),

@@ -8,12 +8,12 @@ use crate::array::{
     MultiPolygonBuilder, PointBuilder, PolygonBuilder, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::*;
 use crate::io::wkb::reader::WKBGeometry;
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use crate::{ArrayBase, NativeArray};
 use arrow_array::{OffsetSizeTrait, UnionArray};
+use geo_traits::*;
 
 pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 
@@ -369,7 +369,7 @@ impl<'a, const D: usize> MixedGeometryBuilder<D> {
 
     #[inline]
     pub fn push_geometry(&mut self, value: Option<&'a impl GeometryTrait<T = f64>>) -> Result<()> {
-        use crate::geo_traits::GeometryType::*;
+        use geo_traits::GeometryType::*;
 
         if let Some(geom) = value {
             match geom.as_type() {
@@ -503,11 +503,13 @@ impl<G: GeometryTrait<T = f64>, const D: usize> TryFrom<&[G]> for MixedGeometryB
     }
 }
 
-impl<G: GeometryTrait<T = f64>, const D: usize> TryFrom<&[Option<G>]> for MixedGeometryBuilder<D> {
+impl<G: GeometryTrait<T = f64>, const D: usize> TryFrom<Vec<Option<G>>>
+    for MixedGeometryBuilder<D>
+{
     type Error = GeoArrowError;
 
-    fn try_from(geoms: &[Option<G>]) -> Result<Self> {
-        Self::from_nullable_geometries(geoms, Default::default(), Default::default(), true)
+    fn try_from(geoms: Vec<Option<G>>) -> Result<Self> {
+        Self::from_nullable_geometries(&geoms, Default::default(), Default::default(), true)
     }
 }
 

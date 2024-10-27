@@ -1,8 +1,4 @@
 use crate::chunked_array::ChunkedArray;
-use crate::geo_traits::{
-    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
-    MultiPolygonTrait, PointTrait, PolygonTrait,
-};
 use crate::indexed::array::*;
 use crate::indexed::chunked::*;
 use crate::io::geo::{
@@ -12,6 +8,10 @@ use crate::io::geo::{
 use crate::trait_::NativeScalar;
 use arrow_array::BooleanArray;
 use geo::{BoundingRect, Intersects as _Intersects};
+use geo_traits::{
+    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
+    MultiPolygonTrait, PointTrait, PolygonTrait,
+};
 
 /// Checks if the geometry Self intersects the geometry Rhs.
 /// More formally, either boundary or interior of Self has

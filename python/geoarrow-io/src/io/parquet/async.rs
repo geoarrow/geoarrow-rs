@@ -8,8 +8,8 @@ use crate::io::object_store::PyObjectStore;
 use crate::io::parquet::options::create_options;
 use crate::util::table_to_pytable;
 
+use geo_traits::CoordTrait;
 use geoarrow::error::GeoArrowError;
-use geoarrow::geo_traits::CoordTrait;
 use geoarrow::io::parquet::metadata::GeoParquetBboxCovering;
 use geoarrow::io::parquet::{
     GeoParquetDatasetMetadata, GeoParquetReaderMetadata, GeoParquetReaderOptions,

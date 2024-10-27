@@ -2,11 +2,11 @@ use crate::algorithm::native::bounding_rect::bounding_rect_linestring;
 use crate::algorithm::native::eq::line_string_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, LineStringArray};
-use crate::geo_traits::LineStringTrait;
 use crate::io::geo::line_string_to_geo;
 use crate::scalar::Coord;
 use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
+use geo_traits::LineStringTrait;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a LineString
@@ -71,11 +71,11 @@ impl<'a, const D: usize> LineStringTrait for LineString<'a, D> {
     type T = f64;
     type CoordType<'b> = Coord<'a, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimensions::Xy,
-            3 => crate::geo_traits::Dimensions::Xyz,
+            2 => geo_traits::Dimensions::Xy,
+            3 => geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
@@ -94,11 +94,11 @@ impl<'a, const D: usize> LineStringTrait for &'a LineString<'a, D> {
     type T = f64;
     type CoordType<'b> = Coord<'a, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimensions::Xy,
-            3 => crate::geo_traits::Dimensions::Xyz,
+            2 => geo_traits::Dimensions::Xy,
+            3 => geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }

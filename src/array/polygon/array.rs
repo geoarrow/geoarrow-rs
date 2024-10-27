@@ -11,7 +11,6 @@ use crate::array::{
 };
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::PolygonTrait;
 use crate::scalar::{Geometry, Polygon};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
@@ -19,6 +18,7 @@ use crate::{ArrayBase, NativeArray};
 use arrow::array::AsArray;
 use arrow_array::GenericListArray;
 use arrow_array::{Array, OffsetSizeTrait};
+use geo_traits::PolygonTrait;
 
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};

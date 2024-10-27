@@ -2,11 +2,11 @@ use crate::algorithm::native::bounding_rect::bounding_rect_multipoint;
 use crate::algorithm::native::eq::multi_point_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, MultiPointArray};
-use crate::geo_traits::MultiPointTrait;
 use crate::io::geo::multi_point_to_geo;
 use crate::scalar::Point;
 use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
+use geo_traits::MultiPointTrait;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a MultiPoint
@@ -72,11 +72,11 @@ impl<'a, const D: usize> MultiPointTrait for MultiPoint<'a, D> {
     type T = f64;
     type PointType<'b> = Point<'a, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimensions::Xy,
-            3 => crate::geo_traits::Dimensions::Xyz,
+            2 => geo_traits::Dimensions::Xy,
+            3 => geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
@@ -95,11 +95,11 @@ impl<'a, const D: usize> MultiPointTrait for &'a MultiPoint<'a, D> {
     type T = f64;
     type PointType<'b> = Point<'a, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimensions::Xy,
-            3 => crate::geo_traits::Dimensions::Xyz,
+            2 => geo_traits::Dimensions::Xy,
+            3 => geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }

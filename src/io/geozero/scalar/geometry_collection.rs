@@ -1,6 +1,6 @@
-use crate::geo_traits::GeometryCollectionTrait;
 use crate::io::geozero::scalar::geometry::process_geometry;
 use crate::scalar::GeometryCollection;
+use geo_traits::GeometryCollectionTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 pub(crate) fn process_geometry_collection<P: GeomProcessor>(

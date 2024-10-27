@@ -1,4 +1,4 @@
-use crate::geo_traits::CoordTrait;
+use geo_traits::CoordTrait;
 use geozero::GeomProcessor;
 
 pub(crate) fn process_coord<P: GeomProcessor>(
@@ -6,7 +6,7 @@ pub(crate) fn process_coord<P: GeomProcessor>(
     coord_idx: usize,
     processor: &mut P,
 ) -> geozero::error::Result<()> {
-    use crate::geo_traits::Dimensions;
+    use geo_traits::Dimensions;
 
     match coord.dim() {
         Dimensions::Xy | Dimensions::Unknown(2) => processor.xy(coord.x(), coord.y(), coord_idx)?,

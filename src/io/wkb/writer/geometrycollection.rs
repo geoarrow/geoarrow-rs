@@ -1,7 +1,6 @@
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{GeometryCollectionArray, WKBArray};
 use crate::error::Result;
-use crate::geo_traits::GeometryCollectionTrait;
 use crate::io::wkb::common::WKBType;
 use crate::io::wkb::reader::Endianness;
 use crate::io::wkb::writer::geometry::{geometry_wkb_size, write_geometry_as_wkb};
@@ -10,6 +9,7 @@ use crate::ArrayBase;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use arrow_buffer::Buffer;
 use byteorder::{LittleEndian, WriteBytesExt};
+use geo_traits::GeometryCollectionTrait;
 use std::io::{Cursor, Write};
 
 /// The byte length of a WKBGeometryCollection
@@ -28,7 +28,7 @@ pub fn write_geometry_collection_as_wkb<W: Write>(
     mut writer: W,
     geom: &impl GeometryCollectionTrait<T = f64>,
 ) -> Result<()> {
-    use crate::geo_traits::Dimensions;
+    use geo_traits::Dimensions;
 
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into())?;

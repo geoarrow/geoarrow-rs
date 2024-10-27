@@ -1,11 +1,9 @@
 use crate::array::{PointArray, PointBuilder};
-use crate::error::GeoArrowError;
+use crate::error::Result;
 use crate::io::geos::scalar::GEOSPoint;
 
-impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>> for PointBuilder<D> {
-    type Error = GeoArrowError;
-
-    fn try_from(value: Vec<Option<geos::Geometry>>) -> std::result::Result<Self, Self::Error> {
+impl<const D: usize> PointBuilder<D> {
+    pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         // TODO: don't use new_unchecked
         let geos_linestring_objects: Vec<Option<GEOSPoint>> = value
             .into_iter()
@@ -15,11 +13,9 @@ impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>> for PointBuilder<D> {
     }
 }
 
-impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>> for PointArray<D> {
-    type Error = GeoArrowError;
-
-    fn try_from(value: Vec<Option<geos::Geometry>>) -> std::result::Result<Self, Self::Error> {
-        let mutable_arr: PointBuilder<D> = value.try_into()?;
+impl<const D: usize> PointArray<D> {
+    pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
+        let mutable_arr = PointBuilder::from_geos(value)?;
         Ok(mutable_arr.into())
     }
 }
@@ -37,7 +33,7 @@ mod test {
             .iter()
             .map(|opt_x| opt_x.map(|x| x.to_geos().unwrap()))
             .collect();
-        let round_trip: PointArray<2> = geos_geoms.try_into().unwrap();
+        let round_trip = PointArray::<2>::from_geos(geos_geoms).unwrap();
         assert_eq!(arr, round_trip);
     }
 }

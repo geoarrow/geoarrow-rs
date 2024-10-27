@@ -15,10 +15,10 @@ use crate::array::{
 };
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::GeometryCollectionTrait;
 use crate::scalar::{Geometry, GeometryCollection};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
 use crate::{ArrayBase, NativeArray};
+use geo_traits::GeometryCollectionTrait;
 
 /// An immutable array of GeometryCollection geometries using GeoArrow's in-memory representation.
 ///

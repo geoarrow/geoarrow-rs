@@ -1,7 +1,7 @@
 use crate::algorithm::native::eq::multi_polygon_eq;
-use crate::geo_traits::MultiPolygonTrait;
 use crate::io::wkb::reader::multipolygon::WKBMultiPolygon;
 use crate::io::wkb::reader::polygon::WKBPolygon;
+use geo_traits::MultiPolygonTrait;
 
 /// An WKB object that can be either a WKBPolygon or a WKBMultiPolygon.
 ///
@@ -23,7 +23,7 @@ impl<'a> MultiPolygonTrait for WKBMaybeMultiPolygon<'a> {
     type T = f64;
     type PolygonType<'b> = WKBPolygon<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         match self {
             WKBMaybeMultiPolygon::Polygon(geom) => geom.dim(),
             WKBMaybeMultiPolygon::MultiPolygon(geom) => geom.dim(),
@@ -49,7 +49,7 @@ impl<'a> MultiPolygonTrait for &'a WKBMaybeMultiPolygon<'a> {
     type T = f64;
     type PolygonType<'b> = WKBPolygon<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         match self {
             WKBMaybeMultiPolygon::Polygon(geom) => geom.dim(),
             WKBMaybeMultiPolygon::MultiPolygon(geom) => geom.dim(),

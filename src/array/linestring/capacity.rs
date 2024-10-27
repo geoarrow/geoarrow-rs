@@ -1,7 +1,7 @@
 use std::ops::Add;
 
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{GeometryTrait, GeometryType, LineStringTrait};
+use geo_traits::{GeometryTrait, GeometryType, LineStringTrait};
 
 /// A counter for the buffer sizes of a [`LineStringArray`][crate::array::LineStringArray].
 ///

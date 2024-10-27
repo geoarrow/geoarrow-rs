@@ -9,10 +9,10 @@ use crate::array::metadata::ArrayMetadata;
 use crate::array::CoordType;
 use crate::chunked_array::ChunkedNativeArrayDyn;
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::GeometryTrait;
 use crate::io::geozero::table::builder::properties::PropertiesBatchBuilder;
 use crate::table::Table;
 use crate::trait_::{GeometryArrayBuilder, NativeArray};
+use geo_traits::GeometryTrait;
 
 /// Options for creating a GeoTableBuilder.
 #[derive(Debug, Clone, PartialEq)]

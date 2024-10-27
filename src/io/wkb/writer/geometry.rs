@@ -4,7 +4,6 @@ use arrow_buffer::Buffer;
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{MixedGeometryArray, WKBArray};
 use crate::error::Result;
-use crate::geo_traits::{GeometryTrait, GeometryType};
 use crate::io::wkb::writer::{
     geometry_collection_wkb_size, line_string_wkb_size, multi_line_string_wkb_size,
     multi_point_wkb_size, multi_polygon_wkb_size, point_wkb_size, polygon_wkb_size,
@@ -13,6 +12,7 @@ use crate::io::wkb::writer::{
 };
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
+use geo_traits::{GeometryTrait, GeometryType};
 use std::io::{Cursor, Write};
 
 /// The byte length of a Geometry

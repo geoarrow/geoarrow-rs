@@ -9,13 +9,13 @@ use crate::array::mixed::builder::DEFAULT_PREFER_MULTI;
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{CoordType, GeometryCollectionArray, MixedGeometryBuilder, WKBArray};
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{
-    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
-    MultiPolygonTrait, PointTrait, PolygonTrait,
-};
 use crate::io::wkb::reader::WKBGeometry;
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
+use geo_traits::{
+    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
+    MultiPolygonTrait, PointTrait, PolygonTrait,
+};
 
 /// The GeoArrow equivalent to `Vec<Option<GeometryCollection>>`: a mutable collection of
 /// GeometryCollections.
@@ -230,7 +230,7 @@ impl<'a, const D: usize> GeometryCollectionBuilder<D> {
     /// Push a Geometry onto the end of this builder
     #[inline]
     pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
-        use crate::geo_traits::GeometryType::*;
+        use geo_traits::GeometryType::*;
 
         if let Some(g) = value {
             match g.as_type() {

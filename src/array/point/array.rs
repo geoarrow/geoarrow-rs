@@ -9,12 +9,12 @@ use crate::array::{
 };
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::PointTrait;
 use crate::scalar::{Geometry, Point};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
 use crate::util::owned_slice_validity;
 use crate::{ArrayBase, NativeArray};
 use arrow_array::{Array, ArrayRef, FixedSizeListArray, OffsetSizeTrait, StructArray};
+use geo_traits::PointTrait;
 
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};

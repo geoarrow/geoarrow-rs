@@ -2,11 +2,11 @@ use crate::algorithm::native::bounding_rect::bounding_rect_multilinestring;
 use crate::algorithm::native::eq::multi_line_string_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, MultiLineStringArray};
-use crate::geo_traits::MultiLineStringTrait;
 use crate::io::geo::multi_line_string_to_geo;
 use crate::scalar::LineString;
 use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
+use geo_traits::MultiLineStringTrait;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a MultiLineString
@@ -81,11 +81,11 @@ impl<'a, const D: usize> MultiLineStringTrait for MultiLineString<'a, D> {
     type T = f64;
     type LineStringType<'b> = LineString<'a, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimensions::Xy,
-            3 => crate::geo_traits::Dimensions::Xyz,
+            2 => geo_traits::Dimensions::Xy,
+            3 => geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
@@ -104,11 +104,11 @@ impl<'a, const D: usize> MultiLineStringTrait for &'a MultiLineString<'a, D> {
     type T = f64;
     type LineStringType<'b> = LineString<'a, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimensions::Xy,
-            3 => crate::geo_traits::Dimensions::Xyz,
+            2 => geo_traits::Dimensions::Xy,
+            3 => geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }

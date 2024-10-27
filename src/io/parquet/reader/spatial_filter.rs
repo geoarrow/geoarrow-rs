@@ -19,9 +19,9 @@ use parquet::schema::types::{ColumnPath, SchemaDescriptor};
 use crate::algorithm::geo::BoundingRect;
 use crate::array::{NativeArrayDyn, RectArray, RectBuilder};
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{CoordTrait, RectTrait};
 use crate::io::parquet::metadata::GeoParquetBboxCovering;
 use crate::trait_::ArrayAccessor;
+use geo_traits::{CoordTrait, RectTrait};
 
 /// A helper for interpreting bounding box row group statistics from GeoParquet files
 ///

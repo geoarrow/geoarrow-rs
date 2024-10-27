@@ -3,12 +3,12 @@ use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedLineStringArray, ChunkedNativeArray};
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::LineStringTrait;
 use crate::io::geo::line_string_to_geo;
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
 use arrow_array::Float64Array;
 use geo::FrechetDistance as _FrechetDistance;
+use geo_traits::LineStringTrait;
 
 // ┌────────────────────────────────┐
 // │ Implementations for RHS arrays │

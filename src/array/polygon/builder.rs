@@ -9,15 +9,15 @@ use crate::array::{
     PolygonArray, SeparatedCoordBufferBuilder, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{
-    CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait,
-    RectTrait,
-};
 use crate::io::wkb::reader::WKBPolygon;
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
+use geo_traits::{
+    CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait,
+    RectTrait,
+};
 
 pub type MutablePolygonParts<const D: usize> = (
     CoordBufferBuilder<D>,

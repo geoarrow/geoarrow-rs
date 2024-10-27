@@ -1,7 +1,7 @@
 use std::ops::{Add, AddAssign};
 
 use crate::array::polygon::PolygonCapacity;
-use crate::geo_traits::{LineStringTrait, MultiPolygonTrait, PolygonTrait};
+use geo_traits::{LineStringTrait, MultiPolygonTrait, PolygonTrait};
 
 /// A counter for the buffer sizes of a [`MultiPolygonArray`][crate::array::MultiPolygonArray].
 ///

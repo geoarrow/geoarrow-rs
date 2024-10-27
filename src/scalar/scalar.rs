@@ -261,7 +261,7 @@ impl GeometryScalar {
 // impl<'a> PointTrait for AnyPoint<'a> {
 //     type T = f64;
 
-//     fn dim(&self) -> crate::geo_traits::Dimensions {
+//     fn dim(&self) -> geo_traits::Dimensions {
 //         match self {
 //             Self::XY(_) => 2,
 //             Self::XYZ(_) => 3,
@@ -330,13 +330,13 @@ impl GeometryScalar {
 //     type GeometryCollection<'a> = AnyGeometryCollection<'a>;
 //     type Rect<'a> = AnyRect<'a>;
 
-//     fn dim(&self) -> crate::geo_traits::Dimensions {
+//     fn dim(&self) -> geo_traits::Dimensions {
 //         self.dimension().size()
 //     }
 
 //     fn as_type(
 //         &self,
-//     ) -> crate::geo_traits::GeometryType<
+//     ) -> geo_traits::GeometryType<
 //         '_,
 //         Self::Point<'_>,
 //         Self::LineString<'_>,

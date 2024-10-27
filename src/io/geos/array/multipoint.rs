@@ -1,11 +1,9 @@
 use crate::array::{MultiPointArray, MultiPointBuilder};
-use crate::error::GeoArrowError;
+use crate::error::Result;
 use crate::io::geos::scalar::GEOSMultiPoint;
 
-impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>> for MultiPointBuilder<D> {
-    type Error = GeoArrowError;
-
-    fn try_from(value: Vec<Option<geos::Geometry>>) -> std::result::Result<Self, Self::Error> {
+impl<const D: usize> MultiPointBuilder<D> {
+    pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         // TODO: don't use new_unchecked
         let geos_objects: Vec<Option<GEOSMultiPoint>> = value
             .into_iter()
@@ -15,11 +13,9 @@ impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>> for MultiPointBuilder<
     }
 }
 
-impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>> for MultiPointArray<D> {
-    type Error = GeoArrowError;
-
-    fn try_from(value: Vec<Option<geos::Geometry>>) -> std::result::Result<Self, Self::Error> {
-        let mutable_arr: MultiPointBuilder<D> = value.try_into()?;
+impl<const D: usize> MultiPointArray<D> {
+    pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
+        let mutable_arr = MultiPointBuilder::from_geos(value)?;
         Ok(mutable_arr.into())
     }
 }
@@ -38,7 +34,7 @@ mod test {
             .iter()
             .map(|opt_x| opt_x.map(|x| x.to_geos().unwrap()))
             .collect();
-        let round_trip: MultiPointArray<2> = geos_geoms.try_into().unwrap();
+        let round_trip = MultiPointArray::<2>::from_geos(geos_geoms).unwrap();
         assert_eq!(arr, round_trip);
     }
 }

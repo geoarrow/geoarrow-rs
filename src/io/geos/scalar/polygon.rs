@@ -1,7 +1,7 @@
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::PolygonTrait;
 use crate::io::geos::scalar::GEOSConstLinearRing;
 use crate::scalar::Polygon;
+use geo_traits::PolygonTrait;
 use geos::{Geom, GeometryTypes};
 
 impl<'a, const D: usize> TryFrom<&'a Polygon<'_, D>> for geos::Geometry {
@@ -73,10 +73,10 @@ impl PolygonTrait for GEOSPolygon {
     type T = f64;
     type RingType<'a> = GEOSConstLinearRing<'a> where Self: 'a;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => crate::geo_traits::Dimensions::Xy,
-            geos::Dimensions::ThreeD => crate::geo_traits::Dimensions::Xyz,
+            geos::Dimensions::TwoD => geo_traits::Dimensions::Xy,
+            geos::Dimensions::ThreeD => geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
@@ -125,10 +125,10 @@ impl<'a> PolygonTrait for GEOSConstPolygon<'a> {
     type T = f64;
     type RingType<'c> = GEOSConstLinearRing< 'c> where Self: 'c;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => crate::geo_traits::Dimensions::Xy,
-            geos::Dimensions::ThreeD => crate::geo_traits::Dimensions::Xyz,
+            geos::Dimensions::TwoD => geo_traits::Dimensions::Xy,
+            geos::Dimensions::ThreeD => geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }

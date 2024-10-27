@@ -4,12 +4,12 @@ use std::sync::Arc;
 use crate::array::{CoordType, InterleavedCoordBufferBuilder};
 use crate::datatypes::coord_type_to_data_type;
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{CoordTrait, PointTrait};
 use crate::scalar::InterleavedCoord;
 use crate::trait_::IntoArrow;
 use arrow_array::{Array, FixedSizeListArray, Float64Array};
-use arrow_buffer::{Buffer, ScalarBuffer};
+use arrow_buffer::ScalarBuffer;
 use arrow_schema::{DataType, Field};
+use geo_traits::CoordTrait;
 
 /// A an array of XY coordinates stored interleaved in a single buffer.
 #[derive(Debug, Clone, PartialEq)]
@@ -179,17 +179,9 @@ impl<const D: usize> TryFrom<Vec<f64>> for InterleavedCoordBuffer<D> {
     }
 }
 
-impl<const D: usize> From<&[f64]> for InterleavedCoordBuffer<D> {
-    fn from(value: &[f64]) -> Self {
-        InterleavedCoordBuffer {
-            coords: Buffer::from_slice_ref(value).into(),
-        }
-    }
-}
-
-impl<G: PointTrait<T = f64>> From<&[G]> for InterleavedCoordBuffer<2> {
+impl<G: CoordTrait<T = f64>, const D: usize> From<&[G]> for InterleavedCoordBuffer<D> {
     fn from(other: &[G]) -> Self {
-        let mut_arr: InterleavedCoordBufferBuilder<2> = other.into();
+        let mut_arr: InterleavedCoordBufferBuilder<D> = other.into();
         mut_arr.into()
     }
 }

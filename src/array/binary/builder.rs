@@ -3,10 +3,6 @@ use std::sync::Arc;
 use crate::array::binary::WKBCapacity;
 use crate::array::metadata::ArrayMetadata;
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{
-    GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
-    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait,
-};
 use crate::io::wkb::writer::{
     geometry_collection_wkb_size, line_string_wkb_size, multi_line_string_wkb_size,
     multi_point_wkb_size, multi_polygon_wkb_size, point_wkb_size, polygon_wkb_size,
@@ -15,6 +11,10 @@ use crate::io::wkb::writer::{
 };
 use arrow_array::builder::GenericBinaryBuilder;
 use arrow_array::OffsetSizeTrait;
+use geo_traits::{
+    GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
+    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait,
+};
 
 use super::array::WKBArray;
 
@@ -232,11 +232,11 @@ impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for WKBBuilder
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[Option<G>]> for WKBBuilder<O> {
+impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<Vec<Option<G>>> for WKBBuilder<O> {
     type Error = GeoArrowError;
 
-    fn try_from(geoms: &[Option<G>]) -> Result<Self> {
-        Ok(Self::from_nullable_geometries(geoms))
+    fn try_from(geoms: Vec<Option<G>>) -> Result<Self> {
+        Ok(Self::from_nullable_geometries(&geoms))
     }
 }
 

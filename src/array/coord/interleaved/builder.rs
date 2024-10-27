@@ -1,5 +1,5 @@
 use crate::array::InterleavedCoordBuffer;
-use crate::geo_traits::{CoordTrait, PointTrait};
+use geo_traits::{CoordTrait, PointTrait};
 
 /// The GeoArrow equivalent to `Vec<Coord>`: a mutable collection of coordinates.
 ///
@@ -114,11 +114,11 @@ impl<const D: usize> From<InterleavedCoordBufferBuilder<D>> for InterleavedCoord
     }
 }
 
-impl<G: PointTrait<T = f64>, const D: usize> From<&[G]> for InterleavedCoordBufferBuilder<D> {
+impl<G: CoordTrait<T = f64>, const D: usize> From<&[G]> for InterleavedCoordBufferBuilder<D> {
     fn from(value: &[G]) -> Self {
         let mut buffer = InterleavedCoordBufferBuilder::with_capacity(value.len());
         for coord in value {
-            buffer.push_point(coord);
+            buffer.push_coord(coord);
         }
         buffer
     }

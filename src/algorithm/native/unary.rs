@@ -3,8 +3,8 @@ use arrow_array::{BooleanArray, OffsetSizeTrait, PrimitiveArray};
 use arrow_buffer::{BooleanBufferBuilder, BufferBuilder};
 
 use crate::array::*;
-use crate::geo_traits::*;
 use crate::trait_::ArrayAccessor;
+use geo_traits::*;
 
 pub trait Unary<'a>: ArrayAccessor<'a> {
     // Note: This is derived from arrow-rs here:

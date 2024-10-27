@@ -2,13 +2,13 @@ use std::ops::Add;
 
 use arrow_array::OffsetSizeTrait;
 
-use crate::geo_traits::{
-    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
-    MultiPolygonTrait, PointTrait, PolygonTrait,
-};
 use crate::io::wkb::writer::{
     geometry_collection_wkb_size, line_string_wkb_size, multi_line_string_wkb_size,
     multi_point_wkb_size, multi_polygon_wkb_size, point_wkb_size, polygon_wkb_size,
+};
+use geo_traits::{
+    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
+    MultiPolygonTrait, PointTrait, PolygonTrait,
 };
 
 /// A counter for the buffer sizes of a [`WKBArray`][crate::array::WKBArray].
@@ -110,7 +110,7 @@ impl WKBCapacity {
     /// Add a Geometry to this capacity counter.
     #[inline]
     pub fn add_geometry<'a>(&mut self, geom: Option<&'a (impl GeometryTrait + 'a)>) {
-        use crate::geo_traits::GeometryType::*;
+        use geo_traits::GeometryType::*;
 
         if let Some(geom) = geom {
             match geom.as_type() {

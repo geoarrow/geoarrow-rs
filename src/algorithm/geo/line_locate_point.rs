@@ -3,13 +3,13 @@ use crate::array::{AsChunkedNativeArray, AsNativeArray, LineStringArray, PointAr
 use crate::chunked_array::{ChunkedArray, ChunkedLineStringArray, ChunkedNativeArray};
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::PointTrait;
 use crate::io::geo::point_to_geo;
 use crate::trait_::ArrayAccessor;
 use crate::{ArrayBase, NativeArray};
 use arrow_array::builder::Float64Builder;
 use arrow_array::Float64Array;
 use geo::LineLocatePoint as _LineLocatePoint;
+use geo_traits::PointTrait;
 
 /// Returns a (option of the) fraction of the line's total length
 /// representing the location of the closest point on the line to

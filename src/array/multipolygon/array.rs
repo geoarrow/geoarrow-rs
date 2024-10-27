@@ -9,13 +9,13 @@ use crate::array::{
 };
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::MultiPolygonTrait;
 use crate::scalar::{Geometry, MultiPolygon};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::{ArrayBase, NativeArray};
 use arrow::array::AsArray;
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
+use geo_traits::MultiPolygonTrait;
 
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};

@@ -2,7 +2,7 @@ use std::ops::Add;
 
 use crate::array::mixed::MixedCapacity;
 use crate::error::Result;
-use crate::geo_traits::{
+use geo_traits::{
     GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
     MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait,
 };

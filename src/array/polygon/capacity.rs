@@ -1,6 +1,6 @@
 use std::ops::Add;
 
-use crate::geo_traits::{LineStringTrait, PolygonTrait, RectTrait};
+use geo_traits::{LineStringTrait, PolygonTrait, RectTrait};
 
 /// A counter for the buffer sizes of a [`PolygonArray`][crate::array::PolygonArray].
 ///

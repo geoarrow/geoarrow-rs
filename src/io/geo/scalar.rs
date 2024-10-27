@@ -1,6 +1,6 @@
 use geo::CoordNum;
 
-use crate::geo_traits::{
+use geo_traits::{
     CoordTrait, GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait,
     MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
 };
