@@ -9,12 +9,12 @@ use crate::array::{
     MultiPointArray, SeparatedCoordBufferBuilder, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
 use crate::io::wkb::reader::WKBMaybeMultiPoint;
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
+use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
 
 /// The GeoArrow equivalent to `Vec<Option<MultiPoint>>`: a mutable collection of MultiPoints.
 ///

@@ -4,13 +4,13 @@ use crate::algorithm::geo_index::RTree;
 use crate::array::*;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{CoordTrait, RectTrait};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::builder::BooleanBuilder;
 use arrow_array::BooleanArray;
 use arrow_buffer::{BooleanBufferBuilder, NullBuffer};
 use geo_index::rtree::{OwnedRTree, RTreeIndex};
+use geo_traits::{CoordTrait, RectTrait};
 
 // TODO: also store Option<ValidOffsets>
 // The problem is that the RTree is only able to store valid, non-empty geometries. But the

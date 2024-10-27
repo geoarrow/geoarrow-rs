@@ -5,9 +5,6 @@ use byteorder::ReadBytesExt;
 
 use crate::datatypes::Dimension;
 use crate::error::Result;
-use crate::geo_traits::{
-    GeometryTrait, UnimplementedLine, UnimplementedRect, UnimplementedTriangle,
-};
 use crate::io::wkb::common::WKBType;
 use crate::io::wkb::reader::geometry_collection::WKBGeometryCollection;
 use crate::io::wkb::reader::{
@@ -15,6 +12,7 @@ use crate::io::wkb::reader::{
     WKBMultiLineString, WKBMultiPoint, WKBMultiPolygon, WKBPoint, WKBPolygon,
 };
 use crate::scalar::WKB;
+use geo_traits::{GeometryTrait, UnimplementedLine, UnimplementedRect, UnimplementedTriangle};
 
 impl<'a, O: OffsetSizeTrait> WKB<'a, O> {
     /// Convert this WKB scalar to a [WKBGeometry]
@@ -224,13 +222,13 @@ impl<'a> GeometryTrait for WKBGeometry<'a> {
     type TriangleType<'b> = UnimplementedTriangle<f64> where Self: 'b;
     type LineType<'b> = UnimplementedLine<f64> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dimension().into()
     }
 
     fn as_type(
         &self,
-    ) -> crate::geo_traits::GeometryType<
+    ) -> geo_traits::GeometryType<
         '_,
         WKBPoint<'a>,
         WKBLineString<'a>,
@@ -243,7 +241,7 @@ impl<'a> GeometryTrait for WKBGeometry<'a> {
         UnimplementedTriangle<f64>,
         UnimplementedLine<f64>,
     > {
-        use crate::geo_traits::GeometryType as B;
+        use geo_traits::GeometryType as B;
         use WKBGeometry as A;
         match self {
             A::Point(p) => B::Point(p),
@@ -270,13 +268,13 @@ impl<'a> GeometryTrait for &'a WKBGeometry<'a> {
     type TriangleType<'b> = UnimplementedTriangle<f64> where Self: 'b;
     type LineType<'b> = UnimplementedLine<f64> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dimension().into()
     }
 
     fn as_type(
         &self,
-    ) -> crate::geo_traits::GeometryType<
+    ) -> geo_traits::GeometryType<
         '_,
         WKBPoint<'a>,
         WKBLineString<'a>,
@@ -289,7 +287,7 @@ impl<'a> GeometryTrait for &'a WKBGeometry<'a> {
         UnimplementedTriangle<f64>,
         UnimplementedLine<f64>,
     > {
-        use crate::geo_traits::GeometryType as B;
+        use geo_traits::GeometryType as B;
         use WKBGeometry as A;
         match self {
             A::Point(p) => B::Point(p),

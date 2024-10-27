@@ -1,11 +1,9 @@
 use crate::array::{MultiLineStringArray, MultiLineStringBuilder};
-use crate::error::{GeoArrowError, Result};
+use crate::error::Result;
 use crate::io::geos::scalar::GEOSMultiLineString;
 
-impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>> for MultiLineStringBuilder<D> {
-    type Error = GeoArrowError;
-
-    fn try_from(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
+impl<const D: usize> MultiLineStringBuilder<D> {
+    fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         // TODO: don't use new_unchecked
         let geos_objects: Vec<Option<GEOSMultiLineString>> = value
             .into_iter()
@@ -15,11 +13,9 @@ impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>> for MultiLineStringBui
     }
 }
 
-impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>> for MultiLineStringArray<D> {
-    type Error = GeoArrowError;
-
-    fn try_from(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
-        let mutable_arr: MultiLineStringBuilder<D> = value.try_into()?;
+impl<const D: usize> MultiLineStringArray<D> {
+    fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
+        let mutable_arr = MultiLineStringBuilder::from_geos(value)?;
         Ok(mutable_arr.into())
     }
 }
@@ -38,7 +34,7 @@ mod test {
             .iter()
             .map(|opt_x| opt_x.map(|x| x.to_geos().unwrap()))
             .collect();
-        let round_trip: MultiLineStringArray<2> = geos_geoms.try_into().unwrap();
+        let round_trip = MultiLineStringArray::<2>::from_geos(geos_geoms).unwrap();
         assert_eq!(arr, round_trip);
     }
 }

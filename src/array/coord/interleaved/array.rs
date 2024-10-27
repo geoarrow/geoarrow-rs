@@ -4,12 +4,12 @@ use std::sync::Arc;
 use crate::array::{CoordType, InterleavedCoordBufferBuilder};
 use crate::datatypes::coord_type_to_data_type;
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{CoordTrait, PointTrait};
 use crate::scalar::InterleavedCoord;
 use crate::trait_::IntoArrow;
 use arrow_array::{Array, FixedSizeListArray, Float64Array};
 use arrow_buffer::{Buffer, ScalarBuffer};
 use arrow_schema::{DataType, Field};
+use geo_traits::{CoordTrait, PointTrait};
 
 /// A an array of XY coordinates stored interleaved in a single buffer.
 #[derive(Debug, Clone, PartialEq)]

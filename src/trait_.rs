@@ -4,11 +4,11 @@ use crate::array::metadata::ArrayMetadata;
 use crate::array::{CoordBuffer, CoordType};
 use crate::datatypes::{NativeType, SerializedType};
 use crate::error::Result;
-use crate::geo_traits::GeometryTrait;
 use crate::scalar::Geometry;
 use arrow_array::{Array, ArrayRef};
 use arrow_buffer::{NullBuffer, NullBufferBuilder};
 use arrow_schema::{DataType, Field};
+use geo_traits::GeometryTrait;
 use std::any::Any;
 use std::sync::Arc;
 

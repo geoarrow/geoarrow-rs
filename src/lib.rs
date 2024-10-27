@@ -64,7 +64,6 @@ pub mod array;
 pub mod chunked_array;
 pub mod datatypes;
 pub mod error;
-pub mod geo_traits;
 // Long-term we want this to be part of the public API, but not yet stabilized in v0.3.
 pub(crate) mod indexed;
 pub mod io;

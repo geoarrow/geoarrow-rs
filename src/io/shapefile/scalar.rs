@@ -1,6 +1,6 @@
 use shapefile::NO_DATA;
 
-use crate::geo_traits::{
+use geo_traits::{
     CoordTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait,
     PointTrait, PolygonTrait,
 };
@@ -17,8 +17,8 @@ impl<'a> Point<'a> {
 impl<'a> CoordTrait for Point<'a> {
     type T = f64;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
-        crate::geo_traits::Dimensions::Xy
+    fn dim(&self) -> geo_traits::Dimensions {
+        geo_traits::Dimensions::Xy
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
@@ -42,8 +42,8 @@ impl<'a> PointTrait for Point<'a> {
     type T = f64;
     type CoordType<'b> = Point<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
-        crate::geo_traits::Dimensions::Xy
+    fn dim(&self) -> geo_traits::Dimensions {
+        geo_traits::Dimensions::Xy
     }
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
@@ -63,11 +63,11 @@ impl<'a> PointZ<'a> {
 impl<'a> CoordTrait for PointZ<'a> {
     type T = f64;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         if self.0.m <= NO_DATA {
-            crate::geo_traits::Dimensions::Xyz
+            geo_traits::Dimensions::Xyz
         } else {
-            crate::geo_traits::Dimensions::Xyzm
+            geo_traits::Dimensions::Xyzm
         }
     }
 
@@ -93,11 +93,11 @@ impl<'a> PointTrait for PointZ<'a> {
     type T = f64;
     type CoordType<'b> = PointZ<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         if self.0.m <= NO_DATA {
-            crate::geo_traits::Dimensions::Xyz
+            geo_traits::Dimensions::Xyz
         } else {
-            crate::geo_traits::Dimensions::Xyzm
+            geo_traits::Dimensions::Xyzm
         }
     }
 
@@ -112,8 +112,8 @@ impl<'a> LineStringTrait for LineString<'a> {
     type T = f64;
     type CoordType<'b> = Point<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
-        crate::geo_traits::Dimensions::Xy
+    fn dim(&self) -> geo_traits::Dimensions {
+        geo_traits::Dimensions::Xy
     }
 
     fn num_coords(&self) -> usize {
@@ -131,9 +131,9 @@ impl<'a> LineStringTrait for LineStringZ<'a> {
     type T = f64;
     type CoordType<'b> = PointZ<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: actually check whether M value exists
-        crate::geo_traits::Dimensions::Xyz
+        geo_traits::Dimensions::Xyz
     }
 
     fn num_coords(&self) -> usize {
@@ -154,8 +154,8 @@ impl<'a> PolygonTrait for &'a Polygon {
     type T = f64;
     type RingType<'b> = LineString<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
-        crate::geo_traits::Dimensions::Xy
+    fn dim(&self) -> geo_traits::Dimensions {
+        geo_traits::Dimensions::Xy
     }
 
     fn num_interiors(&self) -> usize {
@@ -180,9 +180,9 @@ impl<'a> PolygonTrait for &'a PolygonZ {
     type T = f64;
     type RingType<'b> = LineStringZ<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: actually check whether M value exists
-        crate::geo_traits::Dimensions::Xyz
+        geo_traits::Dimensions::Xyz
     }
 
     fn num_interiors(&self) -> usize {
@@ -210,8 +210,8 @@ impl<'a> MultiPointTrait for MultiPoint<'a> {
     type T = f64;
     type PointType<'b> = Point<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
-        crate::geo_traits::Dimensions::Xy
+    fn dim(&self) -> geo_traits::Dimensions {
+        geo_traits::Dimensions::Xy
     }
 
     fn num_points(&self) -> usize {
@@ -234,9 +234,9 @@ impl<'a> MultiPointTrait for MultiPointZ<'a> {
     type T = f64;
     type PointType<'b> = PointZ<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: actually check whether M value exists
-        crate::geo_traits::Dimensions::Xyz
+        geo_traits::Dimensions::Xyz
     }
 
     fn num_points(&self) -> usize {
@@ -260,8 +260,8 @@ impl<'a> MultiLineStringTrait for Polyline<'a> {
     type T = f64;
     type LineStringType<'b> = LineString<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
-        crate::geo_traits::Dimensions::Xy
+    fn dim(&self) -> geo_traits::Dimensions {
+        geo_traits::Dimensions::Xy
     }
 
     fn num_line_strings(&self) -> usize {
@@ -285,9 +285,9 @@ impl<'a> MultiLineStringTrait for PolylineZ<'a> {
     type T = f64;
     type LineStringType<'b> = LineStringZ<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: actually check whether M value exists
-        crate::geo_traits::Dimensions::Xyz
+        geo_traits::Dimensions::Xyz
     }
 
     fn num_line_strings(&self) -> usize {
@@ -345,8 +345,8 @@ impl MultiPolygonTrait for MultiPolygon {
     type T = f64;
     type PolygonType<'a> = &'a Polygon;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
-        crate::geo_traits::Dimensions::Xy
+    fn dim(&self) -> geo_traits::Dimensions {
+        geo_traits::Dimensions::Xy
     }
 
     fn num_polygons(&self) -> usize {
@@ -404,9 +404,9 @@ impl MultiPolygonTrait for MultiPolygonZ {
     type T = f64;
     type PolygonType<'a> = &'a PolygonZ;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: actually check whether M value exists
-        crate::geo_traits::Dimensions::Xyz
+        geo_traits::Dimensions::Xyz
     }
 
     fn num_polygons(&self) -> usize {

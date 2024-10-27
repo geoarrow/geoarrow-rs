@@ -1,6 +1,6 @@
-use crate::geo_traits::MultiPolygonTrait;
 use crate::io::geozero::scalar::polygon::process_polygon;
 use crate::scalar::MultiPolygon;
+use geo_traits::MultiPolygonTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 pub(crate) fn process_multi_polygon<P: GeomProcessor>(

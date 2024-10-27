@@ -1,6 +1,6 @@
-use crate::geo_traits::LineStringTrait;
 use crate::io::geozero::scalar::process_coord;
 use crate::scalar::LineString;
+use geo_traits::LineStringTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 pub(crate) fn process_line_string<P: GeomProcessor>(

@@ -4,9 +4,9 @@ use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
 use crate::algorithm::native::eq::multi_point_eq;
 use crate::datatypes::Dimension;
-use crate::geo_traits::MultiPointTrait;
 use crate::io::wkb::reader::geometry::Endianness;
 use crate::io::wkb::reader::point::WKBPoint;
+use geo_traits::MultiPointTrait;
 
 /// A WKB MultiPoint
 ///
@@ -74,7 +74,7 @@ impl<'a> MultiPointTrait for WKBMultiPoint<'a> {
     type T = f64;
     type PointType<'b> = WKBPoint<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -96,7 +96,7 @@ impl<'a> MultiPointTrait for &'a WKBMultiPoint<'a> {
     type T = f64;
     type PointType<'b> = WKBPoint<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 

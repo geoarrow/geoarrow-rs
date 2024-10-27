@@ -1,10 +1,10 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_point;
 use crate::algorithm::native::eq::point_eq;
 use crate::array::CoordBuffer;
-use crate::geo_traits::PointTrait;
 use crate::io::geo::point_to_geo;
 use crate::scalar::Coord;
 use crate::trait_::NativeScalar;
+use geo_traits::PointTrait;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a Point
@@ -50,11 +50,11 @@ impl<'a, const D: usize> PointTrait for Point<'a, D> {
     type T = f64;
     type CoordType<'b> = Coord<'a, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimensions::Xy,
-            3 => crate::geo_traits::Dimensions::Xyz,
+            2 => geo_traits::Dimensions::Xy,
+            3 => geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
@@ -73,11 +73,11 @@ impl<'a, const D: usize> PointTrait for &Point<'a, D> {
     type T = f64;
     type CoordType<'b> = Coord<'a, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimensions::Xy,
-            3 => crate::geo_traits::Dimensions::Xyz,
+            2 => geo_traits::Dimensions::Xy,
+            3 => geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }

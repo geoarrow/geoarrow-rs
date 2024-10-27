@@ -1,13 +1,13 @@
-use crate::geo_traits::{
-    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
-    MultiPolygonTrait, PointTrait, PolygonTrait, UnimplementedLine, UnimplementedRect,
-    UnimplementedTriangle,
-};
 use crate::io::geos::scalar::{
     GEOSGeometryCollection, GEOSLineString, GEOSMultiLineString, GEOSMultiPoint, GEOSMultiPolygon,
     GEOSPoint, GEOSPolygon,
 };
 use crate::scalar::Geometry;
+use geo_traits::{
+    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
+    MultiPolygonTrait, PointTrait, PolygonTrait, UnimplementedLine, UnimplementedRect,
+    UnimplementedTriangle,
+};
 use geos::Geom;
 
 impl<'a, const D: usize> TryFrom<&'a Geometry<'_, D>> for geos::Geometry {
@@ -77,7 +77,7 @@ impl GeometryTrait for GEOSGeometry {
     type LineType<'a> = UnimplementedLine<f64>;
     type TriangleType<'a> = UnimplementedTriangle<f64>;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         match self {
             Self::Point(g) => g.dim(),
             Self::LineString(g) => g.dim(),
@@ -91,7 +91,7 @@ impl GeometryTrait for GEOSGeometry {
 
     fn as_type(
         &self,
-    ) -> crate::geo_traits::GeometryType<
+    ) -> geo_traits::GeometryType<
         '_,
         GEOSPoint,
         GEOSLineString,
@@ -105,13 +105,13 @@ impl GeometryTrait for GEOSGeometry {
         UnimplementedLine<f64>,
     > {
         match self {
-            Self::Point(g) => crate::geo_traits::GeometryType::Point(g),
-            Self::LineString(g) => crate::geo_traits::GeometryType::LineString(g),
-            Self::Polygon(g) => crate::geo_traits::GeometryType::Polygon(g),
-            Self::MultiPoint(g) => crate::geo_traits::GeometryType::MultiPoint(g),
-            Self::MultiLineString(g) => crate::geo_traits::GeometryType::MultiLineString(g),
-            Self::MultiPolygon(g) => crate::geo_traits::GeometryType::MultiPolygon(g),
-            Self::GeometryCollection(g) => crate::geo_traits::GeometryType::GeometryCollection(g),
+            Self::Point(g) => geo_traits::GeometryType::Point(g),
+            Self::LineString(g) => geo_traits::GeometryType::LineString(g),
+            Self::Polygon(g) => geo_traits::GeometryType::Polygon(g),
+            Self::MultiPoint(g) => geo_traits::GeometryType::MultiPoint(g),
+            Self::MultiLineString(g) => geo_traits::GeometryType::MultiLineString(g),
+            Self::MultiPolygon(g) => geo_traits::GeometryType::MultiPolygon(g),
+            Self::GeometryCollection(g) => geo_traits::GeometryType::GeometryCollection(g),
         }
     }
 }

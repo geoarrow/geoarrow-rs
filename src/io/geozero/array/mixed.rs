@@ -270,7 +270,7 @@ impl<const D: usize> GeometryArrayBuilder for MixedGeometryStreamBuilder<D> {
 
     fn push_geometry(
         &mut self,
-        _value: Option<&impl crate::geo_traits::GeometryTrait<T = f64>>,
+        _value: Option<&impl geo_traits::GeometryTrait<T = f64>>,
     ) -> crate::error::Result<()> {
         todo!()
     }

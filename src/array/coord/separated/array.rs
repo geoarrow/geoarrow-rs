@@ -8,9 +8,9 @@ use arrow_schema::{DataType, Field};
 
 use crate::array::{CoordType, SeparatedCoordBufferBuilder};
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{CoordTrait, PointTrait};
 use crate::scalar::SeparatedCoord;
 use crate::trait_::IntoArrow;
+use geo_traits::{CoordTrait, PointTrait};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SeparatedCoordBuffer<const D: usize> {

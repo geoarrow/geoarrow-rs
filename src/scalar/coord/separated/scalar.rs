@@ -1,9 +1,9 @@
 use crate::algorithm::native::eq::coord_eq;
-use crate::geo_traits::CoordTrait;
 use crate::io::geo::coord_to_geo;
 use crate::scalar::InterleavedCoord;
 use crate::trait_::NativeScalar;
 use arrow_buffer::ScalarBuffer;
+use geo_traits::CoordTrait;
 use rstar::{RTreeObject, AABB};
 
 #[derive(Debug, Clone)]
@@ -84,11 +84,11 @@ impl<const D: usize> PartialEq<InterleavedCoord<'_, D>> for SeparatedCoord<'_, D
 impl<const D: usize> CoordTrait for SeparatedCoord<'_, D> {
     type T = f64;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimensions::Xy,
-            3 => crate::geo_traits::Dimensions::Xyz,
+            2 => geo_traits::Dimensions::Xy,
+            3 => geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
@@ -109,11 +109,11 @@ impl<const D: usize> CoordTrait for SeparatedCoord<'_, D> {
 impl<const D: usize> CoordTrait for &SeparatedCoord<'_, D> {
     type T = f64;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimensions::Xy,
-            3 => crate::geo_traits::Dimensions::Xyz,
+            2 => geo_traits::Dimensions::Xy,
+            3 => geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }

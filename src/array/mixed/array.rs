@@ -15,10 +15,10 @@ use crate::array::{
 };
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::GeometryTrait;
 use crate::scalar::Geometry;
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
 use crate::{ArrayBase, NativeArray};
+use geo_traits::GeometryTrait;
 
 /// # Invariants
 ///

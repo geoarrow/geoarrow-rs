@@ -1,8 +1,8 @@
 use crate::algorithm::native::eq::polygon_eq;
 use crate::array::{CoordBuffer, PolygonArray};
-use crate::geo_traits::PolygonTrait;
 use crate::scalar::{LineString, Polygon};
 use arrow_buffer::OffsetBuffer;
+use geo_traits::PolygonTrait;
 
 #[derive(Clone, Debug)]
 pub struct OwnedPolygon<const D: usize> {
@@ -73,11 +73,11 @@ impl<const D: usize> PolygonTrait for OwnedPolygon<D> {
     type T = f64;
     type RingType<'b> = LineString<'b,  D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimensions::Xy,
-            3 => crate::geo_traits::Dimensions::Xyz,
+            2 => geo_traits::Dimensions::Xy,
+            3 => geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }

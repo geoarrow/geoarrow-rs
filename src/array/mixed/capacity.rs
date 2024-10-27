@@ -6,7 +6,7 @@ use crate::array::multipoint::MultiPointCapacity;
 use crate::array::multipolygon::MultiPolygonCapacity;
 use crate::array::polygon::PolygonCapacity;
 use crate::error::Result;
-use crate::geo_traits::*;
+use geo_traits::*;
 
 /// A counter for the buffer sizes of a [`MixedGeometryArray`][crate::array::MixedGeometryArray].
 ///
@@ -181,18 +181,16 @@ impl MixedCapacity {
         assert!(geom.is_some());
         if let Some(geom) = geom {
             match geom.as_type() {
-                crate::geo_traits::GeometryType::Point(_) => self.add_point(),
-                crate::geo_traits::GeometryType::LineString(g) => self.add_line_string(Some(g)),
-                crate::geo_traits::GeometryType::Polygon(g) => self.add_polygon(Some(g)),
-                crate::geo_traits::GeometryType::MultiPoint(p) => self.add_multi_point(Some(p)),
-                crate::geo_traits::GeometryType::MultiLineString(p) => {
-                    self.add_multi_line_string(Some(p))
-                }
-                crate::geo_traits::GeometryType::MultiPolygon(p) => self.add_multi_polygon(Some(p)),
-                crate::geo_traits::GeometryType::GeometryCollection(_) => {
+                geo_traits::GeometryType::Point(_) => self.add_point(),
+                geo_traits::GeometryType::LineString(g) => self.add_line_string(Some(g)),
+                geo_traits::GeometryType::Polygon(g) => self.add_polygon(Some(g)),
+                geo_traits::GeometryType::MultiPoint(p) => self.add_multi_point(Some(p)),
+                geo_traits::GeometryType::MultiLineString(p) => self.add_multi_line_string(Some(p)),
+                geo_traits::GeometryType::MultiPolygon(p) => self.add_multi_polygon(Some(p)),
+                geo_traits::GeometryType::GeometryCollection(_) => {
                     panic!("nested geometry collections not supported")
                 }
-                _ => todo!(), // crate::geo_traits::GeometryType::Rect(_) => todo!(),
+                _ => todo!(), // geo_traits::GeometryType::Rect(_) => todo!(),
             };
         };
         Ok(())

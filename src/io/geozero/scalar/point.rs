@@ -1,5 +1,5 @@
-use crate::geo_traits::{CoordTrait, PointTrait};
 use crate::scalar::Point;
+use geo_traits::{CoordTrait, PointTrait};
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 pub(crate) fn process_point<P: GeomProcessor>(
@@ -22,7 +22,7 @@ pub(crate) fn process_point_as_coord<P: GeomProcessor>(
     coord_idx: usize,
     processor: &mut P,
 ) -> geozero::error::Result<()> {
-    use crate::geo_traits::Dimensions;
+    use geo_traits::Dimensions;
 
     // TODO: should revisit this now that we have a better separation between coord and point.
     // (ever since we split the point trait and coord trait again.)

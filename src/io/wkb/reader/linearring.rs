@@ -3,9 +3,9 @@ use std::io::Cursor;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
 use crate::datatypes::Dimension;
-use crate::geo_traits::LineStringTrait;
 use crate::io::wkb::reader::coord::WKBCoord;
 use crate::io::wkb::reader::geometry::Endianness;
+use geo_traits::LineStringTrait;
 
 /// A linear ring in a WKB buffer.
 ///
@@ -75,7 +75,7 @@ impl<'a> LineStringTrait for WKBLinearRing<'a> {
     type T = f64;
     type CoordType<'b> = WKBCoord<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 

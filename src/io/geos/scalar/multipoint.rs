@@ -1,7 +1,7 @@
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::MultiPointTrait;
 use crate::io::geos::scalar::GEOSConstPoint;
 use crate::scalar::MultiPoint;
+use geo_traits::MultiPointTrait;
 use geos::{Geom, GeometryTypes};
 
 impl<'a, const D: usize> TryFrom<&'a MultiPoint<'_, D>> for geos::Geometry {
@@ -45,10 +45,10 @@ impl MultiPointTrait for GEOSMultiPoint {
     type T = f64;
     type PointType<'a> = GEOSConstPoint<'a> where Self: 'a;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => crate::geo_traits::Dimensions::Xy,
-            geos::Dimensions::ThreeD => crate::geo_traits::Dimensions::Xyz,
+            geos::Dimensions::TwoD => geo_traits::Dimensions::Xy,
+            geos::Dimensions::ThreeD => geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
@@ -67,10 +67,10 @@ impl MultiPointTrait for &GEOSMultiPoint {
     type T = f64;
     type PointType<'a> = GEOSConstPoint<'a> where Self: 'a;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => crate::geo_traits::Dimensions::Xy,
-            geos::Dimensions::ThreeD => crate::geo_traits::Dimensions::Xyz,
+            geos::Dimensions::TwoD => geo_traits::Dimensions::Xy,
+            geos::Dimensions::ThreeD => geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }

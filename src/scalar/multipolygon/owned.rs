@@ -1,8 +1,8 @@
 use crate::algorithm::native::eq::multi_polygon_eq;
 use crate::array::{CoordBuffer, MultiPolygonArray};
-use crate::geo_traits::MultiPolygonTrait;
 use crate::scalar::{MultiPolygon, Polygon};
 use arrow_buffer::OffsetBuffer;
+use geo_traits::MultiPolygonTrait;
 
 #[derive(Clone, Debug)]
 pub struct OwnedMultiPolygon<const D: usize> {
@@ -86,11 +86,11 @@ impl<const D: usize> MultiPolygonTrait for OwnedMultiPolygon<D> {
     type T = f64;
     type PolygonType<'b> = Polygon<'b, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimensions::Xy,
-            3 => crate::geo_traits::Dimensions::Xyz,
+            2 => geo_traits::Dimensions::Xy,
+            3 => geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }

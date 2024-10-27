@@ -2,9 +2,10 @@ use rstar::{RTreeObject, AABB};
 
 use crate::algorithm::native::eq::rect_eq;
 use crate::array::SeparatedCoordBuffer;
-use crate::geo_traits::RectTrait;
 use crate::io::geo::rect_to_geo;
+use crate::scalar::SeparatedCoord;
 use crate::trait_::NativeScalar;
+use geo_traits::RectTrait;
 
 #[derive(Debug, Clone)]
 pub struct Rect<'a, const D: usize> {
@@ -52,23 +53,23 @@ impl<'a, const D: usize> NativeScalar for Rect<'a, D> {
 // TODO: support 3d rects
 impl<'a, const D: usize> RectTrait for Rect<'a, D> {
     type T = f64;
-    type CoordType<'b> = [Self::T; D] where Self: 'b;
+    type CoordType<'b> = SeparatedCoord<'a, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimensions::Xy,
-            3 => crate::geo_traits::Dimensions::Xyz,
+            2 => geo_traits::Dimensions::Xy,
+            3 => geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
 
     fn min(&self) -> Self::CoordType<'_> {
-        core::array::from_fn(|i| self.lower.buffers[i][self.geom_index])
+        self.lower.value(self.geom_index)
     }
 
     fn max(&self) -> Self::CoordType<'_> {
-        core::array::from_fn(|i| self.upper.buffers[i][self.geom_index])
+        self.upper.value(self.geom_index)
     }
 }
 
@@ -95,7 +96,11 @@ impl<const D: usize> RTreeObject for Rect<'_, D> {
 
     fn envelope(&self) -> Self::Envelope {
         let lower = self.min();
+        let lower = core::array::from_fn(|i| lower.buffers[i][self.geom_index]);
+
         let upper = self.max();
+        let upper = core::array::from_fn(|i| upper.buffers[i][self.geom_index]);
+
         AABB::from_corners(lower, upper)
     }
 }

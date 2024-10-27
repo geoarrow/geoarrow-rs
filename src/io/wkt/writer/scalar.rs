@@ -1,13 +1,13 @@
 #![allow(dead_code)]
 use geo::CoordFloat;
 
-use crate::geo_traits::{
+use geo_traits::{
     CoordTrait, GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait,
     MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
 };
 
 pub(super) fn coord_to_wkt<T: CoordFloat>(coord: &impl CoordTrait<T = T>) -> wkt::types::Coord<T> {
-    use crate::geo_traits::Dimensions;
+    use geo_traits::Dimensions;
 
     let mut out = wkt::types::Coord {
         x: coord.x(),

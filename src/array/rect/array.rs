@@ -11,11 +11,11 @@ use crate::array::rect::RectBuilder;
 use crate::array::{CoordBuffer, CoordType, SeparatedCoordBuffer};
 use crate::datatypes::{rect_fields, NativeType};
 use crate::error::GeoArrowError;
-use crate::geo_traits::RectTrait;
 use crate::scalar::Rect;
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::util::owned_slice_validity;
 use crate::{ArrayBase, NativeArray};
+use geo_traits::RectTrait;
 
 /// An immutable array of Rect geometries.
 ///

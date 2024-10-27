@@ -1,6 +1,6 @@
-use crate::geo_traits::MultiPointTrait;
 use crate::io::geozero::scalar::process_point_as_coord;
 use crate::scalar::MultiPoint;
+use geo_traits::MultiPointTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 pub(crate) fn process_multi_point<P: GeomProcessor>(

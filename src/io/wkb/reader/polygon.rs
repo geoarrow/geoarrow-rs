@@ -4,9 +4,9 @@ use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
 use crate::algorithm::native::eq::polygon_eq;
 use crate::datatypes::Dimension;
-use crate::geo_traits::{MultiPolygonTrait, PolygonTrait};
 use crate::io::wkb::reader::geometry::Endianness;
 use crate::io::wkb::reader::linearring::WKBLinearRing;
+use geo_traits::{MultiPolygonTrait, PolygonTrait};
 
 const WKB_POLYGON_TYPE: u32 = 3;
 
@@ -92,7 +92,7 @@ impl<'a> PolygonTrait for WKBPolygon<'a> {
     type T = f64;
     type RingType<'b> = WKBLinearRing<'a>where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -122,7 +122,7 @@ impl<'a> PolygonTrait for &'a WKBPolygon<'a> {
     type T = f64;
     type RingType<'b> = WKBLinearRing<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -152,7 +152,7 @@ impl<'a> MultiPolygonTrait for WKBPolygon<'a> {
     type T = f64;
     type PolygonType<'b> = WKBPolygon<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -169,7 +169,7 @@ impl<'a> MultiPolygonTrait for &'a WKBPolygon<'a> {
     type T = f64;
     type PolygonType<'b> = WKBPolygon<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 

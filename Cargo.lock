@@ -1245,6 +1245,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "geo-traits"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cdc9562dd7e476214a5eea3caf12763dcc2c886a64cc4c3b8ec41554e8c6c5fc"
+dependencies = [
+ "geo-types",
+]
+
+[[package]]
 name = "geo-types"
 version = "0.7.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1281,6 +1290,7 @@ dependencies = [
  "gdal",
  "geo",
  "geo-index",
+ "geo-traits",
  "geos",
  "geozero",
  "half",
@@ -1301,7 +1311,7 @@ dependencies = [
  "sqlx",
  "thiserror",
  "tokio",
- "wkt 0.11.0",
+ "wkt 0.11.1",
 ]
 
 [[package]]
@@ -4239,6 +4249,18 @@ version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "296937617013271141d1145d9c05861f5ed3b1bc4297e81c692aa3cff9270a9c"
 dependencies = [
+ "geo-types",
+ "log",
+ "num-traits",
+ "thiserror",
+]
+
+[[package]]
+name = "wkt"
+version = "0.11.1"
+source = "git+https://github.com/georust/wkt?branch=kyle/geo-traits-writer#63b13243568470d6da5a44fcc9fe7b903aa53eea"
+dependencies = [
+ "geo-traits",
  "geo-types",
  "log",
  "num-traits",

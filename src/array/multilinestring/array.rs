@@ -10,7 +10,6 @@ use crate::array::{
 };
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::MultiLineStringTrait;
 use crate::scalar::{Geometry, MultiLineString};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
@@ -19,6 +18,7 @@ use arrow::array::AsArray;
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
+use geo_traits::MultiLineStringTrait;
 
 use super::MultiLineStringBuilder;
 

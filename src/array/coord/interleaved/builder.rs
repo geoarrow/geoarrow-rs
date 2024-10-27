@@ -1,5 +1,5 @@
 use crate::array::InterleavedCoordBuffer;
-use crate::geo_traits::{CoordTrait, PointTrait};
+use geo_traits::{CoordTrait, PointTrait};
 
 /// The GeoArrow equivalent to `Vec<Coord>`: a mutable collection of coordinates.
 ///

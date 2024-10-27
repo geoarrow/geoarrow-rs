@@ -7,14 +7,12 @@ use crate::array::{
     MultiPointBuilder, SeparatedCoordBufferBuilder, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{
-    CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
-};
 use crate::io::wkb::reader::WKBLineString;
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
+use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
 use std::convert::From;
 use std::sync::Arc;
 

@@ -1,7 +1,7 @@
 use crate::algorithm::native::eq::multi_line_string_eq;
-use crate::geo_traits::MultiLineStringTrait;
 use crate::io::wkb::reader::linestring::WKBLineString;
 use crate::io::wkb::reader::multilinestring::WKBMultiLineString;
+use geo_traits::MultiLineStringTrait;
 
 /// An WKB object that can be either a WKBLineString or a WKBMultiLineString.
 ///
@@ -23,7 +23,7 @@ impl<'a> MultiLineStringTrait for WKBMaybeMultiLineString<'a> {
     type T = f64;
     type LineStringType<'b> = WKBLineString<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         match self {
             WKBMaybeMultiLineString::LineString(geom) => geom.dim(),
             WKBMaybeMultiLineString::MultiLineString(geom) => geom.dim(),
@@ -49,7 +49,7 @@ impl<'a> MultiLineStringTrait for &'a WKBMaybeMultiLineString<'a> {
     type T = f64;
     type LineStringType<'b> = WKBLineString<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         match self {
             WKBMaybeMultiLineString::LineString(geom) => geom.dim(),
             WKBMaybeMultiLineString::MultiLineString(geom) => geom.dim(),

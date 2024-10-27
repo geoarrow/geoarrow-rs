@@ -1,8 +1,8 @@
 use crate::algorithm::native::eq::point_eq;
 use crate::array::{CoordBuffer, PointArray};
-use crate::geo_traits::PointTrait;
 use crate::io::geo::point_to_geo;
 use crate::scalar::{Coord, Point};
+use geo_traits::PointTrait;
 
 #[derive(Clone, Debug)]
 pub struct OwnedPoint<const D: usize> {
@@ -43,11 +43,11 @@ impl<const D: usize> PointTrait for OwnedPoint<D> {
     type T = f64;
     type CoordType<'a> = Coord<'a, D>;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimensions::Xy,
-            3 => crate::geo_traits::Dimensions::Xyz,
+            2 => geo_traits::Dimensions::Xy,
+            3 => geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }

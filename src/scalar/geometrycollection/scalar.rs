@@ -1,12 +1,12 @@
 use crate::algorithm::native::eq::geometry_collection_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::MixedGeometryArray;
-use crate::geo_traits::GeometryCollectionTrait;
 use crate::io::geo::geometry_collection_to_geo;
 use crate::scalar::Geometry;
 use crate::trait_::ArrayAccessor;
 use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
+use geo_traits::GeometryCollectionTrait;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a GeometryCollection
@@ -63,11 +63,11 @@ impl<'a, const D: usize> GeometryCollectionTrait for GeometryCollection<'a, D> {
     type T = f64;
     type GeometryType<'b> = Geometry<'a, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimensions::Xy,
-            3 => crate::geo_traits::Dimensions::Xyz,
+            2 => geo_traits::Dimensions::Xy,
+            3 => geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
@@ -86,11 +86,11 @@ impl<'a, const D: usize> GeometryCollectionTrait for &'a GeometryCollection<'a, 
     type T = f64;
     type GeometryType<'b> = Geometry<'a, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimensions::Xy,
-            3 => crate::geo_traits::Dimensions::Xyz,
+            2 => geo_traits::Dimensions::Xy,
+            3 => geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }

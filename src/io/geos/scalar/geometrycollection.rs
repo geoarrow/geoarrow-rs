@@ -1,6 +1,6 @@
-use crate::geo_traits::GeometryCollectionTrait;
 use crate::io::geos::scalar::GEOSGeometry;
 use crate::scalar::GeometryCollection;
+use geo_traits::GeometryCollectionTrait;
 use geos::Geom;
 
 impl<'a, const D: usize> TryFrom<&'a GeometryCollection<'_, D>> for geos::Geometry {
@@ -31,10 +31,10 @@ impl GeometryCollectionTrait for GEOSGeometryCollection {
     type T = f64;
     type GeometryType<'a> = GEOSGeometry;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => crate::geo_traits::Dimensions::Xy,
-            geos::Dimensions::ThreeD => crate::geo_traits::Dimensions::Unknown(3),
+            geos::Dimensions::TwoD => geo_traits::Dimensions::Xy,
+            geos::Dimensions::ThreeD => geo_traits::Dimensions::Unknown(3),
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }

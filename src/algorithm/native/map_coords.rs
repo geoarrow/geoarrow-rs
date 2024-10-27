@@ -5,13 +5,13 @@ use crate::array::*;
 use crate::chunked_array::*;
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{
-    GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
-    MultiPointTrait, MultiPolygonTrait, PolygonTrait, RectTrait,
-};
 use crate::scalar::*;
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
+use geo_traits::{
+    CoordTrait, GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait,
+    MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PolygonTrait, RectTrait,
+};
 
 pub trait MapCoords {
     type Output;
@@ -196,10 +196,10 @@ impl MapCoords for Rect<'_, 2> {
     {
         let lower = self.min();
         let upper = self.max();
-        let minx = lower[0];
-        let miny = lower[1];
-        let maxx = upper[0];
-        let maxy = upper[1];
+        let minx = lower.x();
+        let miny = lower.y();
+        let maxx = upper.x();
+        let maxy = upper.y();
         let coords = vec![minx, miny, maxx, maxy];
         let coord_buffer = CoordBuffer::Interleaved(InterleavedCoordBuffer::new(coords.into()));
         let lower_coord = coord_buffer.value(0);

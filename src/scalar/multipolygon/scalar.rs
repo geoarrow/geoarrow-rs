@@ -2,11 +2,11 @@ use crate::algorithm::native::bounding_rect::bounding_rect_multipolygon;
 use crate::algorithm::native::eq::multi_polygon_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, MultiPolygonArray};
-use crate::geo_traits::MultiPolygonTrait;
 use crate::io::geo::multi_polygon_to_geo;
 use crate::scalar::Polygon;
 use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
+use geo_traits::MultiPolygonTrait;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a MultiPolygon
@@ -92,11 +92,11 @@ impl<'a, const D: usize> MultiPolygonTrait for MultiPolygon<'a, D> {
     type T = f64;
     type PolygonType<'b> = Polygon<'a, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimensions::Xy,
-            3 => crate::geo_traits::Dimensions::Xyz,
+            2 => geo_traits::Dimensions::Xy,
+            3 => geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }
@@ -120,11 +120,11 @@ impl<'a, const D: usize> MultiPolygonTrait for &'a MultiPolygon<'a, D> {
     type T = f64;
     type PolygonType<'b> = Polygon<'a, D> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         // TODO: pass through field information from array
         match D {
-            2 => crate::geo_traits::Dimensions::Xy,
-            3 => crate::geo_traits::Dimensions::Xyz,
+            2 => geo_traits::Dimensions::Xy,
+            3 => geo_traits::Dimensions::Xyz,
             _ => todo!(),
         }
     }

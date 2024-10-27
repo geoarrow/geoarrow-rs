@@ -1,8 +1,8 @@
 use crate::algorithm::native::eq::point_eq;
 use crate::datatypes::Dimension;
-use crate::geo_traits::{CoordTrait, MultiPointTrait, PointTrait};
 use crate::io::wkb::reader::coord::WKBCoord;
 use crate::io::wkb::reader::geometry::Endianness;
+use geo_traits::{CoordTrait, MultiPointTrait, PointTrait};
 
 /// A WKB Point.
 ///
@@ -56,7 +56,7 @@ impl<'a> PointTrait for WKBPoint<'a> {
     type T = f64;
     type CoordType<'b> = WKBCoord<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -73,7 +73,7 @@ impl<'a> PointTrait for &WKBPoint<'a> {
     type T = f64;
     type CoordType<'b> = WKBCoord<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -90,7 +90,7 @@ impl<'a> MultiPointTrait for WKBPoint<'a> {
     type T = f64;
     type PointType<'b> = WKBPoint<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -107,7 +107,7 @@ impl<'a> MultiPointTrait for &'a WKBPoint<'a> {
     type T = f64;
     type PointType<'b> = WKBPoint<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 

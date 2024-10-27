@@ -1,13 +1,13 @@
 use crate::array::CoordBuffer;
-use crate::geo_traits::CoordTrait;
 use crate::scalar::Coord;
+use geo_traits::CoordTrait;
 use geos::{CoordDimensions, CoordSeq};
 
 impl<'a, const D: usize> TryFrom<&'a Coord<'_, D>> for geos::CoordSeq {
     type Error = geos::Error;
 
     fn try_from(point: &'a Coord<'_, D>) -> std::result::Result<geos::CoordSeq, geos::Error> {
-        use crate::geo_traits::Dimensions;
+        use geo_traits::Dimensions;
 
         match point.dim() {
             Dimensions::Xy | Dimensions::Unknown(2) => {

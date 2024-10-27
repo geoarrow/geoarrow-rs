@@ -6,10 +6,10 @@ use arrow_schema::{DataType, Field, Schema};
 use geo::{point, Point};
 
 use crate::array::{PointArray, PointBuilder};
-use crate::geo_traits::CoordTrait;
 use crate::table::Table;
 use crate::test::properties;
 use crate::ArrayBase;
+use geo_traits::CoordTrait;
 
 pub(crate) fn p0() -> Point {
     point!(
@@ -42,8 +42,8 @@ struct CoordZ {
 impl CoordTrait for CoordZ {
     type T = f64;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
-        crate::geo_traits::Dimensions::Xyz
+    fn dim(&self) -> geo_traits::Dimensions {
+        geo_traits::Dimensions::Xyz
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {

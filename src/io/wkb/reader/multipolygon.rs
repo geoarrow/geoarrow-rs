@@ -4,9 +4,9 @@ use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
 use crate::algorithm::native::eq::multi_polygon_eq;
 use crate::datatypes::Dimension;
-use crate::geo_traits::MultiPolygonTrait;
 use crate::io::wkb::reader::geometry::Endianness;
 use crate::io::wkb::reader::polygon::WKBPolygon;
+use geo_traits::MultiPolygonTrait;
 
 /// skip endianness and wkb type
 const HEADER_BYTES: u64 = 5;
@@ -73,7 +73,7 @@ impl<'a> MultiPolygonTrait for WKBMultiPolygon<'a> {
     type T = f64;
     type PolygonType<'b> = WKBPolygon<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 
@@ -90,7 +90,7 @@ impl<'a> MultiPolygonTrait for &'a WKBMultiPolygon<'a> {
     type T = f64;
     type PolygonType<'b> = WKBPolygon<'a> where Self: 'b;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 

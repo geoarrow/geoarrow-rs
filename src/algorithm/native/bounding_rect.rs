@@ -1,10 +1,10 @@
 use std::ops::Add;
 
-use crate::geo_traits::{
+use geo::{Coord, Rect};
+use geo_traits::{
     CoordTrait, GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait,
     MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
 };
-use geo::{Coord, Rect};
 
 #[derive(Debug, Clone, Copy)]
 pub struct BoundingRect {
@@ -194,11 +194,11 @@ impl RectTrait for BoundingRect {
     type T = f64;
     type CoordType<'a> = Coord;
 
-    fn dim(&self) -> crate::geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits::Dimensions {
         if self.minz().is_some() && self.maxz().is_some() {
-            crate::geo_traits::Dimensions::Xyz
+            geo_traits::Dimensions::Xyz
         } else {
-            crate::geo_traits::Dimensions::Xy
+            geo_traits::Dimensions::Xy
         }
     }
 
