@@ -6,7 +6,7 @@ use geo_traits::MultiPolygonTrait;
 
 #[derive(Clone, Debug)]
 pub struct OwnedMultiPolygon<const D: usize> {
-    coords: CoordBuffer<D>,
+    coords: CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
     geom_offsets: OffsetBuffer<i32>,
@@ -20,7 +20,7 @@ pub struct OwnedMultiPolygon<const D: usize> {
 
 impl<const D: usize> OwnedMultiPolygon<D> {
     pub fn new(
-        coords: CoordBuffer<D>,
+        coords: CoordBuffer,
         geom_offsets: OffsetBuffer<i32>,
         polygon_offsets: OffsetBuffer<i32>,
         ring_offsets: OffsetBuffer<i32>,

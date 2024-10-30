@@ -8,7 +8,7 @@ use geo_traits::{CoordTrait, PointTrait};
 /// Converting an [`InterleavedCoordBufferBuilder`] into a [`InterleavedCoordBuffer`] is `O(1)`.
 #[derive(Debug, Clone)]
 pub struct InterleavedCoordBufferBuilder<const D: usize> {
-    pub coords: Vec<f64>,
+    pub(crate) coords: Vec<f64>,
 }
 
 impl<const D: usize> InterleavedCoordBufferBuilder<D> {

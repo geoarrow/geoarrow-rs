@@ -6,7 +6,7 @@ use geo_traits::LineStringTrait;
 
 #[derive(Clone, Debug)]
 pub struct OwnedLineString<const D: usize> {
-    coords: CoordBuffer<D>,
+    coords: CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
     geom_offsets: OffsetBuffer<i32>,
@@ -15,7 +15,7 @@ pub struct OwnedLineString<const D: usize> {
 }
 
 impl<const D: usize> OwnedLineString<D> {
-    pub fn new(coords: CoordBuffer<D>, geom_offsets: OffsetBuffer<i32>, geom_index: usize) -> Self {
+    pub fn new(coords: CoordBuffer, geom_offsets: OffsetBuffer<i32>, geom_index: usize) -> Self {
         Self {
             coords,
             geom_offsets,
@@ -52,7 +52,7 @@ impl<const D: usize> From<OwnedLineString<D>> for LineStringArray<D> {
 
 impl<const D: usize> LineStringTrait for OwnedLineString<D> {
     type T = f64;
-    type CoordType<'b> = Coord<'b, D> where Self: 'b;
+    type CoordType<'b> = Coord<'b> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         // TODO: pass through field information from array

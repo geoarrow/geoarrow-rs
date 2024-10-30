@@ -33,7 +33,7 @@ pub struct MultiLineStringArray<const D: usize> {
 
     pub(crate) metadata: Arc<ArrayMetadata>,
 
-    pub(crate) coords: CoordBuffer<D>,
+    pub(crate) coords: CoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
     pub(crate) geom_offsets: OffsetBuffer<i32>,
@@ -45,8 +45,8 @@ pub struct MultiLineStringArray<const D: usize> {
     pub(crate) validity: Option<NullBuffer>,
 }
 
-pub(super) fn check<const D: usize>(
-    coords: &CoordBuffer<D>,
+pub(super) fn check(
+    coords: &CoordBuffer,
     geom_offsets: &OffsetBuffer<i32>,
     ring_offsets: &OffsetBuffer<i32>,
     validity_len: Option<usize>,
@@ -85,7 +85,7 @@ impl<const D: usize> MultiLineStringArray<D> {
     /// - if the largest ring offset does not match the number of coordinates
     /// - if the largest geometry offset does not match the size of ring offsets
     pub fn new(
-        coords: CoordBuffer<D>,
+        coords: CoordBuffer,
         geom_offsets: OffsetBuffer<i32>,
         ring_offsets: OffsetBuffer<i32>,
         validity: Option<NullBuffer>,
@@ -106,7 +106,7 @@ impl<const D: usize> MultiLineStringArray<D> {
     /// - if the largest ring offset does not match the number of coordinates
     /// - if the largest geometry offset does not match the size of ring offsets
     pub fn try_new(
-        coords: CoordBuffer<D>,
+        coords: CoordBuffer,
         geom_offsets: OffsetBuffer<i32>,
         ring_offsets: OffsetBuffer<i32>,
         validity: Option<NullBuffer>,
@@ -140,7 +140,7 @@ impl<const D: usize> MultiLineStringArray<D> {
         Field::new_list("linestrings", self.vertices_field(), false).into()
     }
 
-    pub fn coords(&self) -> &CoordBuffer<D> {
+    pub fn coords(&self) -> &CoordBuffer {
         &self.coords
     }
 
@@ -189,40 +189,41 @@ impl<const D: usize> MultiLineStringArray<D> {
     }
 
     pub fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        assert!(
-            offset + length <= self.len(),
-            "offset + length may not exceed length of array"
-        );
-        assert!(length >= 1, "length must be at least 1");
+        todo!()
+        // assert!(
+        //     offset + length <= self.len(),
+        //     "offset + length may not exceed length of array"
+        // );
+        // assert!(length >= 1, "length must be at least 1");
 
-        // Find the start and end of the ring offsets
-        let (start_ring_idx, _) = self.geom_offsets.start_end(offset);
-        let (_, end_ring_idx) = self.geom_offsets.start_end(offset + length - 1);
+        // // Find the start and end of the ring offsets
+        // let (start_ring_idx, _) = self.geom_offsets.start_end(offset);
+        // let (_, end_ring_idx) = self.geom_offsets.start_end(offset + length - 1);
 
-        // Find the start and end of the coord buffer
-        let (start_coord_idx, _) = self.ring_offsets.start_end(start_ring_idx);
-        let (_, end_coord_idx) = self.ring_offsets.start_end(end_ring_idx - 1);
+        // // Find the start and end of the coord buffer
+        // let (start_coord_idx, _) = self.ring_offsets.start_end(start_ring_idx);
+        // let (_, end_coord_idx) = self.ring_offsets.start_end(end_ring_idx - 1);
 
-        // Slice the geom_offsets
-        let geom_offsets = owned_slice_offsets(&self.geom_offsets, offset, length);
-        let ring_offsets = owned_slice_offsets(
-            &self.ring_offsets,
-            start_ring_idx,
-            end_ring_idx - start_ring_idx,
-        );
-        let coords = self
-            .coords
-            .owned_slice(start_coord_idx, end_coord_idx - start_coord_idx);
+        // // Slice the geom_offsets
+        // let geom_offsets = owned_slice_offsets(&self.geom_offsets, offset, length);
+        // let ring_offsets = owned_slice_offsets(
+        //     &self.ring_offsets,
+        //     start_ring_idx,
+        //     end_ring_idx - start_ring_idx,
+        // );
+        // let coords = self
+        //     .coords
+        //     .owned_slice(start_coord_idx, end_coord_idx - start_coord_idx);
 
-        let validity = owned_slice_validity(self.nulls(), offset, length);
+        // let validity = owned_slice_validity(self.nulls(), offset, length);
 
-        Self::new(
-            coords,
-            geom_offsets,
-            ring_offsets,
-            validity,
-            self.metadata(),
-        )
+        // Self::new(
+        //     coords,
+        //     geom_offsets,
+        //     ring_offsets,
+        //     validity,
+        //     self.metadata(),
+        // )
     }
 
     pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
@@ -317,7 +318,7 @@ impl<const D: usize> NativeArray for MultiLineStringArray<D> {
 }
 
 impl<const D: usize> GeometryArraySelfMethods<D> for MultiLineStringArray<D> {
-    fn with_coords(self, coords: CoordBuffer<D>) -> Self {
+    fn with_coords(self, coords: CoordBuffer) -> Self {
         assert_eq!(coords.len(), self.coords.len());
         Self::new(
             coords,
@@ -357,7 +358,7 @@ impl<'a, const D: usize> crate::trait_::NativeGEOSGeometryAccessor<'a> for Multi
         index: usize,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
         let geom =
-            MultiLineString::new(&self.coords, &self.geom_offsets, &self.ring_offsets, index);
+            MultiLineString::<D>::new(&self.coords, &self.geom_offsets, &self.ring_offsets, index);
         (&geom).try_into()
     }
 }
@@ -378,7 +379,7 @@ impl<const D: usize> IntoArrow for MultiLineStringArray<D> {
         let vertices_field = self.vertices_field();
         let linestrings_field = self.linestrings_field();
         let validity = self.validity;
-        let coord_array = self.coords.into_array_ref();
+        let coord_array = self.coords.into_arrow();
         let ring_array = Arc::new(GenericListArray::new(
             vertices_field,
             self.ring_offsets,
@@ -400,7 +401,7 @@ impl<const D: usize> TryFrom<&GenericListArray<i32>> for MultiLineStringArray<D>
         let rings_array = rings_dyn_array.as_list::<i32>();
 
         let ring_offsets = rings_array.offsets();
-        let coords: CoordBuffer<D> = rings_array.values().as_ref().try_into()?;
+        let coords: CoordBuffer = rings_array.values().as_ref().try_into()?;
 
         Ok(Self::new(
             coords,
@@ -423,7 +424,7 @@ impl<const D: usize> TryFrom<&GenericListArray<i64>> for MultiLineStringArray<D>
         let rings_array = rings_dyn_array.as_list::<i64>();
 
         let ring_offsets = offsets_buffer_i64_to_i32(rings_array.offsets())?;
-        let coords: CoordBuffer<D> = rings_array.values().as_ref().try_into()?;
+        let coords: CoordBuffer = rings_array.values().as_ref().try_into()?;
 
         Ok(Self::new(
             coords,

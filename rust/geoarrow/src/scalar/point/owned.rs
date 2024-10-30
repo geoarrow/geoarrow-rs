@@ -6,16 +6,16 @@ use geo_traits::PointTrait;
 
 #[derive(Clone, Debug)]
 pub struct OwnedPoint<const D: usize> {
-    coords: CoordBuffer<D>,
+    coords: CoordBuffer,
     geom_index: usize,
 }
 
 impl<const D: usize> OwnedPoint<D> {
-    pub fn new(coords: CoordBuffer<D>, geom_index: usize) -> Self {
+    pub fn new(coords: CoordBuffer, geom_index: usize) -> Self {
         Self { coords, geom_index }
     }
 
-    pub fn coord(&self) -> Coord<D> {
+    pub fn coord(&self) -> Coord {
         self.coords.value(self.geom_index)
     }
 }
@@ -41,7 +41,7 @@ impl<const D: usize> From<OwnedPoint<D>> for PointArray<D> {
 
 impl<const D: usize> PointTrait for OwnedPoint<D> {
     type T = f64;
-    type CoordType<'a> = Coord<'a, D>;
+    type CoordType<'a> = Coord<'a>;
 
     fn dim(&self) -> geo_traits::Dimensions {
         // TODO: pass through field information from array

@@ -144,7 +144,7 @@ impl Downcast for MultiPointArray<2> {
     fn downcast(&self, small_offsets: bool) -> Self::Output {
         // Note: this won't allow a downcast for empty MultiPoints
         if *self.geom_offsets.last() as usize == self.len() {
-            return Arc::new(PointArray::new(
+            return Arc::new(PointArray::<2>::new(
                 self.coords.clone(),
                 self.validity.clone(),
                 self.metadata(),
@@ -173,7 +173,7 @@ impl Downcast for MultiLineStringArray<2> {
 
     fn downcast(&self, small_offsets: bool) -> Self::Output {
         if *self.geom_offsets.last() as usize == self.len() {
-            return Arc::new(LineStringArray::new(
+            return Arc::new(LineStringArray::<2>::new(
                 self.coords.clone(),
                 self.ring_offsets.clone(),
                 self.validity.clone(),
@@ -203,7 +203,7 @@ impl Downcast for MultiPolygonArray<2> {
 
     fn downcast(&self, small_offsets: bool) -> Self::Output {
         if *self.geom_offsets.last() as usize == self.len() {
-            return Arc::new(PolygonArray::new(
+            return Arc::new(PolygonArray::<2>::new(
                 self.coords.clone(),
                 self.polygon_offsets.clone(),
                 self.ring_offsets.clone(),
