@@ -1,9 +1,9 @@
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{MultiPointArray, WKBArray};
-use crate::error::Result;
-use crate::io::wkb::common::WKBType;
-use crate::io::wkb::reader::Endianness;
-use crate::io::wkb::writer::point::{point_wkb_size, write_point_as_wkb};
+use crate::error::WKBResult;
+use crate::common::WKBType;
+use crate::reader::Endianness;
+use crate::writer::point::{point_wkb_size, write_point_as_wkb};
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
@@ -21,7 +21,7 @@ pub fn multi_point_wkb_size(geom: &impl MultiPointTrait) -> usize {
 pub fn write_multi_point_as_wkb<W: Write>(
     mut writer: W,
     geom: &impl MultiPointTrait<T = f64>,
-) -> Result<()> {
+) -> WKBResult<()> {
     use geo_traits::Dimensions;
 
     // Byte order

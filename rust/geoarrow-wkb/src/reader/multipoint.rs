@@ -3,9 +3,9 @@ use std::io::Cursor;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
 use crate::algorithm::native::eq::multi_point_eq;
-use crate::datatypes::Dimension;
-use crate::io::wkb::reader::geometry::Endianness;
-use crate::io::wkb::reader::point::WKBPoint;
+use crate::reader::geometry::Endianness;
+use crate::reader::point::WKBPoint;
+use geo_traits::Dimensions;
 use geo_traits::MultiPointTrait;
 
 /// A WKB MultiPoint
@@ -18,11 +18,11 @@ pub struct WKBMultiPoint<'a> {
 
     /// The number of points in this multi point
     num_points: usize,
-    dim: Dimension,
+    dim: Dimensions,
 }
 
 impl<'a> WKBMultiPoint<'a> {
-    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
+    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimensions) -> Self {
         // TODO: assert WKB type?
         let mut reader = Cursor::new(buf);
         // Set reader to after 1-byte byteOrder and 4-byte wkbType
@@ -65,7 +65,7 @@ impl<'a> WKBMultiPoint<'a> {
         multi_point_eq(self, other)
     }
 
-    pub fn dimension(&self) -> Dimension {
+    pub fn dimension(&self) -> Dimensions {
         self.dim
     }
 }
@@ -74,8 +74,8 @@ impl<'a> MultiPointTrait for WKBMultiPoint<'a> {
     type T = f64;
     type PointType<'b> = WKBPoint<'a> where Self: 'b;
 
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.dim.into()
+    fn dim(&self) -> Dimensions {
+        self.dim
     }
 
     fn num_points(&self) -> usize {
@@ -96,8 +96,8 @@ impl<'a> MultiPointTrait for &'a WKBMultiPoint<'a> {
     type T = f64;
     type PointType<'b> = WKBPoint<'a> where Self: 'b;
 
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.dim.into()
+    fn dim(&self) -> Dimensions {
+        self.dim
     }
 
     fn num_points(&self) -> usize {
@@ -126,7 +126,7 @@ mod test {
         let buf = geo::Geometry::MultiPoint(geom.clone())
             .to_wkb(CoordDimensions::xy())
             .unwrap();
-        let wkb_geom = WKBMultiPoint::new(&buf, Endianness::LittleEndian, Dimension::XY);
+        let wkb_geom = WKBMultiPoint::new(&buf, Endianness::LittleEndian, Dimensions::XY);
 
         assert!(wkb_geom.equals_multi_point(&geom));
     }

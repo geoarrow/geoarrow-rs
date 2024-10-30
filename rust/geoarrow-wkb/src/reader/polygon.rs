@@ -2,10 +2,10 @@ use std::io::Cursor;
 
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
-use crate::algorithm::native::eq::polygon_eq;
-use crate::datatypes::Dimension;
-use crate::io::wkb::reader::geometry::Endianness;
-use crate::io::wkb::reader::linearring::WKBLinearRing;
+// use crate::algorithm::native::eq::polygon_eq;
+use crate::reader::geometry::Endianness;
+use crate::reader::linearring::WKBLinearRing;
+use geo_traits::Dimensions;
 use geo_traits::{MultiPolygonTrait, PolygonTrait};
 
 const WKB_POLYGON_TYPE: u32 = 3;
@@ -16,12 +16,12 @@ const WKB_POLYGON_TYPE: u32 = 3;
 #[derive(Debug, Clone)]
 pub struct WKBPolygon<'a> {
     wkb_linear_rings: Vec<WKBLinearRing<'a>>,
-    #[allow(dead_code)]
-    dim: Dimension,
+    // #[allow(dead_code)]
+    dim: Dimensions,
 }
 
 impl<'a> WKBPolygon<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
+    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimensions) -> Self {
         let mut reader = Cursor::new(buf);
         reader.set_position(1 + offset);
 
@@ -78,12 +78,7 @@ impl<'a> WKBPolygon<'a> {
         self.wkb_linear_rings.len() == 0
     }
 
-    /// Check if this WKBPolygon has equal coordinates as some other Polygon object
-    pub fn equals_polygon(&self, other: &impl PolygonTrait<T = f64>) -> bool {
-        polygon_eq(self, other)
-    }
-
-    pub fn dimension(&self) -> Dimension {
+    pub fn dimension(&self) -> Dimensions {
         self.dim
     }
 }
@@ -196,7 +191,7 @@ mod test {
         let buf = geo::Geometry::Polygon(geom.clone())
             .to_wkb(CoordDimensions::xy())
             .unwrap();
-        let wkb_geom = WKBPolygon::new(&buf, Endianness::LittleEndian, 0, Dimension::XY);
+        let wkb_geom = WKBPolygon::new(&buf, Endianness::LittleEndian, 0, Dimensions::XY);
 
         assert!(wkb_geom.equals_polygon(&geom));
     }

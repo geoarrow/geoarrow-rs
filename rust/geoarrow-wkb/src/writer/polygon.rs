@@ -1,8 +1,8 @@
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{PolygonArray, WKBArray};
-use crate::error::Result;
-use crate::io::wkb::common::WKBType;
-use crate::io::wkb::reader::Endianness;
+use crate::error::WKBResult;
+use crate::common::WKBType;
+use crate::reader::Endianness;
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
@@ -32,7 +32,7 @@ pub fn polygon_wkb_size(geom: &impl PolygonTrait) -> usize {
 pub fn write_polygon_as_wkb<W: Write>(
     mut writer: W,
     geom: &impl PolygonTrait<T = f64>,
-) -> Result<()> {
+) -> WKBResult<()> {
     use geo_traits::Dimensions;
 
     // Byte order

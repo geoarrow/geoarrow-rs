@@ -1,6 +1,6 @@
-use crate::algorithm::native::eq::multi_point_eq;
-use crate::io::wkb::reader::multipoint::WKBMultiPoint;
-use crate::io::wkb::reader::point::WKBPoint;
+// use crate::algorithm::native::eq::multi_point_eq;
+use crate::reader::multipoint::WKBMultiPoint;
+use crate::reader::point::WKBPoint;
 use geo_traits::MultiPointTrait;
 
 /// An WKB object that can be either a WKBPoint or a WKBMultiPoint.
@@ -74,10 +74,10 @@ impl<'a> MultiPointTrait for &'a WKBMaybeMultiPoint<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::datatypes::Dimension;
-    use crate::io::wkb::reader::geometry::Endianness;
+    use crate::reader::geometry::Endianness;
     use crate::test::multipoint::mp0;
     use crate::test::point::p0;
+    use geo_traits::Dimensions;
     use geozero::{CoordDimensions, ToWkb};
 
     #[test]

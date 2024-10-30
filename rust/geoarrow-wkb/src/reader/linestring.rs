@@ -2,10 +2,10 @@ use std::io::Cursor;
 
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
-use crate::algorithm::native::eq::{line_string_eq, multi_line_string_eq};
-use crate::datatypes::Dimension;
-use crate::io::wkb::reader::coord::WKBCoord;
-use crate::io::wkb::reader::geometry::Endianness;
+// use crate::algorithm::native::eq::{line_string_eq, multi_line_string_eq};
+use crate::reader::coord::WKBCoord;
+use crate::reader::geometry::Endianness;
+use geo_traits::Dimensions;
 use geo_traits::{LineStringTrait, MultiLineStringTrait};
 
 const HEADER_BYTES: u64 = 5;
@@ -24,11 +24,11 @@ pub struct WKBLineString<'a> {
     /// This offset will be 0 for a single WKBLineString but it will be non zero for a
     /// WKBLineString contained within a WKBMultiLineString
     offset: u64,
-    dim: Dimension,
+    dim: Dimensions,
 }
 
 impl<'a> WKBLineString<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
+    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimensions) -> Self {
         let mut reader = Cursor::new(buf);
         reader.set_position(HEADER_BYTES + offset);
         let num_points = match byte_order {
@@ -75,7 +75,7 @@ impl<'a> WKBLineString<'a> {
         multi_line_string_eq(self, other)
     }
 
-    pub fn dimension(&self) -> Dimension {
+    pub fn dimension(&self) -> Dimensions {
         self.dim
     }
 }
@@ -128,8 +128,8 @@ impl<'a> MultiLineStringTrait for WKBLineString<'a> {
     type T = f64;
     type LineStringType<'b> = WKBLineString<'a> where Self: 'b;
 
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.dim.into()
+    fn dim(&self) -> Dimensions {
+        self.dim
     }
 
     fn num_line_strings(&self) -> usize {
@@ -145,8 +145,8 @@ impl<'a> MultiLineStringTrait for &'a WKBLineString<'a> {
     type T = f64;
     type LineStringType<'b> = WKBLineString<'a> where Self: 'b;
 
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.dim.into()
+    fn dim(&self) -> Dimensions {
+        self.dim
     }
 
     fn num_line_strings(&self) -> usize {
@@ -170,7 +170,7 @@ mod test {
         let buf = geo::Geometry::LineString(geom.clone())
             .to_wkb(CoordDimensions::xy())
             .unwrap();
-        let wkb_geom = WKBLineString::new(&buf, Endianness::LittleEndian, 0, Dimension::XY);
+        let wkb_geom = WKBLineString::new(&buf, Endianness::LittleEndian, 0, Dimensions::XY);
 
         assert!(wkb_geom.equals_line_string(&geom));
     }
@@ -181,7 +181,7 @@ mod test {
         let buf = geo::Geometry::LineString(geom.clone())
             .to_wkb(CoordDimensions::xy())
             .unwrap();
-        let wkb_geom = WKBLineString::new(&buf, Endianness::LittleEndian, 0, Dimension::XY);
+        let wkb_geom = WKBLineString::new(&buf, Endianness::LittleEndian, 0, Dimensions::XY);
 
         assert_eq!(wkb_geom.size(), buf.len() as u64);
     }

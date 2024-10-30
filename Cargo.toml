@@ -1,4 +1,7 @@
 [workspace]
-members = ["rust/geoarrow"]
+members = ["rust/geoarrow", "rust/geoarrow-wkb"]
 exclude = ["js"]
 resolver = "2"
+
+[workspace.dependencies]
+geo-traits = "0.1.1"

@@ -1,6 +1,6 @@
 use crate::algorithm::native::eq::multi_polygon_eq;
-use crate::io::wkb::reader::multipolygon::WKBMultiPolygon;
-use crate::io::wkb::reader::polygon::WKBPolygon;
+use crate::reader::multipolygon::WKBMultiPolygon;
+use crate::reader::polygon::WKBPolygon;
 use geo_traits::MultiPolygonTrait;
 
 /// An WKB object that can be either a WKBPolygon or a WKBMultiPolygon.
@@ -74,8 +74,8 @@ impl<'a> MultiPolygonTrait for &'a WKBMaybeMultiPolygon<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::datatypes::Dimension;
-    use crate::io::wkb::reader::geometry::Endianness;
+    use geo_traits::Dimensions;
+    use crate::reader::geometry::Endianness;
     use crate::test::multipolygon::mp0;
     use crate::test::polygon::p0;
     use geozero::{CoordDimensions, ToWkb};

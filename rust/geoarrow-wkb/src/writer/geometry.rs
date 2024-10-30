@@ -3,8 +3,8 @@ use arrow_buffer::Buffer;
 
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{MixedGeometryArray, WKBArray};
-use crate::error::Result;
-use crate::io::wkb::writer::{
+use crate::error::WKBResult;
+use crate::writer::{
     geometry_collection_wkb_size, line_string_wkb_size, multi_line_string_wkb_size,
     multi_point_wkb_size, multi_polygon_wkb_size, point_wkb_size, polygon_wkb_size,
     write_line_string_as_wkb, write_multi_line_string_as_wkb, write_multi_point_as_wkb,
@@ -36,7 +36,7 @@ pub fn geometry_wkb_size(geom: &impl GeometryTrait) -> usize {
 pub fn write_geometry_as_wkb<W: Write>(
     writer: W,
     geom: &impl GeometryTrait<T = f64>,
-) -> Result<()> {
+) -> WKBResult<()> {
     use GeometryType::*;
     match geom.as_type() {
         Point(p) => write_point_as_wkb(writer, p),

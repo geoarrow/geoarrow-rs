@@ -2,9 +2,9 @@ use std::io::Cursor;
 
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
-use crate::datatypes::Dimension;
-use crate::io::wkb::reader::coord::WKBCoord;
-use crate::io::wkb::reader::geometry::Endianness;
+use crate::reader::coord::WKBCoord;
+use crate::reader::geometry::Endianness;
+use geo_traits::Dimensions;
 use geo_traits::LineStringTrait;
 
 /// A linear ring in a WKB buffer.
@@ -31,11 +31,11 @@ pub struct WKBLinearRing<'a> {
     /// The number of points in this linear ring
     num_points: usize,
 
-    dim: Dimension,
+    dim: Dimensions,
 }
 
 impl<'a> WKBLinearRing<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
+    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimensions) -> Self {
         let mut reader = Cursor::new(buf);
         reader.set_position(offset);
         let num_points = match byte_order {
@@ -75,8 +75,8 @@ impl<'a> LineStringTrait for WKBLinearRing<'a> {
     type T = f64;
     type CoordType<'b> = WKBCoord<'a> where Self: 'b;
 
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.dim.into()
+    fn dim(&self) -> Dimensions {
+        self.dim
     }
 
     fn num_coords(&self) -> usize {

@@ -1,6 +1,6 @@
-use crate::algorithm::native::eq::multi_line_string_eq;
-use crate::io::wkb::reader::linestring::WKBLineString;
-use crate::io::wkb::reader::multilinestring::WKBMultiLineString;
+// use crate::algorithm::native::eq::multi_line_string_eq;
+use crate::reader::linestring::WKBLineString;
+use crate::reader::multilinestring::WKBMultiLineString;
 use geo_traits::MultiLineStringTrait;
 
 /// An WKB object that can be either a WKBLineString or a WKBMultiLineString.
@@ -74,10 +74,10 @@ impl<'a> MultiLineStringTrait for &'a WKBMaybeMultiLineString<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::datatypes::Dimension;
-    use crate::io::wkb::reader::geometry::Endianness;
+    use crate::reader::geometry::Endianness;
     use crate::test::linestring::ls0;
     use crate::test::multilinestring::ml0;
+    use geo_traits::Dimensions;
     use geozero::{CoordDimensions, ToWkb};
 
     #[test]

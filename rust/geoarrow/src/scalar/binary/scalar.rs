@@ -30,6 +30,18 @@ impl<'a, O: OffsetSizeTrait> WKB<'a, O> {
         // let owned = self.into_owned();
         (self.arr.clone(), self.geom_index)
     }
+
+    /// Convert this WKB scalar to a [WKBGeometry]
+    ///
+    /// This "prepares" the WKB input for constant-time coordinate access.
+    pub fn to_wkb_object(&'a self) -> WKBGeometry<'a> {
+        WKBGeometry::try_new(self.as_slice()).unwrap()
+    }
+
+    /// Access the [WKBType] of this WKB object.
+    pub fn wkb_type(&'a self) -> Result<WKBType> {
+        WKBType::from_buffer(self.as_ref())
+    }
 }
 
 impl<'a, O: OffsetSizeTrait> NativeScalar for WKB<'a, O> {

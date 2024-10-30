@@ -2,10 +2,10 @@ use std::io::Cursor;
 
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
-use crate::algorithm::native::eq::multi_line_string_eq;
-use crate::datatypes::Dimension;
-use crate::io::wkb::reader::geometry::Endianness;
-use crate::io::wkb::reader::linestring::WKBLineString;
+// use crate::algorithm::native::eq::multi_line_string_eq;
+use crate::reader::geometry::Endianness;
+use crate::reader::linestring::WKBLineString;
+use geo_traits::Dimensions;
 use geo_traits::MultiLineStringTrait;
 
 const HEADER_BYTES: u64 = 5;
@@ -17,12 +17,12 @@ const HEADER_BYTES: u64 = 5;
 pub struct WKBMultiLineString<'a> {
     /// A WKBLineString object for each of the internal line strings
     wkb_line_strings: Vec<WKBLineString<'a>>,
-    #[allow(dead_code)]
-    dim: Dimension,
+    // #[allow(dead_code)]
+    dim: Dimensions,
 }
 
 impl<'a> WKBMultiLineString<'a> {
-    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
+    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimensions) -> Self {
         let mut reader = Cursor::new(buf);
         reader.set_position(HEADER_BYTES);
         let num_line_strings = match byte_order {
@@ -64,12 +64,7 @@ impl<'a> WKBMultiLineString<'a> {
             .fold(1 + 4 + 4, |acc, ls| acc + ls.size())
     }
 
-    /// Check if this WKBMultiLineString has equal coordinates as some other MultiLineString object
-    pub fn equals_multi_line_string(&self, other: &impl MultiLineStringTrait<T = f64>) -> bool {
-        multi_line_string_eq(self, other)
-    }
-
-    pub fn dimension(&self) -> Dimension {
+    pub fn dimension(&self) -> Dimensions {
         self.dim
     }
 }
@@ -120,7 +115,7 @@ mod test {
         let buf = geo::Geometry::MultiLineString(geom.clone())
             .to_wkb(CoordDimensions::xy())
             .unwrap();
-        let wkb_geom = WKBMultiLineString::new(&buf, Endianness::LittleEndian, Dimension::XY);
+        let wkb_geom = WKBMultiLineString::new(&buf, Endianness::LittleEndian, Dimensions::XY);
 
         assert!(wkb_geom.equals_multi_line_string(&geom));
     }

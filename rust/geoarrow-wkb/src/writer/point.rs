@@ -1,8 +1,8 @@
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{PointArray, WKBArray};
-use crate::error::Result;
-use crate::io::wkb::common::WKBType;
-use crate::io::wkb::reader::Endianness;
+use crate::error::WKBResult;
+use crate::common::WKBType;
+use crate::reader::Endianness;
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
@@ -27,7 +27,10 @@ pub fn point_wkb_size_const<const D: usize>() -> usize {
 }
 
 /// Write a Point geometry to a Writer encoded as WKB
-pub fn write_point_as_wkb<W: Write>(mut writer: W, geom: &impl PointTrait<T = f64>) -> Result<()> {
+pub fn write_point_as_wkb<W: Write>(
+    mut writer: W,
+    geom: &impl PointTrait<T = f64>,
+) -> WKBResult<()> {
     use geo_traits::Dimensions;
 
     // Byte order

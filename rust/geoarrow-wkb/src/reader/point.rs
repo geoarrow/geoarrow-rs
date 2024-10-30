@@ -1,7 +1,7 @@
 use crate::algorithm::native::eq::point_eq;
-use crate::datatypes::Dimension;
-use crate::io::wkb::reader::coord::WKBCoord;
-use crate::io::wkb::reader::geometry::Endianness;
+use crate::reader::coord::WKBCoord;
+use crate::reader::geometry::Endianness;
+use geo_traits::Dimensions;
 use geo_traits::{CoordTrait, MultiPointTrait, PointTrait};
 
 /// A WKB Point.
@@ -13,12 +13,12 @@ use geo_traits::{CoordTrait, MultiPointTrait, PointTrait};
 pub struct WKBPoint<'a> {
     /// The coordinate inside this WKBPoint
     coord: WKBCoord<'a>,
-    dim: Dimension,
+    dim: Dimensions,
     is_empty: bool,
 }
 
 impl<'a> WKBPoint<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
+    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimensions) -> Self {
         // The space of the byte order + geometry type
         let offset = offset + 5;
         let coord = WKBCoord::new(buf, byte_order, offset, dim);
@@ -47,7 +47,7 @@ impl<'a> WKBPoint<'a> {
         point_eq(self, other)
     }
 
-    pub fn dimension(&self) -> Dimension {
+    pub fn dimension(&self) -> Dimensions {
         self.dim
     }
 }
@@ -56,8 +56,8 @@ impl<'a> PointTrait for WKBPoint<'a> {
     type T = f64;
     type CoordType<'b> = WKBCoord<'a> where Self: 'b;
 
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.dim.into()
+    fn dim(&self) -> Dimensions {
+        self.dim
     }
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
@@ -73,8 +73,8 @@ impl<'a> PointTrait for &WKBPoint<'a> {
     type T = f64;
     type CoordType<'b> = WKBCoord<'a> where Self: 'b;
 
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.dim.into()
+    fn dim(&self) -> Dimensions {
+        self.dim
     }
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
@@ -90,8 +90,8 @@ impl<'a> MultiPointTrait for WKBPoint<'a> {
     type T = f64;
     type PointType<'b> = WKBPoint<'a> where Self: 'b;
 
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.dim.into()
+    fn dim(&self) -> Dimensions {
+        self.dim
     }
 
     fn num_points(&self) -> usize {
@@ -107,8 +107,8 @@ impl<'a> MultiPointTrait for &'a WKBPoint<'a> {
     type T = f64;
     type PointType<'b> = WKBPoint<'a> where Self: 'b;
 
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.dim.into()
+    fn dim(&self) -> Dimensions {
+        self.dim
     }
 
     fn num_points(&self) -> usize {
@@ -132,7 +132,7 @@ mod test {
         let buf = geo::Geometry::Point(point)
             .to_wkb(CoordDimensions::xy())
             .unwrap();
-        let wkb_point = WKBPoint::new(&buf, Endianness::LittleEndian, 0, Dimension::XY);
+        let wkb_point = WKBPoint::new(&buf, Endianness::LittleEndian, 0, Dimensions::XY);
 
         assert!(wkb_point.equals_point(&point));
     }

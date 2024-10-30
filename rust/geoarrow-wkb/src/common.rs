@@ -1,11 +1,9 @@
 use std::io::Cursor;
 
-use arrow_array::OffsetSizeTrait;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
-use crate::error::{GeoArrowError, Result};
-use crate::scalar::WKB;
+use crate::error::{WKBError, WKBResult};
 
 /// The various WKB types supported by this crate
 #[derive(Clone, Copy, Debug, PartialEq, TryFromPrimitive, IntoPrimitive)]
@@ -43,7 +41,7 @@ pub enum WKBType {
 
 impl WKBType {
     /// Construct from a byte slice representing a WKB geometry
-    pub fn from_buffer(buf: &[u8]) -> Result<Self> {
+    pub fn from_buffer(buf: &[u8]) -> WKBResult<Self> {
         let mut reader = Cursor::new(buf);
         let byte_order = reader.read_u8().unwrap();
         let geometry_type = match byte_order {
@@ -51,15 +49,14 @@ impl WKBType {
             1 => reader.read_u32::<LittleEndian>().unwrap(),
             _ => panic!("Unexpected byte order."),
         };
-        Self::try_from_primitive(geometry_type)
-            .map_err(|err| GeoArrowError::General(err.to_string()))
+        Self::try_from_primitive(geometry_type).map_err(|err| WKBError::General(err.to_string()))
     }
 }
 
-impl<'a, O: OffsetSizeTrait> TryFrom<WKB<'a, O>> for WKBType {
-    type Error = GeoArrowError;
+// impl<'a, O: OffsetSizeTrait> TryFrom<WKB<'a, O>> for WKBType {
+//     type Error = WKBError;
 
-    fn try_from(value: WKB<'a, O>) -> std::result::Result<Self, Self::Error> {
-        Self::from_buffer(value.as_ref())
-    }
-}
+//     fn try_from(value: WKB<'a, O>) -> std::result::WKBResult<Self, Self::Error> {
+//         Self::from_buffer(value.as_ref())
+//     }
+// }

@@ -2,10 +2,9 @@ use std::io::Cursor;
 
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
-use crate::datatypes::Dimension;
-use crate::error::Result;
-use crate::io::wkb::reader::geometry::{Endianness, WKBGeometry};
-use geo_traits::GeometryCollectionTrait;
+use crate::error::WKBResult;
+use crate::reader::geometry::{Endianness, WKBGeometry};
+use geo_traits::{Dimensions, GeometryCollectionTrait};
 
 /// skip endianness and wkb type
 const HEADER_BYTES: u64 = 5;
@@ -15,11 +14,11 @@ const HEADER_BYTES: u64 = 5;
 pub struct WKBGeometryCollection<'a> {
     /// A WKBGeometry object for each of the internal geometries
     geometries: Vec<WKBGeometry<'a>>,
-    dim: Dimension,
+    dim: Dimensions,
 }
 
 impl<'a> WKBGeometryCollection<'a> {
-    pub fn try_new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Result<Self> {
+    pub fn try_new(buf: &'a [u8], byte_order: Endianness, dim: Dimensions) -> WKBResult<Self> {
         let mut reader = Cursor::new(buf);
         reader.set_position(HEADER_BYTES);
         let num_geometries = match byte_order {
@@ -45,7 +44,7 @@ impl<'a> WKBGeometryCollection<'a> {
         Ok(Self { geometries, dim })
     }
 
-    pub fn dimension(&self) -> Dimension {
+    pub fn dimension(&self) -> Dimensions {
         self.dim
     }
 
@@ -63,8 +62,8 @@ impl<'a> GeometryCollectionTrait for WKBGeometryCollection<'a> {
     type T = f64;
     type GeometryType<'b> = &'b WKBGeometry<'b> where Self: 'b;
 
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.dim.into()
+    fn dim(&self) -> Dimensions {
+        self.dim
     }
 
     fn num_geometries(&self) -> usize {

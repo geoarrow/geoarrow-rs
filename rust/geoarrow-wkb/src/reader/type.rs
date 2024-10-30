@@ -5,10 +5,9 @@ use arrow_array::OffsetSizeTrait;
 use num_enum::TryFromPrimitive;
 
 use crate::array::CoordType;
+use crate::common::WKBType;
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::io::wkb::common::WKBType;
-use crate::scalar::WKB;
 
 #[derive(Debug, Eq, PartialEq, TryFromPrimitive)]
 #[repr(u32)]

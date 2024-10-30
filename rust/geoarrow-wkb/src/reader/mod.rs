@@ -21,6 +21,7 @@ mod polygon;
 pub(crate) mod r#type;
 
 pub use geometry::{Endianness, WKBGeometry};
+pub use geometry_collection::WKBGeometryCollection;
 pub use linestring::WKBLineString;
 pub use maybe_multi_line_string::WKBMaybeMultiLineString;
 pub use maybe_multi_point::WKBMaybeMultiPoint;

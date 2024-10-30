@@ -1291,6 +1291,7 @@ dependencies = [
  "geo",
  "geo-index",
  "geo-traits",
+ "geoarrow-wkb",
  "geos",
  "geozero",
  "half",
@@ -1312,6 +1313,22 @@ dependencies = [
  "thiserror",
  "tokio",
  "wkt 0.11.1",
+]
+
+[[package]]
+name = "geoarrow-wkb"
+version = "0.4.0-beta.1"
+dependencies = [
+ "approx",
+ "byteorder",
+ "bytes",
+ "criterion",
+ "enum-as-inner",
+ "geo-traits",
+ "num_enum",
+ "serde",
+ "serde_json",
+ "thiserror",
 ]
 
 [[package]]

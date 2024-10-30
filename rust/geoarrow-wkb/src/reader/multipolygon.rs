@@ -3,9 +3,9 @@ use std::io::Cursor;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
 use crate::algorithm::native::eq::multi_polygon_eq;
-use crate::datatypes::Dimension;
-use crate::io::wkb::reader::geometry::Endianness;
-use crate::io::wkb::reader::polygon::WKBPolygon;
+use crate::reader::geometry::Endianness;
+use crate::reader::polygon::WKBPolygon;
+use geo_traits::Dimensions;
 use geo_traits::MultiPolygonTrait;
 
 /// skip endianness and wkb type
@@ -17,11 +17,11 @@ pub struct WKBMultiPolygon<'a> {
     /// A WKBPolygon object for each of the internal line strings
     wkb_polygons: Vec<WKBPolygon<'a>>,
 
-    dim: Dimension,
+    dim: Dimensions,
 }
 
 impl<'a> WKBMultiPolygon<'a> {
-    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
+    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimensions) -> Self {
         let mut reader = Cursor::new(buf);
         reader.set_position(HEADER_BYTES);
         let num_polygons = match byte_order {
@@ -64,7 +64,7 @@ impl<'a> WKBMultiPolygon<'a> {
             .fold(1 + 4 + 4, |acc, x| acc + x.size())
     }
 
-    pub fn dimension(&self) -> Dimension {
+    pub fn dimension(&self) -> Dimensions {
         self.dim
     }
 }
@@ -73,8 +73,8 @@ impl<'a> MultiPolygonTrait for WKBMultiPolygon<'a> {
     type T = f64;
     type PolygonType<'b> = WKBPolygon<'a> where Self: 'b;
 
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.dim.into()
+    fn dim(&self) -> Dimensions {
+        self.dim
     }
 
     fn num_polygons(&self) -> usize {
@@ -90,8 +90,8 @@ impl<'a> MultiPolygonTrait for &'a WKBMultiPolygon<'a> {
     type T = f64;
     type PolygonType<'b> = WKBPolygon<'a> where Self: 'b;
 
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.dim.into()
+    fn dim(&self) -> Dimensions {
+        self.dim
     }
 
     fn num_polygons(&self) -> usize {
@@ -115,7 +115,7 @@ mod test {
         let buf = geo::Geometry::MultiPolygon(geom.clone())
             .to_wkb(CoordDimensions::xy())
             .unwrap();
-        let wkb_geom = WKBMultiPolygon::new(&buf, Endianness::LittleEndian, Dimension::XY);
+        let wkb_geom = WKBMultiPolygon::new(&buf, Endianness::LittleEndian, Dimensions::XY);
 
         assert!(wkb_geom.equals_multi_polygon(&geom));
     }
