@@ -25,7 +25,7 @@ impl<'a> CoordTrait for Coord<'a> {
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
-        self.buffer.buffers[n][self.i * self.buffer.coords_stride]
+        self.buffer.buffers[n][self.i * self.buffer.coords_stride + n]
     }
 
     fn x(&self) -> Self::T {
@@ -33,6 +33,6 @@ impl<'a> CoordTrait for Coord<'a> {
     }
 
     fn y(&self) -> Self::T {
-        self.buffer.buffers[1][self.i * self.buffer.coords_stride]
+        self.buffer.buffers[1][self.i * self.buffer.coords_stride + 1]
     }
 }
