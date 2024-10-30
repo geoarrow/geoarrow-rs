@@ -1,0 +1,34 @@
+use criterion::{criterion_group, criterion_main, Criterion};
+use geoarrow::algorithm::geo::Area;
+use geoarrow::algorithm::native::TotalBounds;
+use geoarrow::array::{AsChunkedNativeArray, MultiPolygonArray};
+use geoarrow::io::flatgeobuf::read_flatgeobuf;
+use geoarrow::trait_::ArrayAccessor;
+use std::fs::File;
+
+fn load_file() -> MultiPolygonArray<2> {
+    let mut file = File::open("fixtures/flatgeobuf/countries.fgb").unwrap();
+    let table = read_flatgeobuf(&mut file, Default::default()).unwrap();
+    table
+        .geometry_column(None)
+        .unwrap()
+        .as_ref()
+        .as_multi_polygon::<2>()
+        .chunks()
+        .first()
+        .unwrap()
+        .clone()
+}
+
+fn criterion_benchmark(c: &mut Criterion) {
+    let data = load_file();
+
+    c.bench_function("total_bounds", |bencher| {
+        bencher.iter(|| {
+            criterion::black_box(criterion::black_box(&data).total_bounds());
+        });
+    });
+}
+
+criterion_group!(benches, criterion_benchmark);
+criterion_main!(benches);
