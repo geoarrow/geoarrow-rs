@@ -711,7 +711,7 @@ pub trait GeometryArraySelfMethods<const D: usize> {
     /// assert_eq!(value.x(), 3.);
     /// assert_eq!(value.y(), 4.);
     /// ```
-    fn with_coords(self, coords: CoordBuffer<D>) -> Self;
+    fn with_coords(self, coords: CoordBuffer) -> Self;
 
     /// Casts the coordinate buffer of this geometry array to the given coordinate type.
     ///

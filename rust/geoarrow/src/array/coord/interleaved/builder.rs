@@ -1,4 +1,8 @@
+use core::f64;
+
 use crate::array::InterleavedCoordBuffer;
+use crate::datatypes::Dimension;
+use crate::error::{GeoArrowError, Result};
 use geo_traits::{CoordTrait, PointTrait};
 
 /// The GeoArrow equivalent to `Vec<Coord>`: a mutable collection of coordinates.
@@ -7,25 +11,28 @@ use geo_traits::{CoordTrait, PointTrait};
 ///
 /// Converting an [`InterleavedCoordBufferBuilder`] into a [`InterleavedCoordBuffer`] is `O(1)`.
 #[derive(Debug, Clone)]
-pub struct InterleavedCoordBufferBuilder<const D: usize> {
+pub struct InterleavedCoordBufferBuilder {
     pub coords: Vec<f64>,
+    dim: Dimension,
 }
 
-impl<const D: usize> InterleavedCoordBufferBuilder<D> {
-    pub fn new() -> Self {
-        Self::with_capacity(0)
+impl InterleavedCoordBufferBuilder {
+    pub fn new(dim: Dimension) -> Self {
+        Self::with_capacity(0, dim)
     }
 
-    pub fn with_capacity(capacity: usize) -> Self {
+    pub fn with_capacity(capacity: usize, dim: Dimension) -> Self {
         Self {
-            coords: Vec::with_capacity(capacity * D),
+            coords: Vec::with_capacity(capacity * dim.size()),
+            dim,
         }
     }
 
     /// Initialize a buffer of a given length with all coordinates set to 0.0
-    pub fn initialize(len: usize) -> Self {
+    pub fn initialize(len: usize, dim: Dimension) -> Self {
         Self {
-            coords: vec![0.0f64; len * D],
+            coords: vec![0.0f64; len * dim.size()],
+            dim,
         }
     }
 
@@ -35,7 +42,7 @@ impl<const D: usize> InterleavedCoordBufferBuilder<D> {
     /// capacity will be greater than or equal to `self.len() + additional`.
     /// Does nothing if capacity is already sufficient.
     pub fn reserve(&mut self, additional: usize) {
-        self.coords.reserve(additional * D);
+        self.coords.reserve(additional * self.dim.size());
     }
 
     /// Reserves the minimum capacity for at least `additional` more coordinates to
@@ -51,75 +58,59 @@ impl<const D: usize> InterleavedCoordBufferBuilder<D> {
     ///
     /// [`reserve`]: Vec::reserve
     pub fn reserve_exact(&mut self, additional: usize) {
-        self.coords.reserve_exact(additional * D);
+        self.coords.reserve_exact(additional * self.dim.size());
     }
 
     /// Returns the total number of coordinates the vector can hold without reallocating.
     pub fn capacity(&self) -> usize {
-        self.coords.capacity() / D
+        self.coords.capacity() / self.dim.size()
     }
 
     pub fn len(&self) -> usize {
-        self.coords.len() / 2
+        self.coords.len() / self.dim.size()
     }
 
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
-    pub fn push(&mut self, c: [f64; D]) {
-        self.coords.extend_from_slice(&c);
-    }
+    pub fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+        // TODO: should check xyz/zym
+        if coord.dim().size() != self.dim.size() {
+            return Err(GeoArrowError::General(
+                "coord dimension must match coord buffer dimension.".into(),
+            ));
+        }
 
-    pub fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
-        let buf: [f64; D] = core::array::from_fn(|i| coord.nth(i).unwrap_or(f64::NAN));
-        self.coords.extend_from_slice(&buf);
+        self.coords.push(coord.x());
+        self.coords.push(coord.y());
+        if let Some(z) = coord.nth(2) {
+            self.coords.push(z);
+        };
+        Ok(())
     }
 
     pub fn push_point(&mut self, point: &impl PointTrait<T = f64>) {
         if let Some(coord) = point.coord() {
             self.push_coord(&coord);
         } else {
-            self.push([f64::NAN; D]);
+            for _ in 0..self.dim.size() {
+                self.coords.push(f64::NAN);
+            }
         }
     }
-}
 
-impl InterleavedCoordBufferBuilder<2> {
-    pub fn set_coord(&mut self, i: usize, coord: geo::Coord) {
-        self.coords[i * 2] = coord.x;
-        self.coords[i * 2 + 1] = coord.y;
-    }
-
-    pub fn set_xy(&mut self, i: usize, x: f64, y: f64) {
-        self.coords[i * 2] = x;
-        self.coords[i * 2 + 1] = y;
-    }
-
-    pub fn push_xy(&mut self, x: f64, y: f64) {
-        self.coords.push(x);
-        self.coords.push(y);
-    }
-}
-
-impl<const D: usize> Default for InterleavedCoordBufferBuilder<D> {
-    fn default() -> Self {
-        Self::with_capacity(0)
-    }
-}
-
-impl<const D: usize> From<InterleavedCoordBufferBuilder<D>> for InterleavedCoordBuffer<D> {
-    fn from(value: InterleavedCoordBufferBuilder<D>) -> Self {
-        InterleavedCoordBuffer::new(value.coords.into())
-    }
-}
-
-impl<G: CoordTrait<T = f64>, const D: usize> From<&[G]> for InterleavedCoordBufferBuilder<D> {
-    fn from(value: &[G]) -> Self {
-        let mut buffer = InterleavedCoordBufferBuilder::with_capacity(value.len());
-        for coord in value {
+    pub fn from_coords<G: CoordTrait<T = f64>>(coords: &[G], dim: Dimension) -> Result<Self> {
+        let mut buffer = InterleavedCoordBufferBuilder::with_capacity(coords.len(), dim);
+        for coord in coords {
             buffer.push_coord(coord);
         }
-        buffer
+        Ok(buffer)
+    }
+}
+
+impl From<InterleavedCoordBufferBuilder> for InterleavedCoordBuffer {
+    fn from(value: InterleavedCoordBufferBuilder) -> Self {
+        InterleavedCoordBuffer::new(value.coords.into(), value.dim)
     }
 }

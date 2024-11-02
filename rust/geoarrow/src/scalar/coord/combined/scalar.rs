@@ -6,12 +6,12 @@ use crate::trait_::NativeScalar;
 use geo_traits::CoordTrait;
 
 #[derive(Debug, Clone)]
-pub enum Coord<'a, const D: usize> {
-    Separated(SeparatedCoord<'a, D>),
-    Interleaved(InterleavedCoord<'a, D>),
+pub enum Coord<'a> {
+    Separated(SeparatedCoord<'a>),
+    Interleaved(InterleavedCoord<'a>),
 }
 
-impl<'a, const D: usize> Coord<'a, D> {
+impl<'a> Coord<'a> {
     /// Return `true` if all values in the coordinate are f64::NAN
     pub(crate) fn is_nan(&self) -> bool {
         match self {
@@ -21,7 +21,7 @@ impl<'a, const D: usize> Coord<'a, D> {
     }
 }
 
-impl<'a, const D: usize> NativeScalar for Coord<'a, D> {
+impl<'a> NativeScalar for Coord<'a> {
     type ScalarGeo = geo::Coord;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -39,26 +39,26 @@ impl<'a, const D: usize> NativeScalar for Coord<'a, D> {
     }
 }
 
-impl<const D: usize> From<Coord<'_, D>> for geo::Coord {
-    fn from(value: Coord<D>) -> Self {
+impl From<Coord<'_>> for geo::Coord {
+    fn from(value: Coord) -> Self {
         (&value).into()
     }
 }
 
-impl<const D: usize> From<&Coord<'_, D>> for geo::Coord {
-    fn from(value: &Coord<D>) -> Self {
+impl From<&Coord<'_>> for geo::Coord {
+    fn from(value: &Coord) -> Self {
         coord_to_geo(value)
     }
 }
 
-impl<const D: usize> From<Coord<'_, D>> for geo::Point {
-    fn from(value: Coord<D>) -> Self {
+impl From<Coord<'_>> for geo::Point {
+    fn from(value: Coord) -> Self {
         (&value).into()
     }
 }
 
-impl<const D: usize> From<&Coord<'_, D>> for geo::Point {
-    fn from(value: &Coord<D>) -> Self {
+impl From<&Coord<'_>> for geo::Point {
+    fn from(value: &Coord) -> Self {
         match value {
             Coord::Separated(c) => c.into(),
             Coord::Interleaved(c) => c.into(),
@@ -66,7 +66,7 @@ impl<const D: usize> From<&Coord<'_, D>> for geo::Point {
     }
 }
 
-impl<const D: usize> RTreeObject for Coord<'_, D> {
+impl RTreeObject for Coord<'_> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -77,33 +77,31 @@ impl<const D: usize> RTreeObject for Coord<'_, D> {
     }
 }
 
-impl<const D: usize> PartialEq for Coord<'_, D> {
+impl PartialEq for Coord<'_> {
     fn eq(&self, other: &Self) -> bool {
         self.x_y() == other.x_y()
     }
 }
 
-impl<const D: usize> PartialEq<InterleavedCoord<'_, D>> for Coord<'_, D> {
-    fn eq(&self, other: &InterleavedCoord<'_, D>) -> bool {
+impl PartialEq<InterleavedCoord<'_>> for Coord<'_> {
+    fn eq(&self, other: &InterleavedCoord<'_>) -> bool {
         self.x_y() == other.x_y()
     }
 }
 
-impl<const D: usize> PartialEq<SeparatedCoord<'_, D>> for Coord<'_, D> {
-    fn eq(&self, other: &SeparatedCoord<'_, D>) -> bool {
+impl PartialEq<SeparatedCoord<'_>> for Coord<'_> {
+    fn eq(&self, other: &SeparatedCoord<'_>) -> bool {
         self.x_y() == other.x_y()
     }
 }
 
-impl<const D: usize> CoordTrait for Coord<'_, D> {
+impl CoordTrait for Coord<'_> {
     type T = f64;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
+        match self {
+            Coord::Interleaved(c) => c.dim(),
+            Coord::Separated(c) => c.dim(),
         }
     }
 
@@ -129,15 +127,13 @@ impl<const D: usize> CoordTrait for Coord<'_, D> {
     }
 }
 
-impl<const D: usize> CoordTrait for &Coord<'_, D> {
+impl CoordTrait for &Coord<'_> {
     type T = f64;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
+        match self {
+            Coord::Interleaved(c) => c.dim(),
+            Coord::Separated(c) => c.dim(),
         }
     }
 

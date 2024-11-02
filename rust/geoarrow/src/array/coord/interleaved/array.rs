@@ -1,8 +1,7 @@
-use core::panic;
 use std::sync::Arc;
 
 use crate::array::{CoordType, InterleavedCoordBufferBuilder};
-use crate::datatypes::coord_type_to_data_type;
+use crate::datatypes::{coord_type_to_data_type, Dimension};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::InterleavedCoord;
 use crate::trait_::IntoArrow;
@@ -11,31 +10,32 @@ use arrow_buffer::ScalarBuffer;
 use arrow_schema::{DataType, Field};
 use geo_traits::CoordTrait;
 
-/// A an array of XY coordinates stored interleaved in a single buffer.
+/// A an array of coordinates stored interleaved in a single buffer.
 #[derive(Debug, Clone, PartialEq)]
-pub struct InterleavedCoordBuffer<const D: usize> {
+pub struct InterleavedCoordBuffer {
     pub(crate) coords: ScalarBuffer<f64>,
+    pub(crate) dim: Dimension,
 }
 
-fn check<const D: usize>(coords: &ScalarBuffer<f64>) -> Result<()> {
-    if coords.len() % D != 0 {
+fn check(coords: &ScalarBuffer<f64>, dim: Dimension) -> Result<()> {
+    if coords.len() % dim.size() != 0 {
         return Err(GeoArrowError::General(
-            "x and y arrays must have the same length".to_string(),
+            "Length of interleaved coordinate buffer must be a multiple of the dimension size"
+                .to_string(),
         ));
     }
 
     Ok(())
 }
 
-impl<const D: usize> InterleavedCoordBuffer<D> {
+impl InterleavedCoordBuffer {
     /// Construct a new InterleavedCoordBuffer
     ///
     /// # Panics
     ///
     /// - if the coordinate buffer have different lengths
-    pub fn new(coords: ScalarBuffer<f64>) -> Self {
-        check::<D>(&coords).unwrap();
-        Self { coords }
+    pub fn new(coords: ScalarBuffer<f64>, dim: Dimension) -> Self {
+        Self::try_new(coords, dim).unwrap()
     }
 
     /// Construct a new InterleavedCoordBuffer
@@ -43,9 +43,17 @@ impl<const D: usize> InterleavedCoordBuffer<D> {
     /// # Errors
     ///
     /// - if the coordinate buffer have different lengths
-    pub fn try_new(coords: ScalarBuffer<f64>) -> Result<Self> {
-        check::<D>(&coords)?;
-        Ok(Self { coords })
+    pub fn try_new(coords: ScalarBuffer<f64>, dim: Dimension) -> Result<Self> {
+        check(&coords, dim)?;
+        Ok(Self { coords, dim })
+    }
+
+    pub fn from_vec(coords: Vec<f64>, dim: Dimension) -> Result<Self> {
+        Self::try_new(coords.into(), dim)
+    }
+
+    pub fn from_coords<G: CoordTrait<T = f64>>(coords: &[G], dim: Dimension) -> Result<Self> {
+        Ok(InterleavedCoordBufferBuilder::from_coords(coords, dim)?.into())
     }
 
     /// Access the underlying coordinate buffer.
@@ -57,22 +65,15 @@ impl<const D: usize> InterleavedCoordBuffer<D> {
         Float64Array::new(self.coords.clone(), None)
     }
 
+    pub fn dim(&self) -> Dimension {
+        self.dim
+    }
+
     pub fn values_field(&self) -> Field {
-        match D {
-            2 => Field::new("xy", DataType::Float64, false),
-            3 => Field::new("xyz", DataType::Float64, false),
-            _ => panic!(),
+        match self.dim {
+            Dimension::XY => Field::new("xy", DataType::Float64, false),
+            Dimension::XYZ => Field::new("xyz", DataType::Float64, false),
         }
-    }
-
-    pub fn get_x(&self, i: usize) -> f64 {
-        let c = self.value(i);
-        c.x()
-    }
-
-    pub fn get_y(&self, i: usize) -> f64 {
-        let c = self.value(i);
-        c.y()
     }
 
     pub fn slice(&self, offset: usize, length: usize) -> Self {
@@ -81,13 +82,16 @@ impl<const D: usize> InterleavedCoordBuffer<D> {
             "offset + length may not exceed length of array"
         );
         Self {
-            coords: self.coords.slice(offset * D, length * D),
+            coords: self
+                .coords
+                .slice(offset * self.dim.size(), length * self.dim.size()),
+            dim: self.dim,
         }
     }
 
     pub fn owned_slice(&self, offset: usize, length: usize) -> Self {
         let buffer = self.slice(offset, length);
-        Self::new(buffer.coords.to_vec().into())
+        Self::new(buffer.coords.to_vec().into(), self.dim)
     }
 
     pub fn into_array_ref(self) -> Arc<dyn Array> {
@@ -99,7 +103,7 @@ impl<const D: usize> InterleavedCoordBuffer<D> {
     }
 
     pub fn storage_type(&self) -> DataType {
-        coord_type_to_data_type(CoordType::Interleaved, D.try_into().unwrap())
+        coord_type_to_data_type(CoordType::Interleaved, self.dim)
     }
 
     // todo switch to:
@@ -110,56 +114,34 @@ impl<const D: usize> InterleavedCoordBuffer<D> {
     }
 
     pub fn len(&self) -> usize {
-        self.coords.len() / D
+        self.coords.len() / self.dim.size()
     }
 
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
-    pub fn value(&self, index: usize) -> InterleavedCoord<'_, D> {
+    pub fn value(&self, index: usize) -> InterleavedCoord<'_> {
         assert!(index <= self.len());
         self.value_unchecked(index)
     }
 
-    pub fn value_unchecked(&self, index: usize) -> InterleavedCoord<'_, D> {
+    pub fn value_unchecked(&self, index: usize) -> InterleavedCoord<'_> {
         InterleavedCoord {
             coords: &self.coords,
             i: index,
+            dim: self.dim,
         }
     }
-}
 
-impl<const D: usize> IntoArrow for InterleavedCoordBuffer<D> {
-    type ArrowArray = FixedSizeListArray;
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        FixedSizeListArray::new(
-            Arc::new(self.values_field()),
-            D as i32,
-            Arc::new(self.values_array()),
-            None,
-        )
-    }
-}
-
-impl<const D: usize> From<InterleavedCoordBuffer<D>> for FixedSizeListArray {
-    fn from(value: InterleavedCoordBuffer<D>) -> Self {
-        value.into_arrow()
-    }
-}
-
-impl<const D: usize> TryFrom<&FixedSizeListArray> for InterleavedCoordBuffer<D> {
-    type Error = GeoArrowError;
-
-    fn try_from(value: &FixedSizeListArray) -> std::result::Result<Self, Self::Error> {
-        if value.value_length() != D as i32 {
+    pub fn from_arrow(array: &FixedSizeListArray, dim: Dimension) -> Result<Self> {
+        if array.value_length() != dim.size() as i32 {
             return Err(GeoArrowError::General(
                 "Expected this FixedSizeListArray to have size 2".to_string(),
             ));
         }
 
-        let coord_array_values = value
+        let coord_array_values = array
             .values()
             .as_any()
             .downcast_ref::<Float64Array>()
@@ -167,22 +149,27 @@ impl<const D: usize> TryFrom<&FixedSizeListArray> for InterleavedCoordBuffer<D> 
 
         Ok(InterleavedCoordBuffer::new(
             coord_array_values.values().clone(),
+            dim,
         ))
     }
 }
 
-impl<const D: usize> TryFrom<Vec<f64>> for InterleavedCoordBuffer<D> {
-    type Error = GeoArrowError;
+impl IntoArrow for InterleavedCoordBuffer {
+    type ArrowArray = FixedSizeListArray;
 
-    fn try_from(value: Vec<f64>) -> std::result::Result<Self, Self::Error> {
-        Self::try_new(value.into())
+    fn into_arrow(self) -> Self::ArrowArray {
+        FixedSizeListArray::new(
+            Arc::new(self.values_field()),
+            self.dim.size() as i32,
+            Arc::new(self.values_array()),
+            None,
+        )
     }
 }
 
-impl<G: CoordTrait<T = f64>, const D: usize> From<&[G]> for InterleavedCoordBuffer<D> {
-    fn from(other: &[G]) -> Self {
-        let mut_arr: InterleavedCoordBufferBuilder<D> = other.into();
-        mut_arr.into()
+impl From<InterleavedCoordBuffer> for FixedSizeListArray {
+    fn from(value: InterleavedCoordBuffer) -> Self {
+        value.into_arrow()
     }
 }
 
@@ -193,10 +180,10 @@ mod test {
     #[test]
     fn test_eq_slicing() {
         let coords1 = vec![0., 3., 1., 4., 2., 5.];
-        let buf1 = InterleavedCoordBuffer::<2>::new(coords1.into()).slice(1, 1);
+        let buf1 = InterleavedCoordBuffer::new(coords1.into(), Dimension::XY).slice(1, 1);
 
         let coords2 = vec![1., 4.];
-        let buf2 = InterleavedCoordBuffer::<2>::new(coords2.into());
+        let buf2 = InterleavedCoordBuffer::new(coords2.into(), Dimension::XY);
 
         assert_eq!(buf1, buf2);
     }

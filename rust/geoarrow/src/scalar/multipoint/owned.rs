@@ -6,7 +6,7 @@ use geo_traits::MultiPointTrait;
 
 #[derive(Clone, Debug)]
 pub struct OwnedMultiPoint<const D: usize> {
-    coords: CoordBuffer<D>,
+    coords: CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
     geom_offsets: OffsetBuffer<i32>,
@@ -15,7 +15,7 @@ pub struct OwnedMultiPoint<const D: usize> {
 }
 
 impl<const D: usize> OwnedMultiPoint<D> {
-    pub fn new(coords: CoordBuffer<D>, geom_offsets: OffsetBuffer<i32>, geom_index: usize) -> Self {
+    pub fn new(coords: CoordBuffer, geom_offsets: OffsetBuffer<i32>, geom_index: usize) -> Self {
         Self {
             coords,
             geom_offsets,

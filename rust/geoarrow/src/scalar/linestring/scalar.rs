@@ -12,7 +12,7 @@ use rstar::{RTreeObject, AABB};
 /// An Arrow equivalent of a LineString
 #[derive(Debug, Clone)]
 pub struct LineString<'a, const D: usize> {
-    pub(crate) coords: &'a CoordBuffer<D>,
+    pub(crate) coords: &'a CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
     pub(crate) geom_offsets: &'a OffsetBuffer<i32>,
@@ -24,7 +24,7 @@ pub struct LineString<'a, const D: usize> {
 
 impl<'a, const D: usize> LineString<'a, D> {
     pub fn new(
-        coords: &'a CoordBuffer<D>,
+        coords: &'a CoordBuffer,
         geom_offsets: &'a OffsetBuffer<i32>,
         geom_index: usize,
     ) -> Self {
@@ -37,8 +37,8 @@ impl<'a, const D: usize> LineString<'a, D> {
         }
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer<D>, OffsetBuffer<i32>, usize) {
-        let arr = LineStringArray::new(
+    pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, usize) {
+        let arr = LineStringArray::<D>::new(
             self.coords.clone(),
             self.geom_offsets.clone(),
             None,
@@ -69,15 +69,10 @@ impl<'a, const D: usize> NativeScalar for LineString<'a, D> {
 
 impl<'a, const D: usize> LineStringTrait for LineString<'a, D> {
     type T = f64;
-    type CoordType<'b> = Coord<'a, D> where Self: 'b;
+    type CoordType<'b> = Coord<'a> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
-        }
+        self.coords.dim().into()
     }
 
     fn num_coords(&self) -> usize {
@@ -92,15 +87,10 @@ impl<'a, const D: usize> LineStringTrait for LineString<'a, D> {
 
 impl<'a, const D: usize> LineStringTrait for &'a LineString<'a, D> {
     type T = f64;
-    type CoordType<'b> = Coord<'a, D> where Self: 'b;
+    type CoordType<'b> = Coord<'a> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
-        }
+        self.coords.dim().into()
     }
 
     fn num_coords(&self) -> usize {

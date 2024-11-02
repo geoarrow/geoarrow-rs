@@ -2,25 +2,27 @@ use arrow_buffer::ScalarBuffer;
 use rstar::{RTreeObject, AABB};
 
 use crate::algorithm::native::eq::coord_eq;
+use crate::datatypes::Dimension;
 use crate::io::geo::coord_to_geo;
 use crate::scalar::SeparatedCoord;
 use crate::trait_::NativeScalar;
 use geo_traits::CoordTrait;
 
 #[derive(Debug, Clone)]
-pub struct InterleavedCoord<'a, const D: usize> {
+pub struct InterleavedCoord<'a> {
     pub(crate) coords: &'a ScalarBuffer<f64>,
     pub(crate) i: usize,
+    pub(crate) dim: Dimension,
 }
 
-impl<'a, const D: usize> InterleavedCoord<'a, D> {
+impl<'a> InterleavedCoord<'a> {
     /// Return `true` if all values in the coordinate are f64::NAN
     pub(crate) fn is_nan(&self) -> bool {
-        (0..D).all(|coord_dim| self.nth_unchecked(coord_dim).is_nan())
+        (0..self.dim.size()).all(|coord_dim| self.nth_unchecked(coord_dim).is_nan())
     }
 }
 
-impl<'a, const D: usize> NativeScalar for InterleavedCoord<'a, D> {
+impl<'a> NativeScalar for InterleavedCoord<'a> {
     type ScalarGeo = geo::Coord;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -38,32 +40,32 @@ impl<'a, const D: usize> NativeScalar for InterleavedCoord<'a, D> {
     }
 }
 
-impl<const D: usize> From<InterleavedCoord<'_, D>> for geo::Coord {
-    fn from(value: InterleavedCoord<D>) -> Self {
+impl From<InterleavedCoord<'_>> for geo::Coord {
+    fn from(value: InterleavedCoord) -> Self {
         (&value).into()
     }
 }
 
-impl<const D: usize> From<&InterleavedCoord<'_, D>> for geo::Coord {
-    fn from(value: &InterleavedCoord<D>) -> Self {
+impl From<&InterleavedCoord<'_>> for geo::Coord {
+    fn from(value: &InterleavedCoord) -> Self {
         coord_to_geo(value)
     }
 }
 
-impl<const D: usize> From<InterleavedCoord<'_, D>> for geo::Point {
-    fn from(value: InterleavedCoord<'_, D>) -> Self {
+impl From<InterleavedCoord<'_>> for geo::Point {
+    fn from(value: InterleavedCoord<'_>) -> Self {
         (&value).into()
     }
 }
 
-impl<const D: usize> From<&InterleavedCoord<'_, D>> for geo::Point {
-    fn from(value: &InterleavedCoord<'_, D>) -> Self {
+impl From<&InterleavedCoord<'_>> for geo::Point {
+    fn from(value: &InterleavedCoord<'_>) -> Self {
         let coord: geo::Coord = value.into();
         coord.into()
     }
 }
 
-impl<const D: usize> RTreeObject for InterleavedCoord<'_, D> {
+impl RTreeObject for InterleavedCoord<'_> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -71,83 +73,74 @@ impl<const D: usize> RTreeObject for InterleavedCoord<'_, D> {
     }
 }
 
-impl<const D: usize> PartialEq for InterleavedCoord<'_, D> {
+impl PartialEq for InterleavedCoord<'_> {
     fn eq(&self, other: &Self) -> bool {
         coord_eq(self, other)
     }
 }
 
-impl<const D: usize> PartialEq<SeparatedCoord<'_, D>> for InterleavedCoord<'_, D> {
-    fn eq(&self, other: &SeparatedCoord<'_, D>) -> bool {
+impl PartialEq<SeparatedCoord<'_>> for InterleavedCoord<'_> {
+    fn eq(&self, other: &SeparatedCoord<'_>) -> bool {
         coord_eq(self, other)
     }
 }
 
-impl<const D: usize> CoordTrait for InterleavedCoord<'_, D> {
+impl CoordTrait for InterleavedCoord<'_> {
     type T = f64;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
-        }
+        self.dim.into()
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
-        debug_assert!(n < D);
-        *self.coords.get(self.i * D + n).unwrap()
+        debug_assert!(n < self.dim.size());
+        *self.coords.get(self.i * self.dim.size() + n).unwrap()
     }
 
     fn x(&self) -> Self::T {
-        *self.coords.get(self.i * D).unwrap()
+        *self.coords.get(self.i * self.dim.size()).unwrap()
     }
 
     fn y(&self) -> Self::T {
-        *self.coords.get(self.i * D + 1).unwrap()
+        *self.coords.get(self.i * self.dim.size() + 1).unwrap()
     }
 }
 
-impl<const D: usize> CoordTrait for &InterleavedCoord<'_, D> {
+impl CoordTrait for &InterleavedCoord<'_> {
     type T = f64;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
-        }
+        self.dim.into()
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
-        debug_assert!(n < D);
-        *self.coords.get(self.i * D + n).unwrap()
+        debug_assert!(n < self.dim.size());
+        *self.coords.get(self.i * self.dim.size() + n).unwrap()
     }
 
     fn x(&self) -> Self::T {
-        *self.coords.get(self.i * D).unwrap()
+        *self.coords.get(self.i * self.dim.size()).unwrap()
     }
 
     fn y(&self) -> Self::T {
-        *self.coords.get(self.i * D + 1).unwrap()
+        *self.coords.get(self.i * self.dim.size() + 1).unwrap()
     }
 }
 
 #[cfg(test)]
 mod test {
     use crate::array::{InterleavedCoordBuffer, SeparatedCoordBuffer};
+    use crate::datatypes::Dimension;
 
     /// Test Eq where the current index is true but another index is false
     #[test]
     fn test_eq_other_index_false() {
         let coords1 = vec![0., 3., 1., 4., 2., 5.];
-        let buf1 = InterleavedCoordBuffer::<2>::new(coords1.into());
+        let buf1 = InterleavedCoordBuffer::new(coords1.into(), Dimension::XY);
         let coord1 = buf1.value(0);
 
         let coords2 = vec![0., 3., 100., 400., 200., 500.];
-        let buf2 = InterleavedCoordBuffer::new(coords2.into());
+        let buf2 = InterleavedCoordBuffer::new(coords2.into(), Dimension::XY);
         let coord2 = buf2.value(0);
 
         assert_eq!(coord1, coord2);
@@ -156,12 +149,12 @@ mod test {
     #[test]
     fn test_eq_against_separated_coord() {
         let coords1 = vec![0., 3., 1., 4., 2., 5.];
-        let buf1 = InterleavedCoordBuffer::new(coords1.into());
+        let buf1 = InterleavedCoordBuffer::new(coords1.into(), Dimension::XY);
         let coord1 = buf1.value(0);
 
         let x = vec![0.];
         let y = vec![3.];
-        let buf2 = SeparatedCoordBuffer::new([x.into(), y.into()]);
+        let buf2 = SeparatedCoordBuffer::new([x.into(), y.into()], Dimension::XY);
         let coord2 = buf2.value(0);
 
         assert_eq!(coord1, coord2);

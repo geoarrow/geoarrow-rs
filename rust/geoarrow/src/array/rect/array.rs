@@ -32,18 +32,18 @@ pub struct RectArray<const D: usize> {
     metadata: Arc<ArrayMetadata>,
 
     /// Separated arrays for each of the "lower" dimensions
-    lower: SeparatedCoordBuffer<D>,
+    lower: SeparatedCoordBuffer,
 
     /// Separated arrays for each of the "upper" dimensions
-    upper: SeparatedCoordBuffer<D>,
+    upper: SeparatedCoordBuffer,
 
     validity: Option<NullBuffer>,
 }
 
 impl<const D: usize> RectArray<D> {
     pub fn new(
-        lower: SeparatedCoordBuffer<D>,
-        upper: SeparatedCoordBuffer<D>,
+        lower: SeparatedCoordBuffer,
+        upper: SeparatedCoordBuffer,
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
@@ -57,11 +57,11 @@ impl<const D: usize> RectArray<D> {
         }
     }
 
-    pub fn lower(&self) -> &SeparatedCoordBuffer<D> {
+    pub fn lower(&self) -> &SeparatedCoordBuffer {
         &self.lower
     }
 
-    pub fn upper(&self) -> &SeparatedCoordBuffer<D> {
+    pub fn upper(&self) -> &SeparatedCoordBuffer {
         &self.upper
     }
 
@@ -169,7 +169,7 @@ impl<const D: usize> NativeArray for RectArray<D> {
 }
 
 impl<const D: usize> GeometryArraySelfMethods<D> for RectArray<D> {
-    fn with_coords(self, _coords: CoordBuffer<D>) -> Self {
+    fn with_coords(self, _coords: CoordBuffer) -> Self {
         unimplemented!()
     }
 

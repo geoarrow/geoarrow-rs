@@ -4,7 +4,8 @@ use crate::array::{
     CoordType, InterleavedCoordBuffer, InterleavedCoordBufferBuilder, SeparatedCoordBuffer,
     SeparatedCoordBufferBuilder,
 };
-use crate::error::GeoArrowError;
+use crate::datatypes::Dimension;
+use crate::error::{GeoArrowError, Result};
 use crate::scalar::Coord;
 use crate::trait_::IntoArrow;
 use arrow_array::{Array, FixedSizeListArray, StructArray};
@@ -23,26 +24,12 @@ use arrow_schema::DataType;
 /// validity bitmask. Rather the geometry arrays that build on top of this maintain their own
 /// validity masks.
 #[derive(Debug, Clone)]
-pub enum CoordBuffer<const D: usize> {
-    Interleaved(InterleavedCoordBuffer<D>),
-    Separated(SeparatedCoordBuffer<D>),
+pub enum CoordBuffer {
+    Interleaved(InterleavedCoordBuffer),
+    Separated(SeparatedCoordBuffer),
 }
 
-impl<const D: usize> CoordBuffer<D> {
-    pub fn get_x(&self, i: usize) -> f64 {
-        match self {
-            CoordBuffer::Interleaved(c) => c.get_x(i),
-            CoordBuffer::Separated(c) => c.get_x(i),
-        }
-    }
-
-    pub fn get_y(&self, i: usize) -> f64 {
-        match self {
-            CoordBuffer::Interleaved(c) => c.get_y(i),
-            CoordBuffer::Separated(c) => c.get_y(i),
-        }
-    }
-
+impl CoordBuffer {
     pub fn slice(&self, offset: usize, length: usize) -> Self {
         match self {
             CoordBuffer::Interleaved(c) => CoordBuffer::Interleaved(c.slice(offset, length)),
@@ -84,7 +71,7 @@ impl<const D: usize> CoordBuffer<D> {
         self.len() == 0
     }
 
-    pub fn value(&self, index: usize) -> Coord<'_, D> {
+    pub fn value(&self, index: usize) -> Coord<'_> {
         match self {
             CoordBuffer::Interleaved(c) => Coord::Interleaved(c.value(index)),
             CoordBuffer::Separated(c) => Coord::Separated(c.value(index)),
@@ -99,35 +86,65 @@ impl<const D: usize> CoordBuffer<D> {
         self.clone().into_array_ref()
     }
 
-    pub fn with_coords(self, coords: CoordBuffer<D>) -> Self {
+    pub fn dim(&self) -> Dimension {
+        match self {
+            CoordBuffer::Interleaved(c) => c.dim(),
+            CoordBuffer::Separated(c) => c.dim(),
+        }
+    }
+
+    pub fn with_coords(self, coords: CoordBuffer) -> Self {
         assert_eq!(coords.len(), self.len());
         coords
     }
 
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let dim = self.dim();
         match (self, coord_type) {
             (CoordBuffer::Interleaved(cb), CoordType::Interleaved) => CoordBuffer::Interleaved(cb),
             (CoordBuffer::Interleaved(cb), CoordType::Separated) => {
-                let mut new_buffer = SeparatedCoordBufferBuilder::with_capacity(cb.len());
-                let coords = cb.coords;
-                for row_start_idx in (0..coords.len()).step_by(D) {
-                    new_buffer.push(core::array::from_fn(|i| coords[row_start_idx + i]));
+                let mut new_buffer = SeparatedCoordBufferBuilder::with_capacity(cb.len(), dim);
+                for i in 0..cb.len() {
+                    let coord = cb.value(i);
+                    new_buffer.push_coord(&coord);
                 }
                 CoordBuffer::Separated(new_buffer.into())
             }
             (CoordBuffer::Separated(cb), CoordType::Separated) => CoordBuffer::Separated(cb),
             (CoordBuffer::Separated(cb), CoordType::Interleaved) => {
-                let mut new_buffer = InterleavedCoordBufferBuilder::with_capacity(cb.len());
-                for row_idx in 0..cb.len() {
-                    new_buffer.push(core::array::from_fn(|i| cb.buffers[i][row_idx]));
+                let mut new_buffer = InterleavedCoordBufferBuilder::with_capacity(cb.len(), dim);
+                for i in 0..cb.len() {
+                    let coord = cb.value(i);
+                    new_buffer.push_coord(&coord);
                 }
                 CoordBuffer::Interleaved(new_buffer.into())
             }
         }
     }
+
+    pub fn from_arrow(value: &dyn Array, dim: Dimension) -> Result<Self> {
+        match value.data_type() {
+            DataType::Struct(_) => {
+                let downcasted = value.as_any().downcast_ref::<StructArray>().unwrap();
+                Ok(CoordBuffer::Separated(SeparatedCoordBuffer::from_arrow(
+                    downcasted, dim,
+                )?))
+            }
+            DataType::FixedSizeList(_, _) => {
+                let downcasted = value.as_any().downcast_ref::<FixedSizeListArray>().unwrap();
+                Ok(CoordBuffer::Interleaved(
+                    InterleavedCoordBuffer::from_arrow(downcasted, dim)?,
+                ))
+            }
+            _ => Err(GeoArrowError::General(format!(
+                "Unexpected type: {:?}",
+                value.data_type()
+            ))),
+        }
+    }
 }
 
-impl<const D: usize> IntoArrow for CoordBuffer<D> {
+impl IntoArrow for CoordBuffer {
     type ArrowArray = Arc<dyn Array>;
 
     fn into_arrow(self) -> Self::ArrowArray {
@@ -138,28 +155,7 @@ impl<const D: usize> IntoArrow for CoordBuffer<D> {
     }
 }
 
-impl<const D: usize> TryFrom<&dyn Array> for CoordBuffer<D> {
-    type Error = GeoArrowError;
-
-    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
-        match value.data_type() {
-            DataType::Struct(_) => {
-                let downcasted = value.as_any().downcast_ref::<StructArray>().unwrap();
-                Ok(CoordBuffer::Separated(downcasted.try_into()?))
-            }
-            DataType::FixedSizeList(_, _) => {
-                let downcasted = value.as_any().downcast_ref::<FixedSizeListArray>().unwrap();
-                Ok(CoordBuffer::Interleaved(downcasted.try_into()?))
-            }
-            _ => Err(GeoArrowError::General(format!(
-                "Unexpected type: {:?}",
-                value.data_type()
-            ))),
-        }
-    }
-}
-
-impl<const D: usize> PartialEq for CoordBuffer<D> {
+impl PartialEq for CoordBuffer {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (CoordBuffer::Interleaved(a), CoordBuffer::Interleaved(b)) => PartialEq::eq(a, b),
@@ -200,14 +196,14 @@ impl<const D: usize> PartialEq for CoordBuffer<D> {
     }
 }
 
-impl<const D: usize> From<InterleavedCoordBuffer<D>> for CoordBuffer<D> {
-    fn from(value: InterleavedCoordBuffer<D>) -> Self {
+impl From<InterleavedCoordBuffer> for CoordBuffer {
+    fn from(value: InterleavedCoordBuffer) -> Self {
         Self::Interleaved(value)
     }
 }
 
-impl<const D: usize> From<SeparatedCoordBuffer<D>> for CoordBuffer<D> {
-    fn from(value: SeparatedCoordBuffer<D>) -> Self {
+impl From<SeparatedCoordBuffer> for CoordBuffer {
+    fn from(value: SeparatedCoordBuffer) -> Self {
         Self::Separated(value)
     }
 }
@@ -221,10 +217,12 @@ mod test {
     #[test]
     fn test_eq_both_interleaved() -> Result<()> {
         let coords1 = vec![0., 3., 1., 4., 2., 5.];
-        let buf1 = CoordBuffer::<2>::Interleaved(coords1.try_into()?);
+        let buf1 =
+            CoordBuffer::Interleaved(InterleavedCoordBuffer::from_vec(coords1, Dimension::XY)?);
 
         let coords2 = vec![0., 3., 1., 4., 2., 5.];
-        let buf2 = CoordBuffer::Interleaved(coords2.try_into()?);
+        let buf2 =
+            CoordBuffer::Interleaved(InterleavedCoordBuffer::from_vec(coords2, Dimension::XY)?);
 
         assert_eq!(buf1, buf2);
         Ok(())
@@ -235,7 +233,10 @@ mod test {
         let x1 = vec![0., 1., 2.];
         let y1 = vec![3., 4., 5.];
 
-        let buf1 = CoordBuffer::Separated((x1, y1).try_into()?);
+        let buf1 = CoordBuffer::Separated(SeparatedCoordBuffer::new(
+            [x1.into(), y1.into(), vec![].into(), vec![].into()],
+            Dimension::XY,
+        ));
 
         let coords2 = vec![0., 3., 1., 4., 2., 5.];
         let buf2 = CoordBuffer::Interleaved(coords2.try_into()?);

@@ -411,7 +411,7 @@ impl<const D: usize> NativeArray for MixedGeometryArray<D> {
 }
 
 impl<const D: usize> GeometryArraySelfMethods<D> for MixedGeometryArray<D> {
-    fn with_coords(self, _coords: crate::array::CoordBuffer<D>) -> Self {
+    fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
         todo!();
     }
 

@@ -10,20 +10,20 @@ use rstar::{RTreeObject, AABB};
 /// An Arrow equivalent of a Point
 #[derive(Debug, Clone)]
 pub struct Point<'a, const D: usize> {
-    coords: &'a CoordBuffer<D>,
+    coords: &'a CoordBuffer,
     geom_index: usize,
 }
 
 impl<'a, const D: usize> Point<'a, D> {
-    pub fn new(coords: &'a CoordBuffer<D>, geom_index: usize) -> Self {
+    pub fn new(coords: &'a CoordBuffer, geom_index: usize) -> Self {
         Point { coords, geom_index }
     }
 
-    pub fn coord(&self) -> Coord<D> {
+    pub fn coord(&self) -> Coord {
         self.coords.value(self.geom_index)
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer<D>, usize) {
+    pub fn into_owned_inner(self) -> (CoordBuffer, usize) {
         let coords = self.coords.owned_slice(self.geom_index, 1);
         (coords, self.geom_index)
     }
@@ -48,15 +48,10 @@ impl<'a, const D: usize> NativeScalar for Point<'a, D> {
 
 impl<'a, const D: usize> PointTrait for Point<'a, D> {
     type T = f64;
-    type CoordType<'b> = Coord<'a, D> where Self: 'b;
+    type CoordType<'b> = Coord<'a> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
-        }
+        self.coords.dim().into()
     }
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
@@ -71,15 +66,10 @@ impl<'a, const D: usize> PointTrait for Point<'a, D> {
 
 impl<'a, const D: usize> PointTrait for &Point<'a, D> {
     type T = f64;
-    type CoordType<'b> = Coord<'a, D> where Self: 'b;
+    type CoordType<'b> = Coord<'a> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
-        }
+        self.coords.dim().into()
     }
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
@@ -136,12 +126,12 @@ mod test {
         let x1 = vec![0., 1., 2.];
         let y1 = vec![3., 4., 5.];
         let buf1 = CoordBuffer::Separated((x1, y1).try_into().unwrap());
-        let arr1 = PointArray::new(buf1, None, Default::default());
+        let arr1 = PointArray::<2>::new(buf1, None, Default::default());
 
         let x2 = vec![0., 100., 2.];
         let y2 = vec![3., 400., 5.];
         let buf2 = CoordBuffer::Separated((x2, y2).try_into().unwrap());
-        let arr2 = PointArray::new(buf2, None, Default::default());
+        let arr2 = PointArray::<2>::new(buf2, None, Default::default());
 
         assert_eq!(arr1.value(0), arr2.value(0));
     }

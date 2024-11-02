@@ -5,15 +5,15 @@ use geo_traits::RectTrait;
 
 #[derive(Clone, Debug)]
 pub struct OwnedRect<const D: usize> {
-    lower: SeparatedCoordBuffer<D>,
-    upper: SeparatedCoordBuffer<D>,
+    lower: SeparatedCoordBuffer,
+    upper: SeparatedCoordBuffer,
     geom_index: usize,
 }
 
 impl<const D: usize> OwnedRect<D> {
     pub fn new(
-        lower: SeparatedCoordBuffer<D>,
-        upper: SeparatedCoordBuffer<D>,
+        lower: SeparatedCoordBuffer,
+        upper: SeparatedCoordBuffer,
         geom_index: usize,
     ) -> Self {
         Self {

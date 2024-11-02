@@ -212,7 +212,7 @@ impl<const D: usize> NativeArray for GeometryCollectionArray<D> {
 }
 
 impl<const D: usize> GeometryArraySelfMethods<D> for GeometryCollectionArray<D> {
-    fn with_coords(self, _coords: CoordBuffer<D>) -> Self {
+    fn with_coords(self, _coords: CoordBuffer) -> Self {
         todo!()
     }
 

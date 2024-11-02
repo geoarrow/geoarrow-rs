@@ -7,17 +7,21 @@ use arrow_buffer::ScalarBuffer;
 use arrow_schema::{DataType, Field};
 
 use crate::array::{CoordType, SeparatedCoordBufferBuilder};
+use crate::datatypes::{coord_type_to_data_type, Dimension};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::SeparatedCoord;
 use crate::trait_::IntoArrow;
 use geo_traits::CoordTrait;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct SeparatedCoordBuffer<const D: usize> {
-    pub(crate) buffers: [ScalarBuffer<f64>; D],
+pub struct SeparatedCoordBuffer {
+    /// We always store a buffer for all 4 dimensions. The buffers for dimension 3 and 4 may be
+    /// empty.
+    pub(crate) buffers: [ScalarBuffer<f64>; 4],
+    pub(crate) dim: Dimension,
 }
 
-fn check<const D: usize>(buffers: &[ScalarBuffer<f64>; D]) -> Result<()> {
+fn check(buffers: &[ScalarBuffer<f64>; 4], _dim: Dimension) -> Result<()> {
     if !buffers.windows(2).all(|w| w[0].len() == w[1].len()) {
         return Err(GeoArrowError::General(
             "all buffers must have the same length".to_string(),
@@ -27,15 +31,14 @@ fn check<const D: usize>(buffers: &[ScalarBuffer<f64>; D]) -> Result<()> {
     Ok(())
 }
 
-impl<const D: usize> SeparatedCoordBuffer<D> {
+impl SeparatedCoordBuffer {
     /// Construct a new SeparatedCoordBuffer
     ///
     /// # Panics
     ///
     /// - if the x and y buffers have different lengths
-    pub fn new(buffers: [ScalarBuffer<f64>; D]) -> Self {
-        check(&buffers).unwrap();
-        Self { buffers }
+    pub fn new(buffers: [ScalarBuffer<f64>; 4], dim: Dimension) -> Self {
+        Self::try_new(buffers, dim).unwrap()
     }
 
     /// Construct a new SeparatedCoordBuffer
@@ -43,14 +46,18 @@ impl<const D: usize> SeparatedCoordBuffer<D> {
     /// # Errors
     ///
     /// - if the x and y buffers have different lengths
-    pub fn try_new(buffers: [ScalarBuffer<f64>; D]) -> Result<Self> {
-        check(&buffers)?;
-        Ok(Self { buffers })
+    pub fn try_new(buffers: [ScalarBuffer<f64>; 4], dim: Dimension) -> Result<Self> {
+        check(&buffers, dim)?;
+        Ok(Self { buffers, dim })
     }
 
     /// Access the underlying coordinate buffers.
-    pub fn coords(&self) -> &[ScalarBuffer<f64>; D] {
+    pub(crate) fn coords(&self) -> &[ScalarBuffer<f64>; 4] {
         &self.buffers
+    }
+
+    pub fn dim(&self) -> Dimension {
+        self.dim
     }
 
     pub fn values_array(&self) -> Vec<ArrayRef> {
@@ -61,32 +68,21 @@ impl<const D: usize> SeparatedCoordBuffer<D> {
     }
 
     pub fn values_field(&self) -> Vec<Field> {
-        match D {
-            2 => {
+        match self.dim {
+            Dimension::XY => {
                 vec![
                     Field::new("x", DataType::Float64, false),
                     Field::new("y", DataType::Float64, false),
                 ]
             }
-            3 => {
+            Dimension::XYZ => {
                 vec![
                     Field::new("x", DataType::Float64, false),
                     Field::new("y", DataType::Float64, false),
                     Field::new("z", DataType::Float64, false),
                 ]
             }
-            _ => todo!("only supports xy and xyz right now."),
         }
-    }
-
-    pub fn get_x(&self, i: usize) -> f64 {
-        let c = self.value(i);
-        c.x()
-    }
-
-    pub fn get_y(&self, i: usize) -> f64 {
-        let c = self.value(i);
-        c.y()
     }
 
     pub fn slice(&self, offset: usize, length: usize) -> Self {
@@ -103,6 +99,7 @@ impl<const D: usize> SeparatedCoordBuffer<D> {
 
         Self {
             buffers: sliced_buffers,
+            dim: self.dim,
         }
     }
 
@@ -120,11 +117,12 @@ impl<const D: usize> SeparatedCoordBuffer<D> {
 
         Self {
             buffers: sliced_buffers,
+            dim: self.dim,
         }
     }
 
     pub fn storage_type(&self) -> DataType {
-        DataType::Struct(self.values_field().into())
+        coord_type_to_data_type(CoordType::Separated, self.dim)
     }
 
     pub fn into_array_ref(self) -> Arc<dyn Array> {
@@ -147,20 +145,38 @@ impl<const D: usize> SeparatedCoordBuffer<D> {
         self.len() == 0
     }
 
-    pub fn value(&self, index: usize) -> SeparatedCoord<'_, D> {
+    pub fn value(&self, index: usize) -> SeparatedCoord<'_> {
         assert!(index <= self.len());
         self.value_unchecked(index)
     }
 
-    pub fn value_unchecked(&self, index: usize) -> SeparatedCoord<'_, D> {
+    pub fn value_unchecked(&self, index: usize) -> SeparatedCoord<'_> {
         SeparatedCoord {
             buffers: &self.buffers,
             i: index,
+            dim: self.dim,
         }
+    }
+
+    pub fn from_arrow(array: &StructArray, dim: Dimension) -> Result<Self> {
+        let arrays = array.columns();
+        assert_eq!(arrays.len(), dim.size());
+
+        // Initialize buffers with empty array, then mutate into it
+        let mut buffers = core::array::from_fn(|_| vec![].into());
+        for i in 0..arrays.len() {
+            buffers[i] = arrays[i].as_primitive::<Float64Type>().values().clone();
+        }
+
+        Self::try_new(buffers, dim)
+    }
+
+    pub fn from_coords<G: CoordTrait<T = f64>>(coords: &[G], dim: Dimension) -> Result<Self> {
+        Ok(SeparatedCoordBufferBuilder::from_coords(coords, dim)?.into())
     }
 }
 
-impl<const D: usize> IntoArrow for SeparatedCoordBuffer<D> {
+impl IntoArrow for SeparatedCoordBuffer {
     type ArrowArray = StructArray;
 
     fn into_arrow(self) -> Self::ArrowArray {
@@ -168,42 +184,20 @@ impl<const D: usize> IntoArrow for SeparatedCoordBuffer<D> {
     }
 }
 
-impl<const D: usize> From<SeparatedCoordBuffer<D>> for StructArray {
-    fn from(value: SeparatedCoordBuffer<D>) -> Self {
+impl From<SeparatedCoordBuffer> for StructArray {
+    fn from(value: SeparatedCoordBuffer) -> Self {
         value.into_arrow()
     }
 }
 
-impl<const D: usize> TryFrom<&StructArray> for SeparatedCoordBuffer<D> {
-    type Error = GeoArrowError;
-
-    fn try_from(value: &StructArray) -> Result<Self> {
-        let arrays = value.columns();
-
-        if !arrays.len() == 2 {
-            return Err(GeoArrowError::General(
-                "Expected {D} child arrays of this StructArray.".to_string(),
-            ));
-        }
-
-        let buffers =
-            core::array::from_fn(|i| arrays[i].as_primitive::<Float64Type>().values().clone());
-        Ok(Self::new(buffers))
-    }
-}
-
-impl TryFrom<(Vec<f64>, Vec<f64>)> for SeparatedCoordBuffer<2> {
+impl TryFrom<(Vec<f64>, Vec<f64>)> for SeparatedCoordBuffer {
     type Error = GeoArrowError;
 
     fn try_from(value: (Vec<f64>, Vec<f64>)) -> std::result::Result<Self, Self::Error> {
-        Self::try_new([value.0.into(), value.1.into()])
-    }
-}
-
-impl<G: CoordTrait<T = f64>> From<&[G]> for SeparatedCoordBuffer<2> {
-    fn from(other: &[G]) -> Self {
-        let mut_arr: SeparatedCoordBufferBuilder<2> = other.into();
-        mut_arr.into()
+        Self::try_new(
+            [value.0.into(), value.1.into(), vec![].into(), vec![].into()],
+            Dimension::XY,
+        )
     }
 }
 
@@ -216,13 +210,20 @@ mod test {
         let x1 = vec![0., 1., 2.];
         let y1 = vec![3., 4., 5.];
 
-        let buf1 = SeparatedCoordBuffer::new([x1.into(), y1.into()]).slice(1, 1);
+        let buf1 = SeparatedCoordBuffer::new(
+            [x1.into(), y1.into(), vec![].into(), vec![].into()],
+            Dimension::XY,
+        )
+        .slice(1, 1);
         dbg!(&buf1.buffers[0]);
         dbg!(&buf1.buffers[1]);
 
         let x2 = vec![1.];
         let y2 = vec![4.];
-        let buf2 = SeparatedCoordBuffer::new([x2.into(), y2.into()]);
+        let buf2 = SeparatedCoordBuffer::new(
+            [x2.into(), y2.into(), vec![].into(), vec![].into()],
+            Dimension::XY,
+        );
 
         assert_eq!(buf1, buf2);
     }

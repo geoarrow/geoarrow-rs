@@ -33,7 +33,7 @@ pub struct MultiLineStringArray<const D: usize> {
 
     pub(crate) metadata: Arc<ArrayMetadata>,
 
-    pub(crate) coords: CoordBuffer<D>,
+    pub(crate) coords: CoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
     pub(crate) geom_offsets: OffsetBuffer<i32>,
@@ -45,8 +45,8 @@ pub struct MultiLineStringArray<const D: usize> {
     pub(crate) validity: Option<NullBuffer>,
 }
 
-pub(super) fn check<const D: usize>(
-    coords: &CoordBuffer<D>,
+pub(super) fn check(
+    coords: &CoordBuffer,
     geom_offsets: &OffsetBuffer<i32>,
     ring_offsets: &OffsetBuffer<i32>,
     validity_len: Option<usize>,
@@ -85,7 +85,7 @@ impl<const D: usize> MultiLineStringArray<D> {
     /// - if the largest ring offset does not match the number of coordinates
     /// - if the largest geometry offset does not match the size of ring offsets
     pub fn new(
-        coords: CoordBuffer<D>,
+        coords: CoordBuffer,
         geom_offsets: OffsetBuffer<i32>,
         ring_offsets: OffsetBuffer<i32>,
         validity: Option<NullBuffer>,
@@ -106,7 +106,7 @@ impl<const D: usize> MultiLineStringArray<D> {
     /// - if the largest ring offset does not match the number of coordinates
     /// - if the largest geometry offset does not match the size of ring offsets
     pub fn try_new(
-        coords: CoordBuffer<D>,
+        coords: CoordBuffer,
         geom_offsets: OffsetBuffer<i32>,
         ring_offsets: OffsetBuffer<i32>,
         validity: Option<NullBuffer>,
@@ -140,7 +140,7 @@ impl<const D: usize> MultiLineStringArray<D> {
         Field::new_list("linestrings", self.vertices_field(), false).into()
     }
 
-    pub fn coords(&self) -> &CoordBuffer<D> {
+    pub fn coords(&self) -> &CoordBuffer {
         &self.coords
     }
 
@@ -317,7 +317,7 @@ impl<const D: usize> NativeArray for MultiLineStringArray<D> {
 }
 
 impl<const D: usize> GeometryArraySelfMethods<D> for MultiLineStringArray<D> {
-    fn with_coords(self, coords: CoordBuffer<D>) -> Self {
+    fn with_coords(self, coords: CoordBuffer) -> Self {
         assert_eq!(coords.len(), self.coords.len());
         Self::new(
             coords,
@@ -357,7 +357,7 @@ impl<'a, const D: usize> crate::trait_::NativeGEOSGeometryAccessor<'a> for Multi
         index: usize,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
         let geom =
-            MultiLineString::new(&self.coords, &self.geom_offsets, &self.ring_offsets, index);
+            MultiLineString::<D>::new(&self.coords, &self.geom_offsets, &self.ring_offsets, index);
         (&geom).try_into()
     }
 }
@@ -400,7 +400,7 @@ impl<const D: usize> TryFrom<&GenericListArray<i32>> for MultiLineStringArray<D>
         let rings_array = rings_dyn_array.as_list::<i32>();
 
         let ring_offsets = rings_array.offsets();
-        let coords: CoordBuffer<D> = rings_array.values().as_ref().try_into()?;
+        let coords: CoordBuffer = rings_array.values().as_ref().try_into()?;
 
         Ok(Self::new(
             coords,
@@ -423,7 +423,7 @@ impl<const D: usize> TryFrom<&GenericListArray<i64>> for MultiLineStringArray<D>
         let rings_array = rings_dyn_array.as_list::<i64>();
 
         let ring_offsets = offsets_buffer_i64_to_i32(rings_array.offsets())?;
-        let coords: CoordBuffer<D> = rings_array.values().as_ref().try_into()?;
+        let coords: CoordBuffer = rings_array.values().as_ref().try_into()?;
 
         Ok(Self::new(
             coords,
