@@ -44,9 +44,10 @@ pub fn line_string_to_geo<T: CoordNum>(
 ///
 /// Only the first two dimensions will be kept.
 pub fn polygon_to_geo<T: CoordNum, P: PolygonTrait<T = T>>(polygon: &P) -> geo::Polygon<T> {
-    let exterior = match &polygon.exterior() {
-        Some(ls) => line_string_to_geo(ls),
-        None => geo::LineString::new(vec![]),
+    let exterior = if let Some(exterior) = polygon.exterior() {
+        line_string_to_geo(&exterior)
+    } else {
+        geo::LineString::new(vec![])
     };
     let interiors = polygon
         .interiors()
