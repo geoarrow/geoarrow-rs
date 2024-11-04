@@ -30,11 +30,14 @@ pub fn read_parquet(
     match reader {
         #[cfg(feature = "async")]
         AnyFileReader::Async(async_reader) => {
+            use crate::runtime::get_runtime;
             use geoarrow::io::parquet::GeoParquetRecordBatchStreamBuilder;
             use object_store::ObjectStore;
             use parquet::arrow::async_reader::ParquetObjectReader;
 
-            let table = async_reader.runtime.block_on(async move {
+            let runtime = get_runtime(py)?;
+
+            let table = runtime.block_on(async move {
                 let object_meta = async_reader
                     .store
                     .head(&async_reader.path)

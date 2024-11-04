@@ -20,20 +20,26 @@ pub fn read_flatgeobuf(
     let reader = construct_reader(py, file, fs)?;
     match reader {
         #[cfg(feature = "async")]
-        AnyFileReader::Async(async_reader) => async_reader.runtime.block_on(async move {
-            use geoarrow::io::flatgeobuf::read_flatgeobuf_async as _read_flatgeobuf_async;
+        AnyFileReader::Async(async_reader) => {
+            use crate::runtime::get_runtime;
 
-            let options = FlatGeobufReaderOptions {
-                batch_size: Some(batch_size),
-                bbox,
-                ..Default::default()
-            };
-            let table = _read_flatgeobuf_async(async_reader.store, async_reader.path, options)
-                .await
-                .map_err(PyGeoArrowError::GeoArrowError)?;
+            let runtime = get_runtime(py)?;
 
-            Ok(table_to_pytable(table).to_arro3(py)?)
-        }),
+            runtime.block_on(async move {
+                use geoarrow::io::flatgeobuf::read_flatgeobuf_async as _read_flatgeobuf_async;
+
+                let options = FlatGeobufReaderOptions {
+                    batch_size: Some(batch_size),
+                    bbox,
+                    ..Default::default()
+                };
+                let table = _read_flatgeobuf_async(async_reader.store, async_reader.path, options)
+                    .await
+                    .map_err(PyGeoArrowError::GeoArrowError)?;
+
+                Ok(table_to_pytable(table).to_arro3(py)?)
+            })
+        }
         AnyFileReader::Sync(mut sync_reader) => {
             let options = FlatGeobufReaderOptions {
                 batch_size: Some(batch_size),

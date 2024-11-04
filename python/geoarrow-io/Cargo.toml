@@ -22,6 +22,7 @@ default = ["async"]
 async = [
     "dep:futures",
     "dep:object_store",
+    "dep:pyo3-object_store",
     "parquet/object_store",
     "dep:pyo3-async-runtimes",
     "geoarrow/flatgeobuf_async",
@@ -48,6 +49,7 @@ pyo3-arrow = { workspace = true }
 pyo3-async-runtimes = { version = "0.22", features = [
     "tokio-runtime",
 ], optional = true }
+pyo3-object_store = { version = "0.1.0-beta.1", optional = true }
 pythonize = "0.22"
 geo = "0.28"
 geo-traits = { workspace = true }

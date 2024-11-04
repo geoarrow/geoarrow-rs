@@ -3,6 +3,8 @@ pub(crate) mod crs;
 pub mod error;
 // pub mod ffi;
 pub mod io;
+#[cfg(feature = "async")]
+mod runtime;
 mod util;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -14,14 +16,16 @@ fn ___version() -> &'static str {
 
 /// A Python module implemented in Rust.
 #[pymodule]
-fn _io(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
+fn _io(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(___version))?;
 
     // Async IO
 
     #[cfg(feature = "async")]
     {
-        m.add_class::<crate::io::object_store::PyObjectStore>()?;
+        pyo3_object_store::register_store_module(py, m, "geoarrow.rust.io")?;
+        pyo3_object_store::register_exceptions_module(py, m, "geoarrow.rust.io")?;
+
         m.add_class::<crate::io::parquet::ParquetFile>()?;
         m.add_class::<crate::io::parquet::ParquetDataset>()?;
 

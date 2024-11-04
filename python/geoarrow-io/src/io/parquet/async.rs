@@ -4,8 +4,9 @@ use std::sync::Arc;
 use crate::crs::CRS;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::io::input::{construct_reader, AnyFileReader};
-use crate::io::object_store::PyObjectStore;
 use crate::io::parquet::options::create_options;
+#[cfg(feature = "async")]
+use crate::runtime::get_runtime;
 use crate::util::table_to_pytable;
 
 use geo_traits::CoordTrait;
@@ -24,8 +25,8 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3_arrow::{PyArray, PySchema};
 use pyo3_async_runtimes::tokio::future_into_py;
+use pyo3_object_store::PyObjectStore;
 use pythonize::depythonize;
-use tokio::runtime::Runtime;
 
 #[pyfunction]
 #[pyo3(signature = (path, *, fs=None, batch_size=None))]
@@ -81,22 +82,21 @@ pub struct ParquetFile {
     object_meta: object_store::ObjectMeta,
     geoparquet_meta: GeoParquetReaderMetadata,
     store: Arc<dyn ObjectStore>,
-    rt: Arc<Runtime>,
 }
 
 #[pymethods]
 impl ParquetFile {
     // TODO: change this to aenter
     #[new]
-    pub fn new(path: String, fs: PyObjectStore) -> PyGeoArrowResult<Self> {
-        let store = fs.inner.clone();
-        let (object_meta, geoparquet_meta) = fs.rt.block_on(async move {
-            let object_meta = fs
-                .inner
+    pub fn new(py: Python, path: String, fs: PyObjectStore) -> PyGeoArrowResult<Self> {
+        let runtime = get_runtime(py)?;
+        let store = fs.as_ref();
+        let (object_meta, geoparquet_meta) = runtime.block_on(async move {
+            let object_meta = store
                 .head(&path.into())
                 .await
                 .map_err(GeoArrowError::ObjectStoreError)?;
-            let mut reader = ParquetObjectReader::new(fs.inner.clone(), object_meta.clone());
+            let mut reader = ParquetObjectReader::new(store.clone(), object_meta.clone());
             let arrow_meta = ArrowReaderMetadata::load_async(&mut reader, Default::default())
                 .await
                 .map_err(GeoArrowError::ParquetError)?;
@@ -106,8 +106,7 @@ impl ParquetFile {
         Ok(Self {
             object_meta,
             geoparquet_meta,
-            store,
-            rt: fs.rt.clone(),
+            store: fs.into_inner(),
         })
     }
 
@@ -217,6 +216,7 @@ impl ParquetFile {
         bbox: Option<[f64; 4]>,
         bbox_paths: Option<Bound<'_, PyAny>>,
     ) -> PyGeoArrowResult<PyObject> {
+        let runtime = get_runtime(py)?;
         let reader = ParquetObjectReader::new(self.store.clone(), self.object_meta.clone());
         let options = create_options(batch_size, limit, offset, bbox, bbox_paths)?;
         let stream = GeoParquetRecordBatchStreamBuilder::new_with_metadata_and_options(
@@ -225,7 +225,7 @@ impl ParquetFile {
             options,
         )
         .build()?;
-        self.rt.block_on(async move {
+        runtime.block_on(async move {
             let table = stream
                 .read_table()
                 .await
@@ -322,7 +322,6 @@ pub struct ParquetDataset {
     meta: GeoParquetDatasetMetadata,
     // metas: HashMap<object_store::path::Path, Vec<(ParquetObjectReader, GeoParquetReaderMetadata)>>,
     store: Arc<dyn ObjectStore>,
-    rt: Arc<Runtime>,
 }
 
 impl ParquetDataset {
@@ -355,18 +354,18 @@ impl ParquetDataset {
 #[pymethods]
 impl ParquetDataset {
     #[new]
-    pub fn new(paths: Vec<String>, fs: PyObjectStore) -> PyGeoArrowResult<Self> {
-        let store = fs.inner.clone();
-        let meta = fs.rt.block_on(async move {
-            let meta = fetch_arrow_metadata_objects(paths, fs.inner).await?;
+    pub fn new(py: Python, paths: Vec<String>, fs: PyObjectStore) -> PyGeoArrowResult<Self> {
+        let runtime = get_runtime(py)?;
+        let store = fs.as_ref().clone();
+        let meta = runtime.block_on(async move {
+            let meta = fetch_arrow_metadata_objects(paths, store).await?;
             // let metas = fetch_geoparquet_metas(paths, fs.inner).await?;
             Ok::<_, PyGeoArrowError>(meta)
         })?;
 
         Ok(Self {
             meta: GeoParquetDatasetMetadata::from_files(meta)?,
-            store,
-            rt: fs.rt.clone(),
+            store: fs.into_inner().clone(),
         })
     }
 
@@ -440,11 +439,12 @@ impl ParquetDataset {
         bbox: Option<[f64; 4]>,
         bbox_paths: Option<Bound<'_, PyAny>>,
     ) -> PyGeoArrowResult<PyObject> {
+        let runtime = get_runtime(py)?;
         let options = create_options(batch_size, limit, offset, bbox, bbox_paths)?;
         let readers = self.to_readers(options)?;
         let output_schema = self.meta.resolved_schema(Default::default())?;
 
-        self.rt.block_on(async move {
+        runtime.block_on(async move {
             let request_futures = readers.into_iter().map(|reader| reader.read_table());
             let tables = futures::future::join_all(request_futures)
                 .await
