@@ -9,15 +9,15 @@ use pyo3::prelude::*;
 use pyo3_arrow::input::AnyRecordBatch;
 
 #[pyfunction]
-#[pyo3(signature = (file, *, fs=None, batch_size=65536, bbox=None))]
+#[pyo3(signature = (file, *, store=None, batch_size=65536, bbox=None))]
 pub fn read_flatgeobuf(
     py: Python,
     file: PyObject,
-    fs: Option<PyObject>,
+    store: Option<PyObject>,
     batch_size: usize,
     bbox: Option<(f64, f64, f64, f64)>,
 ) -> PyGeoArrowResult<PyObject> {
-    let reader = construct_reader(py, file, fs)?;
+    let reader = construct_reader(py, file, store)?;
     match reader {
         #[cfg(feature = "async")]
         AnyFileReader::Async(async_reader) => {

@@ -19,14 +19,14 @@ use geoarrow::io::parquet::{
 use pyo3_arrow::input::AnyRecordBatch;
 
 #[pyfunction]
-#[pyo3(signature = (path, *, fs=None, batch_size=None))]
+#[pyo3(signature = (path, *, store=None, batch_size=None))]
 pub fn read_parquet(
     py: Python,
     path: PyObject,
-    fs: Option<PyObject>,
+    store: Option<PyObject>,
     batch_size: Option<usize>,
 ) -> PyGeoArrowResult<PyObject> {
-    let reader = construct_reader(py, path, fs)?;
+    let reader = construct_reader(py, path, store)?;
     match reader {
         #[cfg(feature = "async")]
         AnyFileReader::Async(async_reader) => {
