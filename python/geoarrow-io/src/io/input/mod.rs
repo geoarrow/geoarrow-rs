@@ -9,6 +9,7 @@ use object_store::http::HttpBuilder;
 use object_store::path::Path;
 #[cfg(feature = "async")]
 use object_store::{ClientOptions, ObjectStore};
+#[cfg(feature = "async")]
 use pyo3_object_store::PyObjectStore;
 use sync::FileReader;
 
