@@ -23,7 +23,8 @@ use parquet::arrow::async_reader::ParquetObjectReader;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3_arrow::{PyArray, PySchema};
-use pythonize::depythonize_bound;
+use pyo3_async_runtimes::tokio::future_into_py;
+use pythonize::depythonize;
 use tokio::runtime::Runtime;
 
 #[pyfunction]
@@ -37,7 +38,7 @@ pub fn read_parquet_async(
     let reader = construct_reader(py, path, fs)?;
     match reader {
         AnyFileReader::Async(async_reader) => {
-            let fut = pyo3_asyncio_0_21::tokio::future_into_py(py, async move {
+            let fut = future_into_py(py, async move {
                 let object_meta = async_reader
                     .store
                     .head(&async_reader.path)
@@ -126,6 +127,7 @@ impl ParquetFile {
         Ok(PySchema::new(schema).to_arro3(py)?)
     }
 
+    #[pyo3(signature = (column_name=None))]
     fn crs(&self, py: Python, column_name: Option<&str>) -> PyGeoArrowResult<PyObject> {
         if let Some(crs) = self.geoparquet_meta.crs(column_name)? {
             // TODO: remove clone
@@ -135,13 +137,14 @@ impl ParquetFile {
         }
     }
 
+    #[pyo3(signature = (row_group_idx, bbox_paths=None))]
     pub fn row_group_bounds(
         &self,
         row_group_idx: usize,
         bbox_paths: Option<Bound<'_, PyAny>>,
     ) -> PyGeoArrowResult<Option<Vec<f64>>> {
         let paths: Option<GeoParquetBboxCovering> =
-            bbox_paths.map(|x| depythonize_bound(x)).transpose()?;
+            bbox_paths.map(|x| depythonize(&x)).transpose()?;
 
         if let Some(bounds) = self
             .geoparquet_meta
@@ -158,17 +161,19 @@ impl ParquetFile {
         }
     }
 
+    #[pyo3(signature = (bbox_paths=None))]
     pub fn row_groups_bounds(
         &self,
         py: Python,
         bbox_paths: Option<Bound<'_, PyAny>>,
     ) -> PyGeoArrowResult<PyObject> {
         let paths: Option<GeoParquetBboxCovering> =
-            bbox_paths.map(|x| depythonize_bound(x)).transpose()?;
+            bbox_paths.map(|x| depythonize(&x)).transpose()?;
         let bounds = self.geoparquet_meta.row_groups_bounds(paths.as_ref())?;
         Ok(PyArray::new(bounds.to_array_ref(), bounds.extension_field()).to_arro3(py)?)
     }
 
+    #[pyo3(signature = (column_name=None))]
     fn file_bbox(&self, column_name: Option<&str>) -> PyGeoArrowResult<Option<Vec<f64>>> {
         let bbox = self.geoparquet_meta.file_bbox(column_name)?;
         Ok(bbox.map(|b| b.to_vec()))
@@ -192,7 +197,7 @@ impl ParquetFile {
             options,
         )
         .build()?;
-        let fut = pyo3_asyncio_0_21::tokio::future_into_py(py, async move {
+        let fut = future_into_py(py, async move {
             let table = stream
                 .read_table()
                 .await
@@ -381,6 +386,7 @@ impl ParquetDataset {
         Ok(PySchema::new(schema).to_arro3(py)?)
     }
 
+    #[pyo3(signature = (column_name=None))]
     fn crs(&self, py: Python, column_name: Option<&str>) -> PyGeoArrowResult<PyObject> {
         if let Some(crs) = self.meta.crs(column_name)? {
             // TODO: remove clone
@@ -404,7 +410,7 @@ impl ParquetDataset {
         let readers = self.to_readers(options)?;
         let output_schema = self.meta.resolved_schema(Default::default())?;
 
-        let fut = pyo3_asyncio_0_21::tokio::future_into_py(py, async move {
+        let fut = future_into_py(py, async move {
             let request_futures = readers.into_iter().map(|reader| reader.read_table());
             let tables = futures::future::join_all(request_futures)
                 .await

@@ -38,7 +38,7 @@ use pyo3::prelude::*;
 pub struct BroadcastableFloat(pub(crate) BroadcastablePrimitive<Float64Type>);
 
 impl<'a> FromPyObject<'a> for BroadcastableFloat {
-    fn extract(_ob: &'a PyAny) -> PyResult<Self> {
+    fn extract_bound(_ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         todo!()
         // Python::with_gil(|py| {
         //     let pa = py.import_bound("pyarrow")?;
