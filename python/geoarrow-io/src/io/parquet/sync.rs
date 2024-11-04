@@ -94,7 +94,7 @@ pub enum GeoParquetEncoding {
 }
 
 impl<'a> FromPyObject<'a> for GeoParquetEncoding {
-    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         let s: String = ob.extract()?;
         match s.to_lowercase().as_str() {
             "wkb" => Ok(Self::WKB),

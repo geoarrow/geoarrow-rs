@@ -1143,7 +1143,7 @@ dependencies = [
  "parquet",
  "pyo3",
  "pyo3-arrow",
- "pyo3-asyncio-0-21",
+ "pyo3-async-runtimes",
  "pythonize",
  "reqwest",
  "serde_json",
@@ -1926,9 +1926,9 @@ dependencies = [
 
 [[package]]
 name = "numpy"
-version = "0.21.0"
+version = "0.22.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec170733ca37175f5d75a5bea5911d6ff45d2cd52849ce98b685394e4f2f37f4"
+checksum = "edb929bc0da91a4d85ed6c0a84deaa53d411abfb387fc271124f91bf6b89f14e"
 dependencies = [
  "half",
  "libc",
@@ -2284,9 +2284,9 @@ dependencies = [
 
 [[package]]
 name = "pyo3"
-version = "0.21.2"
+version = "0.22.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5e00b96a521718e08e03b1a622f01c8a8deb50719335de3f60b3b3950f069d8"
+checksum = "3d922163ba1f79c04bc49073ba7b32fd5a8d3b76a87c955921234b8e77333c51"
 dependencies = [
  "anyhow",
  "cfg-if",
@@ -2296,7 +2296,7 @@ dependencies = [
  "indoc",
  "libc",
  "memoffset",
- "parking_lot",
+ "once_cell",
  "portable-atomic",
  "pyo3-build-config",
  "pyo3-ffi",
@@ -2307,9 +2307,9 @@ dependencies = [
 
 [[package]]
 name = "pyo3-arrow"
-version = "0.4.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e23a03fb0bc2b06103d4bc6948424292ad410ef31ed14b1af620c5937f6fac37"
+checksum = "a641506190769c9cb5e3e187b64514afaf318e904accf0137a6ed5ca436d27d5"
 dependencies = [
  "arrow",
  "arrow-array",
@@ -2323,10 +2323,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "pyo3-asyncio-0-21"
-version = "0.21.0"
+name = "pyo3-async-runtimes"
+version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8fde289486f7d5cee0ac7c20b2637a0657654681079cc5eedc90d9a2a79af1e5"
+checksum = "2529f0be73ffd2be0cc43c013a640796558aa12d7ca0aab5cc14f375b4733031"
 dependencies = [
  "futures",
  "once_cell",
@@ -2337,9 +2337,9 @@ dependencies = [
 
 [[package]]
 name = "pyo3-build-config"
-version = "0.21.2"
+version = "0.22.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7883df5835fafdad87c0d888b266c8ec0f4c9ca48a5bed6bbb592e8dedee1b50"
+checksum = "bc38c5feeb496c8321091edf3d63e9a6829eab4b863b4a6a65f26f3e9cc6b179"
 dependencies = [
  "once_cell",
  "target-lexicon",
@@ -2347,9 +2347,9 @@ dependencies = [
 
 [[package]]
 name = "pyo3-ffi"
-version = "0.21.2"
+version = "0.22.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "01be5843dc60b916ab4dad1dca6d20b9b4e6ddc8e15f50c47fe6d85f1fb97403"
+checksum = "94845622d88ae274d2729fcefc850e63d7a3ddff5e3ce11bd88486db9f1d357d"
 dependencies = [
  "libc",
  "pyo3-build-config",
@@ -2376,9 +2376,9 @@ dependencies = [
 
 [[package]]
 name = "pyo3-macros"
-version = "0.21.2"
+version = "0.22.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77b34069fc0682e11b31dbd10321cbf94808394c56fd996796ce45217dfac53c"
+checksum = "e655aad15e09b94ffdb3ce3d217acf652e26bbc37697ef012f5e5e348c716e5e"
 dependencies = [
  "proc-macro2",
  "pyo3-macros-backend",
@@ -2388,11 +2388,11 @@ dependencies = [
 
 [[package]]
 name = "pyo3-macros-backend"
-version = "0.21.2"
+version = "0.22.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08260721f32db5e1a5beae69a55553f56b99bd0e1c3e6e0a5e8851a9d0f5a85c"
+checksum = "ae1e3f09eecd94618f60a455a23def79f79eba4dc561a97324bf9ac8c6df30ce"
 dependencies = [
- "heck 0.4.1",
+ "heck 0.5.0",
  "proc-macro2",
  "pyo3-build-config",
  "quote",
@@ -2401,9 +2401,9 @@ dependencies = [
 
 [[package]]
 name = "pythonize"
-version = "0.21.1"
+version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9d0664248812c38cc55a4ed07f88e4df516ce82604b93b1ffdc041aa77a6cb3c"
+checksum = "90fcf491425978bd889015d5430f6473d91bdfa2097262f1e731aadcf6c2113e"
 dependencies = [
  "pyo3",
  "serde",

@@ -378,6 +378,7 @@ impl PyObjectStore {
     ///     options: a dict of options (e.g. authentication settings) for connecting to the object
     ///         store.
     #[new]
+    #[pyo3(signature = (root, options = None, client_options = None))]
     fn new(
         root: String,
         options: Option<HashMap<String, String>>,

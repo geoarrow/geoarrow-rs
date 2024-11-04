@@ -65,7 +65,7 @@ impl PyNativeArray {
         data.extract()
     }
 
-    #[allow(unused_variables)]
+    #[pyo3(signature = (requested_schema=None))]
     fn __arrow_c_array__<'py>(
         &'py self,
         py: Python<'py>,
@@ -209,7 +209,7 @@ impl PySerializedArray {
         data.extract()
     }
 
-    #[allow(unused_variables)]
+    #[pyo3(signature = (requested_schema=None))]
     fn __arrow_c_array__<'py>(
         &'py self,
         py: Python<'py>,
