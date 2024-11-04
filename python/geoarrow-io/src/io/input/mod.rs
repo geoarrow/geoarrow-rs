@@ -34,15 +34,15 @@ pub enum AnyFileReader {
 pub fn construct_reader(
     py: Python,
     file: PyObject,
-    fs: Option<PyObject>,
+    store: Option<PyObject>,
 ) -> PyGeoArrowResult<AnyFileReader> {
     // If the user passed an object store instance, use that
     #[cfg(feature = "async")]
-    if let Some(fs) = fs {
-        let fs = fs.extract::<PyObjectStore>(py)?;
+    if let Some(store) = store {
+        let store = store.extract::<PyObjectStore>(py)?;
         let path = file.extract::<String>(py)?;
         let async_reader = AsyncFileReader {
-            store: fs.into_inner(),
+            store: store.into_inner(),
             path: path.into(),
         };
         return Ok(AnyFileReader::Async(async_reader));
