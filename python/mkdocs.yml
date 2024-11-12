@@ -36,13 +36,14 @@ nav:
           - api/compute/enums.md
           - api/compute/types.md
       - geoarrow.rust.io:
+          - api/io/arrow_ipc.md
           - api/io/csv.md
           - api/io/flatgeobuf.md
+          - api/io/gdal.md
           - api/io/geojson.md
           - api/io/geoparquet.md
           - api/io/postgis.md
-          - api/io/arrow_ipc.md
-          - api/io/gdal.md
+          - api/io/shapefile.md
   - Ecosystem:
       - ecosystem/geopandas.md
       - ecosystem/lonboard.md
