@@ -1,57 +1,12 @@
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{GeometryCollectionArray, WKBArray};
-use crate::error::Result;
-use crate::io::wkb::common::WKBType;
-use crate::io::wkb::reader::Endianness;
-use crate::io::wkb::writer::geometry::{geometry_wkb_size, write_geometry_as_wkb};
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use arrow_buffer::Buffer;
-use byteorder::{LittleEndian, WriteBytesExt};
-use geo_traits::GeometryCollectionTrait;
-use std::io::{Cursor, Write};
-
-/// The byte length of a WKBGeometryCollection
-pub fn geometry_collection_wkb_size(geom: &impl GeometryCollectionTrait) -> usize {
-    let mut sum = 1 + 4 + 4;
-
-    for inner_geom in geom.geometries() {
-        sum += geometry_wkb_size(&inner_geom);
-    }
-
-    sum
-}
-
-/// Write a GeometryCollection geometry to a Writer encoded as WKB
-pub fn write_geometry_collection_as_wkb<W: Write>(
-    mut writer: W,
-    geom: &impl GeometryCollectionTrait<T = f64>,
-) -> Result<()> {
-    use geo_traits::Dimensions;
-
-    // Byte order
-    writer.write_u8(Endianness::LittleEndian.into())?;
-
-    match geom.dim() {
-        Dimensions::Xy | Dimensions::Unknown(2) => {
-            writer.write_u32::<LittleEndian>(WKBType::GeometryCollection.into())?;
-        }
-        Dimensions::Xyz | Dimensions::Unknown(3) => {
-            writer.write_u32::<LittleEndian>(WKBType::GeometryCollectionZ.into())?;
-        }
-        _ => panic!(),
-    }
-
-    // numGeometries
-    writer.write_u32::<LittleEndian>(geom.num_geometries().try_into().unwrap())?;
-
-    for inner_geom in geom.geometries() {
-        write_geometry_as_wkb(&mut writer, &inner_geom)?;
-    }
-
-    Ok(())
-}
+use std::io::Cursor;
+use wkb::writer::{geometry_collection_wkb_size, write_geometry_collection};
+use wkb::Endianness;
 
 impl<O: OffsetSizeTrait, const D: usize> From<&GeometryCollectionArray<D>> for WKBArray<O> {
     fn from(value: &GeometryCollectionArray<D>) -> Self {
@@ -73,7 +28,7 @@ impl<O: OffsetSizeTrait, const D: usize> From<&GeometryCollectionArray<D>> for W
             let mut writer = Cursor::new(values);
 
             for geom in value.iter().flatten() {
-                write_geometry_collection_as_wkb(&mut writer, &geom).unwrap();
+                write_geometry_collection(&mut writer, &geom, Endianness::LittleEndian).unwrap();
             }
 
             writer.into_inner()

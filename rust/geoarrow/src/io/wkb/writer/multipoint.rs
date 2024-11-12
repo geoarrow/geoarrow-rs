@@ -1,51 +1,12 @@
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{MultiPointArray, WKBArray};
-use crate::error::Result;
-use crate::io::wkb::common::WKBType;
-use crate::io::wkb::reader::Endianness;
-use crate::io::wkb::writer::point::{point_wkb_size, write_point_as_wkb};
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use arrow_buffer::Buffer;
-use byteorder::{LittleEndian, WriteBytesExt};
-use geo_traits::MultiPointTrait;
-use std::io::{Cursor, Write};
-
-/// The byte length of a WKBMultiPoint
-pub fn multi_point_wkb_size(geom: &impl MultiPointTrait) -> usize {
-    1 + 4 + 4 + (geom.num_points() * point_wkb_size(geom.dim()))
-}
-
-/// Write a MultiPoint geometry to a Writer encoded as WKB
-pub fn write_multi_point_as_wkb<W: Write>(
-    mut writer: W,
-    geom: &impl MultiPointTrait<T = f64>,
-) -> Result<()> {
-    use geo_traits::Dimensions;
-
-    // Byte order
-    writer.write_u8(Endianness::LittleEndian.into())?;
-
-    match geom.dim() {
-        Dimensions::Xy | Dimensions::Unknown(2) => {
-            writer.write_u32::<LittleEndian>(WKBType::MultiPoint.into())?;
-        }
-        Dimensions::Xyz | Dimensions::Unknown(3) => {
-            writer.write_u32::<LittleEndian>(WKBType::MultiPointZ.into())?;
-        }
-        _ => panic!(),
-    }
-
-    // numPoints
-    writer.write_u32::<LittleEndian>(geom.num_points().try_into().unwrap())?;
-
-    for point in geom.points() {
-        write_point_as_wkb(&mut writer, &point)?;
-    }
-
-    Ok(())
-}
+use std::io::Cursor;
+use wkb::writer::{multi_point_wkb_size, write_multi_point};
+use wkb::Endianness;
 
 impl<O: OffsetSizeTrait, const D: usize> From<&MultiPointArray<D>> for WKBArray<O> {
     fn from(value: &MultiPointArray<D>) -> Self {
@@ -65,7 +26,7 @@ impl<O: OffsetSizeTrait, const D: usize> From<&MultiPointArray<D>> for WKBArray<
             let mut writer = Cursor::new(values);
 
             for geom in value.iter().flatten() {
-                write_multi_point_as_wkb(&mut writer, &geom).unwrap();
+                write_multi_point(&mut writer, &geom, Endianness::LittleEndian).unwrap();
             }
 
             writer.into_inner()
