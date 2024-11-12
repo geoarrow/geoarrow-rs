@@ -1,7 +1,7 @@
 use crate::array::*;
 use crate::trait_::ArrayAccessor;
 use arrow::array::Int16Builder;
-use arrow_array::{Int16Array, OffsetSizeTrait};
+use arrow_array::Int16Array;
 use std::collections::HashSet;
 
 /// Calculation of the geometry types within a GeometryArray
@@ -115,26 +115,28 @@ impl TypeIds for MixedGeometryArray<2> {
     }
 }
 
-impl<O: OffsetSizeTrait> TypeIds for WKBArray<O> {
-    fn get_type_ids(&self) -> Int16Array {
-        let mut output_array = Int16Builder::with_capacity(self.len());
-        self.iter().for_each(|maybe_wkb| {
-            output_array.append_option(maybe_wkb.map(|wkb| {
-                let type_id = u32::from(wkb.wkb_type().unwrap());
-                type_id.try_into().unwrap()
-            }))
-        });
+// Impl removed when `wkb` was refactored into a standalone crate.
+//
+// impl<O: OffsetSizeTrait> TypeIds for WKBArray<O> {
+//     fn get_type_ids(&self) -> Int16Array {
+//         let mut output_array = Int16Builder::with_capacity(self.len());
+//         self.iter().for_each(|maybe_wkb| {
+//             output_array.append_option(maybe_wkb.map(|wkb| {
+//                 let type_id = u32::from(wkb.wkb_type().unwrap());
+//                 type_id.try_into().unwrap()
+//             }))
+//         });
 
-        output_array.finish()
-    }
+//         output_array.finish()
+//     }
 
-    fn get_unique_type_ids(&self) -> HashSet<i16> {
-        let mut values = HashSet::new();
-        self.iter().flatten().for_each(|wkb| {
-            let type_id = u32::from(wkb.wkb_type().unwrap());
-            values.insert(type_id.try_into().unwrap());
-        });
+//     fn get_unique_type_ids(&self) -> HashSet<i16> {
+//         let mut values = HashSet::new();
+//         self.iter().flatten().for_each(|wkb| {
+//             let type_id = u32::from(wkb.wkb_type().unwrap());
+//             values.insert(type_id.try_into().unwrap());
+//         });
 
-        values
-    }
-}
+//         values
+//     }
+// }

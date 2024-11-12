@@ -1,7 +1,9 @@
+use crate::error::Result;
 use crate::io::geo::geometry_to_geo;
 use crate::trait_::NativeScalar;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use geo::BoundingRect;
+use geo_traits::GeometryTrait;
 use rstar::{RTreeObject, AABB};
 
 /// A scalar WKB reference on a WKBArray
@@ -22,7 +24,7 @@ impl<'a, O: OffsetSizeTrait> WKB<'a, O> {
 
     /// Access the byte slice of this WKB object.
     pub fn as_slice(&self) -> &[u8] {
-        self.arr.value(self.geom_index)
+        self.as_ref()
     }
 
     pub fn into_owned_inner(self) -> (GenericBinaryArray<O>, usize) {
@@ -30,13 +32,17 @@ impl<'a, O: OffsetSizeTrait> WKB<'a, O> {
         // let owned = self.into_owned();
         (self.arr.clone(), self.geom_index)
     }
+
+    pub fn parse(&self) -> Result<impl GeometryTrait<T = f64> + use<'_, O>> {
+        Ok(wkb::reader::read_wkb(self.as_ref())?)
+    }
 }
 
 impl<'a, O: OffsetSizeTrait> NativeScalar for WKB<'a, O> {
     type ScalarGeo = geo::Geometry;
 
     fn to_geo(&self) -> Self::ScalarGeo {
-        self.into()
+        self.try_into().unwrap()
     }
 
     fn to_geo_geometry(&self) -> geo::Geometry {
@@ -55,9 +61,23 @@ impl<'a, O: OffsetSizeTrait> AsRef<[u8]> for WKB<'a, O> {
     }
 }
 
+// impl<O: OffsetSizeTrait> TryFrom<&WKB<'_, O>> for geo::Geometry {
+//     type Error = GeoArrowError;
+//     fn try_from(value: &WKB<'_, O>) -> std::result::Result<Self, Self::Error> {
+//         Ok(geometry_to_geo(&value.parse()?))
+//     }
+// }
+
+// impl<O: OffsetSizeTrait> TryFrom<WKB<'_, O>> for geo::Geometry {
+//     type Error = GeoArrowError;
+//     fn try_from(value: WKB<'_, O>) -> std::result::Result<Self, Self::Error> {
+//         (&value).try_into()
+//     }
+// }
+
 impl<O: OffsetSizeTrait> From<&WKB<'_, O>> for geo::Geometry {
     fn from(value: &WKB<'_, O>) -> Self {
-        geometry_to_geo(&value.to_wkb_object())
+        geometry_to_geo(&value.parse().unwrap())
     }
 }
 
@@ -71,7 +91,7 @@ impl<O: OffsetSizeTrait> RTreeObject for WKB<'_, O> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
-        let geom: geo::Geometry = self.into();
+        let geom: geo::Geometry = self.try_into().unwrap();
         let rect = geom.bounding_rect().unwrap();
         let lower: [f64; 2] = rect.min().into();
         let upper: [f64; 2] = rect.max().into();

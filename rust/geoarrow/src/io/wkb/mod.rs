@@ -2,7 +2,7 @@
 
 mod api;
 mod common;
-pub(crate) mod reader;
+// pub(crate) mod reader;
 pub(crate) mod writer;
 
 pub use api::{from_wkb, to_wkb, FromWKB, ToWKB};

@@ -99,6 +99,7 @@ thiserror = "1"
 tokio = { version = "1", default-features = false, optional = true }
 # wkt = "0.11"
 wkt = { git = "https://github.com/georust/wkt", branch = "kyle/geo-traits-writer" }
+wkb = { git = "https://github.com/kylebarron/wkb", rev = "7d58a2327fe21cf250dab5ac6860b6cf0fddb838" }
 
 
 [dev-dependencies]

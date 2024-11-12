@@ -187,24 +187,24 @@ impl<const D: usize> MultiPolygonBuilder<D> {
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
-        let counter = MultiPolygonCapacity::from_multi_polygons(geoms);
-        Self::with_capacity_and_options(counter, coord_type, metadata)
+        let capacity = MultiPolygonCapacity::from_multi_polygons(geoms);
+        Self::with_capacity_and_options(capacity, coord_type, metadata)
     }
 
     pub fn reserve_from_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
     ) {
-        let counter = MultiPolygonCapacity::from_multi_polygons(geoms);
-        self.reserve(counter)
+        let capacity = MultiPolygonCapacity::from_multi_polygons(geoms);
+        self.reserve(capacity)
     }
 
     pub fn reserve_exact_from_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
     ) {
-        let counter = MultiPolygonCapacity::from_multi_polygons(geoms);
-        self.reserve_exact(counter)
+        let capacity = MultiPolygonCapacity::from_multi_polygons(geoms);
+        self.reserve_exact(capacity)
     }
     /// Add a new Polygon to the end of this array.
     ///
@@ -413,6 +413,24 @@ impl<const D: usize> MultiPolygonBuilder<D> {
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
+        let mut array = Self::with_capacity_and_options_from_iter(
+            geoms.iter().map(|x| x.as_ref()),
+            coord_type.unwrap_or_default(),
+            metadata,
+        );
+        array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
+        array
+    }
+
+    pub fn from_nullable_geometries(
+        geoms: &[Option<impl GeometryTrait<T = f64>>],
+        coord_type: Option<CoordType>,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Self {
+        let capacity = MultiPolygonCapacity::from_geometries(geoms);
+        Self::with_capacity_and_options(counter, coord_type, metadata)
+
+        todo!()
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(|x| x.as_ref()),
             coord_type.unwrap_or_default(),
