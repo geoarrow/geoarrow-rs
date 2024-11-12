@@ -528,6 +528,15 @@ def read_shapefile(
 ) -> Table:
     """
     Read a Shapefile into an Arrow Table.
+
+    The returned Arrow table will have geometry information in native GeoArrow encoding.
+
+    !!! note
+        Coordinate Reference System information is not currently read from the Shapefile.
+
+    Args:
+        shp_file: the path to the `.shp` file or the `.shp` file as a Python file object in binary read mode.
+        dbf_file: the path to the `.dbf` file or the `.dbf` file as a Python file object in binary read mode.
     """
 
 def write_csv(table: ArrowStreamExportable, file: str | Path | BinaryIO) -> None:
