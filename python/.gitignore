@@ -1,3 +1,5 @@
+.ipynb_checkpoints
+
 tmp*.py
 tmp*.ts
 tmp*.js
