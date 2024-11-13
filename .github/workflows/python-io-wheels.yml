@@ -28,7 +28,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: manylinux_2_28
-          args: --release --out dist -m python/geoarrow-io/Cargo.toml
+          args: --release --out dist --find-interpreter -m python/geoarrow-io/Cargo.toml
           before-script-linux: |
             yum update -y
             yum install openssl openssl-devel perl-IPC-Cmd -y
@@ -61,7 +61,7 @@ jobs:
   #       with:
   #         target: ${{ matrix.target }}
   #         manylinux: auto
-  #         args: --release --out dist -m python/geoarrow-io/Cargo.toml
+  #         args: --release --out dist --find-interpreter -m python/geoarrow-io/Cargo.toml
 
   #     # This is currently failing with
   #     # python: command not found
@@ -96,7 +96,7 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - runner: macos-12
+          - runner: macos-13
             target: x86_64
           - runner: macos-14
             target: aarch64
@@ -112,7 +112,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist -m python/geoarrow-io/Cargo.toml
+          args: --release --out dist --find-interpreter -m python/geoarrow-io/Cargo.toml
           sccache: "true"
 
       - name: Install built wheel - ${{ matrix.platform.target }}
@@ -145,7 +145,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist -m python/geoarrow-io/Cargo.toml
+          args: --release --out dist --find-interpreter -m python/geoarrow-io/Cargo.toml
 
       - name: Install built wheel
         run: |
@@ -180,7 +180,7 @@ jobs:
   #       with:
   #         target: ${{ matrix.target }}
   #         manylinux: musllinux_1_2
-  #         args: --release --out dist -m python/geoarrow-io/Cargo.toml
+  #         args: --release --out dist --find-interpreter -m python/geoarrow-io/Cargo.toml
 
   #     - name: Install built wheel
   #       if: matrix.target == 'x86_64-unknown-linux-musl'
@@ -222,7 +222,7 @@ jobs:
   #       with:
   #         target: ${{ matrix.platform.target }}
   #         manylinux: musllinux_1_2
-  #         args: --release --out dist -m python/geoarrow-io/Cargo.toml
+  #         args: --release --out dist --find-interpreter -m python/geoarrow-io/Cargo.toml
 
   #     - uses: uraimo/run-on-arch-action@v2.5.1
   #       name: Install built wheel
