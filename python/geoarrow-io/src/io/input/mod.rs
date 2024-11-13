@@ -4,26 +4,22 @@ use std::sync::Arc;
 
 use crate::error::PyGeoArrowResult;
 #[cfg(feature = "async")]
-use crate::io::object_store::PyObjectStore;
-#[cfg(feature = "async")]
 use object_store::http::HttpBuilder;
 #[cfg(feature = "async")]
 use object_store::path::Path;
 #[cfg(feature = "async")]
 use object_store::{ClientOptions, ObjectStore};
-use pyo3::exceptions::PyValueError;
+#[cfg(feature = "async")]
+use pyo3_object_store::PyObjectStore;
 use sync::FileReader;
 
 use pyo3::prelude::*;
-#[cfg(feature = "async")]
-use tokio::runtime::Runtime;
 use url::Url;
 
 #[cfg(feature = "async")]
 pub struct AsyncFileReader {
     pub store: Arc<dyn ObjectStore>,
     pub path: Path,
-    pub runtime: Arc<Runtime>,
 }
 
 pub enum AnyFileReader {
@@ -39,16 +35,15 @@ pub enum AnyFileReader {
 pub fn construct_reader(
     py: Python,
     file: PyObject,
-    fs: Option<PyObject>,
+    store: Option<PyObject>,
 ) -> PyGeoArrowResult<AnyFileReader> {
     // If the user passed an object store instance, use that
     #[cfg(feature = "async")]
-    if let Some(fs) = fs {
-        let fs = fs.extract::<PyObjectStore>(py)?;
+    if let Some(store) = store {
+        let store = store.extract::<PyObjectStore>(py)?;
         let path = file.extract::<String>(py)?;
         let async_reader = AsyncFileReader {
-            store: fs.inner,
-            runtime: fs.rt,
+            store: store.into_inner(),
             path: path.into(),
         };
         return Ok(AnyFileReader::Async(async_reader));
@@ -70,13 +65,8 @@ pub fn construct_reader(
                 .build()?;
             let path = url.path().trim_start_matches('/');
 
-            let runtime = Arc::new(
-                tokio::runtime::Runtime::new()
-                    .map_err(|err| PyValueError::new_err(err.to_string()))?,
-            );
             let async_reader = AsyncFileReader {
                 store: Arc::new(store),
-                runtime,
                 path: path.into(),
             };
             return Ok(AnyFileReader::Async(async_reader));

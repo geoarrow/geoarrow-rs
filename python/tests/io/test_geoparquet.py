@@ -5,7 +5,8 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import shapely
 from geoarrow.rust.core import from_geopandas
-from geoarrow.rust.io import ObjectStore, ParquetFile, read_parquet, write_parquet
+from geoarrow.rust.io import ParquetFile, read_parquet, write_parquet
+from geoarrow.rust.io.store import LocalStore
 from pyproj import CRS
 
 
@@ -92,8 +93,8 @@ def test_read_write_crs():
     gdf = gpd.GeoDataFrame({"col1": ["a", "b", "c"]}, geometry=points, crs=crs)
     gdf.to_parquet("test.parquet")
 
-    fs = ObjectStore(".")
-    file = ParquetFile("test.parquet", fs)
+    store = LocalStore(".")
+    file = ParquetFile("test.parquet", store)
     assert file.crs() == crs
 
     table = read_parquet("test.parquet")

@@ -19,22 +19,25 @@ use geoarrow::io::parquet::{
 use pyo3_arrow::input::AnyRecordBatch;
 
 #[pyfunction]
-#[pyo3(signature = (path, *, fs=None, batch_size=None))]
+#[pyo3(signature = (path, *, store=None, batch_size=None))]
 pub fn read_parquet(
     py: Python,
     path: PyObject,
-    fs: Option<PyObject>,
+    store: Option<PyObject>,
     batch_size: Option<usize>,
 ) -> PyGeoArrowResult<PyObject> {
-    let reader = construct_reader(py, path, fs)?;
+    let reader = construct_reader(py, path, store)?;
     match reader {
         #[cfg(feature = "async")]
         AnyFileReader::Async(async_reader) => {
+            use crate::runtime::get_runtime;
             use geoarrow::io::parquet::GeoParquetRecordBatchStreamBuilder;
             use object_store::ObjectStore;
             use parquet::arrow::async_reader::ParquetObjectReader;
 
-            let table = async_reader.runtime.block_on(async move {
+            let runtime = get_runtime(py)?;
+
+            let table = runtime.block_on(async move {
                 let object_meta = async_reader
                     .store
                     .head(&async_reader.path)

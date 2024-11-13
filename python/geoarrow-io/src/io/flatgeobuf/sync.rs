@@ -9,31 +9,37 @@ use pyo3::prelude::*;
 use pyo3_arrow::input::AnyRecordBatch;
 
 #[pyfunction]
-#[pyo3(signature = (file, *, fs=None, batch_size=65536, bbox=None))]
+#[pyo3(signature = (file, *, store=None, batch_size=65536, bbox=None))]
 pub fn read_flatgeobuf(
     py: Python,
     file: PyObject,
-    fs: Option<PyObject>,
+    store: Option<PyObject>,
     batch_size: usize,
     bbox: Option<(f64, f64, f64, f64)>,
 ) -> PyGeoArrowResult<PyObject> {
-    let reader = construct_reader(py, file, fs)?;
+    let reader = construct_reader(py, file, store)?;
     match reader {
         #[cfg(feature = "async")]
-        AnyFileReader::Async(async_reader) => async_reader.runtime.block_on(async move {
-            use geoarrow::io::flatgeobuf::read_flatgeobuf_async as _read_flatgeobuf_async;
+        AnyFileReader::Async(async_reader) => {
+            use crate::runtime::get_runtime;
 
-            let options = FlatGeobufReaderOptions {
-                batch_size: Some(batch_size),
-                bbox,
-                ..Default::default()
-            };
-            let table = _read_flatgeobuf_async(async_reader.store, async_reader.path, options)
-                .await
-                .map_err(PyGeoArrowError::GeoArrowError)?;
+            let runtime = get_runtime(py)?;
 
-            Ok(table_to_pytable(table).to_arro3(py)?)
-        }),
+            runtime.block_on(async move {
+                use geoarrow::io::flatgeobuf::read_flatgeobuf_async as _read_flatgeobuf_async;
+
+                let options = FlatGeobufReaderOptions {
+                    batch_size: Some(batch_size),
+                    bbox,
+                    ..Default::default()
+                };
+                let table = _read_flatgeobuf_async(async_reader.store, async_reader.path, options)
+                    .await
+                    .map_err(PyGeoArrowError::GeoArrowError)?;
+
+                Ok(table_to_pytable(table).to_arro3(py)?)
+            })
+        }
         AnyFileReader::Sync(mut sync_reader) => {
             let options = FlatGeobufReaderOptions {
                 batch_size: Some(batch_size),

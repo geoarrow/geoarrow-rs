@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 from typing import (
     BinaryIO,
-    Dict,
     List,
     Optional,
     Sequence,
@@ -24,7 +23,7 @@ from .enums import GeoParquetEncoding
 from .types import BboxCovering, GeoParquetEncodingT
 
 class ParquetFile:
-    def __init__(self, path: str, fs: ObjectStore) -> None:
+    def __init__(self, path: str, store: ObjectStore) -> None:
         """
         Construct a new ParquetFile
 
@@ -32,7 +31,7 @@ class ParquetFile:
 
         Args:
             path: a string URL to read from.
-            fs: the file system interface to read from.
+            store: the file system interface to read from.
 
         Returns:
             A new ParquetFile object.
@@ -133,7 +132,7 @@ class ParquetFile:
         """
 
 class ParquetDataset:
-    def __init__(self, paths: Sequence[str], fs: ObjectStore) -> None:
+    def __init__(self, paths: Sequence[str], store: ObjectStore) -> None:
         """
         Construct a new ParquetDataset
 
@@ -141,7 +140,7 @@ class ParquetDataset:
 
         Args:
             paths: a list of string URLs to read from.
-            fs: the file system interface to read from.
+            store: the file system interface to read from.
 
         Returns:
             A new ParquetDataset object.
@@ -241,9 +240,6 @@ class ParquetWriter:
             table: _description_
         """
 
-class ObjectStore:
-    def __init__(self, root: str, options: Optional[Dict[str, str]] = None) -> None: ...
-
 def read_csv(
     file: str | Path | BinaryIO,
     geometry_column_name: str,
@@ -265,7 +261,7 @@ def read_csv(
 def read_flatgeobuf(
     file: Union[str, Path, BinaryIO],
     *,
-    fs: Optional[ObjectStore] = None,
+    store: Optional[ObjectStore] = None,
     batch_size: int = 65536,
     bbox: Tuple[float, float, float, float] | None = None,
 ) -> Table:
@@ -309,15 +305,15 @@ def read_flatgeobuf(
         "aws_secret_access_key": "...",
         "aws_region": "..."
     }
-    fs = ObjectStore('s3://bucket', options=options)
-    table = read_flatgeobuf("path/in/bucket.fgb", fs=fs)
+    store = ObjectStore('s3://bucket', options=options)
+    table = read_flatgeobuf("path/in/bucket.fgb", store=store)
     ```
 
     Args:
         file: the path to the file or a Python file object in binary read mode.
 
     Other args:
-        fs: an ObjectStore instance for this url. This is required only if the file is at a remote
+        store: an ObjectStore instance for this url. This is required only if the file is at a remote
             location.
         batch_size: the number of rows to include in each internal batch of the table.
         bbox: A spatial filter for reading rows, of the format (minx, miny, maxx, maxy). If set to
@@ -330,7 +326,7 @@ def read_flatgeobuf(
 async def read_flatgeobuf_async(
     path: str,
     *,
-    fs: Optional[ObjectStore] = None,
+    store: Optional[ObjectStore] = None,
     batch_size: int = 65536,
     bbox: Tuple[float, float, float, float] | None = None,
 ) -> Table:
@@ -358,17 +354,17 @@ async def read_flatgeobuf_async(
         "aws_secret_access_key": "...",
         "aws_region": "..."
     }
-    fs = ObjectStore('s3://bucket', options=options)
-    table = await read_flatgeobuf_async("path/in/bucket.fgb", fs=fs)
+    store = ObjectStore('s3://bucket', options=options)
+    table = await read_flatgeobuf_async("path/in/bucket.fgb", store=store)
     ```
 
     Args:
         path: the url or relative path to a remote FlatGeobuf file. If an argument is passed for
-            `fs`, this should be a path fragment relative to the root passed to the `ObjectStore`
+            `store`, this should be a path fragment relative to the root passed to the `ObjectStore`
             constructor.
 
     Other args:
-        fs: an ObjectStore instance for this url. This is required for non-HTTP urls.
+        store: an ObjectStore instance for this url. This is required for non-HTTP urls.
         batch_size: the number of rows to include in each internal batch of the table.
         bbox: A spatial filter for reading rows, of the format (minx, miny, maxx, maxy). If set to
         `None`, no spatial filtering will be performed.
@@ -409,7 +405,7 @@ def read_geojson_lines(
 def read_parquet(
     path: Union[str, Path, BinaryIO],
     *,
-    fs: Optional[ObjectStore] = None,
+    store: Optional[ObjectStore] = None,
     batch_size: int = 65536,
 ) -> Table:
     """
@@ -443,13 +439,13 @@ def read_parquet(
         "aws_secret_access_key": "...",
         "aws_region": "..."
     }
-    fs = ObjectStore('s3://bucket', options=options)
-    table = read_parquet("path/in/bucket.parquet", fs=fs)
+    store = ObjectStore('s3://bucket', options=options)
+    table = read_parquet("path/in/bucket.parquet", store=store)
     ```
 
     Args:
         path: the path to the file
-        fs: the ObjectStore to read from. Defaults to None.
+        store: the ObjectStore to read from. Defaults to None.
         batch_size: the number of rows to include in each internal batch of the table.
 
     Returns:
@@ -459,7 +455,7 @@ def read_parquet(
 async def read_parquet_async(
     path: Union[str, Path, BinaryIO],
     *,
-    fs: Optional[ObjectStore] = None,
+    store: Optional[ObjectStore] = None,
     batch_size: int = 65536,
 ) -> Table:
     """
@@ -486,13 +482,13 @@ async def read_parquet_async(
         "aws_secret_access_key": "...",
         "aws_region": "..."
     }
-    fs = ObjectStore('s3://bucket', options=options)
-    table = await read_parquet_async("path/in/bucket.parquet", fs=fs)
+    store = ObjectStore('s3://bucket', options=options)
+    table = await read_parquet_async("path/in/bucket.parquet", store=store)
     ```
 
     Args:
         path: the path to the file
-        fs: the ObjectStore to read from. Defaults to None.
+        store: the ObjectStore to read from. Defaults to None.
         batch_size: the number of rows to include in each internal batch of the table.
 
     Returns:

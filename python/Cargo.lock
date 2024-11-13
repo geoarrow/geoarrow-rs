@@ -1143,6 +1143,7 @@ dependencies = [
  "pyo3",
  "pyo3-arrow",
  "pyo3-async-runtimes",
+ "pyo3-object_store",
  "pythonize",
  "reqwest",
  "serde_json",
@@ -2396,6 +2397,20 @@ dependencies = [
  "pyo3-build-config",
  "quote",
  "syn 2.0.79",
+]
+
+[[package]]
+name = "pyo3-object_store"
+version = "0.1.0-beta.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "466f6e410731d2ca7a81ea7da94f1e486ea5e709553869c3368cf1517fc1e672"
+dependencies = [
+ "futures",
+ "object_store",
+ "pyo3",
+ "pyo3-async-runtimes",
+ "thiserror",
+ "url",
 ]
 
 [[package]]
