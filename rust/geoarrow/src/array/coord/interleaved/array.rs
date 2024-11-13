@@ -65,16 +65,6 @@ impl<const D: usize> InterleavedCoordBuffer<D> {
         }
     }
 
-    pub fn get_x(&self, i: usize) -> f64 {
-        let c = self.value(i);
-        c.x()
-    }
-
-    pub fn get_y(&self, i: usize) -> f64 {
-        let c = self.value(i);
-        c.y()
-    }
-
     pub fn slice(&self, offset: usize, length: usize) -> Self {
         assert!(
             offset + length <= self.len(),

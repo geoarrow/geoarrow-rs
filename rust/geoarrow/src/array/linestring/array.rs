@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::marker::PhantomData;
 use std::sync::Arc;
 
 use crate::algorithm::native::downcast::can_downcast_multi;
@@ -35,17 +36,18 @@ pub struct LineStringArray<const D: usize> {
 
     pub(crate) metadata: Arc<ArrayMetadata>,
 
-    pub(crate) coords: CoordBuffer<D>,
+    pub(crate) coords: CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
     pub(crate) geom_offsets: OffsetBuffer<i32>,
 
     /// Validity bitmap
     pub(crate) validity: Option<NullBuffer>,
+    // dim_size: PhantomData<D>,
 }
 
-pub(super) fn check<const D: usize>(
-    coords: &CoordBuffer<D>,
+pub(super) fn check(
+    coords: &CoordBuffer,
     validity_len: Option<usize>,
     geom_offsets: &OffsetBuffer<i32>,
 ) -> Result<()> {
@@ -76,7 +78,7 @@ impl<const D: usize> LineStringArray<D> {
     /// - if the validity is not `None` and its length is different from the number of geometries
     /// - if the largest geometry offset does not match the number of coordinates
     pub fn new(
-        coords: CoordBuffer<D>,
+        coords: CoordBuffer,
         geom_offsets: OffsetBuffer<i32>,
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
@@ -95,7 +97,7 @@ impl<const D: usize> LineStringArray<D> {
     /// - if the validity buffer does not have the same length as the number of geometries
     /// - if the geometry offsets do not match the number of coordinates
     pub fn try_new(
-        coords: CoordBuffer<D>,
+        coords: CoordBuffer,
         geom_offsets: OffsetBuffer<i32>,
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
@@ -118,11 +120,11 @@ impl<const D: usize> LineStringArray<D> {
         Field::new("vertices", self.coords.storage_type(), false).into()
     }
 
-    pub fn coords(&self) -> &CoordBuffer<D> {
+    pub fn coords(&self) -> &CoordBuffer {
         &self.coords
     }
 
-    pub fn into_inner(self) -> (CoordBuffer<D>, OffsetBuffer<i32>, Option<NullBuffer>) {
+    pub fn into_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, Option<NullBuffer>) {
         (self.coords, self.geom_offsets, self.validity)
     }
 
@@ -176,25 +178,26 @@ impl<const D: usize> LineStringArray<D> {
     }
 
     pub fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        assert!(
-            offset + length <= self.len(),
-            "offset + length may not exceed length of array"
-        );
-        assert!(length >= 1, "length must be at least 1");
+        todo!();
+        // assert!(
+        //     offset + length <= self.len(),
+        //     "offset + length may not exceed length of array"
+        // );
+        // assert!(length >= 1, "length must be at least 1");
 
-        // Find the start and end of the coord buffer
-        let (start_coord_idx, _) = self.geom_offsets.start_end(offset);
-        let (_, end_coord_idx) = self.geom_offsets.start_end(offset + length - 1);
+        // // Find the start and end of the coord buffer
+        // let (start_coord_idx, _) = self.geom_offsets.start_end(offset);
+        // let (_, end_coord_idx) = self.geom_offsets.start_end(offset + length - 1);
 
-        let geom_offsets = owned_slice_offsets(&self.geom_offsets, offset, length);
+        // let geom_offsets = owned_slice_offsets(&self.geom_offsets, offset, length);
 
-        let coords = self
-            .coords
-            .owned_slice(start_coord_idx, end_coord_idx - start_coord_idx);
+        // let coords = self
+        //     .coords
+        //     .owned_slice(start_coord_idx, end_coord_idx - start_coord_idx);
 
-        let validity = owned_slice_validity(self.nulls(), offset, length);
+        // let validity = owned_slice_validity(self.nulls(), offset, length);
 
-        Self::new(coords, geom_offsets, validity, self.metadata())
+        // Self::new(coords, geom_offsets, validity, self.metadata())
     }
 
     pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
@@ -297,7 +300,7 @@ impl<const D: usize> NativeArray for LineStringArray<D> {
 }
 
 impl<const D: usize> GeometryArraySelfMethods<D> for LineStringArray<D> {
-    fn with_coords(self, coords: CoordBuffer<D>) -> Self {
+    fn with_coords(self, coords: CoordBuffer) -> Self {
         assert_eq!(coords.len(), self.coords.len());
         Self::new(coords, self.geom_offsets, self.validity, self.metadata)
     }
@@ -324,7 +327,7 @@ impl<'a, const D: usize> crate::trait_::NativeGEOSGeometryAccessor<'a> for LineS
         &'a self,
         index: usize,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
-        let geom = LineString::new(&self.coords, &self.geom_offsets, index);
+        let geom = LineString::<D>::new(&self.coords, &self.geom_offsets, index);
         (&geom).try_into()
     }
 }
@@ -344,7 +347,7 @@ impl<const D: usize> IntoArrow for LineStringArray<D> {
     fn into_arrow(self) -> Self::ArrowArray {
         let vertices_field = self.vertices_field();
         let validity = self.validity;
-        let coord_array = self.coords.into_array_ref();
+        let coord_array = self.coords.into_arrow();
         GenericListArray::new(vertices_field, self.geom_offsets, coord_array, validity)
     }
 }
@@ -353,7 +356,7 @@ impl<const D: usize> TryFrom<&GenericListArray<i32>> for LineStringArray<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: &GenericListArray<i32>) -> Result<Self> {
-        let coords: CoordBuffer<D> = value.values().as_ref().try_into()?;
+        let coords: CoordBuffer = value.values().as_ref().try_into()?;
         let geom_offsets = value.offsets();
         let validity = value.nulls();
 
@@ -370,7 +373,7 @@ impl<const D: usize> TryFrom<&GenericListArray<i64>> for LineStringArray<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: &GenericListArray<i64>) -> Result<Self> {
-        let coords: CoordBuffer<D> = value.values().as_ref().try_into()?;
+        let coords: CoordBuffer = value.values().as_ref().try_into()?;
         let geom_offsets = offsets_buffer_i64_to_i32(value.offsets())?;
         let validity = value.nulls();
 

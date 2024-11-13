@@ -3,10 +3,10 @@ use crate::scalar::Coord;
 use geo_traits::CoordTrait;
 use geos::{CoordDimensions, CoordSeq};
 
-impl<'a, const D: usize> TryFrom<&'a Coord<'_, D>> for geos::CoordSeq {
+impl<'a> TryFrom<&'a Coord<'_>> for geos::CoordSeq {
     type Error = geos::Error;
 
-    fn try_from(point: &'a Coord<'_, D>) -> std::result::Result<geos::CoordSeq, geos::Error> {
+    fn try_from(point: &'a Coord<'_>) -> std::result::Result<geos::CoordSeq, geos::Error> {
         use geo_traits::Dimensions;
 
         match point.dim() {
@@ -30,13 +30,14 @@ impl<'a, const D: usize> TryFrom<&'a Coord<'_, D>> for geos::CoordSeq {
     }
 }
 
-impl<const D: usize> TryFrom<CoordBuffer<D>> for CoordSeq {
+impl TryFrom<CoordBuffer> for CoordSeq {
     type Error = geos::Error;
 
-    fn try_from(value: CoordBuffer<D>) -> std::result::Result<Self, geos::Error> {
-        match value {
-            CoordBuffer::Separated(cb) => cb.try_into(),
-            CoordBuffer::Interleaved(cb) => cb.try_into(),
-        }
+    fn try_from(value: CoordBuffer) -> std::result::Result<Self, geos::Error> {
+        todo!()
+        // match value {
+        //     CoordBuffer::Separated(cb) => cb.try_into(),
+        //     CoordBuffer::Interleaved(cb) => cb.try_into(),
+        // }
     }
 }

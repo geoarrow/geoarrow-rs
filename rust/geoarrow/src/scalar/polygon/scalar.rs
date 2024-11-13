@@ -12,7 +12,7 @@ use rstar::{RTreeObject, AABB};
 /// An Arrow equivalent of a Polygon
 #[derive(Debug, Clone)]
 pub struct Polygon<'a, const D: usize> {
-    pub(crate) coords: &'a CoordBuffer<D>,
+    pub(crate) coords: &'a CoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
     pub(crate) geom_offsets: &'a OffsetBuffer<i32>,
@@ -27,7 +27,7 @@ pub struct Polygon<'a, const D: usize> {
 
 impl<'a, const D: usize> Polygon<'a, D> {
     pub fn new(
-        coords: &'a CoordBuffer<D>,
+        coords: &'a CoordBuffer,
         geom_offsets: &'a OffsetBuffer<i32>,
         ring_offsets: &'a OffsetBuffer<i32>,
         geom_index: usize,
@@ -42,8 +42,8 @@ impl<'a, const D: usize> Polygon<'a, D> {
         }
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer<D>, OffsetBuffer<i32>, OffsetBuffer<i32>, usize) {
-        let arr = PolygonArray::new(
+    pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, OffsetBuffer<i32>, usize) {
+        let arr = PolygonArray::<D>::new(
             self.coords.clone(),
             self.geom_offsets.clone(),
             self.ring_offsets.clone(),

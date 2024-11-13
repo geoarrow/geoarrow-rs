@@ -10,7 +10,7 @@ use geo_traits::{CoordTrait, PointTrait};
 /// Converting an [`SeparatedCoordBufferBuilder`] into a [`SeparatedCoordBuffer`] is `O(1)`.
 #[derive(Debug, Clone)]
 pub struct SeparatedCoordBufferBuilder<const D: usize> {
-    buffers: [Vec<f64>; D],
+    pub(crate) buffers: [Vec<f64>; D],
 }
 
 impl<const D: usize> SeparatedCoordBufferBuilder<D> {

@@ -12,7 +12,7 @@ use rstar::{RTreeObject, AABB};
 /// An Arrow equivalent of a MultiPolygon
 #[derive(Debug, Clone)]
 pub struct MultiPolygon<'a, const D: usize> {
-    pub(crate) coords: &'a CoordBuffer<D>,
+    pub(crate) coords: &'a CoordBuffer,
 
     /// Offsets into the polygon array where each geometry starts
     pub(crate) geom_offsets: &'a OffsetBuffer<i32>,
@@ -30,7 +30,7 @@ pub struct MultiPolygon<'a, const D: usize> {
 
 impl<'a, const D: usize> MultiPolygon<'a, D> {
     pub fn new(
-        coords: &'a CoordBuffer<D>,
+        coords: &'a CoordBuffer,
         geom_offsets: &'a OffsetBuffer<i32>,
         polygon_offsets: &'a OffsetBuffer<i32>,
         ring_offsets: &'a OffsetBuffer<i32>,
@@ -50,13 +50,13 @@ impl<'a, const D: usize> MultiPolygon<'a, D> {
     pub fn into_owned_inner(
         self,
     ) -> (
-        CoordBuffer<D>,
+        CoordBuffer,
         OffsetBuffer<i32>,
         OffsetBuffer<i32>,
         OffsetBuffer<i32>,
         usize,
     ) {
-        let arr = MultiPolygonArray::new(
+        let arr = MultiPolygonArray::<D>::new(
             self.coords.clone(),
             self.geom_offsets.clone(),
             self.polygon_offsets.clone(),

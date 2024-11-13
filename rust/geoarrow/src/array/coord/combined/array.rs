@@ -29,20 +29,6 @@ pub enum CoordBuffer<const D: usize> {
 }
 
 impl<const D: usize> CoordBuffer<D> {
-    pub fn get_x(&self, i: usize) -> f64 {
-        match self {
-            CoordBuffer::Interleaved(c) => c.get_x(i),
-            CoordBuffer::Separated(c) => c.get_x(i),
-        }
-    }
-
-    pub fn get_y(&self, i: usize) -> f64 {
-        match self {
-            CoordBuffer::Interleaved(c) => c.get_y(i),
-            CoordBuffer::Separated(c) => c.get_y(i),
-        }
-    }
-
     pub fn slice(&self, offset: usize, length: usize) -> Self {
         match self {
             CoordBuffer::Interleaved(c) => CoordBuffer::Interleaved(c.slice(offset, length)),

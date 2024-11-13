@@ -169,7 +169,7 @@ impl<const D: usize> NativeArray for RectArray<D> {
 }
 
 impl<const D: usize> GeometryArraySelfMethods<D> for RectArray<D> {
-    fn with_coords(self, _coords: CoordBuffer<D>) -> Self {
+    fn with_coords(self, _coords: CoordBuffer) -> Self {
         unimplemented!()
     }
 

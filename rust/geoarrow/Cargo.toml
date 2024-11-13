@@ -129,6 +129,11 @@ harness = false
 required-features = ["flatgeobuf"]
 
 [[bench]]
+name = "total_bounds"
+harness = false
+required-features = ["flatgeobuf"]
+
+[[bench]]
 name = "from_geo"
 harness = false
 

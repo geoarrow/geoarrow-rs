@@ -3,6 +3,7 @@ use core::f64;
 use crate::array::{
     CoordBuffer, CoordType, InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder,
 };
+use arrow_buffer::ScalarBuffer;
 use geo_traits::{CoordTrait, PointTrait};
 
 /// The GeoArrow equivalent to `Vec<Coord>`: a mutable collection of coordinates.
@@ -126,11 +127,20 @@ impl CoordBufferBuilder<2> {
     }
 }
 
-impl<const D: usize> From<CoordBufferBuilder<D>> for CoordBuffer<D> {
+impl<const D: usize> From<CoordBufferBuilder<D>> for CoordBuffer {
     fn from(value: CoordBufferBuilder<D>) -> Self {
         match value {
-            CoordBufferBuilder::Interleaved(cb) => CoordBuffer::Interleaved(cb.into()),
-            CoordBufferBuilder::Separated(cb) => CoordBuffer::Separated(cb.into()),
+            CoordBufferBuilder::Interleaved(cb) => {
+                CoordBuffer::new_interleaved(cb.coords.into(), D.try_into().unwrap()).unwrap()
+            }
+            CoordBufferBuilder::Separated(cb) => {
+                let coord_buffers = cb
+                    .buffers
+                    .into_iter()
+                    .map(|buf| ScalarBuffer::from(buf))
+                    .collect::<Vec<_>>();
+                CoordBuffer::new_separated(&coord_buffers, D.try_into().unwrap()).unwrap()
+            }
         }
     }
 }

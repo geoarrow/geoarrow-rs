@@ -32,7 +32,7 @@ pub struct MultiPointArray<const D: usize> {
 
     pub(crate) metadata: Arc<ArrayMetadata>,
 
-    pub(crate) coords: CoordBuffer<D>,
+    pub(crate) coords: CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
     pub(crate) geom_offsets: OffsetBuffer<i32>,
@@ -41,8 +41,8 @@ pub struct MultiPointArray<const D: usize> {
     pub(crate) validity: Option<NullBuffer>,
 }
 
-pub(super) fn check<const D: usize>(
-    coords: &CoordBuffer<D>,
+pub(super) fn check(
+    coords: &CoordBuffer,
     validity_len: Option<usize>,
     geom_offsets: &OffsetBuffer<i32>,
 ) -> Result<()> {
@@ -73,7 +73,7 @@ impl<const D: usize> MultiPointArray<D> {
     /// - if the validity is not `None` and its length is different from the number of geometries
     /// - if the largest geometry offset does not match the number of coordinates
     pub fn new(
-        coords: CoordBuffer<D>,
+        coords: CoordBuffer,
         geom_offsets: OffsetBuffer<i32>,
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
@@ -92,7 +92,7 @@ impl<const D: usize> MultiPointArray<D> {
     /// - if the validity is not `None` and its length is different from the number of geometries
     /// - if the geometry offsets do not match the number of coordinates
     pub fn try_new(
-        coords: CoordBuffer<D>,
+        coords: CoordBuffer,
         geom_offsets: OffsetBuffer<i32>,
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
@@ -115,11 +115,11 @@ impl<const D: usize> MultiPointArray<D> {
         Field::new("points", self.coords.storage_type(), false).into()
     }
 
-    pub fn coords(&self) -> &CoordBuffer<D> {
+    pub fn coords(&self) -> &CoordBuffer {
         &self.coords
     }
 
-    pub fn into_inner(self) -> (CoordBuffer<D>, OffsetBuffer<i32>, Option<NullBuffer>) {
+    pub fn into_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, Option<NullBuffer>) {
         (self.coords, self.geom_offsets, self.validity)
     }
 
@@ -284,7 +284,7 @@ impl<const D: usize> NativeArray for MultiPointArray<D> {
 }
 
 impl<const D: usize> GeometryArraySelfMethods<D> for MultiPointArray<D> {
-    fn with_coords(self, coords: CoordBuffer<D>) -> Self {
+    fn with_coords(self, coords: CoordBuffer) -> Self {
         assert_eq!(coords.len(), self.coords.len());
         Self::new(coords, self.geom_offsets, self.validity, self.metadata)
     }
@@ -311,7 +311,7 @@ impl<'a, const D: usize> crate::trait_::NativeGEOSGeometryAccessor<'a> for Multi
         &'a self,
         index: usize,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
-        let geom = MultiPoint::new(&self.coords, &self.geom_offsets, index);
+        let geom = MultiPoint::<D>::new(&self.coords, &self.geom_offsets, index);
         (&geom).try_into()
     }
 }
@@ -340,7 +340,7 @@ impl<const D: usize> TryFrom<&GenericListArray<i32>> for MultiPointArray<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: &GenericListArray<i32>) -> Result<Self> {
-        let coords: CoordBuffer<D> = value.values().as_ref().try_into()?;
+        let coords: CoordBuffer = value.values().as_ref().try_into()?;
         let geom_offsets = value.offsets();
         let validity = value.nulls();
 
@@ -357,7 +357,7 @@ impl<const D: usize> TryFrom<&GenericListArray<i64>> for MultiPointArray<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: &GenericListArray<i64>) -> Result<Self> {
-        let coords: CoordBuffer<D> = value.values().as_ref().try_into()?;
+        let coords: CoordBuffer = value.values().as_ref().try_into()?;
         let geom_offsets = offsets_buffer_i64_to_i32(value.offsets())?;
         let validity = value.nulls();
 
