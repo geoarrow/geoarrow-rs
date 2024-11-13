@@ -55,12 +55,13 @@ mod test {
         assert_eq!(orig_arr, new_arr);
     }
 
-    // // TODO: parsing WKBArray<i64> into LineStringArray<i32> not yet implemented
-    // fn round_trip_to_i64() {
-    //     let orig_arr: LineStringArray<i32> = vec![Some(ls0()), Some(ls1()), None].into();
-    //     let wkb_arr: WKBArray<i64> = (&orig_arr).into();
-    //     let new_arr: LineStringArray<i32> = wkb_arr.try_into().unwrap();
+    // TODO: parsing WKBArray<i64> into LineStringArray<i32> not yet implemented
+    #[test]
+    fn round_trip_to_i64() {
+        let orig_arr: LineStringArray<2> = vec![Some(ls0()), Some(ls1()), None].into();
+        let wkb_arr: WKBArray<i64> = (&orig_arr).into();
+        let new_arr: LineStringArray<2> = wkb_arr.try_into().unwrap();
 
-    //     assert_eq!(orig_arr, new_arr);
-    // }
+        assert_eq!(orig_arr, new_arr);
+    }
 }

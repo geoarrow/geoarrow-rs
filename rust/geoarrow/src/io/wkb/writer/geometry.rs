@@ -42,17 +42,43 @@ impl<O: OffsetSizeTrait, const D: usize> From<&MixedGeometryArray<D>> for WKBArr
     }
 }
 
-// #[cfg(test)]
-// mod test {
-//     use super::*;
-//     use crate::test::multilinestring::{ml0, ml1};
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::test::multilinestring::{ml0, ml1};
+    use crate::test::point::{p0, p1};
 
-//     #[test]
-//     fn round_trip() {
-//         let orig_arr: MultiLineStringArray<i32> = vec![Some(ml0()), Some(ml1()), None].into();
-//         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-//         let new_arr: MultiLineStringArray<i32> = wkb_arr.try_into().unwrap();
+    #[test]
+    fn round_trip() {
+        let orig_arr: MixedGeometryArray<2> = vec![
+            Some(geo::Geometry::MultiLineString(ml0())),
+            Some(geo::Geometry::MultiLineString(ml1())),
+            Some(geo::Geometry::Point(p0())),
+            Some(geo::Geometry::Point(p1())),
+        ]
+        .try_into()
+        .unwrap();
+        let wkb_arr: WKBArray<i32> = (&orig_arr).into();
+        let new_arr: MixedGeometryArray<2> = wkb_arr.try_into().unwrap();
 
-//         assert_eq!(orig_arr, new_arr);
-//     }
-// }
+        assert_eq!(orig_arr, new_arr);
+    }
+
+    #[ignore = "None not allowed in geometry array."]
+    #[test]
+    fn round_trip_null() {
+        let orig_arr: MixedGeometryArray<2> = vec![
+            Some(geo::Geometry::MultiLineString(ml0())),
+            Some(geo::Geometry::MultiLineString(ml1())),
+            Some(geo::Geometry::Point(p0())),
+            Some(geo::Geometry::Point(p1())),
+            None,
+        ]
+        .try_into()
+        .unwrap();
+        let wkb_arr: WKBArray<i32> = (&orig_arr).into();
+        let new_arr: MixedGeometryArray<2> = wkb_arr.try_into().unwrap();
+
+        assert_eq!(orig_arr, new_arr);
+    }
+}
