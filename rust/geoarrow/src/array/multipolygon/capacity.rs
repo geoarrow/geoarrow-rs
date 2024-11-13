@@ -1,7 +1,8 @@
 use std::ops::{Add, AddAssign};
 
 use crate::array::polygon::PolygonCapacity;
-use geo_traits::{LineStringTrait, MultiPolygonTrait, PolygonTrait};
+use crate::error::{GeoArrowError, Result};
+use geo_traits::{GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait};
 
 /// A counter for the buffer sizes of a [`MultiPolygonArray`][crate::array::MultiPolygonArray].
 ///
@@ -109,6 +110,19 @@ impl MultiPolygonCapacity {
         }
     }
 
+    pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait>) -> Result<()> {
+        if let Some(geom) = value {
+            match geom.as_type() {
+                GeometryType::Polygon(g) => self.add_polygon(Some(g)),
+                GeometryType::MultiPolygon(g) => self.add_multi_polygon(Some(g)),
+                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+            }
+        } else {
+            self.geom_capacity += 1;
+        };
+        Ok(())
+    }
+
     pub fn add_polygon_capacity(&mut self, capacity: PolygonCapacity) {
         // NOTE: I think this will overallocate if there are null values?
         // Because it assumes that every geometry has exactly one polygon, which won't be true if
@@ -127,6 +141,16 @@ impl MultiPolygonCapacity {
             counter.add_multi_polygon(maybe_multi_polygon);
         }
         counter
+    }
+
+    pub fn from_geometries<'a>(
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+    ) -> Result<Self> {
+        let mut counter = Self::new_empty();
+        for g in geoms.into_iter() {
+            counter.add_geometry(g)?;
+        }
+        Ok(counter)
     }
 
     /// The number of bytes an array with this capacity would occupy.

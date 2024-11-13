@@ -1,61 +1,13 @@
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use arrow_buffer::Buffer;
+use wkb::writer::{geometry_wkb_size, write_geometry};
+use wkb::Endianness;
 
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{MixedGeometryArray, WKBArray};
-use crate::error::Result;
-use crate::io::wkb::writer::{
-    geometry_collection_wkb_size, line_string_wkb_size, multi_line_string_wkb_size,
-    multi_point_wkb_size, multi_polygon_wkb_size, point_wkb_size, polygon_wkb_size,
-    write_line_string_as_wkb, write_multi_line_string_as_wkb, write_multi_point_as_wkb,
-    write_multi_polygon_as_wkb, write_point_as_wkb, write_polygon_as_wkb,
-};
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
-use geo_traits::{GeometryTrait, GeometryType};
-use std::io::{Cursor, Write};
-
-/// The byte length of a Geometry
-pub fn geometry_wkb_size(geom: &impl GeometryTrait) -> usize {
-    use GeometryType::*;
-    match geom.as_type() {
-        Point(_) => point_wkb_size(geom.dim()),
-        LineString(ls) => line_string_wkb_size(ls),
-        Polygon(p) => polygon_wkb_size(p),
-        MultiPoint(mp) => multi_point_wkb_size(mp),
-        MultiLineString(ml) => multi_line_string_wkb_size(ml),
-        MultiPolygon(mp) => multi_polygon_wkb_size(mp),
-        GeometryCollection(gc) => geometry_collection_wkb_size(gc),
-        Rect(_) => todo!(),
-        Triangle(_) => todo!(),
-        Line(_) => todo!(),
-    }
-}
-
-/// Write a Geometry to a Writer encoded as WKB
-pub fn write_geometry_as_wkb<W: Write>(
-    writer: W,
-    geom: &impl GeometryTrait<T = f64>,
-) -> Result<()> {
-    use GeometryType::*;
-    match geom.as_type() {
-        Point(p) => write_point_as_wkb(writer, p),
-        LineString(ls) => write_line_string_as_wkb(writer, ls),
-        Polygon(p) => write_polygon_as_wkb(writer, p),
-        MultiPoint(mp) => write_multi_point_as_wkb(writer, mp),
-        MultiLineString(ml) => write_multi_line_string_as_wkb(writer, ml),
-        MultiPolygon(mp) => write_multi_polygon_as_wkb(writer, mp),
-        GeometryCollection(_gc) => {
-            todo!()
-            // error[E0275]: overflow evaluating the requirement `&mut std::io::Cursor<std::vec::Vec<u8>>: std::io::Write`
-            // https://stackoverflow.com/a/31197781/7319250
-            // write_geometry_collection_as_wkb(writer, gc)
-        }
-        Rect(_) => todo!(),
-        Triangle(_) => todo!(),
-        Line(_) => todo!(),
-    }
-}
+use std::io::Cursor;
 
 impl<O: OffsetSizeTrait, const D: usize> From<&MixedGeometryArray<D>> for WKBArray<O> {
     fn from(value: &MixedGeometryArray<D>) -> Self {
@@ -75,7 +27,7 @@ impl<O: OffsetSizeTrait, const D: usize> From<&MixedGeometryArray<D>> for WKBArr
             let mut writer = Cursor::new(values);
 
             for geom in value.iter().flatten() {
-                write_geometry_as_wkb(&mut writer, &geom).unwrap();
+                write_geometry(&mut writer, &geom, Endianness::LittleEndian).unwrap();
             }
 
             writer.into_inner()
@@ -90,17 +42,43 @@ impl<O: OffsetSizeTrait, const D: usize> From<&MixedGeometryArray<D>> for WKBArr
     }
 }
 
-// #[cfg(test)]
-// mod test {
-//     use super::*;
-//     use crate::test::multilinestring::{ml0, ml1};
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::test::multilinestring::{ml0, ml1};
+    use crate::test::point::{p0, p1};
 
-//     #[test]
-//     fn round_trip() {
-//         let orig_arr: MultiLineStringArray<i32> = vec![Some(ml0()), Some(ml1()), None].into();
-//         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-//         let new_arr: MultiLineStringArray<i32> = wkb_arr.try_into().unwrap();
+    #[test]
+    fn round_trip() {
+        let orig_arr: MixedGeometryArray<2> = vec![
+            Some(geo::Geometry::MultiLineString(ml0())),
+            Some(geo::Geometry::MultiLineString(ml1())),
+            Some(geo::Geometry::Point(p0())),
+            Some(geo::Geometry::Point(p1())),
+        ]
+        .try_into()
+        .unwrap();
+        let wkb_arr: WKBArray<i32> = (&orig_arr).into();
+        let new_arr: MixedGeometryArray<2> = wkb_arr.try_into().unwrap();
 
-//         assert_eq!(orig_arr, new_arr);
-//     }
-// }
+        assert_eq!(orig_arr, new_arr);
+    }
+
+    #[ignore = "None not allowed in geometry array."]
+    #[test]
+    fn round_trip_null() {
+        let orig_arr: MixedGeometryArray<2> = vec![
+            Some(geo::Geometry::MultiLineString(ml0())),
+            Some(geo::Geometry::MultiLineString(ml1())),
+            Some(geo::Geometry::Point(p0())),
+            Some(geo::Geometry::Point(p1())),
+            None,
+        ]
+        .try_into()
+        .unwrap();
+        let wkb_arr: WKBArray<i32> = (&orig_arr).into();
+        let new_arr: MixedGeometryArray<2> = wkb_arr.try_into().unwrap();
+
+        assert_eq!(orig_arr, new_arr);
+    }
+}

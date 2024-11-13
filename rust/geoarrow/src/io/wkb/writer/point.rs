@@ -1,64 +1,12 @@
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{PointArray, WKBArray};
-use crate::error::Result;
-use crate::io::wkb::common::WKBType;
-use crate::io::wkb::reader::Endianness;
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use arrow_buffer::Buffer;
-use byteorder::{LittleEndian, WriteBytesExt};
-use core::f64;
-use geo_traits::{CoordTrait, PointTrait};
-use std::io::{Cursor, Write};
-
-/// The byte length of a WKBPoint
-pub fn point_wkb_size(dim: geo_traits::Dimensions) -> usize {
-    let header = 1 + 4;
-    let coords = dim.size() * 8;
-    header + coords
-}
-
-/// The byte length of a WKBPoint
-pub fn point_wkb_size_const<const D: usize>() -> usize {
-    let header = 1 + 4;
-    let coords = D * 8;
-    header + coords
-}
-
-/// Write a Point geometry to a Writer encoded as WKB
-pub fn write_point_as_wkb<W: Write>(mut writer: W, geom: &impl PointTrait<T = f64>) -> Result<()> {
-    use geo_traits::Dimensions;
-
-    // Byte order
-    writer.write_u8(Endianness::LittleEndian.into())?;
-
-    match geom.dim() {
-        Dimensions::Xy | Dimensions::Unknown(2) => {
-            writer.write_u32::<LittleEndian>(WKBType::Point.into())?;
-        }
-        Dimensions::Xyz | Dimensions::Unknown(3) => {
-            writer.write_u32::<LittleEndian>(WKBType::PointZ.into())?;
-        }
-        _ => panic!(),
-    }
-
-    if let Some(coord) = geom.coord() {
-        writer.write_f64::<LittleEndian>(coord.x())?;
-        writer.write_f64::<LittleEndian>(coord.y())?;
-
-        if coord.dim().size() == 3 {
-            writer.write_f64::<LittleEndian>(coord.nth_unchecked(2))?;
-        }
-    } else {
-        // Write POINT EMPTY as f64::NAN values
-        for _ in 0..geom.dim().size() {
-            writer.write_f64::<LittleEndian>(f64::NAN)?;
-        }
-    }
-
-    Ok(())
-}
+use std::io::Cursor;
+use wkb::writer::{point_wkb_size, write_point};
+use wkb::Endianness;
 
 impl<O: OffsetSizeTrait, const D: usize> From<&PointArray<D>> for WKBArray<O> {
     fn from(value: &PointArray<D>) -> Self {
@@ -68,7 +16,7 @@ impl<O: OffsetSizeTrait, const D: usize> From<&PointArray<D>> for WKBArray<O> {
 
         let validity = value.nulls().cloned();
         // only allocate space for a WKBPoint for non-null items
-        let values_len = non_null_count * point_wkb_size_const::<D>();
+        let values_len = non_null_count * point_wkb_size(geo_traits::Dimensions::Unknown(D));
         let mut offsets: OffsetsBuilder<O> = OffsetsBuilder::with_capacity(value.len());
 
         let values = {
@@ -77,8 +25,10 @@ impl<O: OffsetSizeTrait, const D: usize> From<&PointArray<D>> for WKBArray<O> {
 
             for maybe_geom in value.iter() {
                 if let Some(geom) = maybe_geom {
-                    write_point_as_wkb(&mut writer, &geom).unwrap();
-                    offsets.try_push_usize(point_wkb_size_const::<D>()).unwrap();
+                    write_point(&mut writer, &geom, Endianness::LittleEndian).unwrap();
+                    offsets
+                        .try_push_usize(point_wkb_size(geo_traits::Dimensions::Unknown(D)))
+                        .unwrap();
                 } else {
                     offsets.extend_constant(1);
                 }

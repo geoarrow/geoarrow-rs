@@ -1,56 +1,12 @@
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{MultiPolygonArray, WKBArray};
-use crate::error::Result;
-use crate::io::wkb::common::WKBType;
-use crate::io::wkb::reader::Endianness;
-use crate::io::wkb::writer::polygon::{polygon_wkb_size, write_polygon_as_wkb};
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use arrow_buffer::Buffer;
-use byteorder::{LittleEndian, WriteBytesExt};
-use geo_traits::MultiPolygonTrait;
-use std::io::{Cursor, Write};
-
-/// The byte length of a WKBMultiPolygon
-pub fn multi_polygon_wkb_size(geom: &impl MultiPolygonTrait) -> usize {
-    let mut sum = 1 + 4 + 4;
-    for polygon in geom.polygons() {
-        sum += polygon_wkb_size(&polygon);
-    }
-
-    sum
-}
-
-/// Write a MultiPolygon geometry to a Writer encoded as WKB
-pub fn write_multi_polygon_as_wkb<W: Write>(
-    mut writer: W,
-    geom: &impl MultiPolygonTrait<T = f64>,
-) -> Result<()> {
-    use geo_traits::Dimensions;
-
-    // Byte order
-    writer.write_u8(Endianness::LittleEndian.into())?;
-
-    match geom.dim() {
-        Dimensions::Xy | Dimensions::Unknown(2) => {
-            writer.write_u32::<LittleEndian>(WKBType::MultiPolygon.into())?;
-        }
-        Dimensions::Xyz | Dimensions::Unknown(3) => {
-            writer.write_u32::<LittleEndian>(WKBType::MultiPolygonZ.into())?;
-        }
-        _ => panic!(),
-    }
-
-    // numPolygons
-    writer.write_u32::<LittleEndian>(geom.num_polygons().try_into().unwrap())?;
-
-    for polygon in geom.polygons() {
-        write_polygon_as_wkb(&mut writer, &polygon)?;
-    }
-
-    Ok(())
-}
+use std::io::Cursor;
+use wkb::writer::{multi_polygon_wkb_size, write_multi_polygon};
+use wkb::Endianness;
 
 impl<O: OffsetSizeTrait, const D: usize> From<&MultiPolygonArray<D>> for WKBArray<O> {
     fn from(value: &MultiPolygonArray<D>) -> Self {
@@ -72,7 +28,7 @@ impl<O: OffsetSizeTrait, const D: usize> From<&MultiPolygonArray<D>> for WKBArra
             let mut writer = Cursor::new(values);
 
             for geom in value.iter().flatten() {
-                write_multi_polygon_as_wkb(&mut writer, &geom).unwrap();
+                write_multi_polygon(&mut writer, &geom, Endianness::LittleEndian).unwrap();
             }
 
             writer.into_inner()

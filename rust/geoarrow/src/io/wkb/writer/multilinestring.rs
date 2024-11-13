@@ -1,56 +1,12 @@
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{MultiLineStringArray, WKBArray};
-use crate::error::Result;
-use crate::io::wkb::common::WKBType;
-use crate::io::wkb::reader::Endianness;
-use crate::io::wkb::writer::linestring::{line_string_wkb_size, write_line_string_as_wkb};
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use arrow_buffer::Buffer;
-use byteorder::{LittleEndian, WriteBytesExt};
-use geo_traits::MultiLineStringTrait;
-use std::io::{Cursor, Write};
-
-/// The byte length of a WKBMultiLineString
-pub fn multi_line_string_wkb_size(geom: &impl MultiLineStringTrait) -> usize {
-    let mut sum = 1 + 4 + 4;
-    for line_string in geom.line_strings() {
-        sum += line_string_wkb_size(&line_string);
-    }
-
-    sum
-}
-
-/// Write a MultiLineString geometry to a Writer encoded as WKB
-pub fn write_multi_line_string_as_wkb<W: Write>(
-    mut writer: W,
-    geom: &impl MultiLineStringTrait<T = f64>,
-) -> Result<()> {
-    use geo_traits::Dimensions;
-
-    // Byte order
-    writer.write_u8(Endianness::LittleEndian.into())?;
-
-    match geom.dim() {
-        Dimensions::Xy | Dimensions::Unknown(2) => {
-            writer.write_u32::<LittleEndian>(WKBType::MultiLineString.into())?;
-        }
-        Dimensions::Xyz | Dimensions::Unknown(3) => {
-            writer.write_u32::<LittleEndian>(WKBType::MultiLineStringZ.into())?;
-        }
-        _ => panic!(),
-    }
-
-    // numPoints
-    writer.write_u32::<LittleEndian>(geom.num_line_strings().try_into().unwrap())?;
-
-    for line_string in geom.line_strings() {
-        write_line_string_as_wkb(&mut writer, &line_string)?;
-    }
-
-    Ok(())
-}
+use std::io::Cursor;
+use wkb::writer::{multi_line_string_wkb_size, write_multi_line_string};
+use wkb::Endianness;
 
 impl<O: OffsetSizeTrait, const D: usize> From<&MultiLineStringArray<D>> for WKBArray<O> {
     fn from(value: &MultiLineStringArray<D>) -> Self {
@@ -72,7 +28,7 @@ impl<O: OffsetSizeTrait, const D: usize> From<&MultiLineStringArray<D>> for WKBA
             let mut writer = Cursor::new(values);
 
             for geom in value.iter().flatten() {
-                write_multi_line_string_as_wkb(&mut writer, &geom).unwrap();
+                write_multi_line_string(&mut writer, &geom, Endianness::LittleEndian).unwrap();
             }
 
             writer.into_inner()

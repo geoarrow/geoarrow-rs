@@ -20,11 +20,7 @@ from geoarrow.rust.core import NativeArray
 from pyproj import CRS
 
 from .enums import GeoParquetEncoding
-from .types import (
-    BboxPaths,
-    GeoParquetEncodingT,
-    IntFloat,
-)
+from .types import BboxCovering, GeoParquetEncodingT
 
 class ParquetFile:
     def __init__(self, path: str, store: ObjectStore) -> None:
@@ -59,7 +55,7 @@ class ParquetFile:
             CRS
         """
     def row_group_bounds(
-        self, row_group_idx: int, bbox_paths: BboxPaths | None = None
+        self, row_group_idx: int, bbox_paths: BboxCovering | None = None
     ) -> List[float]:
         """Get the bounds of a single row group.
 
@@ -70,7 +66,7 @@ class ParquetFile:
         Returns:
             The bounds of a single row group.
         """
-    def row_groups_bounds(self, bbox_paths: BboxPaths | None = None) -> NativeArray:
+    def row_groups_bounds(self, bbox_paths: BboxCovering | None = None) -> NativeArray:
         """
         Get the bounds of all row groups.
 
@@ -98,8 +94,8 @@ class ParquetFile:
         batch_size: int | None = None,
         limit: int | None = None,
         offset: int | None = None,
-        bbox: Sequence[IntFloat] | None = None,
-        bbox_paths: BboxPaths | None = None,
+        bbox: Sequence[int | float] | None = None,
+        bbox_paths: BboxCovering | None = None,
     ) -> Table:
         """Perform an async read with the given options
 
@@ -119,8 +115,8 @@ class ParquetFile:
         batch_size: int | None = None,
         limit: int | None = None,
         offset: int | None = None,
-        bbox: Sequence[IntFloat] | None = None,
-        bbox_paths: BboxPaths | None = None,
+        bbox: Sequence[int | float] | None = None,
+        bbox_paths: BboxCovering | None = None,
     ) -> Table:
         """Perform a sync read with the given options
 
@@ -173,8 +169,8 @@ class ParquetDataset:
         batch_size: int | None = None,
         limit: int | None = None,
         offset: int | None = None,
-        bbox: Sequence[IntFloat] | None = None,
-        bbox_paths: BboxPaths | None = None,
+        bbox: Sequence[int | float] | None = None,
+        bbox_paths: BboxCovering | None = None,
     ) -> Table:
         """Perform an async read with the given options
 
@@ -195,8 +191,8 @@ class ParquetDataset:
         batch_size: int | None = None,
         limit: int | None = None,
         offset: int | None = None,
-        bbox: Sequence[IntFloat] | None = None,
-        bbox_paths: BboxPaths | None = None,
+        bbox: Sequence[int | float] | None = None,
+        bbox_paths: BboxCovering | None = None,
     ) -> Table:
         """Perform a sync read with the given options
 
@@ -528,6 +524,15 @@ def read_shapefile(
 ) -> Table:
     """
     Read a Shapefile into an Arrow Table.
+
+    The returned Arrow table will have geometry information in native GeoArrow encoding.
+
+    !!! note
+        Coordinate Reference System information is not currently read from the Shapefile.
+
+    Args:
+        shp_file: the path to the `.shp` file or the `.shp` file as a Python file object in binary read mode.
+        dbf_file: the path to the `.dbf` file or the `.dbf` file as a Python file object in binary read mode.
     """
 
 def write_csv(table: ArrowStreamExportable, file: str | Path | BinaryIO) -> None:
