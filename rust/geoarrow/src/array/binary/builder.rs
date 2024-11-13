@@ -3,18 +3,19 @@ use std::sync::Arc;
 use crate::array::binary::WKBCapacity;
 use crate::array::metadata::ArrayMetadata;
 use crate::error::{GeoArrowError, Result};
-use crate::io::wkb::writer::{
-    geometry_collection_wkb_size, line_string_wkb_size, multi_line_string_wkb_size,
-    multi_point_wkb_size, multi_polygon_wkb_size, point_wkb_size, polygon_wkb_size,
-    write_geometry_collection_as_wkb, write_line_string_as_wkb, write_multi_line_string_as_wkb,
-    write_multi_point_as_wkb, write_multi_polygon_as_wkb, write_point_as_wkb, write_polygon_as_wkb,
-};
 use arrow_array::builder::GenericBinaryBuilder;
 use arrow_array::OffsetSizeTrait;
 use geo_traits::{
     GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
     MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait,
 };
+use wkb::writer::{
+    geometry_collection_wkb_size, line_string_wkb_size, multi_line_string_wkb_size,
+    multi_point_wkb_size, multi_polygon_wkb_size, point_wkb_size, polygon_wkb_size,
+    write_geometry_collection, write_line_string, write_multi_line_string, write_multi_point,
+    write_multi_polygon, write_point, write_polygon,
+};
+use wkb::Endianness;
 
 use super::array::WKBArray;
 
@@ -82,7 +83,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         if let Some(geom) = geom {
             // TODO: figure out how to write directly to the underlying vec without a copy
             let mut buf = Vec::with_capacity(point_wkb_size(geom.dim()));
-            write_point_as_wkb(&mut buf, geom).unwrap();
+            write_point(&mut buf, geom, Endianness::LittleEndian).unwrap();
             self.0.append_value(&buf)
         } else {
             self.0.append_null();
@@ -95,7 +96,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         if let Some(geom) = geom {
             // TODO: figure out how to write directly to the underlying vec without a copy
             let mut buf = Vec::with_capacity(line_string_wkb_size(geom));
-            write_line_string_as_wkb(&mut buf, geom).unwrap();
+            write_line_string(&mut buf, geom, Endianness::LittleEndian).unwrap();
             self.0.append_value(&buf)
         } else {
             self.0.append_null()
@@ -108,7 +109,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         if let Some(geom) = geom {
             // TODO: figure out how to write directly to the underlying vec without a copy
             let mut buf = Vec::with_capacity(polygon_wkb_size(geom));
-            write_polygon_as_wkb(&mut buf, geom).unwrap();
+            write_polygon(&mut buf, geom, Endianness::LittleEndian).unwrap();
             self.0.append_value(&buf)
         } else {
             self.0.append_null()
@@ -121,7 +122,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         if let Some(geom) = geom {
             // TODO: figure out how to write directly to the underlying vec without a copy
             let mut buf = Vec::with_capacity(multi_point_wkb_size(geom));
-            write_multi_point_as_wkb(&mut buf, geom).unwrap();
+            write_multi_point(&mut buf, geom, Endianness::LittleEndian).unwrap();
             self.0.append_value(&buf)
         } else {
             self.0.append_null()
@@ -134,7 +135,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         if let Some(geom) = geom {
             // TODO: figure out how to write directly to the underlying vec without a copy
             let mut buf = Vec::with_capacity(multi_line_string_wkb_size(geom));
-            write_multi_line_string_as_wkb(&mut buf, geom).unwrap();
+            write_multi_line_string(&mut buf, geom, Endianness::LittleEndian).unwrap();
             self.0.append_value(&buf)
         } else {
             self.0.append_null()
@@ -147,7 +148,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         if let Some(geom) = geom {
             // TODO: figure out how to write directly to the underlying vec without a copy
             let mut buf = Vec::with_capacity(multi_polygon_wkb_size(geom));
-            write_multi_polygon_as_wkb(&mut buf, geom).unwrap();
+            write_multi_polygon(&mut buf, geom, Endianness::LittleEndian).unwrap();
             self.0.append_value(&buf)
         } else {
             self.0.append_null()
@@ -159,6 +160,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     pub fn push_geometry(&mut self, geom: Option<&impl GeometryTrait<T = f64>>) {
         use GeometryType::*;
 
+        // TODO: call wkb::write_geometry directly
         if let Some(geom) = geom {
             match geom.as_type() {
                 Point(point) => self.push_point(Some(point)),
@@ -188,7 +190,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         if let Some(geom) = geom {
             // TODO: figure out how to write directly to the underlying vec without a copy
             let mut buf = Vec::with_capacity(geometry_collection_wkb_size(geom));
-            write_geometry_collection_as_wkb(&mut buf, geom).unwrap();
+            write_geometry_collection(&mut buf, geom, Endianness::LittleEndian).unwrap();
             self.0.append_value(&buf)
         } else {
             self.0.append_null()

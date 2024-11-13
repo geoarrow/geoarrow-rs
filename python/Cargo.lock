@@ -1058,7 +1058,6 @@ dependencies = [
  "arrow-schema",
  "async-stream",
  "async-trait",
- "byteorder",
  "bytes",
  "chrono",
  "dbase",
@@ -1073,7 +1072,6 @@ dependencies = [
  "http-range-client",
  "indexmap",
  "lexical-core",
- "num_enum",
  "object_store",
  "parquet",
  "phf",
@@ -1086,6 +1084,7 @@ dependencies = [
  "sqlx",
  "thiserror",
  "tokio",
+ "wkb",
  "wkt 0.11.1",
 ]
 
@@ -4021,6 +4020,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "36c1fec1a2bb5866f07c25f68c26e565c4c200aebb96d7e55710c19d3e8ac49b"
 dependencies = [
  "memchr",
+]
+
+[[package]]
+name = "wkb"
+version = "0.1.0"
+source = "git+https://github.com/kylebarron/wkb?rev=7d58a2327fe21cf250dab5ac6860b6cf0fddb838#7d58a2327fe21cf250dab5ac6860b6cf0fddb838"
+dependencies = [
+ "byteorder",
+ "geo-traits",
+ "num_enum",
+ "thiserror",
 ]
 
 [[package]]

@@ -86,6 +86,10 @@ pub enum GeoArrowError {
     #[cfg(feature = "postgis")]
     #[error(transparent)]
     SqlxError(#[from] sqlx::Error),
+
+    /// [wkb::error::WKBError]
+    #[error(transparent)]
+    WkbError(#[from] wkb::error::WKBError),
 }
 
 /// Crate-specific result type.

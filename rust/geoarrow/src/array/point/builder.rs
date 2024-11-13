@@ -8,7 +8,6 @@ use crate::array::{
     SeparatedCoordBufferBuilder, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::io::wkb::reader::WKBPoint;
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use arrow_array::{Array, OffsetSizeTrait};
@@ -184,6 +183,14 @@ impl<const D: usize> PointBuilder<D> {
             .for_each(|maybe_polygon| self.push_point(maybe_polygon));
     }
 
+    pub fn extend_from_geometry_iter<'a>(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
+    ) -> Result<()> {
+        geoms.into_iter().try_for_each(|g| self.push_geometry(g))?;
+        Ok(())
+    }
+
     pub fn from_points<'a>(
         geoms: impl ExactSizeIterator<Item = &'a (impl PointTrait<T = f64> + 'a)>,
         coord_type: Option<CoordType>,
@@ -210,24 +217,28 @@ impl<const D: usize> PointBuilder<D> {
         mutable_array
     }
 
+    pub fn from_nullable_geometries(
+        geoms: &[Option<impl GeometryTrait<T = f64>>],
+        coord_type: Option<CoordType>,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Result<Self> {
+        let capacity = geoms.len();
+        let mut array =
+            Self::with_capacity_and_options(capacity, coord_type.unwrap_or_default(), metadata);
+        array.extend_from_geometry_iter(geoms.iter().map(|x| x.as_ref()))?;
+        Ok(array)
+    }
+
     pub(crate) fn from_wkb<O: OffsetSizeTrait>(
         wkb_objects: &[Option<WKB<'_, O>>],
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
-        let wkb_objects2: Vec<Option<WKBPoint>> = wkb_objects
+        let wkb_objects2 = wkb_objects
             .iter()
-            .map(|maybe_wkb| {
-                maybe_wkb
-                    .as_ref()
-                    .map(|wkb| wkb.to_wkb_object().into_point())
-            })
-            .collect();
-        Ok(Self::from_nullable_points(
-            wkb_objects2.iter().map(|x| x.as_ref()),
-            coord_type,
-            metadata,
-        ))
+            .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.parse()).transpose())
+            .collect::<Result<Vec<_>>>()?;
+        Self::from_nullable_geometries(&wkb_objects2, coord_type, metadata)
     }
 }
 
