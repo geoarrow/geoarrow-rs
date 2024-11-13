@@ -42,7 +42,7 @@ impl<'a, O: OffsetSizeTrait> NativeScalar for WKB<'a, O> {
     type ScalarGeo = geo::Geometry;
 
     fn to_geo(&self) -> Self::ScalarGeo {
-        self.try_into().unwrap()
+        self.into()
     }
 
     fn to_geo_geometry(&self) -> geo::Geometry {
@@ -91,7 +91,7 @@ impl<O: OffsetSizeTrait> RTreeObject for WKB<'_, O> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
-        let geom: geo::Geometry = self.try_into().unwrap();
+        let geom: geo::Geometry = self.into();
         let rect = geom.bounding_rect().unwrap();
         let lower: [f64; 2] = rect.min().into();
         let upper: [f64; 2] = rect.max().into();

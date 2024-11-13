@@ -9,7 +9,6 @@ use crate::array::{
     SeparatedCoordBufferBuilder, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::io::wkb::reader::WKBMaybeMultiPolygon;
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
@@ -330,6 +329,14 @@ impl<const D: usize> MultiPolygonBuilder<D> {
             .unwrap();
     }
 
+    pub fn extend_from_geometry_iter<'a>(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
+    ) -> Result<()> {
+        geoms.into_iter().try_for_each(|g| self.push_geometry(g))?;
+        Ok(())
+    }
+
     /// Push a raw offset to the underlying geometry offsets buffer.
     ///
     /// # Safety
@@ -426,18 +433,12 @@ impl<const D: usize> MultiPolygonBuilder<D> {
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
-    ) -> Self {
-        let capacity = MultiPolygonCapacity::from_geometries(geoms);
-        Self::with_capacity_and_options(counter, coord_type, metadata)
-
-        todo!()
-        let mut array = Self::with_capacity_and_options_from_iter(
-            geoms.iter().map(|x| x.as_ref()),
-            coord_type.unwrap_or_default(),
-            metadata,
-        );
-        array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
-        array
+    ) -> Result<Self> {
+        let capacity = MultiPolygonCapacity::from_geometries(geoms.iter().map(|x| x.as_ref()))?;
+        let mut array =
+            Self::with_capacity_and_options(capacity, coord_type.unwrap_or_default(), metadata);
+        array.extend_from_geometry_iter(geoms.iter().map(|x| x.as_ref()))?;
+        Ok(array)
     }
 
     pub(crate) fn from_wkb<W: OffsetSizeTrait>(
@@ -445,19 +446,11 @@ impl<const D: usize> MultiPolygonBuilder<D> {
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
-        let wkb_objects2: Vec<Option<WKBMaybeMultiPolygon>> = wkb_objects
+        let wkb_objects2 = wkb_objects
             .iter()
-            .map(|maybe_wkb| {
-                maybe_wkb
-                    .as_ref()
-                    .map(|wkb| wkb.to_wkb_object().into_maybe_multi_polygon())
-            })
-            .collect();
-        Ok(Self::from_nullable_multi_polygons(
-            &wkb_objects2,
-            coord_type,
-            metadata,
-        ))
+            .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.parse()).transpose())
+            .collect::<Result<Vec<_>>>()?;
+        Self::from_nullable_geometries(&wkb_objects2, coord_type, metadata)
     }
 }
 
