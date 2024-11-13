@@ -12,28 +12,28 @@
         <meta name="author" content="Kyle Barron">
       
       
-        <link rel="canonical" href="https://geoarrow.org/geoarrow-rs/python/latest/api/io/flatgeobuf/">
+        <link rel="canonical" href="https://geoarrow.org/geoarrow-rs/python/latest/api/core/geometry/chunked/">
       
       
-        <link rel="prev" href="../csv/">
+        <link rel="prev" href="../array/">
       
       
-        <link rel="next" href="../gdal/">
+        <link rel="next" href="../scalar/">
       
       
-      <link rel="icon" href="../../../assets/images/favicon.png">
+      <link rel="icon" href="../../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.40">
     
     
       
-        <title>FlatGeobuf - geoarrow-rust</title>
+        <title>ChunkedNativeArray - geoarrow-rust</title>
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.8c3ca2c6.min.css">
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.8c3ca2c6.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.06af60db.min.css">
       
       
 
@@ -52,11 +52,11 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../../../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -65,11 +65,11 @@
       
         <meta  property="og:type"  content="website" >
       
-        <meta  property="og:title"  content="FlatGeobuf - geoarrow-rust" >
+        <meta  property="og:title"  content="ChunkedNativeArray - geoarrow-rust" >
       
         <meta  property="og:description"  content="Python bindings to Rust implementation of GeoArrow" >
       
-        <meta  property="og:image"  content="https://geoarrow.org/geoarrow-rs/python/latest/assets/images/social/api/io/flatgeobuf.png" >
+        <meta  property="og:image"  content="https://geoarrow.org/geoarrow-rs/python/latest/assets/images/social/api/core/geometry/chunked.png" >
       
         <meta  property="og:image:type"  content="image/png" >
       
@@ -77,15 +77,15 @@
       
         <meta  property="og:image:height"  content="630" >
       
-        <meta  property="og:url"  content="https://geoarrow.org/geoarrow-rs/python/latest/api/io/flatgeobuf/" >
+        <meta  property="og:url"  content="https://geoarrow.org/geoarrow-rs/python/latest/api/core/geometry/chunked/" >
       
         <meta  name="twitter:card"  content="summary_large_image" >
       
-        <meta  name="twitter:title"  content="FlatGeobuf - geoarrow-rust" >
+        <meta  name="twitter:title"  content="ChunkedNativeArray - geoarrow-rust" >
       
         <meta  name="twitter:description"  content="Python bindings to Rust implementation of GeoArrow" >
       
-        <meta  name="twitter:image"  content="https://geoarrow.org/geoarrow-rs/python/latest/assets/images/social/api/io/flatgeobuf.png" >
+        <meta  name="twitter:image"  content="https://geoarrow.org/geoarrow-rs/python/latest/assets/images/social/api/core/geometry/chunked.png" >
       
     
     
@@ -108,7 +108,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#flatgeobuf" class="md-skip">
+        <a href="#chunkednativearray" class="md-skip">
           Skip to content
         </a>
       
@@ -128,7 +128,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../.." title="geoarrow-rust" class="md-header__button md-logo" aria-label="geoarrow-rust" data-md-component="logo">
+    <a href="../../../.." title="geoarrow-rust" class="md-header__button md-logo" aria-label="geoarrow-rust" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17.9 17.39c-.26-.8-1.01-1.39-1.9-1.39h-1v-3a1 1 0 0 0-1-1H8v-2h2a1 1 0 0 0 1-1V7h2a2 2 0 0 0 2-2v-.41a7.984 7.984 0 0 1 2.9 12.8M11 19.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.22.21-1.79L9 15v1a2 2 0 0 0 2 2m1-16A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg>
@@ -148,7 +148,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              FlatGeobuf
+              ChunkedNativeArray
             
           </span>
         </div>
@@ -278,7 +278,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../.." title="geoarrow-rust" class="md-nav__button md-logo" aria-label="geoarrow-rust" data-md-component="logo">
+    <a href="../../../.." title="geoarrow-rust" class="md-nav__button md-logo" aria-label="geoarrow-rust" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17.9 17.39c-.26-.8-1.01-1.39-1.9-1.39h-1v-3a1 1 0 0 0-1-1H8v-2h2a1 1 0 0 0 1-1V7h2a2 2 0 0 0 2-2v-.41a7.984 7.984 0 0 1 2.9 12.8M11 19.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.22.21-1.79L9 15v1a2 2 0 0 0 2 2m1-16A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg>
@@ -308,7 +308,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../.." class="md-nav__link">
+      <a href="../../../.." class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -370,6 +370,8 @@
                 
   
   
+    
+  
   
   
     
@@ -396,16 +398,16 @@
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" checked>
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../core/" class="md-nav__link ">
+            <a href="../../" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -422,7 +424,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2_1">
             <span class="md-nav__icon md-icon"></span>
             geoarrow.rust.core
@@ -438,7 +440,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../core/geometry/array/" class="md-nav__link">
+      <a href="../array/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -456,10 +458,30 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../core/geometry/chunked/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    ChunkedNativeArray
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -468,6 +490,137 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#geoarrow.rust.core" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-module"></code>&nbsp;core
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" core">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.ChunkedNativeArray" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;ChunkedNativeArray
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" ChunkedNativeArray">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.ChunkedNativeArray.type" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;type
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.ChunkedNativeArray.__arrow_c_stream__" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__arrow_c_stream__
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.ChunkedNativeArray.__getitem__" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__getitem__
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.ChunkedNativeArray.__repr__" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__repr__
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.ChunkedNativeArray.chunk" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;chunk
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.ChunkedNativeArray.chunks" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;chunks
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.ChunkedNativeArray.from_arrow" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;from_arrow
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.ChunkedNativeArray.from_arrow_pycapsule" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;from_arrow_pycapsule
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.ChunkedNativeArray.num_chunks" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;num_chunks
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -480,7 +633,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../core/geometry/scalar/" class="md-nav__link">
+      <a href="../scalar/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -501,7 +654,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../core/constructors/" class="md-nav__link">
+      <a href="../../constructors/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -522,7 +675,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../core/functions/" class="md-nav__link">
+      <a href="../../functions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -543,7 +696,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../core/enums/" class="md-nav__link">
+      <a href="../../enums/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -564,7 +717,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../core/types/" class="md-nav__link">
+      <a href="../../types/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -636,7 +789,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../compute/functions/" class="md-nav__link">
+      <a href="../../../compute/functions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -657,7 +810,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../compute/enums/" class="md-nav__link">
+      <a href="../../../compute/enums/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -678,7 +831,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../compute/types/" class="md-nav__link">
+      <a href="../../../compute/types/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -704,10 +857,8 @@
                 
   
   
-    
   
   
-  
     
     
       
@@ -730,11 +881,11 @@
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" >
         
           
           <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
@@ -748,7 +899,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_2_3">
             <span class="md-nav__icon md-icon"></span>
             geoarrow.rust.io
@@ -762,7 +913,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../arrow_ipc/" class="md-nav__link">
+      <a href="../../../io/arrow_ipc/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -783,7 +934,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../csv/" class="md-nav__link">
+      <a href="../../../io/csv/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -801,30 +952,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    FlatGeobuf
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../../io/flatgeobuf/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -833,53 +964,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#geoarrow.rust.io.read_flatgeobuf" class="md-nav__link">
-    <span class="md-ellipsis">
-      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;read_flatgeobuf
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#geoarrow.rust.io.read_flatgeobuf_async" class="md-nav__link">
-    <span class="md-ellipsis">
-      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;read_flatgeobuf_async
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#geoarrow.rust.io.write_flatgeobuf" class="md-nav__link">
-    <span class="md-ellipsis">
-      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;write_flatgeobuf
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -892,7 +976,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../gdal/" class="md-nav__link">
+      <a href="../../../io/gdal/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -913,7 +997,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../geojson/" class="md-nav__link">
+      <a href="../../../io/geojson/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -934,7 +1018,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../geoparquet/" class="md-nav__link">
+      <a href="../../../io/geoparquet/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -955,7 +1039,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../postgis/" class="md-nav__link">
+      <a href="../../../io/postgis/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -976,7 +1060,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../shapefile/" class="md-nav__link">
+      <a href="../../../io/shapefile/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1057,7 +1141,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../ecosystem/geopandas/" class="md-nav__link">
+      <a href="../../../../ecosystem/geopandas/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1078,7 +1162,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../ecosystem/lonboard/" class="md-nav__link">
+      <a href="../../../../ecosystem/lonboard/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1099,7 +1183,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../ecosystem/pyogrio/" class="md-nav__link">
+      <a href="../../../../ecosystem/pyogrio/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1120,7 +1204,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../ecosystem/shapely/" class="md-nav__link">
+      <a href="../../../../ecosystem/shapely/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1187,7 +1271,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../performance/multithreading/" class="md-nav__link">
+      <a href="../../../../performance/multithreading/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1215,7 +1299,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../CHANGELOG/" class="md-nav__link">
+      <a href="../../../../CHANGELOG/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1255,29 +1339,113 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#geoarrow.rust.io.read_flatgeobuf" class="md-nav__link">
+  <a href="#geoarrow.rust.core" class="md-nav__link">
     <span class="md-ellipsis">
-      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;read_flatgeobuf
+      <code class="doc-symbol doc-symbol-toc doc-symbol-module"></code>&nbsp;core
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" core">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.ChunkedNativeArray" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;ChunkedNativeArray
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" ChunkedNativeArray">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.ChunkedNativeArray.type" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;type
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#geoarrow.rust.io.read_flatgeobuf_async" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.ChunkedNativeArray.__arrow_c_stream__" class="md-nav__link">
     <span class="md-ellipsis">
-      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;read_flatgeobuf_async
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__arrow_c_stream__
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#geoarrow.rust.io.write_flatgeobuf" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.ChunkedNativeArray.__getitem__" class="md-nav__link">
     <span class="md-ellipsis">
-      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;write_flatgeobuf
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__getitem__
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.ChunkedNativeArray.__repr__" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__repr__
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.ChunkedNativeArray.chunk" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;chunk
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.ChunkedNativeArray.chunks" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;chunks
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.ChunkedNativeArray.from_arrow" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;from_arrow
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.ChunkedNativeArray.from_arrow_pycapsule" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;from_arrow_pycapsule
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.ChunkedNativeArray.num_chunks" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;num_chunks
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1299,201 +1467,211 @@
   
 
 
-<h1 id="flatgeobuf">FlatGeobuf<a class="headerlink" href="#flatgeobuf" title="Permanent link">&para;</a></h1>
-<p>Read and write <a href="https://flatgeobuf.org/">FlatGeobuf</a> files.</p>
+<h1 id="chunkednativearray">ChunkedNativeArray<a class="headerlink" href="#chunkednativearray" title="Permanent link">&para;</a></h1>
 
 
-<div class="doc doc-object doc-function">
+<div class="doc doc-object doc-module">
 
 
-<h2 id="geoarrow.rust.io.read_flatgeobuf" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">geoarrow.rust.io.read_flatgeobuf</span>
+
+<h2 id="geoarrow.rust.core" class="doc doc-heading">
+            <span class="doc doc-object-name doc-module-name">geoarrow.rust.core</span>
 
 
-<a href="#geoarrow.rust.io.read_flatgeobuf" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">read_flatgeobuf</span><span class="p">(</span>
-    <span class="n">file</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="typing.BinaryIO" href="https://docs.python.org/3/library/typing.html#typing.BinaryIO">BinaryIO</a></span><span class="p">],</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">store</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n">ObjectStore</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">batch_size</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="mi">65536</span><span class="p">,</span>
-    <span class="n">bbox</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="arro3.core.Table" href="https://kylebarron.dev/arro3/latest/api/core/table/#arro3.core.Table">Table</a></span>
-</code></pre></div>
+<a href="#geoarrow.rust.core" class="headerlink" title="Permanent link">&para;</a></h2>
 
     <div class="doc doc-contents first">
 
-        <p>Read a FlatGeobuf file from a path on disk or a remote location into an Arrow Table.</p>
-<p>Example:</p>
-<p>Reading from a local path:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">geoarrow.rust.core</span> <span class="kn">import</span> <span class="n">read_flatgeobuf</span>
-<span class="n">table</span> <span class="o">=</span> <span class="n">read_flatgeobuf</span><span class="p">(</span><span class="s2">&quot;path/to/file.fgb&quot;</span><span class="p">)</span>
-</code></pre></div>
-<p>Reading from a Python file object:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">geoarrow.rust.core</span> <span class="kn">import</span> <span class="n">read_flatgeobuf</span>
-
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;path/to/file.fgb&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-    <span class="n">table</span> <span class="o">=</span> <span class="n">read_flatgeobuf</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-</code></pre></div>
-<p>Reading from an HTTP(S) url:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">geoarrow.rust.core</span> <span class="kn">import</span> <span class="n">read_flatgeobuf</span>
-
-<span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;http://flatgeobuf.org/test/data/UScounties.fgb&quot;</span>
-<span class="n">table</span> <span class="o">=</span> <span class="n">read_flatgeobuf</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
-</code></pre></div>
-<p>Reading from a remote file on an S3 bucket.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">geoarrow.rust.core</span> <span class="kn">import</span> <span class="n">ObjectStore</span><span class="p">,</span> <span class="n">read_flatgeobuf</span>
-
-<span class="n">options</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;aws_access_key_id&quot;</span><span class="p">:</span> <span class="s2">&quot;...&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;aws_secret_access_key&quot;</span><span class="p">:</span> <span class="s2">&quot;...&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;aws_region&quot;</span><span class="p">:</span> <span class="s2">&quot;...&quot;</span>
-<span class="p">}</span>
-<span class="n">store</span> <span class="o">=</span> <span class="n">ObjectStore</span><span class="p">(</span><span class="s1">&#39;s3://bucket&#39;</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">)</span>
-<span class="n">table</span> <span class="o">=</span> <span class="n">read_flatgeobuf</span><span class="p">(</span><span class="s2">&quot;path/in/bucket.fgb&quot;</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span>
-</code></pre></div>
 
 
-<p><span class="doc-section-title">Parameters:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-          <b><code>file</code></b>
-              (<code><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a>, <a class="autorefs autorefs-external" title="typing.BinaryIO" href="https://docs.python.org/3/library/typing.html#typing.BinaryIO">BinaryIO</a>]</code>)
-          –
-          <div class="doc-md-description">
-            <p>the path to the file or a Python file object in binary read mode.</p>
-          </div>
-        </li>
-    </ul>
+  <div class="doc doc-children">
 
 
-<p><span class="doc-section-title">Other Parameters:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-          <b><code>store</code></b>
-              (<code><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a>[ObjectStore]</code>)
-          –
-          <div class="doc-md-description">
-            <p>an ObjectStore instance for this url. This is required only if the file is at a remote
-location.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-          <b><code>batch_size</code></b>
-              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></code>)
-          –
-          <div class="doc-md-description">
-            <p>the number of rows to include in each internal batch of the table.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-          <b><code>bbox</code></b>
-              (<code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a>, <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a>, <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a>, <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a>] | None</code>)
-          –
-          <div class="doc-md-description">
-            <p>A spatial filter for reading rows, of the format (minx, miny, maxx, maxy). If set to</p>
-          </div>
-        </li>
-    </ul>
 
 
-<p><span class="doc-section-title">Returns:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-              <code><a class="autorefs autorefs-external" title="arro3.core.Table" href="https://kylebarron.dev/arro3/latest/api/core/table/#arro3.core.Table">Table</a></code>
-          –
-          <div class="doc-md-description">
-            <p>Table from FlatGeobuf file.</p>
-          </div>
-        </li>
-    </ul>
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
 
 
-<h2 id="geoarrow.rust.io.read_flatgeobuf_async" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">geoarrow.rust.io.read_flatgeobuf_async</span>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="geoarrow.rust.core.ChunkedNativeArray" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">ChunkedNativeArray</span>
+
+
+<a href="#geoarrow.rust.core.ChunkedNativeArray" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+        <p>An immutable chunked array of geometries using GeoArrow's in-memory representation.</p>
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="geoarrow.rust.core.ChunkedNativeArray.type" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">type</span>
 
 
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-async"><code>async</code></small>
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
   </span>
 
-<a href="#geoarrow.rust.io.read_flatgeobuf_async" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">read_flatgeobuf_async</span><span class="p">(</span>
-    <span class="n">path</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">store</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n">ObjectStore</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">batch_size</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="mi">65536</span><span class="p">,</span>
-    <span class="n">bbox</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="arro3.core.Table" href="https://kylebarron.dev/arro3/latest/api/core/table/#arro3.core.Table">Table</a></span>
+<a href="#geoarrow.rust.core.ChunkedNativeArray.type" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nb">type</span><span class="p">:</span> <span class="n"><span title="geoarrow.rust.core._rust.NativeType">NativeType</span></span>
 </code></pre></div>
 
-    <div class="doc doc-contents first">
+    <div class="doc doc-contents ">
 
-        <p>Read a FlatGeobuf file from a url into an Arrow Table.</p>
-<p>Example:</p>
-<p>Reading from an HTTP(S) url:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">geoarrow.rust.core</span> <span class="kn">import</span> <span class="n">read_flatgeobuf_async</span>
+        <p>Get the geometry type of this array.</p>
+    </div>
 
-<span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;http://flatgeobuf.org/test/data/UScounties.fgb&quot;</span>
-<span class="n">table</span> <span class="o">=</span> <span class="k">await</span> <span class="n">read_flatgeobuf_async</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+</div>
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="geoarrow.rust.core.ChunkedNativeArray.__arrow_c_stream__" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">__arrow_c_stream__</span>
+
+
+<a href="#geoarrow.rust.core.ChunkedNativeArray.__arrow_c_stream__" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">__arrow_c_stream__</span><span class="p">(</span><span class="n">requested_schema</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#object">object</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#object">object</a></span>
 </code></pre></div>
-<p>Reading from an S3 bucket:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">geoarrow.rust.core</span> <span class="kn">import</span> <span class="n">ObjectStore</span><span class="p">,</span> <span class="n">read_flatgeobuf_async</span>
 
-<span class="n">options</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;aws_access_key_id&quot;</span><span class="p">:</span> <span class="s2">&quot;...&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;aws_secret_access_key&quot;</span><span class="p">:</span> <span class="s2">&quot;...&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;aws_region&quot;</span><span class="p">:</span> <span class="s2">&quot;...&quot;</span>
-<span class="p">}</span>
-<span class="n">store</span> <span class="o">=</span> <span class="n">ObjectStore</span><span class="p">(</span><span class="s1">&#39;s3://bucket&#39;</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">)</span>
-<span class="n">table</span> <span class="o">=</span> <span class="k">await</span> <span class="n">read_flatgeobuf_async</span><span class="p">(</span><span class="s2">&quot;path/in/bucket.fgb&quot;</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span>
+    <div class="doc doc-contents ">
+
+        <p>An implementation of the <a href="https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html">Arrow PyCapsule
+Interface</a>.
+This dunder method should not be called directly, but enables zero-copy data
+transfer to other Python libraries that understand Arrow memory.</p>
+<p>For example, you can call <a class="autorefs autorefs-external" href="https://arrow.apache.org/docs/python/generated/pyarrow.chunked_array.html#pyarrow.chunked_array"><code>pyarrow.chunked_array()</code></a> to
+convert this array into a pyarrow array, without copying memory.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="geoarrow.rust.core.ChunkedNativeArray.__getitem__" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">__getitem__</span>
+
+
+<a href="#geoarrow.rust.core.ChunkedNativeArray.__getitem__" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="fm">__getitem__</span><span class="p">(</span><span class="nf">key</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="geoarrow.rust.core._rust.Geometry" href="../scalar/#geoarrow.rust.core.Geometry">Geometry</a></span>
 </code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Access the item at a given index.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="geoarrow.rust.core.ChunkedNativeArray.__repr__" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">__repr__</span>
+
+
+<a href="#geoarrow.rust.core.ChunkedNativeArray.__repr__" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="fm">__repr__</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nf"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Text representation.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="geoarrow.rust.core.ChunkedNativeArray.chunk" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">chunk</span>
+
+
+<a href="#geoarrow.rust.core.ChunkedNativeArray.chunk" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">chunk</span><span class="p">(</span><span class="n">i</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="geoarrow.rust.core._rust.NativeArray" href="../array/#geoarrow.rust.core.NativeArray">NativeArray</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Access a single underlying chunk.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="geoarrow.rust.core.ChunkedNativeArray.chunks" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">chunks</span>
+
+
+<a href="#geoarrow.rust.core.ChunkedNativeArray.chunks" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">chunks</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="typing.List" href="https://docs.python.org/3/library/typing.html#typing.List">List</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="geoarrow.rust.core._rust.NativeArray" href="../array/#geoarrow.rust.core.NativeArray">NativeArray</a></span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Convert to a list of single-chunked arrays.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="geoarrow.rust.core.ChunkedNativeArray.from_arrow" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">from_arrow</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.ChunkedNativeArray.from_arrow" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">from_arrow</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="arro3.core.types.ArrowArrayExportable" href="https://kylebarron.dev/arro3/latest/api/core/types/#arro3.core.types.ArrowArrayExportable">ArrowArrayExportable</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Construct this object from existing Arrow data</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-          <b><code>path</code></b>
-              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>)
+          <b><code>input</code></b>
           –
           <div class="doc-md-description">
-            <p>the url or relative path to a remote FlatGeobuf file. If an argument is passed for
-<code>store</code>, this should be a path fragment relative to the root passed to the <code>ObjectStore</code>
-constructor.</p>
-          </div>
-        </li>
-    </ul>
-
-
-<p><span class="doc-section-title">Other Parameters:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-          <b><code>store</code></b>
-              (<code><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a>[ObjectStore]</code>)
-          –
-          <div class="doc-md-description">
-            <p>an ObjectStore instance for this url. This is required for non-HTTP urls.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-          <b><code>batch_size</code></b>
-              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></code>)
-          –
-          <div class="doc-md-description">
-            <p>the number of rows to include in each internal batch of the table.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-          <b><code>bbox</code></b>
-              (<code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a>, <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a>, <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a>, <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a>] | None</code>)
-          –
-          <div class="doc-md-description">
-            <p>A spatial filter for reading rows, of the format (minx, miny, maxx, maxy). If set to</p>
+            <p>Arrow array to use for constructing this object</p>
           </div>
         </li>
     </ul>
@@ -1502,10 +1680,10 @@ constructor.</p>
 <p><span class="doc-section-title">Returns:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-              <code><a class="autorefs autorefs-external" title="arro3.core.Table" href="https://kylebarron.dev/arro3/latest/api/core/table/#arro3.core.Table">Table</a></code>
+              <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
           –
           <div class="doc-md-description">
-            <p>Table from FlatGeobuf file.</p>
+            <p>Self</p>
           </div>
         </li>
     </ul>
@@ -1517,56 +1695,57 @@ constructor.</p>
 <div class="doc doc-object doc-function">
 
 
-<h2 id="geoarrow.rust.io.write_flatgeobuf" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">geoarrow.rust.io.write_flatgeobuf</span>
+<h4 id="geoarrow.rust.core.ChunkedNativeArray.from_arrow_pycapsule" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">from_arrow_pycapsule</span>
 
 
-<a href="#geoarrow.rust.io.write_flatgeobuf" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">write_flatgeobuf</span><span class="p">(</span>
-    <span class="n">table</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="arro3.core.types.ArrowStreamExportable" href="https://kylebarron.dev/arro3/latest/api/core/types/#arro3.core.types.ArrowStreamExportable">ArrowStreamExportable</a></span><span class="p">,</span>
-    <span class="n">file</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-external" title="typing.BinaryIO" href="https://docs.python.org/3/library/typing.html#typing.BinaryIO">BinaryIO</a></span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">write_index</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></span> <span class="o">=</span> <span class="kc">True</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.ChunkedNativeArray.from_arrow_pycapsule" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">from_arrow_pycapsule</span><span class="p">(</span><span class="n">schema_capsule</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#object">object</a></span><span class="p">,</span> <span class="n">array_capsule</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#object">object</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></span>
 </code></pre></div>
 
-    <div class="doc doc-contents first">
+    <div class="doc doc-contents ">
 
-        <p>Write to a FlatGeobuf file on disk.</p>
+        <p>Construct this object from raw Arrow capsules.</p>
 
+    </div>
 
-<p><span class="doc-section-title">Parameters:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-          <b><code>table</code></b>
-              (<code><a class="autorefs autorefs-external" title="arro3.core.types.ArrowStreamExportable" href="https://kylebarron.dev/arro3/latest/api/core/types/#arro3.core.types.ArrowStreamExportable">ArrowStreamExportable</a></code>)
-          –
-          <div class="doc-md-description">
-            <p>the Arrow RecordBatch, Table, or RecordBatchReader to write.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-          <b><code>file</code></b>
-              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a> | <a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a> | <a class="autorefs autorefs-external" title="typing.BinaryIO" href="https://docs.python.org/3/library/typing.html#typing.BinaryIO">BinaryIO</a></code>)
-          –
-          <div class="doc-md-description">
-            <p>the path to the file or a Python file object in binary write mode.</p>
-          </div>
-        </li>
-    </ul>
+</div>
+
+<div class="doc doc-object doc-function">
 
 
-<p><span class="doc-section-title">Other Parameters:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-          <b><code>write_index</code></b>
-              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></code>)
-          –
-          <div class="doc-md-description">
-            <p>whether to write a spatial index in the FlatGeobuf file. Defaults to True.</p>
-          </div>
-        </li>
-    </ul>
+<h4 id="geoarrow.rust.core.ChunkedNativeArray.num_chunks" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">num_chunks</span>
+
+
+<a href="#geoarrow.rust.core.ChunkedNativeArray.num_chunks" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">num_chunks</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Number of underlying chunks.</p>
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+  </div>
 
     </div>
 
@@ -1635,10 +1814,10 @@ constructor.</p>
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.annotate", "content.code.copy", "navigation.indexes", "navigation.instant", "navigation.tracking", "search.suggest", "search.share"], "search": "../../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    <script id="__config" type="application/json">{"base": "../../../..", "features": ["content.code.annotate", "content.code.copy", "navigation.indexes", "navigation.instant", "navigation.tracking", "search.suggest", "search.share"], "search": "../../../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.525ec568.min.js"></script>
+      <script src="../../../../assets/javascripts/bundle.525ec568.min.js"></script>
       
     
   </body>
