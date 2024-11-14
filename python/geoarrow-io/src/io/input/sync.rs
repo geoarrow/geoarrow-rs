@@ -19,8 +19,20 @@ use std::path::{Path, PathBuf};
 
 #[derive(Debug)]
 pub struct PyFileLikeObject {
+    // We use PyObject instead of Bound<PyAny> because Bound<PyAny> is a GIL-bound type.
+    // We want to avoid holding the GIL when creating the struct.
+    // The GIL will be re-taken when the methods are called.
     inner: PyObject,
     is_text_io: bool,
+}
+
+impl Clone for PyFileLikeObject {
+    fn clone(&self) -> Self {
+        Python::with_gil(|py| PyFileLikeObject {
+            inner: self.inner.clone_ref(py),
+            is_text_io: self.is_text_io,
+        })
+    }
 }
 
 /// Wraps a `PyObject`, and implements read, seek, and write for it.
@@ -86,14 +98,6 @@ impl PyFileLikeObject {
             .getattr(py, intern!(py, "name"))
             .ok()
             .map(|x| x.to_string())
-    }
-}
-
-impl Clone for PyFileLikeObject {
-    fn clone(&self) -> Self {
-        Python::with_gil(|py| {
-            PyFileLikeObject::new(self.inner.clone_ref(py)).expect("Failed to clone")
-        })
     }
 }
 
@@ -326,13 +330,7 @@ impl<'py> FromPyObject<'py> for FileReader {
             Ok(Self::File(path.clone(), BufReader::new(File::open(path)?)))
         } else {
             Ok(Self::FileLike(BufReader::new(
-                PyFileLikeObject::with_requirements(
-                    ob.as_gil_ref().into(),
-                    true,
-                    false,
-                    true,
-                    false,
-                )?,
+                PyFileLikeObject::with_requirements(ob.clone().unbind(), true, false, true, false)?,
             )))
         }
     }
@@ -406,13 +404,7 @@ impl<'py> FromPyObject<'py> for FileWriter {
             ))
         } else {
             Ok(Self::FileLike(BufWriter::new(
-                PyFileLikeObject::with_requirements(
-                    ob.as_gil_ref().into(),
-                    false,
-                    true,
-                    true,
-                    false,
-                )?,
+                PyFileLikeObject::with_requirements(ob.clone().unbind(), false, true, true, false)?,
             )))
         }
     }

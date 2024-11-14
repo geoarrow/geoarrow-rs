@@ -12,7 +12,8 @@ use geoarrow::datatypes::{Dimension, NativeType};
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
-use pyo3::types::{PyBytes, PyDict, PyString, PyTuple};
+use pyo3::pybacked::PyBackedBytes;
+use pyo3::types::{PyDict, PyString, PyTuple};
 use pyo3::PyAny;
 use pyo3_geoarrow::PyGeoArrowResult;
 
@@ -90,7 +91,7 @@ pub fn from_shapely(
         shapely_mod.call_method(intern!(py, "to_ragged_array"), (input,), Some(&kwargs))
     {
         let (geom_type, coords, offsets) =
-            ragged_array_output.extract::<(&PyAny, Bound<PyAny>, PyObject)>()?;
+            ragged_array_output.extract::<(Bound<PyAny>, Bound<PyAny>, PyObject)>()?;
         let coords = numpy_mod.call_method1(
             intern!(py, "ascontiguousarray"),
             PyTuple::new_bound(py, vec![coords]),
@@ -181,8 +182,8 @@ fn make_wkb_arr(
     let mut builder = BinaryBuilder::with_capacity(wkb_result.len()?, 0);
 
     for item in wkb_result.iter()? {
-        let x = item?.extract::<&PyBytes>()?;
-        builder.append_value(x.as_bytes());
+        let buf = item?.extract::<PyBackedBytes>()?;
+        builder.append_value(buf.as_ref());
     }
 
     Ok(geoarrow::array::WKBArray::new(builder.finish(), metadata))

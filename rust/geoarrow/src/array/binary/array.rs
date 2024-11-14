@@ -54,9 +54,10 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
     /// Infer the minimal NativeType that this WKBArray can be casted to.
     #[allow(dead_code)]
     // TODO: is this obsolete with new from_wkb approach that uses downcasting?
-    pub(crate) fn infer_geo_data_type(&self, coord_type: CoordType) -> Result<NativeType> {
-        use crate::io::wkb::reader::r#type::infer_geometry_type;
-        infer_geometry_type(self.iter().flatten(), coord_type)
+    pub(crate) fn infer_geo_data_type(&self, _coord_type: CoordType) -> Result<NativeType> {
+        todo!()
+        // use crate::io::wkb::reader::r#type::infer_geometry_type;
+        // infer_geometry_type(self.iter().flatten(), coord_type)
     }
 
     /// The lengths of each buffer contained in this array.

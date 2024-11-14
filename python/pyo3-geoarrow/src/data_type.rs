@@ -32,6 +32,7 @@ impl PyNativeType {
 #[pymethods]
 impl PyNativeType {
     #[new]
+    #[pyo3(signature = (r#type, dimension=None, coord_type=None))]
     fn py_new(
         r#type: &str,
         dimension: Option<PyDimension>,

@@ -9,7 +9,6 @@ use crate::array::mixed::builder::DEFAULT_PREFER_MULTI;
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{CoordType, GeometryCollectionArray, MixedGeometryBuilder, WKBArray};
 use crate::error::{GeoArrowError, Result};
-use crate::io::wkb::reader::WKBGeometry;
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use geo_traits::{
@@ -369,10 +368,10 @@ impl<'a, const D: usize> GeometryCollectionBuilder<D> {
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
-        let wkb_objects2: Vec<Option<WKBGeometry>> = wkb_objects
+        let wkb_objects2 = wkb_objects
             .iter()
-            .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.to_wkb_object()))
-            .collect();
+            .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.parse()).transpose())
+            .collect::<Result<Vec<_>>>()?;
         Self::from_nullable_geometries(&wkb_objects2, coord_type, metadata, prefer_multi)
     }
 }

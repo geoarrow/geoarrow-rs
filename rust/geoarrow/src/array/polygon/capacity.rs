@@ -1,6 +1,8 @@
 use std::ops::Add;
 
-use geo_traits::{LineStringTrait, PolygonTrait, RectTrait};
+use geo_traits::{GeometryTrait, GeometryType, LineStringTrait, PolygonTrait, RectTrait};
+
+use crate::error::{GeoArrowError, Result};
 
 /// A counter for the buffer sizes of a [`PolygonArray`][crate::array::PolygonArray].
 ///
@@ -74,6 +76,19 @@ impl PolygonCapacity {
         }
     }
 
+    pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait>) -> Result<()> {
+        if let Some(geom) = value {
+            match geom.as_type() {
+                GeometryType::Polygon(g) => self.add_polygon(Some(g)),
+                GeometryType::Rect(g) => self.add_rect(Some(g)),
+                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+            }
+        } else {
+            self.geom_capacity += 1;
+        };
+        Ok(())
+    }
+
     pub fn from_polygons<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
     ) -> Self {
@@ -90,6 +105,16 @@ impl PolygonCapacity {
             counter.add_rect(maybe_rect);
         }
         counter
+    }
+
+    pub fn from_geometries<'a>(
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+    ) -> Result<Self> {
+        let mut counter = Self::new_empty();
+        for g in geoms.into_iter() {
+            counter.add_geometry(g)?;
+        }
+        Ok(counter)
     }
 
     /// The number of bytes an array with this capacity would occupy.

@@ -97,6 +97,16 @@ impl MultiPointCapacity {
         counter
     }
 
+    pub fn from_geometries<'a>(
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+    ) -> Result<Self> {
+        let mut counter = Self::new_empty();
+        for g in geoms.into_iter() {
+            counter.add_geometry(g)?;
+        }
+        Ok(counter)
+    }
+
     /// The number of bytes an array with this capacity would occupy.
     pub fn num_bytes(&self) -> usize {
         let offsets_byte_width = 4;
