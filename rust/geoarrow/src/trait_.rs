@@ -701,11 +701,12 @@ pub trait GeometryArraySelfMethods<const D: usize> {
     /// use geoarrow::{
     ///     array::{PointArray, CoordBuffer, InterleavedCoordBuffer},
     ///     trait_::{GeometryArraySelfMethods, ArrayAccessor},
+    ///     datatypes::Dimension,
     /// };
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
-    /// let coords = CoordBuffer::Interleaved(InterleavedCoordBuffer::new(vec![3., 4.].into()));
+    /// let coords = CoordBuffer::Interleaved(InterleavedCoordBuffer::new(vec![3., 4.].into(), Dimension::XY));
     /// let array = array.with_coords(coords);
     /// let value = array.value_as_geo(0);
     /// assert_eq!(value.x(), 3.);

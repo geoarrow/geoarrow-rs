@@ -21,8 +21,15 @@ pub struct SeparatedCoordBuffer {
     pub(crate) dim: Dimension,
 }
 
-fn check(buffers: &[ScalarBuffer<f64>; 4], _dim: Dimension) -> Result<()> {
-    if !buffers.windows(2).all(|w| w[0].len() == w[1].len()) {
+fn check(buffers: &[ScalarBuffer<f64>; 4], dim: Dimension) -> Result<()> {
+    let all_same_length = match dim {
+        Dimension::XY => buffers[0].len() == buffers[1].len(),
+        Dimension::XYZ => {
+            buffers[0].len() == buffers[1].len() && buffers[1].len() == buffers[2].len()
+        }
+    };
+
+    if !all_same_length {
         return Err(GeoArrowError::General(
             "all buffers must have the same length".to_string(),
         ));
