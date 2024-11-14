@@ -1,16 +1,21 @@
 use arrow::array::AsArray;
 use arrow::datatypes::Float64Type;
 use arrow_array::Array;
+use arrow_buffer::ScalarBuffer;
 use arrow_schema::DataType;
 use geoarrow::array::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
+use geoarrow::datatypes::Dimension;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyList, PyTuple};
 use pyo3_arrow::PyArray;
 
-pub enum PyCoordBuffer {
-    TwoD(CoordBuffer<2>),
-    ThreeD(CoordBuffer<3>),
+pub struct PyCoordBuffer(CoordBuffer);
+
+impl PyCoordBuffer {
+    pub fn into_inner(self) -> CoordBuffer {
+        self.0
+    }
 }
 
 impl<'py> FromPyObject<'py> for PyCoordBuffer {
@@ -81,12 +86,25 @@ impl<'py> FromPyObject<'py> for PyCoordBuffer {
 
                 let z = z.values();
 
-                Ok(Self::ThreeD(
-                    SeparatedCoordBuffer::new([x.clone(), y.clone(), z.clone()]).into(),
+                Ok(Self(
+                    SeparatedCoordBuffer::new(
+                        [x.clone(), y.clone(), z.clone(), ScalarBuffer::from(vec![])],
+                        Dimension::XYZ,
+                    )
+                    .into(),
                 ))
             } else {
-                Ok(Self::TwoD(
-                    SeparatedCoordBuffer::new([x.clone(), y.clone()]).into(),
+                Ok(Self(
+                    SeparatedCoordBuffer::new(
+                        [
+                            x.clone(),
+                            y.clone(),
+                            ScalarBuffer::from(vec![]),
+                            ScalarBuffer::from(vec![]),
+                        ],
+                        Dimension::XY,
+                    )
+                    .into(),
                 ))
             }
         } else {
@@ -123,11 +141,13 @@ impl<'py> FromPyObject<'py> for PyCoordBuffer {
                     }
 
                     match list_size {
-                        2 => Ok(Self::TwoD(
-                            InterleavedCoordBuffer::<2>::new(values.values().clone()).into(),
+                        2 => Ok(Self(
+                            InterleavedCoordBuffer::new(values.values().clone(), Dimension::XY)
+                                .into(),
                         )),
-                        3 => Ok(Self::ThreeD(
-                            InterleavedCoordBuffer::<3>::new(values.values().clone()).into(),
+                        3 => Ok(Self(
+                            InterleavedCoordBuffer::new(values.values().clone(), Dimension::XYZ)
+                                .into(),
                         )),
                         _ => Err(PyValueError::new_err(format!(
                             "Unsupported fixed size list size {}",

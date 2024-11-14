@@ -58,6 +58,33 @@ impl SeparatedCoordBuffer {
         Ok(Self { buffers, dim })
     }
 
+    /// Access the underlying coordinate buffers.
+    ///
+    /// Note that not all four buffers may be valid. Only so many buffers have defined meaning as
+    /// there are dimensions, so for an XY buffer, only the first two buffers have defined meaning,
+    /// and the last two may be any buffer, or empty.
+    pub fn raw_buffers(&self) -> &[ScalarBuffer<f64>; 4] {
+        &self.buffers
+    }
+
+    /// Access the underlying coordinate buffers.
+    ///
+    /// In comparison to raw_buffers, all of the returned buffers are valid.
+    pub fn buffers(&self) -> Vec<ScalarBuffer<f64>> {
+        match self.dim {
+            Dimension::XY => {
+                vec![self.buffers[0].clone(), self.buffers[1].clone()]
+            }
+            Dimension::XYZ => {
+                vec![
+                    self.buffers[0].clone(),
+                    self.buffers[1].clone(),
+                    self.buffers[2].clone(),
+                ]
+            }
+        }
+    }
+
     pub fn dim(&self) -> Dimension {
         self.dim
     }

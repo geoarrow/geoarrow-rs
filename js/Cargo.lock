@@ -1059,7 +1059,6 @@ dependencies = [
  "arrow-ipc",
  "arrow-schema",
  "async-stream",
- "byteorder",
  "chrono",
  "dbase",
  "enum-as-inner",
@@ -1072,7 +1071,6 @@ dependencies = [
  "half",
  "indexmap",
  "lexical-core",
- "num_enum",
  "parquet",
  "phf",
  "rstar",
@@ -1081,6 +1079,7 @@ dependencies = [
  "shapefile",
  "thiserror",
  "tokio",
+ "wkb",
  "wkt 0.11.1",
 ]
 
@@ -3166,6 +3165,17 @@ checksum = "524e57b2c537c0f9b1e69f1965311ec12182b4122e45035b1508cd24d2adadb1"
 dependencies = [
  "cfg-if",
  "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "wkb"
+version = "0.1.0"
+source = "git+https://github.com/kylebarron/wkb?rev=7d58a2327fe21cf250dab5ac6860b6cf0fddb838#7d58a2327fe21cf250dab5ac6860b6cf0fddb838"
+dependencies = [
+ "byteorder",
+ "geo-traits",
+ "num_enum",
+ "thiserror",
 ]
 
 [[package]]
