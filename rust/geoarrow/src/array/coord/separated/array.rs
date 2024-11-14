@@ -133,7 +133,7 @@ impl SeparatedCoordBuffer {
 
         // Initialize array with existing buffers, then overwrite them
         let mut sliced_buffers = self.buffers.clone();
-        for (i, buffer) in self.buffers.iter().enumerate() {
+        for (i, buffer) in self.buffers.iter().enumerate().take(self.dim.size()) {
             sliced_buffers[i] = buffer.slice(offset, length);
         }
 
