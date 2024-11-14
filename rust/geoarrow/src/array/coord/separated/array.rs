@@ -63,10 +63,21 @@ impl SeparatedCoordBuffer {
     }
 
     pub fn values_array(&self) -> Vec<ArrayRef> {
-        self.buffers
-            .iter()
-            .map(|buffer| Arc::new(Float64Array::new(buffer.clone(), None)) as ArrayRef)
-            .collect()
+        match self.dim {
+            Dimension::XY => {
+                vec![
+                    Arc::new(Float64Array::new(self.buffers[0].clone(), None)),
+                    Arc::new(Float64Array::new(self.buffers[1].clone(), None)),
+                ]
+            }
+            Dimension::XYZ => {
+                vec![
+                    Arc::new(Float64Array::new(self.buffers[0].clone(), None)),
+                    Arc::new(Float64Array::new(self.buffers[1].clone(), None)),
+                    Arc::new(Float64Array::new(self.buffers[2].clone(), None)),
+                ]
+            }
+        }
     }
 
     pub fn values_field(&self) -> Vec<Field> {
