@@ -18,7 +18,7 @@ use geo_traits::{
 };
 
 pub type MutableMultiPolygonParts<const D: usize> = (
-    CoordBufferBuilder<D>,
+    CoordBufferBuilder,
     OffsetsBuilder<i32>,
     OffsetsBuilder<i32>,
     OffsetsBuilder<i32>,
@@ -32,7 +32,7 @@ pub type MutableMultiPolygonParts<const D: usize> = (
 pub struct MultiPolygonBuilder<const D: usize> {
     metadata: Arc<ArrayMetadata>,
 
-    pub(crate) coords: CoordBufferBuilder<D>,
+    pub(crate) coords: CoordBufferBuilder,
 
     /// OffsetsBuilder into the polygon array where each geometry starts
     pub(crate) geom_offsets: OffsetsBuilder<i32>,
@@ -68,12 +68,18 @@ impl<const D: usize> MultiPolygonBuilder<D> {
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let coords = match coord_type {
-            CoordType::Interleaved => CoordBufferBuilder::Interleaved(
-                InterleavedCoordBufferBuilder::with_capacity(capacity.coord_capacity),
-            ),
-            CoordType::Separated => CoordBufferBuilder::Separated(
-                SeparatedCoordBufferBuilder::with_capacity(capacity.coord_capacity),
-            ),
+            CoordType::Interleaved => {
+                CoordBufferBuilder::Interleaved(InterleavedCoordBufferBuilder::with_capacity(
+                    capacity.coord_capacity,
+                    D.try_into().unwrap(),
+                ))
+            }
+            CoordType::Separated => {
+                CoordBufferBuilder::Separated(SeparatedCoordBufferBuilder::with_capacity(
+                    capacity.coord_capacity,
+                    D.try_into().unwrap(),
+                ))
+            }
         };
 
         Self {
@@ -132,7 +138,7 @@ impl<const D: usize> MultiPolygonBuilder<D> {
     /// - if the largest polygon offset does not match the size of ring offsets
     /// - if the largest geometry offset does not match the size of polygon offsets
     pub fn try_new(
-        coords: CoordBufferBuilder<D>,
+        coords: CoordBufferBuilder,
         geom_offsets: OffsetsBuilder<i32>,
         polygon_offsets: OffsetsBuilder<i32>,
         ring_offsets: OffsetsBuilder<i32>,

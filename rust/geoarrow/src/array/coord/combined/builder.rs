@@ -85,19 +85,62 @@ impl CoordBufferBuilder {
         }
     }
 
-    // TODO: how should this handle coords that don't have the same dimension D?
-    pub fn push_coord(&mut self, point: &impl CoordTrait<T = f64>) -> Result<()> {
+    /// Push a new coord onto the end of this coordinate buffer
+    ///
+    /// ## Panics
+    ///
+    /// - If the added coordinate does not have the same dimension as the coordinate buffer.
+    pub fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
         match self {
-            CoordBufferBuilder::Interleaved(cb) => cb.push_coord(point),
-            CoordBufferBuilder::Separated(cb) => cb.push_coord(point),
+            CoordBufferBuilder::Interleaved(cb) => cb.push_coord(coord),
+            CoordBufferBuilder::Separated(cb) => cb.push_coord(coord),
         }
     }
 
-    // TODO: how should this handle coords that don't have the same dimension D?
+    /// Push a new coord onto the end of this coordinate buffer
+    ///
+    /// ## Errors
+    ///
+    /// - If the added coordinate does not have the same dimension as the coordinate buffer.
+    pub fn try_push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+        match self {
+            CoordBufferBuilder::Interleaved(cb) => cb.try_push_coord(coord),
+            CoordBufferBuilder::Separated(cb) => cb.try_push_coord(coord),
+        }
+    }
+
+    /// Push a valid coordinate with NaN values
+    ///
+    /// Used in the case of point and rect arrays, where a `null` array value still needs to have
+    /// space allocated for it.
+    pub fn push_nan_coord(&mut self) {
+        match self {
+            CoordBufferBuilder::Interleaved(cb) => cb.push_nan_coord(),
+            CoordBufferBuilder::Separated(cb) => cb.push_nan_coord(),
+        }
+    }
+
+    /// Push a new point onto the end of this coordinate buffer
+    ///
+    /// ## Panics
+    ///
+    /// - If the added point does not have the same dimension as the coordinate buffer.
     pub fn push_point(&mut self, point: &impl PointTrait<T = f64>) {
         match self {
             CoordBufferBuilder::Interleaved(cb) => cb.push_point(point),
             CoordBufferBuilder::Separated(cb) => cb.push_point(point),
+        }
+    }
+
+    /// Push a new point onto the end of this coordinate buffer
+    ///
+    /// ## Errors
+    ///
+    /// - If the added point does not have the same dimension as the coordinate buffer.
+    pub fn try_push_point(&mut self, point: &impl PointTrait<T = f64>) -> Result<()> {
+        match self {
+            CoordBufferBuilder::Interleaved(cb) => cb.try_push_point(point),
+            CoordBufferBuilder::Separated(cb) => cb.try_push_point(point),
         }
     }
 }

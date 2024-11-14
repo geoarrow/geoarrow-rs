@@ -233,8 +233,8 @@ impl<const D: usize> TryFrom<&StructArray> for RectArray<D> {
         };
 
         Ok(Self::new(
-            SeparatedCoordBuffer::new(lower),
-            SeparatedCoordBuffer::new(upper),
+            SeparatedCoordBuffer::new(lower, D.try_into().unwrap()),
+            SeparatedCoordBuffer::new(upper, D.try_into().unwrap()),
             validity.cloned(),
             Default::default(),
         ))

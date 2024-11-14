@@ -20,7 +20,7 @@ use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, Point
 #[derive(Debug)]
 pub struct PointBuilder<const D: usize> {
     metadata: Arc<ArrayMetadata>,
-    pub coords: CoordBufferBuilder<D>,
+    pub coords: CoordBufferBuilder,
     pub validity: NullBufferBuilder,
 }
 
@@ -47,11 +47,11 @@ impl<const D: usize> PointBuilder<D> {
     ) -> Self {
         let coords = match coord_type {
             CoordType::Interleaved => CoordBufferBuilder::Interleaved(
-                InterleavedCoordBufferBuilder::with_capacity(capacity),
+                InterleavedCoordBufferBuilder::with_capacity(capacity, D.try_into().unwrap()),
             ),
-            CoordType::Separated => {
-                CoordBufferBuilder::Separated(SeparatedCoordBufferBuilder::with_capacity(capacity))
-            }
+            CoordType::Separated => CoordBufferBuilder::Separated(
+                SeparatedCoordBufferBuilder::with_capacity(capacity, D.try_into().unwrap()),
+            ),
         };
         Self {
             coords,
@@ -97,7 +97,7 @@ impl<const D: usize> PointBuilder<D> {
     ///
     /// - The validity is not `None` and its length is different from the number of geometries
     pub fn try_new(
-        coords: CoordBufferBuilder<D>,
+        coords: CoordBufferBuilder,
         validity: NullBufferBuilder,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
@@ -110,7 +110,7 @@ impl<const D: usize> PointBuilder<D> {
     }
 
     /// Extract the low-level APIs from the [`PointBuilder`].
-    pub fn into_inner(self) -> (CoordBufferBuilder<D>, NullBufferBuilder) {
+    pub fn into_inner(self) -> (CoordBufferBuilder, NullBufferBuilder) {
         (self.coords, self.validity)
     }
 
@@ -119,38 +119,68 @@ impl<const D: usize> PointBuilder<D> {
     }
 
     /// Add a new coord to the end of this array, where the coord is a non-empty point
+    ///
+    /// ## Panics
+    ///
+    /// - If the added coordinate does not have the same dimension as the point array.
     #[inline]
     pub fn push_coord(&mut self, value: Option<&impl CoordTrait<T = f64>>) {
-        if let Some(value) = value {
-            self.coords.push_coord(value);
-            self.validity.append(true);
-        } else {
-            self.push_null()
-        }
+        self.try_push_coord(value).unwrap()
     }
 
     /// Add a new point to the end of this array.
+    ///
+    /// ## Panics
+    ///
+    /// - If the added point does not have the same dimension as the point array.
     #[inline]
     pub fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) {
+        self.try_push_point(value).unwrap()
+    }
+
+    /// Add a new coord to the end of this array, where the coord is a non-empty point
+    ///
+    /// ## Errors
+    ///
+    /// - If the added coordinate does not have the same dimension as the point array.
+    #[inline]
+    pub fn try_push_coord(&mut self, value: Option<&impl CoordTrait<T = f64>>) -> Result<()> {
         if let Some(value) = value {
-            self.coords.push_point(value);
+            self.coords.try_push_coord(value)?;
             self.validity.append(true);
         } else {
             self.push_null()
-        }
+        };
+        Ok(())
+    }
+
+    /// Add a new point to the end of this array.
+    ///
+    /// ## Errors
+    ///
+    /// - If the added point does not have the same dimension as the point array.
+    #[inline]
+    pub fn try_push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) -> Result<()> {
+        if let Some(value) = value {
+            self.coords.try_push_point(value)?;
+            self.validity.append(true);
+        } else {
+            self.push_null()
+        };
+        Ok(())
     }
 
     /// Add a valid but empty point to the end of this array.
     #[inline]
     pub fn push_empty(&mut self) {
-        self.coords.push(core::array::from_fn(|_| f64::NAN));
+        self.coords.push_nan_coord();
         self.validity.append_non_null();
     }
 
     /// Add a new null value to the end of this array.
     #[inline]
     pub fn push_null(&mut self) {
-        self.coords.push(core::array::from_fn(|_| 0.));
+        self.coords.push_nan_coord();
         self.validity.append_null();
     }
 

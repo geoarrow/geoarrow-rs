@@ -112,7 +112,21 @@ impl SeparatedCoordBufferBuilder {
         self.len() == 0
     }
 
-    pub fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+    /// Push a new coord onto the end of this coordinate buffer
+    ///
+    /// ## Panics
+    ///
+    /// - If the added coordinate does not have the same dimension as the coordinate buffer.
+    pub fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
+        self.try_push_coord(coord).unwrap()
+    }
+
+    /// Push a new coord onto the end of this coordinate buffer
+    ///
+    /// ## Errors
+    ///
+    /// - If the added coordinate does not have the same dimension as the coordinate buffer.
+    pub fn try_push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
         // TODO: should check xyz/zym
         if coord.dim().size() != self.dim.size() {
             return Err(GeoArrowError::General(
@@ -128,20 +142,43 @@ impl SeparatedCoordBufferBuilder {
         Ok(())
     }
 
-    pub fn push_point(&mut self, point: &impl PointTrait<T = f64>) {
-        if let Some(coord) = point.coord() {
-            self.push_coord(&coord);
-        } else {
-            for i in 0..self.dim.size() {
-                self.buffers[i].push(f64::NAN);
-            }
+    /// Push a valid coordinate with NaN values
+    ///
+    /// Used in the case of point and rect arrays, where a `null` array value still needs to have
+    /// space allocated for it.
+    pub fn push_nan_coord(&mut self) {
+        for i in 0..self.dim.size() {
+            self.buffers[i].push(f64::NAN);
         }
+    }
+
+    /// Push a new point onto the end of this coordinate buffer
+    ///
+    /// ## Panics
+    ///
+    /// - If the added point does not have the same dimension as the coordinate buffer.
+    pub fn push_point(&mut self, point: &impl PointTrait<T = f64>) {
+        self.try_push_point(point).unwrap()
+    }
+
+    /// Push a new point onto the end of this coordinate buffer
+    ///
+    /// ## Errors
+    ///
+    /// - If the added point does not have the same dimension as the coordinate buffer.
+    pub fn try_push_point(&mut self, point: &impl PointTrait<T = f64>) -> Result<()> {
+        if let Some(coord) = point.coord() {
+            self.try_push_coord(&coord)?;
+        } else {
+            self.push_nan_coord();
+        };
+        Ok(())
     }
 
     pub fn from_coords<G: CoordTrait<T = f64>>(coords: &[G], dim: Dimension) -> Result<Self> {
         let mut buffer = SeparatedCoordBufferBuilder::with_capacity(coords.len(), dim);
         for coord in coords {
-            buffer.push_coord(coord);
+            buffer.try_push_coord(coord)?;
         }
         Ok(buffer)
     }

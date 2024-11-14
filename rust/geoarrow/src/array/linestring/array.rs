@@ -353,7 +353,7 @@ impl<const D: usize> TryFrom<&GenericListArray<i32>> for LineStringArray<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: &GenericListArray<i32>) -> Result<Self> {
-        let coords: CoordBuffer = value.values().as_ref().try_into()?;
+        let coords = CoordBuffer::from_arrow(value.values().as_ref(), D.try_into()?)?;
         let geom_offsets = value.offsets();
         let validity = value.nulls();
 
@@ -370,7 +370,7 @@ impl<const D: usize> TryFrom<&GenericListArray<i64>> for LineStringArray<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: &GenericListArray<i64>) -> Result<Self> {
-        let coords: CoordBuffer = value.values().as_ref().try_into()?;
+        let coords = CoordBuffer::from_arrow(value.values().as_ref(), D.try_into()?)?;
         let geom_offsets = offsets_buffer_i64_to_i32(value.offsets())?;
         let validity = value.nulls();
 

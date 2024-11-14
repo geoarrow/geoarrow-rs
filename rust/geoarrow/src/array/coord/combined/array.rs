@@ -239,7 +239,8 @@ mod test {
         ));
 
         let coords2 = vec![0., 3., 1., 4., 2., 5.];
-        let buf2 = CoordBuffer::Interleaved(coords2.try_into()?);
+        let buf2 =
+            CoordBuffer::Interleaved(InterleavedCoordBuffer::new(coords2.into(), Dimension::XY));
 
         assert_eq!(buf1, buf2);
         Ok(())
@@ -253,7 +254,9 @@ mod test {
         let buf1 = CoordBuffer::Separated((x1, y1).try_into()?).slice(1, 1);
 
         let coords2 = vec![0., 3., 1., 4., 2., 5.];
-        let buf2 = CoordBuffer::Interleaved(coords2.try_into()?).slice(1, 1);
+        let buf2 =
+            CoordBuffer::Interleaved(InterleavedCoordBuffer::new(coords2.into(), Dimension::XY))
+                .slice(1, 1);
 
         assert_eq!(buf1, buf2);
         Ok(())

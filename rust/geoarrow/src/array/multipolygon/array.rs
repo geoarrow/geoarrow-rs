@@ -488,7 +488,7 @@ impl<const D: usize> TryFrom<&GenericListArray<i32>> for MultiPolygonArray<D> {
         let rings_array = rings_dyn_array.as_list::<i32>();
 
         let ring_offsets = rings_array.offsets();
-        let coords: CoordBuffer = rings_array.values().as_ref().try_into()?;
+        let coords = CoordBuffer::from_arrow(rings_array.values().as_ref(), D.try_into()?)?;
 
         Ok(Self::new(
             coords,
@@ -516,7 +516,7 @@ impl<const D: usize> TryFrom<&GenericListArray<i64>> for MultiPolygonArray<D> {
         let rings_array = rings_dyn_array.as_list::<i64>();
 
         let ring_offsets = offsets_buffer_i64_to_i32(rings_array.offsets())?;
-        let coords: CoordBuffer = rings_array.values().as_ref().try_into()?;
+        let coords = CoordBuffer::from_arrow(rings_array.values().as_ref(), D.try_into()?)?;
 
         Ok(Self::new(
             coords,

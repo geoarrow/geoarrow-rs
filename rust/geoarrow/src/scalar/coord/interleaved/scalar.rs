@@ -129,6 +129,8 @@ impl CoordTrait for &InterleavedCoord<'_> {
 
 #[cfg(test)]
 mod test {
+    use arrow_buffer::ScalarBuffer;
+
     use crate::array::{InterleavedCoordBuffer, SeparatedCoordBuffer};
     use crate::datatypes::Dimension;
 
@@ -154,7 +156,15 @@ mod test {
 
         let x = vec![0.];
         let y = vec![3.];
-        let buf2 = SeparatedCoordBuffer::new([x.into(), y.into()], Dimension::XY);
+        let buf2 = SeparatedCoordBuffer::new(
+            [
+                x.into(),
+                y.into(),
+                ScalarBuffer::from(vec![]),
+                ScalarBuffer::from(vec![]),
+            ],
+            Dimension::XY,
+        );
         let coord2 = buf2.value(0);
 
         assert_eq!(coord1, coord2);

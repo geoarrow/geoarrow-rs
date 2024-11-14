@@ -43,7 +43,7 @@ impl<'a, const D: usize> Polygon<'a, D> {
     }
 
     pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, OffsetBuffer<i32>, usize) {
-        let arr = PolygonArray::new(
+        let arr = PolygonArray::<D>::new(
             self.coords.clone(),
             self.geom_offsets.clone(),
             self.ring_offsets.clone(),

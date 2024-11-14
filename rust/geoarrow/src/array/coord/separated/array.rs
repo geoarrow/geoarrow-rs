@@ -51,11 +51,6 @@ impl SeparatedCoordBuffer {
         Ok(Self { buffers, dim })
     }
 
-    /// Access the underlying coordinate buffers.
-    pub(crate) fn coords(&self) -> &[ScalarBuffer<f64>; 4] {
-        &self.buffers
-    }
-
     pub fn dim(&self) -> Dimension {
         self.dim
     }

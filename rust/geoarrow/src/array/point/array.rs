@@ -283,7 +283,7 @@ impl<const D: usize> TryFrom<&FixedSizeListArray> for PointArray<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: &FixedSizeListArray) -> Result<Self> {
-        let interleaved_coords: InterleavedCoordBuffer = value.try_into()?;
+        let interleaved_coords = InterleavedCoordBuffer::from_arrow(value, D.try_into()?)?;
 
         Ok(Self::new(
             CoordBuffer::Interleaved(interleaved_coords),
@@ -298,7 +298,7 @@ impl<const D: usize> TryFrom<&StructArray> for PointArray<D> {
 
     fn try_from(value: &StructArray) -> Result<Self> {
         let validity = value.nulls();
-        let separated_coords: SeparatedCoordBuffer = value.try_into()?;
+        let separated_coords = SeparatedCoordBuffer::from_arrow(value, D.try_into()?)?;
         Ok(Self::new(
             CoordBuffer::Separated(separated_coords),
             validity.cloned(),
