@@ -12,7 +12,7 @@ use rstar::{RTreeObject, AABB};
 /// An Arrow equivalent of a MultiLineString
 #[derive(Debug, Clone)]
 pub struct MultiLineString<'a, const D: usize> {
-    pub(crate) coords: &'a CoordBuffer<D>,
+    pub(crate) coords: &'a CoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
     pub(crate) geom_offsets: &'a OffsetBuffer<i32>,
@@ -27,7 +27,7 @@ pub struct MultiLineString<'a, const D: usize> {
 
 impl<'a, const D: usize> MultiLineString<'a, D> {
     pub fn new(
-        coords: &'a CoordBuffer<D>,
+        coords: &'a CoordBuffer,
         geom_offsets: &'a OffsetBuffer<i32>,
         ring_offsets: &'a OffsetBuffer<i32>,
         geom_index: usize,
@@ -42,8 +42,8 @@ impl<'a, const D: usize> MultiLineString<'a, D> {
         }
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer<D>, OffsetBuffer<i32>, OffsetBuffer<i32>, usize) {
-        let arr = MultiLineStringArray::new(
+    pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, OffsetBuffer<i32>, usize) {
+        let arr = MultiLineStringArray::<D>::new(
             self.coords.clone(),
             self.geom_offsets.clone(),
             self.ring_offsets.clone(),
@@ -82,12 +82,7 @@ impl<'a, const D: usize> MultiLineStringTrait for MultiLineString<'a, D> {
     type LineStringType<'b> = LineString<'a, D> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
-        }
+        self.coords.dim().into()
     }
 
     fn num_line_strings(&self) -> usize {
@@ -105,12 +100,7 @@ impl<'a, const D: usize> MultiLineStringTrait for &'a MultiLineString<'a, D> {
     type LineStringType<'b> = LineString<'a, D> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
-        }
+        self.coords.dim().into()
     }
 
     fn num_line_strings(&self) -> usize {

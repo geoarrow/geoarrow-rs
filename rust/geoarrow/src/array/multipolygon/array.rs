@@ -33,7 +33,7 @@ pub struct MultiPolygonArray<const D: usize> {
 
     pub(crate) metadata: Arc<ArrayMetadata>,
 
-    pub(crate) coords: CoordBuffer<D>,
+    pub(crate) coords: CoordBuffer,
 
     /// Offsets into the polygon array where each geometry starts
     pub(crate) geom_offsets: OffsetBuffer<i32>,
@@ -48,8 +48,8 @@ pub struct MultiPolygonArray<const D: usize> {
     pub(crate) validity: Option<NullBuffer>,
 }
 
-pub(super) fn check<const D: usize>(
-    coords: &CoordBuffer<D>,
+pub(super) fn check(
+    coords: &CoordBuffer,
     geom_offsets: &OffsetBuffer<i32>,
     polygon_offsets: &OffsetBuffer<i32>,
     ring_offsets: &OffsetBuffer<i32>,
@@ -95,7 +95,7 @@ impl<const D: usize> MultiPolygonArray<D> {
     /// - if the largest polygon offset does not match the size of ring offsets
     /// - if the largest geometry offset does not match the size of polygon offsets
     pub fn new(
-        coords: CoordBuffer<D>,
+        coords: CoordBuffer,
         geom_offsets: OffsetBuffer<i32>,
         polygon_offsets: OffsetBuffer<i32>,
         ring_offsets: OffsetBuffer<i32>,
@@ -126,7 +126,7 @@ impl<const D: usize> MultiPolygonArray<D> {
     /// - if the largest polygon offset does not match the size of ring offsets
     /// - if the largest geometry offset does not match the size of polygon offsets
     pub fn try_new(
-        coords: CoordBuffer<D>,
+        coords: CoordBuffer,
         geom_offsets: OffsetBuffer<i32>,
         polygon_offsets: OffsetBuffer<i32>,
         ring_offsets: OffsetBuffer<i32>,
@@ -169,14 +169,14 @@ impl<const D: usize> MultiPolygonArray<D> {
         Field::new_list(name, self.rings_field(), false).into()
     }
 
-    pub fn coords(&self) -> &CoordBuffer<D> {
+    pub fn coords(&self) -> &CoordBuffer {
         &self.coords
     }
 
     pub fn into_inner(
         self,
     ) -> (
-        CoordBuffer<D>,
+        CoordBuffer,
         OffsetBuffer<i32>,
         OffsetBuffer<i32>,
         OffsetBuffer<i32>,
@@ -379,7 +379,7 @@ impl<const D: usize> NativeArray for MultiPolygonArray<D> {
 }
 
 impl<const D: usize> GeometryArraySelfMethods<D> for MultiPolygonArray<D> {
-    fn with_coords(self, coords: CoordBuffer<D>) -> Self {
+    fn with_coords(self, coords: CoordBuffer) -> Self {
         assert_eq!(coords.len(), self.coords.len());
         Self::new(
             coords,
@@ -421,7 +421,7 @@ impl<'a, const D: usize> crate::trait_::NativeGEOSGeometryAccessor<'a> for Multi
         &'a self,
         index: usize,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
-        let geom = MultiPolygon::new(
+        let geom = MultiPolygon::<D>::new(
             &self.coords,
             &self.geom_offsets,
             &self.polygon_offsets,
@@ -488,7 +488,7 @@ impl<const D: usize> TryFrom<&GenericListArray<i32>> for MultiPolygonArray<D> {
         let rings_array = rings_dyn_array.as_list::<i32>();
 
         let ring_offsets = rings_array.offsets();
-        let coords: CoordBuffer<D> = rings_array.values().as_ref().try_into()?;
+        let coords = CoordBuffer::from_arrow(rings_array.values().as_ref(), D.try_into()?)?;
 
         Ok(Self::new(
             coords,
@@ -516,7 +516,7 @@ impl<const D: usize> TryFrom<&GenericListArray<i64>> for MultiPolygonArray<D> {
         let rings_array = rings_dyn_array.as_list::<i64>();
 
         let ring_offsets = offsets_buffer_i64_to_i32(rings_array.offsets())?;
-        let coords: CoordBuffer<D> = rings_array.values().as_ref().try_into()?;
+        let coords = CoordBuffer::from_arrow(rings_array.values().as_ref(), D.try_into()?)?;
 
         Ok(Self::new(
             coords,

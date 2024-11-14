@@ -14,8 +14,8 @@ use std::sync::Arc;
 #[derive(Debug)]
 pub struct RectBuilder<const D: usize> {
     pub metadata: Arc<ArrayMetadata>,
-    pub lower: SeparatedCoordBufferBuilder<D>,
-    pub upper: SeparatedCoordBufferBuilder<D>,
+    pub lower: SeparatedCoordBufferBuilder,
+    pub upper: SeparatedCoordBufferBuilder,
     pub validity: NullBufferBuilder,
 }
 
@@ -37,8 +37,8 @@ impl<const D: usize> RectBuilder<D> {
     /// Creates a new [`RectBuilder`] with a capacity.
     pub fn with_capacity_and_options(capacity: usize, metadata: Arc<ArrayMetadata>) -> Self {
         Self {
-            lower: SeparatedCoordBufferBuilder::with_capacity(capacity),
-            upper: SeparatedCoordBufferBuilder::with_capacity(capacity),
+            lower: SeparatedCoordBufferBuilder::with_capacity(capacity, D.try_into().unwrap()),
+            upper: SeparatedCoordBufferBuilder::with_capacity(capacity, D.try_into().unwrap()),
             validity: NullBufferBuilder::new(capacity),
             metadata,
         }
@@ -83,8 +83,8 @@ impl<const D: usize> RectBuilder<D> {
     ///
     /// - The validity is not `None` and its length is different from the number of geometries
     pub fn try_new(
-        lower: SeparatedCoordBufferBuilder<D>,
-        upper: SeparatedCoordBufferBuilder<D>,
+        lower: SeparatedCoordBufferBuilder,
+        upper: SeparatedCoordBufferBuilder,
         validity: NullBufferBuilder,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self, GeoArrowError> {
@@ -105,8 +105,8 @@ impl<const D: usize> RectBuilder<D> {
     pub fn into_inner(
         self,
     ) -> (
-        SeparatedCoordBufferBuilder<D>,
-        SeparatedCoordBufferBuilder<D>,
+        SeparatedCoordBufferBuilder,
+        SeparatedCoordBufferBuilder,
         NullBufferBuilder,
     ) {
         (self.lower, self.upper, self.validity)
@@ -132,8 +132,8 @@ impl<const D: usize> RectBuilder<D> {
             self.validity.append_non_null()
         } else {
             // Since it's a struct, we still need to push coords when null
-            self.lower.push(core::array::from_fn(|_| 0.));
-            self.upper.push(core::array::from_fn(|_| 0.));
+            self.lower.push_nan_coord();
+            self.upper.push_nan_coord();
             self.validity.append_null();
         }
     }

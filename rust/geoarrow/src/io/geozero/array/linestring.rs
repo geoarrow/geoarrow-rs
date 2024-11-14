@@ -61,7 +61,7 @@ impl<const D: usize> GeomProcessor for LineStringBuilder<D> {
         // # Safety:
         // This upholds invariants because we call try_push_length in multipoint_begin to ensure
         // offset arrays are correct.
-        unsafe { self.push_coord(&geo::Coord { x, y }) }
+        unsafe { self.push_coord(&geo::Coord { x, y }) }.unwrap();
         Ok(())
     }
 

@@ -3,22 +3,28 @@ use core::f64;
 use crate::array::{
     CoordBuffer, CoordType, InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder,
 };
+use crate::datatypes::Dimension;
+use crate::error::Result;
 use geo_traits::{CoordTrait, PointTrait};
 
 /// The GeoArrow equivalent to `Vec<Coord>`: a mutable collection of coordinates.
 ///
 /// Converting an [`CoordBufferBuilder`] into a [`CoordBuffer`] is `O(1)`.
 #[derive(Debug, Clone)]
-pub enum CoordBufferBuilder<const D: usize> {
-    Interleaved(InterleavedCoordBufferBuilder<D>),
-    Separated(SeparatedCoordBufferBuilder<D>),
+pub enum CoordBufferBuilder {
+    Interleaved(InterleavedCoordBufferBuilder),
+    Separated(SeparatedCoordBufferBuilder),
 }
 
-impl<const D: usize> CoordBufferBuilder<D> {
-    pub fn initialize(len: usize, interleaved: bool) -> Self {
+impl CoordBufferBuilder {
+    pub fn initialize(len: usize, interleaved: bool, dim: Dimension) -> Self {
         match interleaved {
-            true => CoordBufferBuilder::Interleaved(InterleavedCoordBufferBuilder::initialize(len)),
-            false => CoordBufferBuilder::Separated(SeparatedCoordBufferBuilder::initialize(len)),
+            true => {
+                CoordBufferBuilder::Interleaved(InterleavedCoordBufferBuilder::initialize(len, dim))
+            }
+            false => {
+                CoordBufferBuilder::Separated(SeparatedCoordBufferBuilder::initialize(len, dim))
+            }
         }
     }
 
@@ -72,13 +78,6 @@ impl<const D: usize> CoordBufferBuilder<D> {
         self.len() == 0
     }
 
-    pub fn push(&mut self, c: [f64; D]) {
-        match self {
-            CoordBufferBuilder::Interleaved(cb) => cb.push(c),
-            CoordBufferBuilder::Separated(cb) => cb.push(c),
-        }
-    }
-
     pub fn coord_type(&self) -> CoordType {
         match self {
             CoordBufferBuilder::Interleaved(_) => CoordType::Interleaved,
@@ -86,48 +85,68 @@ impl<const D: usize> CoordBufferBuilder<D> {
         }
     }
 
-    // TODO: how should this handle coords that don't have the same dimension D?
-    pub fn push_coord(&mut self, point: &impl CoordTrait<T = f64>) {
+    /// Push a new coord onto the end of this coordinate buffer
+    ///
+    /// ## Panics
+    ///
+    /// - If the added coordinate does not have the same dimension as the coordinate buffer.
+    pub fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
         match self {
-            CoordBufferBuilder::Interleaved(cb) => cb.push_coord(point),
-            CoordBufferBuilder::Separated(cb) => cb.push_coord(point),
+            CoordBufferBuilder::Interleaved(cb) => cb.push_coord(coord),
+            CoordBufferBuilder::Separated(cb) => cb.push_coord(coord),
         }
     }
 
-    // TODO: how should this handle coords that don't have the same dimension D?
+    /// Push a new coord onto the end of this coordinate buffer
+    ///
+    /// ## Errors
+    ///
+    /// - If the added coordinate does not have the same dimension as the coordinate buffer.
+    pub fn try_push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+        match self {
+            CoordBufferBuilder::Interleaved(cb) => cb.try_push_coord(coord),
+            CoordBufferBuilder::Separated(cb) => cb.try_push_coord(coord),
+        }
+    }
+
+    /// Push a valid coordinate with NaN values
+    ///
+    /// Used in the case of point and rect arrays, where a `null` array value still needs to have
+    /// space allocated for it.
+    pub fn push_nan_coord(&mut self) {
+        match self {
+            CoordBufferBuilder::Interleaved(cb) => cb.push_nan_coord(),
+            CoordBufferBuilder::Separated(cb) => cb.push_nan_coord(),
+        }
+    }
+
+    /// Push a new point onto the end of this coordinate buffer
+    ///
+    /// ## Panics
+    ///
+    /// - If the added point does not have the same dimension as the coordinate buffer.
     pub fn push_point(&mut self, point: &impl PointTrait<T = f64>) {
         match self {
             CoordBufferBuilder::Interleaved(cb) => cb.push_point(point),
             CoordBufferBuilder::Separated(cb) => cb.push_point(point),
         }
     }
-}
 
-impl CoordBufferBuilder<2> {
-    pub fn set_coord(&mut self, i: usize, coord: geo::Coord) {
+    /// Push a new point onto the end of this coordinate buffer
+    ///
+    /// ## Errors
+    ///
+    /// - If the added point does not have the same dimension as the coordinate buffer.
+    pub fn try_push_point(&mut self, point: &impl PointTrait<T = f64>) -> Result<()> {
         match self {
-            CoordBufferBuilder::Interleaved(cb) => cb.set_coord(i, coord),
-            CoordBufferBuilder::Separated(cb) => cb.set_coord(i, coord),
-        }
-    }
-
-    pub fn set_xy(&mut self, i: usize, x: f64, y: f64) {
-        match self {
-            CoordBufferBuilder::Interleaved(cb) => cb.set_xy(i, x, y),
-            CoordBufferBuilder::Separated(cb) => cb.set_xy(i, x, y),
-        }
-    }
-
-    pub fn push_xy(&mut self, x: f64, y: f64) {
-        match self {
-            CoordBufferBuilder::Interleaved(cb) => cb.push_xy(x, y),
-            CoordBufferBuilder::Separated(cb) => cb.push_xy(x, y),
+            CoordBufferBuilder::Interleaved(cb) => cb.try_push_point(point),
+            CoordBufferBuilder::Separated(cb) => cb.try_push_point(point),
         }
     }
 }
 
-impl<const D: usize> From<CoordBufferBuilder<D>> for CoordBuffer<D> {
-    fn from(value: CoordBufferBuilder<D>) -> Self {
+impl From<CoordBufferBuilder> for CoordBuffer {
+    fn from(value: CoordBufferBuilder) -> Self {
         match value {
             CoordBufferBuilder::Interleaved(cb) => CoordBuffer::Interleaved(cb.into()),
             CoordBufferBuilder::Separated(cb) => CoordBuffer::Separated(cb.into()),

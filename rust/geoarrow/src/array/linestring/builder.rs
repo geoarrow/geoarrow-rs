@@ -22,7 +22,7 @@ use std::sync::Arc;
 pub struct LineStringBuilder<const D: usize> {
     metadata: Arc<ArrayMetadata>,
 
-    pub(crate) coords: CoordBufferBuilder<D>,
+    pub(crate) coords: CoordBufferBuilder,
 
     /// Offsets into the coordinate array where each geometry starts
     pub(crate) geom_offsets: OffsetsBuilder<i32>,
@@ -52,12 +52,18 @@ impl<const D: usize> LineStringBuilder<D> {
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let coords = match coord_type {
-            CoordType::Interleaved => CoordBufferBuilder::Interleaved(
-                InterleavedCoordBufferBuilder::with_capacity(capacity.coord_capacity()),
-            ),
-            CoordType::Separated => CoordBufferBuilder::Separated(
-                SeparatedCoordBufferBuilder::with_capacity(capacity.coord_capacity()),
-            ),
+            CoordType::Interleaved => {
+                CoordBufferBuilder::Interleaved(InterleavedCoordBufferBuilder::with_capacity(
+                    capacity.coord_capacity(),
+                    D.try_into().unwrap(),
+                ))
+            }
+            CoordType::Separated => {
+                CoordBufferBuilder::Separated(SeparatedCoordBufferBuilder::with_capacity(
+                    capacity.coord_capacity(),
+                    D.try_into().unwrap(),
+                ))
+            }
         };
         Self {
             coords,
@@ -107,7 +113,7 @@ impl<const D: usize> LineStringBuilder<D> {
     /// - The validity is not `None` and its length is different from the number of geometries
     /// - if the largest geometry offset does not match the number of coordinates
     pub fn try_new(
-        coords: CoordBufferBuilder<D>,
+        coords: CoordBufferBuilder,
         geom_offsets: OffsetsBuilder<i32>,
         validity: NullBufferBuilder,
         metadata: Arc<ArrayMetadata>,
@@ -126,13 +132,7 @@ impl<const D: usize> LineStringBuilder<D> {
     }
 
     /// Extract the low-level APIs from the [`LineStringBuilder`].
-    pub fn into_inner(
-        self,
-    ) -> (
-        CoordBufferBuilder<D>,
-        OffsetsBuilder<i32>,
-        NullBufferBuilder,
-    ) {
+    pub fn into_inner(self) -> (CoordBufferBuilder, OffsetsBuilder<i32>, NullBufferBuilder) {
         (self.coords, self.geom_offsets, self.validity)
     }
 
@@ -231,7 +231,7 @@ impl<const D: usize> LineStringBuilder<D> {
         if let Some(line_string) = value {
             let num_coords = line_string.num_coords();
             for coord in line_string.coords() {
-                self.coords.push_coord(&coord);
+                self.coords.try_push_coord(&coord)?;
             }
             self.try_push_length(num_coords)?;
         } else {
@@ -265,8 +265,8 @@ impl<const D: usize> LineStringBuilder<D> {
     /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
     /// to the array upholds the necessary invariants of the array.
     #[inline]
-    pub unsafe fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
-        self.coords.push_coord(coord)
+    pub unsafe fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+        self.coords.try_push_coord(coord)
     }
 
     #[inline]

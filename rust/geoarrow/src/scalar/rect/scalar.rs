@@ -9,15 +9,15 @@ use geo_traits::RectTrait;
 
 #[derive(Debug, Clone)]
 pub struct Rect<'a, const D: usize> {
-    lower: &'a SeparatedCoordBuffer<D>,
-    upper: &'a SeparatedCoordBuffer<D>,
+    lower: &'a SeparatedCoordBuffer,
+    upper: &'a SeparatedCoordBuffer,
     pub(crate) geom_index: usize,
 }
 
 impl<'a, const D: usize> Rect<'a, D> {
     pub fn new(
-        lower: &'a SeparatedCoordBuffer<D>,
-        upper: &'a SeparatedCoordBuffer<D>,
+        lower: &'a SeparatedCoordBuffer,
+        upper: &'a SeparatedCoordBuffer,
         geom_index: usize,
     ) -> Self {
         Self {
@@ -26,7 +26,7 @@ impl<'a, const D: usize> Rect<'a, D> {
             geom_index,
         }
     }
-    pub fn into_owned_inner(self) -> (SeparatedCoordBuffer<D>, SeparatedCoordBuffer<D>, usize) {
+    pub fn into_owned_inner(self) -> (SeparatedCoordBuffer, SeparatedCoordBuffer, usize) {
         // TODO: make hard slice?
         (self.lower.clone(), self.upper.clone(), self.geom_index)
     }
@@ -53,15 +53,10 @@ impl<'a, const D: usize> NativeScalar for Rect<'a, D> {
 // TODO: support 3d rects
 impl<'a, const D: usize> RectTrait for Rect<'a, D> {
     type T = f64;
-    type CoordType<'b> = SeparatedCoord<'a, D> where Self: 'b;
+    type CoordType<'b> = SeparatedCoord<'a> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
-        }
+        self.lower.dim.into()
     }
 
     fn min(&self) -> Self::CoordType<'_> {

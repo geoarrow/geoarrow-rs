@@ -18,25 +18,25 @@ pub trait MapCoords {
 
     fn map_coords<F>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> geo::Coord + Sync,
+        F: Fn(&crate::scalar::Coord) -> geo::Coord + Sync,
     {
         self.try_map_coords(|coord| Ok::<_, GeoArrowError>(map_op(coord)))
     }
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>;
 }
 
 // Scalar impls
 
-impl MapCoords for Coord<'_, 2> {
+impl MapCoords for Coord<'_> {
     type Output = geo::Coord;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         Ok(map_op(self)?)
@@ -48,7 +48,7 @@ impl MapCoords for Point<'_, 2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         Ok(geo::Point(map_op(&self.coord())?))
@@ -60,7 +60,7 @@ impl MapCoords for LineString<'_, 2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let output_coords = self
@@ -76,7 +76,7 @@ impl MapCoords for Polygon<'_, 2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         if self.exterior().is_none() {
@@ -98,7 +98,7 @@ impl MapCoords for MultiPoint<'_, 2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let points = self
@@ -114,7 +114,7 @@ impl MapCoords for MultiLineString<'_, 2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let lines = self
@@ -131,7 +131,7 @@ impl MapCoords for MultiPolygon<'_, 2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let polygons = self
@@ -147,7 +147,7 @@ impl MapCoords for Geometry<'_, 2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         use GeometryType::*;
@@ -175,7 +175,7 @@ impl MapCoords for GeometryCollection<'_, 2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let geoms = self
@@ -191,7 +191,7 @@ impl MapCoords for Rect<'_, 2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let lower = self.min();
@@ -201,7 +201,8 @@ impl MapCoords for Rect<'_, 2> {
         let maxx = upper.x();
         let maxy = upper.y();
         let coords = vec![minx, miny, maxx, maxy];
-        let coord_buffer = CoordBuffer::Interleaved(InterleavedCoordBuffer::new(coords.into()));
+        let coord_buffer =
+            CoordBuffer::Interleaved(InterleavedCoordBuffer::new(coords.into(), Dimension::XY));
         let lower_coord = coord_buffer.value(0);
         let upper_coord = coord_buffer.value(1);
 
@@ -216,7 +217,7 @@ impl MapCoords for PointArray<2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let mut builder = PointBuilder::with_capacity_and_options(
@@ -241,7 +242,7 @@ impl MapCoords for LineStringArray<2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let mut builder = LineStringBuilder::with_capacity_and_options(
@@ -266,7 +267,7 @@ impl MapCoords for PolygonArray<2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let mut builder = PolygonBuilder::with_capacity_and_options(
@@ -291,7 +292,7 @@ impl MapCoords for MultiPointArray<2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let mut builder = MultiPointBuilder::with_capacity_and_options(
@@ -316,7 +317,7 @@ impl MapCoords for MultiLineStringArray<2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let mut builder = MultiLineStringBuilder::with_capacity_and_options(
@@ -341,7 +342,7 @@ impl MapCoords for MultiPolygonArray<2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let mut builder = MultiPolygonBuilder::with_capacity_and_options(
@@ -366,7 +367,7 @@ impl MapCoords for MixedGeometryArray<2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let mut builder = MixedGeometryBuilder::with_capacity_and_options(
@@ -392,7 +393,7 @@ impl MapCoords for GeometryCollectionArray<2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let mut builder = GeometryCollectionBuilder::with_capacity_and_options(
@@ -418,7 +419,7 @@ impl MapCoords for RectArray<2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let mut builder = RectBuilder::with_capacity_and_options(self.len(), self.metadata());
@@ -439,7 +440,7 @@ impl MapCoords for &dyn NativeArray {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         use Dimension::*;
@@ -470,7 +471,7 @@ impl MapCoords for ChunkedPointArray<2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         Ok(ChunkedGeometryArray::new(
@@ -484,7 +485,7 @@ impl MapCoords for ChunkedLineStringArray<2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         Ok(ChunkedGeometryArray::new(
@@ -498,7 +499,7 @@ impl MapCoords for ChunkedPolygonArray<2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         Ok(ChunkedGeometryArray::new(
@@ -512,7 +513,7 @@ impl MapCoords for ChunkedMultiPointArray<2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         Ok(ChunkedGeometryArray::new(
@@ -526,7 +527,7 @@ impl MapCoords for ChunkedMultiLineStringArray<2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         Ok(ChunkedGeometryArray::new(
@@ -540,7 +541,7 @@ impl MapCoords for ChunkedMultiPolygonArray<2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         Ok(ChunkedGeometryArray::new(
@@ -554,7 +555,7 @@ impl MapCoords for ChunkedMixedGeometryArray<2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         Ok(ChunkedGeometryArray::new(
@@ -568,7 +569,7 @@ impl MapCoords for ChunkedGeometryCollectionArray<2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         Ok(ChunkedGeometryArray::new(
@@ -582,7 +583,7 @@ impl MapCoords for ChunkedRectArray<2> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         Ok(ChunkedGeometryArray::new(
@@ -596,7 +597,7 @@ impl MapCoords for &dyn ChunkedNativeArray {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         use Dimension::*;

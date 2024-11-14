@@ -5,15 +5,15 @@ use geo_traits::RectTrait;
 
 #[derive(Clone, Debug)]
 pub struct OwnedRect<const D: usize> {
-    lower: SeparatedCoordBuffer<D>,
-    upper: SeparatedCoordBuffer<D>,
+    lower: SeparatedCoordBuffer,
+    upper: SeparatedCoordBuffer,
     geom_index: usize,
 }
 
 impl<const D: usize> OwnedRect<D> {
     pub fn new(
-        lower: SeparatedCoordBuffer<D>,
-        upper: SeparatedCoordBuffer<D>,
+        lower: SeparatedCoordBuffer,
+        upper: SeparatedCoordBuffer,
         geom_index: usize,
     ) -> Self {
         Self {
@@ -45,7 +45,7 @@ impl<const D: usize> From<OwnedRect<D>> for RectArray<D> {
 
 impl<const D: usize> RectTrait for OwnedRect<D> {
     type T = f64;
-    type CoordType<'b> = SeparatedCoord<'b, D> where Self: 'b;
+    type CoordType<'b> = SeparatedCoord<'b> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         // TODO: pass through field information from array

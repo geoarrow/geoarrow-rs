@@ -23,7 +23,7 @@ use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, Multi
 pub struct MultiLineStringBuilder<const D: usize> {
     metadata: Arc<ArrayMetadata>,
 
-    pub(crate) coords: CoordBufferBuilder<D>,
+    pub(crate) coords: CoordBufferBuilder,
 
     /// OffsetsBuilder into the ring array where each geometry starts
     pub(crate) geom_offsets: OffsetsBuilder<i32>,
@@ -36,7 +36,7 @@ pub struct MultiLineStringBuilder<const D: usize> {
 }
 
 pub type MultiLineStringInner<const D: usize> = (
-    CoordBufferBuilder<D>,
+    CoordBufferBuilder,
     OffsetsBuilder<i32>,
     OffsetsBuilder<i32>,
     NullBufferBuilder,
@@ -63,12 +63,18 @@ impl<const D: usize> MultiLineStringBuilder<D> {
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let coords = match coord_type {
-            CoordType::Interleaved => CoordBufferBuilder::Interleaved(
-                InterleavedCoordBufferBuilder::with_capacity(capacity.coord_capacity),
-            ),
-            CoordType::Separated => CoordBufferBuilder::Separated(
-                SeparatedCoordBufferBuilder::with_capacity(capacity.coord_capacity),
-            ),
+            CoordType::Interleaved => {
+                CoordBufferBuilder::Interleaved(InterleavedCoordBufferBuilder::with_capacity(
+                    capacity.coord_capacity,
+                    D.try_into().unwrap(),
+                ))
+            }
+            CoordType::Separated => {
+                CoordBufferBuilder::Separated(SeparatedCoordBufferBuilder::with_capacity(
+                    capacity.coord_capacity,
+                    D.try_into().unwrap(),
+                ))
+            }
         };
         Self {
             coords,
@@ -121,7 +127,7 @@ impl<const D: usize> MultiLineStringBuilder<D> {
     /// - if the largest ring offset does not match the number of coordinates
     /// - if the largest geometry offset does not match the size of ring offsets
     pub fn try_new(
-        coords: CoordBufferBuilder<D>,
+        coords: CoordBufferBuilder,
         geom_offsets: OffsetsBuilder<i32>,
         ring_offsets: OffsetsBuilder<i32>,
         validity: NullBufferBuilder,

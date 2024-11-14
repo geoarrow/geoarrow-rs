@@ -13,7 +13,7 @@ use rstar::{RTreeObject, AABB};
 #[derive(Debug, Clone)]
 pub struct MultiPoint<'a, const D: usize> {
     /// Buffer of coordinates
-    pub(crate) coords: &'a CoordBuffer<D>,
+    pub(crate) coords: &'a CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
     pub(crate) geom_offsets: &'a OffsetBuffer<i32>,
@@ -25,7 +25,7 @@ pub struct MultiPoint<'a, const D: usize> {
 
 impl<'a, const D: usize> MultiPoint<'a, D> {
     pub fn new(
-        coords: &'a CoordBuffer<D>,
+        coords: &'a CoordBuffer,
         geom_offsets: &'a OffsetBuffer<i32>,
         geom_index: usize,
     ) -> Self {
@@ -38,8 +38,8 @@ impl<'a, const D: usize> MultiPoint<'a, D> {
         }
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer<D>, OffsetBuffer<i32>, usize) {
-        let arr = MultiPointArray::new(
+    pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, usize) {
+        let arr = MultiPointArray::<D>::new(
             self.coords.clone(),
             self.geom_offsets.clone(),
             None,

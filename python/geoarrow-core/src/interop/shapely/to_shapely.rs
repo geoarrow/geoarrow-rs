@@ -32,21 +32,19 @@ fn check_nulls(nulls: Option<&NullBuffer>) -> PyGeoArrowResult<()> {
 }
 
 /// Copy a CoordBuffer to a numpy array of shape `(length, D)`
-fn coords_to_numpy<const D: usize>(
-    py: Python,
-    coords: &CoordBuffer<D>,
-) -> PyGeoArrowResult<PyObject> {
+fn coords_to_numpy(py: Python, coords: &CoordBuffer) -> PyGeoArrowResult<PyObject> {
     match coords {
         CoordBuffer::Interleaved(cb) => {
+            let size = cb.dim().size();
             let scalar_buffer = cb.coords();
             let numpy_coords = scalar_buffer
                 .to_pyarray_bound(py)
-                .reshape([scalar_buffer.len() / D, D])?;
+                .reshape([scalar_buffer.len() / size, size])?;
 
             Ok(numpy_coords.to_object(py))
         }
         CoordBuffer::Separated(cb) => {
-            let buffers = cb.coords();
+            let buffers = cb.buffers();
             let numpy_buffers = buffers
                 .iter()
                 .map(|buf| buf.to_pyarray_bound(py).to_object(py))
@@ -258,10 +256,10 @@ fn rect_arr(py: Python, arr: geoarrow::array::RectArray<2>) -> PyGeoArrowResult<
     let lower = arr.lower();
     let upper = arr.upper();
 
-    let xmin = &lower.coords()[0].to_pyarray_bound(py);
-    let ymin = &lower.coords()[1].to_pyarray_bound(py);
-    let xmax = &upper.coords()[0].to_pyarray_bound(py);
-    let ymax = &upper.coords()[1].to_pyarray_bound(py);
+    let xmin = &lower.buffers()[0].to_pyarray_bound(py);
+    let ymin = &lower.buffers()[1].to_pyarray_bound(py);
+    let xmax = &upper.buffers()[0].to_pyarray_bound(py);
+    let ymax = &upper.buffers()[1].to_pyarray_bound(py);
 
     let args = (xmin, ymin, xmax, ymax);
     Ok(shapely_mod.call_method1(intern!(py, "box"), args)?)

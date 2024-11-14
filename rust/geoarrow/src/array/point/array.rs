@@ -27,14 +27,11 @@ pub struct PointArray<const D: usize> {
     // Always NativeType::Point
     data_type: NativeType,
     pub(crate) metadata: Arc<ArrayMetadata>,
-    pub(crate) coords: CoordBuffer<D>,
+    pub(crate) coords: CoordBuffer,
     pub(crate) validity: Option<NullBuffer>,
 }
 
-pub(super) fn check<const D: usize>(
-    coords: &CoordBuffer<D>,
-    validity_len: Option<usize>,
-) -> Result<()> {
+pub(super) fn check(coords: &CoordBuffer, validity_len: Option<usize>) -> Result<()> {
     if validity_len.map_or(false, |len| len != coords.len()) {
         return Err(GeoArrowError::General(
             "validity mask length must match the number of values".to_string(),
@@ -55,7 +52,7 @@ impl<const D: usize> PointArray<D> {
     ///
     /// - if the validity is not `None` and its length is different from the number of geometries
     pub fn new(
-        coords: CoordBuffer<D>,
+        coords: CoordBuffer,
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
@@ -72,7 +69,7 @@ impl<const D: usize> PointArray<D> {
     ///
     /// - if the validity is not `None` and its length is different from the number of geometries
     pub fn try_new(
-        coords: CoordBuffer<D>,
+        coords: CoordBuffer,
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
@@ -86,11 +83,11 @@ impl<const D: usize> PointArray<D> {
         })
     }
 
-    pub fn coords(&self) -> &CoordBuffer<D> {
+    pub fn coords(&self) -> &CoordBuffer {
         &self.coords
     }
 
-    pub fn into_inner(self) -> (CoordBuffer<D>, Option<NullBuffer>) {
+    pub fn into_inner(self) -> (CoordBuffer, Option<NullBuffer>) {
         (self.coords, self.validity)
     }
 
@@ -226,7 +223,7 @@ impl<const D: usize> NativeArray for PointArray<D> {
 }
 
 impl<const D: usize> GeometryArraySelfMethods<D> for PointArray<D> {
-    fn with_coords(self, coords: CoordBuffer<D>) -> Self {
+    fn with_coords(self, coords: CoordBuffer) -> Self {
         assert_eq!(coords.len(), self.coords.len());
         Self::new(coords, self.validity, self.metadata)
     }
@@ -248,7 +245,7 @@ impl<'a, const D: usize> crate::trait_::NativeGEOSGeometryAccessor<'a> for Point
         &'a self,
         index: usize,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
-        let geom = Point::new(&self.coords, index);
+        let geom = Point::<D>::new(&self.coords, index);
         (&geom).try_into()
     }
 }
@@ -286,7 +283,7 @@ impl<const D: usize> TryFrom<&FixedSizeListArray> for PointArray<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: &FixedSizeListArray) -> Result<Self> {
-        let interleaved_coords: InterleavedCoordBuffer<D> = value.try_into()?;
+        let interleaved_coords = InterleavedCoordBuffer::from_arrow(value, D.try_into()?)?;
 
         Ok(Self::new(
             CoordBuffer::Interleaved(interleaved_coords),
@@ -301,7 +298,7 @@ impl<const D: usize> TryFrom<&StructArray> for PointArray<D> {
 
     fn try_from(value: &StructArray) -> Result<Self> {
         let validity = value.nulls();
-        let separated_coords: SeparatedCoordBuffer<D> = value.try_into()?;
+        let separated_coords = SeparatedCoordBuffer::from_arrow(value, D.try_into()?)?;
         Ok(Self::new(
             CoordBuffer::Separated(separated_coords),
             validity.cloned(),

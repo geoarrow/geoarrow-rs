@@ -6,7 +6,7 @@ use geo_traits::MultiLineStringTrait;
 
 #[derive(Clone, Debug)]
 pub struct OwnedMultiLineString<const D: usize> {
-    coords: CoordBuffer<D>,
+    coords: CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
     geom_offsets: OffsetBuffer<i32>,
@@ -18,7 +18,7 @@ pub struct OwnedMultiLineString<const D: usize> {
 
 impl<const D: usize> OwnedMultiLineString<D> {
     pub fn new(
-        coords: CoordBuffer<D>,
+        coords: CoordBuffer,
         geom_offsets: OffsetBuffer<i32>,
         ring_offsets: OffsetBuffer<i32>,
         geom_index: usize,

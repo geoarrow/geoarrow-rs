@@ -1,10 +1,12 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use geoarrow::algorithm::geos::Buffer;
 use geoarrow::array::{CoordBuffer, InterleavedCoordBuffer, PointArray, PolygonArray};
+use geoarrow::datatypes::Dimension;
 
 fn generate_data() -> PointArray<2> {
     let coords = vec![0.0; 100_000];
-    let coord_buffer = CoordBuffer::Interleaved(InterleavedCoordBuffer::new(coords.into()));
+    let coord_buffer =
+        CoordBuffer::Interleaved(InterleavedCoordBuffer::new(coords.into(), Dimension::XY));
     PointArray::new(coord_buffer, None, Default::default())
 }
 

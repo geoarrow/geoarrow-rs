@@ -1,6 +1,8 @@
 use core::f64;
 
 use crate::array::SeparatedCoordBuffer;
+use crate::datatypes::Dimension;
+use crate::error::{GeoArrowError, Result};
 use geo_traits::{CoordTrait, PointTrait};
 
 /// The GeoArrow equivalent to `Vec<Coord>`: a mutable collection of coordinates.
@@ -9,31 +11,63 @@ use geo_traits::{CoordTrait, PointTrait};
 ///
 /// Converting an [`SeparatedCoordBufferBuilder`] into a [`SeparatedCoordBuffer`] is `O(1)`.
 #[derive(Debug, Clone)]
-pub struct SeparatedCoordBufferBuilder<const D: usize> {
-    buffers: [Vec<f64>; D],
+pub struct SeparatedCoordBufferBuilder {
+    buffers: [Vec<f64>; 4],
+    dim: Dimension,
 }
 
-impl<const D: usize> SeparatedCoordBufferBuilder<D> {
+impl SeparatedCoordBufferBuilder {
     // TODO: switch this new (initializing to zero) to default?
-    pub fn new() -> Self {
-        Self::with_capacity(0)
+    pub fn new(dim: Dimension) -> Self {
+        Self::with_capacity(0, dim)
     }
 
-    pub fn from_vecs(buffers: [Vec<f64>; D]) -> Self {
-        Self { buffers }
-    }
+    // TODO: need to figure out how to take variable-length input but take ownership from the
+    // input.
+    // pub fn from_vecs(buffers: &[Vec<f64>], dim: Dimension) -> Result<Self> {
+    //     if buffers.len() != dim.size() {
+    //         return Err(GeoArrowError::General(
+    //             "Buffers must match dimension length ".into(),
+    //         ));
+    //     }
 
-    pub fn with_capacity(capacity: usize) -> Self {
-        Self {
-            buffers: core::array::from_fn(|_| Vec::with_capacity(capacity)),
-        }
+    //     // Fill buffers with empty buffers past needed dimensions
+    //     let buffers = core::array::from_fn(|i| {
+    //         if i < buffers.len() {
+    //             buffers[0]
+    //         } else {
+    //             Vec::new()
+    //         }
+    //     });
+
+    //     Self { buffers }
+    // }
+
+    pub fn with_capacity(capacity: usize, dim: Dimension) -> Self {
+        // Only allocate buffers for existant dimensions
+        let buffers = core::array::from_fn(|i| {
+            if i < dim.size() {
+                Vec::with_capacity(capacity)
+            } else {
+                Vec::new()
+            }
+        });
+
+        Self { buffers, dim }
     }
 
     /// Initialize a buffer of a given length with all coordinates set to 0.0
-    pub fn initialize(len: usize) -> Self {
-        Self {
-            buffers: core::array::from_fn(|_| vec![0.0f64; len]),
-        }
+    pub fn initialize(len: usize, dim: Dimension) -> Self {
+        // Only allocate buffers for existant dimensions
+        let buffers = core::array::from_fn(|i| {
+            if i < dim.size() {
+                vec![0.0f64; len]
+            } else {
+                Vec::new()
+            }
+        });
+
+        Self { buffers, dim }
     }
 
     /// Reserves capacity for at least `additional` more coordinates to be inserted
@@ -78,68 +112,85 @@ impl<const D: usize> SeparatedCoordBufferBuilder<D> {
         self.len() == 0
     }
 
-    pub fn push(&mut self, c: [f64; D]) {
-        for (i, value) in c.iter().enumerate().take(D) {
-            self.buffers[i].push(*value);
-        }
-    }
-
+    /// Push a new coord onto the end of this coordinate buffer
+    ///
+    /// ## Panics
+    ///
+    /// - If the added coordinate does not have the same dimension as the coordinate buffer.
     pub fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
-        // TODO: how to handle when coord dimensions and store dimensions don't line up?
-        for (i, buffer) in self.buffers.iter_mut().enumerate() {
-            buffer.push(coord.nth(i).unwrap_or(f64::NAN))
+        self.try_push_coord(coord).unwrap()
+    }
+
+    /// Push a new coord onto the end of this coordinate buffer
+    ///
+    /// ## Errors
+    ///
+    /// - If the added coordinate does not have the same dimension as the coordinate buffer.
+    pub fn try_push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+        // TODO: should check xyz/zym
+        if coord.dim().size() != self.dim.size() {
+            return Err(GeoArrowError::General(
+                "coord dimension must match coord buffer dimension.".into(),
+            ));
+        }
+
+        self.buffers[0].push(coord.x());
+        self.buffers[1].push(coord.y());
+        if let Some(z) = coord.nth(2) {
+            self.buffers[2].push(z);
+        };
+        Ok(())
+    }
+
+    /// Push a valid coordinate with NaN values
+    ///
+    /// Used in the case of point and rect arrays, where a `null` array value still needs to have
+    /// space allocated for it.
+    pub fn push_nan_coord(&mut self) {
+        for i in 0..self.dim.size() {
+            self.buffers[i].push(f64::NAN);
         }
     }
 
+    /// Push a new point onto the end of this coordinate buffer
+    ///
+    /// ## Panics
+    ///
+    /// - If the added point does not have the same dimension as the coordinate buffer.
     pub fn push_point(&mut self, point: &impl PointTrait<T = f64>) {
+        self.try_push_point(point).unwrap()
+    }
+
+    /// Push a new point onto the end of this coordinate buffer
+    ///
+    /// ## Errors
+    ///
+    /// - If the added point does not have the same dimension as the coordinate buffer.
+    pub fn try_push_point(&mut self, point: &impl PointTrait<T = f64>) -> Result<()> {
         if let Some(coord) = point.coord() {
-            self.push_coord(&coord);
+            self.try_push_coord(&coord)?;
         } else {
-            self.push([f64::NAN; D]);
+            self.push_nan_coord();
+        };
+        Ok(())
+    }
+
+    pub fn from_coords<G: CoordTrait<T = f64>>(coords: &[G], dim: Dimension) -> Result<Self> {
+        let mut buffer = SeparatedCoordBufferBuilder::with_capacity(coords.len(), dim);
+        for coord in coords {
+            buffer.try_push_coord(coord)?;
         }
+        Ok(buffer)
     }
 }
 
-impl SeparatedCoordBufferBuilder<2> {
-    pub fn set_coord(&mut self, i: usize, coord: geo::Coord) {
-        self.buffers[0][i] = coord.x;
-        self.buffers[1][i] = coord.y;
-    }
-
-    pub fn set_xy(&mut self, i: usize, x: f64, y: f64) {
-        self.buffers[0][i] = x;
-        self.buffers[1][i] = y;
-    }
-
-    pub fn push_xy(&mut self, x: f64, y: f64) {
-        self.buffers[0].push(x);
-        self.buffers[1].push(y);
-    }
-}
-
-impl<const D: usize> Default for SeparatedCoordBufferBuilder<D> {
-    fn default() -> Self {
-        Self::with_capacity(0)
-    }
-}
-
-impl<const D: usize> From<SeparatedCoordBufferBuilder<D>> for SeparatedCoordBuffer<D> {
-    fn from(value: SeparatedCoordBufferBuilder<D>) -> Self {
+impl From<SeparatedCoordBufferBuilder> for SeparatedCoordBuffer {
+    fn from(value: SeparatedCoordBufferBuilder) -> Self {
         // Initialize buffers with empty array, then mutate into it
         let mut buffers = core::array::from_fn(|_| vec![].into());
         for (i, buffer) in value.buffers.into_iter().enumerate() {
             buffers[i] = buffer.into();
         }
-        SeparatedCoordBuffer::new(buffers)
-    }
-}
-
-impl<G: CoordTrait<T = f64>, const D: usize> From<&[G]> for SeparatedCoordBufferBuilder<D> {
-    fn from(value: &[G]) -> Self {
-        let mut buffer = SeparatedCoordBufferBuilder::with_capacity(value.len());
-        for coord in value {
-            buffer.push_coord(coord);
-        }
-        buffer
+        SeparatedCoordBuffer::new(buffers, value.dim)
     }
 }
