@@ -9,7 +9,7 @@ use crate::array::{
     CoordBuffer, CoordType, GeometryCollectionArray, MixedGeometryArray, MultiLineStringArray,
     MultiPolygonArray, RectArray, WKBArray,
 };
-use crate::datatypes::NativeType;
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, Polygon};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
@@ -389,10 +389,10 @@ impl IntoArrow for PolygonArray {
     }
 }
 
-impl TryFrom<&GenericListArray<i32>> for PolygonArray {
+impl TryFrom<(&GenericListArray<i32>, Dimension)> for PolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from(geom_array: &GenericListArray<i32>) -> Result<Self> {
+    fn try_from((geom_array, dim): (&GenericListArray<i32>, Dimension)) -> Result<Self> {
         let geom_offsets = geom_array.offsets();
         let validity = geom_array.nulls();
 
@@ -400,7 +400,7 @@ impl TryFrom<&GenericListArray<i32>> for PolygonArray {
         let rings_array = rings_dyn_array.as_list::<i32>();
 
         let ring_offsets = rings_array.offsets();
-        let coords = CoordBuffer::from_arrow(rings_array.values().as_ref(), D.try_into()?)?;
+        let coords = CoordBuffer::from_arrow(rings_array.values().as_ref(), dim)?;
 
         Ok(Self::new(
             coords,
@@ -412,10 +412,10 @@ impl TryFrom<&GenericListArray<i32>> for PolygonArray {
     }
 }
 
-impl TryFrom<&GenericListArray<i64>> for PolygonArray {
+impl TryFrom<(&GenericListArray<i64>, Dimension)> for PolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from(geom_array: &GenericListArray<i64>) -> Result<Self> {
+    fn try_from((geom_array, dim): (&GenericListArray<i64>, Dimension)) -> Result<Self> {
         let geom_offsets = offsets_buffer_i64_to_i32(geom_array.offsets())?;
         let validity = geom_array.nulls();
 
@@ -423,7 +423,7 @@ impl TryFrom<&GenericListArray<i64>> for PolygonArray {
         let rings_array = rings_dyn_array.as_list::<i64>();
 
         let ring_offsets = offsets_buffer_i64_to_i32(rings_array.offsets())?;
-        let coords = CoordBuffer::from_arrow(rings_array.values().as_ref(), D.try_into()?)?;
+        let coords = CoordBuffer::from_arrow(rings_array.values().as_ref(), dim)?;
 
         Ok(Self::new(
             coords,
@@ -434,18 +434,18 @@ impl TryFrom<&GenericListArray<i64>> for PolygonArray {
         ))
     }
 }
-impl TryFrom<&dyn Array> for PolygonArray {
+impl TryFrom<(&dyn Array, Dimension)> for PolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: &dyn Array) -> Result<Self> {
+    fn try_from((value, dim): (&dyn Array, Dimension)) -> Result<Self> {
         match value.data_type() {
             DataType::List(_) => {
                 let downcasted = value.as_list::<i32>();
-                downcasted.try_into()
+                (downcasted, dim).try_into()
             }
             DataType::LargeList(_) => {
                 let downcasted = value.as_list::<i64>();
-                downcasted.try_into()
+                (downcasted, dim).try_into()
             }
             _ => Err(GeoArrowError::General(format!(
                 "Unexpected type: {:?}",
@@ -459,7 +459,8 @@ impl TryFrom<(&dyn Array, &Field)> for PolygonArray {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
-        let mut arr: Self = arr.try_into()?;
+        let geom_type = NativeType::try_from(field)?;
+        let mut arr: Self = (arr, geom_type.dimension()).try_into()?;
         arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
         Ok(arr)
     }

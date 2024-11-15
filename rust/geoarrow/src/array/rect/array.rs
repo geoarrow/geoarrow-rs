@@ -9,7 +9,7 @@ use arrow_schema::{DataType, Field};
 use crate::array::metadata::ArrayMetadata;
 use crate::array::rect::RectBuilder;
 use crate::array::{CoordBuffer, CoordType, SeparatedCoordBuffer};
-use crate::datatypes::{rect_fields, NativeType};
+use crate::datatypes::{rect_fields, Dimension, NativeType};
 use crate::error::GeoArrowError;
 use crate::scalar::Rect;
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
@@ -47,7 +47,8 @@ impl RectArray {
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
-        let data_type = NativeType::Rect(D.try_into().unwrap());
+        assert_eq!(lower.dim(), upper.dim());
+        let data_type = NativeType::Rect(lower.dim());
         Self {
             data_type,
             lower,
@@ -191,7 +192,7 @@ impl IntoArrow for RectArray {
     type ArrowArray = StructArray;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let fields = rect_fields(D.try_into().unwrap());
+        let fields = rect_fields(self.data_type.dimension());
         let mut arrays: Vec<ArrayRef> = vec![];
         for buf in self.lower.buffers {
             arrays.push(Arc::new(Float64Array::new(buf, None)));
@@ -205,50 +206,48 @@ impl IntoArrow for RectArray {
     }
 }
 
-impl TryFrom<&StructArray> for RectArray {
+impl TryFrom<(&StructArray, Dimension)> for RectArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: &StructArray) -> Result<Self, Self::Error> {
+    fn try_from((value, dim): (&StructArray, Dimension)) -> Result<Self, Self::Error> {
         let validity = value.nulls();
         let columns = value.columns();
-        assert_eq!(columns.len(), D * 2);
+        assert_eq!(columns.len(), dim.size() * 2);
 
-        let lower = match D {
-            2 => {
+        let lower = match dim {
+            Dimension::XY => {
                 core::array::from_fn(|i| columns[i].as_primitive::<Float64Type>().values().clone())
             }
-            3 => {
+            Dimension::XYZ => {
                 core::array::from_fn(|i| columns[i].as_primitive::<Float64Type>().values().clone())
             }
-            _ => panic!("unexpected dim"),
         };
-        let upper = match D {
-            2 => {
+        let upper = match dim {
+            Dimension::XY => {
                 core::array::from_fn(|i| columns[i].as_primitive::<Float64Type>().values().clone())
             }
-            3 => {
+            Dimension::XYZ => {
                 core::array::from_fn(|i| columns[i].as_primitive::<Float64Type>().values().clone())
             }
-            _ => panic!("unexpected dim"),
         };
 
         Ok(Self::new(
-            SeparatedCoordBuffer::new(lower, D.try_into().unwrap()),
-            SeparatedCoordBuffer::new(upper, D.try_into().unwrap()),
+            SeparatedCoordBuffer::new(lower, dim),
+            SeparatedCoordBuffer::new(upper, dim),
             validity.cloned(),
             Default::default(),
         ))
     }
 }
 
-impl TryFrom<&dyn Array> for RectArray {
+impl TryFrom<(&dyn Array, Dimension)> for RectArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
+    fn try_from((value, dim): (&dyn Array, Dimension)) -> Result<Self, Self::Error> {
         match value.data_type() {
             DataType::Struct(_) => {
                 let arr = value.as_any().downcast_ref::<StructArray>().unwrap();
-                arr.try_into()
+                (arr, dim).try_into()
             }
             _ => Err(GeoArrowError::General(
                 "Invalid data type for RectArray".to_string(),
@@ -261,20 +260,21 @@ impl TryFrom<(&dyn Array, &Field)> for RectArray {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self, Self::Error> {
-        let mut arr: Self = arr.try_into()?;
+        let geom_type = NativeType::try_from(field)?;
+        let mut arr: Self = (arr, geom_type.dimension()).try_into()?;
         arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
         Ok(arr)
     }
 }
 
-impl<G: RectTrait<T = f64>, const D: usize> From<&[G]> for RectArray {
+impl<G: RectTrait<T = f64>> From<&[G]> for RectArray {
     fn from(other: &[G]) -> Self {
         let mut_arr: RectBuilder = other.into();
         mut_arr.into()
     }
 }
 
-impl<G: RectTrait<T = f64>, const D: usize> From<Vec<Option<G>>> for RectArray {
+impl<G: RectTrait<T = f64>> From<Vec<Option<G>>> for RectArray {
     fn from(other: Vec<Option<G>>) -> Self {
         let mut_arr: RectBuilder = other.into();
         mut_arr.into()

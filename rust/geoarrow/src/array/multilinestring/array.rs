@@ -8,7 +8,7 @@ use crate::array::{
     CoordBuffer, CoordType, GeometryCollectionArray, LineStringArray, MixedGeometryArray,
     PolygonArray, WKBArray,
 };
-use crate::datatypes::NativeType;
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, MultiLineString};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
@@ -386,10 +386,10 @@ impl IntoArrow for MultiLineStringArray {
     }
 }
 
-impl TryFrom<&GenericListArray<i32>> for MultiLineStringArray {
+impl TryFrom<(&GenericListArray<i32>, Dimension)> for MultiLineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from(geom_array: &GenericListArray<i32>) -> Result<Self> {
+    fn try_from((geom_array, dim): (&GenericListArray<i32>, Dimension)) -> Result<Self> {
         let geom_offsets = geom_array.offsets();
         let validity = geom_array.nulls();
 
@@ -397,7 +397,7 @@ impl TryFrom<&GenericListArray<i32>> for MultiLineStringArray {
         let rings_array = rings_dyn_array.as_list::<i32>();
 
         let ring_offsets = rings_array.offsets();
-        let coords = CoordBuffer::from_arrow(rings_array.values().as_ref(), D.try_into()?)?;
+        let coords = CoordBuffer::from_arrow(rings_array.values().as_ref(), dim)?;
 
         Ok(Self::new(
             coords,
@@ -409,10 +409,10 @@ impl TryFrom<&GenericListArray<i32>> for MultiLineStringArray {
     }
 }
 
-impl TryFrom<&GenericListArray<i64>> for MultiLineStringArray {
+impl TryFrom<(&GenericListArray<i64>, Dimension)> for MultiLineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from(geom_array: &GenericListArray<i64>) -> Result<Self> {
+    fn try_from((geom_array, dim): (&GenericListArray<i64>, Dimension)) -> Result<Self> {
         let geom_offsets = offsets_buffer_i64_to_i32(geom_array.offsets())?;
         let validity = geom_array.nulls();
 
@@ -420,7 +420,7 @@ impl TryFrom<&GenericListArray<i64>> for MultiLineStringArray {
         let rings_array = rings_dyn_array.as_list::<i64>();
 
         let ring_offsets = offsets_buffer_i64_to_i32(rings_array.offsets())?;
-        let coords = CoordBuffer::from_arrow(rings_array.values().as_ref(), D.try_into()?)?;
+        let coords = CoordBuffer::from_arrow(rings_array.values().as_ref(), dim)?;
 
         Ok(Self::new(
             coords,
@@ -432,18 +432,18 @@ impl TryFrom<&GenericListArray<i64>> for MultiLineStringArray {
     }
 }
 
-impl TryFrom<&dyn Array> for MultiLineStringArray {
+impl TryFrom<(&dyn Array, Dimension)> for MultiLineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: &dyn Array) -> Result<Self> {
+    fn try_from((value, dim): (&dyn Array, Dimension)) -> Result<Self> {
         match value.data_type() {
             DataType::List(_) => {
                 let downcasted = value.as_list::<i32>();
-                downcasted.try_into()
+                (downcasted, dim).try_into()
             }
             DataType::LargeList(_) => {
                 let downcasted = value.as_list::<i64>();
-                downcasted.try_into()
+                (downcasted, dim).try_into()
             }
             _ => Err(GeoArrowError::General(format!(
                 "Unexpected type: {:?}",
@@ -457,22 +457,21 @@ impl TryFrom<(&dyn Array, &Field)> for MultiLineStringArray {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
-        let mut arr: Self = arr.try_into()?;
+        let geom_type = NativeType::try_from(field)?;
+        let mut arr: Self = (arr, geom_type.dimension()).try_into()?;
         arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
         Ok(arr)
     }
 }
 
-impl<G: MultiLineStringTrait<T = f64>, const D: usize> From<Vec<Option<G>>>
-    for MultiLineStringArray
-{
+impl<G: MultiLineStringTrait<T = f64>> From<Vec<Option<G>>> for MultiLineStringArray {
     fn from(other: Vec<Option<G>>) -> Self {
         let mut_arr: MultiLineStringBuilder = other.into();
         mut_arr.into()
     }
 }
 
-impl<G: MultiLineStringTrait<T = f64>, const D: usize> From<&[G]> for MultiLineStringArray {
+impl<G: MultiLineStringTrait<T = f64>> From<&[G]> for MultiLineStringArray {
     fn from(other: &[G]) -> Self {
         let mut_arr: MultiLineStringBuilder = other.into();
         mut_arr.into()
@@ -493,7 +492,7 @@ impl From<MultiLineStringArray> for PolygonArray {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MultiLineStringArray {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiLineStringArray {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
@@ -565,6 +564,7 @@ impl TryFrom<MixedGeometryArray> for MultiLineStringArray {
         capacity += value.line_strings.buffer_lengths();
 
         let mut builder = MultiLineStringBuilder::with_capacity_and_options(
+            value.dim(),
             capacity,
             value.coord_type(),
             value.metadata(),

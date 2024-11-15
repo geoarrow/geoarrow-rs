@@ -126,12 +126,12 @@ mod test {
         let x1 = vec![0., 1., 2.];
         let y1 = vec![3., 4., 5.];
         let buf1 = CoordBuffer::Separated((x1, y1).try_into().unwrap());
-        let arr1 = PointArray::<2>::new(buf1, None, Default::default());
+        let arr1 = PointArray::new(buf1, None, Default::default());
 
         let x2 = vec![0., 100., 2.];
         let y2 = vec![3., 400., 5.];
         let buf2 = CoordBuffer::Separated((x2, y2).try_into().unwrap());
-        let arr2 = PointArray::<2>::new(buf2, None, Default::default());
+        let arr2 = PointArray::new(buf2, None, Default::default());
 
         assert_eq!(arr1.value(0), arr2.value(0));
     }

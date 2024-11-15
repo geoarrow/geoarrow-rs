@@ -22,7 +22,7 @@ fn create_array_metadata(crs: Option<CRS>) -> Arc<ArrayMetadata> {
 pub fn points(coords: PyCoordBuffer, crs: Option<CRS>) -> PyGeoArrowResult<PyNativeArray> {
     let metadata = create_array_metadata(crs);
     // TODO: remove const generic
-    let array = PointArray::<2>::new(coords.into_inner(), None, metadata);
+    let array = PointArray::new(coords.into_inner(), None, metadata);
     Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
 }
 
@@ -35,7 +35,7 @@ pub fn linestrings(
 ) -> PyGeoArrowResult<PyNativeArray> {
     let metadata = create_array_metadata(crs);
     // TODO: remove const generic
-    let array = LineStringArray::<2>::new(
+    let array = LineStringArray::new(
         coords.into_inner(),
         geom_offsets.into_inner(),
         None,
@@ -54,7 +54,7 @@ pub fn polygons(
 ) -> PyGeoArrowResult<PyNativeArray> {
     let metadata = create_array_metadata(crs);
     // TODO: remove const generic
-    let array = PolygonArray::<2>::new(
+    let array = PolygonArray::new(
         coords.into_inner(),
         geom_offsets.into_inner(),
         ring_offsets.into_inner(),
@@ -72,7 +72,7 @@ pub fn multipoints(
     crs: Option<CRS>,
 ) -> PyGeoArrowResult<PyNativeArray> {
     let metadata = create_array_metadata(crs);
-    let array = MultiPointArray::<2>::new(
+    let array = MultiPointArray::new(
         coords.into_inner(),
         geom_offsets.into_inner(),
         None,
@@ -90,7 +90,7 @@ pub fn multilinestrings(
     crs: Option<CRS>,
 ) -> PyGeoArrowResult<PyNativeArray> {
     let metadata = create_array_metadata(crs);
-    let array = MultiLineStringArray::<2>::new(
+    let array = MultiLineStringArray::new(
         coords.into_inner(),
         geom_offsets.into_inner(),
         ring_offsets.into_inner(),
@@ -110,7 +110,7 @@ pub fn multipolygons(
     crs: Option<CRS>,
 ) -> PyGeoArrowResult<PyNativeArray> {
     let metadata = create_array_metadata(crs);
-    let array = MultiPolygonArray::<2>::new(
+    let array = MultiPolygonArray::new(
         coords.into_inner(),
         geom_offsets.into_inner(),
         polygon_offsets.into_inner(),

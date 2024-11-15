@@ -9,8 +9,8 @@ pub trait Concatenate: Sized {
     fn concatenate(&self) -> Self::Output;
 }
 
-impl Concatenate for &[PointArray<2>] {
-    type Output = Result<PointArray<2>>;
+impl Concatenate for &[PointArray] {
+    type Output = Result<PointArray>;
 
     fn concatenate(&self) -> Self::Output {
         let output_capacity = self.iter().fold(0, |sum, val| sum + val.buffer_lengths());
@@ -43,50 +43,45 @@ macro_rules! impl_concatenate {
 }
 
 impl_concatenate!(
-    LineStringArray<2>,
+    LineStringArray,
     LineStringCapacity,
-    LineStringBuilder<2>,
+    LineStringBuilder,
     push_line_string
 );
+impl_concatenate!(PolygonArray, PolygonCapacity, PolygonBuilder, push_polygon);
 impl_concatenate!(
-    PolygonArray<2>,
-    PolygonCapacity,
-    PolygonBuilder<2>,
-    push_polygon
-);
-impl_concatenate!(
-    MultiPointArray<2>,
+    MultiPointArray,
     MultiPointCapacity,
-    MultiPointBuilder<2>,
+    MultiPointBuilder,
     push_multi_point
 );
 impl_concatenate!(
-    MultiLineStringArray<2>,
+    MultiLineStringArray,
     MultiLineStringCapacity,
-    MultiLineStringBuilder<2>,
+    MultiLineStringBuilder,
     push_multi_line_string
 );
 impl_concatenate!(
-    MultiPolygonArray<2>,
+    MultiPolygonArray,
     MultiPolygonCapacity,
-    MultiPolygonBuilder<2>,
+    MultiPolygonBuilder,
     push_multi_polygon
 );
 impl_concatenate!(
-    MixedGeometryArray<2>,
+    MixedGeometryArray,
     MixedCapacity,
-    MixedGeometryBuilder<2>,
+    MixedGeometryBuilder,
     push_geometry
 );
 impl_concatenate!(
-    GeometryCollectionArray<2>,
+    GeometryCollectionArray,
     GeometryCollectionCapacity,
-    GeometryCollectionBuilder<2>,
+    GeometryCollectionBuilder,
     push_geometry_collection
 );
 
-impl Concatenate for ChunkedPointArray<2> {
-    type Output = Result<PointArray<2>>;
+impl Concatenate for ChunkedPointArray {
+    type Output = Result<PointArray>;
 
     fn concatenate(&self) -> Self::Output {
         self.chunks.as_slice().concatenate()
@@ -105,13 +100,10 @@ macro_rules! impl_chunked_concatenate {
     };
 }
 
-impl_chunked_concatenate!(ChunkedLineStringArray<2>, LineStringArray<2>);
-impl_chunked_concatenate!(ChunkedPolygonArray<2>, PolygonArray<2>);
-impl_chunked_concatenate!(ChunkedMultiPointArray<2>, MultiPointArray<2>);
-impl_chunked_concatenate!(ChunkedMultiLineStringArray<2>, MultiLineStringArray<2>);
-impl_chunked_concatenate!(ChunkedMultiPolygonArray<2>, MultiPolygonArray<2>);
-impl_chunked_concatenate!(ChunkedMixedGeometryArray<2>, MixedGeometryArray<2>);
-impl_chunked_concatenate!(
-    ChunkedGeometryCollectionArray<2>,
-    GeometryCollectionArray<2>
-);
+impl_chunked_concatenate!(ChunkedLineStringArray, LineStringArray);
+impl_chunked_concatenate!(ChunkedPolygonArray, PolygonArray);
+impl_chunked_concatenate!(ChunkedMultiPointArray, MultiPointArray);
+impl_chunked_concatenate!(ChunkedMultiLineStringArray, MultiLineStringArray);
+impl_chunked_concatenate!(ChunkedMultiPolygonArray, MultiPolygonArray);
+impl_chunked_concatenate!(ChunkedMixedGeometryArray, MixedGeometryArray);
+impl_chunked_concatenate!(ChunkedGeometryCollectionArray, GeometryCollectionArray);

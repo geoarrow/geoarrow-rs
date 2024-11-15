@@ -129,7 +129,7 @@ impl From<MultiPoint<'_>> for geo::Geometry {
     }
 }
 
-impl RTreeObject for MultiPoint<'_, 2> {
+impl RTreeObject for MultiPoint<'_> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -153,8 +153,8 @@ mod test {
     /// Test Eq where the current index is true but another index is false
     #[test]
     fn test_eq_other_index_false() {
-        let arr1: MultiPointArray<2> = vec![mp0(), mp1()].as_slice().into();
-        let arr2: MultiPointArray<2> = vec![mp0(), mp0()].as_slice().into();
+        let arr1: MultiPointArray = vec![mp0(), mp1()].as_slice().into();
+        let arr2: MultiPointArray = vec![mp0(), mp0()].as_slice().into();
 
         assert_eq!(arr1.value(0), arr2.value(0));
         assert_ne!(arr1.value(1), arr2.value(1));

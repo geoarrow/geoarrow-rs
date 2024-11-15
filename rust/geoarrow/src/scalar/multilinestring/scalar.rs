@@ -131,7 +131,7 @@ impl From<MultiLineString<'_>> for geo::Geometry {
     }
 }
 
-impl RTreeObject for MultiLineString<'_, 2> {
+impl RTreeObject for MultiLineString<'_> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -140,7 +140,7 @@ impl RTreeObject for MultiLineString<'_, 2> {
     }
 }
 
-impl<G: MultiLineStringTrait<T = f64>> PartialEq<G> for MultiLineString<'_, 2> {
+impl<G: MultiLineStringTrait<T = f64>> PartialEq<G> for MultiLineString<'_> {
     fn eq(&self, other: &G) -> bool {
         multi_line_string_eq(self, other)
     }
@@ -155,8 +155,8 @@ mod test {
     /// Test Eq where the current index is true but another index is false
     #[test]
     fn test_eq_other_index_false() {
-        let arr1: MultiLineStringArray<2> = vec![ml0(), ml1()].as_slice().into();
-        let arr2: MultiLineStringArray<2> = vec![ml0(), ml0()].as_slice().into();
+        let arr1: MultiLineStringArray = vec![ml0(), ml1()].as_slice().into();
+        let arr2: MultiLineStringArray = vec![ml0(), ml0()].as_slice().into();
 
         assert_eq!(arr1.value(0), arr2.value(0));
         assert_ne!(arr1.value(1), arr2.value(1));

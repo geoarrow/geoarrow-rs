@@ -7,7 +7,7 @@ use crate::array::{
     CoordBuffer, CoordType, GeometryCollectionArray, InterleavedCoordBuffer, MixedGeometryArray,
     MultiPointArray, PointBuilder, SeparatedCoordBuffer, WKBArray,
 };
-use crate::datatypes::NativeType;
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, Point};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
@@ -267,7 +267,7 @@ impl IntoArrow for PointArray {
         match self.coords {
             CoordBuffer::Interleaved(c) => Arc::new(FixedSizeListArray::new(
                 c.values_field().into(),
-                D as i32,
+                self.coords.dim().size() as i32,
                 Arc::new(c.values_array()),
                 validity,
             )),
@@ -279,11 +279,11 @@ impl IntoArrow for PointArray {
     }
 }
 
-impl TryFrom<&FixedSizeListArray> for PointArray {
+impl TryFrom<(&FixedSizeListArray, Dimension)> for PointArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: &FixedSizeListArray) -> Result<Self> {
-        let interleaved_coords = InterleavedCoordBuffer::from_arrow(value, D.try_into()?)?;
+    fn try_from((value, dim): (&FixedSizeListArray, Dimension)) -> Result<Self> {
+        let interleaved_coords = InterleavedCoordBuffer::from_arrow(value, dim)?;
 
         Ok(Self::new(
             CoordBuffer::Interleaved(interleaved_coords),
@@ -293,12 +293,12 @@ impl TryFrom<&FixedSizeListArray> for PointArray {
     }
 }
 
-impl TryFrom<&StructArray> for PointArray {
+impl TryFrom<(&StructArray, Dimension)> for PointArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: &StructArray) -> Result<Self> {
+    fn try_from((value, dim): (&StructArray, Dimension)) -> Result<Self> {
         let validity = value.nulls();
-        let separated_coords = SeparatedCoordBuffer::from_arrow(value, D.try_into()?)?;
+        let separated_coords = SeparatedCoordBuffer::from_arrow(value, dim)?;
         Ok(Self::new(
             CoordBuffer::Separated(separated_coords),
             validity.cloned(),
@@ -307,18 +307,18 @@ impl TryFrom<&StructArray> for PointArray {
     }
 }
 
-impl TryFrom<&dyn Array> for PointArray {
+impl TryFrom<(&dyn Array, Dimension)> for PointArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: &dyn Array) -> Result<Self> {
+    fn try_from((value, dim): (&dyn Array, Dimension)) -> Result<Self> {
         match value.data_type() {
             DataType::FixedSizeList(_, _) => {
                 let arr = value.as_any().downcast_ref::<FixedSizeListArray>().unwrap();
-                arr.try_into()
+                (arr, dim).try_into()
             }
             DataType::Struct(_) => {
                 let arr = value.as_any().downcast_ref::<StructArray>().unwrap();
-                arr.try_into()
+                (arr, dim).try_into()
             }
             _ => Err(GeoArrowError::General(
                 "Invalid data type for PointArray".to_string(),
@@ -331,27 +331,28 @@ impl TryFrom<(&dyn Array, &Field)> for PointArray {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
-        let mut arr: Self = arr.try_into()?;
+        let geom_type = NativeType::try_from(field)?;
+        let mut arr: Self = (arr, geom_type.dimension()).try_into()?;
         arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
         Ok(arr)
     }
 }
 
-impl<G: PointTrait<T = f64>, const D: usize> From<Vec<Option<G>>> for PointArray {
+impl<G: PointTrait<T = f64>> From<Vec<Option<G>>> for PointArray {
     fn from(other: Vec<Option<G>>) -> Self {
         let mut_arr: PointBuilder = other.into();
         mut_arr.into()
     }
 }
 
-impl<G: PointTrait<T = f64>, const D: usize> From<&[G]> for PointArray {
+impl<G: PointTrait<T = f64>> From<&[G]> for PointArray {
     fn from(other: &[G]) -> Self {
         let mut_arr: PointBuilder = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for PointArray {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for PointArray {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {

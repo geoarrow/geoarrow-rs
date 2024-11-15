@@ -13,7 +13,7 @@ use rstar::{RTreeObject, AABB};
 /// An Arrow equivalent of a GeometryCollection
 #[derive(Debug, Clone)]
 pub struct GeometryCollection<'a> {
-    pub(crate) array: &'a MixedGeometryArray<D>,
+    pub(crate) array: &'a MixedGeometryArray,
 
     /// Offsets into the geometry array where each geometry starts
     pub(crate) geom_offsets: &'a OffsetBuffer<i32>,
@@ -25,7 +25,7 @@ pub struct GeometryCollection<'a> {
 
 impl<'a> GeometryCollection<'a> {
     pub fn new(
-        array: &'a MixedGeometryArray<D>,
+        array: &'a MixedGeometryArray,
         geom_offsets: &'a OffsetBuffer<i32>,
         geom_index: usize,
     ) -> Self {
@@ -38,7 +38,7 @@ impl<'a> GeometryCollection<'a> {
         }
     }
 
-    pub fn into_inner(&self) -> (&MixedGeometryArray<D>, &OffsetBuffer<i32>, usize) {
+    pub fn into_inner(&self) -> (&MixedGeometryArray, &OffsetBuffer<i32>, usize) {
         (self.array, self.geom_offsets, self.geom_index)
     }
 }
@@ -65,7 +65,7 @@ impl<'a> GeometryCollectionTrait for GeometryCollection<'a> {
     type GeometryType<'b> = Geometry<'a> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        match self.coords.dim() {
+        match self.array.dim() {
             Dimension::XY => geo_traits::Dimensions::Xy,
             Dimension::XYZ => geo_traits::Dimensions::Xyz,
         }
@@ -86,7 +86,7 @@ impl<'a> GeometryCollectionTrait for &'a GeometryCollection<'a> {
     type GeometryType<'b> = Geometry<'a> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        match self.coords.dim() {
+        match self.array.dim() {
             Dimension::XY => geo_traits::Dimensions::Xy,
             Dimension::XYZ => geo_traits::Dimensions::Xyz,
         }
@@ -114,7 +114,7 @@ impl From<GeometryCollection<'_>> for geo::Geometry {
     }
 }
 
-impl RTreeObject for GeometryCollection<'_, 2> {
+impl RTreeObject for GeometryCollection<'_> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {

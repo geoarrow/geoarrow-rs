@@ -44,8 +44,8 @@ impl<'a> From<&'a OwnedMultiLineString> for MultiLineString<'a> {
     }
 }
 
-impl From<OwnedMultiLineString<2>> for geo::MultiLineString {
-    fn from(value: OwnedMultiLineString<2>) -> Self {
+impl From<OwnedMultiLineString> for geo::MultiLineString {
+    fn from(value: OwnedMultiLineString) -> Self {
         let geom = MultiLineString::from(&value);
         geom.into()
     }
@@ -90,7 +90,7 @@ impl MultiLineStringTrait for OwnedMultiLineString {
     }
 }
 
-impl<G: MultiLineStringTrait<T = f64>> PartialEq<G> for OwnedMultiLineString<2> {
+impl<G: MultiLineStringTrait<T = f64>> PartialEq<G> for OwnedMultiLineString {
     fn eq(&self, other: &G) -> bool {
         multi_line_string_eq(self, other)
     }

@@ -17,7 +17,7 @@ pub struct OwnedPolygon {
     geom_index: usize,
 }
 
-impl OwnedPolygon<D> {
+impl OwnedPolygon {
     pub fn new(
         coords: CoordBuffer,
         geom_offsets: OffsetBuffer<i32>,
@@ -33,8 +33,8 @@ impl OwnedPolygon<D> {
     }
 }
 
-impl<'a> From<&'a OwnedPolygon<D>> for Polygon<'a> {
-    fn from(value: &'a OwnedPolygon<D>) -> Self {
+impl<'a> From<&'a OwnedPolygon> for Polygon<'a> {
+    fn from(value: &'a OwnedPolygon) -> Self {
         Self::new(
             &value.coords,
             &value.geom_offsets,
@@ -44,22 +44,22 @@ impl<'a> From<&'a OwnedPolygon<D>> for Polygon<'a> {
     }
 }
 
-impl From<OwnedPolygon<2>> for geo::Polygon {
-    fn from(value: OwnedPolygon<2>) -> Self {
+impl From<OwnedPolygon> for geo::Polygon {
+    fn from(value: OwnedPolygon) -> Self {
         let geom = Polygon::from(&value);
         geom.into()
     }
 }
 
-impl<'a> From<Polygon<'a>> for OwnedPolygon<D> {
+impl<'a> From<Polygon<'a>> for OwnedPolygon {
     fn from(value: Polygon<'a>) -> Self {
         let (coords, geom_offsets, ring_offsets, geom_index) = value.into_owned_inner();
         Self::new(coords, geom_offsets, ring_offsets, geom_index)
     }
 }
 
-impl From<OwnedPolygon<D>> for PolygonArray<D> {
-    fn from(value: OwnedPolygon<D>) -> Self {
+impl From<OwnedPolygon> for PolygonArray {
+    fn from(value: OwnedPolygon) -> Self {
         Self::new(
             value.coords,
             value.geom_offsets,
@@ -70,9 +70,9 @@ impl From<OwnedPolygon<D>> for PolygonArray<D> {
     }
 }
 
-impl PolygonTrait for OwnedPolygon<D> {
+impl PolygonTrait for OwnedPolygon {
     type T = f64;
-    type RingType<'b> = LineString<'b,  D> where Self: 'b;
+    type RingType<'b> = LineString<'b> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.coords.dim() {
@@ -94,7 +94,7 @@ impl PolygonTrait for OwnedPolygon<D> {
     }
 }
 
-impl<G: PolygonTrait<T = f64>> PartialEq<G> for OwnedPolygon<2> {
+impl<G: PolygonTrait<T = f64>> PartialEq<G> for OwnedPolygon {
     fn eq(&self, other: &G) -> bool {
         polygon_eq(self, other)
     }

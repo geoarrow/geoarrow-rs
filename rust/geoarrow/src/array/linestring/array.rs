@@ -10,7 +10,7 @@ use crate::array::{
     CoordBuffer, CoordType, GeometryCollectionArray, MixedGeometryArray, MultiLineStringArray,
     MultiPointArray, WKBArray,
 };
-use crate::datatypes::NativeType;
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, LineString};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
@@ -346,11 +346,11 @@ impl IntoArrow for LineStringArray {
     }
 }
 
-impl TryFrom<&GenericListArray<i32>> for LineStringArray {
+impl TryFrom<(&GenericListArray<i32>, Dimension)> for LineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: &GenericListArray<i32>) -> Result<Self> {
-        let coords = CoordBuffer::from_arrow(value.values().as_ref(), D.try_into()?)?;
+    fn try_from((value, dim): (&GenericListArray<i32>, Dimension)) -> Result<Self> {
+        let coords = CoordBuffer::from_arrow(value.values().as_ref(), dim)?;
         let geom_offsets = value.offsets();
         let validity = value.nulls();
 
@@ -363,11 +363,11 @@ impl TryFrom<&GenericListArray<i32>> for LineStringArray {
     }
 }
 
-impl TryFrom<&GenericListArray<i64>> for LineStringArray {
+impl TryFrom<(&GenericListArray<i64>, Dimension)> for LineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: &GenericListArray<i64>) -> Result<Self> {
-        let coords = CoordBuffer::from_arrow(value.values().as_ref(), D.try_into()?)?;
+    fn try_from((value, dim): (&GenericListArray<i64>, Dimension)) -> Result<Self> {
+        let coords = CoordBuffer::from_arrow(value.values().as_ref(), dim)?;
         let geom_offsets = offsets_buffer_i64_to_i32(value.offsets())?;
         let validity = value.nulls();
 
@@ -379,18 +379,18 @@ impl TryFrom<&GenericListArray<i64>> for LineStringArray {
         ))
     }
 }
-impl TryFrom<&dyn Array> for LineStringArray {
+impl TryFrom<(&dyn Array, Dimension)> for LineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: &dyn Array) -> Result<Self> {
+    fn try_from((value, dim): (&dyn Array, Dimension)) -> Result<Self> {
         match value.data_type() {
             DataType::List(_) => {
                 let downcasted = value.as_list::<i32>();
-                downcasted.try_into()
+                (downcasted, dim).try_into()
             }
             DataType::LargeList(_) => {
                 let downcasted = value.as_list::<i64>();
-                downcasted.try_into()
+                (downcasted, dim).try_into()
             }
             _ => Err(GeoArrowError::General(format!(
                 "Unexpected type: {:?}",
@@ -404,7 +404,8 @@ impl TryFrom<(&dyn Array, &Field)> for LineStringArray {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
-        let mut arr: Self = arr.try_into()?;
+        let geom_type = NativeType::try_from(field)?;
+        let mut arr: Self = (arr, geom_type.dimension()).try_into()?;
         arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
         Ok(arr)
     }

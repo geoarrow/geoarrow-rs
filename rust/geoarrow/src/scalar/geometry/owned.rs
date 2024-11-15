@@ -36,8 +36,8 @@ impl<'a> From<&'a OwnedGeometry> for Geometry<'a> {
     }
 }
 
-impl<'a> From<&'a OwnedGeometry<2>> for geo::Geometry {
-    fn from(value: &'a OwnedGeometry<2>) -> Self {
+impl<'a> From<&'a OwnedGeometry> for geo::Geometry {
+    fn from(value: &'a OwnedGeometry) -> Self {
         let geom = Geometry::from(value);
         geom.into()
     }
