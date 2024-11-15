@@ -66,7 +66,7 @@ impl GeometryScalar {
         }
     }
 
-    pub fn as_geometry<const D: usize>(&self) -> Option<Geometry<'_, D>> {
+    pub fn as_geometry(&self) -> Option<Geometry<'_>> {
         use NativeType::*;
 
         // Note: we use `.downcast_ref` directly here because we need to pass in the generic

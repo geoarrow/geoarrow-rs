@@ -10,10 +10,10 @@ use geo_traits::{
 };
 use geos::Geom;
 
-impl<'a, const D: usize> TryFrom<&'a Geometry<'_, D>> for geos::Geometry {
+impl<'a> TryFrom<&'a Geometry<'_>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: &'a Geometry<'_, D>) -> std::result::Result<geos::Geometry, geos::Error> {
+    fn try_from(value: &'a Geometry<'_>) -> std::result::Result<geos::Geometry, geos::Error> {
         match value {
             Geometry::Point(g) => g.try_into(),
             Geometry::LineString(g) => g.try_into(),

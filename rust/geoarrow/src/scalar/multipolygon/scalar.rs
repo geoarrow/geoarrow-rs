@@ -2,6 +2,7 @@ use crate::algorithm::native::bounding_rect::bounding_rect_multipolygon;
 use crate::algorithm::native::eq::multi_polygon_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, MultiPolygonArray};
+use crate::datatypes::Dimension;
 use crate::io::geo::multi_polygon_to_geo;
 use crate::scalar::Polygon;
 use crate::trait_::NativeScalar;
@@ -11,7 +12,7 @@ use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a MultiPolygon
 #[derive(Debug, Clone)]
-pub struct MultiPolygon<'a, const D: usize> {
+pub struct MultiPolygon<'a> {
     pub(crate) coords: &'a CoordBuffer,
 
     /// Offsets into the polygon array where each geometry starts
@@ -28,7 +29,7 @@ pub struct MultiPolygon<'a, const D: usize> {
     start_offset: usize,
 }
 
-impl<'a, const D: usize> MultiPolygon<'a, D> {
+impl<'a> MultiPolygon<'a> {
     pub fn new(
         coords: &'a CoordBuffer,
         geom_offsets: &'a OffsetBuffer<i32>,
@@ -56,7 +57,7 @@ impl<'a, const D: usize> MultiPolygon<'a, D> {
         OffsetBuffer<i32>,
         usize,
     ) {
-        let arr = MultiPolygonArray::<D>::new(
+        let arr = MultiPolygonArray::new(
             self.coords.clone(),
             self.geom_offsets.clone(),
             self.polygon_offsets.clone(),
@@ -71,7 +72,7 @@ impl<'a, const D: usize> MultiPolygon<'a, D> {
     }
 }
 
-impl<'a, const D: usize> NativeScalar for MultiPolygon<'a, D> {
+impl<'a> NativeScalar for MultiPolygon<'a> {
     type ScalarGeo = geo::MultiPolygon;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -88,16 +89,14 @@ impl<'a, const D: usize> NativeScalar for MultiPolygon<'a, D> {
     }
 }
 
-impl<'a, const D: usize> MultiPolygonTrait for MultiPolygon<'a, D> {
+impl<'a> MultiPolygonTrait for MultiPolygon<'a> {
     type T = f64;
-    type PolygonType<'b> = Polygon<'a, D> where Self: 'b;
+    type PolygonType<'b> = Polygon<'a> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
+        match self.coords.dim() {
+            Dimension::XY => geo_traits::Dimensions::Xy,
+            Dimension::XYZ => geo_traits::Dimensions::Xyz,
         }
     }
 
@@ -116,16 +115,14 @@ impl<'a, const D: usize> MultiPolygonTrait for MultiPolygon<'a, D> {
     }
 }
 
-impl<'a, const D: usize> MultiPolygonTrait for &'a MultiPolygon<'a, D> {
+impl<'a> MultiPolygonTrait for &'a MultiPolygon<'a> {
     type T = f64;
-    type PolygonType<'b> = Polygon<'a, D> where Self: 'b;
+    type PolygonType<'b> = Polygon<'a> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
+        match self.coords.dim() {
+            Dimension::XY => geo_traits::Dimensions::Xy,
+            Dimension::XYZ => geo_traits::Dimensions::Xyz,
         }
     }
 
@@ -144,25 +141,25 @@ impl<'a, const D: usize> MultiPolygonTrait for &'a MultiPolygon<'a, D> {
     }
 }
 
-impl<const D: usize> From<MultiPolygon<'_, D>> for geo::MultiPolygon {
-    fn from(value: MultiPolygon<'_, D>) -> Self {
+impl From<MultiPolygon<'_>> for geo::MultiPolygon {
+    fn from(value: MultiPolygon<'_>) -> Self {
         (&value).into()
     }
 }
 
-impl<const D: usize> From<&MultiPolygon<'_, D>> for geo::MultiPolygon {
-    fn from(value: &MultiPolygon<'_, D>) -> Self {
+impl From<&MultiPolygon<'_>> for geo::MultiPolygon {
+    fn from(value: &MultiPolygon<'_>) -> Self {
         multi_polygon_to_geo(value)
     }
 }
 
-impl<const D: usize> From<MultiPolygon<'_, D>> for geo::Geometry {
-    fn from(value: MultiPolygon<'_, D>) -> Self {
+impl From<MultiPolygon<'_>> for geo::Geometry {
+    fn from(value: MultiPolygon<'_>) -> Self {
         geo::Geometry::MultiPolygon(value.into())
     }
 }
 
-impl RTreeObject for MultiPolygon<'_, 2> {
+impl RTreeObject for MultiPolygon<'_> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -171,7 +168,7 @@ impl RTreeObject for MultiPolygon<'_, 2> {
     }
 }
 
-impl<const D: usize, G: MultiPolygonTrait<T = f64>> PartialEq<G> for MultiPolygon<'_, D> {
+impl<G: MultiPolygonTrait<T = f64>> PartialEq<G> for MultiPolygon<'_> {
     fn eq(&self, other: &G) -> bool {
         multi_polygon_eq(self, other)
     }

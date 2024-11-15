@@ -2,7 +2,7 @@ use crate::array::{PointArray, PointBuilder};
 use crate::error::Result;
 use crate::io::geos::scalar::GEOSPoint;
 
-impl<const D: usize> PointBuilder<D> {
+impl PointBuilder<D> {
     pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         // TODO: don't use new_unchecked
         let geos_linestring_objects: Vec<Option<GEOSPoint>> = value
@@ -13,7 +13,7 @@ impl<const D: usize> PointBuilder<D> {
     }
 }
 
-impl<const D: usize> PointArray<D> {
+impl PointArray<D> {
     pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         let mutable_arr = PointBuilder::from_geos(value)?;
         Ok(mutable_arr.into())

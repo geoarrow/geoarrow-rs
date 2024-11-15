@@ -59,8 +59,8 @@ macro_rules! identity_impl {
     };
 }
 
-identity_impl!(PointArray<2>);
-identity_impl!(MultiPointArray<2>);
+identity_impl!(PointArray);
+identity_impl!(MultiPointArray);
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
@@ -80,12 +80,12 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<2>, geo::LineString);
-iter_geo_impl!(PolygonArray<2>, geo::Polygon);
-iter_geo_impl!(MultiLineStringArray<2>, geo::MultiLineString);
-iter_geo_impl!(MultiPolygonArray<2>, geo::MultiPolygon);
-// iter_geo_impl!(MixedGeometryArray<2>, geo::Geometry);
-// iter_geo_impl!(GeometryCollectionArray<2>, geo::GeometryCollection);
+iter_geo_impl!(LineStringArray, geo::LineString);
+iter_geo_impl!(PolygonArray, geo::Polygon);
+iter_geo_impl!(MultiLineStringArray, geo::MultiLineString);
+iter_geo_impl!(MultiPolygonArray, geo::MultiPolygon);
+// iter_geo_impl!(MixedGeometryArray, geo::Geometry);
+// iter_geo_impl!(GeometryCollectionArray, geo::GeometryCollection);
 
 impl SimplifyVwPreserve for &dyn NativeArray {
     type Output = Result<Arc<dyn NativeArray>>;
@@ -95,26 +95,26 @@ impl SimplifyVwPreserve for &dyn NativeArray {
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
-            Point(_, XY) => Arc::new(self.as_point::<2>().simplify_vw_preserve(epsilon)),
-            LineString(_, XY) => Arc::new(self.as_line_string::<2>().simplify_vw_preserve(epsilon)),
-            Polygon(_, XY) => Arc::new(self.as_polygon::<2>().simplify_vw_preserve(epsilon)),
-            MultiPoint(_, XY) => Arc::new(self.as_multi_point::<2>().simplify_vw_preserve(epsilon)),
+            Point(_, XY) => Arc::new(self.as_point().simplify_vw_preserve(epsilon)),
+            LineString(_, XY) => Arc::new(self.as_line_string().simplify_vw_preserve(epsilon)),
+            Polygon(_, XY) => Arc::new(self.as_polygon().simplify_vw_preserve(epsilon)),
+            MultiPoint(_, XY) => Arc::new(self.as_multi_point().simplify_vw_preserve(epsilon)),
             MultiLineString(_, XY) => Arc::new(
-                self.as_multi_line_string::<2>()
+                self.as_multi_line_string()
                     .simplify_vw_preserve(epsilon),
             ),
             MultiPolygon(_, XY) => {
-                Arc::new(self.as_multi_polygon::<2>().simplify_vw_preserve(epsilon))
+                Arc::new(self.as_multi_polygon().simplify_vw_preserve(epsilon))
             }
-            // Mixed(_, XY) => self.as_mixed::<2>().simplify_vw_preserve(epsilon),
-            // GeometryCollection(_, XY) => self.as_geometry_collection::<2>().simplify_vw_preserve(),
+            // Mixed(_, XY) => self.as_mixed().simplify_vw_preserve(epsilon),
+            // GeometryCollection(_, XY) => self.as_geometry_collection().simplify_vw_preserve(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
     }
 }
 
-impl SimplifyVwPreserve for ChunkedGeometryArray<PointArray<2>> {
+impl SimplifyVwPreserve for ChunkedGeometryArray<PointArray> {
     type Output = Self;
 
     fn simplify_vw_preserve(&self, epsilon: &f64) -> Self::Output {
@@ -139,11 +139,11 @@ macro_rules! chunked_impl {
     };
 }
 
-chunked_impl!(ChunkedGeometryArray<LineStringArray<2>>);
-chunked_impl!(ChunkedGeometryArray<PolygonArray<2>>);
-chunked_impl!(ChunkedGeometryArray<MultiPointArray<2>>);
-chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<2>>);
-chunked_impl!(ChunkedGeometryArray<MultiPolygonArray<2>>);
+chunked_impl!(ChunkedGeometryArray<LineStringArray>);
+chunked_impl!(ChunkedGeometryArray<PolygonArray>);
+chunked_impl!(ChunkedGeometryArray<MultiPointArray>);
+chunked_impl!(ChunkedGeometryArray<MultiLineStringArray>);
+chunked_impl!(ChunkedGeometryArray<MultiPolygonArray>);
 
 impl SimplifyVwPreserve for &dyn ChunkedNativeArray {
     type Output = Result<Arc<dyn ChunkedNativeArray>>;
@@ -153,19 +153,19 @@ impl SimplifyVwPreserve for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
-            Point(_, XY) => Arc::new(self.as_point::<2>().simplify_vw_preserve(epsilon)),
-            LineString(_, XY) => Arc::new(self.as_line_string::<2>().simplify_vw_preserve(epsilon)),
-            Polygon(_, XY) => Arc::new(self.as_polygon::<2>().simplify_vw_preserve(epsilon)),
-            MultiPoint(_, XY) => Arc::new(self.as_multi_point::<2>().simplify_vw_preserve(epsilon)),
+            Point(_, XY) => Arc::new(self.as_point().simplify_vw_preserve(epsilon)),
+            LineString(_, XY) => Arc::new(self.as_line_string().simplify_vw_preserve(epsilon)),
+            Polygon(_, XY) => Arc::new(self.as_polygon().simplify_vw_preserve(epsilon)),
+            MultiPoint(_, XY) => Arc::new(self.as_multi_point().simplify_vw_preserve(epsilon)),
             MultiLineString(_, XY) => Arc::new(
-                self.as_multi_line_string::<2>()
+                self.as_multi_line_string()
                     .simplify_vw_preserve(epsilon),
             ),
             MultiPolygon(_, XY) => {
-                Arc::new(self.as_multi_polygon::<2>().simplify_vw_preserve(epsilon))
+                Arc::new(self.as_multi_polygon().simplify_vw_preserve(epsilon))
             }
-            // Mixed(_, XY) => self.as_mixed::<2>().simplify_vw_preserve(epsilon),
-            // GeometryCollection(_, XY) => self.as_geometry_collection::<2>().simplify_vw_preserve(),
+            // Mixed(_, XY) => self.as_mixed().simplify_vw_preserve(epsilon),
+            // GeometryCollection(_, XY) => self.as_geometry_collection().simplify_vw_preserve(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)

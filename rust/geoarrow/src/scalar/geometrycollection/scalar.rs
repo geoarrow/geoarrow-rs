@@ -1,6 +1,7 @@
 use crate::algorithm::native::eq::geometry_collection_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::MixedGeometryArray;
+use crate::datatypes::Dimension;
 use crate::io::geo::geometry_collection_to_geo;
 use crate::scalar::Geometry;
 use crate::trait_::ArrayAccessor;
@@ -11,7 +12,7 @@ use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a GeometryCollection
 #[derive(Debug, Clone)]
-pub struct GeometryCollection<'a, const D: usize> {
+pub struct GeometryCollection<'a> {
     pub(crate) array: &'a MixedGeometryArray<D>,
 
     /// Offsets into the geometry array where each geometry starts
@@ -22,7 +23,7 @@ pub struct GeometryCollection<'a, const D: usize> {
     start_offset: usize,
 }
 
-impl<'a, const D: usize> GeometryCollection<'a, D> {
+impl<'a> GeometryCollection<'a> {
     pub fn new(
         array: &'a MixedGeometryArray<D>,
         geom_offsets: &'a OffsetBuffer<i32>,
@@ -42,7 +43,7 @@ impl<'a, const D: usize> GeometryCollection<'a, D> {
     }
 }
 
-impl<'a, const D: usize> NativeScalar for GeometryCollection<'a, D> {
+impl<'a> NativeScalar for GeometryCollection<'a> {
     type ScalarGeo = geo::GeometryCollection;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -59,16 +60,14 @@ impl<'a, const D: usize> NativeScalar for GeometryCollection<'a, D> {
     }
 }
 
-impl<'a, const D: usize> GeometryCollectionTrait for GeometryCollection<'a, D> {
+impl<'a> GeometryCollectionTrait for GeometryCollection<'a> {
     type T = f64;
-    type GeometryType<'b> = Geometry<'a, D> where Self: 'b;
+    type GeometryType<'b> = Geometry<'a> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
+        match self.coords.dim() {
+            Dimension::XY => geo_traits::Dimensions::Xy,
+            Dimension::XYZ => geo_traits::Dimensions::Xyz,
         }
     }
 
@@ -82,16 +81,14 @@ impl<'a, const D: usize> GeometryCollectionTrait for GeometryCollection<'a, D> {
     }
 }
 
-impl<'a, const D: usize> GeometryCollectionTrait for &'a GeometryCollection<'a, D> {
+impl<'a> GeometryCollectionTrait for &'a GeometryCollection<'a> {
     type T = f64;
-    type GeometryType<'b> = Geometry<'a, D> where Self: 'b;
+    type GeometryType<'b> = Geometry<'a> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
+        match self.coords.dim() {
+            Dimension::XY => geo_traits::Dimensions::Xy,
+            Dimension::XYZ => geo_traits::Dimensions::Xyz,
         }
     }
 
@@ -105,20 +102,14 @@ impl<'a, const D: usize> GeometryCollectionTrait for &'a GeometryCollection<'a, 
     }
 }
 
-// impl<O: OffsetSizeTrait> From<GeometryCollection<'_, 2>> for geo::GeometryCollection {
-//     fn from(value: GeometryCollection<'_, 2>) -> Self {
-//         (&value).into()
-//     }
-// }
-
-impl<const D: usize> From<&GeometryCollection<'_, D>> for geo::GeometryCollection {
-    fn from(value: &GeometryCollection<'_, D>) -> Self {
+impl From<&GeometryCollection<'_>> for geo::GeometryCollection {
+    fn from(value: &GeometryCollection<'_>) -> Self {
         geometry_collection_to_geo(value)
     }
 }
 
-impl<const D: usize> From<GeometryCollection<'_, D>> for geo::Geometry {
-    fn from(value: GeometryCollection<'_, D>) -> Self {
+impl From<GeometryCollection<'_>> for geo::Geometry {
+    fn from(value: GeometryCollection<'_>) -> Self {
         geo::Geometry::GeometryCollection(value.into())
     }
 }
@@ -133,9 +124,7 @@ impl RTreeObject for GeometryCollection<'_, 2> {
     }
 }
 
-impl<const D: usize, G: GeometryCollectionTrait<T = f64>> PartialEq<G>
-    for GeometryCollection<'_, D>
-{
+impl<G: GeometryCollectionTrait<T = f64>> PartialEq<G> for GeometryCollection<'_> {
     fn eq(&self, other: &G) -> bool {
         geometry_collection_eq(self, other)
     }

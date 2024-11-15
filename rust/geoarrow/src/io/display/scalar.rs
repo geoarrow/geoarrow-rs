@@ -37,13 +37,13 @@ pub(crate) fn write_geometry(
     Ok(())
 }
 
-impl fmt::Display for Point<'_, 2> {
+impl fmt::Display for Point<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write_geometry(f, self.to_geo_geometry(), 80)
     }
 }
 
-impl fmt::Display for Rect<'_, 2> {
+impl fmt::Display for Rect<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write_geometry(f, self.to_geo_geometry(), 80)
     }
@@ -59,14 +59,14 @@ macro_rules! impl_fmt {
     };
 }
 
-impl_fmt!(LineString<'_, 2>);
-impl_fmt!(Polygon<'_, 2>);
-impl_fmt!(MultiPoint<'_, 2>);
-impl_fmt!(MultiLineString<'_, 2>);
-impl_fmt!(MultiPolygon<'_, 2>);
-impl_fmt!(GeometryCollection<'_, 2>);
+impl_fmt!(LineString<'_>);
+impl_fmt!(Polygon<'_>);
+impl_fmt!(MultiPoint<'_>);
+impl_fmt!(MultiLineString<'_>);
+impl_fmt!(MultiPolygon<'_>);
+impl_fmt!(GeometryCollection<'_>);
 
-impl fmt::Display for Geometry<'_, 2> {
+impl fmt::Display for Geometry<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write_geometry(f, self.to_geo_geometry(), 80)
     }

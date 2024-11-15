@@ -11,7 +11,7 @@ use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a LineString
 #[derive(Debug, Clone)]
-pub struct LineString<'a, const D: usize> {
+pub struct LineString<'a> {
     pub(crate) coords: &'a CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
@@ -22,7 +22,7 @@ pub struct LineString<'a, const D: usize> {
     start_offset: usize,
 }
 
-impl<'a, const D: usize> LineString<'a, D> {
+impl<'a> LineString<'a> {
     pub fn new(
         coords: &'a CoordBuffer,
         geom_offsets: &'a OffsetBuffer<i32>,
@@ -38,7 +38,7 @@ impl<'a, const D: usize> LineString<'a, D> {
     }
 
     pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, usize) {
-        let arr = LineStringArray::<D>::new(
+        let arr = LineStringArray::new(
             self.coords.clone(),
             self.geom_offsets.clone(),
             None,
@@ -50,7 +50,7 @@ impl<'a, const D: usize> LineString<'a, D> {
     }
 }
 
-impl<'a, const D: usize> NativeScalar for LineString<'a, D> {
+impl<'a> NativeScalar for LineString<'a> {
     type ScalarGeo = geo::LineString;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -67,7 +67,7 @@ impl<'a, const D: usize> NativeScalar for LineString<'a, D> {
     }
 }
 
-impl<'a, const D: usize> LineStringTrait for LineString<'a, D> {
+impl<'a> LineStringTrait for LineString<'a> {
     type T = f64;
     type CoordType<'b> = Coord<'a> where Self: 'b;
 
@@ -85,7 +85,7 @@ impl<'a, const D: usize> LineStringTrait for LineString<'a, D> {
     }
 }
 
-impl<'a, const D: usize> LineStringTrait for &'a LineString<'a, D> {
+impl<'a> LineStringTrait for &'a LineString<'a> {
     type T = f64;
     type CoordType<'b> = Coord<'a> where Self: 'b;
 
@@ -103,25 +103,25 @@ impl<'a, const D: usize> LineStringTrait for &'a LineString<'a, D> {
     }
 }
 
-impl<const D: usize> From<LineString<'_, D>> for geo::LineString {
-    fn from(value: LineString<'_, D>) -> Self {
+impl From<LineString<'_>> for geo::LineString {
+    fn from(value: LineString<'_>) -> Self {
         (&value).into()
     }
 }
 
-impl<const D: usize> From<&LineString<'_, D>> for geo::LineString {
-    fn from(value: &LineString<'_, D>) -> Self {
+impl From<&LineString<'_>> for geo::LineString {
+    fn from(value: &LineString<'_>) -> Self {
         line_string_to_geo(value)
     }
 }
 
-impl<const D: usize> From<LineString<'_, D>> for geo::Geometry {
-    fn from(value: LineString<'_, D>) -> Self {
+impl From<LineString<'_>> for geo::Geometry {
+    fn from(value: LineString<'_>) -> Self {
         geo::Geometry::LineString(value.into())
     }
 }
 
-impl RTreeObject for LineString<'_, 2> {
+impl RTreeObject for LineString<'_> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -130,7 +130,7 @@ impl RTreeObject for LineString<'_, 2> {
     }
 }
 
-impl<G: LineStringTrait<T = f64>> PartialEq<G> for LineString<'_, 2> {
+impl<G: LineStringTrait<T = f64>> PartialEq<G> for LineString<'_> {
     fn eq(&self, other: &G) -> bool {
         line_string_eq(self, other)
     }

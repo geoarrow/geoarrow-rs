@@ -2,7 +2,7 @@ use crate::array::{MultiPointArray, MultiPointBuilder};
 use crate::error::Result;
 use crate::io::geos::scalar::GEOSMultiPoint;
 
-impl<const D: usize> MultiPointBuilder<D> {
+impl MultiPointBuilder<D> {
     pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         // TODO: don't use new_unchecked
         let geos_objects: Vec<Option<GEOSMultiPoint>> = value
@@ -13,7 +13,7 @@ impl<const D: usize> MultiPointBuilder<D> {
     }
 }
 
-impl<const D: usize> MultiPointArray<D> {
+impl MultiPointArray<D> {
     pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         let mutable_arr = MultiPointBuilder::from_geos(value)?;
         Ok(mutable_arr.into())

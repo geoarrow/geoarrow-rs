@@ -5,7 +5,7 @@ use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-impl<const D: usize> GeozeroGeometry for PolygonArray<D> {
+impl GeozeroGeometry for PolygonArray<D> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -23,7 +23,7 @@ impl<const D: usize> GeozeroGeometry for PolygonArray<D> {
 }
 
 /// GeoZero trait to convert to GeoArrow PolygonArray.
-pub trait ToPolygonArray<const D: usize> {
+pub trait ToPolygonArray {
     /// Convert to GeoArrow PolygonArray
     fn to_line_string_array(&self) -> geozero::error::Result<PolygonArray<D>>;
 
@@ -44,7 +44,7 @@ impl<T: GeozeroGeometry, const D: usize> ToPolygonArray<D> for T {
 }
 
 #[allow(unused_variables)]
-impl<const D: usize> GeomProcessor for PolygonBuilder<D> {
+impl GeomProcessor for PolygonBuilder<D> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         // reserve `size` geometries
         let capacity = PolygonCapacity::new(0, 0, size);

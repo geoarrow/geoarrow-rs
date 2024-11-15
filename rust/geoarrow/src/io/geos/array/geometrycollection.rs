@@ -2,7 +2,7 @@ use crate::array::{GeometryCollectionArray, GeometryCollectionBuilder};
 use crate::error::GeoArrowError;
 use crate::io::geos::scalar::GEOSGeometryCollection;
 
-impl<const D: usize> TryFrom<Vec<geos::Geometry>> for GeometryCollectionBuilder<D> {
+impl TryFrom<Vec<geos::Geometry>> for GeometryCollectionBuilder<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<geos::Geometry>) -> std::result::Result<Self, Self::Error> {
@@ -14,7 +14,7 @@ impl<const D: usize> TryFrom<Vec<geos::Geometry>> for GeometryCollectionBuilder<
     }
 }
 
-impl<const D: usize> TryFrom<Vec<geos::Geometry>> for GeometryCollectionArray<D> {
+impl TryFrom<Vec<geos::Geometry>> for GeometryCollectionArray<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<geos::Geometry>) -> std::result::Result<Self, Self::Error> {

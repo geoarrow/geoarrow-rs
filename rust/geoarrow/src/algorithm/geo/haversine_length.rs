@@ -37,7 +37,7 @@ pub trait HaversineLength {
     ///     // London
     ///     (-0.1278, 51.5074),
     /// ]);
-    /// let linestring_array: LineStringArray<2> = vec![linestring].as_slice().into();
+    /// let linestring_array: LineStringArray = vec![linestring].as_slice().into();
     ///
     /// let length_array = linestring_array.haversine_length();
     ///
@@ -64,8 +64,8 @@ macro_rules! zero_impl {
     };
 }
 
-zero_impl!(PointArray<2>);
-zero_impl!(MultiPointArray<2>);
+zero_impl!(PointArray);
+zero_impl!(MultiPointArray);
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
@@ -80,8 +80,8 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<2>);
-iter_geo_impl!(MultiLineStringArray<2>);
+iter_geo_impl!(LineStringArray);
+iter_geo_impl!(MultiLineStringArray);
 
 impl HaversineLength for &dyn NativeArray {
     type Output = Result<Float64Array>;
@@ -91,21 +91,21 @@ impl HaversineLength for &dyn NativeArray {
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, XY) => self.as_point::<2>().haversine_length(),
-            LineString(_, XY) => self.as_line_string::<2>().haversine_length(),
-            // Polygon(_, XY) => self.as_polygon::<2>().haversine_length(),
-            MultiPoint(_, XY) => self.as_multi_point::<2>().haversine_length(),
-            MultiLineString(_, XY) => self.as_multi_line_string::<2>().haversine_length(),
-            // MultiPolygon(_, XY) => self.as_multi_polygon::<2>().haversine_length(),
-            // Mixed(_, XY) => self.as_mixed::<2>().haversine_length(),
-            // GeometryCollection(_, XY) => self.as_geometry_collection::<2>().haversine_length(),
+            Point(_, XY) => self.as_point().haversine_length(),
+            LineString(_, XY) => self.as_line_string().haversine_length(),
+            // Polygon(_, XY) => self.as_polygon().haversine_length(),
+            MultiPoint(_, XY) => self.as_multi_point().haversine_length(),
+            MultiLineString(_, XY) => self.as_multi_line_string().haversine_length(),
+            // MultiPolygon(_, XY) => self.as_multi_polygon().haversine_length(),
+            // Mixed(_, XY) => self.as_mixed().haversine_length(),
+            // GeometryCollection(_, XY) => self.as_geometry_collection().haversine_length(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
     }
 }
 
-impl HaversineLength for ChunkedGeometryArray<PointArray<2>> {
+impl HaversineLength for ChunkedGeometryArray<PointArray> {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn haversine_length(&self) -> Self::Output {
@@ -126,9 +126,9 @@ macro_rules! chunked_impl {
     };
 }
 
-chunked_impl!(ChunkedGeometryArray<LineStringArray<2>>);
-chunked_impl!(ChunkedGeometryArray<MultiPointArray<2>>);
-chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<2>>);
+chunked_impl!(ChunkedGeometryArray<LineStringArray>);
+chunked_impl!(ChunkedGeometryArray<MultiPointArray>);
+chunked_impl!(ChunkedGeometryArray<MultiLineStringArray>);
 
 impl HaversineLength for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<Float64Array>>;
@@ -138,14 +138,14 @@ impl HaversineLength for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point::<2>().haversine_length(),
-            LineString(_, XY) => self.as_line_string::<2>().haversine_length(),
-            // Polygon(_, XY) => self.as_polygon::<2>().haversine_length(),
-            MultiPoint(_, XY) => self.as_multi_point::<2>().haversine_length(),
-            MultiLineString(_, XY) => self.as_multi_line_string::<2>().haversine_length(),
-            // MultiPolygon(_, XY) => self.as_multi_polygon::<2>().haversine_length(),
-            // Mixed(_, XY) => self.as_mixed::<2>().haversine_length(),
-            // GeometryCollection(_, XY) => self.as_geometry_collection::<2>().haversine_length(),
+            Point(_, XY) => self.as_point().haversine_length(),
+            LineString(_, XY) => self.as_line_string().haversine_length(),
+            // Polygon(_, XY) => self.as_polygon().haversine_length(),
+            MultiPoint(_, XY) => self.as_multi_point().haversine_length(),
+            MultiLineString(_, XY) => self.as_multi_line_string().haversine_length(),
+            // MultiPolygon(_, XY) => self.as_multi_polygon().haversine_length(),
+            // Mixed(_, XY) => self.as_mixed().haversine_length(),
+            // GeometryCollection(_, XY) => self.as_geometry_collection().haversine_length(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
@@ -166,7 +166,7 @@ mod tests {
             // London
             (x: -0.1278, y: 51.5074),
         ];
-        let input_array: LineStringArray<2> = vec![input_geom].as_slice().into();
+        let input_array: LineStringArray = vec![input_geom].as_slice().into();
         let result_array = input_array.haversine_length();
 
         // Meters

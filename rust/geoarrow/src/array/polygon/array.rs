@@ -30,7 +30,7 @@ use super::PolygonBuilder;
 /// This is semantically equivalent to `Vec<Option<Polygon>>` due to the internal validity bitmap.
 #[derive(Debug, Clone)]
 // #[derive(Debug, Clone, PartialEq)]
-pub struct PolygonArray<const D: usize> {
+pub struct PolygonArray {
     // Always NativeType::Polygon or NativeType::LargePolygon
     data_type: NativeType,
 
@@ -75,7 +75,7 @@ pub(super) fn check(
     Ok(())
 }
 
-impl<const D: usize> PolygonArray<D> {
+impl PolygonArray {
     /// Create a new PolygonArray from parts
     ///
     /// # Implementation
@@ -121,10 +121,7 @@ impl<const D: usize> PolygonArray<D> {
             &ring_offsets,
             validity.as_ref().map(|v| v.len()),
         )?;
-
-        let coord_type = coords.coord_type();
-        let data_type = NativeType::Polygon(coord_type, D.try_into()?);
-
+        let data_type = NativeType::Polygon(coords.coord_type(), coords.dim());
         Ok(Self {
             data_type,
             coords,
@@ -244,7 +241,7 @@ impl<const D: usize> PolygonArray<D> {
     }
 }
 
-impl<const D: usize> ArrayBase for PolygonArray<D> {
+impl ArrayBase for PolygonArray {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -288,7 +285,7 @@ impl<const D: usize> ArrayBase for PolygonArray<D> {
     }
 }
 
-impl<const D: usize> NativeArray for PolygonArray<D> {
+impl NativeArray for PolygonArray {
     fn data_type(&self) -> NativeType {
         self.data_type
     }
@@ -320,7 +317,7 @@ impl<const D: usize> NativeArray for PolygonArray<D> {
     }
 }
 
-impl<const D: usize> GeometryArraySelfMethods<D> for PolygonArray<D> {
+impl GeometryArraySelfMethods for PolygonArray {
     fn with_coords(self, coords: CoordBuffer) -> Self {
         assert_eq!(coords.len(), self.coords.len());
         Self::new(
@@ -343,8 +340,8 @@ impl<const D: usize> GeometryArraySelfMethods<D> for PolygonArray<D> {
     }
 }
 
-impl<const D: usize> NativeGeometryAccessor<D> for PolygonArray<D> {
-    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry<D> {
+impl NativeGeometryAccessor for PolygonArray {
+    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry {
         Geometry::Polygon(Polygon::new(
             &self.coords,
             &self.geom_offsets,
@@ -355,18 +352,18 @@ impl<const D: usize> NativeGeometryAccessor<D> for PolygonArray<D> {
 }
 
 #[cfg(feature = "geos")]
-impl<'a, const D: usize> crate::trait_::NativeGEOSGeometryAccessor<'a> for PolygonArray<D> {
+impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for PolygonArray {
     unsafe fn value_as_geometry_unchecked(
         &'a self,
         index: usize,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
-        let geom = Polygon::<D>::new(&self.coords, &self.geom_offsets, &self.ring_offsets, index);
+        let geom = Polygon::new(&self.coords, &self.geom_offsets, &self.ring_offsets, index);
         (&geom).try_into()
     }
 }
 
-impl<'a, const D: usize> ArrayAccessor<'a> for PolygonArray<D> {
-    type Item = Polygon<'a, D>;
+impl<'a> ArrayAccessor<'a> for PolygonArray {
+    type Item = Polygon<'a>;
     type ItemGeo = geo::Polygon;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
@@ -374,7 +371,7 @@ impl<'a, const D: usize> ArrayAccessor<'a> for PolygonArray<D> {
     }
 }
 
-impl<const D: usize> IntoArrow for PolygonArray<D> {
+impl IntoArrow for PolygonArray {
     type ArrowArray = GenericListArray<i32>;
 
     fn into_arrow(self) -> Self::ArrowArray {
@@ -392,7 +389,7 @@ impl<const D: usize> IntoArrow for PolygonArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<&GenericListArray<i32>> for PolygonArray<D> {
+impl TryFrom<&GenericListArray<i32>> for PolygonArray {
     type Error = GeoArrowError;
 
     fn try_from(geom_array: &GenericListArray<i32>) -> Result<Self> {
@@ -415,7 +412,7 @@ impl<const D: usize> TryFrom<&GenericListArray<i32>> for PolygonArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<&GenericListArray<i64>> for PolygonArray<D> {
+impl TryFrom<&GenericListArray<i64>> for PolygonArray {
     type Error = GeoArrowError;
 
     fn try_from(geom_array: &GenericListArray<i64>) -> Result<Self> {
@@ -437,7 +434,7 @@ impl<const D: usize> TryFrom<&GenericListArray<i64>> for PolygonArray<D> {
         ))
     }
 }
-impl<const D: usize> TryFrom<&dyn Array> for PolygonArray<D> {
+impl TryFrom<&dyn Array> for PolygonArray {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self> {
@@ -458,7 +455,7 @@ impl<const D: usize> TryFrom<&dyn Array> for PolygonArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<(&dyn Array, &Field)> for PolygonArray<D> {
+impl TryFrom<(&dyn Array, &Field)> for PolygonArray {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
@@ -468,33 +465,33 @@ impl<const D: usize> TryFrom<(&dyn Array, &Field)> for PolygonArray<D> {
     }
 }
 
-impl<G: PolygonTrait<T = f64>, const D: usize> From<Vec<Option<G>>> for PolygonArray<D> {
+impl<G: PolygonTrait<T = f64>> From<Vec<Option<G>>> for PolygonArray {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: PolygonBuilder<D> = other.into();
+        let mut_arr: PolygonBuilder = other.into();
         mut_arr.into()
     }
 }
 
-impl<G: PolygonTrait<T = f64>, const D: usize> From<&[G]> for PolygonArray<D> {
+impl<G: PolygonTrait<T = f64>> From<&[G]> for PolygonArray {
     fn from(other: &[G]) -> Self {
-        let mut_arr: PolygonBuilder<D> = other.into();
+        let mut_arr: PolygonBuilder = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for PolygonArray<D> {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for PolygonArray {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
-        let mut_arr: PolygonBuilder<D> = value.try_into()?;
+        let mut_arr: PolygonBuilder = value.try_into()?;
         Ok(mut_arr.into())
     }
 }
 
 /// Polygon and MultiLineString have the same layout, so enable conversions between the two to
 /// change the semantic type
-impl<const D: usize> From<PolygonArray<D>> for MultiLineStringArray<D> {
-    fn from(value: PolygonArray<D>) -> Self {
+impl From<PolygonArray> for MultiLineStringArray {
+    fn from(value: PolygonArray) -> Self {
         Self::new(
             value.coords,
             value.geom_offsets,
@@ -505,8 +502,8 @@ impl<const D: usize> From<PolygonArray<D>> for MultiLineStringArray<D> {
     }
 }
 
-impl From<RectArray<2>> for PolygonArray<2> {
-    fn from(value: RectArray<2>) -> Self {
+impl From<RectArray> for PolygonArray {
+    fn from(value: RectArray) -> Self {
         // The number of output geoms is the same as the input
         let geom_capacity = value.len();
 
@@ -531,13 +528,13 @@ impl From<RectArray<2>> for PolygonArray<2> {
 }
 
 /// Default to an empty array
-impl<const D: usize> Default for PolygonArray<D> {
+impl Default for PolygonArray {
     fn default() -> Self {
         PolygonBuilder::default().into()
     }
 }
 
-impl<const D: usize> PartialEq for PolygonArray<D> {
+impl PartialEq for PolygonArray {
     fn eq(&self, other: &Self) -> bool {
         if self.validity != other.validity {
             return false;
@@ -559,10 +556,10 @@ impl<const D: usize> PartialEq for PolygonArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<MultiPolygonArray<D>> for PolygonArray<D> {
+impl TryFrom<MultiPolygonArray> for PolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: MultiPolygonArray<D>) -> Result<Self> {
+    fn try_from(value: MultiPolygonArray) -> Result<Self> {
         if !can_downcast_multi(&value.geom_offsets) {
             return Err(GeoArrowError::General("Unable to cast".to_string()));
         }
@@ -577,10 +574,10 @@ impl<const D: usize> TryFrom<MultiPolygonArray<D>> for PolygonArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<MixedGeometryArray<D>> for PolygonArray<D> {
+impl TryFrom<MixedGeometryArray> for PolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: MixedGeometryArray<D>) -> Result<Self> {
+    fn try_from(value: MixedGeometryArray) -> Result<Self> {
         if value.has_points()
             || value.has_line_strings()
             || value.has_multi_points()
@@ -603,7 +600,7 @@ impl<const D: usize> TryFrom<MixedGeometryArray<D>> for PolygonArray<D> {
         capacity.ring_capacity += buffer_lengths.ring_capacity;
         capacity.geom_capacity += buffer_lengths.polygon_capacity;
 
-        let mut builder = PolygonBuilder::<D>::with_capacity_and_options(
+        let mut builder = PolygonBuilder::with_capacity_and_options(
             capacity,
             value.coord_type(),
             value.metadata(),
@@ -615,10 +612,10 @@ impl<const D: usize> TryFrom<MixedGeometryArray<D>> for PolygonArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<GeometryCollectionArray<D>> for PolygonArray<D> {
+impl TryFrom<GeometryCollectionArray> for PolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: GeometryCollectionArray<D>) -> Result<Self> {
+    fn try_from(value: GeometryCollectionArray) -> Result<Self> {
         MixedGeometryArray::try_from(value)?.try_into()
     }
 }
@@ -634,14 +631,14 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate() {
-        let arr: PolygonArray<2> = vec![p0(), p1()].as_slice().into();
+        let arr: PolygonArray = vec![p0(), p1()].as_slice().into();
         assert_eq!(arr.value_as_geo(0), p0());
         assert_eq!(arr.value_as_geo(1), p1());
     }
 
     #[test]
     fn geo_roundtrip_accurate_option_vec() {
-        let arr: PolygonArray<2> = vec![Some(p0()), Some(p1()), None].into();
+        let arr: PolygonArray = vec![Some(p0()), Some(p1()), None].into();
         assert_eq!(arr.get_as_geo(0), Some(p0()));
         assert_eq!(arr.get_as_geo(1), Some(p1()));
         assert_eq!(arr.get_as_geo(2), None);
@@ -649,7 +646,7 @@ mod test {
 
     #[test]
     fn slice() {
-        let arr: PolygonArray<2> = vec![p0(), p1()].as_slice().into();
+        let arr: PolygonArray = vec![p0(), p1()].as_slice().into();
         let sliced = arr.slice(1, 1);
 
         assert_eq!(sliced.len(), 1);
@@ -661,7 +658,7 @@ mod test {
 
     #[test]
     fn owned_slice() {
-        let arr: PolygonArray<2> = vec![p0(), p1()].as_slice().into();
+        let arr: PolygonArray = vec![p0(), p1()].as_slice().into();
         let sliced = arr.owned_slice(1, 1);
 
         // assert!(
@@ -682,7 +679,7 @@ mod test {
         let geom_arr = example_polygon_interleaved();
 
         let wkb_arr = example_polygon_wkb();
-        let parsed_geom_arr: PolygonArray<2> = wkb_arr.try_into().unwrap();
+        let parsed_geom_arr: PolygonArray = wkb_arr.try_into().unwrap();
 
         assert_eq!(geom_arr, parsed_geom_arr);
     }
@@ -693,7 +690,7 @@ mod test {
         let geom_arr = example_polygon_separated().into_coord_type(CoordType::Interleaved);
 
         let wkb_arr = example_polygon_wkb();
-        let parsed_geom_arr: PolygonArray<2> = wkb_arr.try_into().unwrap();
+        let parsed_geom_arr: PolygonArray = wkb_arr.try_into().unwrap();
 
         assert_eq!(geom_arr, parsed_geom_arr);
     }

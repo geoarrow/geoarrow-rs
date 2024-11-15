@@ -27,7 +27,7 @@ use super::MultiPolygonBuilder;
 /// This is semantically equivalent to `Vec<Option<MultiPolygon>>` due to the internal validity
 /// bitmap.
 #[derive(Debug, Clone)]
-pub struct MultiPolygonArray<const D: usize> {
+pub struct MultiPolygonArray {
     // Always NativeType::MultiPolygon or NativeType::LargeMultiPolygon
     data_type: NativeType,
 
@@ -81,7 +81,7 @@ pub(super) fn check(
     Ok(())
 }
 
-impl<const D: usize> MultiPolygonArray<D> {
+impl MultiPolygonArray {
     /// Create a new MultiPolygonArray from parts
     ///
     /// # Implementation
@@ -140,10 +140,7 @@ impl<const D: usize> MultiPolygonArray<D> {
             &ring_offsets,
             validity.as_ref().map(|v| v.len()),
         )?;
-
-        let coord_type = coords.coord_type();
-        let data_type = NativeType::MultiPolygon(coord_type, D.try_into()?);
-
+        let data_type = NativeType::MultiPolygon(coords.coord_type(), coords.dim());
         Ok(Self {
             data_type,
             coords,
@@ -302,7 +299,7 @@ impl<const D: usize> MultiPolygonArray<D> {
     }
 }
 
-impl<const D: usize> ArrayBase for MultiPolygonArray<D> {
+impl ArrayBase for MultiPolygonArray {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -346,7 +343,7 @@ impl<const D: usize> ArrayBase for MultiPolygonArray<D> {
     }
 }
 
-impl<const D: usize> NativeArray for MultiPolygonArray<D> {
+impl NativeArray for MultiPolygonArray {
     fn data_type(&self) -> NativeType {
         self.data_type
     }
@@ -378,7 +375,7 @@ impl<const D: usize> NativeArray for MultiPolygonArray<D> {
     }
 }
 
-impl<const D: usize> GeometryArraySelfMethods<D> for MultiPolygonArray<D> {
+impl GeometryArraySelfMethods for MultiPolygonArray {
     fn with_coords(self, coords: CoordBuffer) -> Self {
         assert_eq!(coords.len(), self.coords.len());
         Self::new(
@@ -403,8 +400,8 @@ impl<const D: usize> GeometryArraySelfMethods<D> for MultiPolygonArray<D> {
     }
 }
 
-impl<const D: usize> NativeGeometryAccessor<D> for MultiPolygonArray<D> {
-    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry<D> {
+impl NativeGeometryAccessor for MultiPolygonArray {
+    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry {
         Geometry::MultiPolygon(MultiPolygon::new(
             &self.coords,
             &self.geom_offsets,
@@ -416,12 +413,12 @@ impl<const D: usize> NativeGeometryAccessor<D> for MultiPolygonArray<D> {
 }
 
 #[cfg(feature = "geos")]
-impl<'a, const D: usize> crate::trait_::NativeGEOSGeometryAccessor<'a> for MultiPolygonArray<D> {
+impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for MultiPolygonArray {
     unsafe fn value_as_geometry_unchecked(
         &'a self,
         index: usize,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
-        let geom = MultiPolygon::<D>::new(
+        let geom = MultiPolygon::new(
             &self.coords,
             &self.geom_offsets,
             &self.polygon_offsets,
@@ -432,8 +429,8 @@ impl<'a, const D: usize> crate::trait_::NativeGEOSGeometryAccessor<'a> for Multi
     }
 }
 
-impl<'a, const D: usize> ArrayAccessor<'a> for MultiPolygonArray<D> {
-    type Item = MultiPolygon<'a, D>;
+impl<'a> ArrayAccessor<'a> for MultiPolygonArray {
+    type Item = MultiPolygon<'a>;
     type ItemGeo = geo::MultiPolygon;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
@@ -447,7 +444,7 @@ impl<'a, const D: usize> ArrayAccessor<'a> for MultiPolygonArray<D> {
     }
 }
 
-impl<const D: usize> IntoArrow for MultiPolygonArray<D> {
+impl IntoArrow for MultiPolygonArray {
     type ArrowArray = GenericListArray<i32>;
 
     fn into_arrow(self) -> Self::ArrowArray {
@@ -473,7 +470,7 @@ impl<const D: usize> IntoArrow for MultiPolygonArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<&GenericListArray<i32>> for MultiPolygonArray<D> {
+impl TryFrom<&GenericListArray<i32>> for MultiPolygonArray {
     type Error = GeoArrowError;
 
     fn try_from(geom_array: &GenericListArray<i32>) -> Result<Self> {
@@ -501,7 +498,7 @@ impl<const D: usize> TryFrom<&GenericListArray<i32>> for MultiPolygonArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<&GenericListArray<i64>> for MultiPolygonArray<D> {
+impl TryFrom<&GenericListArray<i64>> for MultiPolygonArray {
     type Error = GeoArrowError;
 
     fn try_from(geom_array: &GenericListArray<i64>) -> Result<Self> {
@@ -529,7 +526,7 @@ impl<const D: usize> TryFrom<&GenericListArray<i64>> for MultiPolygonArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<&dyn Array> for MultiPolygonArray<D> {
+impl TryFrom<&dyn Array> for MultiPolygonArray {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self> {
@@ -550,7 +547,7 @@ impl<const D: usize> TryFrom<&dyn Array> for MultiPolygonArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<(&dyn Array, &Field)> for MultiPolygonArray<D> {
+impl TryFrom<(&dyn Array, &Field)> for MultiPolygonArray {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
@@ -560,31 +557,31 @@ impl<const D: usize> TryFrom<(&dyn Array, &Field)> for MultiPolygonArray<D> {
     }
 }
 
-impl<G: MultiPolygonTrait<T = f64>, const D: usize> From<Vec<Option<G>>> for MultiPolygonArray<D> {
+impl<G: MultiPolygonTrait<T = f64>, const D: usize> From<Vec<Option<G>>> for MultiPolygonArray {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: MultiPolygonBuilder<D> = other.into();
+        let mut_arr: MultiPolygonBuilder = other.into();
         mut_arr.into()
     }
 }
 
-impl<G: MultiPolygonTrait<T = f64>, const D: usize> From<&[G]> for MultiPolygonArray<D> {
+impl<G: MultiPolygonTrait<T = f64>, const D: usize> From<&[G]> for MultiPolygonArray {
     fn from(other: &[G]) -> Self {
-        let mut_arr: MultiPolygonBuilder<D> = other.into();
+        let mut_arr: MultiPolygonBuilder = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MultiPolygonArray<D> {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MultiPolygonArray {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
-        let mut_arr: MultiPolygonBuilder<D> = value.try_into()?;
+        let mut_arr: MultiPolygonBuilder = value.try_into()?;
         Ok(mut_arr.into())
     }
 }
 
-impl<const D: usize> From<PolygonArray<D>> for MultiPolygonArray<D> {
-    fn from(value: PolygonArray<D>) -> Self {
+impl From<PolygonArray> for MultiPolygonArray {
+    fn from(value: PolygonArray) -> Self {
         let coords = value.coords;
         let geom_offsets = OffsetBuffer::from_lengths(vec![1; coords.len()]);
         let ring_offsets = value.ring_offsets;
@@ -602,13 +599,13 @@ impl<const D: usize> From<PolygonArray<D>> for MultiPolygonArray<D> {
 }
 
 /// Default to an empty array
-impl<const D: usize> Default for MultiPolygonArray<D> {
+impl Default for MultiPolygonArray {
     fn default() -> Self {
         MultiPolygonBuilder::default().into()
     }
 }
 
-impl<const D: usize> PartialEq for MultiPolygonArray<D> {
+impl PartialEq for MultiPolygonArray {
     fn eq(&self, other: &Self) -> bool {
         if self.validity != other.validity {
             return false;
@@ -634,10 +631,10 @@ impl<const D: usize> PartialEq for MultiPolygonArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<MixedGeometryArray<D>> for MultiPolygonArray<D> {
+impl TryFrom<MixedGeometryArray> for MultiPolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: MixedGeometryArray<D>) -> Result<Self> {
+    fn try_from(value: MixedGeometryArray) -> Result<Self> {
         if value.has_points()
             || value.has_line_strings()
             || value.has_multi_points()
@@ -657,7 +654,7 @@ impl<const D: usize> TryFrom<MixedGeometryArray<D>> for MultiPolygonArray<D> {
         let mut capacity = value.multi_polygons.buffer_lengths();
         capacity += value.polygons.buffer_lengths();
 
-        let mut builder = MultiPolygonBuilder::<D>::with_capacity_and_options(
+        let mut builder = MultiPolygonBuilder::with_capacity_and_options(
             capacity,
             value.coord_type(),
             value.metadata(),
@@ -669,10 +666,10 @@ impl<const D: usize> TryFrom<MixedGeometryArray<D>> for MultiPolygonArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<GeometryCollectionArray<D>> for MultiPolygonArray<D> {
+impl TryFrom<GeometryCollectionArray> for MultiPolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: GeometryCollectionArray<D>) -> Result<Self> {
+    fn try_from(value: GeometryCollectionArray) -> Result<Self> {
         MixedGeometryArray::try_from(value)?.try_into()
     }
 }
@@ -687,14 +684,14 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate() {
-        let arr: MultiPolygonArray<2> = vec![mp0(), mp1()].as_slice().into();
+        let arr: MultiPolygonArray = vec![mp0(), mp1()].as_slice().into();
         assert_eq!(arr.value_as_geo(0), mp0());
         assert_eq!(arr.value_as_geo(1), mp1());
     }
 
     #[test]
     fn geo_roundtrip_accurate_option_vec() {
-        let arr: MultiPolygonArray<2> = vec![Some(mp0()), Some(mp1()), None].into();
+        let arr: MultiPolygonArray = vec![Some(mp0()), Some(mp1()), None].into();
         assert_eq!(arr.get_as_geo(0), Some(mp0()));
         assert_eq!(arr.get_as_geo(1), Some(mp1()));
         assert_eq!(arr.get_as_geo(2), None);
@@ -702,7 +699,7 @@ mod test {
 
     #[test]
     fn slice() {
-        let arr: MultiPolygonArray<2> = vec![mp0(), mp1()].as_slice().into();
+        let arr: MultiPolygonArray = vec![mp0(), mp1()].as_slice().into();
         let sliced = arr.slice(1, 1);
         assert_eq!(sliced.len(), 1);
         assert_eq!(sliced.get_as_geo(0), Some(mp1()));
@@ -710,7 +707,7 @@ mod test {
 
     #[test]
     fn owned_slice() {
-        let arr: MultiPolygonArray<2> = vec![mp0(), mp1()].as_slice().into();
+        let arr: MultiPolygonArray = vec![mp0(), mp1()].as_slice().into();
         let sliced = arr.owned_slice(1, 1);
 
         // assert!(
@@ -731,7 +728,7 @@ mod test {
         let geom_arr = example_multipolygon_interleaved();
 
         let wkb_arr = example_multipolygon_wkb();
-        let parsed_geom_arr: MultiPolygonArray<2> = wkb_arr.try_into().unwrap();
+        let parsed_geom_arr: MultiPolygonArray = wkb_arr.try_into().unwrap();
 
         assert_eq!(geom_arr, parsed_geom_arr);
     }
@@ -742,7 +739,7 @@ mod test {
         let geom_arr = example_multipolygon_separated().into_coord_type(CoordType::Interleaved);
 
         let wkb_arr = example_multipolygon_wkb();
-        let parsed_geom_arr: MultiPolygonArray<2> = wkb_arr.try_into().unwrap();
+        let parsed_geom_arr: MultiPolygonArray = wkb_arr.try_into().unwrap();
 
         assert_eq!(geom_arr, parsed_geom_arr);
     }

@@ -3,11 +3,11 @@ use crate::scalar::GeometryCollection;
 use geo_traits::GeometryCollectionTrait;
 use geos::Geom;
 
-impl<'a, const D: usize> TryFrom<&'a GeometryCollection<'_, D>> for geos::Geometry {
+impl<'a> TryFrom<&'a GeometryCollection<'_>> for geos::Geometry {
     type Error = geos::Error;
 
     fn try_from(
-        value: &'a GeometryCollection<'_, D>,
+        value: &'a GeometryCollection<'_>,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
         geos::Geometry::create_geometry_collection(
             value

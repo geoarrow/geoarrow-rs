@@ -1,11 +1,12 @@
 use crate::algorithm::native::eq::multi_point_eq;
 use crate::array::{CoordBuffer, MultiPointArray};
+use crate::datatypes::Dimension;
 use crate::scalar::{MultiPoint, Point};
 use arrow_buffer::OffsetBuffer;
 use geo_traits::MultiPointTrait;
 
 #[derive(Clone, Debug)]
-pub struct OwnedMultiPoint<const D: usize> {
+pub struct OwnedMultiPoint {
     coords: CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
@@ -14,7 +15,7 @@ pub struct OwnedMultiPoint<const D: usize> {
     geom_index: usize,
 }
 
-impl<const D: usize> OwnedMultiPoint<D> {
+impl OwnedMultiPoint {
     pub fn new(coords: CoordBuffer, geom_offsets: OffsetBuffer<i32>, geom_index: usize) -> Self {
         Self {
             coords,
@@ -24,42 +25,40 @@ impl<const D: usize> OwnedMultiPoint<D> {
     }
 }
 
-impl<'a, const D: usize> From<&'a OwnedMultiPoint<D>> for MultiPoint<'a, D> {
-    fn from(value: &'a OwnedMultiPoint<D>) -> Self {
+impl<'a> From<&'a OwnedMultiPoint> for MultiPoint<'a> {
+    fn from(value: &'a OwnedMultiPoint) -> Self {
         Self::new(&value.coords, &value.geom_offsets, value.geom_index)
     }
 }
 
-impl From<OwnedMultiPoint<2>> for geo::MultiPoint {
-    fn from(value: OwnedMultiPoint<2>) -> Self {
+impl From<OwnedMultiPoint> for geo::MultiPoint {
+    fn from(value: OwnedMultiPoint) -> Self {
         let geom = MultiPoint::from(&value);
         geom.into()
     }
 }
 
-impl<'a, const D: usize> From<MultiPoint<'a, D>> for OwnedMultiPoint<D> {
-    fn from(value: MultiPoint<'a, D>) -> Self {
+impl<'a> From<MultiPoint<'a>> for OwnedMultiPoint {
+    fn from(value: MultiPoint<'a>) -> Self {
         let (coords, geom_offsets, geom_index) = value.into_owned_inner();
         Self::new(coords, geom_offsets, geom_index)
     }
 }
 
-impl<const D: usize> From<OwnedMultiPoint<D>> for MultiPointArray<D> {
-    fn from(value: OwnedMultiPoint<D>) -> Self {
+impl From<OwnedMultiPoint> for MultiPointArray {
+    fn from(value: OwnedMultiPoint) -> Self {
         Self::new(value.coords, value.geom_offsets, None, Default::default())
     }
 }
 
-impl<const D: usize> MultiPointTrait for OwnedMultiPoint<D> {
+impl MultiPointTrait for OwnedMultiPoint {
     type T = f64;
-    type PointType<'b> = Point<'b, D> where Self: 'b;
+    type PointType<'b> = Point<'b> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
+        match self.coords.dim() {
+            Dimension::XY => geo_traits::Dimensions::Xy,
+            Dimension::XYZ => geo_traits::Dimensions::Xyz,
         }
     }
 
@@ -72,7 +71,7 @@ impl<const D: usize> MultiPointTrait for OwnedMultiPoint<D> {
     }
 }
 
-impl<G: MultiPointTrait<T = f64>> PartialEq<G> for OwnedMultiPoint<2> {
+impl<G: MultiPointTrait<T = f64>> PartialEq<G> for OwnedMultiPoint {
     fn eq(&self, other: &G) -> bool {
         multi_point_eq(self, other)
     }

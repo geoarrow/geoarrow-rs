@@ -33,39 +33,39 @@ impl NativeArrayDyn {
         use NativeType::*;
         let geo_arr: Arc<dyn NativeArray> = match data_type {
             Point(_, dim) => match dim {
-                XY => Arc::new(PointArray::<2>::try_from((array, field))?),
+                XY => Arc::new(PointArray::try_from((array, field))?),
                 XYZ => Arc::new(PointArray::<3>::try_from((array, field))?),
             },
             LineString(_, dim) => match dim {
-                XY => Arc::new(LineStringArray::<2>::try_from((array, field))?),
+                XY => Arc::new(LineStringArray::try_from((array, field))?),
                 XYZ => Arc::new(LineStringArray::<3>::try_from((array, field))?),
             },
             Polygon(_, dim) => match dim {
-                XY => Arc::new(PolygonArray::<2>::try_from((array, field))?),
+                XY => Arc::new(PolygonArray::try_from((array, field))?),
                 XYZ => Arc::new(PolygonArray::<3>::try_from((array, field))?),
             },
             MultiPoint(_, dim) => match dim {
-                XY => Arc::new(MultiPointArray::<2>::try_from((array, field))?),
+                XY => Arc::new(MultiPointArray::try_from((array, field))?),
                 XYZ => Arc::new(MultiPointArray::<3>::try_from((array, field))?),
             },
             MultiLineString(_, dim) => match dim {
-                XY => Arc::new(MultiLineStringArray::<2>::try_from((array, field))?),
+                XY => Arc::new(MultiLineStringArray::try_from((array, field))?),
                 XYZ => Arc::new(MultiLineStringArray::<3>::try_from((array, field))?),
             },
             MultiPolygon(_, dim) => match dim {
-                XY => Arc::new(MultiPolygonArray::<2>::try_from((array, field))?),
+                XY => Arc::new(MultiPolygonArray::try_from((array, field))?),
                 XYZ => Arc::new(MultiPolygonArray::<3>::try_from((array, field))?),
             },
             Mixed(_, dim) => match dim {
-                XY => Arc::new(MixedGeometryArray::<2>::try_from((array, field))?),
+                XY => Arc::new(MixedGeometryArray::try_from((array, field))?),
                 XYZ => Arc::new(MixedGeometryArray::<3>::try_from((array, field))?),
             },
             GeometryCollection(_, dim) => match dim {
-                XY => Arc::new(GeometryCollectionArray::<2>::try_from((array, field))?),
+                XY => Arc::new(GeometryCollectionArray::try_from((array, field))?),
                 XYZ => Arc::new(GeometryCollectionArray::<3>::try_from((array, field))?),
             },
             Rect(dim) => match dim {
-                XY => Arc::new(RectArray::<2>::try_from((array, field))?),
+                XY => Arc::new(RectArray::try_from((array, field))?),
                 XYZ => Arc::new(RectArray::<3>::try_from((array, field))?),
             },
         };

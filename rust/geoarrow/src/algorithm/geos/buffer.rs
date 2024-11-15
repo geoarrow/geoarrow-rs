@@ -11,8 +11,8 @@ pub trait Buffer {
     fn buffer_with_params(&self, width: f64, buffer_params: &BufferParams) -> Self::Output;
 }
 
-impl<const D: usize> Buffer for PointArray<D> {
-    type Output = Result<PolygonArray<D>>;
+impl Buffer for PointArray {
+    type Output = Result<PolygonArray>;
 
     fn buffer(&self, width: f64, quadsegs: i32) -> Self::Output {
         try_unary_polygon(self, |g| g.buffer(width, quadsegs))
@@ -31,7 +31,7 @@ mod test {
     #[test]
     fn point_buffer() {
         let arr = point_array();
-        let buffered: PolygonArray<2> = arr.buffer(1., 8).unwrap();
+        let buffered: PolygonArray = arr.buffer(1., 8).unwrap();
         dbg!(buffered);
     }
 }

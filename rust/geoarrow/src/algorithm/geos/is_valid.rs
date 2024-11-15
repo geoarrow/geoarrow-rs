@@ -1,7 +1,7 @@
 use crate::algorithm::native::Unary;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
@@ -17,7 +17,7 @@ pub trait IsValid {
 
 macro_rules! iter_geos_impl {
     ($type:ty) => {
-        impl<const D: usize> IsValid for $type {
+        impl IsValid for $type {
             type Output = Result<BooleanArray>;
 
             fn is_valid(&self) -> Self::Output {
@@ -28,42 +28,32 @@ macro_rules! iter_geos_impl {
     };
 }
 
-iter_geos_impl!(PointArray<D>);
-iter_geos_impl!(LineStringArray<D>);
-iter_geos_impl!(MultiPointArray<D>);
-iter_geos_impl!(MultiLineStringArray<D>);
-iter_geos_impl!(PolygonArray<D>);
-iter_geos_impl!(MultiPolygonArray<D>);
-iter_geos_impl!(MixedGeometryArray<D>);
-iter_geos_impl!(GeometryCollectionArray<D>);
-iter_geos_impl!(RectArray<D>);
+iter_geos_impl!(PointArray);
+iter_geos_impl!(LineStringArray);
+iter_geos_impl!(MultiPointArray);
+iter_geos_impl!(MultiLineStringArray);
+iter_geos_impl!(PolygonArray);
+iter_geos_impl!(MultiPolygonArray);
+iter_geos_impl!(MixedGeometryArray);
+iter_geos_impl!(GeometryCollectionArray);
+iter_geos_impl!(RectArray);
 
 impl IsValid for &dyn NativeArray {
     type Output = Result<BooleanArray>;
 
     fn is_valid(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => IsValid::is_valid(self.as_point::<2>()),
-            LineString(_, XY) => IsValid::is_valid(self.as_line_string::<2>()),
-            Polygon(_, XY) => IsValid::is_valid(self.as_polygon::<2>()),
-            MultiPoint(_, XY) => IsValid::is_valid(self.as_multi_point::<2>()),
-            MultiLineString(_, XY) => IsValid::is_valid(self.as_multi_line_string::<2>()),
-            MultiPolygon(_, XY) => IsValid::is_valid(self.as_multi_polygon::<2>()),
-            Mixed(_, XY) => IsValid::is_valid(self.as_mixed::<2>()),
-            GeometryCollection(_, XY) => IsValid::is_valid(self.as_geometry_collection::<2>()),
-            Rect(XY) => IsValid::is_valid(self.as_rect::<2>()),
-            Point(_, XYZ) => IsValid::is_valid(self.as_point::<3>()),
-            LineString(_, XYZ) => IsValid::is_valid(self.as_line_string::<3>()),
-            Polygon(_, XYZ) => IsValid::is_valid(self.as_polygon::<3>()),
-            MultiPoint(_, XYZ) => IsValid::is_valid(self.as_multi_point::<3>()),
-            MultiLineString(_, XYZ) => IsValid::is_valid(self.as_multi_line_string::<3>()),
-            MultiPolygon(_, XYZ) => IsValid::is_valid(self.as_multi_polygon::<3>()),
-            Mixed(_, XYZ) => IsValid::is_valid(self.as_mixed::<3>()),
-            GeometryCollection(_, XYZ) => IsValid::is_valid(self.as_geometry_collection::<3>()),
-            Rect(XYZ) => IsValid::is_valid(self.as_rect::<3>()),
+            Point(_, _) => IsValid::is_valid(self.as_point()),
+            LineString(_, _) => IsValid::is_valid(self.as_line_string()),
+            Polygon(_, _) => IsValid::is_valid(self.as_polygon()),
+            MultiPoint(_, _) => IsValid::is_valid(self.as_multi_point()),
+            MultiLineString(_, _) => IsValid::is_valid(self.as_multi_line_string()),
+            MultiPolygon(_, _) => IsValid::is_valid(self.as_multi_polygon()),
+            Mixed(_, _) => IsValid::is_valid(self.as_mixed()),
+            GeometryCollection(_, _) => IsValid::is_valid(self.as_geometry_collection()),
+            Rect(_) => IsValid::is_valid(self.as_rect()),
         }
     }
 }

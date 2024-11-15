@@ -18,13 +18,13 @@ use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, Point
 ///
 /// Converting an [`PointBuilder`] into a [`PointArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct PointBuilder<const D: usize> {
+pub struct PointBuilder {
     metadata: Arc<ArrayMetadata>,
     pub coords: CoordBufferBuilder,
     pub validity: NullBufferBuilder,
 }
 
-impl<const D: usize> PointBuilder<D> {
+impl PointBuilder {
     /// Creates a new empty [`PointBuilder`].
     pub fn new() -> Self {
         Self::new_with_options(Default::default(), Default::default())
@@ -114,7 +114,7 @@ impl<const D: usize> PointBuilder<D> {
         (self.coords, self.validity)
     }
 
-    pub fn finish(self) -> PointArray<D> {
+    pub fn finish(self) -> PointArray {
         self.into()
     }
 
@@ -272,7 +272,7 @@ impl<const D: usize> PointBuilder<D> {
     }
 }
 
-impl<const D: usize> GeometryArrayBuilder for PointBuilder<D> {
+impl GeometryArrayBuilder for PointBuilder {
     fn new() -> Self {
         Self::new()
     }
@@ -318,41 +318,41 @@ impl<const D: usize> GeometryArrayBuilder for PointBuilder<D> {
     }
 }
 
-impl<const D: usize> Default for PointBuilder<D> {
+impl Default for PointBuilder {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<const D: usize> IntoArrow for PointBuilder<D> {
+impl IntoArrow for PointBuilder {
     type ArrowArray = Arc<dyn Array>;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let point_array: PointArray<D> = self.into();
+        let point_array: PointArray = self.into();
         point_array.into_arrow()
     }
 }
 
-impl<const D: usize> From<PointBuilder<D>> for PointArray<D> {
-    fn from(mut other: PointBuilder<D>) -> Self {
+impl From<PointBuilder> for PointArray {
+    fn from(mut other: PointBuilder) -> Self {
         let validity = other.validity.finish();
         Self::new(other.coords.into(), validity, other.metadata)
     }
 }
 
-impl<const D: usize> From<PointBuilder<D>> for Arc<dyn Array> {
-    fn from(arr: PointBuilder<D>) -> Self {
+impl From<PointBuilder> for Arc<dyn Array> {
+    fn from(arr: PointBuilder) -> Self {
         arr.into_array_ref()
     }
 }
 
-impl<const D: usize, G: PointTrait<T = f64>> From<&[G]> for PointBuilder<D> {
+impl<const D: usize, G: PointTrait<T = f64>> From<&[G]> for PointBuilder {
     fn from(value: &[G]) -> Self {
         PointBuilder::from_points(value.iter(), Default::default(), Default::default())
     }
 }
 
-impl<const D: usize, G: PointTrait<T = f64>> From<Vec<Option<G>>> for PointBuilder<D> {
+impl<const D: usize, G: PointTrait<T = f64>> From<Vec<Option<G>>> for PointBuilder {
     fn from(geoms: Vec<Option<G>>) -> Self {
         PointBuilder::from_nullable_points(
             geoms.iter().map(|x| x.as_ref()),
@@ -362,7 +362,7 @@ impl<const D: usize, G: PointTrait<T = f64>> From<Vec<Option<G>>> for PointBuild
     }
 }
 
-impl<const D: usize, O: OffsetSizeTrait> TryFrom<WKBArray<O>> for PointBuilder<D> {
+impl<const D: usize, O: OffsetSizeTrait> TryFrom<WKBArray<O>> for PointBuilder {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {

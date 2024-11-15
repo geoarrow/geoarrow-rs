@@ -9,7 +9,7 @@ use crate::ArrayBase;
 use crate::NativeArray;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-impl<const D: usize> GeozeroGeometry for MixedGeometryArray<D> {
+impl GeozeroGeometry for MixedGeometryArray<D> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -28,7 +28,7 @@ impl<const D: usize> GeozeroGeometry for MixedGeometryArray<D> {
 
 // TODO: Add "promote to multi" here
 /// GeoZero trait to convert to GeoArrow MixedArray.
-pub trait ToMixedArray<const D: usize> {
+pub trait ToMixedArray {
     /// Convert to GeoArrow MixedArray
     fn to_mixed_geometry_array(&self) -> geozero::error::Result<MixedGeometryArray<D>>;
 
@@ -55,7 +55,7 @@ impl<T: GeozeroGeometry, const D: usize> ToMixedArray<D> for T {
 ///
 /// Converting an [`MixedGeometryStreamBuilder`] into a [`MixedGeometryArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct MixedGeometryStreamBuilder<const D: usize> {
+pub struct MixedGeometryStreamBuilder {
     builder: MixedGeometryBuilder<D>,
     // Note: we don't know if, when `linestring_end` is called, that means a ring of a polygon has
     // finished or if a tagged line string has finished. This means we can't have an "unknown" enum
@@ -64,7 +64,7 @@ pub struct MixedGeometryStreamBuilder<const D: usize> {
     current_geom_type: GeometryType,
 }
 
-impl<const D: usize> MixedGeometryStreamBuilder<D> {
+impl MixedGeometryStreamBuilder<D> {
     pub fn new() -> Self {
         Self::new_with_options(Default::default(), Default::default(), true)
     }
@@ -89,14 +89,14 @@ impl<const D: usize> MixedGeometryStreamBuilder<D> {
     }
 }
 
-impl<const D: usize> Default for MixedGeometryStreamBuilder<D> {
+impl Default for MixedGeometryStreamBuilder<D> {
     fn default() -> Self {
         Self::new()
     }
 }
 
 #[allow(unused_variables)]
-impl<const D: usize> GeomProcessor for MixedGeometryStreamBuilder<D> {
+impl GeomProcessor for MixedGeometryStreamBuilder<D> {
     fn xy(&mut self, x: f64, y: f64, idx: usize) -> geozero::error::Result<()> {
         match self.current_geom_type {
             GeometryType::Point => {
@@ -258,7 +258,7 @@ impl<const D: usize> GeomProcessor for MixedGeometryStreamBuilder<D> {
     }
 }
 
-impl<const D: usize> GeometryArrayBuilder for MixedGeometryStreamBuilder<D> {
+impl GeometryArrayBuilder for MixedGeometryStreamBuilder<D> {
     fn len(&self) -> usize {
         self.builder.len()
     }

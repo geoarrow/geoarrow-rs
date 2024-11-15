@@ -12,14 +12,14 @@ use std::sync::Arc;
 ///
 /// Converting an [`RectBuilder`] into a [`RectArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct RectBuilder<const D: usize> {
+pub struct RectBuilder {
     pub metadata: Arc<ArrayMetadata>,
     pub lower: SeparatedCoordBufferBuilder,
     pub upper: SeparatedCoordBufferBuilder,
     pub validity: NullBufferBuilder,
 }
 
-impl<const D: usize> RectBuilder<D> {
+impl RectBuilder {
     /// Creates a new empty [`RectBuilder`].
     pub fn new() -> Self {
         Self::new_with_options(Default::default())
@@ -116,7 +116,7 @@ impl<const D: usize> RectBuilder<D> {
         Arc::new(self.into_arrow())
     }
 
-    pub fn finish(self) -> RectArray<D> {
+    pub fn finish(self) -> RectArray {
         self.into()
     }
 
@@ -141,7 +141,7 @@ impl<const D: usize> RectBuilder<D> {
     /// Add a new null value to the end of this builder.
     #[inline]
     pub fn push_null(&mut self) {
-        self.push_rect(None::<&Rect<D>>);
+        self.push_rect(None::<&Rect>);
     }
 
     /// Create this builder from a iterator of Rects.
@@ -169,23 +169,23 @@ impl<const D: usize> RectBuilder<D> {
     }
 }
 
-impl<const D: usize> Default for RectBuilder<D> {
+impl Default for RectBuilder {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<const D: usize> IntoArrow for RectBuilder<D> {
+impl IntoArrow for RectBuilder {
     type ArrowArray = StructArray;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let rect_array: RectArray<D> = self.into();
+        let rect_array: RectArray = self.into();
         rect_array.into_arrow()
     }
 }
 
-impl<const D: usize> From<RectBuilder<D>> for RectArray<D> {
-    fn from(mut other: RectBuilder<D>) -> Self {
+impl From<RectBuilder> for RectArray {
+    fn from(mut other: RectBuilder) -> Self {
         RectArray::new(
             other.lower.into(),
             other.upper.into(),
@@ -195,13 +195,13 @@ impl<const D: usize> From<RectBuilder<D>> for RectArray<D> {
     }
 }
 
-impl<G: RectTrait<T = f64>, const D: usize> From<&[G]> for RectBuilder<D> {
+impl<G: RectTrait<T = f64>, const D: usize> From<&[G]> for RectBuilder {
     fn from(geoms: &[G]) -> Self {
         RectBuilder::from_rects(geoms.iter(), Default::default())
     }
 }
 
-impl<G: RectTrait<T = f64>, const D: usize> From<Vec<Option<G>>> for RectBuilder<D> {
+impl<G: RectTrait<T = f64>, const D: usize> From<Vec<Option<G>>> for RectBuilder {
     fn from(geoms: Vec<Option<G>>) -> Self {
         RectBuilder::from_nullable_rects(geoms.iter().map(|x| x.as_ref()), Default::default())
     }

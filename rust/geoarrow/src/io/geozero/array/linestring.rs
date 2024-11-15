@@ -6,7 +6,7 @@ use crate::io::geozero::scalar::process_line_string;
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
 
-impl<const D: usize> GeozeroGeometry for LineStringArray<D> {
+impl GeozeroGeometry for LineStringArray<D> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -24,7 +24,7 @@ impl<const D: usize> GeozeroGeometry for LineStringArray<D> {
 }
 
 /// GeoZero trait to convert to GeoArrow LineStringArray.
-pub trait ToLineStringArray<const D: usize> {
+pub trait ToLineStringArray {
     /// Convert to GeoArrow LineStringArray
     fn to_line_string_array(&self) -> geozero::error::Result<LineStringArray<D>>;
 
@@ -45,7 +45,7 @@ impl<T: GeozeroGeometry, const D: usize> ToLineStringArray<D> for T {
 }
 
 #[allow(unused_variables)]
-impl<const D: usize> GeomProcessor for LineStringBuilder<D> {
+impl GeomProcessor for LineStringBuilder<D> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         let capacity = LineStringCapacity::new(0, size);
         self.reserve(capacity);

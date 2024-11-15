@@ -135,7 +135,7 @@ fn pyarray_to_shapely(py: Python, input: PyArray) -> PyGeoArrowResult<Bound<PyAn
     }
 }
 
-fn point_arr<const D: usize>(
+fn point_arr(
     py: Python,
     arr: geoarrow::array::PointArray<D>,
 ) -> PyGeoArrowResult<Bound<PyAny>> {
@@ -150,7 +150,7 @@ fn point_arr<const D: usize>(
     Ok(shapely_mod.call_method1(intern!(py, "from_ragged_array"), args)?)
 }
 
-fn linestring_arr<const D: usize>(
+fn linestring_arr(
     py: Python,
     arr: geoarrow::array::LineStringArray<D>,
 ) -> PyGeoArrowResult<Bound<PyAny>> {
@@ -168,7 +168,7 @@ fn linestring_arr<const D: usize>(
     Ok(shapely_mod.call_method1(intern!(py, "from_ragged_array"), args)?)
 }
 
-fn polygon_arr<const D: usize>(
+fn polygon_arr(
     py: Python,
     arr: geoarrow::array::PolygonArray<D>,
 ) -> PyGeoArrowResult<Bound<PyAny>> {
@@ -189,7 +189,7 @@ fn polygon_arr<const D: usize>(
     Ok(shapely_mod.call_method1(intern!(py, "from_ragged_array"), args)?)
 }
 
-fn multipoint_arr<const D: usize>(
+fn multipoint_arr(
     py: Python,
     arr: geoarrow::array::MultiPointArray<D>,
 ) -> PyGeoArrowResult<Bound<PyAny>> {
@@ -207,7 +207,7 @@ fn multipoint_arr<const D: usize>(
     Ok(shapely_mod.call_method1(intern!(py, "from_ragged_array"), args)?)
 }
 
-fn multilinestring_arr<const D: usize>(
+fn multilinestring_arr(
     py: Python,
     arr: geoarrow::array::MultiLineStringArray<D>,
 ) -> PyGeoArrowResult<Bound<PyAny>> {
@@ -228,7 +228,7 @@ fn multilinestring_arr<const D: usize>(
     Ok(shapely_mod.call_method1(intern!(py, "from_ragged_array"), args)?)
 }
 
-fn multipolygon_arr<const D: usize>(
+fn multipolygon_arr(
     py: Python,
     arr: geoarrow::array::MultiPolygonArray<D>,
 ) -> PyGeoArrowResult<Bound<PyAny>> {

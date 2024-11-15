@@ -25,7 +25,7 @@ pub trait EuclideanLength {
     ///     (x: 40.02f64, y: 116.34),
     ///     (x: 42.02f64, y: 116.34),
     /// ];
-    /// let linestring_array: LineStringArray<2> = vec![line_string].as_slice().into();
+    /// let linestring_array: LineStringArray = vec![line_string].as_slice().into();
     ///
     /// let length_array = linestring_array.euclidean_length();
     ///
@@ -50,8 +50,8 @@ macro_rules! zero_impl {
     };
 }
 
-zero_impl!(PointArray<2>);
-zero_impl!(MultiPointArray<2>);
+zero_impl!(PointArray);
+zero_impl!(MultiPointArray);
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
@@ -66,8 +66,8 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<2>);
-iter_geo_impl!(MultiLineStringArray<2>);
+iter_geo_impl!(LineStringArray);
+iter_geo_impl!(MultiLineStringArray);
 
 impl EuclideanLength for &dyn NativeArray {
     type Output = Result<Float64Array>;
@@ -77,19 +77,19 @@ impl EuclideanLength for &dyn NativeArray {
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, XY) => self.as_point::<2>().euclidean_length(),
-            LineString(_, XY) => self.as_line_string::<2>().euclidean_length(),
-            // Polygon(_, XY) => self.as_polygon::<2>().euclidean_length(),
-            // LargePolygon(_, XY) => self.as_large_polygon::<2>().euclidean_length(),
-            MultiPoint(_, XY) => self.as_multi_point::<2>().euclidean_length(),
-            MultiLineString(_, XY) => self.as_multi_line_string::<2>().euclidean_length(),
-            // MultiPolygon(_, XY) => self.as_multi_polygon::<2>().euclidean_length(),
-            // LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().euclidean_length(),
-            // Mixed(_, XY) => self.as_mixed::<2>().euclidean_length(),
-            // LargeMixed(_, XY) => self.as_large_mixed::<2>().euclidean_length(),
-            // GeometryCollection(_, XY) => self.as_geometry_collection::<2>().euclidean_length(),
+            Point(_, XY) => self.as_point().euclidean_length(),
+            LineString(_, XY) => self.as_line_string().euclidean_length(),
+            // Polygon(_, XY) => self.as_polygon().euclidean_length(),
+            // LargePolygon(_, XY) => self.as_large_polygon().euclidean_length(),
+            MultiPoint(_, XY) => self.as_multi_point().euclidean_length(),
+            MultiLineString(_, XY) => self.as_multi_line_string().euclidean_length(),
+            // MultiPolygon(_, XY) => self.as_multi_polygon().euclidean_length(),
+            // LargeMultiPolygon(_, XY) => self.as_large_multi_polygon().euclidean_length(),
+            // Mixed(_, XY) => self.as_mixed().euclidean_length(),
+            // LargeMixed(_, XY) => self.as_large_mixed().euclidean_length(),
+            // GeometryCollection(_, XY) => self.as_geometry_collection().euclidean_length(),
             // LargeGeometryCollection(_, XY) => {
-            //     self.as_large_geometry_collection::<2>().euclidean_length()
+            //     self.as_large_geometry_collection().euclidean_length()
             // }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -97,7 +97,7 @@ impl EuclideanLength for &dyn NativeArray {
     }
 }
 
-impl EuclideanLength for ChunkedGeometryArray<PointArray<2>> {
+impl EuclideanLength for ChunkedGeometryArray<PointArray> {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn euclidean_length(&self) -> Self::Output {
@@ -118,9 +118,9 @@ macro_rules! chunked_impl {
     };
 }
 
-chunked_impl!(ChunkedGeometryArray<LineStringArray<2>>);
-chunked_impl!(ChunkedGeometryArray<MultiPointArray<2>>);
-chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<2>>);
+chunked_impl!(ChunkedGeometryArray<LineStringArray>);
+chunked_impl!(ChunkedGeometryArray<MultiPointArray>);
+chunked_impl!(ChunkedGeometryArray<MultiLineStringArray>);
 
 impl EuclideanLength for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<Float64Array>>;
@@ -130,19 +130,19 @@ impl EuclideanLength for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point::<2>().euclidean_length(),
-            LineString(_, XY) => self.as_line_string::<2>().euclidean_length(),
-            // Polygon(_, XY) => self.as_polygon::<2>().euclidean_length(),
-            // LargePolygon(_, XY) => self.as_large_polygon::<2>().euclidean_length(),
-            MultiPoint(_, XY) => self.as_multi_point::<2>().euclidean_length(),
-            MultiLineString(_, XY) => self.as_multi_line_string::<2>().euclidean_length(),
-            // MultiPolygon(_, XY) => self.as_multi_polygon::<2>().euclidean_length(),
-            // LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().euclidean_length(),
-            // Mixed(_, XY) => self.as_mixed::<2>().euclidean_length(),
-            // LargeMixed(_, XY) => self.as_large_mixed::<2>().euclidean_length(),
-            // GeometryCollection(_, XY) => self.as_geometry_collection::<2>().euclidean_length(),
+            Point(_, XY) => self.as_point().euclidean_length(),
+            LineString(_, XY) => self.as_line_string().euclidean_length(),
+            // Polygon(_, XY) => self.as_polygon().euclidean_length(),
+            // LargePolygon(_, XY) => self.as_large_polygon().euclidean_length(),
+            MultiPoint(_, XY) => self.as_multi_point().euclidean_length(),
+            MultiLineString(_, XY) => self.as_multi_line_string().euclidean_length(),
+            // MultiPolygon(_, XY) => self.as_multi_polygon().euclidean_length(),
+            // LargeMultiPolygon(_, XY) => self.as_large_multi_polygon().euclidean_length(),
+            // Mixed(_, XY) => self.as_mixed().euclidean_length(),
+            // LargeMixed(_, XY) => self.as_large_mixed().euclidean_length(),
+            // GeometryCollection(_, XY) => self.as_geometry_collection().euclidean_length(),
             // LargeGeometryCollection(_, XY) => {
-            //     self.as_large_geometry_collection::<2>().euclidean_length()
+            //     self.as_large_geometry_collection().euclidean_length()
             // }
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
@@ -166,7 +166,7 @@ mod tests {
             (x: 10., y: 1.),
             (x: 11., y: 1.)
         ];
-        let input_array: LineStringArray<2> = vec![input_geom].as_slice().into();
+        let input_array: LineStringArray = vec![input_geom].as_slice().into();
         let result_array = input_array.euclidean_length();
 
         let expected = 10.0_f64;

@@ -39,10 +39,10 @@ where
     Ok(PrimitiveArray::new(values, nulls))
 }
 
-pub(super) fn try_unary_polygon<'a, const D: usize, F>(
+pub(super) fn try_unary_polygon<'a, F>(
     array: &'a dyn NativeGEOSGeometryAccessor<'a>,
     op: F,
-) -> std::result::Result<PolygonArray<D>, GeoArrowError>
+) -> std::result::Result<PolygonArray, GeoArrowError>
 where
     F: Fn(geos::Geometry) -> std::result::Result<geos::Geometry, geos::Error>,
 {

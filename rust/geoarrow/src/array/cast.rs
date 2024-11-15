@@ -4,135 +4,135 @@ use crate::chunked_array::*;
 /// Helpers for downcasting a [`NativeArray`] to a concrete implementation.
 pub trait AsNativeArray {
     /// Downcast this to a [`PointArray`] returning `None` if not possible
-    fn as_point_opt<const D: usize>(&self) -> Option<&PointArray<D>>;
+    fn as_point_opt(&self) -> Option<&PointArray>;
 
     /// Downcast this to a [`PointArray`] panicking if not possible
     #[inline]
-    fn as_point<const D: usize>(&self) -> &PointArray<D> {
-        self.as_point_opt::<D>().unwrap()
+    fn as_point(&self) -> &PointArray {
+        self.as_point_opt().unwrap()
     }
 
     /// Downcast this to a [`LineStringArray`] with `i32` offsets returning `None` if not possible
-    fn as_line_string_opt<const D: usize>(&self) -> Option<&LineStringArray<D>>;
+    fn as_line_string_opt(&self) -> Option<&LineStringArray>;
 
     /// Downcast this to a [`LineStringArray`] with `i32` offsets panicking if not possible
     #[inline]
-    fn as_line_string<const D: usize>(&self) -> &LineStringArray<D> {
-        self.as_line_string_opt::<D>().unwrap()
+    fn as_line_string(&self) -> &LineStringArray {
+        self.as_line_string_opt().unwrap()
     }
 
     /// Downcast this to a [`PolygonArray`] with `i32` offsets returning `None` if not possible
-    fn as_polygon_opt<const D: usize>(&self) -> Option<&PolygonArray<D>>;
+    fn as_polygon_opt(&self) -> Option<&PolygonArray>;
 
     /// Downcast this to a [`PolygonArray`] with `i32` offsets panicking if not possible
     #[inline]
-    fn as_polygon<const D: usize>(&self) -> &PolygonArray<D> {
-        self.as_polygon_opt::<D>().unwrap()
+    fn as_polygon(&self) -> &PolygonArray {
+        self.as_polygon_opt().unwrap()
     }
 
     /// Downcast this to a [`MultiPointArray`] with `i32` offsets returning `None` if not possible
-    fn as_multi_point_opt<const D: usize>(&self) -> Option<&MultiPointArray<D>>;
+    fn as_multi_point_opt(&self) -> Option<&MultiPointArray>;
 
     /// Downcast this to a [`MultiPointArray`] with `i32` offsets panicking if not possible
     #[inline]
-    fn as_multi_point<const D: usize>(&self) -> &MultiPointArray<D> {
-        self.as_multi_point_opt::<D>().unwrap()
+    fn as_multi_point(&self) -> &MultiPointArray {
+        self.as_multi_point_opt().unwrap()
     }
 
     /// Downcast this to a [`MultiLineStringArray`] with `i32` offsets returning `None` if not
     /// possible
-    fn as_multi_line_string_opt<const D: usize>(&self) -> Option<&MultiLineStringArray<D>>;
+    fn as_multi_line_string_opt(&self) -> Option<&MultiLineStringArray>;
 
     /// Downcast this to a [`MultiLineStringArray`] with `i32` offsets panicking if not possible
     #[inline]
-    fn as_multi_line_string<const D: usize>(&self) -> &MultiLineStringArray<D> {
-        self.as_multi_line_string_opt::<D>().unwrap()
+    fn as_multi_line_string(&self) -> &MultiLineStringArray {
+        self.as_multi_line_string_opt().unwrap()
     }
 
     /// Downcast this to a [`MultiPolygonArray`] with `i32` offsets returning `None` if not
     /// possible
-    fn as_multi_polygon_opt<const D: usize>(&self) -> Option<&MultiPolygonArray<D>>;
+    fn as_multi_polygon_opt(&self) -> Option<&MultiPolygonArray>;
 
     /// Downcast this to a [`MultiPolygonArray`] with `i32` offsets panicking if not possible
     #[inline]
-    fn as_multi_polygon<const D: usize>(&self) -> &MultiPolygonArray<D> {
-        self.as_multi_polygon_opt::<D>().unwrap()
+    fn as_multi_polygon(&self) -> &MultiPolygonArray {
+        self.as_multi_polygon_opt().unwrap()
     }
 
     /// Downcast this to a [`MixedGeometryArray`] with `i32` offsets returning `None` if not
     /// possible
-    fn as_mixed_opt<const D: usize>(&self) -> Option<&MixedGeometryArray<D>>;
+    fn as_mixed_opt(&self) -> Option<&MixedGeometryArray>;
 
     /// Downcast this to a [`MixedGeometryArray`] with `i32` offsets panicking if not possible
     #[inline]
-    fn as_mixed<const D: usize>(&self) -> &MixedGeometryArray<D> {
-        self.as_mixed_opt::<D>().unwrap()
+    fn as_mixed(&self) -> &MixedGeometryArray {
+        self.as_mixed_opt().unwrap()
     }
 
     /// Downcast this to a [`GeometryCollectionArray`] with `i32` offsets returning `None` if not
     /// possible
-    fn as_geometry_collection_opt<const D: usize>(&self) -> Option<&GeometryCollectionArray<D>>;
+    fn as_geometry_collection_opt(&self) -> Option<&GeometryCollectionArray>;
 
     /// Downcast this to a [`GeometryCollectionArray`] with `i32` offsets panicking if not possible
     #[inline]
-    fn as_geometry_collection<const D: usize>(&self) -> &GeometryCollectionArray<D> {
-        self.as_geometry_collection_opt::<D>().unwrap()
+    fn as_geometry_collection(&self) -> &GeometryCollectionArray {
+        self.as_geometry_collection_opt().unwrap()
     }
 
     /// Downcast this to a [`RectArray`] returning `None` if not possible
-    fn as_rect_opt<const D: usize>(&self) -> Option<&RectArray<D>>;
+    fn as_rect_opt(&self) -> Option<&RectArray>;
 
     /// Downcast this to a [`RectArray`] panicking if not possible
     #[inline]
-    fn as_rect<const D: usize>(&self) -> &RectArray<D> {
-        self.as_rect_opt::<D>().unwrap()
+    fn as_rect(&self) -> &RectArray {
+        self.as_rect_opt().unwrap()
     }
 }
 
 impl AsNativeArray for &dyn NativeArray {
     #[inline]
-    fn as_point_opt<const D: usize>(&self) -> Option<&PointArray<D>> {
-        self.as_any().downcast_ref::<PointArray<D>>()
+    fn as_point_opt(&self) -> Option<&PointArray> {
+        self.as_any().downcast_ref::<PointArray>()
     }
 
     #[inline]
-    fn as_line_string_opt<const D: usize>(&self) -> Option<&LineStringArray<D>> {
-        self.as_any().downcast_ref::<LineStringArray<D>>()
+    fn as_line_string_opt(&self) -> Option<&LineStringArray> {
+        self.as_any().downcast_ref::<LineStringArray>()
     }
 
     #[inline]
-    fn as_polygon_opt<const D: usize>(&self) -> Option<&PolygonArray<D>> {
-        self.as_any().downcast_ref::<PolygonArray<D>>()
+    fn as_polygon_opt(&self) -> Option<&PolygonArray> {
+        self.as_any().downcast_ref::<PolygonArray>()
     }
 
     #[inline]
-    fn as_multi_point_opt<const D: usize>(&self) -> Option<&MultiPointArray<D>> {
-        self.as_any().downcast_ref::<MultiPointArray<D>>()
+    fn as_multi_point_opt(&self) -> Option<&MultiPointArray> {
+        self.as_any().downcast_ref::<MultiPointArray>()
     }
 
     #[inline]
-    fn as_multi_line_string_opt<const D: usize>(&self) -> Option<&MultiLineStringArray<D>> {
-        self.as_any().downcast_ref::<MultiLineStringArray<D>>()
+    fn as_multi_line_string_opt(&self) -> Option<&MultiLineStringArray> {
+        self.as_any().downcast_ref::<MultiLineStringArray>()
     }
 
     #[inline]
-    fn as_multi_polygon_opt<const D: usize>(&self) -> Option<&MultiPolygonArray<D>> {
-        self.as_any().downcast_ref::<MultiPolygonArray<D>>()
+    fn as_multi_polygon_opt(&self) -> Option<&MultiPolygonArray> {
+        self.as_any().downcast_ref::<MultiPolygonArray>()
     }
 
     #[inline]
-    fn as_mixed_opt<const D: usize>(&self) -> Option<&MixedGeometryArray<D>> {
-        self.as_any().downcast_ref::<MixedGeometryArray<D>>()
+    fn as_mixed_opt(&self) -> Option<&MixedGeometryArray> {
+        self.as_any().downcast_ref::<MixedGeometryArray>()
     }
 
     #[inline]
-    fn as_geometry_collection_opt<const D: usize>(&self) -> Option<&GeometryCollectionArray<D>> {
-        self.as_any().downcast_ref::<GeometryCollectionArray<D>>()
+    fn as_geometry_collection_opt(&self) -> Option<&GeometryCollectionArray> {
+        self.as_any().downcast_ref::<GeometryCollectionArray>()
     }
 
     #[inline]
-    fn as_rect_opt<const D: usize>(&self) -> Option<&RectArray<D>> {
-        self.as_any().downcast_ref::<RectArray<D>>()
+    fn as_rect_opt(&self) -> Option<&RectArray> {
+        self.as_any().downcast_ref::<RectArray>()
     }
 }
 
@@ -171,141 +171,136 @@ impl AsSerializedArray for &dyn SerializedArray {
 /// Helpers for downcasting a [`ChunkedNativeArray`] to a concrete implementation.
 pub trait AsChunkedNativeArray {
     /// Downcast this to a [`ChunkedPointArray`] returning `None` if not possible
-    fn as_point_opt<const D: usize>(&self) -> Option<&ChunkedPointArray<D>>;
+    fn as_point_opt(&self) -> Option<&ChunkedPointArray>;
 
     /// Downcast this to a [`ChunkedPointArray`] panicking if not possible
     #[inline]
-    fn as_point<const D: usize>(&self) -> &ChunkedPointArray<D> {
-        self.as_point_opt::<D>().unwrap()
+    fn as_point(&self) -> &ChunkedPointArray {
+        self.as_point_opt().unwrap()
     }
 
     /// Downcast this to a [`ChunkedLineStringArray`] with `i32` offsets returning `None` if not possible
-    fn as_line_string_opt<const D: usize>(&self) -> Option<&ChunkedLineStringArray<D>>;
+    fn as_line_string_opt(&self) -> Option<&ChunkedLineStringArray>;
 
     /// Downcast this to a [`ChunkedLineStringArray`] with `i32` offsets panicking if not possible
     #[inline]
-    fn as_line_string<const D: usize>(&self) -> &ChunkedLineStringArray<D> {
-        self.as_line_string_opt::<D>().unwrap()
+    fn as_line_string(&self) -> &ChunkedLineStringArray {
+        self.as_line_string_opt().unwrap()
     }
 
     /// Downcast this to a [`ChunkedPolygonArray`] with `i32` offsets returning `None` if not possible
-    fn as_polygon_opt<const D: usize>(&self) -> Option<&ChunkedPolygonArray<D>>;
+    fn as_polygon_opt(&self) -> Option<&ChunkedPolygonArray>;
 
     /// Downcast this to a [`ChunkedPolygonArray`] with `i32` offsets panicking if not possible
     #[inline]
-    fn as_polygon<const D: usize>(&self) -> &ChunkedPolygonArray<D> {
-        self.as_polygon_opt::<D>().unwrap()
+    fn as_polygon(&self) -> &ChunkedPolygonArray {
+        self.as_polygon_opt().unwrap()
     }
 
     /// Downcast this to a [`ChunkedMultiPointArray`] with `i32` offsets returning `None` if not possible
-    fn as_multi_point_opt<const D: usize>(&self) -> Option<&ChunkedMultiPointArray<D>>;
+    fn as_multi_point_opt(&self) -> Option<&ChunkedMultiPointArray>;
 
     /// Downcast this to a [`ChunkedMultiPointArray`] with `i32` offsets panicking if not possible
     #[inline]
-    fn as_multi_point<const D: usize>(&self) -> &ChunkedMultiPointArray<D> {
-        self.as_multi_point_opt::<D>().unwrap()
+    fn as_multi_point(&self) -> &ChunkedMultiPointArray {
+        self.as_multi_point_opt().unwrap()
     }
 
     /// Downcast this to a [`ChunkedMultiLineStringArray`] with `i32` offsets returning `None` if not
     /// possible
-    fn as_multi_line_string_opt<const D: usize>(&self) -> Option<&ChunkedMultiLineStringArray<D>>;
+    fn as_multi_line_string_opt(&self) -> Option<&ChunkedMultiLineStringArray>;
 
     /// Downcast this to a [`ChunkedMultiLineStringArray`] with `i32` offsets panicking if not possible
     #[inline]
-    fn as_multi_line_string<const D: usize>(&self) -> &ChunkedMultiLineStringArray<D> {
-        self.as_multi_line_string_opt::<D>().unwrap()
+    fn as_multi_line_string(&self) -> &ChunkedMultiLineStringArray {
+        self.as_multi_line_string_opt().unwrap()
     }
 
     /// Downcast this to a [`ChunkedMultiPolygonArray`] with `i32` offsets returning `None` if not
     /// possible
-    fn as_multi_polygon_opt<const D: usize>(&self) -> Option<&ChunkedMultiPolygonArray<D>>;
+    fn as_multi_polygon_opt(&self) -> Option<&ChunkedMultiPolygonArray>;
 
     /// Downcast this to a [`ChunkedMultiPolygonArray`] with `i32` offsets panicking if not possible
     #[inline]
-    fn as_multi_polygon<const D: usize>(&self) -> &ChunkedMultiPolygonArray<D> {
-        self.as_multi_polygon_opt::<D>().unwrap()
+    fn as_multi_polygon(&self) -> &ChunkedMultiPolygonArray {
+        self.as_multi_polygon_opt().unwrap()
     }
 
     /// Downcast this to a [`ChunkedMixedGeometryArray`] with `i32` offsets returning `None` if not
     /// possible
-    fn as_mixed_opt<const D: usize>(&self) -> Option<&ChunkedMixedGeometryArray<D>>;
+    fn as_mixed_opt(&self) -> Option<&ChunkedMixedGeometryArray>;
 
     /// Downcast this to a [`ChunkedMixedGeometryArray`] with `i32` offsets panicking if not possible
     #[inline]
-    fn as_mixed<const D: usize>(&self) -> &ChunkedMixedGeometryArray<D> {
-        self.as_mixed_opt::<D>().unwrap()
+    fn as_mixed(&self) -> &ChunkedMixedGeometryArray {
+        self.as_mixed_opt().unwrap()
     }
 
     /// Downcast this to a [`ChunkedGeometryCollectionArray`] with `i32` offsets returning `None` if not
     /// possible
-    fn as_geometry_collection_opt<const D: usize>(
-        &self,
-    ) -> Option<&ChunkedGeometryCollectionArray<D>>;
+    fn as_geometry_collection_opt(&self) -> Option<&ChunkedGeometryCollectionArray>;
 
     /// Downcast this to a [`ChunkedGeometryCollectionArray`] with `i32` offsets panicking if not possible
     #[inline]
-    fn as_geometry_collection<const D: usize>(&self) -> &ChunkedGeometryCollectionArray<D> {
-        self.as_geometry_collection_opt::<D>().unwrap()
+    fn as_geometry_collection(&self) -> &ChunkedGeometryCollectionArray {
+        self.as_geometry_collection_opt().unwrap()
     }
 
     /// Downcast this to a [`ChunkedRectArray`] returning `None` if not possible
-    fn as_rect_opt<const D: usize>(&self) -> Option<&ChunkedRectArray<D>>;
+    fn as_rect_opt(&self) -> Option<&ChunkedRectArray>;
 
     /// Downcast this to a [`ChunkedRectArray`] panicking if not possible
     #[inline]
-    fn as_rect<const D: usize>(&self) -> &ChunkedRectArray<D> {
-        self.as_rect_opt::<D>().unwrap()
+    fn as_rect(&self) -> &ChunkedRectArray {
+        self.as_rect_opt().unwrap()
     }
 }
 
 impl AsChunkedNativeArray for &dyn ChunkedNativeArray {
     #[inline]
-    fn as_point_opt<const D: usize>(&self) -> Option<&ChunkedPointArray<D>> {
-        self.as_any().downcast_ref::<ChunkedPointArray<D>>()
+    fn as_point_opt(&self) -> Option<&ChunkedPointArray> {
+        self.as_any().downcast_ref::<ChunkedPointArray>()
     }
 
     #[inline]
-    fn as_line_string_opt<const D: usize>(&self) -> Option<&ChunkedLineStringArray<D>> {
-        self.as_any().downcast_ref::<ChunkedLineStringArray<D>>()
+    fn as_line_string_opt(&self) -> Option<&ChunkedLineStringArray> {
+        self.as_any().downcast_ref::<ChunkedLineStringArray>()
     }
 
     #[inline]
-    fn as_polygon_opt<const D: usize>(&self) -> Option<&ChunkedPolygonArray<D>> {
-        self.as_any().downcast_ref::<ChunkedPolygonArray<D>>()
+    fn as_polygon_opt(&self) -> Option<&ChunkedPolygonArray> {
+        self.as_any().downcast_ref::<ChunkedPolygonArray>()
     }
 
     #[inline]
-    fn as_multi_point_opt<const D: usize>(&self) -> Option<&ChunkedMultiPointArray<D>> {
-        self.as_any().downcast_ref::<ChunkedMultiPointArray<D>>()
+    fn as_multi_point_opt(&self) -> Option<&ChunkedMultiPointArray> {
+        self.as_any().downcast_ref::<ChunkedMultiPointArray>()
     }
 
     #[inline]
-    fn as_multi_line_string_opt<const D: usize>(&self) -> Option<&ChunkedMultiLineStringArray<D>> {
+    fn as_multi_line_string_opt(&self) -> Option<&ChunkedMultiLineStringArray> {
+        self.as_any().downcast_ref::<ChunkedMultiLineStringArray>()
+    }
+
+    #[inline]
+    fn as_multi_polygon_opt(&self) -> Option<&ChunkedMultiPolygonArray> {
+        self.as_any().downcast_ref::<ChunkedMultiPolygonArray>()
+    }
+
+    #[inline]
+    fn as_mixed_opt(&self) -> Option<&ChunkedMixedGeometryArray> {
+        self.as_any().downcast_ref::<ChunkedMixedGeometryArray>()
+    }
+
+    #[inline]
+    fn as_geometry_collection_opt(&self) -> Option<&ChunkedGeometryCollectionArray> {
         self.as_any()
-            .downcast_ref::<ChunkedMultiLineStringArray<D>>()
+            .downcast_ref::<ChunkedGeometryCollectionArray>()
     }
 
     #[inline]
-    fn as_multi_polygon_opt<const D: usize>(&self) -> Option<&ChunkedMultiPolygonArray<D>> {
-        self.as_any().downcast_ref::<ChunkedMultiPolygonArray<D>>()
-    }
-
-    #[inline]
-    fn as_mixed_opt<const D: usize>(&self) -> Option<&ChunkedMixedGeometryArray<D>> {
-        self.as_any().downcast_ref::<ChunkedMixedGeometryArray<D>>()
-    }
-
-    #[inline]
-    fn as_geometry_collection_opt<const D: usize>(
-        &self,
-    ) -> Option<&ChunkedGeometryCollectionArray<D>> {
-        self.as_any()
-            .downcast_ref::<ChunkedGeometryCollectionArray<D>>()
-    }
-
-    #[inline]
-    fn as_rect_opt<const D: usize>(&self) -> Option<&ChunkedRectArray<D>> {
-        self.as_any().downcast_ref::<ChunkedRectArray<D>>()
+    fn as_rect_opt(&self) -> Option<&ChunkedRectArray> {
+        self.as_any().downcast_ref::<ChunkedRectArray>()
     }
 }
 

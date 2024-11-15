@@ -19,7 +19,7 @@ use std::sync::Arc;
 ///
 /// Converting an [`LineStringBuilder`] into a [`LineStringArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct LineStringBuilder<const D: usize> {
+pub struct LineStringBuilder {
     metadata: Arc<ArrayMetadata>,
 
     pub(crate) coords: CoordBufferBuilder,
@@ -31,7 +31,7 @@ pub struct LineStringBuilder<const D: usize> {
     pub(crate) validity: NullBufferBuilder,
 }
 
-impl<const D: usize> LineStringBuilder<D> {
+impl LineStringBuilder {
     /// Creates a new empty [`LineStringBuilder`].
     pub fn new() -> Self {
         Self::new_with_options(Default::default(), Default::default())
@@ -155,7 +155,7 @@ impl<const D: usize> LineStringBuilder<D> {
         Arc::new(self.into_arrow())
     }
 
-    pub fn finish(self) -> LineStringArray<D> {
+    pub fn finish(self) -> LineStringArray {
         self.into()
     }
 
@@ -314,7 +314,7 @@ impl<const D: usize> LineStringBuilder<D> {
     }
 }
 
-impl<const D: usize> GeometryArrayBuilder for LineStringBuilder<D> {
+impl GeometryArrayBuilder for LineStringBuilder {
     fn new() -> Self {
         Self::new()
     }
@@ -361,23 +361,23 @@ impl<const D: usize> GeometryArrayBuilder for LineStringBuilder<D> {
     }
 }
 
-impl<const D: usize> IntoArrow for LineStringBuilder<D> {
+impl IntoArrow for LineStringBuilder {
     type ArrowArray = GenericListArray<i32>;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let linestring_arr: LineStringArray<D> = self.into();
+        let linestring_arr: LineStringArray = self.into();
         linestring_arr.into_arrow()
     }
 }
 
-impl<const D: usize> Default for LineStringBuilder<D> {
+impl Default for LineStringBuilder {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<const D: usize> From<LineStringBuilder<D>> for LineStringArray<D> {
-    fn from(mut other: LineStringBuilder<D>) -> Self {
+impl From<LineStringBuilder> for LineStringArray {
+    fn from(mut other: LineStringBuilder) -> Self {
         let validity = other.validity.finish();
         Self::new(
             other.coords.into(),
@@ -388,25 +388,25 @@ impl<const D: usize> From<LineStringBuilder<D>> for LineStringArray<D> {
     }
 }
 
-impl<const D: usize> From<LineStringBuilder<D>> for GenericListArray<i32> {
-    fn from(arr: LineStringBuilder<D>) -> Self {
+impl From<LineStringBuilder> for GenericListArray<i32> {
+    fn from(arr: LineStringBuilder) -> Self {
         arr.into_arrow()
     }
 }
 
-impl<G: LineStringTrait<T = f64>, const D: usize> From<&[G]> for LineStringBuilder<D> {
+impl<G: LineStringTrait<T = f64>> From<&[G]> for LineStringBuilder {
     fn from(geoms: &[G]) -> Self {
         Self::from_line_strings(geoms, Default::default(), Default::default())
     }
 }
 
-impl<G: LineStringTrait<T = f64>, const D: usize> From<Vec<Option<G>>> for LineStringBuilder<D> {
+impl<G: LineStringTrait<T = f64>> From<Vec<Option<G>>> for LineStringBuilder {
     fn from(geoms: Vec<Option<G>>) -> Self {
         Self::from_nullable_line_strings(&geoms, Default::default(), Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for LineStringBuilder<D> {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for LineStringBuilder {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
@@ -418,8 +418,8 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for LineStringBuil
 
 /// LineString and MultiPoint have the same layout, so enable conversions between the two to change
 /// the semantic type
-impl<const D: usize> From<LineStringBuilder<D>> for MultiPointBuilder<D> {
-    fn from(value: LineStringBuilder<D>) -> Self {
+impl From<LineStringBuilder> for MultiPointBuilder {
+    fn from(value: LineStringBuilder) -> Self {
         Self::try_new(
             value.coords,
             value.geom_offsets,

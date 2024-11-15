@@ -12,7 +12,7 @@ pub trait Reproject {
         Self: Sized;
 }
 
-impl Reproject for PointArray<2> {
+impl Reproject for PointArray {
     fn reproject(&self, proj: &Proj) -> Result<Self> {
         let mut output_array = PointBuilder::with_capacity(self.len());
 
@@ -50,19 +50,15 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<2>, LineStringBuilder<2>, push_line_string);
-iter_geo_impl!(PolygonArray<2>, PolygonBuilder<2>, push_polygon);
-iter_geo_impl!(MultiPointArray<2>, MultiPointBuilder<2>, push_multi_point);
+iter_geo_impl!(LineStringArray, LineStringBuilder, push_line_string);
+iter_geo_impl!(PolygonArray, PolygonBuilder, push_polygon);
+iter_geo_impl!(MultiPointArray, MultiPointBuilder, push_multi_point);
 iter_geo_impl!(
-    MultiLineStringArray<2>,
-    MultiLineStringBuilder<2>,
+    MultiLineStringArray,
+    MultiLineStringBuilder,
     push_multi_line_string
 );
-iter_geo_impl!(
-    MultiPolygonArray<2>,
-    MultiPolygonBuilder<2>,
-    push_multi_polygon
-);
+iter_geo_impl!(MultiPolygonArray, MultiPolygonBuilder, push_multi_polygon);
 
 #[cfg(test)]
 mod test {
@@ -74,7 +70,7 @@ mod test {
 
     #[test]
     fn point_round_trip() {
-        let point_array: PointArray<2> = vec![Some(p0()), Some(p1()), Some(p2())].into();
+        let point_array: PointArray = vec![Some(p0()), Some(p1()), Some(p2())].into();
         let proj = Proj::new_known_crs("EPSG:4326", "EPSG:3857", None).unwrap();
 
         // You can verify this with PROJ on the command line:

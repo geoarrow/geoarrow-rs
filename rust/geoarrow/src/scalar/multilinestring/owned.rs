@@ -1,11 +1,12 @@
 use crate::algorithm::native::eq::multi_line_string_eq;
 use crate::array::{CoordBuffer, MultiLineStringArray};
+use crate::datatypes::Dimension;
 use crate::scalar::{LineString, MultiLineString};
 use arrow_buffer::OffsetBuffer;
 use geo_traits::MultiLineStringTrait;
 
 #[derive(Clone, Debug)]
-pub struct OwnedMultiLineString<const D: usize> {
+pub struct OwnedMultiLineString {
     coords: CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
@@ -16,7 +17,7 @@ pub struct OwnedMultiLineString<const D: usize> {
     geom_index: usize,
 }
 
-impl<const D: usize> OwnedMultiLineString<D> {
+impl OwnedMultiLineString {
     pub fn new(
         coords: CoordBuffer,
         geom_offsets: OffsetBuffer<i32>,
@@ -32,8 +33,8 @@ impl<const D: usize> OwnedMultiLineString<D> {
     }
 }
 
-impl<'a, const D: usize> From<&'a OwnedMultiLineString<D>> for MultiLineString<'a, D> {
-    fn from(value: &'a OwnedMultiLineString<D>) -> Self {
+impl<'a> From<&'a OwnedMultiLineString> for MultiLineString<'a> {
+    fn from(value: &'a OwnedMultiLineString) -> Self {
         Self::new(
             &value.coords,
             &value.geom_offsets,
@@ -50,15 +51,15 @@ impl From<OwnedMultiLineString<2>> for geo::MultiLineString {
     }
 }
 
-impl<'a, const D: usize> From<MultiLineString<'a, D>> for OwnedMultiLineString<D> {
-    fn from(value: MultiLineString<'a, D>) -> Self {
+impl<'a> From<MultiLineString<'a>> for OwnedMultiLineString {
+    fn from(value: MultiLineString<'a>) -> Self {
         let (coords, geom_offsets, ring_offsets, geom_index) = value.into_owned_inner();
         Self::new(coords, geom_offsets, ring_offsets, geom_index)
     }
 }
 
-impl<const D: usize> From<OwnedMultiLineString<D>> for MultiLineStringArray<D> {
-    fn from(value: OwnedMultiLineString<D>) -> Self {
+impl From<OwnedMultiLineString> for MultiLineStringArray {
+    fn from(value: OwnedMultiLineString) -> Self {
         Self::new(
             value.coords,
             value.geom_offsets,
@@ -69,16 +70,14 @@ impl<const D: usize> From<OwnedMultiLineString<D>> for MultiLineStringArray<D> {
     }
 }
 
-impl<const D: usize> MultiLineStringTrait for OwnedMultiLineString<D> {
+impl MultiLineStringTrait for OwnedMultiLineString {
     type T = f64;
-    type LineStringType<'b> = LineString<'b, D> where Self: 'b;
+    type LineStringType<'b> = LineString<'b> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
+        match self.coords.dim() {
+            Dimension::XY => geo_traits::Dimensions::Xy,
+            Dimension::XYZ => geo_traits::Dimensions::Xyz,
         }
     }
 

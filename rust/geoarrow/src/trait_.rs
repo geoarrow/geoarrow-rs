@@ -398,9 +398,9 @@ pub trait SerializedArray: ArrayBase {
 pub type SerializedArrayRef = Arc<dyn SerializedArray>;
 
 /// Trait for accessing generic `Geometry` scalars
-pub trait NativeGeometryAccessor<const D: usize>: NativeArray {
+pub trait NativeGeometryAccessor: NativeArray {
     /// Returns the element at index `i` as a `Geometry`, not considering validity.
-    fn value_as_geometry(&self, index: usize) -> Geometry<'_, D> {
+    fn value_as_geometry(&self, index: usize) -> Geometry<'_> {
         assert!(index <= self.len());
         unsafe { self.value_as_geometry_unchecked(index) }
     }
@@ -410,10 +410,10 @@ pub trait NativeGeometryAccessor<const D: usize>: NativeArray {
     /// # Safety
     ///
     /// Caller is responsible for ensuring that the index is within the bounds of the array
-    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> Geometry<'_, D>;
+    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> Geometry<'_>;
 
     /// Returns the value at slot `i` as a `Geometry`, considering validity.
-    fn get_as_geometry(&self, index: usize) -> Option<Geometry<'_, D>> {
+    fn get_as_geometry(&self, index: usize) -> Option<Geometry<'_>> {
         if self.is_null(index) {
             return None;
         }
@@ -426,7 +426,7 @@ pub trait NativeGeometryAccessor<const D: usize>: NativeArray {
     /// # Safety
     ///
     /// Caller is responsible for ensuring that the index is within the bounds of the array
-    unsafe fn get_as_geometry_unchecked(&self, index: usize) -> Option<Geometry<'_, D>> {
+    unsafe fn get_as_geometry_unchecked(&self, index: usize) -> Option<Geometry<'_>> {
         if self.is_null(index) {
             return None;
         }
@@ -689,7 +689,7 @@ pub trait ArrayAccessor<'a>: ArrayBase {
 /// Trait for geometry array methods that return `Self`.
 ///
 /// TODO Horrible name, to be changed to a better name in the future!!
-pub trait GeometryArraySelfMethods<const D: usize> {
+pub trait GeometryArraySelfMethods {
     /// Creates a new array with replaced coordinates.
     ///
     /// This is useful if you want to apply an operation to _every_ coordinate in unison, such as a

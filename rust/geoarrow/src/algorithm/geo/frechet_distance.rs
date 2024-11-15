@@ -26,10 +26,10 @@ pub trait FrechetDistance<Rhs = Self> {
     fn frechet_distance(&self, rhs: &Rhs) -> Self::Output;
 }
 
-impl FrechetDistance<LineStringArray<2>> for LineStringArray<2> {
+impl FrechetDistance<LineStringArray> for LineStringArray {
     type Output = Float64Array;
 
-    fn frechet_distance(&self, rhs: &LineStringArray<2>) -> Self::Output {
+    fn frechet_distance(&self, rhs: &LineStringArray) -> Self::Output {
         self.try_binary_primitive(rhs, |left, right| {
             Ok(left.to_geo().frechet_distance(&right.to_geo()))
         })
@@ -37,10 +37,10 @@ impl FrechetDistance<LineStringArray<2>> for LineStringArray<2> {
     }
 }
 
-impl FrechetDistance<ChunkedLineStringArray<2>> for ChunkedLineStringArray<2> {
+impl FrechetDistance<ChunkedLineStringArray> for ChunkedLineStringArray {
     type Output = ChunkedArray<Float64Array>;
 
-    fn frechet_distance(&self, rhs: &ChunkedLineStringArray<2>) -> Self::Output {
+    fn frechet_distance(&self, rhs: &ChunkedLineStringArray) -> Self::Output {
         ChunkedArray::new(self.binary_map(rhs.chunks(), |(left, right)| {
             FrechetDistance::frechet_distance(left, right)
         }))
@@ -56,8 +56,8 @@ impl FrechetDistance for &dyn NativeArray {
 
         let result = match (self.data_type(), rhs.data_type()) {
             (LineString(_, XY), LineString(_, XY)) => FrechetDistance::frechet_distance(
-                self.as_line_string::<2>(),
-                rhs.as_line_string::<2>(),
+                self.as_line_string(),
+                rhs.as_line_string(),
             ),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -74,8 +74,8 @@ impl FrechetDistance for &dyn ChunkedNativeArray {
 
         let result = match (self.data_type(), rhs.data_type()) {
             (LineString(_, XY), LineString(_, XY)) => FrechetDistance::frechet_distance(
-                self.as_line_string::<2>(),
-                rhs.as_line_string::<2>(),
+                self.as_line_string(),
+                rhs.as_line_string(),
             ),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -93,7 +93,7 @@ pub trait FrechetDistanceLineString<Rhs> {
     fn frechet_distance(&self, rhs: &Rhs) -> Self::Output;
 }
 
-impl<G: LineStringTrait<T = f64>> FrechetDistanceLineString<G> for LineStringArray<2> {
+impl<G: LineStringTrait<T = f64>> FrechetDistanceLineString<G> for LineStringArray {
     type Output = Float64Array;
 
     fn frechet_distance(&self, rhs: &G) -> Self::Output {
@@ -106,7 +106,7 @@ impl<G: LineStringTrait<T = f64>> FrechetDistanceLineString<G> for LineStringArr
 }
 
 impl<G: LineStringTrait<T = f64> + Sync> FrechetDistanceLineString<G>
-    for ChunkedLineStringArray<2>
+    for ChunkedLineStringArray
 {
     type Output = ChunkedArray<Float64Array>;
 
@@ -124,7 +124,7 @@ impl<G: LineStringTrait<T = f64>> FrechetDistanceLineString<G> for &dyn NativeAr
 
         let result = match self.data_type() {
             LineString(_, XY) => {
-                FrechetDistanceLineString::frechet_distance(self.as_line_string::<2>(), rhs)
+                FrechetDistanceLineString::frechet_distance(self.as_line_string(), rhs)
             }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -142,7 +142,7 @@ impl<G: LineStringTrait<T = f64>> FrechetDistanceLineString<G> for &dyn ChunkedN
         let rhs = line_string_to_geo(rhs);
         let result = match self.data_type() {
             LineString(_, XY) => {
-                FrechetDistanceLineString::frechet_distance(self.as_line_string::<2>(), &rhs)
+                FrechetDistanceLineString::frechet_distance(self.as_line_string(), &rhs)
             }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };

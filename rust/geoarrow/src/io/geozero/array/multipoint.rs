@@ -5,7 +5,7 @@ use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-impl<const D: usize> GeozeroGeometry for MultiPointArray<D> {
+impl GeozeroGeometry for MultiPointArray<D> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -23,7 +23,7 @@ impl<const D: usize> GeozeroGeometry for MultiPointArray<D> {
 }
 
 /// GeoZero trait to convert to GeoArrow MultiPointArray.
-pub trait ToMultiPointArray<const D: usize> {
+pub trait ToMultiPointArray {
     /// Convert to GeoArrow MultiPointArray
     fn to_multi_point_array(&self) -> geozero::error::Result<MultiPointArray<D>>;
 
@@ -44,7 +44,7 @@ impl<T: GeozeroGeometry, const D: usize> ToMultiPointArray<D> for T {
 }
 
 #[allow(unused_variables)]
-impl<const D: usize> GeomProcessor for MultiPointBuilder<D> {
+impl GeomProcessor for MultiPointBuilder<D> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         let capacity = MultiPointCapacity::new(0, size);
         self.reserve(capacity);

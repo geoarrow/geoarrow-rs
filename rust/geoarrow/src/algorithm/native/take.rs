@@ -20,7 +20,7 @@ pub trait Take {
     fn take_range(&self, range: &Range<usize>) -> Self::Output;
 }
 
-impl Take for PointArray<2> {
+impl Take for PointArray {
     type Output = Self;
 
     fn take(&self, indices: &UInt32Array) -> Self::Output {
@@ -108,37 +108,37 @@ macro_rules! take_impl {
 }
 
 take_impl!(
-    LineStringArray<2>,
+    LineStringArray,
     LineStringCapacity,
-    LineStringBuilder<2>,
+    LineStringBuilder,
     add_line_string,
     push_line_string
 );
 take_impl!(
-    PolygonArray<2>,
+    PolygonArray,
     PolygonCapacity,
-    PolygonBuilder<2>,
+    PolygonBuilder,
     add_polygon,
     push_polygon
 );
 take_impl!(
-    MultiPointArray<2>,
+    MultiPointArray,
     MultiPointCapacity,
-    MultiPointBuilder<2>,
+    MultiPointBuilder,
     add_multi_point,
     push_multi_point
 );
 take_impl!(
-    MultiLineStringArray<2>,
+    MultiLineStringArray,
     MultiLineStringCapacity,
-    MultiLineStringBuilder<2>,
+    MultiLineStringBuilder,
     add_multi_line_string,
     push_multi_line_string
 );
 take_impl!(
-    MultiPolygonArray<2>,
+    MultiPolygonArray,
     MultiPolygonCapacity,
-    MultiPolygonBuilder<2>,
+    MultiPolygonBuilder,
     add_multi_polygon,
     push_multi_polygon
 );
@@ -198,16 +198,16 @@ macro_rules! take_impl_fallible {
 }
 
 take_impl_fallible!(
-    MixedGeometryArray<2>,
+    MixedGeometryArray,
     MixedCapacity,
-    MixedGeometryBuilder<2>,
+    MixedGeometryBuilder,
     add_geometry,
     push_geometry
 );
 take_impl_fallible!(
-    GeometryCollectionArray<2>,
+    GeometryCollectionArray,
     GeometryCollectionCapacity,
-    GeometryCollectionBuilder<2>,
+    GeometryCollectionBuilder,
     add_geometry_collection,
     push_geometry_collection
 );
@@ -220,16 +220,14 @@ impl Take for &dyn NativeArray {
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
-            Point(_, XY) => Arc::new(self.as_point::<2>().take(indices)),
-            LineString(_, XY) => Arc::new(self.as_line_string::<2>().take(indices)?),
-            Polygon(_, XY) => Arc::new(self.as_polygon::<2>().take(indices)?),
-            MultiPoint(_, XY) => Arc::new(self.as_multi_point::<2>().take(indices)?),
-            MultiLineString(_, XY) => Arc::new(self.as_multi_line_string::<2>().take(indices)?),
-            MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon::<2>().take(indices)?),
-            Mixed(_, XY) => Arc::new(self.as_mixed::<2>().take(indices)?),
-            GeometryCollection(_, XY) => {
-                Arc::new(self.as_geometry_collection::<2>().take(indices)?)
-            }
+            Point(_, XY) => Arc::new(self.as_point().take(indices)),
+            LineString(_, XY) => Arc::new(self.as_line_string().take(indices)?),
+            Polygon(_, XY) => Arc::new(self.as_polygon().take(indices)?),
+            MultiPoint(_, XY) => Arc::new(self.as_multi_point().take(indices)?),
+            MultiLineString(_, XY) => Arc::new(self.as_multi_line_string().take(indices)?),
+            MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon().take(indices)?),
+            Mixed(_, XY) => Arc::new(self.as_mixed().take(indices)?),
+            GeometryCollection(_, XY) => Arc::new(self.as_geometry_collection().take(indices)?),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -240,24 +238,22 @@ impl Take for &dyn NativeArray {
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
-            Point(_, XY) => Arc::new(self.as_point::<2>().take_range(range)),
-            LineString(_, XY) => Arc::new(self.as_line_string::<2>().take_range(range)?),
-            Polygon(_, XY) => Arc::new(self.as_polygon::<2>().take_range(range)?),
-            MultiPoint(_, XY) => Arc::new(self.as_multi_point::<2>().take_range(range)?),
-            MultiLineString(_, XY) => Arc::new(self.as_multi_line_string::<2>().take_range(range)?),
-            MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon::<2>().take_range(range)?),
-            Mixed(_, XY) => Arc::new(self.as_mixed::<2>().take_range(range)?),
-            GeometryCollection(_, XY) => {
-                Arc::new(self.as_geometry_collection::<2>().take_range(range)?)
-            }
+            Point(_, XY) => Arc::new(self.as_point().take_range(range)),
+            LineString(_, XY) => Arc::new(self.as_line_string().take_range(range)?),
+            Polygon(_, XY) => Arc::new(self.as_polygon().take_range(range)?),
+            MultiPoint(_, XY) => Arc::new(self.as_multi_point().take_range(range)?),
+            MultiLineString(_, XY) => Arc::new(self.as_multi_line_string().take_range(range)?),
+            MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon().take_range(range)?),
+            Mixed(_, XY) => Arc::new(self.as_mixed().take_range(range)?),
+            GeometryCollection(_, XY) => Arc::new(self.as_geometry_collection().take_range(range)?),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
     }
 }
 
-impl Take for ChunkedGeometryArray<PointArray<2>> {
-    type Output = Result<ChunkedGeometryArray<PointArray<2>>>;
+impl Take for ChunkedGeometryArray<PointArray> {
+    type Output = Result<ChunkedGeometryArray<PointArray>>;
 
     fn take(&self, indices: &UInt32Array) -> Self::Output {
         let mut output_chunks = Vec::with_capacity(self.chunks.len());
@@ -305,10 +301,10 @@ macro_rules! chunked_impl {
     };
 }
 
-chunked_impl!(ChunkedGeometryArray<LineStringArray<2>>);
-chunked_impl!(ChunkedGeometryArray<PolygonArray<2>>);
-chunked_impl!(ChunkedGeometryArray<MultiPointArray<2>>);
-chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<2>>);
-chunked_impl!(ChunkedGeometryArray<MultiPolygonArray<2>>);
-chunked_impl!(ChunkedGeometryArray<MixedGeometryArray<2>>);
-chunked_impl!(ChunkedGeometryArray<GeometryCollectionArray<2>>);
+chunked_impl!(ChunkedGeometryArray<LineStringArray>);
+chunked_impl!(ChunkedGeometryArray<PolygonArray>);
+chunked_impl!(ChunkedGeometryArray<MultiPointArray>);
+chunked_impl!(ChunkedGeometryArray<MultiLineStringArray>);
+chunked_impl!(ChunkedGeometryArray<MultiPolygonArray>);
+chunked_impl!(ChunkedGeometryArray<MixedGeometryArray>);
+chunked_impl!(ChunkedGeometryArray<GeometryCollectionArray>);

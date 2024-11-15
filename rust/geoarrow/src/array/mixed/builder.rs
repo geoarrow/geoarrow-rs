@@ -28,18 +28,18 @@ pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 /// - All arrays must have the same dimension
 /// - All arrays must have the same coordinate layout (interleaved or separated)
 #[derive(Debug)]
-pub struct MixedGeometryBuilder<const D: usize> {
+pub struct MixedGeometryBuilder {
     metadata: Arc<ArrayMetadata>,
 
     // Invariant: every item in `types` is `> 0 && < fields.len()`
     types: Vec<i8>,
 
-    pub(crate) points: PointBuilder<D>,
-    pub(crate) line_strings: LineStringBuilder<D>,
-    pub(crate) polygons: PolygonBuilder<D>,
-    pub(crate) multi_points: MultiPointBuilder<D>,
-    pub(crate) multi_line_strings: MultiLineStringBuilder<D>,
-    pub(crate) multi_polygons: MultiPolygonBuilder<D>,
+    pub(crate) points: PointBuilder,
+    pub(crate) line_strings: LineStringBuilder,
+    pub(crate) polygons: PolygonBuilder,
+    pub(crate) multi_points: MultiPointBuilder,
+    pub(crate) multi_line_strings: MultiLineStringBuilder,
+    pub(crate) multi_polygons: MultiPolygonBuilder,
 
     // Invariant: `offsets.len() == types.len()`
     offsets: Vec<i32>,
@@ -54,7 +54,7 @@ pub struct MixedGeometryBuilder<const D: usize> {
     pub(crate) prefer_multi: bool,
 }
 
-impl<'a, const D: usize> MixedGeometryBuilder<D> {
+impl<'a> MixedGeometryBuilder {
     /// Creates a new empty [`MixedGeometryBuilder`].
     pub fn new() -> Self {
         Self::new_with_options(Default::default(), Default::default(), DEFAULT_PREFER_MULTI)
@@ -177,7 +177,7 @@ impl<'a, const D: usize> MixedGeometryBuilder<D> {
     //     })
     // }
 
-    pub fn finish(self) -> MixedGeometryArray<D> {
+    pub fn finish(self) -> MixedGeometryArray {
         self.into()
     }
 
@@ -464,13 +464,13 @@ impl<'a, const D: usize> MixedGeometryBuilder<D> {
     }
 }
 
-impl<const D: usize> Default for MixedGeometryBuilder<D> {
+impl Default for MixedGeometryBuilder {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<const D: usize> IntoArrow for MixedGeometryBuilder<D> {
+impl IntoArrow for MixedGeometryBuilder {
     type ArrowArray = UnionArray;
 
     fn into_arrow(self) -> Self::ArrowArray {
@@ -478,8 +478,8 @@ impl<const D: usize> IntoArrow for MixedGeometryBuilder<D> {
     }
 }
 
-impl<const D: usize> From<MixedGeometryBuilder<D>> for MixedGeometryArray<D> {
-    fn from(other: MixedGeometryBuilder<D>) -> Self {
+impl From<MixedGeometryBuilder> for MixedGeometryArray {
+    fn from(other: MixedGeometryBuilder) -> Self {
         Self::new(
             other.types.into(),
             other.offsets.into(),
@@ -494,7 +494,7 @@ impl<const D: usize> From<MixedGeometryBuilder<D>> for MixedGeometryArray<D> {
     }
 }
 
-impl<G: GeometryTrait<T = f64>, const D: usize> TryFrom<&[G]> for MixedGeometryBuilder<D> {
+impl<G: GeometryTrait<T = f64>> TryFrom<&[G]> for MixedGeometryBuilder {
     type Error = GeoArrowError;
 
     fn try_from(geoms: &[G]) -> Result<Self> {
@@ -502,9 +502,7 @@ impl<G: GeometryTrait<T = f64>, const D: usize> TryFrom<&[G]> for MixedGeometryB
     }
 }
 
-impl<G: GeometryTrait<T = f64>, const D: usize> TryFrom<Vec<Option<G>>>
-    for MixedGeometryBuilder<D>
-{
+impl<G: GeometryTrait<T = f64>> TryFrom<Vec<Option<G>>> for MixedGeometryBuilder {
     type Error = GeoArrowError;
 
     fn try_from(geoms: Vec<Option<G>>) -> Result<Self> {
@@ -512,7 +510,7 @@ impl<G: GeometryTrait<T = f64>, const D: usize> TryFrom<Vec<Option<G>>>
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MixedGeometryBuilder<D> {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MixedGeometryBuilder {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> std::result::Result<Self, Self::Error> {
@@ -528,7 +526,7 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MixedGeometryB
     }
 }
 
-impl<const D: usize> GeometryArrayBuilder for MixedGeometryBuilder<D> {
+impl GeometryArrayBuilder for MixedGeometryBuilder {
     fn len(&self) -> usize {
         self.types.len()
     }

@@ -24,7 +24,7 @@ pub(crate) fn process_multi_line_string<P: GeomProcessor>(
     Ok(())
 }
 
-impl<const D: usize> GeozeroGeometry for MultiLineString<'_, D> {
+impl GeozeroGeometry for MultiLineString<'_> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,

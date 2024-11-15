@@ -2,7 +2,7 @@ use crate::algorithm::geo::utils::zeroes;
 use crate::algorithm::native::Unary;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
@@ -19,7 +19,7 @@ pub trait Area {
 /// Implementation where the result is zero.
 macro_rules! zero_impl {
     ($type:ty) => {
-        impl<const D: usize> Area for $type {
+        impl Area for $type {
             type Output = Result<Float64Array>;
 
             fn area(&self) -> Self::Output {
@@ -29,14 +29,14 @@ macro_rules! zero_impl {
     };
 }
 
-zero_impl!(PointArray<D>);
-zero_impl!(LineStringArray<D>);
-zero_impl!(MultiPointArray<D>);
-zero_impl!(MultiLineStringArray<D>);
+zero_impl!(PointArray);
+zero_impl!(LineStringArray);
+zero_impl!(MultiPointArray);
+zero_impl!(MultiLineStringArray);
 
 macro_rules! iter_geos_impl {
     ($type:ty) => {
-        impl<const D: usize> Area for $type {
+        impl Area for $type {
             type Output = Result<Float64Array>;
 
             fn area(&self) -> Self::Output {
@@ -46,38 +46,28 @@ macro_rules! iter_geos_impl {
     };
 }
 
-iter_geos_impl!(PolygonArray<D>);
-iter_geos_impl!(MultiPolygonArray<D>);
-iter_geos_impl!(MixedGeometryArray<D>);
-iter_geos_impl!(GeometryCollectionArray<D>);
-iter_geos_impl!(RectArray<D>);
+iter_geos_impl!(PolygonArray);
+iter_geos_impl!(MultiPolygonArray);
+iter_geos_impl!(MixedGeometryArray);
+iter_geos_impl!(GeometryCollectionArray);
+iter_geos_impl!(RectArray);
 
 impl Area for &dyn NativeArray {
     type Output = Result<Float64Array>;
 
     fn area(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point::<2>().area(),
-            LineString(_, XY) => self.as_line_string::<2>().area(),
-            Polygon(_, XY) => self.as_polygon::<2>().area(),
-            MultiPoint(_, XY) => self.as_multi_point::<2>().area(),
-            MultiLineString(_, XY) => self.as_multi_line_string::<2>().area(),
-            MultiPolygon(_, XY) => self.as_multi_polygon::<2>().area(),
-            Mixed(_, XY) => self.as_mixed::<2>().area(),
-            GeometryCollection(_, XY) => self.as_geometry_collection::<2>().area(),
-            Rect(XY) => self.as_rect::<2>().area(),
-            Point(_, XYZ) => self.as_point::<3>().area(),
-            LineString(_, XYZ) => self.as_line_string::<3>().area(),
-            Polygon(_, XYZ) => self.as_polygon::<3>().area(),
-            MultiPoint(_, XYZ) => self.as_multi_point::<3>().area(),
-            MultiLineString(_, XYZ) => self.as_multi_line_string::<3>().area(),
-            MultiPolygon(_, XYZ) => self.as_multi_polygon::<3>().area(),
-            Mixed(_, XYZ) => self.as_mixed::<3>().area(),
-            GeometryCollection(_, XYZ) => self.as_geometry_collection::<3>().area(),
-            Rect(XYZ) => self.as_rect::<3>().area(),
+            Point(_, _) => self.as_point().area(),
+            LineString(_, _) => self.as_line_string().area(),
+            Polygon(_, _) => self.as_polygon().area(),
+            MultiPoint(_, _) => self.as_multi_point().area(),
+            MultiLineString(_, _) => self.as_multi_line_string().area(),
+            MultiPolygon(_, _) => self.as_multi_polygon().area(),
+            Mixed(_, _) => self.as_mixed().area(),
+            GeometryCollection(_, _) => self.as_geometry_collection().area(),
+            Rect(_) => self.as_rect().area(),
         }
     }
 }

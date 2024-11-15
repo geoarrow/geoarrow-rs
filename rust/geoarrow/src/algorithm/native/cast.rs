@@ -54,7 +54,7 @@ pub trait Cast {
     fn cast(&self, to_type: &NativeType) -> Self::Output;
 }
 
-impl<const D: usize> Cast for PointArray<D> {
+impl Cast for PointArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
     fn cast(&self, to_type: &NativeType) -> Self::Output {
@@ -63,9 +63,9 @@ impl<const D: usize> Cast for PointArray<D> {
         let array = self.to_coord_type(to_type.coord_type());
         match to_type {
             Point(_, _) => Ok(Arc::new(array)),
-            MultiPoint(_, _) => Ok(Arc::new(MultiPointArray::<D>::from(array))),
-            Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::<D>::from(array))),
-            GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::<D>::from(array))),
+            MultiPoint(_, _) => Ok(Arc::new(MultiPointArray::from(array))),
+            Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::from(array))),
+            GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::from(array))),
             dt => Err(GeoArrowError::General(format!(
                 "invalid cast to type {dt:?}"
             ))),
@@ -73,7 +73,7 @@ impl<const D: usize> Cast for PointArray<D> {
     }
 }
 
-impl<const D: usize> Cast for LineStringArray<D> {
+impl Cast for LineStringArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
     fn cast(&self, to_type: &NativeType) -> Self::Output {
@@ -83,9 +83,9 @@ impl<const D: usize> Cast for LineStringArray<D> {
 
         match to_type {
             LineString(_, _) => Ok(Arc::new(array)),
-            MultiLineString(_, _) => Ok(Arc::new(MultiLineStringArray::<D>::from(array))),
-            Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::<D>::from(array))),
-            GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::<D>::from(array))),
+            MultiLineString(_, _) => Ok(Arc::new(MultiLineStringArray::from(array))),
+            Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::from(array))),
+            GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::from(array))),
             dt => Err(GeoArrowError::General(format!(
                 "invalid cast to type {dt:?}"
             ))),
@@ -93,7 +93,7 @@ impl<const D: usize> Cast for LineStringArray<D> {
     }
 }
 
-impl<const D: usize> Cast for PolygonArray<D> {
+impl Cast for PolygonArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
     fn cast(&self, to_type: &NativeType) -> Self::Output {
@@ -103,9 +103,9 @@ impl<const D: usize> Cast for PolygonArray<D> {
 
         match to_type {
             Polygon(_, _) => Ok(Arc::new(array)),
-            MultiPolygon(_, _) => Ok(Arc::new(MultiPolygonArray::<D>::from(array))),
-            Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::<D>::from(array))),
-            GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::<D>::from(array))),
+            MultiPolygon(_, _) => Ok(Arc::new(MultiPolygonArray::from(array))),
+            Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::from(array))),
+            GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::from(array))),
             dt => Err(GeoArrowError::General(format!(
                 "invalid cast to type {dt:?}"
             ))),
@@ -113,7 +113,7 @@ impl<const D: usize> Cast for PolygonArray<D> {
     }
 }
 
-impl<const D: usize> Cast for MultiPointArray<D> {
+impl Cast for MultiPointArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
     fn cast(&self, to_type: &NativeType) -> Self::Output {
@@ -122,10 +122,10 @@ impl<const D: usize> Cast for MultiPointArray<D> {
         let array = self.to_coord_type(to_type.coord_type());
 
         match to_type {
-            Point(_, _) => Ok(Arc::new(PointArray::<D>::try_from(array)?)),
+            Point(_, _) => Ok(Arc::new(PointArray::try_from(array)?)),
             MultiPoint(_, _) => Ok(Arc::new(array)),
-            Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::<D>::from(array))),
-            GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::<D>::from(array))),
+            Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::from(array))),
+            GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::from(array))),
             dt => Err(GeoArrowError::General(format!(
                 "invalid cast to type {dt:?}"
             ))),
@@ -133,7 +133,7 @@ impl<const D: usize> Cast for MultiPointArray<D> {
     }
 }
 
-impl<const D: usize> Cast for MultiLineStringArray<D> {
+impl Cast for MultiLineStringArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
     fn cast(&self, to_type: &NativeType) -> Self::Output {
@@ -142,9 +142,9 @@ impl<const D: usize> Cast for MultiLineStringArray<D> {
         let array = self.to_coord_type(to_type.coord_type());
 
         match to_type {
-            LineString(_, _) => Ok(Arc::new(LineStringArray::<D>::try_from(array)?)),
-            Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::<D>::from(array))),
-            GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::<D>::from(array))),
+            LineString(_, _) => Ok(Arc::new(LineStringArray::try_from(array)?)),
+            Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::from(array))),
+            GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::from(array))),
             dt => Err(GeoArrowError::General(format!(
                 "invalid cast to type {dt:?}"
             ))),
@@ -152,7 +152,7 @@ impl<const D: usize> Cast for MultiLineStringArray<D> {
     }
 }
 
-impl<const D: usize> Cast for MultiPolygonArray<D> {
+impl Cast for MultiPolygonArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
     fn cast(&self, to_type: &NativeType) -> Self::Output {
@@ -161,9 +161,9 @@ impl<const D: usize> Cast for MultiPolygonArray<D> {
         let array = self.to_coord_type(to_type.coord_type());
 
         match to_type {
-            Polygon(_, _) => Ok(Arc::new(PolygonArray::<D>::try_from(array)?)),
-            Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::<D>::from(array))),
-            GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::<D>::from(array))),
+            Polygon(_, _) => Ok(Arc::new(PolygonArray::try_from(array)?)),
+            Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::from(array))),
+            GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::from(array))),
             dt => Err(GeoArrowError::General(format!(
                 "invalid cast to type {dt:?}"
             ))),
@@ -171,7 +171,7 @@ impl<const D: usize> Cast for MultiPolygonArray<D> {
     }
 }
 
-impl<const D: usize> Cast for MixedGeometryArray<D> {
+impl Cast for MixedGeometryArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
     fn cast(&self, to_type: &NativeType) -> Self::Output {
@@ -181,13 +181,13 @@ impl<const D: usize> Cast for MixedGeometryArray<D> {
 
         match to_type {
             Point(_, _) => Ok(Arc::new(PointArray::try_from(array)?)),
-            LineString(_, _) => Ok(Arc::new(LineStringArray::<D>::try_from(array)?)),
-            Polygon(_, _) => Ok(Arc::new(PolygonArray::<D>::try_from(array)?)),
-            MultiPoint(_, _) => Ok(Arc::new(MultiPointArray::<D>::try_from(array)?)),
-            MultiLineString(_, _) => Ok(Arc::new(MultiLineStringArray::<D>::try_from(array)?)),
-            MultiPolygon(_, _) => Ok(Arc::new(MultiPolygonArray::<D>::try_from(array)?)),
+            LineString(_, _) => Ok(Arc::new(LineStringArray::try_from(array)?)),
+            Polygon(_, _) => Ok(Arc::new(PolygonArray::try_from(array)?)),
+            MultiPoint(_, _) => Ok(Arc::new(MultiPointArray::try_from(array)?)),
+            MultiLineString(_, _) => Ok(Arc::new(MultiLineStringArray::try_from(array)?)),
+            MultiPolygon(_, _) => Ok(Arc::new(MultiPolygonArray::try_from(array)?)),
             Mixed(_, _) => Ok(Arc::new(array)),
-            GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::<D>::from(array))),
+            GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::from(array))),
             dt => Err(GeoArrowError::General(format!(
                 "invalid cast to type {dt:?}"
             ))),
@@ -195,7 +195,7 @@ impl<const D: usize> Cast for MixedGeometryArray<D> {
     }
 }
 
-impl<const D: usize> Cast for GeometryCollectionArray<D> {
+impl Cast for GeometryCollectionArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
     fn cast(&self, to_type: &NativeType) -> Self::Output {
@@ -205,12 +205,12 @@ impl<const D: usize> Cast for GeometryCollectionArray<D> {
 
         match to_type {
             Point(_, _) => Ok(Arc::new(PointArray::try_from(array)?)),
-            LineString(_, _) => Ok(Arc::new(LineStringArray::<D>::try_from(array)?)),
-            Polygon(_, _) => Ok(Arc::new(PolygonArray::<D>::try_from(array)?)),
-            MultiPoint(_, _) => Ok(Arc::new(MultiPointArray::<D>::try_from(array)?)),
-            MultiLineString(_, _) => Ok(Arc::new(MultiLineStringArray::<D>::try_from(array)?)),
-            MultiPolygon(_, _) => Ok(Arc::new(MultiPolygonArray::<D>::try_from(array)?)),
-            Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::<D>::try_from(array)?)),
+            LineString(_, _) => Ok(Arc::new(LineStringArray::try_from(array)?)),
+            Polygon(_, _) => Ok(Arc::new(PolygonArray::try_from(array)?)),
+            MultiPoint(_, _) => Ok(Arc::new(MultiPointArray::try_from(array)?)),
+            MultiLineString(_, _) => Ok(Arc::new(MultiLineStringArray::try_from(array)?)),
+            MultiPolygon(_, _) => Ok(Arc::new(MultiPolygonArray::try_from(array)?)),
+            Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::try_from(array)?)),
             GeometryCollection(_, _) => Ok(Arc::new(array)),
             dt => Err(GeoArrowError::General(format!(
                 "invalid cast to type {dt:?}"
@@ -232,22 +232,22 @@ impl Cast for &dyn NativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_ref().as_point::<2>().cast(to_type),
-            LineString(_, XY) => self.as_ref().as_line_string::<2>().cast(to_type),
-            Polygon(_, XY) => self.as_ref().as_polygon::<2>().cast(to_type),
-            MultiPoint(_, XY) => self.as_ref().as_multi_point::<2>().cast(to_type),
-            MultiLineString(_, XY) => self.as_ref().as_multi_line_string::<2>().cast(to_type),
-            MultiPolygon(_, XY) => self.as_ref().as_multi_polygon::<2>().cast(to_type),
-            Mixed(_, XY) => self.as_ref().as_mixed::<2>().cast(to_type),
-            GeometryCollection(_, XY) => self.as_ref().as_geometry_collection::<2>().cast(to_type),
-            Point(_, XYZ) => self.as_ref().as_point::<3>().cast(to_type),
-            LineString(_, XYZ) => self.as_ref().as_line_string::<3>().cast(to_type),
-            Polygon(_, XYZ) => self.as_ref().as_polygon::<3>().cast(to_type),
-            MultiPoint(_, XYZ) => self.as_ref().as_multi_point::<3>().cast(to_type),
-            MultiLineString(_, XYZ) => self.as_ref().as_multi_line_string::<3>().cast(to_type),
-            MultiPolygon(_, XYZ) => self.as_ref().as_multi_polygon::<3>().cast(to_type),
-            Mixed(_, XYZ) => self.as_ref().as_mixed::<3>().cast(to_type),
-            GeometryCollection(_, XYZ) => self.as_ref().as_geometry_collection::<3>().cast(to_type),
+            Point(_, XY) => self.as_ref().as_point().cast(to_type),
+            LineString(_, XY) => self.as_ref().as_line_string().cast(to_type),
+            Polygon(_, XY) => self.as_ref().as_polygon().cast(to_type),
+            MultiPoint(_, XY) => self.as_ref().as_multi_point().cast(to_type),
+            MultiLineString(_, XY) => self.as_ref().as_multi_line_string().cast(to_type),
+            MultiPolygon(_, XY) => self.as_ref().as_multi_polygon().cast(to_type),
+            Mixed(_, XY) => self.as_ref().as_mixed().cast(to_type),
+            GeometryCollection(_, XY) => self.as_ref().as_geometry_collection().cast(to_type),
+            Point(_, XYZ) => self.as_ref().as_point().cast(to_type),
+            LineString(_, XYZ) => self.as_ref().as_line_string().cast(to_type),
+            Polygon(_, XYZ) => self.as_ref().as_polygon().cast(to_type),
+            MultiPoint(_, XYZ) => self.as_ref().as_multi_point().cast(to_type),
+            MultiLineString(_, XYZ) => self.as_ref().as_multi_line_string().cast(to_type),
+            MultiPolygon(_, XYZ) => self.as_ref().as_multi_polygon().cast(to_type),
+            Mixed(_, XYZ) => self.as_ref().as_mixed().cast(to_type),
+            GeometryCollection(_, XYZ) => self.as_ref().as_geometry_collection().cast(to_type),
             _ => todo!(),
         }
     }
@@ -379,22 +379,22 @@ macro_rules! impl_chunked_cast_generic {
     };
 }
 
-impl_chunked_cast_non_generic!(ChunkedPointArray<2>);
-impl_chunked_cast_non_generic!(ChunkedRectArray<2>);
+impl_chunked_cast_non_generic!(ChunkedPointArray);
+impl_chunked_cast_non_generic!(ChunkedRectArray);
 impl_chunked_cast_non_generic!(&dyn ChunkedNativeArray);
-impl_chunked_cast_generic!(ChunkedLineStringArray<2>);
-impl_chunked_cast_generic!(ChunkedPolygonArray<2>);
-impl_chunked_cast_generic!(ChunkedMultiPointArray<2>);
-impl_chunked_cast_generic!(ChunkedMultiLineStringArray<2>);
-impl_chunked_cast_generic!(ChunkedMultiPolygonArray<2>);
-impl_chunked_cast_generic!(ChunkedMixedGeometryArray<2>);
-impl_chunked_cast_generic!(ChunkedGeometryCollectionArray<2>);
-impl_chunked_cast_non_generic!(ChunkedPointArray<3>);
-impl_chunked_cast_non_generic!(ChunkedRectArray<3>);
-impl_chunked_cast_generic!(ChunkedLineStringArray<3>);
-impl_chunked_cast_generic!(ChunkedPolygonArray<3>);
-impl_chunked_cast_generic!(ChunkedMultiPointArray<3>);
-impl_chunked_cast_generic!(ChunkedMultiLineStringArray<3>);
-impl_chunked_cast_generic!(ChunkedMultiPolygonArray<3>);
-impl_chunked_cast_generic!(ChunkedMixedGeometryArray<3>);
-impl_chunked_cast_generic!(ChunkedGeometryCollectionArray<3>);
+impl_chunked_cast_generic!(ChunkedLineStringArray);
+impl_chunked_cast_generic!(ChunkedPolygonArray);
+impl_chunked_cast_generic!(ChunkedMultiPointArray);
+impl_chunked_cast_generic!(ChunkedMultiLineStringArray);
+impl_chunked_cast_generic!(ChunkedMultiPolygonArray);
+impl_chunked_cast_generic!(ChunkedMixedGeometryArray);
+impl_chunked_cast_generic!(ChunkedGeometryCollectionArray);
+impl_chunked_cast_non_generic!(ChunkedPointArray);
+impl_chunked_cast_non_generic!(ChunkedRectArray);
+impl_chunked_cast_generic!(ChunkedLineStringArray);
+impl_chunked_cast_generic!(ChunkedPolygonArray);
+impl_chunked_cast_generic!(ChunkedMultiPointArray);
+impl_chunked_cast_generic!(ChunkedMultiLineStringArray);
+impl_chunked_cast_generic!(ChunkedMultiPolygonArray);
+impl_chunked_cast_generic!(ChunkedMixedGeometryArray);
+impl_chunked_cast_generic!(ChunkedGeometryCollectionArray);

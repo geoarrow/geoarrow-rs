@@ -11,7 +11,7 @@ use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a MultiLineString
 #[derive(Debug, Clone)]
-pub struct MultiLineString<'a, const D: usize> {
+pub struct MultiLineString<'a> {
     pub(crate) coords: &'a CoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
@@ -25,7 +25,7 @@ pub struct MultiLineString<'a, const D: usize> {
     start_offset: usize,
 }
 
-impl<'a, const D: usize> MultiLineString<'a, D> {
+impl<'a> MultiLineString<'a> {
     pub fn new(
         coords: &'a CoordBuffer,
         geom_offsets: &'a OffsetBuffer<i32>,
@@ -43,7 +43,7 @@ impl<'a, const D: usize> MultiLineString<'a, D> {
     }
 
     pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, OffsetBuffer<i32>, usize) {
-        let arr = MultiLineStringArray::<D>::new(
+        let arr = MultiLineStringArray::new(
             self.coords.clone(),
             self.geom_offsets.clone(),
             self.ring_offsets.clone(),
@@ -60,7 +60,7 @@ impl<'a, const D: usize> MultiLineString<'a, D> {
     }
 }
 
-impl<'a, const D: usize> NativeScalar for MultiLineString<'a, D> {
+impl<'a> NativeScalar for MultiLineString<'a> {
     type ScalarGeo = geo::MultiLineString;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -77,9 +77,9 @@ impl<'a, const D: usize> NativeScalar for MultiLineString<'a, D> {
     }
 }
 
-impl<'a, const D: usize> MultiLineStringTrait for MultiLineString<'a, D> {
+impl<'a> MultiLineStringTrait for MultiLineString<'a> {
     type T = f64;
-    type LineStringType<'b> = LineString<'a, D> where Self: 'b;
+    type LineStringType<'b> = LineString<'a> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         self.coords.dim().into()
@@ -95,9 +95,9 @@ impl<'a, const D: usize> MultiLineStringTrait for MultiLineString<'a, D> {
     }
 }
 
-impl<'a, const D: usize> MultiLineStringTrait for &'a MultiLineString<'a, D> {
+impl<'a> MultiLineStringTrait for &'a MultiLineString<'a> {
     type T = f64;
-    type LineStringType<'b> = LineString<'a, D> where Self: 'b;
+    type LineStringType<'b> = LineString<'a> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         self.coords.dim().into()
@@ -113,20 +113,20 @@ impl<'a, const D: usize> MultiLineStringTrait for &'a MultiLineString<'a, D> {
     }
 }
 
-impl<const D: usize> From<MultiLineString<'_, D>> for geo::MultiLineString {
-    fn from(value: MultiLineString<'_, D>) -> Self {
+impl From<MultiLineString<'_>> for geo::MultiLineString {
+    fn from(value: MultiLineString<'_>) -> Self {
         (&value).into()
     }
 }
 
-impl<const D: usize> From<&MultiLineString<'_, D>> for geo::MultiLineString {
-    fn from(value: &MultiLineString<'_, D>) -> Self {
+impl From<&MultiLineString<'_>> for geo::MultiLineString {
+    fn from(value: &MultiLineString<'_>) -> Self {
         multi_line_string_to_geo(value)
     }
 }
 
-impl<const D: usize> From<MultiLineString<'_, D>> for geo::Geometry {
-    fn from(value: MultiLineString<'_, D>) -> Self {
+impl From<MultiLineString<'_>> for geo::Geometry {
+    fn from(value: MultiLineString<'_>) -> Self {
         geo::Geometry::MultiLineString(value.into())
     }
 }

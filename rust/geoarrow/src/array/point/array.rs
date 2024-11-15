@@ -23,7 +23,7 @@ use arrow_schema::{DataType, Field};
 ///
 /// This is semantically equivalent to `Vec<Option<Point>>` due to the internal validity bitmap.
 #[derive(Debug, Clone)]
-pub struct PointArray<const D: usize> {
+pub struct PointArray {
     // Always NativeType::Point
     data_type: NativeType,
     pub(crate) metadata: Arc<ArrayMetadata>,
@@ -41,7 +41,7 @@ pub(super) fn check(coords: &CoordBuffer, validity_len: Option<usize>) -> Result
     Ok(())
 }
 
-impl<const D: usize> PointArray<D> {
+impl PointArray {
     /// Create a new PointArray from parts
     ///
     /// # Implementation
@@ -74,7 +74,7 @@ impl<const D: usize> PointArray<D> {
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
         check(&coords, validity.as_ref().map(|v| v.len()))?;
-        let data_type = NativeType::Point(coords.coord_type(), D.try_into()?);
+        let data_type = NativeType::Point(coords.coord_type(), coords.dim());
         Ok(Self {
             data_type,
             coords,
@@ -146,7 +146,7 @@ impl<const D: usize> PointArray<D> {
     }
 }
 
-impl<const D: usize> ArrayBase for PointArray<D> {
+impl ArrayBase for PointArray {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -190,7 +190,7 @@ impl<const D: usize> ArrayBase for PointArray<D> {
     }
 }
 
-impl<const D: usize> NativeArray for PointArray<D> {
+impl NativeArray for PointArray {
     fn data_type(&self) -> NativeType {
         self.data_type
     }
@@ -222,7 +222,7 @@ impl<const D: usize> NativeArray for PointArray<D> {
     }
 }
 
-impl<const D: usize> GeometryArraySelfMethods<D> for PointArray<D> {
+impl GeometryArraySelfMethods for PointArray {
     fn with_coords(self, coords: CoordBuffer) -> Self {
         assert_eq!(coords.len(), self.coords.len());
         Self::new(coords, self.validity, self.metadata)
@@ -233,25 +233,25 @@ impl<const D: usize> GeometryArraySelfMethods<D> for PointArray<D> {
     }
 }
 
-impl<const D: usize> NativeGeometryAccessor<D> for PointArray<D> {
-    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry<D> {
+impl NativeGeometryAccessor for PointArray {
+    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry {
         Geometry::Point(Point::new(&self.coords, index))
     }
 }
 
 #[cfg(feature = "geos")]
-impl<'a, const D: usize> crate::trait_::NativeGEOSGeometryAccessor<'a> for PointArray<D> {
+impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for PointArray {
     unsafe fn value_as_geometry_unchecked(
         &'a self,
         index: usize,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
-        let geom = Point::<D>::new(&self.coords, index);
+        let geom = Point::new(&self.coords, index);
         (&geom).try_into()
     }
 }
 
-impl<'a, const D: usize> ArrayAccessor<'a> for PointArray<D> {
-    type Item = Point<'a, D>;
+impl<'a> ArrayAccessor<'a> for PointArray {
+    type Item = Point<'a>;
     type ItemGeo = geo::Point;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
@@ -259,7 +259,7 @@ impl<'a, const D: usize> ArrayAccessor<'a> for PointArray<D> {
     }
 }
 
-impl<const D: usize> IntoArrow for PointArray<D> {
+impl IntoArrow for PointArray {
     type ArrowArray = Arc<dyn Array>;
 
     fn into_arrow(self) -> Self::ArrowArray {
@@ -279,7 +279,7 @@ impl<const D: usize> IntoArrow for PointArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<&FixedSizeListArray> for PointArray<D> {
+impl TryFrom<&FixedSizeListArray> for PointArray {
     type Error = GeoArrowError;
 
     fn try_from(value: &FixedSizeListArray) -> Result<Self> {
@@ -293,7 +293,7 @@ impl<const D: usize> TryFrom<&FixedSizeListArray> for PointArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<&StructArray> for PointArray<D> {
+impl TryFrom<&StructArray> for PointArray {
     type Error = GeoArrowError;
 
     fn try_from(value: &StructArray) -> Result<Self> {
@@ -307,7 +307,7 @@ impl<const D: usize> TryFrom<&StructArray> for PointArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<&dyn Array> for PointArray<D> {
+impl TryFrom<&dyn Array> for PointArray {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self> {
@@ -327,7 +327,7 @@ impl<const D: usize> TryFrom<&dyn Array> for PointArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<(&dyn Array, &Field)> for PointArray<D> {
+impl TryFrom<(&dyn Array, &Field)> for PointArray {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
@@ -337,31 +337,31 @@ impl<const D: usize> TryFrom<(&dyn Array, &Field)> for PointArray<D> {
     }
 }
 
-impl<G: PointTrait<T = f64>, const D: usize> From<Vec<Option<G>>> for PointArray<D> {
+impl<G: PointTrait<T = f64>, const D: usize> From<Vec<Option<G>>> for PointArray {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: PointBuilder<D> = other.into();
+        let mut_arr: PointBuilder = other.into();
         mut_arr.into()
     }
 }
 
-impl<G: PointTrait<T = f64>, const D: usize> From<&[G]> for PointArray<D> {
+impl<G: PointTrait<T = f64>, const D: usize> From<&[G]> for PointArray {
     fn from(other: &[G]) -> Self {
-        let mut_arr: PointBuilder<D> = other.into();
+        let mut_arr: PointBuilder = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for PointArray<D> {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for PointArray {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
-        let mut_arr: PointBuilder<D> = value.try_into()?;
+        let mut_arr: PointBuilder = value.try_into()?;
         Ok(mut_arr.into())
     }
 }
 
 /// Default to an empty array
-impl<const D: usize> Default for PointArray<D> {
+impl Default for PointArray {
     fn default() -> Self {
         PointBuilder::default().into()
     }
@@ -369,7 +369,7 @@ impl<const D: usize> Default for PointArray<D> {
 
 // Implement a custom PartialEq for PointArray to allow Point(EMPTY) comparisons, which is stored
 // as (NaN, NaN). By default, these resolve to false
-impl<const D: usize> PartialEq for PointArray<D> {
+impl PartialEq for PointArray {
     fn eq(&self, other: &Self) -> bool {
         if self.validity != other.validity {
             return false;
@@ -398,10 +398,10 @@ impl<const D: usize> PartialEq for PointArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<MultiPointArray<D>> for PointArray<D> {
+impl TryFrom<MultiPointArray> for PointArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: MultiPointArray<D>) -> Result<Self> {
+    fn try_from(value: MultiPointArray) -> Result<Self> {
         if !can_downcast_multi(&value.geom_offsets) {
             return Err(GeoArrowError::General("Unable to cast".to_string()));
         }
@@ -414,10 +414,10 @@ impl<const D: usize> TryFrom<MultiPointArray<D>> for PointArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<MixedGeometryArray<D>> for PointArray<D> {
+impl TryFrom<MixedGeometryArray> for PointArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: MixedGeometryArray<D>) -> Result<Self> {
+    fn try_from(value: MixedGeometryArray) -> Result<Self> {
         if value.has_line_strings()
             || value.has_polygons()
             || value.has_multi_line_strings()
@@ -434,7 +434,7 @@ impl<const D: usize> TryFrom<MixedGeometryArray<D>> for PointArray<D> {
             return value.multi_points.try_into();
         }
 
-        let mut builder = PointBuilder::<D>::with_capacity_and_options(
+        let mut builder = PointBuilder::with_capacity_and_options(
             value.len(),
             value.coord_type(),
             value.metadata(),
@@ -446,10 +446,10 @@ impl<const D: usize> TryFrom<MixedGeometryArray<D>> for PointArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<GeometryCollectionArray<D>> for PointArray<D> {
+impl TryFrom<GeometryCollectionArray> for PointArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: GeometryCollectionArray<D>) -> Result<Self> {
+    fn try_from(value: GeometryCollectionArray) -> Result<Self> {
         MixedGeometryArray::try_from(value)?.try_into()
     }
 }
@@ -466,7 +466,7 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate() {
-        let arr: PointArray<2> = vec![p0(), p1(), p2()].as_slice().into();
+        let arr: PointArray = vec![p0(), p1(), p2()].as_slice().into();
         assert_eq!(arr.value_as_geo(0), p0());
         assert_eq!(arr.value_as_geo(1), p1());
         assert_eq!(arr.value_as_geo(2), p2());
@@ -474,7 +474,7 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate_option_vec() {
-        let arr: PointArray<2> = vec![Some(p0()), Some(p1()), Some(p2()), None].into();
+        let arr: PointArray = vec![Some(p0()), Some(p1()), Some(p2()), None].into();
         assert_eq!(arr.get_as_geo(0), Some(p0()));
         assert_eq!(arr.get_as_geo(1), Some(p1()));
         assert_eq!(arr.get_as_geo(2), Some(p2()));
@@ -484,7 +484,7 @@ mod test {
     #[test]
     fn slice() {
         let points: Vec<Point> = vec![p0(), p1(), p2()];
-        let point_array: PointArray<2> = points.as_slice().into();
+        let point_array: PointArray = points.as_slice().into();
         let sliced = point_array.slice(1, 1);
         assert_eq!(sliced.len(), 1);
         assert_eq!(sliced.get_as_geo(0), Some(p1()));
@@ -493,7 +493,7 @@ mod test {
     #[test]
     fn owned_slice() {
         let points: Vec<Point> = vec![p0(), p1(), p2()];
-        let point_array: PointArray<2> = points.as_slice().into();
+        let point_array: PointArray = points.as_slice().into();
         let sliced = point_array.owned_slice(1, 1);
 
         assert_eq!(point_array.len(), 3);
@@ -507,7 +507,7 @@ mod test {
         let geom_arr = example_point_interleaved();
 
         let wkb_arr = example_point_wkb();
-        let parsed_geom_arr: PointArray<2> = wkb_arr.try_into().unwrap();
+        let parsed_geom_arr: PointArray = wkb_arr.try_into().unwrap();
 
         // Comparisons on the point array directly currently fail because of NaN values in
         // coordinate 1.
@@ -520,7 +520,7 @@ mod test {
         let geom_arr = example_point_separated();
 
         let wkb_arr = example_point_wkb();
-        let parsed_geom_arr: PointArray<2> = wkb_arr.try_into().unwrap();
+        let parsed_geom_arr: PointArray = wkb_arr.try_into().unwrap();
 
         assert_eq!(geom_arr, parsed_geom_arr);
     }

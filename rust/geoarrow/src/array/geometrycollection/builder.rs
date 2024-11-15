@@ -21,17 +21,17 @@ use geo_traits::{
 ///
 /// Converting an [`GeometryCollectionBuilder`] into a [`GeometryCollectionArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct GeometryCollectionBuilder<const D: usize> {
+pub struct GeometryCollectionBuilder {
     metadata: Arc<ArrayMetadata>,
 
-    pub(crate) geoms: MixedGeometryBuilder<D>,
+    pub(crate) geoms: MixedGeometryBuilder,
 
     pub(crate) geom_offsets: OffsetsBuilder<i32>,
 
     pub(crate) validity: NullBufferBuilder,
 }
 
-impl<'a, const D: usize> GeometryCollectionBuilder<D> {
+impl<'a> GeometryCollectionBuilder {
     /// Creates a new empty [`GeometryCollectionBuilder`].
     pub fn new() -> Self {
         Self::new_with_options(Default::default(), Default::default(), DEFAULT_PREFER_MULTI)
@@ -102,17 +102,11 @@ impl<'a, const D: usize> GeometryCollectionBuilder<D> {
     }
 
     /// Extract the low-level APIs from the [`GeometryCollectionBuilder`].
-    pub fn into_inner(
-        self,
-    ) -> (
-        MixedGeometryBuilder<D>,
-        OffsetsBuilder<i32>,
-        NullBufferBuilder,
-    ) {
+    pub fn into_inner(self) -> (MixedGeometryBuilder, OffsetsBuilder<i32>, NullBufferBuilder) {
         (self.geoms, self.geom_offsets, self.validity)
     }
 
-    pub fn finish(self) -> GeometryCollectionArray<D> {
+    pub fn finish(self) -> GeometryCollectionArray {
         self.into()
     }
 
@@ -376,7 +370,7 @@ impl<'a, const D: usize> GeometryCollectionBuilder<D> {
     }
 }
 
-impl<const D: usize> GeometryArrayBuilder for GeometryCollectionBuilder<D> {
+impl GeometryArrayBuilder for GeometryCollectionBuilder {
     fn new() -> Self {
         Self::new()
     }
@@ -423,23 +417,23 @@ impl<const D: usize> GeometryArrayBuilder for GeometryCollectionBuilder<D> {
     }
 }
 
-impl<const D: usize> IntoArrow for GeometryCollectionBuilder<D> {
+impl IntoArrow for GeometryCollectionBuilder {
     type ArrowArray = GenericListArray<i32>;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let linestring_arr: GeometryCollectionArray<D> = self.into();
+        let linestring_arr: GeometryCollectionArray = self.into();
         linestring_arr.into_arrow()
     }
 }
 
-impl<const D: usize> Default for GeometryCollectionBuilder<D> {
+impl Default for GeometryCollectionBuilder {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<const D: usize> From<GeometryCollectionBuilder<D>> for GeometryCollectionArray<D> {
-    fn from(mut other: GeometryCollectionBuilder<D>) -> Self {
+impl From<GeometryCollectionBuilder> for GeometryCollectionArray {
+    fn from(mut other: GeometryCollectionBuilder) -> Self {
         let validity = other.validity.finish();
         Self::new(
             other.geoms.into(),
@@ -450,20 +444,20 @@ impl<const D: usize> From<GeometryCollectionBuilder<D>> for GeometryCollectionAr
     }
 }
 
-impl<const D: usize> From<GeometryCollectionBuilder<D>> for GenericListArray<i32> {
-    fn from(arr: GeometryCollectionBuilder<D>) -> Self {
+impl From<GeometryCollectionBuilder> for GenericListArray<i32> {
+    fn from(arr: GeometryCollectionBuilder) -> Self {
         arr.into_arrow()
     }
 }
 
-impl<G: GeometryCollectionTrait<T = f64>> From<&[G]> for GeometryCollectionBuilder<2> {
+impl<G: GeometryCollectionTrait<T = f64>> From<&[G]> for GeometryCollectionBuilder {
     fn from(geoms: &[G]) -> Self {
         Self::from_geometry_collections(geoms, Default::default(), Default::default(), true)
             .unwrap()
     }
 }
 
-impl<G: GeometryCollectionTrait<T = f64>> From<Vec<Option<G>>> for GeometryCollectionBuilder<2> {
+impl<G: GeometryCollectionTrait<T = f64>> From<Vec<Option<G>>> for GeometryCollectionBuilder {
     fn from(geoms: Vec<Option<G>>) -> Self {
         Self::from_nullable_geometry_collections(
             &geoms,
@@ -475,7 +469,7 @@ impl<G: GeometryCollectionTrait<T = f64>> From<Vec<Option<G>>> for GeometryColle
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryCollectionBuilder<2> {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryCollectionBuilder {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {

@@ -226,14 +226,14 @@ fn parse_wkb_column(arr: &dyn Array, target_geo_data_type: NativeType) -> Result
     }
 }
 
-fn parse_point_column<const D: usize>(array: &dyn Array) -> Result<Arc<dyn Array>> {
+fn parse_point_column(array: &dyn Array) -> Result<Arc<dyn Array>> {
     let geom_arr: PointArray<D> = array.try_into()?;
     Ok(geom_arr.into_array_ref())
 }
 
 macro_rules! impl_parse_fn {
     ($fn_name:ident, $geoarrow_type:ty) => {
-        fn $fn_name<const D: usize>(array: &dyn Array) -> Result<Arc<dyn Array>> {
+        fn $fn_name(array: &dyn Array) -> Result<Arc<dyn Array>> {
             match array.data_type() {
                 DataType::List(_) | DataType::LargeList(_) => {
                     let geom_arr: $geoarrow_type = array.try_into()?;

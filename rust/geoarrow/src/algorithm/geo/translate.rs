@@ -52,7 +52,7 @@ pub trait Translate {
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl Translate for PointArray<2> {
+impl Translate for PointArray {
     type Output = Self;
 
     fn translate(
@@ -110,17 +110,17 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<2>, LineStringBuilder<2>, push_line_string);
-iter_geo_impl!(PolygonArray<2>, PolygonBuilder<2>, push_polygon);
-iter_geo_impl!(MultiPointArray<2>, MultiPointBuilder<2>, push_multi_point);
+iter_geo_impl!(LineStringArray, LineStringBuilder, push_line_string);
+iter_geo_impl!(PolygonArray, PolygonBuilder, push_polygon);
+iter_geo_impl!(MultiPointArray, MultiPointBuilder, push_multi_point);
 iter_geo_impl!(
-    MultiLineStringArray<2>,
-    MultiLineStringBuilder<2>,
+    MultiLineStringArray,
+    MultiLineStringBuilder,
     push_multi_line_string
 );
 iter_geo_impl!(
-    MultiPolygonArray<2>,
-    MultiPolygonBuilder<2>,
+    MultiPolygonArray,
+    MultiPolygonBuilder,
     push_multi_polygon
 );
 

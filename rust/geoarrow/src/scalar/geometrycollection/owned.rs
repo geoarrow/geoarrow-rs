@@ -1,11 +1,12 @@
 use crate::algorithm::native::eq::geometry_collection_eq;
 use crate::array::{GeometryCollectionArray, MixedGeometryArray};
+use crate::datatypes::Dimension;
 use crate::scalar::{Geometry, GeometryCollection};
 use arrow_buffer::OffsetBuffer;
 use geo_traits::GeometryCollectionTrait;
 
 #[derive(Clone, Debug)]
-pub struct OwnedGeometryCollection<const D: usize> {
+pub struct OwnedGeometryCollection {
     array: MixedGeometryArray<D>,
 
     /// Offsets into the geometry array where each geometry starts
@@ -14,7 +15,7 @@ pub struct OwnedGeometryCollection<const D: usize> {
     geom_index: usize,
 }
 
-impl<const D: usize> OwnedGeometryCollection<D> {
+impl OwnedGeometryCollection<D> {
     pub fn new(
         array: MixedGeometryArray<D>,
         geom_offsets: OffsetBuffer<i32>,
@@ -28,7 +29,7 @@ impl<const D: usize> OwnedGeometryCollection<D> {
     }
 }
 
-impl<'a, const D: usize> From<&'a OwnedGeometryCollection<D>> for GeometryCollection<'a, D> {
+impl<'a> From<&'a OwnedGeometryCollection<D>> for GeometryCollection<'a> {
     fn from(value: &'a OwnedGeometryCollection<D>) -> Self {
         Self::new(&value.array, &value.geom_offsets, value.geom_index)
     }
@@ -41,29 +42,27 @@ impl<'a> From<&'a OwnedGeometryCollection<2>> for geo::GeometryCollection {
     }
 }
 
-impl<'a, const D: usize> From<GeometryCollection<'a, D>> for OwnedGeometryCollection<D> {
-    fn from(value: GeometryCollection<'a, D>) -> Self {
+impl<'a> From<GeometryCollection<'a>> for OwnedGeometryCollection<D> {
+    fn from(value: GeometryCollection<'a>) -> Self {
         let (array, geom_offsets, geom_index) = value.into_inner();
         Self::new(array.clone(), geom_offsets.clone(), geom_index)
     }
 }
 
-impl<const D: usize> From<OwnedGeometryCollection<D>> for GeometryCollectionArray<D> {
+impl From<OwnedGeometryCollection<D>> for GeometryCollectionArray<D> {
     fn from(value: OwnedGeometryCollection<D>) -> Self {
         Self::new(value.array, value.geom_offsets, None, Default::default())
     }
 }
 
-impl<const D: usize> GeometryCollectionTrait for OwnedGeometryCollection<D> {
+impl GeometryCollectionTrait for OwnedGeometryCollection<D> {
     type T = f64;
-    type GeometryType<'b> = Geometry<'b, D> where Self: 'b;
+    type GeometryType<'b> = Geometry<'b> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
+        match self.coords.dim() {
+            Dimension::XY => geo_traits::Dimensions::Xy,
+            Dimension::XYZ => geo_traits::Dimensions::Xyz,
         }
     }
 

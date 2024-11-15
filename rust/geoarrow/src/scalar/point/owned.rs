@@ -5,12 +5,12 @@ use crate::scalar::{Coord, Point};
 use geo_traits::PointTrait;
 
 #[derive(Clone, Debug)]
-pub struct OwnedPoint<const D: usize> {
+pub struct OwnedPoint {
     coords: CoordBuffer,
     geom_index: usize,
 }
 
-impl<const D: usize> OwnedPoint<D> {
+impl OwnedPoint {
     pub fn new(coords: CoordBuffer, geom_index: usize) -> Self {
         Self { coords, geom_index }
     }
@@ -20,26 +20,26 @@ impl<const D: usize> OwnedPoint<D> {
     }
 }
 
-impl<'a, const D: usize> From<&'a OwnedPoint<D>> for Point<'a, D> {
-    fn from(value: &'a OwnedPoint<D>) -> Self {
+impl<'a> From<&'a OwnedPoint> for Point<'a> {
+    fn from(value: &'a OwnedPoint) -> Self {
         Self::new(&value.coords, value.geom_index)
     }
 }
 
-impl<'a, const D: usize> From<Point<'a, D>> for OwnedPoint<D> {
-    fn from(value: Point<'a, D>) -> Self {
+impl<'a> From<Point<'a>> for OwnedPoint {
+    fn from(value: Point<'a>) -> Self {
         let (coords, geom_index) = value.into_owned_inner();
         Self::new(coords, geom_index)
     }
 }
 
-impl<const D: usize> From<OwnedPoint<D>> for PointArray<D> {
-    fn from(value: OwnedPoint<D>) -> Self {
+impl From<OwnedPoint> for PointArray {
+    fn from(value: OwnedPoint) -> Self {
         Self::new(value.coords, None, Default::default())
     }
 }
 
-impl<const D: usize> PointTrait for OwnedPoint<D> {
+impl PointTrait for OwnedPoint {
     type T = f64;
     type CoordType<'a> = Coord<'a>;
 
@@ -57,19 +57,19 @@ impl<const D: usize> PointTrait for OwnedPoint<D> {
     }
 }
 
-impl<const D: usize> From<OwnedPoint<D>> for geo::Point {
-    fn from(value: OwnedPoint<D>) -> Self {
+impl From<OwnedPoint> for geo::Point {
+    fn from(value: OwnedPoint) -> Self {
         (&value).into()
     }
 }
 
-impl<const D: usize> From<&OwnedPoint<D>> for geo::Point {
-    fn from(value: &OwnedPoint<D>) -> Self {
+impl From<&OwnedPoint> for geo::Point {
+    fn from(value: &OwnedPoint) -> Self {
         point_to_geo(value)
     }
 }
 
-impl<const D: usize> PartialEq for OwnedPoint<D> {
+impl PartialEq for OwnedPoint {
     fn eq(&self, other: &Self) -> bool {
         point_eq(self, other)
     }

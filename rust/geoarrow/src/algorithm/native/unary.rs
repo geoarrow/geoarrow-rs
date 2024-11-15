@@ -86,20 +86,20 @@ pub trait Unary<'a>: ArrayAccessor<'a> {
     }
 }
 
-impl<'a, const D: usize> Unary<'a> for PointArray<D> {}
-impl<'a, const D: usize> Unary<'a> for LineStringArray<D> {}
-impl<'a, const D: usize> Unary<'a> for PolygonArray<D> {}
-impl<'a, const D: usize> Unary<'a> for MultiPointArray<D> {}
-impl<'a, const D: usize> Unary<'a> for MultiLineStringArray<D> {}
-impl<'a, const D: usize> Unary<'a> for MultiPolygonArray<D> {}
-impl<'a, const D: usize> Unary<'a> for MixedGeometryArray<D> {}
-impl<'a, const D: usize> Unary<'a> for GeometryCollectionArray<D> {}
-impl<'a, const D: usize> Unary<'a> for RectArray<D> {}
+impl<'a> Unary<'a> for PointArray {}
+impl<'a> Unary<'a> for LineStringArray {}
+impl<'a> Unary<'a> for PolygonArray {}
+impl<'a> Unary<'a> for MultiPointArray {}
+impl<'a> Unary<'a> for MultiLineStringArray {}
+impl<'a> Unary<'a> for MultiPolygonArray {}
+impl<'a> Unary<'a> for MixedGeometryArray {}
+impl<'a> Unary<'a> for GeometryCollectionArray {}
+impl<'a> Unary<'a> for RectArray {}
 impl<'a, O: OffsetSizeTrait> Unary<'a> for WKBArray<O> {}
 
 #[allow(dead_code)]
 pub trait UnaryPoint<'a>: ArrayAccessor<'a> + NativeArray {
-    fn unary_point<F, G>(&'a self, op: F) -> PointArray<2>
+    fn unary_point<F, G>(&'a self, op: F) -> PointArray
     where
         G: PointTrait<T = f64> + 'a,
         F: Fn(Self::Item) -> &'a G,
@@ -113,7 +113,7 @@ pub trait UnaryPoint<'a>: ArrayAccessor<'a> + NativeArray {
         result
     }
 
-    fn try_unary_point<F, G, E>(&'a self, op: F) -> std::result::Result<PointArray<2>, E>
+    fn try_unary_point<F, G, E>(&'a self, op: F) -> std::result::Result<PointArray, E>
     where
         G: PointTrait<T = f64> + 'a,
         F: Fn(Self::Item) -> std::result::Result<G, E>,
@@ -133,12 +133,12 @@ pub trait UnaryPoint<'a>: ArrayAccessor<'a> + NativeArray {
     }
 }
 
-impl<'a> UnaryPoint<'a> for PointArray<2> {}
-impl<'a> UnaryPoint<'a> for LineStringArray<2> {}
-impl<'a> UnaryPoint<'a> for PolygonArray<2> {}
-impl<'a> UnaryPoint<'a> for MultiPointArray<2> {}
-impl<'a> UnaryPoint<'a> for MultiLineStringArray<2> {}
-impl<'a> UnaryPoint<'a> for MultiPolygonArray<2> {}
-impl<'a> UnaryPoint<'a> for MixedGeometryArray<2> {}
-impl<'a> UnaryPoint<'a> for GeometryCollectionArray<2> {}
-impl<'a> UnaryPoint<'a> for RectArray<2> {}
+impl<'a> UnaryPoint<'a> for PointArray {}
+impl<'a> UnaryPoint<'a> for LineStringArray {}
+impl<'a> UnaryPoint<'a> for PolygonArray {}
+impl<'a> UnaryPoint<'a> for MultiPointArray {}
+impl<'a> UnaryPoint<'a> for MultiLineStringArray {}
+impl<'a> UnaryPoint<'a> for MultiPolygonArray {}
+impl<'a> UnaryPoint<'a> for MixedGeometryArray {}
+impl<'a> UnaryPoint<'a> for GeometryCollectionArray {}
+impl<'a> UnaryPoint<'a> for RectArray {}

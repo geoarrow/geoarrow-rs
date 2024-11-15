@@ -10,7 +10,7 @@ pub trait TotalBounds {
     fn total_bounds(&self) -> BoundingRect;
 }
 
-impl<const D: usize> TotalBounds for PointArray<D> {
+impl TotalBounds for PointArray {
     fn total_bounds(&self) -> BoundingRect {
         let mut bounds = BoundingRect::new();
         for geom in self.iter().flatten() {
@@ -20,7 +20,7 @@ impl<const D: usize> TotalBounds for PointArray<D> {
     }
 }
 
-impl<const D: usize> TotalBounds for RectArray<D> {
+impl TotalBounds for RectArray {
     fn total_bounds(&self) -> BoundingRect {
         let mut bounds = BoundingRect::new();
         for geom in self.iter().flatten() {
@@ -32,7 +32,7 @@ impl<const D: usize> TotalBounds for RectArray<D> {
 
 macro_rules! impl_array {
     ($type:ty, $func:ident) => {
-        impl<const D: usize> TotalBounds for $type {
+        impl TotalBounds for $type {
             fn total_bounds(&self) -> BoundingRect {
                 let mut bounds = BoundingRect::new();
                 for geom in self.iter().flatten() {
@@ -44,13 +44,13 @@ macro_rules! impl_array {
     };
 }
 
-impl_array!(LineStringArray<D>, add_line_string);
-impl_array!(PolygonArray<D>, add_polygon);
-impl_array!(MultiPointArray<D>, add_multi_point);
-impl_array!(MultiLineStringArray<D>, add_multi_line_string);
-impl_array!(MultiPolygonArray<D>, add_multi_polygon);
-impl_array!(MixedGeometryArray<D>, add_geometry);
-impl_array!(GeometryCollectionArray<D>, add_geometry_collection);
+impl_array!(LineStringArray, add_line_string);
+impl_array!(PolygonArray, add_polygon);
+impl_array!(MultiPointArray, add_multi_point);
+impl_array!(MultiLineStringArray, add_multi_line_string);
+impl_array!(MultiPolygonArray, add_multi_polygon);
+impl_array!(MixedGeometryArray, add_geometry);
+impl_array!(GeometryCollectionArray, add_geometry_collection);
 
 // impl<O: OffsetSizeTrait> TotalBounds for WKBArray<O> {
 //     fn total_bounds(&self) -> BoundingRect {

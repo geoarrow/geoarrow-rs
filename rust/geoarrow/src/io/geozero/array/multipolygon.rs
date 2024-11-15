@@ -6,7 +6,7 @@ use crate::io::geozero::scalar::process_multi_polygon;
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
 
-impl<const D: usize> GeozeroGeometry for MultiPolygonArray<D> {
+impl GeozeroGeometry for MultiPolygonArray<D> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -24,7 +24,7 @@ impl<const D: usize> GeozeroGeometry for MultiPolygonArray<D> {
 }
 
 /// GeoZero trait to convert to GeoArrow MultiPolygonArray.
-pub trait ToMultiPolygonArray<const D: usize> {
+pub trait ToMultiPolygonArray {
     /// Convert to GeoArrow MultiPolygonArray
     fn to_line_string_array(&self) -> geozero::error::Result<MultiPolygonArray<D>>;
 
@@ -45,7 +45,7 @@ impl<T: GeozeroGeometry, const D: usize> ToMultiPolygonArray<D> for T {
 }
 
 #[allow(unused_variables)]
-impl<const D: usize> GeomProcessor for MultiPolygonBuilder<D> {
+impl GeomProcessor for MultiPolygonBuilder<D> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         // reserve `size` geometries
         let capacity = MultiPolygonCapacity::new(0, 0, 0, size);

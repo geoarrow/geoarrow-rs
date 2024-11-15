@@ -25,13 +25,13 @@ use geo_traits::GeometryCollectionTrait;
 /// This is semantically equivalent to `Vec<Option<GeometryCollection>>` due to the internal
 /// validity bitmap.
 #[derive(Debug, Clone)]
-pub struct GeometryCollectionArray<const D: usize> {
+pub struct GeometryCollectionArray {
     // Always NativeType::GeometryCollection or NativeType::LargeGeometryCollection
     data_type: NativeType,
 
     metadata: Arc<ArrayMetadata>,
 
-    pub(crate) array: MixedGeometryArray<D>,
+    pub(crate) array: MixedGeometryArray,
 
     /// Offsets into the mixed geometry array where each geometry starts
     pub(crate) geom_offsets: OffsetBuffer<i32>,
@@ -40,21 +40,20 @@ pub struct GeometryCollectionArray<const D: usize> {
     pub(crate) validity: Option<NullBuffer>,
 }
 
-impl<const D: usize> GeometryCollectionArray<D> {
+impl GeometryCollectionArray {
     /// Create a new GeometryCollectionArray from parts
     ///
     /// # Implementation
     ///
     /// This function is `O(1)`.
     pub fn new(
-        array: MixedGeometryArray<D>,
+        array: MixedGeometryArray,
         geom_offsets: OffsetBuffer<i32>,
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let coord_type = array.coord_type();
-        let data_type = NativeType::GeometryCollection(coord_type, D.try_into().unwrap());
-
+        let data_type = NativeType::GeometryCollection(coord_type, array.dim());
         Self {
             data_type,
             array,
@@ -134,7 +133,7 @@ impl<const D: usize> GeometryCollectionArray<D> {
     }
 }
 
-impl<const D: usize> ArrayBase for GeometryCollectionArray<D> {
+impl ArrayBase for GeometryCollectionArray {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -179,7 +178,7 @@ impl<const D: usize> ArrayBase for GeometryCollectionArray<D> {
     }
 }
 
-impl<const D: usize> NativeArray for GeometryCollectionArray<D> {
+impl NativeArray for GeometryCollectionArray {
     fn data_type(&self) -> NativeType {
         self.data_type
     }
@@ -211,7 +210,7 @@ impl<const D: usize> NativeArray for GeometryCollectionArray<D> {
     }
 }
 
-impl<const D: usize> GeometryArraySelfMethods<D> for GeometryCollectionArray<D> {
+impl GeometryArraySelfMethods for GeometryCollectionArray {
     fn with_coords(self, _coords: CoordBuffer) -> Self {
         todo!()
     }
@@ -221,8 +220,8 @@ impl<const D: usize> GeometryArraySelfMethods<D> for GeometryCollectionArray<D> 
     }
 }
 
-impl<const D: usize> NativeGeometryAccessor<D> for GeometryCollectionArray<D> {
-    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry<D> {
+impl NativeGeometryAccessor for GeometryCollectionArray {
+    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry {
         Geometry::GeometryCollection(GeometryCollection::new(
             &self.array,
             &self.geom_offsets,
@@ -232,9 +231,7 @@ impl<const D: usize> NativeGeometryAccessor<D> for GeometryCollectionArray<D> {
 }
 
 #[cfg(feature = "geos")]
-impl<'a, const D: usize> crate::trait_::NativeGEOSGeometryAccessor<'a>
-    for GeometryCollectionArray<D>
-{
+impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for GeometryCollectionArray {
     unsafe fn value_as_geometry_unchecked(
         &'a self,
         index: usize,
@@ -244,8 +241,8 @@ impl<'a, const D: usize> crate::trait_::NativeGEOSGeometryAccessor<'a>
     }
 }
 
-impl<'a, const D: usize> ArrayAccessor<'a> for GeometryCollectionArray<D> {
-    type Item = GeometryCollection<'a, D>;
+impl<'a> ArrayAccessor<'a> for GeometryCollectionArray {
+    type Item = GeometryCollection<'a>;
     type ItemGeo = geo::GeometryCollection;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
@@ -253,7 +250,7 @@ impl<'a, const D: usize> ArrayAccessor<'a> for GeometryCollectionArray<D> {
     }
 }
 
-impl<const D: usize> IntoArrow for GeometryCollectionArray<D> {
+impl IntoArrow for GeometryCollectionArray {
     type ArrowArray = GenericListArray<i32>;
 
     fn into_arrow(self) -> Self::ArrowArray {
@@ -264,11 +261,11 @@ impl<const D: usize> IntoArrow for GeometryCollectionArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<&GenericListArray<i32>> for GeometryCollectionArray<D> {
+impl TryFrom<&GenericListArray<i32>> for GeometryCollectionArray {
     type Error = GeoArrowError;
 
     fn try_from(value: &GenericListArray<i32>) -> Result<Self> {
-        let geoms: MixedGeometryArray<D> = value.values().as_ref().try_into()?;
+        let geoms: MixedGeometryArray = value.values().as_ref().try_into()?;
         let geom_offsets = value.offsets();
         let validity = value.nulls();
 
@@ -281,11 +278,11 @@ impl<const D: usize> TryFrom<&GenericListArray<i32>> for GeometryCollectionArray
     }
 }
 
-impl<const D: usize> TryFrom<&GenericListArray<i64>> for GeometryCollectionArray<D> {
+impl TryFrom<&GenericListArray<i64>> for GeometryCollectionArray {
     type Error = GeoArrowError;
 
     fn try_from(value: &GenericListArray<i64>) -> Result<Self> {
-        let geoms: MixedGeometryArray<D> = value.values().as_ref().try_into()?;
+        let geoms: MixedGeometryArray = value.values().as_ref().try_into()?;
         let geom_offsets = offsets_buffer_i64_to_i32(value.offsets())?;
         let validity = value.nulls();
 
@@ -298,7 +295,7 @@ impl<const D: usize> TryFrom<&GenericListArray<i64>> for GeometryCollectionArray
     }
 }
 
-impl<const D: usize> TryFrom<&dyn Array> for GeometryCollectionArray<D> {
+impl TryFrom<&dyn Array> for GeometryCollectionArray {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self> {
@@ -319,7 +316,7 @@ impl<const D: usize> TryFrom<&dyn Array> for GeometryCollectionArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<(&dyn Array, &Field)> for GeometryCollectionArray<D> {
+impl TryFrom<(&dyn Array, &Field)> for GeometryCollectionArray {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
@@ -329,37 +326,37 @@ impl<const D: usize> TryFrom<(&dyn Array, &Field)> for GeometryCollectionArray<D
     }
 }
 
-impl<G: GeometryCollectionTrait<T = f64>> From<&[G]> for GeometryCollectionArray<2> {
+impl<G: GeometryCollectionTrait<T = f64>> From<&[G]> for GeometryCollectionArray {
     fn from(other: &[G]) -> Self {
-        let mut_arr: GeometryCollectionBuilder<2> = other.into();
+        let mut_arr: GeometryCollectionBuilder = other.into();
         mut_arr.into()
     }
 }
 
-impl<G: GeometryCollectionTrait<T = f64>> From<Vec<Option<G>>> for GeometryCollectionArray<2> {
+impl<G: GeometryCollectionTrait<T = f64>> From<Vec<Option<G>>> for GeometryCollectionArray {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: GeometryCollectionBuilder<2> = other.into();
+        let mut_arr: GeometryCollectionBuilder = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryCollectionArray<2> {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryCollectionArray {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
-        let mut_arr: GeometryCollectionBuilder<2> = value.try_into()?;
+        let mut_arr: GeometryCollectionBuilder = value.try_into()?;
         Ok(mut_arr.into())
     }
 }
 
 /// Default to an empty array
-impl<const D: usize> Default for GeometryCollectionArray<D> {
+impl Default for GeometryCollectionArray {
     fn default() -> Self {
         GeometryCollectionBuilder::default().into()
     }
 }
 
-impl<const D: usize> PartialEq for GeometryCollectionArray<D> {
+impl PartialEq for GeometryCollectionArray {
     fn eq(&self, other: &Self) -> bool {
         if self.validity != other.validity {
             return false;
@@ -377,42 +374,42 @@ impl<const D: usize> PartialEq for GeometryCollectionArray<D> {
     }
 }
 
-impl<const D: usize> From<PointArray<D>> for GeometryCollectionArray<D> {
-    fn from(value: PointArray<D>) -> Self {
-        MixedGeometryArray::<D>::from(value).into()
+impl From<PointArray> for GeometryCollectionArray {
+    fn from(value: PointArray) -> Self {
+        MixedGeometryArray::from(value).into()
     }
 }
 
-impl<const D: usize> From<LineStringArray<D>> for GeometryCollectionArray<D> {
-    fn from(value: LineStringArray<D>) -> Self {
-        MixedGeometryArray::<D>::from(value).into()
+impl From<LineStringArray> for GeometryCollectionArray {
+    fn from(value: LineStringArray) -> Self {
+        MixedGeometryArray::from(value).into()
     }
 }
 
-impl<const D: usize> From<PolygonArray<D>> for GeometryCollectionArray<D> {
-    fn from(value: PolygonArray<D>) -> Self {
-        MixedGeometryArray::<D>::from(value).into()
+impl From<PolygonArray> for GeometryCollectionArray {
+    fn from(value: PolygonArray) -> Self {
+        MixedGeometryArray::from(value).into()
     }
 }
-impl<const D: usize> From<MultiPointArray<D>> for GeometryCollectionArray<D> {
-    fn from(value: MultiPointArray<D>) -> Self {
-        MixedGeometryArray::<D>::from(value).into()
+impl From<MultiPointArray> for GeometryCollectionArray {
+    fn from(value: MultiPointArray) -> Self {
+        MixedGeometryArray::from(value).into()
     }
 }
-impl<const D: usize> From<MultiLineStringArray<D>> for GeometryCollectionArray<D> {
-    fn from(value: MultiLineStringArray<D>) -> Self {
-        MixedGeometryArray::<D>::from(value).into()
+impl From<MultiLineStringArray> for GeometryCollectionArray {
+    fn from(value: MultiLineStringArray) -> Self {
+        MixedGeometryArray::from(value).into()
     }
 }
-impl<const D: usize> From<MultiPolygonArray<D>> for GeometryCollectionArray<D> {
-    fn from(value: MultiPolygonArray<D>) -> Self {
-        MixedGeometryArray::<D>::from(value).into()
+impl From<MultiPolygonArray> for GeometryCollectionArray {
+    fn from(value: MultiPolygonArray) -> Self {
+        MixedGeometryArray::from(value).into()
     }
 }
 
-impl<const D: usize> From<MixedGeometryArray<D>> for GeometryCollectionArray<D> {
+impl From<MixedGeometryArray> for GeometryCollectionArray {
     // TODO: We should construct the correct validity buffer from the union's underlying arrays.
-    fn from(value: MixedGeometryArray<D>) -> Self {
+    fn from(value: MixedGeometryArray) -> Self {
         let metadata = value.metadata.clone();
         let geom_offsets = OffsetBuffer::from_lengths(vec![1; value.len()]);
         GeometryCollectionArray::new(value, geom_offsets, None, metadata)

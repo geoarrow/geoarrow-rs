@@ -4,10 +4,10 @@ use crate::scalar::MultiPoint;
 use geo_traits::MultiPointTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<'a, const D: usize> TryFrom<&'a MultiPoint<'_, D>> for geos::Geometry {
+impl<'a> TryFrom<&'a MultiPoint<'_>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: &'a MultiPoint<'_, D>) -> std::result::Result<geos::Geometry, geos::Error> {
+    fn try_from(value: &'a MultiPoint<'_>) -> std::result::Result<geos::Geometry, geos::Error> {
         geos::Geometry::create_multipoint(
             value
                 .points()

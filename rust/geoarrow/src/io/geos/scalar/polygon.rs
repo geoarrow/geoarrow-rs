@@ -4,10 +4,10 @@ use crate::scalar::Polygon;
 use geo_traits::PolygonTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<'a, const D: usize> TryFrom<&'a Polygon<'_, D>> for geos::Geometry {
+impl<'a> TryFrom<&'a Polygon<'_>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: &'a Polygon<'_, D>) -> std::result::Result<geos::Geometry, geos::Error> {
+    fn try_from(value: &'a Polygon<'_>) -> std::result::Result<geos::Geometry, geos::Error> {
         if let Some(exterior) = value.exterior() {
             let exterior = exterior.to_geos_linear_ring()?;
             let interiors = value

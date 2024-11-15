@@ -125,20 +125,20 @@ impl<'a, G: NativeArray + ArrayAccessor<'a>> IndexedGeometryArray<G> {
     }
 }
 
-pub type IndexedPointArray<const D: usize> = IndexedGeometryArray<PointArray<D>>;
-pub type IndexedLineStringArray<const D: usize> = IndexedGeometryArray<LineStringArray<D>>;
-pub type IndexedPolygonArray<const D: usize> = IndexedGeometryArray<PolygonArray<D>>;
-pub type IndexedMultiPointArray<const D: usize> = IndexedGeometryArray<MultiPointArray<D>>;
-pub type IndexedMultiLineStringArray<const D: usize> =
+pub type IndexedPointArray = IndexedGeometryArray<PointArray<D>>;
+pub type IndexedLineStringArray = IndexedGeometryArray<LineStringArray<D>>;
+pub type IndexedPolygonArray = IndexedGeometryArray<PolygonArray<D>>;
+pub type IndexedMultiPointArray = IndexedGeometryArray<MultiPointArray<D>>;
+pub type IndexedMultiLineStringArray =
     IndexedGeometryArray<MultiLineStringArray<D>>;
-pub type IndexedMultiPolygonArray<const D: usize> = IndexedGeometryArray<MultiPolygonArray<D>>;
-pub type IndexedMixedGeometryArray<const D: usize> = IndexedGeometryArray<MixedGeometryArray<D>>;
-pub type IndexedGeometryCollectionArray<const D: usize> =
+pub type IndexedMultiPolygonArray = IndexedGeometryArray<MultiPolygonArray<D>>;
+pub type IndexedMixedGeometryArray = IndexedGeometryArray<MixedGeometryArray<D>>;
+pub type IndexedGeometryCollectionArray =
     IndexedGeometryArray<GeometryCollectionArray<D>>;
 #[allow(dead_code)]
 pub type IndexedWKBArray<O> = IndexedGeometryArray<WKBArray<O>>;
 #[allow(dead_code)]
-pub type IndexedRectArray<const D: usize> = IndexedGeometryArray<RectArray<D>>;
+pub type IndexedRectArray = IndexedGeometryArray<RectArray<D>>;
 #[allow(dead_code)]
 pub type IndexedUnknownGeometryArray = IndexedGeometryArray<Arc<dyn NativeArray>>;
 

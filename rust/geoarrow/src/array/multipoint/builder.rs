@@ -19,7 +19,7 @@ use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, Point
 ///
 /// Converting an [`MultiPointBuilder`] into a [`MultiPointArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct MultiPointBuilder<const D: usize> {
+pub struct MultiPointBuilder {
     metadata: Arc<ArrayMetadata>,
 
     coords: CoordBufferBuilder,
@@ -30,7 +30,7 @@ pub struct MultiPointBuilder<const D: usize> {
     validity: NullBufferBuilder,
 }
 
-impl<const D: usize> MultiPointBuilder<D> {
+impl MultiPointBuilder {
     /// Creates a new empty [`MultiPointBuilder`].
     pub fn new() -> Self {
         Self::new_with_options(Default::default(), Default::default())
@@ -140,7 +140,7 @@ impl<const D: usize> MultiPointBuilder<D> {
         Arc::new(self.into_arrow())
     }
 
-    pub fn finish(self) -> MultiPointArray<D> {
+    pub fn finish(self) -> MultiPointArray {
         self.into()
     }
 
@@ -340,13 +340,13 @@ impl<const D: usize> MultiPointBuilder<D> {
     }
 }
 
-impl<const D: usize> Default for MultiPointBuilder<D> {
+impl Default for MultiPointBuilder {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<const D: usize> GeometryArrayBuilder for MultiPointBuilder<D> {
+impl GeometryArrayBuilder for MultiPointBuilder {
     fn new() -> Self {
         Self::new()
     }
@@ -393,17 +393,17 @@ impl<const D: usize> GeometryArrayBuilder for MultiPointBuilder<D> {
     }
 }
 
-impl<const D: usize> IntoArrow for MultiPointBuilder<D> {
+impl IntoArrow for MultiPointBuilder {
     type ArrowArray = GenericListArray<i32>;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let arr: MultiPointArray<D> = self.into();
+        let arr: MultiPointArray = self.into();
         arr.into_arrow()
     }
 }
 
-impl<const D: usize> From<MultiPointBuilder<D>> for MultiPointArray<D> {
-    fn from(mut other: MultiPointBuilder<D>) -> Self {
+impl From<MultiPointBuilder> for MultiPointArray {
+    fn from(mut other: MultiPointBuilder) -> Self {
         let validity = other.validity.finish();
 
         // TODO: impl shrink_to_fit for all mutable -> * impls
@@ -419,25 +419,25 @@ impl<const D: usize> From<MultiPointBuilder<D>> for MultiPointArray<D> {
     }
 }
 
-impl<const D: usize> From<MultiPointBuilder<D>> for GenericListArray<i32> {
-    fn from(arr: MultiPointBuilder<D>) -> Self {
+impl From<MultiPointBuilder> for GenericListArray<i32> {
+    fn from(arr: MultiPointBuilder) -> Self {
         arr.into_arrow()
     }
 }
 
-impl<G: MultiPointTrait<T = f64>, const D: usize> From<&[G]> for MultiPointBuilder<D> {
+impl<G: MultiPointTrait<T = f64>, const D: usize> From<&[G]> for MultiPointBuilder {
     fn from(geoms: &[G]) -> Self {
         Self::from_multi_points(geoms, Default::default(), Default::default())
     }
 }
 
-impl<G: MultiPointTrait<T = f64>, const D: usize> From<Vec<Option<G>>> for MultiPointBuilder<D> {
+impl<G: MultiPointTrait<T = f64>, const D: usize> From<Vec<Option<G>>> for MultiPointBuilder {
     fn from(geoms: Vec<Option<G>>) -> Self {
         Self::from_nullable_multi_points(&geoms, Default::default(), Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MultiPointBuilder<D> {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MultiPointBuilder {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
@@ -449,8 +449,8 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MultiPointBuil
 
 /// LineString and MultiPoint have the same layout, so enable conversions between the two to change
 /// the semantic type
-impl<const D: usize> From<MultiPointBuilder<D>> for LineStringBuilder<D> {
-    fn from(value: MultiPointBuilder<D>) -> Self {
+impl From<MultiPointBuilder> for LineStringBuilder {
+    fn from(value: MultiPointBuilder) -> Self {
         Self::try_new(
             value.coords,
             value.geom_offsets,

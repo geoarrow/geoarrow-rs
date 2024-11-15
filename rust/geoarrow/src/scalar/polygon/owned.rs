@@ -1,11 +1,12 @@
 use crate::algorithm::native::eq::polygon_eq;
 use crate::array::{CoordBuffer, PolygonArray};
+use crate::datatypes::Dimension;
 use crate::scalar::{LineString, Polygon};
 use arrow_buffer::OffsetBuffer;
 use geo_traits::PolygonTrait;
 
 #[derive(Clone, Debug)]
-pub struct OwnedPolygon<const D: usize> {
+pub struct OwnedPolygon {
     coords: CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
@@ -16,7 +17,7 @@ pub struct OwnedPolygon<const D: usize> {
     geom_index: usize,
 }
 
-impl<const D: usize> OwnedPolygon<D> {
+impl OwnedPolygon<D> {
     pub fn new(
         coords: CoordBuffer,
         geom_offsets: OffsetBuffer<i32>,
@@ -32,7 +33,7 @@ impl<const D: usize> OwnedPolygon<D> {
     }
 }
 
-impl<'a, const D: usize> From<&'a OwnedPolygon<D>> for Polygon<'a, D> {
+impl<'a> From<&'a OwnedPolygon<D>> for Polygon<'a> {
     fn from(value: &'a OwnedPolygon<D>) -> Self {
         Self::new(
             &value.coords,
@@ -50,14 +51,14 @@ impl From<OwnedPolygon<2>> for geo::Polygon {
     }
 }
 
-impl<'a, const D: usize> From<Polygon<'a, D>> for OwnedPolygon<D> {
-    fn from(value: Polygon<'a, D>) -> Self {
+impl<'a> From<Polygon<'a>> for OwnedPolygon<D> {
+    fn from(value: Polygon<'a>) -> Self {
         let (coords, geom_offsets, ring_offsets, geom_index) = value.into_owned_inner();
         Self::new(coords, geom_offsets, ring_offsets, geom_index)
     }
 }
 
-impl<const D: usize> From<OwnedPolygon<D>> for PolygonArray<D> {
+impl From<OwnedPolygon<D>> for PolygonArray<D> {
     fn from(value: OwnedPolygon<D>) -> Self {
         Self::new(
             value.coords,
@@ -69,16 +70,14 @@ impl<const D: usize> From<OwnedPolygon<D>> for PolygonArray<D> {
     }
 }
 
-impl<const D: usize> PolygonTrait for OwnedPolygon<D> {
+impl PolygonTrait for OwnedPolygon<D> {
     type T = f64;
     type RingType<'b> = LineString<'b,  D> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
+        match self.coords.dim() {
+            Dimension::XY => geo_traits::Dimensions::Xy,
+            Dimension::XYZ => geo_traits::Dimensions::Xyz,
         }
     }
 

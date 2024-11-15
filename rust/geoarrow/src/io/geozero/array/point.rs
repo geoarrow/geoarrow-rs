@@ -4,7 +4,7 @@ use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-impl<const D: usize> GeozeroGeometry for PointArray<D> {
+impl GeozeroGeometry for PointArray<D> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -22,7 +22,7 @@ impl<const D: usize> GeozeroGeometry for PointArray<D> {
 }
 
 /// GeoZero trait to convert to GeoArrow PointArray.
-pub trait ToPointArray<const D: usize> {
+pub trait ToPointArray {
     /// Convert to GeoArrow PointArray
     fn to_point_array(&self) -> geozero::error::Result<PointArray<D>>;
 
@@ -43,7 +43,7 @@ impl<T: GeozeroGeometry, const D: usize> ToPointArray<D> for T {
 }
 
 #[allow(unused_variables)]
-impl<const D: usize> GeomProcessor for PointBuilder<D> {
+impl GeomProcessor for PointBuilder<D> {
     fn empty_point(&mut self, idx: usize) -> geozero::error::Result<()> {
         self.push_empty();
         Ok(())

@@ -1,7 +1,7 @@
 use crate::algorithm::native::Unary;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
@@ -17,7 +17,7 @@ pub trait IsSimple {
 
 macro_rules! iter_geos_impl {
     ($type:ty) => {
-        impl<const D: usize> IsSimple for $type {
+        impl IsSimple for $type {
             type Output = Result<BooleanArray>;
 
             fn is_simple(&self) -> Self::Output {
@@ -27,42 +27,32 @@ macro_rules! iter_geos_impl {
     };
 }
 
-iter_geos_impl!(PointArray<D>);
-iter_geos_impl!(LineStringArray<D>);
-iter_geos_impl!(MultiPointArray<D>);
-iter_geos_impl!(MultiLineStringArray<D>);
-iter_geos_impl!(PolygonArray<D>);
-iter_geos_impl!(MultiPolygonArray<D>);
-iter_geos_impl!(MixedGeometryArray<D>);
-iter_geos_impl!(GeometryCollectionArray<D>);
-iter_geos_impl!(RectArray<D>);
+iter_geos_impl!(PointArray);
+iter_geos_impl!(LineStringArray);
+iter_geos_impl!(MultiPointArray);
+iter_geos_impl!(MultiLineStringArray);
+iter_geos_impl!(PolygonArray);
+iter_geos_impl!(MultiPolygonArray);
+iter_geos_impl!(MixedGeometryArray);
+iter_geos_impl!(GeometryCollectionArray);
+iter_geos_impl!(RectArray);
 
 impl IsSimple for &dyn NativeArray {
     type Output = Result<BooleanArray>;
 
     fn is_simple(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point::<2>().is_simple(),
-            LineString(_, XY) => self.as_line_string::<2>().is_simple(),
-            Polygon(_, XY) => self.as_polygon::<2>().is_simple(),
-            MultiPoint(_, XY) => self.as_multi_point::<2>().is_simple(),
-            MultiLineString(_, XY) => self.as_multi_line_string::<2>().is_simple(),
-            MultiPolygon(_, XY) => self.as_multi_polygon::<2>().is_simple(),
-            Mixed(_, XY) => self.as_mixed::<2>().is_simple(),
-            GeometryCollection(_, XY) => self.as_geometry_collection::<2>().is_simple(),
-            Rect(XY) => self.as_rect::<2>().is_simple(),
-            Point(_, XYZ) => self.as_point::<3>().is_simple(),
-            LineString(_, XYZ) => self.as_line_string::<3>().is_simple(),
-            Polygon(_, XYZ) => self.as_polygon::<3>().is_simple(),
-            MultiPoint(_, XYZ) => self.as_multi_point::<3>().is_simple(),
-            MultiLineString(_, XYZ) => self.as_multi_line_string::<3>().is_simple(),
-            MultiPolygon(_, XYZ) => self.as_multi_polygon::<3>().is_simple(),
-            Mixed(_, XYZ) => self.as_mixed::<3>().is_simple(),
-            GeometryCollection(_, XYZ) => self.as_geometry_collection::<3>().is_simple(),
-            Rect(XYZ) => self.as_rect::<3>().is_simple(),
+            Point(_, _) => self.as_point().is_simple(),
+            LineString(_, _) => self.as_line_string().is_simple(),
+            Polygon(_, _) => self.as_polygon().is_simple(),
+            MultiPoint(_, _) => self.as_multi_point().is_simple(),
+            MultiLineString(_, _) => self.as_multi_line_string().is_simple(),
+            MultiPolygon(_, _) => self.as_multi_polygon().is_simple(),
+            Mixed(_, _) => self.as_mixed().is_simple(),
+            GeometryCollection(_, _) => self.as_geometry_collection().is_simple(),
+            Rect(_) => self.as_rect().is_simple(),
         }
     }
 }

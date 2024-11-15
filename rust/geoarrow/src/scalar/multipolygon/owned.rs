@@ -1,11 +1,12 @@
 use crate::algorithm::native::eq::multi_polygon_eq;
 use crate::array::{CoordBuffer, MultiPolygonArray};
+use crate::datatypes::Dimension;
 use crate::scalar::{MultiPolygon, Polygon};
 use arrow_buffer::OffsetBuffer;
 use geo_traits::MultiPolygonTrait;
 
 #[derive(Clone, Debug)]
-pub struct OwnedMultiPolygon<const D: usize> {
+pub struct OwnedMultiPolygon {
     coords: CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
@@ -18,7 +19,7 @@ pub struct OwnedMultiPolygon<const D: usize> {
     geom_index: usize,
 }
 
-impl<const D: usize> OwnedMultiPolygon<D> {
+impl OwnedMultiPolygon {
     pub fn new(
         coords: CoordBuffer,
         geom_offsets: OffsetBuffer<i32>,
@@ -36,8 +37,8 @@ impl<const D: usize> OwnedMultiPolygon<D> {
     }
 }
 
-impl<'a, const D: usize> From<&'a OwnedMultiPolygon<D>> for MultiPolygon<'a, D> {
-    fn from(value: &'a OwnedMultiPolygon<D>) -> Self {
+impl<'a> From<&'a OwnedMultiPolygon> for MultiPolygon<'a> {
+    fn from(value: &'a OwnedMultiPolygon) -> Self {
         Self::new(
             &value.coords,
             &value.geom_offsets,
@@ -48,15 +49,15 @@ impl<'a, const D: usize> From<&'a OwnedMultiPolygon<D>> for MultiPolygon<'a, D> 
     }
 }
 
-impl From<OwnedMultiPolygon<2>> for geo::MultiPolygon {
-    fn from(value: OwnedMultiPolygon<2>) -> Self {
+impl From<OwnedMultiPolygon> for geo::MultiPolygon {
+    fn from(value: OwnedMultiPolygon) -> Self {
         let geom = MultiPolygon::from(&value);
         geom.into()
     }
 }
 
-impl<'a, const D: usize> From<MultiPolygon<'a, D>> for OwnedMultiPolygon<D> {
-    fn from(value: MultiPolygon<'a, D>) -> Self {
+impl<'a> From<MultiPolygon<'a>> for OwnedMultiPolygon {
+    fn from(value: MultiPolygon<'a>) -> Self {
         let (coords, geom_offsets, polygon_offsets, ring_offsets, geom_index) =
             value.into_owned_inner();
         Self::new(
@@ -69,8 +70,8 @@ impl<'a, const D: usize> From<MultiPolygon<'a, D>> for OwnedMultiPolygon<D> {
     }
 }
 
-impl<const D: usize> From<OwnedMultiPolygon<D>> for MultiPolygonArray<D> {
-    fn from(value: OwnedMultiPolygon<D>) -> Self {
+impl From<OwnedMultiPolygon> for MultiPolygonArray {
+    fn from(value: OwnedMultiPolygon) -> Self {
         Self::new(
             value.coords,
             value.geom_offsets,
@@ -82,16 +83,14 @@ impl<const D: usize> From<OwnedMultiPolygon<D>> for MultiPolygonArray<D> {
     }
 }
 
-impl<const D: usize> MultiPolygonTrait for OwnedMultiPolygon<D> {
+impl MultiPolygonTrait for OwnedMultiPolygon {
     type T = f64;
-    type PolygonType<'b> = Polygon<'b, D> where Self: 'b;
+    type PolygonType<'b> = Polygon<'b> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
+        match self.coords.dim() {
+            Dimension::XY => geo_traits::Dimensions::Xy,
+            Dimension::XYZ => geo_traits::Dimensions::Xyz,
         }
     }
 
@@ -104,7 +103,7 @@ impl<const D: usize> MultiPolygonTrait for OwnedMultiPolygon<D> {
     }
 }
 
-impl<G: MultiPolygonTrait<T = f64>> PartialEq<G> for OwnedMultiPolygon<2> {
+impl<G: MultiPolygonTrait<T = f64>> PartialEq<G> for OwnedMultiPolygon {
     fn eq(&self, other: &G) -> bool {
         multi_polygon_eq(self, other)
     }

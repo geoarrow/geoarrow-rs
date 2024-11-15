@@ -25,7 +25,7 @@ use geo_traits::RectTrait;
 ///
 /// Internally this is implemented as a FixedSizeList, laid out as minx, miny, maxx, maxy.
 #[derive(Debug, Clone, PartialEq)]
-pub struct RectArray<const D: usize> {
+pub struct RectArray {
     // Always NativeType::Rect
     data_type: NativeType,
 
@@ -40,7 +40,7 @@ pub struct RectArray<const D: usize> {
     validity: Option<NullBuffer>,
 }
 
-impl<const D: usize> RectArray<D> {
+impl RectArray {
     pub fn new(
         lower: SeparatedCoordBuffer,
         upper: SeparatedCoordBuffer,
@@ -92,7 +92,7 @@ impl<const D: usize> RectArray<D> {
     }
 }
 
-impl<const D: usize> ArrayBase for RectArray<D> {
+impl ArrayBase for RectArray {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -136,7 +136,7 @@ impl<const D: usize> ArrayBase for RectArray<D> {
     }
 }
 
-impl<const D: usize> NativeArray for RectArray<D> {
+impl NativeArray for RectArray {
     fn data_type(&self) -> NativeType {
         self.data_type
     }
@@ -168,7 +168,7 @@ impl<const D: usize> NativeArray for RectArray<D> {
     }
 }
 
-impl<const D: usize> GeometryArraySelfMethods<D> for RectArray<D> {
+impl GeometryArraySelfMethods for RectArray {
     fn with_coords(self, _coords: CoordBuffer) -> Self {
         unimplemented!()
     }
@@ -178,8 +178,8 @@ impl<const D: usize> GeometryArraySelfMethods<D> for RectArray<D> {
     }
 }
 
-impl<'a, const D: usize> ArrayAccessor<'a> for RectArray<D> {
-    type Item = Rect<'a, D>;
+impl<'a> ArrayAccessor<'a> for RectArray {
+    type Item = Rect<'a>;
     type ItemGeo = geo::Rect;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
@@ -187,7 +187,7 @@ impl<'a, const D: usize> ArrayAccessor<'a> for RectArray<D> {
     }
 }
 
-impl<const D: usize> IntoArrow for RectArray<D> {
+impl IntoArrow for RectArray {
     type ArrowArray = StructArray;
 
     fn into_arrow(self) -> Self::ArrowArray {
@@ -205,7 +205,7 @@ impl<const D: usize> IntoArrow for RectArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<&StructArray> for RectArray<D> {
+impl TryFrom<&StructArray> for RectArray {
     type Error = GeoArrowError;
 
     fn try_from(value: &StructArray) -> Result<Self, Self::Error> {
@@ -241,7 +241,7 @@ impl<const D: usize> TryFrom<&StructArray> for RectArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<&dyn Array> for RectArray<D> {
+impl TryFrom<&dyn Array> for RectArray {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
@@ -257,7 +257,7 @@ impl<const D: usize> TryFrom<&dyn Array> for RectArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<(&dyn Array, &Field)> for RectArray<D> {
+impl TryFrom<(&dyn Array, &Field)> for RectArray {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self, Self::Error> {
@@ -267,16 +267,16 @@ impl<const D: usize> TryFrom<(&dyn Array, &Field)> for RectArray<D> {
     }
 }
 
-impl<G: RectTrait<T = f64>, const D: usize> From<&[G]> for RectArray<D> {
+impl<G: RectTrait<T = f64>, const D: usize> From<&[G]> for RectArray {
     fn from(other: &[G]) -> Self {
-        let mut_arr: RectBuilder<D> = other.into();
+        let mut_arr: RectBuilder = other.into();
         mut_arr.into()
     }
 }
 
-impl<G: RectTrait<T = f64>, const D: usize> From<Vec<Option<G>>> for RectArray<D> {
+impl<G: RectTrait<T = f64>, const D: usize> From<Vec<Option<G>>> for RectArray {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: RectBuilder<D> = other.into();
+        let mut_arr: RectBuilder = other.into();
         mut_arr.into()
     }
 }

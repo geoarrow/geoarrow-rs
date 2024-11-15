@@ -4,11 +4,11 @@ use crate::scalar::MultiPolygon;
 use geo_traits::MultiPolygonTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<'a, const D: usize> TryFrom<&'a MultiPolygon<'_, D>> for geos::Geometry {
+impl<'a> TryFrom<&'a MultiPolygon<'_>> for geos::Geometry {
     type Error = geos::Error;
 
     fn try_from(
-        value: &'a MultiPolygon<'_, D>,
+        value: &'a MultiPolygon<'_>,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
         geos::Geometry::create_multipolygon(
             value
