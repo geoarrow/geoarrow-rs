@@ -11,7 +11,7 @@ use crate::array::metadata::ArrayMetadata;
 use crate::array::wkt::WKTArray;
 use crate::array::CoordType;
 use crate::array::*;
-use crate::datatypes::{Dimension, NativeType, SerializedType};
+use crate::datatypes::{NativeType, SerializedType};
 use crate::error::Result;
 use crate::trait_::{NativeArrayRef, SerializedArray, SerializedArrayRef};
 use crate::{ArrayBase, NativeArray};
@@ -29,45 +29,19 @@ impl NativeArrayDyn {
     pub fn from_arrow_array(array: &dyn Array, field: &Field) -> Result<Self> {
         let data_type = NativeType::try_from(field)?;
 
-        use Dimension::*;
         use NativeType::*;
         let geo_arr: Arc<dyn NativeArray> = match data_type {
-            Point(_, dim) => match dim {
-                XY => Arc::new(PointArray::try_from((array, field))?),
-                XYZ => Arc::new(PointArray::<3>::try_from((array, field))?),
-            },
-            LineString(_, dim) => match dim {
-                XY => Arc::new(LineStringArray::try_from((array, field))?),
-                XYZ => Arc::new(LineStringArray::<3>::try_from((array, field))?),
-            },
-            Polygon(_, dim) => match dim {
-                XY => Arc::new(PolygonArray::try_from((array, field))?),
-                XYZ => Arc::new(PolygonArray::<3>::try_from((array, field))?),
-            },
-            MultiPoint(_, dim) => match dim {
-                XY => Arc::new(MultiPointArray::try_from((array, field))?),
-                XYZ => Arc::new(MultiPointArray::<3>::try_from((array, field))?),
-            },
-            MultiLineString(_, dim) => match dim {
-                XY => Arc::new(MultiLineStringArray::try_from((array, field))?),
-                XYZ => Arc::new(MultiLineStringArray::<3>::try_from((array, field))?),
-            },
-            MultiPolygon(_, dim) => match dim {
-                XY => Arc::new(MultiPolygonArray::try_from((array, field))?),
-                XYZ => Arc::new(MultiPolygonArray::<3>::try_from((array, field))?),
-            },
-            Mixed(_, dim) => match dim {
-                XY => Arc::new(MixedGeometryArray::try_from((array, field))?),
-                XYZ => Arc::new(MixedGeometryArray::<3>::try_from((array, field))?),
-            },
-            GeometryCollection(_, dim) => match dim {
-                XY => Arc::new(GeometryCollectionArray::try_from((array, field))?),
-                XYZ => Arc::new(GeometryCollectionArray::<3>::try_from((array, field))?),
-            },
-            Rect(dim) => match dim {
-                XY => Arc::new(RectArray::try_from((array, field))?),
-                XYZ => Arc::new(RectArray::<3>::try_from((array, field))?),
-            },
+            Point(_, _) => Arc::new(PointArray::try_from((array, field))?),
+            LineString(_, _) => Arc::new(LineStringArray::try_from((array, field))?),
+            Polygon(_, _) => Arc::new(PolygonArray::try_from((array, field))?),
+            MultiPoint(_, _) => Arc::new(MultiPointArray::try_from((array, field))?),
+            MultiLineString(_, _) => Arc::new(MultiLineStringArray::try_from((array, field))?),
+            MultiPolygon(_, _) => Arc::new(MultiPolygonArray::try_from((array, field))?),
+            Mixed(_, _) => Arc::new(MixedGeometryArray::try_from((array, field))?),
+            GeometryCollection(_, _) => {
+                Arc::new(GeometryCollectionArray::try_from((array, field))?)
+            }
+            Rect(_) => Arc::new(RectArray::try_from((array, field))?),
         };
 
         Ok(Self(geo_arr))

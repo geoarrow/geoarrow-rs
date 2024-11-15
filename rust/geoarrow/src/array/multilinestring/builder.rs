@@ -59,7 +59,7 @@ impl MultiLineStringBuilder {
 
     /// Creates a new [`MultiLineStringBuilder`] with a capacity.
     pub fn with_capacity(dim: Dimension, capacity: MultiLineStringCapacity) -> Self {
-        Self::with_capacity_and_options(capacity, Default::default(), Default::default())
+        Self::with_capacity_and_options(dim, capacity, Default::default(), Default::default())
     }
 
     pub fn with_capacity_and_options(
@@ -193,17 +193,24 @@ impl MultiLineStringBuilder {
 
     pub fn with_capacity_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
+        dim: Dimension,
     ) -> Self {
-        Self::with_capacity_and_options_from_iter(geoms, Default::default(), Default::default())
+        Self::with_capacity_and_options_from_iter(
+            geoms,
+            dim,
+            Default::default(),
+            Default::default(),
+        )
     }
 
     pub fn with_capacity_and_options_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
+        dim: Dimension,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let counter = MultiLineStringCapacity::from_multi_line_strings(geoms);
-        Self::with_capacity_and_options(counter, coord_type, metadata)
+        Self::with_capacity_and_options(dim, counter, coord_type, metadata)
     }
 
     pub fn reserve_from_iter<'a>(
@@ -349,11 +356,13 @@ impl MultiLineStringBuilder {
 
     pub fn from_multi_line_strings(
         geoms: &[impl MultiLineStringTrait<T = f64>],
+        dim: Dimension,
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(Some),
+            dim,
             coord_type.unwrap_or_default(),
             metadata,
         );
@@ -363,11 +372,13 @@ impl MultiLineStringBuilder {
 
     pub fn from_nullable_multi_line_strings(
         geoms: &[Option<impl MultiLineStringTrait<T = f64>>],
+        dim: Dimension,
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(|x| x.as_ref()),
+            dim,
             coord_type.unwrap_or_default(),
             metadata,
         );
@@ -377,12 +388,17 @@ impl MultiLineStringBuilder {
 
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
+        dim: Dimension,
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
         let capacity = MultiLineStringCapacity::from_geometries(geoms.iter().map(|x| x.as_ref()))?;
-        let mut array =
-            Self::with_capacity_and_options(capacity, coord_type.unwrap_or_default(), metadata);
+        let mut array = Self::with_capacity_and_options(
+            dim,
+            capacity,
+            coord_type.unwrap_or_default(),
+            metadata,
+        );
         array.extend_from_geometry_iter(geoms.iter().map(|x| x.as_ref()))?;
         Ok(array)
     }
@@ -401,17 +417,18 @@ impl MultiLineStringBuilder {
 }
 
 impl GeometryArrayBuilder for MultiLineStringBuilder {
-    fn new() -> Self {
-        Self::new()
+    fn new(dim: Dimension) -> Self {
+        Self::new(dim)
     }
 
     fn with_geom_capacity_and_options(
+        dim: Dimension,
         geom_capacity: usize,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let capacity = MultiLineStringCapacity::new(0, 0, geom_capacity);
-        Self::with_capacity_and_options(capacity, coord_type, metadata)
+        Self::with_capacity_and_options(dim, capacity, coord_type, metadata)
     }
 
     fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
@@ -458,7 +475,7 @@ impl IntoArrow for MultiLineStringBuilder {
 
 impl Default for MultiLineStringBuilder {
     fn default() -> Self {
-        Self::new()
+        Self::new(Dimension::XY)
     }
 }
 
@@ -479,15 +496,17 @@ impl From<MultiLineStringBuilder> for MultiLineStringArray {
     }
 }
 
-impl<G: MultiLineStringTrait<T = f64>> From<&[G]> for MultiLineStringBuilder {
-    fn from(geoms: &[G]) -> Self {
-        Self::from_multi_line_strings(geoms, Default::default(), Default::default())
+impl<G: MultiLineStringTrait<T = f64>> From<(&[G], Dimension)> for MultiLineStringBuilder {
+    fn from((geoms, dim): (&[G], Dimension)) -> Self {
+        Self::from_multi_line_strings(geoms, dim, Default::default(), Default::default())
     }
 }
 
-impl<G: MultiLineStringTrait<T = f64>> From<Vec<Option<G>>> for MultiLineStringBuilder {
-    fn from(geoms: Vec<Option<G>>) -> Self {
-        Self::from_nullable_multi_line_strings(&geoms, Default::default(), Default::default())
+impl<G: MultiLineStringTrait<T = f64>> From<(Vec<Option<G>>, Dimension)>
+    for MultiLineStringBuilder
+{
+    fn from((geoms, dim): (Vec<Option<G>>, Dimension)) -> Self {
+        Self::from_nullable_multi_line_strings(&geoms, dim, Default::default(), Default::default())
     }
 }
 

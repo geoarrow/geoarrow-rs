@@ -8,15 +8,17 @@ use std::io::Cursor;
 use wkb::writer::{point_wkb_size, write_point};
 use wkb::Endianness;
 
-impl<O: OffsetSizeTrait, const D: usize> From<&PointArray<D>> for WKBArray<O> {
-    fn from(value: &PointArray<D>) -> Self {
+impl<O: OffsetSizeTrait> From<&PointArray> for WKBArray<O> {
+    fn from(value: &PointArray) -> Self {
+        let dim = value.coords.dim();
+
         let non_null_count = value
             .nulls()
             .map_or(value.len(), |validity| value.len() - validity.null_count());
 
         let validity = value.nulls().cloned();
         // only allocate space for a WKBPoint for non-null items
-        let values_len = non_null_count * point_wkb_size(geo_traits::Dimensions::Unknown(D));
+        let values_len = non_null_count * point_wkb_size(dim.into());
         let mut offsets: OffsetsBuilder<O> = OffsetsBuilder::with_capacity(value.len());
 
         let values = {
@@ -26,9 +28,7 @@ impl<O: OffsetSizeTrait, const D: usize> From<&PointArray<D>> for WKBArray<O> {
             for maybe_geom in value.iter() {
                 if let Some(geom) = maybe_geom {
                     write_point(&mut writer, &geom, Endianness::LittleEndian).unwrap();
-                    offsets
-                        .try_push_usize(point_wkb_size(geo_traits::Dimensions::Unknown(D)))
-                        .unwrap();
+                    offsets.try_push_usize(point_wkb_size(dim.into())).unwrap();
                 } else {
                     offsets.extend_constant(1);
                 }
@@ -51,18 +51,18 @@ mod test {
     #[test]
     fn round_trip() {
         // TODO: test with nulls
-        let orig_arr: PointArray<2> = vec![Some(p0()), Some(p1()), Some(p2())].into();
+        let orig_arr: PointArray = vec![Some(p0()), Some(p1()), Some(p2())].into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: PointArray<2> = wkb_arr.try_into().unwrap();
+        let new_arr: PointArray = wkb_arr.try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }
 
     #[test]
     fn round_trip_with_null() {
-        let orig_arr: PointArray<2> = vec![Some(p0()), None, Some(p1()), None, Some(p2())].into();
+        let orig_arr: PointArray = vec![Some(p0()), None, Some(p1()), None, Some(p2())].into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: PointArray<2> = wkb_arr.try_into().unwrap();
+        let new_arr: PointArray = wkb_arr.try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }

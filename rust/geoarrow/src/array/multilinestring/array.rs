@@ -464,15 +464,15 @@ impl TryFrom<(&dyn Array, &Field)> for MultiLineStringArray {
     }
 }
 
-impl<G: MultiLineStringTrait<T = f64>> From<Vec<Option<G>>> for MultiLineStringArray {
-    fn from(other: Vec<Option<G>>) -> Self {
+impl<G: MultiLineStringTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for MultiLineStringArray {
+    fn from(other: (Vec<Option<G>>, Dimension)) -> Self {
         let mut_arr: MultiLineStringBuilder = other.into();
         mut_arr.into()
     }
 }
 
-impl<G: MultiLineStringTrait<T = f64>> From<&[G]> for MultiLineStringArray {
-    fn from(other: &[G]) -> Self {
+impl<G: MultiLineStringTrait<T = f64>> From<(&[G], Dimension)> for MultiLineStringArray {
+    fn from(other: (&[G], Dimension)) -> Self {
         let mut_arr: MultiLineStringBuilder = other.into();
         mut_arr.into()
     }

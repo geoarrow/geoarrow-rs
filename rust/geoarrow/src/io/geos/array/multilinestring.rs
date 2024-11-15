@@ -2,7 +2,7 @@ use crate::array::{MultiLineStringArray, MultiLineStringBuilder};
 use crate::error::Result;
 use crate::io::geos::scalar::GEOSMultiLineString;
 
-impl MultiLineStringBuilder<D> {
+impl MultiLineStringBuilder {
     pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         // TODO: don't use new_unchecked
         let geos_objects: Vec<Option<GEOSMultiLineString>> = value
@@ -13,7 +13,7 @@ impl MultiLineStringBuilder<D> {
     }
 }
 
-impl MultiLineStringArray<D> {
+impl MultiLineStringArray {
     pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         let mutable_arr = MultiLineStringBuilder::from_geos(value)?;
         Ok(mutable_arr.into())

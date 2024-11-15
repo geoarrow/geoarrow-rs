@@ -29,8 +29,9 @@ pub(crate) fn p2() -> Point {
     )
 }
 
-pub(crate) fn point_array() -> PointArray<2> {
-    vec![p0(), p1(), p2()].as_slice().into()
+pub(crate) fn point_array() -> PointArray {
+    let geoms = vec![p0(), p1(), p2()];
+    PointBuilder::from_points(geoms.iter(), Default::default(), Default::default()).finish()
 }
 
 struct CoordZ {
@@ -64,7 +65,7 @@ impl CoordTrait for CoordZ {
     }
 }
 
-pub(crate) fn point_z_array() -> PointArray<3> {
+pub(crate) fn point_z_array() -> PointArray {
     let mut builder = PointBuilder::with_capacity(3);
     let coords = vec![
         CoordZ {

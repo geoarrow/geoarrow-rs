@@ -2,7 +2,7 @@ use crate::array::{PolygonArray, PolygonBuilder};
 use crate::error::Result;
 use crate::io::geos::scalar::GEOSPolygon;
 
-impl PolygonBuilder<D> {
+impl PolygonBuilder {
     pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         // TODO: don't use new_unchecked
         let geos_objects: Vec<Option<GEOSPolygon>> = value
@@ -14,7 +14,7 @@ impl PolygonBuilder<D> {
     }
 }
 
-impl PolygonArray<D> {
+impl PolygonArray {
     pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         let mutable_arr = PolygonBuilder::from_geos(value)?;
         Ok(mutable_arr.into())

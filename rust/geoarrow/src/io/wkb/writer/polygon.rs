@@ -8,8 +8,8 @@ use std::io::Cursor;
 use wkb::writer::{polygon_wkb_size, write_polygon};
 use wkb::Endianness;
 
-impl<O: OffsetSizeTrait, const D: usize> From<&PolygonArray<D>> for WKBArray<O> {
-    fn from(value: &PolygonArray<D>) -> Self {
+impl<O: OffsetSizeTrait> From<&PolygonArray> for WKBArray<O> {
+    fn from(value: &PolygonArray) -> Self {
         let mut offsets: OffsetsBuilder<O> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
@@ -50,9 +50,9 @@ mod test {
 
     #[test]
     fn round_trip() {
-        let orig_arr: PolygonArray<2> = vec![Some(p0()), Some(p1()), None].into();
+        let orig_arr: PolygonArray = vec![Some(p0()), Some(p1()), None].into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: PolygonArray<2> = wkb_arr.clone().try_into().unwrap();
+        let new_arr: PolygonArray = wkb_arr.clone().try_into().unwrap();
 
         let wkb0 = geo::Geometry::Polygon(p0())
             .to_wkb(CoordDimensions::xy())

@@ -46,6 +46,6 @@ pub(crate) fn mp1() -> MultiPolygon {
     ])
 }
 
-pub(crate) fn mp_array() -> MultiPolygonArray<2> {
+pub(crate) fn mp_array() -> MultiPolygonArray {
     vec![mp0(), mp1()].as_slice().into()
 }

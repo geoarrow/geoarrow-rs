@@ -2,7 +2,7 @@
 
 use crate::array::metadata::ArrayMetadata;
 use crate::array::{CoordBuffer, CoordType};
-use crate::datatypes::{NativeType, SerializedType};
+use crate::datatypes::{Dimension, NativeType, SerializedType};
 use crate::error::Result;
 use crate::scalar::Geometry;
 use arrow_array::{Array, ArrayRef};
@@ -857,7 +857,7 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     /// use geoarrow::{array::PointBuilder, trait_::GeometryArrayBuilder};
     /// let builder = PointBuilder::new(Dimension::XY);
     /// ```
-    fn new() -> Self;
+    fn new(dim: Dimension) -> Self;
 
     /// Creates a new builder with capacity and other options.
     ///
@@ -879,6 +879,7 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     /// );
     /// ```
     fn with_geom_capacity_and_options(
+        dim: Dimension,
         geom_capacity: usize,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
@@ -895,8 +896,9 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     /// };
     /// let builder = PointBuilder::<2>::with_geom_capacity(2);
     /// ```
-    fn with_geom_capacity(geom_capacity: usize) -> Self {
+    fn with_geom_capacity(dim: Dimension, geom_capacity: usize) -> Self {
         GeometryArrayBuilder::with_geom_capacity_and_options(
+            dim,
             geom_capacity,
             Default::default(),
             Default::default(),

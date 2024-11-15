@@ -60,7 +60,7 @@ impl GeometryCollectionTrait for OwnedGeometryCollection {
     type GeometryType<'b> = Geometry<'b> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        match self.coords.dim() {
+        match self.array.dim() {
             Dimension::XY => geo_traits::Dimensions::Xy,
             Dimension::XYZ => geo_traits::Dimensions::Xyz,
         }

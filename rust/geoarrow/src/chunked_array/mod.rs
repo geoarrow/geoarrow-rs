@@ -568,25 +568,23 @@ impl<G: ArrayBase> TryFrom<Vec<G>> for ChunkedGeometryArray<G> {
 }
 
 /// A chunked point array.
-pub type ChunkedPointArray = ChunkedGeometryArray<PointArray<D>>;
+pub type ChunkedPointArray = ChunkedGeometryArray<PointArray>;
 /// A chunked line string array.
-pub type ChunkedLineStringArray = ChunkedGeometryArray<LineStringArray<D>>;
+pub type ChunkedLineStringArray = ChunkedGeometryArray<LineStringArray>;
 /// A chunked polygon array.
-pub type ChunkedPolygonArray = ChunkedGeometryArray<PolygonArray<D>>;
+pub type ChunkedPolygonArray = ChunkedGeometryArray<PolygonArray>;
 /// A chunked multi-point array.
-pub type ChunkedMultiPointArray = ChunkedGeometryArray<MultiPointArray<D>>;
+pub type ChunkedMultiPointArray = ChunkedGeometryArray<MultiPointArray>;
 /// A chunked mutli-line string array.
-pub type ChunkedMultiLineStringArray =
-    ChunkedGeometryArray<MultiLineStringArray<D>>;
+pub type ChunkedMultiLineStringArray = ChunkedGeometryArray<MultiLineStringArray>;
 /// A chunked multi-polygon array.
-pub type ChunkedMultiPolygonArray = ChunkedGeometryArray<MultiPolygonArray<D>>;
+pub type ChunkedMultiPolygonArray = ChunkedGeometryArray<MultiPolygonArray>;
 /// A chunked mixed geometry array.
-pub type ChunkedMixedGeometryArray = ChunkedGeometryArray<MixedGeometryArray<D>>;
+pub type ChunkedMixedGeometryArray = ChunkedGeometryArray<MixedGeometryArray>;
 /// A chunked geometry collection array.
-pub type ChunkedGeometryCollectionArray =
-    ChunkedGeometryArray<GeometryCollectionArray<D>>;
+pub type ChunkedGeometryCollectionArray = ChunkedGeometryArray<GeometryCollectionArray>;
 /// A chunked rect array.
-pub type ChunkedRectArray = ChunkedGeometryArray<RectArray<D>>;
+pub type ChunkedRectArray = ChunkedGeometryArray<RectArray>;
 /// A chunked unknown geometry array.
 #[allow(dead_code)]
 pub type ChunkedUnknownGeometryArray = ChunkedGeometryArray<Arc<dyn NativeArray>>;
@@ -797,7 +795,7 @@ pub trait ChunkedNativeArray: ChunkedArrayBase {
     }
 }
 
-impl ChunkedArrayBase for ChunkedPointArray<D> {
+impl ChunkedArrayBase for ChunkedPointArray {
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -823,7 +821,7 @@ impl ChunkedArrayBase for ChunkedPointArray<D> {
     }
 }
 
-impl ChunkedNativeArray for ChunkedPointArray<D> {
+impl ChunkedNativeArray for ChunkedPointArray {
     fn data_type(&self) -> NativeType {
         self.chunks.first().unwrap().data_type()
     }
@@ -930,15 +928,15 @@ macro_rules! impl_trait {
     };
 }
 
-impl_trait!(ChunkedLineStringArray<D>);
-impl_trait!(ChunkedPolygonArray<D>);
-impl_trait!(ChunkedMultiPointArray<D>);
-impl_trait!(ChunkedMultiLineStringArray<D>);
-impl_trait!(ChunkedMultiPolygonArray<D>);
-impl_trait!(ChunkedMixedGeometryArray<D>);
-impl_trait!(ChunkedGeometryCollectionArray<D>);
+impl_trait!(ChunkedLineStringArray);
+impl_trait!(ChunkedPolygonArray);
+impl_trait!(ChunkedMultiPointArray);
+impl_trait!(ChunkedMultiLineStringArray);
+impl_trait!(ChunkedMultiPolygonArray);
+impl_trait!(ChunkedMixedGeometryArray);
+impl_trait!(ChunkedGeometryCollectionArray);
 
-impl ChunkedArrayBase for ChunkedRectArray<D> {
+impl ChunkedArrayBase for ChunkedRectArray {
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -965,7 +963,7 @@ impl ChunkedArrayBase for ChunkedRectArray<D> {
     }
 }
 
-impl ChunkedNativeArray for ChunkedRectArray<D> {
+impl ChunkedNativeArray for ChunkedRectArray {
     fn data_type(&self) -> NativeType {
         self.chunks.first().unwrap().data_type()
     }

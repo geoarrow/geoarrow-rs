@@ -172,7 +172,7 @@ pub async fn read_postgis<'c, E: Executor<'c, Database = Postgres>>(
 ) -> Result<Option<Table>> {
     let query = sqlx::query::<Postgres>(sql);
     let mut result_stream = query.fetch(executor);
-    let mut table_builder: Option<GeoTableBuilder<MixedGeometryStreamBuilder<2>>> = None;
+    let mut table_builder: Option<GeoTableBuilder<MixedGeometryStreamBuilder>> = None;
 
     // TODO: try out chunking with `result_stream.try_chunks`
     let mut row_idx = 0;

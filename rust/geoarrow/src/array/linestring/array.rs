@@ -411,15 +411,15 @@ impl TryFrom<(&dyn Array, &Field)> for LineStringArray {
     }
 }
 
-impl<G: LineStringTrait<T = f64>> From<Vec<Option<G>>> for LineStringArray {
-    fn from(other: Vec<Option<G>>) -> Self {
+impl<G: LineStringTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for LineStringArray {
+    fn from(other: (Vec<Option<G>>, Dimension)) -> Self {
         let mut_arr: LineStringBuilder = other.into();
         mut_arr.into()
     }
 }
 
-impl<G: LineStringTrait<T = f64>> From<&[G]> for LineStringArray {
-    fn from(other: &[G]) -> Self {
+impl<G: LineStringTrait<T = f64>> From<(&[G], Dimension)> for LineStringArray {
+    fn from(other: (&[G], Dimension)) -> Self {
         let mut_arr: LineStringBuilder = other.into();
         mut_arr.into()
     }
@@ -515,6 +515,7 @@ impl TryFrom<MixedGeometryArray> for LineStringArray {
         capacity.geom_capacity += buffer_lengths.ring_capacity;
 
         let mut builder = LineStringBuilder::with_capacity_and_options(
+            value.dim(),
             capacity,
             value.coord_type(),
             value.metadata(),

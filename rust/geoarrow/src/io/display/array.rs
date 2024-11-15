@@ -78,8 +78,8 @@ macro_rules! impl_fmt_non_generic {
     };
 }
 
-impl_fmt_non_generic!(PointArray<2>, "PointArray");
-impl_fmt_non_generic!(RectArray<2>, "RectArray");
+impl_fmt_non_generic!(PointArray, "PointArray");
+impl_fmt_non_generic!(RectArray, "RectArray");
 
 macro_rules! impl_fmt_generic {
     ($struct_name:ty, $str_literal:tt) => {
@@ -122,22 +122,22 @@ macro_rules! impl_fmt_generic {
     };
 }
 
-impl_fmt_generic!(LineStringArray<2>, "LineStringArray");
-impl_fmt_generic!(PolygonArray<2>, "PolygonArray");
-impl_fmt_generic!(MultiPointArray<2>, "MultiPointArray");
-impl_fmt_generic!(MultiLineStringArray<2>, "MultiLineStringArray");
-impl_fmt_generic!(MultiPolygonArray<2>, "MultiPolygonArray");
-impl_fmt_generic!(MixedGeometryArray<2>, "MixedGeometryArray");
-impl_fmt_generic!(GeometryCollectionArray<2>, "GeometryCollectionArray");
+impl_fmt_generic!(LineStringArray, "LineStringArray");
+impl_fmt_generic!(PolygonArray, "PolygonArray");
+impl_fmt_generic!(MultiPointArray, "MultiPointArray");
+impl_fmt_generic!(MultiLineStringArray, "MultiLineStringArray");
+impl_fmt_generic!(MultiPolygonArray, "MultiPolygonArray");
+impl_fmt_generic!(MixedGeometryArray, "MixedGeometryArray");
+impl_fmt_generic!(GeometryCollectionArray, "GeometryCollectionArray");
 // impl_fmt_generic!(WKBArray<O>, "WKBArray");
 
-impl fmt::Display for PointArray<2> {
+impl fmt::Display for PointArray {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.write(f, 0)
     }
 }
 
-impl fmt::Display for RectArray<2> {
+impl fmt::Display for RectArray {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.write(f, 0)
     }
@@ -153,13 +153,13 @@ macro_rules! impl_fmt {
     };
 }
 
-impl_fmt!(LineStringArray<2>, "LineStringArray");
-impl_fmt!(PolygonArray<2>, "PolygonArray");
-impl_fmt!(MultiPointArray<2>, "MultiPointArray");
-impl_fmt!(MultiLineStringArray<2>, "MultiLineStringArray");
-impl_fmt!(MultiPolygonArray<2>, "MultiPolygonArray");
-impl_fmt!(MixedGeometryArray<2>, "MixedGeometryArray");
-impl_fmt!(GeometryCollectionArray<2>, "GeometryCollectionArray");
+impl_fmt!(LineStringArray, "LineStringArray");
+impl_fmt!(PolygonArray, "PolygonArray");
+impl_fmt!(MultiPointArray, "MultiPointArray");
+impl_fmt!(MultiLineStringArray, "MultiLineStringArray");
+impl_fmt!(MultiPolygonArray, "MultiPolygonArray");
+impl_fmt!(MixedGeometryArray, "MixedGeometryArray");
+impl_fmt!(GeometryCollectionArray, "GeometryCollectionArray");
 // impl_fmt!(WKBArray<O>, "WKBArray");
 
 #[cfg(test)]

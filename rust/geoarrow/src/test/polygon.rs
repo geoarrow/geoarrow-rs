@@ -1,4 +1,4 @@
-use crate::array::PolygonArray;
+use crate::array::{PolygonArray, PolygonBuilder};
 use geo::{polygon, Polygon};
 
 pub(crate) fn p0() -> Polygon {
@@ -29,6 +29,7 @@ pub(crate) fn p1() -> Polygon {
     )
 }
 
-pub(crate) fn p_array() -> PolygonArray<2> {
-    vec![p0(), p1()].as_slice().into()
+pub(crate) fn p_array() -> PolygonArray {
+    let geoms = vec![p0(), p1()];
+    PolygonBuilder::from_polygons(&geoms, Default::default(), Default::default()).finish()
 }

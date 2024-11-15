@@ -2,7 +2,7 @@ use crate::array::{LineStringArray, LineStringBuilder};
 use crate::error::Result;
 use crate::io::geos::scalar::GEOSLineString;
 
-impl LineStringBuilder<D> {
+impl LineStringBuilder {
     pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         // TODO: don't use new_unchecked
         let geos_objects: Vec<Option<GEOSLineString>> = value
@@ -13,7 +13,7 @@ impl LineStringBuilder<D> {
     }
 }
 
-impl LineStringArray<D> {
+impl LineStringArray {
     pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         let mutable_arr = LineStringBuilder::from_geos(value)?;
         Ok(mutable_arr.into())
@@ -34,7 +34,7 @@ mod test {
             .iter()
             .map(|opt_x| opt_x.map(|x| x.to_geos().unwrap()))
             .collect();
-        let round_trip = LineStringArray::<2>::from_geos(geos_geoms).unwrap();
+        let round_trip = LineStringArray::from_geos(geos_geoms).unwrap();
         assert_eq!(arr, round_trip);
     }
 }

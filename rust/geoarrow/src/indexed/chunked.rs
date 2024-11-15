@@ -42,24 +42,19 @@ impl<G: NativeArray> IndexedChunkedGeometryArray<G> {
     }
 }
 
-pub type IndexedChunkedPointArray = IndexedChunkedGeometryArray<PointArray<D>>;
-pub type IndexedChunkedLineStringArray =
-    IndexedChunkedGeometryArray<LineStringArray<D>>;
-pub type IndexedChunkedPolygonArray = IndexedChunkedGeometryArray<PolygonArray<D>>;
-pub type IndexedChunkedMultiPointArray =
-    IndexedChunkedGeometryArray<MultiPointArray<D>>;
-pub type IndexedChunkedMultiLineStringArray =
-    IndexedChunkedGeometryArray<MultiLineStringArray<D>>;
-pub type IndexedChunkedMultiPolygonArray =
-    IndexedChunkedGeometryArray<MultiPolygonArray<D>>;
-pub type IndexedChunkedMixedGeometryArray =
-    IndexedChunkedGeometryArray<MixedGeometryArray<D>>;
+pub type IndexedChunkedPointArray = IndexedChunkedGeometryArray<PointArray>;
+pub type IndexedChunkedLineStringArray = IndexedChunkedGeometryArray<LineStringArray>;
+pub type IndexedChunkedPolygonArray = IndexedChunkedGeometryArray<PolygonArray>;
+pub type IndexedChunkedMultiPointArray = IndexedChunkedGeometryArray<MultiPointArray>;
+pub type IndexedChunkedMultiLineStringArray = IndexedChunkedGeometryArray<MultiLineStringArray>;
+pub type IndexedChunkedMultiPolygonArray = IndexedChunkedGeometryArray<MultiPolygonArray>;
+pub type IndexedChunkedMixedGeometryArray = IndexedChunkedGeometryArray<MixedGeometryArray>;
 pub type IndexedChunkedGeometryCollectionArray =
-    IndexedChunkedGeometryArray<GeometryCollectionArray<D>>;
+    IndexedChunkedGeometryArray<GeometryCollectionArray>;
 #[allow(dead_code)]
 pub type IndexedChunkedWKBArray<O> = IndexedChunkedGeometryArray<WKBArray<O>>;
 #[allow(dead_code)]
-pub type IndexedChunkedRectArray = IndexedChunkedGeometryArray<RectArray<D>>;
+pub type IndexedChunkedRectArray = IndexedChunkedGeometryArray<RectArray>;
 #[allow(dead_code)]
 pub type IndexedChunkedUnknownGeometryArray =
     IndexedChunkedGeometryArray<Arc<dyn ChunkedNativeArray>>;

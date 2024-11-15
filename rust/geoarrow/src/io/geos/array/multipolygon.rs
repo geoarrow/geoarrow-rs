@@ -2,7 +2,7 @@ use crate::array::{MultiPolygonArray, MultiPolygonBuilder};
 use crate::error::Result;
 use crate::io::geos::scalar::GEOSMultiPolygon;
 
-impl MultiPolygonBuilder<D> {
+impl MultiPolygonBuilder {
     pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         // TODO: don't use new_unchecked
         let geos_objects: Vec<Option<GEOSMultiPolygon>> = value
@@ -13,7 +13,7 @@ impl MultiPolygonBuilder<D> {
     }
 }
 
-impl MultiPolygonArray<D> {
+impl MultiPolygonArray {
     pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         let mutable_arr = MultiPolygonBuilder::from_geos(value)?;
         Ok(mutable_arr.into())

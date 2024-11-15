@@ -6,7 +6,7 @@ use arrow_schema::Field;
 
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray};
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 
 /// A wrapper around a ChunkedNativeArray of unknown type
@@ -30,7 +30,7 @@ impl ChunkedNativeArrayDyn {
     /// use geoarrow::chunked_array::ChunkedNativeArrayDyn;
     /// use std::sync::Arc;
     ///
-    /// let array: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
+    /// let array: PointArray = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
     /// let field = array.extension_field();
     /// let array = array.into_array_ref();
     /// let chunks = vec![array.as_ref()];
@@ -57,29 +57,17 @@ impl ChunkedNativeArrayDyn {
 
         let typ = NativeType::try_from(field)?;
         let ca: Arc<dyn ChunkedNativeArray> = match typ {
-            Point(_, Dimension::XY) => impl_downcast!(PointArray<2>),
-            LineString(_, Dimension::XY) => impl_downcast!(LineStringArray<2>),
-            Polygon(_, Dimension::XY) => impl_downcast!(PolygonArray<2>),
-            MultiPoint(_, Dimension::XY) => impl_downcast!(MultiPointArray<2>),
-            MultiLineString(_, Dimension::XY) => impl_downcast!(MultiLineStringArray<2>),
-            MultiPolygon(_, Dimension::XY) => impl_downcast!(MultiPolygonArray<2>),
-            Mixed(_, Dimension::XY) => impl_downcast!(MixedGeometryArray<2>),
-            GeometryCollection(_, Dimension::XY) => {
-                impl_downcast!(GeometryCollectionArray<2>)
+            Point(_, _) => impl_downcast!(PointArray),
+            LineString(_, _) => impl_downcast!(LineStringArray),
+            Polygon(_, _) => impl_downcast!(PolygonArray),
+            MultiPoint(_, _) => impl_downcast!(MultiPointArray),
+            MultiLineString(_, _) => impl_downcast!(MultiLineStringArray),
+            MultiPolygon(_, _) => impl_downcast!(MultiPolygonArray),
+            Mixed(_, _) => impl_downcast!(MixedGeometryArray),
+            GeometryCollection(_, _) => {
+                impl_downcast!(GeometryCollectionArray)
             }
-            Rect(Dimension::XY) => impl_downcast!(RectArray<2>),
-
-            Point(_, Dimension::XYZ) => impl_downcast!(PointArray<3>),
-            LineString(_, Dimension::XYZ) => impl_downcast!(LineStringArray<3>),
-            Polygon(_, Dimension::XYZ) => impl_downcast!(PolygonArray<3>),
-            MultiPoint(_, Dimension::XYZ) => impl_downcast!(MultiPointArray<3>),
-            MultiLineString(_, Dimension::XYZ) => impl_downcast!(MultiLineStringArray<3>),
-            MultiPolygon(_, Dimension::XYZ) => impl_downcast!(MultiPolygonArray<3>),
-            Mixed(_, Dimension::XYZ) => impl_downcast!(MixedGeometryArray<3>),
-            GeometryCollection(_, Dimension::XYZ) => {
-                impl_downcast!(GeometryCollectionArray<3>)
-            }
-            Rect(Dimension::XYZ) => impl_downcast!(RectArray<3>),
+            Rect(_) => impl_downcast!(RectArray),
         };
         Ok(Self(ca))
     }
@@ -92,8 +80,8 @@ impl ChunkedNativeArrayDyn {
     /// use geoarrow::{NativeArray, array::PointArray};
     /// use geoarrow::chunked_array::ChunkedNativeArrayDyn;
     ///
-    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
-    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
+    /// let array_0: PointArray = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
+    /// let array_1: PointArray = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
     /// let chunks = vec![array_0.as_ref(), array_1.as_ref()];
     /// let chunked_array = ChunkedNativeArrayDyn::from_geoarrow_chunks(chunks.as_slice()).unwrap();
     /// ```
@@ -111,11 +99,11 @@ impl ChunkedNativeArrayDyn {
 
         if data_types.len() == 1 {
             macro_rules! impl_downcast {
-                ($cast_func:ident, $dim:expr) => {
+                ($cast_func:ident) => {
                     Arc::new(ChunkedGeometryArray::new(
                         chunks
                             .iter()
-                            .map(|chunk| chunk.as_ref().$cast_func::<$dim>().clone())
+                            .map(|chunk| chunk.as_ref().$cast_func().clone())
                             .collect(),
                     ))
                 };
@@ -123,24 +111,15 @@ impl ChunkedNativeArrayDyn {
 
             use NativeType::*;
             let result: Arc<dyn ChunkedNativeArray> = match data_types.drain().next().unwrap() {
-                Point(_, Dimension::XY) => impl_downcast!(as_point, 2),
-                LineString(_, Dimension::XY) => impl_downcast!(as_line_string, 2),
-                Polygon(_, Dimension::XY) => impl_downcast!(as_polygon, 2),
-                MultiPoint(_, Dimension::XY) => impl_downcast!(as_multi_point, 2),
-                MultiLineString(_, Dimension::XY) => impl_downcast!(as_multi_line_string, 2),
-                MultiPolygon(_, Dimension::XY) => impl_downcast!(as_multi_polygon, 2),
-                Mixed(_, Dimension::XY) => impl_downcast!(as_mixed, 2),
-                GeometryCollection(_, Dimension::XY) => impl_downcast!(as_geometry_collection, 2),
-                Point(_, Dimension::XYZ) => impl_downcast!(as_point, 3),
-                LineString(_, Dimension::XYZ) => impl_downcast!(as_line_string, 3),
-                Polygon(_, Dimension::XYZ) => impl_downcast!(as_polygon, 3),
-                MultiPoint(_, Dimension::XYZ) => impl_downcast!(as_multi_point, 3),
-                MultiLineString(_, Dimension::XYZ) => impl_downcast!(as_multi_line_string, 3),
-                MultiPolygon(_, Dimension::XYZ) => impl_downcast!(as_multi_polygon, 3),
-                Mixed(_, Dimension::XYZ) => impl_downcast!(as_mixed, 3),
-                GeometryCollection(_, Dimension::XYZ) => impl_downcast!(as_geometry_collection, 3),
-                Rect(Dimension::XY) => impl_downcast!(as_rect, 2),
-                Rect(Dimension::XYZ) => impl_downcast!(as_rect, 3),
+                Point(_, _) => impl_downcast!(as_point),
+                LineString(_, _) => impl_downcast!(as_line_string),
+                Polygon(_, _) => impl_downcast!(as_polygon),
+                MultiPoint(_, _) => impl_downcast!(as_multi_point),
+                MultiLineString(_, _) => impl_downcast!(as_multi_line_string),
+                MultiPolygon(_, _) => impl_downcast!(as_multi_polygon),
+                Mixed(_, _) => impl_downcast!(as_mixed),
+                GeometryCollection(_, _) => impl_downcast!(as_geometry_collection),
+                Rect(_) => impl_downcast!(as_rect),
             };
             Ok(Self(result))
         } else {

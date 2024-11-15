@@ -22,7 +22,7 @@ pub trait Explode {
     fn explode(&self) -> Self::Output;
 }
 
-impl Explode for PointArray<2> {
+impl Explode for PointArray {
     type Output = (Self, Option<Int32Array>);
 
     fn explode(&self) -> Self::Output {
@@ -30,7 +30,7 @@ impl Explode for PointArray<2> {
     }
 }
 
-impl Explode for LineStringArray<2> {
+impl Explode for LineStringArray {
     type Output = (Self, Option<Int32Array>);
 
     fn explode(&self) -> Self::Output {
@@ -38,7 +38,7 @@ impl Explode for LineStringArray<2> {
     }
 }
 
-impl Explode for PolygonArray<2> {
+impl Explode for PolygonArray {
     type Output = (Self, Option<Int32Array>);
 
     fn explode(&self) -> Self::Output {
@@ -67,8 +67,8 @@ fn explode_offsets(offsets: &OffsetBuffer<i32>) -> Int32Array {
     Int32Array::new(take_indices.into(), None)
 }
 
-impl Explode for MultiPointArray<2> {
-    type Output = (PointArray<2>, Option<Int32Array>);
+impl Explode for MultiPointArray {
+    type Output = (PointArray, Option<Int32Array>);
 
     fn explode(&self) -> Self::Output {
         assert_eq!(
@@ -83,8 +83,8 @@ impl Explode for MultiPointArray<2> {
     }
 }
 
-impl Explode for MultiLineStringArray<2> {
-    type Output = (LineStringArray<2>, Option<Int32Array>);
+impl Explode for MultiLineStringArray {
+    type Output = (LineStringArray, Option<Int32Array>);
 
     fn explode(&self) -> Self::Output {
         assert_eq!(
@@ -104,8 +104,8 @@ impl Explode for MultiLineStringArray<2> {
     }
 }
 
-impl Explode for MultiPolygonArray<2> {
-    type Output = (PolygonArray<2>, Option<Int32Array>);
+impl Explode for MultiPolygonArray {
+    type Output = (PolygonArray, Option<Int32Array>);
 
     fn explode(&self) -> Self::Output {
         assert_eq!(
@@ -147,8 +147,8 @@ impl Explode for &dyn NativeArray {
             MultiPoint(_, XY) => call_explode!(as_multi_point),
             MultiLineString(_, XY) => call_explode!(as_multi_line_string),
             MultiPolygon(_, XY) => call_explode!(as_multi_polygon),
-            // Mixed(_, XY) => self.as_mixed::<2>().explode(),
-            // GeometryCollection(_, XY) => self.as_geometry_collection::<2>().explode(),
+            // Mixed(_, XY) => self.as_mixed::().explode(),
+            // GeometryCollection(_, XY) => self.as_geometry_collection::().explode(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -192,15 +192,15 @@ impl Explode for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point::<2>().explode(),
-            LineString(_, XY) => self.as_line_string::<2>().explode(),
-            Polygon(_, XY) => self.as_polygon::<2>().explode(),
-            MultiPoint(_, XY) => self.as_multi_point::<2>().explode(),
-            MultiLineString(_, XY) => self.as_multi_line_string::<2>().explode(),
-            MultiPolygon(_, XY) => self.as_multi_polygon::<2>().explode(),
-            Mixed(_, XY) => self.as_mixed::<2>().explode(),
-            GeometryCollection(_, XY) => self.as_geometry_collection::<2>().explode(),
-            Rect(XY) => self.as_rect::<2>().explode(),
+            Point(_, XY) => self.as_point::().explode(),
+            LineString(_, XY) => self.as_line_string::().explode(),
+            Polygon(_, XY) => self.as_polygon::().explode(),
+            MultiPoint(_, XY) => self.as_multi_point::().explode(),
+            MultiLineString(_, XY) => self.as_multi_line_string::().explode(),
+            MultiPolygon(_, XY) => self.as_multi_polygon::().explode(),
+            Mixed(_, XY) => self.as_mixed::().explode(),
+            GeometryCollection(_, XY) => self.as_geometry_collection::().explode(),
+            Rect(XY) => self.as_rect::().explode(),
             _ => todo!(),
         }
     }
