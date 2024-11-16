@@ -53,7 +53,7 @@ impl GeometryCollectionArray {
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let coord_type = array.coord_type();
-        let data_type = NativeType::GeometryCollection(coord_type, array.dim());
+        let data_type = NativeType::GeometryCollection(coord_type, array.dimension());
         Self {
             data_type,
             array,

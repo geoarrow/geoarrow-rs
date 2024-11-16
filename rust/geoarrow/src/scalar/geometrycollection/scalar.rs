@@ -6,6 +6,7 @@ use crate::io::geo::geometry_collection_to_geo;
 use crate::scalar::Geometry;
 use crate::trait_::ArrayAccessor;
 use crate::trait_::NativeScalar;
+use crate::NativeArray;
 use arrow_buffer::OffsetBuffer;
 use geo_traits::GeometryCollectionTrait;
 use rstar::{RTreeObject, AABB};
@@ -65,7 +66,7 @@ impl<'a> GeometryCollectionTrait for GeometryCollection<'a> {
     type GeometryType<'b> = Geometry<'a> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        match self.array.dim() {
+        match self.array.dimension() {
             Dimension::XY => geo_traits::Dimensions::Xy,
             Dimension::XYZ => geo_traits::Dimensions::Xyz,
         }
@@ -86,7 +87,7 @@ impl<'a> GeometryCollectionTrait for &'a GeometryCollection<'a> {
     type GeometryType<'b> = Geometry<'a> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        match self.array.dim() {
+        match self.array.dimension() {
             Dimension::XY => geo_traits::Dimensions::Xy,
             Dimension::XYZ => geo_traits::Dimensions::Xyz,
         }

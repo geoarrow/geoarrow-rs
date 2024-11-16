@@ -286,10 +286,6 @@ impl MixedGeometryArray {
             && self.has_multi_polygons()
     }
 
-    pub fn dim(&self) -> Dimension {
-        todo!()
-    }
-
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
         self.buffer_lengths().num_bytes()

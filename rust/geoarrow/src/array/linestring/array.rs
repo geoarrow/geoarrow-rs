@@ -515,7 +515,7 @@ impl TryFrom<MixedGeometryArray> for LineStringArray {
         capacity.geom_capacity += buffer_lengths.ring_capacity;
 
         let mut builder = LineStringBuilder::with_capacity_and_options(
-            value.dim(),
+            value.dimension(),
             capacity,
             value.coord_type(),
             value.metadata(),

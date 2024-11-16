@@ -2,6 +2,7 @@ use crate::algorithm::native::eq::geometry_collection_eq;
 use crate::array::{GeometryCollectionArray, MixedGeometryArray};
 use crate::datatypes::Dimension;
 use crate::scalar::{Geometry, GeometryCollection};
+use crate::NativeArray;
 use arrow_buffer::OffsetBuffer;
 use geo_traits::GeometryCollectionTrait;
 
@@ -60,7 +61,7 @@ impl GeometryCollectionTrait for OwnedGeometryCollection {
     type GeometryType<'b> = Geometry<'b> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        match self.array.dim() {
+        match self.array.dimension() {
             Dimension::XY => geo_traits::Dimensions::Xy,
             Dimension::XYZ => geo_traits::Dimensions::Xyz,
         }

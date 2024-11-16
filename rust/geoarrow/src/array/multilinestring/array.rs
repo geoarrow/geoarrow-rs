@@ -564,7 +564,7 @@ impl TryFrom<MixedGeometryArray> for MultiLineStringArray {
         capacity += value.line_strings.buffer_lengths();
 
         let mut builder = MultiLineStringBuilder::with_capacity_and_options(
-            value.dim(),
+            value.dimension(),
             capacity,
             value.coord_type(),
             value.metadata(),

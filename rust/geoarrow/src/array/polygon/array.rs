@@ -581,7 +581,7 @@ impl TryFrom<MixedGeometryArray> for PolygonArray {
     type Error = GeoArrowError;
 
     fn try_from(value: MixedGeometryArray) -> Result<Self> {
-        let dim = value.dim();
+        let dim = value.dimension();
 
         if value.has_points()
             || value.has_line_strings()
