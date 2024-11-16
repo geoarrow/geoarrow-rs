@@ -82,7 +82,7 @@ macro_rules! iter_geo_impl {
                     .map(|maybe_g| maybe_g.map(|geom| geom.simplify(epsilon)))
                     .collect();
 
-                output_geoms.into()
+                (output_geoms, Dimension::XY).into()
             }
         }
     };
@@ -186,7 +186,7 @@ mod tests {
             (x: 17.3, y: 3.2 ),
             (x: 27.8, y: 0.1 ),
         ];
-        let input_array: LineStringArray = vec![input_geom].as_slice().into();
+        let input_array: LineStringArray = (vec![input_geom].as_slice(), Dimension::XY).into();
         let result_array = input_array.simplify(&1.0);
 
         let expected = line_string![
@@ -209,7 +209,7 @@ mod tests {
             (x: 10., y: 0.),
             (x: 0., y: 0.),
         ];
-        let input_array: PolygonArray = vec![input_geom].as_slice().into();
+        let input_array: PolygonArray = (vec![input_geom].as_slice(), Dimension::XY).into();
         let result_array = input_array.simplify(&2.0);
 
         let expected = polygon![

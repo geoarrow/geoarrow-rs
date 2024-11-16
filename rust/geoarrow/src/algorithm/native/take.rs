@@ -25,6 +25,7 @@ impl Take for PointArray {
 
     fn take(&self, indices: &UInt32Array) -> Self::Output {
         let mut builder = PointBuilder::with_capacity_and_options(
+            self.dimension(),
             indices.len(),
             self.coord_type(),
             self.metadata(),
@@ -42,6 +43,7 @@ impl Take for PointArray {
 
     fn take_range(&self, range: &Range<usize>) -> Self::Output {
         let mut builder = PointBuilder::with_capacity_and_options(
+            self.dimension(),
             range.end - range.start,
             self.coord_type(),
             self.metadata(),
@@ -68,6 +70,7 @@ macro_rules! take_impl {
                 }
 
                 let mut builder = <$builder_type>::with_capacity_and_options(
+                    self.dimension(),
                     capacity,
                     self.coord_type(),
                     self.metadata(),
@@ -92,6 +95,7 @@ macro_rules! take_impl {
                 }
 
                 let mut builder = <$builder_type>::with_capacity_and_options(
+                    self.dimension(),
                     capacity,
                     self.coord_type(),
                     self.metadata(),
@@ -156,6 +160,7 @@ macro_rules! take_impl_fallible {
                 }
 
                 let mut builder = <$builder_type>::with_capacity_and_options(
+                    self.dimension(),
                     capacity,
                     self.coord_type(),
                     self.metadata(),
@@ -181,6 +186,7 @@ macro_rules! take_impl_fallible {
                 }
 
                 let mut builder = <$builder_type>::with_capacity_and_options(
+                    self.dimension(),
                     capacity,
                     self.coord_type(),
                     self.metadata(),

@@ -42,7 +42,7 @@ macro_rules! iter_geo_impl {
                     .map(|maybe_g| maybe_g.map(|geom| geom.densify(max_distance)))
                     .collect();
 
-                output_geoms.into()
+                (output_geoms, Dimension::XY).into()
             }
         }
     };
@@ -63,9 +63,7 @@ impl Densify for &dyn NativeArray {
         let result: Arc<dyn NativeArray> = match self.data_type() {
             LineString(_, XY) => Arc::new(self.as_line_string().densify(max_distance)),
             Polygon(_, XY) => Arc::new(self.as_polygon().densify(max_distance)),
-            MultiLineString(_, XY) => {
-                Arc::new(self.as_multi_line_string().densify(max_distance))
-            }
+            MultiLineString(_, XY) => Arc::new(self.as_multi_line_string().densify(max_distance)),
             MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon().densify(max_distance)),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -102,9 +100,7 @@ impl Densify for &dyn ChunkedNativeArray {
         let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
             LineString(_, XY) => Arc::new(self.as_line_string().densify(max_distance)),
             Polygon(_, XY) => Arc::new(self.as_polygon().densify(max_distance)),
-            MultiLineString(_, XY) => {
-                Arc::new(self.as_multi_line_string().densify(max_distance))
-            }
+            MultiLineString(_, XY) => Arc::new(self.as_multi_line_string().densify(max_distance)),
             MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon().densify(max_distance)),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };

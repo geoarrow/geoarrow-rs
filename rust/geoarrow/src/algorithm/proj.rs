@@ -1,11 +1,14 @@
 //! Bindings to the [`proj`] crate for coordinate reprojection.
 
 use crate::array::*;
+use crate::datatypes::Dimension;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 use proj::{Proj, Transform};
 
 /// Reproject an array using PROJ
+///
+/// Note: this will currently return a two-dimensional array
 pub trait Reproject {
     fn reproject(&self, proj: &Proj) -> Result<Self>
     where
@@ -14,7 +17,7 @@ pub trait Reproject {
 
 impl Reproject for PointArray {
     fn reproject(&self, proj: &Proj) -> Result<Self> {
-        let mut output_array = PointBuilder::with_capacity(self.len());
+        let mut output_array = PointBuilder::with_capacity(Dimension::XY, self.len());
 
         for maybe_geom in self.iter_geo() {
             if let Some(mut geom) = maybe_geom {
@@ -33,7 +36,8 @@ macro_rules! iter_geo_impl {
     ($type:ty, $builder_type:ty, $push_func:ident) => {
         impl Reproject for $type {
             fn reproject(&self, proj: &Proj) -> Result<Self> {
-                let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
+                let mut output_array =
+                    <$builder_type>::with_capacity(Dimension::XY, self.buffer_lengths());
 
                 for maybe_geom in self.iter_geo() {
                     if let Some(mut geom) = maybe_geom {
@@ -70,7 +74,8 @@ mod test {
 
     #[test]
     fn point_round_trip() {
-        let point_array: PointArray = vec![Some(p0()), Some(p1()), Some(p2())].into();
+        let point_array: PointArray =
+            (vec![Some(p0()), Some(p1()), Some(p2())], Dimension::XY).into();
         let proj = Proj::new_known_crs("EPSG:4326", "EPSG:3857", None).unwrap();
 
         // You can verify this with PROJ on the command line:

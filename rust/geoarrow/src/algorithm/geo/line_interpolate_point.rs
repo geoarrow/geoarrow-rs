@@ -47,7 +47,7 @@ impl LineInterpolatePoint<&Float64Array> for LineStringArray {
     type Output = PointArray;
 
     fn line_interpolate_point(&self, p: &Float64Array) -> Self::Output {
-        let mut output_array = PointBuilder::with_capacity(self.len());
+        let mut output_array = PointBuilder::with_capacity(Dimension::XY, self.len());
 
         self.iter_geo()
             .zip(p)
@@ -108,7 +108,7 @@ impl LineInterpolatePoint<f64> for LineStringArray {
     type Output = PointArray;
 
     fn line_interpolate_point(&self, p: f64) -> Self::Output {
-        let mut output_array = PointBuilder::with_capacity(self.len());
+        let mut output_array = PointBuilder::with_capacity(Dimension::XY, self.len());
 
         self.iter_geo().for_each(|maybe_line_string| {
             if let Some(line_string) = maybe_line_string {

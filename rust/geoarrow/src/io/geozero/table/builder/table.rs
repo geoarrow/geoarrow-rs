@@ -8,6 +8,7 @@ use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
 use crate::array::metadata::ArrayMetadata;
 use crate::array::CoordType;
 use crate::chunked_array::ChunkedNativeArrayDyn;
+use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::io::geozero::table::builder::properties::PropertiesBatchBuilder;
 use crate::table::Table;
@@ -97,14 +98,16 @@ pub struct GeoTableBuilder<G: GeometryArrayBuilder + GeomProcessor> {
 
     /// Builder for the geometries of the current batch
     geom_builder: G,
+
+    dim: Dimension,
 }
 
 impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
-    pub fn new() -> Self {
-        Self::new_with_options(Default::default())
+    pub fn new(dim: Dimension) -> Self {
+        Self::new_with_options(dim, Default::default())
     }
 
-    pub fn new_with_options(options: GeoTableBuilderOptions) -> Self {
+    pub fn new_with_options(dim: Dimension, options: GeoTableBuilderOptions) -> Self {
         let (current_batch_size, num_batches) = if let Some(total_num_rows) = options.num_rows {
             (
                 Some(total_num_rows.min(options.batch_size)),
@@ -133,12 +136,13 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
 
         let geom_builder = if let Some(current_batch_size) = current_batch_size {
             G::with_geom_capacity_and_options(
+                dim,
                 current_batch_size,
                 options.coord_type,
                 options.metadata,
             )
         } else {
-            G::with_geom_capacity_and_options(0, options.coord_type, options.metadata)
+            G::with_geom_capacity_and_options(dim, 0, options.coord_type, options.metadata)
         };
 
         Self {
@@ -149,6 +153,7 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
             prop_builder,
             geom_arrays,
             geom_builder,
+            dim,
         }
     }
 
@@ -176,11 +181,12 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
             let batch_size = self.batch_size.min(rows_left);
             let prop_builder =
                 PropertiesBatchBuilder::from_schema_with_capacity(&next_schema, batch_size);
-            let geom_builder = G::with_geom_capacity_and_options(batch_size, coord_type, metadata);
+            let geom_builder =
+                G::with_geom_capacity_and_options(self.dim, batch_size, coord_type, metadata);
             (prop_builder, geom_builder)
         } else {
             let prop_builder = PropertiesBatchBuilder::from_schema(&next_schema);
-            let geom_builder = G::with_geom_capacity_and_options(0, coord_type, metadata);
+            let geom_builder = G::with_geom_capacity_and_options(self.dim, 0, coord_type, metadata);
             (prop_builder, geom_builder)
         };
 

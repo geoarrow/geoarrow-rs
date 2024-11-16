@@ -134,7 +134,7 @@ impl Skew for PointArray {
         x_factor: &BroadcastablePrimitive<Float64Type>,
         y_factor: &BroadcastablePrimitive<Float64Type>,
     ) -> Self {
-        let mut output_array = PointBuilder::with_capacity(self.buffer_lengths());
+        let mut output_array = PointBuilder::with_capacity(Dimension::XY, self.buffer_lengths());
 
         self.iter_geo()
             .zip(x_factor)
@@ -156,7 +156,7 @@ impl Skew for PointArray {
         y_factor: &BroadcastablePrimitive<Float64Type>,
         origin: geo::Point,
     ) -> Self {
-        let mut output_array = PointBuilder::with_capacity(self.buffer_lengths());
+        let mut output_array = PointBuilder::with_capacity(Dimension::XY, self.buffer_lengths());
 
         self.iter_geo()
             .zip(x_factor)
@@ -186,7 +186,8 @@ macro_rules! iter_geo_impl {
                 x_factor: &BroadcastablePrimitive<Float64Type>,
                 y_factor: &BroadcastablePrimitive<Float64Type>,
             ) -> Self {
-                let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
+                let mut output_array =
+                    <$builder_type>::with_capacity(Dimension::XY, self.buffer_lengths());
 
                 self.iter_geo().zip(x_factor).zip(y_factor).for_each(
                     |((maybe_g, x_factor), y_factor)| {
@@ -209,7 +210,8 @@ macro_rules! iter_geo_impl {
                 y_factor: &BroadcastablePrimitive<Float64Type>,
                 origin: geo::Point,
             ) -> Self {
-                let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
+                let mut output_array =
+                    <$builder_type>::with_capacity(Dimension::XY, self.buffer_lengths());
 
                 self.iter_geo().zip(x_factor).zip(y_factor).for_each(
                     |((maybe_g, x_factor), y_factor)| {
@@ -243,11 +245,7 @@ iter_geo_impl!(
     MultiLineStringBuilder,
     push_multi_line_string
 );
-iter_geo_impl!(
-    MultiPolygonArray,
-    MultiPolygonBuilder,
-    push_multi_polygon
-);
+iter_geo_impl!(MultiPolygonArray, MultiPolygonBuilder, push_multi_polygon);
 
 impl Skew for &dyn NativeArray {
     type Output = Result<Arc<dyn NativeArray>>;

@@ -188,20 +188,18 @@ impl Explode for &dyn ChunkedNativeArray {
     )>;
 
     fn explode(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point::().explode(),
-            LineString(_, XY) => self.as_line_string::().explode(),
-            Polygon(_, XY) => self.as_polygon::().explode(),
-            MultiPoint(_, XY) => self.as_multi_point::().explode(),
-            MultiLineString(_, XY) => self.as_multi_line_string::().explode(),
-            MultiPolygon(_, XY) => self.as_multi_polygon::().explode(),
-            Mixed(_, XY) => self.as_mixed::().explode(),
-            GeometryCollection(_, XY) => self.as_geometry_collection::().explode(),
-            Rect(XY) => self.as_rect::().explode(),
-            _ => todo!(),
+            Point(_, _) => self.as_point().explode(),
+            LineString(_, _) => self.as_line_string().explode(),
+            Polygon(_, _) => self.as_polygon().explode(),
+            MultiPoint(_, _) => self.as_multi_point().explode(),
+            MultiLineString(_, _) => self.as_multi_line_string().explode(),
+            MultiPolygon(_, _) => self.as_multi_polygon().explode(),
+            Mixed(_, _) => self.as_mixed().explode(),
+            GeometryCollection(_, _) => self.as_geometry_collection().explode(),
+            Rect(_) => self.as_rect().explode(),
         }
     }
 }

@@ -3,13 +3,14 @@ use std::sync::Arc;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::mixed::array::GeometryType;
 use crate::array::{CoordType, MixedGeometryArray, MixedGeometryBuilder};
+use crate::datatypes::Dimension;
 use crate::io::geozero::scalar::process_geometry;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
 use crate::ArrayBase;
 use crate::NativeArray;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-impl GeozeroGeometry for MixedGeometryArray<D> {
+impl GeozeroGeometry for MixedGeometryArray {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -30,19 +31,29 @@ impl GeozeroGeometry for MixedGeometryArray<D> {
 /// GeoZero trait to convert to GeoArrow MixedArray.
 pub trait ToMixedArray {
     /// Convert to GeoArrow MixedArray
-    fn to_mixed_geometry_array(&self) -> geozero::error::Result<MixedGeometryArray<D>>;
+    fn to_mixed_geometry_array(&self, dim: Dimension)
+        -> geozero::error::Result<MixedGeometryArray>;
 
     /// Convert to a GeoArrow MixedArrayBuilder
-    fn to_mixed_geometry_builder(&self) -> geozero::error::Result<MixedGeometryBuilder<D>>;
+    fn to_mixed_geometry_builder(
+        &self,
+        dim: Dimension,
+    ) -> geozero::error::Result<MixedGeometryBuilder>;
 }
 
-impl<T: GeozeroGeometry, const D: usize> ToMixedArray<D> for T {
-    fn to_mixed_geometry_array(&self) -> geozero::error::Result<MixedGeometryArray<D>> {
-        Ok(self.to_mixed_geometry_builder()?.into())
+impl<T: GeozeroGeometry> ToMixedArray for T {
+    fn to_mixed_geometry_array(
+        &self,
+        dim: Dimension,
+    ) -> geozero::error::Result<MixedGeometryArray> {
+        Ok(self.to_mixed_geometry_builder(dim)?.into())
     }
 
-    fn to_mixed_geometry_builder(&self) -> geozero::error::Result<MixedGeometryBuilder<D>> {
-        let mut stream_builder = MixedGeometryStreamBuilder::new();
+    fn to_mixed_geometry_builder(
+        &self,
+        dim: Dimension,
+    ) -> geozero::error::Result<MixedGeometryBuilder> {
+        let mut stream_builder = MixedGeometryStreamBuilder::new(dim);
         self.process_geom(&mut stream_builder)?;
         Ok(stream_builder.builder)
     }
@@ -56,7 +67,7 @@ impl<T: GeozeroGeometry, const D: usize> ToMixedArray<D> for T {
 /// Converting an [`MixedGeometryStreamBuilder`] into a [`MixedGeometryArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct MixedGeometryStreamBuilder {
-    builder: MixedGeometryBuilder<D>,
+    builder: MixedGeometryBuilder,
     // Note: we don't know if, when `linestring_end` is called, that means a ring of a polygon has
     // finished or if a tagged line string has finished. This means we can't have an "unknown" enum
     // type, because we'll never be able to set it to unknown after a line string is done, meaning
@@ -64,18 +75,24 @@ pub struct MixedGeometryStreamBuilder {
     current_geom_type: GeometryType,
 }
 
-impl MixedGeometryStreamBuilder<D> {
-    pub fn new() -> Self {
-        Self::new_with_options(Default::default(), Default::default(), true)
+impl MixedGeometryStreamBuilder {
+    pub fn new(dim: Dimension) -> Self {
+        Self::new_with_options(dim, Default::default(), Default::default(), true)
     }
 
     pub fn new_with_options(
+        dim: Dimension,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Self {
         Self {
-            builder: MixedGeometryBuilder::new_with_options(coord_type, metadata, prefer_multi),
+            builder: MixedGeometryBuilder::new_with_options(
+                dim,
+                coord_type,
+                metadata,
+                prefer_multi,
+            ),
             current_geom_type: GeometryType::Point,
         }
     }
@@ -84,19 +101,19 @@ impl MixedGeometryStreamBuilder<D> {
         self.builder.push_null()
     }
 
-    pub fn finish(self) -> MixedGeometryArray<D> {
+    pub fn finish(self) -> MixedGeometryArray {
         self.builder.finish()
     }
 }
 
-impl Default for MixedGeometryStreamBuilder<D> {
+impl Default for MixedGeometryStreamBuilder {
     fn default() -> Self {
-        Self::new()
+        Self::new(Dimension::XY)
     }
 }
 
 #[allow(unused_variables)]
-impl GeomProcessor for MixedGeometryStreamBuilder<D> {
+impl GeomProcessor for MixedGeometryStreamBuilder {
     fn xy(&mut self, x: f64, y: f64, idx: usize) -> geozero::error::Result<()> {
         match self.current_geom_type {
             GeometryType::Point => {
@@ -258,7 +275,7 @@ impl GeomProcessor for MixedGeometryStreamBuilder<D> {
     }
 }
 
-impl GeometryArrayBuilder for MixedGeometryStreamBuilder<D> {
+impl GeometryArrayBuilder for MixedGeometryStreamBuilder {
     fn len(&self) -> usize {
         self.builder.len()
     }
@@ -275,8 +292,8 @@ impl GeometryArrayBuilder for MixedGeometryStreamBuilder<D> {
         todo!()
     }
 
-    fn new() -> Self {
-        Self::with_geom_capacity_and_options(0, Default::default(), Default::default())
+    fn new(dim: Dimension) -> Self {
+        Self::with_geom_capacity_and_options(dim, 0, Default::default(), Default::default())
     }
 
     fn into_array_ref(self) -> Arc<dyn arrow_array::Array> {
@@ -284,11 +301,12 @@ impl GeometryArrayBuilder for MixedGeometryStreamBuilder<D> {
     }
 
     fn with_geom_capacity_and_options(
+        dim: Dimension,
         _geom_capacity: usize,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
-        Self::new_with_options(coord_type, metadata, true)
+        Self::new_with_options(dim, coord_type, metadata, true)
     }
 
     fn set_metadata(&mut self, metadata: Arc<ArrayMetadata>) {

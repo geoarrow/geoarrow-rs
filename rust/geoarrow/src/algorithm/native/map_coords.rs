@@ -13,6 +13,7 @@ use geo_traits::{
     MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PolygonTrait, RectTrait,
 };
 
+/// Note: this will currently always create a _two-dimensional_ output array because it returns a [`geo::Coord`].
 pub trait MapCoords {
     type Output;
 
@@ -221,6 +222,7 @@ impl MapCoords for PointArray {
         GeoArrowError: From<E>,
     {
         let mut builder = PointBuilder::with_capacity_and_options(
+            Dimension::XY,
             self.buffer_lengths(),
             self.coord_type(),
             self.metadata(),
@@ -246,6 +248,7 @@ impl MapCoords for LineStringArray {
         GeoArrowError: From<E>,
     {
         let mut builder = LineStringBuilder::with_capacity_and_options(
+            Dimension::XY,
             self.buffer_lengths(),
             self.coord_type(),
             self.metadata(),
@@ -271,6 +274,7 @@ impl MapCoords for PolygonArray {
         GeoArrowError: From<E>,
     {
         let mut builder = PolygonBuilder::with_capacity_and_options(
+            Dimension::XY,
             self.buffer_lengths(),
             self.coord_type(),
             self.metadata(),
@@ -296,6 +300,7 @@ impl MapCoords for MultiPointArray {
         GeoArrowError: From<E>,
     {
         let mut builder = MultiPointBuilder::with_capacity_and_options(
+            Dimension::XY,
             self.buffer_lengths(),
             self.coord_type(),
             self.metadata(),
@@ -321,6 +326,7 @@ impl MapCoords for MultiLineStringArray {
         GeoArrowError: From<E>,
     {
         let mut builder = MultiLineStringBuilder::with_capacity_and_options(
+            Dimension::XY,
             self.buffer_lengths(),
             self.coord_type(),
             self.metadata(),
@@ -346,6 +352,7 @@ impl MapCoords for MultiPolygonArray {
         GeoArrowError: From<E>,
     {
         let mut builder = MultiPolygonBuilder::with_capacity_and_options(
+            Dimension::XY,
             self.buffer_lengths(),
             self.coord_type(),
             self.metadata(),
@@ -371,6 +378,7 @@ impl MapCoords for MixedGeometryArray {
         GeoArrowError: From<E>,
     {
         let mut builder = MixedGeometryBuilder::with_capacity_and_options(
+            Dimension::XY,
             self.buffer_lengths(),
             self.coord_type(),
             self.metadata(),
@@ -397,6 +405,7 @@ impl MapCoords for GeometryCollectionArray {
         GeoArrowError: From<E>,
     {
         let mut builder = GeometryCollectionBuilder::with_capacity_and_options(
+            Dimension::XY,
             self.buffer_lengths(),
             self.coord_type(),
             self.metadata(),
@@ -422,7 +431,8 @@ impl MapCoords for RectArray {
         F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        let mut builder = RectBuilder::with_capacity_and_options(self.len(), self.metadata());
+        let mut builder =
+            RectBuilder::with_capacity_and_options(Dimension::XY, self.len(), self.metadata());
         for maybe_geom in self.iter() {
             if let Some(geom) = maybe_geom {
                 let result = geom.try_map_coords(&map_op)?;

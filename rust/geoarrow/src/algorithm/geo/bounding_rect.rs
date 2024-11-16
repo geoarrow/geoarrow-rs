@@ -44,7 +44,7 @@ impl BoundingRect for PointArray {
             .map(|maybe_g| maybe_g.map(|geom| geom.bounding_rect()))
             .collect();
 
-        output_geoms.into()
+        (output_geoms, Dimension::XY).into()
     }
 }
 
@@ -60,7 +60,7 @@ macro_rules! iter_geo_impl {
                     .map(|maybe_g| maybe_g.and_then(|geom| geom.bounding_rect()))
                     .collect();
 
-                output_geoms.into()
+                (output_geoms, Dimension::XY).into()
             }
         }
     };

@@ -61,7 +61,7 @@ macro_rules! iter_geo_impl {
                     .map(|maybe_g| maybe_g.map(|geom| geom.convex_hull()))
                     .collect();
 
-                output_geoms.into()
+                (output_geoms, Dimension::XY).into()
             }
         }
     };
@@ -136,6 +136,7 @@ mod tests {
     use super::ConvexHull;
     use crate::array::polygon::PolygonArray;
     use crate::array::{LineStringArray, MultiPointArray};
+    use crate::datatypes::Dimension;
     use crate::trait_::ArrayAccessor;
     use geo::{line_string, polygon, MultiPoint, Point};
 
@@ -154,7 +155,7 @@ mod tests {
             Point::new(0.0, 10.0),
         ]
         .into();
-        let input_array: MultiPointArray = vec![input_geom].as_slice().into();
+        let input_array: MultiPointArray = (vec![input_geom].as_slice(), Dimension::XY).into();
         let result_array: PolygonArray = input_array.convex_hull();
 
         let expected = polygon![
@@ -182,7 +183,7 @@ mod tests {
             (x: 0.0, y: 10.0),
         ];
 
-        let input_array: LineStringArray = vec![input_geom].as_slice().into();
+        let input_array: LineStringArray = (vec![input_geom].as_slice(), Dimension::XY).into();
         let result_array: PolygonArray = input_array.convex_hull();
 
         let expected = polygon![

@@ -166,7 +166,7 @@ mod tests {
             (x: 10., y: 1.),
             (x: 11., y: 1.)
         ];
-        let input_array: LineStringArray = vec![input_geom].as_slice().into();
+        let input_array: LineStringArray = (vec![input_geom].as_slice(), Dimension::XY).into();
         let result_array = input_array.euclidean_length();
 
         let expected = 10.0_f64;

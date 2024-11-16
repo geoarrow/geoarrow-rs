@@ -174,7 +174,7 @@ mod tests {
             // Osaka
             (x: 135.5244559, y: 34.687455),
         ];
-        let input_array: LineStringArray = vec![input_geom].as_slice().into();
+        let input_array: LineStringArray = (vec![input_geom].as_slice(), Dimension::XY).into();
         let result_array = input_array.geodesic_length();
 
         // Meters

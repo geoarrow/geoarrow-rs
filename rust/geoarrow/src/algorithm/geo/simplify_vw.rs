@@ -80,7 +80,7 @@ macro_rules! iter_geo_impl {
                     .map(|maybe_g| maybe_g.map(|geom| geom.simplify_vw(epsilon)))
                     .collect();
 
-                output_geoms.into()
+                (output_geoms, Dimension::XY).into()
             }
         }
     };
@@ -105,9 +105,7 @@ impl SimplifyVw for &dyn NativeArray {
             LineString(_, XY) => Arc::new(self.as_line_string().simplify_vw(epsilon)),
             Polygon(_, XY) => Arc::new(self.as_polygon().simplify_vw(epsilon)),
             MultiPoint(_, XY) => Arc::new(self.as_multi_point().simplify_vw(epsilon)),
-            MultiLineString(_, XY) => {
-                Arc::new(self.as_multi_line_string().simplify_vw(epsilon))
-            }
+            MultiLineString(_, XY) => Arc::new(self.as_multi_line_string().simplify_vw(epsilon)),
             MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon().simplify_vw(epsilon)),
             // Mixed(_, XY) => self.as_mixed().simplify_vw(epsilon),
             // GeometryCollection(_, XY) => self.as_geometry_collection().simplify_vw(),
@@ -160,9 +158,7 @@ impl SimplifyVw for &dyn ChunkedNativeArray {
             LineString(_, XY) => Arc::new(self.as_line_string().simplify_vw(epsilon)),
             Polygon(_, XY) => Arc::new(self.as_polygon().simplify_vw(epsilon)),
             MultiPoint(_, XY) => Arc::new(self.as_multi_point().simplify_vw(epsilon)),
-            MultiLineString(_, XY) => {
-                Arc::new(self.as_multi_line_string().simplify_vw(epsilon))
-            }
+            MultiLineString(_, XY) => Arc::new(self.as_multi_line_string().simplify_vw(epsilon)),
             MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon().simplify_vw(epsilon)),
             // Mixed(_, XY) => self.as_mixed().simplify_vw(epsilon),
             // GeometryCollection(_, XY) => self.as_geometry_collection().simplify_vw(),

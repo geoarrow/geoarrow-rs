@@ -1,3 +1,4 @@
+use crate::datatypes::Dimension;
 use crate::io::geozero::scalar::geometry_collection::process_geometry_collection;
 use crate::io::geozero::scalar::linestring::process_line_string;
 use crate::io::geozero::scalar::multilinestring::process_multi_line_string;
@@ -45,12 +46,12 @@ impl GeozeroGeometry for Geometry<'_> {
 }
 
 pub trait ToGeometry<O: OffsetSizeTrait> {
-    fn to_geometry(&self) -> geozero::error::Result<OwnedGeometry<2>>;
+    fn to_geometry(&self, dim: Dimension) -> geozero::error::Result<OwnedGeometry>;
 }
 
 impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToGeometry<O> for T {
-    fn to_geometry(&self) -> geozero::error::Result<OwnedGeometry<2>> {
-        let arr = self.to_mixed_geometry_array()?;
+    fn to_geometry(&self, dim: Dimension) -> geozero::error::Result<OwnedGeometry> {
+        let arr = self.to_mixed_geometry_array(dim)?;
         assert_eq!(arr.len(), 1);
         Ok(OwnedGeometry::from(arr.value(0)))
     }

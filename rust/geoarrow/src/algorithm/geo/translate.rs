@@ -60,7 +60,7 @@ impl Translate for PointArray {
         x_offset: &BroadcastablePrimitive<Float64Type>,
         y_offset: &BroadcastablePrimitive<Float64Type>,
     ) -> Self {
-        let mut output_array = PointBuilder::with_capacity(self.buffer_lengths());
+        let mut output_array = PointBuilder::with_capacity(Dimension::XY, self.buffer_lengths());
 
         self.iter_geo()
             .zip(x_offset)
@@ -88,7 +88,8 @@ macro_rules! iter_geo_impl {
                 x_offset: &BroadcastablePrimitive<Float64Type>,
                 y_offset: &BroadcastablePrimitive<Float64Type>,
             ) -> Self {
-                let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
+                let mut output_array =
+                    <$builder_type>::with_capacity(Dimension::XY, self.buffer_lengths());
 
                 self.iter_geo().zip(x_offset).zip(y_offset).for_each(
                     |((maybe_g, x_offset), y_offset)| {
@@ -118,11 +119,7 @@ iter_geo_impl!(
     MultiLineStringBuilder,
     push_multi_line_string
 );
-iter_geo_impl!(
-    MultiPolygonArray,
-    MultiPolygonBuilder,
-    push_multi_polygon
-);
+iter_geo_impl!(MultiPolygonArray, MultiPolygonBuilder, push_multi_polygon);
 
 impl Translate for &dyn NativeArray {
     type Output = Result<Arc<dyn NativeArray>>;

@@ -40,7 +40,7 @@ macro_rules! iter_geo_impl {
                     })
                     .collect();
 
-                output_geoms.into()
+                (output_geoms, Dimension::XY).into()
             }
         }
     };
@@ -59,14 +59,11 @@ impl ChaikinSmoothing for &dyn NativeArray {
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
-            LineString(_, XY) => {
-                Arc::new(self.as_line_string().chaikin_smoothing(n_iterations))
-            }
+            LineString(_, XY) => Arc::new(self.as_line_string().chaikin_smoothing(n_iterations)),
             Polygon(_, XY) => Arc::new(self.as_polygon().chaikin_smoothing(n_iterations)),
-            MultiLineString(_, XY) => Arc::new(
-                self.as_multi_line_string()
-                    .chaikin_smoothing(n_iterations),
-            ),
+            MultiLineString(_, XY) => {
+                Arc::new(self.as_multi_line_string().chaikin_smoothing(n_iterations))
+            }
             MultiPolygon(_, XY) => {
                 Arc::new(self.as_multi_polygon().chaikin_smoothing(n_iterations))
             }
@@ -103,14 +100,11 @@ impl ChaikinSmoothing for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
-            LineString(_, XY) => {
-                Arc::new(self.as_line_string().chaikin_smoothing(n_iterations))
-            }
+            LineString(_, XY) => Arc::new(self.as_line_string().chaikin_smoothing(n_iterations)),
             Polygon(_, XY) => Arc::new(self.as_polygon().chaikin_smoothing(n_iterations)),
-            MultiLineString(_, XY) => Arc::new(
-                self.as_multi_line_string()
-                    .chaikin_smoothing(n_iterations),
-            ),
+            MultiLineString(_, XY) => {
+                Arc::new(self.as_multi_line_string().chaikin_smoothing(n_iterations))
+            }
             MultiPolygon(_, XY) => {
                 Arc::new(self.as_multi_polygon().chaikin_smoothing(n_iterations))
             }

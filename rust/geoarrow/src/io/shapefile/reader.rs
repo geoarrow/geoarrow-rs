@@ -7,6 +7,7 @@ use geozero::FeatureProcessor;
 use shapefile::{Reader, ShapeReader, ShapeType};
 
 use crate::array::{MultiLineStringBuilder, MultiPointBuilder, MultiPolygonBuilder, PointBuilder};
+use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::io::geozero::table::builder::anyvalue::AnyBuilder;
 use crate::io::geozero::table::builder::properties::PropertiesBatchBuilder;
@@ -52,7 +53,8 @@ pub fn read_shapefile<T: Read + Seek>(shp_reader: T, dbf_reader: T) -> Result<Ta
 
     match geometry_type {
         ShapeType::Point => {
-            let mut builder = GeoTableBuilder::<PointBuilder<2>>::new_with_options(options);
+            let mut builder =
+                GeoTableBuilder::<PointBuilder>::new_with_options(Dimension::XY, options);
 
             for geom_and_record in
                 reader.iter_shapes_and_records_as::<shapefile::Point, dbase::Record>()
@@ -75,7 +77,8 @@ pub fn read_shapefile<T: Read + Seek>(shp_reader: T, dbf_reader: T) -> Result<Ta
             builder.finish()
         }
         ShapeType::PointZ => {
-            let mut builder = GeoTableBuilder::<PointBuilder<3>>::new_with_options(options);
+            let mut builder =
+                GeoTableBuilder::<PointBuilder>::new_with_options(Dimension::XYZ, options);
 
             for geom_and_record in
                 reader.iter_shapes_and_records_as::<shapefile::PointZ, dbase::Record>()
@@ -98,7 +101,8 @@ pub fn read_shapefile<T: Read + Seek>(shp_reader: T, dbf_reader: T) -> Result<Ta
             builder.finish()
         }
         ShapeType::Multipoint => {
-            let mut builder = GeoTableBuilder::<MultiPointBuilder<2>>::new_with_options(options);
+            let mut builder =
+                GeoTableBuilder::<MultiPointBuilder>::new_with_options(Dimension::XY, options);
 
             for geom_and_record in
                 reader.iter_shapes_and_records_as::<shapefile::Multipoint, dbase::Record>()
@@ -121,7 +125,8 @@ pub fn read_shapefile<T: Read + Seek>(shp_reader: T, dbf_reader: T) -> Result<Ta
             builder.finish()
         }
         ShapeType::MultipointZ => {
-            let mut builder = GeoTableBuilder::<MultiPointBuilder<3>>::new_with_options(options);
+            let mut builder =
+                GeoTableBuilder::<MultiPointBuilder>::new_with_options(Dimension::XYZ, options);
 
             for geom_and_record in
                 reader.iter_shapes_and_records_as::<shapefile::MultipointZ, dbase::Record>()

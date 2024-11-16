@@ -1,10 +1,11 @@
 use crate::array::{PointArray, PointBuilder};
+use crate::datatypes::Dimension;
 use crate::io::geozero::scalar::process_point;
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-impl GeozeroGeometry for PointArray<D> {
+impl GeozeroGeometry for PointArray {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -24,26 +25,26 @@ impl GeozeroGeometry for PointArray<D> {
 /// GeoZero trait to convert to GeoArrow PointArray.
 pub trait ToPointArray {
     /// Convert to GeoArrow PointArray
-    fn to_point_array(&self) -> geozero::error::Result<PointArray<D>>;
+    fn to_point_array(&self, dim: Dimension) -> geozero::error::Result<PointArray>;
 
     /// Convert to a GeoArrow PointBuilder
-    fn to_point_builder(&self) -> geozero::error::Result<PointBuilder<D>>;
+    fn to_point_builder(&self, dim: Dimension) -> geozero::error::Result<PointBuilder>;
 }
 
-impl<T: GeozeroGeometry, const D: usize> ToPointArray<D> for T {
-    fn to_point_array(&self) -> geozero::error::Result<PointArray<D>> {
-        Ok(self.to_point_builder()?.into())
+impl<T: GeozeroGeometry> ToPointArray for T {
+    fn to_point_array(&self, dim: Dimension) -> geozero::error::Result<PointArray> {
+        Ok(self.to_point_builder(dim)?.into())
     }
 
-    fn to_point_builder(&self) -> geozero::error::Result<PointBuilder<D>> {
-        let mut mutable_point_array = PointBuilder::new();
+    fn to_point_builder(&self, dim: Dimension) -> geozero::error::Result<PointBuilder> {
+        let mut mutable_point_array = PointBuilder::new(dim);
         self.process_geom(&mut mutable_point_array)?;
         Ok(mutable_point_array)
     }
 }
 
 #[allow(unused_variables)]
-impl GeomProcessor for PointBuilder<D> {
+impl GeomProcessor for PointBuilder {
     fn empty_point(&mut self, idx: usize) -> geozero::error::Result<()> {
         self.push_empty();
         Ok(())
@@ -162,7 +163,6 @@ impl GeomProcessor for PointBuilder<D> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::array::PointArray;
     use crate::trait_::ArrayAccessor;
     use geo::{line_string, point, Geometry, GeometryCollection, LineString, Point};
 
@@ -201,7 +201,7 @@ mod test {
             ]
             .into(),
         );
-        let point_array: PointArray<2> = geo.to_point_array().unwrap();
+        let point_array = geo.to_point_array(Dimension::XY).unwrap();
         assert_eq!(point_array.value_as_geo(0), p0());
         assert_eq!(point_array.value_as_geo(1), p1());
         assert_eq!(point_array.value_as_geo(2), p2());
@@ -213,7 +213,7 @@ mod test {
             Geometry::Point(p0()),
             Geometry::LineString(ls0()),
         ]));
-        let err = ToPointArray::<2>::to_point_array(&geo).unwrap_err();
+        let err = ToPointArray::to_point_array(&geo, Dimension::XY).unwrap_err();
         assert!(matches!(err, geozero::error::GeozeroError::Geometry(..)));
     }
 }

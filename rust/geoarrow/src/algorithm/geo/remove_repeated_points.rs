@@ -41,7 +41,8 @@ macro_rules! iter_geo_impl {
             type Output = Self;
 
             fn remove_repeated_points(&self) -> Self::Output {
-                let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
+                let mut output_array =
+                    <$builder_type>::with_capacity(Dimension::XY, self.buffer_lengths());
 
                 self.iter_geo().for_each(|maybe_g| {
                     output_array
@@ -63,11 +64,7 @@ iter_geo_impl!(
     MultiLineStringBuilder,
     push_multi_line_string
 );
-iter_geo_impl!(
-    MultiPolygonArray,
-    MultiPolygonBuilder,
-    push_multi_polygon
-);
+iter_geo_impl!(MultiPolygonArray, MultiPolygonBuilder, push_multi_polygon);
 // iter_geo_impl!(MixedGeometryArray, MixedGeometryBuilder, push_geometry);
 // iter_geo_impl!(GeometryCollectionArray, geo::GeometryCollection);
 

@@ -2,11 +2,12 @@ use geozero::{GeomProcessor, GeozeroGeometry};
 
 use crate::array::multipolygon::MultiPolygonCapacity;
 use crate::array::{MultiPolygonArray, MultiPolygonBuilder};
+use crate::datatypes::Dimension;
 use crate::io::geozero::scalar::process_multi_polygon;
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
 
-impl GeozeroGeometry for MultiPolygonArray<D> {
+impl GeozeroGeometry for MultiPolygonArray {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -26,26 +27,32 @@ impl GeozeroGeometry for MultiPolygonArray<D> {
 /// GeoZero trait to convert to GeoArrow MultiPolygonArray.
 pub trait ToMultiPolygonArray {
     /// Convert to GeoArrow MultiPolygonArray
-    fn to_line_string_array(&self) -> geozero::error::Result<MultiPolygonArray<D>>;
+    fn to_multi_polygon_array(&self, dim: Dimension) -> geozero::error::Result<MultiPolygonArray>;
 
     /// Convert to a GeoArrow MultiPolygonBuilder
-    fn to_line_string_builder(&self) -> geozero::error::Result<MultiPolygonBuilder<D>>;
+    fn to_multi_polygon_builder(
+        &self,
+        dim: Dimension,
+    ) -> geozero::error::Result<MultiPolygonBuilder>;
 }
 
-impl<T: GeozeroGeometry, const D: usize> ToMultiPolygonArray<D> for T {
-    fn to_line_string_array(&self) -> geozero::error::Result<MultiPolygonArray<D>> {
-        Ok(self.to_line_string_builder()?.into())
+impl<T: GeozeroGeometry> ToMultiPolygonArray for T {
+    fn to_multi_polygon_array(&self, dim: Dimension) -> geozero::error::Result<MultiPolygonArray> {
+        Ok(self.to_multi_polygon_builder(dim)?.into())
     }
 
-    fn to_line_string_builder(&self) -> geozero::error::Result<MultiPolygonBuilder<D>> {
-        let mut mutable_array = MultiPolygonBuilder::new();
+    fn to_multi_polygon_builder(
+        &self,
+        dim: Dimension,
+    ) -> geozero::error::Result<MultiPolygonBuilder> {
+        let mut mutable_array = MultiPolygonBuilder::new(dim);
         self.process_geom(&mut mutable_array)?;
         Ok(mutable_array)
     }
 }
 
 #[allow(unused_variables)]
-impl GeomProcessor for MultiPolygonBuilder<D> {
+impl GeomProcessor for MultiPolygonBuilder {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         // reserve `size` geometries
         let capacity = MultiPolygonCapacity::new(0, 0, 0, size);
@@ -138,7 +145,7 @@ mod test {
 
     #[test]
     fn geozero_process_geom() -> geozero::error::Result<()> {
-        let arr: MultiPolygonArray<2> = vec![mp0(), mp1()].as_slice().into();
+        let arr: MultiPolygonArray = (vec![mp0(), mp1()].as_slice(), Dimension::XY).into();
         let wkt = arr.to_wkt()?;
         let expected = "GEOMETRYCOLLECTION(MULTIPOLYGON(((-111 45,-111 41,-104 41,-104 45,-111 45)),((-111 45,-111 41,-104 41,-104 45,-111 45),(-110 44,-110 42,-105 42,-105 44,-110 44))),MULTIPOLYGON(((-111 45,-111 41,-104 41,-104 45,-111 45)),((-110 44,-110 42,-105 42,-105 44,-110 44))))";
         assert_eq!(wkt, expected);
@@ -153,7 +160,7 @@ mod test {
                 .map(Geometry::MultiPolygon)
                 .collect(),
         );
-        let multi_point_array: MultiPolygonArray<2> = geo.to_line_string_array().unwrap();
+        let multi_point_array = geo.to_multi_polygon_array(Dimension::XY).unwrap();
         assert_eq!(multi_point_array.value_as_geo(0), mp0());
         assert_eq!(multi_point_array.value_as_geo(1), mp1());
         Ok(())

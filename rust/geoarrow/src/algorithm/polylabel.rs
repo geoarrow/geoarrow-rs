@@ -29,7 +29,7 @@ impl Polylabel for PolygonArray {
     type Output = Result<PointArray>;
 
     fn polylabel(&self, tolerance: f64) -> Self::Output {
-        Ok(self.try_unary_point(|geom| polylabel(&geom.to_geo(), &tolerance))?)
+        Ok(self.try_unary_point(|geom| polylabel(&geom.to_geo(), &tolerance), Dimension::XY)?)
     }
 }
 

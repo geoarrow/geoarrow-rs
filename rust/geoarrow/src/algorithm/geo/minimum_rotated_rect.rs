@@ -55,7 +55,7 @@ macro_rules! iter_geo_impl {
 
                 let capacity = PolygonCapacity::new(coord_capacity, ring_capacity, geom_capacity);
 
-                let mut output_array = PolygonBuilder::with_capacity(capacity);
+                let mut output_array = PolygonBuilder::with_capacity(Dimension::XY, capacity);
 
                 self.iter_geo().for_each(|maybe_g| {
                     output_array

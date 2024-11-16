@@ -228,26 +228,17 @@ impl Cast for &dyn NativeArray {
         //     return Ok(Arc::new(self.to_owned()));
         // }
 
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_ref().as_point().cast(to_type),
-            LineString(_, XY) => self.as_ref().as_line_string().cast(to_type),
-            Polygon(_, XY) => self.as_ref().as_polygon().cast(to_type),
-            MultiPoint(_, XY) => self.as_ref().as_multi_point().cast(to_type),
-            MultiLineString(_, XY) => self.as_ref().as_multi_line_string().cast(to_type),
-            MultiPolygon(_, XY) => self.as_ref().as_multi_polygon().cast(to_type),
-            Mixed(_, XY) => self.as_ref().as_mixed().cast(to_type),
-            GeometryCollection(_, XY) => self.as_ref().as_geometry_collection().cast(to_type),
-            Point(_, XYZ) => self.as_ref().as_point().cast(to_type),
-            LineString(_, XYZ) => self.as_ref().as_line_string().cast(to_type),
-            Polygon(_, XYZ) => self.as_ref().as_polygon().cast(to_type),
-            MultiPoint(_, XYZ) => self.as_ref().as_multi_point().cast(to_type),
-            MultiLineString(_, XYZ) => self.as_ref().as_multi_line_string().cast(to_type),
-            MultiPolygon(_, XYZ) => self.as_ref().as_multi_polygon().cast(to_type),
-            Mixed(_, XYZ) => self.as_ref().as_mixed().cast(to_type),
-            GeometryCollection(_, XYZ) => self.as_ref().as_geometry_collection().cast(to_type),
+            Point(_, _) => self.as_ref().as_point().cast(to_type),
+            LineString(_, _) => self.as_ref().as_line_string().cast(to_type),
+            Polygon(_, _) => self.as_ref().as_polygon().cast(to_type),
+            MultiPoint(_, _) => self.as_ref().as_multi_point().cast(to_type),
+            MultiLineString(_, _) => self.as_ref().as_multi_line_string().cast(to_type),
+            MultiPolygon(_, _) => self.as_ref().as_multi_polygon().cast(to_type),
+            Mixed(_, _) => self.as_ref().as_mixed().cast(to_type),
+            GeometryCollection(_, _) => self.as_ref().as_geometry_collection().cast(to_type),
             _ => todo!(),
         }
     }
@@ -270,45 +261,20 @@ macro_rules! impl_chunked_cast_non_generic {
                                 .collect::<Result<Vec<_>>>()?,
                         ))
                     };
-                    ($method:ident, $dim:expr) => {
-                        Arc::new(ChunkedGeometryArray::new(
-                            self.geometry_chunks()
-                                .iter()
-                                .map(|chunk| {
-                                    Ok(chunk
-                                        .as_ref()
-                                        .cast(to_type)?
-                                        .as_ref()
-                                        .$method::<$dim>()
-                                        .clone())
-                                })
-                                .collect::<Result<Vec<_>>>()?,
-                        ))
-                    };
                 }
 
-                use Dimension::*;
                 use NativeType::*;
 
                 let result: Arc<dyn ChunkedNativeArray> = match to_type {
-                    Point(_, XY) => impl_cast!(as_point, 2),
-                    LineString(_, XY) => impl_cast!(as_line_string, 2),
-                    Polygon(_, XY) => impl_cast!(as_polygon, 2),
-                    MultiPoint(_, XY) => impl_cast!(as_multi_point, 2),
-                    MultiLineString(_, XY) => impl_cast!(as_multi_line_string, 2),
-                    MultiPolygon(_, XY) => impl_cast!(as_multi_polygon, 2),
-                    Mixed(_, XY) => impl_cast!(as_mixed, 2),
-                    GeometryCollection(_, XY) => impl_cast!(as_geometry_collection, 2),
-                    Point(_, XYZ) => impl_cast!(as_point, 3),
-                    LineString(_, XYZ) => impl_cast!(as_line_string, 3),
-                    Polygon(_, XYZ) => impl_cast!(as_polygon, 3),
-                    MultiPoint(_, XYZ) => impl_cast!(as_multi_point, 3),
-                    MultiLineString(_, XYZ) => impl_cast!(as_multi_line_string, 3),
-                    MultiPolygon(_, XYZ) => impl_cast!(as_multi_polygon, 3),
-                    Mixed(_, XYZ) => impl_cast!(as_mixed, 3),
-                    GeometryCollection(_, XYZ) => impl_cast!(as_geometry_collection, 3),
-                    Rect(XY) => impl_cast!(as_rect, 2),
-                    Rect(XYZ) => impl_cast!(as_rect, 3),
+                    Point(_, _) => impl_cast!(as_point),
+                    LineString(_, _) => impl_cast!(as_line_string),
+                    Polygon(_, _) => impl_cast!(as_polygon),
+                    MultiPoint(_, _) => impl_cast!(as_multi_point),
+                    MultiLineString(_, _) => impl_cast!(as_multi_line_string),
+                    MultiPolygon(_, _) => impl_cast!(as_multi_polygon),
+                    Mixed(_, _) => impl_cast!(as_mixed),
+                    GeometryCollection(_, _) => impl_cast!(as_geometry_collection),
+                    Rect(_) => impl_cast!(as_rect),
                 };
                 Ok(result)
             }
@@ -333,45 +299,20 @@ macro_rules! impl_chunked_cast_generic {
                                 .collect::<Result<Vec<_>>>()?,
                         ))
                     };
-                    ($method:ident, $dim:expr) => {
-                        Arc::new(ChunkedGeometryArray::new(
-                            self.geometry_chunks()
-                                .iter()
-                                .map(|chunk| {
-                                    Ok(chunk
-                                        .as_ref()
-                                        .cast(to_type)?
-                                        .as_ref()
-                                        .$method::<$dim>()
-                                        .clone())
-                                })
-                                .collect::<Result<Vec<_>>>()?,
-                        ))
-                    };
                 }
 
-                use Dimension::*;
                 use NativeType::*;
 
                 let result: Arc<dyn ChunkedNativeArray> = match to_type {
-                    Point(_, XY) => impl_cast!(as_point, 2),
-                    LineString(_, XY) => impl_cast!(as_line_string, 2),
-                    Polygon(_, XY) => impl_cast!(as_polygon, 2),
-                    MultiPoint(_, XY) => impl_cast!(as_multi_point, 2),
-                    MultiLineString(_, XY) => impl_cast!(as_multi_line_string, 2),
-                    MultiPolygon(_, XY) => impl_cast!(as_multi_polygon, 2),
-                    Mixed(_, XY) => impl_cast!(as_mixed, 2),
-                    GeometryCollection(_, XY) => impl_cast!(as_geometry_collection, 2),
-                    Point(_, XYZ) => impl_cast!(as_point, 3),
-                    LineString(_, XYZ) => impl_cast!(as_line_string, 3),
-                    Polygon(_, XYZ) => impl_cast!(as_polygon, 3),
-                    MultiPoint(_, XYZ) => impl_cast!(as_multi_point, 3),
-                    MultiLineString(_, XYZ) => impl_cast!(as_multi_line_string, 3),
-                    MultiPolygon(_, XYZ) => impl_cast!(as_multi_polygon, 3),
-                    Mixed(_, XYZ) => impl_cast!(as_mixed, 3),
-                    GeometryCollection(_, XYZ) => impl_cast!(as_geometry_collection, 3),
-                    Rect(XY) => impl_cast!(as_rect, 2),
-                    Rect(XYZ) => impl_cast!(as_rect, 3),
+                    Point(_, _) => impl_cast!(as_point),
+                    LineString(_, _) => impl_cast!(as_line_string),
+                    Polygon(_, _) => impl_cast!(as_polygon),
+                    MultiPoint(_, _) => impl_cast!(as_multi_point),
+                    MultiLineString(_, _) => impl_cast!(as_multi_line_string),
+                    MultiPolygon(_, _) => impl_cast!(as_multi_polygon),
+                    Mixed(_, _) => impl_cast!(as_mixed),
+                    GeometryCollection(_, _) => impl_cast!(as_geometry_collection),
+                    Rect(_) => impl_cast!(as_rect),
                 };
                 Ok(result)
             }
@@ -382,15 +323,6 @@ macro_rules! impl_chunked_cast_generic {
 impl_chunked_cast_non_generic!(ChunkedPointArray);
 impl_chunked_cast_non_generic!(ChunkedRectArray);
 impl_chunked_cast_non_generic!(&dyn ChunkedNativeArray);
-impl_chunked_cast_generic!(ChunkedLineStringArray);
-impl_chunked_cast_generic!(ChunkedPolygonArray);
-impl_chunked_cast_generic!(ChunkedMultiPointArray);
-impl_chunked_cast_generic!(ChunkedMultiLineStringArray);
-impl_chunked_cast_generic!(ChunkedMultiPolygonArray);
-impl_chunked_cast_generic!(ChunkedMixedGeometryArray);
-impl_chunked_cast_generic!(ChunkedGeometryCollectionArray);
-impl_chunked_cast_non_generic!(ChunkedPointArray);
-impl_chunked_cast_non_generic!(ChunkedRectArray);
 impl_chunked_cast_generic!(ChunkedLineStringArray);
 impl_chunked_cast_generic!(ChunkedPolygonArray);
 impl_chunked_cast_generic!(ChunkedMultiPointArray);
