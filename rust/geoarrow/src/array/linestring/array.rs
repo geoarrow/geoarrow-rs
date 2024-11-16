@@ -438,10 +438,10 @@ impl From<LineStringArray> for MultiPointArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for LineStringArray {
+impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for LineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: WKBArray<O>) -> Result<Self> {
+    fn try_from(value: (WKBArray<O>, Dimension)) -> Result<Self> {
         let mut_arr: LineStringBuilder = value.try_into()?;
         Ok(mut_arr.into())
     }
@@ -546,14 +546,14 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate() {
-        let arr: LineStringArray = vec![ls0(), ls1()].as_slice().into();
+        let arr: LineStringArray = (vec![ls0(), ls1()].as_slice(), Dimension::XY).into();
         assert_eq!(arr.value_as_geo(0), ls0());
         assert_eq!(arr.value_as_geo(1), ls1());
     }
 
     #[test]
     fn geo_roundtrip_accurate_option_vec() {
-        let arr: LineStringArray = vec![Some(ls0()), Some(ls1()), None].into();
+        let arr: LineStringArray = (vec![Some(ls0()), Some(ls1()), None], Dimension::XY).into();
         assert_eq!(arr.get_as_geo(0), Some(ls0()));
         assert_eq!(arr.get_as_geo(1), Some(ls1()));
         assert_eq!(arr.get_as_geo(2), None);
@@ -561,7 +561,7 @@ mod test {
 
     // #[test]
     // fn rstar_integration() {
-    //     let arr: LineStringArray = vec![ls0(), ls1()].as_slice().into();
+    //     let arr: LineStringArray = (vec![ls0(), ls1()].as_slice(), Dimension::XY).into();
     //     let tree = arr.rstar_tree();
 
     //     let search_box = AABB::from_corners([3.5, 5.5], [4.5, 6.5]);
@@ -577,7 +577,7 @@ mod test {
 
     #[test]
     fn slice() {
-        let arr: LineStringArray = vec![ls0(), ls1()].as_slice().into();
+        let arr: LineStringArray = (vec![ls0(), ls1()].as_slice(), Dimension::XY).into();
         let sliced = arr.slice(1, 1);
         assert_eq!(sliced.len(), 1);
         assert_eq!(sliced.get_as_geo(0), Some(ls1()));
@@ -585,7 +585,7 @@ mod test {
 
     #[test]
     fn owned_slice() {
-        let arr: LineStringArray = vec![ls0(), ls1()].as_slice().into();
+        let arr: LineStringArray = (vec![ls0(), ls1()].as_slice(), Dimension::XY).into();
         let sliced = arr.owned_slice(1, 1);
 
         // assert!(
@@ -602,7 +602,7 @@ mod test {
         let linestring_arr = example_linestring_interleaved();
 
         let wkb_arr = example_linestring_wkb();
-        let parsed_linestring_arr: LineStringArray = wkb_arr.try_into().unwrap();
+        let parsed_linestring_arr: LineStringArray = (wkb_arr, Dimension::XY).try_into().unwrap();
 
         assert_eq!(linestring_arr, parsed_linestring_arr);
     }
@@ -612,7 +612,7 @@ mod test {
         let linestring_arr = example_linestring_separated().into_coord_type(CoordType::Interleaved);
 
         let wkb_arr = example_linestring_wkb();
-        let parsed_linestring_arr: LineStringArray = wkb_arr.try_into().unwrap();
+        let parsed_linestring_arr: LineStringArray = (wkb_arr, Dimension::XY).try_into().unwrap();
 
         assert_eq!(linestring_arr, parsed_linestring_arr);
     }

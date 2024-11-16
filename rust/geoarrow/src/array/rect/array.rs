@@ -267,15 +267,15 @@ impl TryFrom<(&dyn Array, &Field)> for RectArray {
     }
 }
 
-impl<G: RectTrait<T = f64>> From<&[G]> for RectArray {
-    fn from(other: &[G]) -> Self {
+impl<G: RectTrait<T = f64>> From<(&[G], Dimension)> for RectArray {
+    fn from(other: (&[G], Dimension)) -> Self {
         let mut_arr: RectBuilder = other.into();
         mut_arr.into()
     }
 }
 
-impl<G: RectTrait<T = f64>> From<Vec<Option<G>>> for RectArray {
-    fn from(other: Vec<Option<G>>) -> Self {
+impl<G: RectTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for RectArray {
+    fn from(other: (Vec<Option<G>>, Dimension)) -> Self {
         let mut_arr: RectBuilder = other.into();
         mut_arr.into()
     }

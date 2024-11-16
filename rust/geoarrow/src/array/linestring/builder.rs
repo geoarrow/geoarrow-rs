@@ -301,8 +301,8 @@ impl LineStringBuilder {
     }
 
     pub fn from_nullable_geometries(
-        dim: Dimension,
         geoms: &[Option<impl GeometryTrait<T = f64>>],
+        dim: Dimension,
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
@@ -318,8 +318,8 @@ impl LineStringBuilder {
     }
 
     pub(crate) fn from_wkb<W: OffsetSizeTrait>(
-        dim: Dimension,
         wkb_objects: &[Option<WKB<'_, W>>],
+        dim: Dimension,
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
@@ -327,7 +327,7 @@ impl LineStringBuilder {
             .iter()
             .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.parse()).transpose())
             .collect::<Result<Vec<_>>>()?;
-        Self::from_nullable_geometries(dim, &wkb_objects2, coord_type, metadata)
+        Self::from_nullable_geometries(&wkb_objects2, dim, coord_type, metadata)
     }
 }
 
@@ -424,13 +424,13 @@ impl<G: LineStringTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for LineStri
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for LineStringBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for LineStringBuilder {
     type Error = GeoArrowError;
 
-    fn try_from(value: WKBArray<O>) -> Result<Self> {
+    fn try_from((value, dim): (WKBArray<O>, Dimension)) -> Result<Self> {
         let metadata = value.metadata.clone();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, Default::default(), metadata)
+        Self::from_wkb(&wkb_objects, dim, Default::default(), metadata)
     }
 }
 

@@ -8,6 +8,7 @@ use crate::array::{
     CoordBufferBuilder, CoordType, InterleavedCoordBufferBuilder, LineStringBuilder,
     MultiPointArray, SeparatedCoordBufferBuilder, WKBArray,
 };
+use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
@@ -32,38 +33,37 @@ pub struct MultiPointBuilder {
 
 impl MultiPointBuilder {
     /// Creates a new empty [`MultiPointBuilder`].
-    pub fn new() -> Self {
-        Self::new_with_options(Default::default(), Default::default())
+    pub fn new(dim: Dimension) -> Self {
+        Self::new_with_options(dim, Default::default(), Default::default())
     }
 
     /// Creates a new [`MultiPointBuilder`] with a specified [`CoordType`]
-    pub fn new_with_options(coord_type: CoordType, metadata: Arc<ArrayMetadata>) -> Self {
-        Self::with_capacity_and_options(Default::default(), coord_type, metadata)
+    pub fn new_with_options(
+        dim: Dimension,
+        coord_type: CoordType,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Self {
+        Self::with_capacity_and_options(dim, Default::default(), coord_type, metadata)
     }
     /// Creates a new [`MultiPointBuilder`] with a capacity.
-    pub fn with_capacity(capacity: MultiPointCapacity) -> Self {
-        Self::with_capacity_and_options(capacity, Default::default(), Default::default())
+    pub fn with_capacity(dim: Dimension, capacity: MultiPointCapacity) -> Self {
+        Self::with_capacity_and_options(dim, capacity, Default::default(), Default::default())
     }
 
     // with capacity and options enables us to write with_capacity based on this method
     pub fn with_capacity_and_options(
+        dim: Dimension,
         capacity: MultiPointCapacity,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let coords = match coord_type {
-            CoordType::Interleaved => {
-                CoordBufferBuilder::Interleaved(InterleavedCoordBufferBuilder::with_capacity(
-                    capacity.coord_capacity,
-                    D.try_into().unwrap(),
-                ))
-            }
-            CoordType::Separated => {
-                CoordBufferBuilder::Separated(SeparatedCoordBufferBuilder::with_capacity(
-                    capacity.coord_capacity,
-                    D.try_into().unwrap(),
-                ))
-            }
+            CoordType::Interleaved => CoordBufferBuilder::Interleaved(
+                InterleavedCoordBufferBuilder::with_capacity(capacity.coord_capacity, dim),
+            ),
+            CoordType::Separated => CoordBufferBuilder::Separated(
+                SeparatedCoordBufferBuilder::with_capacity(capacity.coord_capacity, dim),
+            ),
         };
         Self {
             coords,
@@ -146,17 +146,24 @@ impl MultiPointBuilder {
 
     pub fn with_capacity_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
+        dim: Dimension,
     ) -> Self {
-        Self::with_capacity_and_options_from_iter(geoms, Default::default(), Default::default())
+        Self::with_capacity_and_options_from_iter(
+            geoms,
+            dim,
+            Default::default(),
+            Default::default(),
+        )
     }
 
     pub fn with_capacity_and_options_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
+        dim: Dimension,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let counter = MultiPointCapacity::from_multi_points(geoms);
-        Self::with_capacity_and_options(counter, coord_type, metadata)
+        Self::with_capacity_and_options(dim, counter, coord_type, metadata)
     }
 
     pub fn reserve_from_iter<'a>(
@@ -290,11 +297,13 @@ impl MultiPointBuilder {
 
     pub fn from_multi_points(
         geoms: &[impl MultiPointTrait<T = f64>],
+        dim: Dimension,
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(Some),
+            dim,
             coord_type.unwrap_or_default(),
             metadata,
         );
@@ -304,11 +313,13 @@ impl MultiPointBuilder {
 
     pub fn from_nullable_multi_points(
         geoms: &[Option<impl MultiPointTrait<T = f64>>],
+        dim: Dimension,
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(|x| x.as_ref()),
+            dim,
             coord_type.unwrap_or_default(),
             metadata,
         );
@@ -318,17 +329,23 @@ impl MultiPointBuilder {
 
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
+        dim: Dimension,
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
         let capacity = MultiPointCapacity::from_geometries(geoms.iter().map(|x| x.as_ref()))?;
-        let mut array =
-            Self::with_capacity_and_options(capacity, coord_type.unwrap_or_default(), metadata);
+        let mut array = Self::with_capacity_and_options(
+            dim,
+            capacity,
+            coord_type.unwrap_or_default(),
+            metadata,
+        );
         array.extend_from_geometry_iter(geoms.iter().map(|x| x.as_ref()))?;
         Ok(array)
     }
     pub(crate) fn from_wkb<W: OffsetSizeTrait>(
         wkb_objects: &[Option<WKB<'_, W>>],
+        dim: Dimension,
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
@@ -336,28 +353,29 @@ impl MultiPointBuilder {
             .iter()
             .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.parse()).transpose())
             .collect::<Result<Vec<_>>>()?;
-        Self::from_nullable_geometries(&wkb_objects2, coord_type, metadata)
+        Self::from_nullable_geometries(&wkb_objects2, dim, coord_type, metadata)
     }
 }
 
 impl Default for MultiPointBuilder {
     fn default() -> Self {
-        Self::new()
+        Self::new(Dimension::XY)
     }
 }
 
 impl GeometryArrayBuilder for MultiPointBuilder {
-    fn new() -> Self {
-        Self::new()
+    fn new(dim: Dimension) -> Self {
+        Self::new(dim)
     }
 
     fn with_geom_capacity_and_options(
+        dim: Dimension,
         geom_capacity: usize,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let capacity = MultiPointCapacity::new(0, geom_capacity);
-        Self::with_capacity_and_options(capacity, coord_type, metadata)
+        Self::with_capacity_and_options(dim, capacity, coord_type, metadata)
     }
 
     fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
@@ -425,25 +443,25 @@ impl From<MultiPointBuilder> for GenericListArray<i32> {
     }
 }
 
-impl<G: MultiPointTrait<T = f64>, const D: usize> From<&[G]> for MultiPointBuilder {
-    fn from(geoms: &[G]) -> Self {
-        Self::from_multi_points(geoms, Default::default(), Default::default())
+impl<G: MultiPointTrait<T = f64>> From<(&[G], Dimension)> for MultiPointBuilder {
+    fn from((geoms, dim): (&[G], Dimension)) -> Self {
+        Self::from_multi_points(geoms, dim, Default::default(), Default::default())
     }
 }
 
-impl<G: MultiPointTrait<T = f64>, const D: usize> From<Vec<Option<G>>> for MultiPointBuilder {
-    fn from(geoms: Vec<Option<G>>) -> Self {
-        Self::from_nullable_multi_points(&geoms, Default::default(), Default::default())
+impl<G: MultiPointTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for MultiPointBuilder {
+    fn from((geoms, dim): (Vec<Option<G>>, Dimension)) -> Self {
+        Self::from_nullable_multi_points(&geoms, dim, Default::default(), Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MultiPointBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MultiPointBuilder {
     type Error = GeoArrowError;
 
-    fn try_from(value: WKBArray<O>) -> Result<Self> {
+    fn try_from((value, dim): (WKBArray<O>, Dimension)) -> Result<Self> {
         let metadata = value.metadata.clone();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, Default::default(), metadata)
+        Self::from_wkb(&wkb_objects, dim, Default::default(), metadata)
     }
 }
 

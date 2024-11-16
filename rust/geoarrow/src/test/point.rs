@@ -6,6 +6,7 @@ use arrow_schema::{DataType, Field, Schema};
 use geo::{point, Point};
 
 use crate::array::{PointArray, PointBuilder};
+use crate::datatypes::Dimension;
 use crate::table::Table;
 use crate::test::properties;
 use crate::ArrayBase;
@@ -31,7 +32,13 @@ pub(crate) fn p2() -> Point {
 
 pub(crate) fn point_array() -> PointArray {
     let geoms = vec![p0(), p1(), p2()];
-    PointBuilder::from_points(geoms.iter(), Default::default(), Default::default()).finish()
+    PointBuilder::from_points(
+        geoms.iter(),
+        Dimension::XY,
+        Default::default(),
+        Default::default(),
+    )
+    .finish()
 }
 
 struct CoordZ {

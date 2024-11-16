@@ -13,7 +13,7 @@ use crate::array::{
     CoordBuffer, CoordType, LineStringArray, MixedGeometryArray, MultiLineStringArray,
     MultiPointArray, MultiPolygonArray, PointArray, PolygonArray, WKBArray,
 };
-use crate::datatypes::NativeType;
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, GeometryCollection};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
@@ -326,24 +326,26 @@ impl TryFrom<(&dyn Array, &Field)> for GeometryCollectionArray {
     }
 }
 
-impl<G: GeometryCollectionTrait<T = f64>> From<&[G]> for GeometryCollectionArray {
-    fn from(other: &[G]) -> Self {
+impl<G: GeometryCollectionTrait<T = f64>> From<(&[G], Dimension)> for GeometryCollectionArray {
+    fn from(other: (&[G], Dimension)) -> Self {
         let mut_arr: GeometryCollectionBuilder = other.into();
         mut_arr.into()
     }
 }
 
-impl<G: GeometryCollectionTrait<T = f64>> From<Vec<Option<G>>> for GeometryCollectionArray {
-    fn from(other: Vec<Option<G>>) -> Self {
+impl<G: GeometryCollectionTrait<T = f64>> From<(Vec<Option<G>>, Dimension)>
+    for GeometryCollectionArray
+{
+    fn from(other: (Vec<Option<G>>, Dimension)) -> Self {
         let mut_arr: GeometryCollectionBuilder = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryCollectionArray {
+impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for GeometryCollectionArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: WKBArray<O>) -> Result<Self> {
+    fn try_from(value: (WKBArray<O>, Dimension)) -> Result<Self> {
         let mut_arr: GeometryCollectionBuilder = value.try_into()?;
         Ok(mut_arr.into())
     }

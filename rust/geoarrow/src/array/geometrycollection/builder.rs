@@ -8,6 +8,7 @@ use crate::array::metadata::ArrayMetadata;
 use crate::array::mixed::builder::DEFAULT_PREFER_MULTI;
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{CoordType, GeometryCollectionArray, MixedGeometryBuilder, WKBArray};
+use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
@@ -33,20 +34,27 @@ pub struct GeometryCollectionBuilder {
 
 impl<'a> GeometryCollectionBuilder {
     /// Creates a new empty [`GeometryCollectionBuilder`].
-    pub fn new() -> Self {
-        Self::new_with_options(Default::default(), Default::default(), DEFAULT_PREFER_MULTI)
+    pub fn new(dim: Dimension) -> Self {
+        Self::new_with_options(
+            dim,
+            Default::default(),
+            Default::default(),
+            DEFAULT_PREFER_MULTI,
+        )
     }
 
     pub fn new_with_options(
+        dim: Dimension,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Self {
-        Self::with_capacity_and_options(Default::default(), coord_type, metadata, prefer_multi)
+        Self::with_capacity_and_options(dim, Default::default(), coord_type, metadata, prefer_multi)
     }
 
-    pub fn with_capacity(capacity: GeometryCollectionCapacity) -> Self {
+    pub fn with_capacity(dim: Dimension, capacity: GeometryCollectionCapacity) -> Self {
         Self::with_capacity_and_options(
+            dim,
             capacity,
             Default::default(),
             Default::default(),
@@ -55,6 +63,7 @@ impl<'a> GeometryCollectionBuilder {
     }
 
     pub fn with_capacity_and_options(
+        dim: Dimension,
         capacity: GeometryCollectionCapacity,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
@@ -63,6 +72,7 @@ impl<'a> GeometryCollectionBuilder {
         // Should we be storing array metadata on child arrays?
         Self {
             geoms: MixedGeometryBuilder::with_capacity_and_options(
+                dim,
                 capacity.mixed_capacity,
                 coord_type,
                 metadata.clone(),
@@ -112,9 +122,11 @@ impl<'a> GeometryCollectionBuilder {
 
     pub fn with_capacity_from_iter(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
+        dim: Dimension,
     ) -> Result<Self> {
         Self::with_capacity_and_options_from_iter(
             geoms,
+            dim,
             Default::default(),
             Default::default(),
             DEFAULT_PREFER_MULTI,
@@ -123,12 +135,14 @@ impl<'a> GeometryCollectionBuilder {
 
     pub fn with_capacity_and_options_from_iter(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
+        dim: Dimension,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let counter = GeometryCollectionCapacity::from_geometry_collections(geoms)?;
         Ok(Self::with_capacity_and_options(
+            dim,
             counter,
             coord_type,
             metadata,
@@ -287,12 +301,14 @@ impl<'a> GeometryCollectionBuilder {
 
     pub fn from_geometry_collections(
         geoms: &[impl GeometryCollectionTrait<T = f64>],
+        dim: Dimension,
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(Some),
+            dim,
             coord_type.unwrap_or_default(),
             metadata,
             prefer_multi,
@@ -303,12 +319,14 @@ impl<'a> GeometryCollectionBuilder {
 
     pub fn from_nullable_geometry_collections(
         geoms: &[Option<impl GeometryCollectionTrait<T = f64>>],
+        dim: Dimension,
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(|x| x.as_ref()),
+            dim,
             coord_type.unwrap_or_default(),
             metadata,
             prefer_multi,
@@ -319,12 +337,14 @@ impl<'a> GeometryCollectionBuilder {
 
     pub fn from_geometries(
         geoms: &[impl GeometryTrait<T = f64>],
+        dim: Dimension,
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let capacity = GeometryCollectionCapacity::from_geometries(geoms.iter().map(Some))?;
         let mut array = Self::with_capacity_and_options(
+            dim,
             capacity,
             coord_type.unwrap_or_default(),
             metadata,
@@ -338,6 +358,7 @@ impl<'a> GeometryCollectionBuilder {
 
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
+        dim: Dimension,
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
@@ -345,6 +366,7 @@ impl<'a> GeometryCollectionBuilder {
         let capacity =
             GeometryCollectionCapacity::from_geometries(geoms.iter().map(|x| x.as_ref()))?;
         let mut array = Self::with_capacity_and_options(
+            dim,
             capacity,
             coord_type.unwrap_or_default(),
             metadata,
@@ -358,6 +380,7 @@ impl<'a> GeometryCollectionBuilder {
 
     pub(crate) fn from_wkb<W: OffsetSizeTrait>(
         wkb_objects: &[Option<WKB<'_, W>>],
+        dim: Dimension,
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
@@ -366,22 +389,23 @@ impl<'a> GeometryCollectionBuilder {
             .iter()
             .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.parse()).transpose())
             .collect::<Result<Vec<_>>>()?;
-        Self::from_nullable_geometries(&wkb_objects2, coord_type, metadata, prefer_multi)
+        Self::from_nullable_geometries(&wkb_objects2, dim, coord_type, metadata, prefer_multi)
     }
 }
 
 impl GeometryArrayBuilder for GeometryCollectionBuilder {
-    fn new() -> Self {
-        Self::new()
+    fn new(dim: Dimension) -> Self {
+        Self::new(dim)
     }
 
     fn with_geom_capacity_and_options(
+        dim: Dimension,
         geom_capacity: usize,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let capacity = GeometryCollectionCapacity::new(Default::default(), geom_capacity);
-        Self::with_capacity_and_options(capacity, coord_type, metadata, DEFAULT_PREFER_MULTI)
+        Self::with_capacity_and_options(dim, capacity, coord_type, metadata, DEFAULT_PREFER_MULTI)
     }
 
     fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
@@ -428,7 +452,7 @@ impl IntoArrow for GeometryCollectionBuilder {
 
 impl Default for GeometryCollectionBuilder {
     fn default() -> Self {
-        Self::new()
+        Self::new(Dimension::XY)
     }
 }
 
@@ -450,17 +474,20 @@ impl From<GeometryCollectionBuilder> for GenericListArray<i32> {
     }
 }
 
-impl<G: GeometryCollectionTrait<T = f64>> From<&[G]> for GeometryCollectionBuilder {
-    fn from(geoms: &[G]) -> Self {
-        Self::from_geometry_collections(geoms, Default::default(), Default::default(), true)
+impl<G: GeometryCollectionTrait<T = f64>> From<(&[G], Dimension)> for GeometryCollectionBuilder {
+    fn from((geoms, dim): (&[G], Dimension)) -> Self {
+        Self::from_geometry_collections(geoms, dim, Default::default(), Default::default(), true)
             .unwrap()
     }
 }
 
-impl<G: GeometryCollectionTrait<T = f64>> From<Vec<Option<G>>> for GeometryCollectionBuilder {
-    fn from(geoms: Vec<Option<G>>) -> Self {
+impl<G: GeometryCollectionTrait<T = f64>> From<(Vec<Option<G>>, Dimension)>
+    for GeometryCollectionBuilder
+{
+    fn from((geoms, dim): (Vec<Option<G>>, Dimension)) -> Self {
         Self::from_nullable_geometry_collections(
             &geoms,
+            dim,
             Default::default(),
             Default::default(),
             true,
@@ -469,12 +496,12 @@ impl<G: GeometryCollectionTrait<T = f64>> From<Vec<Option<G>>> for GeometryColle
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryCollectionBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for GeometryCollectionBuilder {
     type Error = GeoArrowError;
 
-    fn try_from(value: WKBArray<O>) -> Result<Self> {
+    fn try_from((value, dim): (WKBArray<O>, Dimension)) -> Result<Self> {
         let metadata = value.metadata.clone();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, Default::default(), metadata, true)
+        Self::from_wkb(&wkb_objects, dim, Default::default(), metadata, true)
     }
 }

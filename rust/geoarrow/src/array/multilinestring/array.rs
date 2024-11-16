@@ -492,10 +492,10 @@ impl From<MultiLineStringArray> for PolygonArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiLineStringArray {
+impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MultiLineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: WKBArray<O>) -> Result<Self> {
+    fn try_from(value: (WKBArray<O>, Dimension)) -> Result<Self> {
         let mut_arr: MultiLineStringBuilder = value.try_into()?;
         Ok(mut_arr.into())
     }
@@ -596,14 +596,15 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate() {
-        let arr: MultiLineStringArray = vec![ml0(), ml1()].as_slice().into();
+        let arr: MultiLineStringArray = (vec![ml0(), ml1()].as_slice(), Dimension::XY).into();
         assert_eq!(arr.value_as_geo(0), ml0());
         assert_eq!(arr.value_as_geo(1), ml1());
     }
 
     #[test]
     fn geo_roundtrip_accurate_option_vec() {
-        let arr: MultiLineStringArray = vec![Some(ml0()), Some(ml1()), None].into();
+        let arr: MultiLineStringArray =
+            (vec![Some(ml0()), Some(ml1()), None], Dimension::XY).into();
         assert_eq!(arr.get_as_geo(0), Some(ml0()));
         assert_eq!(arr.get_as_geo(1), Some(ml1()));
         assert_eq!(arr.get_as_geo(2), None);
@@ -611,7 +612,7 @@ mod test {
 
     #[test]
     fn slice() {
-        let arr: MultiLineStringArray = vec![ml0(), ml1()].as_slice().into();
+        let arr: MultiLineStringArray = (vec![ml0(), ml1()].as_slice(), Dimension::XY).into();
         let sliced = arr.slice(1, 1);
         assert_eq!(sliced.len(), 1);
         assert_eq!(sliced.get_as_geo(0), Some(ml1()));
@@ -619,7 +620,7 @@ mod test {
 
     #[test]
     fn owned_slice() {
-        let arr: MultiLineStringArray = vec![ml0(), ml1()].as_slice().into();
+        let arr: MultiLineStringArray = (vec![ml0(), ml1()].as_slice(), Dimension::XY).into();
         let sliced = arr.owned_slice(1, 1);
 
         // assert!(
@@ -640,7 +641,7 @@ mod test {
         let geom_arr = example_multilinestring_interleaved();
 
         let wkb_arr = example_multilinestring_wkb();
-        let parsed_geom_arr: MultiLineStringArray = wkb_arr.try_into().unwrap();
+        let parsed_geom_arr: MultiLineStringArray = (wkb_arr, Dimension::XY).try_into().unwrap();
 
         assert_eq!(geom_arr, parsed_geom_arr);
     }
@@ -650,7 +651,7 @@ mod test {
         let geom_arr = example_multilinestring_separated().into_coord_type(CoordType::Interleaved);
 
         let wkb_arr = example_multilinestring_wkb();
-        let parsed_geom_arr: MultiLineStringArray = wkb_arr.try_into().unwrap();
+        let parsed_geom_arr: MultiLineStringArray = (wkb_arr, Dimension::XY).try_into().unwrap();
 
         assert_eq!(geom_arr, parsed_geom_arr);
     }

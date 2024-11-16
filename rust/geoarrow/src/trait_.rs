@@ -265,6 +265,10 @@ pub trait NativeArray: ArrayBase {
     /// ```
     fn coord_type(&self) -> CoordType;
 
+    fn dimension(&self) -> Dimension {
+        self.data_type().dimension()
+    }
+
     /// Converts this array to the same type of array but with the provided [CoordType].
     ///
     /// # Examples

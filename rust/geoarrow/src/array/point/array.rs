@@ -99,7 +99,7 @@ impl PointArray {
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
         let validity_len = self.nulls().map(|v| v.buffer().len()).unwrap_or(0);
-        validity_len + self.buffer_lengths() * D * 8
+        validity_len + self.buffer_lengths() * self.dimension().size() * 8
     }
 
     /// Slices this [`PointArray`] in place.
@@ -264,10 +264,11 @@ impl IntoArrow for PointArray {
 
     fn into_arrow(self) -> Self::ArrowArray {
         let validity = self.validity;
+        let dim = self.coords.dim();
         match self.coords {
             CoordBuffer::Interleaved(c) => Arc::new(FixedSizeListArray::new(
                 c.values_field().into(),
-                self.coords.dim().size() as i32,
+                dim.size() as i32,
                 Arc::new(c.values_array()),
                 validity,
             )),
@@ -338,24 +339,24 @@ impl TryFrom<(&dyn Array, &Field)> for PointArray {
     }
 }
 
-impl<G: PointTrait<T = f64>> From<Vec<Option<G>>> for PointArray {
-    fn from(other: Vec<Option<G>>) -> Self {
+impl<G: PointTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for PointArray {
+    fn from(other: (Vec<Option<G>>, Dimension)) -> Self {
         let mut_arr: PointBuilder = other.into();
         mut_arr.into()
     }
 }
 
-impl<G: PointTrait<T = f64>> From<&[G]> for PointArray {
-    fn from(other: &[G]) -> Self {
+impl<G: PointTrait<T = f64>> From<(&[G], Dimension)> for PointArray {
+    fn from(other: (&[G], Dimension)) -> Self {
         let mut_arr: PointBuilder = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for PointArray {
+impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for PointArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: WKBArray<O>) -> Result<Self> {
+    fn try_from(value: (WKBArray<O>, Dimension)) -> Result<Self> {
         let mut_arr: PointBuilder = value.try_into()?;
         Ok(mut_arr.into())
     }
@@ -436,6 +437,7 @@ impl TryFrom<MixedGeometryArray> for PointArray {
         }
 
         let mut builder = PointBuilder::with_capacity_and_options(
+            value.dimension(),
             value.len(),
             value.coord_type(),
             value.metadata(),
@@ -467,7 +469,7 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate() {
-        let arr: PointArray = vec![p0(), p1(), p2()].as_slice().into();
+        let arr: PointArray = (vec![p0(), p1(), p2()].as_slice(), Dimension::XY).into();
         assert_eq!(arr.value_as_geo(0), p0());
         assert_eq!(arr.value_as_geo(1), p1());
         assert_eq!(arr.value_as_geo(2), p2());
@@ -475,7 +477,11 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate_option_vec() {
-        let arr: PointArray = vec![Some(p0()), Some(p1()), Some(p2()), None].into();
+        let arr: PointArray = (
+            vec![Some(p0()), Some(p1()), Some(p2()), None],
+            Dimension::XY,
+        )
+            .into();
         assert_eq!(arr.get_as_geo(0), Some(p0()));
         assert_eq!(arr.get_as_geo(1), Some(p1()));
         assert_eq!(arr.get_as_geo(2), Some(p2()));
@@ -485,7 +491,7 @@ mod test {
     #[test]
     fn slice() {
         let points: Vec<Point> = vec![p0(), p1(), p2()];
-        let point_array: PointArray = points.as_slice().into();
+        let point_array: PointArray = (points.as_slice(), Dimension::XY).into();
         let sliced = point_array.slice(1, 1);
         assert_eq!(sliced.len(), 1);
         assert_eq!(sliced.get_as_geo(0), Some(p1()));
@@ -494,7 +500,7 @@ mod test {
     #[test]
     fn owned_slice() {
         let points: Vec<Point> = vec![p0(), p1(), p2()];
-        let point_array: PointArray = points.as_slice().into();
+        let point_array: PointArray = (points.as_slice(), Dimension::XY).into();
         let sliced = point_array.owned_slice(1, 1);
 
         assert_eq!(point_array.len(), 3);
@@ -508,7 +514,7 @@ mod test {
         let geom_arr = example_point_interleaved();
 
         let wkb_arr = example_point_wkb();
-        let parsed_geom_arr: PointArray = wkb_arr.try_into().unwrap();
+        let parsed_geom_arr: PointArray = (wkb_arr, Dimension::XY).try_into().unwrap();
 
         // Comparisons on the point array directly currently fail because of NaN values in
         // coordinate 1.
@@ -521,7 +527,7 @@ mod test {
         let geom_arr = example_point_separated();
 
         let wkb_arr = example_point_wkb();
-        let parsed_geom_arr: PointArray = wkb_arr.try_into().unwrap();
+        let parsed_geom_arr: PointArray = (wkb_arr, Dimension::XY).try_into().unwrap();
 
         assert_eq!(geom_arr, parsed_geom_arr);
     }

@@ -466,24 +466,24 @@ impl TryFrom<(&dyn Array, &Field)> for PolygonArray {
     }
 }
 
-impl<G: PolygonTrait<T = f64>> From<Vec<Option<G>>> for PolygonArray {
-    fn from(other: Vec<Option<G>>) -> Self {
+impl<G: PolygonTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for PolygonArray {
+    fn from(other: (Vec<Option<G>>, Dimension)) -> Self {
         let mut_arr: PolygonBuilder = other.into();
         mut_arr.into()
     }
 }
 
-impl<G: PolygonTrait<T = f64>> From<&[G]> for PolygonArray {
-    fn from(other: &[G]) -> Self {
+impl<G: PolygonTrait<T = f64>> From<(&[G], Dimension)> for PolygonArray {
+    fn from(other: (&[G], Dimension)) -> Self {
         let mut_arr: PolygonBuilder = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for PolygonArray {
+impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for PolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: WKBArray<O>) -> Result<Self> {
+    fn try_from(value: (WKBArray<O>, Dimension)) -> Result<Self> {
         let mut_arr: PolygonBuilder = value.try_into()?;
         Ok(mut_arr.into())
     }
@@ -505,6 +505,8 @@ impl From<PolygonArray> for MultiLineStringArray {
 
 impl From<RectArray> for PolygonArray {
     fn from(value: RectArray) -> Self {
+        let dim = value.dimension();
+
         // The number of output geoms is the same as the input
         let geom_capacity = value.len();
 
@@ -516,7 +518,7 @@ impl From<RectArray> for PolygonArray {
         let coord_capacity = (value.len() - value.null_count()) * 5;
 
         let capacity = PolygonCapacity::new(coord_capacity, ring_capacity, geom_capacity);
-        let mut output_array = PolygonBuilder::with_capacity(capacity);
+        let mut output_array = PolygonBuilder::with_capacity(dim, capacity);
 
         value.iter_geo().for_each(|maybe_g| {
             output_array
@@ -579,6 +581,8 @@ impl TryFrom<MixedGeometryArray> for PolygonArray {
     type Error = GeoArrowError;
 
     fn try_from(value: MixedGeometryArray) -> Result<Self> {
+        let dim = value.dim();
+
         if value.has_points()
             || value.has_line_strings()
             || value.has_multi_points()
@@ -602,6 +606,7 @@ impl TryFrom<MixedGeometryArray> for PolygonArray {
         capacity.geom_capacity += buffer_lengths.polygon_capacity;
 
         let mut builder = PolygonBuilder::with_capacity_and_options(
+            dim,
             capacity,
             value.coord_type(),
             value.metadata(),
@@ -632,14 +637,14 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate() {
-        let arr: PolygonArray = vec![p0(), p1()].as_slice().into();
+        let arr: PolygonArray = (vec![p0(), p1()].as_slice(), Dimension::XY).into();
         assert_eq!(arr.value_as_geo(0), p0());
         assert_eq!(arr.value_as_geo(1), p1());
     }
 
     #[test]
     fn geo_roundtrip_accurate_option_vec() {
-        let arr: PolygonArray = vec![Some(p0()), Some(p1()), None].into();
+        let arr: PolygonArray = (vec![Some(p0()), Some(p1()), None], Dimension::XY).into();
         assert_eq!(arr.get_as_geo(0), Some(p0()));
         assert_eq!(arr.get_as_geo(1), Some(p1()));
         assert_eq!(arr.get_as_geo(2), None);
@@ -647,7 +652,7 @@ mod test {
 
     #[test]
     fn slice() {
-        let arr: PolygonArray = vec![p0(), p1()].as_slice().into();
+        let arr: PolygonArray = (vec![p0(), p1()].as_slice(), Dimension::XY).into();
         let sliced = arr.slice(1, 1);
 
         assert_eq!(sliced.len(), 1);
@@ -659,7 +664,7 @@ mod test {
 
     #[test]
     fn owned_slice() {
-        let arr: PolygonArray = vec![p0(), p1()].as_slice().into();
+        let arr: PolygonArray = (vec![p0(), p1()].as_slice(), Dimension::XY).into();
         let sliced = arr.owned_slice(1, 1);
 
         // assert!(
@@ -680,7 +685,7 @@ mod test {
         let geom_arr = example_polygon_interleaved();
 
         let wkb_arr = example_polygon_wkb();
-        let parsed_geom_arr: PolygonArray = wkb_arr.try_into().unwrap();
+        let parsed_geom_arr: PolygonArray = (wkb_arr, Dimension::XY).try_into().unwrap();
 
         assert_eq!(geom_arr, parsed_geom_arr);
     }
@@ -691,7 +696,7 @@ mod test {
         let geom_arr = example_polygon_separated().into_coord_type(CoordType::Interleaved);
 
         let wkb_arr = example_polygon_wkb();
-        let parsed_geom_arr: PolygonArray = wkb_arr.try_into().unwrap();
+        let parsed_geom_arr: PolygonArray = (wkb_arr, Dimension::XY).try_into().unwrap();
 
         assert_eq!(geom_arr, parsed_geom_arr);
     }

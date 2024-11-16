@@ -1,5 +1,6 @@
 use crate::array::metadata::ArrayMetadata;
 use crate::array::{RectArray, SeparatedCoordBufferBuilder};
+use crate::datatypes::Dimension;
 use crate::error::GeoArrowError;
 use crate::scalar::Rect;
 use crate::trait_::IntoArrow;
@@ -21,24 +22,28 @@ pub struct RectBuilder {
 
 impl RectBuilder {
     /// Creates a new empty [`RectBuilder`].
-    pub fn new() -> Self {
-        Self::new_with_options(Default::default())
+    pub fn new(dim: Dimension) -> Self {
+        Self::new_with_options(dim, Default::default())
     }
 
-    pub fn new_with_options(metadata: Arc<ArrayMetadata>) -> Self {
-        Self::with_capacity_and_options(0, metadata)
-    }
-
-    /// Creates a new [`RectBuilder`] with a capacity.
-    pub fn with_capacity(capacity: usize) -> Self {
-        Self::with_capacity_and_options(capacity, Default::default())
+    pub fn new_with_options(dim: Dimension, metadata: Arc<ArrayMetadata>) -> Self {
+        Self::with_capacity_and_options(dim, 0, metadata)
     }
 
     /// Creates a new [`RectBuilder`] with a capacity.
-    pub fn with_capacity_and_options(capacity: usize, metadata: Arc<ArrayMetadata>) -> Self {
+    pub fn with_capacity(dim: Dimension, capacity: usize) -> Self {
+        Self::with_capacity_and_options(dim, capacity, Default::default())
+    }
+
+    /// Creates a new [`RectBuilder`] with a capacity.
+    pub fn with_capacity_and_options(
+        dim: Dimension,
+        capacity: usize,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Self {
         Self {
-            lower: SeparatedCoordBufferBuilder::with_capacity(capacity, D.try_into().unwrap()),
-            upper: SeparatedCoordBufferBuilder::with_capacity(capacity, D.try_into().unwrap()),
+            lower: SeparatedCoordBufferBuilder::with_capacity(capacity, dim),
+            upper: SeparatedCoordBufferBuilder::with_capacity(capacity, dim),
             validity: NullBufferBuilder::new(capacity),
             metadata,
         }
@@ -147,9 +152,10 @@ impl RectBuilder {
     /// Create this builder from a iterator of Rects.
     pub fn from_rects<'a>(
         geoms: impl ExactSizeIterator<Item = &'a (impl RectTrait<T = f64> + 'a)>,
+        dim: Dimension,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
-        let mut mutable_array = Self::with_capacity_and_options(geoms.len(), metadata);
+        let mut mutable_array = Self::with_capacity_and_options(dim, geoms.len(), metadata);
         geoms
             .into_iter()
             .for_each(|rect| mutable_array.push_rect(Some(rect)));
@@ -159,9 +165,10 @@ impl RectBuilder {
     /// Create this builder from a iterator of nullable Rects.
     pub fn from_nullable_rects<'a>(
         geoms: impl ExactSizeIterator<Item = Option<&'a (impl RectTrait<T = f64> + 'a)>>,
+        dim: Dimension,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
-        let mut mutable_array = Self::with_capacity_and_options(geoms.len(), metadata);
+        let mut mutable_array = Self::with_capacity_and_options(dim, geoms.len(), metadata);
         geoms
             .into_iter()
             .for_each(|maybe_rect| mutable_array.push_rect(maybe_rect));
@@ -171,7 +178,7 @@ impl RectBuilder {
 
 impl Default for RectBuilder {
     fn default() -> Self {
-        Self::new()
+        Self::new(Dimension::XY)
     }
 }
 
@@ -195,14 +202,14 @@ impl From<RectBuilder> for RectArray {
     }
 }
 
-impl<G: RectTrait<T = f64>, const D: usize> From<&[G]> for RectBuilder {
-    fn from(geoms: &[G]) -> Self {
-        RectBuilder::from_rects(geoms.iter(), Default::default())
+impl<G: RectTrait<T = f64>> From<(&[G], Dimension)> for RectBuilder {
+    fn from((geoms, dim): (&[G], Dimension)) -> Self {
+        RectBuilder::from_rects(geoms.iter(), dim, Default::default())
     }
 }
 
-impl<G: RectTrait<T = f64>, const D: usize> From<Vec<Option<G>>> for RectBuilder {
-    fn from(geoms: Vec<Option<G>>) -> Self {
-        RectBuilder::from_nullable_rects(geoms.iter().map(|x| x.as_ref()), Default::default())
+impl<G: RectTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for RectBuilder {
+    fn from((geoms, dim): (Vec<Option<G>>, Dimension)) -> Self {
+        RectBuilder::from_nullable_rects(geoms.iter().map(|x| x.as_ref()), dim, Default::default())
     }
 }
