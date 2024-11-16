@@ -659,12 +659,12 @@ impl TryFrom<&UnionArray> for MixedGeometryArray {
         Ok(Self::new(
             type_ids,
             offsets,
-            points.get(0).cloned().unwrap_or_default(),
-            line_strings.get(0).cloned().unwrap_or_default(),
-            polygons.get(0).cloned().unwrap_or_default(),
-            multi_points.get(0).cloned().unwrap_or_default(),
-            multi_line_strings.get(0).cloned().unwrap_or_default(),
-            multi_polygons.get(0).cloned().unwrap_or_default(),
+            points.first().cloned().unwrap_or_default(),
+            line_strings.first().cloned().unwrap_or_default(),
+            polygons.first().cloned().unwrap_or_default(),
+            multi_points.first().cloned().unwrap_or_default(),
+            multi_line_strings.first().cloned().unwrap_or_default(),
+            multi_polygons.first().cloned().unwrap_or_default(),
             Default::default(),
         ))
     }

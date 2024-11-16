@@ -4,14 +4,14 @@ use geoarrow::array::{AsChunkedNativeArray, MultiPolygonArray};
 use geoarrow::io::flatgeobuf::read_flatgeobuf;
 use std::fs::File;
 
-fn load_file() -> MultiPolygonArray<2> {
+fn load_file() -> MultiPolygonArray {
     let mut file = File::open("fixtures/flatgeobuf/countries.fgb").unwrap();
     let table = read_flatgeobuf(&mut file, Default::default()).unwrap();
     table
         .geometry_column(None)
         .unwrap()
         .as_ref()
-        .as_multi_polygon::<2>()
+        .as_multi_polygon()
         .chunks()
         .first()
         .unwrap()

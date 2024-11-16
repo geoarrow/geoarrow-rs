@@ -31,7 +31,7 @@ pub(crate) fn p2() -> Point {
 }
 
 pub(crate) fn point_array() -> PointArray {
-    let geoms = vec![p0(), p1(), p2()];
+    let geoms = [p0(), p1(), p2()];
     PointBuilder::from_points(
         geoms.iter(),
         Dimension::XY,

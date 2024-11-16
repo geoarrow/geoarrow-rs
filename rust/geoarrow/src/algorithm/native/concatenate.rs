@@ -1,5 +1,8 @@
+use std::collections::HashSet;
+
 use crate::array::*;
 use crate::chunked_array::*;
+use crate::datatypes::Dimension;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 
@@ -13,8 +16,10 @@ impl Concatenate for &[PointArray] {
     type Output = Result<PointArray>;
 
     fn concatenate(&self) -> Self::Output {
+        let common_dimension = infer_common_dimension(self.iter().map(|arr| arr.dimension()));
+
         let output_capacity = self.iter().fold(0, |sum, val| sum + val.buffer_lengths());
-        let mut builder = PointBuilder::with_capacity(output_capacity);
+        let mut builder = PointBuilder::with_capacity(common_dimension, output_capacity);
         self.iter()
             .for_each(|chunk| chunk.iter().for_each(|p| builder.push_point(p.as_ref())));
         Ok(builder.finish())
@@ -27,10 +32,13 @@ macro_rules! impl_concatenate {
             type Output = Result<$array>;
 
             fn concatenate(&self) -> Self::Output {
+                let common_dimension =
+                    infer_common_dimension(self.iter().map(|arr| arr.dimension()));
+
                 let output_capacity = self.iter().fold(<$capacity>::new_empty(), |sum, val| {
                     sum + val.buffer_lengths()
                 });
-                let mut builder = <$builder>::with_capacity(output_capacity);
+                let mut builder = <$builder>::with_capacity(common_dimension, output_capacity);
                 for chunk in self.iter() {
                     for geom in chunk.iter() {
                         builder.$push_func(geom.as_ref())?;
@@ -79,6 +87,12 @@ impl_concatenate!(
     GeometryCollectionBuilder,
     push_geometry_collection
 );
+
+fn infer_common_dimension(dimensions: impl Iterator<Item = Dimension>) -> Dimension {
+    let dimensions: HashSet<Dimension> = HashSet::from_iter(dimensions);
+    assert_eq!(dimensions.len(), 1);
+    dimensions.into_iter().next().unwrap()
+}
 
 impl Concatenate for ChunkedPointArray {
     type Output = Result<PointArray>;
