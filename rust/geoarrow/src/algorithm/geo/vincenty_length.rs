@@ -27,6 +27,7 @@ pub trait VincentyLength {
     /// use geo::LineString;
     /// use geoarrow::array::LineStringArray;
     /// use geoarrow::algorithm::geo::VincentyLength;
+    /// use geoarrow::datatypes::Dimension;
     ///
     /// let linestring = LineString::<f64>::from(vec![
     ///     // New York City
@@ -36,7 +37,7 @@ pub trait VincentyLength {
     ///     // Osaka
     ///     (135.5244559, 34.687455)
     /// ]);
-    /// let linestring_array: LineStringArray = vec![linestring].as_slice().into();
+    /// let linestring_array: LineStringArray = (vec![linestring].as_slice(), Dimension::XY).into();
     ///
     /// let length_array = linestring_array.vincenty_length().unwrap();
     ///

@@ -18,6 +18,7 @@ use geo::prelude::Area as GeoArea;
 ///
 /// use geoarrow::algorithm::geo::Area;
 /// use geoarrow::array::PolygonArray;
+/// use geoarrow::datatypes::Dimension;
 ///
 /// let polygon = polygon![
 ///     (x: 0., y: 0.),
@@ -32,8 +33,8 @@ use geo::prelude::Area as GeoArea;
 ///     line_string.0.reverse();
 /// });
 ///
-/// let polygon_array: PolygonArray = vec![polygon].as_slice().into();
-/// let reversed_polygon_array: PolygonArray = vec![reversed_polygon].as_slice().into();
+/// let polygon_array: PolygonArray = (vec![polygon].as_slice(), Dimension::XY).into();
+/// let reversed_polygon_array: PolygonArray = (vec![reversed_polygon].as_slice(), Dimension::XY).into();
 ///
 /// assert_eq!(polygon_array.signed_area().value(0), 30.);
 /// assert_eq!(polygon_array.unsigned_area().value(0), 30.);

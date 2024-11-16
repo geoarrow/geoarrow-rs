@@ -30,6 +30,7 @@ pub trait HaversineLength {
     /// use geo::LineString;
     /// use geoarrow::array::LineStringArray;
     /// use geoarrow::algorithm::geo::HaversineLength;
+    /// use geoarrow::datatypes::Dimension;
     ///
     /// let linestring = LineString::<f64>::from(vec![
     ///     // New York City
@@ -37,7 +38,7 @@ pub trait HaversineLength {
     ///     // London
     ///     (-0.1278, 51.5074),
     /// ]);
-    /// let linestring_array: LineStringArray = vec![linestring].as_slice().into();
+    /// let linestring_array: LineStringArray = (vec![linestring].as_slice(), Dimension::XY).into();
     ///
     /// let length_array = linestring_array.haversine_length();
     ///

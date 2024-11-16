@@ -20,12 +20,13 @@ pub trait EuclideanLength {
     /// use geo::line_string;
     /// use geoarrow::array::LineStringArray;
     /// use geoarrow::algorithm::geo::EuclideanLength;
+    /// use geoarrow::datatypes::Dimension;
     ///
     /// let line_string = line_string![
     ///     (x: 40.02f64, y: 116.34),
     ///     (x: 42.02f64, y: 116.34),
     /// ];
-    /// let linestring_array: LineStringArray = vec![line_string].as_slice().into();
+    /// let linestring_array: LineStringArray = (vec![line_string].as_slice(), Dimension::XY).into();
     ///
     /// let length_array = linestring_array.euclidean_length();
     ///

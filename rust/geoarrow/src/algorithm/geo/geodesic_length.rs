@@ -34,6 +34,7 @@ pub trait GeodesicLength {
     /// use geo::LineString;
     /// use geoarrow::array::LineStringArray;
     /// use geoarrow::algorithm::geo::GeodesicLength;
+    /// use geoarrow::datatypes::Dimension;
     ///
     /// let linestring = LineString::from(vec![
     ///     // New York City
@@ -43,7 +44,7 @@ pub trait GeodesicLength {
     ///     // Osaka
     ///     (135.5244559, 34.687455)
     /// ]);
-    /// let linestring_array: LineStringArray = vec![linestring].as_slice().into();
+    /// let linestring_array: LineStringArray = (vec![linestring].as_slice(), Dimension::XY).into();
     ///
     /// let length_array = linestring_array.geodesic_length();
     ///

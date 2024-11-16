@@ -57,7 +57,7 @@ pub trait EuclideanDistance<Rhs> {
     ///
     /// let distance = point.euclidean_distance(&polygon);
     ///
-    /// assert_relative_eq!(distance.1213203435596424);
+    /// assert_relative_eq!(distance, 2.1213203435596424);
     /// ```
     ///
     /// `Point` to `LineString`:

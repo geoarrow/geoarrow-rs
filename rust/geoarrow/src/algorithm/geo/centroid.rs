@@ -20,6 +20,7 @@ use geo::algorithm::centroid::Centroid as GeoCentroid;
 /// use geoarrow::algorithm::geo::Centroid;
 /// use geoarrow::array::PolygonArray;
 /// use geoarrow::trait_::ArrayAccessor;
+/// use geoarrow::datatypes::Dimension;
 /// use geo::{point, polygon};
 ///
 /// // rhombus shaped polygon
@@ -30,7 +31,7 @@ use geo::algorithm::centroid::Centroid as GeoCentroid;
 ///     (x: 1., y: -1.),
 ///     (x: -2., y: 1.),
 /// ];
-/// let polygon_array: PolygonArray = vec![polygon].as_slice().into();
+/// let polygon_array: PolygonArray = (vec![polygon].as_slice(), Dimension::XY).into();
 ///
 /// assert_eq!(
 ///     Some(point!(x: 1., y: 1.)),
@@ -48,13 +49,14 @@ pub trait Centroid {
     /// use geoarrow::algorithm::geo::Centroid;
     /// use geoarrow::array::LineStringArray;
     /// use geoarrow::trait_::ArrayAccessor;
+    /// use geoarrow::datatypes::Dimension;
     /// use geo::{line_string, point};
     ///
     /// let line_string = line_string![
     ///     (x: 40.02f64, y: 116.34),
     ///     (x: 40.02f64, y: 118.23),
     /// ];
-    /// let line_string_array: LineStringArray = vec![line_string].as_slice().into();
+    /// let line_string_array: LineStringArray = (vec![line_string].as_slice(), Dimension::XY).into();
     ///
     /// assert_eq!(
     ///     Some(point!(x: 40.02, y: 117.285)),

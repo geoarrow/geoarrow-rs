@@ -29,6 +29,7 @@ pub trait SimplifyVw {
     /// use geoarrow::array::LineStringArray;
     /// use geoarrow::trait_::ArrayAccessor;
     /// use geo::line_string;
+    /// use geoarrow::datatypes::Dimension;
     ///
     /// let line_string = line_string![
     ///     (x: 5.0, y: 2.0),
@@ -37,7 +38,7 @@ pub trait SimplifyVw {
     ///     (x: 7.0, y: 25.0),
     ///     (x: 10.0, y: 10.0),
     /// ];
-    /// let line_string_array: LineStringArray = vec![line_string].as_slice().into();
+    /// let line_string_array: LineStringArray = (vec![line_string].as_slice(), Dimension::XY).into();
     ///
     /// let simplified_array = line_string_array.simplify_vw(&30.0);
     ///
