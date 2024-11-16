@@ -18,6 +18,7 @@ use parquet::schema::types::{ColumnPath, SchemaDescriptor};
 
 use crate::algorithm::geo::BoundingRect;
 use crate::array::{NativeArrayDyn, RectArray, RectBuilder};
+use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::metadata::GeoParquetBboxCovering;
 use crate::trait_::ArrayAccessor;
@@ -147,8 +148,8 @@ impl<'a> ParquetBboxStatistics<'a> {
     }
 
     /// Extract the bounding boxes for a sequence of row groups
-    pub fn get_bboxes(&self, row_groups: &[RowGroupMetaData]) -> Result<RectArray<2>> {
-        let mut builder = RectBuilder::with_capacity(row_groups.len());
+    pub fn get_bboxes(&self, row_groups: &[RowGroupMetaData]) -> Result<RectArray> {
+        let mut builder = RectBuilder::with_capacity(Dimension::XY, row_groups.len());
         for rg_meta in row_groups.iter() {
             builder.push_rect(Some(&self.get_bbox(rg_meta)?));
         }

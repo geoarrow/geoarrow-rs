@@ -11,6 +11,7 @@ use parquet::schema::types::SchemaDescriptor;
 use serde_json::Value;
 
 use crate::array::{CoordType, RectArray, RectBuilder};
+use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::metadata::{GeoParquetBboxCovering, GeoParquetMetadata};
 use crate::io::parquet::reader::parse::infer_target_schema;
@@ -159,10 +160,7 @@ impl GeoParquetReaderMetadata {
     ///
     /// As of GeoParquet 1.1 you won't need to pass in these column names, as they'll be specified
     /// in the metadata.
-    pub fn row_groups_bounds(
-        &self,
-        paths: Option<&GeoParquetBboxCovering>,
-    ) -> Result<RectArray<2>> {
+    pub fn row_groups_bounds(&self, paths: Option<&GeoParquetBboxCovering>) -> Result<RectArray> {
         let paths = if let Some(paths) = paths {
             paths
         } else {
@@ -183,7 +181,8 @@ impl GeoParquetReaderMetadata {
             .iter()
             .map(|rg_meta| geo_statistics.get_bbox(rg_meta))
             .collect::<Result<Vec<_>>>()?;
-        let rect_array = RectBuilder::from_rects(rects.iter(), Default::default()).finish();
+        let rect_array =
+            RectBuilder::from_rects(rects.iter(), Dimension::XY, Default::default()).finish();
         Ok(rect_array)
     }
 

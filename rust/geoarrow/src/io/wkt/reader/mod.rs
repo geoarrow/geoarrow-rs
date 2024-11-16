@@ -5,6 +5,7 @@ use arrow_array::{Array, GenericStringArray, OffsetSizeTrait};
 
 use crate::array::metadata::ArrayMetadata;
 use crate::array::{CoordType, MixedGeometryBuilder};
+use crate::datatypes::Dimension;
 use crate::NativeArray;
 
 // mod wkt_trait;
@@ -21,7 +22,9 @@ impl<O: OffsetSizeTrait> ParseWKT for GenericStringArray<O> {
 
     fn parse_wkt(&self, coord_type: CoordType, metadata: Arc<ArrayMetadata>) -> Self::Output {
         // TODO: switch this prefer_multi to true when we use downcasting here.
-        let mut builder = MixedGeometryBuilder::new_with_options(coord_type, metadata, false);
+        // TODO: Support xyz, xyzm, etc WKT input
+        let mut builder =
+            MixedGeometryBuilder::new_with_options(Dimension::XY, coord_type, metadata, false);
         for i in 0..self.len() {
             if self.is_valid(i) {
                 let w = wkt::Wkt::<f64>::from_str(self.value(i)).unwrap();

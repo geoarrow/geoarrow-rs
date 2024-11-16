@@ -10,6 +10,7 @@ use sqlx::{Column, Decode, Executor, Postgres, Row, Type, TypeInfo};
 use std::io::Cursor;
 use std::sync::Arc;
 
+use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::io::geozero::array::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
@@ -160,7 +161,7 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
         options.properties_schema = Some(Arc::new(schema.finish()));
 
         // Create builder and add this row
-        let mut builder = Self::new_with_options(options);
+        let mut builder = Self::new_with_options(Dimension::XY, options);
         builder.add_postgres_row(0, row)?;
         Ok(builder)
     }

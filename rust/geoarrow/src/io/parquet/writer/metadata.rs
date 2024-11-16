@@ -80,33 +80,8 @@ impl ColumnInfo {
 
         // We only have to do this for mixed arrays because other arrays are statically known
         match array_ref.data_type() {
-            NativeType::Mixed(_, Dimension::XY) => {
-                let mixed_arr = array_ref.as_mixed::<2>();
-                if mixed_arr.has_points() {
-                    self.geometry_types.insert(GeoParquetGeometryType::Point);
-                }
-                if mixed_arr.has_line_strings() {
-                    self.geometry_types
-                        .insert(GeoParquetGeometryType::LineString);
-                }
-                if mixed_arr.has_polygons() {
-                    self.geometry_types.insert(GeoParquetGeometryType::Polygon);
-                }
-                if mixed_arr.has_multi_points() {
-                    self.geometry_types
-                        .insert(GeoParquetGeometryType::MultiPoint);
-                }
-                if mixed_arr.has_multi_line_strings() {
-                    self.geometry_types
-                        .insert(GeoParquetGeometryType::MultiLineString);
-                }
-                if mixed_arr.has_multi_polygons() {
-                    self.geometry_types
-                        .insert(GeoParquetGeometryType::MultiPolygon);
-                }
-            }
-            NativeType::Mixed(_, Dimension::XYZ) => {
-                let mixed_arr = array_ref.as_mixed::<3>();
+            NativeType::Mixed(_, _) => {
+                let mixed_arr = array_ref.as_mixed();
                 if mixed_arr.has_points() {
                     self.geometry_types.insert(GeoParquetGeometryType::Point);
                 }

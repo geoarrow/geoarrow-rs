@@ -1,4 +1,5 @@
 use crate::array::{PolygonArray, PolygonBuilder};
+use crate::datatypes::Dimension;
 use geo::{polygon, Polygon};
 
 pub(crate) fn p0() -> Polygon {
@@ -31,5 +32,11 @@ pub(crate) fn p1() -> Polygon {
 
 pub(crate) fn p_array() -> PolygonArray {
     let geoms = vec![p0(), p1()];
-    PolygonBuilder::from_polygons(&geoms, Default::default(), Default::default()).finish()
+    PolygonBuilder::from_polygons(
+        &geoms,
+        Dimension::XY,
+        Default::default(),
+        Default::default(),
+    )
+    .finish()
 }

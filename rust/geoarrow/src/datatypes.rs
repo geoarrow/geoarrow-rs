@@ -990,7 +990,7 @@ mod test {
         let data_type: NativeType = field.as_ref().try_into().unwrap();
         assert_eq!(ml_array.data_type(), data_type);
 
-        let mut builder = MixedGeometryBuilder::new();
+        let mut builder = MixedGeometryBuilder::new(Dimension::XY);
         builder.push_point(Some(&crate::test::point::p0())).unwrap();
         builder.push_point(Some(&crate::test::point::p1())).unwrap();
         builder.push_point(Some(&crate::test::point::p2())).unwrap();

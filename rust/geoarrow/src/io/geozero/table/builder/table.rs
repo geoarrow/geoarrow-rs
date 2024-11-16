@@ -238,7 +238,7 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
 
 impl<G: GeometryArrayBuilder + GeomProcessor> Default for GeoTableBuilder<G> {
     fn default() -> Self {
-        Self::new()
+        Self::new(Dimension::XY)
     }
 }
 

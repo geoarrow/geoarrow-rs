@@ -1,6 +1,7 @@
 use geo::{polygon, MultiPolygon};
 
 use crate::array::MultiPolygonArray;
+use crate::datatypes::Dimension;
 
 pub(crate) fn mp0() -> MultiPolygon {
     MultiPolygon::new(vec![
@@ -47,5 +48,5 @@ pub(crate) fn mp1() -> MultiPolygon {
 }
 
 pub(crate) fn mp_array() -> MultiPolygonArray {
-    vec![mp0(), mp1()].as_slice().into()
+    (vec![mp0(), mp1()].as_slice(), Dimension::XY).into()
 }

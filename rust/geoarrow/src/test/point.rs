@@ -73,7 +73,7 @@ impl CoordTrait for CoordZ {
 }
 
 pub(crate) fn point_z_array() -> PointArray {
-    let mut builder = PointBuilder::with_capacity(3);
+    let mut builder = PointBuilder::with_capacity(Dimension::XYZ, 3);
     let coords = vec![
         CoordZ {
             x: 0.,

@@ -170,25 +170,18 @@ fn parse_array(
     orig_field: &Field,
     target_field: &Field,
 ) -> Result<Arc<dyn Array>> {
-    use Dimension::*;
     use NativeType::*;
 
     let orig_type = AnyType::try_from(orig_field)?;
     let arr = array.as_ref();
     match orig_type {
         AnyType::Native(t) => match t {
-            Point(_, XY) => parse_point_column::<2>(arr),
-            LineString(_, XY) => parse_line_string_column::<2>(arr),
-            Polygon(_, XY) => parse_polygon_column::<2>(arr),
-            MultiPoint(_, XY) => parse_multi_point_column::<2>(arr),
-            MultiLineString(_, XY) => parse_multi_line_string_column::<2>(arr),
-            MultiPolygon(_, XY) => parse_multi_polygon_column::<2>(arr),
-            Point(_, XYZ) => parse_point_column::<3>(arr),
-            LineString(_, XYZ) => parse_line_string_column::<3>(arr),
-            Polygon(_, XYZ) => parse_polygon_column::<3>(arr),
-            MultiPoint(_, XYZ) => parse_multi_point_column::<3>(arr),
-            MultiLineString(_, XYZ) => parse_multi_line_string_column::<3>(arr),
-            MultiPolygon(_, XYZ) => parse_multi_polygon_column::<3>(arr),
+            Point(_, dim) => parse_point_column(arr, dim),
+            LineString(_, dim) => parse_line_string_column(arr, dim),
+            Polygon(_, dim) => parse_polygon_column(arr, dim),
+            MultiPoint(_, dim) => parse_multi_point_column(arr, dim),
+            MultiLineString(_, dim) => parse_multi_line_string_column(arr, dim),
+            MultiPolygon(_, dim) => parse_multi_polygon_column(arr, dim),
             other => Err(GeoArrowError::General(format!(
                 "Unexpected geometry encoding: {:?}",
                 other
@@ -226,17 +219,17 @@ fn parse_wkb_column(arr: &dyn Array, target_geo_data_type: NativeType) -> Result
     }
 }
 
-fn parse_point_column(array: &dyn Array) -> Result<Arc<dyn Array>> {
-    let geom_arr: PointArray<D> = array.try_into()?;
+fn parse_point_column(array: &dyn Array, dim: Dimension) -> Result<Arc<dyn Array>> {
+    let geom_arr: PointArray = (array, dim).try_into()?;
     Ok(geom_arr.into_array_ref())
 }
 
 macro_rules! impl_parse_fn {
     ($fn_name:ident, $geoarrow_type:ty) => {
-        fn $fn_name(array: &dyn Array) -> Result<Arc<dyn Array>> {
+        fn $fn_name(array: &dyn Array, dim: Dimension) -> Result<Arc<dyn Array>> {
             match array.data_type() {
                 DataType::List(_) | DataType::LargeList(_) => {
-                    let geom_arr: $geoarrow_type = array.try_into()?;
+                    let geom_arr: $geoarrow_type = (array, dim).try_into()?;
                     Ok(geom_arr.into_array_ref())
                 }
                 dt => Err(GeoArrowError::General(format!(
@@ -248,8 +241,8 @@ macro_rules! impl_parse_fn {
     };
 }
 
-impl_parse_fn!(parse_line_string_column, LineStringArray<D>);
-impl_parse_fn!(parse_polygon_column, PolygonArray<D>);
-impl_parse_fn!(parse_multi_point_column, MultiPointArray<D>);
-impl_parse_fn!(parse_multi_line_string_column, MultiLineStringArray<D>);
-impl_parse_fn!(parse_multi_polygon_column, MultiPolygonArray<D>);
+impl_parse_fn!(parse_line_string_column, LineStringArray);
+impl_parse_fn!(parse_polygon_column, PolygonArray);
+impl_parse_fn!(parse_multi_point_column, MultiPointArray);
+impl_parse_fn!(parse_multi_line_string_column, MultiLineStringArray);
+impl_parse_fn!(parse_multi_polygon_column, MultiPolygonArray);
