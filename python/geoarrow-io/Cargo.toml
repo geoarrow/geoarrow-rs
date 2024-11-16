@@ -77,3 +77,7 @@ url = "2.5"
 reqwest = { version = "*", features = ["rustls-tls-native-roots"] }
 # Compile openssl from source
 openssl = { version = "0.10", features = ["vendored"] }
+
+# Pin to fix strange pyodide compilation errors.
+# See https://github.com/geoarrow/geoarrow-rs/issues/868
+zstd-sys = "2.0.12+zstd.1.5.6"

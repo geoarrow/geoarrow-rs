@@ -1167,6 +1167,7 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "url",
+ "zstd-sys",
 ]
 
 [[package]]
