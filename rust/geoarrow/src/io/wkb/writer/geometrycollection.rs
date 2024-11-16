@@ -46,6 +46,7 @@ impl<O: OffsetSizeTrait> From<&GeometryCollectionArray> for WKBArray<O> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::datatypes::Dimension;
     use crate::test::multipoint;
     use crate::test::multipolygon;
 
@@ -61,9 +62,10 @@ mod test {
             geo::Geometry::MultiPolygon(multipolygon::mp1()),
         ]);
 
-        let orig_arr: GeometryCollectionArray = vec![Some(gc0), Some(gc1), None].into();
+        let orig_arr: GeometryCollectionArray =
+            (vec![Some(gc0), Some(gc1), None], Dimension::XY).into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: GeometryCollectionArray = wkb_arr.try_into().unwrap();
+        let new_arr: GeometryCollectionArray = (wkb_arr, Dimension::XY).try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }

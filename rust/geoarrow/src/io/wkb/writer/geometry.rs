@@ -45,21 +45,25 @@ impl<O: OffsetSizeTrait> From<&MixedGeometryArray> for WKBArray<O> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::datatypes::Dimension;
     use crate::test::multilinestring::{ml0, ml1};
     use crate::test::point::{p0, p1};
 
     #[test]
     fn round_trip() {
-        let orig_arr: MixedGeometryArray = vec![
-            Some(geo::Geometry::MultiLineString(ml0())),
-            Some(geo::Geometry::MultiLineString(ml1())),
-            Some(geo::Geometry::Point(p0())),
-            Some(geo::Geometry::Point(p1())),
-        ]
-        .try_into()
-        .unwrap();
+        let orig_arr: MixedGeometryArray = (
+            vec![
+                Some(geo::Geometry::MultiLineString(ml0())),
+                Some(geo::Geometry::MultiLineString(ml1())),
+                Some(geo::Geometry::Point(p0())),
+                Some(geo::Geometry::Point(p1())),
+            ],
+            Dimension::XY,
+        )
+            .try_into()
+            .unwrap();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: MixedGeometryArray = wkb_arr.try_into().unwrap();
+        let new_arr: MixedGeometryArray = (wkb_arr, Dimension::XY).try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }
@@ -67,17 +71,20 @@ mod test {
     #[ignore = "None not allowed in geometry array."]
     #[test]
     fn round_trip_null() {
-        let orig_arr: MixedGeometryArray = vec![
-            Some(geo::Geometry::MultiLineString(ml0())),
-            Some(geo::Geometry::MultiLineString(ml1())),
-            Some(geo::Geometry::Point(p0())),
-            Some(geo::Geometry::Point(p1())),
-            None,
-        ]
-        .try_into()
-        .unwrap();
+        let orig_arr: MixedGeometryArray = (
+            vec![
+                Some(geo::Geometry::MultiLineString(ml0())),
+                Some(geo::Geometry::MultiLineString(ml1())),
+                Some(geo::Geometry::Point(p0())),
+                Some(geo::Geometry::Point(p1())),
+                None,
+            ],
+            Dimension::XY,
+        )
+            .try_into()
+            .unwrap();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: MixedGeometryArray = wkb_arr.try_into().unwrap();
+        let new_arr: MixedGeometryArray = (wkb_arr, Dimension::XY).try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }

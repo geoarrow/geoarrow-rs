@@ -177,14 +177,15 @@ impl<G: MultiPolygonTrait<T = f64>> PartialEq<G> for MultiPolygon<'_> {
 #[cfg(test)]
 mod test {
     use crate::array::MultiPolygonArray;
+    use crate::datatypes::Dimension;
     use crate::test::multipolygon::{mp0, mp1};
     use crate::trait_::ArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]
     fn test_eq_other_index_false() {
-        let arr1: MultiPolygonArray = vec![mp0(), mp1()].as_slice().into();
-        let arr2: MultiPolygonArray = vec![mp0(), mp0()].as_slice().into();
+        let arr1: MultiPolygonArray = (vec![mp0(), mp1()].as_slice(), Dimension::XY).into();
+        let arr2: MultiPolygonArray = (vec![mp0(), mp0()].as_slice(), Dimension::XY).into();
 
         assert_eq!(arr1.value(0), arr2.value(0));
         assert_ne!(arr1.value(1), arr2.value(1));

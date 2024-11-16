@@ -44,15 +44,16 @@ impl<O: OffsetSizeTrait> From<&PolygonArray> for WKBArray<O> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::datatypes::Dimension;
     use crate::test::polygon::{p0, p1};
     use crate::trait_::ArrayAccessor;
     use geozero::{CoordDimensions, ToWkb};
 
     #[test]
     fn round_trip() {
-        let orig_arr: PolygonArray = vec![Some(p0()), Some(p1()), None].into();
+        let orig_arr: PolygonArray = (vec![Some(p0()), Some(p1()), None], Dimension::XY).into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: PolygonArray = wkb_arr.clone().try_into().unwrap();
+        let new_arr: PolygonArray = (wkb_arr.clone(), Dimension::XY).try_into().unwrap();
 
         let wkb0 = geo::Geometry::Polygon(p0())
             .to_wkb(CoordDimensions::xy())

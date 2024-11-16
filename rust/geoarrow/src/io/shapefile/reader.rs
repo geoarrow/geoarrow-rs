@@ -150,7 +150,7 @@ pub fn read_shapefile<T: Read + Seek>(shp_reader: T, dbf_reader: T) -> Result<Ta
         }
         ShapeType::Polyline => {
             let mut builder =
-                GeoTableBuilder::<MultiLineStringBuilder<2>>::new_with_options(options);
+                GeoTableBuilder::<MultiLineStringBuilder>::new_with_options(Dimension::XY, options);
 
             for geom_and_record in
                 reader.iter_shapes_and_records_as::<shapefile::Polyline, dbase::Record>()
@@ -173,8 +173,10 @@ pub fn read_shapefile<T: Read + Seek>(shp_reader: T, dbf_reader: T) -> Result<Ta
             builder.finish()
         }
         ShapeType::PolylineZ => {
-            let mut builder =
-                GeoTableBuilder::<MultiLineStringBuilder<3>>::new_with_options(options);
+            let mut builder = GeoTableBuilder::<MultiLineStringBuilder>::new_with_options(
+                Dimension::XYZ,
+                options,
+            );
 
             for geom_and_record in
                 reader.iter_shapes_and_records_as::<shapefile::PolylineZ, dbase::Record>()
@@ -197,7 +199,8 @@ pub fn read_shapefile<T: Read + Seek>(shp_reader: T, dbf_reader: T) -> Result<Ta
             builder.finish()
         }
         ShapeType::Polygon => {
-            let mut builder = GeoTableBuilder::<MultiPolygonBuilder<2>>::new_with_options(options);
+            let mut builder =
+                GeoTableBuilder::<MultiPolygonBuilder>::new_with_options(Dimension::XY, options);
 
             for geom_and_record in
                 reader.iter_shapes_and_records_as::<shapefile::Polygon, dbase::Record>()
@@ -220,7 +223,8 @@ pub fn read_shapefile<T: Read + Seek>(shp_reader: T, dbf_reader: T) -> Result<Ta
             builder.finish()
         }
         ShapeType::PolygonZ => {
-            let mut builder = GeoTableBuilder::<MultiPolygonBuilder<3>>::new_with_options(options);
+            let mut builder =
+                GeoTableBuilder::<MultiPolygonBuilder>::new_with_options(Dimension::XYZ, options);
 
             for geom_and_record in
                 reader.iter_shapes_and_records_as::<shapefile::PolygonZ, dbase::Record>()

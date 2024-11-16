@@ -87,7 +87,7 @@ impl From<Rect<'_>> for geo::Geometry {
 }
 
 impl RTreeObject for Rect<'_> {
-    type Envelope = AABB<[f64; D]>;
+    type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
         let lower = self.min();

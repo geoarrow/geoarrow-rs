@@ -46,13 +46,15 @@ impl<O: OffsetSizeTrait> From<&MultiLineStringArray> for WKBArray<O> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::datatypes::Dimension;
     use crate::test::multilinestring::{ml0, ml1};
 
     #[test]
     fn round_trip() {
-        let orig_arr: MultiLineStringArray = vec![Some(ml0()), Some(ml1()), None].into();
+        let orig_arr: MultiLineStringArray =
+            (vec![Some(ml0()), Some(ml1()), None], Dimension::XY).into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: MultiLineStringArray = wkb_arr.try_into().unwrap();
+        let new_arr: MultiLineStringArray = (wkb_arr, Dimension::XY).try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }

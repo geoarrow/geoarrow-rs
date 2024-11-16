@@ -46,23 +46,27 @@ impl<O: OffsetSizeTrait> From<&PointArray> for WKBArray<O> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::datatypes::Dimension;
     use crate::test::point::{p0, p1, p2};
 
     #[test]
     fn round_trip() {
-        // TODO: test with nulls
-        let orig_arr: PointArray = vec![Some(p0()), Some(p1()), Some(p2())].into();
+        let orig_arr: PointArray = (vec![Some(p0()), Some(p1()), Some(p2())], Dimension::XY).into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: PointArray = wkb_arr.try_into().unwrap();
+        let new_arr: PointArray = (wkb_arr, Dimension::XY).try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }
 
     #[test]
     fn round_trip_with_null() {
-        let orig_arr: PointArray = vec![Some(p0()), None, Some(p1()), None, Some(p2())].into();
+        let orig_arr: PointArray = (
+            vec![Some(p0()), None, Some(p1()), None, Some(p2())],
+            Dimension::XY,
+        )
+            .into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: PointArray = wkb_arr.try_into().unwrap();
+        let new_arr: PointArray = (wkb_arr, Dimension::XY).try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }
