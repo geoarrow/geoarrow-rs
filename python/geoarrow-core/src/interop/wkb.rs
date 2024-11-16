@@ -1,6 +1,6 @@
 use geoarrow::array::WKBArray;
 use geoarrow::chunked_array::{ChunkedArrayBase, ChunkedWKBArray};
-use geoarrow::datatypes::SerializedType;
+use geoarrow::datatypes::{Dimension, SerializedType};
 use geoarrow::io::wkb::{to_wkb as _to_wkb, FromWKB, ToWKB};
 use geoarrow::ArrayBase;
 use pyo3::exceptions::PyValueError;
@@ -31,11 +31,11 @@ pub fn from_wkb(
             let geo_array = match typ {
                 SerializedType::WKB => {
                     let wkb_arr = WKBArray::<i32>::try_from((arr.as_ref(), field.as_ref()))?;
-                    FromWKB::from_wkb(&wkb_arr, coord_type)?
+                    FromWKB::from_wkb(&wkb_arr, coord_type, Dimension::XY)?
                 }
                 SerializedType::LargeWKB => {
                     let wkb_arr = WKBArray::<i64>::try_from((arr.as_ref(), field.as_ref()))?;
-                    FromWKB::from_wkb(&wkb_arr, coord_type)?
+                    FromWKB::from_wkb(&wkb_arr, coord_type, Dimension::XY)?
                 }
                 _ => return Err(PyValueError::new_err("Expected a WKB array").into()),
             };
@@ -50,14 +50,14 @@ pub fn from_wkb(
                         .into_iter()
                         .map(|chunk| WKBArray::<i32>::try_from((chunk.as_ref(), field.as_ref())))
                         .collect::<Result<Vec<_>, _>>()?;
-                    FromWKB::from_wkb(&ChunkedWKBArray::new(chunks), coord_type)?
+                    FromWKB::from_wkb(&ChunkedWKBArray::new(chunks), coord_type, Dimension::XY)?
                 }
                 SerializedType::LargeWKB => {
                     let chunks = chunks
                         .into_iter()
                         .map(|chunk| WKBArray::<i64>::try_from((chunk.as_ref(), field.as_ref())))
                         .collect::<Result<Vec<_>, _>>()?;
-                    FromWKB::from_wkb(&ChunkedWKBArray::new(chunks), coord_type)?
+                    FromWKB::from_wkb(&ChunkedWKBArray::new(chunks), coord_type, Dimension::XY)?
                 }
                 _ => return Err(PyValueError::new_err("Expected a WKB array").into()),
             };

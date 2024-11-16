@@ -4,6 +4,7 @@ use arrow::datatypes::DataType;
 use arrow_array::cast::AsArray;
 use geoarrow::array::metadata::ArrayMetadata;
 use geoarrow::chunked_array::{ChunkedArray, ChunkedMixedGeometryArray};
+use geoarrow::datatypes::Dimension;
 use geoarrow::io::geozero::FromWKT;
 use geoarrow::io::wkt::reader::ParseWKT;
 use geoarrow::io::wkt::ToWKT;
@@ -47,7 +48,7 @@ pub fn from_wkt(
             let chunked_arr = s.into_chunked_array()?;
             let (chunks, field) = chunked_arr.into_inner();
             let metadata = Arc::new(ArrayMetadata::try_from(field.as_ref())?);
-            let geo_array: ChunkedMixedGeometryArray<2> = match field.data_type() {
+            let geo_array: ChunkedMixedGeometryArray = match field.data_type() {
                 DataType::Utf8 => {
                     let string_chunks = chunks
                         .iter()
@@ -56,6 +57,7 @@ pub fn from_wkt(
                     FromWKT::from_wkt(
                         &ChunkedArray::new(string_chunks),
                         coord_type,
+                        Dimension::XY,
                         metadata,
                         false,
                     )?
@@ -68,6 +70,7 @@ pub fn from_wkt(
                     FromWKT::from_wkt(
                         &ChunkedArray::new(string_chunks),
                         coord_type,
+                        Dimension::XY,
                         metadata,
                         false,
                     )?

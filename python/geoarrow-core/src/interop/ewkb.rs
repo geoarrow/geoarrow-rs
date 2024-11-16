@@ -1,5 +1,5 @@
 use geoarrow::array::{CoordType, WKBArray};
-use geoarrow::datatypes::SerializedType;
+use geoarrow::datatypes::{Dimension, SerializedType};
 use geoarrow::io::geozero::FromEWKB;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -15,11 +15,23 @@ pub fn from_ewkb(py: Python, input: PyArray) -> PyGeoArrowResult<PyObject> {
     let geo_array = match typ {
         SerializedType::WKB => {
             let wkb_arr = WKBArray::<i32>::try_from((array.as_ref(), field.as_ref()))?;
-            FromEWKB::from_ewkb(&wkb_arr, CoordType::Interleaved, Default::default(), false)?
+            FromEWKB::from_ewkb(
+                &wkb_arr,
+                CoordType::Interleaved,
+                Dimension::XY,
+                Default::default(),
+                false,
+            )?
         }
         SerializedType::LargeWKB => {
             let wkb_arr = WKBArray::<i64>::try_from((array.as_ref(), field.as_ref()))?;
-            FromEWKB::from_ewkb(&wkb_arr, CoordType::Interleaved, Default::default(), false)?
+            FromEWKB::from_ewkb(
+                &wkb_arr,
+                CoordType::Interleaved,
+                Dimension::XY,
+                Default::default(),
+                false,
+            )?
         }
         _ => return Err(PyValueError::new_err("Expected a WKB array").into()),
     };
