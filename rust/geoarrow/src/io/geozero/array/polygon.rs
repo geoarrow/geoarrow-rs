@@ -1,11 +1,12 @@
 use crate::array::polygon::PolygonCapacity;
 use crate::array::{PolygonArray, PolygonBuilder};
+use crate::datatypes::Dimension;
 use crate::io::geozero::scalar::process_polygon;
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-impl<const D: usize> GeozeroGeometry for PolygonArray<D> {
+impl GeozeroGeometry for PolygonArray {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -23,28 +24,28 @@ impl<const D: usize> GeozeroGeometry for PolygonArray<D> {
 }
 
 /// GeoZero trait to convert to GeoArrow PolygonArray.
-pub trait ToPolygonArray<const D: usize> {
+pub trait ToPolygonArray {
     /// Convert to GeoArrow PolygonArray
-    fn to_line_string_array(&self) -> geozero::error::Result<PolygonArray<D>>;
+    fn to_line_string_array(&self, dim: Dimension) -> geozero::error::Result<PolygonArray>;
 
     /// Convert to a GeoArrow PolygonBuilder
-    fn to_line_string_builder(&self) -> geozero::error::Result<PolygonBuilder<D>>;
+    fn to_line_string_builder(&self, dim: Dimension) -> geozero::error::Result<PolygonBuilder>;
 }
 
-impl<T: GeozeroGeometry, const D: usize> ToPolygonArray<D> for T {
-    fn to_line_string_array(&self) -> geozero::error::Result<PolygonArray<D>> {
-        Ok(self.to_line_string_builder()?.into())
+impl<T: GeozeroGeometry> ToPolygonArray for T {
+    fn to_line_string_array(&self, dim: Dimension) -> geozero::error::Result<PolygonArray> {
+        Ok(self.to_line_string_builder(dim)?.into())
     }
 
-    fn to_line_string_builder(&self) -> geozero::error::Result<PolygonBuilder<D>> {
-        let mut mutable_array = PolygonBuilder::new();
+    fn to_line_string_builder(&self, dim: Dimension) -> geozero::error::Result<PolygonBuilder> {
+        let mut mutable_array = PolygonBuilder::new(dim);
         self.process_geom(&mut mutable_array)?;
         Ok(mutable_array)
     }
 }
 
 #[allow(unused_variables)]
-impl<const D: usize> GeomProcessor for PolygonBuilder<D> {
+impl GeomProcessor for PolygonBuilder {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         // reserve `size` geometries
         let capacity = PolygonCapacity::new(0, 0, size);
@@ -112,7 +113,7 @@ mod test {
 
     #[test]
     fn geozero_process_geom() -> geozero::error::Result<()> {
-        let arr: PolygonArray<2> = vec![p0(), p1()].as_slice().into();
+        let arr: PolygonArray = (vec![p0(), p1()].as_slice(), Dimension::XY).into();
         let wkt = arr.to_wkt()?;
         let expected = "GEOMETRYCOLLECTION(POLYGON((-111 45,-111 41,-104 41,-104 45,-111 45)),POLYGON((-111 45,-111 41,-104 41,-104 45,-111 45),(-110 44,-110 42,-105 42,-105 44,-110 44)))";
         assert_eq!(wkt, expected);
@@ -127,7 +128,7 @@ mod test {
                 .map(Geometry::Polygon)
                 .collect(),
         );
-        let multi_point_array: PolygonArray<2> = geo.to_line_string_array().unwrap();
+        let multi_point_array = geo.to_line_string_array(Dimension::XY).unwrap();
         assert_eq!(multi_point_array.value_as_geo(0), p0());
         assert_eq!(multi_point_array.value_as_geo(1), p1());
         Ok(())

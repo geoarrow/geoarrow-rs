@@ -12,11 +12,11 @@ use pyo3_geoarrow::PyGeoArrowResult;
 pub fn convex_hull(py: Python, input: AnyNativeInput) -> PyGeoArrowResult<PyObject> {
     match input {
         AnyNativeInput::Array(arr) => {
-            let out: PolygonArray<2> = arr.as_ref().convex_hull()?;
+            let out: PolygonArray = arr.as_ref().convex_hull()?;
             return_geometry_array(py, Arc::new(out))
         }
         AnyNativeInput::Chunked(arr) => {
-            let out: ChunkedGeometryArray<PolygonArray<2>> = arr.as_ref().convex_hull()?;
+            let out: ChunkedGeometryArray<PolygonArray> = arr.as_ref().convex_hull()?;
             return_chunked_geometry_array(py, Arc::new(out))
         }
     }

@@ -25,27 +25,27 @@ pub trait Polylabel {
     fn polylabel(&self, tolerance: f64) -> Self::Output;
 }
 
-impl Polylabel for PolygonArray<2> {
-    type Output = Result<PointArray<2>>;
+impl Polylabel for PolygonArray {
+    type Output = Result<PointArray>;
 
     fn polylabel(&self, tolerance: f64) -> Self::Output {
-        Ok(self.try_unary_point(|geom| polylabel(&geom.to_geo(), &tolerance))?)
+        Ok(self.try_unary_point(|geom| polylabel(&geom.to_geo(), &tolerance), Dimension::XY)?)
     }
 }
 
 impl Polylabel for &dyn NativeArray {
-    type Output = Result<PointArray<2>>;
+    type Output = Result<PointArray>;
 
     fn polylabel(&self, tolerance: f64) -> Self::Output {
         match self.data_type() {
-            NativeType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().polylabel(tolerance),
+            NativeType::Polygon(_, Dimension::XY) => self.as_polygon().polylabel(tolerance),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
 }
 
-impl Polylabel for ChunkedPolygonArray<2> {
-    type Output = Result<ChunkedPointArray<2>>;
+impl Polylabel for ChunkedPolygonArray {
+    type Output = Result<ChunkedPointArray>;
 
     fn polylabel(&self, tolerance: f64) -> Self::Output {
         let chunks = self.try_map(|chunk| chunk.polylabel(tolerance))?;
@@ -54,11 +54,11 @@ impl Polylabel for ChunkedPolygonArray<2> {
 }
 
 impl Polylabel for &dyn ChunkedNativeArray {
-    type Output = Result<ChunkedPointArray<2>>;
+    type Output = Result<ChunkedPointArray>;
 
     fn polylabel(&self, tolerance: f64) -> Self::Output {
         match self.data_type() {
-            NativeType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().polylabel(tolerance),
+            NativeType::Polygon(_, Dimension::XY) => self.as_polygon().polylabel(tolerance),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

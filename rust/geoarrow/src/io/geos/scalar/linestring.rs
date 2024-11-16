@@ -5,10 +5,10 @@ use crate::scalar::LineString;
 use geo_traits::LineStringTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<'a, const D: usize> TryFrom<&'a LineString<'_, D>> for geos::Geometry {
+impl<'a> TryFrom<&'a LineString<'_>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: &'a LineString<'_, D>) -> std::result::Result<geos::Geometry, geos::Error> {
+    fn try_from(value: &'a LineString<'_>) -> std::result::Result<geos::Geometry, geos::Error> {
         let (start, end) = value.geom_offsets.start_end(value.geom_index);
 
         let sliced_coords = value.coords.clone().slice(start, end - start);
@@ -17,7 +17,7 @@ impl<'a, const D: usize> TryFrom<&'a LineString<'_, D>> for geos::Geometry {
     }
 }
 
-impl<const D: usize> LineString<'_, D> {
+impl LineString<'_> {
     pub fn to_geos_linear_ring(&self) -> std::result::Result<geos::Geometry, geos::Error> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
 

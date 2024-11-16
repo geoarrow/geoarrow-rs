@@ -8,8 +8,8 @@ use std::io::Cursor;
 use wkb::writer::{multi_polygon_wkb_size, write_multi_polygon};
 use wkb::Endianness;
 
-impl<O: OffsetSizeTrait, const D: usize> From<&MultiPolygonArray<D>> for WKBArray<O> {
-    fn from(value: &MultiPolygonArray<D>) -> Self {
+impl<O: OffsetSizeTrait> From<&MultiPolygonArray> for WKBArray<O> {
+    fn from(value: &MultiPolygonArray) -> Self {
         let mut offsets: OffsetsBuilder<O> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
@@ -46,13 +46,15 @@ impl<O: OffsetSizeTrait, const D: usize> From<&MultiPolygonArray<D>> for WKBArra
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::datatypes::Dimension;
     use crate::test::multipolygon::{mp0, mp1};
 
     #[test]
     fn round_trip() {
-        let orig_arr: MultiPolygonArray<2> = vec![Some(mp0()), Some(mp1()), None].into();
+        let orig_arr: MultiPolygonArray =
+            (vec![Some(mp0()), Some(mp1()), None], Dimension::XY).into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: MultiPolygonArray<2> = wkb_arr.try_into().unwrap();
+        let new_arr: MultiPolygonArray = (wkb_arr, Dimension::XY).try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }

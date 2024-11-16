@@ -4,7 +4,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use crate::array::{from_arrow_array, AsNativeArray};
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::io::geozero::scalar::{
     process_geometry, process_geometry_collection, process_line_string, process_multi_line_string,
     process_multi_point, process_multi_polygon, process_point, process_polygon,
@@ -369,68 +369,36 @@ fn process_geometry_n<P: GeomProcessor>(
     let i = within_batch_row_idx;
     use NativeType::*;
     match arr.data_type() {
-        Point(_, Dimension::XY) => {
-            let geom = arr.as_point::<2>().value(i);
+        Point(_, _) => {
+            let geom = arr.as_point().value(i);
             process_point(&geom, 0, processor)?;
         }
-        LineString(_, Dimension::XY) => {
-            let geom = arr.as_line_string::<2>().value(i);
+        LineString(_, _) => {
+            let geom = arr.as_line_string().value(i);
             process_line_string(&geom, 0, processor)?;
         }
-        Polygon(_, Dimension::XY) => {
-            let geom = arr.as_polygon::<2>().value(i);
+        Polygon(_, _) => {
+            let geom = arr.as_polygon().value(i);
             process_polygon(&geom, true, 0, processor)?;
         }
-        MultiPoint(_, Dimension::XY) => {
-            let geom = arr.as_multi_point::<2>().value(i);
+        MultiPoint(_, _) => {
+            let geom = arr.as_multi_point().value(i);
             process_multi_point(&geom, 0, processor)?;
         }
-        MultiLineString(_, Dimension::XY) => {
-            let geom = arr.as_multi_line_string::<2>().value(i);
+        MultiLineString(_, _) => {
+            let geom = arr.as_multi_line_string().value(i);
             process_multi_line_string(&geom, 0, processor)?;
         }
-        MultiPolygon(_, Dimension::XY) => {
-            let geom = arr.as_multi_polygon::<2>().value(i);
+        MultiPolygon(_, _) => {
+            let geom = arr.as_multi_polygon().value(i);
             process_multi_polygon(&geom, 0, processor)?;
         }
-        Mixed(_, Dimension::XY) => {
-            let geom = arr.as_mixed::<2>().value(i);
+        Mixed(_, _) => {
+            let geom = arr.as_mixed().value(i);
             process_geometry(&geom, 0, processor)?;
         }
-        GeometryCollection(_, Dimension::XY) => {
-            let geom = arr.as_geometry_collection::<2>().value(i);
-            process_geometry_collection(&geom, 0, processor)?;
-        }
-        Point(_, Dimension::XYZ) => {
-            let geom = arr.as_point::<3>().value(i);
-            process_point(&geom, 0, processor)?;
-        }
-        LineString(_, Dimension::XYZ) => {
-            let geom = arr.as_line_string::<3>().value(i);
-            process_line_string(&geom, 0, processor)?;
-        }
-        Polygon(_, Dimension::XYZ) => {
-            let geom = arr.as_polygon::<3>().value(i);
-            process_polygon(&geom, true, 0, processor)?;
-        }
-        MultiPoint(_, Dimension::XYZ) => {
-            let geom = arr.as_multi_point::<3>().value(i);
-            process_multi_point(&geom, 0, processor)?;
-        }
-        MultiLineString(_, Dimension::XYZ) => {
-            let geom = arr.as_multi_line_string::<3>().value(i);
-            process_multi_line_string(&geom, 0, processor)?;
-        }
-        MultiPolygon(_, Dimension::XYZ) => {
-            let geom = arr.as_multi_polygon::<3>().value(i);
-            process_multi_polygon(&geom, 0, processor)?;
-        }
-        Mixed(_, Dimension::XYZ) => {
-            let geom = arr.as_mixed::<3>().value(i);
-            process_geometry(&geom, 0, processor)?;
-        }
-        GeometryCollection(_, Dimension::XYZ) => {
-            let geom = arr.as_geometry_collection::<3>().value(i);
+        GeometryCollection(_, _) => {
+            let geom = arr.as_geometry_collection().value(i);
             process_geometry_collection(&geom, 0, processor)?;
         }
         // WKB => {

@@ -18,7 +18,7 @@ pub(crate) fn process_multi_point<P: GeomProcessor>(
     Ok(())
 }
 
-impl<const D: usize> GeozeroGeometry for MultiPoint<'_, D> {
+impl GeozeroGeometry for MultiPoint<'_> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,

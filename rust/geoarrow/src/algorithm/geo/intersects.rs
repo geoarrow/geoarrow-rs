@@ -55,7 +55,7 @@ pub trait Intersects<Rhs = Self> {
 }
 
 // Note: this implementation is outside the macro because it is not generic over O
-impl Intersects for IndexedPointArray<2> {
+impl Intersects for IndexedPointArray {
     type Output = BooleanArray;
 
     fn intersects(&self, rhs: &Self) -> Self::Output {
@@ -83,72 +83,63 @@ macro_rules! iter_geo_impl {
 }
 
 // Implementations on PointArray
-iter_geo_impl!(IndexedPointArray<2>, IndexedLineStringArray<2>);
-iter_geo_impl!(IndexedPointArray<2>, IndexedPolygonArray<2>);
-iter_geo_impl!(IndexedPointArray<2>, IndexedMultiPointArray<2>);
-iter_geo_impl!(IndexedPointArray<2>, IndexedMultiLineStringArray<2>);
-iter_geo_impl!(IndexedPointArray<2>, IndexedMultiPolygonArray<2>);
-iter_geo_impl!(IndexedPointArray<2>, IndexedMixedGeometryArray<2>);
-iter_geo_impl!(IndexedPointArray<2>, IndexedGeometryCollectionArray<2>);
+iter_geo_impl!(IndexedPointArray, IndexedLineStringArray);
+iter_geo_impl!(IndexedPointArray, IndexedPolygonArray);
+iter_geo_impl!(IndexedPointArray, IndexedMultiPointArray);
+iter_geo_impl!(IndexedPointArray, IndexedMultiLineStringArray);
+iter_geo_impl!(IndexedPointArray, IndexedMultiPolygonArray);
+iter_geo_impl!(IndexedPointArray, IndexedMixedGeometryArray);
+iter_geo_impl!(IndexedPointArray, IndexedGeometryCollectionArray);
 
 // Implementations on LineStringArray
-iter_geo_impl!(IndexedLineStringArray<2>, IndexedPointArray<2>);
-iter_geo_impl!(IndexedLineStringArray<2>, IndexedLineStringArray<2>);
-iter_geo_impl!(IndexedLineStringArray<2>, IndexedPolygonArray<2>);
-iter_geo_impl!(IndexedLineStringArray<2>, IndexedMultiPointArray<2>);
-iter_geo_impl!(IndexedLineStringArray<2>, IndexedMultiLineStringArray<2>);
-iter_geo_impl!(IndexedLineStringArray<2>, IndexedMultiPolygonArray<2>);
-iter_geo_impl!(IndexedLineStringArray<2>, IndexedMixedGeometryArray<2>);
-iter_geo_impl!(IndexedLineStringArray<2>, IndexedGeometryCollectionArray<2>);
+iter_geo_impl!(IndexedLineStringArray, IndexedPointArray);
+iter_geo_impl!(IndexedLineStringArray, IndexedLineStringArray);
+iter_geo_impl!(IndexedLineStringArray, IndexedPolygonArray);
+iter_geo_impl!(IndexedLineStringArray, IndexedMultiPointArray);
+iter_geo_impl!(IndexedLineStringArray, IndexedMultiLineStringArray);
+iter_geo_impl!(IndexedLineStringArray, IndexedMultiPolygonArray);
+iter_geo_impl!(IndexedLineStringArray, IndexedMixedGeometryArray);
+iter_geo_impl!(IndexedLineStringArray, IndexedGeometryCollectionArray);
 
 // Implementations on PolygonArray
-iter_geo_impl!(IndexedPolygonArray<2>, IndexedPointArray<2>);
-iter_geo_impl!(IndexedPolygonArray<2>, IndexedLineStringArray<2>);
-iter_geo_impl!(IndexedPolygonArray<2>, IndexedPolygonArray<2>);
-iter_geo_impl!(IndexedPolygonArray<2>, IndexedMultiPointArray<2>);
-iter_geo_impl!(IndexedPolygonArray<2>, IndexedMultiLineStringArray<2>);
-iter_geo_impl!(IndexedPolygonArray<2>, IndexedMultiPolygonArray<2>);
-iter_geo_impl!(IndexedPolygonArray<2>, IndexedMixedGeometryArray<2>);
-iter_geo_impl!(IndexedPolygonArray<2>, IndexedGeometryCollectionArray<2>);
+iter_geo_impl!(IndexedPolygonArray, IndexedPointArray);
+iter_geo_impl!(IndexedPolygonArray, IndexedLineStringArray);
+iter_geo_impl!(IndexedPolygonArray, IndexedPolygonArray);
+iter_geo_impl!(IndexedPolygonArray, IndexedMultiPointArray);
+iter_geo_impl!(IndexedPolygonArray, IndexedMultiLineStringArray);
+iter_geo_impl!(IndexedPolygonArray, IndexedMultiPolygonArray);
+iter_geo_impl!(IndexedPolygonArray, IndexedMixedGeometryArray);
+iter_geo_impl!(IndexedPolygonArray, IndexedGeometryCollectionArray);
 
 // Implementations on MultiPointArray
-iter_geo_impl!(IndexedMultiPointArray<2>, IndexedPointArray<2>);
-iter_geo_impl!(IndexedMultiPointArray<2>, IndexedLineStringArray<2>);
-iter_geo_impl!(IndexedMultiPointArray<2>, IndexedPolygonArray<2>);
-iter_geo_impl!(IndexedMultiPointArray<2>, IndexedMultiPointArray<2>);
-iter_geo_impl!(IndexedMultiPointArray<2>, IndexedMultiLineStringArray<2>);
-iter_geo_impl!(IndexedMultiPointArray<2>, IndexedMultiPolygonArray<2>);
-iter_geo_impl!(IndexedMultiPointArray<2>, IndexedMixedGeometryArray<2>);
-iter_geo_impl!(IndexedMultiPointArray<2>, IndexedGeometryCollectionArray<2>);
+iter_geo_impl!(IndexedMultiPointArray, IndexedPointArray);
+iter_geo_impl!(IndexedMultiPointArray, IndexedLineStringArray);
+iter_geo_impl!(IndexedMultiPointArray, IndexedPolygonArray);
+iter_geo_impl!(IndexedMultiPointArray, IndexedMultiPointArray);
+iter_geo_impl!(IndexedMultiPointArray, IndexedMultiLineStringArray);
+iter_geo_impl!(IndexedMultiPointArray, IndexedMultiPolygonArray);
+iter_geo_impl!(IndexedMultiPointArray, IndexedMixedGeometryArray);
+iter_geo_impl!(IndexedMultiPointArray, IndexedGeometryCollectionArray);
 
 // Implementations on MultiLineStringArray
-iter_geo_impl!(IndexedMultiLineStringArray<2>, IndexedPointArray<2>);
-iter_geo_impl!(IndexedMultiLineStringArray<2>, IndexedLineStringArray<2>);
-iter_geo_impl!(IndexedMultiLineStringArray<2>, IndexedPolygonArray<2>);
-iter_geo_impl!(IndexedMultiLineStringArray<2>, IndexedMultiPointArray<2>);
-iter_geo_impl!(
-    IndexedMultiLineStringArray<2>,
-    IndexedMultiLineStringArray<2>
-);
-iter_geo_impl!(IndexedMultiLineStringArray<2>, IndexedMultiPolygonArray<2>);
-iter_geo_impl!(IndexedMultiLineStringArray<2>, IndexedMixedGeometryArray<2>);
-iter_geo_impl!(
-    IndexedMultiLineStringArray<2>,
-    IndexedGeometryCollectionArray<2>
-);
+iter_geo_impl!(IndexedMultiLineStringArray, IndexedPointArray);
+iter_geo_impl!(IndexedMultiLineStringArray, IndexedLineStringArray);
+iter_geo_impl!(IndexedMultiLineStringArray, IndexedPolygonArray);
+iter_geo_impl!(IndexedMultiLineStringArray, IndexedMultiPointArray);
+iter_geo_impl!(IndexedMultiLineStringArray, IndexedMultiLineStringArray);
+iter_geo_impl!(IndexedMultiLineStringArray, IndexedMultiPolygonArray);
+iter_geo_impl!(IndexedMultiLineStringArray, IndexedMixedGeometryArray);
+iter_geo_impl!(IndexedMultiLineStringArray, IndexedGeometryCollectionArray);
 
 // Implementations on MultiPolygonArray
-iter_geo_impl!(IndexedMultiPolygonArray<2>, IndexedPointArray<2>);
-iter_geo_impl!(IndexedMultiPolygonArray<2>, IndexedLineStringArray<2>);
-iter_geo_impl!(IndexedMultiPolygonArray<2>, IndexedPolygonArray<2>);
-iter_geo_impl!(IndexedMultiPolygonArray<2>, IndexedMultiPointArray<2>);
-iter_geo_impl!(IndexedMultiPolygonArray<2>, IndexedMultiLineStringArray<2>);
-iter_geo_impl!(IndexedMultiPolygonArray<2>, IndexedMultiPolygonArray<2>);
-iter_geo_impl!(IndexedMultiPolygonArray<2>, IndexedMixedGeometryArray<2>);
-iter_geo_impl!(
-    IndexedMultiPolygonArray<2>,
-    IndexedGeometryCollectionArray<2>
-);
+iter_geo_impl!(IndexedMultiPolygonArray, IndexedPointArray);
+iter_geo_impl!(IndexedMultiPolygonArray, IndexedLineStringArray);
+iter_geo_impl!(IndexedMultiPolygonArray, IndexedPolygonArray);
+iter_geo_impl!(IndexedMultiPolygonArray, IndexedMultiPointArray);
+iter_geo_impl!(IndexedMultiPolygonArray, IndexedMultiLineStringArray);
+iter_geo_impl!(IndexedMultiPolygonArray, IndexedMultiPolygonArray);
+iter_geo_impl!(IndexedMultiPolygonArray, IndexedMixedGeometryArray);
+iter_geo_impl!(IndexedMultiPolygonArray, IndexedGeometryCollectionArray);
 
 // ┌─────────────────────────────────┐
 // │ Implementations for RHS scalars │
@@ -160,7 +151,7 @@ pub trait IntersectsPoint<Rhs> {
     fn intersects(&self, rhs: &Rhs) -> Self::Output;
 }
 
-impl<G: PointTrait<T = f64>> IntersectsPoint<G> for IndexedPointArray<2> {
+impl<G: PointTrait<T = f64>> IntersectsPoint<G> for IndexedPointArray {
     type Output = BooleanArray;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
@@ -182,15 +173,15 @@ macro_rules! impl_intersects {
     };
 }
 
-impl_intersects!(IndexedLineStringArray<2>);
-impl_intersects!(IndexedPolygonArray<2>);
-impl_intersects!(IndexedMultiPointArray<2>);
-impl_intersects!(IndexedMultiLineStringArray<2>);
-impl_intersects!(IndexedMultiPolygonArray<2>);
-impl_intersects!(IndexedMixedGeometryArray<2>);
-impl_intersects!(IndexedGeometryCollectionArray<2>);
+impl_intersects!(IndexedLineStringArray);
+impl_intersects!(IndexedPolygonArray);
+impl_intersects!(IndexedMultiPointArray);
+impl_intersects!(IndexedMultiLineStringArray);
+impl_intersects!(IndexedMultiPolygonArray);
+impl_intersects!(IndexedMixedGeometryArray);
+impl_intersects!(IndexedGeometryCollectionArray);
 
-impl<G: PointTrait<T = f64>> IntersectsPoint<G> for IndexedChunkedPointArray<2> {
+impl<G: PointTrait<T = f64>> IntersectsPoint<G> for IndexedChunkedPointArray {
     type Output = ChunkedArray<BooleanArray>;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
@@ -216,13 +207,13 @@ macro_rules! impl_intersects {
     };
 }
 
-impl_intersects!(IndexedChunkedLineStringArray<2>);
-impl_intersects!(IndexedChunkedPolygonArray<2>);
-impl_intersects!(IndexedChunkedMultiPointArray<2>);
-impl_intersects!(IndexedChunkedMultiLineStringArray<2>);
-impl_intersects!(IndexedChunkedMultiPolygonArray<2>);
-impl_intersects!(IndexedChunkedMixedGeometryArray<2>);
-impl_intersects!(IndexedChunkedGeometryCollectionArray<2>);
+impl_intersects!(IndexedChunkedLineStringArray);
+impl_intersects!(IndexedChunkedPolygonArray);
+impl_intersects!(IndexedChunkedMultiPointArray);
+impl_intersects!(IndexedChunkedMultiLineStringArray);
+impl_intersects!(IndexedChunkedMultiPolygonArray);
+impl_intersects!(IndexedChunkedMixedGeometryArray);
+impl_intersects!(IndexedChunkedGeometryCollectionArray);
 
 pub trait IntersectsLineString<Rhs> {
     type Output;
@@ -230,7 +221,7 @@ pub trait IntersectsLineString<Rhs> {
     fn intersects(&self, rhs: &Rhs) -> Self::Output;
 }
 
-impl<G: LineStringTrait<T = f64>> IntersectsLineString<G> for IndexedPointArray<2> {
+impl<G: LineStringTrait<T = f64>> IntersectsLineString<G> for IndexedPointArray {
     type Output = BooleanArray;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
@@ -256,15 +247,15 @@ macro_rules! impl_intersects {
     };
 }
 
-impl_intersects!(IndexedLineStringArray<2>);
-impl_intersects!(IndexedPolygonArray<2>);
-impl_intersects!(IndexedMultiPointArray<2>);
-impl_intersects!(IndexedMultiLineStringArray<2>);
-impl_intersects!(IndexedMultiPolygonArray<2>);
-impl_intersects!(IndexedMixedGeometryArray<2>);
-impl_intersects!(IndexedGeometryCollectionArray<2>);
+impl_intersects!(IndexedLineStringArray);
+impl_intersects!(IndexedPolygonArray);
+impl_intersects!(IndexedMultiPointArray);
+impl_intersects!(IndexedMultiLineStringArray);
+impl_intersects!(IndexedMultiPolygonArray);
+impl_intersects!(IndexedMixedGeometryArray);
+impl_intersects!(IndexedGeometryCollectionArray);
 
-impl<G: LineStringTrait<T = f64>> IntersectsLineString<G> for IndexedChunkedPointArray<2> {
+impl<G: LineStringTrait<T = f64>> IntersectsLineString<G> for IndexedChunkedPointArray {
     type Output = ChunkedArray<BooleanArray>;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
@@ -290,13 +281,13 @@ macro_rules! impl_intersects {
     };
 }
 
-impl_intersects!(IndexedChunkedLineStringArray<2>);
-impl_intersects!(IndexedChunkedPolygonArray<2>);
-impl_intersects!(IndexedChunkedMultiPointArray<2>);
-impl_intersects!(IndexedChunkedMultiLineStringArray<2>);
-impl_intersects!(IndexedChunkedMultiPolygonArray<2>);
-impl_intersects!(IndexedChunkedMixedGeometryArray<2>);
-impl_intersects!(IndexedChunkedGeometryCollectionArray<2>);
+impl_intersects!(IndexedChunkedLineStringArray);
+impl_intersects!(IndexedChunkedPolygonArray);
+impl_intersects!(IndexedChunkedMultiPointArray);
+impl_intersects!(IndexedChunkedMultiLineStringArray);
+impl_intersects!(IndexedChunkedMultiPolygonArray);
+impl_intersects!(IndexedChunkedMixedGeometryArray);
+impl_intersects!(IndexedChunkedGeometryCollectionArray);
 
 pub trait IntersectsPolygon<Rhs> {
     type Output;
@@ -304,7 +295,7 @@ pub trait IntersectsPolygon<Rhs> {
     fn intersects(&self, rhs: &Rhs) -> Self::Output;
 }
 
-impl<G: PolygonTrait<T = f64>> IntersectsPolygon<G> for IndexedPointArray<2> {
+impl<G: PolygonTrait<T = f64>> IntersectsPolygon<G> for IndexedPointArray {
     type Output = BooleanArray;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
@@ -330,15 +321,15 @@ macro_rules! impl_intersects {
     };
 }
 
-impl_intersects!(IndexedLineStringArray<2>);
-impl_intersects!(IndexedPolygonArray<2>);
-impl_intersects!(IndexedMultiPointArray<2>);
-impl_intersects!(IndexedMultiLineStringArray<2>);
-impl_intersects!(IndexedMultiPolygonArray<2>);
-impl_intersects!(IndexedMixedGeometryArray<2>);
-impl_intersects!(IndexedGeometryCollectionArray<2>);
+impl_intersects!(IndexedLineStringArray);
+impl_intersects!(IndexedPolygonArray);
+impl_intersects!(IndexedMultiPointArray);
+impl_intersects!(IndexedMultiLineStringArray);
+impl_intersects!(IndexedMultiPolygonArray);
+impl_intersects!(IndexedMixedGeometryArray);
+impl_intersects!(IndexedGeometryCollectionArray);
 
-impl<G: PolygonTrait<T = f64>> IntersectsPolygon<G> for IndexedChunkedPointArray<2> {
+impl<G: PolygonTrait<T = f64>> IntersectsPolygon<G> for IndexedChunkedPointArray {
     type Output = ChunkedArray<BooleanArray>;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
@@ -364,13 +355,13 @@ macro_rules! impl_intersects {
     };
 }
 
-impl_intersects!(IndexedChunkedLineStringArray<2>);
-impl_intersects!(IndexedChunkedPolygonArray<2>);
-impl_intersects!(IndexedChunkedMultiPointArray<2>);
-impl_intersects!(IndexedChunkedMultiLineStringArray<2>);
-impl_intersects!(IndexedChunkedMultiPolygonArray<2>);
-impl_intersects!(IndexedChunkedMixedGeometryArray<2>);
-impl_intersects!(IndexedChunkedGeometryCollectionArray<2>);
+impl_intersects!(IndexedChunkedLineStringArray);
+impl_intersects!(IndexedChunkedPolygonArray);
+impl_intersects!(IndexedChunkedMultiPointArray);
+impl_intersects!(IndexedChunkedMultiLineStringArray);
+impl_intersects!(IndexedChunkedMultiPolygonArray);
+impl_intersects!(IndexedChunkedMixedGeometryArray);
+impl_intersects!(IndexedChunkedGeometryCollectionArray);
 
 pub trait IntersectsMultiPoint<Rhs> {
     type Output;
@@ -378,7 +369,7 @@ pub trait IntersectsMultiPoint<Rhs> {
     fn intersects(&self, rhs: &Rhs) -> Self::Output;
 }
 
-impl<G: MultiPointTrait<T = f64>> IntersectsMultiPoint<G> for IndexedPointArray<2> {
+impl<G: MultiPointTrait<T = f64>> IntersectsMultiPoint<G> for IndexedPointArray {
     type Output = BooleanArray;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
@@ -404,15 +395,15 @@ macro_rules! impl_intersects {
     };
 }
 
-impl_intersects!(IndexedLineStringArray<2>);
-impl_intersects!(IndexedPolygonArray<2>);
-impl_intersects!(IndexedMultiPointArray<2>);
-impl_intersects!(IndexedMultiLineStringArray<2>);
-impl_intersects!(IndexedMultiPolygonArray<2>);
-impl_intersects!(IndexedMixedGeometryArray<2>);
-impl_intersects!(IndexedGeometryCollectionArray<2>);
+impl_intersects!(IndexedLineStringArray);
+impl_intersects!(IndexedPolygonArray);
+impl_intersects!(IndexedMultiPointArray);
+impl_intersects!(IndexedMultiLineStringArray);
+impl_intersects!(IndexedMultiPolygonArray);
+impl_intersects!(IndexedMixedGeometryArray);
+impl_intersects!(IndexedGeometryCollectionArray);
 
-impl<G: MultiPointTrait<T = f64>> IntersectsMultiPoint<G> for IndexedChunkedPointArray<2> {
+impl<G: MultiPointTrait<T = f64>> IntersectsMultiPoint<G> for IndexedChunkedPointArray {
     type Output = ChunkedArray<BooleanArray>;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
@@ -438,13 +429,13 @@ macro_rules! impl_intersects {
     };
 }
 
-impl_intersects!(IndexedChunkedLineStringArray<2>);
-impl_intersects!(IndexedChunkedPolygonArray<2>);
-impl_intersects!(IndexedChunkedMultiPointArray<2>);
-impl_intersects!(IndexedChunkedMultiLineStringArray<2>);
-impl_intersects!(IndexedChunkedMultiPolygonArray<2>);
-impl_intersects!(IndexedChunkedMixedGeometryArray<2>);
-impl_intersects!(IndexedChunkedGeometryCollectionArray<2>);
+impl_intersects!(IndexedChunkedLineStringArray);
+impl_intersects!(IndexedChunkedPolygonArray);
+impl_intersects!(IndexedChunkedMultiPointArray);
+impl_intersects!(IndexedChunkedMultiLineStringArray);
+impl_intersects!(IndexedChunkedMultiPolygonArray);
+impl_intersects!(IndexedChunkedMixedGeometryArray);
+impl_intersects!(IndexedChunkedGeometryCollectionArray);
 
 pub trait IntersectsMultiLineString<Rhs> {
     type Output;
@@ -452,7 +443,7 @@ pub trait IntersectsMultiLineString<Rhs> {
     fn intersects(&self, rhs: &Rhs) -> Self::Output;
 }
 
-impl<G: MultiLineStringTrait<T = f64>> IntersectsMultiLineString<G> for IndexedPointArray<2> {
+impl<G: MultiLineStringTrait<T = f64>> IntersectsMultiLineString<G> for IndexedPointArray {
     type Output = BooleanArray;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
@@ -478,17 +469,15 @@ macro_rules! impl_intersects {
     };
 }
 
-impl_intersects!(IndexedLineStringArray<2>);
-impl_intersects!(IndexedPolygonArray<2>);
-impl_intersects!(IndexedMultiPointArray<2>);
-impl_intersects!(IndexedMultiLineStringArray<2>);
-impl_intersects!(IndexedMultiPolygonArray<2>);
-impl_intersects!(IndexedMixedGeometryArray<2>);
-impl_intersects!(IndexedGeometryCollectionArray<2>);
+impl_intersects!(IndexedLineStringArray);
+impl_intersects!(IndexedPolygonArray);
+impl_intersects!(IndexedMultiPointArray);
+impl_intersects!(IndexedMultiLineStringArray);
+impl_intersects!(IndexedMultiPolygonArray);
+impl_intersects!(IndexedMixedGeometryArray);
+impl_intersects!(IndexedGeometryCollectionArray);
 
-impl<G: MultiLineStringTrait<T = f64>> IntersectsMultiLineString<G>
-    for IndexedChunkedPointArray<2>
-{
+impl<G: MultiLineStringTrait<T = f64>> IntersectsMultiLineString<G> for IndexedChunkedPointArray {
     type Output = ChunkedArray<BooleanArray>;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
@@ -514,13 +503,13 @@ macro_rules! impl_intersects {
     };
 }
 
-impl_intersects!(IndexedChunkedLineStringArray<2>);
-impl_intersects!(IndexedChunkedPolygonArray<2>);
-impl_intersects!(IndexedChunkedMultiPointArray<2>);
-impl_intersects!(IndexedChunkedMultiLineStringArray<2>);
-impl_intersects!(IndexedChunkedMultiPolygonArray<2>);
-impl_intersects!(IndexedChunkedMixedGeometryArray<2>);
-impl_intersects!(IndexedChunkedGeometryCollectionArray<2>);
+impl_intersects!(IndexedChunkedLineStringArray);
+impl_intersects!(IndexedChunkedPolygonArray);
+impl_intersects!(IndexedChunkedMultiPointArray);
+impl_intersects!(IndexedChunkedMultiLineStringArray);
+impl_intersects!(IndexedChunkedMultiPolygonArray);
+impl_intersects!(IndexedChunkedMixedGeometryArray);
+impl_intersects!(IndexedChunkedGeometryCollectionArray);
 
 pub trait IntersectsMultiPolygon<Rhs> {
     type Output;
@@ -528,7 +517,7 @@ pub trait IntersectsMultiPolygon<Rhs> {
     fn intersects(&self, rhs: &Rhs) -> Self::Output;
 }
 
-impl<G: MultiPolygonTrait<T = f64>> IntersectsMultiPolygon<G> for IndexedPointArray<2> {
+impl<G: MultiPolygonTrait<T = f64>> IntersectsMultiPolygon<G> for IndexedPointArray {
     type Output = BooleanArray;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
@@ -554,15 +543,15 @@ macro_rules! impl_intersects {
     };
 }
 
-impl_intersects!(IndexedLineStringArray<2>);
-impl_intersects!(IndexedPolygonArray<2>);
-impl_intersects!(IndexedMultiPointArray<2>);
-impl_intersects!(IndexedMultiLineStringArray<2>);
-impl_intersects!(IndexedMultiPolygonArray<2>);
-impl_intersects!(IndexedMixedGeometryArray<2>);
-impl_intersects!(IndexedGeometryCollectionArray<2>);
+impl_intersects!(IndexedLineStringArray);
+impl_intersects!(IndexedPolygonArray);
+impl_intersects!(IndexedMultiPointArray);
+impl_intersects!(IndexedMultiLineStringArray);
+impl_intersects!(IndexedMultiPolygonArray);
+impl_intersects!(IndexedMixedGeometryArray);
+impl_intersects!(IndexedGeometryCollectionArray);
 
-impl<G: MultiPolygonTrait<T = f64>> IntersectsMultiPolygon<G> for IndexedChunkedPointArray<2> {
+impl<G: MultiPolygonTrait<T = f64>> IntersectsMultiPolygon<G> for IndexedChunkedPointArray {
     type Output = ChunkedArray<BooleanArray>;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
@@ -588,13 +577,13 @@ macro_rules! impl_intersects {
     };
 }
 
-impl_intersects!(IndexedChunkedLineStringArray<2>);
-impl_intersects!(IndexedChunkedPolygonArray<2>);
-impl_intersects!(IndexedChunkedMultiPointArray<2>);
-impl_intersects!(IndexedChunkedMultiLineStringArray<2>);
-impl_intersects!(IndexedChunkedMultiPolygonArray<2>);
-impl_intersects!(IndexedChunkedMixedGeometryArray<2>);
-impl_intersects!(IndexedChunkedGeometryCollectionArray<2>);
+impl_intersects!(IndexedChunkedLineStringArray);
+impl_intersects!(IndexedChunkedPolygonArray);
+impl_intersects!(IndexedChunkedMultiPointArray);
+impl_intersects!(IndexedChunkedMultiLineStringArray);
+impl_intersects!(IndexedChunkedMultiPolygonArray);
+impl_intersects!(IndexedChunkedMixedGeometryArray);
+impl_intersects!(IndexedChunkedGeometryCollectionArray);
 
 pub trait IntersectsGeometry<Rhs> {
     type Output;
@@ -602,7 +591,7 @@ pub trait IntersectsGeometry<Rhs> {
     fn intersects(&self, rhs: &Rhs) -> Self::Output;
 }
 
-impl<G: GeometryTrait<T = f64>> IntersectsGeometry<G> for IndexedPointArray<2> {
+impl<G: GeometryTrait<T = f64>> IntersectsGeometry<G> for IndexedPointArray {
     type Output = BooleanArray;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
@@ -628,15 +617,15 @@ macro_rules! impl_intersects {
     };
 }
 
-impl_intersects!(IndexedLineStringArray<2>);
-impl_intersects!(IndexedPolygonArray<2>);
-impl_intersects!(IndexedMultiPointArray<2>);
-impl_intersects!(IndexedMultiLineStringArray<2>);
-impl_intersects!(IndexedMultiPolygonArray<2>);
-impl_intersects!(IndexedMixedGeometryArray<2>);
-impl_intersects!(IndexedGeometryCollectionArray<2>);
+impl_intersects!(IndexedLineStringArray);
+impl_intersects!(IndexedPolygonArray);
+impl_intersects!(IndexedMultiPointArray);
+impl_intersects!(IndexedMultiLineStringArray);
+impl_intersects!(IndexedMultiPolygonArray);
+impl_intersects!(IndexedMixedGeometryArray);
+impl_intersects!(IndexedGeometryCollectionArray);
 
-impl<G: GeometryTrait<T = f64>> IntersectsGeometry<G> for IndexedChunkedPointArray<2> {
+impl<G: GeometryTrait<T = f64>> IntersectsGeometry<G> for IndexedChunkedPointArray {
     type Output = ChunkedArray<BooleanArray>;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
@@ -662,13 +651,13 @@ macro_rules! impl_intersects {
     };
 }
 
-impl_intersects!(IndexedChunkedLineStringArray<2>);
-impl_intersects!(IndexedChunkedPolygonArray<2>);
-impl_intersects!(IndexedChunkedMultiPointArray<2>);
-impl_intersects!(IndexedChunkedMultiLineStringArray<2>);
-impl_intersects!(IndexedChunkedMultiPolygonArray<2>);
-impl_intersects!(IndexedChunkedMixedGeometryArray<2>);
-impl_intersects!(IndexedChunkedGeometryCollectionArray<2>);
+impl_intersects!(IndexedChunkedLineStringArray);
+impl_intersects!(IndexedChunkedPolygonArray);
+impl_intersects!(IndexedChunkedMultiPointArray);
+impl_intersects!(IndexedChunkedMultiLineStringArray);
+impl_intersects!(IndexedChunkedMultiPolygonArray);
+impl_intersects!(IndexedChunkedMixedGeometryArray);
+impl_intersects!(IndexedChunkedGeometryCollectionArray);
 
 pub trait IntersectsGeometryCollection<Rhs> {
     type Output;
@@ -676,7 +665,7 @@ pub trait IntersectsGeometryCollection<Rhs> {
     fn intersects(&self, rhs: &Rhs) -> Self::Output;
 }
 
-impl<G: GeometryCollectionTrait<T = f64>> IntersectsGeometryCollection<G> for IndexedPointArray<2> {
+impl<G: GeometryCollectionTrait<T = f64>> IntersectsGeometryCollection<G> for IndexedPointArray {
     type Output = BooleanArray;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
@@ -702,16 +691,16 @@ macro_rules! impl_intersects {
     };
 }
 
-impl_intersects!(IndexedLineStringArray<2>);
-impl_intersects!(IndexedPolygonArray<2>);
-impl_intersects!(IndexedMultiPointArray<2>);
-impl_intersects!(IndexedMultiLineStringArray<2>);
-impl_intersects!(IndexedMultiPolygonArray<2>);
-impl_intersects!(IndexedMixedGeometryArray<2>);
-impl_intersects!(IndexedGeometryCollectionArray<2>);
+impl_intersects!(IndexedLineStringArray);
+impl_intersects!(IndexedPolygonArray);
+impl_intersects!(IndexedMultiPointArray);
+impl_intersects!(IndexedMultiLineStringArray);
+impl_intersects!(IndexedMultiPolygonArray);
+impl_intersects!(IndexedMixedGeometryArray);
+impl_intersects!(IndexedGeometryCollectionArray);
 
 impl<G: GeometryCollectionTrait<T = f64>> IntersectsGeometryCollection<G>
-    for IndexedChunkedPointArray<2>
+    for IndexedChunkedPointArray
 {
     type Output = ChunkedArray<BooleanArray>;
 
@@ -738,10 +727,10 @@ macro_rules! impl_intersects {
     };
 }
 
-impl_intersects!(IndexedChunkedLineStringArray<2>);
-impl_intersects!(IndexedChunkedPolygonArray<2>);
-impl_intersects!(IndexedChunkedMultiPointArray<2>);
-impl_intersects!(IndexedChunkedMultiLineStringArray<2>);
-impl_intersects!(IndexedChunkedMultiPolygonArray<2>);
-impl_intersects!(IndexedChunkedMixedGeometryArray<2>);
-impl_intersects!(IndexedChunkedGeometryCollectionArray<2>);
+impl_intersects!(IndexedChunkedLineStringArray);
+impl_intersects!(IndexedChunkedPolygonArray);
+impl_intersects!(IndexedChunkedMultiPointArray);
+impl_intersects!(IndexedChunkedMultiLineStringArray);
+impl_intersects!(IndexedChunkedMultiPolygonArray);
+impl_intersects!(IndexedChunkedMixedGeometryArray);
+impl_intersects!(IndexedChunkedGeometryCollectionArray);

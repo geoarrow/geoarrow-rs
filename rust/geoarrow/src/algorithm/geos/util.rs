@@ -2,6 +2,7 @@ use arrow_array::{ArrowPrimitiveType, PrimitiveArray};
 use arrow_buffer::BufferBuilder;
 
 use crate::array::PolygonArray;
+use crate::datatypes::Dimension;
 use crate::error::GeoArrowError;
 use crate::io::geos::scalar::GEOSPolygon;
 use crate::trait_::NativeGEOSGeometryAccessor;
@@ -39,10 +40,11 @@ where
     Ok(PrimitiveArray::new(values, nulls))
 }
 
-pub(super) fn try_unary_polygon<'a, const D: usize, F>(
+pub(super) fn try_unary_polygon<'a, F>(
     array: &'a dyn NativeGEOSGeometryAccessor<'a>,
     op: F,
-) -> std::result::Result<PolygonArray<D>, GeoArrowError>
+    output_dim: Dimension,
+) -> std::result::Result<PolygonArray, GeoArrowError>
 where
     F: Fn(geos::Geometry) -> std::result::Result<geos::Geometry, geos::Error>,
 {
@@ -65,5 +67,5 @@ where
         None => (0..len).try_for_each(f)?,
     }
 
-    Ok(PolygonArray::from(buffer))
+    Ok(PolygonArray::from((buffer, output_dim)))
 }

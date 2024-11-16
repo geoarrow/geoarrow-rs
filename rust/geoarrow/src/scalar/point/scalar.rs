@@ -9,12 +9,12 @@ use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a Point
 #[derive(Debug, Clone)]
-pub struct Point<'a, const D: usize> {
+pub struct Point<'a> {
     coords: &'a CoordBuffer,
     geom_index: usize,
 }
 
-impl<'a, const D: usize> Point<'a, D> {
+impl<'a> Point<'a> {
     pub fn new(coords: &'a CoordBuffer, geom_index: usize) -> Self {
         Point { coords, geom_index }
     }
@@ -29,7 +29,7 @@ impl<'a, const D: usize> Point<'a, D> {
     }
 }
 
-impl<'a, const D: usize> NativeScalar for Point<'a, D> {
+impl<'a> NativeScalar for Point<'a> {
     type ScalarGeo = geo::Point;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -46,7 +46,7 @@ impl<'a, const D: usize> NativeScalar for Point<'a, D> {
     }
 }
 
-impl<'a, const D: usize> PointTrait for Point<'a, D> {
+impl<'a> PointTrait for Point<'a> {
     type T = f64;
     type CoordType<'b> = Coord<'a> where Self: 'b;
 
@@ -64,7 +64,7 @@ impl<'a, const D: usize> PointTrait for Point<'a, D> {
     }
 }
 
-impl<'a, const D: usize> PointTrait for &Point<'a, D> {
+impl<'a> PointTrait for &Point<'a> {
     type T = f64;
     type CoordType<'b> = Coord<'a> where Self: 'b;
 
@@ -82,25 +82,25 @@ impl<'a, const D: usize> PointTrait for &Point<'a, D> {
     }
 }
 
-impl<const D: usize> From<Point<'_, D>> for geo::Point {
-    fn from(value: Point<'_, D>) -> Self {
+impl From<Point<'_>> for geo::Point {
+    fn from(value: Point<'_>) -> Self {
         (&value).into()
     }
 }
 
-impl<const D: usize> From<&Point<'_, D>> for geo::Point {
-    fn from(value: &Point<'_, D>) -> Self {
+impl From<&Point<'_>> for geo::Point {
+    fn from(value: &Point<'_>) -> Self {
         point_to_geo(value)
     }
 }
 
-impl<const D: usize> From<Point<'_, D>> for geo::Geometry {
-    fn from(value: Point<'_, D>) -> Self {
+impl From<Point<'_>> for geo::Geometry {
+    fn from(value: Point<'_>) -> Self {
         geo::Geometry::Point(value.into())
     }
 }
 
-impl<const D: usize> RTreeObject for Point<'_, D> {
+impl RTreeObject for Point<'_> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -109,7 +109,7 @@ impl<const D: usize> RTreeObject for Point<'_, D> {
     }
 }
 
-impl<G: PointTrait<T = f64>, const D: usize> PartialEq<G> for Point<'_, D> {
+impl<G: PointTrait<T = f64>> PartialEq<G> for Point<'_> {
     fn eq(&self, other: &G) -> bool {
         point_eq(self, other)
     }
@@ -126,12 +126,12 @@ mod test {
         let x1 = vec![0., 1., 2.];
         let y1 = vec![3., 4., 5.];
         let buf1 = CoordBuffer::Separated((x1, y1).try_into().unwrap());
-        let arr1 = PointArray::<2>::new(buf1, None, Default::default());
+        let arr1 = PointArray::new(buf1, None, Default::default());
 
         let x2 = vec![0., 100., 2.];
         let y2 = vec![3., 400., 5.];
         let buf2 = CoordBuffer::Separated((x2, y2).try_into().unwrap());
-        let arr2 = PointArray::<2>::new(buf2, None, Default::default());
+        let arr2 = PointArray::new(buf2, None, Default::default());
 
         assert_eq!(arr1.value(0), arr2.value(0));
     }

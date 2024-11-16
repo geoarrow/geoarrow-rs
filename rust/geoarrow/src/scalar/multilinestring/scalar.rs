@@ -11,7 +11,7 @@ use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a MultiLineString
 #[derive(Debug, Clone)]
-pub struct MultiLineString<'a, const D: usize> {
+pub struct MultiLineString<'a> {
     pub(crate) coords: &'a CoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
@@ -25,7 +25,7 @@ pub struct MultiLineString<'a, const D: usize> {
     start_offset: usize,
 }
 
-impl<'a, const D: usize> MultiLineString<'a, D> {
+impl<'a> MultiLineString<'a> {
     pub fn new(
         coords: &'a CoordBuffer,
         geom_offsets: &'a OffsetBuffer<i32>,
@@ -43,7 +43,7 @@ impl<'a, const D: usize> MultiLineString<'a, D> {
     }
 
     pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, OffsetBuffer<i32>, usize) {
-        let arr = MultiLineStringArray::<D>::new(
+        let arr = MultiLineStringArray::new(
             self.coords.clone(),
             self.geom_offsets.clone(),
             self.ring_offsets.clone(),
@@ -60,7 +60,7 @@ impl<'a, const D: usize> MultiLineString<'a, D> {
     }
 }
 
-impl<'a, const D: usize> NativeScalar for MultiLineString<'a, D> {
+impl<'a> NativeScalar for MultiLineString<'a> {
     type ScalarGeo = geo::MultiLineString;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -77,9 +77,9 @@ impl<'a, const D: usize> NativeScalar for MultiLineString<'a, D> {
     }
 }
 
-impl<'a, const D: usize> MultiLineStringTrait for MultiLineString<'a, D> {
+impl<'a> MultiLineStringTrait for MultiLineString<'a> {
     type T = f64;
-    type LineStringType<'b> = LineString<'a, D> where Self: 'b;
+    type LineStringType<'b> = LineString<'a> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         self.coords.dim().into()
@@ -95,9 +95,9 @@ impl<'a, const D: usize> MultiLineStringTrait for MultiLineString<'a, D> {
     }
 }
 
-impl<'a, const D: usize> MultiLineStringTrait for &'a MultiLineString<'a, D> {
+impl<'a> MultiLineStringTrait for &'a MultiLineString<'a> {
     type T = f64;
-    type LineStringType<'b> = LineString<'a, D> where Self: 'b;
+    type LineStringType<'b> = LineString<'a> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         self.coords.dim().into()
@@ -113,25 +113,25 @@ impl<'a, const D: usize> MultiLineStringTrait for &'a MultiLineString<'a, D> {
     }
 }
 
-impl<const D: usize> From<MultiLineString<'_, D>> for geo::MultiLineString {
-    fn from(value: MultiLineString<'_, D>) -> Self {
+impl From<MultiLineString<'_>> for geo::MultiLineString {
+    fn from(value: MultiLineString<'_>) -> Self {
         (&value).into()
     }
 }
 
-impl<const D: usize> From<&MultiLineString<'_, D>> for geo::MultiLineString {
-    fn from(value: &MultiLineString<'_, D>) -> Self {
+impl From<&MultiLineString<'_>> for geo::MultiLineString {
+    fn from(value: &MultiLineString<'_>) -> Self {
         multi_line_string_to_geo(value)
     }
 }
 
-impl<const D: usize> From<MultiLineString<'_, D>> for geo::Geometry {
-    fn from(value: MultiLineString<'_, D>) -> Self {
+impl From<MultiLineString<'_>> for geo::Geometry {
+    fn from(value: MultiLineString<'_>) -> Self {
         geo::Geometry::MultiLineString(value.into())
     }
 }
 
-impl RTreeObject for MultiLineString<'_, 2> {
+impl RTreeObject for MultiLineString<'_> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -140,7 +140,7 @@ impl RTreeObject for MultiLineString<'_, 2> {
     }
 }
 
-impl<G: MultiLineStringTrait<T = f64>> PartialEq<G> for MultiLineString<'_, 2> {
+impl<G: MultiLineStringTrait<T = f64>> PartialEq<G> for MultiLineString<'_> {
     fn eq(&self, other: &G) -> bool {
         multi_line_string_eq(self, other)
     }
@@ -149,14 +149,15 @@ impl<G: MultiLineStringTrait<T = f64>> PartialEq<G> for MultiLineString<'_, 2> {
 #[cfg(test)]
 mod test {
     use crate::array::MultiLineStringArray;
+    use crate::datatypes::Dimension;
     use crate::test::multilinestring::{ml0, ml1};
     use crate::trait_::ArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]
     fn test_eq_other_index_false() {
-        let arr1: MultiLineStringArray<2> = vec![ml0(), ml1()].as_slice().into();
-        let arr2: MultiLineStringArray<2> = vec![ml0(), ml0()].as_slice().into();
+        let arr1: MultiLineStringArray = (vec![ml0(), ml1()].as_slice(), Dimension::XY).into();
+        let arr2: MultiLineStringArray = (vec![ml0(), ml0()].as_slice(), Dimension::XY).into();
 
         assert_eq!(arr1.value(0), arr2.value(0));
         assert_ne!(arr1.value(1), arr2.value(1));

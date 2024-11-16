@@ -15,7 +15,7 @@ use crate::array::{
 use crate::datatypes::NativeType;
 use crate::error::GeoArrowError;
 use crate::scalar::Geometry;
-use crate::trait_::{GeometryArraySelfMethods, IntoArrow, ArrayAccessor};
+use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::NativeArray;
 
 /// A GeometryArray is an enum over the various underlying _zero copy_ GeoArrow array types.
@@ -173,7 +173,7 @@ impl<O: OffsetSizeTrait> NativeArray for GeometryArray<O> {
 }
 
 impl<O: OffsetSizeTrait> GeometryArraySelfMethods for GeometryArray<O> {
-    fn with_coords(self, coords: crate::array::CoordBuffer<2>) -> Self {
+    fn with_coords(self, coords: crate::array::CoordBuffer) -> Self {
         match self {
             GeometryArray::Point(arr) => GeometryArray::Point(arr.with_coords(coords)),
             GeometryArray::LineString(arr) => GeometryArray::LineString(arr.with_coords(coords)),

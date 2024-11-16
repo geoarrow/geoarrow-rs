@@ -1,16 +1,17 @@
 use crate::algorithm::native::eq::rect_eq;
 use crate::array::{RectArray, SeparatedCoordBuffer};
+use crate::datatypes::Dimension;
 use crate::scalar::{Rect, SeparatedCoord};
 use geo_traits::RectTrait;
 
 #[derive(Clone, Debug)]
-pub struct OwnedRect<const D: usize> {
+pub struct OwnedRect {
     lower: SeparatedCoordBuffer,
     upper: SeparatedCoordBuffer,
     geom_index: usize,
 }
 
-impl<const D: usize> OwnedRect<D> {
+impl OwnedRect {
     pub fn new(
         lower: SeparatedCoordBuffer,
         upper: SeparatedCoordBuffer,
@@ -24,35 +25,33 @@ impl<const D: usize> OwnedRect<D> {
     }
 }
 
-impl<'a, const D: usize> From<&'a OwnedRect<D>> for Rect<'a, D> {
-    fn from(value: &'a OwnedRect<D>) -> Self {
+impl<'a> From<&'a OwnedRect> for Rect<'a> {
+    fn from(value: &'a OwnedRect) -> Self {
         Self::new(&value.lower, &value.upper, value.geom_index)
     }
 }
 
-impl<'a, const D: usize> From<Rect<'a, D>> for OwnedRect<D> {
-    fn from(value: Rect<'a, D>) -> Self {
+impl<'a> From<Rect<'a>> for OwnedRect {
+    fn from(value: Rect<'a>) -> Self {
         let (lower, upper, geom_index) = value.into_owned_inner();
         Self::new(lower, upper, geom_index)
     }
 }
 
-impl<const D: usize> From<OwnedRect<D>> for RectArray<D> {
-    fn from(value: OwnedRect<D>) -> Self {
+impl From<OwnedRect> for RectArray {
+    fn from(value: OwnedRect) -> Self {
         Self::new(value.lower, value.upper, None, Default::default())
     }
 }
 
-impl<const D: usize> RectTrait for OwnedRect<D> {
+impl RectTrait for OwnedRect {
     type T = f64;
     type CoordType<'b> = SeparatedCoord<'b> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
+        match self.lower.dim() {
+            Dimension::XY => geo_traits::Dimensions::Xy,
+            Dimension::XYZ => geo_traits::Dimensions::Xyz,
         }
     }
 
@@ -65,7 +64,7 @@ impl<const D: usize> RectTrait for OwnedRect<D> {
     }
 }
 
-impl<G: RectTrait<T = f64>> PartialEq<G> for OwnedRect<2> {
+impl<G: RectTrait<T = f64>> PartialEq<G> for OwnedRect {
     fn eq(&self, other: &G) -> bool {
         rect_eq(self, other)
     }

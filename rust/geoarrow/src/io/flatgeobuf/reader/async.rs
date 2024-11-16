@@ -63,7 +63,7 @@ pub async fn read_flatgeobuf_async(
 
     macro_rules! impl_read {
         ($builder:ty, $geom_type:ty, $dim:expr) => {{
-            let mut builder = GeoTableBuilder::<$builder>::new_with_options(options);
+            let mut builder = GeoTableBuilder::<$builder>::new_with_options($dim, options);
             while let Some(feature) = selection.next().await? {
                 feature.process_properties(&mut builder)?;
                 builder.properties_end()?;
@@ -83,67 +83,63 @@ pub async fn read_flatgeobuf_async(
 
     match (geometry_type, has_z) {
         (GeometryType::Point, false) => {
-            impl_read!(PointBuilder<2>, super::core::Point, Dimension::XY)
+            impl_read!(PointBuilder, super::core::Point, Dimension::XY)
         }
         (GeometryType::LineString, false) => {
-            impl_read!(LineStringBuilder<2>, super::core::LineString, Dimension::XY)
+            impl_read!(LineStringBuilder, super::core::LineString, Dimension::XY)
         }
         (GeometryType::Polygon, false) => {
-            impl_read!(PolygonBuilder<2>, super::core::Polygon, Dimension::XY)
+            impl_read!(PolygonBuilder, super::core::Polygon, Dimension::XY)
         }
         (GeometryType::MultiPoint, false) => {
-            impl_read!(MultiPointBuilder<2>, super::core::MultiPoint, Dimension::XY)
+            impl_read!(MultiPointBuilder, super::core::MultiPoint, Dimension::XY)
         }
         (GeometryType::MultiLineString, false) => impl_read!(
-            MultiLineStringBuilder<2>,
+            MultiLineStringBuilder,
             super::core::MultiLineString,
             Dimension::XY
         ),
         (GeometryType::MultiPolygon, false) => impl_read!(
-            MultiPolygonBuilder<2>,
+            MultiPolygonBuilder,
             super::core::MultiPolygon,
             Dimension::XY
         ),
         (GeometryType::Unknown, false) => {
-            let mut builder =
-                GeoTableBuilder::<MixedGeometryStreamBuilder<2>>::new_with_options(options);
+            let mut builder = GeoTableBuilder::<MixedGeometryStreamBuilder>::new_with_options(
+                Dimension::XY,
+                options,
+            );
             selection.process_features(&mut builder).await?;
             let table = builder.finish()?;
             table.downcast(true)
         }
         (GeometryType::Point, true) => {
-            impl_read!(PointBuilder<3>, super::core::Point, Dimension::XYZ)
+            impl_read!(PointBuilder, super::core::Point, Dimension::XYZ)
         }
         (GeometryType::LineString, true) => {
-            impl_read!(
-                LineStringBuilder<3>,
-                super::core::LineString,
-                Dimension::XYZ
-            )
+            impl_read!(LineStringBuilder, super::core::LineString, Dimension::XYZ)
         }
         (GeometryType::Polygon, true) => {
-            impl_read!(PolygonBuilder<3>, super::core::Polygon, Dimension::XYZ)
+            impl_read!(PolygonBuilder, super::core::Polygon, Dimension::XYZ)
         }
         (GeometryType::MultiPoint, true) => {
-            impl_read!(
-                MultiPointBuilder<3>,
-                super::core::MultiPoint,
-                Dimension::XYZ
-            )
+            impl_read!(MultiPointBuilder, super::core::MultiPoint, Dimension::XYZ)
         }
         (GeometryType::MultiLineString, true) => impl_read!(
-            MultiLineStringBuilder<3>,
+            MultiLineStringBuilder,
             super::core::MultiLineString,
             Dimension::XYZ
         ),
         (GeometryType::MultiPolygon, true) => impl_read!(
-            MultiPolygonBuilder<3>,
+            MultiPolygonBuilder,
             super::core::MultiPolygon,
             Dimension::XYZ
         ),
         (GeometryType::Unknown, true) => {
-            let mut builder =
-                GeoTableBuilder::<MixedGeometryStreamBuilder<3>>::new_with_options(options);
+            let mut builder = GeoTableBuilder::<MixedGeometryStreamBuilder>::new_with_options(
+                Dimension::XYZ,
+                options,
+            );
             selection.process_features(&mut builder).await?;
             let table = builder.finish()?;
             table.downcast(true)

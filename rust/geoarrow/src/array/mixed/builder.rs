@@ -7,6 +7,7 @@ use crate::array::{
     CoordType, LineStringBuilder, MixedGeometryArray, MultiLineStringBuilder, MultiPointBuilder,
     MultiPolygonBuilder, PointBuilder, PolygonBuilder, WKBArray,
 };
+use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
@@ -28,18 +29,18 @@ pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 /// - All arrays must have the same dimension
 /// - All arrays must have the same coordinate layout (interleaved or separated)
 #[derive(Debug)]
-pub struct MixedGeometryBuilder<const D: usize> {
+pub struct MixedGeometryBuilder {
     metadata: Arc<ArrayMetadata>,
 
     // Invariant: every item in `types` is `> 0 && < fields.len()`
     types: Vec<i8>,
 
-    pub(crate) points: PointBuilder<D>,
-    pub(crate) line_strings: LineStringBuilder<D>,
-    pub(crate) polygons: PolygonBuilder<D>,
-    pub(crate) multi_points: MultiPointBuilder<D>,
-    pub(crate) multi_line_strings: MultiLineStringBuilder<D>,
-    pub(crate) multi_polygons: MultiPolygonBuilder<D>,
+    pub(crate) points: PointBuilder,
+    pub(crate) line_strings: LineStringBuilder,
+    pub(crate) polygons: PolygonBuilder,
+    pub(crate) multi_points: MultiPointBuilder,
+    pub(crate) multi_line_strings: MultiLineStringBuilder,
+    pub(crate) multi_polygons: MultiPolygonBuilder,
 
     // Invariant: `offsets.len() == types.len()`
     offsets: Vec<i32>,
@@ -54,23 +55,30 @@ pub struct MixedGeometryBuilder<const D: usize> {
     pub(crate) prefer_multi: bool,
 }
 
-impl<'a, const D: usize> MixedGeometryBuilder<D> {
+impl<'a> MixedGeometryBuilder {
     /// Creates a new empty [`MixedGeometryBuilder`].
-    pub fn new() -> Self {
-        Self::new_with_options(Default::default(), Default::default(), DEFAULT_PREFER_MULTI)
+    pub fn new(dim: Dimension) -> Self {
+        Self::new_with_options(
+            dim,
+            Default::default(),
+            Default::default(),
+            DEFAULT_PREFER_MULTI,
+        )
     }
 
     pub fn new_with_options(
+        dim: Dimension,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Self {
-        Self::with_capacity_and_options(Default::default(), coord_type, metadata, prefer_multi)
+        Self::with_capacity_and_options(dim, Default::default(), coord_type, metadata, prefer_multi)
     }
 
     /// Creates a new [`MixedGeometryBuilder`] with given capacity and no validity.
-    pub fn with_capacity(capacity: MixedCapacity) -> Self {
+    pub fn with_capacity(dim: Dimension, capacity: MixedCapacity) -> Self {
         Self::with_capacity_and_options(
+            dim,
             capacity,
             Default::default(),
             Default::default(),
@@ -79,6 +87,7 @@ impl<'a, const D: usize> MixedGeometryBuilder<D> {
     }
 
     pub fn with_capacity_and_options(
+        dim: Dimension,
         capacity: MixedCapacity,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
@@ -89,31 +98,37 @@ impl<'a, const D: usize> MixedGeometryBuilder<D> {
             metadata,
             types: vec![],
             points: PointBuilder::with_capacity_and_options(
+                dim,
                 capacity.point,
                 coord_type,
                 Default::default(),
             ),
             line_strings: LineStringBuilder::with_capacity_and_options(
+                dim,
                 capacity.line_string,
                 coord_type,
                 Default::default(),
             ),
             polygons: PolygonBuilder::with_capacity_and_options(
+                dim,
                 capacity.polygon,
                 coord_type,
                 Default::default(),
             ),
             multi_points: MultiPointBuilder::with_capacity_and_options(
+                dim,
                 capacity.multi_point,
                 coord_type,
                 Default::default(),
             ),
             multi_line_strings: MultiLineStringBuilder::with_capacity_and_options(
+                dim,
                 capacity.multi_line_string,
                 coord_type,
                 Default::default(),
             ),
             multi_polygons: MultiPolygonBuilder::with_capacity_and_options(
+                dim,
                 capacity.multi_polygon,
                 coord_type,
                 Default::default(),
@@ -177,15 +192,17 @@ impl<'a, const D: usize> MixedGeometryBuilder<D> {
     //     })
     // }
 
-    pub fn finish(self) -> MixedGeometryArray<D> {
+    pub fn finish(self) -> MixedGeometryArray {
         self.into()
     }
 
     pub fn with_capacity_from_iter(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+        dim: Dimension,
     ) -> Result<Self> {
         Self::with_capacity_and_options_from_iter(
             geoms,
+            dim,
             Default::default(),
             Default::default(),
             DEFAULT_PREFER_MULTI,
@@ -194,12 +211,14 @@ impl<'a, const D: usize> MixedGeometryBuilder<D> {
 
     pub fn with_capacity_and_options_from_iter(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+        dim: Dimension,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let counter = MixedCapacity::from_geometries(geoms)?;
         Ok(Self::with_capacity_and_options(
+            dim,
             counter,
             coord_type,
             metadata,
@@ -419,12 +438,14 @@ impl<'a, const D: usize> MixedGeometryBuilder<D> {
     /// Create this builder from a slice of Geometries.
     pub fn from_geometries(
         geoms: &[impl GeometryTrait<T = f64>],
+        dim: Dimension,
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(Some),
+            dim,
             coord_type.unwrap_or_default(),
             metadata,
             prefer_multi,
@@ -436,12 +457,14 @@ impl<'a, const D: usize> MixedGeometryBuilder<D> {
     /// Create this builder from a slice of nullable Geometries.
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
+        dim: Dimension,
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(|x| x.as_ref()),
+            dim,
             coord_type.unwrap_or_default(),
             metadata,
             prefer_multi,
@@ -452,6 +475,7 @@ impl<'a, const D: usize> MixedGeometryBuilder<D> {
 
     pub(crate) fn from_wkb<W: OffsetSizeTrait>(
         wkb_objects: &[Option<WKB<'_, W>>],
+        dim: Dimension,
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
@@ -460,17 +484,17 @@ impl<'a, const D: usize> MixedGeometryBuilder<D> {
             .iter()
             .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.parse()).transpose())
             .collect::<Result<Vec<_>>>()?;
-        Self::from_nullable_geometries(&wkb_objects2, coord_type, metadata, prefer_multi)
+        Self::from_nullable_geometries(&wkb_objects2, dim, coord_type, metadata, prefer_multi)
     }
 }
 
-impl<const D: usize> Default for MixedGeometryBuilder<D> {
+impl Default for MixedGeometryBuilder {
     fn default() -> Self {
-        Self::new()
+        Self::new(Dimension::XY)
     }
 }
 
-impl<const D: usize> IntoArrow for MixedGeometryBuilder<D> {
+impl IntoArrow for MixedGeometryBuilder {
     type ArrowArray = UnionArray;
 
     fn into_arrow(self) -> Self::ArrowArray {
@@ -478,8 +502,8 @@ impl<const D: usize> IntoArrow for MixedGeometryBuilder<D> {
     }
 }
 
-impl<const D: usize> From<MixedGeometryBuilder<D>> for MixedGeometryArray<D> {
-    fn from(other: MixedGeometryBuilder<D>) -> Self {
+impl From<MixedGeometryBuilder> for MixedGeometryArray {
+    fn from(other: MixedGeometryBuilder) -> Self {
         Self::new(
             other.types.into(),
             other.offsets.into(),
@@ -494,28 +518,26 @@ impl<const D: usize> From<MixedGeometryBuilder<D>> for MixedGeometryArray<D> {
     }
 }
 
-impl<G: GeometryTrait<T = f64>, const D: usize> TryFrom<&[G]> for MixedGeometryBuilder<D> {
+impl<G: GeometryTrait<T = f64>> TryFrom<(&[G], Dimension)> for MixedGeometryBuilder {
     type Error = GeoArrowError;
 
-    fn try_from(geoms: &[G]) -> Result<Self> {
-        Self::from_geometries(geoms, Default::default(), Default::default(), true)
+    fn try_from((geoms, dim): (&[G], Dimension)) -> Result<Self> {
+        Self::from_geometries(geoms, dim, Default::default(), Default::default(), true)
     }
 }
 
-impl<G: GeometryTrait<T = f64>, const D: usize> TryFrom<Vec<Option<G>>>
-    for MixedGeometryBuilder<D>
-{
+impl<G: GeometryTrait<T = f64>> TryFrom<(Vec<Option<G>>, Dimension)> for MixedGeometryBuilder {
     type Error = GeoArrowError;
 
-    fn try_from(geoms: Vec<Option<G>>) -> Result<Self> {
-        Self::from_nullable_geometries(&geoms, Default::default(), Default::default(), true)
+    fn try_from((geoms, dim): (Vec<Option<G>>, Dimension)) -> Result<Self> {
+        Self::from_nullable_geometries(&geoms, dim, Default::default(), Default::default(), true)
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MixedGeometryBuilder<D> {
+impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MixedGeometryBuilder {
     type Error = GeoArrowError;
 
-    fn try_from(value: WKBArray<O>) -> std::result::Result<Self, Self::Error> {
+    fn try_from((value, dim): (WKBArray<O>, Dimension)) -> std::result::Result<Self, Self::Error> {
         assert_eq!(
             value.nulls().map_or(0, |validity| validity.null_count()),
             0,
@@ -524,11 +546,11 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MixedGeometryB
 
         let metadata = value.metadata.clone();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, Default::default(), metadata, true)
+        Self::from_wkb(&wkb_objects, dim, Default::default(), metadata, true)
     }
 }
 
-impl<const D: usize> GeometryArrayBuilder for MixedGeometryBuilder<D> {
+impl GeometryArrayBuilder for MixedGeometryBuilder {
     fn len(&self) -> usize {
         self.types.len()
     }
@@ -538,8 +560,8 @@ impl<const D: usize> GeometryArrayBuilder for MixedGeometryBuilder<D> {
         todo!()
     }
 
-    fn new() -> Self {
-        Self::new()
+    fn new(dim: Dimension) -> Self {
+        Self::new(dim)
     }
 
     fn into_array_ref(self) -> Arc<dyn arrow_array::Array> {
@@ -547,12 +569,14 @@ impl<const D: usize> GeometryArrayBuilder for MixedGeometryBuilder<D> {
     }
 
     fn with_geom_capacity_and_options(
+        dim: Dimension,
         _geom_capacity: usize,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         // We don't know where to allocate the capacity
         Self::with_capacity_and_options(
+            dim,
             Default::default(),
             coord_type,
             metadata,

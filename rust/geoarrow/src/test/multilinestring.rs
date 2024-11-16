@@ -1,6 +1,7 @@
 use geo::{line_string, MultiLineString};
 
-use crate::array::MultiLineStringArray;
+use crate::array::{MultiLineStringArray, MultiLineStringBuilder};
+use crate::datatypes::Dimension;
 
 pub(crate) fn ml0() -> MultiLineString {
     MultiLineString::new(vec![line_string![
@@ -28,6 +29,13 @@ pub(crate) fn ml1() -> MultiLineString {
     ])
 }
 
-pub(crate) fn ml_array() -> MultiLineStringArray<2> {
-    vec![ml0(), ml1()].as_slice().into()
+pub(crate) fn ml_array() -> MultiLineStringArray {
+    let geoms = vec![ml0(), ml1()];
+    MultiLineStringBuilder::from_multi_line_strings(
+        &geoms,
+        Dimension::XY,
+        Default::default(),
+        Default::default(),
+    )
+    .finish()
 }

@@ -55,9 +55,10 @@ impl Table {
     /// use arrow_array::RecordBatch;
     /// use arrow_schema::{Schema, SchemaRef};
     /// use geoarrow::{NativeArray, ArrayBase, array::PointArray, table::Table};
+    /// use geoarrow::datatypes::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
-    /// let array: PointArray<2> = vec![point].as_slice().into();
+    /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// let field = array.extension_field();
     /// let schema: SchemaRef = Schema::new(vec![field]).into();
     /// let columns = vec![array.into_array_ref()];
@@ -95,10 +96,11 @@ impl Table {
     ///     table::Table,
     ///     chunked_array::ChunkedGeometryArray
     /// };
+    /// use geoarrow::datatypes::Dimension;
     /// use std::sync::Arc;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
-    /// let array: PointArray<2> = vec![point].as_slice().into();
+    /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// let chunked_array = ChunkedGeometryArray::new(vec![array]);
     ///
     /// let id_array = Int32Array::from(vec![1]);

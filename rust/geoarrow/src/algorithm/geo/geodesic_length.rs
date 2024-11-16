@@ -34,6 +34,7 @@ pub trait GeodesicLength {
     /// use geo::LineString;
     /// use geoarrow::array::LineStringArray;
     /// use geoarrow::algorithm::geo::GeodesicLength;
+    /// use geoarrow::datatypes::Dimension;
     ///
     /// let linestring = LineString::from(vec![
     ///     // New York City
@@ -43,7 +44,7 @@ pub trait GeodesicLength {
     ///     // Osaka
     ///     (135.5244559, 34.687455)
     /// ]);
-    /// let linestring_array: LineStringArray<2> = vec![linestring].as_slice().into();
+    /// let linestring_array: LineStringArray = (vec![linestring].as_slice(), Dimension::XY).into();
     ///
     /// let length_array = linestring_array.geodesic_length();
     ///
@@ -70,8 +71,8 @@ macro_rules! zero_impl {
     };
 }
 
-zero_impl!(PointArray<2>);
-zero_impl!(MultiPointArray<2>);
+zero_impl!(PointArray);
+zero_impl!(MultiPointArray);
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
@@ -86,8 +87,8 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<2>);
-iter_geo_impl!(MultiLineStringArray<2>);
+iter_geo_impl!(LineStringArray);
+iter_geo_impl!(MultiLineStringArray);
 
 impl GeodesicLength for &dyn NativeArray {
     type Output = Result<Float64Array>;
@@ -97,21 +98,21 @@ impl GeodesicLength for &dyn NativeArray {
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, XY) => self.as_point::<2>().geodesic_length(),
-            LineString(_, XY) => self.as_line_string::<2>().geodesic_length(),
-            // Polygon(_, XY) => self.as_polygon::<2>().geodesic_length(),
-            MultiPoint(_, XY) => self.as_multi_point::<2>().geodesic_length(),
-            MultiLineString(_, XY) => self.as_multi_line_string::<2>().geodesic_length(),
-            // MultiPolygon(_, XY) => self.as_multi_polygon::<2>().geodesic_length(),
-            // Mixed(_, XY) => self.as_mixed::<2>().geodesic_length(),
-            // GeometryCollection(_, XY) => self.as_geometry_collection::<2>().geodesic_length(),
+            Point(_, XY) => self.as_point().geodesic_length(),
+            LineString(_, XY) => self.as_line_string().geodesic_length(),
+            // Polygon(_, XY) => self.as_polygon().geodesic_length(),
+            MultiPoint(_, XY) => self.as_multi_point().geodesic_length(),
+            MultiLineString(_, XY) => self.as_multi_line_string().geodesic_length(),
+            // MultiPolygon(_, XY) => self.as_multi_polygon().geodesic_length(),
+            // Mixed(_, XY) => self.as_mixed().geodesic_length(),
+            // GeometryCollection(_, XY) => self.as_geometry_collection().geodesic_length(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
     }
 }
 
-impl GeodesicLength for ChunkedGeometryArray<PointArray<2>> {
+impl GeodesicLength for ChunkedGeometryArray<PointArray> {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn geodesic_length(&self) -> Self::Output {
@@ -132,9 +133,9 @@ macro_rules! chunked_impl {
     };
 }
 
-chunked_impl!(ChunkedGeometryArray<LineStringArray<2>>);
-chunked_impl!(ChunkedGeometryArray<MultiPointArray<2>>);
-chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<2>>);
+chunked_impl!(ChunkedGeometryArray<LineStringArray>);
+chunked_impl!(ChunkedGeometryArray<MultiPointArray>);
+chunked_impl!(ChunkedGeometryArray<MultiLineStringArray>);
 
 impl GeodesicLength for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<Float64Array>>;
@@ -144,14 +145,14 @@ impl GeodesicLength for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point::<2>().geodesic_length(),
-            LineString(_, XY) => self.as_line_string::<2>().geodesic_length(),
-            // Polygon(_, XY) => self.as_polygon::<2>().geodesic_length(),
-            MultiPoint(_, XY) => self.as_multi_point::<2>().geodesic_length(),
-            MultiLineString(_, XY) => self.as_multi_line_string::<2>().geodesic_length(),
-            // MultiPolygon(_, XY) => self.as_multi_polygon::<2>().geodesic_length(),
-            // Mixed(_, XY) => self.as_mixed::<2>().geodesic_length(),
-            // GeometryCollection(_, XY) => self.as_geometry_collection::<2>().geodesic_length(),
+            Point(_, XY) => self.as_point().geodesic_length(),
+            LineString(_, XY) => self.as_line_string().geodesic_length(),
+            // Polygon(_, XY) => self.as_polygon().geodesic_length(),
+            MultiPoint(_, XY) => self.as_multi_point().geodesic_length(),
+            MultiLineString(_, XY) => self.as_multi_line_string().geodesic_length(),
+            // MultiPolygon(_, XY) => self.as_multi_polygon().geodesic_length(),
+            // Mixed(_, XY) => self.as_mixed().geodesic_length(),
+            // GeometryCollection(_, XY) => self.as_geometry_collection().geodesic_length(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
@@ -174,7 +175,7 @@ mod tests {
             // Osaka
             (x: 135.5244559, y: 34.687455),
         ];
-        let input_array: LineStringArray<2> = vec![input_geom].as_slice().into();
+        let input_array: LineStringArray = (vec![input_geom].as_slice(), Dimension::XY).into();
         let result_array = input_array.geodesic_length();
 
         // Meters

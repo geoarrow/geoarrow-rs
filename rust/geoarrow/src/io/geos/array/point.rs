@@ -1,21 +1,22 @@
 use crate::array::{PointArray, PointBuilder};
+use crate::datatypes::Dimension;
 use crate::error::Result;
 use crate::io::geos::scalar::GEOSPoint;
 
-impl<const D: usize> PointBuilder<D> {
-    pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
+impl PointBuilder {
+    pub fn from_geos(value: Vec<Option<geos::Geometry>>, dim: Dimension) -> Result<Self> {
         // TODO: don't use new_unchecked
         let geos_linestring_objects: Vec<Option<GEOSPoint>> = value
             .into_iter()
             .map(|geom| geom.map(GEOSPoint::new_unchecked))
             .collect();
-        Ok(geos_linestring_objects.into())
+        Ok((geos_linestring_objects, dim).into())
     }
 }
 
-impl<const D: usize> PointArray<D> {
-    pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
-        let mutable_arr = PointBuilder::from_geos(value)?;
+impl PointArray {
+    pub fn from_geos(value: Vec<Option<geos::Geometry>>, dim: Dimension) -> Result<Self> {
+        let mutable_arr = PointBuilder::from_geos(value, dim)?;
         Ok(mutable_arr.into())
     }
 }
@@ -33,7 +34,7 @@ mod test {
             .iter()
             .map(|opt_x| opt_x.map(|x| x.to_geos().unwrap()))
             .collect();
-        let round_trip = PointArray::<2>::from_geos(geos_geoms).unwrap();
+        let round_trip = PointArray::from_geos(geos_geoms, Dimension::XY).unwrap();
         assert_eq!(arr, round_trip);
     }
 }

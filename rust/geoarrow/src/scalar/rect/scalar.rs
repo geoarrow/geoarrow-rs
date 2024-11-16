@@ -8,13 +8,13 @@ use crate::trait_::NativeScalar;
 use geo_traits::RectTrait;
 
 #[derive(Debug, Clone)]
-pub struct Rect<'a, const D: usize> {
+pub struct Rect<'a> {
     lower: &'a SeparatedCoordBuffer,
     upper: &'a SeparatedCoordBuffer,
     pub(crate) geom_index: usize,
 }
 
-impl<'a, const D: usize> Rect<'a, D> {
+impl<'a> Rect<'a> {
     pub fn new(
         lower: &'a SeparatedCoordBuffer,
         upper: &'a SeparatedCoordBuffer,
@@ -32,7 +32,7 @@ impl<'a, const D: usize> Rect<'a, D> {
     }
 }
 
-impl<'a, const D: usize> NativeScalar for Rect<'a, D> {
+impl<'a> NativeScalar for Rect<'a> {
     type ScalarGeo = geo::Rect;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -51,7 +51,7 @@ impl<'a, const D: usize> NativeScalar for Rect<'a, D> {
 }
 
 // TODO: support 3d rects
-impl<'a, const D: usize> RectTrait for Rect<'a, D> {
+impl<'a> RectTrait for Rect<'a> {
     type T = f64;
     type CoordType<'b> = SeparatedCoord<'a> where Self: 'b;
 
@@ -68,26 +68,26 @@ impl<'a, const D: usize> RectTrait for Rect<'a, D> {
     }
 }
 
-impl<const D: usize> From<Rect<'_, D>> for geo::Rect {
-    fn from(value: Rect<'_, D>) -> Self {
+impl From<Rect<'_>> for geo::Rect {
+    fn from(value: Rect<'_>) -> Self {
         (&value).into()
     }
 }
 
-impl<const D: usize> From<&Rect<'_, D>> for geo::Rect {
-    fn from(value: &Rect<'_, D>) -> Self {
+impl From<&Rect<'_>> for geo::Rect {
+    fn from(value: &Rect<'_>) -> Self {
         rect_to_geo(value)
     }
 }
 
-impl<const D: usize> From<Rect<'_, D>> for geo::Geometry {
-    fn from(value: Rect<'_, D>) -> Self {
+impl From<Rect<'_>> for geo::Geometry {
+    fn from(value: Rect<'_>) -> Self {
         geo::Geometry::Rect(value.into())
     }
 }
 
-impl<const D: usize> RTreeObject for Rect<'_, D> {
-    type Envelope = AABB<[f64; D]>;
+impl RTreeObject for Rect<'_> {
+    type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
         let lower = self.min();
@@ -100,7 +100,7 @@ impl<const D: usize> RTreeObject for Rect<'_, D> {
     }
 }
 
-impl<G: RectTrait<T = f64>, const D: usize> PartialEq<G> for Rect<'_, D> {
+impl<G: RectTrait<T = f64>> PartialEq<G> for Rect<'_> {
     fn eq(&self, other: &G) -> bool {
         rect_eq(self, other)
     }

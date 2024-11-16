@@ -280,9 +280,10 @@ impl<G: ArrayBase> ChunkedGeometryArray<G> {
     ///
     /// ```
     /// use geoarrow::{chunked_array::ChunkedGeometryArray, array::PointArray};
+    /// use geoarrow::datatypes::Dimension;
     ///
-    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
-    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
+    /// let array_0: PointArray = (vec![&geo::point!(x: 1., y: 2.)].as_slice(), Dimension::XY).into();
+    /// let array_1: PointArray = (vec![&geo::point!(x: 3., y: 4.)].as_slice(), Dimension::XY).into();
     /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
     /// ```
     pub fn new(chunks: Vec<G>) -> Self {
@@ -301,9 +302,10 @@ impl<G: ArrayBase> ChunkedGeometryArray<G> {
     ///
     /// ```
     /// use geoarrow::{chunked_array::ChunkedGeometryArray, array::PointArray};
+    /// use geoarrow::datatypes::Dimension;
     ///
-    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
-    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
+    /// let array_0: PointArray = (vec![&geo::point!(x: 1., y: 2.)].as_slice(), Dimension::XY).into();
+    /// let array_1: PointArray = (vec![&geo::point!(x: 3., y: 4.)].as_slice(), Dimension::XY).into();
     /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
     /// let field = chunked_array.extension_field();
     /// assert_eq!(field.name(), "geometry");
@@ -318,9 +320,10 @@ impl<G: ArrayBase> ChunkedGeometryArray<G> {
     ///
     /// ```
     /// use geoarrow::{chunked_array::ChunkedGeometryArray, array::PointArray};
+    /// use geoarrow::datatypes::Dimension;
     ///
-    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
-    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
+    /// let array_0: PointArray = (vec![&geo::point!(x: 1., y: 2.)].as_slice(), Dimension::XY).into();
+    /// let array_1: PointArray = (vec![&geo::point!(x: 3., y: 4.)].as_slice(), Dimension::XY).into();
     /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
     /// let chunks = chunked_array.into_inner();
     /// assert_eq!(chunks.len(), 2);
@@ -335,9 +338,10 @@ impl<G: ArrayBase> ChunkedGeometryArray<G> {
     ///
     /// ```
     /// use geoarrow::{chunked_array::ChunkedGeometryArray, array::PointArray};
+    /// use geoarrow::datatypes::Dimension;
     ///
-    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
-    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.), &geo::point!(x: 5., y: 6.)].as_slice().into();
+    /// let array_0: PointArray = (vec![&geo::point!(x: 1., y: 2.)].as_slice(), Dimension::XY).into();
+    /// let array_1: PointArray = (vec![&geo::point!(x: 3., y: 4.), &geo::point!(x: 5., y: 6.)].as_slice(), Dimension::XY).into();
     /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
     /// assert_eq!(chunked_array.len(), 3);
     /// ```
@@ -351,9 +355,10 @@ impl<G: ArrayBase> ChunkedGeometryArray<G> {
     ///
     /// ```
     /// use geoarrow::{chunked_array::ChunkedGeometryArray, array::PointArray};
+    /// use geoarrow::datatypes::Dimension;
     ///
-    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
-    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
+    /// let array_0: PointArray = (vec![&geo::point!(x: 1., y: 2.)].as_slice(), Dimension::XY).into();
+    /// let array_1: PointArray = (vec![&geo::point!(x: 3., y: 4.)].as_slice(), Dimension::XY).into();
     /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
     /// assert!(!chunked_array.is_empty());
     /// ```
@@ -367,9 +372,10 @@ impl<G: ArrayBase> ChunkedGeometryArray<G> {
     ///
     /// ```
     /// use geoarrow::{chunked_array::ChunkedGeometryArray, array::PointArray};
+    /// use geoarrow::datatypes::Dimension;
     ///
-    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
-    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
+    /// let array_0: PointArray = (vec![&geo::point!(x: 1., y: 2.)].as_slice(), Dimension::XY).into();
+    /// let array_1: PointArray = (vec![&geo::point!(x: 3., y: 4.)].as_slice(), Dimension::XY).into();
     /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
     /// let chunks = chunked_array.chunks();
     /// ```
@@ -388,9 +394,10 @@ impl<G: ArrayBase> ChunkedGeometryArray<G> {
     ///     trait_::ArrayBase,
     ///     datatypes::NativeType,
     /// };
+    /// use geoarrow::datatypes::Dimension;
     ///
-    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
-    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
+    /// let array_0: PointArray = (vec![&geo::point!(x: 1., y: 2.)].as_slice(), Dimension::XY).into();
+    /// let array_1: PointArray = (vec![&geo::point!(x: 3., y: 4.)].as_slice(), Dimension::XY).into();
     /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
     /// let lengths = chunked_array.into_map(|chunk| chunk.len()); // chunked_array is consumed
     /// assert_eq!(lengths, vec![1, 1]);
@@ -423,9 +430,10 @@ impl<G: ArrayBase> ChunkedGeometryArray<G> {
     ///     trait_::ArrayBase,
     ///     datatypes::NativeType,
     /// };
+    /// use geoarrow::datatypes::Dimension;
     ///
-    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
-    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
+    /// let array_0: PointArray = (vec![&geo::point!(x: 1., y: 2.)].as_slice(), Dimension::XY).into();
+    /// let array_1: PointArray = (vec![&geo::point!(x: 3., y: 4.)].as_slice(), Dimension::XY).into();
     /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
     /// let lengths = chunked_array.map(|chunk| chunk.len());
     /// assert_eq!(lengths, vec![1, 1]);
@@ -458,9 +466,10 @@ impl<G: ArrayBase> ChunkedGeometryArray<G> {
     ///     trait_::ArrayBase,
     ///     datatypes::NativeType,
     /// };
+    /// use geoarrow::datatypes::Dimension;
     ///
-    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
-    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
+    /// let array_0: PointArray = (vec![&geo::point!(x: 1., y: 2.)].as_slice(), Dimension::XY).into();
+    /// let array_1: PointArray = (vec![&geo::point!(x: 3., y: 4.)].as_slice(), Dimension::XY).into();
     /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
     /// let lengths = chunked_array.try_map(|chunk| Ok(chunk.len())).unwrap();
     /// assert_eq!(lengths, vec![1, 1]);
@@ -488,9 +497,10 @@ impl<G: NativeArray> ChunkedGeometryArray<G> {
     ///
     /// ```
     /// use geoarrow::{chunked_array::ChunkedGeometryArray, array::PointArray, datatypes::NativeType};
+    /// use geoarrow::datatypes::Dimension;
     ///
-    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
-    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
+    /// let array_0: PointArray = (vec![&geo::point!(x: 1., y: 2.)].as_slice(), Dimension::XY).into();
+    /// let array_1: PointArray = (vec![&geo::point!(x: 3., y: 4.)].as_slice(), Dimension::XY).into();
     /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
     /// assert!(matches!(chunked_array.data_type(), NativeType::Point(_, _)));
     /// ```
@@ -506,11 +516,12 @@ impl<'a, G: NativeArray + ArrayAccessor<'a>> ChunkedGeometryArray<G> {
     ///
     /// ```
     /// use geoarrow::{chunked_array::ChunkedGeometryArray, array::PointArray};
+    /// use geoarrow::datatypes::Dimension;
     ///
-    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
-    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
+    /// let array_0: PointArray = (vec![&geo::point!(x: 1., y: 2.)].as_slice(), Dimension::XY).into();
+    /// let array_1: PointArray = (vec![&geo::point!(x: 3., y: 4.)].as_slice(), Dimension::XY).into();
     /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
-    /// let value = chunked_array.value(1); // geoarrow::scalar::Point<2>
+    /// let value = chunked_array.value(1); // geoarrow::scalar::Point
     /// ```
     ///
     /// # Panics
@@ -535,11 +546,12 @@ impl<'a, G: NativeArray + ArrayAccessor<'a>> ChunkedGeometryArray<G> {
     ///
     /// ```
     /// use geoarrow::{chunked_array::ChunkedGeometryArray, array::PointArray};
+    /// use geoarrow::datatypes::Dimension;
     ///
-    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
-    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
+    /// let array_0: PointArray = (vec![&geo::point!(x: 1., y: 2.)].as_slice(), Dimension::XY).into();
+    /// let array_1: PointArray = (vec![&geo::point!(x: 3., y: 4.)].as_slice(), Dimension::XY).into();
     /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
-    /// let value = chunked_array.get(1).unwrap(); // geoarrow::scalar::Point<2>
+    /// let value = chunked_array.get(1).unwrap(); // geoarrow::scalar::Point
     /// ```
     ///
     /// # Panics
@@ -568,25 +580,23 @@ impl<G: ArrayBase> TryFrom<Vec<G>> for ChunkedGeometryArray<G> {
 }
 
 /// A chunked point array.
-pub type ChunkedPointArray<const D: usize> = ChunkedGeometryArray<PointArray<D>>;
+pub type ChunkedPointArray = ChunkedGeometryArray<PointArray>;
 /// A chunked line string array.
-pub type ChunkedLineStringArray<const D: usize> = ChunkedGeometryArray<LineStringArray<D>>;
+pub type ChunkedLineStringArray = ChunkedGeometryArray<LineStringArray>;
 /// A chunked polygon array.
-pub type ChunkedPolygonArray<const D: usize> = ChunkedGeometryArray<PolygonArray<D>>;
+pub type ChunkedPolygonArray = ChunkedGeometryArray<PolygonArray>;
 /// A chunked multi-point array.
-pub type ChunkedMultiPointArray<const D: usize> = ChunkedGeometryArray<MultiPointArray<D>>;
+pub type ChunkedMultiPointArray = ChunkedGeometryArray<MultiPointArray>;
 /// A chunked mutli-line string array.
-pub type ChunkedMultiLineStringArray<const D: usize> =
-    ChunkedGeometryArray<MultiLineStringArray<D>>;
+pub type ChunkedMultiLineStringArray = ChunkedGeometryArray<MultiLineStringArray>;
 /// A chunked multi-polygon array.
-pub type ChunkedMultiPolygonArray<const D: usize> = ChunkedGeometryArray<MultiPolygonArray<D>>;
+pub type ChunkedMultiPolygonArray = ChunkedGeometryArray<MultiPolygonArray>;
 /// A chunked mixed geometry array.
-pub type ChunkedMixedGeometryArray<const D: usize> = ChunkedGeometryArray<MixedGeometryArray<D>>;
+pub type ChunkedMixedGeometryArray = ChunkedGeometryArray<MixedGeometryArray>;
 /// A chunked geometry collection array.
-pub type ChunkedGeometryCollectionArray<const D: usize> =
-    ChunkedGeometryArray<GeometryCollectionArray<D>>;
+pub type ChunkedGeometryCollectionArray = ChunkedGeometryArray<GeometryCollectionArray>;
 /// A chunked rect array.
-pub type ChunkedRectArray<const D: usize> = ChunkedGeometryArray<RectArray<D>>;
+pub type ChunkedRectArray = ChunkedGeometryArray<RectArray>;
 /// A chunked unknown geometry array.
 #[allow(dead_code)]
 pub type ChunkedUnknownGeometryArray = ChunkedGeometryArray<Arc<dyn NativeArray>>;
@@ -608,9 +618,10 @@ pub trait ChunkedArrayBase: std::fmt::Debug + Send + Sync {
     ///     chunked_array::{ChunkedGeometryArray, ChunkedNativeArray, ChunkedArrayBase},
     ///     array::PointArray
     /// };
+    /// use geoarrow::datatypes::Dimension;
     ///
-    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
-    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
+    /// let array_0: PointArray = (vec![&geo::point!(x: 1., y: 2.)].as_slice(), Dimension::XY).into();
+    /// let array_1: PointArray = (vec![&geo::point!(x: 3., y: 4.)].as_slice(), Dimension::XY).into();
     /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
     /// let any = chunked_array.as_any();
     /// ```
@@ -628,9 +639,10 @@ pub trait ChunkedArrayBase: std::fmt::Debug + Send + Sync {
     ///     chunked_array::{ChunkedGeometryArray, ChunkedNativeArray},
     ///     array::PointArray
     /// };
+    /// use geoarrow::datatypes::Dimension;
     ///
-    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
-    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
+    /// let array_0: PointArray = (vec![&geo::point!(x: 1., y: 2.)].as_slice(), Dimension::XY).into();
+    /// let array_1: PointArray = (vec![&geo::point!(x: 3., y: 4.)].as_slice(), Dimension::XY).into();
     /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
     /// let field = chunked_array.extension_field();
     /// assert_eq!(field.metadata()["ARROW:extension:name"], "geoarrow.point");
@@ -643,9 +655,10 @@ pub trait ChunkedArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     /// use geoarrow::{array::PointArray, NativeArray, ArrayBase};
+    /// use geoarrow::datatypes::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
-    /// let point_array: PointArray<2> = vec![point].as_slice().into();
+    /// let point_array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// assert_eq!(point_array.len(), 1);
     /// ```
     fn len(&self) -> usize;
@@ -656,9 +669,10 @@ pub trait ChunkedArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     /// use geoarrow::{array::PointArray, ArrayBase};
+    /// use geoarrow::datatypes::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
-    /// let point_array: PointArray<2> = vec![point].as_slice().into();
+    /// let point_array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// assert!(!point_array.is_empty());
     /// ```
     fn is_empty(&self) -> bool {
@@ -674,9 +688,10 @@ pub trait ChunkedArrayBase: std::fmt::Debug + Send + Sync {
     ///     chunked_array::{ChunkedGeometryArray, ChunkedArrayBase},
     ///     array::PointArray
     /// };
+    /// use geoarrow::datatypes::Dimension;
     ///
-    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
-    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
+    /// let array_0: PointArray = (vec![&geo::point!(x: 1., y: 2.)].as_slice(), Dimension::XY).into();
+    /// let array_1: PointArray = (vec![&geo::point!(x: 3., y: 4.)].as_slice(), Dimension::XY).into();
     /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
     /// assert_eq!(chunked_array.num_chunks(), 2);
     /// ```
@@ -691,9 +706,10 @@ pub trait ChunkedArrayBase: std::fmt::Debug + Send + Sync {
     ///     chunked_array::{ChunkedGeometryArray, ChunkedArrayBase},
     ///     array::PointArray
     /// };
+    /// use geoarrow::datatypes::Dimension;
     ///
-    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
-    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
+    /// let array_0: PointArray = (vec![&geo::point!(x: 1., y: 2.)].as_slice(), Dimension::XY).into();
+    /// let array_1: PointArray = (vec![&geo::point!(x: 3., y: 4.)].as_slice(), Dimension::XY).into();
     /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
     /// let arrays = chunked_array.array_refs();
     /// ```
@@ -716,9 +732,10 @@ pub trait ChunkedNativeArray: ChunkedArrayBase {
     ///     chunked_array::{ChunkedGeometryArray, ChunkedNativeArray},
     ///     array::PointArray
     /// };
+    /// use geoarrow::datatypes::Dimension;
     ///
-    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
-    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
+    /// let array_0: PointArray = (vec![&geo::point!(x: 1., y: 2.)].as_slice(), Dimension::XY).into();
+    /// let array_1: PointArray = (vec![&geo::point!(x: 3., y: 4.)].as_slice(), Dimension::XY).into();
     /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
     /// let data_type = chunked_array.data_type();
     /// ```
@@ -733,9 +750,10 @@ pub trait ChunkedNativeArray: ChunkedArrayBase {
     ///     chunked_array::{ChunkedGeometryArray, ChunkedNativeArray},
     ///     array::PointArray
     /// };
+    /// use geoarrow::datatypes::Dimension;
     ///
-    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
-    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
+    /// let array_0: PointArray = (vec![&geo::point!(x: 1., y: 2.)].as_slice(), Dimension::XY).into();
+    /// let array_1: PointArray = (vec![&geo::point!(x: 3., y: 4.)].as_slice(), Dimension::XY).into();
     /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
     /// let chunks = chunked_array.geometry_chunks();
     /// assert_eq!(chunks.len(), 2);
@@ -751,9 +769,10 @@ pub trait ChunkedNativeArray: ChunkedArrayBase {
     ///     chunked_array::{ChunkedGeometryArray, ChunkedNativeArray},
     ///     array::PointArray
     /// };
+    /// use geoarrow::datatypes::Dimension;
     ///
-    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
-    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
+    /// let array_0: PointArray = (vec![&geo::point!(x: 1., y: 2.)].as_slice(), Dimension::XY).into();
+    /// let array_1: PointArray = (vec![&geo::point!(x: 3., y: 4.)].as_slice(), Dimension::XY).into();
     /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
     /// let array_ref = chunked_array.as_ref();
     /// ```
@@ -797,7 +816,7 @@ pub trait ChunkedNativeArray: ChunkedArrayBase {
     }
 }
 
-impl<const D: usize> ChunkedArrayBase for ChunkedPointArray<D> {
+impl ChunkedArrayBase for ChunkedPointArray {
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -823,7 +842,7 @@ impl<const D: usize> ChunkedArrayBase for ChunkedPointArray<D> {
     }
 }
 
-impl<const D: usize> ChunkedNativeArray for ChunkedPointArray<D> {
+impl ChunkedNativeArray for ChunkedPointArray {
     fn data_type(&self) -> NativeType {
         self.chunks.first().unwrap().data_type()
     }
@@ -884,7 +903,7 @@ impl<O: OffsetSizeTrait> ChunkedArrayBase for ChunkedWKBArray<O> {
 
 macro_rules! impl_trait {
     ($chunked_array:ty) => {
-        impl<const D: usize> ChunkedArrayBase for $chunked_array {
+        impl ChunkedArrayBase for $chunked_array {
             fn as_any(&self) -> &dyn Any {
                 self
             }
@@ -911,7 +930,7 @@ macro_rules! impl_trait {
             }
         }
 
-        impl<const D: usize> ChunkedNativeArray for $chunked_array {
+        impl ChunkedNativeArray for $chunked_array {
             fn data_type(&self) -> NativeType {
                 self.chunks.first().unwrap().data_type()
             }
@@ -930,15 +949,15 @@ macro_rules! impl_trait {
     };
 }
 
-impl_trait!(ChunkedLineStringArray<D>);
-impl_trait!(ChunkedPolygonArray<D>);
-impl_trait!(ChunkedMultiPointArray<D>);
-impl_trait!(ChunkedMultiLineStringArray<D>);
-impl_trait!(ChunkedMultiPolygonArray<D>);
-impl_trait!(ChunkedMixedGeometryArray<D>);
-impl_trait!(ChunkedGeometryCollectionArray<D>);
+impl_trait!(ChunkedLineStringArray);
+impl_trait!(ChunkedPolygonArray);
+impl_trait!(ChunkedMultiPointArray);
+impl_trait!(ChunkedMultiLineStringArray);
+impl_trait!(ChunkedMultiPolygonArray);
+impl_trait!(ChunkedMixedGeometryArray);
+impl_trait!(ChunkedGeometryCollectionArray);
 
-impl<const D: usize> ChunkedArrayBase for ChunkedRectArray<D> {
+impl ChunkedArrayBase for ChunkedRectArray {
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -965,7 +984,7 @@ impl<const D: usize> ChunkedArrayBase for ChunkedRectArray<D> {
     }
 }
 
-impl<const D: usize> ChunkedNativeArray for ChunkedRectArray<D> {
+impl ChunkedNativeArray for ChunkedRectArray {
     fn data_type(&self) -> NativeType {
         self.chunks.first().unwrap().data_type()
     }

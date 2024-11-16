@@ -6,7 +6,7 @@ use arrow_buffer::NullBuffer;
 use geoarrow::array::{
     AsNativeArray, AsSerializedArray, CoordBuffer, NativeArrayDyn, SerializedArrayDyn,
 };
-use geoarrow::datatypes::{AnyType, Dimension, NativeType, SerializedType};
+use geoarrow::datatypes::{AnyType, NativeType, SerializedType};
 use geoarrow::io::wkb::to_wkb;
 use geoarrow::NativeArray;
 use numpy::PyArrayMethods;
@@ -88,41 +88,21 @@ fn pyarray_to_shapely(py: Python, input: PyArray) -> PyGeoArrowResult<Bound<PyAn
         AnyType::Native(typ) => {
             let array = NativeArrayDyn::from_arrow_array(&array, &field)?.into_inner();
 
-            use Dimension::*;
             use NativeType::*;
             match typ {
-                Point(_, XY) => point_arr(py, array.as_ref().as_point::<2>().clone()),
-                LineString(_, XY) => {
-                    linestring_arr(py, array.as_ref().as_line_string::<2>().clone())
+                Point(_, _) => point_arr(py, array.as_ref().as_point().clone()),
+                LineString(_, _) => linestring_arr(py, array.as_ref().as_line_string().clone()),
+                Polygon(_, _) => polygon_arr(py, array.as_ref().as_polygon().clone()),
+                MultiPoint(_, _) => multipoint_arr(py, array.as_ref().as_multi_point().clone()),
+                MultiLineString(_, _) => {
+                    multilinestring_arr(py, array.as_ref().as_multi_line_string().clone())
                 }
-                Polygon(_, XY) => polygon_arr(py, array.as_ref().as_polygon::<2>().clone()),
-                MultiPoint(_, XY) => {
-                    multipoint_arr(py, array.as_ref().as_multi_point::<2>().clone())
+                MultiPolygon(_, _) => {
+                    multipolygon_arr(py, array.as_ref().as_multi_polygon().clone())
                 }
-                MultiLineString(_, XY) => {
-                    multilinestring_arr(py, array.as_ref().as_multi_line_string::<2>().clone())
-                }
-                MultiPolygon(_, XY) => {
-                    multipolygon_arr(py, array.as_ref().as_multi_polygon::<2>().clone())
-                }
-                Rect(XY) => rect_arr(py, array.as_ref().as_rect::<2>().clone()),
-                Point(_, XYZ) => point_arr(py, array.as_ref().as_point::<3>().clone()),
-                LineString(_, XYZ) => {
-                    linestring_arr(py, array.as_ref().as_line_string::<3>().clone())
-                }
-                Polygon(_, XYZ) => polygon_arr(py, array.as_ref().as_polygon::<3>().clone()),
-                MultiPoint(_, XYZ) => {
-                    multipoint_arr(py, array.as_ref().as_multi_point::<3>().clone())
-                }
-                MultiLineString(_, XYZ) => {
-                    multilinestring_arr(py, array.as_ref().as_multi_line_string::<3>().clone())
-                }
-                MultiPolygon(_, XYZ) => {
-                    multipolygon_arr(py, array.as_ref().as_multi_polygon::<3>().clone())
-                }
+                Rect(_) => rect_arr(py, array.as_ref().as_rect().clone()),
                 Mixed(_, _) => via_wkb(py, array),
                 GeometryCollection(_, _) => via_wkb(py, array),
-                t => Err(PyValueError::new_err(format!("unsupported type {:?}", t)).into()),
             }
         }
         AnyType::Serialized(typ) => {
@@ -135,10 +115,7 @@ fn pyarray_to_shapely(py: Python, input: PyArray) -> PyGeoArrowResult<Bound<PyAn
     }
 }
 
-fn point_arr<const D: usize>(
-    py: Python,
-    arr: geoarrow::array::PointArray<D>,
-) -> PyGeoArrowResult<Bound<PyAny>> {
+fn point_arr(py: Python, arr: geoarrow::array::PointArray) -> PyGeoArrowResult<Bound<PyAny>> {
     let shapely_mod = import_shapely(py)?;
     let shapely_geom_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
 
@@ -150,9 +127,9 @@ fn point_arr<const D: usize>(
     Ok(shapely_mod.call_method1(intern!(py, "from_ragged_array"), args)?)
 }
 
-fn linestring_arr<const D: usize>(
+fn linestring_arr(
     py: Python,
-    arr: geoarrow::array::LineStringArray<D>,
+    arr: geoarrow::array::LineStringArray,
 ) -> PyGeoArrowResult<Bound<PyAny>> {
     let shapely_mod = import_shapely(py)?;
     let shapely_geom_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
@@ -168,10 +145,7 @@ fn linestring_arr<const D: usize>(
     Ok(shapely_mod.call_method1(intern!(py, "from_ragged_array"), args)?)
 }
 
-fn polygon_arr<const D: usize>(
-    py: Python,
-    arr: geoarrow::array::PolygonArray<D>,
-) -> PyGeoArrowResult<Bound<PyAny>> {
+fn polygon_arr(py: Python, arr: geoarrow::array::PolygonArray) -> PyGeoArrowResult<Bound<PyAny>> {
     let shapely_mod = import_shapely(py)?;
     let shapely_geom_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
 
@@ -189,9 +163,9 @@ fn polygon_arr<const D: usize>(
     Ok(shapely_mod.call_method1(intern!(py, "from_ragged_array"), args)?)
 }
 
-fn multipoint_arr<const D: usize>(
+fn multipoint_arr(
     py: Python,
-    arr: geoarrow::array::MultiPointArray<D>,
+    arr: geoarrow::array::MultiPointArray,
 ) -> PyGeoArrowResult<Bound<PyAny>> {
     let shapely_mod = import_shapely(py)?;
     let shapely_geom_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
@@ -207,9 +181,9 @@ fn multipoint_arr<const D: usize>(
     Ok(shapely_mod.call_method1(intern!(py, "from_ragged_array"), args)?)
 }
 
-fn multilinestring_arr<const D: usize>(
+fn multilinestring_arr(
     py: Python,
-    arr: geoarrow::array::MultiLineStringArray<D>,
+    arr: geoarrow::array::MultiLineStringArray,
 ) -> PyGeoArrowResult<Bound<PyAny>> {
     let shapely_mod = import_shapely(py)?;
     let shapely_geom_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
@@ -228,9 +202,9 @@ fn multilinestring_arr<const D: usize>(
     Ok(shapely_mod.call_method1(intern!(py, "from_ragged_array"), args)?)
 }
 
-fn multipolygon_arr<const D: usize>(
+fn multipolygon_arr(
     py: Python,
-    arr: geoarrow::array::MultiPolygonArray<D>,
+    arr: geoarrow::array::MultiPolygonArray,
 ) -> PyGeoArrowResult<Bound<PyAny>> {
     let shapely_mod = import_shapely(py)?;
     let shapely_geom_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
@@ -250,7 +224,7 @@ fn multipolygon_arr<const D: usize>(
     Ok(shapely_mod.call_method1(intern!(py, "from_ragged_array"), args)?)
 }
 
-fn rect_arr(py: Python, arr: geoarrow::array::RectArray<2>) -> PyGeoArrowResult<Bound<PyAny>> {
+fn rect_arr(py: Python, arr: geoarrow::array::RectArray) -> PyGeoArrowResult<Bound<PyAny>> {
     let shapely_mod = import_shapely(py)?;
 
     let lower = arr.lower();

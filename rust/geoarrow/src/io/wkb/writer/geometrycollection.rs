@@ -8,8 +8,8 @@ use std::io::Cursor;
 use wkb::writer::{geometry_collection_wkb_size, write_geometry_collection};
 use wkb::Endianness;
 
-impl<O: OffsetSizeTrait, const D: usize> From<&GeometryCollectionArray<D>> for WKBArray<O> {
-    fn from(value: &GeometryCollectionArray<D>) -> Self {
+impl<O: OffsetSizeTrait> From<&GeometryCollectionArray> for WKBArray<O> {
+    fn from(value: &GeometryCollectionArray) -> Self {
         let mut offsets: OffsetsBuilder<O> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
@@ -46,6 +46,7 @@ impl<O: OffsetSizeTrait, const D: usize> From<&GeometryCollectionArray<D>> for W
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::datatypes::Dimension;
     use crate::test::multipoint;
     use crate::test::multipolygon;
 
@@ -61,9 +62,10 @@ mod test {
             geo::Geometry::MultiPolygon(multipolygon::mp1()),
         ]);
 
-        let orig_arr: GeometryCollectionArray<2> = vec![Some(gc0), Some(gc1), None].into();
+        let orig_arr: GeometryCollectionArray =
+            (vec![Some(gc0), Some(gc1), None], Dimension::XY).into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: GeometryCollectionArray<2> = wkb_arr.try_into().unwrap();
+        let new_arr: GeometryCollectionArray = (wkb_arr, Dimension::XY).try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }

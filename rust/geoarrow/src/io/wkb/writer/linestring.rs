@@ -8,8 +8,8 @@ use std::io::Cursor;
 use wkb::writer::{line_string_wkb_size, write_line_string};
 use wkb::Endianness;
 
-impl<O: OffsetSizeTrait, const D: usize> From<&LineStringArray<D>> for WKBArray<O> {
-    fn from(value: &LineStringArray<D>) -> Self {
+impl<O: OffsetSizeTrait> From<&LineStringArray> for WKBArray<O> {
+    fn from(value: &LineStringArray) -> Self {
         let mut offsets: OffsetsBuilder<O> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
@@ -44,23 +44,25 @@ impl<O: OffsetSizeTrait, const D: usize> From<&LineStringArray<D>> for WKBArray<
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::datatypes::Dimension;
     use crate::test::linestring::{ls0, ls1};
 
     #[test]
     fn round_trip() {
-        let orig_arr: LineStringArray<2> = vec![Some(ls0()), Some(ls1()), None].into();
+        let orig_arr: LineStringArray =
+            (vec![Some(ls0()), Some(ls1()), None], Dimension::XY).into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: LineStringArray<2> = wkb_arr.try_into().unwrap();
+        let new_arr: LineStringArray = (wkb_arr, Dimension::XY).try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }
 
-    // TODO: parsing WKBArray<i64> into LineStringArray<i32> not yet implemented
     #[test]
     fn round_trip_to_i64() {
-        let orig_arr: LineStringArray<2> = vec![Some(ls0()), Some(ls1()), None].into();
+        let orig_arr: LineStringArray =
+            (vec![Some(ls0()), Some(ls1()), None], Dimension::XY).into();
         let wkb_arr: WKBArray<i64> = (&orig_arr).into();
-        let new_arr: LineStringArray<2> = wkb_arr.try_into().unwrap();
+        let new_arr: LineStringArray = (wkb_arr, Dimension::XY).try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }

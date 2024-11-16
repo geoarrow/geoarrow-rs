@@ -5,7 +5,7 @@ use arrow_buffer::OffsetBuffer;
 use geo_traits::LineStringTrait;
 
 #[derive(Clone, Debug)]
-pub struct OwnedLineString<const D: usize> {
+pub struct OwnedLineString {
     coords: CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
@@ -14,7 +14,7 @@ pub struct OwnedLineString<const D: usize> {
     geom_index: usize,
 }
 
-impl<const D: usize> OwnedLineString<D> {
+impl OwnedLineString {
     pub fn new(coords: CoordBuffer, geom_offsets: OffsetBuffer<i32>, geom_index: usize) -> Self {
         Self {
             coords,
@@ -24,33 +24,33 @@ impl<const D: usize> OwnedLineString<D> {
     }
 }
 
-impl<'a, const D: usize> From<&'a OwnedLineString<D>> for LineString<'a, D> {
-    fn from(value: &'a OwnedLineString<D>) -> Self {
+impl<'a> From<&'a OwnedLineString> for LineString<'a> {
+    fn from(value: &'a OwnedLineString) -> Self {
         Self::new(&value.coords, &value.geom_offsets, value.geom_index)
     }
 }
 
-impl From<OwnedLineString<2>> for geo::LineString {
-    fn from(value: OwnedLineString<2>) -> Self {
+impl From<OwnedLineString> for geo::LineString {
+    fn from(value: OwnedLineString) -> Self {
         let geom = LineString::from(&value);
         geom.into()
     }
 }
 
-impl<'a, const D: usize> From<LineString<'a, D>> for OwnedLineString<D> {
-    fn from(value: LineString<'a, D>) -> Self {
+impl<'a> From<LineString<'a>> for OwnedLineString {
+    fn from(value: LineString<'a>) -> Self {
         let (coords, geom_offsets, geom_index) = value.into_owned_inner();
         Self::new(coords, geom_offsets, geom_index)
     }
 }
 
-impl<const D: usize> From<OwnedLineString<D>> for LineStringArray<D> {
-    fn from(value: OwnedLineString<D>) -> Self {
+impl From<OwnedLineString> for LineStringArray {
+    fn from(value: OwnedLineString) -> Self {
         Self::new(value.coords, value.geom_offsets, None, Default::default())
     }
 }
 
-impl<const D: usize> LineStringTrait for OwnedLineString<D> {
+impl LineStringTrait for OwnedLineString {
     type T = f64;
     type CoordType<'b> = Coord<'b> where Self: 'b;
 
@@ -67,7 +67,7 @@ impl<const D: usize> LineStringTrait for OwnedLineString<D> {
     }
 }
 
-impl<G: LineStringTrait<T = f64>> PartialEq<G> for OwnedLineString<2> {
+impl<G: LineStringTrait<T = f64>> PartialEq<G> for OwnedLineString {
     fn eq(&self, other: &G) -> bool {
         line_string_eq(self, other)
     }

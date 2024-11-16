@@ -10,6 +10,7 @@ use sqlx::{Column, Decode, Executor, Postgres, Row, Type, TypeInfo};
 use std::io::Cursor;
 use std::sync::Arc;
 
+use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::io::geozero::array::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
@@ -160,7 +161,7 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
         options.properties_schema = Some(Arc::new(schema.finish()));
 
         // Create builder and add this row
-        let mut builder = Self::new_with_options(options);
+        let mut builder = Self::new_with_options(Dimension::XY, options);
         builder.add_postgres_row(0, row)?;
         Ok(builder)
     }
@@ -172,7 +173,7 @@ pub async fn read_postgis<'c, E: Executor<'c, Database = Postgres>>(
 ) -> Result<Option<Table>> {
     let query = sqlx::query::<Postgres>(sql);
     let mut result_stream = query.fetch(executor);
-    let mut table_builder: Option<GeoTableBuilder<MixedGeometryStreamBuilder<2>>> = None;
+    let mut table_builder: Option<GeoTableBuilder<MixedGeometryStreamBuilder>> = None;
 
     // TODO: try out chunking with `result_stream.try_chunks`
     let mut row_idx = 0;

@@ -43,11 +43,11 @@ pub trait LineInterpolatePoint<Rhs> {
     fn line_interpolate_point(&self, fraction: Rhs) -> Self::Output;
 }
 
-impl LineInterpolatePoint<&Float64Array> for LineStringArray<2> {
-    type Output = PointArray<2>;
+impl LineInterpolatePoint<&Float64Array> for LineStringArray {
+    type Output = PointArray;
 
     fn line_interpolate_point(&self, p: &Float64Array) -> Self::Output {
-        let mut output_array = PointBuilder::with_capacity(self.len());
+        let mut output_array = PointBuilder::with_capacity(Dimension::XY, self.len());
 
         self.iter_geo()
             .zip(p)
@@ -67,21 +67,21 @@ impl LineInterpolatePoint<&Float64Array> for LineStringArray<2> {
 }
 
 impl LineInterpolatePoint<&Float64Array> for &dyn NativeArray {
-    type Output = Result<PointArray<2>>;
+    type Output = Result<PointArray>;
 
     fn line_interpolate_point(&self, fraction: &Float64Array) -> Self::Output {
         use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            LineString(_, XY) => Ok(self.as_line_string::<2>().line_interpolate_point(fraction)),
+            LineString(_, XY) => Ok(self.as_line_string().line_interpolate_point(fraction)),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
 }
 
-impl LineInterpolatePoint<&[Float64Array]> for ChunkedLineStringArray<2> {
-    type Output = ChunkedPointArray<2>;
+impl LineInterpolatePoint<&[Float64Array]> for ChunkedLineStringArray {
+    type Output = ChunkedPointArray;
 
     fn line_interpolate_point(&self, p: &[Float64Array]) -> Self::Output {
         ChunkedPointArray::new(
@@ -91,24 +91,24 @@ impl LineInterpolatePoint<&[Float64Array]> for ChunkedLineStringArray<2> {
 }
 
 impl LineInterpolatePoint<&[Float64Array]> for &dyn ChunkedNativeArray {
-    type Output = Result<ChunkedPointArray<2>>;
+    type Output = Result<ChunkedPointArray>;
 
     fn line_interpolate_point(&self, fraction: &[Float64Array]) -> Self::Output {
         use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            LineString(_, XY) => Ok(self.as_line_string::<2>().line_interpolate_point(fraction)),
+            LineString(_, XY) => Ok(self.as_line_string().line_interpolate_point(fraction)),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
 }
 
-impl LineInterpolatePoint<f64> for LineStringArray<2> {
-    type Output = PointArray<2>;
+impl LineInterpolatePoint<f64> for LineStringArray {
+    type Output = PointArray;
 
     fn line_interpolate_point(&self, p: f64) -> Self::Output {
-        let mut output_array = PointBuilder::with_capacity(self.len());
+        let mut output_array = PointBuilder::with_capacity(Dimension::XY, self.len());
 
         self.iter_geo().for_each(|maybe_line_string| {
             if let Some(line_string) = maybe_line_string {
@@ -127,21 +127,21 @@ impl LineInterpolatePoint<f64> for LineStringArray<2> {
 }
 
 impl LineInterpolatePoint<f64> for &dyn NativeArray {
-    type Output = Result<PointArray<2>>;
+    type Output = Result<PointArray>;
 
     fn line_interpolate_point(&self, fraction: f64) -> Self::Output {
         use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            LineString(_, XY) => Ok(self.as_line_string::<2>().line_interpolate_point(fraction)),
+            LineString(_, XY) => Ok(self.as_line_string().line_interpolate_point(fraction)),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
 }
 
-impl LineInterpolatePoint<f64> for ChunkedLineStringArray<2> {
-    type Output = ChunkedPointArray<2>;
+impl LineInterpolatePoint<f64> for ChunkedLineStringArray {
+    type Output = ChunkedPointArray;
 
     fn line_interpolate_point(&self, fraction: f64) -> Self::Output {
         ChunkedPointArray::new(self.map(|chunk| chunk.line_interpolate_point(fraction)))
@@ -149,14 +149,14 @@ impl LineInterpolatePoint<f64> for ChunkedLineStringArray<2> {
 }
 
 impl LineInterpolatePoint<f64> for &dyn ChunkedNativeArray {
-    type Output = Result<ChunkedPointArray<2>>;
+    type Output = Result<ChunkedPointArray>;
 
     fn line_interpolate_point(&self, fraction: f64) -> Self::Output {
         use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            LineString(_, XY) => Ok(self.as_line_string::<2>().line_interpolate_point(fraction)),
+            LineString(_, XY) => Ok(self.as_line_string().line_interpolate_point(fraction)),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

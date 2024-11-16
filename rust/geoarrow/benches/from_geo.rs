@@ -2,6 +2,7 @@ use geo::polygon;
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use geoarrow::array::{PolygonArray, PolygonBuilder};
+use geoarrow::datatypes::Dimension;
 
 fn create_data() -> Vec<geo::Polygon> {
     // An L shape
@@ -24,9 +25,13 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
     c.bench_function("convert Vec<geo::Polygon> to PolygonArray", |b| {
         b.iter(|| {
-            let mut_arr =
-                PolygonBuilder::<2>::from_polygons(&data, Default::default(), Default::default());
-            let _arr: PolygonArray<2> = mut_arr.into();
+            let mut_arr = PolygonBuilder::from_polygons(
+                &data,
+                Dimension::XY,
+                Default::default(),
+                Default::default(),
+            );
+            let _arr: PolygonArray = mut_arr.into();
         })
     });
 }

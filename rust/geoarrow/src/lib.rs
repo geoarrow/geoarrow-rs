@@ -39,16 +39,19 @@
 //!
 //! ```
 //! use geoarrow::array::PointArray;
+//! use geoarrow::datatypes::Dimension;
 //!
 //! let point = geo::point!(x: 1., y: 2.);
-//! let array: PointArray<2> = vec![point].as_slice().into();
+//! let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
 //! ```
 //!
 //! Or you can use builders, e.g. [PointBuilder](crate::array::PointBuilder):
 //!
 //! ```
 //! use geoarrow::array::PointBuilder;
-//! let mut builder = PointBuilder::<2>::new();
+//! use geoarrow::datatypes::Dimension;
+//!
+//! let mut builder = PointBuilder::new(Dimension::XY);
 //! builder.push_point(Some(&geo::point!(x: 1., y: 2.)));
 //! let array = builder.finish();
 //! ```

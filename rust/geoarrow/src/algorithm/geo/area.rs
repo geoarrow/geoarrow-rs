@@ -18,6 +18,7 @@ use geo::prelude::Area as GeoArea;
 ///
 /// use geoarrow::algorithm::geo::Area;
 /// use geoarrow::array::PolygonArray;
+/// use geoarrow::datatypes::Dimension;
 ///
 /// let polygon = polygon![
 ///     (x: 0., y: 0.),
@@ -32,8 +33,8 @@ use geo::prelude::Area as GeoArea;
 ///     line_string.0.reverse();
 /// });
 ///
-/// let polygon_array: PolygonArray<2> = vec![polygon].as_slice().into();
-/// let reversed_polygon_array: PolygonArray<2> = vec![reversed_polygon].as_slice().into();
+/// let polygon_array: PolygonArray = (vec![polygon].as_slice(), Dimension::XY).into();
+/// let reversed_polygon_array: PolygonArray = (vec![reversed_polygon].as_slice(), Dimension::XY).into();
 ///
 /// assert_eq!(polygon_array.signed_area().value(0), 30.);
 /// assert_eq!(polygon_array.unsigned_area().value(0), 30.);
@@ -66,10 +67,10 @@ macro_rules! zero_impl {
     };
 }
 
-zero_impl!(PointArray<2>);
-zero_impl!(LineStringArray<2>);
-zero_impl!(MultiPointArray<2>);
-zero_impl!(MultiLineStringArray<2>);
+zero_impl!(PointArray);
+zero_impl!(LineStringArray);
+zero_impl!(MultiPointArray);
+zero_impl!(MultiLineStringArray);
 
 macro_rules! iter_geo_impl {
     ($type:ty) => {
@@ -87,11 +88,11 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(PolygonArray<2>);
-iter_geo_impl!(MultiPolygonArray<2>);
-iter_geo_impl!(MixedGeometryArray<2>);
-iter_geo_impl!(GeometryCollectionArray<2>);
-iter_geo_impl!(RectArray<2>);
+iter_geo_impl!(PolygonArray);
+iter_geo_impl!(MultiPolygonArray);
+iter_geo_impl!(MixedGeometryArray);
+iter_geo_impl!(GeometryCollectionArray);
+iter_geo_impl!(RectArray);
 
 impl Area for &dyn NativeArray {
     type Output = Result<Float64Array>;
@@ -101,15 +102,15 @@ impl Area for &dyn NativeArray {
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, XY) => self.as_point::<2>().signed_area(),
-            LineString(_, XY) => self.as_line_string::<2>().signed_area(),
-            Polygon(_, XY) => self.as_polygon::<2>().signed_area(),
-            MultiPoint(_, XY) => self.as_multi_point::<2>().signed_area(),
-            MultiLineString(_, XY) => self.as_multi_line_string::<2>().signed_area(),
-            MultiPolygon(_, XY) => self.as_multi_polygon::<2>().signed_area(),
-            Mixed(_, XY) => self.as_mixed::<2>().signed_area(),
-            GeometryCollection(_, XY) => self.as_geometry_collection::<2>().signed_area(),
-            Rect(XY) => self.as_rect::<2>().signed_area(),
+            Point(_, XY) => self.as_point().signed_area(),
+            LineString(_, XY) => self.as_line_string().signed_area(),
+            Polygon(_, XY) => self.as_polygon().signed_area(),
+            MultiPoint(_, XY) => self.as_multi_point().signed_area(),
+            MultiLineString(_, XY) => self.as_multi_line_string().signed_area(),
+            MultiPolygon(_, XY) => self.as_multi_polygon().signed_area(),
+            Mixed(_, XY) => self.as_mixed().signed_area(),
+            GeometryCollection(_, XY) => self.as_geometry_collection().signed_area(),
+            Rect(XY) => self.as_rect().signed_area(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -120,15 +121,15 @@ impl Area for &dyn NativeArray {
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, XY) => self.as_point::<2>().unsigned_area(),
-            LineString(_, XY) => self.as_line_string::<2>().unsigned_area(),
-            Polygon(_, XY) => self.as_polygon::<2>().unsigned_area(),
-            MultiPoint(_, XY) => self.as_multi_point::<2>().unsigned_area(),
-            MultiLineString(_, XY) => self.as_multi_line_string::<2>().unsigned_area(),
-            MultiPolygon(_, XY) => self.as_multi_polygon::<2>().unsigned_area(),
-            Mixed(_, XY) => self.as_mixed::<2>().unsigned_area(),
-            GeometryCollection(_, XY) => self.as_geometry_collection::<2>().unsigned_area(),
-            Rect(XY) => self.as_rect::<2>().unsigned_area(),
+            Point(_, XY) => self.as_point().unsigned_area(),
+            LineString(_, XY) => self.as_line_string().unsigned_area(),
+            Polygon(_, XY) => self.as_polygon().unsigned_area(),
+            MultiPoint(_, XY) => self.as_multi_point().unsigned_area(),
+            MultiLineString(_, XY) => self.as_multi_line_string().unsigned_area(),
+            MultiPolygon(_, XY) => self.as_multi_polygon().unsigned_area(),
+            Mixed(_, XY) => self.as_mixed().unsigned_area(),
+            GeometryCollection(_, XY) => self.as_geometry_collection().unsigned_area(),
+            Rect(XY) => self.as_rect().unsigned_area(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -157,15 +158,15 @@ impl Area for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point::<2>().signed_area(),
-            LineString(_, XY) => self.as_line_string::<2>().signed_area(),
-            Polygon(_, XY) => self.as_polygon::<2>().signed_area(),
-            MultiPoint(_, XY) => self.as_multi_point::<2>().signed_area(),
-            MultiLineString(_, XY) => self.as_multi_line_string::<2>().signed_area(),
-            MultiPolygon(_, XY) => self.as_multi_polygon::<2>().signed_area(),
-            Mixed(_, XY) => self.as_mixed::<2>().signed_area(),
-            GeometryCollection(_, XY) => self.as_geometry_collection::<2>().signed_area(),
-            Rect(XY) => self.as_rect::<2>().signed_area(),
+            Point(_, XY) => self.as_point().signed_area(),
+            LineString(_, XY) => self.as_line_string().signed_area(),
+            Polygon(_, XY) => self.as_polygon().signed_area(),
+            MultiPoint(_, XY) => self.as_multi_point().signed_area(),
+            MultiLineString(_, XY) => self.as_multi_line_string().signed_area(),
+            MultiPolygon(_, XY) => self.as_multi_polygon().signed_area(),
+            Mixed(_, XY) => self.as_mixed().signed_area(),
+            GeometryCollection(_, XY) => self.as_geometry_collection().signed_area(),
+            Rect(XY) => self.as_rect().signed_area(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
@@ -175,15 +176,15 @@ impl Area for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point::<2>().unsigned_area(),
-            LineString(_, XY) => self.as_line_string::<2>().unsigned_area(),
-            Polygon(_, XY) => self.as_polygon::<2>().unsigned_area(),
-            MultiPoint(_, XY) => self.as_multi_point::<2>().unsigned_area(),
-            MultiLineString(_, XY) => self.as_multi_line_string::<2>().unsigned_area(),
-            MultiPolygon(_, XY) => self.as_multi_polygon::<2>().unsigned_area(),
-            Mixed(_, XY) => self.as_mixed::<2>().unsigned_area(),
-            GeometryCollection(_, XY) => self.as_geometry_collection::<2>().unsigned_area(),
-            Rect(XY) => self.as_rect::<2>().unsigned_area(),
+            Point(_, XY) => self.as_point().unsigned_area(),
+            LineString(_, XY) => self.as_line_string().unsigned_area(),
+            Polygon(_, XY) => self.as_polygon().unsigned_area(),
+            MultiPoint(_, XY) => self.as_multi_point().unsigned_area(),
+            MultiLineString(_, XY) => self.as_multi_line_string().unsigned_area(),
+            MultiPolygon(_, XY) => self.as_multi_polygon().unsigned_area(),
+            Mixed(_, XY) => self.as_mixed().unsigned_area(),
+            GeometryCollection(_, XY) => self.as_geometry_collection().unsigned_area(),
+            Rect(XY) => self.as_rect().unsigned_area(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

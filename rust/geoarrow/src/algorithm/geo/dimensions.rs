@@ -51,14 +51,14 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(PointArray<2>);
-iter_geo_impl!(LineStringArray<2>);
-iter_geo_impl!(PolygonArray<2>);
-iter_geo_impl!(MultiPointArray<2>);
-iter_geo_impl!(MultiLineStringArray<2>);
-iter_geo_impl!(MultiPolygonArray<2>);
-iter_geo_impl!(MixedGeometryArray<2>);
-iter_geo_impl!(GeometryCollectionArray<2>);
+iter_geo_impl!(PointArray);
+iter_geo_impl!(LineStringArray);
+iter_geo_impl!(PolygonArray);
+iter_geo_impl!(MultiPointArray);
+iter_geo_impl!(MultiLineStringArray);
+iter_geo_impl!(MultiPolygonArray);
+iter_geo_impl!(MixedGeometryArray);
+iter_geo_impl!(GeometryCollectionArray);
 
 impl HasDimensions for &dyn NativeArray {
     type Output = Result<BooleanArray>;
@@ -68,16 +68,14 @@ impl HasDimensions for &dyn NativeArray {
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, XY) => HasDimensions::is_empty(self.as_point::<2>()),
-            LineString(_, XY) => HasDimensions::is_empty(self.as_line_string::<2>()),
-            Polygon(_, XY) => HasDimensions::is_empty(self.as_polygon::<2>()),
-            MultiPoint(_, XY) => HasDimensions::is_empty(self.as_multi_point::<2>()),
-            MultiLineString(_, XY) => HasDimensions::is_empty(self.as_multi_line_string::<2>()),
-            MultiPolygon(_, XY) => HasDimensions::is_empty(self.as_multi_polygon::<2>()),
-            Mixed(_, XY) => HasDimensions::is_empty(self.as_mixed::<2>()),
-            GeometryCollection(_, XY) => {
-                HasDimensions::is_empty(self.as_geometry_collection::<2>())
-            }
+            Point(_, XY) => HasDimensions::is_empty(self.as_point()),
+            LineString(_, XY) => HasDimensions::is_empty(self.as_line_string()),
+            Polygon(_, XY) => HasDimensions::is_empty(self.as_polygon()),
+            MultiPoint(_, XY) => HasDimensions::is_empty(self.as_multi_point()),
+            MultiLineString(_, XY) => HasDimensions::is_empty(self.as_multi_line_string()),
+            MultiPolygon(_, XY) => HasDimensions::is_empty(self.as_multi_polygon()),
+            Mixed(_, XY) => HasDimensions::is_empty(self.as_mixed()),
+            GeometryCollection(_, XY) => HasDimensions::is_empty(self.as_geometry_collection()),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -101,16 +99,14 @@ impl HasDimensions for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => HasDimensions::is_empty(self.as_point::<2>()),
-            LineString(_, XY) => HasDimensions::is_empty(self.as_line_string::<2>()),
-            Polygon(_, XY) => HasDimensions::is_empty(self.as_polygon::<2>()),
-            MultiPoint(_, XY) => HasDimensions::is_empty(self.as_multi_point::<2>()),
-            MultiLineString(_, XY) => HasDimensions::is_empty(self.as_multi_line_string::<2>()),
-            MultiPolygon(_, XY) => HasDimensions::is_empty(self.as_multi_polygon::<2>()),
-            Mixed(_, XY) => HasDimensions::is_empty(self.as_mixed::<2>()),
-            GeometryCollection(_, XY) => {
-                HasDimensions::is_empty(self.as_geometry_collection::<2>())
-            }
+            Point(_, XY) => HasDimensions::is_empty(self.as_point()),
+            LineString(_, XY) => HasDimensions::is_empty(self.as_line_string()),
+            Polygon(_, XY) => HasDimensions::is_empty(self.as_polygon()),
+            MultiPoint(_, XY) => HasDimensions::is_empty(self.as_multi_point()),
+            MultiLineString(_, XY) => HasDimensions::is_empty(self.as_multi_line_string()),
+            MultiPolygon(_, XY) => HasDimensions::is_empty(self.as_multi_polygon()),
+            Mixed(_, XY) => HasDimensions::is_empty(self.as_mixed()),
+            GeometryCollection(_, XY) => HasDimensions::is_empty(self.as_geometry_collection()),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

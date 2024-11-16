@@ -18,7 +18,7 @@ pub(crate) fn process_geometry_collection<P: GeomProcessor>(
     Ok(())
 }
 
-impl<const D: usize> GeozeroGeometry for GeometryCollection<'_, D> {
+impl GeozeroGeometry for GeometryCollection<'_> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,

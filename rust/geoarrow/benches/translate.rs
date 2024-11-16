@@ -3,8 +3,9 @@ use geo::polygon;
 use criterion::{criterion_group, criterion_main, Criterion};
 use geoarrow::algorithm::geo::Translate;
 use geoarrow::array::PolygonArray;
+use geoarrow::datatypes::Dimension;
 
-fn create_data() -> PolygonArray<2> {
+fn create_data() -> PolygonArray {
     // An L shape
     // https://github.com/georust/geo/blob/7cb7d0ffa6bf1544c5ca9922bd06100c36f815d7/README.md?plain=1#L40
     let poly = polygon![
@@ -17,7 +18,7 @@ fn create_data() -> PolygonArray<2> {
         (x: 0.0, y: 0.0),
     ];
     let v = vec![poly; 1000];
-    v.as_slice().into()
+    (v.as_slice(), Dimension::XY).into()
 }
 
 pub fn criterion_benchmark(c: &mut Criterion) {

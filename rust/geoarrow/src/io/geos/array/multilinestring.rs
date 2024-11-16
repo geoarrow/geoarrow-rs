@@ -1,21 +1,22 @@
 use crate::array::{MultiLineStringArray, MultiLineStringBuilder};
+use crate::datatypes::Dimension;
 use crate::error::Result;
 use crate::io::geos::scalar::GEOSMultiLineString;
 
-impl<const D: usize> MultiLineStringBuilder<D> {
-    pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
+impl MultiLineStringBuilder {
+    pub fn from_geos(value: Vec<Option<geos::Geometry>>, dim: Dimension) -> Result<Self> {
         // TODO: don't use new_unchecked
         let geos_objects: Vec<Option<GEOSMultiLineString>> = value
             .into_iter()
             .map(|geom| geom.map(GEOSMultiLineString::new_unchecked))
             .collect();
-        Ok(geos_objects.into())
+        Ok((geos_objects, dim).into())
     }
 }
 
-impl<const D: usize> MultiLineStringArray<D> {
-    pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
-        let mutable_arr = MultiLineStringBuilder::from_geos(value)?;
+impl MultiLineStringArray {
+    pub fn from_geos(value: Vec<Option<geos::Geometry>>, dim: Dimension) -> Result<Self> {
+        let mutable_arr = MultiLineStringBuilder::from_geos(value, dim)?;
         Ok(mutable_arr.into())
     }
 }
@@ -34,7 +35,7 @@ mod test {
             .iter()
             .map(|opt_x| opt_x.map(|x| x.to_geos().unwrap()))
             .collect();
-        let round_trip = MultiLineStringArray::<2>::from_geos(geos_geoms).unwrap();
+        let round_trip = MultiLineStringArray::from_geos(geos_geoms, Dimension::XY).unwrap();
         assert_eq!(arr, round_trip);
     }
 }

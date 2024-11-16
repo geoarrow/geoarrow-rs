@@ -8,8 +8,8 @@ use std::io::Cursor;
 use wkb::writer::{multi_line_string_wkb_size, write_multi_line_string};
 use wkb::Endianness;
 
-impl<O: OffsetSizeTrait, const D: usize> From<&MultiLineStringArray<D>> for WKBArray<O> {
-    fn from(value: &MultiLineStringArray<D>) -> Self {
+impl<O: OffsetSizeTrait> From<&MultiLineStringArray> for WKBArray<O> {
+    fn from(value: &MultiLineStringArray) -> Self {
         let mut offsets: OffsetsBuilder<O> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
@@ -46,13 +46,15 @@ impl<O: OffsetSizeTrait, const D: usize> From<&MultiLineStringArray<D>> for WKBA
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::datatypes::Dimension;
     use crate::test::multilinestring::{ml0, ml1};
 
     #[test]
     fn round_trip() {
-        let orig_arr: MultiLineStringArray<2> = vec![Some(ml0()), Some(ml1()), None].into();
+        let orig_arr: MultiLineStringArray =
+            (vec![Some(ml0()), Some(ml1()), None], Dimension::XY).into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: MultiLineStringArray<2> = wkb_arr.try_into().unwrap();
+        let new_arr: MultiLineStringArray = (wkb_arr, Dimension::XY).try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }

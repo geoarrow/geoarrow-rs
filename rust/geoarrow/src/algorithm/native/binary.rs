@@ -118,90 +118,90 @@ pub trait Binary<'a, Rhs: ArrayAccessor<'a> = Self>: ArrayAccessor<'a> {
     }
 }
 
-// Implementations on PointArray<2>
-impl<'a> Binary<'a, PointArray<2>> for PointArray<2> {}
-impl<'a> Binary<'a, PointArray<2>> for RectArray<2> {}
-impl<'a> Binary<'a, PointArray<2>> for LineStringArray<2> {}
-impl<'a> Binary<'a, PointArray<2>> for PolygonArray<2> {}
-impl<'a> Binary<'a, PointArray<2>> for MultiPointArray<2> {}
-impl<'a> Binary<'a, PointArray<2>> for MultiLineStringArray<2> {}
-impl<'a> Binary<'a, PointArray<2>> for MultiPolygonArray<2> {}
-impl<'a> Binary<'a, PointArray<2>> for MixedGeometryArray<2> {}
-impl<'a> Binary<'a, PointArray<2>> for GeometryCollectionArray<2> {}
+// Implementations on PointArray
+impl<'a> Binary<'a, PointArray> for PointArray {}
+impl<'a> Binary<'a, PointArray> for RectArray {}
+impl<'a> Binary<'a, PointArray> for LineStringArray {}
+impl<'a> Binary<'a, PointArray> for PolygonArray {}
+impl<'a> Binary<'a, PointArray> for MultiPointArray {}
+impl<'a> Binary<'a, PointArray> for MultiLineStringArray {}
+impl<'a> Binary<'a, PointArray> for MultiPolygonArray {}
+impl<'a> Binary<'a, PointArray> for MixedGeometryArray {}
+impl<'a> Binary<'a, PointArray> for GeometryCollectionArray {}
 
 // Implementations on LineStringArray
-impl<'a> Binary<'a, LineStringArray<2>> for PointArray<2> {}
-impl<'a> Binary<'a, LineStringArray<2>> for RectArray<2> {}
-impl<'a> Binary<'a, LineStringArray<2>> for LineStringArray<2> {}
-impl<'a> Binary<'a, LineStringArray<2>> for PolygonArray<2> {}
-impl<'a> Binary<'a, LineStringArray<2>> for MultiPointArray<2> {}
-impl<'a> Binary<'a, LineStringArray<2>> for MultiLineStringArray<2> {}
-impl<'a> Binary<'a, LineStringArray<2>> for MultiPolygonArray<2> {}
-impl<'a> Binary<'a, LineStringArray<2>> for MixedGeometryArray<2> {}
-impl<'a> Binary<'a, LineStringArray<2>> for GeometryCollectionArray<2> {}
+impl<'a> Binary<'a, LineStringArray> for PointArray {}
+impl<'a> Binary<'a, LineStringArray> for RectArray {}
+impl<'a> Binary<'a, LineStringArray> for LineStringArray {}
+impl<'a> Binary<'a, LineStringArray> for PolygonArray {}
+impl<'a> Binary<'a, LineStringArray> for MultiPointArray {}
+impl<'a> Binary<'a, LineStringArray> for MultiLineStringArray {}
+impl<'a> Binary<'a, LineStringArray> for MultiPolygonArray {}
+impl<'a> Binary<'a, LineStringArray> for MixedGeometryArray {}
+impl<'a> Binary<'a, LineStringArray> for GeometryCollectionArray {}
 
 // Implementations on PolygonArray
-impl<'a> Binary<'a, PolygonArray<2>> for PointArray<2> {}
-impl<'a> Binary<'a, PolygonArray<2>> for RectArray<2> {}
-impl<'a> Binary<'a, PolygonArray<2>> for LineStringArray<2> {}
-impl<'a> Binary<'a, PolygonArray<2>> for PolygonArray<2> {}
-impl<'a> Binary<'a, PolygonArray<2>> for MultiPointArray<2> {}
-impl<'a> Binary<'a, PolygonArray<2>> for MultiLineStringArray<2> {}
-impl<'a> Binary<'a, PolygonArray<2>> for MultiPolygonArray<2> {}
-impl<'a> Binary<'a, PolygonArray<2>> for MixedGeometryArray<2> {}
-impl<'a> Binary<'a, PolygonArray<2>> for GeometryCollectionArray<2> {}
+impl<'a> Binary<'a, PolygonArray> for PointArray {}
+impl<'a> Binary<'a, PolygonArray> for RectArray {}
+impl<'a> Binary<'a, PolygonArray> for LineStringArray {}
+impl<'a> Binary<'a, PolygonArray> for PolygonArray {}
+impl<'a> Binary<'a, PolygonArray> for MultiPointArray {}
+impl<'a> Binary<'a, PolygonArray> for MultiLineStringArray {}
+impl<'a> Binary<'a, PolygonArray> for MultiPolygonArray {}
+impl<'a> Binary<'a, PolygonArray> for MixedGeometryArray {}
+impl<'a> Binary<'a, PolygonArray> for GeometryCollectionArray {}
 
 // Implementations on MultiPointArray
-impl<'a> Binary<'a, MultiPointArray<2>> for PointArray<2> {}
-impl<'a> Binary<'a, MultiPointArray<2>> for RectArray<2> {}
-impl<'a> Binary<'a, MultiPointArray<2>> for LineStringArray<2> {}
-impl<'a> Binary<'a, MultiPointArray<2>> for PolygonArray<2> {}
-impl<'a> Binary<'a, MultiPointArray<2>> for MultiPointArray<2> {}
-impl<'a> Binary<'a, MultiPointArray<2>> for MultiLineStringArray<2> {}
-impl<'a> Binary<'a, MultiPointArray<2>> for MultiPolygonArray<2> {}
-impl<'a> Binary<'a, MultiPointArray<2>> for MixedGeometryArray<2> {}
-impl<'a> Binary<'a, MultiPointArray<2>> for GeometryCollectionArray<2> {}
+impl<'a> Binary<'a, MultiPointArray> for PointArray {}
+impl<'a> Binary<'a, MultiPointArray> for RectArray {}
+impl<'a> Binary<'a, MultiPointArray> for LineStringArray {}
+impl<'a> Binary<'a, MultiPointArray> for PolygonArray {}
+impl<'a> Binary<'a, MultiPointArray> for MultiPointArray {}
+impl<'a> Binary<'a, MultiPointArray> for MultiLineStringArray {}
+impl<'a> Binary<'a, MultiPointArray> for MultiPolygonArray {}
+impl<'a> Binary<'a, MultiPointArray> for MixedGeometryArray {}
+impl<'a> Binary<'a, MultiPointArray> for GeometryCollectionArray {}
 
 // Implementations on MultiLineStringArray
-impl<'a> Binary<'a, MultiLineStringArray<2>> for PointArray<2> {}
-impl<'a> Binary<'a, MultiLineStringArray<2>> for RectArray<2> {}
-impl<'a> Binary<'a, MultiLineStringArray<2>> for LineStringArray<2> {}
-impl<'a> Binary<'a, MultiLineStringArray<2>> for PolygonArray<2> {}
-impl<'a> Binary<'a, MultiLineStringArray<2>> for MultiPointArray<2> {}
-impl<'a> Binary<'a, MultiLineStringArray<2>> for MultiLineStringArray<2> {}
-impl<'a> Binary<'a, MultiLineStringArray<2>> for MultiPolygonArray<2> {}
-impl<'a> Binary<'a, MultiLineStringArray<2>> for MixedGeometryArray<2> {}
-impl<'a> Binary<'a, MultiLineStringArray<2>> for GeometryCollectionArray<2> {}
+impl<'a> Binary<'a, MultiLineStringArray> for PointArray {}
+impl<'a> Binary<'a, MultiLineStringArray> for RectArray {}
+impl<'a> Binary<'a, MultiLineStringArray> for LineStringArray {}
+impl<'a> Binary<'a, MultiLineStringArray> for PolygonArray {}
+impl<'a> Binary<'a, MultiLineStringArray> for MultiPointArray {}
+impl<'a> Binary<'a, MultiLineStringArray> for MultiLineStringArray {}
+impl<'a> Binary<'a, MultiLineStringArray> for MultiPolygonArray {}
+impl<'a> Binary<'a, MultiLineStringArray> for MixedGeometryArray {}
+impl<'a> Binary<'a, MultiLineStringArray> for GeometryCollectionArray {}
 
 // Implementations on MultiPolygonArray
-impl<'a> Binary<'a, MultiPolygonArray<2>> for PointArray<2> {}
-impl<'a> Binary<'a, MultiPolygonArray<2>> for RectArray<2> {}
-impl<'a> Binary<'a, MultiPolygonArray<2>> for LineStringArray<2> {}
-impl<'a> Binary<'a, MultiPolygonArray<2>> for PolygonArray<2> {}
-impl<'a> Binary<'a, MultiPolygonArray<2>> for MultiPointArray<2> {}
-impl<'a> Binary<'a, MultiPolygonArray<2>> for MultiLineStringArray<2> {}
-impl<'a> Binary<'a, MultiPolygonArray<2>> for MultiPolygonArray<2> {}
-impl<'a> Binary<'a, MultiPolygonArray<2>> for MixedGeometryArray<2> {}
-impl<'a> Binary<'a, MultiPolygonArray<2>> for GeometryCollectionArray<2> {}
+impl<'a> Binary<'a, MultiPolygonArray> for PointArray {}
+impl<'a> Binary<'a, MultiPolygonArray> for RectArray {}
+impl<'a> Binary<'a, MultiPolygonArray> for LineStringArray {}
+impl<'a> Binary<'a, MultiPolygonArray> for PolygonArray {}
+impl<'a> Binary<'a, MultiPolygonArray> for MultiPointArray {}
+impl<'a> Binary<'a, MultiPolygonArray> for MultiLineStringArray {}
+impl<'a> Binary<'a, MultiPolygonArray> for MultiPolygonArray {}
+impl<'a> Binary<'a, MultiPolygonArray> for MixedGeometryArray {}
+impl<'a> Binary<'a, MultiPolygonArray> for GeometryCollectionArray {}
 
 // Implementations on MixedGeometryArray
-impl<'a> Binary<'a, MixedGeometryArray<2>> for PointArray<2> {}
-impl<'a> Binary<'a, MixedGeometryArray<2>> for RectArray<2> {}
-impl<'a> Binary<'a, MixedGeometryArray<2>> for LineStringArray<2> {}
-impl<'a> Binary<'a, MixedGeometryArray<2>> for PolygonArray<2> {}
-impl<'a> Binary<'a, MixedGeometryArray<2>> for MultiPointArray<2> {}
-impl<'a> Binary<'a, MixedGeometryArray<2>> for MultiLineStringArray<2> {}
-impl<'a> Binary<'a, MixedGeometryArray<2>> for MultiPolygonArray<2> {}
-impl<'a> Binary<'a, MixedGeometryArray<2>> for MixedGeometryArray<2> {}
-impl<'a> Binary<'a, MixedGeometryArray<2>> for GeometryCollectionArray<2> {}
+impl<'a> Binary<'a, MixedGeometryArray> for PointArray {}
+impl<'a> Binary<'a, MixedGeometryArray> for RectArray {}
+impl<'a> Binary<'a, MixedGeometryArray> for LineStringArray {}
+impl<'a> Binary<'a, MixedGeometryArray> for PolygonArray {}
+impl<'a> Binary<'a, MixedGeometryArray> for MultiPointArray {}
+impl<'a> Binary<'a, MixedGeometryArray> for MultiLineStringArray {}
+impl<'a> Binary<'a, MixedGeometryArray> for MultiPolygonArray {}
+impl<'a> Binary<'a, MixedGeometryArray> for MixedGeometryArray {}
+impl<'a> Binary<'a, MixedGeometryArray> for GeometryCollectionArray {}
 
 // Implementations on GeometryCollectionArray
-impl<'a> Binary<'a, GeometryCollectionArray<2>> for PointArray<2> {}
-impl<'a> Binary<'a, GeometryCollectionArray<2>> for RectArray<2> {}
-impl<'a> Binary<'a, GeometryCollectionArray<2>> for LineStringArray<2> {}
-impl<'a> Binary<'a, GeometryCollectionArray<2>> for PolygonArray<2> {}
-impl<'a> Binary<'a, GeometryCollectionArray<2>> for MultiPointArray<2> {}
-impl<'a> Binary<'a, GeometryCollectionArray<2>> for MultiLineStringArray<2> {}
-impl<'a> Binary<'a, GeometryCollectionArray<2>> for MultiPolygonArray<2> {}
-impl<'a> Binary<'a, GeometryCollectionArray<2>> for MixedGeometryArray<2> {}
-impl<'a> Binary<'a, GeometryCollectionArray<2>> for GeometryCollectionArray<2> {}
+impl<'a> Binary<'a, GeometryCollectionArray> for PointArray {}
+impl<'a> Binary<'a, GeometryCollectionArray> for RectArray {}
+impl<'a> Binary<'a, GeometryCollectionArray> for LineStringArray {}
+impl<'a> Binary<'a, GeometryCollectionArray> for PolygonArray {}
+impl<'a> Binary<'a, GeometryCollectionArray> for MultiPointArray {}
+impl<'a> Binary<'a, GeometryCollectionArray> for MultiLineStringArray {}
+impl<'a> Binary<'a, GeometryCollectionArray> for MultiPolygonArray {}
+impl<'a> Binary<'a, GeometryCollectionArray> for MixedGeometryArray {}
+impl<'a> Binary<'a, GeometryCollectionArray> for GeometryCollectionArray {}

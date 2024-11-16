@@ -26,7 +26,7 @@ pub trait RemoveRepeatedPoints {
 }
 
 // Note: this implementation is outside the macro because it is not generic over O
-impl RemoveRepeatedPoints for PointArray<2> {
+impl RemoveRepeatedPoints for PointArray {
     type Output = Self;
 
     fn remove_repeated_points(&self) -> Self::Output {
@@ -41,7 +41,8 @@ macro_rules! iter_geo_impl {
             type Output = Self;
 
             fn remove_repeated_points(&self) -> Self::Output {
-                let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
+                let mut output_array =
+                    <$builder_type>::with_capacity(Dimension::XY, self.buffer_lengths());
 
                 self.iter_geo().for_each(|maybe_g| {
                     output_array
@@ -55,21 +56,17 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<2>, LineStringBuilder<2>, push_line_string);
-iter_geo_impl!(PolygonArray<2>, PolygonBuilder<2>, push_polygon);
-iter_geo_impl!(MultiPointArray<2>, MultiPointBuilder<2>, push_multi_point);
+iter_geo_impl!(LineStringArray, LineStringBuilder, push_line_string);
+iter_geo_impl!(PolygonArray, PolygonBuilder, push_polygon);
+iter_geo_impl!(MultiPointArray, MultiPointBuilder, push_multi_point);
 iter_geo_impl!(
-    MultiLineStringArray<2>,
-    MultiLineStringBuilder<2>,
+    MultiLineStringArray,
+    MultiLineStringBuilder,
     push_multi_line_string
 );
-iter_geo_impl!(
-    MultiPolygonArray<2>,
-    MultiPolygonBuilder<2>,
-    push_multi_polygon
-);
-// iter_geo_impl!(MixedGeometryArray<2>, MixedGeometryBuilder<2>, push_geometry);
-// iter_geo_impl!(GeometryCollectionArray<2>, geo::GeometryCollection);
+iter_geo_impl!(MultiPolygonArray, MultiPolygonBuilder, push_multi_polygon);
+// iter_geo_impl!(MixedGeometryArray, MixedGeometryBuilder, push_geometry);
+// iter_geo_impl!(GeometryCollectionArray, geo::GeometryCollection);
 
 impl RemoveRepeatedPoints for &dyn NativeArray {
     type Output = Result<Arc<dyn NativeArray>>;
@@ -79,23 +76,23 @@ impl RemoveRepeatedPoints for &dyn NativeArray {
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
-            Point(_, XY) => Arc::new(self.as_point::<2>().remove_repeated_points()),
-            LineString(_, XY) => Arc::new(self.as_line_string::<2>().remove_repeated_points()),
-            Polygon(_, XY) => Arc::new(self.as_polygon::<2>().remove_repeated_points()),
-            MultiPoint(_, XY) => Arc::new(self.as_multi_point::<2>().remove_repeated_points()),
+            Point(_, XY) => Arc::new(self.as_point().remove_repeated_points()),
+            LineString(_, XY) => Arc::new(self.as_line_string().remove_repeated_points()),
+            Polygon(_, XY) => Arc::new(self.as_polygon().remove_repeated_points()),
+            MultiPoint(_, XY) => Arc::new(self.as_multi_point().remove_repeated_points()),
             MultiLineString(_, XY) => {
-                Arc::new(self.as_multi_line_string::<2>().remove_repeated_points())
+                Arc::new(self.as_multi_line_string().remove_repeated_points())
             }
-            MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon::<2>().remove_repeated_points()),
-            // Mixed(_, XY) => self.as_mixed::<2>().remove_repeated_points(),
-            // GeometryCollection(_, XY) => self.as_geometry_collection::<2>().remove_repeated_points(),
+            MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon().remove_repeated_points()),
+            // Mixed(_, XY) => self.as_mixed().remove_repeated_points(),
+            // GeometryCollection(_, XY) => self.as_geometry_collection().remove_repeated_points(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
     }
 }
 
-impl RemoveRepeatedPoints for ChunkedPointArray<2> {
+impl RemoveRepeatedPoints for ChunkedPointArray {
     type Output = Self;
 
     fn remove_repeated_points(&self) -> Self::Output {
@@ -117,11 +114,11 @@ macro_rules! impl_chunked {
     };
 }
 
-impl_chunked!(ChunkedLineStringArray<2>);
-impl_chunked!(ChunkedPolygonArray<2>);
-impl_chunked!(ChunkedMultiPointArray<2>);
-impl_chunked!(ChunkedMultiLineStringArray<2>);
-impl_chunked!(ChunkedMultiPolygonArray<2>);
+impl_chunked!(ChunkedLineStringArray);
+impl_chunked!(ChunkedPolygonArray);
+impl_chunked!(ChunkedMultiPointArray);
+impl_chunked!(ChunkedMultiLineStringArray);
+impl_chunked!(ChunkedMultiPolygonArray);
 
 impl RemoveRepeatedPoints for &dyn ChunkedNativeArray {
     type Output = Result<Arc<dyn ChunkedNativeArray>>;
@@ -131,16 +128,16 @@ impl RemoveRepeatedPoints for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
-            Point(_, XY) => Arc::new(self.as_point::<2>().remove_repeated_points()),
-            LineString(_, XY) => Arc::new(self.as_line_string::<2>().remove_repeated_points()),
-            Polygon(_, XY) => Arc::new(self.as_polygon::<2>().remove_repeated_points()),
-            MultiPoint(_, XY) => Arc::new(self.as_multi_point::<2>().remove_repeated_points()),
+            Point(_, XY) => Arc::new(self.as_point().remove_repeated_points()),
+            LineString(_, XY) => Arc::new(self.as_line_string().remove_repeated_points()),
+            Polygon(_, XY) => Arc::new(self.as_polygon().remove_repeated_points()),
+            MultiPoint(_, XY) => Arc::new(self.as_multi_point().remove_repeated_points()),
             MultiLineString(_, XY) => {
-                Arc::new(self.as_multi_line_string::<2>().remove_repeated_points())
+                Arc::new(self.as_multi_line_string().remove_repeated_points())
             }
-            MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon::<2>().remove_repeated_points()),
-            // Mixed(_, XY) => self.as_mixed::<2>().remove_repeated_points(),
-            // GeometryCollection(_, XY) => self.as_geometry_collection::<2>().remove_repeated_points(),
+            MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon().remove_repeated_points()),
+            // Mixed(_, XY) => self.as_mixed().remove_repeated_points(),
+            // GeometryCollection(_, XY) => self.as_geometry_collection().remove_repeated_points(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)

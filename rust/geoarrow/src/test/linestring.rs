@@ -1,6 +1,7 @@
 use geo::{line_string, LineString};
 
-use crate::array::LineStringArray;
+use crate::array::{LineStringArray, LineStringBuilder};
+use crate::datatypes::Dimension;
 
 pub(crate) fn ls0() -> LineString {
     line_string![
@@ -17,10 +18,13 @@ pub(crate) fn ls1() -> LineString {
 }
 
 #[allow(dead_code)]
-pub(crate) fn ls_array() -> LineStringArray<2> {
-    vec![ls0(), ls1()].as_slice().into()
-}
-
-pub(crate) fn large_ls_array() -> LineStringArray<2> {
-    vec![ls0(), ls1()].as_slice().into()
+pub(crate) fn ls_array() -> LineStringArray {
+    let geoms = vec![ls0(), ls1()];
+    LineStringBuilder::from_line_strings(
+        &geoms,
+        Dimension::XY,
+        Default::default(),
+        Default::default(),
+    )
+    .finish()
 }

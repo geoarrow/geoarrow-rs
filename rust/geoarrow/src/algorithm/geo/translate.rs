@@ -52,7 +52,7 @@ pub trait Translate {
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl Translate for PointArray<2> {
+impl Translate for PointArray {
     type Output = Self;
 
     fn translate(
@@ -60,7 +60,7 @@ impl Translate for PointArray<2> {
         x_offset: &BroadcastablePrimitive<Float64Type>,
         y_offset: &BroadcastablePrimitive<Float64Type>,
     ) -> Self {
-        let mut output_array = PointBuilder::with_capacity(self.buffer_lengths());
+        let mut output_array = PointBuilder::with_capacity(Dimension::XY, self.buffer_lengths());
 
         self.iter_geo()
             .zip(x_offset)
@@ -88,7 +88,8 @@ macro_rules! iter_geo_impl {
                 x_offset: &BroadcastablePrimitive<Float64Type>,
                 y_offset: &BroadcastablePrimitive<Float64Type>,
             ) -> Self {
-                let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
+                let mut output_array =
+                    <$builder_type>::with_capacity(Dimension::XY, self.buffer_lengths());
 
                 self.iter_geo().zip(x_offset).zip(y_offset).for_each(
                     |((maybe_g, x_offset), y_offset)| {
@@ -110,19 +111,15 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<2>, LineStringBuilder<2>, push_line_string);
-iter_geo_impl!(PolygonArray<2>, PolygonBuilder<2>, push_polygon);
-iter_geo_impl!(MultiPointArray<2>, MultiPointBuilder<2>, push_multi_point);
+iter_geo_impl!(LineStringArray, LineStringBuilder, push_line_string);
+iter_geo_impl!(PolygonArray, PolygonBuilder, push_polygon);
+iter_geo_impl!(MultiPointArray, MultiPointBuilder, push_multi_point);
 iter_geo_impl!(
-    MultiLineStringArray<2>,
-    MultiLineStringBuilder<2>,
+    MultiLineStringArray,
+    MultiLineStringBuilder,
     push_multi_line_string
 );
-iter_geo_impl!(
-    MultiPolygonArray<2>,
-    MultiPolygonBuilder<2>,
-    push_multi_polygon
-);
+iter_geo_impl!(MultiPolygonArray, MultiPolygonBuilder, push_multi_polygon);
 
 impl Translate for &dyn NativeArray {
     type Output = Result<Arc<dyn NativeArray>>;

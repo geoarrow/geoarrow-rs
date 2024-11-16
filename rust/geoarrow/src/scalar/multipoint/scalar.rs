@@ -2,6 +2,7 @@ use crate::algorithm::native::bounding_rect::bounding_rect_multipoint;
 use crate::algorithm::native::eq::multi_point_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, MultiPointArray};
+use crate::datatypes::Dimension;
 use crate::io::geo::multi_point_to_geo;
 use crate::scalar::Point;
 use crate::trait_::NativeScalar;
@@ -11,7 +12,7 @@ use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a MultiPoint
 #[derive(Debug, Clone)]
-pub struct MultiPoint<'a, const D: usize> {
+pub struct MultiPoint<'a> {
     /// Buffer of coordinates
     pub(crate) coords: &'a CoordBuffer,
 
@@ -23,7 +24,7 @@ pub struct MultiPoint<'a, const D: usize> {
     start_offset: usize,
 }
 
-impl<'a, const D: usize> MultiPoint<'a, D> {
+impl<'a> MultiPoint<'a> {
     pub fn new(
         coords: &'a CoordBuffer,
         geom_offsets: &'a OffsetBuffer<i32>,
@@ -39,7 +40,7 @@ impl<'a, const D: usize> MultiPoint<'a, D> {
     }
 
     pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, usize) {
-        let arr = MultiPointArray::<D>::new(
+        let arr = MultiPointArray::new(
             self.coords.clone(),
             self.geom_offsets.clone(),
             None,
@@ -51,7 +52,7 @@ impl<'a, const D: usize> MultiPoint<'a, D> {
     }
 }
 
-impl<'a, const D: usize> NativeScalar for MultiPoint<'a, D> {
+impl<'a> NativeScalar for MultiPoint<'a> {
     type ScalarGeo = geo::MultiPoint;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -68,16 +69,14 @@ impl<'a, const D: usize> NativeScalar for MultiPoint<'a, D> {
     }
 }
 
-impl<'a, const D: usize> MultiPointTrait for MultiPoint<'a, D> {
+impl<'a> MultiPointTrait for MultiPoint<'a> {
     type T = f64;
-    type PointType<'b> = Point<'a, D> where Self: 'b;
+    type PointType<'b> = Point<'a> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
+        match self.coords.dim() {
+            Dimension::XY => geo_traits::Dimensions::Xy,
+            Dimension::XYZ => geo_traits::Dimensions::Xyz,
         }
     }
 
@@ -91,16 +90,14 @@ impl<'a, const D: usize> MultiPointTrait for MultiPoint<'a, D> {
     }
 }
 
-impl<'a, const D: usize> MultiPointTrait for &'a MultiPoint<'a, D> {
+impl<'a> MultiPointTrait for &'a MultiPoint<'a> {
     type T = f64;
-    type PointType<'b> = Point<'a, D> where Self: 'b;
+    type PointType<'b> = Point<'a> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
+        match self.coords.dim() {
+            Dimension::XY => geo_traits::Dimensions::Xy,
+            Dimension::XYZ => geo_traits::Dimensions::Xyz,
         }
     }
 
@@ -114,25 +111,25 @@ impl<'a, const D: usize> MultiPointTrait for &'a MultiPoint<'a, D> {
     }
 }
 
-impl<const D: usize> From<MultiPoint<'_, D>> for geo::MultiPoint {
-    fn from(value: MultiPoint<'_, D>) -> Self {
+impl From<MultiPoint<'_>> for geo::MultiPoint {
+    fn from(value: MultiPoint<'_>) -> Self {
         (&value).into()
     }
 }
 
-impl<const D: usize> From<&MultiPoint<'_, D>> for geo::MultiPoint {
-    fn from(value: &MultiPoint<'_, D>) -> Self {
+impl From<&MultiPoint<'_>> for geo::MultiPoint {
+    fn from(value: &MultiPoint<'_>) -> Self {
         multi_point_to_geo(value)
     }
 }
 
-impl<const D: usize> From<MultiPoint<'_, D>> for geo::Geometry {
-    fn from(value: MultiPoint<'_, D>) -> Self {
+impl From<MultiPoint<'_>> for geo::Geometry {
+    fn from(value: MultiPoint<'_>) -> Self {
         geo::Geometry::MultiPoint(value.into())
     }
 }
 
-impl RTreeObject for MultiPoint<'_, 2> {
+impl RTreeObject for MultiPoint<'_> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -141,7 +138,7 @@ impl RTreeObject for MultiPoint<'_, 2> {
     }
 }
 
-impl<const D: usize, G: MultiPointTrait<T = f64>> PartialEq<G> for MultiPoint<'_, D> {
+impl<G: MultiPointTrait<T = f64>> PartialEq<G> for MultiPoint<'_> {
     fn eq(&self, other: &G) -> bool {
         multi_point_eq(self, other)
     }
@@ -150,14 +147,15 @@ impl<const D: usize, G: MultiPointTrait<T = f64>> PartialEq<G> for MultiPoint<'_
 #[cfg(test)]
 mod test {
     use crate::array::MultiPointArray;
+    use crate::datatypes::Dimension;
     use crate::test::multipoint::{mp0, mp1};
     use crate::trait_::ArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]
     fn test_eq_other_index_false() {
-        let arr1: MultiPointArray<2> = vec![mp0(), mp1()].as_slice().into();
-        let arr2: MultiPointArray<2> = vec![mp0(), mp0()].as_slice().into();
+        let arr1: MultiPointArray = (vec![mp0(), mp1()].as_slice(), Dimension::XY).into();
+        let arr2: MultiPointArray = (vec![mp0(), mp0()].as_slice(), Dimension::XY).into();
 
         assert_eq!(arr1.value(0), arr2.value(0));
         assert_ne!(arr1.value(1), arr2.value(1));

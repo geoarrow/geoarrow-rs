@@ -2,6 +2,7 @@ use crate::algorithm::native::bounding_rect::bounding_rect_polygon;
 use crate::algorithm::native::eq::polygon_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, PolygonArray};
+use crate::datatypes::Dimension;
 use crate::io::geo::polygon_to_geo;
 use crate::scalar::LineString;
 use crate::trait_::NativeScalar;
@@ -11,7 +12,7 @@ use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a Polygon
 #[derive(Debug, Clone)]
-pub struct Polygon<'a, const D: usize> {
+pub struct Polygon<'a> {
     pub(crate) coords: &'a CoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
@@ -25,7 +26,7 @@ pub struct Polygon<'a, const D: usize> {
     start_offset: usize,
 }
 
-impl<'a, const D: usize> Polygon<'a, D> {
+impl<'a> Polygon<'a> {
     pub fn new(
         coords: &'a CoordBuffer,
         geom_offsets: &'a OffsetBuffer<i32>,
@@ -43,7 +44,7 @@ impl<'a, const D: usize> Polygon<'a, D> {
     }
 
     pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, OffsetBuffer<i32>, usize) {
-        let arr = PolygonArray::<D>::new(
+        let arr = PolygonArray::new(
             self.coords.clone(),
             self.geom_offsets.clone(),
             self.ring_offsets.clone(),
@@ -61,7 +62,7 @@ impl<'a, const D: usize> Polygon<'a, D> {
     }
 }
 
-impl<'a, const D: usize> NativeScalar for Polygon<'a, D> {
+impl<'a> NativeScalar for Polygon<'a> {
     type ScalarGeo = geo::Polygon;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -78,16 +79,14 @@ impl<'a, const D: usize> NativeScalar for Polygon<'a, D> {
     }
 }
 
-impl<'a, const D: usize> PolygonTrait for Polygon<'a, D> {
+impl<'a> PolygonTrait for Polygon<'a> {
     type T = f64;
-    type RingType<'b> = LineString<'a, D> where Self: 'b;
+    type RingType<'b> = LineString<'a> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
+        match self.coords.dim() {
+            Dimension::XY => geo_traits::Dimensions::Xy,
+            Dimension::XYZ => geo_traits::Dimensions::Xyz,
         }
     }
 
@@ -110,16 +109,14 @@ impl<'a, const D: usize> PolygonTrait for Polygon<'a, D> {
     }
 }
 
-impl<'a, const D: usize> PolygonTrait for &'a Polygon<'a, D> {
+impl<'a> PolygonTrait for &'a Polygon<'a> {
     type T = f64;
-    type RingType<'b> = LineString<'a, D> where Self: 'b;
+    type RingType<'b> = LineString<'a> where Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: pass through field information from array
-        match D {
-            2 => geo_traits::Dimensions::Xy,
-            3 => geo_traits::Dimensions::Xyz,
-            _ => todo!(),
+        match self.coords.dim() {
+            Dimension::XY => geo_traits::Dimensions::Xy,
+            Dimension::XYZ => geo_traits::Dimensions::Xyz,
         }
     }
 
@@ -142,25 +139,25 @@ impl<'a, const D: usize> PolygonTrait for &'a Polygon<'a, D> {
     }
 }
 
-impl<const D: usize> From<Polygon<'_, D>> for geo::Polygon {
-    fn from(value: Polygon<'_, D>) -> Self {
+impl From<Polygon<'_>> for geo::Polygon {
+    fn from(value: Polygon<'_>) -> Self {
         (&value).into()
     }
 }
 
-impl<const D: usize> From<&Polygon<'_, D>> for geo::Polygon {
-    fn from(value: &Polygon<'_, D>) -> Self {
+impl From<&Polygon<'_>> for geo::Polygon {
+    fn from(value: &Polygon<'_>) -> Self {
         polygon_to_geo(value)
     }
 }
 
-impl<const D: usize> From<Polygon<'_, D>> for geo::Geometry {
-    fn from(value: Polygon<'_, D>) -> Self {
+impl From<Polygon<'_>> for geo::Geometry {
+    fn from(value: Polygon<'_>) -> Self {
         geo::Geometry::Polygon(value.into())
     }
 }
 
-impl RTreeObject for Polygon<'_, 2> {
+impl RTreeObject for Polygon<'_> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -169,7 +166,7 @@ impl RTreeObject for Polygon<'_, 2> {
     }
 }
 
-impl<G: PolygonTrait<T = f64>, const D: usize> PartialEq<G> for Polygon<'_, D> {
+impl<G: PolygonTrait<T = f64>> PartialEq<G> for Polygon<'_> {
     fn eq(&self, other: &G) -> bool {
         polygon_eq(self, other)
     }
@@ -178,14 +175,15 @@ impl<G: PolygonTrait<T = f64>, const D: usize> PartialEq<G> for Polygon<'_, D> {
 #[cfg(test)]
 mod test {
     use crate::array::PolygonArray;
+    use crate::datatypes::Dimension;
     use crate::test::polygon::{p0, p1};
     use crate::trait_::ArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]
     fn test_eq_other_index_false() {
-        let arr1: PolygonArray<2> = vec![p0(), p1()].as_slice().into();
-        let arr2: PolygonArray<2> = vec![p0(), p0()].as_slice().into();
+        let arr1: PolygonArray = (vec![p0(), p1()].as_slice(), Dimension::XY).into();
+        let arr2: PolygonArray = (vec![p0(), p0()].as_slice(), Dimension::XY).into();
 
         assert_eq!(arr1.value(0), arr2.value(0));
         assert_ne!(arr1.value(1), arr2.value(1));

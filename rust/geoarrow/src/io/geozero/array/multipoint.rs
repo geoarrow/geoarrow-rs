@@ -1,11 +1,12 @@
 use crate::array::multipoint::MultiPointCapacity;
 use crate::array::{MultiPointArray, MultiPointBuilder};
+use crate::datatypes::Dimension;
 use crate::io::geozero::scalar::process_multi_point;
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-impl<const D: usize> GeozeroGeometry for MultiPointArray<D> {
+impl GeozeroGeometry for MultiPointArray {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -23,28 +24,28 @@ impl<const D: usize> GeozeroGeometry for MultiPointArray<D> {
 }
 
 /// GeoZero trait to convert to GeoArrow MultiPointArray.
-pub trait ToMultiPointArray<const D: usize> {
+pub trait ToMultiPointArray {
     /// Convert to GeoArrow MultiPointArray
-    fn to_multi_point_array(&self) -> geozero::error::Result<MultiPointArray<D>>;
+    fn to_multi_point_array(&self, dim: Dimension) -> geozero::error::Result<MultiPointArray>;
 
     /// Convert to a GeoArrow MultiPointBuilder
-    fn to_multi_point_builder(&self) -> geozero::error::Result<MultiPointBuilder<D>>;
+    fn to_multi_point_builder(&self, dim: Dimension) -> geozero::error::Result<MultiPointBuilder>;
 }
 
-impl<T: GeozeroGeometry, const D: usize> ToMultiPointArray<D> for T {
-    fn to_multi_point_array(&self) -> geozero::error::Result<MultiPointArray<D>> {
-        Ok(self.to_multi_point_builder()?.into())
+impl<T: GeozeroGeometry> ToMultiPointArray for T {
+    fn to_multi_point_array(&self, dim: Dimension) -> geozero::error::Result<MultiPointArray> {
+        Ok(self.to_multi_point_builder(dim)?.into())
     }
 
-    fn to_multi_point_builder(&self) -> geozero::error::Result<MultiPointBuilder<D>> {
-        let mut mutable_array = MultiPointBuilder::new();
+    fn to_multi_point_builder(&self, dim: Dimension) -> geozero::error::Result<MultiPointBuilder> {
+        let mut mutable_array = MultiPointBuilder::new(dim);
         self.process_geom(&mut mutable_array)?;
         Ok(mutable_array)
     }
 }
 
 #[allow(unused_variables)]
-impl<const D: usize> GeomProcessor for MultiPointBuilder<D> {
+impl GeomProcessor for MultiPointBuilder {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         let capacity = MultiPointCapacity::new(0, size);
         self.reserve(capacity);
@@ -93,7 +94,7 @@ mod test {
 
     #[test]
     fn geozero_process_geom() -> Result<()> {
-        let arr: MultiPointArray<2> = vec![mp0(), mp1()].as_slice().into();
+        let arr: MultiPointArray = (vec![mp0(), mp1()].as_slice(), Dimension::XY).into();
         let wkt = arr.to_wkt()?;
         let expected = "GEOMETRYCOLLECTION(MULTIPOINT(0 1,1 2),MULTIPOINT(3 4,5 6))";
         assert_eq!(wkt, expected);
@@ -108,7 +109,7 @@ mod test {
                 .map(Geometry::MultiPoint)
                 .collect(),
         );
-        let multi_point_array: MultiPointArray<2> = geo.to_multi_point_array().unwrap();
+        let multi_point_array = geo.to_multi_point_array(Dimension::XY).unwrap();
         assert_eq!(multi_point_array.value_as_geo(0), mp0());
         assert_eq!(multi_point_array.value_as_geo(1), mp1());
         Ok(())

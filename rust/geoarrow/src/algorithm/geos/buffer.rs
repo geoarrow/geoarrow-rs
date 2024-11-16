@@ -1,6 +1,7 @@
 use crate::algorithm::geos::util::try_unary_polygon;
 use crate::array::{PointArray, PolygonArray};
 use crate::error::Result;
+use crate::NativeArray;
 use geos::{BufferParams, Geom};
 
 pub trait Buffer {
@@ -11,15 +12,19 @@ pub trait Buffer {
     fn buffer_with_params(&self, width: f64, buffer_params: &BufferParams) -> Self::Output;
 }
 
-impl<const D: usize> Buffer for PointArray<D> {
-    type Output = Result<PolygonArray<D>>;
+impl Buffer for PointArray {
+    type Output = Result<PolygonArray>;
 
     fn buffer(&self, width: f64, quadsegs: i32) -> Self::Output {
-        try_unary_polygon(self, |g| g.buffer(width, quadsegs))
+        try_unary_polygon(self, |g| g.buffer(width, quadsegs), self.dimension())
     }
 
     fn buffer_with_params(&self, width: f64, buffer_params: &BufferParams) -> Self::Output {
-        try_unary_polygon(self, |g| g.buffer_with_params(width, buffer_params))
+        try_unary_polygon(
+            self,
+            |g| g.buffer_with_params(width, buffer_params),
+            self.dimension(),
+        )
     }
 }
 
@@ -31,7 +36,7 @@ mod test {
     #[test]
     fn point_buffer() {
         let arr = point_array();
-        let buffered: PolygonArray<2> = arr.buffer(1., 8).unwrap();
+        let buffered: PolygonArray = arr.buffer(1., 8).unwrap();
         dbg!(buffered);
     }
 }

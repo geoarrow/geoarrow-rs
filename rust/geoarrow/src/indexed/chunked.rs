@@ -42,24 +42,19 @@ impl<G: NativeArray> IndexedChunkedGeometryArray<G> {
     }
 }
 
-pub type IndexedChunkedPointArray<const D: usize> = IndexedChunkedGeometryArray<PointArray<D>>;
-pub type IndexedChunkedLineStringArray<const D: usize> =
-    IndexedChunkedGeometryArray<LineStringArray<D>>;
-pub type IndexedChunkedPolygonArray<const D: usize> = IndexedChunkedGeometryArray<PolygonArray<D>>;
-pub type IndexedChunkedMultiPointArray<const D: usize> =
-    IndexedChunkedGeometryArray<MultiPointArray<D>>;
-pub type IndexedChunkedMultiLineStringArray<const D: usize> =
-    IndexedChunkedGeometryArray<MultiLineStringArray<D>>;
-pub type IndexedChunkedMultiPolygonArray<const D: usize> =
-    IndexedChunkedGeometryArray<MultiPolygonArray<D>>;
-pub type IndexedChunkedMixedGeometryArray<const D: usize> =
-    IndexedChunkedGeometryArray<MixedGeometryArray<D>>;
-pub type IndexedChunkedGeometryCollectionArray<const D: usize> =
-    IndexedChunkedGeometryArray<GeometryCollectionArray<D>>;
+pub type IndexedChunkedPointArray = IndexedChunkedGeometryArray<PointArray>;
+pub type IndexedChunkedLineStringArray = IndexedChunkedGeometryArray<LineStringArray>;
+pub type IndexedChunkedPolygonArray = IndexedChunkedGeometryArray<PolygonArray>;
+pub type IndexedChunkedMultiPointArray = IndexedChunkedGeometryArray<MultiPointArray>;
+pub type IndexedChunkedMultiLineStringArray = IndexedChunkedGeometryArray<MultiLineStringArray>;
+pub type IndexedChunkedMultiPolygonArray = IndexedChunkedGeometryArray<MultiPolygonArray>;
+pub type IndexedChunkedMixedGeometryArray = IndexedChunkedGeometryArray<MixedGeometryArray>;
+pub type IndexedChunkedGeometryCollectionArray =
+    IndexedChunkedGeometryArray<GeometryCollectionArray>;
 #[allow(dead_code)]
 pub type IndexedChunkedWKBArray<O> = IndexedChunkedGeometryArray<WKBArray<O>>;
 #[allow(dead_code)]
-pub type IndexedChunkedRectArray<const D: usize> = IndexedChunkedGeometryArray<RectArray<D>>;
+pub type IndexedChunkedRectArray = IndexedChunkedGeometryArray<RectArray>;
 #[allow(dead_code)]
 pub type IndexedChunkedUnknownGeometryArray =
     IndexedChunkedGeometryArray<Arc<dyn ChunkedNativeArray>>;

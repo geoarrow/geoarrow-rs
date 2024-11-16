@@ -3,6 +3,7 @@ use arrow_array::{BooleanArray, OffsetSizeTrait, PrimitiveArray};
 use arrow_buffer::{BooleanBufferBuilder, BufferBuilder};
 
 use crate::array::*;
+use crate::datatypes::Dimension;
 use crate::trait_::ArrayAccessor;
 use geo_traits::*;
 
@@ -86,40 +87,52 @@ pub trait Unary<'a>: ArrayAccessor<'a> {
     }
 }
 
-impl<'a, const D: usize> Unary<'a> for PointArray<D> {}
-impl<'a, const D: usize> Unary<'a> for LineStringArray<D> {}
-impl<'a, const D: usize> Unary<'a> for PolygonArray<D> {}
-impl<'a, const D: usize> Unary<'a> for MultiPointArray<D> {}
-impl<'a, const D: usize> Unary<'a> for MultiLineStringArray<D> {}
-impl<'a, const D: usize> Unary<'a> for MultiPolygonArray<D> {}
-impl<'a, const D: usize> Unary<'a> for MixedGeometryArray<D> {}
-impl<'a, const D: usize> Unary<'a> for GeometryCollectionArray<D> {}
-impl<'a, const D: usize> Unary<'a> for RectArray<D> {}
+impl<'a> Unary<'a> for PointArray {}
+impl<'a> Unary<'a> for LineStringArray {}
+impl<'a> Unary<'a> for PolygonArray {}
+impl<'a> Unary<'a> for MultiPointArray {}
+impl<'a> Unary<'a> for MultiLineStringArray {}
+impl<'a> Unary<'a> for MultiPolygonArray {}
+impl<'a> Unary<'a> for MixedGeometryArray {}
+impl<'a> Unary<'a> for GeometryCollectionArray {}
+impl<'a> Unary<'a> for RectArray {}
 impl<'a, O: OffsetSizeTrait> Unary<'a> for WKBArray<O> {}
 
 #[allow(dead_code)]
 pub trait UnaryPoint<'a>: ArrayAccessor<'a> + NativeArray {
-    fn unary_point<F, G>(&'a self, op: F) -> PointArray<2>
+    fn unary_point<F, G>(&'a self, op: F, output_dim: Dimension) -> PointArray
     where
         G: PointTrait<T = f64> + 'a,
         F: Fn(Self::Item) -> &'a G,
     {
         let nulls = self.nulls().cloned();
         let result_geom_iter = self.iter_values().map(op);
-        let builder =
-            PointBuilder::from_points(result_geom_iter, Some(self.coord_type()), self.metadata());
+        let builder = PointBuilder::from_points(
+            result_geom_iter,
+            output_dim,
+            Some(self.coord_type()),
+            self.metadata(),
+        );
         let mut result = builder.finish();
         result.validity = nulls;
         result
     }
 
-    fn try_unary_point<F, G, E>(&'a self, op: F) -> std::result::Result<PointArray<2>, E>
+    fn try_unary_point<F, G, E>(
+        &'a self,
+        op: F,
+        output_dim: Dimension,
+    ) -> std::result::Result<PointArray, E>
     where
         G: PointTrait<T = f64> + 'a,
         F: Fn(Self::Item) -> std::result::Result<G, E>,
     {
-        let mut builder =
-            PointBuilder::with_capacity_and_options(self.len(), self.coord_type(), self.metadata());
+        let mut builder = PointBuilder::with_capacity_and_options(
+            output_dim,
+            self.len(),
+            self.coord_type(),
+            self.metadata(),
+        );
 
         for maybe_geom in self.iter() {
             if let Some(geom) = maybe_geom {
@@ -133,12 +146,12 @@ pub trait UnaryPoint<'a>: ArrayAccessor<'a> + NativeArray {
     }
 }
 
-impl<'a> UnaryPoint<'a> for PointArray<2> {}
-impl<'a> UnaryPoint<'a> for LineStringArray<2> {}
-impl<'a> UnaryPoint<'a> for PolygonArray<2> {}
-impl<'a> UnaryPoint<'a> for MultiPointArray<2> {}
-impl<'a> UnaryPoint<'a> for MultiLineStringArray<2> {}
-impl<'a> UnaryPoint<'a> for MultiPolygonArray<2> {}
-impl<'a> UnaryPoint<'a> for MixedGeometryArray<2> {}
-impl<'a> UnaryPoint<'a> for GeometryCollectionArray<2> {}
-impl<'a> UnaryPoint<'a> for RectArray<2> {}
+impl<'a> UnaryPoint<'a> for PointArray {}
+impl<'a> UnaryPoint<'a> for LineStringArray {}
+impl<'a> UnaryPoint<'a> for PolygonArray {}
+impl<'a> UnaryPoint<'a> for MultiPointArray {}
+impl<'a> UnaryPoint<'a> for MultiLineStringArray {}
+impl<'a> UnaryPoint<'a> for MultiPolygonArray {}
+impl<'a> UnaryPoint<'a> for MixedGeometryArray {}
+impl<'a> UnaryPoint<'a> for GeometryCollectionArray {}
+impl<'a> UnaryPoint<'a> for RectArray {}

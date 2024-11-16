@@ -98,7 +98,7 @@ pub trait Rotate<DegreesT> {
 // └────────────────────────────────┘
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl Rotate<Float64Array> for PointArray<2> {
+impl Rotate<Float64Array> for PointArray {
     type Output = Self;
 
     fn rotate_around_centroid(&self, degrees: &Float64Array) -> Self {
@@ -169,18 +169,18 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<2>);
-iter_geo_impl!(PolygonArray<2>);
-iter_geo_impl!(MultiPointArray<2>);
-iter_geo_impl!(MultiLineStringArray<2>);
-iter_geo_impl!(MultiPolygonArray<2>);
+iter_geo_impl!(LineStringArray);
+iter_geo_impl!(PolygonArray);
+iter_geo_impl!(MultiPointArray);
+iter_geo_impl!(MultiLineStringArray);
+iter_geo_impl!(MultiPolygonArray);
 
 // ┌─────────────────────────────────┐
 // │ Implementations for RHS scalars │
 // └─────────────────────────────────┘
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl Rotate<f64> for PointArray<2> {
+impl Rotate<f64> for PointArray {
     type Output = Self;
 
     fn rotate_around_centroid(&self, degrees: &f64) -> Self {
@@ -239,11 +239,11 @@ macro_rules! iter_geo_impl_scalar {
     };
 }
 
-iter_geo_impl_scalar!(LineStringArray<2>);
-iter_geo_impl_scalar!(PolygonArray<2>);
-iter_geo_impl_scalar!(MultiPointArray<2>);
-iter_geo_impl_scalar!(MultiLineStringArray<2>);
-iter_geo_impl_scalar!(MultiPolygonArray<2>);
+iter_geo_impl_scalar!(LineStringArray);
+iter_geo_impl_scalar!(PolygonArray);
+iter_geo_impl_scalar!(MultiPointArray);
+iter_geo_impl_scalar!(MultiLineStringArray);
+iter_geo_impl_scalar!(MultiPolygonArray);
 
 impl Rotate<f64> for &dyn NativeArray {
     type Output = Result<Arc<dyn NativeArray>>;

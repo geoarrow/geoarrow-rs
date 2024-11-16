@@ -8,6 +8,7 @@ use crate::array::*;
 use crate::chunked_array::{
     ChunkedGeometryCollectionArray, ChunkedMixedGeometryArray, ChunkedNativeArray, ChunkedWKBArray,
 };
+use crate::datatypes::Dimension;
 use crate::error::Result;
 use crate::io::geozero::array::MixedGeometryStreamBuilder;
 use crate::NativeArray;
@@ -21,23 +22,25 @@ pub trait FromEWKB: Sized {
     fn from_ewkb<O: OffsetSizeTrait>(
         arr: &Self::Input<O>,
         coord_type: CoordType,
+        dim: Dimension,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Result<Self>;
 }
 
-impl FromEWKB for MixedGeometryArray<2> {
+impl FromEWKB for MixedGeometryArray {
     type Input<O: OffsetSizeTrait> = WKBArray<O>;
 
     fn from_ewkb<O: OffsetSizeTrait>(
         arr: &Self::Input<O>,
         coord_type: CoordType,
+        dim: Dimension,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let arr = arr.clone().into_inner();
         let mut builder =
-            MixedGeometryStreamBuilder::new_with_options(coord_type, metadata, prefer_multi);
+            MixedGeometryStreamBuilder::new_with_options(dim, coord_type, metadata, prefer_multi);
         for i in 0..arr.len() {
             if arr.is_valid(i) {
                 process_ewkb_geom(&mut Cursor::new(arr.value(i)), &mut builder)?;
@@ -50,19 +53,20 @@ impl FromEWKB for MixedGeometryArray<2> {
     }
 }
 
-impl FromEWKB for GeometryCollectionArray<2> {
+impl FromEWKB for GeometryCollectionArray {
     type Input<O: OffsetSizeTrait> = WKBArray<O>;
 
     fn from_ewkb<O: OffsetSizeTrait>(
         arr: &Self::Input<O>,
         coord_type: CoordType,
+        dim: Dimension,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         // TODO: Add GeometryCollectionStreamBuilder and use that instead of going through geo
         let arr = arr.clone().into_inner();
         let mut builder =
-            GeometryCollectionBuilder::new_with_options(coord_type, metadata, prefer_multi);
+            GeometryCollectionBuilder::new_with_options(dim, coord_type, metadata, prefer_multi);
         for i in 0..arr.len() {
             if arr.is_valid(i) {
                 let buf = arr.value(i);
@@ -85,40 +89,47 @@ impl FromEWKB for Arc<dyn NativeArray> {
     fn from_ewkb<O: OffsetSizeTrait>(
         arr: &Self::Input<O>,
         coord_type: CoordType,
+        dim: Dimension,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let geom_arr =
-            GeometryCollectionArray::<2>::from_ewkb(arr, coord_type, metadata, prefer_multi)?;
+            GeometryCollectionArray::from_ewkb(arr, coord_type, dim, metadata, prefer_multi)?;
         Ok(geom_arr.downcast(true))
     }
 }
 
-impl FromEWKB for ChunkedMixedGeometryArray<2> {
+impl FromEWKB for ChunkedMixedGeometryArray {
     type Input<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
 
     fn from_ewkb<O: OffsetSizeTrait>(
         arr: &Self::Input<O>,
         coord_type: CoordType,
+        dim: Dimension,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
-        arr.try_map(|chunk| FromEWKB::from_ewkb(chunk, coord_type, metadata.clone(), prefer_multi))?
-            .try_into()
+        arr.try_map(|chunk| {
+            FromEWKB::from_ewkb(chunk, coord_type, dim, metadata.clone(), prefer_multi)
+        })?
+        .try_into()
     }
 }
 
-impl FromEWKB for ChunkedGeometryCollectionArray<2> {
+impl FromEWKB for ChunkedGeometryCollectionArray {
     type Input<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
 
     fn from_ewkb<O: OffsetSizeTrait>(
         arr: &Self::Input<O>,
         coord_type: CoordType,
+        dim: Dimension,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
-        arr.try_map(|chunk| FromEWKB::from_ewkb(chunk, coord_type, metadata.clone(), prefer_multi))?
-            .try_into()
+        arr.try_map(|chunk| {
+            FromEWKB::from_ewkb(chunk, coord_type, dim, metadata.clone(), prefer_multi)
+        })?
+        .try_into()
     }
 }
 
@@ -128,12 +139,14 @@ impl FromEWKB for Arc<dyn ChunkedNativeArray> {
     fn from_ewkb<O: OffsetSizeTrait>(
         arr: &Self::Input<O>,
         coord_type: CoordType,
+        dim: Dimension,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
-        let geom_arr = ChunkedGeometryCollectionArray::<2>::from_ewkb(
+        let geom_arr = ChunkedGeometryCollectionArray::from_ewkb(
             arr,
             coord_type,
+            dim,
             metadata,
             prefer_multi,
         )?;
