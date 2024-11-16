@@ -3,6 +3,7 @@ use geozero::GeozeroDatasource;
 use std::io::Read;
 
 use crate::array::CoordType;
+use crate::datatypes::Dimension;
 use crate::error::Result;
 use crate::io::geozero::array::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
@@ -47,8 +48,10 @@ pub fn read_csv<R: Read>(
         None,
         Default::default(),
     );
-    let mut geo_table =
-        GeoTableBuilder::<MixedGeometryStreamBuilder<2>>::new_with_options(table_builder_options);
+    let mut geo_table = GeoTableBuilder::<MixedGeometryStreamBuilder>::new_with_options(
+        Dimension::XY,
+        table_builder_options,
+    );
     csv.process(&mut geo_table)?;
     geo_table.finish()
 }

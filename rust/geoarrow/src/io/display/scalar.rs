@@ -84,6 +84,7 @@ impl<O: OffsetSizeTrait> fmt::Display for WKB<'_, O> {
 #[cfg(test)]
 mod test {
     use crate::array::PointArray;
+    use crate::datatypes::Dimension;
     use crate::io::wkb::ToWKB;
     use crate::test::{multipolygon, point};
     use crate::trait_::ArrayAccessor;
@@ -100,7 +101,7 @@ mod test {
     #[test]
     fn test_display_point_5_decimals() {
         let point = geo::Point::from((0.12345, 1.23456));
-        let point_array: PointArray<2> = vec![point].as_slice().into();
+        let point_array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
         let result = point_array.value(0).to_string();
         let expected = "<POINT(0.123 1.234)>";
         assert_eq!(result, expected);

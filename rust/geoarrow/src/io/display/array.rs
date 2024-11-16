@@ -180,7 +180,7 @@ mod test {
 
     #[test]
     fn test_display_ls_array() {
-        let array = linestring::large_ls_array();
+        let array = linestring::ls_array();
         let result = array.to_string();
         let expected = "LineStringArray([
     <LINESTRING(0 1,1 2)>,
