@@ -7,9 +7,7 @@ use geos::{Geom, GeometryTypes};
 impl<'a> TryFrom<&'a MultiPolygon<'_>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(
-        value: &'a MultiPolygon<'_>,
-    ) -> std::result::Result<geos::Geometry, geos::Error> {
+    fn try_from(value: &'a MultiPolygon<'_>) -> std::result::Result<geos::Geometry, geos::Error> {
         geos::Geometry::create_multipolygon(
             value
                 .polygons()

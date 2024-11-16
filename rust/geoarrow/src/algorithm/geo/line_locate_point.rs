@@ -84,10 +84,9 @@ impl LineLocatePoint<&dyn ChunkedNativeArray> for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         let result = match (self.data_type(), rhs.data_type()) {
-            (LineString(_, XY), Point(_, XY)) => LineLocatePoint::line_locate_point(
-                self.as_line_string(),
-                &rhs.as_point().chunks,
-            ),
+            (LineString(_, XY), Point(_, XY)) => {
+                LineLocatePoint::line_locate_point(self.as_line_string(), &rhs.as_point().chunks)
+            }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
