@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use crate::array::metadata::ArrayMetadata;
-use crate::array::mixed::array::GeometryType;
 use crate::array::mixed::MixedCapacity;
 use crate::array::{
     CoordType, LineStringBuilder, MixedGeometryArray, MultiLineStringBuilder, MultiPointBuilder,
@@ -17,7 +16,8 @@ use geo_traits::*;
 
 pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 
-/// The GeoArrow equivalent to a `Vec<Option<Geometry>>`: a mutable collection of Geometries.
+/// The GeoArrow equivalent to a `Vec<Option<Geometry>>`: a mutable collection of Geometries, all
+/// of which have the same dimension.
 ///
 /// This currently has the caveat that these geometries must be a _primitive_ geometry type. This
 /// does not currently support nested GeometryCollection objects.
@@ -31,6 +31,11 @@ pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 #[derive(Debug)]
 pub struct MixedGeometryBuilder {
     metadata: Arc<ArrayMetadata>,
+
+    /// The dimension of this builder.
+    ///
+    /// All underlying arrays must contain a coordinate buffer of this same dimension.
+    dim: Dimension,
 
     // Invariant: every item in `types` is `> 0 && < fields.len()`
     types: Vec<i8>,
@@ -96,6 +101,7 @@ impl<'a> MixedGeometryBuilder {
         // Don't store array metadata on child arrays
         Self {
             metadata,
+            dim,
             types: vec![],
             points: PointBuilder::with_capacity_and_options(
                 dim,
@@ -263,7 +269,10 @@ impl<'a> MixedGeometryBuilder {
     #[inline]
     pub(crate) fn add_point_type(&mut self) {
         self.offsets.push(self.points.len().try_into().unwrap());
-        self.types.push(GeometryType::Point.default_ordering());
+        match self.dim {
+            Dimension::XY => self.types.push(1),
+            Dimension::XYZ => self.types.push(11),
+        }
     }
 
     /// Add a new LineString to the end of this array.
@@ -292,7 +301,10 @@ impl<'a> MixedGeometryBuilder {
     pub(crate) fn add_line_string_type(&mut self) {
         self.offsets
             .push(self.line_strings.len().try_into().unwrap());
-        self.types.push(GeometryType::LineString.default_ordering());
+        match self.dim {
+            Dimension::XY => self.types.push(2),
+            Dimension::XYZ => self.types.push(12),
+        }
     }
 
     /// Add a new Polygon to the end of this array.
@@ -317,7 +329,10 @@ impl<'a> MixedGeometryBuilder {
     #[inline]
     pub(crate) fn add_polygon_type(&mut self) {
         self.offsets.push(self.polygons.len().try_into().unwrap());
-        self.types.push(GeometryType::Polygon.default_ordering());
+        match self.dim {
+            Dimension::XY => self.types.push(3),
+            Dimension::XYZ => self.types.push(13),
+        }
     }
 
     /// Add a new MultiPoint to the end of this array.
@@ -338,7 +353,10 @@ impl<'a> MixedGeometryBuilder {
     pub(crate) fn add_multi_point_type(&mut self) {
         self.offsets
             .push(self.multi_points.len().try_into().unwrap());
-        self.types.push(GeometryType::MultiPoint.default_ordering());
+        match self.dim {
+            Dimension::XY => self.types.push(4),
+            Dimension::XYZ => self.types.push(14),
+        }
     }
 
     /// Add a new MultiLineString to the end of this array.
@@ -359,8 +377,10 @@ impl<'a> MixedGeometryBuilder {
     pub(crate) fn add_multi_line_string_type(&mut self) {
         self.offsets
             .push(self.multi_line_strings.len().try_into().unwrap());
-        self.types
-            .push(GeometryType::MultiLineString.default_ordering());
+        match self.dim {
+            Dimension::XY => self.types.push(5),
+            Dimension::XYZ => self.types.push(15),
+        }
     }
 
     /// Add a new MultiPolygon to the end of this array.
@@ -381,8 +401,10 @@ impl<'a> MixedGeometryBuilder {
     pub(crate) fn add_multi_polygon_type(&mut self) {
         self.offsets
             .push(self.multi_polygons.len().try_into().unwrap());
-        self.types
-            .push(GeometryType::MultiPolygon.default_ordering());
+        match self.dim {
+            Dimension::XY => self.types.push(6),
+            Dimension::XYZ => self.types.push(16),
+        }
     }
 
     #[inline]

@@ -94,46 +94,6 @@ pub struct MixedGeometryArray {
     pub(crate) slice_offset: usize,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub(crate) enum GeometryType {
-    Point = 1,
-    LineString = 2,
-    Polygon = 3,
-    MultiPoint = 4,
-    MultiLineString = 5,
-    MultiPolygon = 6,
-    GeometryCollection = 7,
-}
-
-impl GeometryType {
-    pub fn default_ordering(&self) -> i8 {
-        match self {
-            GeometryType::Point => 1,
-            GeometryType::LineString => 2,
-            GeometryType::Polygon => 3,
-            GeometryType::MultiPoint => 4,
-            GeometryType::MultiLineString => 5,
-            GeometryType::MultiPolygon => 6,
-            GeometryType::GeometryCollection => 7,
-        }
-    }
-}
-
-impl From<&String> for GeometryType {
-    fn from(value: &String) -> Self {
-        match value.as_str() {
-            "geoarrow.point" => GeometryType::Point,
-            "geoarrow.linestring" => GeometryType::LineString,
-            "geoarrow.polygon" => GeometryType::Polygon,
-            "geoarrow.multipoint" => GeometryType::MultiPoint,
-            "geoarrow.multilinestring" => GeometryType::MultiLineString,
-            "geoarrow.multipolygon" => GeometryType::MultiPolygon,
-            "geoarrow.geometrycollection" => GeometryType::GeometryCollection,
-            _ => panic!(),
-        }
-    }
-}
-
 impl MixedGeometryArray {
     /// Create a new MixedGeometryArray from parts
     ///

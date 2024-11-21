@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use crate::array::metadata::ArrayMetadata;
-use crate::array::mixed::array::GeometryType;
 use crate::array::{CoordType, MixedGeometryArray, MixedGeometryBuilder};
 use crate::datatypes::Dimension;
 use crate::io::geozero::scalar::process_geometry;
@@ -57,6 +56,17 @@ impl<T: GeozeroGeometry> ToMixedArray for T {
         self.process_geom(&mut stream_builder)?;
         Ok(stream_builder.builder)
     }
+}
+
+/// The current geometry type in which we're pushing coordinates.
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum GeometryType {
+    Point = 1,
+    LineString = 2,
+    Polygon = 3,
+    MultiPoint = 4,
+    MultiLineString = 5,
+    MultiPolygon = 6,
 }
 
 /// A streaming builder for GeoArrow MixedGeometryArray.
@@ -140,7 +150,6 @@ impl GeomProcessor for MixedGeometryStreamBuilder {
             GeometryType::MultiPoint => self.builder.multi_points.xy(x, y, idx),
             GeometryType::MultiLineString => self.builder.multi_line_strings.xy(x, y, idx),
             GeometryType::MultiPolygon => self.builder.multi_polygons.xy(x, y, idx),
-            GeometryType::GeometryCollection => todo!(),
         }
     }
 
