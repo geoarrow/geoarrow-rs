@@ -64,7 +64,7 @@ futures = { version = "0.3", optional = true }
 gdal = { version = "0.17", optional = true }
 geo = "0.28"
 geo-index = "0.1.1"
-geo-traits = "0.1.1"
+geo-traits = "0.2"
 geos = { version = "9.0", features = ["v3_10_0", "geo"], optional = true }
 geozero = { version = "0.14", features = ["with-wkb"] }
 half = { version = "2.4.1" }
@@ -96,8 +96,8 @@ sqlx = { version = "0.7", optional = true, default-features = false, features = 
 thiserror = "1"
 tokio = { version = "1", default-features = false, optional = true }
 # wkt = "0.11"
-wkt = { git = "https://github.com/georust/wkt", branch = "kyle/geo-traits-writer" }
-wkb = { git = "https://github.com/kylebarron/wkb", rev = "7d58a2327fe21cf250dab5ac6860b6cf0fddb838" }
+wkt = { git = "https://github.com/georust/wkt", rev = "447be533e0a76188ca499eb8a0c74fc4e8a0f823" }
+wkb = { git = "https://github.com/kylebarron/wkb", rev = "e0f29b4a24104356464cc123925b459d81c40e52" }
 
 
 [dev-dependencies]

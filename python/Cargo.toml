@@ -18,7 +18,7 @@ arrow = "53"
 arrow-array = "53"
 arrow-buffer = "53"
 arrow-schema = "53"
-geo-traits = "0.1.1"
+geo-traits = "0.2"
 geoarrow = { path = "../rust/geoarrow" }
 # Uncomment when publishing
 # geoarrow = { version = "0.4.0-beta.1" }

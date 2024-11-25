@@ -21,7 +21,7 @@ impl<'a> CoordTrait for Point<'a> {
         geo_traits::Dimensions::Xy
     }
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
+    fn nth_or_panic(&self, n: usize) -> Self::T {
         match n {
             0 => self.0.x,
             1 => self.0.y,
@@ -71,7 +71,7 @@ impl<'a> CoordTrait for PointZ<'a> {
         }
     }
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
+    fn nth_or_panic(&self, n: usize) -> Self::T {
         match n {
             0 => self.0.x,
             1 => self.0.y,

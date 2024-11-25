@@ -18,14 +18,14 @@ pub(super) fn coord_to_wkt<T: CoordFloat>(coord: &impl CoordTrait<T = T>) -> wkt
     match coord.dim() {
         Dimensions::Xy | Dimensions::Unknown(2) => {}
         Dimensions::Xyz | Dimensions::Unknown(3) => {
-            out.z = Some(coord.nth_unchecked(2));
+            out.z = Some(unsafe { coord.nth_unchecked(2) });
         }
         Dimensions::Xym => {
-            out.m = Some(coord.nth_unchecked(2));
+            out.m = Some(unsafe { coord.nth_unchecked(2) });
         }
         Dimensions::Xyzm | Dimensions::Unknown(4) => {
-            out.z = Some(coord.nth_unchecked(2));
-            out.m = Some(coord.nth_unchecked(3));
+            out.z = Some(unsafe { coord.nth_unchecked(2) });
+            out.m = Some(unsafe { coord.nth_unchecked(3) });
         }
         _ => panic!(),
     }

@@ -33,7 +33,7 @@ pub(crate) fn process_point_as_coord<P: GeomProcessor>(
         Dimensions::Xyz | Dimensions::Unknown(3) => processor.coordinate(
             coord.x(),
             coord.y(),
-            Some(coord.nth_unchecked(2)),
+            Some(unsafe { coord.nth_unchecked(2) }),
             None,
             None,
             None,
@@ -43,7 +43,7 @@ pub(crate) fn process_point_as_coord<P: GeomProcessor>(
             coord.x(),
             coord.y(),
             None,
-            Some(coord.nth_unchecked(2)),
+            Some(unsafe { coord.nth_unchecked(2) }),
             None,
             None,
             coord_idx,
@@ -51,8 +51,8 @@ pub(crate) fn process_point_as_coord<P: GeomProcessor>(
         Dimensions::Xyzm | Dimensions::Unknown(4) => processor.coordinate(
             coord.x(),
             coord.y(),
-            Some(coord.nth_unchecked(2)),
-            Some(coord.nth_unchecked(3)),
+            Some(unsafe { coord.nth_unchecked(2) }),
+            Some(unsafe { coord.nth_unchecked(3) }),
             None,
             None,
             coord_idx,

@@ -105,10 +105,10 @@ impl CoordTrait for Coord<'_> {
         }
     }
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
+    fn nth_or_panic(&self, n: usize) -> Self::T {
         match self {
-            Coord::Interleaved(c) => c.nth_unchecked(n),
-            Coord::Separated(c) => c.nth_unchecked(n),
+            Coord::Interleaved(c) => c.nth_or_panic(n),
+            Coord::Separated(c) => c.nth_or_panic(n),
         }
     }
 
@@ -137,10 +137,10 @@ impl CoordTrait for &Coord<'_> {
         }
     }
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
+    fn nth_or_panic(&self, n: usize) -> Self::T {
         match self {
-            Coord::Interleaved(c) => c.nth_unchecked(n),
-            Coord::Separated(c) => c.nth_unchecked(n),
+            Coord::Interleaved(c) => c.nth_or_panic(n),
+            Coord::Separated(c) => c.nth_or_panic(n),
         }
     }
 

@@ -23,7 +23,7 @@ impl<'a> CoordTrait for Coord<'a> {
         self.dim.into()
     }
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
+    fn nth_or_panic(&self, n: usize) -> Self::T {
         match n {
             0 => self.geom.xy().unwrap().get(self.coord_offset * 2),
             1 => self.geom.xy().unwrap().get((self.coord_offset * 2) + 1),
