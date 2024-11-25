@@ -127,6 +127,10 @@ pub enum NativeType {
     /// Represents a [RectArray][crate::array::RectArray] or
     /// [ChunkedRectArray][crate::chunked_array::ChunkedRectArray].
     Rect(Dimension),
+
+    /// Represents a [UnknownGeometryArray][crate::array::UnknownGeometryArray] or
+    /// [ChunkedUnknownGeometryArray][crate::chunked_array::ChunkedUnknownGeometryArray].
+    Unknown(CoordType),
 }
 
 /// A type enum representing "serialized" GeoArrow geometry types.
