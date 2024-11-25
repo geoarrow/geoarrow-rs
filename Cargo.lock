@@ -1246,9 +1246,9 @@ dependencies = [
 
 [[package]]
 name = "geo-traits"
-version = "0.1.1"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cdc9562dd7e476214a5eea3caf12763dcc2c886a64cc4c3b8ec41554e8c6c5fc"
+checksum = "b018fc19fa58202b03f1c809aebe654f7d70fd3887dace34c3d05c11aeb474b5"
 dependencies = [
  "geo-types",
 ]
@@ -4233,7 +4233,7 @@ dependencies = [
 [[package]]
 name = "wkb"
 version = "0.1.0"
-source = "git+https://github.com/kylebarron/wkb?rev=7d58a2327fe21cf250dab5ac6860b6cf0fddb838#7d58a2327fe21cf250dab5ac6860b6cf0fddb838"
+source = "git+https://github.com/kylebarron/wkb?rev=e0f29b4a24104356464cc123925b459d81c40e52#e0f29b4a24104356464cc123925b459d81c40e52"
 dependencies = [
  "byteorder",
  "geo-traits",
@@ -4268,7 +4268,7 @@ dependencies = [
 [[package]]
 name = "wkt"
 version = "0.11.1"
-source = "git+https://github.com/georust/wkt?branch=kyle/geo-traits-writer#63b13243568470d6da5a44fcc9fe7b903aa53eea"
+source = "git+https://github.com/georust/wkt?rev=447be533e0a76188ca499eb8a0c74fc4e8a0f823#447be533e0a76188ca499eb8a0c74fc4e8a0f823"
 dependencies = [
  "geo-traits",
  "geo-types",

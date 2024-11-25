@@ -17,7 +17,7 @@ pub fn coord_eq<T: CoordFloat>(
     }
 
     for i in 0..left_dim.size() {
-        if left.nth_unchecked(i) != right.nth_unchecked(i) {
+        if left.nth_or_panic(i) != right.nth_or_panic(i) {
             return false;
         }
     }

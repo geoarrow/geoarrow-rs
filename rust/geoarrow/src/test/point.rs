@@ -54,7 +54,7 @@ impl CoordTrait for CoordZ {
         geo_traits::Dimensions::Xyz
     }
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
+    fn nth_or_panic(&self, n: usize) -> Self::T {
         match n {
             0 => self.x,
             1 => self.y,

@@ -18,7 +18,7 @@ impl CoordTrait for GEOSConstCoord {
         self.dim
     }
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
+    fn nth_or_panic(&self, n: usize) -> Self::T {
         match n {
             0 => self.coords.get_x(self.geom_index).unwrap(),
             1 => self.coords.get_y(self.geom_index).unwrap(),

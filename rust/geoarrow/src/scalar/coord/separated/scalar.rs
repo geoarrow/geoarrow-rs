@@ -17,7 +17,7 @@ pub struct SeparatedCoord<'a> {
 impl<'a> SeparatedCoord<'a> {
     /// Return `true` if all values in the coordinate are f64::NAN
     pub(crate) fn is_nan(&self) -> bool {
-        (0..self.dim.size()).all(|coord_dim| self.nth_unchecked(coord_dim).is_nan())
+        (0..self.dim.size()).all(|coord_dim| self.nth_or_panic(coord_dim).is_nan())
     }
 }
 
@@ -90,7 +90,7 @@ impl CoordTrait for SeparatedCoord<'_> {
         self.dim.into()
     }
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
+    fn nth_or_panic(&self, n: usize) -> Self::T {
         self.buffers[n][self.i]
     }
 
@@ -110,7 +110,7 @@ impl CoordTrait for &SeparatedCoord<'_> {
         self.dim.into()
     }
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
+    fn nth_or_panic(&self, n: usize) -> Self::T {
         self.buffers[n][self.i]
     }
 
