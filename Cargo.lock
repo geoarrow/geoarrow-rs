@@ -1015,13 +1015,13 @@ dependencies = [
 [[package]]
 name = "flatgeobuf"
 version = "4.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "36ae7433806df7b5066c8ca3d17eb29f795f70bdc7326ce9faf714991fdb558f"
+source = "git+https://github.com/flatgeobuf/flatgeobuf?rev=f554f2768b612e131e9f55d014eaa5b911a7f1b5#f554f2768b612e131e9f55d014eaa5b911a7f1b5"
 dependencies = [
  "byteorder",
  "bytes",
  "fallible-streaming-iterator",
  "flatbuffers",
+ "geo-traits",
  "geozero",
  "http-range-client",
  "log",
