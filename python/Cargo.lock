@@ -839,13 +839,13 @@ dependencies = [
 [[package]]
 name = "flatgeobuf"
 version = "4.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "36ae7433806df7b5066c8ca3d17eb29f795f70bdc7326ce9faf714991fdb558f"
+source = "git+https://github.com/flatgeobuf/flatgeobuf?rev=f554f2768b612e131e9f55d014eaa5b911a7f1b5#f554f2768b612e131e9f55d014eaa5b911a7f1b5"
 dependencies = [
  "byteorder",
  "bytes",
  "fallible-streaming-iterator",
  "flatbuffers",
+ "geo-traits",
  "geozero",
  "http-range-client",
  "log",
@@ -1042,9 +1042,9 @@ dependencies = [
 
 [[package]]
 name = "geo-traits"
-version = "0.1.1"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cdc9562dd7e476214a5eea3caf12763dcc2c886a64cc4c3b8ec41554e8c6c5fc"
+checksum = "b018fc19fa58202b03f1c809aebe654f7d70fd3887dace34c3d05c11aeb474b5"
 dependencies = [
  "geo-types",
 ]
@@ -1101,7 +1101,7 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "wkb",
- "wkt 0.11.1 (git+https://github.com/georust/wkt?branch=kyle/geo-traits-writer)",
+ "wkt 0.11.1 (git+https://github.com/georust/wkt?rev=447be533e0a76188ca499eb8a0c74fc4e8a0f823)",
 ]
 
 [[package]]
@@ -4335,7 +4335,7 @@ dependencies = [
 [[package]]
 name = "wkb"
 version = "0.1.0"
-source = "git+https://github.com/kylebarron/wkb?rev=7d58a2327fe21cf250dab5ac6860b6cf0fddb838#7d58a2327fe21cf250dab5ac6860b6cf0fddb838"
+source = "git+https://github.com/kylebarron/wkb?rev=e0f29b4a24104356464cc123925b459d81c40e52#e0f29b4a24104356464cc123925b459d81c40e52"
 dependencies = [
  "byteorder",
  "geo-traits",
@@ -4358,7 +4358,7 @@ dependencies = [
 [[package]]
 name = "wkt"
 version = "0.11.1"
-source = "git+https://github.com/georust/wkt?branch=kyle/geo-traits-writer#f3434f5283d070f1accd64cd1bd09303f0f0547c"
+source = "git+https://github.com/georust/wkt?rev=447be533e0a76188ca499eb8a0c74fc4e8a0f823#447be533e0a76188ca499eb8a0c74fc4e8a0f823"
 dependencies = [
  "geo-traits",
  "geo-types",

@@ -59,7 +59,8 @@ chrono = { version = "0.4" }
 dbase = "0.5.0"
 enum-as-inner = "0.6.1"
 # Set default-features = false because async not working in wasm right now
-flatgeobuf = { version = "4.4.0", optional = true, default-features = false }
+# For geo-traits impl
+flatgeobuf = { git = "https://github.com/flatgeobuf/flatgeobuf", rev = "f554f2768b612e131e9f55d014eaa5b911a7f1b5", optional = true, default-features = false }
 futures = { version = "0.3", optional = true }
 gdal = { version = "0.17", optional = true }
 geo = "0.28"
