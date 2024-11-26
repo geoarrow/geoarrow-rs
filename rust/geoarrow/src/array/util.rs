@@ -62,7 +62,7 @@ pub(crate) trait OffsetBufferUtils<O: OffsetSizeTrait> {
 
     /// Returns a range (start, end) corresponding to the position `index`
     /// # Panic
-    /// This function panics iff `index >= self.len()`
+    /// This function panics iff `index >= self.len_proxy()`
     fn start_end(&self, index: usize) -> (usize, usize);
 
     /// Returns the last offset.
@@ -80,7 +80,7 @@ impl<O: OffsetSizeTrait> OffsetBufferUtils<O> for OffsetBuffer<O> {
     ///
     /// # Panic
     ///
-    /// Panics iff `index >= self.len()`
+    /// Panics iff `index >= self.len_proxy()`
     #[inline]
     fn start_end(&self, index: usize) -> (usize, usize) {
         assert!(index < self.len_proxy());
