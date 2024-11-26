@@ -259,7 +259,7 @@ impl MixedGeometryArray {
     ///
     /// # Panic
     ///
-    /// This function panics iff `offset + length >= self.len()`.
+    /// This function panics iff `offset + length > self.len()`.
     #[inline]
     pub fn slice(&self, offset: usize, length: usize) -> Self {
         assert!(
