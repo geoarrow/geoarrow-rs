@@ -10,7 +10,7 @@ use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use geo_traits::{
     CoordTrait, GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait,
-    MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PolygonTrait, RectTrait,
+    MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
 };
 
 /// Note: this will currently always create a _two-dimensional_ output array because it returns a [`geo::Coord`].
@@ -52,7 +52,7 @@ impl MapCoords for Point<'_> {
         F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        Ok(geo::Point(map_op(&self.coord())?))
+        Ok(geo::Point(map_op(&self.coord().unwrap())?))
     }
 }
 
@@ -229,7 +229,7 @@ impl MapCoords for PointArray {
         );
         for maybe_geom in self.iter() {
             if let Some(geom) = maybe_geom {
-                let result = geom.coord().try_map_coords(&map_op)?;
+                let result = geom.coord().unwrap().try_map_coords(&map_op)?;
                 builder.push_coord(Some(&result));
             } else {
                 builder.push_null()

@@ -19,10 +19,6 @@ impl<'a> Point<'a> {
         Point { coords, geom_index }
     }
 
-    pub fn coord(&self) -> Coord {
-        self.coords.value(self.geom_index)
-    }
-
     pub fn into_owned_inner(self) -> (CoordBuffer, usize) {
         let coords = self.coords.owned_slice(self.geom_index, 1);
         (coords, self.geom_index)
