@@ -2,9 +2,9 @@ use rstar::{RTreeObject, AABB};
 
 use crate::algorithm::native::eq::rect_eq;
 use crate::array::SeparatedCoordBuffer;
-use crate::io::geo::rect_to_geo;
 use crate::scalar::SeparatedCoord;
 use crate::trait_::NativeScalar;
+use geo_traits::to_geo::ToGeoRect;
 use geo_traits::RectTrait;
 
 #[derive(Debug, Clone)]
@@ -76,7 +76,7 @@ impl From<Rect<'_>> for geo::Rect {
 
 impl From<&Rect<'_>> for geo::Rect {
     fn from(value: &Rect<'_>) -> Self {
-        rect_to_geo(value)
+        value.to_rect()
     }
 }
 

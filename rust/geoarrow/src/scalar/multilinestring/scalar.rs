@@ -2,10 +2,10 @@ use crate::algorithm::native::bounding_rect::bounding_rect_multilinestring;
 use crate::algorithm::native::eq::multi_line_string_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, MultiLineStringArray};
-use crate::io::geo::multi_line_string_to_geo;
 use crate::scalar::LineString;
 use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
+use geo_traits::to_geo::ToGeoMultiLineString;
 use geo_traits::MultiLineStringTrait;
 use rstar::{RTreeObject, AABB};
 
@@ -121,7 +121,7 @@ impl From<MultiLineString<'_>> for geo::MultiLineString {
 
 impl From<&MultiLineString<'_>> for geo::MultiLineString {
     fn from(value: &MultiLineString<'_>) -> Self {
-        multi_line_string_to_geo(value)
+        value.to_multi_line_string()
     }
 }
 

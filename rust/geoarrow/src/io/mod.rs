@@ -10,7 +10,6 @@ pub mod display;
 pub mod flatgeobuf;
 #[cfg(feature = "gdal")]
 pub mod gdal;
-pub mod geo;
 pub mod geojson;
 pub mod geojson_lines;
 #[cfg(feature = "geos")]

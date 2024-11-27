@@ -1,8 +1,8 @@
 use rstar::{RTreeObject, AABB};
 
-use crate::io::geo::coord_to_geo;
 use crate::scalar::{InterleavedCoord, SeparatedCoord};
 use crate::trait_::NativeScalar;
+use geo_traits::to_geo::ToGeoCoord;
 use geo_traits::CoordTrait;
 
 #[derive(Debug, Clone)]
@@ -47,7 +47,7 @@ impl From<Coord<'_>> for geo::Coord {
 
 impl From<&Coord<'_>> for geo::Coord {
     fn from(value: &Coord) -> Self {
-        coord_to_geo(value)
+        value.to_coord()
     }
 }
 

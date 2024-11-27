@@ -3,9 +3,9 @@ use rstar::{RTreeObject, AABB};
 
 use crate::algorithm::native::eq::coord_eq;
 use crate::datatypes::Dimension;
-use crate::io::geo::coord_to_geo;
 use crate::scalar::SeparatedCoord;
 use crate::trait_::NativeScalar;
+use geo_traits::to_geo::ToGeoCoord;
 use geo_traits::CoordTrait;
 
 #[derive(Debug, Clone)]
@@ -48,7 +48,7 @@ impl From<InterleavedCoord<'_>> for geo::Coord {
 
 impl From<&InterleavedCoord<'_>> for geo::Coord {
     fn from(value: &InterleavedCoord) -> Self {
-        coord_to_geo(value)
+        value.to_coord()
     }
 }
 

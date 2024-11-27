@@ -2,12 +2,12 @@ use crate::algorithm::native::eq::geometry_collection_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::MixedGeometryArray;
 use crate::datatypes::Dimension;
-use crate::io::geo::geometry_collection_to_geo;
 use crate::scalar::Geometry;
 use crate::trait_::ArrayAccessor;
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
 use arrow_buffer::OffsetBuffer;
+use geo_traits::to_geo::ToGeoGeometryCollection;
 use geo_traits::GeometryCollectionTrait;
 use rstar::{RTreeObject, AABB};
 
@@ -105,7 +105,7 @@ impl<'a> GeometryCollectionTrait for &'a GeometryCollection<'a> {
 
 impl From<&GeometryCollection<'_>> for geo::GeometryCollection {
     fn from(value: &GeometryCollection<'_>) -> Self {
-        geometry_collection_to_geo(value)
+        value.to_geometry_collection()
     }
 }
 
