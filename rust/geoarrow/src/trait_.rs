@@ -540,8 +540,8 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// let value = array.value(0); // geoarrow::scalar::Point
-    /// assert_eq!(value.coord().x(), 1.);
-    /// assert_eq!(value.coord().y(), 2.);
+    /// assert_eq!(value.coord().unwrap().x(), 1.);
+    /// assert_eq!(value.coord().unwrap().y(), 2.);
     /// ```
     ///
     /// # Panics
