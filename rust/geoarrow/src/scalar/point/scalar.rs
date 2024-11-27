@@ -1,9 +1,9 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_point;
 use crate::algorithm::native::eq::point_eq;
 use crate::array::CoordBuffer;
-use crate::io::geo::point_to_geo;
 use crate::scalar::Coord;
 use crate::trait_::NativeScalar;
+use geo_traits::to_geo::ToGeoPoint;
 use geo_traits::PointTrait;
 use rstar::{RTreeObject, AABB};
 
@@ -90,7 +90,7 @@ impl From<Point<'_>> for geo::Point {
 
 impl From<&Point<'_>> for geo::Point {
     fn from(value: &Point<'_>) -> Self {
-        point_to_geo(value)
+        value.to_point()
     }
 }
 

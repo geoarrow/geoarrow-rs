@@ -3,10 +3,10 @@ use crate::algorithm::native::eq::multi_point_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, MultiPointArray};
 use crate::datatypes::Dimension;
-use crate::io::geo::multi_point_to_geo;
 use crate::scalar::Point;
 use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
+use geo_traits::to_geo::ToGeoMultiPoint;
 use geo_traits::MultiPointTrait;
 use rstar::{RTreeObject, AABB};
 
@@ -119,7 +119,7 @@ impl From<MultiPoint<'_>> for geo::MultiPoint {
 
 impl From<&MultiPoint<'_>> for geo::MultiPoint {
     fn from(value: &MultiPoint<'_>) -> Self {
-        multi_point_to_geo(value)
+        value.to_multi_point()
     }
 }
 

@@ -1,8 +1,8 @@
 use crate::error::Result;
-use crate::io::geo::geometry_to_geo;
 use crate::trait_::NativeScalar;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use geo::BoundingRect;
+use geo_traits::to_geo::ToGeoGeometry;
 use geo_traits::GeometryTrait;
 use rstar::{RTreeObject, AABB};
 
@@ -77,7 +77,7 @@ impl<'a, O: OffsetSizeTrait> AsRef<[u8]> for WKB<'a, O> {
 
 impl<O: OffsetSizeTrait> From<&WKB<'_, O>> for geo::Geometry {
     fn from(value: &WKB<'_, O>) -> Self {
-        geometry_to_geo(&value.parse().unwrap())
+        value.parse().unwrap().to_geometry()
     }
 }
 

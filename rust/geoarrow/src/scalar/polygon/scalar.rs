@@ -3,10 +3,10 @@ use crate::algorithm::native::eq::polygon_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, PolygonArray};
 use crate::datatypes::Dimension;
-use crate::io::geo::polygon_to_geo;
 use crate::scalar::LineString;
 use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
+use geo_traits::to_geo::ToGeoPolygon;
 use geo_traits::PolygonTrait;
 use rstar::{RTreeObject, AABB};
 
@@ -147,7 +147,7 @@ impl From<Polygon<'_>> for geo::Polygon {
 
 impl From<&Polygon<'_>> for geo::Polygon {
     fn from(value: &Polygon<'_>) -> Self {
-        polygon_to_geo(value)
+        value.to_polygon()
     }
 }
 

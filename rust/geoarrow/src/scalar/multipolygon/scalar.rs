@@ -3,10 +3,10 @@ use crate::algorithm::native::eq::multi_polygon_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, MultiPolygonArray};
 use crate::datatypes::Dimension;
-use crate::io::geo::multi_polygon_to_geo;
 use crate::scalar::Polygon;
 use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
+use geo_traits::to_geo::ToGeoMultiPolygon;
 use geo_traits::MultiPolygonTrait;
 use rstar::{RTreeObject, AABB};
 
@@ -149,7 +149,7 @@ impl From<MultiPolygon<'_>> for geo::MultiPolygon {
 
 impl From<&MultiPolygon<'_>> for geo::MultiPolygon {
     fn from(value: &MultiPolygon<'_>) -> Self {
-        multi_polygon_to_geo(value)
+        value.to_multi_polygon()
     }
 }
 

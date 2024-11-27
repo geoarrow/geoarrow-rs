@@ -1,13 +1,10 @@
 use crate::chunked_array::ChunkedArray;
 use crate::indexed::array::*;
 use crate::indexed::chunked::*;
-use crate::io::geo::{
-    geometry_collection_to_geo, geometry_to_geo, line_string_to_geo, multi_line_string_to_geo,
-    multi_point_to_geo, multi_polygon_to_geo, point_to_geo, polygon_to_geo,
-};
 use crate::trait_::NativeScalar;
 use arrow_array::BooleanArray;
 use geo::{BoundingRect, Intersects as _Intersects};
+use geo_traits::to_geo::*;
 use geo_traits::{
     GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
     MultiPolygonTrait, PointTrait, PolygonTrait,
@@ -155,7 +152,7 @@ impl<G: PointTrait<T = f64>> IntersectsPoint<G> for IndexedPointArray {
     type Output = BooleanArray;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
-        let rhs = point_to_geo(rhs);
+        let rhs = rhs.to_point();
         self.unary_boolean(&rhs.bounding_rect(), |geom| geom.to_geo().intersects(&rhs))
     }
 }
@@ -166,7 +163,7 @@ macro_rules! impl_intersects {
             type Output = BooleanArray;
 
             fn intersects(&self, rhs: &G) -> Self::Output {
-                let rhs = point_to_geo(rhs);
+                let rhs = rhs.to_point();
                 self.unary_boolean(&rhs.bounding_rect(), |geom| geom.to_geo().intersects(&rhs))
             }
         }
@@ -185,7 +182,7 @@ impl<G: PointTrait<T = f64>> IntersectsPoint<G> for IndexedChunkedPointArray {
     type Output = ChunkedArray<BooleanArray>;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
-        let rhs = point_to_geo(rhs);
+        let rhs = rhs.to_point();
         self.map(|chunk| IntersectsPoint::intersects(chunk, &rhs))
             .try_into()
             .unwrap()
@@ -198,7 +195,7 @@ macro_rules! impl_intersects {
             type Output = ChunkedArray<BooleanArray>;
 
             fn intersects(&self, rhs: &G) -> Self::Output {
-                let rhs = point_to_geo(rhs);
+                let rhs = rhs.to_point();
                 self.map(|chunk| IntersectsPoint::intersects(chunk, &rhs))
                     .try_into()
                     .unwrap()
@@ -225,7 +222,7 @@ impl<G: LineStringTrait<T = f64>> IntersectsLineString<G> for IndexedPointArray 
     type Output = BooleanArray;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
-        let rhs = line_string_to_geo(rhs);
+        let rhs = rhs.to_line_string();
         self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
             geom.to_geo().intersects(&rhs)
         })
@@ -238,7 +235,7 @@ macro_rules! impl_intersects {
             type Output = BooleanArray;
 
             fn intersects(&self, rhs: &G) -> Self::Output {
-                let rhs = line_string_to_geo(rhs);
+                let rhs = rhs.to_line_string();
                 self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
                     geom.to_geo().intersects(&rhs)
                 })
@@ -259,7 +256,7 @@ impl<G: LineStringTrait<T = f64>> IntersectsLineString<G> for IndexedChunkedPoin
     type Output = ChunkedArray<BooleanArray>;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
-        let rhs = line_string_to_geo(rhs);
+        let rhs = rhs.to_line_string();
         self.map(|chunk| IntersectsLineString::intersects(chunk, &rhs))
             .try_into()
             .unwrap()
@@ -272,7 +269,7 @@ macro_rules! impl_intersects {
             type Output = ChunkedArray<BooleanArray>;
 
             fn intersects(&self, rhs: &G) -> Self::Output {
-                let rhs = line_string_to_geo(rhs);
+                let rhs = rhs.to_line_string();
                 self.map(|chunk| IntersectsLineString::intersects(chunk, &rhs))
                     .try_into()
                     .unwrap()
@@ -299,7 +296,7 @@ impl<G: PolygonTrait<T = f64>> IntersectsPolygon<G> for IndexedPointArray {
     type Output = BooleanArray;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
-        let rhs = polygon_to_geo(rhs);
+        let rhs = rhs.to_polygon();
         self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
             geom.to_geo().intersects(&rhs)
         })
@@ -312,7 +309,7 @@ macro_rules! impl_intersects {
             type Output = BooleanArray;
 
             fn intersects(&self, rhs: &G) -> Self::Output {
-                let rhs = polygon_to_geo(rhs);
+                let rhs = rhs.to_polygon();
                 self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
                     geom.to_geo().intersects(&rhs)
                 })
@@ -333,7 +330,7 @@ impl<G: PolygonTrait<T = f64>> IntersectsPolygon<G> for IndexedChunkedPointArray
     type Output = ChunkedArray<BooleanArray>;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
-        let rhs = polygon_to_geo(rhs);
+        let rhs = rhs.to_polygon();
         self.map(|chunk| IntersectsPolygon::intersects(chunk, &rhs))
             .try_into()
             .unwrap()
@@ -346,7 +343,7 @@ macro_rules! impl_intersects {
             type Output = ChunkedArray<BooleanArray>;
 
             fn intersects(&self, rhs: &G) -> Self::Output {
-                let rhs = polygon_to_geo(rhs);
+                let rhs = rhs.to_polygon();
                 self.map(|chunk| IntersectsPolygon::intersects(chunk, &rhs))
                     .try_into()
                     .unwrap()
@@ -373,7 +370,7 @@ impl<G: MultiPointTrait<T = f64>> IntersectsMultiPoint<G> for IndexedPointArray 
     type Output = BooleanArray;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
-        let rhs = multi_point_to_geo(rhs);
+        let rhs = rhs.to_multi_point();
         self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
             geom.to_geo().intersects(&rhs)
         })
@@ -386,7 +383,7 @@ macro_rules! impl_intersects {
             type Output = BooleanArray;
 
             fn intersects(&self, rhs: &G) -> Self::Output {
-                let rhs = multi_point_to_geo(rhs);
+                let rhs = rhs.to_multi_point();
                 self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
                     geom.to_geo().intersects(&rhs)
                 })
@@ -407,7 +404,7 @@ impl<G: MultiPointTrait<T = f64>> IntersectsMultiPoint<G> for IndexedChunkedPoin
     type Output = ChunkedArray<BooleanArray>;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
-        let rhs = multi_point_to_geo(rhs);
+        let rhs = rhs.to_multi_point();
         self.map(|chunk| IntersectsMultiPoint::intersects(chunk, &rhs))
             .try_into()
             .unwrap()
@@ -420,7 +417,7 @@ macro_rules! impl_intersects {
             type Output = ChunkedArray<BooleanArray>;
 
             fn intersects(&self, rhs: &G) -> Self::Output {
-                let rhs = multi_point_to_geo(rhs);
+                let rhs = rhs.to_multi_point();
                 self.map(|chunk| IntersectsMultiPoint::intersects(chunk, &rhs))
                     .try_into()
                     .unwrap()
@@ -447,7 +444,7 @@ impl<G: MultiLineStringTrait<T = f64>> IntersectsMultiLineString<G> for IndexedP
     type Output = BooleanArray;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
-        let rhs = multi_line_string_to_geo(rhs);
+        let rhs = rhs.to_multi_line_string();
         self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
             geom.to_geo().intersects(&rhs)
         })
@@ -460,7 +457,7 @@ macro_rules! impl_intersects {
             type Output = BooleanArray;
 
             fn intersects(&self, rhs: &G) -> Self::Output {
-                let rhs = multi_line_string_to_geo(rhs);
+                let rhs = rhs.to_multi_line_string();
                 self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
                     geom.to_geo().intersects(&rhs)
                 })
@@ -481,7 +478,7 @@ impl<G: MultiLineStringTrait<T = f64>> IntersectsMultiLineString<G> for IndexedC
     type Output = ChunkedArray<BooleanArray>;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
-        let rhs = multi_line_string_to_geo(rhs);
+        let rhs = rhs.to_multi_line_string();
         self.map(|chunk| IntersectsMultiLineString::intersects(chunk, &rhs))
             .try_into()
             .unwrap()
@@ -494,7 +491,7 @@ macro_rules! impl_intersects {
             type Output = ChunkedArray<BooleanArray>;
 
             fn intersects(&self, rhs: &G) -> Self::Output {
-                let rhs = multi_line_string_to_geo(rhs);
+                let rhs = rhs.to_multi_line_string();
                 self.map(|chunk| IntersectsMultiLineString::intersects(chunk, &rhs))
                     .try_into()
                     .unwrap()
@@ -521,7 +518,7 @@ impl<G: MultiPolygonTrait<T = f64>> IntersectsMultiPolygon<G> for IndexedPointAr
     type Output = BooleanArray;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
-        let rhs = multi_polygon_to_geo(rhs);
+        let rhs = rhs.to_multi_polygon();
         self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
             geom.to_geo().intersects(&rhs)
         })
@@ -534,7 +531,7 @@ macro_rules! impl_intersects {
             type Output = BooleanArray;
 
             fn intersects(&self, rhs: &G) -> Self::Output {
-                let rhs = multi_polygon_to_geo(rhs);
+                let rhs = rhs.to_multi_polygon();
                 self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
                     geom.to_geo().intersects(&rhs)
                 })
@@ -555,7 +552,7 @@ impl<G: MultiPolygonTrait<T = f64>> IntersectsMultiPolygon<G> for IndexedChunked
     type Output = ChunkedArray<BooleanArray>;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
-        let rhs = multi_polygon_to_geo(rhs);
+        let rhs = rhs.to_multi_polygon();
         self.map(|chunk| IntersectsMultiPolygon::intersects(chunk, &rhs))
             .try_into()
             .unwrap()
@@ -568,7 +565,7 @@ macro_rules! impl_intersects {
             type Output = ChunkedArray<BooleanArray>;
 
             fn intersects(&self, rhs: &G) -> Self::Output {
-                let rhs = multi_polygon_to_geo(rhs);
+                let rhs = rhs.to_multi_polygon();
                 self.map(|chunk| IntersectsMultiPolygon::intersects(chunk, &rhs))
                     .try_into()
                     .unwrap()
@@ -595,7 +592,7 @@ impl<G: GeometryTrait<T = f64>> IntersectsGeometry<G> for IndexedPointArray {
     type Output = BooleanArray;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
-        let rhs = geometry_to_geo(rhs);
+        let rhs = rhs.to_geometry();
         self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
             geom.to_geo().intersects(&rhs)
         })
@@ -608,7 +605,7 @@ macro_rules! impl_intersects {
             type Output = BooleanArray;
 
             fn intersects(&self, rhs: &G) -> Self::Output {
-                let rhs = geometry_to_geo(rhs);
+                let rhs = rhs.to_geometry();
                 self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
                     geom.to_geo().intersects(&rhs)
                 })
@@ -629,7 +626,7 @@ impl<G: GeometryTrait<T = f64>> IntersectsGeometry<G> for IndexedChunkedPointArr
     type Output = ChunkedArray<BooleanArray>;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
-        let rhs = geometry_to_geo(rhs);
+        let rhs = rhs.to_geometry();
         self.map(|chunk| IntersectsGeometry::intersects(chunk, &rhs))
             .try_into()
             .unwrap()
@@ -642,7 +639,7 @@ macro_rules! impl_intersects {
             type Output = ChunkedArray<BooleanArray>;
 
             fn intersects(&self, rhs: &G) -> Self::Output {
-                let rhs = geometry_to_geo(rhs);
+                let rhs = rhs.to_geometry();
                 self.map(|chunk| IntersectsGeometry::intersects(chunk, &rhs))
                     .try_into()
                     .unwrap()
@@ -669,7 +666,7 @@ impl<G: GeometryCollectionTrait<T = f64>> IntersectsGeometryCollection<G> for In
     type Output = BooleanArray;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
-        let rhs = geometry_collection_to_geo(rhs);
+        let rhs = rhs.to_geometry_collection();
         self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
             geom.to_geo().intersects(&rhs)
         })
@@ -682,7 +679,7 @@ macro_rules! impl_intersects {
             type Output = BooleanArray;
 
             fn intersects(&self, rhs: &G) -> Self::Output {
-                let rhs = geometry_collection_to_geo(rhs);
+                let rhs = rhs.to_geometry_collection();
                 self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
                     geom.to_geo().intersects(&rhs)
                 })
@@ -705,7 +702,7 @@ impl<G: GeometryCollectionTrait<T = f64>> IntersectsGeometryCollection<G>
     type Output = ChunkedArray<BooleanArray>;
 
     fn intersects(&self, rhs: &G) -> Self::Output {
-        let rhs = geometry_collection_to_geo(rhs);
+        let rhs = rhs.to_geometry_collection();
         self.map(|chunk| IntersectsGeometryCollection::intersects(chunk, &rhs))
             .try_into()
             .unwrap()
@@ -718,7 +715,7 @@ macro_rules! impl_intersects {
             type Output = ChunkedArray<BooleanArray>;
 
             fn intersects(&self, rhs: &G) -> Self::Output {
-                let rhs = geometry_collection_to_geo(rhs);
+                let rhs = rhs.to_geometry_collection();
                 self.map(|chunk| IntersectsGeometryCollection::intersects(chunk, &rhs))
                     .try_into()
                     .unwrap()

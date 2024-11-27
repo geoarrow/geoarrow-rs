@@ -2,10 +2,10 @@ use crate::algorithm::native::bounding_rect::bounding_rect_linestring;
 use crate::algorithm::native::eq::line_string_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, LineStringArray};
-use crate::io::geo::line_string_to_geo;
 use crate::scalar::Coord;
 use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
+use geo_traits::to_geo::ToGeoLineString;
 use geo_traits::LineStringTrait;
 use rstar::{RTreeObject, AABB};
 
@@ -111,7 +111,7 @@ impl From<LineString<'_>> for geo::LineString {
 
 impl From<&LineString<'_>> for geo::LineString {
     fn from(value: &LineString<'_>) -> Self {
-        line_string_to_geo(value)
+        value.to_line_string()
     }
 }
 

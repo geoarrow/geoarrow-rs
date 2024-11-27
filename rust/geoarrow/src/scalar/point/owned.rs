@@ -1,7 +1,7 @@
 use crate::algorithm::native::eq::point_eq;
 use crate::array::{CoordBuffer, PointArray};
-use crate::io::geo::point_to_geo;
 use crate::scalar::{Coord, Point};
+use geo_traits::to_geo::ToGeoPoint;
 use geo_traits::PointTrait;
 
 #[derive(Clone, Debug)]
@@ -65,7 +65,7 @@ impl From<OwnedPoint> for geo::Point {
 
 impl From<&OwnedPoint> for geo::Point {
     fn from(value: &OwnedPoint) -> Self {
-        point_to_geo(value)
+        value.to_point()
     }
 }
 
