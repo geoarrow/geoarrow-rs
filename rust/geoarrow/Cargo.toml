@@ -45,13 +45,13 @@ rayon = ["dep:rayon"]
 
 
 [dependencies]
-arrow = { version = "53", features = ["ffi"] }
-arrow-array = { version = "53", features = ["chrono-tz"] }
-arrow-buffer = "53"
-arrow-cast = { version = "53" }
-arrow-data = "53"
-arrow-ipc = "53"
-arrow-schema = "53"
+arrow = { version = "53.3", features = ["ffi"] }
+arrow-array = { version = "53.3", features = ["chrono-tz"] }
+arrow-buffer = "53.3"
+arrow-cast = { version = "53.3" }
+arrow-data = "53.3"
+arrow-ipc = "53.3"
+arrow-schema = "53.3"
 async-stream = { version = "0.3", optional = true }
 async-trait = { version = "0.1", optional = true }
 bytes = { version = "1.5.0", optional = true }
@@ -97,8 +97,8 @@ sqlx = { version = "0.7", optional = true, default-features = false, features = 
 thiserror = "1"
 tokio = { version = "1", default-features = false, optional = true }
 # wkt = "0.11"
-wkt = { git = "https://github.com/georust/wkt", rev = "447be533e0a76188ca499eb8a0c74fc4e8a0f823" }
-wkb = { git = "https://github.com/kylebarron/wkb", rev = "e0f29b4a24104356464cc123925b459d81c40e52" }
+wkt = { git = "https://github.com/georust/wkt", rev = "94c32cdbdaf9523b3d71cd4b2d5d3a033efadacb" }
+wkb = { git = "https://github.com/kylebarron/wkb", rev = "51a95fff591c7e66ea10f6effaba0d48b3b0a392" }
 
 
 [dev-dependencies]
