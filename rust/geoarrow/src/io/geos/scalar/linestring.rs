@@ -47,7 +47,10 @@ impl GEOSLineString {
 
 impl LineStringTrait for GEOSLineString {
     type T = f64;
-    type CoordType<'b> = GEOSConstCoord where Self: 'b;
+    type CoordType<'b>
+        = GEOSConstCoord
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
@@ -73,7 +76,10 @@ impl LineStringTrait for GEOSLineString {
 
 impl LineStringTrait for &GEOSLineString {
     type T = f64;
-    type CoordType<'b> = GEOSConstCoord where Self: 'b;
+    type CoordType<'b>
+        = GEOSConstCoord
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
@@ -118,7 +124,10 @@ impl<'a> GEOSConstLineString<'a> {
 
 impl<'a> LineStringTrait for GEOSConstLineString<'a> {
     type T = f64;
-    type CoordType<'b> = GEOSConstCoord where Self: 'b;
+    type CoordType<'b>
+        = GEOSConstCoord
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
@@ -144,7 +153,10 @@ impl<'a> LineStringTrait for GEOSConstLineString<'a> {
 
 impl<'a> LineStringTrait for &'a GEOSConstLineString<'a> {
     type T = f64;
-    type CoordType<'b> = GEOSConstCoord where Self: 'b;
+    type CoordType<'b>
+        = GEOSConstCoord
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {

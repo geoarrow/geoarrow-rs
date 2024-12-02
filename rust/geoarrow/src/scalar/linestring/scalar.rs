@@ -69,7 +69,10 @@ impl<'a> NativeScalar for LineString<'a> {
 
 impl<'a> LineStringTrait for LineString<'a> {
     type T = f64;
-    type CoordType<'b> = Coord<'a> where Self: 'b;
+    type CoordType<'b>
+        = Coord<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         self.coords.dim().into()
@@ -87,7 +90,10 @@ impl<'a> LineStringTrait for LineString<'a> {
 
 impl<'a> LineStringTrait for &'a LineString<'a> {
     type T = f64;
-    type CoordType<'b> = Coord<'a> where Self: 'b;
+    type CoordType<'b>
+        = Coord<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         self.coords.dim().into()

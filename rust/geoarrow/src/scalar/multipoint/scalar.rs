@@ -71,7 +71,10 @@ impl<'a> NativeScalar for MultiPoint<'a> {
 
 impl<'a> MultiPointTrait for MultiPoint<'a> {
     type T = f64;
-    type PointType<'b> = Point<'a> where Self: 'b;
+    type PointType<'b>
+        = Point<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.coords.dim() {
@@ -92,7 +95,10 @@ impl<'a> MultiPointTrait for MultiPoint<'a> {
 
 impl<'a> MultiPointTrait for &'a MultiPoint<'a> {
     type T = f64;
-    type PointType<'b> = Point<'a> where Self: 'b;
+    type PointType<'b>
+        = Point<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.coords.dim() {

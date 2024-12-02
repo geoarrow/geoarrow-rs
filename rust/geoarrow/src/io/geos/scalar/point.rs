@@ -38,7 +38,10 @@ impl GEOSPoint {
 
 impl PointTrait for GEOSPoint {
     type T = f64;
-    type CoordType<'a> = GEOSConstCoord where Self: 'a;
+    type CoordType<'a>
+        = GEOSConstCoord
+    where
+        Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
@@ -64,7 +67,10 @@ impl PointTrait for GEOSPoint {
 
 impl PointTrait for &GEOSPoint {
     type T = f64;
-    type CoordType<'a> = GEOSConstCoord where Self: 'a;
+    type CoordType<'a>
+        = GEOSConstCoord
+    where
+        Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
@@ -108,7 +114,10 @@ impl<'a> GEOSConstPoint<'a> {
 
 impl<'a> PointTrait for GEOSConstPoint<'a> {
     type T = f64;
-    type CoordType<'b> = GEOSConstCoord where Self: 'b;
+    type CoordType<'b>
+        = GEOSConstCoord
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
@@ -134,7 +143,10 @@ impl<'a> PointTrait for GEOSConstPoint<'a> {
 
 impl<'a> PointTrait for &GEOSConstPoint<'a> {
     type T = f64;
-    type CoordType<'b> = GEOSConstCoord where Self: 'b;
+    type CoordType<'b>
+        = GEOSConstCoord
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {

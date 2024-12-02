@@ -56,7 +56,10 @@ impl GEOSMultiLineString {
 
 impl MultiLineStringTrait for GEOSMultiLineString {
     type T = f64;
-    type LineStringType<'a> = GEOSConstLineString<'a> where Self: 'a;
+    type LineStringType<'a>
+        = GEOSConstLineString<'a>
+    where
+        Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {

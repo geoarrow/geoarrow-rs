@@ -52,7 +52,10 @@ impl From<OwnedLineString> for LineStringArray {
 
 impl LineStringTrait for OwnedLineString {
     type T = f64;
-    type CoordType<'b> = Coord<'b> where Self: 'b;
+    type CoordType<'b>
+        = Coord<'b>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         self.coords.dim().into()

@@ -46,7 +46,10 @@ impl From<OwnedRect> for RectArray {
 
 impl RectTrait for OwnedRect {
     type T = f64;
-    type CoordType<'b> = SeparatedCoord<'b> where Self: 'b;
+    type CoordType<'b>
+        = SeparatedCoord<'b>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.lower.dim() {
