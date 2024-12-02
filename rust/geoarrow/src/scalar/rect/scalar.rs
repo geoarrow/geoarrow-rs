@@ -53,7 +53,10 @@ impl<'a> NativeScalar for Rect<'a> {
 // TODO: support 3d rects
 impl<'a> RectTrait for Rect<'a> {
     type T = f64;
-    type CoordType<'b> = SeparatedCoord<'a> where Self: 'b;
+    type CoordType<'b>
+        = SeparatedCoord<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         self.lower.dim.into()

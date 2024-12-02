@@ -72,7 +72,10 @@ impl From<OwnedMultiLineString> for MultiLineStringArray {
 
 impl MultiLineStringTrait for OwnedMultiLineString {
     type T = f64;
-    type LineStringType<'b> = LineString<'b> where Self: 'b;
+    type LineStringType<'b>
+        = LineString<'b>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.coords.dim() {

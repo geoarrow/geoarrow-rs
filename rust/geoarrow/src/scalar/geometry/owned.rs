@@ -68,16 +68,46 @@ impl<'a> From<Geometry<'a>> for OwnedGeometry {
 
 impl GeometryTrait for OwnedGeometry {
     type T = f64;
-    type PointType<'b> = OwnedPoint where Self: 'b;
-    type LineStringType<'b> = OwnedLineString where Self: 'b;
-    type PolygonType<'b> = OwnedPolygon where Self: 'b;
-    type MultiPointType<'b> = OwnedMultiPoint where Self: 'b;
-    type MultiLineStringType<'b> = OwnedMultiLineString where Self: 'b;
-    type MultiPolygonType<'b> = OwnedMultiPolygon where Self: 'b;
-    type GeometryCollectionType<'b> = OwnedGeometryCollection where Self: 'b;
-    type RectType<'b> = OwnedRect where Self: 'b;
-    type TriangleType<'b> = UnimplementedTriangle<f64> where Self: 'b;
-    type LineType<'b> = UnimplementedLine<f64> where Self: 'b;
+    type PointType<'b>
+        = OwnedPoint
+    where
+        Self: 'b;
+    type LineStringType<'b>
+        = OwnedLineString
+    where
+        Self: 'b;
+    type PolygonType<'b>
+        = OwnedPolygon
+    where
+        Self: 'b;
+    type MultiPointType<'b>
+        = OwnedMultiPoint
+    where
+        Self: 'b;
+    type MultiLineStringType<'b>
+        = OwnedMultiLineString
+    where
+        Self: 'b;
+    type MultiPolygonType<'b>
+        = OwnedMultiPolygon
+    where
+        Self: 'b;
+    type GeometryCollectionType<'b>
+        = OwnedGeometryCollection
+    where
+        Self: 'b;
+    type RectType<'b>
+        = OwnedRect
+    where
+        Self: 'b;
+    type TriangleType<'b>
+        = UnimplementedTriangle<f64>
+    where
+        Self: 'b;
+    type LineType<'b>
+        = UnimplementedLine<f64>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self {

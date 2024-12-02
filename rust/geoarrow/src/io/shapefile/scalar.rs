@@ -40,7 +40,10 @@ impl<'a> CoordTrait for Point<'a> {
 
 impl<'a> PointTrait for Point<'a> {
     type T = f64;
-    type CoordType<'b> = Point<'a> where Self: 'b;
+    type CoordType<'b>
+        = Point<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         geo_traits::Dimensions::Xy
@@ -91,7 +94,10 @@ impl<'a> CoordTrait for PointZ<'a> {
 
 impl<'a> PointTrait for PointZ<'a> {
     type T = f64;
-    type CoordType<'b> = PointZ<'a> where Self: 'b;
+    type CoordType<'b>
+        = PointZ<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         if self.0.m <= NO_DATA {
@@ -110,7 +116,10 @@ pub(super) struct LineString<'a>(&'a [shapefile::Point]);
 
 impl<'a> LineStringTrait for LineString<'a> {
     type T = f64;
-    type CoordType<'b> = Point<'a> where Self: 'b;
+    type CoordType<'b>
+        = Point<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         geo_traits::Dimensions::Xy
@@ -129,7 +138,10 @@ pub(super) struct LineStringZ<'a>(&'a [shapefile::PointZ]);
 
 impl<'a> LineStringTrait for LineStringZ<'a> {
     type T = f64;
-    type CoordType<'b> = PointZ<'a> where Self: 'b;
+    type CoordType<'b>
+        = PointZ<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         // TODO: actually check whether M value exists
@@ -152,7 +164,10 @@ pub(super) struct Polygon {
 
 impl<'a> PolygonTrait for &'a Polygon {
     type T = f64;
-    type RingType<'b> = LineString<'a> where Self: 'b;
+    type RingType<'b>
+        = LineString<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         geo_traits::Dimensions::Xy
@@ -178,7 +193,10 @@ pub(super) struct PolygonZ {
 
 impl<'a> PolygonTrait for &'a PolygonZ {
     type T = f64;
-    type RingType<'b> = LineStringZ<'a> where Self: 'b;
+    type RingType<'b>
+        = LineStringZ<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         // TODO: actually check whether M value exists
@@ -208,7 +226,10 @@ impl<'a> MultiPoint<'a> {
 
 impl<'a> MultiPointTrait for MultiPoint<'a> {
     type T = f64;
-    type PointType<'b> = Point<'a> where Self: 'b;
+    type PointType<'b>
+        = Point<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         geo_traits::Dimensions::Xy
@@ -232,7 +253,10 @@ impl<'a> MultiPointZ<'a> {
 }
 impl<'a> MultiPointTrait for MultiPointZ<'a> {
     type T = f64;
-    type PointType<'b> = PointZ<'a> where Self: 'b;
+    type PointType<'b>
+        = PointZ<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         // TODO: actually check whether M value exists
@@ -258,7 +282,10 @@ impl<'a> Polyline<'a> {
 
 impl<'a> MultiLineStringTrait for Polyline<'a> {
     type T = f64;
-    type LineStringType<'b> = LineString<'a> where Self: 'b;
+    type LineStringType<'b>
+        = LineString<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         geo_traits::Dimensions::Xy
@@ -283,7 +310,10 @@ impl<'a> PolylineZ<'a> {
 
 impl<'a> MultiLineStringTrait for PolylineZ<'a> {
     type T = f64;
-    type LineStringType<'b> = LineStringZ<'a> where Self: 'b;
+    type LineStringType<'b>
+        = LineStringZ<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         // TODO: actually check whether M value exists

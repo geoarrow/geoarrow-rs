@@ -63,7 +63,10 @@ impl<'a> NativeScalar for GeometryCollection<'a> {
 
 impl<'a> GeometryCollectionTrait for GeometryCollection<'a> {
     type T = f64;
-    type GeometryType<'b> = Geometry<'a> where Self: 'b;
+    type GeometryType<'b>
+        = Geometry<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.array.dimension() {
@@ -84,7 +87,10 @@ impl<'a> GeometryCollectionTrait for GeometryCollection<'a> {
 
 impl<'a> GeometryCollectionTrait for &'a GeometryCollection<'a> {
     type T = f64;
-    type GeometryType<'b> = Geometry<'a> where Self: 'b;
+    type GeometryType<'b>
+        = Geometry<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.array.dimension() {

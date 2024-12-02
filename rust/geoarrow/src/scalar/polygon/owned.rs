@@ -72,7 +72,10 @@ impl From<OwnedPolygon> for PolygonArray {
 
 impl PolygonTrait for OwnedPolygon {
     type T = f64;
-    type RingType<'b> = LineString<'b> where Self: 'b;
+    type RingType<'b>
+        = LineString<'b>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.coords.dim() {
