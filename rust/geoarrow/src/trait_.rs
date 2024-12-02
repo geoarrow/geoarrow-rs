@@ -310,8 +310,8 @@ pub trait NativeArray: ArrayBase {
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// let metadata = ArrayMetadata {
-    ///     crs: None,
     ///     edges: Some(Edges::Spherical),
+    ///     ..Default::default()
     /// };
     /// let metadata = array.with_metadata(metadata.into());
     /// ```
@@ -397,8 +397,8 @@ pub trait SerializedArray: ArrayBase {
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// let metadata = ArrayMetadata {
-    ///     crs: None,
     ///     edges: Some(Edges::Spherical),
+    ///     ..Default::default()
     /// };
     /// let metadata = array.with_metadata(metadata.into());
     /// ```
@@ -917,8 +917,8 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     /// use geoarrow::datatypes::Dimension;
     ///
     /// let metadata = ArrayMetadata {
-    ///     crs: None,
     ///     edges: Some(Edges::Spherical),
+    ///     ..Default::default()
     /// };
     /// let builder = PointBuilder::with_geom_capacity_and_options(
     ///     Dimension::XY,
@@ -972,8 +972,8 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     ///
     /// let mut builder = PointBuilder::new(Dimension::XY);
     /// let metadata = ArrayMetadata {
-    ///     crs: None,
     ///     edges: Some(Edges::Spherical),
+    ///     ..Default::default()
     /// };
     /// builder.set_metadata(metadata.into());
     /// ```

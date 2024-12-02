@@ -653,8 +653,14 @@ impl From<GeoParquetColumnMetadata> for ArrayMetadata {
         } else {
             None
         };
+        let crs_type = if value.crs.is_some() {
+            Some("projjson".to_string())
+        } else {
+            None
+        };
         ArrayMetadata {
             crs: value.crs,
+            crs_type,
             edges,
         }
     }
