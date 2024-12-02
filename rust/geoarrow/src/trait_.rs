@@ -311,7 +311,7 @@ pub trait NativeArray: ArrayBase {
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// let metadata = ArrayMetadata {
     ///     edges: Some(Edges::Spherical),
-    ///     ..Default::default(),
+    ///     ..Default::default()
     /// };
     /// let metadata = array.with_metadata(metadata.into());
     /// ```
@@ -398,7 +398,7 @@ pub trait SerializedArray: ArrayBase {
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// let metadata = ArrayMetadata {
     ///     edges: Some(Edges::Spherical),
-    ///     ..Default::default(),
+    ///     ..Default::default()
     /// };
     /// let metadata = array.with_metadata(metadata.into());
     /// ```
@@ -918,7 +918,7 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     ///
     /// let metadata = ArrayMetadata {
     ///     edges: Some(Edges::Spherical),
-    ///     ..Default::default(),
+    ///     ..Default::default()
     /// };
     /// let builder = PointBuilder::with_geom_capacity_and_options(
     ///     Dimension::XY,
@@ -973,7 +973,7 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     /// let mut builder = PointBuilder::new(Dimension::XY);
     /// let metadata = ArrayMetadata {
     ///     edges: Some(Edges::Spherical),
-    ///     ..Default::default(),
+    ///     ..Default::default()
     /// };
     /// builder.set_metadata(metadata.into());
     /// ```
