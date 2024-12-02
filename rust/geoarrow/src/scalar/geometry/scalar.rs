@@ -22,7 +22,7 @@ pub enum Geometry<'a> {
     Rect(crate::scalar::Rect<'a>),
 }
 
-impl<'a> NativeScalar for Geometry<'a> {
+impl NativeScalar for Geometry<'_> {
     type ScalarGeo = geo::Geometry;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -48,7 +48,7 @@ impl<'a> NativeScalar for Geometry<'a> {
     }
 }
 
-impl<'a> GeometryTrait for Geometry<'a> {
+impl GeometryTrait for Geometry<'_> {
     type T = f64;
     type PointType<'b>
         = Point<'b>

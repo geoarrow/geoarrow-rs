@@ -112,7 +112,7 @@ impl<'a> GEOSConstPoint<'a> {
     }
 }
 
-impl<'a> PointTrait for GEOSConstPoint<'a> {
+impl PointTrait for GEOSConstPoint<'_> {
     type T = f64;
     type CoordType<'b>
         = GEOSConstCoord
@@ -141,7 +141,7 @@ impl<'a> PointTrait for GEOSConstPoint<'a> {
     }
 }
 
-impl<'a> PointTrait for &GEOSConstPoint<'a> {
+impl PointTrait for &GEOSConstPoint<'_> {
     type T = f64;
     type CoordType<'b>
         = GEOSConstCoord

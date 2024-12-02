@@ -60,7 +60,7 @@ impl<'a> MultiLineString<'a> {
     }
 }
 
-impl<'a> NativeScalar for MultiLineString<'a> {
+impl NativeScalar for MultiLineString<'_> {
     type ScalarGeo = geo::MultiLineString;
 
     fn to_geo(&self) -> Self::ScalarGeo {

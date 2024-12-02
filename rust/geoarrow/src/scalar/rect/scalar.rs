@@ -32,7 +32,7 @@ impl<'a> Rect<'a> {
     }
 }
 
-impl<'a> NativeScalar for Rect<'a> {
+impl NativeScalar for Rect<'_> {
     type ScalarGeo = geo::Rect;
 
     fn to_geo(&self) -> Self::ScalarGeo {

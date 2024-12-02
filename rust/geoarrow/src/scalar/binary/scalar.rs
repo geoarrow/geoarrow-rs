@@ -38,7 +38,7 @@ impl<'a, O: OffsetSizeTrait> WKB<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> NativeScalar for WKB<'a, O> {
+impl<O: OffsetSizeTrait> NativeScalar for WKB<'_, O> {
     type ScalarGeo = geo::Geometry;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -55,7 +55,7 @@ impl<'a, O: OffsetSizeTrait> NativeScalar for WKB<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> AsRef<[u8]> for WKB<'a, O> {
+impl<O: OffsetSizeTrait> AsRef<[u8]> for WKB<'_, O> {
     fn as_ref(&self) -> &[u8] {
         self.arr.value(self.geom_index)
     }

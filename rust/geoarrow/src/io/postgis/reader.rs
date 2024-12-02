@@ -28,13 +28,13 @@ impl<'a, 'r: 'a> Decode<'r, Postgres> for PostgisEWKBGeometry<'a> {
     }
 }
 
-impl<'a> Type<Postgres> for PostgisEWKBGeometry<'a> {
+impl Type<Postgres> for PostgisEWKBGeometry<'_> {
     fn type_info() -> <Postgres as sqlx::Database>::TypeInfo {
         PgTypeInfo::with_name("geometry")
     }
 }
 
-impl<'a> GeozeroGeometry for PostgisEWKBGeometry<'a> {
+impl GeozeroGeometry for PostgisEWKBGeometry<'_> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,

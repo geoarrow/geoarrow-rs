@@ -25,7 +25,7 @@ impl<'a> Point<'a> {
     }
 }
 
-impl<'a> NativeScalar for Point<'a> {
+impl NativeScalar for Point<'_> {
     type ScalarGeo = geo::Point;
 
     fn to_geo(&self) -> Self::ScalarGeo {

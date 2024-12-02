@@ -22,7 +22,7 @@ impl<'a> GEOSConstLinearRing<'a> {
     }
 }
 
-impl<'a> LineStringTrait for GEOSConstLinearRing<'a> {
+impl LineStringTrait for GEOSConstLinearRing<'_> {
     type T = f64;
     type CoordType<'c>
         = GEOSConstCoord

@@ -14,7 +14,7 @@ impl<'a> Point<'a> {
 }
 
 // Shapefile points can't be null, so we implement both traits on them
-impl<'a> CoordTrait for Point<'a> {
+impl CoordTrait for Point<'_> {
     type T = f64;
 
     fn dim(&self) -> geo_traits::Dimensions {
@@ -63,7 +63,7 @@ impl<'a> PointZ<'a> {
     }
 }
 
-impl<'a> CoordTrait for PointZ<'a> {
+impl CoordTrait for PointZ<'_> {
     type T = f64;
 
     fn dim(&self) -> geo_traits::Dimensions {

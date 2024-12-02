@@ -87,16 +87,16 @@ pub trait Unary<'a>: ArrayAccessor<'a> {
     }
 }
 
-impl<'a> Unary<'a> for PointArray {}
-impl<'a> Unary<'a> for LineStringArray {}
-impl<'a> Unary<'a> for PolygonArray {}
-impl<'a> Unary<'a> for MultiPointArray {}
-impl<'a> Unary<'a> for MultiLineStringArray {}
-impl<'a> Unary<'a> for MultiPolygonArray {}
-impl<'a> Unary<'a> for MixedGeometryArray {}
-impl<'a> Unary<'a> for GeometryCollectionArray {}
-impl<'a> Unary<'a> for RectArray {}
-impl<'a, O: OffsetSizeTrait> Unary<'a> for WKBArray<O> {}
+impl Unary<'_> for PointArray {}
+impl Unary<'_> for LineStringArray {}
+impl Unary<'_> for PolygonArray {}
+impl Unary<'_> for MultiPointArray {}
+impl Unary<'_> for MultiLineStringArray {}
+impl Unary<'_> for MultiPolygonArray {}
+impl Unary<'_> for MixedGeometryArray {}
+impl Unary<'_> for GeometryCollectionArray {}
+impl Unary<'_> for RectArray {}
+impl<O: OffsetSizeTrait> Unary<'_> for WKBArray<O> {}
 
 #[allow(dead_code)]
 pub trait UnaryPoint<'a>: ArrayAccessor<'a> + NativeArray {
@@ -146,12 +146,12 @@ pub trait UnaryPoint<'a>: ArrayAccessor<'a> + NativeArray {
     }
 }
 
-impl<'a> UnaryPoint<'a> for PointArray {}
-impl<'a> UnaryPoint<'a> for LineStringArray {}
-impl<'a> UnaryPoint<'a> for PolygonArray {}
-impl<'a> UnaryPoint<'a> for MultiPointArray {}
-impl<'a> UnaryPoint<'a> for MultiLineStringArray {}
-impl<'a> UnaryPoint<'a> for MultiPolygonArray {}
-impl<'a> UnaryPoint<'a> for MixedGeometryArray {}
-impl<'a> UnaryPoint<'a> for GeometryCollectionArray {}
-impl<'a> UnaryPoint<'a> for RectArray {}
+impl UnaryPoint<'_> for PointArray {}
+impl UnaryPoint<'_> for LineStringArray {}
+impl UnaryPoint<'_> for PolygonArray {}
+impl UnaryPoint<'_> for MultiPointArray {}
+impl UnaryPoint<'_> for MultiLineStringArray {}
+impl UnaryPoint<'_> for MultiPolygonArray {}
+impl UnaryPoint<'_> for MixedGeometryArray {}
+impl UnaryPoint<'_> for GeometryCollectionArray {}
+impl UnaryPoint<'_> for RectArray {}

@@ -124,7 +124,7 @@ impl<'a> GEOSConstPolygon<'a> {
     }
 }
 
-impl<'a> PolygonTrait for GEOSConstPolygon<'a> {
+impl PolygonTrait for GEOSConstPolygon<'_> {
     type T = f64;
     type RingType<'c>
         = GEOSConstLinearRing<'c>
