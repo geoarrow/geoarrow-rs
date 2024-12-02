@@ -430,8 +430,8 @@ impl NativeType {
     ///
     /// let geo_data_type = NativeType::Point(Default::default(), 2.try_into().unwrap());
     /// let metadata = ArrayMetadata {
-    ///     crs: None,
     ///     edges: Some(Edges::Spherical),
+    ///     ..Default::default()
     /// };
     /// let field = geo_data_type.to_field_with_metadata("geometry", false, &metadata);
     /// ```
