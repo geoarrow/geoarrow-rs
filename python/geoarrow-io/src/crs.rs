@@ -1,3 +1,5 @@
+use geoarrow::array::metadata::ArrayMetadata;
+use geoarrow::io::crs::CRSTransform;
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
@@ -8,7 +10,7 @@ use crate::error::PyGeoArrowResult;
 
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Clone, Debug)]
-pub struct CRS(Value);
+pub struct CRS(ArrayMetadata);
 
 impl<'py> FromPyObject<'py> for CRS {
     fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
@@ -27,19 +29,23 @@ impl<'py> FromPyObject<'py> for CRS {
         let projjson_string = ob
             .call_method0(intern!(py, "to_json"))?
             .extract::<String>()?;
-        let value = serde_json::from_str(&projjson_string)
+        let projjson_value = serde_json::from_str(&projjson_string)
             .map_err(|err| PyValueError::new_err(err.to_string()))?;
-        Ok(Self(value))
+        Ok(Self(ArrayMetadata {
+            crs: Some(projjson_value),
+            crs_type: Some("projjson".to_string()),
+            ..Default::default()
+        }))
     }
 }
 
 impl CRS {
-    pub fn new(value: Value) -> Self {
-        Self(value)
+    pub fn from_projjson(value: Value) -> Self {
+        Self(ArrayMetadata::from_projjson(value))
     }
 
     #[allow(dead_code)]
-    pub fn into_inner(self) -> Value {
+    pub fn into_inner(self) -> ArrayMetadata {
         self.0
     }
 
@@ -50,5 +56,27 @@ impl CRS {
         let args = PyTuple::new_bound(py, vec![serde_json::to_string(&self.0)?]);
         let crs_obj = crs_class.call_method1(intern!(py, "from_json"), args)?;
         Ok(crs_obj.into())
+    }
+}
+
+/// An implementation of [CRSTransform] using pyproj.
+pub struct PyprojCRSTransform {}
+
+impl PyprojCRSTransform {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl CRSTransform for PyprojCRSTransform {
+    fn _convert_to_projjson(
+        &self,
+        meta: &geoarrow::array::metadata::ArrayMetadata,
+    ) -> geoarrow::error::Result<Option<Value>> {
+        todo!()
+    }
+
+    fn _convert_to_wkt(&self, meta: &ArrayMetadata) -> geoarrow::error::Result<Option<String>> {
+        todo!()
     }
 }

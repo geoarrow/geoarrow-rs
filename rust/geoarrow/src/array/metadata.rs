@@ -77,6 +77,41 @@ impl ArrayMetadata {
     pub fn should_serialize(&self) -> bool {
         self.crs.is_some() || self.edges.is_some()
     }
+
+    pub fn from_projjson(value: Value) -> Self {
+        Self::default().with_projjson(value)
+    }
+
+    pub fn from_wkt2_2019(value: String) -> Self {
+        Self::default().with_wkt2_2019(value)
+    }
+
+    pub fn from_unknown_crs_type(value: String) -> Self {
+        Self::default().with_unknown_crs_type(value)
+    }
+
+    pub fn with_projjson(mut self, value: Value) -> Self {
+        self.crs = Some(value);
+        self.crs_type = Some("projjson".to_string());
+        self
+    }
+
+    pub fn with_wkt2_2019(mut self, value: String) -> Self {
+        self.crs = Some(Value::String(value));
+        self.crs_type = Some("wkt2:2019".to_string());
+        self
+    }
+
+    pub fn with_unknown_crs_type(mut self, value: String) -> Self {
+        self.crs = Some(Value::String(value));
+        self.crs_type = None;
+        self
+    }
+
+    pub fn with_edges(mut self, edges: Edges) -> Self {
+        self.edges = Some(edges);
+        self
+    }
 }
 
 impl TryFrom<&Field> for ArrayMetadata {

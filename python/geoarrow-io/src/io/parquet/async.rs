@@ -129,8 +129,7 @@ impl ParquetFile {
     #[pyo3(signature = (column_name=None))]
     fn crs(&self, py: Python, column_name: Option<&str>) -> PyGeoArrowResult<PyObject> {
         if let Some(crs) = self.geoparquet_meta.crs(column_name)? {
-            // TODO: remove clone
-            CRS::new(crs.clone()).to_pyproj(py)
+            CRS::from_projjson(crs.clone()).to_pyproj(py)
         } else {
             Ok(py.None())
         }
@@ -387,8 +386,7 @@ impl ParquetDataset {
     #[pyo3(signature = (column_name=None))]
     fn crs(&self, py: Python, column_name: Option<&str>) -> PyGeoArrowResult<PyObject> {
         if let Some(crs) = self.meta.crs(column_name)? {
-            // TODO: remove clone
-            CRS::new(crs.clone()).to_pyproj(py)
+            CRS::from_projjson(crs.clone()).to_pyproj(py)
         } else {
             Ok(py.None())
         }

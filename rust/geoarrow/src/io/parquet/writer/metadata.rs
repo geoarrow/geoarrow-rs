@@ -10,6 +10,7 @@ use crate::array::metadata::{ArrayMetadata, Edges};
 use crate::array::{AsNativeArray, CoordType, NativeArrayDyn};
 use crate::datatypes::{Dimension, NativeType, SerializedType};
 use crate::error::Result;
+use crate::io::crs::{CRSTransform, DefaultCRSTransform};
 use crate::io::parquet::metadata::{
     GeoParquetColumnEncoding, GeoParquetColumnMetadata, GeoParquetGeometryType, GeoParquetMetadata,
 };
@@ -38,21 +39,31 @@ pub struct ColumnInfo {
 }
 
 impl ColumnInfo {
+    #[allow(clippy::borrowed_box)]
     pub fn try_new(
         name: String,
         writer_encoding: GeoParquetWriterEncoding,
         data_type: &NativeType,
         array_meta: ArrayMetadata,
+        crs_transform: Option<&Box<dyn CRSTransform>>,
     ) -> Result<Self> {
         let encoding = GeoParquetColumnEncoding::try_new(writer_encoding, data_type)?;
         let geometry_types = get_geometry_types(data_type);
+
+        let crs = if let Some(crs_transform) = crs_transform {
+            crs_transform.extract_projjson(&array_meta)?
+        } else {
+            DefaultCRSTransform::default().extract_projjson(&array_meta)?
+        };
+        let edges = array_meta.edges;
+
         Ok(Self {
             name,
             encoding,
             geometry_types,
             bbox: None,
-            crs: array_meta.crs,
-            edges: array_meta.edges,
+            crs,
+            edges,
         })
     }
 
@@ -168,8 +179,13 @@ impl GeoParquetMetadataBuilder {
 
                 let geo_data_type = field.as_ref().try_into()?;
 
-                let column_info =
-                    ColumnInfo::try_new(column_name, options.encoding, &geo_data_type, array_meta)?;
+                let column_info = ColumnInfo::try_new(
+                    column_name,
+                    options.encoding,
+                    &geo_data_type,
+                    array_meta,
+                    options.crs_transform.as_ref(),
+                )?;
 
                 columns.insert(col_idx, column_info);
             }

@@ -1,5 +1,6 @@
 use std::fs::File;
 
+use crate::crs::PyprojCRSTransform;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::io::input::sync::{FileReader, FileWriter};
 use crate::io::input::{construct_reader, AnyFileReader};
@@ -130,6 +131,7 @@ pub fn write_parquet(
 ) -> PyGeoArrowResult<()> {
     let options = GeoParquetWriterOptions {
         encoding: encoding.into(),
+        crs_transform: Some(Box::new(PyprojCRSTransform::new())),
         ..Default::default()
     };
     _write_geoparquet(table.into_reader()?, file, &options)?;
@@ -146,8 +148,11 @@ impl ParquetWriter {
     #[new]
     pub fn new(py: Python, file: PyObject, schema: PySchema) -> PyGeoArrowResult<Self> {
         let file_writer = file.extract::<FileWriter>(py)?;
-        let geoparquet_writer =
-            _GeoParquetWriter::try_new(file_writer, schema.as_ref(), &Default::default())?;
+        let options = GeoParquetWriterOptions {
+            crs_transform: Some(Box::new(PyprojCRSTransform::new())),
+            ..Default::default()
+        };
+        let geoparquet_writer = _GeoParquetWriter::try_new(file_writer, schema.as_ref(), &options)?;
         Ok(Self {
             file: Some(geoparquet_writer),
         })

@@ -340,6 +340,9 @@ impl GeoParquetDatasetMetadata {
     }
 
     /// Access the Coordinate Reference System (CRS) of the given column
+    ///
+    /// This is returned as a PROJJSON object. I.e. the variant returned should always be
+    /// `Value::Object`.
     pub fn crs(&self, column_name: Option<&str>) -> Result<Option<&Value>> {
         if let Some(geo_meta) = self.geo_metadata() {
             let column_name = column_name.unwrap_or(geo_meta.primary_column.as_str());

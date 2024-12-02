@@ -1,12 +1,57 @@
 use std::io::Write;
 
-use flatgeobuf::{FgbWriter, FgbWriterOptions};
+use flatgeobuf::{FgbCrs, FgbWriter, FgbWriterOptions};
 use geozero::GeozeroDatasource;
 
+use crate::array::metadata::ArrayMetadata;
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::Result;
+use crate::io::crs::CRSTransform;
 use crate::io::stream::RecordBatchReader;
 use crate::schema::GeoSchemaExt;
+
+/// Options for the FlatGeobuf writer
+#[derive(Debug)]
+pub struct FlatGeobufWriterOptions {
+    /// Write index and sort features accordingly.
+    pub write_index: bool,
+    /// Detect geometry type when `geometry_type` is Unknown.
+    pub detect_type: bool,
+    /// Convert single to multi geometries, if `geometry_type` is multi type or Unknown
+    pub promote_to_multi: bool,
+    // Dataset title
+    pub title: Option<String>,
+    // Dataset description (intended for free form long text)
+    pub description: Option<String>,
+    // Dataset metadata (intended to be application specific and
+    pub metadata: Option<String>,
+
+    /// A method for transforming CRS to WKT
+    pub crs_transform: Option<Box<dyn CRSTransform>>,
+}
+
+impl FlatGeobufWriterOptions {
+    fn create_fgb_options(&self, geo_data_type: N array_meta: &ArrayMetadata) -> FgbWriterOptions {
+        FgbCrs {
+
+        }
+
+        FgbWriterOptions {
+            write_index: value.write_index,
+            detect_type: (),
+            promote_to_multi: (),
+            crs: (),
+            has_z: (),
+            has_m: (),
+            has_t: (),
+            has_tm: (),
+            title: (),
+            description: (),
+            metadata: (),
+        }
+    }
+}
+
 
 // TODO: always write CRS saved in Table metadata (you can do this by adding an option)
 /// Write a Table to a FlatGeobuf file.
