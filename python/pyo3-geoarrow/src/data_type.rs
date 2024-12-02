@@ -77,7 +77,10 @@ impl PyNativeType {
     }
 
     #[allow(unused_variables)]
-    fn __arrow_c_schema__<'py>(&'py self, py: Python<'py>) -> PyGeoArrowResult<Bound<PyCapsule>> {
+    fn __arrow_c_schema__<'py>(
+        &'py self,
+        py: Python<'py>,
+    ) -> PyGeoArrowResult<Bound<'py, PyCapsule>> {
         let field = self.0.to_field("", true);
         Ok(to_schema_pycapsule(py, field)?)
     }
@@ -184,7 +187,10 @@ impl PySerializedType {
     }
 
     #[allow(unused_variables)]
-    fn __arrow_c_schema__<'py>(&'py self, py: Python<'py>) -> PyGeoArrowResult<Bound<PyCapsule>> {
+    fn __arrow_c_schema__<'py>(
+        &'py self,
+        py: Python<'py>,
+    ) -> PyGeoArrowResult<Bound<'py, PyCapsule>> {
         let field = self.0.to_field("", true);
         Ok(to_schema_pycapsule(py, field)?)
     }
