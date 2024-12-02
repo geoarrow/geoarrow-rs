@@ -52,7 +52,7 @@ impl<'a> MultiPoint<'a> {
     }
 }
 
-impl<'a> NativeScalar for MultiPoint<'a> {
+impl NativeScalar for MultiPoint<'_> {
     type ScalarGeo = geo::MultiPoint;
 
     fn to_geo(&self) -> Self::ScalarGeo {

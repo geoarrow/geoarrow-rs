@@ -50,7 +50,7 @@ impl<'a> LineString<'a> {
     }
 }
 
-impl<'a> NativeScalar for LineString<'a> {
+impl NativeScalar for LineString<'_> {
     type ScalarGeo = geo::LineString;
 
     fn to_geo(&self) -> Self::ScalarGeo {

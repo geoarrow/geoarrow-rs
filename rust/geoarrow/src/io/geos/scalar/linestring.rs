@@ -122,7 +122,7 @@ impl<'a> GEOSConstLineString<'a> {
     }
 }
 
-impl<'a> LineStringTrait for GEOSConstLineString<'a> {
+impl LineStringTrait for GEOSConstLineString<'_> {
     type T = f64;
     type CoordType<'b>
         = GEOSConstCoord

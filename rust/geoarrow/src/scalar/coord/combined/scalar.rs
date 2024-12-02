@@ -11,7 +11,7 @@ pub enum Coord<'a> {
     Interleaved(InterleavedCoord<'a>),
 }
 
-impl<'a> Coord<'a> {
+impl Coord<'_> {
     /// Return `true` if all values in the coordinate are f64::NAN
     pub(crate) fn is_nan(&self) -> bool {
         match self {
@@ -21,7 +21,7 @@ impl<'a> Coord<'a> {
     }
 }
 
-impl<'a> NativeScalar for Coord<'a> {
+impl NativeScalar for Coord<'_> {
     type ScalarGeo = geo::Coord;
 
     fn to_geo(&self) -> Self::ScalarGeo {

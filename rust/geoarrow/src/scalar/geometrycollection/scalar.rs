@@ -44,7 +44,7 @@ impl<'a> GeometryCollection<'a> {
     }
 }
 
-impl<'a> NativeScalar for GeometryCollection<'a> {
+impl NativeScalar for GeometryCollection<'_> {
     type ScalarGeo = geo::GeometryCollection;
 
     fn to_geo(&self) -> Self::ScalarGeo {

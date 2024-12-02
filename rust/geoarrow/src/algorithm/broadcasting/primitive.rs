@@ -37,7 +37,7 @@ where
     }
 }
 
-impl<'a, T> Iterator for BroadcastIter<'a, T>
+impl<T> Iterator for BroadcastIter<'_, T>
 where
     T: ArrowPrimitiveType,
 {

@@ -62,7 +62,7 @@ impl<'a> Polygon<'a> {
     }
 }
 
-impl<'a> NativeScalar for Polygon<'a> {
+impl NativeScalar for Polygon<'_> {
     type ScalarGeo = geo::Polygon;
 
     fn to_geo(&self) -> Self::ScalarGeo {
