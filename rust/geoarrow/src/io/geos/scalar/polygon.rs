@@ -71,7 +71,10 @@ impl GEOSPolygon {
 
 impl PolygonTrait for GEOSPolygon {
     type T = f64;
-    type RingType<'a> = GEOSConstLinearRing<'a> where Self: 'a;
+    type RingType<'a>
+        = GEOSConstLinearRing<'a>
+    where
+        Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
@@ -121,9 +124,12 @@ impl<'a> GEOSConstPolygon<'a> {
     }
 }
 
-impl<'a> PolygonTrait for GEOSConstPolygon<'a> {
+impl PolygonTrait for GEOSConstPolygon<'_> {
     type T = f64;
-    type RingType<'c> = GEOSConstLinearRing< 'c> where Self: 'c;
+    type RingType<'c>
+        = GEOSConstLinearRing<'c>
+    where
+        Self: 'c;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {

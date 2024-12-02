@@ -15,14 +15,14 @@ pub struct InterleavedCoord<'a> {
     pub(crate) dim: Dimension,
 }
 
-impl<'a> InterleavedCoord<'a> {
+impl InterleavedCoord<'_> {
     /// Return `true` if all values in the coordinate are f64::NAN
     pub(crate) fn is_nan(&self) -> bool {
         (0..self.dim.size()).all(|coord_dim| self.nth_or_panic(coord_dim).is_nan())
     }
 }
 
-impl<'a> NativeScalar for InterleavedCoord<'a> {
+impl NativeScalar for InterleavedCoord<'_> {
     type ScalarGeo = geo::Coord;
 
     fn to_geo(&self) -> Self::ScalarGeo {

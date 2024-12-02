@@ -60,7 +60,7 @@ impl<'a> MultiLineString<'a> {
     }
 }
 
-impl<'a> NativeScalar for MultiLineString<'a> {
+impl NativeScalar for MultiLineString<'_> {
     type ScalarGeo = geo::MultiLineString;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -79,7 +79,10 @@ impl<'a> NativeScalar for MultiLineString<'a> {
 
 impl<'a> MultiLineStringTrait for MultiLineString<'a> {
     type T = f64;
-    type LineStringType<'b> = LineString<'a> where Self: 'b;
+    type LineStringType<'b>
+        = LineString<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         self.coords.dim().into()
@@ -97,7 +100,10 @@ impl<'a> MultiLineStringTrait for MultiLineString<'a> {
 
 impl<'a> MultiLineStringTrait for &'a MultiLineString<'a> {
     type T = f64;
-    type LineStringType<'b> = LineString<'a> where Self: 'b;
+    type LineStringType<'b>
+        = LineString<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         self.coords.dim().into()

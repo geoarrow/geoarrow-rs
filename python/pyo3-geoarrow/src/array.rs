@@ -70,7 +70,7 @@ impl PyNativeArray {
         &'py self,
         py: Python<'py>,
         requested_schema: Option<Bound<'py, PyCapsule>>,
-    ) -> PyGeoArrowResult<Bound<PyTuple>> {
+    ) -> PyGeoArrowResult<Bound<'py, PyTuple>> {
         let field = self.0.extension_field();
         let array = self.0.to_array_ref();
         Ok(to_array_pycapsules(py, field, &array, requested_schema)?)
@@ -82,7 +82,7 @@ impl PyNativeArray {
     // }
 
     #[getter]
-    fn __geo_interface__<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<Bound<PyAny>> {
+    fn __geo_interface__<'py>(&'py self, py: Python<'py>) -> PyGeoArrowResult<Bound<'py, PyAny>> {
         // Note: We create a Table out of this array so that each row can be its own Feature in a
         // FeatureCollection
 
@@ -214,7 +214,7 @@ impl PySerializedArray {
         &'py self,
         py: Python<'py>,
         requested_schema: Option<Bound<'py, PyCapsule>>,
-    ) -> PyGeoArrowResult<Bound<PyTuple>> {
+    ) -> PyGeoArrowResult<Bound<'py, PyTuple>> {
         let field = self.0.extension_field();
         let array = self.0.to_array_ref();
         Ok(to_array_pycapsules(py, field, &array, requested_schema)?)

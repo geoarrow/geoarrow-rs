@@ -25,7 +25,7 @@ impl<'a> Point<'a> {
     }
 }
 
-impl<'a> NativeScalar for Point<'a> {
+impl NativeScalar for Point<'_> {
     type ScalarGeo = geo::Point;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -44,7 +44,10 @@ impl<'a> NativeScalar for Point<'a> {
 
 impl<'a> PointTrait for Point<'a> {
     type T = f64;
-    type CoordType<'b> = Coord<'a> where Self: 'b;
+    type CoordType<'b>
+        = Coord<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         self.coords.dim().into()
@@ -62,7 +65,10 @@ impl<'a> PointTrait for Point<'a> {
 
 impl<'a> PointTrait for &Point<'a> {
     type T = f64;
-    type CoordType<'b> = Coord<'a> where Self: 'b;
+    type CoordType<'b>
+        = Coord<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         self.coords.dim().into()

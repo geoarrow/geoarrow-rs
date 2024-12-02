@@ -53,7 +53,10 @@ impl From<OwnedMultiPoint> for MultiPointArray {
 
 impl MultiPointTrait for OwnedMultiPoint {
     type T = f64;
-    type PointType<'b> = Point<'b> where Self: 'b;
+    type PointType<'b>
+        = Point<'b>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.coords.dim() {

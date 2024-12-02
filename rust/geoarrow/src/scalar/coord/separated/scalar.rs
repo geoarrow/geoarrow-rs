@@ -14,14 +14,14 @@ pub struct SeparatedCoord<'a> {
     pub(crate) dim: Dimension,
 }
 
-impl<'a> SeparatedCoord<'a> {
+impl SeparatedCoord<'_> {
     /// Return `true` if all values in the coordinate are f64::NAN
     pub(crate) fn is_nan(&self) -> bool {
         (0..self.dim.size()).all(|coord_dim| self.nth_or_panic(coord_dim).is_nan())
     }
 }
 
-impl<'a> NativeScalar for SeparatedCoord<'a> {
+impl NativeScalar for SeparatedCoord<'_> {
     type ScalarGeo = geo::Coord;
 
     fn to_geo(&self) -> Self::ScalarGeo {

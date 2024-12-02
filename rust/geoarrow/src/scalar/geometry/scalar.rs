@@ -22,7 +22,7 @@ pub enum Geometry<'a> {
     Rect(crate::scalar::Rect<'a>),
 }
 
-impl<'a> NativeScalar for Geometry<'a> {
+impl NativeScalar for Geometry<'_> {
     type ScalarGeo = geo::Geometry;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -48,18 +48,48 @@ impl<'a> NativeScalar for Geometry<'a> {
     }
 }
 
-impl<'a> GeometryTrait for Geometry<'a> {
+impl GeometryTrait for Geometry<'_> {
     type T = f64;
-    type PointType<'b> = Point<'b> where Self: 'b;
-    type LineStringType<'b> = LineString<'b> where Self: 'b;
-    type PolygonType<'b> = Polygon<'b> where Self: 'b;
-    type MultiPointType<'b> = MultiPoint<'b> where Self: 'b;
-    type MultiLineStringType<'b> = MultiLineString<'b> where Self: 'b;
-    type MultiPolygonType<'b> = MultiPolygon<'b> where Self: 'b;
-    type GeometryCollectionType<'b> = GeometryCollection<'b> where Self: 'b;
-    type RectType<'b> = Rect<'b> where Self: 'b;
-    type LineType<'b> = UnimplementedLine<f64> where Self: 'b;
-    type TriangleType<'b> = UnimplementedTriangle<f64> where Self: 'b;
+    type PointType<'b>
+        = Point<'b>
+    where
+        Self: 'b;
+    type LineStringType<'b>
+        = LineString<'b>
+    where
+        Self: 'b;
+    type PolygonType<'b>
+        = Polygon<'b>
+    where
+        Self: 'b;
+    type MultiPointType<'b>
+        = MultiPoint<'b>
+    where
+        Self: 'b;
+    type MultiLineStringType<'b>
+        = MultiLineString<'b>
+    where
+        Self: 'b;
+    type MultiPolygonType<'b>
+        = MultiPolygon<'b>
+    where
+        Self: 'b;
+    type GeometryCollectionType<'b>
+        = GeometryCollection<'b>
+    where
+        Self: 'b;
+    type RectType<'b>
+        = Rect<'b>
+    where
+        Self: 'b;
+    type LineType<'b>
+        = UnimplementedLine<f64>
+    where
+        Self: 'b;
+    type TriangleType<'b>
+        = UnimplementedTriangle<f64>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self {
@@ -104,16 +134,46 @@ impl<'a> GeometryTrait for Geometry<'a> {
 
 impl<'a> GeometryTrait for &'a Geometry<'a> {
     type T = f64;
-    type PointType<'b> = Point<'b> where Self: 'b;
-    type LineStringType<'b> = LineString<'b> where Self: 'b;
-    type PolygonType<'b> = Polygon<'b> where Self: 'b;
-    type MultiPointType<'b> = MultiPoint<'b> where Self: 'b;
-    type MultiLineStringType<'b> = MultiLineString<'b> where Self: 'b;
-    type MultiPolygonType<'b> = MultiPolygon<'b> where Self: 'b;
-    type GeometryCollectionType<'b> = GeometryCollection<'b> where Self: 'b;
-    type RectType<'b> = Rect<'b> where Self: 'b;
-    type LineType<'b> = UnimplementedLine<f64> where Self: 'b;
-    type TriangleType<'b> = UnimplementedTriangle<f64> where Self: 'b;
+    type PointType<'b>
+        = Point<'b>
+    where
+        Self: 'b;
+    type LineStringType<'b>
+        = LineString<'b>
+    where
+        Self: 'b;
+    type PolygonType<'b>
+        = Polygon<'b>
+    where
+        Self: 'b;
+    type MultiPointType<'b>
+        = MultiPoint<'b>
+    where
+        Self: 'b;
+    type MultiLineStringType<'b>
+        = MultiLineString<'b>
+    where
+        Self: 'b;
+    type MultiPolygonType<'b>
+        = MultiPolygon<'b>
+    where
+        Self: 'b;
+    type GeometryCollectionType<'b>
+        = GeometryCollection<'b>
+    where
+        Self: 'b;
+    type RectType<'b>
+        = Rect<'b>
+    where
+        Self: 'b;
+    type LineType<'b>
+        = UnimplementedLine<f64>
+    where
+        Self: 'b;
+    type TriangleType<'b>
+        = UnimplementedTriangle<f64>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self {

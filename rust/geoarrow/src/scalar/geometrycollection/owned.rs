@@ -58,7 +58,10 @@ impl From<OwnedGeometryCollection> for GeometryCollectionArray {
 
 impl GeometryCollectionTrait for OwnedGeometryCollection {
     type T = f64;
-    type GeometryType<'b> = Geometry<'b> where Self: 'b;
+    type GeometryType<'b>
+        = Geometry<'b>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.array.dimension() {

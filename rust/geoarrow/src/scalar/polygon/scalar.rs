@@ -62,7 +62,7 @@ impl<'a> Polygon<'a> {
     }
 }
 
-impl<'a> NativeScalar for Polygon<'a> {
+impl NativeScalar for Polygon<'_> {
     type ScalarGeo = geo::Polygon;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -81,7 +81,10 @@ impl<'a> NativeScalar for Polygon<'a> {
 
 impl<'a> PolygonTrait for Polygon<'a> {
     type T = f64;
-    type RingType<'b> = LineString<'a> where Self: 'b;
+    type RingType<'b>
+        = LineString<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.coords.dim() {
@@ -111,7 +114,10 @@ impl<'a> PolygonTrait for Polygon<'a> {
 
 impl<'a> PolygonTrait for &'a Polygon<'a> {
     type T = f64;
-    type RingType<'b> = LineString<'a> where Self: 'b;
+    type RingType<'b>
+        = LineString<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.coords.dim() {

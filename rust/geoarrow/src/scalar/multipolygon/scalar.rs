@@ -72,7 +72,7 @@ impl<'a> MultiPolygon<'a> {
     }
 }
 
-impl<'a> NativeScalar for MultiPolygon<'a> {
+impl NativeScalar for MultiPolygon<'_> {
     type ScalarGeo = geo::MultiPolygon;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -91,7 +91,10 @@ impl<'a> NativeScalar for MultiPolygon<'a> {
 
 impl<'a> MultiPolygonTrait for MultiPolygon<'a> {
     type T = f64;
-    type PolygonType<'b> = Polygon<'a> where Self: 'b;
+    type PolygonType<'b>
+        = Polygon<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.coords.dim() {
@@ -117,7 +120,10 @@ impl<'a> MultiPolygonTrait for MultiPolygon<'a> {
 
 impl<'a> MultiPolygonTrait for &'a MultiPolygon<'a> {
     type T = f64;
-    type PolygonType<'b> = Polygon<'a> where Self: 'b;
+    type PolygonType<'b>
+        = Polygon<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.coords.dim() {
