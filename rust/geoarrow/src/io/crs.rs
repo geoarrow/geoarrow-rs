@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use serde_json::Value;
 
 use crate::array::metadata::ArrayMetadata;
@@ -5,7 +7,7 @@ use crate::error::{GeoArrowError, Result};
 
 /// CRS transforms used for writing GeoArrow data to file formats that require different CRS
 /// representations.
-pub trait CRSTransform {
+pub trait CRSTransform: Debug {
     /// Convert the CRS contained in this ArrayMetadata to a PROJJSON object.
     ///
     /// Users should prefer calling `extract_projjson`, which will first unwrap the underlying
