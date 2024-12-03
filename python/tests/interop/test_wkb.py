@@ -28,3 +28,13 @@ def test_geometry_collection():
     assert retour_shapely.geoms[0].geoms[0] == point
     assert retour_shapely.geoms[1].geoms[0] == point2
     assert retour_shapely.geoms[2].geoms[0] == line_string
+
+
+def test_ewkb_srid():
+    geoms = shapely.points([0, 1, 2, 3], [4, 5, 6, 7])
+    geoms = shapely.set_srid(geoms, 4326)
+    assert shapely.get_srid(geoms)[0] == 4326
+
+    ewkb_array = pa.array(shapely.to_wkb(geoms, flavor="extended", include_srid=True))
+    retour = to_shapely(from_wkb(ewkb_array))
+    assert assert_geometries_equal(geoms, retour)
