@@ -271,35 +271,6 @@ impl TryFrom<WKBArray<i64>> for WKBArray<i32> {
     }
 }
 
-// impl TryFrom<&BinaryArray<i64>> for WKBArray {
-//     type Error = GeoArrowError;
-
-//     fn try_from(value: &BinaryArray<i64>) -> Result<Self, Self::Error> {
-//         Ok(Self::new(value.clone()))
-//     }
-// }
-
-// impl TryFrom<&dyn Array> for WKBArray {
-//     type Error = GeoArrowError;
-
-//     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
-//         match value.data_type() {
-//             DataType::Binary => {
-//                 let downcasted = value.as_any().downcast_ref::<BinaryArray<i32>>().unwrap();
-//                 downcasted.try_into()
-//             }
-//             DataType::LargeBinary => {
-//                 let downcasted = value.as_any().downcast_ref::<BinaryArray<i64>>().unwrap();
-//                 downcasted.try_into()
-//             }
-//             _ => Err(GeoArrowError::General(format!(
-//                 "Unexpected type: {:?}",
-//                 value.data_type()
-//             ))),
-//         }
-//     }
-// }
-
 impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for WKBArray<O> {
     type Error = GeoArrowError;
 

@@ -107,6 +107,7 @@ impl MixedGeometryStreamBuilder {
         }
     }
 
+    #[allow(dead_code)]
     pub fn push_null(&mut self) {
         self.builder.push_null()
     }
