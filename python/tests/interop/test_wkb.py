@@ -37,4 +37,4 @@ def test_ewkb_srid():
 
     ewkb_array = pa.array(shapely.to_wkb(geoms, flavor="extended", include_srid=True))
     retour = to_shapely(from_wkb(ewkb_array))
-    assert assert_geometries_equal(geoms, retour)
+    assert all(geoms == retour)
