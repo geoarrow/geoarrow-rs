@@ -190,8 +190,6 @@ impl UnknownGeometryArray {
         )
     }
 
-    // TODO: restore to enable downcasting
-
     pub fn has_points(&self, dim: Dimension) -> bool {
         match dim {
             Dimension::XY => !self.point_xy.is_empty(),
@@ -233,6 +231,8 @@ impl UnknownGeometryArray {
             Dimension::XYZ => !self.mpolygon_xyz.is_empty(),
         }
     }
+
+    // TODO: restore to enable downcasting
 
     // pub fn has_only_points(&self) -> bool {
     //     self.has_points()
@@ -926,7 +926,6 @@ impl Default for UnknownGeometryArray {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::array::MixedGeometryArray;
     use crate::test::{linestring, multilinestring, multipoint, multipolygon, point, polygon};
 
     #[test]
@@ -936,7 +935,36 @@ mod test {
             geo::Geometry::Point(point::p1()),
             geo::Geometry::Point(point::p2()),
         ];
-        let arr: MixedGeometryArray = (geoms.as_slice(), Dimension::XY).try_into().unwrap();
+
+        let arr: UnknownGeometryArray = UnknownGeometryBuilder::from_geometries(
+            geoms.as_slice(),
+            Default::default(),
+            Default::default(),
+            false,
+        )
+        .unwrap()
+        .finish();
+
+        assert_eq!(arr.value_as_geo(0), geo::Geometry::Point(point::p0()));
+        assert_eq!(arr.value_as_geo(1), geo::Geometry::Point(point::p1()));
+        assert_eq!(arr.value_as_geo(2), geo::Geometry::Point(point::p2()));
+    }
+
+    #[test]
+    fn geo_roundtrip_accurate_multi_points() {
+        let geoms: Vec<geo::Geometry> = vec![
+            geo::Geometry::Point(point::p0()),
+            geo::Geometry::Point(point::p1()),
+            geo::Geometry::Point(point::p2()),
+        ];
+        let arr: UnknownGeometryArray = UnknownGeometryBuilder::from_geometries(
+            geoms.as_slice(),
+            Default::default(),
+            Default::default(),
+            true,
+        )
+        .unwrap()
+        .finish();
 
         assert_eq!(
             arr.value_as_geo(0),
@@ -962,20 +990,19 @@ mod test {
             geo::Geometry::MultiLineString(multilinestring::ml0()),
             geo::Geometry::MultiPolygon(multipolygon::mp0()),
         ];
-        let arr: MixedGeometryArray = (geoms.as_slice(), Dimension::XY).try_into().unwrap();
 
-        assert_eq!(
-            arr.value_as_geo(0),
-            geo::Geometry::MultiPoint(geo::MultiPoint(vec![point::p0()]))
-        );
-        assert_eq!(
-            arr.value_as_geo(1),
-            geo::Geometry::MultiLineString(geo::MultiLineString(vec![linestring::ls0()]))
-        );
-        assert_eq!(
-            arr.value_as_geo(2),
-            geo::Geometry::MultiPolygon(geo::MultiPolygon(vec![polygon::p0()]))
-        );
+        let arr: UnknownGeometryArray = UnknownGeometryBuilder::from_geometries(
+            geoms.as_slice(),
+            Default::default(),
+            Default::default(),
+            false,
+        )
+        .unwrap()
+        .finish();
+
+        assert_eq!(arr.value_as_geo(0), geoms[0]);
+        assert_eq!(arr.value_as_geo(1), geoms[1]);
+        assert_eq!(arr.value_as_geo(2), geoms[2]);
         assert_eq!(arr.value_as_geo(3), geoms[3]);
         assert_eq!(arr.value_as_geo(4), geoms[4]);
         assert_eq!(arr.value_as_geo(5), geoms[5]);
@@ -991,24 +1018,23 @@ mod test {
             geo::Geometry::MultiLineString(multilinestring::ml0()),
             geo::Geometry::MultiPolygon(multipolygon::mp0()),
         ];
-        let arr: MixedGeometryArray = (geoms.as_slice(), Dimension::XY).try_into().unwrap();
+
+        let arr: UnknownGeometryArray = UnknownGeometryBuilder::from_geometries(
+            geoms.as_slice(),
+            Default::default(),
+            Default::default(),
+            false,
+        )
+        .unwrap()
+        .finish();
 
         // Round trip to/from arrow-rs
         let arrow_array = arr.into_arrow();
-        let round_trip_arr: MixedGeometryArray = (&arrow_array).try_into().unwrap();
+        let round_trip_arr: UnknownGeometryArray = (&arrow_array).try_into().unwrap();
 
-        assert_eq!(
-            round_trip_arr.value_as_geo(0),
-            geo::Geometry::MultiPoint(geo::MultiPoint(vec![point::p0()]))
-        );
-        assert_eq!(
-            round_trip_arr.value_as_geo(1),
-            geo::Geometry::MultiLineString(geo::MultiLineString(vec![linestring::ls0()]))
-        );
-        assert_eq!(
-            round_trip_arr.value_as_geo(2),
-            geo::Geometry::MultiPolygon(geo::MultiPolygon(vec![polygon::p0()]))
-        );
+        assert_eq!(round_trip_arr.value_as_geo(0), geoms[0]);
+        assert_eq!(round_trip_arr.value_as_geo(1), geoms[1]);
+        assert_eq!(round_trip_arr.value_as_geo(2), geoms[2]);
         assert_eq!(round_trip_arr.value_as_geo(3), geoms[3]);
         assert_eq!(round_trip_arr.value_as_geo(4), geoms[4]);
         assert_eq!(round_trip_arr.value_as_geo(5), geoms[5]);
@@ -1021,11 +1047,19 @@ mod test {
             geo::Geometry::MultiLineString(multilinestring::ml0()),
             geo::Geometry::MultiPolygon(multipolygon::mp0()),
         ];
-        let arr: MixedGeometryArray = (geoms.as_slice(), Dimension::XY).try_into().unwrap();
+
+        let arr: UnknownGeometryArray = UnknownGeometryBuilder::from_geometries(
+            geoms.as_slice(),
+            Default::default(),
+            Default::default(),
+            false,
+        )
+        .unwrap()
+        .finish();
 
         // Round trip to/from arrow-rs
         let arrow_array = arr.into_arrow();
-        let round_trip_arr: MixedGeometryArray = (&arrow_array).try_into().unwrap();
+        let round_trip_arr: UnknownGeometryArray = (&arrow_array).try_into().unwrap();
 
         assert_eq!(round_trip_arr.value_as_geo(0), geoms[0]);
         assert_eq!(round_trip_arr.value_as_geo(1), geoms[1]);
@@ -1038,11 +1072,19 @@ mod test {
             geo::Geometry::MultiPoint(multipoint::mp0()),
             geo::Geometry::MultiPolygon(multipolygon::mp0()),
         ];
-        let arr: MixedGeometryArray = (geoms.as_slice(), Dimension::XY).try_into().unwrap();
+
+        let arr: UnknownGeometryArray = UnknownGeometryBuilder::from_geometries(
+            geoms.as_slice(),
+            Default::default(),
+            Default::default(),
+            false,
+        )
+        .unwrap()
+        .finish();
 
         // Round trip to/from arrow-rs
         let arrow_array = arr.into_arrow();
-        let round_trip_arr: MixedGeometryArray = (&arrow_array).try_into().unwrap();
+        let round_trip_arr: UnknownGeometryArray = (&arrow_array).try_into().unwrap();
 
         assert_eq!(round_trip_arr.value_as_geo(0), geoms[0]);
         assert_eq!(round_trip_arr.value_as_geo(1), geoms[1]);

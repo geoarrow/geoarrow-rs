@@ -307,6 +307,7 @@ impl<'a> UnknownGeometryBuilder {
     pub fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) -> Result<()> {
         if let Some(point) = value {
             if self.prefer_multi {
+                self.add_multi_point_type(point.dim().try_into().unwrap());
                 match point.dim() {
                     Dimensions::Xy | Dimensions::Unknown(2) => {
                         self.mpoint_xy.push_point(Some(point))?;
@@ -320,8 +321,8 @@ impl<'a> UnknownGeometryBuilder {
                         )))
                     }
                 }
-                self.add_multi_point_type(point.dim().try_into().unwrap());
             } else {
+                self.add_point_type(point.dim().try_into().unwrap());
                 match point.dim() {
                     Dimensions::Xy | Dimensions::Unknown(2) => {
                         self.point_xy.push_point(Some(point));
@@ -335,8 +336,6 @@ impl<'a> UnknownGeometryBuilder {
                         )))
                     }
                 }
-
-                self.add_point_type(point.dim().try_into().unwrap());
             }
         } else {
             self.push_null();
@@ -374,6 +373,7 @@ impl<'a> UnknownGeometryBuilder {
     ) -> Result<()> {
         if let Some(line_string) = value {
             if self.prefer_multi {
+                self.add_multi_line_string_type(line_string.dim().try_into().unwrap());
                 match line_string.dim() {
                     Dimensions::Xy | Dimensions::Unknown(2) => {
                         self.mline_string_xy.push_line_string(Some(line_string))?;
@@ -387,8 +387,8 @@ impl<'a> UnknownGeometryBuilder {
                         )))
                     }
                 }
-                self.add_multi_line_string_type(line_string.dim().try_into().unwrap());
             } else {
+                self.add_line_string_type(line_string.dim().try_into().unwrap());
                 match line_string.dim() {
                     Dimensions::Xy | Dimensions::Unknown(2) => {
                         self.line_string_xy.push_line_string(Some(line_string))?;
@@ -402,8 +402,6 @@ impl<'a> UnknownGeometryBuilder {
                         )))
                     }
                 }
-
-                self.add_line_string_type(line_string.dim().try_into().unwrap());
             }
         } else {
             self.push_null();
@@ -440,6 +438,7 @@ impl<'a> UnknownGeometryBuilder {
     pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> Result<()> {
         if let Some(polygon) = value {
             if self.prefer_multi {
+                self.add_multi_polygon_type(polygon.dim().try_into().unwrap());
                 match polygon.dim() {
                     Dimensions::Xy | Dimensions::Unknown(2) => {
                         self.mpolygon_xy.push_polygon(Some(polygon))?;
@@ -453,8 +452,8 @@ impl<'a> UnknownGeometryBuilder {
                         )))
                     }
                 }
-                self.add_multi_polygon_type(polygon.dim().try_into().unwrap());
             } else {
+                self.add_polygon_type(polygon.dim().try_into().unwrap());
                 match polygon.dim() {
                     Dimensions::Xy | Dimensions::Unknown(2) => {
                         self.polygon_xy.push_polygon(Some(polygon))?;
@@ -468,8 +467,6 @@ impl<'a> UnknownGeometryBuilder {
                         )))
                     }
                 }
-
-                self.add_polygon_type(polygon.dim().try_into().unwrap());
             }
         } else {
             self.push_null();
@@ -504,6 +501,7 @@ impl<'a> UnknownGeometryBuilder {
         value: Option<&impl MultiPointTrait<T = f64>>,
     ) -> Result<()> {
         if let Some(multi_point) = value {
+            self.add_multi_point_type(multi_point.dim().try_into().unwrap());
             match multi_point.dim() {
                 Dimensions::Xy | Dimensions::Unknown(2) => {
                     self.mpoint_xy.push_multi_point(Some(multi_point))?;
@@ -517,7 +515,6 @@ impl<'a> UnknownGeometryBuilder {
                     )))
                 }
             }
-            self.add_multi_point_type(multi_point.dim().try_into().unwrap());
         } else {
             self.push_null();
         };
@@ -550,6 +547,7 @@ impl<'a> UnknownGeometryBuilder {
         value: Option<&impl MultiLineStringTrait<T = f64>>,
     ) -> Result<()> {
         if let Some(multi_line_string) = value {
+            self.add_multi_line_string_type(multi_line_string.dim().try_into().unwrap());
             match multi_line_string.dim() {
                 Dimensions::Xy | Dimensions::Unknown(2) => {
                     self.mline_string_xy
@@ -565,7 +563,6 @@ impl<'a> UnknownGeometryBuilder {
                     )))
                 }
             }
-            self.add_multi_line_string_type(multi_line_string.dim().try_into().unwrap());
         } else {
             self.push_null();
         };
@@ -600,6 +597,7 @@ impl<'a> UnknownGeometryBuilder {
         value: Option<&impl MultiPolygonTrait<T = f64>>,
     ) -> Result<()> {
         if let Some(multi_polygon) = value {
+            self.add_multi_polygon_type(multi_polygon.dim().try_into().unwrap());
             match multi_polygon.dim() {
                 Dimensions::Xy | Dimensions::Unknown(2) => {
                     self.mpolygon_xy.push_multi_polygon(Some(multi_polygon))?;
@@ -613,7 +611,6 @@ impl<'a> UnknownGeometryBuilder {
                     )))
                 }
             }
-            self.add_multi_polygon_type(multi_polygon.dim().try_into().unwrap());
         } else {
             self.push_null();
         };
