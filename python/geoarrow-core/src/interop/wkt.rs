@@ -29,11 +29,11 @@ pub fn from_wkt(
             let geo_array = match array.data_type() {
                 DataType::Utf8 => {
                     let wkt_arr = WKTArray::<i32>::try_from((array.as_ref(), field.as_ref()))?;
-                    read_wkt(&wkt_arr, coord_type, true)?
+                    read_wkt(&wkt_arr, coord_type, false)?
                 }
                 DataType::LargeUtf8 => {
                     let wkt_arr = WKTArray::<i64>::try_from((array.as_ref(), field.as_ref()))?;
-                    read_wkt(&wkt_arr, coord_type, true)?
+                    read_wkt(&wkt_arr, coord_type, false)?
                 }
                 other => {
                     return Err(
@@ -53,7 +53,7 @@ pub fn from_wkt(
                         .map(|chunk| WKTArray::<i32>::try_from((chunk.as_ref(), field.as_ref())))
                         .collect::<Result<Vec<_>, _>>()?;
                     let ca = ChunkedWKTArray::new(wkt_chunks);
-                    let parsed = ca.try_map(|chunk| read_wkt(chunk, coord_type, true))?;
+                    let parsed = ca.try_map(|chunk| read_wkt(chunk, coord_type, false))?;
                     let parsed_refs = parsed.iter().map(|x| x.as_ref()).collect::<Vec<_>>();
                     ChunkedNativeArrayDyn::from_geoarrow_chunks(parsed_refs.as_ref())?
                 }
@@ -63,7 +63,7 @@ pub fn from_wkt(
                         .map(|chunk| WKTArray::<i64>::try_from((chunk.as_ref(), field.as_ref())))
                         .collect::<Result<Vec<_>, _>>()?;
                     let ca = ChunkedWKTArray::new(wkt_chunks);
-                    let parsed = ca.try_map(|chunk| read_wkt(chunk, coord_type, true))?;
+                    let parsed = ca.try_map(|chunk| read_wkt(chunk, coord_type, false))?;
                     let parsed_refs = parsed.iter().map(|x| x.as_ref()).collect::<Vec<_>>();
                     ChunkedNativeArrayDyn::from_geoarrow_chunks(parsed_refs.as_ref())?
                 }

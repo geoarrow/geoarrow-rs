@@ -157,11 +157,11 @@ impl TryFrom<&dyn Array> for WKTArray<i32> {
 
     fn try_from(value: &dyn Array) -> Result<Self> {
         match value.data_type() {
-            DataType::Binary => {
+            DataType::Utf8 => {
                 let downcasted = value.as_any().downcast_ref::<StringArray>().unwrap();
                 Ok(downcasted.clone().into())
             }
-            DataType::LargeBinary => {
+            DataType::LargeUtf8 => {
                 let downcasted = value.as_any().downcast_ref::<LargeStringArray>().unwrap();
                 let geom_array: WKTArray<i64> = downcasted.clone().into();
                 geom_array.try_into()
@@ -179,12 +179,12 @@ impl TryFrom<&dyn Array> for WKTArray<i64> {
 
     fn try_from(value: &dyn Array) -> Result<Self> {
         match value.data_type() {
-            DataType::Binary => {
+            DataType::Utf8 => {
                 let downcasted = value.as_string::<i32>();
                 let geom_array: WKTArray<i32> = downcasted.clone().into();
                 Ok(geom_array.into())
             }
-            DataType::LargeBinary => {
+            DataType::LargeUtf8 => {
                 let downcasted = value.as_any().downcast_ref::<LargeStringArray>().unwrap();
                 Ok(downcasted.clone().into())
             }

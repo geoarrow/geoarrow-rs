@@ -469,7 +469,7 @@ impl NativeType {
             Mixed(_, _) => "geoarrow.geometry",
             GeometryCollection(_, _) => "geoarrow.geometrycollection",
             Rect(_) => "geoarrow.box",
-            Unknown(_) => "geoarrow.geometry",
+            Unknown(_) => "geoarrow.unknown",
         }
     }
 
@@ -970,6 +970,114 @@ fn parse_rect(field: &Field) -> NativeType {
     }
 }
 
+fn parse_unknown(field: &Field) -> Result<NativeType> {
+    if let DataType::Union(fields, _mode) = field.data_type() {
+        let mut coord_types: HashSet<CoordType> = HashSet::new();
+
+        fields.iter().try_for_each(|(type_id, field)| {
+            match type_id {
+                1 => match parse_point(field)? {
+                    NativeType::Point(ct, Dimension::XY) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                2 => match parse_linestring(field)? {
+                    NativeType::LineString(ct, Dimension::XY) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                3 => match parse_polygon(field)? {
+                    NativeType::Polygon(ct, Dimension::XY) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                4 => match parse_multi_point(field)? {
+                    NativeType::MultiPoint(ct, Dimension::XY) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                5 => match parse_multi_linestring(field)? {
+                    NativeType::MultiLineString(ct, Dimension::XY) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                6 => match parse_multi_polygon(field)? {
+                    NativeType::MultiPolygon(ct, Dimension::XY) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                7 => match parse_geometry_collection(field)? {
+                    NativeType::GeometryCollection(ct, Dimension::XY) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                11 => match parse_point(field)? {
+                    NativeType::Point(ct, Dimension::XYZ) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                12 => match parse_linestring(field)? {
+                    NativeType::LineString(ct, Dimension::XYZ) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                13 => match parse_polygon(field)? {
+                    NativeType::Polygon(ct, Dimension::XYZ) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                14 => match parse_multi_point(field)? {
+                    NativeType::MultiPoint(ct, Dimension::XYZ) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                15 => match parse_multi_linestring(field)? {
+                    NativeType::MultiLineString(ct, Dimension::XYZ) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                16 => match parse_multi_polygon(field)? {
+                    NativeType::MultiPolygon(ct, Dimension::XYZ) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                17 => match parse_geometry_collection(field)? {
+                    NativeType::GeometryCollection(ct, Dimension::XYZ) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                id => panic!("unexpected type id {}", id),
+            };
+            Ok::<_, GeoArrowError>(())
+        })?;
+
+        if coord_types.len() > 1 {
+            return Err(GeoArrowError::General(
+                "Multi coord types in union".to_string(),
+            ));
+        }
+
+        let coord_type = coord_types.drain().next().unwrap();
+        Ok(NativeType::Unknown(coord_type))
+    } else {
+        Err(GeoArrowError::General("Expected union type".to_string()))
+    }
+}
+
 impl TryFrom<&Field> for NativeType {
     type Error = GeoArrowError;
 
@@ -985,6 +1093,7 @@ impl TryFrom<&Field> for NativeType {
                 "geoarrow.geometry" => parse_geometry(field)?,
                 "geoarrow.geometrycollection" => parse_geometry_collection(field)?,
                 "geoarrow.box" => parse_rect(field),
+                "geoarrow.unknown" => parse_unknown(field)?,
                 name => return Err(GeoArrowError::General(format!("Expected GeoArrow native type, got '{}'.\nIf you're passing a serialized GeoArrow type like 'geoarrow.wkb' or 'geoarrow.wkt', you need to parse to a native representation.", name))),
             };
             Ok(data_type)
