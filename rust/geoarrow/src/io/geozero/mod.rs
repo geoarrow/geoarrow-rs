@@ -6,7 +6,7 @@ pub(crate) mod array;
 mod scalar;
 pub(crate) mod table;
 
-pub use api::{FromEWKB, FromWKT};
+pub use api::FromWKT;
 pub use array::{
     ToLineStringArray, ToMixedArray, ToMultiLineStringArray, ToMultiPointArray,
     ToMultiPolygonArray, ToPointArray, ToPolygonArray,

@@ -1101,7 +1101,7 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "wkb",
- "wkt 0.11.1 (git+https://github.com/georust/wkt?rev=94c32cdbdaf9523b3d71cd4b2d5d3a033efadacb)",
+ "wkt 0.12.0",
 ]
 
 [[package]]
@@ -1203,7 +1203,7 @@ dependencies = [
  "scroll",
  "serde_json",
  "thiserror 1.0.69",
- "wkt 0.11.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "wkt 0.11.1",
 ]
 
 [[package]]
@@ -4334,8 +4334,9 @@ dependencies = [
 
 [[package]]
 name = "wkb"
-version = "0.1.0"
-source = "git+https://github.com/kylebarron/wkb?rev=51a95fff591c7e66ea10f6effaba0d48b3b0a392#51a95fff591c7e66ea10f6effaba0d48b3b0a392"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1e2c084338d6407d24c5a43208aca32128a5d62107eab5ca18314395c4aa3f0"
 dependencies = [
  "byteorder",
  "geo-traits",
@@ -4357,8 +4358,9 @@ dependencies = [
 
 [[package]]
 name = "wkt"
-version = "0.11.1"
-source = "git+https://github.com/georust/wkt?rev=94c32cdbdaf9523b3d71cd4b2d5d3a033efadacb#94c32cdbdaf9523b3d71cd4b2d5d3a033efadacb"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e1c591649bd1c9d4e28459758bbb5fb5c0edc7a67060b52422f4761c94ffe961"
 dependencies = [
  "geo-traits",
  "geo-types",
