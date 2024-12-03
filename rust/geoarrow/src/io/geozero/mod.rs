@@ -1,12 +1,10 @@
 //! Implements the geometry and dataset conversion APIs defined by the [`geozero`]
 //! crate.
 
-mod api;
 pub(crate) mod array;
 mod scalar;
 pub(crate) mod table;
 
-pub use api::FromWKT;
 pub use array::{
     ToLineStringArray, ToMixedArray, ToMultiLineStringArray, ToMultiPointArray,
     ToMultiPolygonArray, ToPointArray, ToPolygonArray,
