@@ -13,7 +13,7 @@ use crate::{ArrayBase, NativeArray};
 /// Currently, an [UnknownGeometryArray] is always returned. This may change in the future with the
 /// addition of a `downcast` parameter, which would automatically downcast the result.
 pub fn read_wkt<O: OffsetSizeTrait>(
-    arr: WKTArray<O>,
+    arr: &WKTArray<O>,
     coord_type: CoordType,
     prefer_multi: bool,
 ) -> Result<Arc<dyn NativeArray>> {
@@ -59,7 +59,7 @@ mod test {
         wkt_geoms.iter().for_each(|s| builder.append_value(s));
         let arr = WKTArray::new(builder.finish(), Default::default());
 
-        let parsed = read_wkt(arr, Default::default(), false).unwrap();
+        let parsed = read_wkt(&arr, Default::default(), false).unwrap();
         let parsed_ref = parsed.as_ref();
         let geom_arr = parsed_ref.as_unknown();
 

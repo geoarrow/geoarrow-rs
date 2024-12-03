@@ -1,13 +1,7 @@
-use std::sync::Arc;
-
 use arrow::datatypes::DataType;
-use arrow_array::cast::AsArray;
-use geoarrow::array::metadata::ArrayMetadata;
-use geoarrow::chunked_array::{ChunkedArray, ChunkedMixedGeometryArray};
-use geoarrow::datatypes::Dimension;
-use geoarrow::io::geozero::FromWKT;
-use geoarrow::io::wkt::reader::ParseWKT;
-use geoarrow::io::wkt::ToWKT;
+use geoarrow::array::WKTArray;
+use geoarrow::chunked_array::{ChunkedNativeArrayDyn, ChunkedWKTArray};
+use geoarrow::io::wkt::{read_wkt, ToWKT};
 use geoarrow::ArrayBase;
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
@@ -32,10 +26,15 @@ pub fn from_wkt(
     match input {
         AnyArray::Array(arr) => {
             let (array, field) = arr.into_inner();
-            let metadata = Arc::new(ArrayMetadata::try_from(field.as_ref())?);
             let geo_array = match array.data_type() {
-                DataType::Utf8 => array.as_string::<i32>().parse_wkt(coord_type, metadata),
-                DataType::LargeUtf8 => array.as_string::<i64>().parse_wkt(coord_type, metadata),
+                DataType::Utf8 => {
+                    let wkt_arr = WKTArray::<i32>::try_from((array.as_ref(), field.as_ref()))?;
+                    read_wkt(&wkt_arr, coord_type, true)?
+                }
+                DataType::LargeUtf8 => {
+                    let wkt_arr = WKTArray::<i64>::try_from((array.as_ref(), field.as_ref()))?;
+                    read_wkt(&wkt_arr, coord_type, true)?
+                }
                 other => {
                     return Err(
                         PyTypeError::new_err(format!("Unexpected array type {:?}", other)).into(),
@@ -47,33 +46,26 @@ pub fn from_wkt(
         AnyArray::Stream(s) => {
             let chunked_arr = s.into_chunked_array()?;
             let (chunks, field) = chunked_arr.into_inner();
-            let metadata = Arc::new(ArrayMetadata::try_from(field.as_ref())?);
-            let geo_array: ChunkedMixedGeometryArray = match field.data_type() {
+            let geo_array = match field.data_type() {
                 DataType::Utf8 => {
-                    let string_chunks = chunks
+                    let wkt_chunks = chunks
                         .iter()
-                        .map(|chunk| chunk.as_string::<i32>().clone())
-                        .collect::<Vec<_>>();
-                    FromWKT::from_wkt(
-                        &ChunkedArray::new(string_chunks),
-                        coord_type,
-                        Dimension::XY,
-                        metadata,
-                        false,
-                    )?
+                        .map(|chunk| WKTArray::<i32>::try_from((chunk.as_ref(), field.as_ref())))
+                        .collect::<Result<Vec<_>, _>>()?;
+                    let ca = ChunkedWKTArray::new(wkt_chunks);
+                    let parsed = ca.try_map(|chunk| read_wkt(chunk, coord_type, true))?;
+                    let parsed_refs = parsed.iter().map(|x| x.as_ref()).collect::<Vec<_>>();
+                    ChunkedNativeArrayDyn::from_geoarrow_chunks(parsed_refs.as_ref())?
                 }
                 DataType::LargeUtf8 => {
-                    let string_chunks = chunks
+                    let wkt_chunks = chunks
                         .iter()
-                        .map(|chunk| chunk.as_string::<i64>().clone())
-                        .collect::<Vec<_>>();
-                    FromWKT::from_wkt(
-                        &ChunkedArray::new(string_chunks),
-                        coord_type,
-                        Dimension::XY,
-                        metadata,
-                        false,
-                    )?
+                        .map(|chunk| WKTArray::<i64>::try_from((chunk.as_ref(), field.as_ref())))
+                        .collect::<Result<Vec<_>, _>>()?;
+                    let ca = ChunkedWKTArray::new(wkt_chunks);
+                    let parsed = ca.try_map(|chunk| read_wkt(chunk, coord_type, true))?;
+                    let parsed_refs = parsed.iter().map(|x| x.as_ref()).collect::<Vec<_>>();
+                    ChunkedNativeArrayDyn::from_geoarrow_chunks(parsed_refs.as_ref())?
                 }
                 other => {
                     return Err(
@@ -81,7 +73,7 @@ pub fn from_wkt(
                     )
                 }
             };
-            chunked_native_array_to_pyobject(py, Arc::new(geo_array))
+            chunked_native_array_to_pyobject(py, geo_array.into_inner())
         }
     }
 }

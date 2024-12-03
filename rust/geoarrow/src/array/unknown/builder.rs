@@ -671,6 +671,10 @@ impl<'a> UnknownGeometryBuilder {
 
     #[inline]
     pub fn push_null(&mut self) {
+        // Note: perhaps you could defer writing nulls until the first actual geometry has been
+        // pushed. And then at that point you write and deferred nulls and then the current
+        // geometry. And at any other point you can check which array already has data, and push a
+        // null to that array.
         todo!("push null geometry")
     }
 
