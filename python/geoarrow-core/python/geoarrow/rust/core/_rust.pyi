@@ -445,17 +445,6 @@ def read_pyogrio(
         Table
     """
 
-def from_ewkb(input: ArrowArrayExportable) -> NativeArray:
-    """
-    Parse an Arrow BinaryArray from EWKB to its GeoArrow-native counterpart.
-
-    Args:
-        input: An Arrow array of Binary type holding EWKB-formatted geometries.
-
-    Returns:
-        A GeoArrow-native geometry array
-    """
-
 def from_geopandas(input: gpd.GeoDataFrame) -> Table:
     """
     Create a GeoArrow Table from a [GeoPandas GeoDataFrame][geopandas.GeoDataFrame].
@@ -519,7 +508,8 @@ def from_wkb(
     """
     Parse an Arrow BinaryArray from WKB to its GeoArrow-native counterpart.
 
-    This expects ISO-formatted WKB geometries.
+    This will handle both ISO and EWKB flavors of WKB. Any embedded SRID in
+    EWKB-flavored WKB will be ignored.
 
     Args:
         input: An Arrow array of Binary type holding WKB-formatted geometries.

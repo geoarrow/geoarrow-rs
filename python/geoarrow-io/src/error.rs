@@ -3,8 +3,8 @@ use pyo3::prelude::*;
 
 pub enum PyGeoArrowError {
     GeoArrowError(geoarrow::error::GeoArrowError),
-    PyErr(PyErr),
     PyArrowError(pyo3_arrow::error::PyArrowError),
+    PyErr(PyErr),
     PythonizeError(pythonize::PythonizeError),
     #[cfg(feature = "async")]
     ObjectStoreError(object_store::Error),
@@ -75,15 +75,15 @@ impl From<url::ParseError> for PyGeoArrowError {
     }
 }
 
-impl From<PyTypeError> for PyGeoArrowError {
-    fn from(other: PyTypeError) -> Self {
-        Self::PyErr((&other).into())
+impl From<Bound<'_, PyTypeError>> for PyGeoArrowError {
+    fn from(other: Bound<'_, PyTypeError>) -> Self {
+        Self::PyErr(other.into())
     }
 }
 
-impl From<PyValueError> for PyGeoArrowError {
-    fn from(other: PyValueError) -> Self {
-        Self::PyErr((&other).into())
+impl From<Bound<'_, PyValueError>> for PyGeoArrowError {
+    fn from(other: Bound<'_, PyValueError>) -> Self {
+        Self::PyErr((other).into())
     }
 }
 

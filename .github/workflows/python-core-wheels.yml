@@ -47,7 +47,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --manifest-path python/${{ matrix.module }}/Cargo.toml
+          args: --release --out dist --find-interpreter --manifest-path python/${{ matrix.module }}/Cargo.toml
           sccache: "true"
           manylinux: auto
       - name: Upload wheels
@@ -56,39 +56,40 @@ jobs:
           name: wheels-linux-${{ matrix.platform.target }}-${{ matrix.module }}
           path: dist
 
-  musllinux:
-    runs-on: ${{ matrix.platform.runner }}
-    strategy:
-      matrix:
-        platform:
-          - runner: ubuntu-latest
-            target: x86_64
-          - runner: ubuntu-latest
-            target: x86
-          - runner: ubuntu-latest
-            target: aarch64
-          - runner: ubuntu-latest
-            target: armv7
-        module:
-          - geoarrow-core
-          - geoarrow-compute
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: 3.x
-      - name: Build wheels
-        uses: PyO3/maturin-action@v1
-        with:
-          target: ${{ matrix.platform.target }}
-          args: --release --out dist --manifest-path python/${{ matrix.module }}/Cargo.toml
-          sccache: "true"
-          manylinux: musllinux_1_2
-      - name: Upload wheels
-        uses: actions/upload-artifact@v4
-        with:
-          name: wheels-musllinux-${{ matrix.platform.target }}-${{ matrix.module }}
-          path: dist
+  # Commented out because rust 1.82 apparently isn't distributed yet (as of Nov 13, 2024) for musllinux? See https://github.com/geoarrow/geoarrow-rs/pull/860
+  # musllinux:
+  #   runs-on: ${{ matrix.platform.runner }}
+  #   strategy:
+  #     matrix:
+  #       platform:
+  #         - runner: ubuntu-latest
+  #           target: x86_64
+  #         - runner: ubuntu-latest
+  #           target: x86
+  #         - runner: ubuntu-latest
+  #           target: aarch64
+  #         - runner: ubuntu-latest
+  #           target: armv7
+  #       module:
+  #         - geoarrow-core
+  #         - geoarrow-compute
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-python@v5
+  #       with:
+  #         python-version: 3.x
+  #     - name: Build wheels
+  #       uses: PyO3/maturin-action@v1
+  #       with:
+  #         target: ${{ matrix.platform.target }}
+  #         args: --release --out dist --find-interpreter --manifest-path python/${{ matrix.module }}/Cargo.toml
+  #         sccache: "true"
+  #         manylinux: musllinux_1_2
+  #     - name: Upload wheels
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: wheels-musllinux-${{ matrix.platform.target }}-${{ matrix.module }}
+  #         path: dist
 
   windows:
     runs-on: ${{ matrix.platform.runner }}
@@ -112,7 +113,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --manifest-path python/${{ matrix.module }}/Cargo.toml
+          args: --release --out dist --find-interpreter --manifest-path python/${{ matrix.module }}/Cargo.toml
           sccache: "true"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
@@ -125,8 +126,9 @@ jobs:
     strategy:
       matrix:
         platform:
-          - runner: macos-12
-            target: x86_64
+          # Commented out because rust 1.82 apparently isn't distributed yet (as of Nov 13, 2024) for x86_64-apple-darwin? See https://github.com/geoarrow/geoarrow-rs/pull/860
+          # - runner: macos-13
+          #   target: x86_64
           - runner: macos-14
             target: aarch64
         module:
@@ -141,7 +143,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --manifest-path python/${{ matrix.module }}/Cargo.toml
+          args: --release --out dist --find-interpreter --manifest-path python/${{ matrix.module }}/Cargo.toml
           sccache: "true"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
@@ -182,7 +184,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --no-default-features --manifest-path python/${{ matrix.module }}/Cargo.toml
+          args: --release --out dist --find-interpreter --no-default-features --manifest-path python/${{ matrix.module }}/Cargo.toml
           sccache: "true"
           rust-toolchain: nightly
       - name: Upload wheels
@@ -210,7 +212,7 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     if: "startsWith(github.ref, 'refs/tags/')"
-    needs: [linux, musllinux, windows, macos]
+    needs: [linux, windows, macos]
     permissions:
       # Used to upload release artifacts
       contents: write

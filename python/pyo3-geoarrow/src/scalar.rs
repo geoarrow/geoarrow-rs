@@ -49,11 +49,12 @@ impl PyGeometry {
 
 #[pymethods]
 impl PyGeometry {
+    #[pyo3(signature = (requested_schema=None))]
     fn __arrow_c_array__<'py>(
         &'py self,
         py: Python<'py>,
         requested_schema: Option<Bound<'py, PyCapsule>>,
-    ) -> PyGeoArrowResult<Bound<PyTuple>> {
+    ) -> PyGeoArrowResult<Bound<'py, PyTuple>> {
         let geo_arr = self.0.inner();
         let field = geo_arr.extension_field();
         let array = geo_arr.to_array_ref();
@@ -66,7 +67,7 @@ impl PyGeometry {
     // }
 
     #[getter]
-    fn __geo_interface__<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<Bound<PyAny>> {
+    fn __geo_interface__<'py>(&'py self, py: Python<'py>) -> PyGeoArrowResult<Bound<'py, PyAny>> {
         let json_string = self.0.to_json().map_err(GeoArrowError::GeozeroError)?;
         let json_mod = py.import_bound(intern!(py, "json"))?;
         let args = (json_string.into_py(py),);

@@ -22,8 +22,9 @@ default = ["async"]
 async = [
     "dep:futures",
     "dep:object_store",
+    "dep:pyo3-object_store",
     "parquet/object_store",
-    "dep:pyo3-asyncio-0-21",
+    "dep:pyo3-async-runtimes",
     "geoarrow/flatgeobuf_async",
     "geoarrow/parquet_async",
     "geoarrow/postgis",
@@ -34,7 +35,8 @@ async = [
 [dependencies]
 arrow = { workspace = true }
 bytes = "1"
-flatgeobuf = { version = "4.4.0", default-features = false }
+# For geo-traits impl
+flatgeobuf = { git = "https://github.com/flatgeobuf/flatgeobuf", rev = "f554f2768b612e131e9f55d014eaa5b911a7f1b5", default-features = false }
 futures = { version = "0.3", optional = true }
 object_store = { workspace = true, features = [
     "aws",
@@ -45,12 +47,14 @@ object_store = { workspace = true, features = [
 parquet = { workspace = true }
 pyo3 = { workspace = true }
 pyo3-arrow = { workspace = true }
-pyo3-asyncio-0-21 = { version = "0.21", features = [
+pyo3-async-runtimes = { version = "0.22", features = [
     "tokio-runtime",
 ], optional = true }
-pythonize = "0.21"
+pyo3-object_store = { version = "0.1.0-beta.1", optional = true }
+pythonize = "0.22"
 geo = "0.28"
-geoarrow = { path = "../../", features = [
+geo-traits = { workspace = true }
+geoarrow = { workspace = true, features = [
     "csv",
     "flatgeobuf",
     "ipc_compression",

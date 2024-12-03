@@ -1,6 +1,6 @@
 [package]
 name = "geoarrow-wasm"
-version = "0.2.0-beta.4"
+version = "0.2.0-beta.5"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = "2021"
 description = "Efficient, vectorized geospatial operations in WebAssembly."
@@ -9,7 +9,7 @@ repository = "https://github.com/geoarrow/geoarrow-rs"
 license = "MIT OR Apache-2.0"
 keywords = ["webassembly", "arrow", "geospatial"]
 categories = ["wasm", "science::geo"]
-rust-version = "1.80"
+rust-version = "1.82"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -89,7 +89,8 @@ bytes = { version = "1", optional = true }
 console_error_panic_hook = { version = "0.1.6", optional = true }
 futures = { version = "0.3.30", optional = true }
 geo = "0.28"
-geoarrow = { path = "../" }
+geo-traits = "0.2"
+geoarrow = { path = "../rust/geoarrow" }
 geodesy = { version = "0.12", optional = true, features = ["js"] }
 object_store = { version = "0.11", optional = true }
 # Use released version when it supports object-store 0.11

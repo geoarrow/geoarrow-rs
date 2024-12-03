@@ -3,7 +3,7 @@ use geoarrow::array::CoordType;
 use geoarrow::io::parquet::metadata::GeoParquetBboxCovering;
 use geoarrow::io::parquet::GeoParquetReaderOptions;
 use pyo3::prelude::*;
-use pythonize::depythonize_bound;
+use pythonize::depythonize;
 
 use crate::error::PyGeoArrowResult;
 
@@ -21,7 +21,7 @@ pub fn create_options(
         )
     });
     let bbox_paths: Option<GeoParquetBboxCovering> =
-        bbox_paths.map(|x| depythonize_bound(x)).transpose()?;
+        bbox_paths.map(|x| depythonize(&x)).transpose()?;
 
     let mut options = GeoParquetReaderOptions::default();
 

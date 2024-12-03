@@ -21,16 +21,9 @@ fn create_array_metadata(crs: Option<CRS>) -> Arc<ArrayMetadata> {
 #[pyo3(signature = (coords, *, crs = None))]
 pub fn points(coords: PyCoordBuffer, crs: Option<CRS>) -> PyGeoArrowResult<PyNativeArray> {
     let metadata = create_array_metadata(crs);
-    match coords {
-        PyCoordBuffer::TwoD(coords) => {
-            let array = PointArray::new(coords, None, metadata);
-            Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
-        }
-        PyCoordBuffer::ThreeD(coords) => {
-            let array = PointArray::new(coords, None, metadata);
-            Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
-        }
-    }
+    // TODO: remove const generic
+    let array = PointArray::new(coords.into_inner(), None, metadata);
+    Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
 }
 
 #[pyfunction]
@@ -41,16 +34,14 @@ pub fn linestrings(
     crs: Option<CRS>,
 ) -> PyGeoArrowResult<PyNativeArray> {
     let metadata = create_array_metadata(crs);
-    match coords {
-        PyCoordBuffer::TwoD(coords) => {
-            let array = LineStringArray::new(coords, geom_offsets.into_inner(), None, metadata);
-            Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
-        }
-        PyCoordBuffer::ThreeD(coords) => {
-            let array = LineStringArray::new(coords, geom_offsets.into_inner(), None, metadata);
-            Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
-        }
-    }
+    // TODO: remove const generic
+    let array = LineStringArray::new(
+        coords.into_inner(),
+        geom_offsets.into_inner(),
+        None,
+        metadata,
+    );
+    Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
 }
 
 #[pyfunction]
@@ -62,28 +53,15 @@ pub fn polygons(
     crs: Option<CRS>,
 ) -> PyGeoArrowResult<PyNativeArray> {
     let metadata = create_array_metadata(crs);
-    match coords {
-        PyCoordBuffer::TwoD(coords) => {
-            let array = PolygonArray::new(
-                coords,
-                geom_offsets.into_inner(),
-                ring_offsets.into_inner(),
-                None,
-                metadata,
-            );
-            Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
-        }
-        PyCoordBuffer::ThreeD(coords) => {
-            let array = PolygonArray::new(
-                coords,
-                geom_offsets.into_inner(),
-                ring_offsets.into_inner(),
-                None,
-                metadata,
-            );
-            Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
-        }
-    }
+    // TODO: remove const generic
+    let array = PolygonArray::new(
+        coords.into_inner(),
+        geom_offsets.into_inner(),
+        ring_offsets.into_inner(),
+        None,
+        metadata,
+    );
+    Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
 }
 
 #[pyfunction]
@@ -94,16 +72,13 @@ pub fn multipoints(
     crs: Option<CRS>,
 ) -> PyGeoArrowResult<PyNativeArray> {
     let metadata = create_array_metadata(crs);
-    match coords {
-        PyCoordBuffer::TwoD(coords) => {
-            let array = MultiPointArray::new(coords, geom_offsets.into_inner(), None, metadata);
-            Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
-        }
-        PyCoordBuffer::ThreeD(coords) => {
-            let array = MultiPointArray::new(coords, geom_offsets.into_inner(), None, metadata);
-            Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
-        }
-    }
+    let array = MultiPointArray::new(
+        coords.into_inner(),
+        geom_offsets.into_inner(),
+        None,
+        metadata,
+    );
+    Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
 }
 
 #[pyfunction]
@@ -115,28 +90,14 @@ pub fn multilinestrings(
     crs: Option<CRS>,
 ) -> PyGeoArrowResult<PyNativeArray> {
     let metadata = create_array_metadata(crs);
-    match coords {
-        PyCoordBuffer::TwoD(coords) => {
-            let array = MultiLineStringArray::new(
-                coords,
-                geom_offsets.into_inner(),
-                ring_offsets.into_inner(),
-                None,
-                metadata,
-            );
-            Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
-        }
-        PyCoordBuffer::ThreeD(coords) => {
-            let array = MultiLineStringArray::new(
-                coords,
-                geom_offsets.into_inner(),
-                ring_offsets.into_inner(),
-                None,
-                metadata,
-            );
-            Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
-        }
-    }
+    let array = MultiLineStringArray::new(
+        coords.into_inner(),
+        geom_offsets.into_inner(),
+        ring_offsets.into_inner(),
+        None,
+        metadata,
+    );
+    Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
 }
 
 #[pyfunction]
@@ -149,28 +110,13 @@ pub fn multipolygons(
     crs: Option<CRS>,
 ) -> PyGeoArrowResult<PyNativeArray> {
     let metadata = create_array_metadata(crs);
-    match coords {
-        PyCoordBuffer::TwoD(coords) => {
-            let array = MultiPolygonArray::new(
-                coords,
-                geom_offsets.into_inner(),
-                polygon_offsets.into_inner(),
-                ring_offsets.into_inner(),
-                None,
-                metadata,
-            );
-            Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
-        }
-        PyCoordBuffer::ThreeD(coords) => {
-            let array = MultiPolygonArray::new(
-                coords,
-                geom_offsets.into_inner(),
-                polygon_offsets.into_inner(),
-                ring_offsets.into_inner(),
-                None,
-                metadata,
-            );
-            Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
-        }
-    }
+    let array = MultiPolygonArray::new(
+        coords.into_inner(),
+        geom_offsets.into_inner(),
+        polygon_offsets.into_inner(),
+        ring_offsets.into_inner(),
+        None,
+        metadata,
+    );
+    Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(array))))
 }

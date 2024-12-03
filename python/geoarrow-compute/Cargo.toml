@@ -32,7 +32,7 @@ pyo3-geoarrow = { path = "../pyo3-geoarrow" }
 geo = "0.28"
 geoarrow = { workspace = true }
 geozero = { version = "0.14", features = ["with-svg"] }
-numpy = "0.21"
+numpy = { workspace = true }
 serde_json = "1"
 thiserror = "1"
 url = "2.5"
