@@ -106,25 +106,27 @@ impl ColumnInfo {
 
         if let NativeType::Unknown(_) = array_ref.data_type() {
             let arr = array_ref.as_unknown();
-            if arr.has_points() {
+            if arr.has_points(Dimension::XY) || arr.has_points(Dimension::XYZ) {
                 self.geometry_types.insert(GeoParquetGeometryType::Point);
             }
-            if arr.has_line_strings() {
+            if arr.has_line_strings(Dimension::XY) || arr.has_line_strings(Dimension::XYZ) {
                 self.geometry_types
                     .insert(GeoParquetGeometryType::LineString);
             }
-            if arr.has_polygons() {
+            if arr.has_polygons(Dimension::XY) || arr.has_polygons(Dimension::XYZ) {
                 self.geometry_types.insert(GeoParquetGeometryType::Polygon);
             }
-            if arr.has_multi_points() {
+            if arr.has_multi_points(Dimension::XY) || arr.has_multi_points(Dimension::XYZ) {
                 self.geometry_types
                     .insert(GeoParquetGeometryType::MultiPoint);
             }
-            if arr.has_multi_line_strings() {
+            if arr.has_multi_line_strings(Dimension::XY)
+                || arr.has_multi_line_strings(Dimension::XYZ)
+            {
                 self.geometry_types
                     .insert(GeoParquetGeometryType::MultiLineString);
             }
-            if arr.has_multi_polygons() {
+            if arr.has_multi_polygons(Dimension::XY) || arr.has_multi_polygons(Dimension::XYZ) {
                 self.geometry_types
                     .insert(GeoParquetGeometryType::MultiPolygon);
             }

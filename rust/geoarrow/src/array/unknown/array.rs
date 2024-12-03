@@ -192,29 +192,47 @@ impl UnknownGeometryArray {
 
     // TODO: restore to enable downcasting
 
-    // pub fn has_points(&self) -> bool {
-    //     !self.points.is_empty()
-    // }
+    pub fn has_points(&self, dim: Dimension) -> bool {
+        match dim {
+            Dimension::XY => !self.point_xy.is_empty(),
+            Dimension::XYZ => !self.point_xyz.is_empty(),
+        }
+    }
 
-    // pub fn has_line_strings(&self) -> bool {
-    //     !self.line_strings.is_empty()
-    // }
+    pub fn has_line_strings(&self, dim: Dimension) -> bool {
+        match dim {
+            Dimension::XY => !self.line_string_xy.is_empty(),
+            Dimension::XYZ => !self.line_string_xyz.is_empty(),
+        }
+    }
 
-    // pub fn has_polygons(&self) -> bool {
-    //     !self.polygons.is_empty()
-    // }
+    pub fn has_polygons(&self, dim: Dimension) -> bool {
+        match dim {
+            Dimension::XY => !self.polygon_xy.is_empty(),
+            Dimension::XYZ => !self.polygon_xyz.is_empty(),
+        }
+    }
 
-    // pub fn has_multi_points(&self) -> bool {
-    //     !self.multi_points.is_empty()
-    // }
+    pub fn has_multi_points(&self, dim: Dimension) -> bool {
+        match dim {
+            Dimension::XY => !self.mpoint_xy.is_empty(),
+            Dimension::XYZ => !self.mpoint_xyz.is_empty(),
+        }
+    }
 
-    // pub fn has_multi_line_strings(&self) -> bool {
-    //     !self.multi_line_strings.is_empty()
-    // }
+    pub fn has_multi_line_strings(&self, dim: Dimension) -> bool {
+        match dim {
+            Dimension::XY => !self.mline_string_xy.is_empty(),
+            Dimension::XYZ => !self.mline_string_xyz.is_empty(),
+        }
+    }
 
-    // pub fn has_multi_polygons(&self) -> bool {
-    //     !self.multi_polygons.is_empty()
-    // }
+    pub fn has_multi_polygons(&self, dim: Dimension) -> bool {
+        match dim {
+            Dimension::XY => !self.mpolygon_xy.is_empty(),
+            Dimension::XYZ => !self.mpolygon_xyz.is_empty(),
+        }
+    }
 
     // pub fn has_only_points(&self) -> bool {
     //     self.has_points()

@@ -37,6 +37,7 @@ pub struct UnknownCapacity {
 }
 
 impl UnknownCapacity {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         nulls: usize,
         point_xy: usize,

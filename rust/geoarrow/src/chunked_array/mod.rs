@@ -955,6 +955,7 @@ impl_trait!(ChunkedMultiLineStringArray);
 impl_trait!(ChunkedMultiPolygonArray);
 impl_trait!(ChunkedMixedGeometryArray);
 impl_trait!(ChunkedGeometryCollectionArray);
+impl_trait!(ChunkedUnknownGeometryArray);
 
 impl ChunkedArrayBase for ChunkedRectArray {
     fn as_any(&self) -> &dyn Any {
