@@ -270,7 +270,7 @@ impl<'a> UnknownGeometryBuilder {
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
-        let counter = UnknownCapacity::from_geometries(geoms)?;
+        let counter = UnknownCapacity::from_geometries(geoms, prefer_multi)?;
         Ok(Self::with_capacity_and_options(
             counter,
             coord_type,
@@ -282,8 +282,9 @@ impl<'a> UnknownGeometryBuilder {
     pub fn reserve_from_iter(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+        prefer_multi: bool,
     ) -> Result<()> {
-        let counter = UnknownCapacity::from_geometries(geoms)?;
+        let counter = UnknownCapacity::from_geometries(geoms, prefer_multi)?;
         self.reserve(counter);
         Ok(())
     }
@@ -291,8 +292,9 @@ impl<'a> UnknownGeometryBuilder {
     pub fn reserve_exact_from_iter(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+        prefer_multi: bool,
     ) -> Result<()> {
-        let counter = UnknownCapacity::from_geometries(geoms)?;
+        let counter = UnknownCapacity::from_geometries(geoms, prefer_multi)?;
         self.reserve_exact(counter);
         Ok(())
     }
@@ -752,12 +754,18 @@ impl From<UnknownGeometryBuilder> for UnknownGeometryArray {
         Self::new(
             other.types.into(),
             other.offsets.into(),
-            other.points.into(),
-            other.line_strings.into(),
-            other.polygons.into(),
-            other.multi_points.into(),
-            other.multi_line_strings.into(),
-            other.multi_polygons.into(),
+            other.point_xy.into(),
+            other.line_string_xy.into(),
+            other.polygon_xy.into(),
+            other.mpoint_xy.into(),
+            other.mline_string_xy.into(),
+            other.mpolygon_xy.into(),
+            other.point_xyz.into(),
+            other.line_string_xyz.into(),
+            other.polygon_xyz.into(),
+            other.mpoint_xyz.into(),
+            other.mline_string_xyz.into(),
+            other.mpolygon_xyz.into(),
             other.metadata,
         )
     }
@@ -805,7 +813,7 @@ impl GeometryArrayBuilder for UnknownGeometryBuilder {
         todo!()
     }
 
-    fn new(dim: Dimension) -> Self {
+    fn new(_dim: Dimension) -> Self {
         Self::new()
     }
 
@@ -814,7 +822,7 @@ impl GeometryArrayBuilder for UnknownGeometryBuilder {
     }
 
     fn with_geom_capacity_and_options(
-        dim: Dimension,
+        _dim: Dimension,
         _geom_capacity: usize,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
@@ -837,7 +845,7 @@ impl GeometryArrayBuilder for UnknownGeometryBuilder {
     }
 
     fn coord_type(&self) -> CoordType {
-        self.points.coord_type()
+        self.point_xy.coord_type()
     }
 
     fn set_metadata(&mut self, metadata: Arc<ArrayMetadata>) {

@@ -192,7 +192,7 @@ impl IntoArrow for RectArray {
     type ArrowArray = StructArray;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let fields = rect_fields(self.data_type.dimension());
+        let fields = rect_fields(self.data_type.dimension().unwrap());
         let mut arrays: Vec<ArrayRef> = vec![];
         for buf in self.lower.buffers {
             arrays.push(Arc::new(Float64Array::new(buf, None)));
@@ -261,7 +261,10 @@ impl TryFrom<(&dyn Array, &Field)> for RectArray {
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self, Self::Error> {
         let geom_type = NativeType::try_from(field)?;
-        let mut arr: Self = (arr, geom_type.dimension()).try_into()?;
+        let dim = geom_type
+            .dimension()
+            .ok_or(GeoArrowError::General("Expected dimension".to_string()))?;
+        let mut arr: Self = (arr, dim).try_into()?;
         arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
         Ok(arr)
     }

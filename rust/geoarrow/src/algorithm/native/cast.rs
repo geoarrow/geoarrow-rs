@@ -275,6 +275,7 @@ macro_rules! impl_chunked_cast_non_generic {
                     Mixed(_, _) => impl_cast!(as_mixed),
                     GeometryCollection(_, _) => impl_cast!(as_geometry_collection),
                     Rect(_) => impl_cast!(as_rect),
+                    Unknown(_) => todo!("cast to unknown"),
                 };
                 Ok(result)
             }
@@ -313,6 +314,7 @@ macro_rules! impl_chunked_cast_generic {
                     Mixed(_, _) => impl_cast!(as_mixed),
                     GeometryCollection(_, _) => impl_cast!(as_geometry_collection),
                     Rect(_) => impl_cast!(as_rect),
+                    Unknown(_) => todo!("cast to unknown"),
                 };
                 Ok(result)
             }

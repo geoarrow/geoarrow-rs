@@ -76,9 +76,36 @@ impl ColumnInfo {
         let array = NativeArrayDyn::from_arrow_array(array, field)?.into_inner();
         let array_ref = array.as_ref();
 
-        // We only have to do this for mixed arrays because other arrays are statically known
+        // We only have to do this for mixed arrays (and unknown below) because other arrays are
+        // statically known
         if let NativeType::Mixed(_, _) = array_ref.data_type() {
             let mixed_arr = array_ref.as_mixed();
+            if mixed_arr.has_points() {
+                self.geometry_types.insert(GeoParquetGeometryType::Point);
+            }
+            if mixed_arr.has_line_strings() {
+                self.geometry_types
+                    .insert(GeoParquetGeometryType::LineString);
+            }
+            if mixed_arr.has_polygons() {
+                self.geometry_types.insert(GeoParquetGeometryType::Polygon);
+            }
+            if mixed_arr.has_multi_points() {
+                self.geometry_types
+                    .insert(GeoParquetGeometryType::MultiPoint);
+            }
+            if mixed_arr.has_multi_line_strings() {
+                self.geometry_types
+                    .insert(GeoParquetGeometryType::MultiLineString);
+            }
+            if mixed_arr.has_multi_polygons() {
+                self.geometry_types
+                    .insert(GeoParquetGeometryType::MultiPolygon);
+            }
+        }
+
+        if let NativeType::Unknown(_) = array_ref.data_type() {
+            let arr = array_ref.as_mixed();
             if mixed_arr.has_points() {
                 self.geometry_types.insert(GeoParquetGeometryType::Point);
             }
@@ -255,7 +282,7 @@ pub fn get_geometry_types(data_type: &NativeType) -> HashSet<GeoParquetGeometryT
         NativeType::MultiPolygon(_, Dimension::XYZ) => {
             geometry_types.insert(MultiPolygonZ);
         }
-        NativeType::Mixed(_, _) => {
+        NativeType::Mixed(_, _) | NativeType::Unknown(_) => {
             // We don't have access to the actual data here, so we can't inspect better than this.
         }
         NativeType::GeometryCollection(_, Dimension::XY) => {

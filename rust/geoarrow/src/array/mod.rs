@@ -20,6 +20,7 @@ pub use multipolygon::{MultiPolygonArray, MultiPolygonBuilder, MultiPolygonCapac
 pub use point::{PointArray, PointBuilder};
 pub use polygon::{PolygonArray, PolygonBuilder, PolygonCapacity};
 pub use rect::{RectArray, RectBuilder};
+pub use unknown::{UnknownCapacity, UnknownGeometryArray, UnknownGeometryBuilder};
 pub use wkt::WKTArray;
 
 pub use crate::trait_::{ArrayBase, NativeArray, SerializedArray};
