@@ -76,7 +76,8 @@ impl ColumnInfo {
         let array = NativeArrayDyn::from_arrow_array(array, field)?.into_inner();
         let array_ref = array.as_ref();
 
-        // We only have to do this for mixed arrays because other arrays are statically known
+        // We only have to do this for mixed arrays (and unknown below) because other arrays are
+        // statically known
         if let NativeType::Mixed(_, _) = array_ref.data_type() {
             let mixed_arr = array_ref.as_mixed();
             if mixed_arr.has_points() {
@@ -98,6 +99,34 @@ impl ColumnInfo {
                     .insert(GeoParquetGeometryType::MultiLineString);
             }
             if mixed_arr.has_multi_polygons() {
+                self.geometry_types
+                    .insert(GeoParquetGeometryType::MultiPolygon);
+            }
+        }
+
+        if let NativeType::Unknown(_) = array_ref.data_type() {
+            let arr = array_ref.as_unknown();
+            if arr.has_points(Dimension::XY) || arr.has_points(Dimension::XYZ) {
+                self.geometry_types.insert(GeoParquetGeometryType::Point);
+            }
+            if arr.has_line_strings(Dimension::XY) || arr.has_line_strings(Dimension::XYZ) {
+                self.geometry_types
+                    .insert(GeoParquetGeometryType::LineString);
+            }
+            if arr.has_polygons(Dimension::XY) || arr.has_polygons(Dimension::XYZ) {
+                self.geometry_types.insert(GeoParquetGeometryType::Polygon);
+            }
+            if arr.has_multi_points(Dimension::XY) || arr.has_multi_points(Dimension::XYZ) {
+                self.geometry_types
+                    .insert(GeoParquetGeometryType::MultiPoint);
+            }
+            if arr.has_multi_line_strings(Dimension::XY)
+                || arr.has_multi_line_strings(Dimension::XYZ)
+            {
+                self.geometry_types
+                    .insert(GeoParquetGeometryType::MultiLineString);
+            }
+            if arr.has_multi_polygons(Dimension::XY) || arr.has_multi_polygons(Dimension::XYZ) {
                 self.geometry_types
                     .insert(GeoParquetGeometryType::MultiPolygon);
             }
@@ -255,7 +284,7 @@ pub fn get_geometry_types(data_type: &NativeType) -> HashSet<GeoParquetGeometryT
         NativeType::MultiPolygon(_, Dimension::XYZ) => {
             geometry_types.insert(MultiPolygonZ);
         }
-        NativeType::Mixed(_, _) => {
+        NativeType::Mixed(_, _) | NativeType::Unknown(_) => {
             // We don't have access to the actual data here, so we can't inspect better than this.
         }
         NativeType::GeometryCollection(_, Dimension::XY) => {

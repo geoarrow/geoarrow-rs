@@ -44,6 +44,7 @@ iter_geos_impl!(MultiPolygonArray);
 iter_geos_impl!(MixedGeometryArray);
 iter_geos_impl!(GeometryCollectionArray);
 iter_geos_impl!(RectArray);
+iter_geos_impl!(UnknownGeometryArray);
 
 impl Length for &dyn NativeArray {
     type Output = Result<Float64Array>;
@@ -61,6 +62,7 @@ impl Length for &dyn NativeArray {
             Mixed(_, _) => self.as_mixed().length(),
             GeometryCollection(_, _) => self.as_geometry_collection().length(),
             Rect(_) => self.as_rect().length(),
+            Unknown(_) => self.as_unknown().length(),
         }
     }
 }

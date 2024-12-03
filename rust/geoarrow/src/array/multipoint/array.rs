@@ -27,7 +27,7 @@ use geo_traits::MultiPointTrait;
 /// bitmap.
 #[derive(Debug, Clone)]
 pub struct MultiPointArray {
-    // Always NativeType::MultiPoint or NativeType::LargeMultiPoint
+    // Always NativeType::MultiPoint
     data_type: NativeType,
 
     pub(crate) metadata: Arc<ArrayMetadata>,
@@ -393,7 +393,10 @@ impl TryFrom<(&dyn Array, &Field)> for MultiPointArray {
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
         let geom_type = NativeType::try_from(field)?;
-        let mut arr: Self = (arr, geom_type.dimension()).try_into()?;
+        let dim = geom_type
+            .dimension()
+            .ok_or(GeoArrowError::General("Expected dimension".to_string()))?;
+        let mut arr: Self = (arr, dim).try_into()?;
         arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
         Ok(arr)
     }

@@ -28,7 +28,7 @@ use super::MultiLineStringBuilder;
 /// bitmap.
 #[derive(Debug, Clone)]
 pub struct MultiLineStringArray {
-    // Always NativeType::MultiLineString or NativeType::LargeMultiLineString
+    // Always NativeType::MultiLineString
     data_type: NativeType,
 
     pub(crate) metadata: Arc<ArrayMetadata>,
@@ -458,7 +458,10 @@ impl TryFrom<(&dyn Array, &Field)> for MultiLineStringArray {
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
         let geom_type = NativeType::try_from(field)?;
-        let mut arr: Self = (arr, geom_type.dimension()).try_into()?;
+        let dim = geom_type
+            .dimension()
+            .ok_or(GeoArrowError::General("Expected dimension".to_string()))?;
+        let mut arr: Self = (arr, dim).try_into()?;
         arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
         Ok(arr)
     }

@@ -281,7 +281,8 @@ pub trait NativeArray: ArrayBase {
 
     /// The dimension of this array.
     fn dimension(&self) -> Dimension {
-        self.data_type().dimension()
+        // TODO: remove this trait method now that we have an unknown-dimension array?
+        self.data_type().dimension().unwrap()
     }
 
     /// Converts this array to the same type of array but with the provided [CoordType].

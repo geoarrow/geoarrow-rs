@@ -85,8 +85,8 @@ fn infer_flatgeobuf_geometry_type(
             flatgeobuf::GeometryType::GeometryCollection,
             matches!(dim, Dimension::XYZ),
         ),
-        // TODO: how to know when WKB has 3d geometries?
-        // WKB | LargeWKB => (flatgeobuf::GeometryType::Unknown, false),
+        // We'll just claim that it does have 3d data. Not sure whether this is bad to lie here?
+        Unknown(_) => (flatgeobuf::GeometryType::Unknown, true),
     };
     Ok((geometry_type, has_z))
 }
