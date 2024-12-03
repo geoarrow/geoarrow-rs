@@ -11,7 +11,9 @@ use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 
-/// An optimized implementation of converting from ISO WKB-encoded geometries.
+/// An optimized implementation of converting from WKB-encoded geometries.
+///
+/// This supports either ISO or EWKB-flavored data.
 ///
 /// This implementation performs a two-pass approach, first scanning the input geometries to
 /// determine the exact buffer sizes, then making a single set of allocations and filling those new
@@ -176,7 +178,9 @@ impl FromWKB for Arc<dyn ChunkedNativeArray> {
     }
 }
 
-/// Parse an ISO [WKBArray] to a GeometryArray with GeoArrow native encoding.
+/// Parse a [WKBArray] to a GeometryArray with GeoArrow native encoding.
+///
+/// This supports either ISO or EWKB-flavored data.
 ///
 /// Does not downcast automatically
 pub fn from_wkb<O: OffsetSizeTrait>(
