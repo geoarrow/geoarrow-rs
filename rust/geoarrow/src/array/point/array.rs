@@ -11,7 +11,6 @@ use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, Point};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
-use crate::util::owned_slice_validity;
 use crate::{ArrayBase, NativeArray};
 use arrow_array::{Array, ArrayRef, FixedSizeListArray, OffsetSizeTrait, StructArray};
 use geo_traits::PointTrait;
@@ -119,20 +118,6 @@ impl PointArray {
         }
     }
 
-    pub fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        assert!(
-            offset + length <= self.len(),
-            "offset + length may not exceed length of array"
-        );
-        assert!(length >= 1, "length must be at least 1");
-
-        let coords = self.coords.owned_slice(offset, length);
-
-        let validity = owned_slice_validity(self.nulls(), offset, length);
-
-        Self::new(coords, validity, self.metadata())
-    }
-
     pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
         self.clone().into_coord_type(coord_type)
     }
@@ -215,10 +200,6 @@ impl NativeArray for PointArray {
 
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
-    }
-
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
-        Arc::new(self.owned_slice(offset, length))
     }
 }
 
@@ -496,17 +477,6 @@ mod test {
         let points: Vec<Point> = vec![p0(), p1(), p2()];
         let point_array: PointArray = (points.as_slice(), Dimension::XY).into();
         let sliced = point_array.slice(1, 1);
-        assert_eq!(sliced.len(), 1);
-        assert_eq!(sliced.get_as_geo(0), Some(p1()));
-    }
-
-    #[test]
-    fn owned_slice() {
-        let points: Vec<Point> = vec![p0(), p1(), p2()];
-        let point_array: PointArray = (points.as_slice(), Dimension::XY).into();
-        let sliced = point_array.owned_slice(1, 1);
-
-        assert_eq!(point_array.len(), 3);
         assert_eq!(sliced.len(), 1);
         assert_eq!(sliced.get_as_geo(0), Some(p1()));
     }

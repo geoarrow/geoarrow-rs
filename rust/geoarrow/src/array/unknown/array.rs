@@ -332,10 +332,6 @@ impl UnknownGeometryArray {
         }
     }
 
-    pub fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
-        todo!()
-    }
-
     pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
         self.clone().into_coord_type(coord_type)
     }
@@ -432,10 +428,6 @@ impl NativeArray for UnknownGeometryArray {
 
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
-    }
-
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
-        Arc::new(self.owned_slice(offset, length))
     }
 }
 
