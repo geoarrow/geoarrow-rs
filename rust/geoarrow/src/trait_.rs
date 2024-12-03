@@ -359,22 +359,6 @@ pub trait NativeArray: ArrayBase {
     /// This function panics iff `offset + length > self.len()`.
     #[must_use]
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray>;
-
-    /// Returns a owned slice that fully copies the contents of the underlying buffer.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use geoarrow::{array::PointArray, trait_::GeometryArraySelfMethods};
-    /// use geoarrow::datatypes::Dimension;
-    ///
-    /// let point_0 = geo::point!(x: 1., y: 2.);
-    /// let point_1 = geo::point!(x: 3., y: 4.);
-    /// let array: PointArray = (vec![point_0, point_1].as_slice(), Dimension::XY).into();
-    /// let smaller_array = array.owned_slice(1, 1);
-    /// ```
-    #[must_use]
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray>;
 }
 
 /// Type alias for a dynamic reference to something that implements [NativeArray].

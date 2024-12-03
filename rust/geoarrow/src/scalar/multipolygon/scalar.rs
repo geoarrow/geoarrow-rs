@@ -1,7 +1,7 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_multipolygon;
 use crate::algorithm::native::eq::multi_polygon_eq;
 use crate::array::util::OffsetBufferUtils;
-use crate::array::{CoordBuffer, MultiPolygonArray};
+use crate::array::CoordBuffer;
 use crate::datatypes::Dimension;
 use crate::scalar::Polygon;
 use crate::trait_::NativeScalar;
@@ -57,18 +57,13 @@ impl<'a> MultiPolygon<'a> {
         OffsetBuffer<i32>,
         usize,
     ) {
-        let arr = MultiPolygonArray::new(
+        (
             self.coords.clone(),
             self.geom_offsets.clone(),
             self.polygon_offsets.clone(),
             self.ring_offsets.clone(),
-            None,
-            Default::default(),
-        );
-        let sliced_arr = arr.owned_slice(self.geom_index, 1);
-        let (coords, geom_offsets, polygon_offsets, ring_offsets) = sliced_arr.into_inner();
-
-        (coords, geom_offsets, polygon_offsets, ring_offsets, 0)
+            self.geom_index,
+        )
     }
 }
 

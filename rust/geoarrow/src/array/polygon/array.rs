@@ -13,7 +13,6 @@ use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, Polygon};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
-use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::{ArrayBase, NativeArray};
 use arrow::array::AsArray;
 use arrow_array::GenericListArray;
@@ -189,43 +188,6 @@ impl PolygonArray {
         }
     }
 
-    pub fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        assert!(
-            offset + length <= self.len(),
-            "offset + length may not exceed length of array"
-        );
-        assert!(length >= 1, "length must be at least 1");
-
-        // Find the start and end of the ring offsets
-        let (start_ring_idx, _) = self.geom_offsets.start_end(offset);
-        let (_, end_ring_idx) = self.geom_offsets.start_end(offset + length - 1);
-
-        // Find the start and end of the coord buffer
-        let (start_coord_idx, _) = self.ring_offsets.start_end(start_ring_idx);
-        let (_, end_coord_idx) = self.ring_offsets.start_end(end_ring_idx - 1);
-
-        // Slice the geom_offsets
-        let geom_offsets = owned_slice_offsets(&self.geom_offsets, offset, length);
-        let ring_offsets = owned_slice_offsets(
-            &self.ring_offsets,
-            start_ring_idx,
-            end_ring_idx - start_ring_idx,
-        );
-        let coords = self
-            .coords
-            .owned_slice(start_coord_idx, end_coord_idx - start_coord_idx);
-
-        let validity = owned_slice_validity(self.nulls(), offset, length);
-
-        Self::new(
-            coords,
-            geom_offsets,
-            ring_offsets,
-            validity,
-            self.metadata.clone(),
-        )
-    }
-
     pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
         self.clone().into_coord_type(coord_type)
     }
@@ -310,10 +272,6 @@ impl NativeArray for PolygonArray {
 
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
-    }
-
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
-        Arc::new(self.owned_slice(offset, length))
     }
 }
 
@@ -663,24 +621,6 @@ mod test {
 
         // // Offset is 1 because it's sliced on another backing buffer
         // assert_eq!(*arr.geom_offsets.first(), 1);
-    }
-
-    #[test]
-    fn owned_slice() {
-        let arr: PolygonArray = (vec![p0(), p1()].as_slice(), Dimension::XY).into();
-        let sliced = arr.owned_slice(1, 1);
-
-        // assert!(
-        //     !sliced.geom_offsets.buffer().is_sliced(),
-        //     "underlying offsets should not be sliced"
-        // );
-        assert_eq!(arr.len(), 2);
-        assert_eq!(sliced.len(), 1);
-        assert_eq!(sliced.get_as_geo(0), Some(p1()));
-
-        // // Offset is 0 because it's copied to an owned buffer
-        // assert_eq!(*sliced.geom_offsets.first(), 0);
-        // assert_eq!(*sliced.ring_offsets.first(), 0);
     }
 
     #[test]

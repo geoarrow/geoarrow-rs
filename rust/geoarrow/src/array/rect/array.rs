@@ -13,7 +13,6 @@ use crate::datatypes::{rect_fields, Dimension, NativeType};
 use crate::error::GeoArrowError;
 use crate::scalar::Rect;
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
-use crate::util::owned_slice_validity;
 use crate::{ArrayBase, NativeArray};
 use geo_traits::RectTrait;
 
@@ -83,13 +82,6 @@ impl RectArray {
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
             metadata: self.metadata(),
         }
-    }
-
-    pub fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        let lower = self.lower.owned_slice(offset, length);
-        let upper = self.upper.owned_slice(offset, length);
-        let validity = owned_slice_validity(self.nulls(), offset, length);
-        Self::new(lower, upper, validity, self.metadata())
     }
 }
 
@@ -162,10 +154,6 @@ impl NativeArray for RectArray {
 
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
-    }
-
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
-        Arc::new(self.owned_slice(offset, length))
     }
 }
 

@@ -89,11 +89,6 @@ impl InterleavedCoordBuffer {
         }
     }
 
-    pub fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        let buffer = self.slice(offset, length);
-        Self::new(buffer.coords.to_vec().into(), self.dim)
-    }
-
     pub fn into_array_ref(self) -> Arc<dyn Array> {
         Arc::new(self.into_arrow())
     }

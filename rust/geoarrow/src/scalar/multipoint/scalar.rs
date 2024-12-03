@@ -1,7 +1,7 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_multipoint;
 use crate::algorithm::native::eq::multi_point_eq;
 use crate::array::util::OffsetBufferUtils;
-use crate::array::{CoordBuffer, MultiPointArray};
+use crate::array::CoordBuffer;
 use crate::datatypes::Dimension;
 use crate::scalar::Point;
 use crate::trait_::NativeScalar;
@@ -40,15 +40,11 @@ impl<'a> MultiPoint<'a> {
     }
 
     pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, usize) {
-        let arr = MultiPointArray::new(
+        (
             self.coords.clone(),
             self.geom_offsets.clone(),
-            None,
-            Default::default(),
-        );
-        let sliced_arr = arr.owned_slice(self.geom_index, 1);
-        let (coords, geom_offsets, _validity) = sliced_arr.into_inner();
-        (coords, geom_offsets, 0)
+            self.geom_index,
+        )
     }
 }
 

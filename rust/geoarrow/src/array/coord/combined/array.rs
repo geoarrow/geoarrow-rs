@@ -37,15 +37,6 @@ impl CoordBuffer {
         }
     }
 
-    pub fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        match self {
-            CoordBuffer::Interleaved(cb) => {
-                CoordBuffer::Interleaved(cb.owned_slice(offset, length))
-            }
-            CoordBuffer::Separated(cb) => CoordBuffer::Separated(cb.owned_slice(offset, length)),
-        }
-    }
-
     pub fn coord_type(&self) -> CoordType {
         match self {
             CoordBuffer::Interleaved(cb) => cb.coord_type(),

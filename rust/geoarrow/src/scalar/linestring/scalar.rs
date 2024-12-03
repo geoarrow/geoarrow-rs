@@ -1,7 +1,7 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_linestring;
 use crate::algorithm::native::eq::line_string_eq;
 use crate::array::util::OffsetBufferUtils;
-use crate::array::{CoordBuffer, LineStringArray};
+use crate::array::CoordBuffer;
 use crate::scalar::Coord;
 use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
@@ -38,15 +38,11 @@ impl<'a> LineString<'a> {
     }
 
     pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, usize) {
-        let arr = LineStringArray::new(
+        (
             self.coords.clone(),
             self.geom_offsets.clone(),
-            None,
-            Default::default(),
-        );
-        let sliced_arr = arr.owned_slice(self.geom_index, 1);
-        let (coords, geom_offsets, _validity) = sliced_arr.into_inner();
-        (coords, geom_offsets, 0)
+            self.geom_index,
+        )
     }
 }
 

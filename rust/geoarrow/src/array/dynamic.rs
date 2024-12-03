@@ -133,10 +133,6 @@ impl NativeArray for NativeArrayDyn {
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         self.0.slice(offset, length)
     }
-
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
-        self.0.owned_slice(offset, length)
-    }
 }
 
 impl Display for NativeArrayDyn {
