@@ -72,7 +72,6 @@ fn _rust(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
         m
     )?)?;
 
-    m.add_function(wrap_pyfunction!(crate::interop::ewkb::from_ewkb, m)?)?;
     m.add_function(wrap_pyfunction!(
         crate::interop::shapely::from_shapely::from_shapely,
         m
