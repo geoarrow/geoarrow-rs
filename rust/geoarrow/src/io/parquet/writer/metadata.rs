@@ -105,26 +105,26 @@ impl ColumnInfo {
         }
 
         if let NativeType::Unknown(_) = array_ref.data_type() {
-            let arr = array_ref.as_mixed();
-            if mixed_arr.has_points() {
+            let arr = array_ref.as_unknown();
+            if arr.has_points() {
                 self.geometry_types.insert(GeoParquetGeometryType::Point);
             }
-            if mixed_arr.has_line_strings() {
+            if arr.has_line_strings() {
                 self.geometry_types
                     .insert(GeoParquetGeometryType::LineString);
             }
-            if mixed_arr.has_polygons() {
+            if arr.has_polygons() {
                 self.geometry_types.insert(GeoParquetGeometryType::Polygon);
             }
-            if mixed_arr.has_multi_points() {
+            if arr.has_multi_points() {
                 self.geometry_types
                     .insert(GeoParquetGeometryType::MultiPoint);
             }
-            if mixed_arr.has_multi_line_strings() {
+            if arr.has_multi_line_strings() {
                 self.geometry_types
                     .insert(GeoParquetGeometryType::MultiLineString);
             }
-            if mixed_arr.has_multi_polygons() {
+            if arr.has_multi_polygons() {
                 self.geometry_types
                     .insert(GeoParquetGeometryType::MultiPolygon);
             }

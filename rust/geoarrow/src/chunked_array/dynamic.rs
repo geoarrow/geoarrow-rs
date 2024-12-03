@@ -69,6 +69,7 @@ impl ChunkedNativeArrayDyn {
                 impl_downcast!(GeometryCollectionArray)
             }
             Rect(_) => impl_downcast!(RectArray),
+            Unknown(_) => impl_downcast!(UnknownGeometryArray),
         };
         Ok(Self(ca))
     }
