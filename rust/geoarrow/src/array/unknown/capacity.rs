@@ -1,7 +1,6 @@
 use std::ops::AddAssign;
 
 use crate::array::linestring::LineStringCapacity;
-use crate::array::mixed::builder::DEFAULT_PREFER_MULTI;
 use crate::array::multilinestring::MultiLineStringCapacity;
 use crate::array::multipoint::MultiPointCapacity;
 use crate::array::multipolygon::MultiPolygonCapacity;
@@ -38,8 +37,43 @@ pub struct UnknownCapacity {
 }
 
 impl UnknownCapacity {
+    pub fn new(
+        nulls: usize,
+        point_xy: usize,
+        line_string_xy: LineStringCapacity,
+        polygon_xy: PolygonCapacity,
+        mpoint_xy: MultiPointCapacity,
+        mline_string_xy: MultiLineStringCapacity,
+        mpolygon_xy: MultiPolygonCapacity,
+
+        point_xyz: usize,
+        line_string_xyz: LineStringCapacity,
+        polygon_xyz: PolygonCapacity,
+        mpoint_xyz: MultiPointCapacity,
+        mline_string_xyz: MultiLineStringCapacity,
+        mpolygon_xyz: MultiPolygonCapacity,
+        prefer_multi: bool,
+    ) -> Self {
+        Self {
+            nulls,
+            point_xy,
+            line_string_xy,
+            polygon_xy,
+            mpoint_xy,
+            mline_string_xy,
+            mpolygon_xy,
+            point_xyz,
+            line_string_xyz,
+            polygon_xyz,
+            mpoint_xyz,
+            mline_string_xyz,
+            mpolygon_xyz,
+            prefer_multi,
+        }
+    }
+
     /// Create a new empty capacity.
-    pub fn new_empty() -> Self {
+    pub fn new_empty(prefer_multi: bool) -> Self {
         Self {
             nulls: 0,
             point_xy: 0,
@@ -54,8 +88,13 @@ impl UnknownCapacity {
             mpoint_xyz: MultiPointCapacity::new_empty(),
             mline_string_xyz: MultiLineStringCapacity::new_empty(),
             mpolygon_xyz: MultiPolygonCapacity::new_empty(),
-            prefer_multi: DEFAULT_PREFER_MULTI,
+            prefer_multi,
         }
+    }
+
+    pub fn with_prefer_multi(mut self, prefer_multi: bool) -> Self {
+        self.prefer_multi = prefer_multi;
+        self
     }
 
     /// Return `true` if the capacity is empty.
@@ -335,8 +374,9 @@ impl UnknownCapacity {
 
     pub fn from_geometries<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+        prefer_multi: bool,
     ) -> Result<Self> {
-        let mut counter = Self::new_empty();
+        let mut counter = Self::new_empty(prefer_multi);
         for maybe_geom in geoms.into_iter() {
             counter.add_geometry(maybe_geom)?;
         }
@@ -345,8 +385,9 @@ impl UnknownCapacity {
 
     pub fn from_owned_geometries<'a>(
         geoms: impl Iterator<Item = Option<(impl GeometryTrait + 'a)>>,
+        prefer_multi: bool,
     ) -> Result<Self> {
-        let mut counter = Self::new_empty();
+        let mut counter = Self::new_empty(prefer_multi);
         for maybe_geom in geoms.into_iter() {
             counter.add_geometry(maybe_geom.as_ref())?;
         }
