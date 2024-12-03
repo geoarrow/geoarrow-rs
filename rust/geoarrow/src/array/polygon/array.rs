@@ -31,7 +31,7 @@ use super::PolygonBuilder;
 #[derive(Debug, Clone)]
 // #[derive(Debug, Clone, PartialEq)]
 pub struct PolygonArray {
-    // Always NativeType::Polygon or NativeType::LargePolygon
+    // Always NativeType::Polygon
     data_type: NativeType,
 
     pub(crate) metadata: Arc<ArrayMetadata>,

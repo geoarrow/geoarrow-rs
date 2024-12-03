@@ -26,7 +26,7 @@ use geo_traits::GeometryCollectionTrait;
 /// validity bitmap.
 #[derive(Debug, Clone)]
 pub struct GeometryCollectionArray {
-    // Always NativeType::GeometryCollection or NativeType::LargeGeometryCollection
+    // Always NativeType::GeometryCollection
     data_type: NativeType,
 
     metadata: Arc<ArrayMetadata>,

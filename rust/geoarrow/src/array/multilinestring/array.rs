@@ -28,7 +28,7 @@ use super::MultiLineStringBuilder;
 /// bitmap.
 #[derive(Debug, Clone)]
 pub struct MultiLineStringArray {
-    // Always NativeType::MultiLineString or NativeType::LargeMultiLineString
+    // Always NativeType::MultiLineString
     data_type: NativeType,
 
     pub(crate) metadata: Arc<ArrayMetadata>,

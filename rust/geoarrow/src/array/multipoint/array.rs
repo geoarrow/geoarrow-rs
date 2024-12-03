@@ -27,7 +27,7 @@ use geo_traits::MultiPointTrait;
 /// bitmap.
 #[derive(Debug, Clone)]
 pub struct MultiPointArray {
-    // Always NativeType::MultiPoint or NativeType::LargeMultiPoint
+    // Always NativeType::MultiPoint
     data_type: NativeType,
 
     pub(crate) metadata: Arc<ArrayMetadata>,

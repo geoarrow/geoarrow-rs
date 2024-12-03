@@ -55,7 +55,7 @@ use geo_traits::GeometryTrait;
 /// - 37: GeometryCollection ZM
 #[derive(Debug, Clone, PartialEq)]
 pub struct MixedGeometryArray {
-    /// Always NativeType::Mixed or NativeType::LargeMixed
+    /// Always NativeType::Mixed
     data_type: NativeType,
 
     pub(crate) metadata: Arc<ArrayMetadata>,

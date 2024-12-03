@@ -40,6 +40,7 @@ pub(crate) mod offset_builder;
 pub(crate) mod point;
 pub(crate) mod polygon;
 pub(crate) mod rect;
+pub(crate) mod unknown;
 pub(crate) mod util;
 pub(crate) mod wkt;
 

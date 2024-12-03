@@ -30,7 +30,7 @@ use super::LineStringBuilder;
 /// bitmap.
 #[derive(Debug, Clone)]
 pub struct LineStringArray {
-    // Always NativeType::LineString or NativeType::LargeLineString
+    // Always NativeType::LineString
     data_type: NativeType,
 
     pub(crate) metadata: Arc<ArrayMetadata>,

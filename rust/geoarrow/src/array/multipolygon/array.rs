@@ -28,7 +28,7 @@ use super::MultiPolygonBuilder;
 /// bitmap.
 #[derive(Debug, Clone)]
 pub struct MultiPolygonArray {
-    // Always NativeType::MultiPolygon or NativeType::LargeMultiPolygon
+    // Always NativeType::MultiPolygon
     data_type: NativeType,
 
     pub(crate) metadata: Arc<ArrayMetadata>,

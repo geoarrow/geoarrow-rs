@@ -79,6 +79,21 @@ impl From<Dimension> for geo_traits::Dimensions {
     }
 }
 
+impl TryFrom<geo_traits::Dimensions> for Dimension {
+    type Error = GeoArrowError;
+
+    fn try_from(value: geo_traits::Dimensions) -> std::result::Result<Self, Self::Error> {
+        match value {
+            geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => Ok(Dimension::XY),
+            geo_traits::Dimensions::Xyz | geo_traits::Dimensions::Unknown(3) => Ok(Dimension::XYZ),
+            _ => Err(GeoArrowError::General(format!(
+                "Unsupported dimension {:?}",
+                value
+            ))),
+        }
+    }
+}
+
 /// A type enum representing "native" GeoArrow geometry types.
 ///
 /// This is designed to aid in downcasting from dynamically-typed geometry arrays.
