@@ -26,7 +26,7 @@ use geo_traits::GeometryCollectionTrait;
 /// validity bitmap.
 #[derive(Debug, Clone)]
 pub struct GeometryCollectionArray {
-    // Always NativeType::GeometryCollection or NativeType::LargeGeometryCollection
+    // Always NativeType::GeometryCollection
     data_type: NativeType,
 
     metadata: Arc<ArrayMetadata>,
@@ -115,10 +115,6 @@ impl GeometryCollectionArray {
         }
     }
 
-    pub fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
-        todo!()
-    }
-
     pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
         self.clone().into_coord_type(coord_type)
     }
@@ -203,10 +199,6 @@ impl NativeArray for GeometryCollectionArray {
 
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
-    }
-
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
-        Arc::new(self.owned_slice(offset, length))
     }
 }
 

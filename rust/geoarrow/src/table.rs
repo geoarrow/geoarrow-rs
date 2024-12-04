@@ -28,6 +28,8 @@ pub(crate) static GEOARROW_EXTENSION_NAMES: Set<&'static str> = phf_set! {
     "geoarrow.geometry",
     "geoarrow.geometrycollection",
     "geoarrow.wkb",
+    "geoarrow.wkt",
+    "geoarrow.unknown",
     "ogc.wkb",
 };
 
@@ -401,7 +403,6 @@ impl Table {
     /// let chunked_array = table.geometry_column(None).unwrap(); // there's only one geometry column
     /// # }
     /// ```
-
     // TODO: make this generic across RecordBatch and Table
     // Deduplicate implementation in Python binding `geometry()`
     pub fn geometry_column(&self, index: Option<usize>) -> Result<Arc<dyn ChunkedNativeArray>> {

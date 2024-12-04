@@ -22,9 +22,12 @@ impl<'a> GEOSConstLinearRing<'a> {
     }
 }
 
-impl<'a> LineStringTrait for GEOSConstLinearRing<'a> {
+impl LineStringTrait for GEOSConstLinearRing<'_> {
     type T = f64;
-    type CoordType<'c> = GEOSConstCoord where Self: 'c;
+    type CoordType<'c>
+        = GEOSConstCoord
+    where
+        Self: 'c;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {

@@ -1,11 +1,11 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_linestring;
 use crate::algorithm::native::eq::line_string_eq;
 use crate::array::util::OffsetBufferUtils;
-use crate::array::{CoordBuffer, LineStringArray};
-use crate::io::geo::line_string_to_geo;
+use crate::array::CoordBuffer;
 use crate::scalar::Coord;
 use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
+use geo_traits::to_geo::ToGeoLineString;
 use geo_traits::LineStringTrait;
 use rstar::{RTreeObject, AABB};
 
@@ -38,19 +38,15 @@ impl<'a> LineString<'a> {
     }
 
     pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, usize) {
-        let arr = LineStringArray::new(
+        (
             self.coords.clone(),
             self.geom_offsets.clone(),
-            None,
-            Default::default(),
-        );
-        let sliced_arr = arr.owned_slice(self.geom_index, 1);
-        let (coords, geom_offsets, _validity) = sliced_arr.into_inner();
-        (coords, geom_offsets, 0)
+            self.geom_index,
+        )
     }
 }
 
-impl<'a> NativeScalar for LineString<'a> {
+impl NativeScalar for LineString<'_> {
     type ScalarGeo = geo::LineString;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -69,7 +65,10 @@ impl<'a> NativeScalar for LineString<'a> {
 
 impl<'a> LineStringTrait for LineString<'a> {
     type T = f64;
-    type CoordType<'b> = Coord<'a> where Self: 'b;
+    type CoordType<'b>
+        = Coord<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         self.coords.dim().into()
@@ -87,7 +86,10 @@ impl<'a> LineStringTrait for LineString<'a> {
 
 impl<'a> LineStringTrait for &'a LineString<'a> {
     type T = f64;
-    type CoordType<'b> = Coord<'a> where Self: 'b;
+    type CoordType<'b>
+        = Coord<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         self.coords.dim().into()
@@ -111,7 +113,7 @@ impl From<LineString<'_>> for geo::LineString {
 
 impl From<&LineString<'_>> for geo::LineString {
     fn from(value: &LineString<'_>) -> Self {
-        line_string_to_geo(value)
+        value.to_line_string()
     }
 }
 

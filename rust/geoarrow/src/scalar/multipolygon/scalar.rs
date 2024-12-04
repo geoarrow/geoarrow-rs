@@ -1,12 +1,12 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_multipolygon;
 use crate::algorithm::native::eq::multi_polygon_eq;
 use crate::array::util::OffsetBufferUtils;
-use crate::array::{CoordBuffer, MultiPolygonArray};
+use crate::array::CoordBuffer;
 use crate::datatypes::Dimension;
-use crate::io::geo::multi_polygon_to_geo;
 use crate::scalar::Polygon;
 use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
+use geo_traits::to_geo::ToGeoMultiPolygon;
 use geo_traits::MultiPolygonTrait;
 use rstar::{RTreeObject, AABB};
 
@@ -57,22 +57,17 @@ impl<'a> MultiPolygon<'a> {
         OffsetBuffer<i32>,
         usize,
     ) {
-        let arr = MultiPolygonArray::new(
+        (
             self.coords.clone(),
             self.geom_offsets.clone(),
             self.polygon_offsets.clone(),
             self.ring_offsets.clone(),
-            None,
-            Default::default(),
-        );
-        let sliced_arr = arr.owned_slice(self.geom_index, 1);
-        let (coords, geom_offsets, polygon_offsets, ring_offsets) = sliced_arr.into_inner();
-
-        (coords, geom_offsets, polygon_offsets, ring_offsets, 0)
+            self.geom_index,
+        )
     }
 }
 
-impl<'a> NativeScalar for MultiPolygon<'a> {
+impl NativeScalar for MultiPolygon<'_> {
     type ScalarGeo = geo::MultiPolygon;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -91,7 +86,10 @@ impl<'a> NativeScalar for MultiPolygon<'a> {
 
 impl<'a> MultiPolygonTrait for MultiPolygon<'a> {
     type T = f64;
-    type PolygonType<'b> = Polygon<'a> where Self: 'b;
+    type PolygonType<'b>
+        = Polygon<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.coords.dim() {
@@ -117,7 +115,10 @@ impl<'a> MultiPolygonTrait for MultiPolygon<'a> {
 
 impl<'a> MultiPolygonTrait for &'a MultiPolygon<'a> {
     type T = f64;
-    type PolygonType<'b> = Polygon<'a> where Self: 'b;
+    type PolygonType<'b>
+        = Polygon<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.coords.dim() {
@@ -149,7 +150,7 @@ impl From<MultiPolygon<'_>> for geo::MultiPolygon {
 
 impl From<&MultiPolygon<'_>> for geo::MultiPolygon {
     fn from(value: &MultiPolygon<'_>) -> Self {
-        multi_polygon_to_geo(value)
+        value.to_multi_polygon()
     }
 }
 

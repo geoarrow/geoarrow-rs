@@ -55,7 +55,7 @@ use geo_traits::GeometryTrait;
 /// - 37: GeometryCollection ZM
 #[derive(Debug, Clone, PartialEq)]
 pub struct MixedGeometryArray {
-    /// Always NativeType::Mixed or NativeType::LargeMixed
+    /// Always NativeType::Mixed
     data_type: NativeType,
 
     pub(crate) metadata: Arc<ArrayMetadata>,
@@ -281,10 +281,6 @@ impl MixedGeometryArray {
         }
     }
 
-    pub fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
-        todo!()
-    }
-
     pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
         self.clone().into_coord_type(coord_type)
     }
@@ -376,10 +372,6 @@ impl NativeArray for MixedGeometryArray {
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
     }
-
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
-        Arc::new(self.owned_slice(offset, length))
-    }
 }
 
 impl GeometryArraySelfMethods for MixedGeometryArray {
@@ -427,31 +419,7 @@ impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for MixedGeometryArray {
         &'a self,
         index: usize,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
-        let type_id = self.type_ids[index];
-        let offset = self.offsets[index] as usize;
-
-        let geom = match type_id {
-            1 => Geometry::Point(self.points.value(offset)),
-            2 => Geometry::LineString(self.line_strings.value(offset)),
-            3 => Geometry::Polygon(self.polygons.value(offset)),
-            4 => Geometry::MultiPoint(self.multi_points.value(offset)),
-            5 => Geometry::MultiLineString(self.multi_line_strings.value(offset)),
-            6 => Geometry::MultiPolygon(self.multi_polygons.value(offset)),
-            7 => {
-                panic!("nested geometry collections not supported")
-            }
-            11 => Geometry::Point(self.points.value(offset)),
-            12 => Geometry::LineString(self.line_strings.value(offset)),
-            13 => Geometry::Polygon(self.polygons.value(offset)),
-            14 => Geometry::MultiPoint(self.multi_points.value(offset)),
-            15 => Geometry::MultiLineString(self.multi_line_strings.value(offset)),
-            16 => Geometry::MultiPolygon(self.multi_polygons.value(offset)),
-            17 => {
-                panic!("nested geometry collections not supported")
-            }
-            _ => panic!("unknown type_id {}", type_id),
-        };
-
+        let geom = NativeGeometryAccessor::value_as_geometry_unchecked(self, index);
         (&geom).try_into()
     }
 }

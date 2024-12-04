@@ -1,7 +1,6 @@
 #[cfg(feature = "flatgeobuf_async")]
 mod r#async;
 mod common;
-mod core;
 #[cfg(feature = "flatgeobuf_async")]
 mod object_store_reader;
 mod sync;

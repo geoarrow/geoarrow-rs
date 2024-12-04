@@ -39,7 +39,10 @@ impl GEOSMultiPolygon {
 
 impl MultiPolygonTrait for GEOSMultiPolygon {
     type T = f64;
-    type PolygonType<'a> = GEOSConstPolygon<'a> where Self: 'a;
+    type PolygonType<'a>
+        = GEOSConstPolygon<'a>
+    where
+        Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {

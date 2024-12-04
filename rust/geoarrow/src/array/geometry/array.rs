@@ -230,26 +230,6 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for GeometryArray<O> {
             GeometryArray::Rect(arr) => GeometryArray::Rect(arr.slice(offset, length)),
         }
     }
-
-    fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        match self {
-            GeometryArray::Point(arr) => GeometryArray::Point(arr.owned_slice(offset, length)),
-            GeometryArray::LineString(arr) => {
-                GeometryArray::LineString(arr.owned_slice(offset, length))
-            }
-            GeometryArray::Polygon(arr) => GeometryArray::Polygon(arr.owned_slice(offset, length)),
-            GeometryArray::MultiPoint(arr) => {
-                GeometryArray::MultiPoint(arr.owned_slice(offset, length))
-            }
-            GeometryArray::MultiLineString(arr) => {
-                GeometryArray::MultiLineString(arr.owned_slice(offset, length))
-            }
-            GeometryArray::MultiPolygon(arr) => {
-                GeometryArray::MultiPolygon(arr.owned_slice(offset, length))
-            }
-            GeometryArray::Rect(arr) => GeometryArray::Rect(arr.owned_slice(offset, length)),
-        }
-    }
 }
 
 impl<'a, O: OffsetSizeTrait> ArrayAccessor<'a> for GeometryArray<O> {

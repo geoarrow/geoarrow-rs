@@ -3,11 +3,11 @@ use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedLineStringArray, ChunkedNativeArray};
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::io::geo::line_string_to_geo;
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
 use arrow_array::Float64Array;
 use geo::FrechetDistance as _FrechetDistance;
+use geo_traits::to_geo::ToGeoLineString;
 use geo_traits::LineStringTrait;
 
 // ┌────────────────────────────────┐
@@ -95,7 +95,7 @@ impl<G: LineStringTrait<T = f64>> FrechetDistanceLineString<G> for LineStringArr
     type Output = Float64Array;
 
     fn frechet_distance(&self, rhs: &G) -> Self::Output {
-        let rhs = line_string_to_geo(rhs);
+        let rhs = rhs.to_line_string();
         self.try_unary_primitive(|geom| {
             Ok::<_, GeoArrowError>(geom.to_geo().frechet_distance(&rhs))
         })
@@ -135,7 +135,7 @@ impl<G: LineStringTrait<T = f64>> FrechetDistanceLineString<G> for &dyn ChunkedN
         use Dimension::*;
         use NativeType::*;
 
-        let rhs = line_string_to_geo(rhs);
+        let rhs = rhs.to_line_string();
         let result = match self.data_type() {
             LineString(_, XY) => {
                 FrechetDistanceLineString::frechet_distance(self.as_line_string(), &rhs)

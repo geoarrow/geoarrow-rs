@@ -77,7 +77,10 @@ impl PyNativeType {
     }
 
     #[allow(unused_variables)]
-    fn __arrow_c_schema__<'py>(&'py self, py: Python<'py>) -> PyGeoArrowResult<Bound<PyCapsule>> {
+    fn __arrow_c_schema__<'py>(
+        &'py self,
+        py: Python<'py>,
+    ) -> PyGeoArrowResult<Bound<'py, PyCapsule>> {
         let field = self.0.to_field("", true);
         Ok(to_schema_pycapsule(py, field)?)
     }
@@ -121,8 +124,9 @@ impl PyNativeType {
         let enums_mod = py.import_bound(intern!(py, "geoarrow.rust.core.enums"))?;
         let coord_type = enums_mod.getattr(intern!(py, "Dimension"))?;
         match self.0.dimension() {
-            Dimension::XY => Ok(coord_type.getattr(intern!(py, "XY"))?.into()),
-            Dimension::XYZ => Ok(coord_type.getattr(intern!(py, "XYZ"))?.into()),
+            Some(Dimension::XY) => Ok(coord_type.getattr(intern!(py, "XY"))?.into()),
+            Some(Dimension::XYZ) => Ok(coord_type.getattr(intern!(py, "XYZ"))?.into()),
+            None => Ok(py.None()),
         }
     }
 }
@@ -184,7 +188,10 @@ impl PySerializedType {
     }
 
     #[allow(unused_variables)]
-    fn __arrow_c_schema__<'py>(&'py self, py: Python<'py>) -> PyGeoArrowResult<Bound<PyCapsule>> {
+    fn __arrow_c_schema__<'py>(
+        &'py self,
+        py: Python<'py>,
+    ) -> PyGeoArrowResult<Bound<'py, PyCapsule>> {
         let field = self.0.to_field("", true);
         Ok(to_schema_pycapsule(py, field)?)
     }

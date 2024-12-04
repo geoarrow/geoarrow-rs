@@ -14,7 +14,6 @@ use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, LineString};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
-use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::{ArrayBase, NativeArray};
 use arrow::array::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
@@ -30,7 +29,7 @@ use super::LineStringBuilder;
 /// bitmap.
 #[derive(Debug, Clone)]
 pub struct LineStringArray {
-    // Always NativeType::LineString or NativeType::LargeLineString
+    // Always NativeType::LineString
     data_type: NativeType,
 
     pub(crate) metadata: Arc<ArrayMetadata>,
@@ -172,28 +171,6 @@ impl LineStringArray {
         }
     }
 
-    pub fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        assert!(
-            offset + length <= self.len(),
-            "offset + length may not exceed length of array"
-        );
-        assert!(length >= 1, "length must be at least 1");
-
-        // Find the start and end of the coord buffer
-        let (start_coord_idx, _) = self.geom_offsets.start_end(offset);
-        let (_, end_coord_idx) = self.geom_offsets.start_end(offset + length - 1);
-
-        let geom_offsets = owned_slice_offsets(&self.geom_offsets, offset, length);
-
-        let coords = self
-            .coords
-            .owned_slice(start_coord_idx, end_coord_idx - start_coord_idx);
-
-        let validity = owned_slice_validity(self.nulls(), offset, length);
-
-        Self::new(coords, geom_offsets, validity, self.metadata())
-    }
-
     pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
         self.clone().into_coord_type(coord_type)
     }
@@ -286,10 +263,6 @@ impl NativeArray for LineStringArray {
 
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
-    }
-
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
-        Arc::new(self.owned_slice(offset, length))
     }
 }
 
@@ -405,7 +378,10 @@ impl TryFrom<(&dyn Array, &Field)> for LineStringArray {
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
         let geom_type = NativeType::try_from(field)?;
-        let mut arr: Self = (arr, geom_type.dimension()).try_into()?;
+        let dim = geom_type
+            .dimension()
+            .ok_or(GeoArrowError::General("Expected dimension".to_string()))?;
+        let mut arr: Self = (arr, dim).try_into()?;
         arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
         Ok(arr)
     }
@@ -579,20 +555,6 @@ mod test {
     fn slice() {
         let arr: LineStringArray = (vec![ls0(), ls1()].as_slice(), Dimension::XY).into();
         let sliced = arr.slice(1, 1);
-        assert_eq!(sliced.len(), 1);
-        assert_eq!(sliced.get_as_geo(0), Some(ls1()));
-    }
-
-    #[test]
-    fn owned_slice() {
-        let arr: LineStringArray = (vec![ls0(), ls1()].as_slice(), Dimension::XY).into();
-        let sliced = arr.owned_slice(1, 1);
-
-        // assert!(
-        //     !sliced.geom_offsets.buffer().is_sliced(),
-        //     "underlying offsets should not be sliced"
-        // );
-        assert_eq!(arr.len(), 2);
         assert_eq!(sliced.len(), 1);
         assert_eq!(sliced.get_as_geo(0), Some(ls1()));
     }

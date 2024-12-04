@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use crate::algorithm::native::Downcast;
 use crate::array::geometrycollection::GeometryCollectionBuilder;
+use crate::array::unknown::UnknownGeometryBuilder;
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::datatypes::{Dimension, NativeType};
@@ -11,7 +12,9 @@ use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 
-/// An optimized implementation of converting from ISO WKB-encoded geometries.
+/// An optimized implementation of converting from WKB-encoded geometries.
+///
+/// This supports either ISO or EWKB-flavored data.
 ///
 /// This implementation performs a two-pass approach, first scanning the input geometries to
 /// determine the exact buffer sizes, then making a single set of allocations and filling those new
@@ -176,7 +179,9 @@ impl FromWKB for Arc<dyn ChunkedNativeArray> {
     }
 }
 
-/// Parse an ISO [WKBArray] to a GeometryArray with GeoArrow native encoding.
+/// Parse a [WKBArray] to a GeometryArray with GeoArrow native encoding.
+///
+/// This supports either ISO or EWKB-flavored data.
 ///
 /// Does not downcast automatically
 pub fn from_wkb<O: OffsetSizeTrait>(
@@ -185,74 +190,56 @@ pub fn from_wkb<O: OffsetSizeTrait>(
     prefer_multi: bool,
 ) -> Result<Arc<dyn NativeArray>> {
     use NativeType::*;
-    let target_dim = target_geo_data_type.dimension();
-
     let wkb_objects: Vec<Option<crate::scalar::WKB<'_, O>>> = arr.iter().collect();
     match target_geo_data_type {
-        Point(coord_type, _) => {
+        Point(coord_type, dim) => {
             let builder =
-                PointBuilder::from_wkb(&wkb_objects, target_dim, Some(coord_type), arr.metadata())?;
+                PointBuilder::from_wkb(&wkb_objects, dim, Some(coord_type), arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
-        LineString(coord_type, _) => {
-            let builder = LineStringBuilder::from_wkb(
-                &wkb_objects,
-                target_dim,
-                Some(coord_type),
-                arr.metadata(),
-            )?;
+        LineString(coord_type, dim) => {
+            let builder =
+                LineStringBuilder::from_wkb(&wkb_objects, dim, Some(coord_type), arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
-        Polygon(coord_type, _) => {
-            let builder = PolygonBuilder::from_wkb(
-                &wkb_objects,
-                target_dim,
-                Some(coord_type),
-                arr.metadata(),
-            )?;
+        Polygon(coord_type, dim) => {
+            let builder =
+                PolygonBuilder::from_wkb(&wkb_objects, dim, Some(coord_type), arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
-        MultiPoint(coord_type, _) => {
-            let builder = MultiPointBuilder::from_wkb(
-                &wkb_objects,
-                target_dim,
-                Some(coord_type),
-                arr.metadata(),
-            )?;
+        MultiPoint(coord_type, dim) => {
+            let builder =
+                MultiPointBuilder::from_wkb(&wkb_objects, dim, Some(coord_type), arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
-        MultiLineString(coord_type, _) => {
+        MultiLineString(coord_type, dim) => {
             let builder = MultiLineStringBuilder::from_wkb(
                 &wkb_objects,
-                target_dim,
+                dim,
                 Some(coord_type),
                 arr.metadata(),
             )?;
             Ok(Arc::new(builder.finish()))
         }
-        MultiPolygon(coord_type, _) => {
-            let builder = MultiPolygonBuilder::from_wkb(
-                &wkb_objects,
-                target_dim,
-                Some(coord_type),
-                arr.metadata(),
-            )?;
+        MultiPolygon(coord_type, dim) => {
+            let builder =
+                MultiPolygonBuilder::from_wkb(&wkb_objects, dim, Some(coord_type), arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
-        Mixed(coord_type, _) => {
+        Mixed(coord_type, dim) => {
             let builder = MixedGeometryBuilder::from_wkb(
                 &wkb_objects,
-                target_dim,
+                dim,
                 Some(coord_type),
                 arr.metadata(),
                 prefer_multi,
             )?;
             Ok(Arc::new(builder.finish()))
         }
-        GeometryCollection(coord_type, _) => {
+        GeometryCollection(coord_type, dim) => {
             let builder = GeometryCollectionBuilder::from_wkb(
                 &wkb_objects,
-                target_dim,
+                dim,
                 Some(coord_type),
                 arr.metadata(),
                 prefer_multi,
@@ -263,6 +250,15 @@ pub fn from_wkb<O: OffsetSizeTrait>(
             "Unexpected data type {:?}",
             target_geo_data_type,
         ))),
+        Unknown(coord_type) => {
+            let builder = UnknownGeometryBuilder::from_wkb(
+                &wkb_objects,
+                Some(coord_type),
+                arr.metadata(),
+                prefer_multi,
+            )?;
+            Ok(Arc::new(builder.finish()))
+        }
     }
 }
 
@@ -294,6 +290,7 @@ impl ToWKB for &dyn NativeArray {
             GeometryCollection(_, _) => self.as_geometry_collection().into(),
 
             Rect(_) => todo!(),
+            Unknown(_) => self.as_unknown().into(),
         }
     }
 }
@@ -324,6 +321,7 @@ impl ToWKB for &dyn ChunkedNativeArray {
                 ChunkedGeometryArray::new(self.as_geometry_collection().map(|chunk| chunk.into()))
             }
             Rect(_) => todo!(),
+            Unknown(_) => ChunkedGeometryArray::new(self.as_mixed().map(|chunk| chunk.into())),
         }
     }
 }
@@ -342,6 +340,7 @@ pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn NativeArray) -> WKBArray<O> {
         Mixed(_, _) => arr.as_mixed().into(),
         GeometryCollection(_, _) => arr.as_geometry_collection().into(),
         Rect(_) => todo!(),
+        Unknown(_) => arr.as_unknown().into(),
     }
 }
 

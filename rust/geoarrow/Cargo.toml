@@ -11,7 +11,7 @@ categories = ["science::geo"]
 rust-version = "1.82"
 
 [features]
-csv = ["geozero/with-csv"]
+csv = ["dep:arrow-csv", "geozero/with-csv"]
 flatgeobuf = ["dep:flatgeobuf"]
 flatgeobuf_async = [
   "flatgeobuf/http",
@@ -45,13 +45,14 @@ rayon = ["dep:rayon"]
 
 
 [dependencies]
-arrow = { version = "53", features = ["ffi"] }
-arrow-array = { version = "53", features = ["chrono-tz"] }
-arrow-buffer = "53"
-arrow-cast = { version = "53" }
-arrow-data = "53"
-arrow-ipc = "53"
-arrow-schema = "53"
+arrow = { version = "53.3", features = ["ffi"] }
+arrow-array = { version = "53.3", features = ["chrono-tz"] }
+arrow-buffer = "53.3"
+arrow-cast = { version = "53.3" }
+arrow-csv = { version = "53", optional = true }
+arrow-data = "53.3"
+arrow-ipc = "53.3"
+arrow-schema = "53.3"
 async-stream = { version = "0.3", optional = true }
 async-trait = { version = "0.1", optional = true }
 bytes = { version = "1.5.0", optional = true }
@@ -59,7 +60,8 @@ chrono = { version = "0.4" }
 dbase = "0.5.0"
 enum-as-inner = "0.6.1"
 # Set default-features = false because async not working in wasm right now
-flatgeobuf = { version = "4.4.0", optional = true, default-features = false }
+# For geo-traits impl
+flatgeobuf = { git = "https://github.com/flatgeobuf/flatgeobuf", rev = "f554f2768b612e131e9f55d014eaa5b911a7f1b5", optional = true, default-features = false }
 futures = { version = "0.3", optional = true }
 gdal = { version = "0.17", optional = true }
 geo = "0.28"
@@ -95,9 +97,8 @@ sqlx = { version = "0.7", optional = true, default-features = false, features = 
 ] }
 thiserror = "1"
 tokio = { version = "1", default-features = false, optional = true }
-# wkt = "0.11"
-wkt = { git = "https://github.com/georust/wkt", rev = "447be533e0a76188ca499eb8a0c74fc4e8a0f823" }
-wkb = { git = "https://github.com/kylebarron/wkb", rev = "e0f29b4a24104356464cc123925b459d81c40e52" }
+wkt = "0.12"
+wkb = "0.8"
 
 
 [dev-dependencies]

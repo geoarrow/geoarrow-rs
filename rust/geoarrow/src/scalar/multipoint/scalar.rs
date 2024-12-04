@@ -1,12 +1,12 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_multipoint;
 use crate::algorithm::native::eq::multi_point_eq;
 use crate::array::util::OffsetBufferUtils;
-use crate::array::{CoordBuffer, MultiPointArray};
+use crate::array::CoordBuffer;
 use crate::datatypes::Dimension;
-use crate::io::geo::multi_point_to_geo;
 use crate::scalar::Point;
 use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
+use geo_traits::to_geo::ToGeoMultiPoint;
 use geo_traits::MultiPointTrait;
 use rstar::{RTreeObject, AABB};
 
@@ -40,19 +40,15 @@ impl<'a> MultiPoint<'a> {
     }
 
     pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, usize) {
-        let arr = MultiPointArray::new(
+        (
             self.coords.clone(),
             self.geom_offsets.clone(),
-            None,
-            Default::default(),
-        );
-        let sliced_arr = arr.owned_slice(self.geom_index, 1);
-        let (coords, geom_offsets, _validity) = sliced_arr.into_inner();
-        (coords, geom_offsets, 0)
+            self.geom_index,
+        )
     }
 }
 
-impl<'a> NativeScalar for MultiPoint<'a> {
+impl NativeScalar for MultiPoint<'_> {
     type ScalarGeo = geo::MultiPoint;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -71,7 +67,10 @@ impl<'a> NativeScalar for MultiPoint<'a> {
 
 impl<'a> MultiPointTrait for MultiPoint<'a> {
     type T = f64;
-    type PointType<'b> = Point<'a> where Self: 'b;
+    type PointType<'b>
+        = Point<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.coords.dim() {
@@ -92,7 +91,10 @@ impl<'a> MultiPointTrait for MultiPoint<'a> {
 
 impl<'a> MultiPointTrait for &'a MultiPoint<'a> {
     type T = f64;
-    type PointType<'b> = Point<'a> where Self: 'b;
+    type PointType<'b>
+        = Point<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.coords.dim() {
@@ -119,7 +121,7 @@ impl From<MultiPoint<'_>> for geo::MultiPoint {
 
 impl From<&MultiPoint<'_>> for geo::MultiPoint {
     fn from(value: &MultiPoint<'_>) -> Self {
-        multi_point_to_geo(value)
+        value.to_multi_point()
     }
 }
 

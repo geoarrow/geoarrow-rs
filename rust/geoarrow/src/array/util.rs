@@ -45,16 +45,6 @@ pub(crate) fn offsets_buffer_to_i32<O: OffsetSizeTrait>(
     Ok(unsafe { OffsetBuffer::new_unchecked(i32_offsets.into()) })
 }
 
-/// Returns an iterator with the lengths of the offsets
-#[inline]
-pub(crate) fn offset_lengths<O: OffsetSizeTrait>(
-    offsets: &OffsetBuffer<O>,
-) -> impl Iterator<Item = usize> + '_ {
-    offsets
-        .windows(2)
-        .map(|w| (w[1] - w[0]).to_usize().unwrap())
-}
-
 /// Offsets utils that I miss from arrow2
 pub(crate) trait OffsetBufferUtils<O: OffsetSizeTrait> {
     /// Returns the length an array with these offsets would be.

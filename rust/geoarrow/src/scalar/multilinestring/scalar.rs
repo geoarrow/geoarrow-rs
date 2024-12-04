@@ -1,11 +1,11 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_multilinestring;
 use crate::algorithm::native::eq::multi_line_string_eq;
 use crate::array::util::OffsetBufferUtils;
-use crate::array::{CoordBuffer, MultiLineStringArray};
-use crate::io::geo::multi_line_string_to_geo;
+use crate::array::CoordBuffer;
 use crate::scalar::LineString;
 use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
+use geo_traits::to_geo::ToGeoMultiLineString;
 use geo_traits::MultiLineStringTrait;
 use rstar::{RTreeObject, AABB};
 
@@ -43,24 +43,16 @@ impl<'a> MultiLineString<'a> {
     }
 
     pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, OffsetBuffer<i32>, usize) {
-        let arr = MultiLineStringArray::new(
+        (
             self.coords.clone(),
             self.geom_offsets.clone(),
             self.ring_offsets.clone(),
-            None,
-            Default::default(),
-        );
-        let sliced_arr = arr.owned_slice(self.geom_index, 1);
-        (
-            sliced_arr.coords,
-            sliced_arr.geom_offsets,
-            sliced_arr.ring_offsets,
-            0,
+            self.geom_index,
         )
     }
 }
 
-impl<'a> NativeScalar for MultiLineString<'a> {
+impl NativeScalar for MultiLineString<'_> {
     type ScalarGeo = geo::MultiLineString;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -79,7 +71,10 @@ impl<'a> NativeScalar for MultiLineString<'a> {
 
 impl<'a> MultiLineStringTrait for MultiLineString<'a> {
     type T = f64;
-    type LineStringType<'b> = LineString<'a> where Self: 'b;
+    type LineStringType<'b>
+        = LineString<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         self.coords.dim().into()
@@ -97,7 +92,10 @@ impl<'a> MultiLineStringTrait for MultiLineString<'a> {
 
 impl<'a> MultiLineStringTrait for &'a MultiLineString<'a> {
     type T = f64;
-    type LineStringType<'b> = LineString<'a> where Self: 'b;
+    type LineStringType<'b>
+        = LineString<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         self.coords.dim().into()
@@ -121,7 +119,7 @@ impl From<MultiLineString<'_>> for geo::MultiLineString {
 
 impl From<&MultiLineString<'_>> for geo::MultiLineString {
     fn from(value: &MultiLineString<'_>) -> Self {
-        multi_line_string_to_geo(value)
+        value.to_multi_line_string()
     }
 }
 

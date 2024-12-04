@@ -143,24 +143,6 @@ impl SeparatedCoordBuffer {
         }
     }
 
-    pub fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        assert!(
-            offset + length <= self.len(),
-            "offset + length may not exceed length of array"
-        );
-
-        // Initialize array with existing buffers, then overwrite them
-        let mut sliced_buffers = self.buffers.clone();
-        for (i, buffer) in self.buffers.iter().enumerate() {
-            sliced_buffers[i] = buffer.slice(offset, length).to_vec().into();
-        }
-
-        Self {
-            buffers: sliced_buffers,
-            dim: self.dim,
-        }
-    }
-
     pub fn storage_type(&self) -> DataType {
         coord_type_to_data_type(CoordType::Separated, self.dim)
     }

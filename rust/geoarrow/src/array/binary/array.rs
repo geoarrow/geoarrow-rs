@@ -7,14 +7,13 @@ use crate::array::{CoordType, WKBBuilder};
 use crate::datatypes::{NativeType, SerializedType};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
-use geo_traits::GeometryTrait;
-// use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, SerializedArray};
 use arrow::array::AsArray;
 use arrow_array::OffsetSizeTrait;
 use arrow_array::{Array, BinaryArray, GenericBinaryArray, LargeBinaryArray};
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
+use geo_traits::GeometryTrait;
 
 /// An immutable array of WKB geometries using GeoArrow's in-memory representation.
 ///
@@ -92,31 +91,6 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
             data_type: self.data_type,
             metadata: self.metadata(),
         }
-    }
-
-    pub fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
-        todo!()
-        // assert!(
-        //     offset + length <= self.len(),
-        //     "offset + length may not exceed length of array"
-        // );
-        // assert!(length >= 1, "length must be at least 1");
-
-        // // Find the start and end of the ring offsets
-        // let (start_idx, _) = self.array.offsets().start_end(offset);
-        // let (_, end_idx) = self.array.offsets().start_end(offset + length - 1);
-
-        // let new_offsets = owned_slice_offsets(self.array.offsets(), offset, length);
-
-        // let mut values = self.array.slice(start_idx, end_idx - start_idx);
-
-        // let validity = owned_slice_validity(self.array.nulls(), offset, length);
-
-        // Self::new(GenericBinaryArray::new(
-        //     new_offsets,
-        //     values.as_slice().to_vec().into(),
-        //     validity,
-        // ))
     }
 
     pub fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> Self {
@@ -296,35 +270,6 @@ impl TryFrom<WKBArray<i64>> for WKBArray<i32> {
         ))
     }
 }
-
-// impl TryFrom<&BinaryArray<i64>> for WKBArray {
-//     type Error = GeoArrowError;
-
-//     fn try_from(value: &BinaryArray<i64>) -> Result<Self, Self::Error> {
-//         Ok(Self::new(value.clone()))
-//     }
-// }
-
-// impl TryFrom<&dyn Array> for WKBArray {
-//     type Error = GeoArrowError;
-
-//     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
-//         match value.data_type() {
-//             DataType::Binary => {
-//                 let downcasted = value.as_any().downcast_ref::<BinaryArray<i32>>().unwrap();
-//                 downcasted.try_into()
-//             }
-//             DataType::LargeBinary => {
-//                 let downcasted = value.as_any().downcast_ref::<BinaryArray<i64>>().unwrap();
-//                 downcasted.try_into()
-//             }
-//             _ => Err(GeoArrowError::General(format!(
-//                 "Unexpected type: {:?}",
-//                 value.data_type()
-//             ))),
-//         }
-//     }
-// }
 
 impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for WKBArray<O> {
     type Error = GeoArrowError;

@@ -85,7 +85,10 @@ impl From<OwnedMultiPolygon> for MultiPolygonArray {
 
 impl MultiPolygonTrait for OwnedMultiPolygon {
     type T = f64;
-    type PolygonType<'b> = Polygon<'b> where Self: 'b;
+    type PolygonType<'b>
+        = Polygon<'b>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self.coords.dim() {

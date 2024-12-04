@@ -200,6 +200,7 @@ impl Explode for &dyn ChunkedNativeArray {
             Mixed(_, _) => self.as_mixed().explode(),
             GeometryCollection(_, _) => self.as_geometry_collection().explode(),
             Rect(_) => self.as_rect().explode(),
+            _ => todo!("explode unknown"),
         }
     }
 }

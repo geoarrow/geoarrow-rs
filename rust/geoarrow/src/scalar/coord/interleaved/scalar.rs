@@ -3,9 +3,9 @@ use rstar::{RTreeObject, AABB};
 
 use crate::algorithm::native::eq::coord_eq;
 use crate::datatypes::Dimension;
-use crate::io::geo::coord_to_geo;
 use crate::scalar::SeparatedCoord;
 use crate::trait_::NativeScalar;
+use geo_traits::to_geo::ToGeoCoord;
 use geo_traits::CoordTrait;
 
 #[derive(Debug, Clone)]
@@ -15,14 +15,14 @@ pub struct InterleavedCoord<'a> {
     pub(crate) dim: Dimension,
 }
 
-impl<'a> InterleavedCoord<'a> {
+impl InterleavedCoord<'_> {
     /// Return `true` if all values in the coordinate are f64::NAN
     pub(crate) fn is_nan(&self) -> bool {
         (0..self.dim.size()).all(|coord_dim| self.nth_or_panic(coord_dim).is_nan())
     }
 }
 
-impl<'a> NativeScalar for InterleavedCoord<'a> {
+impl NativeScalar for InterleavedCoord<'_> {
     type ScalarGeo = geo::Coord;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -48,7 +48,7 @@ impl From<InterleavedCoord<'_>> for geo::Coord {
 
 impl From<&InterleavedCoord<'_>> for geo::Coord {
     fn from(value: &InterleavedCoord) -> Self {
-        coord_to_geo(value)
+        value.to_coord()
     }
 }
 

@@ -1,6 +1,7 @@
 use crate::array::{
     AsNativeArray, GeometryCollectionArray, LineStringArray, MixedGeometryArray,
     MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray, PolygonArray, RectArray,
+    UnknownGeometryArray,
 };
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
@@ -51,18 +52,18 @@ impl GeometryScalar {
             | Mixed(_, dim)
             | GeometryCollection(_, dim)
             | Rect(dim) => dim,
-            // WKB => {
-            //     let arr = self.0.as_ref();
-            //     let wkb_arr = arr.as_wkb().value(0);
-            //     let wkb_obj = wkb_arr.to_wkb_object();
-            //     wkb_obj.dimension()
-            // }
-            // LargeWKB => {
-            //     let arr = self.0.as_ref();
-            //     let wkb_arr = arr.as_large_wkb().value(0);
-            //     let wkb_obj = wkb_arr.to_wkb_object();
-            //     wkb_obj.dimension()
-            // }
+            Unknown(_) => todo!(), // WKB => {
+                                   //     let arr = self.0.as_ref();
+                                   //     let wkb_arr = arr.as_wkb().value(0);
+                                   //     let wkb_obj = wkb_arr.to_wkb_object();
+                                   //     wkb_obj.dimension()
+                                   // }
+                                   // LargeWKB => {
+                                   //     let arr = self.0.as_ref();
+                                   //     let wkb_arr = arr.as_large_wkb().value(0);
+                                   //     let wkb_obj = wkb_arr.to_wkb_object();
+                                   //     wkb_obj.dimension()
+                                   // }
         }
     }
 
@@ -73,6 +74,9 @@ impl GeometryScalar {
         // TODO: may be able to change this now that we don't have <O>
         //
         // TODO: as of Nov 2024 we should be able to switch back to the downcasting helpers
+
+        // Note: switching to the cast helpers using as_ref creates a temporary value. We'll have
+        // to work around that.
 
         match self.data_type() {
             Point(_, _) => {
@@ -123,6 +127,14 @@ impl GeometryScalar {
                 let arr = self.0.as_any().downcast_ref::<RectArray>().unwrap();
                 arr.get(0).map(Geometry::Rect)
             }
+            Unknown(_) => {
+                let arr = self
+                    .0
+                    .as_any()
+                    .downcast_ref::<UnknownGeometryArray>()
+                    .unwrap();
+                arr.get(0)
+            }
         }
     }
 
@@ -145,6 +157,7 @@ impl GeometryScalar {
             Mixed(_, _) => impl_to_geo!(as_mixed),
             GeometryCollection(_, _) => impl_to_geo!(as_geometry_collection),
             Rect(_) => impl_to_geo!(as_rect),
+            Unknown(_) => impl_to_geo!(as_unknown),
         }
     }
 

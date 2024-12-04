@@ -1,9 +1,9 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_point;
 use crate::algorithm::native::eq::point_eq;
 use crate::array::CoordBuffer;
-use crate::io::geo::point_to_geo;
 use crate::scalar::Coord;
 use crate::trait_::NativeScalar;
+use geo_traits::to_geo::ToGeoPoint;
 use geo_traits::PointTrait;
 use rstar::{RTreeObject, AABB};
 
@@ -19,17 +19,12 @@ impl<'a> Point<'a> {
         Point { coords, geom_index }
     }
 
-    pub fn coord(&self) -> Coord {
-        self.coords.value(self.geom_index)
-    }
-
     pub fn into_owned_inner(self) -> (CoordBuffer, usize) {
-        let coords = self.coords.owned_slice(self.geom_index, 1);
-        (coords, self.geom_index)
+        (self.coords.clone(), self.geom_index)
     }
 }
 
-impl<'a> NativeScalar for Point<'a> {
+impl NativeScalar for Point<'_> {
     type ScalarGeo = geo::Point;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -48,7 +43,10 @@ impl<'a> NativeScalar for Point<'a> {
 
 impl<'a> PointTrait for Point<'a> {
     type T = f64;
-    type CoordType<'b> = Coord<'a> where Self: 'b;
+    type CoordType<'b>
+        = Coord<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         self.coords.dim().into()
@@ -66,7 +64,10 @@ impl<'a> PointTrait for Point<'a> {
 
 impl<'a> PointTrait for &Point<'a> {
     type T = f64;
-    type CoordType<'b> = Coord<'a> where Self: 'b;
+    type CoordType<'b>
+        = Coord<'a>
+    where
+        Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
         self.coords.dim().into()
@@ -90,7 +91,7 @@ impl From<Point<'_>> for geo::Point {
 
 impl From<&Point<'_>> for geo::Point {
     fn from(value: &Point<'_>) -> Self {
-        point_to_geo(value)
+        value.to_point()
     }
 }
 

@@ -90,6 +90,14 @@ pub enum GeoArrowError {
     /// [wkb::error::WKBError]
     #[error(transparent)]
     WkbError(#[from] wkb::error::WKBError),
+
+    /// [wkt::error::Error]
+    #[error("WKT error: {0}")]
+    WktStrError(&'static str),
+
+    /// [wkt::error::Error]
+    #[error(transparent)]
+    WktError(#[from] wkt::error::Error),
 }
 
 /// Crate-specific result type.

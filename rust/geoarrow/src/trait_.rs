@@ -281,7 +281,8 @@ pub trait NativeArray: ArrayBase {
 
     /// The dimension of this array.
     fn dimension(&self) -> Dimension {
-        self.data_type().dimension()
+        // TODO: remove this trait method now that we have an unknown-dimension array?
+        self.data_type().dimension().unwrap()
     }
 
     /// Converts this array to the same type of array but with the provided [CoordType].
@@ -310,8 +311,8 @@ pub trait NativeArray: ArrayBase {
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// let metadata = ArrayMetadata {
-    ///     crs: None,
     ///     edges: Some(Edges::Spherical),
+    ///     ..Default::default()
     /// };
     /// let metadata = array.with_metadata(metadata.into());
     /// ```
@@ -358,22 +359,6 @@ pub trait NativeArray: ArrayBase {
     /// This function panics iff `offset + length > self.len()`.
     #[must_use]
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray>;
-
-    /// Returns a owned slice that fully copies the contents of the underlying buffer.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use geoarrow::{array::PointArray, trait_::GeometryArraySelfMethods};
-    /// use geoarrow::datatypes::Dimension;
-    ///
-    /// let point_0 = geo::point!(x: 1., y: 2.);
-    /// let point_1 = geo::point!(x: 3., y: 4.);
-    /// let array: PointArray = (vec![point_0, point_1].as_slice(), Dimension::XY).into();
-    /// let smaller_array = array.owned_slice(1, 1);
-    /// ```
-    #[must_use]
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray>;
 }
 
 /// Type alias for a dynamic reference to something that implements [NativeArray].
@@ -397,8 +382,8 @@ pub trait SerializedArray: ArrayBase {
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// let metadata = ArrayMetadata {
-    ///     crs: None,
     ///     edges: Some(Edges::Spherical),
+    ///     ..Default::default()
     /// };
     /// let metadata = array.with_metadata(metadata.into());
     /// ```
@@ -540,8 +525,8 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// let value = array.value(0); // geoarrow::scalar::Point
-    /// assert_eq!(value.coord().x(), 1.);
-    /// assert_eq!(value.coord().y(), 2.);
+    /// assert_eq!(value.coord().unwrap().x(), 1.);
+    /// assert_eq!(value.coord().unwrap().y(), 2.);
     /// ```
     ///
     /// # Panics
@@ -917,8 +902,8 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     /// use geoarrow::datatypes::Dimension;
     ///
     /// let metadata = ArrayMetadata {
-    ///     crs: None,
     ///     edges: Some(Edges::Spherical),
+    ///     ..Default::default()
     /// };
     /// let builder = PointBuilder::with_geom_capacity_and_options(
     ///     Dimension::XY,
@@ -972,8 +957,8 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     ///
     /// let mut builder = PointBuilder::new(Dimension::XY);
     /// let metadata = ArrayMetadata {
-    ///     crs: None,
     ///     edges: Some(Edges::Spherical),
+    ///     ..Default::default()
     /// };
     /// builder.set_metadata(metadata.into());
     /// ```
