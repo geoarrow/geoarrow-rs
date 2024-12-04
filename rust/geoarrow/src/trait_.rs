@@ -944,6 +944,9 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     /// Push a geometry onto this array.
     fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()>;
 
+    // /// Push a null onto this array.
+    // fn push_null(&mut self) -> Result<()>;
+
     /// Sets this builders metadata.
     ///
     /// # Examples
