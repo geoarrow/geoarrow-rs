@@ -1,5 +1,4 @@
 use crate::algorithm::native::Unary;
-use crate::array::unknown::UnknownGeometryArray;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
 use crate::datatypes::NativeType;

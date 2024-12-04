@@ -1,8 +1,6 @@
 use std::sync::Arc;
 
 use crate::algorithm::native::Downcast;
-use crate::array::geometrycollection::GeometryCollectionBuilder;
-use crate::array::unknown::UnknownGeometryBuilder;
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::datatypes::{Dimension, NativeType};

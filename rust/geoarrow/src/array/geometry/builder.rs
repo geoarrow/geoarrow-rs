@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
+use crate::array::geometry::array::UnknownGeometryArray;
+use crate::array::geometry::capacity::UnknownCapacity;
 use crate::array::metadata::ArrayMetadata;
-use crate::array::unknown::array::UnknownGeometryArray;
-use crate::array::unknown::capacity::UnknownCapacity;
 use crate::array::{
     CoordType, GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder,
     MultiPointBuilder, MultiPolygonBuilder, PointBuilder, PolygonBuilder, WKBArray,

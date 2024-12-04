@@ -1,8 +1,7 @@
-//! Contains the [`GeometryArray`], which is an enum over all geometry array types.
+mod array;
+mod builder;
+mod capacity;
 
-// #[allow(deprecated)]
-// pub use array::GeometryArray;
-
-// mod array;
-// mod iterator;
-// mod mutable;
+pub use array::UnknownGeometryArray;
+pub use builder::UnknownGeometryBuilder;
+pub use capacity::UnknownCapacity;

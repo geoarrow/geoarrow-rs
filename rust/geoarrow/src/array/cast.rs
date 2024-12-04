@@ -1,4 +1,3 @@
-use crate::array::unknown::UnknownGeometryArray;
 use crate::array::*;
 use crate::chunked_array::*;
 

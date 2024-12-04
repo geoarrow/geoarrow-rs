@@ -2,7 +2,6 @@ use arrow_array::types::ArrowPrimitiveType;
 use arrow_array::{BooleanArray, OffsetSizeTrait, PrimitiveArray};
 use arrow_buffer::{BooleanBufferBuilder, BufferBuilder};
 
-use crate::array::unknown::UnknownGeometryArray;
 use crate::array::*;
 use crate::datatypes::Dimension;
 use crate::trait_::ArrayAccessor;
