@@ -63,6 +63,22 @@ pub struct UnknownGeometryBuilder {
     ///
     /// The idea is that always adding multi-geometries will make it easier to downcast later.
     pub(crate) prefer_multi: bool,
+
+    /// The number of nulls that has been deferred and are still to be written.
+    ///
+    /// Adding nulls is tricky. We often want to use this builder as a generic builder for data
+    /// from unknown sources, which then gets downcasted to an array of a specific type.
+    ///
+    /// In a large majority of the time, this builder will have only data of a single type, which
+    /// can then get downcasted to a simple array of a single geometry type and dimension. But in
+    /// order for this process to be easy, we want the nulls to be assigned to the same array type
+    /// as the actual data.
+    ///
+    /// When there's a valid geometry pushed before the null, we can add the null to an existing
+    /// non-null array type, but if there are no valid geometries yet, we don't know which array to
+    /// push the null to. This `deferred_nulls` is the number of initial null values that haven't
+    /// yet been written to an array, because we don't know which array to write them to.
+    deferred_nulls: usize,
 }
 
 impl<'a> UnknownGeometryBuilder {
@@ -173,6 +189,7 @@ impl<'a> UnknownGeometryBuilder {
             ),
             offsets: vec![],
             prefer_multi,
+            deferred_nulls: 0,
         }
     }
 
@@ -310,9 +327,17 @@ impl<'a> UnknownGeometryBuilder {
                 self.add_multi_point_type(point.dim().try_into().unwrap());
                 match point.dim() {
                     Dimensions::Xy | Dimensions::Unknown(2) => {
+                        // Flush deferred nulls
+                        (0..self.deferred_nulls).for_each(|_| self.mpoint_xy.push_null());
+                        self.deferred_nulls = 0;
+
                         self.mpoint_xy.push_point(Some(point))?;
                     }
                     Dimensions::Xyz | Dimensions::Unknown(3) => {
+                        // Flush deferred nulls
+                        (0..self.deferred_nulls).for_each(|_| self.mpoint_xyz.push_null());
+                        self.deferred_nulls = 0;
+
                         self.mpoint_xyz.push_point(Some(point))?;
                     }
                     dim => {
@@ -325,9 +350,17 @@ impl<'a> UnknownGeometryBuilder {
                 self.add_point_type(point.dim().try_into().unwrap());
                 match point.dim() {
                     Dimensions::Xy | Dimensions::Unknown(2) => {
+                        // Flush deferred nulls
+                        (0..self.deferred_nulls).for_each(|_| self.point_xy.push_null());
+                        self.deferred_nulls = 0;
+
                         self.point_xy.push_point(Some(point));
                     }
                     Dimensions::Xyz | Dimensions::Unknown(3) => {
+                        // Flush deferred nulls
+                        (0..self.deferred_nulls).for_each(|_| self.point_xyz.push_null());
+                        self.deferred_nulls = 0;
+
                         self.point_xyz.push_point(Some(point));
                     }
                     dim => {
@@ -376,9 +409,17 @@ impl<'a> UnknownGeometryBuilder {
                 self.add_multi_line_string_type(line_string.dim().try_into().unwrap());
                 match line_string.dim() {
                     Dimensions::Xy | Dimensions::Unknown(2) => {
+                        // Flush deferred nulls
+                        (0..self.deferred_nulls).for_each(|_| self.mline_string_xy.push_null());
+                        self.deferred_nulls = 0;
+
                         self.mline_string_xy.push_line_string(Some(line_string))?;
                     }
                     Dimensions::Xyz | Dimensions::Unknown(3) => {
+                        // Flush deferred nulls
+                        (0..self.deferred_nulls).for_each(|_| self.mline_string_xyz.push_null());
+                        self.deferred_nulls = 0;
+
                         self.mline_string_xyz.push_line_string(Some(line_string))?;
                     }
                     dim => {
@@ -391,9 +432,17 @@ impl<'a> UnknownGeometryBuilder {
                 self.add_line_string_type(line_string.dim().try_into().unwrap());
                 match line_string.dim() {
                     Dimensions::Xy | Dimensions::Unknown(2) => {
+                        // Flush deferred nulls
+                        (0..self.deferred_nulls).for_each(|_| self.line_string_xy.push_null());
+                        self.deferred_nulls = 0;
+
                         self.line_string_xy.push_line_string(Some(line_string))?;
                     }
                     Dimensions::Xyz | Dimensions::Unknown(3) => {
+                        // Flush deferred nulls
+                        (0..self.deferred_nulls).for_each(|_| self.line_string_xyz.push_null());
+                        self.deferred_nulls = 0;
+
                         self.line_string_xyz.push_line_string(Some(line_string))?;
                     }
                     dim => {
@@ -441,9 +490,17 @@ impl<'a> UnknownGeometryBuilder {
                 self.add_multi_polygon_type(polygon.dim().try_into().unwrap());
                 match polygon.dim() {
                     Dimensions::Xy | Dimensions::Unknown(2) => {
+                        // Flush deferred nulls
+                        (0..self.deferred_nulls).for_each(|_| self.mpolygon_xy.push_null());
+                        self.deferred_nulls = 0;
+
                         self.mpolygon_xy.push_polygon(Some(polygon))?;
                     }
                     Dimensions::Xyz | Dimensions::Unknown(3) => {
+                        // Flush deferred nulls
+                        (0..self.deferred_nulls).for_each(|_| self.mpolygon_xyz.push_null());
+                        self.deferred_nulls = 0;
+
                         self.mpolygon_xyz.push_polygon(Some(polygon))?;
                     }
                     dim => {
@@ -456,9 +513,17 @@ impl<'a> UnknownGeometryBuilder {
                 self.add_polygon_type(polygon.dim().try_into().unwrap());
                 match polygon.dim() {
                     Dimensions::Xy | Dimensions::Unknown(2) => {
+                        // Flush deferred nulls
+                        (0..self.deferred_nulls).for_each(|_| self.polygon_xy.push_null());
+                        self.deferred_nulls = 0;
+
                         self.polygon_xy.push_polygon(Some(polygon))?;
                     }
                     Dimensions::Xyz | Dimensions::Unknown(3) => {
+                        // Flush deferred nulls
+                        (0..self.deferred_nulls).for_each(|_| self.polygon_xyz.push_null());
+                        self.deferred_nulls = 0;
+
                         self.polygon_xyz.push_polygon(Some(polygon))?;
                     }
                     dim => {
@@ -504,9 +569,17 @@ impl<'a> UnknownGeometryBuilder {
             self.add_multi_point_type(multi_point.dim().try_into().unwrap());
             match multi_point.dim() {
                 Dimensions::Xy | Dimensions::Unknown(2) => {
+                    // Flush deferred nulls
+                    (0..self.deferred_nulls).for_each(|_| self.mpoint_xy.push_null());
+                    self.deferred_nulls = 0;
+
                     self.mpoint_xy.push_multi_point(Some(multi_point))?;
                 }
                 Dimensions::Xyz | Dimensions::Unknown(3) => {
+                    // Flush deferred nulls
+                    (0..self.deferred_nulls).for_each(|_| self.mpoint_xyz.push_null());
+                    self.deferred_nulls = 0;
+
                     self.mpoint_xyz.push_multi_point(Some(multi_point))?;
                 }
                 dim => {
@@ -550,10 +623,18 @@ impl<'a> UnknownGeometryBuilder {
             self.add_multi_line_string_type(multi_line_string.dim().try_into().unwrap());
             match multi_line_string.dim() {
                 Dimensions::Xy | Dimensions::Unknown(2) => {
+                    // Flush deferred nulls
+                    (0..self.deferred_nulls).for_each(|_| self.mline_string_xy.push_null());
+                    self.deferred_nulls = 0;
+
                     self.mline_string_xy
                         .push_multi_line_string(Some(multi_line_string))?;
                 }
                 Dimensions::Xyz | Dimensions::Unknown(3) => {
+                    // Flush deferred nulls
+                    (0..self.deferred_nulls).for_each(|_| self.mline_string_xyz.push_null());
+                    self.deferred_nulls = 0;
+
                     self.mline_string_xyz
                         .push_multi_line_string(Some(multi_line_string))?;
                 }
@@ -600,9 +681,17 @@ impl<'a> UnknownGeometryBuilder {
             self.add_multi_polygon_type(multi_polygon.dim().try_into().unwrap());
             match multi_polygon.dim() {
                 Dimensions::Xy | Dimensions::Unknown(2) => {
+                    // Flush deferred nulls
+                    (0..self.deferred_nulls).for_each(|_| self.mpolygon_xy.push_null());
+                    self.deferred_nulls = 0;
+
                     self.mpolygon_xy.push_multi_polygon(Some(multi_polygon))?;
                 }
                 Dimensions::Xyz | Dimensions::Unknown(3) => {
+                    // Flush deferred nulls
+                    (0..self.deferred_nulls).for_each(|_| self.mpolygon_xyz.push_null());
+                    self.deferred_nulls = 0;
+
                     self.mpolygon_xyz.push_multi_polygon(Some(multi_polygon))?;
                 }
                 dim => {
@@ -669,13 +758,38 @@ impl<'a> UnknownGeometryBuilder {
         Ok(())
     }
 
+    /// Push a null to this builder
+    ///
+    /// Nulls will be pushed to one of the underlying non-empty arrays, to simplify downcasting.
     #[inline]
     pub fn push_null(&mut self) {
-        // Note: perhaps you could defer writing nulls until the first actual geometry has been
-        // pushed. And then at that point you write and deferred nulls and then the current
-        // geometry. And at any other point you can check which array already has data, and push a
-        // null to that array.
-        todo!("push null geometry")
+        if !self.point_xy.is_empty() {
+            self.point_xy.push_null();
+        } else if !self.line_string_xy.is_empty() {
+            self.line_string_xy.push_null();
+        } else if !self.polygon_xy.is_empty() {
+            self.polygon_xy.push_null();
+        } else if !self.mpoint_xy.is_empty() {
+            self.mpoint_xy.push_null();
+        } else if !self.mline_string_xy.is_empty() {
+            self.mline_string_xy.push_null();
+        } else if !self.mpolygon_xy.is_empty() {
+            self.mpolygon_xy.push_null();
+        } else if !self.point_xyz.is_empty() {
+            self.point_xyz.push_null();
+        } else if !self.line_string_xyz.is_empty() {
+            self.line_string_xyz.push_null();
+        } else if !self.polygon_xyz.is_empty() {
+            self.polygon_xyz.push_null();
+        } else if !self.mpoint_xyz.is_empty() {
+            self.mpoint_xyz.push_null();
+        } else if !self.mline_string_xyz.is_empty() {
+            self.mline_string_xyz.push_null();
+        } else if !self.mpolygon_xyz.is_empty() {
+            self.mpolygon_xyz.push_null();
+        } else {
+            self.deferred_nulls += 1;
+        }
     }
 
     pub fn extend_from_iter(
