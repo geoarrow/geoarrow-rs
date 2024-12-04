@@ -31,7 +31,7 @@ fn from_str_iter<'a>(
     let mut builder = UnknownGeometryBuilder::new_with_options(coord_type, metadata, prefer_multi);
     for wkt_str in iter {
         if let Some(s) = wkt_str {
-            let wkt = wkt::Wkt::<f64>::from_str(s).map_err(GeoArrowError::WktError)?;
+            let wkt = wkt::Wkt::<f64>::from_str(s).map_err(GeoArrowError::WktStrError)?;
             builder.push_geometry(Some(&wkt))?;
         } else {
             builder.push_null();

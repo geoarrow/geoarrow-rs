@@ -32,7 +32,7 @@ fn encode_batch(batch: RecordBatch) -> Result<RecordBatch> {
 
     for (field, column) in schema.fields().iter().zip(batch.columns()) {
         if let Ok(arr) = NativeArrayDyn::from_arrow_array(&column, field) {
-            let wkt_arr = arr.as_ref().to_wkt::<i32>();
+            let wkt_arr = arr.as_ref().to_wkt::<i32>()?;
             new_fields.push(wkt_arr.extension_field());
             new_columns.push(wkt_arr.into_array_ref());
         } else {
