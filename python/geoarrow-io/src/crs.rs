@@ -60,6 +60,7 @@ impl CRS {
 }
 
 /// An implementation of [CRSTransform] using pyproj.
+#[derive(Debug)]
 pub struct PyprojCRSTransform {}
 
 impl PyprojCRSTransform {

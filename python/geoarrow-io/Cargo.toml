@@ -35,8 +35,6 @@ async = [
 [dependencies]
 arrow = { workspace = true }
 bytes = "1"
-# For geo-traits impl
-flatgeobuf = { git = "https://github.com/flatgeobuf/flatgeobuf", rev = "f554f2768b612e131e9f55d014eaa5b911a7f1b5", default-features = false }
 futures = { version = "0.3", optional = true }
 object_store = { workspace = true, features = [
     "aws",

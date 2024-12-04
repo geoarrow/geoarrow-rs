@@ -2,9 +2,10 @@ use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::io::input::sync::FileWriter;
 use crate::io::input::{construct_reader, AnyFileReader};
 use crate::util::table_to_pytable;
-use flatgeobuf::FgbWriterOptions;
-use geoarrow::io::flatgeobuf::write_flatgeobuf_with_options as _write_flatgeobuf;
-use geoarrow::io::flatgeobuf::{read_flatgeobuf as _read_flatgeobuf, FlatGeobufReaderOptions};
+use geoarrow::io::flatgeobuf::{
+    read_flatgeobuf as _read_flatgeobuf, write_flatgeobuf_with_options as _write_flatgeobuf,
+    FlatGeobufReaderOptions, FlatGeobufWriterOptions,
+};
 use pyo3::prelude::*;
 use pyo3_arrow::input::AnyRecordBatch;
 
@@ -53,19 +54,38 @@ pub fn read_flatgeobuf(
 }
 
 #[pyfunction]
-#[pyo3(signature = (table, file, *, write_index=true))]
+#[pyo3(signature = (
+    table,
+    file,
+    *,
+    write_index=true,
+    promote_to_multi=true,
+    title=None,
+    description=None,
+    metadata=None
+))]
+#[allow(clippy::too_many_arguments)]
 pub fn write_flatgeobuf(
     py: Python,
     table: AnyRecordBatch,
     file: FileWriter,
     write_index: bool,
+    promote_to_multi: bool,
+    title: Option<String>,
+    description: Option<String>,
+    metadata: Option<String>,
 ) -> PyGeoArrowResult<()> {
     let name = file.file_stem(py);
 
-    let options = FgbWriterOptions {
+    let options = FlatGeobufWriterOptions {
         write_index,
+        promote_to_multi,
+        title,
+        description,
+        metadata,
         ..Default::default()
     };
+
     _write_flatgeobuf(
         table.into_reader()?,
         file,
