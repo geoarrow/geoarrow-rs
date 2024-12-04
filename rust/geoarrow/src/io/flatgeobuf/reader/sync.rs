@@ -105,7 +105,7 @@ pub fn read_flatgeobuf<R: Read + Seek>(
             );
             selection.process_features(&mut builder)?;
             let table = builder.finish()?;
-            table.downcast(true)
+            table.downcast()
         }
         (GeometryType::Point, true) => {
             impl_read!(PointBuilder, Dimension::XYZ)
@@ -129,7 +129,7 @@ pub fn read_flatgeobuf<R: Read + Seek>(
             selection.process_features(&mut builder)?;
             let table = builder.finish()?;
             // TODO: 3d downcasting not implemented
-            // table.downcast(true)
+            // table.downcast()
             Ok(table)
         }
         // TODO: Parse into a GeometryCollection array and then downcast to a single-typed array if possible.
