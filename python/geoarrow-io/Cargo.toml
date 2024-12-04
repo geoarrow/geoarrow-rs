@@ -50,7 +50,7 @@ pyo3-arrow = { workspace = true }
 pyo3-async-runtimes = { version = "0.23", features = [
     "tokio-runtime",
 ], optional = true }
-pyo3-object_store = { version = "0.1.0-beta.1", optional = true }
+pyo3-object_store = { git = "https://github.com/developmentseed/object-store-rs", rev = "bad34862a92849dd7b69c28cd4c225446d3d15ab", optional = true }
 pythonize = "0.23"
 geo = "0.28"
 geo-traits = { workspace = true }

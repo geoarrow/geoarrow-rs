@@ -17,12 +17,12 @@ pub fn from_geopandas(py: Python, input: &Bound<PyAny>) -> PyGeoArrowResult<PyOb
 
     // Note: I got an error in test_write_native_multi_points in `from_geopandas` with the WKB
     // encoding
-    let kwargs = PyDict::new_bound(py);
+    let kwargs = PyDict::new(py);
     kwargs.set_item("geometry_encoding", "geoarrow")?;
     let table = input
         .call_method(
             intern!(py, "to_arrow"),
-            PyTuple::new_bound(py, std::iter::empty::<PyObject>()),
+            PyTuple::new(py, std::iter::empty::<PyObject>())?,
             Some(&kwargs),
         )?
         .extract::<PyTable>()?;

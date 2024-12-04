@@ -48,7 +48,7 @@ impl PyNativeArray {
     ///
     /// This requires that you depend on geoarrow-rust-core from your Python package.
     pub fn to_geoarrow<'py>(&'py self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-        let geoarrow_mod = py.import_bound(intern!(py, "geoarrow.rust.core"))?;
+        let geoarrow_mod = py.import(intern!(py, "geoarrow.rust.core"))?;
         geoarrow_mod
             .getattr(intern!(py, "NativeArray"))?
             .call_method1(
@@ -94,8 +94,8 @@ impl PyNativeArray {
         let mut table = geoarrow::table::Table::try_new(vec![batch], schema)?;
         let json_string = table.to_json().map_err(GeoArrowError::GeozeroError)?;
 
-        let json_mod = py.import_bound(intern!(py, "json"))?;
-        let args = (json_string.into_py(py),);
+        let json_mod = py.import(intern!(py, "json"))?;
+        let args = (json_string,);
         Ok(json_mod.call_method1(intern!(py, "loads"), args)?)
     }
 
