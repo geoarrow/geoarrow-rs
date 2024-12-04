@@ -2,9 +2,7 @@ use std::sync::Arc;
 
 use crate::array::*;
 use crate::scalar::*;
-use geoarrow::array::MixedGeometryArray;
-use geoarrow::datatypes::Dimension;
-use geoarrow::io::geozero::ToMixedArray;
+use geoarrow::io::geozero::ToGeometryArray;
 use geoarrow::scalar::GeometryScalar;
 use geozero::geojson::GeoJsonString;
 use pyo3::exceptions::PyValueError;
@@ -26,8 +24,8 @@ impl<'a> FromPyObject<'a> for PyGeometry {
             let reader = GeoJsonString(json_string);
 
             // TODO: we need a dynamic dimensionality reader
-            let arr: MixedGeometryArray = reader
-                .to_mixed_geometry_array(Dimension::XY)
+            let arr = reader
+                .to_geometry_array()
                 .map_err(|err| PyValueError::new_err(err.to_string()))?;
             Ok(Self(
                 GeometryScalar::try_new(Arc::new(arr))
