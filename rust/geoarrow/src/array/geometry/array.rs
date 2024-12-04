@@ -5,8 +5,8 @@ use arrow_array::{Array, OffsetSizeTrait, UnionArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field, UnionMode};
 
-use crate::array::geometry::builder::UnknownGeometryBuilder;
-use crate::array::geometry::capacity::UnknownCapacity;
+use crate::array::geometry::GeometryBuilder;
+use crate::array::geometry::GeometryCapacity;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::{
     CoordType, GeometryCollectionArray, LineStringArray, MultiLineStringArray, MultiPointArray,
@@ -53,7 +53,7 @@ use geo_traits::GeometryTrait;
 /// - 36: MultiPolygon ZM
 /// - 37: GeometryCollection ZM
 #[derive(Debug, Clone, PartialEq)]
-pub struct UnknownGeometryArray {
+pub struct GeometryArray {
     /// Always NativeType::Unknown
     data_type: NativeType,
 
@@ -103,7 +103,7 @@ pub struct UnknownGeometryArray {
     pub(crate) slice_offset: usize,
 }
 
-impl UnknownGeometryArray {
+impl GeometryArray {
     /// Create a new MixedGeometryArray from parts
     ///
     /// # Implementation
@@ -154,7 +154,7 @@ impl UnknownGeometryArray {
 
         let coord_type = coord_types.into_iter().next().unwrap();
 
-        let data_type = NativeType::Unknown(coord_type);
+        let data_type = NativeType::Geometry(coord_type);
 
         Self {
             data_type,
@@ -180,8 +180,8 @@ impl UnknownGeometryArray {
     }
 
     /// The lengths of each buffer contained in this array.
-    pub fn buffer_lengths(&self) -> UnknownCapacity {
-        UnknownCapacity::new(
+    pub fn buffer_lengths(&self) -> GeometryCapacity {
+        GeometryCapacity::new(
             0,
             self.point_xy.buffer_lengths(),
             self.line_string_xy.buffer_lengths(),
@@ -469,7 +469,7 @@ impl UnknownGeometryArray {
     }
 }
 
-impl ArrayBase for UnknownGeometryArray {
+impl ArrayBase for GeometryArray {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -515,7 +515,7 @@ impl ArrayBase for UnknownGeometryArray {
     }
 }
 
-impl NativeArray for UnknownGeometryArray {
+impl NativeArray for GeometryArray {
     fn data_type(&self) -> NativeType {
         self.data_type
     }
@@ -543,7 +543,7 @@ impl NativeArray for UnknownGeometryArray {
     }
 }
 
-impl GeometryArraySelfMethods for UnknownGeometryArray {
+impl GeometryArraySelfMethods for GeometryArray {
     fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
         todo!();
     }
@@ -553,7 +553,7 @@ impl GeometryArraySelfMethods for UnknownGeometryArray {
     }
 }
 
-impl NativeGeometryAccessor for UnknownGeometryArray {
+impl NativeGeometryAccessor for GeometryArray {
     unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry {
         let type_id = self.type_ids[index];
         let offset = self.offsets[index] as usize;
@@ -583,7 +583,7 @@ impl NativeGeometryAccessor for UnknownGeometryArray {
 }
 
 #[cfg(feature = "geos")]
-impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for UnknownGeometryArray {
+impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for GeometryArray {
     unsafe fn value_as_geometry_unchecked(
         &'a self,
         index: usize,
@@ -593,7 +593,7 @@ impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for UnknownGeometryArray 
     }
 }
 
-impl<'a> ArrayAccessor<'a> for UnknownGeometryArray {
+impl<'a> ArrayAccessor<'a> for GeometryArray {
     type Item = Geometry<'a>;
     type ItemGeo = geo::Geometry;
 
@@ -625,7 +625,7 @@ impl<'a> ArrayAccessor<'a> for UnknownGeometryArray {
     }
 }
 
-impl IntoArrow for UnknownGeometryArray {
+impl IntoArrow for GeometryArray {
     type ArrowArray = UnionArray;
 
     fn into_arrow(self) -> Self::ArrowArray {
@@ -659,7 +659,7 @@ impl IntoArrow for UnknownGeometryArray {
     }
 }
 
-impl TryFrom<&UnionArray> for UnknownGeometryArray {
+impl TryFrom<&UnionArray> for GeometryArray {
     type Error = GeoArrowError;
 
     fn try_from(value: &UnionArray) -> std::result::Result<Self, Self::Error> {
@@ -834,7 +834,7 @@ impl TryFrom<&UnionArray> for UnknownGeometryArray {
     }
 }
 
-impl TryFrom<&dyn Array> for UnknownGeometryArray {
+impl TryFrom<&dyn Array> for GeometryArray {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self> {
@@ -851,7 +851,7 @@ impl TryFrom<&dyn Array> for UnknownGeometryArray {
     }
 }
 
-impl TryFrom<(&dyn Array, &Field)> for UnknownGeometryArray {
+impl TryFrom<(&dyn Array, &Field)> for GeometryArray {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
@@ -861,34 +861,34 @@ impl TryFrom<(&dyn Array, &Field)> for UnknownGeometryArray {
     }
 }
 
-impl<G: GeometryTrait<T = f64>> TryFrom<&[G]> for UnknownGeometryArray {
+impl<G: GeometryTrait<T = f64>> TryFrom<&[G]> for GeometryArray {
     type Error = GeoArrowError;
 
     fn try_from(geoms: &[G]) -> Result<Self> {
-        let mut_arr: UnknownGeometryBuilder = geoms.try_into()?;
+        let mut_arr: GeometryBuilder = geoms.try_into()?;
         Ok(mut_arr.into())
     }
 }
 
-impl<G: GeometryTrait<T = f64>> TryFrom<Vec<Option<G>>> for UnknownGeometryArray {
+impl<G: GeometryTrait<T = f64>> TryFrom<Vec<Option<G>>> for GeometryArray {
     type Error = GeoArrowError;
 
     fn try_from(geoms: Vec<Option<G>>) -> Result<Self> {
-        let mut_arr: UnknownGeometryBuilder = geoms.try_into()?;
+        let mut_arr: GeometryBuilder = geoms.try_into()?;
         Ok(mut_arr.into())
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for UnknownGeometryArray {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryArray {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
-        let mut_arr: UnknownGeometryBuilder = value.try_into()?;
+        let mut_arr: GeometryBuilder = value.try_into()?;
         Ok(mut_arr.into())
     }
 }
 
-// impl From<PointArray> for UnknownGeometryArray {
+// impl From<PointArray> for GeometryArray {
 //     fn from(value: PointArray) -> Self {
 //         let type_ids = match value.dimension() {
 //             Dimension::XY => vec![1; value.len()],
@@ -915,7 +915,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for UnknownGeometryArray {
 //     }
 // }
 
-// impl From<LineStringArray> for UnknownGeometryArray {
+// impl From<LineStringArray> for GeometryArray {
 //     fn from(value: LineStringArray) -> Self {
 //         let type_ids = match value.dimension() {
 //             Dimension::XY => vec![2; value.len()],
@@ -936,7 +936,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for UnknownGeometryArray {
 //     }
 // }
 
-// impl From<PolygonArray> for UnknownGeometryArray {
+// impl From<PolygonArray> for GeometryArray {
 //     fn from(value: PolygonArray) -> Self {
 //         let type_ids = match value.dimension() {
 //             Dimension::XY => vec![3; value.len()],
@@ -957,7 +957,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for UnknownGeometryArray {
 //     }
 // }
 
-// impl From<MultiPointArray> for UnknownGeometryArray {
+// impl From<MultiPointArray> for GeometryArray {
 //     fn from(value: MultiPointArray) -> Self {
 //         let type_ids = match value.dimension() {
 //             Dimension::XY => vec![4; value.len()],
@@ -978,7 +978,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for UnknownGeometryArray {
 //     }
 // }
 
-// impl From<MultiLineStringArray> for UnknownGeometryArray {
+// impl From<MultiLineStringArray> for GeometryArray {
 //     fn from(value: MultiLineStringArray) -> Self {
 //         let type_ids = match value.dimension() {
 //             Dimension::XY => vec![5; value.len()],
@@ -999,7 +999,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for UnknownGeometryArray {
 //     }
 // }
 
-// impl From<MultiPolygonArray> for UnknownGeometryArray {
+// impl From<MultiPolygonArray> for GeometryArray {
 //     fn from(value: MultiPolygonArray) -> Self {
 //         let type_ids = match value.dimension() {
 //             Dimension::XY => vec![6; value.len()],
@@ -1020,7 +1020,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for UnknownGeometryArray {
 //     }
 // }
 
-// impl TryFrom<GeometryCollectionArray> for UnknownGeometryArray {
+// impl TryFrom<GeometryCollectionArray> for GeometryArray {
 //     type Error = GeoArrowError;
 
 //     fn try_from(value: GeometryCollectionArray) -> std::result::Result<Self, Self::Error> {
@@ -1039,9 +1039,9 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for UnknownGeometryArray {
 // }
 
 /// Default to an empty array
-impl Default for UnknownGeometryArray {
+impl Default for GeometryArray {
     fn default() -> Self {
-        UnknownGeometryBuilder::default().into()
+        GeometryBuilder::default().into()
     }
 }
 
@@ -1058,7 +1058,7 @@ mod test {
             geo::Geometry::Point(point::p2()),
         ];
 
-        let arr: UnknownGeometryArray = UnknownGeometryBuilder::from_geometries(
+        let arr: GeometryArray = GeometryBuilder::from_geometries(
             geoms.as_slice(),
             Default::default(),
             Default::default(),
@@ -1079,7 +1079,7 @@ mod test {
             geo::Geometry::Point(point::p1()),
             geo::Geometry::Point(point::p2()),
         ];
-        let arr: UnknownGeometryArray = UnknownGeometryBuilder::from_geometries(
+        let arr: GeometryArray = GeometryBuilder::from_geometries(
             geoms.as_slice(),
             Default::default(),
             Default::default(),
@@ -1113,7 +1113,7 @@ mod test {
             geo::Geometry::MultiPolygon(multipolygon::mp0()),
         ];
 
-        let arr: UnknownGeometryArray = UnknownGeometryBuilder::from_geometries(
+        let arr: GeometryArray = GeometryBuilder::from_geometries(
             geoms.as_slice(),
             Default::default(),
             Default::default(),
@@ -1141,7 +1141,7 @@ mod test {
             geo::Geometry::MultiPolygon(multipolygon::mp0()),
         ];
 
-        let arr: UnknownGeometryArray = UnknownGeometryBuilder::from_geometries(
+        let arr: GeometryArray = GeometryBuilder::from_geometries(
             geoms.as_slice(),
             Default::default(),
             Default::default(),
@@ -1152,7 +1152,7 @@ mod test {
 
         // Round trip to/from arrow-rs
         let arrow_array = arr.into_arrow();
-        let round_trip_arr: UnknownGeometryArray = (&arrow_array).try_into().unwrap();
+        let round_trip_arr: GeometryArray = (&arrow_array).try_into().unwrap();
 
         assert_eq!(round_trip_arr.value_as_geo(0), geoms[0]);
         assert_eq!(round_trip_arr.value_as_geo(1), geoms[1]);
@@ -1170,7 +1170,7 @@ mod test {
             geo::Geometry::MultiPolygon(multipolygon::mp0()),
         ];
 
-        let arr: UnknownGeometryArray = UnknownGeometryBuilder::from_geometries(
+        let arr: GeometryArray = GeometryBuilder::from_geometries(
             geoms.as_slice(),
             Default::default(),
             Default::default(),
@@ -1181,7 +1181,7 @@ mod test {
 
         // Round trip to/from arrow-rs
         let arrow_array = arr.into_arrow();
-        let round_trip_arr: UnknownGeometryArray = (&arrow_array).try_into().unwrap();
+        let round_trip_arr: GeometryArray = (&arrow_array).try_into().unwrap();
 
         assert_eq!(round_trip_arr.value_as_geo(0), geoms[0]);
         assert_eq!(round_trip_arr.value_as_geo(1), geoms[1]);
@@ -1195,7 +1195,7 @@ mod test {
             geo::Geometry::MultiPolygon(multipolygon::mp0()),
         ];
 
-        let arr: UnknownGeometryArray = UnknownGeometryBuilder::from_geometries(
+        let arr: GeometryArray = GeometryBuilder::from_geometries(
             geoms.as_slice(),
             Default::default(),
             Default::default(),
@@ -1206,7 +1206,7 @@ mod test {
 
         // Round trip to/from arrow-rs
         let arrow_array = arr.into_arrow();
-        let round_trip_arr: UnknownGeometryArray = (&arrow_array).try_into().unwrap();
+        let round_trip_arr: GeometryArray = (&arrow_array).try_into().unwrap();
 
         assert_eq!(round_trip_arr.value_as_geo(0), geoms[0]);
         assert_eq!(round_trip_arr.value_as_geo(1), geoms[1]);

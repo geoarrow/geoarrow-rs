@@ -4,13 +4,13 @@ use std::sync::Arc;
 use arrow_array::OffsetSizeTrait;
 
 use crate::array::metadata::ArrayMetadata;
-use crate::array::{CoordType, UnknownGeometryArray, UnknownGeometryBuilder, WKTArray};
+use crate::array::{CoordType, GeometryArray, GeometryBuilder, WKTArray};
 use crate::error::{GeoArrowError, Result};
 use crate::{ArrayBase, NativeArray};
 
 /// Parse a WKT array into a native GeoArrow array.
 ///
-/// Currently, an [UnknownGeometryArray] is always returned. This may change in the future with the
+/// Currently, a [GeometryArray] is always returned. This may change in the future with the
 /// addition of a `downcast` parameter, which would automatically downcast the result.
 pub fn read_wkt<O: OffsetSizeTrait>(
     arr: &WKTArray<O>,
@@ -27,8 +27,8 @@ fn from_str_iter<'a>(
     coord_type: CoordType,
     metadata: Arc<ArrayMetadata>,
     prefer_multi: bool,
-) -> Result<UnknownGeometryArray> {
-    let mut builder = UnknownGeometryBuilder::new_with_options(coord_type, metadata, prefer_multi);
+) -> Result<GeometryArray> {
+    let mut builder = GeometryBuilder::new_with_options(coord_type, metadata, prefer_multi);
     for wkt_str in iter {
         if let Some(s) = wkt_str {
             let wkt = wkt::Wkt::<f64>::from_str(s).map_err(GeoArrowError::WktStrError)?;
@@ -61,7 +61,7 @@ mod test {
 
         let parsed = read_wkt(&arr, Default::default(), false).unwrap();
         let parsed_ref = parsed.as_ref();
-        let geom_arr = parsed_ref.as_unknown();
+        let geom_arr = parsed_ref.as_geometry();
 
         assert_eq!(
             geom_arr.value_as_geo(0),

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use crate::array::geometry::array::UnknownGeometryArray;
-use crate::array::geometry::capacity::UnknownCapacity;
+use crate::array::geometry::array::GeometryArray;
+use crate::array::geometry::capacity::GeometryCapacity;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::{
     CoordType, GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder,
@@ -25,13 +25,13 @@ pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 /// This currently has the caveat that these geometries must be a _primitive_ geometry type. This
 /// does not currently support nested GeometryCollection objects.
 ///
-/// Converting an [`UnknownGeometryBuilder`] into a [`UnknownGeometryArray`] is `O(1)`.
+/// Converting an [`GeometryBuilder`] into a [`GeometryArray`] is `O(1)`.
 ///
 /// # Invariants
 ///
 /// - All arrays must have the same coordinate layout (interleaved or separated)
 #[derive(Debug)]
-pub struct UnknownGeometryBuilder {
+pub struct GeometryBuilder {
     metadata: Arc<ArrayMetadata>,
 
     // Invariant: every item in `types` is `> 0 && < fields.len()`
@@ -83,8 +83,8 @@ pub struct UnknownGeometryBuilder {
     deferred_nulls: usize,
 }
 
-impl<'a> UnknownGeometryBuilder {
-    /// Creates a new empty [`UnknownGeometryBuilder`].
+impl<'a> GeometryBuilder {
+    /// Creates a new empty [`GeometryBuilder`].
     pub fn new() -> Self {
         Self::new_with_options(Default::default(), Default::default(), DEFAULT_PREFER_MULTI)
     }
@@ -98,7 +98,7 @@ impl<'a> UnknownGeometryBuilder {
     }
 
     /// Creates a new [`MixedGeometryBuilder`] with given capacity and no validity.
-    pub fn with_capacity(capacity: UnknownCapacity) -> Self {
+    pub fn with_capacity(capacity: GeometryCapacity) -> Self {
         Self::with_capacity_and_options(
             capacity,
             Default::default(),
@@ -108,7 +108,7 @@ impl<'a> UnknownGeometryBuilder {
     }
 
     pub fn with_capacity_and_options(
-        capacity: UnknownCapacity,
+        capacity: GeometryCapacity,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
@@ -211,7 +211,7 @@ impl<'a> UnknownGeometryBuilder {
         }
     }
 
-    pub fn reserve(&mut self, capacity: UnknownCapacity) {
+    pub fn reserve(&mut self, capacity: GeometryCapacity) {
         let total_num_geoms = capacity.total_num_geoms();
         self.types.reserve(total_num_geoms);
         self.offsets.reserve(total_num_geoms);
@@ -233,7 +233,7 @@ impl<'a> UnknownGeometryBuilder {
         self.gc_xyz.reserve(capacity.gc_xyz());
     }
 
-    pub fn reserve_exact(&mut self, capacity: UnknownCapacity) {
+    pub fn reserve_exact(&mut self, capacity: GeometryCapacity) {
         let total_num_geoms = capacity.total_num_geoms();
 
         self.types.reserve_exact(total_num_geoms);
@@ -288,7 +288,7 @@ impl<'a> UnknownGeometryBuilder {
     //     })
     // }
 
-    pub fn finish(self) -> UnknownGeometryArray {
+    pub fn finish(self) -> GeometryArray {
         self.into()
     }
 
@@ -309,7 +309,7 @@ impl<'a> UnknownGeometryBuilder {
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
-        let counter = UnknownCapacity::from_geometries(geoms, prefer_multi)?;
+        let counter = GeometryCapacity::from_geometries(geoms, prefer_multi)?;
         Ok(Self::with_capacity_and_options(
             counter,
             coord_type,
@@ -323,7 +323,7 @@ impl<'a> UnknownGeometryBuilder {
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
         prefer_multi: bool,
     ) -> Result<()> {
-        let counter = UnknownCapacity::from_geometries(geoms, prefer_multi)?;
+        let counter = GeometryCapacity::from_geometries(geoms, prefer_multi)?;
         self.reserve(counter);
         Ok(())
     }
@@ -333,7 +333,7 @@ impl<'a> UnknownGeometryBuilder {
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
         prefer_multi: bool,
     ) -> Result<()> {
-        let counter = UnknownCapacity::from_geometries(geoms, prefer_multi)?;
+        let counter = GeometryCapacity::from_geometries(geoms, prefer_multi)?;
         self.reserve_exact(counter);
         Ok(())
     }
@@ -924,13 +924,13 @@ impl<'a> UnknownGeometryBuilder {
     }
 }
 
-impl Default for UnknownGeometryBuilder {
+impl Default for GeometryBuilder {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl IntoArrow for UnknownGeometryBuilder {
+impl IntoArrow for GeometryBuilder {
     type ArrowArray = UnionArray;
 
     fn into_arrow(self) -> Self::ArrowArray {
@@ -938,8 +938,8 @@ impl IntoArrow for UnknownGeometryBuilder {
     }
 }
 
-impl From<UnknownGeometryBuilder> for UnknownGeometryArray {
-    fn from(other: UnknownGeometryBuilder) -> Self {
+impl From<GeometryBuilder> for GeometryArray {
+    fn from(other: GeometryBuilder) -> Self {
         Self::new(
             other.types.into(),
             other.offsets.into(),
@@ -962,7 +962,7 @@ impl From<UnknownGeometryBuilder> for UnknownGeometryArray {
     }
 }
 
-impl<G: GeometryTrait<T = f64>> TryFrom<&[G]> for UnknownGeometryBuilder {
+impl<G: GeometryTrait<T = f64>> TryFrom<&[G]> for GeometryBuilder {
     type Error = GeoArrowError;
 
     fn try_from(geoms: &[G]) -> Result<Self> {
@@ -970,7 +970,7 @@ impl<G: GeometryTrait<T = f64>> TryFrom<&[G]> for UnknownGeometryBuilder {
     }
 }
 
-impl<G: GeometryTrait<T = f64>> TryFrom<Vec<Option<G>>> for UnknownGeometryBuilder {
+impl<G: GeometryTrait<T = f64>> TryFrom<Vec<Option<G>>> for GeometryBuilder {
     type Error = GeoArrowError;
 
     fn try_from(geoms: Vec<Option<G>>) -> Result<Self> {
@@ -978,7 +978,7 @@ impl<G: GeometryTrait<T = f64>> TryFrom<Vec<Option<G>>> for UnknownGeometryBuild
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for UnknownGeometryBuilder {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryBuilder {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> std::result::Result<Self, Self::Error> {
@@ -994,7 +994,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for UnknownGeometryBuilder {
     }
 }
 
-impl GeometryArrayBuilder for UnknownGeometryBuilder {
+impl GeometryArrayBuilder for GeometryBuilder {
     fn len(&self) -> usize {
         self.types.len()
     }

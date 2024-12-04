@@ -2,6 +2,6 @@ mod array;
 mod builder;
 mod capacity;
 
-pub use array::UnknownGeometryArray;
-pub use builder::UnknownGeometryBuilder;
-pub use capacity::UnknownCapacity;
+pub use array::GeometryArray;
+pub use builder::GeometryBuilder;
+pub use capacity::GeometryCapacity;

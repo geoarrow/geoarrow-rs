@@ -51,7 +51,7 @@ iter_geos_impl!(MultiPolygonArray);
 iter_geos_impl!(MixedGeometryArray);
 iter_geos_impl!(GeometryCollectionArray);
 iter_geos_impl!(RectArray);
-iter_geos_impl!(UnknownGeometryArray);
+iter_geos_impl!(GeometryArray);
 
 impl Area for &dyn NativeArray {
     type Output = Result<Float64Array>;
@@ -69,7 +69,7 @@ impl Area for &dyn NativeArray {
             Mixed(_, _) => self.as_mixed().area(),
             GeometryCollection(_, _) => self.as_geometry_collection().area(),
             Rect(_) => self.as_rect().area(),
-            Unknown(_) => self.as_unknown().area(),
+            Geometry(_) => self.as_geometry().area(),
         }
     }
 }

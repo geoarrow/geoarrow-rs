@@ -96,7 +96,7 @@ impl Unary<'_> for MultiPolygonArray {}
 impl Unary<'_> for MixedGeometryArray {}
 impl Unary<'_> for GeometryCollectionArray {}
 impl Unary<'_> for RectArray {}
-impl Unary<'_> for UnknownGeometryArray {}
+impl Unary<'_> for GeometryArray {}
 impl<O: OffsetSizeTrait> Unary<'_> for WKBArray<O> {}
 
 #[allow(dead_code)]
@@ -156,4 +156,4 @@ impl UnaryPoint<'_> for MultiPolygonArray {}
 impl UnaryPoint<'_> for MixedGeometryArray {}
 impl UnaryPoint<'_> for GeometryCollectionArray {}
 impl UnaryPoint<'_> for RectArray {}
-impl UnaryPoint<'_> for UnknownGeometryArray {}
+impl UnaryPoint<'_> for GeometryArray {}

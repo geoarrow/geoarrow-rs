@@ -598,7 +598,7 @@ pub type ChunkedGeometryCollectionArray = ChunkedGeometryArray<GeometryCollectio
 /// A chunked rect array.
 pub type ChunkedRectArray = ChunkedGeometryArray<RectArray>;
 /// A chunked unknown geometry array.
-pub type ChunkedUnknownGeometryArray = ChunkedGeometryArray<UnknownGeometryArray>;
+pub type ChunkedUnknownGeometryArray = ChunkedGeometryArray<GeometryArray>;
 
 /// A chunked WKB array.
 pub type ChunkedWKBArray<O> = ChunkedGeometryArray<WKBArray<O>>;

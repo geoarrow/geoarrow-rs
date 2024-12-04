@@ -69,7 +69,7 @@ impl ChunkedNativeArrayDyn {
                 impl_downcast!(GeometryCollectionArray)
             }
             Rect(_) => impl_downcast!(RectArray),
-            Unknown(_) => impl_downcast!(UnknownGeometryArray),
+            Geometry(_) => impl_downcast!(GeometryArray),
         };
         Ok(Self(ca))
     }
@@ -123,7 +123,7 @@ impl ChunkedNativeArrayDyn {
                 Mixed(_, _) => impl_downcast!(as_mixed),
                 GeometryCollection(_, _) => impl_downcast!(as_geometry_collection),
                 Rect(_) => impl_downcast!(as_rect),
-                Unknown(_) => impl_downcast!(as_unknown),
+                Geometry(_) => impl_downcast!(as_geometry),
             };
             Ok(Self(result))
         } else {

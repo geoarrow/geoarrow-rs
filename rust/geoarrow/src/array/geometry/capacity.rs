@@ -9,11 +9,11 @@ use crate::array::GeometryCollectionCapacity;
 use crate::error::Result;
 use geo_traits::*;
 
-/// A counter for the buffer sizes of a [`UnknownGeometryArray`][crate::array::UnknownGeometryArray].
+/// A counter for the buffer sizes of a [`GeometryArray`][crate::array::GeometryArray].
 ///
 /// This can be used to reduce allocations by allocating once for exactly the array size you need.
 #[derive(Default, Debug, Clone, Copy)]
-pub struct UnknownCapacity {
+pub struct GeometryCapacity {
     /// The number of null geometries. Ideally the builder will assign these to any array that has
     /// already been allocated. Otherwise we don't know where to assign them.
     nulls: usize,
@@ -39,7 +39,7 @@ pub struct UnknownCapacity {
     prefer_multi: bool,
 }
 
-impl UnknownCapacity {
+impl GeometryCapacity {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         nulls: usize,
@@ -457,7 +457,7 @@ impl UnknownCapacity {
     }
 }
 
-impl AddAssign for UnknownCapacity {
+impl AddAssign for GeometryCapacity {
     fn add_assign(&mut self, rhs: Self) {
         self.nulls += rhs.nulls;
 

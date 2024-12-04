@@ -37,7 +37,7 @@ iter_geos_impl!(MultiPolygonArray);
 iter_geos_impl!(MixedGeometryArray);
 iter_geos_impl!(GeometryCollectionArray);
 iter_geos_impl!(RectArray);
-iter_geos_impl!(UnknownGeometryArray);
+iter_geos_impl!(GeometryArray);
 
 impl IsValid for &dyn NativeArray {
     type Output = Result<BooleanArray>;
@@ -55,7 +55,7 @@ impl IsValid for &dyn NativeArray {
             Mixed(_, _) => IsValid::is_valid(self.as_mixed()),
             GeometryCollection(_, _) => IsValid::is_valid(self.as_geometry_collection()),
             Rect(_) => IsValid::is_valid(self.as_rect()),
-            Unknown(_) => IsValid::is_valid(self.as_unknown()),
+            Geometry(_) => IsValid::is_valid(self.as_geometry()),
         }
     }
 }

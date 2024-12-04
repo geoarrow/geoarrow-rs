@@ -106,7 +106,7 @@ fn pyarray_to_shapely(py: Python, input: PyArray) -> PyGeoArrowResult<Bound<PyAn
                 Rect(_) => rect_arr(py, array.as_ref().as_rect().clone()),
                 Mixed(_, _) => via_wkb(py, array),
                 GeometryCollection(_, _) => via_wkb(py, array),
-                Unknown(_) => via_wkb(py, array),
+                Geometry(_) => via_wkb(py, array),
             }
         }
         AnyType::Serialized(typ) => {
