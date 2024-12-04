@@ -36,6 +36,7 @@ iter_geos_impl!(MultiPolygonArray);
 iter_geos_impl!(MixedGeometryArray);
 iter_geos_impl!(GeometryCollectionArray);
 iter_geos_impl!(RectArray);
+iter_geos_impl!(GeometryArray);
 
 impl IsEmpty for &dyn NativeArray {
     type Output = Result<BooleanArray>;
@@ -53,6 +54,7 @@ impl IsEmpty for &dyn NativeArray {
             Mixed(_, _) => IsEmpty::is_empty(self.as_mixed()),
             GeometryCollection(_, _) => IsEmpty::is_empty(self.as_geometry_collection()),
             Rect(_) => IsEmpty::is_empty(self.as_rect()),
+            Geometry(_) => IsEmpty::is_empty(self.as_geometry()),
         }
     }
 }

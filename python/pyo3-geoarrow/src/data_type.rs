@@ -111,7 +111,7 @@ impl PyNativeType {
 
     #[getter]
     fn coord_type(&self, py: Python) -> PyResult<PyObject> {
-        let enums_mod = py.import_bound(intern!(py, "geoarrow.rust.core.enums"))?;
+        let enums_mod = py.import(intern!(py, "geoarrow.rust.core.enums"))?;
         let coord_type = enums_mod.getattr(intern!(py, "CoordType"))?;
         match self.0.coord_type() {
             CoordType::Interleaved => Ok(coord_type.getattr(intern!(py, "Interleaved"))?.into()),
@@ -121,11 +121,12 @@ impl PyNativeType {
 
     #[getter]
     fn dimension(&self, py: Python) -> PyResult<PyObject> {
-        let enums_mod = py.import_bound(intern!(py, "geoarrow.rust.core.enums"))?;
+        let enums_mod = py.import(intern!(py, "geoarrow.rust.core.enums"))?;
         let coord_type = enums_mod.getattr(intern!(py, "Dimension"))?;
         match self.0.dimension() {
-            Dimension::XY => Ok(coord_type.getattr(intern!(py, "XY"))?.into()),
-            Dimension::XYZ => Ok(coord_type.getattr(intern!(py, "XYZ"))?.into()),
+            Some(Dimension::XY) => Ok(coord_type.getattr(intern!(py, "XY"))?.into()),
+            Some(Dimension::XYZ) => Ok(coord_type.getattr(intern!(py, "XYZ"))?.into()),
+            None => Ok(py.None()),
         }
     }
 }

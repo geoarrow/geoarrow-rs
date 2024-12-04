@@ -13,7 +13,6 @@ use crate::datatypes::{rect_fields, Dimension, NativeType};
 use crate::error::GeoArrowError;
 use crate::scalar::Rect;
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
-use crate::util::owned_slice_validity;
 use crate::{ArrayBase, NativeArray};
 use geo_traits::RectTrait;
 
@@ -83,13 +82,6 @@ impl RectArray {
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
             metadata: self.metadata(),
         }
-    }
-
-    pub fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        let lower = self.lower.owned_slice(offset, length);
-        let upper = self.upper.owned_slice(offset, length);
-        let validity = owned_slice_validity(self.nulls(), offset, length);
-        Self::new(lower, upper, validity, self.metadata())
     }
 }
 
@@ -163,10 +155,6 @@ impl NativeArray for RectArray {
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
     }
-
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
-        Arc::new(self.owned_slice(offset, length))
-    }
 }
 
 impl GeometryArraySelfMethods for RectArray {
@@ -192,7 +180,7 @@ impl IntoArrow for RectArray {
     type ArrowArray = StructArray;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let fields = rect_fields(self.data_type.dimension());
+        let fields = rect_fields(self.data_type.dimension().unwrap());
         let mut arrays: Vec<ArrayRef> = vec![];
         for buf in self.lower.buffers {
             arrays.push(Arc::new(Float64Array::new(buf, None)));
@@ -261,7 +249,10 @@ impl TryFrom<(&dyn Array, &Field)> for RectArray {
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self, Self::Error> {
         let geom_type = NativeType::try_from(field)?;
-        let mut arr: Self = (arr, geom_type.dimension()).try_into()?;
+        let dim = geom_type
+            .dimension()
+            .ok_or(GeoArrowError::General("Expected dimension".to_string()))?;
+        let mut arr: Self = (arr, dim).try_into()?;
         arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
         Ok(arr)
     }

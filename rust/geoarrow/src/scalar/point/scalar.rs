@@ -20,8 +20,7 @@ impl<'a> Point<'a> {
     }
 
     pub fn into_owned_inner(self) -> (CoordBuffer, usize) {
-        let coords = self.coords.owned_slice(self.geom_index, 1);
-        (coords, self.geom_index)
+        (self.coords.clone(), self.geom_index)
     }
 }
 

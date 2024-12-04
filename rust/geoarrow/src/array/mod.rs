@@ -9,6 +9,7 @@ pub use coord::{
     InterleavedCoordBufferBuilder, SeparatedCoordBuffer, SeparatedCoordBufferBuilder,
 };
 pub use dynamic::{NativeArrayDyn, SerializedArrayDyn};
+pub use geometry::{GeometryArray, GeometryBuilder, GeometryCapacity};
 pub use geometrycollection::{
     GeometryCollectionArray, GeometryCollectionBuilder, GeometryCollectionCapacity,
 };

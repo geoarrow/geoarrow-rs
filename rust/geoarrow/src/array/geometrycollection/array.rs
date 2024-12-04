@@ -26,7 +26,7 @@ use geo_traits::GeometryCollectionTrait;
 /// validity bitmap.
 #[derive(Debug, Clone)]
 pub struct GeometryCollectionArray {
-    // Always NativeType::GeometryCollection or NativeType::LargeGeometryCollection
+    // Always NativeType::GeometryCollection
     data_type: NativeType,
 
     metadata: Arc<ArrayMetadata>,
@@ -115,10 +115,6 @@ impl GeometryCollectionArray {
         }
     }
 
-    pub fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
-        todo!()
-    }
-
     pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
         self.clone().into_coord_type(coord_type)
     }
@@ -204,10 +200,6 @@ impl NativeArray for GeometryCollectionArray {
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
     }
-
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
-        Arc::new(self.owned_slice(offset, length))
-    }
 }
 
 impl GeometryArraySelfMethods for GeometryCollectionArray {
@@ -261,11 +253,11 @@ impl IntoArrow for GeometryCollectionArray {
     }
 }
 
-impl TryFrom<&GenericListArray<i32>> for GeometryCollectionArray {
+impl TryFrom<(&GenericListArray<i32>, Dimension)> for GeometryCollectionArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: &GenericListArray<i32>) -> Result<Self> {
-        let geoms: MixedGeometryArray = value.values().as_ref().try_into()?;
+    fn try_from((value, dim): (&GenericListArray<i32>, Dimension)) -> Result<Self> {
+        let geoms: MixedGeometryArray = (value.values().as_ref(), dim).try_into()?;
         let geom_offsets = value.offsets();
         let validity = value.nulls();
 
@@ -278,11 +270,11 @@ impl TryFrom<&GenericListArray<i32>> for GeometryCollectionArray {
     }
 }
 
-impl TryFrom<&GenericListArray<i64>> for GeometryCollectionArray {
+impl TryFrom<(&GenericListArray<i64>, Dimension)> for GeometryCollectionArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: &GenericListArray<i64>) -> Result<Self> {
-        let geoms: MixedGeometryArray = value.values().as_ref().try_into()?;
+    fn try_from((value, dim): (&GenericListArray<i64>, Dimension)) -> Result<Self> {
+        let geoms: MixedGeometryArray = (value.values().as_ref(), dim).try_into()?;
         let geom_offsets = offsets_buffer_i64_to_i32(value.offsets())?;
         let validity = value.nulls();
 
@@ -295,18 +287,18 @@ impl TryFrom<&GenericListArray<i64>> for GeometryCollectionArray {
     }
 }
 
-impl TryFrom<&dyn Array> for GeometryCollectionArray {
+impl TryFrom<(&dyn Array, Dimension)> for GeometryCollectionArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: &dyn Array) -> Result<Self> {
+    fn try_from((value, dim): (&dyn Array, Dimension)) -> Result<Self> {
         match value.data_type() {
             DataType::List(_) => {
                 let downcasted = value.as_list::<i32>();
-                downcasted.try_into()
+                (downcasted, dim).try_into()
             }
             DataType::LargeList(_) => {
                 let downcasted = value.as_list::<i64>();
-                downcasted.try_into()
+                (downcasted, dim).try_into()
             }
             _ => Err(GeoArrowError::General(format!(
                 "Unexpected type: {:?}",
@@ -320,7 +312,11 @@ impl TryFrom<(&dyn Array, &Field)> for GeometryCollectionArray {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
-        let mut arr: Self = arr.try_into()?;
+        let geom_type = NativeType::try_from(field)?;
+        let dim = geom_type
+            .dimension()
+            .ok_or(GeoArrowError::General("Expected dimension".to_string()))?;
+        let mut arr: Self = (arr, dim).try_into()?;
         arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
         Ok(arr)
     }

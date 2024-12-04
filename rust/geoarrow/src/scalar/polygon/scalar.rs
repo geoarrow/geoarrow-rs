@@ -1,7 +1,7 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_polygon;
 use crate::algorithm::native::eq::polygon_eq;
 use crate::array::util::OffsetBufferUtils;
-use crate::array::{CoordBuffer, PolygonArray};
+use crate::array::CoordBuffer;
 use crate::datatypes::Dimension;
 use crate::scalar::LineString;
 use crate::trait_::NativeScalar;
@@ -44,20 +44,11 @@ impl<'a> Polygon<'a> {
     }
 
     pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, OffsetBuffer<i32>, usize) {
-        let arr = PolygonArray::new(
+        (
             self.coords.clone(),
             self.geom_offsets.clone(),
             self.ring_offsets.clone(),
-            None,
-            Default::default(),
-        );
-        let sliced_arr = arr.owned_slice(self.geom_index, 1);
-
-        (
-            sliced_arr.coords,
-            sliced_arr.geom_offsets,
-            sliced_arr.ring_offsets,
-            0,
+            self.geom_index,
         )
     }
 }

@@ -99,7 +99,7 @@ pub async fn read_flatgeobuf_async(
             );
             selection.process_features(&mut builder).await?;
             let table = builder.finish()?;
-            table.downcast(true)
+            table.downcast()
         }
         (GeometryType::Point, true) => {
             impl_read!(PointBuilder, Dimension::XYZ)
@@ -122,7 +122,7 @@ pub async fn read_flatgeobuf_async(
             );
             selection.process_features(&mut builder).await?;
             let table = builder.finish()?;
-            table.downcast(true)
+            table.downcast()
         }
         // TODO: Parse into a GeometryCollection array and then downcast to a single-typed array if possible.
         geom_type => Err(GeoArrowError::NotYetImplemented(format!(

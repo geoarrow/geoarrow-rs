@@ -36,6 +36,7 @@ iter_geos_impl!(MultiPolygonArray);
 iter_geos_impl!(MixedGeometryArray);
 iter_geos_impl!(GeometryCollectionArray);
 iter_geos_impl!(RectArray);
+iter_geos_impl!(GeometryArray);
 
 impl IsSimple for &dyn NativeArray {
     type Output = Result<BooleanArray>;
@@ -53,6 +54,7 @@ impl IsSimple for &dyn NativeArray {
             Mixed(_, _) => self.as_mixed().is_simple(),
             GeometryCollection(_, _) => self.as_geometry_collection().is_simple(),
             Rect(_) => self.as_rect().is_simple(),
+            Geometry(_) => self.as_geometry().is_simple(),
         }
     }
 }

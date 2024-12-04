@@ -59,8 +59,10 @@ impl FlatGeobufWriterOptions {
         wkt_crs: Option<&'a str>,
     ) -> FgbWriterOptions<'a> {
         let (has_z, has_m) = match geo_data_type.dimension() {
-            Dimension::XY => (false, false),
-            Dimension::XYZ => (true, false),
+            Some(Dimension::XY) => (false, false),
+            Some(Dimension::XYZ) => (true, false),
+            // TODO: not sure how to handle geometry arrays
+            None => (false, false),
         };
         let crs = FgbCrs {
             wkt: wkt_crs,
@@ -145,7 +147,7 @@ fn infer_flatgeobuf_geometry_type(stream: &RecordBatchReader) -> Result<flatgeob
         MultiPoint(_, _) => flatgeobuf::GeometryType::MultiPoint,
         MultiLineString(_, _) => flatgeobuf::GeometryType::MultiLineString,
         MultiPolygon(_, _) => flatgeobuf::GeometryType::MultiPolygon,
-        Mixed(_, _) | Rect(_) => flatgeobuf::GeometryType::Unknown,
+        Mixed(_, _) | Rect(_) | Geometry(_) => flatgeobuf::GeometryType::Unknown,
         GeometryCollection(_, _) => flatgeobuf::GeometryType::GeometryCollection,
     };
     Ok(geometry_type)

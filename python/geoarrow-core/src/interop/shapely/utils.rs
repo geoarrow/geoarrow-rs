@@ -4,7 +4,7 @@ use pyo3::prelude::*;
 use pyo3_geoarrow::PyGeoArrowResult;
 
 pub(crate) fn import_shapely(py: Python) -> PyGeoArrowResult<Bound<PyModule>> {
-    let shapely_mod = py.import_bound(intern!(py, "shapely"))?;
+    let shapely_mod = py.import(intern!(py, "shapely"))?;
     let shapely_version_string = shapely_mod
         .getattr(intern!(py, "__version__"))?
         .extract::<String>()?;

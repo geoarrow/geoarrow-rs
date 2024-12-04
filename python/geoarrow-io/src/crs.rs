@@ -15,14 +15,14 @@ pub struct CRS(ArrayMetadata);
 impl<'py> FromPyObject<'py> for CRS {
     fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
         let py = ob.py();
-        let pyproj = py.import_bound(intern!(py, "pyproj"))?;
+        let pyproj = py.import(intern!(py, "pyproj"))?;
         let crs_class = pyproj.getattr(intern!(py, "CRS"))?;
 
         let mut ob = ob.clone();
 
         // If the input is not a pyproj.CRS, call pyproj.CRS.from_user_input on it
         if !ob.is_instance(&crs_class)? {
-            let args = PyTuple::new_bound(py, vec![ob]);
+            let args = PyTuple::new(py, vec![ob])?;
             ob = crs_class.call_method1(intern!(py, "from_user_input"), args)?;
         }
 
@@ -50,10 +50,10 @@ impl CRS {
     }
 
     pub fn to_pyproj(&self, py: Python) -> PyGeoArrowResult<PyObject> {
-        let pyproj = py.import_bound(intern!(py, "pyproj"))?;
+        let pyproj = py.import(intern!(py, "pyproj"))?;
         let crs_class = pyproj.getattr(intern!(py, "CRS"))?;
 
-        let args = PyTuple::new_bound(py, vec![serde_json::to_string(&self.0)?]);
+        let args = PyTuple::new(py, vec![serde_json::to_string(&self.0)?])?;
         let crs_obj = crs_class.call_method1(intern!(py, "from_json"), args)?;
         Ok(crs_obj.into())
     }

@@ -62,6 +62,7 @@ pub fn process_geometry_scalar_array<P: GeomProcessor>(
         //     process_geometry(&wkb_object, geom_idx, processor)
         // }
         Rect(_) => todo!(),
+        Geometry(_) => impl_process!(process_geometry, as_geometry),
     }
 }
 

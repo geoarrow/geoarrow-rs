@@ -79,6 +79,21 @@ impl From<Dimension> for geo_traits::Dimensions {
     }
 }
 
+impl TryFrom<geo_traits::Dimensions> for Dimension {
+    type Error = GeoArrowError;
+
+    fn try_from(value: geo_traits::Dimensions) -> std::result::Result<Self, Self::Error> {
+        match value {
+            geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => Ok(Dimension::XY),
+            geo_traits::Dimensions::Xyz | geo_traits::Dimensions::Unknown(3) => Ok(Dimension::XYZ),
+            _ => Err(GeoArrowError::General(format!(
+                "Unsupported dimension {:?}",
+                value
+            ))),
+        }
+    }
+}
+
 /// A type enum representing "native" GeoArrow geometry types.
 ///
 /// This is designed to aid in downcasting from dynamically-typed geometry arrays.
@@ -127,6 +142,9 @@ pub enum NativeType {
     /// Represents a [RectArray][crate::array::RectArray] or
     /// [ChunkedRectArray][crate::chunked_array::ChunkedRectArray].
     Rect(Dimension),
+
+    /// Represents a mixed geometry array of unknown types or dimensions
+    Geometry(CoordType),
 }
 
 /// A type enum representing "serialized" GeoArrow geometry types.
@@ -310,6 +328,58 @@ fn rect_data_type(dim: Dimension) -> DataType {
     DataType::Struct(rect_fields(dim))
 }
 
+fn unknown_data_type(coord_type: CoordType) -> DataType {
+    let mut fields = vec![];
+    let type_ids = vec![1, 2, 3, 4, 5, 6, 11, 12, 13, 14, 15, 16];
+
+    // Note: we manually construct the fields because these fields shouldn't have their own
+    // GeoArrow extension metadata
+    fields.push(Field::new(
+        "",
+        NativeType::Point(coord_type, Dimension::XY).to_data_type(),
+        true,
+    ));
+
+    let linestring = NativeType::LineString(coord_type, Dimension::XY);
+    fields.push(Field::new("", linestring.to_data_type(), true));
+
+    let polygon = NativeType::Polygon(coord_type, Dimension::XY);
+    fields.push(Field::new("", polygon.to_data_type(), true));
+
+    let multi_point = NativeType::MultiPoint(coord_type, Dimension::XY);
+    fields.push(Field::new("", multi_point.to_data_type(), true));
+
+    let multi_line_string = NativeType::MultiLineString(coord_type, Dimension::XY);
+    fields.push(Field::new("", multi_line_string.to_data_type(), true));
+
+    let multi_polygon = NativeType::MultiPolygon(coord_type, Dimension::XY);
+    fields.push(Field::new("", multi_polygon.to_data_type(), true));
+
+    fields.push(Field::new(
+        "",
+        NativeType::Point(coord_type, Dimension::XYZ).to_data_type(),
+        true,
+    ));
+
+    let linestring = NativeType::LineString(coord_type, Dimension::XYZ);
+    fields.push(Field::new("", linestring.to_data_type(), true));
+
+    let polygon = NativeType::Polygon(coord_type, Dimension::XYZ);
+    fields.push(Field::new("", polygon.to_data_type(), true));
+
+    let multi_point = NativeType::MultiPoint(coord_type, Dimension::XYZ);
+    fields.push(Field::new("", multi_point.to_data_type(), true));
+
+    let multi_line_string = NativeType::MultiLineString(coord_type, Dimension::XYZ);
+    fields.push(Field::new("", multi_line_string.to_data_type(), true));
+
+    let multi_polygon = NativeType::MultiPolygon(coord_type, Dimension::XYZ);
+    fields.push(Field::new("", multi_polygon.to_data_type(), true));
+
+    let union_fields = UnionFields::new(type_ids, fields);
+    DataType::Union(union_fields, UnionMode::Dense)
+}
+
 impl NativeType {
     /// Get the [`CoordType`] of this data type.
     pub fn coord_type(&self) -> CoordType {
@@ -324,22 +394,26 @@ impl NativeType {
             Mixed(ct, _) => *ct,
             GeometryCollection(ct, _) => *ct,
             Rect(_) => CoordType::Separated,
+            Geometry(ct) => *ct,
         }
     }
 
-    /// Get the [`Dimension`] of this data type.
-    pub fn dimension(&self) -> Dimension {
+    /// Get the [`Dimension`] of this data type, if it has one.
+    ///
+    /// "Unknown" native arrays can hold all dimensions.
+    pub fn dimension(&self) -> Option<Dimension> {
         use NativeType::*;
         match self {
-            Point(_, dim) => *dim,
-            LineString(_, dim) => *dim,
-            Polygon(_, dim) => *dim,
-            MultiPoint(_, dim) => *dim,
-            MultiLineString(_, dim) => *dim,
-            MultiPolygon(_, dim) => *dim,
-            Mixed(_, dim) => *dim,
-            GeometryCollection(_, dim) => *dim,
-            Rect(dim) => *dim,
+            Point(_, dim) => Some(*dim),
+            LineString(_, dim) => Some(*dim),
+            Polygon(_, dim) => Some(*dim),
+            MultiPoint(_, dim) => Some(*dim),
+            MultiLineString(_, dim) => Some(*dim),
+            MultiPolygon(_, dim) => Some(*dim),
+            Mixed(_, dim) => Some(*dim),
+            GeometryCollection(_, dim) => Some(*dim),
+            Rect(dim) => Some(*dim),
+            Geometry(_) => None,
         }
     }
 
@@ -369,6 +443,7 @@ impl NativeType {
             Mixed(coord_type, dim) => mixed_data_type(*coord_type, *dim),
             GeometryCollection(coord_type, dim) => geometry_collection_data_type(*coord_type, *dim),
             Rect(dim) => rect_data_type(*dim),
+            Geometry(coord_type) => unknown_data_type(*coord_type),
         }
     }
 
@@ -394,6 +469,7 @@ impl NativeType {
             Mixed(_, _) => "geoarrow.geometry",
             GeometryCollection(_, _) => "geoarrow.geometrycollection",
             Rect(_) => "geoarrow.box",
+            Geometry(_) => "geoarrow.unknown",
         }
     }
 
@@ -478,6 +554,7 @@ impl NativeType {
             Mixed(_, dim) => Mixed(coord_type, dim),
             GeometryCollection(_, dim) => GeometryCollection(coord_type, dim),
             Rect(dim) => Rect(dim),
+            Geometry(_) => Geometry(coord_type),
         }
     }
 
@@ -503,6 +580,7 @@ impl NativeType {
             Mixed(coord_type, _) => Mixed(coord_type, dim),
             GeometryCollection(coord_type, _) => GeometryCollection(coord_type, dim),
             Rect(_) => Rect(dim),
+            Geometry(coord_type) => Geometry(coord_type),
         }
     }
 }
@@ -892,6 +970,114 @@ fn parse_rect(field: &Field) -> NativeType {
     }
 }
 
+fn parse_unknown(field: &Field) -> Result<NativeType> {
+    if let DataType::Union(fields, _mode) = field.data_type() {
+        let mut coord_types: HashSet<CoordType> = HashSet::new();
+
+        fields.iter().try_for_each(|(type_id, field)| {
+            match type_id {
+                1 => match parse_point(field)? {
+                    NativeType::Point(ct, Dimension::XY) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                2 => match parse_linestring(field)? {
+                    NativeType::LineString(ct, Dimension::XY) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                3 => match parse_polygon(field)? {
+                    NativeType::Polygon(ct, Dimension::XY) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                4 => match parse_multi_point(field)? {
+                    NativeType::MultiPoint(ct, Dimension::XY) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                5 => match parse_multi_linestring(field)? {
+                    NativeType::MultiLineString(ct, Dimension::XY) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                6 => match parse_multi_polygon(field)? {
+                    NativeType::MultiPolygon(ct, Dimension::XY) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                7 => match parse_geometry_collection(field)? {
+                    NativeType::GeometryCollection(ct, Dimension::XY) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                11 => match parse_point(field)? {
+                    NativeType::Point(ct, Dimension::XYZ) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                12 => match parse_linestring(field)? {
+                    NativeType::LineString(ct, Dimension::XYZ) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                13 => match parse_polygon(field)? {
+                    NativeType::Polygon(ct, Dimension::XYZ) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                14 => match parse_multi_point(field)? {
+                    NativeType::MultiPoint(ct, Dimension::XYZ) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                15 => match parse_multi_linestring(field)? {
+                    NativeType::MultiLineString(ct, Dimension::XYZ) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                16 => match parse_multi_polygon(field)? {
+                    NativeType::MultiPolygon(ct, Dimension::XYZ) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                17 => match parse_geometry_collection(field)? {
+                    NativeType::GeometryCollection(ct, Dimension::XYZ) => {
+                        coord_types.insert(ct);
+                    }
+                    _ => unreachable!(),
+                },
+                id => panic!("unexpected type id {}", id),
+            };
+            Ok::<_, GeoArrowError>(())
+        })?;
+
+        if coord_types.len() > 1 {
+            return Err(GeoArrowError::General(
+                "Multi coord types in union".to_string(),
+            ));
+        }
+
+        let coord_type = coord_types.drain().next().unwrap();
+        Ok(NativeType::Geometry(coord_type))
+    } else {
+        Err(GeoArrowError::General("Expected union type".to_string()))
+    }
+}
+
 impl TryFrom<&Field> for NativeType {
     type Error = GeoArrowError;
 
@@ -907,6 +1093,7 @@ impl TryFrom<&Field> for NativeType {
                 "geoarrow.geometry" => parse_geometry(field)?,
                 "geoarrow.geometrycollection" => parse_geometry_collection(field)?,
                 "geoarrow.box" => parse_rect(field),
+                "geoarrow.unknown" => parse_unknown(field)?,
                 name => return Err(GeoArrowError::General(format!("Expected GeoArrow native type, got '{}'.\nIf you're passing a serialized GeoArrow type like 'geoarrow.wkb' or 'geoarrow.wkt', you need to parse to a native representation.", name))),
             };
             Ok(data_type)

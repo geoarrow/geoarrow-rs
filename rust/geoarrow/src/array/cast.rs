@@ -87,6 +87,15 @@ pub trait AsNativeArray {
     fn as_rect(&self) -> &RectArray {
         self.as_rect_opt().unwrap()
     }
+
+    /// Downcast this to a [`GeometryArray`] returning `None` if not possible
+    fn as_geometry_opt(&self) -> Option<&GeometryArray>;
+
+    /// Downcast this to a [`GeometryArray`] panicking if not possible
+    #[inline]
+    fn as_geometry(&self) -> &GeometryArray {
+        self.as_geometry_opt().unwrap()
+    }
 }
 
 impl AsNativeArray for &dyn NativeArray {
@@ -133,6 +142,11 @@ impl AsNativeArray for &dyn NativeArray {
     #[inline]
     fn as_rect_opt(&self) -> Option<&RectArray> {
         self.as_any().downcast_ref::<RectArray>()
+    }
+
+    #[inline]
+    fn as_geometry_opt(&self) -> Option<&GeometryArray> {
+        self.as_any().downcast_ref::<GeometryArray>()
     }
 }
 
@@ -254,6 +268,15 @@ pub trait AsChunkedNativeArray {
     fn as_rect(&self) -> &ChunkedRectArray {
         self.as_rect_opt().unwrap()
     }
+
+    /// Downcast this to a [`ChunkedUnknownGeometryArray`] returning `None` if not possible
+    fn as_geometry_opt(&self) -> Option<&ChunkedUnknownGeometryArray>;
+
+    /// Downcast this to a [`ChunkedUnknownGeometryArray`] panicking if not possible
+    #[inline]
+    fn as_geometry(&self) -> &ChunkedUnknownGeometryArray {
+        self.as_geometry_opt().unwrap()
+    }
 }
 
 impl AsChunkedNativeArray for &dyn ChunkedNativeArray {
@@ -301,6 +324,11 @@ impl AsChunkedNativeArray for &dyn ChunkedNativeArray {
     #[inline]
     fn as_rect_opt(&self) -> Option<&ChunkedRectArray> {
         self.as_any().downcast_ref::<ChunkedRectArray>()
+    }
+
+    #[inline]
+    fn as_geometry_opt(&self) -> Option<&ChunkedUnknownGeometryArray> {
+        self.as_any().downcast_ref::<ChunkedUnknownGeometryArray>()
     }
 }
 

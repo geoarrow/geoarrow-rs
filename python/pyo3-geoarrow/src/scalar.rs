@@ -69,10 +69,8 @@ impl PyGeometry {
     #[getter]
     fn __geo_interface__<'py>(&'py self, py: Python<'py>) -> PyGeoArrowResult<Bound<'py, PyAny>> {
         let json_string = self.0.to_json().map_err(GeoArrowError::GeozeroError)?;
-        let json_mod = py.import_bound(intern!(py, "json"))?;
-        let args = (json_string.into_py(py),);
-
-        Ok(json_mod.call_method1(intern!(py, "loads"), args)?)
+        let json_mod = py.import(intern!(py, "json"))?;
+        Ok(json_mod.call_method1(intern!(py, "loads"), (json_string,))?)
     }
 
     fn _repr_svg_(&self) -> PyGeoArrowResult<String> {

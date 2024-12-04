@@ -31,7 +31,7 @@ pub fn read_pyogrio(
     let pyogrio_mod = import_pyogrio(py)?;
 
     let args = (path_or_buffer,);
-    let our_kwargs = PyDict::new_bound(py);
+    let our_kwargs = PyDict::new(py);
     our_kwargs.set_item("layer", layer)?;
     our_kwargs.set_item("encoding", encoding)?;
     our_kwargs.set_item("columns", columns)?;
@@ -74,11 +74,7 @@ pub fn read_pyogrio(
         Err(py_err) => {
             context_manager.call_method1(
                 "__exit__",
-                (
-                    py_err.get_type_bound(py),
-                    py_err.value_bound(py),
-                    py_err.traceback_bound(py),
-                ),
+                (py_err.get_type(py), py_err.value(py), py_err.traceback(py)),
             )?;
             Err(py_err.into())
         }

@@ -51,6 +51,7 @@ impl_rtree!(MultiPolygonArray, bounding_rect_multipolygon);
 impl_rtree!(MixedGeometryArray, bounding_rect_geometry);
 impl_rtree!(GeometryCollectionArray, bounding_rect_geometry_collection);
 impl_rtree!(RectArray, bounding_rect_rect);
+impl_rtree!(GeometryArray, bounding_rect_geometry);
 
 impl RTree for &dyn NativeArray {
     type Output = OwnedRTree<f64>;
@@ -74,6 +75,7 @@ impl RTree for &dyn NativeArray {
             Mixed(_, _) => impl_method!(as_mixed),
             GeometryCollection(_, _) => impl_method!(as_geometry_collection),
             Rect(_) => impl_method!(as_rect),
+            Geometry(_) => impl_method!(as_geometry),
         }
     }
 }
@@ -108,6 +110,7 @@ impl RTree for &dyn ChunkedNativeArray {
             Mixed(_, _) => impl_method!(as_mixed),
             GeometryCollection(_, _) => impl_method!(as_geometry_collection),
             Rect(_) => impl_method!(as_rect),
+            Geometry(_) => todo!("Chunked unknown array"), // impl_method!(as_unknown),
         };
         Ok(result)
     }

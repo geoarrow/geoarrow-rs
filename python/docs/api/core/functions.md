@@ -8,7 +8,6 @@ Interoperability with other Python geospatial libraries (Shapely, GeoPandas) and
         - "!^_"
       members:
         - read_pyogrio
-        - from_ewkb
         - from_geopandas
         - from_shapely
         - from_wkb

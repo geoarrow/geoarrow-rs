@@ -76,4 +76,3 @@ pub mod table;
 #[cfg(test)]
 pub(crate) mod test;
 pub mod trait_;
-mod util;

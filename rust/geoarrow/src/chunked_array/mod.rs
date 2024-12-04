@@ -598,8 +598,7 @@ pub type ChunkedGeometryCollectionArray = ChunkedGeometryArray<GeometryCollectio
 /// A chunked rect array.
 pub type ChunkedRectArray = ChunkedGeometryArray<RectArray>;
 /// A chunked unknown geometry array.
-#[allow(dead_code)]
-pub type ChunkedUnknownGeometryArray = ChunkedGeometryArray<Arc<dyn NativeArray>>;
+pub type ChunkedUnknownGeometryArray = ChunkedGeometryArray<GeometryArray>;
 
 /// A chunked WKB array.
 pub type ChunkedWKBArray<O> = ChunkedGeometryArray<WKBArray<O>>;
@@ -956,6 +955,7 @@ impl_trait!(ChunkedMultiLineStringArray);
 impl_trait!(ChunkedMultiPolygonArray);
 impl_trait!(ChunkedMixedGeometryArray);
 impl_trait!(ChunkedGeometryCollectionArray);
+impl_trait!(ChunkedUnknownGeometryArray);
 
 impl ChunkedArrayBase for ChunkedRectArray {
     fn as_any(&self) -> &dyn Any {

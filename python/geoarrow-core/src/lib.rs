@@ -20,11 +20,11 @@ fn ___version() -> &'static str {
 fn check_debug_build(py: Python) -> PyResult<()> {
     #[cfg(debug_assertions)]
     {
-        let warnings_mod = py.import_bound(intern!(py, "warnings"))?;
+        let warnings_mod = py.import(intern!(py, "warnings"))?;
         let warning = PyRuntimeWarning::new_err(
             "geoarrow-rust-core has not been compiled in release mode. Performance will be degraded.",
         );
-        let args = PyTuple::new_bound(py, vec![warning.into_py(py)]);
+        let args = PyTuple::new(py, vec![warning])?;
         warnings_mod.call_method1(intern!(py, "warn"), args)?;
     }
     Ok(())
@@ -72,7 +72,6 @@ fn _rust(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
         m
     )?)?;
 
-    m.add_function(wrap_pyfunction!(crate::interop::ewkb::from_ewkb, m)?)?;
     m.add_function(wrap_pyfunction!(
         crate::interop::shapely::from_shapely::from_shapely,
         m

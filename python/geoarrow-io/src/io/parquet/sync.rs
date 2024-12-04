@@ -1,4 +1,5 @@
 use std::fs::File;
+use std::sync::Mutex;
 
 use crate::crs::PyprojCRSTransform;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
@@ -140,7 +141,7 @@ pub fn write_parquet(
 
 #[pyclass(module = "geoarrow.rust.io._io")]
 pub struct ParquetWriter {
-    file: Option<_GeoParquetWriter<FileWriter>>,
+    file: Mutex<Option<_GeoParquetWriter<FileWriter>>>,
 }
 
 #[pymethods]
@@ -154,14 +155,14 @@ impl ParquetWriter {
         };
         let geoparquet_writer = _GeoParquetWriter::try_new(file_writer, schema.as_ref(), &options)?;
         Ok(Self {
-            file: Some(geoparquet_writer),
+            file: Mutex::new(Some(geoparquet_writer)),
         })
     }
 
     pub fn __enter__(&self) {}
 
     pub fn write_batch(&mut self, batch: PyRecordBatch) -> PyGeoArrowResult<()> {
-        if let Some(file) = self.file.as_mut() {
+        if let Some(file) = self.file.lock().unwrap().as_mut() {
             file.write_batch(batch.as_ref())?;
             Ok(())
         } else {
@@ -170,7 +171,7 @@ impl ParquetWriter {
     }
 
     pub fn write_table(&mut self, table: AnyRecordBatch) -> PyGeoArrowResult<()> {
-        if let Some(file) = self.file.as_mut() {
+        if let Some(file) = self.file.lock().unwrap().as_mut() {
             for batch in table.into_reader()? {
                 file.write_batch(&batch?)?;
             }
@@ -181,7 +182,7 @@ impl ParquetWriter {
     }
 
     pub fn close(&mut self) -> PyGeoArrowResult<()> {
-        if let Some(file) = std::mem::take(&mut self.file) {
+        if let Some(file) = self.file.lock().unwrap().take() {
             file.finish()?;
             Ok(())
         } else {
@@ -190,7 +191,7 @@ impl ParquetWriter {
     }
 
     pub fn is_closed(&self) -> bool {
-        self.file.is_none()
+        self.file.lock().unwrap().is_none()
     }
 
     /// Exit the context manager

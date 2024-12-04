@@ -24,22 +24,20 @@ pub(crate) fn return_geometry_array(
 ) -> PyGeoArrowResult<PyObject> {
     Ok(PyNativeArray::new(NativeArrayDyn::new(arr))
         .to_geoarrow(py)?
-        .to_object(py))
+        .unbind())
 }
 
 pub(crate) fn return_chunked_geometry_array(
     py: Python,
     arr: Arc<dyn ChunkedNativeArray>,
 ) -> PyGeoArrowResult<PyObject> {
-    Ok(PyChunkedNativeArray::new(arr)
-        .to_geoarrow(py)?
-        .to_object(py))
+    Ok(PyChunkedNativeArray::new(arr).to_geoarrow(py)?.unbind())
 }
 
 pub(crate) fn return_array(py: Python, arr: PyArray) -> PyGeoArrowResult<PyObject> {
-    Ok(arr.to_arro3(py)?.to_object(py))
+    Ok(arr.to_arro3(py)?)
 }
 
 pub(crate) fn return_chunked_array(py: Python, arr: PyChunkedArray) -> PyGeoArrowResult<PyObject> {
-    Ok(arr.to_arro3(py)?.to_object(py))
+    Ok(arr.to_arro3(py)?)
 }
