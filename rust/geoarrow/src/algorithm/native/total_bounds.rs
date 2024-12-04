@@ -51,7 +51,7 @@ impl_array!(MultiLineStringArray, add_multi_line_string);
 impl_array!(MultiPolygonArray, add_multi_polygon);
 impl_array!(MixedGeometryArray, add_geometry);
 impl_array!(GeometryCollectionArray, add_geometry_collection);
-impl_array!(UnknownGeometryArray, add_geometry);
+impl_array!(GeometryArray, add_geometry);
 
 // impl<O: OffsetSizeTrait> TotalBounds for WKBArray<O> {
 //     fn total_bounds(&self) -> BoundingRect {
@@ -77,7 +77,7 @@ impl TotalBounds for &dyn NativeArray {
             Mixed(_, _) => self.as_mixed().total_bounds(),
             GeometryCollection(_, _) => self.as_geometry_collection().total_bounds(),
             Rect(_) => self.as_rect().total_bounds(),
-            Unknown(_) => self.as_unknown().total_bounds(),
+            Geometry(_) => self.as_geometry().total_bounds(),
             // WKB => self.as_wkb().total_bounds(),
             // LargeWKB => self.as_large_wkb().total_bounds(),
         }
@@ -107,7 +107,7 @@ impl TotalBounds for &dyn ChunkedNativeArray {
             Mixed(_, _) => self.as_mixed().total_bounds(),
             GeometryCollection(_, _) => self.as_geometry_collection().total_bounds(),
             Rect(_) => self.as_rect().total_bounds(),
-            Unknown(_) => self.as_unknown().total_bounds(),
+            Geometry(_) => self.as_geometry().total_bounds(),
         }
     }
 }

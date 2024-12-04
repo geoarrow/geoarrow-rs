@@ -9,6 +9,7 @@ pub use coord::{
     InterleavedCoordBufferBuilder, SeparatedCoordBuffer, SeparatedCoordBufferBuilder,
 };
 pub use dynamic::{NativeArrayDyn, SerializedArrayDyn};
+pub use geometry::{GeometryArray, GeometryBuilder, GeometryCapacity};
 pub use geometrycollection::{
     GeometryCollectionArray, GeometryCollectionBuilder, GeometryCollectionCapacity,
 };
@@ -20,7 +21,6 @@ pub use multipolygon::{MultiPolygonArray, MultiPolygonBuilder, MultiPolygonCapac
 pub use point::{PointArray, PointBuilder};
 pub use polygon::{PolygonArray, PolygonBuilder, PolygonCapacity};
 pub use rect::{RectArray, RectBuilder};
-pub use unknown::{UnknownCapacity, UnknownGeometryArray, UnknownGeometryBuilder};
 pub use wkt::WKTArray;
 
 pub use crate::trait_::{ArrayBase, NativeArray, SerializedArray};
@@ -41,7 +41,6 @@ pub(crate) mod offset_builder;
 pub(crate) mod point;
 pub(crate) mod polygon;
 pub(crate) mod rect;
-pub(crate) mod unknown;
 pub(crate) mod util;
 pub(crate) mod wkt;
 

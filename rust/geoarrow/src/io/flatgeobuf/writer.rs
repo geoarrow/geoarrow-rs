@@ -86,7 +86,7 @@ fn infer_flatgeobuf_geometry_type(
             matches!(dim, Dimension::XYZ),
         ),
         // We'll just claim that it does have 3d data. Not sure whether this is bad to lie here?
-        Unknown(_) => (flatgeobuf::GeometryType::Unknown, true),
+        Geometry(_) => (flatgeobuf::GeometryType::Unknown, true),
     };
     Ok((geometry_type, has_z))
 }

@@ -1,4 +1,3 @@
-use crate::array::unknown::UnknownGeometryArray;
 use crate::array::*;
 use crate::chunked_array::*;
 
@@ -89,13 +88,13 @@ pub trait AsNativeArray {
         self.as_rect_opt().unwrap()
     }
 
-    /// Downcast this to a [`UnknownGeometryArray`] returning `None` if not possible
-    fn as_unknown_opt(&self) -> Option<&UnknownGeometryArray>;
+    /// Downcast this to a [`GeometryArray`] returning `None` if not possible
+    fn as_geometry_opt(&self) -> Option<&GeometryArray>;
 
-    /// Downcast this to a [`UnknownGeometryArray`] panicking if not possible
+    /// Downcast this to a [`GeometryArray`] panicking if not possible
     #[inline]
-    fn as_unknown(&self) -> &UnknownGeometryArray {
-        self.as_unknown_opt().unwrap()
+    fn as_geometry(&self) -> &GeometryArray {
+        self.as_geometry_opt().unwrap()
     }
 }
 
@@ -146,8 +145,8 @@ impl AsNativeArray for &dyn NativeArray {
     }
 
     #[inline]
-    fn as_unknown_opt(&self) -> Option<&UnknownGeometryArray> {
-        self.as_any().downcast_ref::<UnknownGeometryArray>()
+    fn as_geometry_opt(&self) -> Option<&GeometryArray> {
+        self.as_any().downcast_ref::<GeometryArray>()
     }
 }
 
@@ -271,12 +270,12 @@ pub trait AsChunkedNativeArray {
     }
 
     /// Downcast this to a [`ChunkedUnknownGeometryArray`] returning `None` if not possible
-    fn as_unknown_opt(&self) -> Option<&ChunkedUnknownGeometryArray>;
+    fn as_geometry_opt(&self) -> Option<&ChunkedUnknownGeometryArray>;
 
     /// Downcast this to a [`ChunkedUnknownGeometryArray`] panicking if not possible
     #[inline]
-    fn as_unknown(&self) -> &ChunkedUnknownGeometryArray {
-        self.as_unknown_opt().unwrap()
+    fn as_geometry(&self) -> &ChunkedUnknownGeometryArray {
+        self.as_geometry_opt().unwrap()
     }
 }
 
@@ -328,7 +327,7 @@ impl AsChunkedNativeArray for &dyn ChunkedNativeArray {
     }
 
     #[inline]
-    fn as_unknown_opt(&self) -> Option<&ChunkedUnknownGeometryArray> {
+    fn as_geometry_opt(&self) -> Option<&ChunkedUnknownGeometryArray> {
         self.as_any().downcast_ref::<ChunkedUnknownGeometryArray>()
     }
 }

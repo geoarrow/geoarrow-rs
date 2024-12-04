@@ -1,7 +1,6 @@
 use crate::array::{
-    AsNativeArray, GeometryCollectionArray, LineStringArray, MixedGeometryArray,
+    AsNativeArray, GeometryArray, GeometryCollectionArray, LineStringArray, MixedGeometryArray,
     MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray, PolygonArray, RectArray,
-    UnknownGeometryArray,
 };
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
@@ -52,24 +51,22 @@ impl GeometryScalar {
             | Mixed(_, dim)
             | GeometryCollection(_, dim)
             | Rect(dim) => dim,
-            Unknown(_) => todo!(), // WKB => {
-                                   //     let arr = self.0.as_ref();
-                                   //     let wkb_arr = arr.as_wkb().value(0);
-                                   //     let wkb_obj = wkb_arr.to_wkb_object();
-                                   //     wkb_obj.dimension()
-                                   // }
-                                   // LargeWKB => {
-                                   //     let arr = self.0.as_ref();
-                                   //     let wkb_arr = arr.as_large_wkb().value(0);
-                                   //     let wkb_obj = wkb_arr.to_wkb_object();
-                                   //     wkb_obj.dimension()
-                                   // }
+            Geometry(_) => todo!(), // WKB => {
+                                    //     let arr = self.0.as_ref();
+                                    //     let wkb_arr = arr.as_wkb().value(0);
+                                    //     let wkb_obj = wkb_arr.to_wkb_object();
+                                    //     wkb_obj.dimension()
+                                    // }
+                                    // LargeWKB => {
+                                    //     let arr = self.0.as_ref();
+                                    //     let wkb_arr = arr.as_large_wkb().value(0);
+                                    //     let wkb_obj = wkb_arr.to_wkb_object();
+                                    //     wkb_obj.dimension()
+                                    // }
         }
     }
 
     pub fn as_geometry(&self) -> Option<Geometry<'_>> {
-        use NativeType::*;
-
         // Note: we use `.downcast_ref` directly here because we need to pass in the generic
         // TODO: may be able to change this now that we don't have <O>
         //
@@ -79,23 +76,23 @@ impl GeometryScalar {
         // to work around that.
 
         match self.data_type() {
-            Point(_, _) => {
+            NativeType::Point(_, _) => {
                 let arr = self.0.as_any().downcast_ref::<PointArray>().unwrap();
                 arr.get(0).map(Geometry::Point)
             }
-            LineString(_, _) => {
+            NativeType::LineString(_, _) => {
                 let arr = self.0.as_any().downcast_ref::<LineStringArray>().unwrap();
                 arr.get(0).map(Geometry::LineString)
             }
-            Polygon(_, _) => {
+            NativeType::Polygon(_, _) => {
                 let arr = self.0.as_any().downcast_ref::<PolygonArray>().unwrap();
                 arr.get(0).map(Geometry::Polygon)
             }
-            MultiPoint(_, _) => {
+            NativeType::MultiPoint(_, _) => {
                 let arr = self.0.as_any().downcast_ref::<MultiPointArray>().unwrap();
                 arr.get(0).map(Geometry::MultiPoint)
             }
-            MultiLineString(_, _) => {
+            NativeType::MultiLineString(_, _) => {
                 let arr = self
                     .0
                     .as_any()
@@ -103,11 +100,11 @@ impl GeometryScalar {
                     .unwrap();
                 arr.get(0).map(Geometry::MultiLineString)
             }
-            MultiPolygon(_, _) => {
+            NativeType::MultiPolygon(_, _) => {
                 let arr = self.0.as_any().downcast_ref::<MultiPolygonArray>().unwrap();
                 arr.get(0).map(Geometry::MultiPolygon)
             }
-            Mixed(_, _) => {
+            NativeType::Mixed(_, _) => {
                 let arr = self
                     .0
                     .as_any()
@@ -115,7 +112,7 @@ impl GeometryScalar {
                     .unwrap();
                 arr.get(0)
             }
-            GeometryCollection(_, _) => {
+            NativeType::GeometryCollection(_, _) => {
                 let arr = self
                     .0
                     .as_any()
@@ -123,16 +120,12 @@ impl GeometryScalar {
                     .unwrap();
                 arr.get(0).map(Geometry::GeometryCollection)
             }
-            Rect(_) => {
+            NativeType::Rect(_) => {
                 let arr = self.0.as_any().downcast_ref::<RectArray>().unwrap();
                 arr.get(0).map(Geometry::Rect)
             }
-            Unknown(_) => {
-                let arr = self
-                    .0
-                    .as_any()
-                    .downcast_ref::<UnknownGeometryArray>()
-                    .unwrap();
+            NativeType::Geometry(_) => {
+                let arr = self.0.as_any().downcast_ref::<GeometryArray>().unwrap();
                 arr.get(0)
             }
         }
@@ -157,7 +150,7 @@ impl GeometryScalar {
             Mixed(_, _) => impl_to_geo!(as_mixed),
             GeometryCollection(_, _) => impl_to_geo!(as_geometry_collection),
             Rect(_) => impl_to_geo!(as_rect),
-            Unknown(_) => impl_to_geo!(as_unknown),
+            Geometry(_) => impl_to_geo!(as_geometry),
         }
     }
 

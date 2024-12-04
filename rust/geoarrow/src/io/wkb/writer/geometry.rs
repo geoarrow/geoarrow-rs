@@ -4,7 +4,7 @@ use wkb::writer::{geometry_wkb_size, write_geometry};
 use wkb::Endianness;
 
 use crate::array::offset_builder::OffsetsBuilder;
-use crate::array::{MixedGeometryArray, UnknownGeometryArray, WKBArray};
+use crate::array::{GeometryArray, MixedGeometryArray, WKBArray};
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
 use std::io::Cursor;
@@ -42,8 +42,8 @@ impl<O: OffsetSizeTrait> From<&MixedGeometryArray> for WKBArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<&UnknownGeometryArray> for WKBArray<O> {
-    fn from(value: &UnknownGeometryArray) -> Self {
+impl<O: OffsetSizeTrait> From<&GeometryArray> for WKBArray<O> {
+    fn from(value: &GeometryArray) -> Self {
         let mut offsets: OffsetsBuilder<O> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets

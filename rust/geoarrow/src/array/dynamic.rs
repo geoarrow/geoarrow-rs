@@ -43,7 +43,7 @@ impl NativeArrayDyn {
                 Arc::new(GeometryCollectionArray::try_from((array, field))?)
             }
             Rect(_) => Arc::new(RectArray::try_from((array, field))?),
-            Unknown(_) => Arc::new(UnknownGeometryArray::try_from((array, field))?),
+            Geometry(_) => Arc::new(GeometryArray::try_from((array, field))?),
         };
 
         Ok(Self(geo_arr))

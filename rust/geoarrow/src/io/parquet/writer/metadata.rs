@@ -104,8 +104,8 @@ impl ColumnInfo {
             }
         }
 
-        if let NativeType::Unknown(_) = array_ref.data_type() {
-            let arr = array_ref.as_unknown();
+        if let NativeType::Geometry(_) = array_ref.data_type() {
+            let arr = array_ref.as_geometry();
             if arr.has_points(Dimension::XY) || arr.has_points(Dimension::XYZ) {
                 self.geometry_types.insert(GeoParquetGeometryType::Point);
             }
@@ -284,7 +284,7 @@ pub fn get_geometry_types(data_type: &NativeType) -> HashSet<GeoParquetGeometryT
         NativeType::MultiPolygon(_, Dimension::XYZ) => {
             geometry_types.insert(MultiPolygonZ);
         }
-        NativeType::Mixed(_, _) | NativeType::Unknown(_) => {
+        NativeType::Mixed(_, _) | NativeType::Geometry(_) => {
             // We don't have access to the actual data here, so we can't inspect better than this.
         }
         NativeType::GeometryCollection(_, Dimension::XY) => {

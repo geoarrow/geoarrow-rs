@@ -414,8 +414,8 @@ fn process_geometry_n<P: GeomProcessor>(
             // let geom = arr.as_ref().as_rect::<2>().value(i);
             // process_rect
         }
-        Unknown(_) => {
-            let geom = arr.as_unknown().value(i);
+        Geometry(_) => {
+            let geom = arr.as_geometry().value(i);
             process_geometry(&geom, 0, processor)?;
         }
     }

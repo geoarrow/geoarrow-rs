@@ -64,7 +64,7 @@ impl ToWKT for &dyn NativeArray {
                 impl_to_wkt!(as_geometry_collection, write_geometry_collection)
             }
             Rect(_) => impl_to_wkt!(as_rect, write_rect),
-            Unknown(_) => impl_to_wkt!(as_unknown, write_geometry),
+            Geometry(_) => impl_to_wkt!(as_geometry, write_geometry),
         }
 
         Ok(WKTArray::new(output_array.finish(), metadata))
@@ -94,7 +94,7 @@ impl ToWKT for &dyn ChunkedNativeArray {
             Mixed(_, _) => impl_to_wkt!(as_mixed),
             GeometryCollection(_, _) => impl_to_wkt!(as_geometry_collection),
             Rect(_) => impl_to_wkt!(as_rect),
-            Unknown(_) => impl_to_wkt!(as_unknown),
+            Geometry(_) => impl_to_wkt!(as_geometry),
         }
     }
 }

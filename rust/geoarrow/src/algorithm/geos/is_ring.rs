@@ -36,7 +36,7 @@ iter_geos_impl!(MultiPolygonArray);
 iter_geos_impl!(MixedGeometryArray);
 iter_geos_impl!(GeometryCollectionArray);
 iter_geos_impl!(RectArray);
-iter_geos_impl!(UnknownGeometryArray);
+iter_geos_impl!(GeometryArray);
 
 impl IsRing for &dyn NativeArray {
     type Output = Result<BooleanArray>;
@@ -54,7 +54,7 @@ impl IsRing for &dyn NativeArray {
             Mixed(_, _) => self.as_mixed().is_ring(),
             GeometryCollection(_, _) => self.as_geometry_collection().is_ring(),
             Rect(_) => self.as_rect().is_ring(),
-            Unknown(_) => self.as_unknown().is_ring(),
+            Geometry(_) => self.as_geometry().is_ring(),
         }
     }
 }

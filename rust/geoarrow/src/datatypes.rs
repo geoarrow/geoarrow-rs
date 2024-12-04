@@ -144,7 +144,7 @@ pub enum NativeType {
     Rect(Dimension),
 
     /// Represents a mixed geometry array of unknown types or dimensions
-    Unknown(CoordType),
+    Geometry(CoordType),
 }
 
 /// A type enum representing "serialized" GeoArrow geometry types.
@@ -394,7 +394,7 @@ impl NativeType {
             Mixed(ct, _) => *ct,
             GeometryCollection(ct, _) => *ct,
             Rect(_) => CoordType::Separated,
-            Unknown(ct) => *ct,
+            Geometry(ct) => *ct,
         }
     }
 
@@ -413,7 +413,7 @@ impl NativeType {
             Mixed(_, dim) => Some(*dim),
             GeometryCollection(_, dim) => Some(*dim),
             Rect(dim) => Some(*dim),
-            Unknown(_) => None,
+            Geometry(_) => None,
         }
     }
 
@@ -443,7 +443,7 @@ impl NativeType {
             Mixed(coord_type, dim) => mixed_data_type(*coord_type, *dim),
             GeometryCollection(coord_type, dim) => geometry_collection_data_type(*coord_type, *dim),
             Rect(dim) => rect_data_type(*dim),
-            Unknown(coord_type) => unknown_data_type(*coord_type),
+            Geometry(coord_type) => unknown_data_type(*coord_type),
         }
     }
 
@@ -469,7 +469,7 @@ impl NativeType {
             Mixed(_, _) => "geoarrow.geometry",
             GeometryCollection(_, _) => "geoarrow.geometrycollection",
             Rect(_) => "geoarrow.box",
-            Unknown(_) => "geoarrow.unknown",
+            Geometry(_) => "geoarrow.unknown",
         }
     }
 
@@ -554,7 +554,7 @@ impl NativeType {
             Mixed(_, dim) => Mixed(coord_type, dim),
             GeometryCollection(_, dim) => GeometryCollection(coord_type, dim),
             Rect(dim) => Rect(dim),
-            Unknown(_) => Unknown(coord_type),
+            Geometry(_) => Geometry(coord_type),
         }
     }
 
@@ -580,7 +580,7 @@ impl NativeType {
             Mixed(coord_type, _) => Mixed(coord_type, dim),
             GeometryCollection(coord_type, _) => GeometryCollection(coord_type, dim),
             Rect(_) => Rect(dim),
-            Unknown(coord_type) => Unknown(coord_type),
+            Geometry(coord_type) => Geometry(coord_type),
         }
     }
 }
@@ -1072,7 +1072,7 @@ fn parse_unknown(field: &Field) -> Result<NativeType> {
         }
 
         let coord_type = coord_types.drain().next().unwrap();
-        Ok(NativeType::Unknown(coord_type))
+        Ok(NativeType::Geometry(coord_type))
     } else {
         Err(GeoArrowError::General("Expected union type".to_string()))
     }

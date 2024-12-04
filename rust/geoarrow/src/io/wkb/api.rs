@@ -1,8 +1,6 @@
 use std::sync::Arc;
 
 use crate::algorithm::native::Downcast;
-use crate::array::geometrycollection::GeometryCollectionBuilder;
-use crate::array::unknown::UnknownGeometryBuilder;
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::datatypes::{Dimension, NativeType};
@@ -250,8 +248,8 @@ pub fn from_wkb<O: OffsetSizeTrait>(
             "Unexpected data type {:?}",
             target_geo_data_type,
         ))),
-        Unknown(coord_type) => {
-            let builder = UnknownGeometryBuilder::from_wkb(
+        Geometry(coord_type) => {
+            let builder = GeometryBuilder::from_wkb(
                 &wkb_objects,
                 Some(coord_type),
                 arr.metadata(),
@@ -290,7 +288,7 @@ impl ToWKB for &dyn NativeArray {
             GeometryCollection(_, _) => self.as_geometry_collection().into(),
 
             Rect(_) => todo!(),
-            Unknown(_) => self.as_unknown().into(),
+            Geometry(_) => self.as_geometry().into(),
         }
     }
 }
@@ -321,7 +319,7 @@ impl ToWKB for &dyn ChunkedNativeArray {
                 ChunkedGeometryArray::new(self.as_geometry_collection().map(|chunk| chunk.into()))
             }
             Rect(_) => todo!(),
-            Unknown(_) => ChunkedGeometryArray::new(self.as_mixed().map(|chunk| chunk.into())),
+            Geometry(_) => ChunkedGeometryArray::new(self.as_mixed().map(|chunk| chunk.into())),
         }
     }
 }
@@ -340,7 +338,7 @@ pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn NativeArray) -> WKBArray<O> {
         Mixed(_, _) => arr.as_mixed().into(),
         GeometryCollection(_, _) => arr.as_geometry_collection().into(),
         Rect(_) => todo!(),
-        Unknown(_) => arr.as_unknown().into(),
+        Geometry(_) => arr.as_geometry().into(),
     }
 }
 
