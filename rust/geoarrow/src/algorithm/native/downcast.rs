@@ -388,7 +388,6 @@ impl Downcast for &dyn NativeArray {
             MultiPoint(_, _) => self.as_multi_point().downcasted_data_type(),
             MultiLineString(_, _) => self.as_multi_line_string().downcasted_data_type(),
             MultiPolygon(_, _) => self.as_multi_polygon().downcasted_data_type(),
-            Mixed(_, _) => self.as_mixed().downcasted_data_type(),
             GeometryCollection(_, _) => self.as_geometry_collection().downcasted_data_type(),
             Rect(_) => self.as_rect().downcasted_data_type(),
             _ => todo!("3d support"),
@@ -405,7 +404,6 @@ impl Downcast for &dyn NativeArray {
             MultiPoint(_, _) => self.as_multi_point().downcast(),
             MultiLineString(_, _) => self.as_multi_line_string().downcast(),
             MultiPolygon(_, _) => self.as_multi_polygon().downcast(),
-            Mixed(_, _) => self.as_mixed().downcast(),
             GeometryCollection(_, _) => self.as_geometry_collection().downcast(),
             Rect(_) => self.as_rect().downcast(),
             _ => todo!("3d support"),
@@ -440,10 +438,10 @@ fn resolve_types(types: &HashSet<NativeType>) -> NativeType {
         } else if extension_name_set.contains("geoarrow.geometrycollection") {
             NativeType::GeometryCollection(Default::default(), Dimension::XY)
         } else {
-            NativeType::Mixed(Default::default(), Dimension::XY)
+            NativeType::Geometry(Default::default())
         }
     } else {
-        NativeType::Mixed(Default::default(), Dimension::XY)
+        NativeType::Geometry(Default::default())
     }
 }
 
@@ -516,7 +514,6 @@ impl Downcast for &dyn ChunkedNativeArray {
             MultiPoint(_, XY) => self.as_multi_point().downcasted_data_type(),
             MultiLineString(_, XY) => self.as_multi_line_string().downcasted_data_type(),
             MultiPolygon(_, XY) => self.as_multi_polygon().downcasted_data_type(),
-            Mixed(_, XY) => self.as_mixed().downcasted_data_type(),
             GeometryCollection(_, XY) => self.as_geometry_collection().downcasted_data_type(),
             Rect(XY) => self.as_rect().downcasted_data_type(),
             _ => todo!("3d support"),
@@ -534,7 +531,6 @@ impl Downcast for &dyn ChunkedNativeArray {
             MultiPoint(_, XY) => self.as_multi_point().downcast(),
             MultiLineString(_, XY) => self.as_multi_line_string().downcast(),
             MultiPolygon(_, XY) => self.as_multi_polygon().downcast(),
-            Mixed(_, XY) => self.as_mixed().downcast(),
             GeometryCollection(_, XY) => self.as_geometry_collection().downcast(),
             Rect(XY) => self.as_rect().downcast(),
             _ => todo!("3d support"),

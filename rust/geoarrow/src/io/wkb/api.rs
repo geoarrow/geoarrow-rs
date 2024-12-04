@@ -224,16 +224,6 @@ pub fn from_wkb<O: OffsetSizeTrait>(
                 MultiPolygonBuilder::from_wkb(&wkb_objects, dim, Some(coord_type), arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
-        Mixed(coord_type, dim) => {
-            let builder = MixedGeometryBuilder::from_wkb(
-                &wkb_objects,
-                dim,
-                Some(coord_type),
-                arr.metadata(),
-                prefer_multi,
-            )?;
-            Ok(Arc::new(builder.finish()))
-        }
         GeometryCollection(coord_type, dim) => {
             let builder = GeometryCollectionBuilder::from_wkb(
                 &wkb_objects,
@@ -284,7 +274,6 @@ impl ToWKB for &dyn NativeArray {
             MultiPoint(_, _) => self.as_multi_point().into(),
             MultiLineString(_, _) => self.as_multi_line_string().into(),
             MultiPolygon(_, _) => self.as_multi_polygon().into(),
-            Mixed(_, _) => self.as_mixed().into(),
             GeometryCollection(_, _) => self.as_geometry_collection().into(),
 
             Rect(_) => todo!(),
@@ -314,7 +303,6 @@ impl ToWKB for &dyn ChunkedNativeArray {
             MultiPolygon(_, _) => {
                 ChunkedGeometryArray::new(self.as_multi_polygon().map(|chunk| chunk.into()))
             }
-            Mixed(_, _) => ChunkedGeometryArray::new(self.as_mixed().map(|chunk| chunk.into())),
             GeometryCollection(_, _) => {
                 ChunkedGeometryArray::new(self.as_geometry_collection().map(|chunk| chunk.into()))
             }
@@ -335,7 +323,6 @@ pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn NativeArray) -> WKBArray<O> {
         MultiPoint(_, _) => arr.as_multi_point().into(),
         MultiLineString(_, _) => arr.as_multi_line_string().into(),
         MultiPolygon(_, _) => arr.as_multi_polygon().into(),
-        Mixed(_, _) => arr.as_mixed().into(),
         GeometryCollection(_, _) => arr.as_geometry_collection().into(),
         Rect(_) => todo!(),
         Geometry(_) => arr.as_geometry().into(),
@@ -362,37 +349,39 @@ mod test {
         assert_eq!(&arr, rt_point_arr_ref);
     }
 
-    #[test]
-    fn point_round_trip() {
-        let arr = point::point_array();
-        let wkb_arr: WKBArray<i32> = to_wkb(&arr);
-        let roundtrip = from_wkb(
-            &wkb_arr,
-            NativeType::Mixed(CoordType::Interleaved, Dimension::XY),
-            true,
-        )
-        .unwrap();
-        let rt_ref = roundtrip.as_ref();
-        let rt_mixed_arr = rt_ref.as_mixed();
-        let downcasted = rt_mixed_arr.downcast();
-        let downcasted_ref = downcasted.as_ref();
-        let rt_point_arr = downcasted_ref.as_point();
-        assert_eq!(&arr, rt_point_arr);
-    }
+    // TODO: update for removal of NativeType::Mixed
+    // #[test]
+    // fn point_round_trip() {
+    //     let arr = point::point_array();
+    //     let wkb_arr: WKBArray<i32> = to_wkb(&arr);
+    //     let roundtrip = from_wkb(
+    //         &wkb_arr,
+    //         NativeType::Mixed(CoordType::Interleaved, Dimension::XY),
+    //         true,
+    //     )
+    //     .unwrap();
+    //     let rt_ref = roundtrip.as_ref();
+    //     let rt_mixed_arr = rt_ref.as_mixed();
+    //     let downcasted = rt_mixed_arr.downcast();
+    //     let downcasted_ref = downcasted.as_ref();
+    //     let rt_point_arr = downcasted_ref.as_point();
+    //     assert_eq!(&arr, rt_point_arr);
+    // }
 
     #[test]
     fn point_3d_round_trip() {
         let arr = point::point_z_array();
         let wkb_arr: WKBArray<i32> = to_wkb(&arr);
-        let roundtrip_mixed = from_wkb(
-            &wkb_arr,
-            NativeType::Mixed(CoordType::Interleaved, Dimension::XYZ),
-            false,
-        )
-        .unwrap();
-        let rt_ref = roundtrip_mixed.as_ref();
-        let rt_mixed_arr = rt_ref.as_mixed();
-        assert!(rt_mixed_arr.has_points());
+        // TODO: update for removal of NativeType::Mixed
+        // let roundtrip_mixed = from_wkb(
+        //     &wkb_arr,
+        //     NativeType::Mixed(CoordType::Interleaved, Dimension::XYZ),
+        //     false,
+        // )
+        // .unwrap();
+        // let rt_ref = roundtrip_mixed.as_ref();
+        // let rt_mixed_arr = rt_ref.as_mixed();
+        // assert!(rt_mixed_arr.has_points());
 
         let roundtrip_point = from_wkb(
             &wkb_arr,

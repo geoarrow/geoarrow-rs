@@ -51,7 +51,6 @@ impl IsRing for &dyn NativeArray {
             MultiPoint(_, _) => self.as_multi_point().is_ring(),
             MultiLineString(_, _) => self.as_multi_line_string().is_ring(),
             MultiPolygon(_, _) => self.as_multi_polygon().is_ring(),
-            Mixed(_, _) => self.as_mixed().is_ring(),
             GeometryCollection(_, _) => self.as_geometry_collection().is_ring(),
             Rect(_) => self.as_rect().is_ring(),
             Geometry(_) => self.as_geometry().is_ring(),

@@ -1,6 +1,6 @@
 use crate::array::{
-    AsNativeArray, GeometryArray, GeometryCollectionArray, LineStringArray, MixedGeometryArray,
-    MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray, PolygonArray, RectArray,
+    AsNativeArray, GeometryArray, GeometryCollectionArray, LineStringArray, MultiLineStringArray,
+    MultiPointArray, MultiPolygonArray, PointArray, PolygonArray, RectArray,
 };
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
@@ -48,7 +48,6 @@ impl GeometryScalar {
             | MultiPoint(_, dim)
             | MultiLineString(_, dim)
             | MultiPolygon(_, dim)
-            | Mixed(_, dim)
             | GeometryCollection(_, dim)
             | Rect(dim) => dim,
             Geometry(_) => todo!(), // WKB => {
@@ -104,14 +103,6 @@ impl GeometryScalar {
                 let arr = self.0.as_any().downcast_ref::<MultiPolygonArray>().unwrap();
                 arr.get(0).map(Geometry::MultiPolygon)
             }
-            NativeType::Mixed(_, _) => {
-                let arr = self
-                    .0
-                    .as_any()
-                    .downcast_ref::<MixedGeometryArray>()
-                    .unwrap();
-                arr.get(0)
-            }
             NativeType::GeometryCollection(_, _) => {
                 let arr = self
                     .0
@@ -147,7 +138,6 @@ impl GeometryScalar {
             MultiPoint(_, _) => impl_to_geo!(as_multi_point),
             MultiLineString(_, _) => impl_to_geo!(as_multi_line_string),
             MultiPolygon(_, _) => impl_to_geo!(as_multi_polygon),
-            Mixed(_, _) => impl_to_geo!(as_mixed),
             GeometryCollection(_, _) => impl_to_geo!(as_geometry_collection),
             Rect(_) => impl_to_geo!(as_rect),
             Geometry(_) => impl_to_geo!(as_geometry),

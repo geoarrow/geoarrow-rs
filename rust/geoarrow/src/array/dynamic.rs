@@ -29,7 +29,6 @@ impl NativeArrayDyn {
     pub fn from_arrow_array(array: &dyn Array, field: &Field) -> Result<Self> {
         let data_type = NativeType::try_from(field)?;
 
-        // TODO: have to figure out when to parse as a MixedGeometry array vs Unknown Array
         use NativeType::*;
         let geo_arr: Arc<dyn NativeArray> = match data_type {
             Point(_, _) => Arc::new(PointArray::try_from((array, field))?),
@@ -38,7 +37,6 @@ impl NativeArrayDyn {
             MultiPoint(_, _) => Arc::new(MultiPointArray::try_from((array, field))?),
             MultiLineString(_, _) => Arc::new(MultiLineStringArray::try_from((array, field))?),
             MultiPolygon(_, _) => Arc::new(MultiPolygonArray::try_from((array, field))?),
-            Mixed(_, _) => Arc::new(MixedGeometryArray::try_from((array, field))?),
             GeometryCollection(_, _) => {
                 Arc::new(GeometryCollectionArray::try_from((array, field))?)
             }

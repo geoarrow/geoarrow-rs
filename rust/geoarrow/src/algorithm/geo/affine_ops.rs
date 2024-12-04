@@ -133,7 +133,6 @@ impl AffineOps<&AffineTransform> for &dyn NativeArray {
             MultiPoint(_, XY) => impl_downcast!(as_multi_point),
             MultiLineString(_, XY) => impl_downcast!(as_multi_line_string),
             MultiPolygon(_, XY) => impl_downcast!(as_multi_polygon),
-            Mixed(_, XY) => impl_downcast!(as_mixed),
             GeometryCollection(_, XY) => impl_downcast!(as_geometry_collection),
             // Rect => impl_downcast!(as_rect),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
@@ -193,7 +192,6 @@ impl AffineOps<&AffineTransform> for &dyn ChunkedNativeArray {
             MultiPoint(_, XY) => impl_downcast!(as_multi_point),
             MultiLineString(_, XY) => impl_downcast!(as_multi_line_string),
             MultiPolygon(_, XY) => impl_downcast!(as_multi_polygon),
-            Mixed(_, XY) => impl_downcast!(as_mixed),
             GeometryCollection(_, XY) => impl_downcast!(as_geometry_collection),
             // Rect => impl_downcast!(as_rect),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
@@ -287,7 +285,6 @@ impl AffineOps<&[AffineTransform]> for &dyn NativeArray {
                 Arc::new(self.as_multi_line_string().affine_transform(transform))
             }
             MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon().affine_transform(transform)),
-            Mixed(_, XY) => Arc::new(self.as_mixed().affine_transform(transform)),
             GeometryCollection(_, XY) => {
                 Arc::new(self.as_geometry_collection().affine_transform(transform))
             }

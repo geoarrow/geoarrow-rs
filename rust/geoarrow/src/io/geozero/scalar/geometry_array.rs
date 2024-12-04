@@ -44,7 +44,6 @@ pub fn process_geometry_scalar_array<P: GeomProcessor>(
         MultiPoint(_, _) => impl_process!(process_multi_point, as_multi_point),
         MultiLineString(_, _) => impl_process!(process_multi_line_string, as_multi_line_string),
         MultiPolygon(_, _) => impl_process!(process_multi_polygon, as_multi_polygon),
-        Mixed(_, _) => impl_process!(process_geometry, as_mixed),
         GeometryCollection(_, _) => {
             impl_process!(process_geometry_collection, as_geometry_collection)
         }
