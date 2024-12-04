@@ -42,12 +42,12 @@ impl PyChunkedNativeArray {
     ///
     /// This requires that you depend on geoarrow-rust-core from your Python package.
     pub fn to_geoarrow<'py>(&'py self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-        let geoarrow_mod = py.import_bound(intern!(py, "geoarrow.rust.core"))?;
+        let geoarrow_mod = py.import(intern!(py, "geoarrow.rust.core"))?;
         geoarrow_mod
             .getattr(intern!(py, "ChunkedNativeArray"))?
             .call_method1(
                 intern!(py, "from_arrow_pycapsule"),
-                PyTuple::new_bound(py, vec![self.__arrow_c_stream__(py, None)?]),
+                PyTuple::new(py, vec![self.__arrow_c_stream__(py, None)?])?,
             )
     }
 }

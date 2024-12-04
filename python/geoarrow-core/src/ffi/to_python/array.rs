@@ -12,12 +12,18 @@ pub fn native_array_to_pyobject(
     py: Python,
     arr: Arc<dyn NativeArray>,
 ) -> PyGeoArrowResult<PyObject> {
-    Ok(PyNativeArray::new(NativeArrayDyn::new(arr)).into_py(py))
+    Ok(PyNativeArray::new(NativeArrayDyn::new(arr))
+        .into_pyobject(py)?
+        .into_any()
+        .unbind())
 }
 
 pub fn chunked_native_array_to_pyobject(
     py: Python,
     arr: Arc<dyn ChunkedNativeArray>,
 ) -> PyGeoArrowResult<PyObject> {
-    Ok(PyChunkedNativeArray::new(arr).into_py(py))
+    Ok(PyChunkedNativeArray::new(arr)
+        .into_pyobject(py)?
+        .into_any()
+        .unbind())
 }

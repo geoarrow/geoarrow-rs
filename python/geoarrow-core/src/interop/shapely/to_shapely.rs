@@ -38,25 +38,28 @@ fn coords_to_numpy(py: Python, coords: &CoordBuffer) -> PyGeoArrowResult<PyObjec
             let size = cb.dim().size();
             let scalar_buffer = cb.coords();
             let numpy_coords = scalar_buffer
-                .to_pyarray_bound(py)
+                .to_pyarray(py)
                 .reshape([scalar_buffer.len() / size, size])?;
 
-            Ok(numpy_coords.to_object(py))
+            Ok(numpy_coords.into_pyobject(py).unwrap().into_any().unbind())
         }
         CoordBuffer::Separated(cb) => {
             let buffers = cb.buffers();
             let numpy_buffers = buffers
                 .iter()
-                .map(|buf| buf.to_pyarray_bound(py).to_object(py))
+                .map(|buf| buf.to_pyarray(py))
                 .collect::<Vec<_>>();
 
-            let numpy_mod = py.import_bound(intern!(py, "numpy"))?;
+            let numpy_mod = py.import(intern!(py, "numpy"))?;
             Ok(numpy_mod
                 .call_method1(
                     intern!(py, "column_stack"),
-                    PyTuple::new_bound(py, numpy_buffers),
+                    PyTuple::new(py, numpy_buffers)?,
                 )?
-                .into_py(py))
+                .into_pyobject(py)
+                .unwrap()
+                .into_any()
+                .unbind())
         }
     }
 }
@@ -73,7 +76,7 @@ pub fn to_shapely(py: Python, input: AnyArray) -> PyGeoArrowResult<Bound<PyAny>>
                 shapely_chunks.push(pyarray_to_shapely(py, py_array)?);
             }
 
-            let numpy_mod = py.import_bound(intern!(py, "numpy"))?;
+            let numpy_mod = py.import(intern!(py, "numpy"))?;
             Ok(numpy_mod.call_method1(intern!(py, "concatenate"), (shapely_chunks,))?)
         }
     }
@@ -136,7 +139,7 @@ fn linestring_arr(
     let shapely_geom_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
 
     let coords = coords_to_numpy(py, arr.coords())?;
-    let offsets = (arr.geom_offsets().to_pyarray_bound(py),);
+    let offsets = (arr.geom_offsets().to_pyarray(py),);
 
     let args = (
         shapely_geom_type_enum.getattr(intern!(py, "LINESTRING"))?,
@@ -152,8 +155,8 @@ fn polygon_arr(py: Python, arr: geoarrow::array::PolygonArray) -> PyGeoArrowResu
 
     let coords = coords_to_numpy(py, arr.coords())?;
     let offsets = (
-        arr.ring_offsets().to_pyarray_bound(py),
-        arr.geom_offsets().to_pyarray_bound(py),
+        arr.ring_offsets().to_pyarray(py),
+        arr.geom_offsets().to_pyarray(py),
     );
 
     let args = (
@@ -172,7 +175,7 @@ fn multipoint_arr(
     let shapely_geom_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
 
     let coords = coords_to_numpy(py, arr.coords())?;
-    let offsets = (arr.geom_offsets().to_pyarray_bound(py),);
+    let offsets = (arr.geom_offsets().to_pyarray(py),);
 
     let args = (
         shapely_geom_type_enum.getattr(intern!(py, "MULTIPOINT"))?,
@@ -191,8 +194,8 @@ fn multilinestring_arr(
 
     let coords = coords_to_numpy(py, arr.coords())?;
     let offsets = (
-        arr.ring_offsets().to_pyarray_bound(py),
-        arr.geom_offsets().to_pyarray_bound(py),
+        arr.ring_offsets().to_pyarray(py),
+        arr.geom_offsets().to_pyarray(py),
     );
 
     let args = (
@@ -212,9 +215,9 @@ fn multipolygon_arr(
 
     let coords = coords_to_numpy(py, arr.coords())?;
     let offsets = (
-        arr.ring_offsets().to_pyarray_bound(py),
-        arr.polygon_offsets().to_pyarray_bound(py),
-        arr.geom_offsets().to_pyarray_bound(py),
+        arr.ring_offsets().to_pyarray(py),
+        arr.polygon_offsets().to_pyarray(py),
+        arr.geom_offsets().to_pyarray(py),
     );
 
     let args = (
@@ -231,10 +234,10 @@ fn rect_arr(py: Python, arr: geoarrow::array::RectArray) -> PyGeoArrowResult<Bou
     let lower = arr.lower();
     let upper = arr.upper();
 
-    let xmin = &lower.buffers()[0].to_pyarray_bound(py);
-    let ymin = &lower.buffers()[1].to_pyarray_bound(py);
-    let xmax = &upper.buffers()[0].to_pyarray_bound(py);
-    let ymax = &upper.buffers()[1].to_pyarray_bound(py);
+    let xmin = &lower.buffers()[0].to_pyarray(py);
+    let ymin = &lower.buffers()[1].to_pyarray(py);
+    let xmax = &upper.buffers()[0].to_pyarray(py);
+    let ymax = &upper.buffers()[1].to_pyarray(py);
 
     let args = (xmin, ymin, xmax, ymax);
     Ok(shapely_mod.call_method1(intern!(py, "box"), args)?)
@@ -260,7 +263,7 @@ fn wkb_arr(py: Python, arr: geoarrow::array::WKBArray<i32>) -> PyGeoArrowResult<
 //             ///
 //             ///     A shapely array.
 //             pub fn to_shapely<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<Bound<PyAny>> {
-//                 let numpy_mod = py.import_bound(intern!(py, "numpy"))?;
+//                 let numpy_mod = py.import(intern!(py, "numpy"))?;
 //                 let shapely_chunks = self
 //                     .0
 //                     .chunks()

@@ -48,7 +48,7 @@ fn call_to_ragged_array(
 ) -> PyGeoArrowResult<(PyObject, PyObject)> {
     let args = (input,);
 
-    let kwargs = PyDict::new_bound(py);
+    let kwargs = PyDict::new(py);
     kwargs.set_item("include_z", false)?;
     let ragged_array_output =
         shapely_mod.call_method(intern!(py, "to_ragged_array"), args, Some(&kwargs))?;
@@ -68,7 +68,7 @@ fn call_to_wkb<'a>(
 ) -> PyGeoArrowResult<Bound<'a, PyAny>> {
     let args = (input,);
 
-    let kwargs = PyDict::new_bound(py);
+    let kwargs = PyDict::new(py);
     kwargs.set_item("output_dimension", 2)?;
     kwargs.set_item("include_srid", false)?;
     kwargs.set_item("flavor", "iso")?;
@@ -83,10 +83,10 @@ pub fn from_shapely(
     input: &Bound<PyAny>,
     crs: Option<CRS>,
 ) -> PyGeoArrowResult<PyObject> {
-    let numpy_mod = py.import_bound(intern!(py, "numpy"))?;
+    let numpy_mod = py.import(intern!(py, "numpy"))?;
     let shapely_mod = import_shapely(py)?;
 
-    let kwargs = PyDict::new_bound(py);
+    let kwargs = PyDict::new(py);
     if let Ok(ragged_array_output) =
         shapely_mod.call_method(intern!(py, "to_ragged_array"), (input,), Some(&kwargs))
     {
@@ -94,7 +94,7 @@ pub fn from_shapely(
             ragged_array_output.extract::<(Bound<PyAny>, Bound<PyAny>, PyObject)>()?;
         let coords = numpy_mod.call_method1(
             intern!(py, "ascontiguousarray"),
-            PyTuple::new_bound(py, vec![coords]),
+            PyTuple::new(py, vec![coords])?,
         )?;
 
         let geometry_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
@@ -181,7 +181,7 @@ fn make_wkb_arr(
 
     let mut builder = BinaryBuilder::with_capacity(wkb_result.len()?, 0);
 
-    for item in wkb_result.iter()? {
+    for item in wkb_result.try_iter()? {
         let buf = item?.extract::<PyBackedBytes>()?;
         builder.append_value(buf.as_ref());
     }

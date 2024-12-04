@@ -46,12 +46,12 @@ fn call_geo_interface(py: Python, ob: &Bound<PyAny>) -> PyResult<String> {
     let py_obj = ob.getattr("__geo_interface__")?;
 
     // Import JSON module
-    let json_mod = py.import_bound(intern!(py, "json"))?;
+    let json_mod = py.import(intern!(py, "json"))?;
 
     // Prepare json.dumps call
     let args = (py_obj,);
-    let separators = PyTuple::new_bound(py, vec![',', ':']);
-    let kwargs = PyDict::new_bound(py);
+    let separators = PyTuple::new(py, vec![',', ':'])?;
+    let kwargs = PyDict::new(py);
     kwargs.set_item("separators", separators)?;
 
     // Call json.dumps

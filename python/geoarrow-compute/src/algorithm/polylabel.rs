@@ -12,11 +12,17 @@ pub fn polylabel(py: Python, input: AnyNativeInput, tolerance: f64) -> PyGeoArro
     match input {
         AnyNativeInput::Array(arr) => {
             let out = arr.as_ref().polylabel(tolerance)?;
-            Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(out))).into_py(py))
+            Ok(PyNativeArray::new(NativeArrayDyn::new(Arc::new(out)))
+                .into_pyobject(py)?
+                .into_any()
+                .unbind())
         }
         AnyNativeInput::Chunked(chunked) => {
             let out = chunked.as_ref().polylabel(tolerance)?;
-            Ok(PyChunkedNativeArray::new(Arc::new(out)).into_py(py))
+            Ok(PyChunkedNativeArray::new(Arc::new(out))
+                .into_pyobject(py)?
+                .into_any()
+                .unbind())
         }
     }
 }
