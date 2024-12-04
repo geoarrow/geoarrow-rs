@@ -6,7 +6,7 @@ mod scalar;
 pub(crate) mod table;
 
 pub use array::{
-    ToLineStringArray, ToMixedArray, ToMultiLineStringArray, ToMultiPointArray,
+    ToGeometryArray, ToLineStringArray, ToMultiLineStringArray, ToMultiPointArray,
     ToMultiPolygonArray, ToPointArray, ToPolygonArray,
 };
 pub use scalar::ToGeometry;
