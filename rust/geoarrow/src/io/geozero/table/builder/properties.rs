@@ -98,7 +98,7 @@ impl PropertiesBatchBuilder {
         for field in schema.fields().iter() {
             columns.insert(
                 field.name().clone(),
-                AnyBuilder::from_data_type_with_capacity(field.data_type(), capacity),
+                AnyBuilder::from_field_with_capacity(field, capacity),
             );
         }
 
