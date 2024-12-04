@@ -17,6 +17,7 @@ use crate::schema::GeoSchemaExt;
 use crate::table::Table;
 use crate::NativeArray;
 
+/// Downcast will change between geometry types but will not affect the dimension of the data.
 pub trait Downcast {
     type Output;
 
@@ -100,10 +101,7 @@ impl Downcast for LineStringArray {
 
     fn downcast(&self) -> Self::Output {
         match (self.data_type(), self.downcasted_data_type()) {
-            (
-                NativeType::LineString(_, Dimension::XY),
-                NativeType::LineString(_, Dimension::XY),
-            ) => Arc::new(self.clone()),
+            (NativeType::LineString(_, _), NativeType::LineString(_, _)) => Arc::new(self.clone()),
             _ => unreachable!(),
         }
     }
@@ -381,37 +379,35 @@ impl Downcast for &dyn NativeArray {
     type Output = Arc<dyn NativeArray>;
 
     fn downcasted_data_type(&self) -> NativeType {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point().downcasted_data_type(),
-            LineString(_, XY) => self.as_line_string().downcasted_data_type(),
-            Polygon(_, XY) => self.as_polygon().downcasted_data_type(),
-            MultiPoint(_, XY) => self.as_multi_point().downcasted_data_type(),
-            MultiLineString(_, XY) => self.as_multi_line_string().downcasted_data_type(),
-            MultiPolygon(_, XY) => self.as_multi_polygon().downcasted_data_type(),
-            Mixed(_, XY) => self.as_mixed().downcasted_data_type(),
-            GeometryCollection(_, XY) => self.as_geometry_collection().downcasted_data_type(),
-            Rect(XY) => self.as_rect().downcasted_data_type(),
+            Point(_, _) => self.as_point().downcasted_data_type(),
+            LineString(_, _) => self.as_line_string().downcasted_data_type(),
+            Polygon(_, _) => self.as_polygon().downcasted_data_type(),
+            MultiPoint(_, _) => self.as_multi_point().downcasted_data_type(),
+            MultiLineString(_, _) => self.as_multi_line_string().downcasted_data_type(),
+            MultiPolygon(_, _) => self.as_multi_polygon().downcasted_data_type(),
+            Mixed(_, _) => self.as_mixed().downcasted_data_type(),
+            GeometryCollection(_, _) => self.as_geometry_collection().downcasted_data_type(),
+            Rect(_) => self.as_rect().downcasted_data_type(),
             _ => todo!("3d support"),
         }
     }
 
     fn downcast(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point().downcast(),
-            LineString(_, XY) => self.as_line_string().downcast(),
-            Polygon(_, XY) => self.as_polygon().downcast(),
-            MultiPoint(_, XY) => self.as_multi_point().downcast(),
-            MultiLineString(_, XY) => self.as_multi_line_string().downcast(),
-            MultiPolygon(_, XY) => self.as_multi_polygon().downcast(),
-            Mixed(_, XY) => self.as_mixed().downcast(),
-            GeometryCollection(_, XY) => self.as_geometry_collection().downcast(),
-            Rect(XY) => self.as_rect().downcast(),
+            Point(_, _) => self.as_point().downcast(),
+            LineString(_, _) => self.as_line_string().downcast(),
+            Polygon(_, _) => self.as_polygon().downcast(),
+            MultiPoint(_, _) => self.as_multi_point().downcast(),
+            MultiLineString(_, _) => self.as_multi_line_string().downcast(),
+            MultiPolygon(_, _) => self.as_multi_polygon().downcast(),
+            Mixed(_, _) => self.as_mixed().downcast(),
+            GeometryCollection(_, _) => self.as_geometry_collection().downcast(),
+            Rect(_) => self.as_rect().downcast(),
             _ => todo!("3d support"),
         }
     }

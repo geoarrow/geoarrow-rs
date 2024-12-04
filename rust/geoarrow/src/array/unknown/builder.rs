@@ -4,8 +4,8 @@ use crate::array::metadata::ArrayMetadata;
 use crate::array::unknown::array::UnknownGeometryArray;
 use crate::array::unknown::capacity::UnknownCapacity;
 use crate::array::{
-    CoordType, LineStringBuilder, MultiLineStringBuilder, MultiPointBuilder, MultiPolygonBuilder,
-    PointBuilder, PolygonBuilder, WKBArray,
+    CoordType, GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder,
+    MultiPointBuilder, MultiPolygonBuilder, PointBuilder, PolygonBuilder, WKBArray,
 };
 use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
@@ -44,6 +44,7 @@ pub struct UnknownGeometryBuilder {
     mpoint_xy: MultiPointBuilder,
     mline_string_xy: MultiLineStringBuilder,
     mpolygon_xy: MultiPolygonBuilder,
+    gc_xy: GeometryCollectionBuilder,
 
     point_xyz: PointBuilder,
     line_string_xyz: LineStringBuilder,
@@ -51,6 +52,7 @@ pub struct UnknownGeometryBuilder {
     mpoint_xyz: MultiPointBuilder,
     mline_string_xyz: MultiLineStringBuilder,
     mpolygon_xyz: MultiPolygonBuilder,
+    gc_xyz: GeometryCollectionBuilder,
 
     // Invariant: `offsets.len() == types.len()`
     offsets: Vec<i32>,
@@ -111,81 +113,97 @@ impl<'a> UnknownGeometryBuilder {
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Self {
+        use Dimension::*;
+
         // Don't store array metadata on child arrays
         Self {
             metadata,
             types: vec![],
             point_xy: PointBuilder::with_capacity_and_options(
-                Dimension::XY,
+                XY,
                 capacity.point_xy(),
                 coord_type,
                 Default::default(),
             ),
             line_string_xy: LineStringBuilder::with_capacity_and_options(
-                Dimension::XY,
+                XY,
                 capacity.line_string_xy(),
                 coord_type,
                 Default::default(),
             ),
             polygon_xy: PolygonBuilder::with_capacity_and_options(
-                Dimension::XY,
+                XY,
                 capacity.polygon_xy(),
                 coord_type,
                 Default::default(),
             ),
             mpoint_xy: MultiPointBuilder::with_capacity_and_options(
-                Dimension::XY,
+                XY,
                 capacity.mpoint_xy(),
                 coord_type,
                 Default::default(),
             ),
             mline_string_xy: MultiLineStringBuilder::with_capacity_and_options(
-                Dimension::XY,
+                XY,
                 capacity.mline_string_xy(),
                 coord_type,
                 Default::default(),
             ),
             mpolygon_xy: MultiPolygonBuilder::with_capacity_and_options(
-                Dimension::XY,
+                XY,
                 capacity.mpolygon_xy(),
                 coord_type,
                 Default::default(),
             ),
+            gc_xy: GeometryCollectionBuilder::with_capacity_and_options(
+                XY,
+                capacity.gc_xy(),
+                coord_type,
+                Default::default(),
+                prefer_multi,
+            ),
             point_xyz: PointBuilder::with_capacity_and_options(
-                Dimension::XYZ,
+                XYZ,
                 capacity.point_xyz(),
                 coord_type,
                 Default::default(),
             ),
             line_string_xyz: LineStringBuilder::with_capacity_and_options(
-                Dimension::XYZ,
+                XYZ,
                 capacity.line_string_xyz(),
                 coord_type,
                 Default::default(),
             ),
             polygon_xyz: PolygonBuilder::with_capacity_and_options(
-                Dimension::XYZ,
+                XYZ,
                 capacity.polygon_xyz(),
                 coord_type,
                 Default::default(),
             ),
             mpoint_xyz: MultiPointBuilder::with_capacity_and_options(
-                Dimension::XYZ,
+                XYZ,
                 capacity.mpoint_xyz(),
                 coord_type,
                 Default::default(),
             ),
             mline_string_xyz: MultiLineStringBuilder::with_capacity_and_options(
-                Dimension::XYZ,
+                XYZ,
                 capacity.mline_string_xyz(),
                 coord_type,
                 Default::default(),
             ),
             mpolygon_xyz: MultiPolygonBuilder::with_capacity_and_options(
-                Dimension::XYZ,
+                XYZ,
                 capacity.mpolygon_xyz(),
                 coord_type,
                 Default::default(),
+            ),
+            gc_xyz: GeometryCollectionBuilder::with_capacity_and_options(
+                XYZ,
+                capacity.gc_xyz(),
+                coord_type,
+                Default::default(),
+                prefer_multi,
             ),
             offsets: vec![],
             prefer_multi,
@@ -204,6 +222,7 @@ impl<'a> UnknownGeometryBuilder {
         self.mpoint_xy.reserve(capacity.mpoint_xy());
         self.mline_string_xy.reserve(capacity.mline_string_xy());
         self.mpolygon_xy.reserve(capacity.mpolygon_xy());
+        self.gc_xy.reserve(capacity.gc_xy());
 
         self.point_xyz.reserve(capacity.point_xyz());
         self.line_string_xyz.reserve(capacity.line_string_xyz());
@@ -211,6 +230,7 @@ impl<'a> UnknownGeometryBuilder {
         self.mpoint_xyz.reserve(capacity.mpoint_xyz());
         self.mline_string_xyz.reserve(capacity.mline_string_xyz());
         self.mpolygon_xyz.reserve(capacity.mpolygon_xyz());
+        self.gc_xyz.reserve(capacity.gc_xyz());
     }
 
     pub fn reserve_exact(&mut self, capacity: UnknownCapacity) {
@@ -226,6 +246,7 @@ impl<'a> UnknownGeometryBuilder {
         self.mline_string_xy
             .reserve_exact(capacity.mline_string_xy());
         self.mpolygon_xy.reserve_exact(capacity.mpolygon_xy());
+        self.gc_xy.reserve_exact(capacity.gc_xy());
 
         self.point_xyz.reserve_exact(capacity.point_xyz());
         self.line_string_xyz
@@ -235,6 +256,7 @@ impl<'a> UnknownGeometryBuilder {
         self.mline_string_xyz
             .reserve_exact(capacity.mline_string_xyz());
         self.mpolygon_xyz.reserve_exact(capacity.mpolygon_xyz());
+        self.gc_xyz.reserve_exact(capacity.gc_xyz());
     }
 
     // /// The canonical method to create a [`MixedGeometryBuilder`] out of its internal
@@ -745,9 +767,7 @@ impl<'a> UnknownGeometryBuilder {
                     if gc.num_geometries() == 1 {
                         self.push_geometry(Some(&gc.geometry(0).unwrap()))?
                     } else {
-                        return Err(GeoArrowError::General(
-                            "nested geometry collections not supported".to_string(),
-                        ));
+                        self.push_geometry_collection(Some(gc))?
                     }
                 }
                 Rect(_) | Triangle(_) | Line(_) => todo!(),
@@ -756,6 +776,60 @@ impl<'a> UnknownGeometryBuilder {
             self.push_null();
         }
         Ok(())
+    }
+
+    /// Add a new GeometryCollection to the end of this array.
+    ///
+    /// # Errors
+    ///
+    /// This function errors iff the new last item is larger than what O supports.
+    #[inline]
+    pub fn push_geometry_collection(
+        &mut self,
+        value: Option<&impl GeometryCollectionTrait<T = f64>>,
+    ) -> Result<()> {
+        if let Some(gc) = value {
+            self.add_geometry_collection_type(gc.dim().try_into().unwrap());
+            match gc.dim() {
+                Dimensions::Xy | Dimensions::Unknown(2) => {
+                    // Flush deferred nulls
+                    (0..self.deferred_nulls).for_each(|_| self.gc_xy.push_null());
+                    self.deferred_nulls = 0;
+
+                    self.gc_xy.push_geometry_collection(Some(gc))?;
+                }
+                Dimensions::Xyz | Dimensions::Unknown(3) => {
+                    // Flush deferred nulls
+                    (0..self.deferred_nulls).for_each(|_| self.gc_xyz.push_null());
+                    self.deferred_nulls = 0;
+
+                    self.gc_xyz.push_geometry_collection(Some(gc))?;
+                }
+                dim => {
+                    return Err(GeoArrowError::General(format!(
+                        "Unsupported dimension {dim:?}"
+                    )))
+                }
+            }
+        } else {
+            self.push_null();
+        };
+
+        Ok(())
+    }
+
+    #[inline]
+    pub(crate) fn add_geometry_collection_type(&mut self, dim: Dimension) {
+        match dim {
+            Dimension::XY => {
+                self.offsets.push(self.gc_xy.len().try_into().unwrap());
+                self.types.push(7)
+            }
+            Dimension::XYZ => {
+                self.offsets.push(self.gc_xyz.len().try_into().unwrap());
+                self.types.push(17)
+            }
+        }
     }
 
     /// Push a null to this builder
@@ -875,12 +949,14 @@ impl From<UnknownGeometryBuilder> for UnknownGeometryArray {
             other.mpoint_xy.into(),
             other.mline_string_xy.into(),
             other.mpolygon_xy.into(),
+            other.gc_xy.into(),
             other.point_xyz.into(),
             other.line_string_xyz.into(),
             other.polygon_xyz.into(),
             other.mpoint_xyz.into(),
             other.mline_string_xyz.into(),
             other.mpolygon_xyz.into(),
+            other.gc_xyz.into(),
             other.metadata,
         )
     }

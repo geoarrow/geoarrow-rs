@@ -484,16 +484,17 @@ impl IntoArrow for MixedGeometryArray {
     }
 }
 
-impl TryFrom<&UnionArray> for MixedGeometryArray {
+impl TryFrom<(&UnionArray, Dimension)> for MixedGeometryArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: &UnionArray) -> std::result::Result<Self, Self::Error> {
-        let mut points: Vec<PointArray> = vec![];
-        let mut line_strings: Vec<LineStringArray> = vec![];
-        let mut polygons: Vec<PolygonArray> = vec![];
-        let mut multi_points: Vec<MultiPointArray> = vec![];
-        let mut multi_line_strings: Vec<MultiLineStringArray> = vec![];
-        let mut multi_polygons: Vec<MultiPolygonArray> = vec![];
+    fn try_from((value, dim): (&UnionArray, Dimension)) -> std::result::Result<Self, Self::Error> {
+        let mut points: Option<PointArray> = None;
+        let mut line_strings: Option<LineStringArray> = None;
+        let mut polygons: Option<PolygonArray> = None;
+        let mut multi_points: Option<MultiPointArray> = None;
+        let mut multi_line_strings: Option<MultiLineStringArray> = None;
+        let mut multi_polygons: Option<MultiPolygonArray> = None;
+
         match value.data_type() {
             DataType::Union(fields, mode) => {
                 if !matches!(mode, UnionMode::Dense) {
@@ -501,7 +502,7 @@ impl TryFrom<&UnionArray> for MixedGeometryArray {
                 }
 
                 for (type_id, _field) in fields.iter() {
-                    let dimension = if type_id < 10 {
+                    let found_dimension = if type_id < 10 {
                         Dimension::XY
                     } else if type_id < 20 {
                         Dimension::XYZ
@@ -512,48 +513,33 @@ impl TryFrom<&UnionArray> for MixedGeometryArray {
                         )));
                     };
 
+                    if dim != found_dimension {
+                        return Err(  GeoArrowError::General(format!("expected dimension: {:?}, found child array with dimension {:?} and type_id: {}", dim, found_dimension, type_id )));
+                    }
+
                     match type_id {
                         1 | 11 => {
-                            points.push(
-                                (value.child(type_id).as_ref(), dimension)
-                                    .try_into()
-                                    .unwrap(),
-                            );
+                            points = Some((value.child(type_id).as_ref(), dim).try_into().unwrap());
                         }
                         2 | 12 => {
-                            line_strings.push(
-                                (value.child(type_id).as_ref(), dimension)
-                                    .try_into()
-                                    .unwrap(),
-                            );
+                            line_strings =
+                                Some((value.child(type_id).as_ref(), dim).try_into().unwrap());
                         }
                         3 | 13 => {
-                            polygons.push(
-                                (value.child(type_id).as_ref(), dimension)
-                                    .try_into()
-                                    .unwrap(),
-                            );
+                            polygons =
+                                Some((value.child(type_id).as_ref(), dim).try_into().unwrap());
                         }
                         4 | 14 => {
-                            multi_points.push(
-                                (value.child(type_id).as_ref(), dimension)
-                                    .try_into()
-                                    .unwrap(),
-                            );
+                            multi_points =
+                                Some((value.child(type_id).as_ref(), dim).try_into().unwrap());
                         }
                         5 | 15 => {
-                            multi_line_strings.push(
-                                (value.child(type_id).as_ref(), dimension)
-                                    .try_into()
-                                    .unwrap(),
-                            );
+                            multi_line_strings =
+                                Some((value.child(type_id).as_ref(), dim).try_into().unwrap());
                         }
                         6 | 16 => {
-                            multi_polygons.push(
-                                (value.child(type_id).as_ref(), dimension)
-                                    .try_into()
-                                    .unwrap(),
-                            );
+                            multi_polygons =
+                                Some((value.child(type_id).as_ref(), dim).try_into().unwrap());
                         }
                         _ => {
                             return Err(GeoArrowError::General(format!(
@@ -571,37 +557,28 @@ impl TryFrom<&UnionArray> for MixedGeometryArray {
         // This is after checking for dense union
         let offsets = value.offsets().unwrap().clone();
 
-        // TODO: make nicer errors. We don't currently allow a mixed geometry array with multiple
-        // dimensions of underlying geometries.
-        assert!(points.len() <= 1);
-        assert!(line_strings.len() <= 1);
-        assert!(polygons.len() <= 1);
-        assert!(multi_points.len() <= 1);
-        assert!(multi_line_strings.len() <= 1);
-        assert!(multi_polygons.len() <= 1);
-
         Ok(Self::new(
             type_ids,
             offsets,
-            points.first().cloned().unwrap_or_default(),
-            line_strings.first().cloned().unwrap_or_default(),
-            polygons.first().cloned().unwrap_or_default(),
-            multi_points.first().cloned().unwrap_or_default(),
-            multi_line_strings.first().cloned().unwrap_or_default(),
-            multi_polygons.first().cloned().unwrap_or_default(),
+            points.unwrap_or_default(),
+            line_strings.unwrap_or_default(),
+            polygons.unwrap_or_default(),
+            multi_points.unwrap_or_default(),
+            multi_line_strings.unwrap_or_default(),
+            multi_polygons.unwrap_or_default(),
             Default::default(),
         ))
     }
 }
 
-impl TryFrom<&dyn Array> for MixedGeometryArray {
+impl TryFrom<(&dyn Array, Dimension)> for MixedGeometryArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: &dyn Array) -> Result<Self> {
+    fn try_from((value, dim): (&dyn Array, Dimension)) -> Result<Self> {
         match value.data_type() {
             DataType::Union(_, _) => {
                 let downcasted = value.as_any().downcast_ref::<UnionArray>().unwrap();
-                downcasted.try_into()
+                (downcasted, dim).try_into()
             }
             _ => Err(GeoArrowError::General(format!(
                 "Unexpected type: {:?}",
@@ -611,11 +588,16 @@ impl TryFrom<&dyn Array> for MixedGeometryArray {
     }
 }
 
+// TODO:, thinking all geoarrow.geometry will go through primary dimensionless geometry array
 impl TryFrom<(&dyn Array, &Field)> for MixedGeometryArray {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
-        let mut arr: Self = arr.try_into()?;
+        let geom_type = NativeType::try_from(field)?;
+        let dim = geom_type
+            .dimension()
+            .ok_or(GeoArrowError::General("Expected dimension".to_string()))?;
+        let mut arr: Self = (arr, dim).try_into()?;
         arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
         Ok(arr)
     }
@@ -871,7 +853,7 @@ mod test {
 
         // Round trip to/from arrow-rs
         let arrow_array = arr.into_arrow();
-        let round_trip_arr: MixedGeometryArray = (&arrow_array).try_into().unwrap();
+        let round_trip_arr: MixedGeometryArray = (&arrow_array, Dimension::XY).try_into().unwrap();
 
         assert_eq!(
             round_trip_arr.value_as_geo(0),
@@ -901,7 +883,7 @@ mod test {
 
         // Round trip to/from arrow-rs
         let arrow_array = arr.into_arrow();
-        let round_trip_arr: MixedGeometryArray = (&arrow_array).try_into().unwrap();
+        let round_trip_arr: MixedGeometryArray = (&arrow_array, Dimension::XY).try_into().unwrap();
 
         assert_eq!(round_trip_arr.value_as_geo(0), geoms[0]);
         assert_eq!(round_trip_arr.value_as_geo(1), geoms[1]);
@@ -918,7 +900,7 @@ mod test {
 
         // Round trip to/from arrow-rs
         let arrow_array = arr.into_arrow();
-        let round_trip_arr: MixedGeometryArray = (&arrow_array).try_into().unwrap();
+        let round_trip_arr: MixedGeometryArray = (&arrow_array, Dimension::XY).try_into().unwrap();
 
         assert_eq!(round_trip_arr.value_as_geo(0), geoms[0]);
         assert_eq!(round_trip_arr.value_as_geo(1), geoms[1]);

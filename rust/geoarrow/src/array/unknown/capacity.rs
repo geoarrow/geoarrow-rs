@@ -5,6 +5,7 @@ use crate::array::multilinestring::MultiLineStringCapacity;
 use crate::array::multipoint::MultiPointCapacity;
 use crate::array::multipolygon::MultiPolygonCapacity;
 use crate::array::polygon::PolygonCapacity;
+use crate::array::GeometryCollectionCapacity;
 use crate::error::Result;
 use geo_traits::*;
 
@@ -24,6 +25,7 @@ pub struct UnknownCapacity {
     mpoint_xy: MultiPointCapacity,
     mline_string_xy: MultiLineStringCapacity,
     mpolygon_xy: MultiPolygonCapacity,
+    gc_xy: GeometryCollectionCapacity,
 
     point_xyz: usize,
     line_string_xyz: LineStringCapacity,
@@ -31,6 +33,7 @@ pub struct UnknownCapacity {
     mpoint_xyz: MultiPointCapacity,
     mline_string_xyz: MultiLineStringCapacity,
     mpolygon_xyz: MultiPolygonCapacity,
+    gc_xyz: GeometryCollectionCapacity,
 
     /// Whether to prefer multi or single arrays for new geometries.
     prefer_multi: bool,
@@ -46,6 +49,7 @@ impl UnknownCapacity {
         mpoint_xy: MultiPointCapacity,
         mline_string_xy: MultiLineStringCapacity,
         mpolygon_xy: MultiPolygonCapacity,
+        gc_xy: GeometryCollectionCapacity,
 
         point_xyz: usize,
         line_string_xyz: LineStringCapacity,
@@ -53,6 +57,7 @@ impl UnknownCapacity {
         mpoint_xyz: MultiPointCapacity,
         mline_string_xyz: MultiLineStringCapacity,
         mpolygon_xyz: MultiPolygonCapacity,
+        gc_xyz: GeometryCollectionCapacity,
         prefer_multi: bool,
     ) -> Self {
         Self {
@@ -63,12 +68,14 @@ impl UnknownCapacity {
             mpoint_xy,
             mline_string_xy,
             mpolygon_xy,
+            gc_xy,
             point_xyz,
             line_string_xyz,
             polygon_xyz,
             mpoint_xyz,
             mline_string_xyz,
             mpolygon_xyz,
+            gc_xyz,
             prefer_multi,
         }
     }
@@ -83,12 +90,14 @@ impl UnknownCapacity {
             mpoint_xy: MultiPointCapacity::new_empty(),
             mline_string_xy: MultiLineStringCapacity::new_empty(),
             mpolygon_xy: MultiPolygonCapacity::new_empty(),
+            gc_xy: GeometryCollectionCapacity::new_empty(),
             point_xyz: 0,
             line_string_xyz: LineStringCapacity::new_empty(),
             polygon_xyz: PolygonCapacity::new_empty(),
             mpoint_xyz: MultiPointCapacity::new_empty(),
             mline_string_xyz: MultiLineStringCapacity::new_empty(),
             mpolygon_xyz: MultiPolygonCapacity::new_empty(),
+            gc_xyz: GeometryCollectionCapacity::new_empty(),
             prefer_multi,
         }
     }
@@ -155,6 +164,10 @@ impl UnknownCapacity {
         self.mpolygon_xy
     }
 
+    pub fn gc_xy(&self) -> GeometryCollectionCapacity {
+        self.gc_xy
+    }
+
     pub fn point_xyz(&self) -> usize {
         self.point_xyz
     }
@@ -177,6 +190,10 @@ impl UnknownCapacity {
 
     pub fn mpolygon_xyz(&self) -> MultiPolygonCapacity {
         self.mpolygon_xyz
+    }
+
+    pub fn gc_xyz(&self) -> GeometryCollectionCapacity {
+        self.gc_xyz
     }
 
     // pub fn point_compatible(&self) -> bool {
@@ -362,14 +379,35 @@ impl UnknownCapacity {
                 geo_traits::GeometryType::MultiPoint(p) => self.add_multi_point(Some(p)),
                 geo_traits::GeometryType::MultiLineString(p) => self.add_multi_line_string(Some(p)),
                 geo_traits::GeometryType::MultiPolygon(p) => self.add_multi_polygon(Some(p)),
-                geo_traits::GeometryType::GeometryCollection(_) => {
-                    panic!("nested geometry collections not supported")
+                geo_traits::GeometryType::GeometryCollection(p) => {
+                    self.add_geometry_collection(Some(p))?
                 }
                 _ => todo!(),
             };
         } else {
             self.nulls += 1;
         }
+        Ok(())
+    }
+
+    #[inline]
+    pub fn add_geometry_collection(
+        &mut self,
+        gc: Option<&impl GeometryCollectionTrait>,
+    ) -> Result<()> {
+        if let Some(gc) = gc {
+            match gc.dim() {
+                Dimensions::Xy | Dimensions::Unknown(2) => {
+                    self.gc_xy.add_geometry_collection(Some(gc))?;
+                }
+                Dimensions::Xyz | Dimensions::Unknown(3) => {
+                    self.gc_xyz.add_geometry_collection(Some(gc))?;
+                }
+                _ => todo!(),
+            }
+        } else {
+            self.nulls += 1;
+        };
         Ok(())
     }
 
@@ -405,6 +443,7 @@ impl UnknownCapacity {
         count += self.mpoint_xy.num_bytes();
         count += self.mline_string_xy.num_bytes();
         count += self.mpolygon_xy.num_bytes();
+        count += self.gc_xy.num_bytes();
 
         count += self.point_xyz * 3 * 8;
         count += self.line_string_xyz.num_bytes();
@@ -412,6 +451,7 @@ impl UnknownCapacity {
         count += self.mpoint_xyz.num_bytes();
         count += self.mline_string_xyz.num_bytes();
         count += self.mpolygon_xyz.num_bytes();
+        count += self.gc_xyz.num_bytes();
 
         count
     }
@@ -428,6 +468,7 @@ impl AddAssign for UnknownCapacity {
         self.mpoint_xy = self.mpoint_xy + rhs.mpoint_xy;
         self.mline_string_xy = self.mline_string_xy + rhs.mline_string_xy;
         self.mpolygon_xy = self.mpolygon_xy + rhs.mpolygon_xy;
+        self.gc_xy = self.gc_xy + rhs.gc_xy;
 
         self.point_xyz = self.point_xyz + rhs.point_xyz;
         self.line_string_xyz = self.line_string_xyz + rhs.line_string_xyz;
@@ -435,5 +476,6 @@ impl AddAssign for UnknownCapacity {
         self.mpoint_xyz = self.mpoint_xyz + rhs.mpoint_xyz;
         self.mline_string_xyz = self.mline_string_xyz + rhs.mline_string_xyz;
         self.mpolygon_xyz = self.mpolygon_xyz + rhs.mpolygon_xyz;
+        self.gc_xyz = self.gc_xyz + rhs.gc_xyz;
     }
 }
