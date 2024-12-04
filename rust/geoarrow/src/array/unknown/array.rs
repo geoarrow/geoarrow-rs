@@ -9,8 +9,8 @@ use crate::array::metadata::ArrayMetadata;
 use crate::array::unknown::builder::UnknownGeometryBuilder;
 use crate::array::unknown::capacity::UnknownCapacity;
 use crate::array::{
-    CoordType, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
-    PointArray, PolygonArray, WKBArray,
+    CoordType, GeometryCollectionArray, LineStringArray, MultiLineStringArray, MultiPointArray,
+    MultiPolygonArray, PointArray, PolygonArray, WKBArray,
 };
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
@@ -59,26 +59,29 @@ pub struct UnknownGeometryArray {
 
     pub(crate) metadata: Arc<ArrayMetadata>,
 
-    /// Invariant: every item in `type_ids` is `> 0 && < fields.len()` if `type_ids` are not provided. If `type_ids` exist in the NativeType, then every item in `type_ids` is `> 0 && `
+    /// Invariant: every item in `type_ids` is `> 0 && < fields.len()` if `type_ids` are not
+    /// provided. If `type_ids` exist in the NativeType, then every item in `type_ids` is `> 0 && `
     pub(crate) type_ids: ScalarBuffer<i8>,
 
     /// Invariant: `offsets.len() == type_ids.len()`
     pub(crate) offsets: ScalarBuffer<i32>,
 
     // In the future we'll additionally have xym, xyzm array variants.
-    point_xy: PointArray,
-    line_string_xy: LineStringArray,
-    polygon_xy: PolygonArray,
-    mpoint_xy: MultiPointArray,
-    mline_string_xy: MultiLineStringArray,
-    mpolygon_xy: MultiPolygonArray,
+    pub(crate) point_xy: PointArray,
+    pub(crate) line_string_xy: LineStringArray,
+    pub(crate) polygon_xy: PolygonArray,
+    pub(crate) mpoint_xy: MultiPointArray,
+    pub(crate) mline_string_xy: MultiLineStringArray,
+    pub(crate) mpolygon_xy: MultiPolygonArray,
+    pub(crate) gc_xy: GeometryCollectionArray,
 
-    point_xyz: PointArray,
-    line_string_xyz: LineStringArray,
-    polygon_xyz: PolygonArray,
-    mpoint_xyz: MultiPointArray,
-    mline_string_xyz: MultiLineStringArray,
-    mpolygon_xyz: MultiPolygonArray,
+    pub(crate) point_xyz: PointArray,
+    pub(crate) line_string_xyz: LineStringArray,
+    pub(crate) polygon_xyz: PolygonArray,
+    pub(crate) mpoint_xyz: MultiPointArray,
+    pub(crate) mline_string_xyz: MultiLineStringArray,
+    pub(crate) mpolygon_xyz: MultiPolygonArray,
+    pub(crate) gc_xyz: GeometryCollectionArray,
 
     /// An offset used for slicing into this array. The offset will be 0 if the array has not been
     /// sliced.
@@ -121,12 +124,14 @@ impl UnknownGeometryArray {
         mpoint_xy: MultiPointArray,
         mline_string_xy: MultiLineStringArray,
         mpolygon_xy: MultiPolygonArray,
+        gc_xy: GeometryCollectionArray,
         point_xyz: PointArray,
         line_string_xyz: LineStringArray,
         polygon_xyz: PolygonArray,
         mpoint_xyz: MultiPointArray,
         mline_string_xyz: MultiLineStringArray,
         mpolygon_xyz: MultiPolygonArray,
+        gc_xyz: GeometryCollectionArray,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let mut coord_types = HashSet::new();
@@ -136,6 +141,7 @@ impl UnknownGeometryArray {
         coord_types.insert(mpoint_xy.coord_type());
         coord_types.insert(mline_string_xy.coord_type());
         coord_types.insert(mpolygon_xy.coord_type());
+        coord_types.insert(gc_xy.coord_type());
 
         coord_types.insert(point_xyz.coord_type());
         coord_types.insert(line_string_xyz.coord_type());
@@ -143,6 +149,7 @@ impl UnknownGeometryArray {
         coord_types.insert(mpoint_xyz.coord_type());
         coord_types.insert(mline_string_xyz.coord_type());
         coord_types.insert(mpolygon_xyz.coord_type());
+        coord_types.insert(gc_xyz.coord_type());
         assert_eq!(coord_types.len(), 1);
 
         let coord_type = coord_types.into_iter().next().unwrap();
@@ -159,12 +166,14 @@ impl UnknownGeometryArray {
             mpoint_xy,
             mline_string_xy,
             mpolygon_xy,
+            gc_xy,
             point_xyz,
             line_string_xyz,
             polygon_xyz,
             mpoint_xyz,
             mline_string_xyz,
             mpolygon_xyz,
+            gc_xyz,
             slice_offset: 0,
             metadata,
         }
@@ -180,12 +189,14 @@ impl UnknownGeometryArray {
             self.mpoint_xy.buffer_lengths(),
             self.mline_string_xy.buffer_lengths(),
             self.mpolygon_xy.buffer_lengths(),
+            self.gc_xy.buffer_lengths(),
             self.point_xyz.buffer_lengths(),
             self.line_string_xyz.buffer_lengths(),
             self.polygon_xyz.buffer_lengths(),
             self.mpoint_xyz.buffer_lengths(),
             self.mline_string_xyz.buffer_lengths(),
             self.mpolygon_xyz.buffer_lengths(),
+            self.gc_xyz.buffer_lengths(),
             false,
         )
     }
@@ -232,15 +243,112 @@ impl UnknownGeometryArray {
         }
     }
 
+    /// Return `true` if this array holds at least one geometry array of the given dimension
+    pub fn has_dimension(&self, dim: Dimension) -> bool {
+        use Dimension::*;
+        match dim {
+            XY => {
+                self.has_points(XY)
+                    || self.has_line_strings(XY)
+                    || self.has_polygons(XY)
+                    || self.has_multi_points(XY)
+                    || self.has_multi_line_strings(XY)
+                    || self.has_multi_polygons(XY)
+            }
+            XYZ => {
+                self.has_points(XYZ)
+                    || self.has_line_strings(XYZ)
+                    || self.has_polygons(XYZ)
+                    || self.has_multi_points(XYZ)
+                    || self.has_multi_line_strings(XYZ)
+                    || self.has_multi_polygons(XYZ)
+            }
+        }
+    }
+
+    /// Return `true` if this array holds at least one geometry array of the given dimension and no
+    /// arrays of any other dimension.
+    pub fn has_only_dimension(&self, dim: Dimension) -> bool {
+        use Dimension::*;
+        match dim {
+            XY => self.has_dimension(XY) && !self.has_dimension(XYZ),
+            XYZ => self.has_dimension(XYZ) && !self.has_dimension(XY),
+        }
+    }
+
+    // /// The number of non-empty child arrays
+    // fn num_non_empty_children(&self) -> usize {
+    //     let mut count = 0;
+
+    //     if !self.point_xy.is_empty() {
+    //         count += 1
+    //     };
+    //     if !self.line_string_xy.is_empty() {
+    //         count += 1
+    //     };
+    //     if !self.polygon_xy.is_empty() {
+    //         count += 1
+    //     };
+    //     if !self.mpoint_xy.is_empty() {
+    //         count += 1
+    //     };
+    //     if !self.mline_string_xy.is_empty() {
+    //         count += 1
+    //     };
+    //     if !self.mpolygon_xy.is_empty() {
+    //         count += 1
+    //     };
+
+    //     if !self.point_xyz.is_empty() {
+    //         count += 1
+    //     };
+    //     if !self.line_string_xyz.is_empty() {
+    //         count += 1
+    //     };
+    //     if !self.polygon_xyz.is_empty() {
+    //         count += 1
+    //     };
+    //     if !self.mpoint_xyz.is_empty() {
+    //         count += 1
+    //     };
+    //     if !self.mline_string_xyz.is_empty() {
+    //         count += 1
+    //     };
+    //     if !self.mpolygon_xyz.is_empty() {
+    //         count += 1
+    //     };
+
+    //     count
+    // }
+
     // TODO: restore to enable downcasting
 
-    // pub fn has_only_points(&self) -> bool {
-    //     self.has_points()
-    //         && !self.has_line_strings()
-    //         && !self.has_polygons()
-    //         && !self.has_multi_points()
-    //         && !self.has_multi_line_strings()
-    //         && !self.has_multi_polygons()
+    // pub fn has_only_type(&self, typ: NativeType) -> bool {
+    //     use Dimension::*;
+
+    //     if self.num_non_empty_children() == 0 {
+    //         // Empty array
+    //         false
+    //     }
+
+    //     if self.num_non_empty_children() > 1 {}
+
+    //     match typ {
+    //         NativeType::Point(_, dim)
+    //     }
+
+    //     self.has_points(XY)
+    //         && !self.has_line_strings(XY)
+    //         && !self.has_polygons(XY)
+    //         && !self.has_multi_points(XY)
+    //         && !self.has_multi_line_strings(XY)
+    //         && !self.has_multi_polygons(XY)
+    //         && !self.has_points(XYZ)
+    //         && !self.has_line_strings(XYZ)
+    //         && !self.has_polygons(XYZ)
+    //         && !self.has_multi_points(XYZ)
+    //         && !self.has_multi_line_strings(XYZ)
+    //         && !self.has_multi_polygons(XYZ)
     // }
 
     // pub fn has_only_line_strings(&self) -> bool {
@@ -319,6 +427,7 @@ impl UnknownGeometryArray {
             mpoint_xy: self.mpoint_xy.clone(),
             mline_string_xy: self.mline_string_xy.clone(),
             mpolygon_xy: self.mpolygon_xy.clone(),
+            gc_xy: self.gc_xy.clone(),
 
             point_xyz: self.point_xyz.clone(),
             line_string_xyz: self.line_string_xyz.clone(),
@@ -326,6 +435,7 @@ impl UnknownGeometryArray {
             mpoint_xyz: self.mpoint_xyz.clone(),
             mline_string_xyz: self.mline_string_xyz.clone(),
             mpolygon_xyz: self.mpolygon_xyz.clone(),
+            gc_xyz: self.gc_xyz.clone(),
 
             slice_offset: self.slice_offset + offset,
             metadata: self.metadata.clone(),
@@ -346,12 +456,14 @@ impl UnknownGeometryArray {
             self.mpoint_xy.into_coord_type(coord_type),
             self.mline_string_xy.into_coord_type(coord_type),
             self.mpolygon_xy.into_coord_type(coord_type),
+            self.gc_xy.into_coord_type(coord_type),
             self.point_xyz.into_coord_type(coord_type),
             self.line_string_xyz.into_coord_type(coord_type),
             self.polygon_xyz.into_coord_type(coord_type),
             self.mpoint_xyz.into_coord_type(coord_type),
             self.mline_string_xyz.into_coord_type(coord_type),
             self.mpolygon_xyz.into_coord_type(coord_type),
+            self.gc_xyz.into_coord_type(coord_type),
             self.metadata,
         )
     }
@@ -557,6 +669,7 @@ impl TryFrom<&UnionArray> for UnknownGeometryArray {
         let mut mpoint_xy: Option<MultiPointArray> = None;
         let mut mline_string_xy: Option<MultiLineStringArray> = None;
         let mut mpolygon_xy: Option<MultiPolygonArray> = None;
+        let mut gc_xy: Option<GeometryCollectionArray> = None;
 
         let mut point_xyz: Option<PointArray> = None;
         let mut line_string_xyz: Option<LineStringArray> = None;
@@ -564,6 +677,7 @@ impl TryFrom<&UnionArray> for UnknownGeometryArray {
         let mut mpoint_xyz: Option<MultiPointArray> = None;
         let mut mline_string_xyz: Option<MultiLineStringArray> = None;
         let mut mpolygon_xyz: Option<MultiPolygonArray> = None;
+        let mut gc_xyz: Option<GeometryCollectionArray> = None;
 
         match value.data_type() {
             DataType::Union(fields, mode) => {
@@ -626,6 +740,13 @@ impl TryFrom<&UnionArray> for UnknownGeometryArray {
                                     .unwrap(),
                             );
                         }
+                        7 => {
+                            gc_xy = Some(
+                                (value.child(type_id).as_ref(), dimension)
+                                    .try_into()
+                                    .unwrap(),
+                            );
+                        }
                         11 => {
                             point_xyz = Some(
                                 (value.child(type_id).as_ref(), dimension)
@@ -668,6 +789,13 @@ impl TryFrom<&UnionArray> for UnknownGeometryArray {
                                     .unwrap(),
                             );
                         }
+                        17 => {
+                            gc_xyz = Some(
+                                (value.child(type_id).as_ref(), dimension)
+                                    .try_into()
+                                    .unwrap(),
+                            );
+                        }
                         _ => {
                             return Err(GeoArrowError::General(format!(
                                 "Unexpected type_id {}",
@@ -693,12 +821,14 @@ impl TryFrom<&UnionArray> for UnknownGeometryArray {
             mpoint_xy.unwrap_or_default(),
             mline_string_xy.unwrap_or_default(),
             mpolygon_xy.unwrap_or_default(),
+            gc_xy.unwrap_or_default(),
             point_xyz.unwrap_or_default(),
             line_string_xyz.unwrap_or_default(),
             polygon_xyz.unwrap_or_default(),
             mpoint_xyz.unwrap_or_default(),
             mline_string_xyz.unwrap_or_default(),
             mpolygon_xyz.unwrap_or_default(),
+            gc_xyz.unwrap_or_default(),
             Default::default(),
         ))
     }

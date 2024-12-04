@@ -17,11 +17,12 @@ use crate::schema::GeoSchemaExt;
 use crate::table::Table;
 use crate::NativeArray;
 
+/// Downcast will change between geometry types but will not affect the dimension of the data.
 pub trait Downcast {
     type Output;
 
     /// The data type that downcasting would result in.
-    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType;
+    fn downcasted_data_type(&self) -> NativeType;
 
     /// If possible, convert this array to a simpler and/or smaller data type
     ///
@@ -33,19 +34,17 @@ pub trait Downcast {
     /// - MixedGeometry -> any of the 6 concrete types
     /// - GeometryCollection -> MixedGeometry or any of the 6 concrete types
     ///
-    /// If small_offsets is `true`, it will additionally try to convert `i64` offset buffers to
-    /// `i32` if the offsets would not overflow.
-    fn downcast(&self, small_offsets: bool) -> Self::Output;
+    fn downcast(&self) -> Self::Output;
 }
 
 impl Downcast for PointArray {
     type Output = Arc<dyn NativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
+    fn downcasted_data_type(&self) -> NativeType {
         self.data_type()
     }
 
-    fn downcast(&self, small_offsets: bool) -> Self::Output {
+    fn downcast(&self) -> Self::Output {
         Arc::new(self.clone())
     }
 }
@@ -93,19 +92,16 @@ pub(crate) fn can_downcast_multi<O: OffsetSizeTrait>(buffer: &OffsetBuffer<O>) -
 impl Downcast for LineStringArray {
     type Output = Arc<dyn NativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
+    fn downcasted_data_type(&self) -> NativeType {
         match self.data_type() {
             NativeType::LineString(ct, dim) => NativeType::LineString(ct, dim),
             _ => unreachable!(),
         }
     }
 
-    fn downcast(&self, small_offsets: bool) -> Self::Output {
-        match (self.data_type(), self.downcasted_data_type(small_offsets)) {
-            (
-                NativeType::LineString(_, Dimension::XY),
-                NativeType::LineString(_, Dimension::XY),
-            ) => Arc::new(self.clone()),
+    fn downcast(&self) -> Self::Output {
+        match (self.data_type(), self.downcasted_data_type()) {
+            (NativeType::LineString(_, _), NativeType::LineString(_, _)) => Arc::new(self.clone()),
             _ => unreachable!(),
         }
     }
@@ -114,14 +110,14 @@ impl Downcast for LineStringArray {
 impl Downcast for PolygonArray {
     type Output = Arc<dyn NativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
+    fn downcasted_data_type(&self) -> NativeType {
         match self.data_type() {
             NativeType::Polygon(ct, dim) => NativeType::Polygon(ct, dim),
             _ => unreachable!(),
         }
     }
 
-    fn downcast(&self, small_offsets: bool) -> Self::Output {
+    fn downcast(&self) -> Self::Output {
         Arc::new(self.clone())
     }
 }
@@ -129,7 +125,7 @@ impl Downcast for PolygonArray {
 impl Downcast for MultiPointArray {
     type Output = Arc<dyn NativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
+    fn downcasted_data_type(&self) -> NativeType {
         match self.data_type() {
             NativeType::MultiPoint(ct, dim) => {
                 if can_downcast_multi(&self.geom_offsets) {
@@ -141,7 +137,7 @@ impl Downcast for MultiPointArray {
             _ => unreachable!(),
         }
     }
-    fn downcast(&self, small_offsets: bool) -> Self::Output {
+    fn downcast(&self) -> Self::Output {
         // Note: this won't allow a downcast for empty MultiPoints
         if *self.geom_offsets.last() as usize == self.len() {
             return Arc::new(PointArray::new(
@@ -158,7 +154,7 @@ impl Downcast for MultiPointArray {
 impl Downcast for MultiLineStringArray {
     type Output = Arc<dyn NativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
+    fn downcasted_data_type(&self) -> NativeType {
         match self.data_type() {
             NativeType::MultiLineString(ct, dim) => {
                 if can_downcast_multi(&self.geom_offsets) {
@@ -171,7 +167,7 @@ impl Downcast for MultiLineStringArray {
         }
     }
 
-    fn downcast(&self, small_offsets: bool) -> Self::Output {
+    fn downcast(&self) -> Self::Output {
         if *self.geom_offsets.last() as usize == self.len() {
             return Arc::new(LineStringArray::new(
                 self.coords.clone(),
@@ -188,7 +184,7 @@ impl Downcast for MultiLineStringArray {
 impl Downcast for MultiPolygonArray {
     type Output = Arc<dyn NativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
+    fn downcasted_data_type(&self) -> NativeType {
         match self.data_type() {
             NativeType::MultiPolygon(ct, dim) => {
                 if can_downcast_multi(&self.geom_offsets) {
@@ -201,7 +197,7 @@ impl Downcast for MultiPolygonArray {
         }
     }
 
-    fn downcast(&self, small_offsets: bool) -> Self::Output {
+    fn downcast(&self) -> Self::Output {
         if *self.geom_offsets.last() as usize == self.len() {
             return Arc::new(PolygonArray::new(
                 self.coords.clone(),
@@ -219,7 +215,7 @@ impl Downcast for MultiPolygonArray {
 impl Downcast for MixedGeometryArray {
     type Output = Arc<dyn NativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
+    fn downcasted_data_type(&self) -> NativeType {
         let coord_type = self.coord_type();
 
         if self.has_points()
@@ -239,7 +235,7 @@ impl Downcast for MixedGeometryArray {
             && !self.has_multi_line_strings()
             && !self.has_multi_polygons()
         {
-            return self.line_strings.downcasted_data_type(small_offsets);
+            return self.line_strings.downcasted_data_type();
         }
 
         if !self.has_points()
@@ -249,7 +245,7 @@ impl Downcast for MixedGeometryArray {
             && !self.has_multi_line_strings()
             && !self.has_multi_polygons()
         {
-            return self.polygons.downcasted_data_type(small_offsets);
+            return self.polygons.downcasted_data_type();
         }
 
         if !self.has_points()
@@ -259,7 +255,7 @@ impl Downcast for MixedGeometryArray {
             && !self.has_multi_line_strings()
             && !self.has_multi_polygons()
         {
-            return self.multi_points.downcasted_data_type(small_offsets);
+            return self.multi_points.downcasted_data_type();
         }
 
         if !self.has_points()
@@ -269,7 +265,7 @@ impl Downcast for MixedGeometryArray {
             && self.has_multi_line_strings()
             && !self.has_multi_polygons()
         {
-            return self.multi_line_strings.downcasted_data_type(small_offsets);
+            return self.multi_line_strings.downcasted_data_type();
         }
 
         if !self.has_points()
@@ -279,13 +275,13 @@ impl Downcast for MixedGeometryArray {
             && !self.has_multi_line_strings()
             && self.has_multi_polygons()
         {
-            return self.multi_polygons.downcasted_data_type(small_offsets);
+            return self.multi_polygons.downcasted_data_type();
         }
 
         self.data_type()
     }
 
-    fn downcast(&self, small_offsets: bool) -> Self::Output {
+    fn downcast(&self) -> Self::Output {
         // TODO: do I need to handle the slice offset?
         if self.has_points()
             && !self.has_line_strings()
@@ -304,7 +300,7 @@ impl Downcast for MixedGeometryArray {
             && !self.has_multi_line_strings()
             && !self.has_multi_polygons()
         {
-            return self.line_strings.downcast(small_offsets);
+            return self.line_strings.downcast();
         }
 
         if !self.has_points()
@@ -314,7 +310,7 @@ impl Downcast for MixedGeometryArray {
             && !self.has_multi_line_strings()
             && !self.has_multi_polygons()
         {
-            return self.polygons.downcast(small_offsets);
+            return self.polygons.downcast();
         }
 
         if !self.has_points()
@@ -324,7 +320,7 @@ impl Downcast for MixedGeometryArray {
             && !self.has_multi_line_strings()
             && !self.has_multi_polygons()
         {
-            return self.multi_points.downcast(small_offsets);
+            return self.multi_points.downcast();
         }
 
         if !self.has_points()
@@ -334,7 +330,7 @@ impl Downcast for MixedGeometryArray {
             && self.has_multi_line_strings()
             && !self.has_multi_polygons()
         {
-            return self.multi_line_strings.downcast(small_offsets);
+            return self.multi_line_strings.downcast();
         }
 
         if !self.has_points()
@@ -344,7 +340,7 @@ impl Downcast for MixedGeometryArray {
             && !self.has_multi_line_strings()
             && self.has_multi_polygons()
         {
-            return self.multi_polygons.downcast(small_offsets);
+            return self.multi_polygons.downcast();
         }
 
         Arc::new(self.clone())
@@ -354,14 +350,14 @@ impl Downcast for MixedGeometryArray {
 impl Downcast for GeometryCollectionArray {
     type Output = Arc<dyn NativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
+    fn downcasted_data_type(&self) -> NativeType {
         todo!()
     }
-    fn downcast(&self, small_offsets: bool) -> Self::Output {
+    fn downcast(&self) -> Self::Output {
         // TODO: support downcasting with null elements
         if *self.geom_offsets.last() as usize == self.len() && self.null_count() == 0 {
             // Call downcast on the mixed array
-            return self.array.downcast(small_offsets);
+            return self.array.downcast();
         }
 
         Arc::new(self.clone())
@@ -371,10 +367,10 @@ impl Downcast for GeometryCollectionArray {
 impl Downcast for RectArray {
     type Output = Arc<dyn NativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
+    fn downcasted_data_type(&self) -> NativeType {
         self.data_type()
     }
-    fn downcast(&self, small_offsets: bool) -> Self::Output {
+    fn downcast(&self) -> Self::Output {
         Arc::new(self.clone())
     }
 }
@@ -382,42 +378,36 @@ impl Downcast for RectArray {
 impl Downcast for &dyn NativeArray {
     type Output = Arc<dyn NativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
-        use Dimension::*;
+    fn downcasted_data_type(&self) -> NativeType {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point().downcasted_data_type(small_offsets),
-            LineString(_, XY) => self.as_line_string().downcasted_data_type(small_offsets),
-            Polygon(_, XY) => self.as_polygon().downcasted_data_type(small_offsets),
-            MultiPoint(_, XY) => self.as_multi_point().downcasted_data_type(small_offsets),
-            MultiLineString(_, XY) => self
-                .as_multi_line_string()
-                .downcasted_data_type(small_offsets),
-            MultiPolygon(_, XY) => self.as_multi_polygon().downcasted_data_type(small_offsets),
-            Mixed(_, XY) => self.as_mixed().downcasted_data_type(small_offsets),
-            GeometryCollection(_, XY) => self
-                .as_geometry_collection()
-                .downcasted_data_type(small_offsets),
-            Rect(XY) => self.as_rect().downcasted_data_type(small_offsets),
+            Point(_, _) => self.as_point().downcasted_data_type(),
+            LineString(_, _) => self.as_line_string().downcasted_data_type(),
+            Polygon(_, _) => self.as_polygon().downcasted_data_type(),
+            MultiPoint(_, _) => self.as_multi_point().downcasted_data_type(),
+            MultiLineString(_, _) => self.as_multi_line_string().downcasted_data_type(),
+            MultiPolygon(_, _) => self.as_multi_polygon().downcasted_data_type(),
+            Mixed(_, _) => self.as_mixed().downcasted_data_type(),
+            GeometryCollection(_, _) => self.as_geometry_collection().downcasted_data_type(),
+            Rect(_) => self.as_rect().downcasted_data_type(),
             _ => todo!("3d support"),
         }
     }
 
-    fn downcast(&self, small_offsets: bool) -> Self::Output {
-        use Dimension::*;
+    fn downcast(&self) -> Self::Output {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point().downcast(small_offsets),
-            LineString(_, XY) => self.as_line_string().downcast(small_offsets),
-            Polygon(_, XY) => self.as_polygon().downcast(small_offsets),
-            MultiPoint(_, XY) => self.as_multi_point().downcast(small_offsets),
-            MultiLineString(_, XY) => self.as_multi_line_string().downcast(small_offsets),
-            MultiPolygon(_, XY) => self.as_multi_polygon().downcast(small_offsets),
-            Mixed(_, XY) => self.as_mixed().downcast(small_offsets),
-            GeometryCollection(_, XY) => self.as_geometry_collection().downcast(small_offsets),
-            Rect(XY) => self.as_rect().downcast(small_offsets),
+            Point(_, _) => self.as_point().downcast(),
+            LineString(_, _) => self.as_line_string().downcast(),
+            Polygon(_, _) => self.as_polygon().downcast(),
+            MultiPoint(_, _) => self.as_multi_point().downcast(),
+            MultiLineString(_, _) => self.as_multi_line_string().downcast(),
+            MultiPolygon(_, _) => self.as_multi_polygon().downcast(),
+            Mixed(_, _) => self.as_mixed().downcast(),
+            GeometryCollection(_, _) => self.as_geometry_collection().downcast(),
+            Rect(_) => self.as_rect().downcast(),
             _ => todo!("3d support"),
         }
     }
@@ -460,10 +450,10 @@ fn resolve_types(types: &HashSet<NativeType>) -> NativeType {
 impl Downcast for ChunkedPointArray {
     type Output = Arc<dyn ChunkedNativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
+    fn downcasted_data_type(&self) -> NativeType {
         self.data_type()
     }
-    fn downcast(&self, small_offsets: bool) -> Self::Output {
+    fn downcast(&self) -> Self::Output {
         Arc::new(self.clone())
     }
 }
@@ -473,15 +463,15 @@ macro_rules! impl_chunked_downcast {
         impl Downcast for $chunked_array {
             type Output = Arc<dyn ChunkedNativeArray>;
 
-            fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
+            fn downcasted_data_type(&self) -> NativeType {
                 let mut types = HashSet::new();
                 self.chunks.iter().for_each(|chunk| {
-                    types.insert(chunk.downcasted_data_type(small_offsets));
+                    types.insert(chunk.downcasted_data_type());
                 });
                 resolve_types(&types)
             }
-            fn downcast(&self, small_offsets: bool) -> Self::Output {
-                let to_data_type = self.downcasted_data_type(small_offsets);
+            fn downcast(&self) -> Self::Output {
+                let to_data_type = self.downcasted_data_type();
 
                 if to_data_type == self.data_type() {
                     return Arc::new(self.clone());
@@ -504,10 +494,10 @@ impl_chunked_downcast!(ChunkedGeometryCollectionArray);
 impl Downcast for ChunkedRectArray {
     type Output = Arc<dyn ChunkedNativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
+    fn downcasted_data_type(&self) -> NativeType {
         self.data_type()
     }
-    fn downcast(&self, small_offsets: bool) -> Self::Output {
+    fn downcast(&self) -> Self::Output {
         Arc::new(self.clone())
     }
 }
@@ -515,42 +505,38 @@ impl Downcast for ChunkedRectArray {
 impl Downcast for &dyn ChunkedNativeArray {
     type Output = Arc<dyn ChunkedNativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
+    fn downcasted_data_type(&self) -> NativeType {
         use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point().downcasted_data_type(small_offsets),
-            LineString(_, XY) => self.as_line_string().downcasted_data_type(small_offsets),
-            Polygon(_, XY) => self.as_polygon().downcasted_data_type(small_offsets),
-            MultiPoint(_, XY) => self.as_multi_point().downcasted_data_type(small_offsets),
-            MultiLineString(_, XY) => self
-                .as_multi_line_string()
-                .downcasted_data_type(small_offsets),
-            MultiPolygon(_, XY) => self.as_multi_polygon().downcasted_data_type(small_offsets),
-            Mixed(_, XY) => self.as_mixed().downcasted_data_type(small_offsets),
-            GeometryCollection(_, XY) => self
-                .as_geometry_collection()
-                .downcasted_data_type(small_offsets),
-            Rect(XY) => self.as_rect().downcasted_data_type(small_offsets),
+            Point(_, XY) => self.as_point().downcasted_data_type(),
+            LineString(_, XY) => self.as_line_string().downcasted_data_type(),
+            Polygon(_, XY) => self.as_polygon().downcasted_data_type(),
+            MultiPoint(_, XY) => self.as_multi_point().downcasted_data_type(),
+            MultiLineString(_, XY) => self.as_multi_line_string().downcasted_data_type(),
+            MultiPolygon(_, XY) => self.as_multi_polygon().downcasted_data_type(),
+            Mixed(_, XY) => self.as_mixed().downcasted_data_type(),
+            GeometryCollection(_, XY) => self.as_geometry_collection().downcasted_data_type(),
+            Rect(XY) => self.as_rect().downcasted_data_type(),
             _ => todo!("3d support"),
         }
     }
 
-    fn downcast(&self, small_offsets: bool) -> Self::Output {
+    fn downcast(&self) -> Self::Output {
         use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point().downcast(small_offsets),
-            LineString(_, XY) => self.as_line_string().downcast(small_offsets),
-            Polygon(_, XY) => self.as_polygon().downcast(small_offsets),
-            MultiPoint(_, XY) => self.as_multi_point().downcast(small_offsets),
-            MultiLineString(_, XY) => self.as_multi_line_string().downcast(small_offsets),
-            MultiPolygon(_, XY) => self.as_multi_polygon().downcast(small_offsets),
-            Mixed(_, XY) => self.as_mixed().downcast(small_offsets),
-            GeometryCollection(_, XY) => self.as_geometry_collection().downcast(small_offsets),
-            Rect(XY) => self.as_rect().downcast(small_offsets),
+            Point(_, XY) => self.as_point().downcast(),
+            LineString(_, XY) => self.as_line_string().downcast(),
+            Polygon(_, XY) => self.as_polygon().downcast(),
+            MultiPoint(_, XY) => self.as_multi_point().downcast(),
+            MultiLineString(_, XY) => self.as_multi_line_string().downcast(),
+            MultiPolygon(_, XY) => self.as_multi_polygon().downcast(),
+            Mixed(_, XY) => self.as_mixed().downcast(),
+            GeometryCollection(_, XY) => self.as_geometry_collection().downcast(),
+            Rect(XY) => self.as_rect().downcast(),
             _ => todo!("3d support"),
         }
     }
@@ -569,11 +555,11 @@ pub trait DowncastTable {
     ///
     /// If small_offsets is `true`, it will additionally try to convert `i64` offset buffers to
     /// `i32` if the offsets would not overflow.
-    fn downcast(&self, small_offsets: bool) -> Result<Table>;
+    fn downcast(&self) -> Result<Table>;
 }
 
 impl DowncastTable for Table {
-    fn downcast(&self, small_offsets: bool) -> Result<Table> {
+    fn downcast(&self) -> Result<Table> {
         let downcasted_columns = self
             .schema()
             .as_ref()
@@ -581,7 +567,7 @@ impl DowncastTable for Table {
             .iter()
             .map(|idx| {
                 let geometry = self.geometry_column(Some(*idx))?;
-                Ok((*idx, geometry.as_ref().downcast(small_offsets)))
+                Ok((*idx, geometry.as_ref().downcast()))
             })
             .collect::<Result<Vec<_>>>()?;
 

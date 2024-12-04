@@ -236,7 +236,7 @@ impl Table {
                         ChunkedNativeArrayDyn::from_geoarrow_chunks(parsed_chunks_refs.as_slice())?
                             .into_inner()
                             .as_ref()
-                            .downcast(true)
+                            .downcast()
                     }
                     SerializedType::LargeWKB => {
                         let wkb_chunks = array_slices
@@ -254,7 +254,7 @@ impl Table {
                         ChunkedNativeArrayDyn::from_geoarrow_chunks(parsed_chunks_refs.as_slice())?
                             .into_inner()
                             .as_ref()
-                            .downcast(true)
+                            .downcast()
                     }
                     _ => panic!("WKT input not supported yet"),
                 };
