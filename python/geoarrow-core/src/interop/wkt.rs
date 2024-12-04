@@ -82,12 +82,12 @@ pub fn from_wkt(
 pub fn to_wkt(py: Python, input: AnyNativeInput) -> PyGeoArrowResult<PyObject> {
     match input {
         AnyNativeInput::Array(array) => {
-            let wkt_arr = array.as_ref().to_wkt::<i32>();
+            let wkt_arr = array.as_ref().to_wkt::<i32>()?;
             let field = wkt_arr.extension_field();
             return_array(py, PyArray::new(wkt_arr.into_array_ref(), field))
         }
         AnyNativeInput::Chunked(array) => {
-            let out = array.as_ref().to_wkt::<i32>();
+            let out = array.as_ref().to_wkt::<i32>()?;
             let field = out.extension_field();
             let chunks = out
                 .into_inner()
