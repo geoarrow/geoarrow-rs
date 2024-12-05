@@ -96,7 +96,7 @@ sqlx = { version = "0.7", optional = true, default-features = false, features = 
 thiserror = "1"
 tokio = { version = "1", default-features = false, optional = true }
 # wkt = "0.11"
-wkt = { git = "https://github.com/georust/wkt", branch = "kyle/geo-traits-writer" }
+wkt = { git = "https://github.com/georust/wkt", rev = "63b13243568470d6da5a44fcc9fe7b903aa53eea" }
 wkb = { git = "https://github.com/kylebarron/wkb", rev = "7d58a2327fe21cf250dab5ac6860b6cf0fddb838" }
 
 

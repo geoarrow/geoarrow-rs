@@ -4268,7 +4268,7 @@ dependencies = [
 [[package]]
 name = "wkt"
 version = "0.11.1"
-source = "git+https://github.com/georust/wkt?branch=kyle/geo-traits-writer#63b13243568470d6da5a44fcc9fe7b903aa53eea"
+source = "git+https://github.com/georust/wkt?rev=63b13243568470d6da5a44fcc9fe7b903aa53eea#63b13243568470d6da5a44fcc9fe7b903aa53eea"
 dependencies = [
  "geo-traits",
  "geo-types",
