@@ -1,5 +1,6 @@
 use std::io::Write;
 
+use arrow_schema::Schema;
 use flatgeobuf::{FgbCrs, FgbWriter, FgbWriterOptions};
 use geozero::GeozeroDatasource;
 
@@ -25,8 +26,11 @@ pub struct FlatGeobufWriterOptions {
     pub description: Option<String>,
     // Dataset metadata (intended to be application specific and
     pub metadata: Option<String>,
-
     /// A method for transforming CRS to WKT
+    ///
+    /// This is implemented as an external trait so that external libraries can inject the method
+    /// for CRS conversions. For example, the Python API uses the `pyproj` Python library to
+    /// perform the conversion rather than linking into PROJ from Rust.
     pub crs_transform: Option<Box<dyn CRSTransform>>,
 }
 
@@ -45,6 +49,11 @@ impl Default for FlatGeobufWriterOptions {
 }
 
 impl FlatGeobufWriterOptions {
+    /// Create a WKT CRS from whatever CRS exists in the [ArrayMetadata].
+    ///
+    /// This uses the [CRSTransform] supplied in the [FlatGeobufWriterOptions].
+    ///
+    /// If no CRS exists in the ArrayMetadata, None will be returned here.
     fn create_wkt_crs(&self, array_meta: &ArrayMetadata) -> Result<Option<String>> {
         if let Some(crs_transform) = &self.crs_transform {
             crs_transform.extract_wkt(array_meta)
@@ -53,6 +62,7 @@ impl FlatGeobufWriterOptions {
         }
     }
 
+    /// Create [FgbWriterOptions]
     fn create_fgb_options<'a>(
         &'a self,
         geo_data_type: NativeType,
@@ -85,8 +95,10 @@ impl FlatGeobufWriterOptions {
     }
 }
 
-// TODO: always write CRS saved in Table metadata (you can do this by adding an option)
-/// Write a Table to a FlatGeobuf file.
+/// Write an iterator of GeoArrow RecordBatches to a FlatGeobuf file.
+///
+/// `name` is the string passed to [`FgbWriter::create`] and is what OGR observes as the layer name
+/// of the file.
 pub fn write_flatgeobuf<W: Write, S: Into<RecordBatchReader>>(
     stream: S,
     writer: W,
@@ -97,7 +109,8 @@ pub fn write_flatgeobuf<W: Write, S: Into<RecordBatchReader>>(
 
 /// Write a Table to a FlatGeobuf file with specific writer options.
 ///
-/// Note: this `name` argument is what OGR observes as the layer name of the file.
+/// `name` is the string passed to [`FgbWriter::create`] and is what OGR observes as the layer name
+/// of the file.
 pub fn write_flatgeobuf_with_options<W: Write, S: Into<RecordBatchReader>>(
     stream: S,
     writer: W,
@@ -120,7 +133,7 @@ pub fn write_flatgeobuf_with_options<W: Write, S: Into<RecordBatchReader>>(
     let wkt_crs_str = options.create_wkt_crs(&array_meta)?;
     let fgb_options = options.create_fgb_options(geo_data_type, wkt_crs_str.as_deref());
 
-    let geometry_type = infer_flatgeobuf_geometry_type(&stream)?;
+    let geometry_type = infer_flatgeobuf_geometry_type(stream.schema()?.as_ref())?;
 
     let mut fgb = FgbWriter::create_with_options(name, geometry_type, fgb_options)?;
     stream.process(&mut fgb)?;
@@ -128,10 +141,9 @@ pub fn write_flatgeobuf_with_options<W: Write, S: Into<RecordBatchReader>>(
     Ok(())
 }
 
-fn infer_flatgeobuf_geometry_type(stream: &RecordBatchReader) -> Result<flatgeobuf::GeometryType> {
-    let schema = stream.schema()?;
+fn infer_flatgeobuf_geometry_type(schema: &Schema) -> Result<flatgeobuf::GeometryType> {
     let fields = &schema.fields;
-    let geom_col_idxs = schema.as_ref().geometry_columns();
+    let geom_col_idxs = schema.geometry_columns();
     if geom_col_idxs.len() != 1 {
         panic!("Only one geometry column currently supported in FlatGeobuf writer");
     }

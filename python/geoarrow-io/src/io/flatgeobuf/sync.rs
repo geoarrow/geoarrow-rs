@@ -60,7 +60,6 @@ pub fn read_flatgeobuf(
     file,
     *,
     write_index=true,
-    promote_to_multi=true,
     title=None,
     description=None,
     metadata=None
@@ -71,7 +70,6 @@ pub fn write_flatgeobuf(
     table: AnyRecordBatch,
     file: FileWriter,
     write_index: bool,
-    promote_to_multi: bool,
     title: Option<String>,
     description: Option<String>,
     metadata: Option<String>,
@@ -80,7 +78,6 @@ pub fn write_flatgeobuf(
 
     let options = FlatGeobufWriterOptions {
         write_index,
-        promote_to_multi,
         title,
         description,
         metadata,
