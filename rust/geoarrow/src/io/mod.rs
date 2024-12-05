@@ -6,8 +6,6 @@
 #[cfg(feature = "csv")]
 pub mod csv;
 pub mod display;
-#[cfg(feature = "flatgeobuf")]
-pub mod flatgeobuf;
 #[cfg(feature = "gdal")]
 pub mod gdal;
 pub mod geojson;

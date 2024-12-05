@@ -3,10 +3,10 @@ use std::io::Write;
 use flatgeobuf::{FgbWriter, FgbWriterOptions};
 use geozero::GeozeroDatasource;
 
-use crate::datatypes::{Dimension, NativeType};
-use crate::error::Result;
-use crate::io::stream::RecordBatchReader;
-use crate::schema::GeoSchemaExt;
+use geoarrow::datatypes::{Dimension, NativeType};
+use geoarrow::error::Result;
+use geoarrow::io::stream::RecordBatchReader;
+use geoarrow::schema::GeoSchemaExt;
 
 // TODO: always write CRS saved in Table metadata (you can do this by adding an option)
 /// Write a Table to a FlatGeobuf file.

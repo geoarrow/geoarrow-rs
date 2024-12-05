@@ -6,15 +6,15 @@ use http_range_client::AsyncBufferedHttpRangeClient;
 use object_store::path::Path;
 use object_store::ObjectStore;
 
-use crate::algorithm::native::DowncastTable;
-use crate::array::*;
-use crate::datatypes::Dimension;
-use crate::error::{GeoArrowError, Result};
-use crate::io::flatgeobuf::reader::common::{infer_schema, FlatGeobufReaderOptions};
-use crate::io::flatgeobuf::reader::object_store_reader::ObjectStoreWrapper;
-use crate::io::geozero::array::MixedGeometryStreamBuilder;
-use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
-use crate::table::Table;
+use crate::flatgeobuf::reader::common::{infer_schema, FlatGeobufReaderOptions};
+use crate::flatgeobuf::reader::object_store_reader::ObjectStoreWrapper;
+use geoarrow::algorithm::native::DowncastTable;
+use geoarrow::array::*;
+use geoarrow::datatypes::Dimension;
+use geoarrow::error::{GeoArrowError, Result};
+use geoarrow::io::geozero::array::MixedGeometryStreamBuilder;
+use geoarrow::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
+use geoarrow::table::Table;
 
 pub async fn read_flatgeobuf_async(
     reader: Arc<dyn ObjectStore>,
