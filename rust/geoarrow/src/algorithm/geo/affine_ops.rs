@@ -18,29 +18,6 @@ use geo::{AffineTransform, MapCoords};
 /// be more readable. See: [`Scale`](crate::algorithm::geo::Scale),
 /// [`Translate`](crate::algorithm::geo::Translate), [`Rotate`](crate::algorithm::geo::Rotate), and
 /// [`Skew`](crate::algorithm::geo::Skew).
-///
-/// # Examples
-/// ## Build up transforms by beginning with a constructor, then chaining mutation operations
-/// ```
-/// use geo::{AffineOps, AffineTransform};
-/// use geo::{line_string, BoundingRect, Point, LineString};
-/// use approx::assert_relative_eq;
-///
-/// let ls: LineString = line_string![
-///     (x: 0.0f64, y: 0.0f64),
-///     (x: 0.0f64, y: 10.0f64),
-/// ];
-/// let center = ls.bounding_rect().unwrap().center();
-///
-/// let transform = AffineTransform::skew(40.0, 40.0, center).rotated(45.0, center);
-///
-/// let skewed_rotated = ls.affine_transform(&transform);
-///
-/// assert_relative_eq!(skewed_rotated, line_string![
-///     (x: 0.5688687f64, y: 4.4311312),
-///     (x: -0.5688687, y: 5.5688687)
-/// ], max_relative = 1.0);
-/// ```
 pub trait AffineOps<Rhs> {
     type Output;
 
