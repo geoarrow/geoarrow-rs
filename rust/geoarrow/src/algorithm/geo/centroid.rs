@@ -113,7 +113,6 @@ impl Centroid for &dyn NativeArray {
             MultiPoint(_, XY) => self.as_multi_point().centroid(),
             MultiLineString(_, XY) => self.as_multi_line_string().centroid(),
             MultiPolygon(_, XY) => self.as_multi_polygon().centroid(),
-            Mixed(_, XY) => self.as_mixed().centroid(),
             GeometryCollection(_, XY) => self.as_geometry_collection().centroid(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -143,7 +142,6 @@ impl Centroid for &dyn ChunkedNativeArray {
             MultiPoint(_, XY) => self.as_multi_point().centroid(),
             MultiLineString(_, XY) => self.as_multi_line_string().centroid(),
             MultiPolygon(_, XY) => self.as_multi_polygon().centroid(),
-            Mixed(_, XY) => self.as_mixed().centroid(),
             GeometryCollection(_, XY) => self.as_geometry_collection().centroid(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }

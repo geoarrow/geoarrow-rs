@@ -131,8 +131,10 @@ fn infer_target_wkb_type(
     geometry_types: &HashSet<GeoParquetGeometryType>,
     coord_type: CoordType,
 ) -> Result<NativeType> {
-    Ok(infer_geo_data_type(geometry_types, coord_type)?
-        .unwrap_or(NativeType::Mixed(coord_type, Dimension::XY)))
+    Ok(
+        infer_geo_data_type(geometry_types, coord_type)?
+            .unwrap_or(NativeType::Geometry(coord_type)),
+    )
 }
 
 /// Parse a record batch to a GeoArrow record batch.

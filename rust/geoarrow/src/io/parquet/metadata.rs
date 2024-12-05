@@ -181,6 +181,7 @@ impl GeoParquetGeometryType {
         }
     }
 
+    #[allow(dead_code)]
     pub(crate) fn has_z(&self) -> bool {
         match self {
             Self::Point
@@ -776,11 +777,7 @@ pub(crate) fn infer_geo_data_type(
                 return Ok(Some(NativeType::MultiPolygon(coord_type, Dimension::XYZ)));
             }
 
-            if geometry_types.iter().any(|t| t.has_z()) {
-                Ok(Some(NativeType::Mixed(coord_type, Dimension::XYZ)))
-            } else {
-                Ok(Some(NativeType::Mixed(coord_type, Dimension::XY)))
-            }
+            Ok(Some(NativeType::Geometry(coord_type)))
         }
     }
 }

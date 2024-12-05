@@ -463,7 +463,6 @@ impl MapCoords for &dyn NativeArray {
             MultiPoint(_, XY) => Arc::new(self.as_multi_point().try_map_coords(map_op)?),
             MultiLineString(_, XY) => Arc::new(self.as_multi_line_string().try_map_coords(map_op)?),
             MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon().try_map_coords(map_op)?),
-            Mixed(_, XY) => Arc::new(self.as_mixed().try_map_coords(map_op)?),
             GeometryCollection(_, XY) => {
                 Arc::new(self.as_geometry_collection().try_map_coords(map_op)?)
             }
@@ -618,7 +617,6 @@ impl MapCoords for &dyn ChunkedNativeArray {
             MultiPoint(_, XY) => Arc::new(self.as_multi_point().try_map_coords(map_op)?),
             MultiLineString(_, XY) => Arc::new(self.as_multi_line_string().try_map_coords(map_op)?),
             MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon().try_map_coords(map_op)?),
-            Mixed(_, XY) => Arc::new(self.as_mixed().try_map_coords(map_op)?),
             GeometryCollection(_, XY) => {
                 Arc::new(self.as_geometry_collection().try_map_coords(map_op)?)
             }

@@ -59,7 +59,6 @@ impl Length for &dyn NativeArray {
             MultiPoint(_, _) => self.as_multi_point().length(),
             MultiLineString(_, _) => self.as_multi_line_string().length(),
             MultiPolygon(_, _) => self.as_multi_polygon().length(),
-            Mixed(_, _) => self.as_mixed().length(),
             GeometryCollection(_, _) => self.as_geometry_collection().length(),
             Rect(_) => self.as_rect().length(),
             Geometry(_) => self.as_geometry().length(),

@@ -174,7 +174,6 @@ impl<G: PointTrait<T = f64>> ContainsPoint<G> for &dyn NativeArray {
             MultiPoint(_, XY) => ContainsPoint::contains(self.as_multi_point(), rhs),
             MultiLineString(_, XY) => ContainsPoint::contains(self.as_multi_line_string(), rhs),
             MultiPolygon(_, XY) => ContainsPoint::contains(self.as_multi_polygon(), rhs),
-            Mixed(_, XY) => ContainsPoint::contains(self.as_mixed(), rhs),
             GeometryCollection(_, XY) => {
                 ContainsPoint::contains(self.as_geometry_collection(), rhs)
             }
@@ -235,7 +234,6 @@ impl<G: LineStringTrait<T = f64>> ContainsLineString<G> for &dyn NativeArray {
                 ContainsLineString::contains(self.as_multi_line_string(), rhs)
             }
             MultiPolygon(_, XY) => ContainsLineString::contains(self.as_multi_polygon(), rhs),
-            Mixed(_, XY) => ContainsLineString::contains(self.as_mixed(), rhs),
             GeometryCollection(_, XY) => {
                 ContainsLineString::contains(self.as_geometry_collection(), rhs)
             }
@@ -288,7 +286,6 @@ impl<G: PolygonTrait<T = f64>> ContainsPolygon<G> for &dyn NativeArray {
             MultiPoint(_, XY) => ContainsPolygon::contains(self.as_multi_point(), rhs),
             MultiLineString(_, XY) => ContainsPolygon::contains(self.as_multi_line_string(), rhs),
             MultiPolygon(_, XY) => ContainsPolygon::contains(self.as_multi_polygon(), rhs),
-            Mixed(_, XY) => ContainsPolygon::contains(self.as_mixed(), rhs),
             GeometryCollection(_, XY) => {
                 ContainsPolygon::contains(self.as_geometry_collection(), rhs)
             }
@@ -343,7 +340,6 @@ impl<G: MultiPointTrait<T = f64>> ContainsMultiPoint<G> for &dyn NativeArray {
                 ContainsMultiPoint::contains(self.as_multi_line_string(), rhs)
             }
             MultiPolygon(_, XY) => ContainsMultiPoint::contains(self.as_multi_polygon(), rhs),
-            Mixed(_, XY) => ContainsMultiPoint::contains(self.as_mixed(), rhs),
             GeometryCollection(_, XY) => {
                 ContainsMultiPoint::contains(self.as_geometry_collection(), rhs)
             }
@@ -398,7 +394,6 @@ impl<G: MultiLineStringTrait<T = f64>> ContainsMultiLineString<G> for &dyn Nativ
                 ContainsMultiLineString::contains(self.as_multi_line_string(), rhs)
             }
             MultiPolygon(_, XY) => ContainsMultiLineString::contains(self.as_multi_polygon(), rhs),
-            Mixed(_, XY) => ContainsMultiLineString::contains(self.as_mixed(), rhs),
             GeometryCollection(_, XY) => {
                 ContainsMultiLineString::contains(self.as_geometry_collection(), rhs)
             }
@@ -453,7 +448,6 @@ impl<G: MultiPolygonTrait<T = f64>> ContainsMultiPolygon<G> for &dyn NativeArray
                 ContainsMultiPolygon::contains(self.as_multi_line_string(), rhs)
             }
             MultiPolygon(_, XY) => ContainsMultiPolygon::contains(self.as_multi_polygon(), rhs),
-            Mixed(_, XY) => ContainsMultiPolygon::contains(self.as_mixed(), rhs),
             GeometryCollection(_, XY) => {
                 ContainsMultiPolygon::contains(self.as_geometry_collection(), rhs)
             }
@@ -506,7 +500,6 @@ impl<G: GeometryTrait<T = f64>> ContainsGeometry<G> for &dyn NativeArray {
             MultiPoint(_, XY) => todo!(), // ContainsGeometry::contains(self.as_multi_point(), rhs),
             MultiLineString(_, XY) => ContainsGeometry::contains(self.as_multi_line_string(), rhs),
             MultiPolygon(_, XY) => todo!(), // ContainsGeometry::contains(self.as_multi_polygon(), rhs),
-            Mixed(_, XY) => ContainsGeometry::contains(self.as_mixed(), rhs),
             GeometryCollection(_, XY) => {
                 ContainsGeometry::contains(self.as_geometry_collection(), rhs)
             }
@@ -563,7 +556,6 @@ impl<G: GeometryCollectionTrait<T = f64>> ContainsGeometryCollection<G> for &dyn
             MultiPolygon(_, XY) => {
                 ContainsGeometryCollection::contains(self.as_multi_polygon(), rhs)
             }
-            Mixed(_, XY) => ContainsGeometryCollection::contains(self.as_mixed(), rhs),
             GeometryCollection(_, XY) => {
                 ContainsGeometryCollection::contains(self.as_geometry_collection(), rhs)
             }

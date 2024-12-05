@@ -52,7 +52,6 @@ impl IsValid for &dyn NativeArray {
             MultiPoint(_, _) => IsValid::is_valid(self.as_multi_point()),
             MultiLineString(_, _) => IsValid::is_valid(self.as_multi_line_string()),
             MultiPolygon(_, _) => IsValid::is_valid(self.as_multi_polygon()),
-            Mixed(_, _) => IsValid::is_valid(self.as_mixed()),
             GeometryCollection(_, _) => IsValid::is_valid(self.as_geometry_collection()),
             Rect(_) => IsValid::is_valid(self.as_rect()),
             Geometry(_) => IsValid::is_valid(self.as_geometry()),

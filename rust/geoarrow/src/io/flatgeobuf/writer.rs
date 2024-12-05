@@ -77,7 +77,7 @@ fn infer_flatgeobuf_geometry_type(
             flatgeobuf::GeometryType::MultiPolygon,
             matches!(dim, Dimension::XYZ),
         ),
-        Mixed(_, dim) | Rect(dim) => (
+        Rect(dim) => (
             flatgeobuf::GeometryType::Unknown,
             matches!(dim, Dimension::XYZ),
         ),

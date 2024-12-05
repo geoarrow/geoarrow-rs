@@ -74,7 +74,6 @@ impl HasDimensions for &dyn NativeArray {
             MultiPoint(_, XY) => HasDimensions::is_empty(self.as_multi_point()),
             MultiLineString(_, XY) => HasDimensions::is_empty(self.as_multi_line_string()),
             MultiPolygon(_, XY) => HasDimensions::is_empty(self.as_multi_polygon()),
-            Mixed(_, XY) => HasDimensions::is_empty(self.as_mixed()),
             GeometryCollection(_, XY) => HasDimensions::is_empty(self.as_geometry_collection()),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -105,7 +104,6 @@ impl HasDimensions for &dyn ChunkedNativeArray {
             MultiPoint(_, XY) => HasDimensions::is_empty(self.as_multi_point()),
             MultiLineString(_, XY) => HasDimensions::is_empty(self.as_multi_line_string()),
             MultiPolygon(_, XY) => HasDimensions::is_empty(self.as_multi_polygon()),
-            Mixed(_, XY) => HasDimensions::is_empty(self.as_mixed()),
             GeometryCollection(_, XY) => HasDimensions::is_empty(self.as_geometry_collection()),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }

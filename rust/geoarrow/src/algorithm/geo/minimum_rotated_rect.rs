@@ -92,7 +92,6 @@ impl MinimumRotatedRect for &dyn NativeArray {
             MultiPoint(_, XY) => self.as_multi_point().minimum_rotated_rect(),
             MultiLineString(_, XY) => self.as_multi_line_string().minimum_rotated_rect(),
             MultiPolygon(_, XY) => self.as_multi_polygon().minimum_rotated_rect(),
-            Mixed(_, XY) => self.as_mixed().minimum_rotated_rect(),
             GeometryCollection(_, XY) => self.as_geometry_collection().minimum_rotated_rect(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -123,7 +122,6 @@ impl MinimumRotatedRect for &dyn ChunkedNativeArray {
             MultiPoint(_, XY) => self.as_multi_point().minimum_rotated_rect(),
             MultiLineString(_, XY) => self.as_multi_line_string().minimum_rotated_rect(),
             MultiPolygon(_, XY) => self.as_multi_polygon().minimum_rotated_rect(),
-            Mixed(_, XY) => self.as_mixed().minimum_rotated_rect(),
             GeometryCollection(_, XY) => self.as_geometry_collection().minimum_rotated_rect(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }

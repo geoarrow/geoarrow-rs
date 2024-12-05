@@ -88,7 +88,6 @@ impl BoundingRect for &dyn NativeArray {
             MultiPoint(_, XY) => self.as_multi_point().bounding_rect(),
             MultiLineString(_, XY) => self.as_multi_line_string().bounding_rect(),
             MultiPolygon(_, XY) => self.as_multi_polygon().bounding_rect(),
-            Mixed(_, XY) => self.as_mixed().bounding_rect(),
             GeometryCollection(_, XY) => self.as_geometry_collection().bounding_rect(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -119,7 +118,6 @@ impl BoundingRect for &dyn ChunkedNativeArray {
             MultiPoint(_, XY) => self.as_multi_point().bounding_rect(),
             MultiLineString(_, XY) => self.as_multi_line_string().bounding_rect(),
             MultiPolygon(_, XY) => self.as_multi_polygon().bounding_rect(),
-            Mixed(_, XY) => self.as_mixed().bounding_rect(),
             GeometryCollection(_, XY) => self.as_geometry_collection().bounding_rect(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }

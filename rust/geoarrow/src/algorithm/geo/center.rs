@@ -66,7 +66,6 @@ impl Center for &dyn NativeArray {
             MultiPoint(_, XY) => self.as_multi_point().center(),
             MultiLineString(_, XY) => self.as_multi_line_string().center(),
             MultiPolygon(_, XY) => self.as_multi_polygon().center(),
-            Mixed(_, XY) => self.as_mixed().center(),
             GeometryCollection(_, XY) => self.as_geometry_collection().center(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -96,7 +95,6 @@ impl Center for &dyn ChunkedNativeArray {
             MultiPoint(_, XY) => self.as_multi_point().center(),
             MultiLineString(_, XY) => self.as_multi_line_string().center(),
             MultiPolygon(_, XY) => self.as_multi_polygon().center(),
-            Mixed(_, XY) => self.as_mixed().center(),
             GeometryCollection(_, XY) => self.as_geometry_collection().center(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }

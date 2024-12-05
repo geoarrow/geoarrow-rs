@@ -66,7 +66,6 @@ impl Area for &dyn NativeArray {
             MultiPoint(_, _) => self.as_multi_point().area(),
             MultiLineString(_, _) => self.as_multi_line_string().area(),
             MultiPolygon(_, _) => self.as_multi_polygon().area(),
-            Mixed(_, _) => self.as_mixed().area(),
             GeometryCollection(_, _) => self.as_geometry_collection().area(),
             Rect(_) => self.as_rect().area(),
             Geometry(_) => self.as_geometry().area(),
