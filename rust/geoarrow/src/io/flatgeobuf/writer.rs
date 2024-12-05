@@ -183,12 +183,29 @@ mod test {
         let mut reader = Cursor::new(output_buffer);
         let new_table = read_flatgeobuf(&mut reader, Default::default()).unwrap();
 
-        // TODO: it looks like it's getting read back in backwards row order!
+        // Note: backwards row order is due to the reordering during the spatial index
         let batch = &new_table.batches()[0];
         let arr = batch.column(0);
         dbg!(arr);
         dbg!(new_table);
         // dbg!(output_buffer);
+    }
+
+    #[test]
+    fn test_write_no_index() {
+        let table = point::table();
+
+        let mut output_buffer = Vec::new();
+        let writer = BufWriter::new(&mut output_buffer);
+        let options = FlatGeobufWriterOptions {
+            write_index: false,
+            ..Default::default()
+        };
+        write_flatgeobuf_with_options(&table, writer, "name", options).unwrap();
+
+        let mut reader = Cursor::new(output_buffer);
+        let new_table = read_flatgeobuf(&mut reader, Default::default()).unwrap();
+        assert_eq!(table, new_table);
     }
 
     #[test]
@@ -202,11 +219,8 @@ mod test {
         let mut reader = Cursor::new(output_buffer);
         let new_table = read_flatgeobuf(&mut reader, Default::default()).unwrap();
 
-        // TODO: it looks like it's getting read back in backwards row order!
+        // Note: backwards row order is due to the reordering during the spatial index
         let batch = &new_table.batches()[0];
-        let arr = batch.column(0);
-        dbg!(arr);
-        dbg!(new_table);
-        // dbg!(output_buffer);
+        let _arr = batch.column(0);
     }
 }
