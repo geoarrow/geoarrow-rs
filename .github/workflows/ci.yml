@@ -115,6 +115,6 @@ jobs:
           echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/envs/default/lib/pkgconfig" >> "$GITHUB_ENV"
           echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/envs/default/lib" >> "$GITHUB_ENV"
       - name: Build benchmarks with no features
-        run: cargo bench --no-run
+        run: RUSTFLAGS="-Zinline-mir=no" cargo bench --no-run
       - name: Build benchmarks with all features
-        run: cargo bench --no-run --all-features
+        run: RUSTFLAGS="-Zinline-mir=no" cargo bench --no-run --all-features
