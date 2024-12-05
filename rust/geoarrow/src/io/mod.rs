@@ -3,6 +3,7 @@
 
 #![allow(missing_docs)] // FIXME
 
+pub mod crs;
 #[cfg(feature = "csv")]
 pub mod csv;
 pub mod display;

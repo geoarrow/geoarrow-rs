@@ -1,5 +1,7 @@
 use parquet::file::properties::WriterProperties;
 
+use crate::io::crs::CRSTransform;
+
 /// Allowed encodings when writing to GeoParquet
 #[derive(Copy, Clone, Default)]
 #[allow(clippy::upper_case_acronyms)]
@@ -16,11 +18,14 @@ pub enum GeoParquetWriterEncoding {
 }
 
 /// Options for writing GeoParquet
-#[derive(Clone, Default)]
+#[derive(Default)]
 pub struct GeoParquetWriterOptions {
     /// Set the type of encoding to use for writing to GeoParquet.
     pub encoding: GeoParquetWriterEncoding,
 
     /// The parquet [WriterProperties] to use for writing to file
     pub writer_properties: Option<WriterProperties>,
+
+    /// A transformer for converting CRS from the GeoArrow representation to PROJJSON.
+    pub crs_transform: Option<Box<dyn CRSTransform>>,
 }

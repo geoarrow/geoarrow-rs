@@ -2,8 +2,10 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use arrow_schema::{DataType, Field, SchemaBuilder, SchemaRef, TimeUnit};
-use flatgeobuf::{ColumnType, Header};
+use flatgeobuf::{ColumnType, Crs, Header};
+use serde_json::Value;
 
+use crate::array::metadata::{ArrayMetadata, CRSType};
 use crate::array::CoordType;
 
 /// Options for the FlatGeobuf reader
@@ -68,4 +70,34 @@ pub(super) fn infer_schema(header: Header<'_>) -> SchemaRef {
     }
 
     Arc::new(schema.finish())
+}
+
+/// Parse CRS information provided by FlatGeobuf into an [ArrayMetadata].
+///
+/// WKT is preferred if it exists. Otherwise, authority code will be used as a fallback.
+pub(super) fn parse_crs(crs: Option<Crs<'_>>) -> Arc<ArrayMetadata> {
+    if let Some(crs) = crs {
+        let mut meta = ArrayMetadata::default();
+        if let Some(wkt) = crs.wkt() {
+            meta.crs = Some(Value::String(wkt.to_string()));
+            return Arc::new(meta);
+        }
+
+        if let Some(org) = crs.org() {
+            let code = crs.code();
+            if code != 0 {
+                meta.crs = Some(Value::String(format!("{org}:{code}")));
+                meta.crs_type = Some(CRSType::AuthorityCode);
+                return Arc::new(meta);
+            }
+
+            if let Some(code) = crs.code_string() {
+                meta.crs = Some(Value::String(format!("{org}:{code}")));
+                meta.crs_type = Some(CRSType::AuthorityCode);
+                return Arc::new(meta);
+            }
+        };
+    };
+
+    Default::default()
 }

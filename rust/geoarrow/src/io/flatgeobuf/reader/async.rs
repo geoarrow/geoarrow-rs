@@ -10,7 +10,7 @@ use crate::algorithm::native::DowncastTable;
 use crate::array::*;
 use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
-use crate::io::flatgeobuf::reader::common::{infer_schema, FlatGeobufReaderOptions};
+use crate::io::flatgeobuf::reader::common::{infer_schema, parse_crs, FlatGeobufReaderOptions};
 use crate::io::flatgeobuf::reader::object_store_reader::ObjectStoreWrapper;
 use crate::io::geozero::array::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
@@ -42,6 +42,7 @@ pub async fn read_flatgeobuf_async(
 
     let schema = infer_schema(header);
     let geometry_type = header.geometry_type();
+    let array_metadata = parse_crs(header.crs());
 
     let mut selection = if let Some((min_x, min_y, max_x, max_y)) = options.bbox {
         reader.select_bbox(min_x, min_y, max_x, max_y).await?
@@ -51,14 +52,13 @@ pub async fn read_flatgeobuf_async(
 
     let features_count = selection.features_count();
 
-    // TODO: propagate CRS
     let options = GeoTableBuilderOptions::new(
         options.coord_type,
         true,
         options.batch_size,
         Some(schema),
         features_count,
-        Default::default(),
+        array_metadata,
     );
 
     macro_rules! impl_read {

@@ -1,15 +1,104 @@
 use std::io::Write;
 
-use flatgeobuf::{FgbWriter, FgbWriterOptions};
+use arrow_schema::Schema;
+use flatgeobuf::{FgbCrs, FgbWriter, FgbWriterOptions};
 use geozero::GeozeroDatasource;
 
+use crate::array::metadata::ArrayMetadata;
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::Result;
+use crate::io::crs::{CRSTransform, DefaultCRSTransform};
 use crate::io::stream::RecordBatchReader;
 use crate::schema::GeoSchemaExt;
 
-// TODO: always write CRS saved in Table metadata (you can do this by adding an option)
-/// Write a Table to a FlatGeobuf file.
+/// Options for the FlatGeobuf writer
+#[derive(Debug)]
+pub struct FlatGeobufWriterOptions {
+    /// Write index and sort features accordingly.
+    pub write_index: bool,
+    /// Detect geometry type when `geometry_type` is Unknown.
+    pub detect_type: bool,
+    /// Convert single to multi geometries, if `geometry_type` is multi type or Unknown
+    pub promote_to_multi: bool,
+    // Dataset title
+    pub title: Option<String>,
+    // Dataset description (intended for free form long text)
+    pub description: Option<String>,
+    // Dataset metadata (intended to be application specific and
+    pub metadata: Option<String>,
+    /// A method for transforming CRS to WKT
+    ///
+    /// This is implemented as an external trait so that external libraries can inject the method
+    /// for CRS conversions. For example, the Python API uses the `pyproj` Python library to
+    /// perform the conversion rather than linking into PROJ from Rust.
+    pub crs_transform: Option<Box<dyn CRSTransform>>,
+}
+
+impl Default for FlatGeobufWriterOptions {
+    fn default() -> Self {
+        Self {
+            write_index: true,
+            detect_type: true,
+            promote_to_multi: true,
+            crs_transform: Some(Box::new(DefaultCRSTransform::default())),
+            title: None,
+            description: None,
+            metadata: None,
+        }
+    }
+}
+
+impl FlatGeobufWriterOptions {
+    /// Create a WKT CRS from whatever CRS exists in the [ArrayMetadata].
+    ///
+    /// This uses the [CRSTransform] supplied in the [FlatGeobufWriterOptions].
+    ///
+    /// If no CRS exists in the ArrayMetadata, None will be returned here.
+    fn create_wkt_crs(&self, array_meta: &ArrayMetadata) -> Result<Option<String>> {
+        if let Some(crs_transform) = &self.crs_transform {
+            crs_transform.extract_wkt(array_meta)
+        } else {
+            DefaultCRSTransform::default().extract_wkt(array_meta)
+        }
+    }
+
+    /// Create [FgbWriterOptions]
+    fn create_fgb_options<'a>(
+        &'a self,
+        geo_data_type: NativeType,
+        wkt_crs: Option<&'a str>,
+    ) -> FgbWriterOptions<'a> {
+        let (has_z, has_m) = match geo_data_type.dimension() {
+            Some(Dimension::XY) => (false, false),
+            Some(Dimension::XYZ) => (true, false),
+            // TODO: not sure how to handle geometry arrays
+            None => (false, false),
+        };
+        let crs = FgbCrs {
+            wkt: wkt_crs,
+            ..Default::default()
+        };
+
+        FgbWriterOptions {
+            write_index: self.write_index,
+            detect_type: self.detect_type,
+            promote_to_multi: self.promote_to_multi,
+            crs,
+            has_z,
+            has_m,
+            has_t: false,
+            has_tm: false,
+            title: self.title.as_deref(),
+            description: self.description.as_deref(),
+            metadata: self.metadata.as_deref(),
+        }
+    }
+}
+
+/// Write an iterator of GeoArrow RecordBatches to a FlatGeobuf file.
+///
+/// `name` is the string passed to [`FgbWriter::create`] and is what OGR observes as the layer name
+/// of the file.
 pub fn write_flatgeobuf<W: Write, S: Into<RecordBatchReader>>(
     stream: S,
     writer: W,
@@ -20,27 +109,16 @@ pub fn write_flatgeobuf<W: Write, S: Into<RecordBatchReader>>(
 
 /// Write a Table to a FlatGeobuf file with specific writer options.
 ///
-/// Note: this `name` argument is what OGR observes as the layer name of the file.
+/// `name` is the string passed to [`FgbWriter::create`] and is what OGR observes as the layer name
+/// of the file.
 pub fn write_flatgeobuf_with_options<W: Write, S: Into<RecordBatchReader>>(
     stream: S,
     writer: W,
     name: &str,
-    mut options: FgbWriterOptions,
+    options: FlatGeobufWriterOptions,
 ) -> Result<()> {
-    let mut stream = stream.into();
+    let mut stream: RecordBatchReader = stream.into();
 
-    let (geometry_type, has_z) = infer_flatgeobuf_geometry_type(&stream)?;
-    options.has_z = has_z;
-
-    let mut fgb = FgbWriter::create_with_options(name, geometry_type, options)?;
-    stream.process(&mut fgb)?;
-    fgb.write(writer)?;
-    Ok(())
-}
-
-fn infer_flatgeobuf_geometry_type(
-    stream: &RecordBatchReader,
-) -> Result<(flatgeobuf::GeometryType, bool)> {
     let schema = stream.schema()?;
     let fields = &schema.fields;
     let geom_col_idxs = schema.as_ref().geometry_columns();
@@ -50,45 +128,41 @@ fn infer_flatgeobuf_geometry_type(
 
     let geometry_field = &fields[geom_col_idxs[0]];
     let geo_data_type = NativeType::try_from(geometry_field.as_ref())?;
+    let array_meta = ArrayMetadata::try_from(geometry_field.as_ref())?;
+
+    let wkt_crs_str = options.create_wkt_crs(&array_meta)?;
+    let fgb_options = options.create_fgb_options(geo_data_type, wkt_crs_str.as_deref());
+
+    let geometry_type = infer_flatgeobuf_geometry_type(stream.schema()?.as_ref())?;
+
+    let mut fgb = FgbWriter::create_with_options(name, geometry_type, fgb_options)?;
+    stream.process(&mut fgb)?;
+    fgb.write(writer)?;
+    Ok(())
+}
+
+fn infer_flatgeobuf_geometry_type(schema: &Schema) -> Result<flatgeobuf::GeometryType> {
+    let fields = &schema.fields;
+    let geom_col_idxs = schema.geometry_columns();
+    if geom_col_idxs.len() != 1 {
+        panic!("Only one geometry column currently supported in FlatGeobuf writer");
+    }
+
+    let geometry_field = &fields[geom_col_idxs[0]];
+    let geo_data_type = NativeType::try_from(geometry_field.as_ref())?;
 
     use NativeType::*;
-    let (geometry_type, has_z) = match geo_data_type {
-        Point(_, dim) => (
-            flatgeobuf::GeometryType::Point,
-            matches!(dim, Dimension::XYZ),
-        ),
-        LineString(_, dim) => (
-            flatgeobuf::GeometryType::LineString,
-            matches!(dim, Dimension::XYZ),
-        ),
-        Polygon(_, dim) => (
-            flatgeobuf::GeometryType::Polygon,
-            matches!(dim, Dimension::XYZ),
-        ),
-        MultiPoint(_, dim) => (
-            flatgeobuf::GeometryType::MultiPoint,
-            matches!(dim, Dimension::XYZ),
-        ),
-        MultiLineString(_, dim) => (
-            flatgeobuf::GeometryType::MultiLineString,
-            matches!(dim, Dimension::XYZ),
-        ),
-        MultiPolygon(_, dim) => (
-            flatgeobuf::GeometryType::MultiPolygon,
-            matches!(dim, Dimension::XYZ),
-        ),
-        Mixed(_, dim) | Rect(dim) => (
-            flatgeobuf::GeometryType::Unknown,
-            matches!(dim, Dimension::XYZ),
-        ),
-        GeometryCollection(_, dim) => (
-            flatgeobuf::GeometryType::GeometryCollection,
-            matches!(dim, Dimension::XYZ),
-        ),
-        // We'll just claim that it does have 3d data. Not sure whether this is bad to lie here?
-        Geometry(_) => (flatgeobuf::GeometryType::Unknown, true),
+    let geometry_type = match geo_data_type {
+        Point(_, _) => flatgeobuf::GeometryType::Point,
+        LineString(_, _) => flatgeobuf::GeometryType::LineString,
+        Polygon(_, _) => flatgeobuf::GeometryType::Polygon,
+        MultiPoint(_, _) => flatgeobuf::GeometryType::MultiPoint,
+        MultiLineString(_, _) => flatgeobuf::GeometryType::MultiLineString,
+        MultiPolygon(_, _) => flatgeobuf::GeometryType::MultiPolygon,
+        Mixed(_, _) | Rect(_) | Geometry(_) => flatgeobuf::GeometryType::Unknown,
+        GeometryCollection(_, _) => flatgeobuf::GeometryType::GeometryCollection,
     };
-    Ok((geometry_type, has_z))
+    Ok(geometry_type)
 }
 
 #[cfg(test)]

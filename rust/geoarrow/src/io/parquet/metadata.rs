@@ -644,25 +644,17 @@ impl GeoParquetMetadata {
 
 impl From<GeoParquetColumnMetadata> for ArrayMetadata {
     fn from(value: GeoParquetColumnMetadata) -> Self {
-        let edges = if let Some(edges) = value.edges {
+        let mut meta = if let Some(crs) = value.crs {
+            ArrayMetadata::from_projjson(crs)
+        } else {
+            ArrayMetadata::default()
+        };
+        if let Some(edges) = value.edges {
             if edges.as_str() == "spherical" {
-                Some(Edges::Spherical)
-            } else {
-                None
+                meta = meta.with_edges(Edges::Spherical);
             }
-        } else {
-            None
         };
-        let crs_type = if value.crs.is_some() {
-            Some("projjson".to_string())
-        } else {
-            None
-        };
-        ArrayMetadata {
-            crs: value.crs,
-            crs_type,
-            edges,
-        }
+        meta
     }
 }
 
