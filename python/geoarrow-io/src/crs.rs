@@ -57,6 +57,14 @@ impl CRS {
         let crs_obj = crs_class.call_method1(intern!(py, "from_json"), args)?;
         Ok(crs_obj.into())
     }
+
+    pub fn to_projjson(&self, py: Python) -> Option<Value> {
+        todo!()
+    }
+
+    pub fn to_wkt(&self, py: Python) -> Option<String> {
+        todo!()
+    }
 }
 
 /// An implementation of [CRSTransform] using pyproj.
@@ -74,10 +82,14 @@ impl CRSTransform for PyprojCRSTransform {
         &self,
         meta: &geoarrow::array::metadata::ArrayMetadata,
     ) -> geoarrow::error::Result<Option<Value>> {
-        todo!()
+        let crs = CRS(meta.clone());
+        let projjson = Python::with_gil(|py| crs.to_projjson(py));
+        Ok(projjson)
     }
 
     fn _convert_to_wkt(&self, meta: &ArrayMetadata) -> geoarrow::error::Result<Option<String>> {
-        todo!()
+        let crs = CRS(meta.clone());
+        let wkt = Python::with_gil(|py| crs.to_wkt(py));
+        Ok(wkt)
     }
 }

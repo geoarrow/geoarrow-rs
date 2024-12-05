@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use serde_json::Value;
 
-use crate::array::metadata::ArrayMetadata;
+use crate::array::metadata::{ArrayMetadata, CRSType};
 use crate::error::{GeoArrowError, Result};
 
 /// CRS transforms used for writing GeoArrow data to file formats that require different CRS
@@ -40,7 +40,7 @@ pub trait CRSTransform: Debug {
     /// [`Self::_convert_to_wkt`].
     fn extract_wkt(&self, meta: &ArrayMetadata) -> Result<Option<String>> {
         if let (Some(crs), Some(crs_type)) = (&meta.crs, &meta.crs_type) {
-            if crs_type == "wkt2:2019" {
+            if *crs_type == CRSType::Wkt2_2019 {
                 if let Value::String(inner) = crs {
                     return Ok::<_, GeoArrowError>(Some(inner.clone()));
                 }

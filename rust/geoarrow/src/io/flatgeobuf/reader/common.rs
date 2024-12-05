@@ -5,7 +5,7 @@ use arrow_schema::{DataType, Field, SchemaBuilder, SchemaRef, TimeUnit};
 use flatgeobuf::{ColumnType, Crs, Header};
 use serde_json::Value;
 
-use crate::array::metadata::ArrayMetadata;
+use crate::array::metadata::{ArrayMetadata, CRSType};
 use crate::array::CoordType;
 
 /// Options for the FlatGeobuf reader
@@ -87,13 +87,13 @@ pub(super) fn parse_crs(crs: Option<Crs<'_>>) -> Arc<ArrayMetadata> {
             let code = crs.code();
             if code != 0 {
                 meta.crs = Some(Value::String(format!("{org}:{code}")));
-                meta.crs_type = Some("authority_code".to_string());
+                meta.crs_type = Some(CRSType::AuthorityCode);
                 return Arc::new(meta);
             }
 
             if let Some(code) = crs.code_string() {
                 meta.crs = Some(Value::String(format!("{org}:{code}")));
-                meta.crs_type = Some("authority_code".to_string());
+                meta.crs_type = Some(CRSType::AuthorityCode);
                 return Arc::new(meta);
             }
         };

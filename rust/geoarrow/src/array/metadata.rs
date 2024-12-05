@@ -21,6 +21,33 @@ pub enum Edges {
     Spherical,
 }
 
+/// An optional string disambiguating the value of the `crs` field.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum CRSType {
+    /// Indicates that the `"crs"` field was written as
+    /// [PROJJSON](https://proj.org/specifications/projjson.html).
+    #[serde(rename = "projjson")]
+    Projjson,
+
+    /// Indicates that the `"crs"` field was written as
+    /// [WKT2:2019](https://www.ogc.org/publications/standard/wkt-crs/).
+    #[serde(rename = "wkt2:2019")]
+    Wkt2_2019,
+
+    /// Indicates that the `"crs"` field contains an identifier
+    /// in the form `AUTHORITY:CODE`. This should only be used as a last resort
+    /// (i.e., producers should prefer writing a complete description of the CRS).
+    #[serde(rename = "authority_code")]
+    AuthorityCode,
+
+    /// Indicates that the `"crs"` field contains an opaque identifier
+    /// that requires the consumer to communicate with the producer outside of
+    /// this metadata. This should only be used as a last resort for database
+    /// drivers or readers that have no other option.
+    #[serde(rename = "srid")]
+    Srid,
+}
+
 /// A GeoArrow metadata object following the extension metadata [defined by the GeoArrow
 /// specification](https://geoarrow.org/extension-types).
 ///
@@ -46,25 +73,12 @@ pub struct ArrayMetadata {
     /// regardless of the the axis order encoded in the CRS specification.
     pub crs: Option<Value>,
 
-    /// - `crs_type`: An optional string disambiguating the value of the `crs` field.
-    ///   Must be omitted or a string value of:
+    /// An optional string disambiguating the value of the `crs` field.
     ///
-    ///   - `"projjson"`: Indicates that the `"crs"` field was written as
-    ///     [PROJJSON](https://proj.org/specifications/projjson.html).
-    ///   - `"wkt2:2019"`: Indicates that the `"crs"` field was written as
-    ///     [WKT2:2019](https://www.ogc.org/publications/standard/wkt-crs/).
-    ///   - `"authority_code"`: Indicates that the `"crs"` field contains an identifier
-    ///     in the form `AUTHORITY:CODE`. This should only be used as a last resort
-    ///     (i.e., producers should prefer writing a complete description of the CRS).
-    ///   - `"srid"`: Indicates that the `"crs"` field contains an opaque identifier
-    ///     that requires the consumer to communicate with the producer outside of
-    ///     this metadata. This should only be used as a last resort for database
-    ///     drivers or readers that have no other option.
-    ///
-    ///   The `"crs_type"` should be omitted if the producer cannot guarantee the validity
-    ///   of any of the above values (e.g., if it just serialized a CRS object
-    ///   specifically into one of these representations).
-    pub crs_type: Option<String>,
+    /// The `"crs_type"` should be omitted if the producer cannot guarantee the validity
+    /// of any of the above values (e.g., if it just serialized a CRS object
+    /// specifically into one of these representations).
+    pub crs_type: Option<CRSType>,
 
     /// If present, instructs consumers that edges follow a spherical path rather than a planar
     /// one. If this value is omitted, edges will be interpreted as planar.
@@ -92,13 +106,13 @@ impl ArrayMetadata {
 
     pub fn with_projjson(mut self, value: Value) -> Self {
         self.crs = Some(value);
-        self.crs_type = Some("projjson".to_string());
+        self.crs_type = Some(CRSType::Projjson);
         self
     }
 
     pub fn with_wkt2_2019(mut self, value: String) -> Self {
         self.crs = Some(Value::String(value));
-        self.crs_type = Some("wkt2:2019".to_string());
+        self.crs_type = Some(CRSType::Wkt2_2019);
         self
     }
 
