@@ -13,18 +13,6 @@ use geo::Euclidean;
 /// a maximum distance of `max_distance` between them.
 ///
 /// Note: `max_distance` must be greater than 0.
-///
-/// # Examples
-/// ```
-/// use geo::{coord, Line, LineString};
-/// use geo::Densify;
-///
-/// let line: Line<f64> = Line::new(coord! {x: 0.0, y: 6.0}, coord! {x: 1.0, y: 8.0});
-/// let correct: LineString<f64> = vec![[0.0, 6.0], [0.5, 7.0], [1.0, 8.0]].into();
-/// let max_dist = 2.0;
-/// let densified = line.densify(max_dist);
-/// assert_eq!(densified, correct);
-///```
 pub trait Densify {
     type Output;
 
