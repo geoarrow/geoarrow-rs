@@ -64,7 +64,7 @@ enum-as-inner = "0.6.1"
 flatgeobuf = { git = "https://github.com/flatgeobuf/flatgeobuf", rev = "f554f2768b612e131e9f55d014eaa5b911a7f1b5", optional = true, default-features = false }
 futures = { version = "0.3", optional = true }
 gdal = { version = "0.17", optional = true }
-geo = "0.28"
+geo = "0.29.3"
 geo-index = "0.1.1"
 geo-traits = "0.2"
 geos = { version = "9.0", features = ["v3_10_0", "geo"], optional = true }

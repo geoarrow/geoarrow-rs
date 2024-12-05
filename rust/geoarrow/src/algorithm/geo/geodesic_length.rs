@@ -7,7 +7,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
 use arrow_array::Float64Array;
-use geo::GeodesicLength as _GeodesicLength;
+use geo::{Geodesic, Length};
 
 /// Determine the length of a geometry on an ellipsoidal model of the earth.
 ///
@@ -81,7 +81,7 @@ macro_rules! iter_geo_impl {
             type Output = Float64Array;
 
             fn geodesic_length(&self) -> Self::Output {
-                self.unary_primitive(|geom| geom.to_geo().geodesic_length())
+                self.unary_primitive(|geom| geom.to_geo().length::<Geodesic>())
             }
         }
     };

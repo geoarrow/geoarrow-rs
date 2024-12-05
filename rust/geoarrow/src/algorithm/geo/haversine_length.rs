@@ -7,7 +7,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
 use arrow_array::Float64Array;
-use geo::HaversineLength as _HaversineLength;
+use geo::{Haversine, Length};
 
 /// Determine the length of a geometry using the [haversine formula].
 ///
@@ -75,7 +75,7 @@ macro_rules! iter_geo_impl {
             type Output = Float64Array;
 
             fn haversine_length(&self) -> Self::Output {
-                self.unary_primitive(|geom| geom.to_geo().haversine_length())
+                self.unary_primitive(|geom| geom.to_geo().length::<Haversine>())
             }
         }
     };

@@ -88,7 +88,7 @@ async-trait = { version = "0.1.77", optional = true }
 bytes = { version = "1", optional = true }
 console_error_panic_hook = { version = "0.1.6", optional = true }
 futures = { version = "0.3.30", optional = true }
-geo = "0.28"
+geo = "0.29.3"
 geo-traits = "0.2"
 geoarrow = { path = "../rust/geoarrow" }
 geodesy = { version = "0.12", optional = true, features = ["js"] }
