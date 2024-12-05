@@ -1,3 +1,4 @@
+use crate::crs::PyprojCRSTransform;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::io::input::sync::FileWriter;
 use crate::io::input::{construct_reader, AnyFileReader};
@@ -83,6 +84,8 @@ pub fn write_flatgeobuf(
         title,
         description,
         metadata,
+        // Use pyproj for converting CRS to WKT
+        crs_transform: Some(Box::new(PyprojCRSTransform::new())),
         ..Default::default()
     };
 
