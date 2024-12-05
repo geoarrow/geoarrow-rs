@@ -1,11 +1,6 @@
 # `geoarrow-rs`
 
-A Rust implementation and Python and JavaScript (WebAssembly) bindings of the [GeoArrow](https://geoarrow.org) memory specification for efficiently storing geospatial vector geometries, connected to geospatial algorithms implemented by the [GeoRust community](https://georust.org/).
-
-## Motivation
-
-GeoArrow provides a way to share geospatial vector data between programs _at no cost_ and without copies, so that an ecosystem of libraries can share data without serialization overhead. Removing this overhead enables faster code in high-level, interpreted languages such as Python and JavaScript.
-
+The geoarrow-rs repository contains a Rust implementation, Python bindings, and JavaScript (WebAssembly) bindings of the [GeoArrow](https://geoarrow.org) memory specification for efficiently storing geospatial vector geometries, connected to geospatial algorithms implemented by the [GeoRust community](https://georust.org/).
 
 <div class="grid cards" markdown>
 
@@ -42,3 +37,7 @@ GeoArrow provides a way to share geospatial vector data between programs _at no 
     [:octicons-arrow-right-24: Specification](https://geoarrow.org)
 
 </div>
+
+## Motivation
+
+GeoArrow provides a way to share geospatial vector data between programs _at no cost_ and without copies, so that an ecosystem of libraries can share data without serialization overhead. Removing this overhead enables faster code in high-level, interpreted languages such as Python and JavaScript.
