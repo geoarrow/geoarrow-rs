@@ -12,7 +12,7 @@ use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::io::flatgeobuf::reader::common::{infer_schema, FlatGeobufReaderOptions};
 use crate::io::flatgeobuf::reader::object_store_reader::ObjectStoreWrapper;
-use crate::io::geozero::array::MixedGeometryStreamBuilder;
+use crate::io::geozero::array::GeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
 use crate::table::Table;
 
@@ -93,7 +93,8 @@ pub async fn read_flatgeobuf_async(
         (GeometryType::MultiLineString, false) => impl_read!(MultiLineStringBuilder, Dimension::XY),
         (GeometryType::MultiPolygon, false) => impl_read!(MultiPolygonBuilder, Dimension::XY),
         (GeometryType::Unknown, false) => {
-            let mut builder = GeoTableBuilder::<MixedGeometryStreamBuilder>::new_with_options(
+            let mut builder = GeoTableBuilder::<GeometryStreamBuilder>::new_with_options(
+                // Hack: this is unused
                 Dimension::XY,
                 options,
             );
@@ -116,7 +117,8 @@ pub async fn read_flatgeobuf_async(
         (GeometryType::MultiLineString, true) => impl_read!(MultiLineStringBuilder, Dimension::XYZ),
         (GeometryType::MultiPolygon, true) => impl_read!(MultiPolygonBuilder, Dimension::XYZ),
         (GeometryType::Unknown, true) => {
-            let mut builder = GeoTableBuilder::<MixedGeometryStreamBuilder>::new_with_options(
+            let mut builder = GeoTableBuilder::<GeometryStreamBuilder>::new_with_options(
+                // Hack: this is unused
                 Dimension::XYZ,
                 options,
             );
