@@ -189,29 +189,32 @@ mod test {
         ));
     }
 
-    #[ignore = "fails on JSON columns"]
     #[test]
     fn test_all_datatypes() {
         let mut filein =
             BufReader::new(File::open("fixtures/flatgeobuf/alldatatypes.fgb").unwrap());
         let table = read_flatgeobuf(&mut filein, Default::default()).unwrap();
 
-        let _geom_col = table.geometry_column(None).unwrap();
-        // assert!(matches!(geom_col.data_type(), NativeType::Polygon(_, _)));
+        let geom_col = table.geometry_column(None).unwrap();
+        assert!(matches!(geom_col.data_type(), NativeType::Point(_, _)));
 
-        // let (batches, schema) = table.into_inner();
-        // assert_eq!(batches[0].num_rows(), 10);
-        // assert!(matches!(
-        //     schema.field_with_name("AREA").unwrap().data_type(),
-        //     DataType::Float64
-        // ));
-        // assert!(matches!(
-        //     schema.field_with_name("EAS_ID").unwrap().data_type(),
-        //     DataType::Int64
-        // ));
-        // assert!(matches!(
-        //     schema.field_with_name("PRFEDEA").unwrap().data_type(),
-        //     DataType::Utf8
-        // ));
+        let (batches, schema) = table.into_inner();
+        assert_eq!(batches[0].num_rows(), 1);
+        assert!(matches!(
+            schema.field_with_name("byte").unwrap().data_type(),
+            DataType::Int8
+        ));
+        assert!(matches!(
+            schema.field_with_name("float").unwrap().data_type(),
+            DataType::Float32
+        ));
+        assert!(matches!(
+            schema.field_with_name("json").unwrap().data_type(),
+            DataType::Utf8
+        ));
+        assert!(matches!(
+            schema.field_with_name("binary").unwrap().data_type(),
+            DataType::Binary
+        ));
     }
 }

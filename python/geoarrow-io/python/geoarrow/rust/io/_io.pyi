@@ -273,14 +273,14 @@ def read_flatgeobuf(
     Reading from a local path:
 
     ```py
-    from geoarrow.rust.core import read_flatgeobuf
+    from geoarrow.rust.io import read_flatgeobuf
     table = read_flatgeobuf("path/to/file.fgb")
     ```
 
     Reading from a Python file object:
 
     ```py
-    from geoarrow.rust.core import read_flatgeobuf
+    from geoarrow.rust.io import read_flatgeobuf
 
     with open("path/to/file.fgb", "rb") as file:
         table = read_flatgeobuf(file)
@@ -289,7 +289,7 @@ def read_flatgeobuf(
     Reading from an HTTP(S) url:
 
     ```py
-    from geoarrow.rust.core import read_flatgeobuf
+    from geoarrow.rust.io import read_flatgeobuf
 
     url = "http://flatgeobuf.org/test/data/UScounties.fgb"
     table = read_flatgeobuf(url)
@@ -298,7 +298,7 @@ def read_flatgeobuf(
     Reading from a remote file on an S3 bucket.
 
     ```py
-    from geoarrow.rust.core import ObjectStore, read_flatgeobuf
+    from geoarrow.rust.io import ObjectStore, read_flatgeobuf
 
     options = {
         "aws_access_key_id": "...",
@@ -338,7 +338,7 @@ async def read_flatgeobuf_async(
     Reading from an HTTP(S) url:
 
     ```py
-    from geoarrow.rust.core import read_flatgeobuf_async
+    from geoarrow.rust.io import read_flatgeobuf_async
 
     url = "http://flatgeobuf.org/test/data/UScounties.fgb"
     table = await read_flatgeobuf_async(url)
@@ -347,7 +347,7 @@ async def read_flatgeobuf_async(
     Reading from an S3 bucket:
 
     ```py
-    from geoarrow.rust.core import ObjectStore, read_flatgeobuf_async
+    from geoarrow.rust.io import ObjectStore, read_flatgeobuf_async
 
     options = {
         "aws_access_key_id": "...",
@@ -416,14 +416,14 @@ def read_parquet(
     Reading from a local path:
 
     ```py
-    from geoarrow.rust.core import read_parquet
+    from geoarrow.rust.io import read_parquet
     table = read_parquet("path/to/file.parquet")
     ```
 
     Reading from an HTTP(S) url:
 
     ```py
-    from geoarrow.rust.core import read_parquet
+    from geoarrow.rust.io import read_parquet
 
     url = "https://raw.githubusercontent.com/opengeospatial/geoparquet/v1.0.0/examples/example.parquet"
     table = read_parquet(url)
@@ -432,7 +432,7 @@ def read_parquet(
     Reading from a remote file on an S3 bucket.
 
     ```py
-    from geoarrow.rust.core import ObjectStore, read_parquet
+    from geoarrow.rust.io import ObjectStore, read_parquet
 
     options = {
         "aws_access_key_id": "...",
@@ -466,7 +466,7 @@ async def read_parquet_async(
     Reading from an HTTP(S) url:
 
     ```py
-    from geoarrow.rust.core import read_parquet_async
+    from geoarrow.rust.io import read_parquet_async
 
     url = "https://raw.githubusercontent.com/opengeospatial/geoparquet/v1.0.0/examples/example.parquet"
     table = await read_parquet_async(url)
@@ -475,7 +475,7 @@ async def read_parquet_async(
     Reading from a remote file on an S3 bucket.
 
     ```py
-    from geoarrow.rust.core import ObjectStore, read_parquet_async
+    from geoarrow.rust.io import ObjectStore, read_parquet_async
 
     options = {
         "aws_access_key_id": "...",

@@ -125,9 +125,17 @@ impl AnyBuilder {
         }
     }
 
-    pub fn from_data_type_with_capacity(data_type: &DataType, capacity: usize) -> Self {
+    pub fn from_field_with_capacity(field: &Field, capacity: usize) -> Self {
         use AnyBuilder::*;
-        match data_type {
+
+        // Short circuit check for JSON type
+        if let Some(ext_val) = field.metadata().get("ARROW:extension:name") {
+            if ext_val.as_str() == "arrow.json" {
+                return Json(StringBuilder::with_capacity(capacity, 0));
+            }
+        }
+
+        match field.data_type() {
             DataType::Boolean => Bool(BooleanBuilder::with_capacity(capacity)),
             DataType::Int8 => Int8(Int8Builder::with_capacity(capacity)),
             DataType::UInt8 => Uint8(UInt8Builder::with_capacity(capacity)),
@@ -146,7 +154,7 @@ impl AnyBuilder {
                 TimestampMicrosecondBuilder::with_capacity(capacity),
                 tz.clone(),
             )),
-            _ => todo!("Unsupported type {data_type}"),
+            _ => todo!("Unsupported type {}", field.data_type()),
         }
     }
 
