@@ -57,14 +57,16 @@ pub struct DefaultCRSTransform {}
 
 impl CRSTransform for DefaultCRSTransform {
     fn _convert_to_projjson(&self, _meta: &ArrayMetadata) -> Result<Option<Value>> {
-        Err(GeoArrowError::General(
-            "Unable to convert CRS to PROJJSON".to_string(),
-        ))
+        // Unable to convert CRS to PROJJSON
+        // So we proceed with missing CRS
+        // TODO: we should probably log this.
+        Ok(None)
     }
 
     fn _convert_to_wkt(&self, _meta: &ArrayMetadata) -> Result<Option<String>> {
-        Err(GeoArrowError::General(
-            "Unable to convert CRS to WKT".to_string(),
-        ))
+        // Unable to convert CRS to WKT
+        // So we proceed with missing CRS
+        // TODO: we should probably log this.
+        Ok(None)
     }
 }
