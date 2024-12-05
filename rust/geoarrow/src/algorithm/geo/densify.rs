@@ -7,23 +7,12 @@ use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use geo::Densify as _Densify;
+use geo::Euclidean;
 
 /// Return a new linear geometry containing both existing and new interpolated coordinates with
 /// a maximum distance of `max_distance` between them.
 ///
 /// Note: `max_distance` must be greater than 0.
-///
-/// # Examples
-/// ```
-/// use geo::{coord, Line, LineString};
-/// use geo::Densify;
-///
-/// let line: Line<f64> = Line::new(coord! {x: 0.0, y: 6.0}, coord! {x: 1.0, y: 8.0});
-/// let correct: LineString<f64> = vec![[0.0, 6.0], [0.5, 7.0], [1.0, 8.0]].into();
-/// let max_dist = 2.0;
-/// let densified = line.densify(max_dist);
-/// assert_eq!(densified, correct);
-///```
 pub trait Densify {
     type Output;
 
@@ -39,7 +28,7 @@ macro_rules! iter_geo_impl {
             fn densify(&self, max_distance: f64) -> Self::Output {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()
-                    .map(|maybe_g| maybe_g.map(|geom| geom.densify(max_distance)))
+                    .map(|maybe_g| maybe_g.map(|geom| geom.densify::<Euclidean>(max_distance)))
                     .collect();
 
                 (output_geoms, Dimension::XY).into()

@@ -27,6 +27,6 @@ pyo3 = { version = "0.23.0", features = [
     "serde",
     "anyhow",
 ] }
-geo = "0.28"
+geo = "0.29.3"
 geoarrow = { path = "../../", features = [] }
 geoarrow-rust-core = { path = "../core" }

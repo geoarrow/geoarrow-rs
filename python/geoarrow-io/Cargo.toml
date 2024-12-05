@@ -52,7 +52,7 @@ pyo3-async-runtimes = { version = "0.23", features = [
 ], optional = true }
 pyo3-object_store = { git = "https://github.com/developmentseed/object-store-rs", rev = "bad34862a92849dd7b69c28cd4c225446d3d15ab", optional = true }
 pythonize = "0.23"
-geo = "0.28"
+geo = "0.29.3"
 geo-traits = { workspace = true }
 geoarrow = { workspace = true, features = [
     "csv",

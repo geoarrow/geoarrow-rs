@@ -7,7 +7,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
 use arrow_array::Float64Array;
-use geo::EuclideanLength as _EuclideanLength;
+use geo::{Euclidean, Length};
 
 pub trait EuclideanLength {
     type Output;
@@ -61,7 +61,7 @@ macro_rules! iter_geo_impl {
             type Output = Float64Array;
 
             fn euclidean_length(&self) -> Self::Output {
-                self.unary_primitive(|geom| geom.to_geo().euclidean_length())
+                self.unary_primitive(|geom| geom.to_geo().length::<Euclidean>())
             }
         }
     };
@@ -81,17 +81,11 @@ impl EuclideanLength for &dyn NativeArray {
             Point(_, XY) => self.as_point().euclidean_length(),
             LineString(_, XY) => self.as_line_string().euclidean_length(),
             // Polygon(_, XY) => self.as_polygon().euclidean_length(),
-            // LargePolygon(_, XY) => self.as_large_polygon().euclidean_length(),
             MultiPoint(_, XY) => self.as_multi_point().euclidean_length(),
             MultiLineString(_, XY) => self.as_multi_line_string().euclidean_length(),
             // MultiPolygon(_, XY) => self.as_multi_polygon().euclidean_length(),
-            // LargeMultiPolygon(_, XY) => self.as_large_multi_polygon().euclidean_length(),
             // Mixed(_, XY) => self.as_mixed().euclidean_length(),
-            // LargeMixed(_, XY) => self.as_large_mixed().euclidean_length(),
             // GeometryCollection(_, XY) => self.as_geometry_collection().euclidean_length(),
-            // LargeGeometryCollection(_, XY) => {
-            //     self.as_large_geometry_collection().euclidean_length()
-            // }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
