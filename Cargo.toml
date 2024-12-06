@@ -2,3 +2,5 @@
 members = ["rust/geoarrow"]
 exclude = ["js"]
 resolver = "2"
+
+[workspace.package]
