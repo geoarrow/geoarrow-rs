@@ -1,4 +1,4 @@
-# `geoarrow-rs`
+# geoarrow-rs
 
 The geoarrow-rs repository contains a Rust implementation, Python bindings, and JavaScript (WebAssembly) bindings of the [GeoArrow](https://geoarrow.org) memory specification for efficiently storing geospatial vector geometries, connected to geospatial algorithms implemented by the [GeoRust community](https://georust.org/).
 
