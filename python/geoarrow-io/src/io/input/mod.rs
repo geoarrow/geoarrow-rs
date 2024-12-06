@@ -4,12 +4,9 @@ use std::sync::Arc;
 
 use crate::error::PyGeoArrowResult;
 #[cfg(feature = "async")]
-use object_store::http::HttpBuilder;
-use object_store::local::LocalFileSystem;
-#[cfg(feature = "async")]
-use object_store::path::Path;
-#[cfg(feature = "async")]
-use object_store::{ClientOptions, ObjectStore};
+use object_store::{
+    http::HttpBuilder, local::LocalFileSystem, path::Path, ClientOptions, ObjectStore,
+};
 use pyo3::pybacked::PyBackedStr;
 #[cfg(feature = "async")]
 use pyo3_object_store::PyObjectStore;
@@ -88,6 +85,7 @@ pub fn construct_reader(
     Ok(AnyFileReader::Sync(file.extract()?))
 }
 
+#[cfg(feature = "async")]
 fn default_http_store(path_or_url: &str) -> PyGeoArrowResult<AsyncFileReader> {
     let url = Url::parse(path_or_url)?;
 
@@ -107,6 +105,7 @@ fn default_http_store(path_or_url: &str) -> PyGeoArrowResult<AsyncFileReader> {
     Ok(async_reader)
 }
 
+#[cfg(feature = "async")]
 fn default_local_store(path: &str) -> PyGeoArrowResult<AsyncFileReader> {
     let async_reader = AsyncFileReader {
         store: Arc::new(LocalFileSystem::new()),
