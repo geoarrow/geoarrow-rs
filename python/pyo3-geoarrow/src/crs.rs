@@ -10,6 +10,8 @@ use serde_json::Value;
 
 use crate::error::PyGeoArrowResult;
 
+/// A wrapper around the CRS functionality contained within [ArrayMetadata] to integrate with
+/// `pyproj` Python APIs.
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Clone, Debug)]
 pub struct CRS(ArrayMetadata);
@@ -130,6 +132,12 @@ pub struct PyprojCRSTransform {}
 impl PyprojCRSTransform {
     pub fn new() -> Self {
         Self {}
+    }
+}
+
+impl Default for PyprojCRSTransform {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

@@ -6,15 +6,10 @@ use geoarrow::array::{
     PointArray, PolygonArray,
 };
 use pyo3::prelude::*;
-use pyo3_geoarrow::{PyCoordBuffer, PyGeoArrowResult, PyNativeArray, PyOffsetBuffer};
-
-use crate::crs::CRS;
+use pyo3_geoarrow::{PyCoordBuffer, PyGeoArrowResult, PyNativeArray, PyOffsetBuffer, CRS};
 
 fn create_array_metadata(crs: Option<CRS>) -> Arc<ArrayMetadata> {
-    Arc::new(ArrayMetadata {
-        crs: crs.map(|c| c.into_inner()),
-        ..Default::default()
-    })
+    Arc::new(crs.map(|inner| inner.into_inner()).unwrap_or_default())
 }
 
 #[pyfunction]

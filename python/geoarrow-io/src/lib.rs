@@ -2,7 +2,6 @@ use pyo3::exceptions::PyRuntimeWarning;
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::PyTuple;
-pub(crate) mod crs;
 pub mod error;
 // pub mod ffi;
 pub mod io;

@@ -45,6 +45,7 @@ object_store = { workspace = true, features = [
 parquet = { workspace = true }
 pyo3 = { workspace = true }
 pyo3-arrow = { workspace = true }
+pyo3-geoarrow = { workspace = true }
 pyo3-async-runtimes = { version = "0.23", features = [
     "tokio-runtime",
 ], optional = true }

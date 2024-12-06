@@ -1,4 +1,3 @@
-use crate::crs::PyprojCRSTransform;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::io::input::sync::FileWriter;
 use crate::io::input::{construct_reader, AnyFileReader};
@@ -9,6 +8,7 @@ use geoarrow::io::flatgeobuf::{
 };
 use pyo3::prelude::*;
 use pyo3_arrow::input::AnyRecordBatch;
+use pyo3_geoarrow::PyprojCRSTransform;
 
 #[pyfunction]
 #[pyo3(signature = (file, *, store=None, batch_size=65536, bbox=None))]

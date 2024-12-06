@@ -1,7 +1,6 @@
 use std::fs::File;
 use std::sync::Mutex;
 
-use crate::crs::PyprojCRSTransform;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::io::input::sync::{FileReader, FileWriter};
 use crate::io::input::{construct_reader, AnyFileReader};
@@ -19,6 +18,7 @@ use geoarrow::io::parquet::{
     GeoParquetWriterOptions,
 };
 use pyo3_arrow::input::AnyRecordBatch;
+use pyo3_geoarrow::PyprojCRSTransform;
 
 #[pyfunction]
 #[pyo3(signature = (path, *, store=None, batch_size=None))]
