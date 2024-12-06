@@ -25,7 +25,10 @@ jobs:
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
+        env:
+          RUSTFLAGS: "-Zinline-mir=no"
         with:
+          rust-toolchain: nightly
           target: ${{ matrix.target }}
           manylinux: manylinux_2_28
           args: --release --out dist --find-interpreter -m python/geoarrow-io/Cargo.toml
@@ -58,7 +61,10 @@ jobs:
 
   #     - name: Build wheels
   #       uses: PyO3/maturin-action@v1
+  # env:
+  #   RUSTFLAGS: "-Zinline-mir=no"
   #       with:
+  #         rust-toolchain: nightly
   #         target: ${{ matrix.target }}
   #         manylinux: auto
   #         args: --release --out dist --find-interpreter -m python/geoarrow-io/Cargo.toml
@@ -110,6 +116,8 @@ jobs:
 
       - name: Build wheels - ${{ matrix.platform.target }}
         uses: PyO3/maturin-action@v1
+        env:
+          RUSTFLAGS: "-Zinline-mir=no"
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist --find-interpreter -m python/geoarrow-io/Cargo.toml
@@ -143,7 +151,10 @@ jobs:
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
+        env:
+          RUSTFLAGS: "-Zinline-mir=no"
         with:
+          rust-toolchain: nightly
           target: ${{ matrix.target }}
           args: --release --out dist --find-interpreter -m python/geoarrow-io/Cargo.toml
 
@@ -178,8 +189,10 @@ jobs:
   #     - name: Build wheels
   #       uses: PyO3/maturin-action@v1
   #       with:
+  #         rust-toolchain: nightly
   #         target: ${{ matrix.target }}
   #         manylinux: musllinux_1_2
+  # TODO: update rustflags env
   #         args: --release --out dist --find-interpreter -m python/geoarrow-io/Cargo.toml
 
   #     - name: Install built wheel
@@ -220,8 +233,10 @@ jobs:
   #     - name: Build wheels
   #       uses: PyO3/maturin-action@v1
   #       with:
+  #         rust-toolchain: nightly
   #         target: ${{ matrix.platform.target }}
   #         manylinux: musllinux_1_2
+  # TODO: update rustflags env
   #         args: --release --out dist --find-interpreter -m python/geoarrow-io/Cargo.toml
 
   #     - uses: uraimo/run-on-arch-action@v2.5.1
