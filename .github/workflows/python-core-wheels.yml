@@ -190,7 +190,6 @@ jobs:
           target: ${{ matrix.platform.target }}
           args: RUSTFLAGS="-Zinline-mir=no" --release --out dist --find-interpreter --no-default-features --manifest-path python/${{ matrix.module }}/Cargo.toml
           sccache: "true"
-          rust-toolchain: nightly
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
