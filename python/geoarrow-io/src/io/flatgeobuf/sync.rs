@@ -14,12 +14,12 @@ use pyo3_geoarrow::PyprojCRSTransform;
 #[pyo3(signature = (file, *, store=None, batch_size=65536, bbox=None))]
 pub fn read_flatgeobuf(
     py: Python,
-    file: PyObject,
-    store: Option<PyObject>,
+    file: Bound<PyAny>,
+    store: Option<Bound<PyAny>>,
     batch_size: usize,
     bbox: Option<(f64, f64, f64, f64)>,
 ) -> PyGeoArrowResult<PyObject> {
-    let reader = construct_reader(py, file, store)?;
+    let reader = construct_reader(file, store)?;
     match reader {
         #[cfg(feature = "async")]
         AnyFileReader::Async(async_reader) => {

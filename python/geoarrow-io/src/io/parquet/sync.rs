@@ -24,11 +24,11 @@ use pyo3_geoarrow::PyprojCRSTransform;
 #[pyo3(signature = (path, *, store=None, batch_size=None))]
 pub fn read_parquet(
     py: Python,
-    path: PyObject,
-    store: Option<PyObject>,
+    path: Bound<PyAny>,
+    store: Option<Bound<PyAny>>,
     batch_size: Option<usize>,
 ) -> PyGeoArrowResult<PyObject> {
-    let reader = construct_reader(py, path, store)?;
+    let reader = construct_reader(path, store)?;
     match reader {
         #[cfg(feature = "async")]
         AnyFileReader::Async(async_reader) => {

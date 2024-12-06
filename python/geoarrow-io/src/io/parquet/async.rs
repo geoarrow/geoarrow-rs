@@ -32,11 +32,11 @@ use pythonize::depythonize;
 #[pyo3(signature = (path, *, store=None, batch_size=None))]
 pub fn read_parquet_async(
     py: Python,
-    path: PyObject,
-    store: Option<PyObject>,
+    path: Bound<PyAny>,
+    store: Option<Bound<PyAny>>,
     batch_size: Option<usize>,
 ) -> PyGeoArrowResult<PyObject> {
-    let reader = construct_reader(py, path, store)?;
+    let reader = construct_reader(path, store)?;
     match reader {
         AnyFileReader::Async(async_reader) => {
             let fut = future_into_py(py, async move {
