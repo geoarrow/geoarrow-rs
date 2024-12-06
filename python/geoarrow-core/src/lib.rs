@@ -3,7 +3,6 @@ use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::PyTuple;
 mod constructors;
-pub(crate) mod crs;
 pub mod ffi;
 pub mod interop;
 pub mod table;

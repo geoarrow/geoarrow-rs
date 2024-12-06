@@ -3,7 +3,6 @@ use std::sync::Arc;
 use crate::constructors::{
     linestrings, multilinestrings, multipoints, multipolygons, points, polygons,
 };
-use crate::crs::CRS;
 use crate::ffi::to_python::native_array_to_pyobject;
 use crate::interop::shapely::utils::import_shapely;
 use arrow_array::builder::BinaryBuilder;
@@ -15,7 +14,7 @@ use pyo3::prelude::*;
 use pyo3::pybacked::PyBackedBytes;
 use pyo3::types::{PyDict, PyString, PyTuple};
 use pyo3::PyAny;
-use pyo3_geoarrow::PyGeoArrowResult;
+use pyo3_geoarrow::{PyGeoArrowResult, CRS};
 
 /// Check that the value of the GeometryType enum returned from shapely.to_ragged_array matches the
 /// expected variant for this geometry array.
@@ -155,10 +154,7 @@ pub fn from_shapely(
 
         native_array_to_pyobject(py, arr)
     } else {
-        let metadata = Arc::new(ArrayMetadata {
-            crs: crs.map(|c| c.into_inner()),
-            ..Default::default()
-        });
+        let metadata = Arc::new(crs.map(|inner| inner.into_inner()).unwrap_or_default());
 
         // TODO: support 3d WKB
         let wkb_arr = make_wkb_arr(py, input, metadata)?;

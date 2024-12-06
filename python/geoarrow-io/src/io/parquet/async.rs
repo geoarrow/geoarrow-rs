@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::crs::CRS;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::io::input::{construct_reader, AnyFileReader};
 use crate::io::parquet::options::create_options;
@@ -25,6 +24,7 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3_arrow::{PyArray, PySchema};
 use pyo3_async_runtimes::tokio::future_into_py;
+use pyo3_geoarrow::CRS;
 use pyo3_object_store::PyObjectStore;
 use pythonize::depythonize;
 
@@ -129,7 +129,9 @@ impl ParquetFile {
     #[pyo3(signature = (column_name=None))]
     fn crs(&self, py: Python, column_name: Option<&str>) -> PyGeoArrowResult<PyObject> {
         if let Some(crs) = self.geoparquet_meta.crs(column_name)? {
-            CRS::from_projjson(crs.clone()).to_pyproj(py)
+            Ok(CRS::from_projjson(crs.clone())
+                .to_pyproj(py)
+                .map_err(PyErr::from)?)
         } else {
             Ok(py.None())
         }
@@ -386,7 +388,9 @@ impl ParquetDataset {
     #[pyo3(signature = (column_name=None))]
     fn crs(&self, py: Python, column_name: Option<&str>) -> PyGeoArrowResult<PyObject> {
         if let Some(crs) = self.meta.crs(column_name)? {
-            CRS::from_projjson(crs.clone()).to_pyproj(py)
+            Ok(CRS::from_projjson(crs.clone())
+                .to_pyproj(py)
+                .map_err(PyErr::from)?)
         } else {
             Ok(py.None())
         }

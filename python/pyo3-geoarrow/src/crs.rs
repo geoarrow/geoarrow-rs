@@ -133,6 +133,12 @@ impl PyprojCRSTransform {
     }
 }
 
+impl Default for PyprojCRSTransform {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CRSTransform for PyprojCRSTransform {
     fn _convert_to_projjson(
         &self,

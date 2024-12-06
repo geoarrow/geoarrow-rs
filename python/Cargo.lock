@@ -1195,6 +1195,7 @@ dependencies = [
  "pyo3",
  "pyo3-arrow",
  "pyo3-async-runtimes",
+ "pyo3-geoarrow",
  "pyo3-object_store",
  "pythonize",
  "reqwest",
