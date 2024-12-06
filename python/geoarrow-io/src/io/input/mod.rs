@@ -5,10 +5,12 @@ use std::sync::Arc;
 use crate::error::PyGeoArrowResult;
 #[cfg(feature = "async")]
 use object_store::http::HttpBuilder;
+use object_store::local::LocalFileSystem;
 #[cfg(feature = "async")]
 use object_store::path::Path;
 #[cfg(feature = "async")]
 use object_store::{ClientOptions, ObjectStore};
+use pyo3::pybacked::PyBackedStr;
 #[cfg(feature = "async")]
 use pyo3_object_store::PyObjectStore;
 use sync::FileReader;
@@ -31,11 +33,29 @@ pub enum AnyFileReader {
 /// Construct a reader for the user that will always be asynchronous
 ///
 /// object_store default instances will be created for local and HTTP(s) files.
+#[cfg(feature = "async")]
 pub fn construct_async_reader(
     file: Bound<PyAny>,
     store: Option<Bound<PyAny>>,
 ) -> PyGeoArrowResult<AsyncFileReader> {
-    todo!()
+    // If the user passed an object store instance, use that
+    if let Some(store) = store {
+        let async_reader = AsyncFileReader {
+            store: store.extract::<PyObjectStore>()?.into_inner(),
+            path: file.extract::<String>()?.into(),
+        };
+        return Ok(async_reader);
+    }
+
+    // HTTP(s) url
+    let path_or_url = file.extract::<PyBackedStr>()?;
+    if path_or_url.starts_with("http") {
+        return default_http_store(&path_or_url);
+    }
+
+    // Make default local store
+    // Note: not sure if this works with relative paths
+    default_local_store(&path_or_url)
 }
 
 /// Construct a reader for the user that can be either synchronous or asynchronous
@@ -59,26 +79,38 @@ pub fn construct_reader(
     // If the user's path is a "known" URL (i.e. http(s)) then construct an object store
     // instance for them.
     #[cfg(feature = "async")]
-    if let Ok(path_or_url) = file.extract::<String>() {
+    if let Ok(path_or_url) = file.extract::<PyBackedStr>() {
         if path_or_url.starts_with("http") {
-            let url = Url::parse(&path_or_url)?;
-            // Expecting that the url input is something like
-            let store_input = format!("{}://{}", url.scheme(), url.domain().unwrap());
-
-            let options = ClientOptions::new().with_allow_http(true);
-            let store = HttpBuilder::new()
-                .with_url(store_input)
-                .with_client_options(options)
-                .build()?;
-            let path = url.path().trim_start_matches('/');
-
-            let async_reader = AsyncFileReader {
-                store: Arc::new(store),
-                path: path.into(),
-            };
-            return Ok(AnyFileReader::Async(async_reader));
+            return Ok(AnyFileReader::Async(default_http_store(&path_or_url)?));
         }
     }
 
     Ok(AnyFileReader::Sync(file.extract()?))
+}
+
+fn default_http_store(path_or_url: &str) -> PyGeoArrowResult<AsyncFileReader> {
+    let url = Url::parse(path_or_url)?;
+
+    let store_input = format!("{}://{}", url.scheme(), url.domain().unwrap());
+
+    let options = ClientOptions::new().with_allow_http(true);
+    let store = HttpBuilder::new()
+        .with_url(store_input)
+        .with_client_options(options)
+        .build()?;
+    let path = url.path().trim_start_matches('/');
+
+    let async_reader = AsyncFileReader {
+        store: Arc::new(store),
+        path: path.into(),
+    };
+    Ok(async_reader)
+}
+
+fn default_local_store(path: &str) -> PyGeoArrowResult<AsyncFileReader> {
+    let async_reader = AsyncFileReader {
+        store: Arc::new(LocalFileSystem::new()),
+        path: path.into(),
+    };
+    Ok(async_reader)
 }
