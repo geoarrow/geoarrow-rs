@@ -2,12 +2,13 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
-use crate::io::input::{construct_reader, AnyFileReader};
+use crate::io::input::{construct_reader, AnyFileReader, AsyncFileReader};
 use crate::io::parquet::options::create_options;
 #[cfg(feature = "async")]
 use crate::runtime::get_runtime;
 use crate::util::Arro3Table;
 
+use arrow::datatypes::SchemaRef;
 use geo_traits::CoordTrait;
 use geoarrow::error::GeoArrowError;
 use geoarrow::io::parquet::metadata::GeoParquetBboxCovering;
@@ -40,33 +41,7 @@ pub fn read_parquet_async(
     match reader {
         AnyFileReader::Async(async_reader) => {
             let fut = future_into_py(py, async move {
-                let object_meta = async_reader
-                    .store
-                    .head(&async_reader.path)
-                    .await
-                    .map_err(PyGeoArrowError::ObjectStoreError)?;
-                let reader = ParquetObjectReader::new(async_reader.store, object_meta);
-
-                let mut geo_options = GeoParquetReaderOptions::default();
-
-                if let Some(batch_size) = batch_size {
-                    geo_options = geo_options.with_batch_size(batch_size);
-                }
-
-                let table = GeoParquetRecordBatchStreamBuilder::try_new_with_options(
-                    reader,
-                    ArrowReaderOptions::new().with_page_index(true),
-                    geo_options,
-                )
-                .await
-                .map_err(PyGeoArrowError::GeoArrowError)?
-                .build()
-                .map_err(PyGeoArrowError::GeoArrowError)?
-                .read_table()
-                .await
-                .map_err(PyGeoArrowError::GeoArrowError)?;
-
-                Ok(Arro3Table::from_geoarrow(table))
+                Ok(read_parquet_async_inner(async_reader, batch_size).await?)
             })?;
             Ok(fut.into())
         }
@@ -74,6 +49,32 @@ pub fn read_parquet_async(
             Err(PyValueError::new_err("Local file paths not supported in async reader.").into())
         }
     }
+}
+
+async fn read_parquet_async_inner(
+    async_reader: AsyncFileReader,
+    batch_size: Option<usize>,
+) -> PyGeoArrowResult<Arro3Table> {
+    let object_meta = async_reader.store.head(&async_reader.path).await?;
+    let reader = ParquetObjectReader::new(async_reader.store, object_meta);
+
+    let mut geo_options = GeoParquetReaderOptions::default();
+
+    if let Some(batch_size) = batch_size {
+        geo_options = geo_options.with_batch_size(batch_size);
+    }
+
+    let table = GeoParquetRecordBatchStreamBuilder::try_new_with_options(
+        reader,
+        ArrowReaderOptions::new().with_page_index(true),
+        geo_options,
+    )
+    .await?
+    .build()?
+    .read_table()
+    .await?;
+
+    Ok(Arro3Table::from_geoarrow(table))
 }
 
 /// Reader interface for a single Parquet file.
@@ -335,8 +336,8 @@ impl ParquetDataset {
                     let object_meta = ObjectMeta {
                         location: path.into(),
                         last_modified: Default::default(),
-                        // NOTE: Usually we'd need to know the file size of each object, but since we
-                        // already have the Parquet metadata, this should be ok
+                        // NOTE: Usually we'd need to know the file size of each object, but since
+                        // we already have the Parquet metadata, this should be ok
                         size: 0,
                         e_tag: None,
                         version: None,
@@ -348,6 +349,27 @@ impl ParquetDataset {
             .into_iter()
             .map(|builder| builder.build())
             .collect()
+    }
+
+    async fn read_inner(
+        readers: Vec<GeoParquetRecordBatchStream<ParquetObjectReader>>,
+        output_schema: SchemaRef,
+    ) -> PyGeoArrowResult<Arro3Table> {
+        let request_futures = readers.into_iter().map(|reader| reader.read_table());
+        let tables = futures::future::join_all(request_futures)
+            .await
+            .into_iter()
+            .collect::<Result<Vec<_>, GeoArrowError>>()
+            .map_err(PyGeoArrowError::GeoArrowError)?;
+
+        let mut all_batches = vec![];
+        tables.into_iter().for_each(|table| {
+            let (table_batches, _schema) = table.into_inner();
+            all_batches.extend(table_batches);
+        });
+        let table =
+            Table::try_new(all_batches, output_schema).map_err(PyGeoArrowError::GeoArrowError)?;
+        Ok(Arro3Table::from_geoarrow(table))
     }
 }
 
@@ -396,37 +418,23 @@ impl ParquetDataset {
     }
 
     #[pyo3(signature = (*, batch_size=None, limit=None, offset=None, bbox=None, bbox_paths=None))]
-    fn read_async(
+    fn read_async<'py>(
         &self,
-        py: Python,
+        py: Python<'py>,
         batch_size: Option<usize>,
         limit: Option<usize>,
         offset: Option<usize>,
         bbox: Option<[f64; 4]>,
         bbox_paths: Option<Bound<'_, PyAny>>,
-    ) -> PyGeoArrowResult<PyObject> {
+    ) -> PyGeoArrowResult<Bound<'py, PyAny>> {
         let options = create_options(batch_size, limit, offset, bbox, bbox_paths)?;
         let readers = self.to_readers(options)?;
         let output_schema = self.meta.resolved_schema(Default::default())?;
 
         let fut = future_into_py(py, async move {
-            let request_futures = readers.into_iter().map(|reader| reader.read_table());
-            let tables = futures::future::join_all(request_futures)
-                .await
-                .into_iter()
-                .collect::<Result<Vec<_>, GeoArrowError>>()
-                .map_err(PyGeoArrowError::GeoArrowError)?;
-
-            let mut all_batches = vec![];
-            tables.into_iter().for_each(|table| {
-                let (table_batches, _schema) = table.into_inner();
-                all_batches.extend(table_batches);
-            });
-            let table = Table::try_new(all_batches, output_schema)
-                .map_err(PyGeoArrowError::GeoArrowError)?;
-            Ok(Arro3Table::from_geoarrow(table))
+            Ok(Self::read_inner(readers, output_schema).await?)
         })?;
-        Ok(fut.into())
+        Ok(fut)
     }
 
     #[pyo3(signature = (*, batch_size=None, limit=None, offset=None, bbox=None, bbox_paths=None))]
@@ -444,22 +452,6 @@ impl ParquetDataset {
         let readers = self.to_readers(options)?;
         let output_schema = self.meta.resolved_schema(Default::default())?;
 
-        runtime.block_on(async move {
-            let request_futures = readers.into_iter().map(|reader| reader.read_table());
-            let tables = futures::future::join_all(request_futures)
-                .await
-                .into_iter()
-                .collect::<Result<Vec<_>, GeoArrowError>>()
-                .map_err(PyGeoArrowError::GeoArrowError)?;
-
-            let mut all_batches = vec![];
-            tables.into_iter().for_each(|table| {
-                let (table_batches, _schema) = table.into_inner();
-                all_batches.extend(table_batches);
-            });
-            let table = Table::try_new(all_batches, output_schema)
-                .map_err(PyGeoArrowError::GeoArrowError)?;
-            Ok(Arro3Table::from_geoarrow(table))
-        })
+        runtime.block_on(Self::read_inner(readers, output_schema))
     }
 }
