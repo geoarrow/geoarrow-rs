@@ -5,6 +5,8 @@ from typing import BinaryIO, Optional, Tuple, Union
 
 from arro3.core import Table
 from arro3.core.types import ArrowStreamExportable
+from geoarrow.rust.core.enums import CoordType
+from geoarrow.rust.core.types import CoordTypeT
 
 def read_flatgeobuf(
     file: Union[str, Path, BinaryIO],
@@ -77,6 +79,7 @@ async def read_flatgeobuf_async(
     store: Optional[ObjectStore] = None,
     batch_size: int = 65536,
     bbox: Tuple[float, float, float, float] | None = None,
+    coord_type: CoordType | CoordTypeT | None = None,
 ) -> Table:
     """
     Read a FlatGeobuf file from a url into an Arrow Table.
@@ -115,7 +118,8 @@ async def read_flatgeobuf_async(
         store: an ObjectStore instance for this url. This is required for non-HTTP urls.
         batch_size: the number of rows to include in each internal batch of the table.
         bbox: A spatial filter for reading rows, of the format (minx, miny, maxx, maxy). If set to
-        `None`, no spatial filtering will be performed.
+            `None`, no spatial filtering will be performed.
+        coord_type: The GeoArrow coordinate variant to use.
 
     Returns:
         Table from FlatGeobuf file.
