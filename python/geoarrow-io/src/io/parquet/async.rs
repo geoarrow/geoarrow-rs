@@ -174,9 +174,8 @@ impl ParquetFile {
     }
 
     #[pyo3(signature = (column_name=None))]
-    fn file_bbox(&self, column_name: Option<&str>) -> PyGeoArrowResult<Option<Vec<f64>>> {
-        let bbox = self.geoparquet_meta.file_bbox(column_name)?;
-        Ok(bbox.map(|b| b.to_vec()))
+    fn file_bbox(&self, column_name: Option<&str>) -> PyGeoArrowResult<Option<&[f64]>> {
+        Ok(self.geoparquet_meta.file_bbox(column_name)?)
     }
 
     #[pyo3(signature = (*, batch_size=None, limit=None, offset=None, bbox=None, bbox_paths=None))]

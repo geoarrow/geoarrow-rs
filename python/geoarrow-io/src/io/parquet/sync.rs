@@ -1,14 +1,13 @@
-use std::fs::File;
 use std::sync::Mutex;
 
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
-use crate::io::input::sync::{FileReader, FileWriter};
+use crate::io::input::sync::FileWriter;
 use crate::io::input::{construct_reader, AnyFileReader};
 use crate::util::Arro3Table;
 
 use geoarrow::io::parquet::{GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder};
 use parquet::arrow::arrow_reader::ArrowReaderOptions;
-use pyo3::exceptions::{PyFileNotFoundError, PyValueError};
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3_arrow::PyRecordBatch;
 use pyo3_arrow::PySchema;
@@ -67,28 +66,22 @@ pub fn read_parquet(
             })?;
             Ok(table)
         }
-        AnyFileReader::Sync(sync_reader) => match sync_reader {
-            FileReader::File(path, _) => {
-                let file = File::open(path)
-                    .map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?;
+        AnyFileReader::Sync(sync_reader) => {
+            let mut geo_options = GeoParquetReaderOptions::default();
 
-                let mut geo_options = GeoParquetReaderOptions::default();
-
-                if let Some(batch_size) = batch_size {
-                    geo_options = geo_options.with_batch_size(batch_size);
-                }
-
-                let table = GeoParquetRecordBatchReaderBuilder::try_new_with_options(
-                    file,
-                    ArrowReaderOptions::new().with_page_index(true),
-                    geo_options,
-                )?
-                .build()?
-                .read_table()?;
-                Ok(Arro3Table::from_geoarrow(table))
+            if let Some(batch_size) = batch_size {
+                geo_options = geo_options.with_batch_size(batch_size);
             }
-            _ => Err(PyValueError::new_err("File objects not supported in Parquet reader.").into()),
-        },
+
+            let table = GeoParquetRecordBatchReaderBuilder::try_new_with_options(
+                sync_reader,
+                ArrowReaderOptions::new().with_page_index(true),
+                geo_options,
+            )?
+            .build()?
+            .read_table()?;
+            Ok(Arro3Table::from_geoarrow(table))
+        }
     }
 }
 
