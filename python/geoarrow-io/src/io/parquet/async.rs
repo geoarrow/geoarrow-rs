@@ -6,7 +6,7 @@ use crate::io::input::{construct_reader, AnyFileReader};
 use crate::io::parquet::options::create_options;
 #[cfg(feature = "async")]
 use crate::runtime::get_runtime;
-use crate::util::table_to_pytable;
+use crate::util::Arro3Table;
 
 use geo_traits::CoordTrait;
 use geoarrow::error::GeoArrowError;
@@ -66,7 +66,7 @@ pub fn read_parquet_async(
                 .await
                 .map_err(PyGeoArrowError::GeoArrowError)?;
 
-                Ok(table_to_pytable(table))
+                Ok(Arro3Table::from_geoarrow(table))
             })?;
             Ok(fut.into())
         }
@@ -202,7 +202,7 @@ impl ParquetFile {
                 .read_table()
                 .await
                 .map_err(PyGeoArrowError::GeoArrowError)?;
-            Ok(table_to_pytable(table))
+            Ok(Arro3Table::from_geoarrow(table))
         })?;
         Ok(fut.into())
     }
@@ -216,7 +216,7 @@ impl ParquetFile {
         offset: Option<usize>,
         bbox: Option<[f64; 4]>,
         bbox_paths: Option<Bound<'_, PyAny>>,
-    ) -> PyGeoArrowResult<PyObject> {
+    ) -> PyGeoArrowResult<Arro3Table> {
         let runtime = get_runtime(py)?;
         let reader = ParquetObjectReader::new(self.store.clone(), self.object_meta.clone());
         let options = create_options(batch_size, limit, offset, bbox, bbox_paths)?;
@@ -231,7 +231,7 @@ impl ParquetFile {
                 .read_table()
                 .await
                 .map_err(PyGeoArrowError::GeoArrowError)?;
-            Ok(table_to_pytable(table).to_arro3(py)?)
+            Ok(Arro3Table::from_geoarrow(table))
         })
     }
 }
@@ -425,7 +425,7 @@ impl ParquetDataset {
             });
             let table = Table::try_new(all_batches, output_schema)
                 .map_err(PyGeoArrowError::GeoArrowError)?;
-            Ok(table_to_pytable(table))
+            Ok(Arro3Table::from_geoarrow(table))
         })?;
         Ok(fut.into())
     }
@@ -439,7 +439,7 @@ impl ParquetDataset {
         offset: Option<usize>,
         bbox: Option<[f64; 4]>,
         bbox_paths: Option<Bound<'_, PyAny>>,
-    ) -> PyGeoArrowResult<PyObject> {
+    ) -> PyGeoArrowResult<Arro3Table> {
         let runtime = get_runtime(py)?;
         let options = create_options(batch_size, limit, offset, bbox, bbox_paths)?;
         let readers = self.to_readers(options)?;
@@ -460,7 +460,7 @@ impl ParquetDataset {
             });
             let table = Table::try_new(all_batches, output_schema)
                 .map_err(PyGeoArrowError::GeoArrowError)?;
-            Ok(table_to_pytable(table).to_arro3(py)?)
+            Ok(Arro3Table::from_geoarrow(table))
         })
     }
 }

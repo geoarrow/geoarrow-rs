@@ -4,7 +4,7 @@ use std::sync::Mutex;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::io::input::sync::{FileReader, FileWriter};
 use crate::io::input::{construct_reader, AnyFileReader};
-use crate::util::table_to_pytable;
+use crate::util::Arro3Table;
 
 use geoarrow::io::parquet::{GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder};
 use parquet::arrow::arrow_reader::ArrowReaderOptions;
@@ -27,7 +27,7 @@ pub fn read_parquet(
     path: Bound<PyAny>,
     store: Option<Bound<PyAny>>,
     batch_size: Option<usize>,
-) -> PyGeoArrowResult<PyObject> {
+) -> PyGeoArrowResult<Arro3Table> {
     let reader = construct_reader(path, store)?;
     match reader {
         #[cfg(feature = "async")]
@@ -63,7 +63,7 @@ pub fn read_parquet(
                 .read_table()
                 .await?;
 
-                Ok::<_, PyGeoArrowError>(table_to_pytable(table).to_arro3(py)?)
+                Ok::<_, PyGeoArrowError>(Arro3Table::from_geoarrow(table))
             })?;
             Ok(table)
         }
@@ -85,7 +85,7 @@ pub fn read_parquet(
                 )?
                 .build()?
                 .read_table()?;
-                Ok(table_to_pytable(table).to_arro3(py)?)
+                Ok(Arro3Table::from_geoarrow(table))
             }
             _ => Err(PyValueError::new_err("File objects not supported in Parquet reader.").into()),
         },
