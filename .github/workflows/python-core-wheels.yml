@@ -46,8 +46,9 @@ jobs:
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
+          rust-toolchain: nightly
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --find-interpreter --manifest-path python/${{ matrix.module }}/Cargo.toml
+          args: RUSTFLAGS="-Zinline-mir=no" --release --out dist --find-interpreter --manifest-path python/${{ matrix.module }}/Cargo.toml
           sccache: "true"
           manylinux: auto
       - name: Upload wheels
@@ -82,7 +83,7 @@ jobs:
   #       uses: PyO3/maturin-action@v1
   #       with:
   #         target: ${{ matrix.platform.target }}
-  #         args: --release --out dist --find-interpreter --manifest-path python/${{ matrix.module }}/Cargo.toml
+  #         args: RUSTFLAGS="-Zinline-mir=no" --release --out dist --find-interpreter --manifest-path python/${{ matrix.module }}/Cargo.toml
   #         sccache: "true"
   #         manylinux: musllinux_1_2
   #     - name: Upload wheels
@@ -112,8 +113,9 @@ jobs:
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
+          rust-toolchain: nightly
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --find-interpreter --manifest-path python/${{ matrix.module }}/Cargo.toml
+          args: RUSTFLAGS="-Zinline-mir=no" --release --out dist --find-interpreter --manifest-path python/${{ matrix.module }}/Cargo.toml
           sccache: "true"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
@@ -142,8 +144,9 @@ jobs:
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
+          rust-toolchain: nightly
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --find-interpreter --manifest-path python/${{ matrix.module }}/Cargo.toml
+          args: RUSTFLAGS="-Zinline-mir=no" --release --out dist --find-interpreter --manifest-path python/${{ matrix.module }}/Cargo.toml
           sccache: "true"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
@@ -183,8 +186,9 @@ jobs:
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
+          rust-toolchain: nightly
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --find-interpreter --no-default-features --manifest-path python/${{ matrix.module }}/Cargo.toml
+          args: RUSTFLAGS="-Zinline-mir=no" --release --out dist --find-interpreter --no-default-features --manifest-path python/${{ matrix.module }}/Cargo.toml
           sccache: "true"
           rust-toolchain: nightly
       - name: Upload wheels
