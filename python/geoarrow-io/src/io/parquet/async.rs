@@ -6,7 +6,7 @@ use crate::io::input::{construct_reader, AnyFileReader, AsyncFileReader};
 use crate::io::parquet::options::create_options;
 #[cfg(feature = "async")]
 use crate::runtime::get_runtime;
-use crate::util::Arro3Table;
+use crate::util::to_arro3_table;
 
 use arrow::datatypes::SchemaRef;
 use geo_traits::CoordTrait;
@@ -23,7 +23,8 @@ use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::ParquetObjectReader;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3_arrow::{PyArray, PySchema};
+use pyo3_arrow::export::{Arro3Schema, Arro3Table};
+use pyo3_arrow::PyArray;
 use pyo3_async_runtimes::tokio::future_into_py;
 use pyo3_geoarrow::CRS;
 use pyo3_object_store::PyObjectStore;
@@ -74,7 +75,7 @@ async fn read_parquet_async_inner(
     .read_table()
     .await?;
 
-    Ok(Arro3Table::from_geoarrow(table))
+    Ok(to_arro3_table(table))
 }
 
 /// Reader interface for a single Parquet file.
@@ -122,9 +123,9 @@ impl ParquetFile {
     }
 
     #[getter]
-    fn schema_arrow(&self, py: Python) -> PyGeoArrowResult<PyObject> {
+    fn schema_arrow(&self) -> PyGeoArrowResult<Arro3Schema> {
         let schema = self.geoparquet_meta.resolved_schema(Default::default())?;
-        Ok(PySchema::new(schema).to_arro3(py)?)
+        Ok(schema.into())
     }
 
     #[pyo3(signature = (column_name=None))]
@@ -171,7 +172,11 @@ impl ParquetFile {
         let paths: Option<GeoParquetBboxCovering> =
             bbox_paths.map(|x| depythonize(&x)).transpose()?;
         let bounds = self.geoparquet_meta.row_groups_bounds(paths.as_ref())?;
-        Ok(PyArray::new(bounds.to_array_ref(), bounds.extension_field()).to_arro3(py)?)
+        Ok(
+            PyArray::new(bounds.to_array_ref(), bounds.extension_field())
+                .to_arro3(py)?
+                .unbind(),
+        )
     }
 
     #[pyo3(signature = (column_name=None))]
@@ -202,7 +207,7 @@ impl ParquetFile {
                 .read_table()
                 .await
                 .map_err(PyGeoArrowError::GeoArrowError)?;
-            Ok(Arro3Table::from_geoarrow(table))
+            Ok(to_arro3_table(table))
         })?;
         Ok(fut.into())
     }
@@ -231,7 +236,7 @@ impl ParquetFile {
                 .read_table()
                 .await
                 .map_err(PyGeoArrowError::GeoArrowError)?;
-            Ok(Arro3Table::from_geoarrow(table))
+            Ok(to_arro3_table(table))
         })
     }
 }
@@ -369,7 +374,7 @@ impl ParquetDataset {
         });
         let table =
             Table::try_new(all_batches, output_schema).map_err(PyGeoArrowError::GeoArrowError)?;
-        Ok(Arro3Table::from_geoarrow(table))
+        Ok(to_arro3_table(table))
     }
 }
 
@@ -401,9 +406,9 @@ impl ParquetDataset {
     }
 
     #[getter]
-    fn schema_arrow(&self, py: Python) -> PyGeoArrowResult<PyObject> {
+    fn schema_arrow(&self) -> PyGeoArrowResult<Arro3Schema> {
         let schema = self.meta.resolved_schema(Default::default())?;
-        Ok(PySchema::new(schema).to_arro3(py)?)
+        Ok(schema.into())
     }
 
     #[pyo3(signature = (column_name=None))]

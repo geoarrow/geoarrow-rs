@@ -1,10 +1,12 @@
 use crate::error::PyGeoArrowResult;
 use crate::io::input::sync::{FileReader, FileWriter};
-use crate::util::Arro3Table;
+use crate::util::to_arro3_table;
+
 use geoarrow::io::csv::read_csv as _read_csv;
 use geoarrow::io::csv::write_csv as _write_csv;
 use geoarrow::io::csv::CSVReaderOptions;
 use pyo3::prelude::*;
+use pyo3_arrow::export::Arro3Table;
 use pyo3_arrow::input::AnyRecordBatch;
 
 #[pyfunction]
@@ -16,7 +18,7 @@ pub fn read_csv(
 ) -> PyGeoArrowResult<Arro3Table> {
     let options = CSVReaderOptions::new(Default::default(), batch_size);
     let table = _read_csv(&mut file, geometry_column_name, options)?;
-    Ok(Arro3Table::from_geoarrow(table))
+    Ok(to_arro3_table(table))
 }
 
 #[pyfunction]

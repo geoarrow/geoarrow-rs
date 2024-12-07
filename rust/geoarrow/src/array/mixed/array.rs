@@ -73,25 +73,6 @@ pub struct MixedGeometryArray {
     pub(crate) multi_points: MultiPointArray,
     pub(crate) multi_line_strings: MultiLineStringArray,
     pub(crate) multi_polygons: MultiPolygonArray,
-
-    /// An offset used for slicing into this array. The offset will be 0 if the array has not been
-    /// sliced.
-    ///
-    /// In order to slice this array efficiently (and zero-cost) we can't slice the underlying
-    /// fields directly. If this were always a _sparse_ union array, we could! We could then always
-    /// slice from offset to length of each underlying array. But we're under the assumption that
-    /// most or all of the time we have a dense union array, where the `offsets` buffer is defined.
-    /// In that case, to know how to slice each underlying array, we'd have to walk the `type_ids`
-    /// and `offsets` arrays (in O(N) time) to figure out how to slice the underlying arrays.
-    ///
-    /// Instead, we store the slice offset.
-    ///
-    /// Note that this offset is only for slicing into the **fields**, i.e. the geometry arrays.
-    /// The `type_ids` and `offsets` arrays are sliced as usual.
-    ///
-    /// TODO: when exporting this array, export to arrow2 and then slice from scratch because we
-    /// can't set the `offset` in a UnionArray constructor
-    pub(crate) slice_offset: usize,
 }
 
 impl MixedGeometryArray {
@@ -151,7 +132,6 @@ impl MixedGeometryArray {
             multi_points,
             multi_line_strings,
             multi_polygons,
-            slice_offset: 0,
             metadata,
         }
     }
@@ -276,7 +256,6 @@ impl MixedGeometryArray {
             multi_points: self.multi_points.clone(),
             multi_line_strings: self.multi_line_strings.clone(),
             multi_polygons: self.multi_polygons.clone(),
-            slice_offset: self.slice_offset + offset,
             metadata: self.metadata.clone(),
         }
     }

@@ -1,8 +1,10 @@
 use crate::error::PyGeoArrowError;
-use crate::util::Arro3Table;
+use crate::util::to_arro3_table;
+
 use geoarrow::error::GeoArrowError;
 use geoarrow::io::postgis::read_postgis as _read_postgis;
 use pyo3::prelude::*;
+use pyo3_arrow::export::Arro3Table;
 use pyo3_async_runtimes::tokio::future_into_py;
 use sqlx::postgres::PgPoolOptions;
 
@@ -37,5 +39,5 @@ async fn read_postgis_inner(connection_url: String, sql: String) -> PyResult<Opt
         .await
         .map_err(PyGeoArrowError::GeoArrowError)?;
 
-    Ok(table.map(Arro3Table::from_geoarrow))
+    Ok(table.map(to_arro3_table))
 }

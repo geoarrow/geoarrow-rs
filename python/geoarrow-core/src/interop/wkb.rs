@@ -72,12 +72,16 @@ pub fn to_wkb(py: Python, input: AnyNativeInput) -> PyGeoArrowResult<PyObject> {
         AnyNativeInput::Array(arr) => {
             let wkb_arr = _to_wkb::<i32>(arr.as_ref());
             let field = wkb_arr.extension_field();
-            Ok(PyArray::new(wkb_arr.into_array_ref(), field).to_arro3(py)?)
+            Ok(PyArray::new(wkb_arr.into_array_ref(), field)
+                .to_arro3(py)?
+                .unbind())
         }
         AnyNativeInput::Chunked(s) => {
             let out = s.as_ref().to_wkb::<i32>();
             let field = out.extension_field();
-            Ok(PyChunkedArray::try_new(out.array_refs(), field)?.to_arro3(py)?)
+            Ok(PyChunkedArray::try_new(out.array_refs(), field)?
+                .to_arro3(py)?
+                .unbind())
         }
     }
 }

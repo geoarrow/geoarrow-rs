@@ -3,12 +3,13 @@ use std::sync::Mutex;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::io::input::sync::FileWriter;
 use crate::io::input::{construct_reader, AnyFileReader};
-use crate::util::Arro3Table;
+use crate::util::to_arro3_table;
 
 use geoarrow::io::parquet::{GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder};
 use parquet::arrow::arrow_reader::ArrowReaderOptions;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
+use pyo3_arrow::export::Arro3Table;
 use pyo3_arrow::PyRecordBatch;
 use pyo3_arrow::PySchema;
 
@@ -62,7 +63,7 @@ pub fn read_parquet(
                 .read_table()
                 .await?;
 
-                Ok::<_, PyGeoArrowError>(Arro3Table::from_geoarrow(table))
+                Ok::<_, PyGeoArrowError>(to_arro3_table(table))
             })?;
             Ok(table)
         }
@@ -80,7 +81,7 @@ pub fn read_parquet(
             )?
             .build()?
             .read_table()?;
-            Ok(Arro3Table::from_geoarrow(table))
+            Ok(to_arro3_table(table))
         }
     }
 }

@@ -100,9 +100,9 @@ pub fn to_wkt(py: Python, input: AnyNativeInput) -> PyGeoArrowResult<PyObject> {
 }
 
 pub(crate) fn return_array(py: Python, arr: PyArray) -> PyGeoArrowResult<PyObject> {
-    Ok(arr.to_arro3(py)?)
+    Ok(arr.to_arro3(py)?.unbind())
 }
 
 pub(crate) fn return_chunked_array(py: Python, arr: PyChunkedArray) -> PyGeoArrowResult<PyObject> {
-    Ok(arr.to_arro3(py)?)
+    Ok(arr.to_arro3(py)?.unbind())
 }
