@@ -1,6 +1,7 @@
 use crate::error::PyGeoArrowError;
 use crate::io::input::construct_async_reader;
-use crate::util::Arro3Table;
+use crate::util::to_arro3_table;
+
 use geoarrow::io::flatgeobuf::read_flatgeobuf_async as _read_flatgeobuf_async;
 use geoarrow::io::flatgeobuf::FlatGeobufReaderOptions;
 use pyo3::prelude::*;
@@ -27,6 +28,6 @@ pub fn read_flatgeobuf_async<'py>(
         let table = _read_flatgeobuf_async(reader.store, reader.path, options)
             .await
             .map_err(PyGeoArrowError::GeoArrowError)?;
-        Ok(Arro3Table::from_geoarrow(table))
+        Ok(to_arro3_table(table))
     })
 }

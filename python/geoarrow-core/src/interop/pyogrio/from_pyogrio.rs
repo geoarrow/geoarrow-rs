@@ -69,7 +69,7 @@ pub fn read_pyogrio(
         Ok(table) => {
             let none = py.None();
             context_manager.call_method1("__exit__", (&none, &none, &none))?;
-            Ok(table.to_arro3(py)?)
+            Ok(table.to_arro3(py)?.unbind())
         }
         Err(py_err) => {
             context_manager.call_method1(
