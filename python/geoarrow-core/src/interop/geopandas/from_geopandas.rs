@@ -4,11 +4,12 @@ use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyTuple};
 use pyo3::PyAny;
+use pyo3_arrow::export::Arro3Table;
 use pyo3_arrow::PyTable;
 use pyo3_geoarrow::PyGeoArrowResult;
 
 #[pyfunction]
-pub fn from_geopandas(py: Python, input: &Bound<PyAny>) -> PyGeoArrowResult<PyObject> {
+pub fn from_geopandas(py: Python, input: &Bound<PyAny>) -> PyGeoArrowResult<Arro3Table> {
     let geopandas_mod = import_geopandas(py)?;
     let geodataframe_class = geopandas_mod.getattr(intern!(py, "GeoDataFrame"))?;
     if !input.is_instance(&geodataframe_class)? {
@@ -26,7 +27,8 @@ pub fn from_geopandas(py: Python, input: &Bound<PyAny>) -> PyGeoArrowResult<PyOb
             Some(&kwargs),
         )?
         .extract::<PyTable>()?;
+
     let table = pytable_to_table(table)?;
     let table = table.parse_serialized_geometry(table.default_geometry_column_idx()?, None)?;
-    Ok(table_to_pytable(table).to_arro3(py)?)
+    Ok(table_to_pytable(table).into())
 }

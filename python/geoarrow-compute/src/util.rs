@@ -35,9 +35,9 @@ pub(crate) fn return_chunked_geometry_array(
 }
 
 pub(crate) fn return_array(py: Python, arr: PyArray) -> PyGeoArrowResult<PyObject> {
-    Ok(arr.to_arro3(py)?)
+    Ok(arr.to_arro3(py)?.unbind())
 }
 
 pub(crate) fn return_chunked_array(py: Python, arr: PyChunkedArray) -> PyGeoArrowResult<PyObject> {
-    Ok(arr.to_arro3(py)?)
+    Ok(arr.to_arro3(py)?.unbind())
 }

@@ -1,12 +1,14 @@
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::io::input::sync::FileWriter;
 use crate::io::input::{construct_reader, AnyFileReader};
-use crate::util::Arro3Table;
+use crate::util::to_arro3_table;
+
 use geoarrow::io::flatgeobuf::{
     read_flatgeobuf as _read_flatgeobuf, write_flatgeobuf_with_options as _write_flatgeobuf,
     FlatGeobufReaderOptions, FlatGeobufWriterOptions,
 };
 use pyo3::prelude::*;
+use pyo3_arrow::export::Arro3Table;
 use pyo3_arrow::input::AnyRecordBatch;
 use pyo3_geoarrow::PyprojCRSTransform;
 
@@ -39,7 +41,7 @@ pub fn read_flatgeobuf(
                     .await
                     .map_err(PyGeoArrowError::GeoArrowError)?;
 
-                Ok(Arro3Table::from_geoarrow(table))
+                Ok(to_arro3_table(table))
             })
         }
         AnyFileReader::Sync(mut sync_reader) => {
@@ -49,7 +51,7 @@ pub fn read_flatgeobuf(
                 ..Default::default()
             };
             let table = _read_flatgeobuf(&mut sync_reader, options)?;
-            Ok(Arro3Table::from_geoarrow(table))
+            Ok(to_arro3_table(table))
         }
     }
 }
