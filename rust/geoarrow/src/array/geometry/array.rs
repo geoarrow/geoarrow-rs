@@ -9,8 +9,8 @@ use crate::array::geometry::GeometryBuilder;
 use crate::array::geometry::GeometryCapacity;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::{
-    CoordType, GeometryCollectionArray, LineStringArray, MultiLineStringArray, MultiPointArray,
-    MultiPolygonArray, PointArray, PolygonArray, WKBArray,
+    CoordType, GeometryCollectionArray, LineStringArray, MixedGeometryArray, MultiLineStringArray,
+    MultiPointArray, MultiPolygonArray, PointArray, PolygonArray, WKBArray,
 };
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
@@ -255,6 +255,9 @@ impl GeometryArray {
             XYZ => self.has_dimension(XYZ) && !self.has_dimension(XY),
         }
     }
+
+    // Handle sliced data before downcasting.
+    // pub fn compact_children()
 
     // /// The number of non-empty child arrays
     // fn num_non_empty_children(&self) -> usize {
@@ -867,155 +870,104 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryArray {
     }
 }
 
-// impl From<PointArray> for GeometryArray {
-//     fn from(value: PointArray) -> Self {
-//         let type_ids = match value.dimension() {
-//             Dimension::XY => vec![1; value.len()],
-//             Dimension::XYZ => vec![11; value.len()],
-//         };
-//         let metadata = value.metadata.clone();
-//         Self::new(
-//             ScalarBuffer::from(type_ids),
-//             ScalarBuffer::from_iter(0..value.len() as i32),
-//             value,
-//             Default::default(),
-//             Default::default(),
-//             Default::default(),
-//             Default::default(),
-//             Default::default(),
-//             Default::default(),
-//             Default::default(),
-//             Default::default(),
-//             Default::default(),
-//             Default::default(),
-//             Default::default(),
-//             metadata,
-//         )
-//     }
-// }
+macro_rules! impl_to_geometry_array {
+    ($source_array:ty, $typeid_xy:expr, $typeid_xyz:expr, $child_xy:ident, $child_xyz:ident) => {
+        impl From<$source_array> for GeometryArray {
+            fn from(value: $source_array) -> Self {
+                let dim = value.dimension();
+                let type_ids = match dim {
+                    Dimension::XY => vec![$typeid_xy; value.len()],
+                    Dimension::XYZ => vec![$typeid_xyz; value.len()],
+                };
+                let mut slf = Self {
+                    data_type: NativeType::Geometry(value.coord_type()),
+                    metadata: value.metadata().clone(),
+                    type_ids: type_ids.into(),
+                    offsets: ScalarBuffer::from_iter(0..value.len() as i32),
+                    ..Default::default()
+                };
+                match dim {
+                    Dimension::XY => {
+                        slf.$child_xy = value;
+                    }
+                    Dimension::XYZ => {
+                        slf.$child_xyz = value;
+                    }
+                }
+                slf
+            }
+        }
+    };
+}
 
-// impl From<LineStringArray> for GeometryArray {
-//     fn from(value: LineStringArray) -> Self {
-//         let type_ids = match value.dimension() {
-//             Dimension::XY => vec![2; value.len()],
-//             Dimension::XYZ => vec![12; value.len()],
-//         };
-//         let metadata = value.metadata.clone();
-//         Self::new(
-//             ScalarBuffer::from(type_ids),
-//             ScalarBuffer::from_iter(0..value.len() as i32),
-//             Default::default(),
-//             value,
-//             Default::default(),
-//             Default::default(),
-//             Default::default(),
-//             Default::default(),
-//             metadata,
-//         )
-//     }
-// }
+impl_to_geometry_array!(PointArray, 1, 11, point_xy, point_xyz);
+impl_to_geometry_array!(LineStringArray, 1, 11, line_string_xy, line_string_xy);
+impl_to_geometry_array!(PolygonArray, 1, 11, polygon_xy, polygon_xyz);
+impl_to_geometry_array!(MultiPointArray, 1, 11, mpoint_xy, mpoint_xyz);
+impl_to_geometry_array!(
+    MultiLineStringArray,
+    1,
+    11,
+    mline_string_xy,
+    mline_string_xyz
+);
+impl_to_geometry_array!(MultiPolygonArray, 1, 11, mpolygon_xy, mpolygon_xyz);
+impl_to_geometry_array!(GeometryCollectionArray, 1, 11, gc_xy, gc_xyz);
 
-// impl From<PolygonArray> for GeometryArray {
-//     fn from(value: PolygonArray) -> Self {
-//         let type_ids = match value.dimension() {
-//             Dimension::XY => vec![3; value.len()],
-//             Dimension::XYZ => vec![13; value.len()],
-//         };
-//         let metadata = value.metadata.clone();
-//         Self::new(
-//             ScalarBuffer::from(type_ids),
-//             ScalarBuffer::from_iter(0..value.len() as i32),
-//             Default::default(),
-//             Default::default(),
-//             value,
-//             Default::default(),
-//             Default::default(),
-//             Default::default(),
-//             metadata,
-//         )
-//     }
-// }
+impl TryFrom<GeometryArray> for MixedGeometryArray {
+    type Error = GeoArrowError;
 
-// impl From<MultiPointArray> for GeometryArray {
-//     fn from(value: MultiPointArray) -> Self {
-//         let type_ids = match value.dimension() {
-//             Dimension::XY => vec![4; value.len()],
-//             Dimension::XYZ => vec![14; value.len()],
-//         };
-//         let metadata = value.metadata.clone();
-//         Self::new(
-//             ScalarBuffer::from(type_ids),
-//             ScalarBuffer::from_iter(0..value.len() as i32),
-//             Default::default(),
-//             Default::default(),
-//             Default::default(),
-//             value,
-//             Default::default(),
-//             Default::default(),
-//             metadata,
-//         )
-//     }
-// }
-
-// impl From<MultiLineStringArray> for GeometryArray {
-//     fn from(value: MultiLineStringArray) -> Self {
-//         let type_ids = match value.dimension() {
-//             Dimension::XY => vec![5; value.len()],
-//             Dimension::XYZ => vec![15; value.len()],
-//         };
-//         let metadata = value.metadata.clone();
-//         Self::new(
-//             ScalarBuffer::from(type_ids),
-//             ScalarBuffer::from_iter(0..value.len() as i32),
-//             Default::default(),
-//             Default::default(),
-//             Default::default(),
-//             Default::default(),
-//             value,
-//             Default::default(),
-//             metadata,
-//         )
-//     }
-// }
-
-// impl From<MultiPolygonArray> for GeometryArray {
-//     fn from(value: MultiPolygonArray) -> Self {
-//         let type_ids = match value.dimension() {
-//             Dimension::XY => vec![6; value.len()],
-//             Dimension::XYZ => vec![16; value.len()],
-//         };
-//         let metadata = value.metadata.clone();
-//         Self::new(
-//             ScalarBuffer::from(type_ids),
-//             ScalarBuffer::from_iter(0..value.len() as i32),
-//             Default::default(),
-//             Default::default(),
-//             Default::default(),
-//             Default::default(),
-//             Default::default(),
-//             value,
-//             metadata,
-//         )
-//     }
-// }
-
-// impl TryFrom<GeometryCollectionArray> for GeometryArray {
-//     type Error = GeoArrowError;
-
-//     fn try_from(value: GeometryCollectionArray) -> std::result::Result<Self, Self::Error> {
-//         if !can_downcast_multi(&value.geom_offsets) {
-//             return Err(GeoArrowError::General("Unable to cast".to_string()));
-//         }
-
-//         if value.null_count() > 0 {
-//             return Err(GeoArrowError::General(
-//                 "Unable to cast with nulls".to_string(),
-//             ));
-//         }
-
-//         Ok(value.array)
-//     }
-// }
+    /// Will error if:
+    ///
+    /// - the contained geometries are not all of the same dimension
+    /// - any geometry collection child exists
+    fn try_from(value: GeometryArray) -> std::result::Result<Self, Self::Error> {
+        if value.has_only_dimension(Dimension::XY) {
+            if value.gc_xy.is_empty() {
+                Ok(MixedGeometryArray::new(
+                    value.type_ids,
+                    value.offsets,
+                    value.point_xy,
+                    value.line_string_xy,
+                    value.polygon_xy,
+                    value.mpoint_xy,
+                    value.mline_string_xy,
+                    value.mpolygon_xy,
+                    value.metadata,
+                ))
+            } else {
+                Err(GeoArrowError::General(
+                    "Cannot cast to MixedGeometryArray with non-empty GeometryCollection child."
+                        .to_string(),
+                ))
+            }
+        } else if value.has_only_dimension(Dimension::XYZ) {
+            if value.gc_xyz.is_empty() {
+                Ok(MixedGeometryArray::new(
+                    value.type_ids,
+                    value.offsets,
+                    value.point_xyz,
+                    value.line_string_xyz,
+                    value.polygon_xyz,
+                    value.mpoint_xyz,
+                    value.mline_string_xyz,
+                    value.mpolygon_xyz,
+                    value.metadata,
+                ))
+            } else {
+                Err(GeoArrowError::General(
+                    "Cannot cast to MixedGeometryArray with non-empty GeometryCollection child."
+                        .to_string(),
+                ))
+            }
+        } else {
+            Err(GeoArrowError::General(
+                "Cannot cast to MixedGeometryArray when GeometryArray contains multiple dimensions"
+                    .to_string(),
+            ))
+        }
+    }
+}
 
 /// Default to an empty array
 impl Default for GeometryArray {

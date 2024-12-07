@@ -7,17 +7,18 @@ use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
 use crate::algorithm::native::cast::Cast;
-use crate::array::offset_builder::OffsetsBuilder;
-use crate::array::util::OffsetBufferUtils;
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::Result;
 use crate::schema::GeoSchemaExt;
 use crate::table::Table;
+use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 
 /// Downcast will change between geometry types but will not affect the dimension of the data.
+///
+/// Downcast will not change the coordinate type of the data.
 pub trait Downcast {
     type Output;
 
@@ -46,35 +47,6 @@ impl Downcast for PointArray {
 
     fn downcast(&self) -> Self::Output {
         Arc::new(self.clone())
-    }
-}
-
-/// Returns `true` if this offsets buffer is type `i64` and would fit in an `i32`
-///
-/// If the offset type `O` is already `i32`, will return false
-#[allow(dead_code)]
-fn can_downcast_offsets_i32<O: OffsetSizeTrait>(buffer: &OffsetBuffer<O>) -> bool {
-    if O::IS_LARGE {
-        buffer.last().to_usize().unwrap() < i32::MAX as usize
-    } else {
-        false
-    }
-}
-
-/// Downcast an i64 offset buffer to i32
-///
-/// This copies the buffer into an i32
-#[allow(dead_code)]
-fn downcast_offsets<O: OffsetSizeTrait>(buffer: &OffsetBuffer<O>) -> OffsetBuffer<i32> {
-    if O::IS_LARGE {
-        let mut builder = OffsetsBuilder::with_capacity(buffer.len_proxy());
-        buffer
-            .iter()
-            .for_each(|x| builder.try_push(x.to_usize().unwrap() as i32).unwrap());
-        builder.finish()
-    } else {
-        // This function should never be called when offsets are i32
-        unreachable!()
     }
 }
 
@@ -139,7 +111,7 @@ impl Downcast for MultiPointArray {
     }
     fn downcast(&self) -> Self::Output {
         // Note: this won't allow a downcast for empty MultiPoints
-        if *self.geom_offsets.last() as usize == self.len() {
+        if can_downcast_multi(self.geom_offsets()) {
             return Arc::new(PointArray::new(
                 self.coords.clone(),
                 self.validity.clone(),
@@ -168,7 +140,7 @@ impl Downcast for MultiLineStringArray {
     }
 
     fn downcast(&self) -> Self::Output {
-        if *self.geom_offsets.last() as usize == self.len() {
+        if can_downcast_multi(self.geom_offsets()) {
             return Arc::new(LineStringArray::new(
                 self.coords.clone(),
                 self.ring_offsets.clone(),
@@ -198,7 +170,7 @@ impl Downcast for MultiPolygonArray {
     }
 
     fn downcast(&self) -> Self::Output {
-        if *self.geom_offsets.last() as usize == self.len() {
+        if can_downcast_multi(self.geom_offsets()) {
             return Arc::new(PolygonArray::new(
                 self.coords.clone(),
                 self.polygon_offsets.clone(),
@@ -212,12 +184,15 @@ impl Downcast for MultiPolygonArray {
     }
 }
 
+// Note: this will not downcast on sliced data when it otherwise could, because the children
+// haven't been sliced, just the offsets. So it still looks like the children have data.
 impl Downcast for MixedGeometryArray {
-    type Output = Arc<dyn NativeArray>;
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn downcasted_data_type(&self) -> NativeType {
         let coord_type = self.coord_type();
 
+        // Only has non-multi geometry children
         if self.has_points()
             && !self.has_line_strings()
             && !self.has_polygons()
@@ -225,7 +200,7 @@ impl Downcast for MixedGeometryArray {
             && !self.has_multi_line_strings()
             && !self.has_multi_polygons()
         {
-            return NativeType::Point(coord_type, Dimension::XY);
+            return self.points.data_type();
         }
 
         if !self.has_points()
@@ -235,7 +210,7 @@ impl Downcast for MixedGeometryArray {
             && !self.has_multi_line_strings()
             && !self.has_multi_polygons()
         {
-            return self.line_strings.downcasted_data_type();
+            return self.line_strings.data_type();
         }
 
         if !self.has_points()
@@ -245,11 +220,12 @@ impl Downcast for MixedGeometryArray {
             && !self.has_multi_line_strings()
             && !self.has_multi_polygons()
         {
-            return self.polygons.downcasted_data_type();
+            return self.polygons.data_type();
         }
 
-        if !self.has_points()
-            && !self.has_line_strings()
+        // Whether or not we have the single-geom type, if we only otherwise have the multi-geom
+        // type, then we can downcast if we can downcast the multi-geom type.
+        if !self.has_line_strings()
             && !self.has_polygons()
             && self.has_multi_points()
             && !self.has_multi_line_strings()
@@ -259,7 +235,6 @@ impl Downcast for MixedGeometryArray {
         }
 
         if !self.has_points()
-            && !self.has_line_strings()
             && !self.has_polygons()
             && !self.has_multi_points()
             && self.has_multi_line_strings()
@@ -270,7 +245,6 @@ impl Downcast for MixedGeometryArray {
 
         if !self.has_points()
             && !self.has_line_strings()
-            && !self.has_polygons()
             && !self.has_multi_points()
             && !self.has_multi_line_strings()
             && self.has_multi_polygons()
@@ -281,8 +255,14 @@ impl Downcast for MixedGeometryArray {
         self.data_type()
     }
 
+    // TODO: we actually do need to slice here.
     fn downcast(&self) -> Self::Output {
-        // TODO: do I need to handle the slice offset?
+        let downcasted_data_type = self.downcasted_data_type();
+        if self.data_type() == downcasted_data_type {
+            return Ok(Arc::new(self.clone()));
+        }
+
+        // Only has non-multi geometry children
         if self.has_points()
             && !self.has_line_strings()
             && !self.has_polygons()
@@ -290,7 +270,7 @@ impl Downcast for MixedGeometryArray {
             && !self.has_multi_line_strings()
             && !self.has_multi_polygons()
         {
-            return Arc::new(self.points.clone());
+            return Ok(self.points.downcast());
         }
 
         if !self.has_points()
@@ -300,7 +280,7 @@ impl Downcast for MixedGeometryArray {
             && !self.has_multi_line_strings()
             && !self.has_multi_polygons()
         {
-            return self.line_strings.downcast();
+            return Ok(self.line_strings.downcast());
         }
 
         if !self.has_points()
@@ -310,9 +290,10 @@ impl Downcast for MixedGeometryArray {
             && !self.has_multi_line_strings()
             && !self.has_multi_polygons()
         {
-            return self.polygons.downcast();
+            return Ok(self.polygons.downcast());
         }
 
+        // Only has multi geometry children
         if !self.has_points()
             && !self.has_line_strings()
             && !self.has_polygons()
@@ -320,7 +301,7 @@ impl Downcast for MixedGeometryArray {
             && !self.has_multi_line_strings()
             && !self.has_multi_polygons()
         {
-            return self.multi_points.downcast();
+            return Ok(self.multi_points.downcast());
         }
 
         if !self.has_points()
@@ -330,7 +311,7 @@ impl Downcast for MixedGeometryArray {
             && self.has_multi_line_strings()
             && !self.has_multi_polygons()
         {
-            return self.multi_line_strings.downcast();
+            return Ok(self.multi_line_strings.downcast());
         }
 
         if !self.has_points()
@@ -340,27 +321,128 @@ impl Downcast for MixedGeometryArray {
             && !self.has_multi_line_strings()
             && self.has_multi_polygons()
         {
-            return self.multi_polygons.downcast();
+            return Ok(self.multi_polygons.downcast());
         }
 
-        Arc::new(self.clone())
+        // Has a mix of single-and-multi geometry children
+        // We need to rebuild the array manually
+        if !self.has_line_strings()
+            && !self.has_polygons()
+            && self.has_multi_points()
+            && !self.has_multi_line_strings()
+            && !self.has_multi_polygons()
+        {
+            match downcasted_data_type {
+                NativeType::Point(coord_type, dim) => {
+                    let mut builder =
+                        PointBuilder::new_with_options(dim, coord_type, self.metadata().clone());
+                    for geom in self.iter() {
+                        builder.push_geometry(geom.as_ref())?;
+                    }
+                    return Ok(Arc::new(builder.finish()));
+                }
+                NativeType::MultiPoint(coord_type, dim) => {
+                    let mut builder = MultiPointBuilder::new_with_options(
+                        dim,
+                        coord_type,
+                        self.metadata().clone(),
+                    );
+                    for geom in self.iter() {
+                        builder.push_geometry(geom.as_ref())?;
+                    }
+                    return Ok(Arc::new(builder.finish()));
+                }
+                _ => unreachable!(),
+            }
+        }
+
+        if !self.has_points()
+            && !self.has_polygons()
+            && !self.has_multi_points()
+            && self.has_multi_line_strings()
+            && !self.has_multi_polygons()
+        {
+            match downcasted_data_type {
+                NativeType::LineString(coord_type, dim) => {
+                    let mut builder = LineStringBuilder::new_with_options(
+                        dim,
+                        coord_type,
+                        self.metadata().clone(),
+                    );
+                    for geom in self.iter() {
+                        builder.push_geometry(geom.as_ref())?;
+                    }
+                    return Ok(Arc::new(builder.finish()));
+                }
+                NativeType::MultiLineString(coord_type, dim) => {
+                    let mut builder = MultiLineStringBuilder::new_with_options(
+                        dim,
+                        coord_type,
+                        self.metadata().clone(),
+                    );
+                    for geom in self.iter() {
+                        builder.push_geometry(geom.as_ref())?;
+                    }
+                    return Ok(Arc::new(builder.finish()));
+                }
+                _ => unreachable!(),
+            }
+        }
+
+        if !self.has_points()
+            && !self.has_line_strings()
+            && !self.has_multi_points()
+            && !self.has_multi_line_strings()
+            && self.has_multi_polygons()
+        {
+            match downcasted_data_type {
+                NativeType::Polygon(coord_type, dim) => {
+                    let mut builder =
+                        PolygonBuilder::new_with_options(dim, coord_type, self.metadata().clone());
+                    for geom in self.iter() {
+                        builder.push_geometry(geom.as_ref())?;
+                    }
+                    return Ok(Arc::new(builder.finish()));
+                }
+                NativeType::MultiPolygon(coord_type, dim) => {
+                    let mut builder = MultiPolygonBuilder::new_with_options(
+                        dim,
+                        coord_type,
+                        self.metadata().clone(),
+                    );
+                    for geom in self.iter() {
+                        builder.push_geometry(geom.as_ref())?;
+                    }
+                    return Ok(Arc::new(builder.finish()));
+                }
+                _ => unreachable!(),
+            }
+        }
+
+        Ok(Arc::new(self.clone()))
     }
 }
 
 impl Downcast for GeometryCollectionArray {
-    type Output = Arc<dyn NativeArray>;
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn downcasted_data_type(&self) -> NativeType {
-        todo!()
+        // TODO: support downcasting with null elements
+        if can_downcast_multi(&self.geom_offsets) && self.null_count() == 0 {
+            self.array.downcasted_data_type()
+        } else {
+            self.data_type()
+        }
     }
+
     fn downcast(&self) -> Self::Output {
         // TODO: support downcasting with null elements
-        if *self.geom_offsets.last() as usize == self.len() && self.null_count() == 0 {
+        if can_downcast_multi(&self.geom_offsets) && self.null_count() == 0 {
             // Call downcast on the mixed array
             return self.array.downcast();
         }
 
-        Arc::new(self.clone())
+        Ok(Arc::new(self.clone()))
     }
 }
 
@@ -370,13 +452,34 @@ impl Downcast for RectArray {
     fn downcasted_data_type(&self) -> NativeType {
         self.data_type()
     }
+
     fn downcast(&self) -> Self::Output {
         Arc::new(self.clone())
     }
 }
 
+impl Downcast for GeometryArray {
+    type Output = Result<Arc<dyn NativeArray>>;
+
+    fn downcasted_data_type(&self) -> NativeType {
+        if let Ok(mixed_array) = MixedGeometryArray::try_from(self.clone()) {
+            mixed_array.downcasted_data_type()
+        } else {
+            self.data_type()
+        }
+    }
+
+    fn downcast(&self) -> Self::Output {
+        if let Ok(mixed_array) = MixedGeometryArray::try_from(self.clone()) {
+            mixed_array.downcast()
+        } else {
+            Ok(Arc::new(self.clone()))
+        }
+    }
+}
+
 impl Downcast for &dyn NativeArray {
-    type Output = Arc<dyn NativeArray>;
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn downcasted_data_type(&self) -> NativeType {
         use NativeType::*;
@@ -391,7 +494,7 @@ impl Downcast for &dyn NativeArray {
             Mixed(_, _) => self.as_mixed().downcasted_data_type(),
             GeometryCollection(_, _) => self.as_geometry_collection().downcasted_data_type(),
             Rect(_) => self.as_rect().downcasted_data_type(),
-            _ => todo!("3d support"),
+            Geometry(_) => self.as_geometry().downcasted_data_type(),
         }
     }
 
@@ -399,16 +502,16 @@ impl Downcast for &dyn NativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => self.as_point().downcast(),
-            LineString(_, _) => self.as_line_string().downcast(),
-            Polygon(_, _) => self.as_polygon().downcast(),
-            MultiPoint(_, _) => self.as_multi_point().downcast(),
-            MultiLineString(_, _) => self.as_multi_line_string().downcast(),
-            MultiPolygon(_, _) => self.as_multi_polygon().downcast(),
+            Point(_, _) => Ok(self.as_point().downcast()),
+            LineString(_, _) => Ok(self.as_line_string().downcast()),
+            Polygon(_, _) => Ok(self.as_polygon().downcast()),
+            MultiPoint(_, _) => Ok(self.as_multi_point().downcast()),
+            MultiLineString(_, _) => Ok(self.as_multi_line_string().downcast()),
+            MultiPolygon(_, _) => Ok(self.as_multi_polygon().downcast()),
             Mixed(_, _) => self.as_mixed().downcast(),
             GeometryCollection(_, _) => self.as_geometry_collection().downcast(),
-            Rect(_) => self.as_rect().downcast(),
-            _ => todo!("3d support"),
+            Rect(_) => Ok(self.as_rect().downcast()),
+            Geometry(_) => self.as_geometry().downcast(),
         }
     }
 }
