@@ -56,7 +56,7 @@ pub fn read_shapefile<T: Read + Seek>(
 
     let array_metadata = options
         .crs
-        .map(|val| ArrayMetadata::from_unknown_crs_type(val))
+        .map(ArrayMetadata::from_unknown_crs_type)
         .unwrap_or_default();
 
     let table_builder_options = GeoTableBuilderOptions::new(
