@@ -29,7 +29,7 @@ def read_csv(
     Other args:
         geometry_name: the name of the geometry column within the CSV.
         batch_size: the number of rows to include in each internal batch of the table.
-
+        coord_type: The coordinate type. Defaults to None.
         has_header: Set whether the CSV file has a header. Defaults to `True`.
         max_records: The maximum number of records to read to infer schema. Defaults to
             `None`.

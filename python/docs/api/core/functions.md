@@ -25,3 +25,7 @@ Interoperability with other Python geospatial libraries (Shapely, GeoPandas) and
         - "!^_"
       members:
         - geometry_col
+
+## CRS Access
+
+::: geoarrow.rust.core.get_crs
