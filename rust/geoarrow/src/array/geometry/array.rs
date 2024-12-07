@@ -82,25 +82,6 @@ pub struct GeometryArray {
     pub(crate) mline_string_xyz: MultiLineStringArray,
     pub(crate) mpolygon_xyz: MultiPolygonArray,
     pub(crate) gc_xyz: GeometryCollectionArray,
-
-    /// An offset used for slicing into this array. The offset will be 0 if the array has not been
-    /// sliced.
-    ///
-    /// In order to slice this array efficiently (and zero-cost) we can't slice the underlying
-    /// fields directly. If this were always a _sparse_ union array, we could! We could then always
-    /// slice from offset to length of each underlying array. But we're under the assumption that
-    /// most or all of the time we have a dense union array, where the `offsets` buffer is defined.
-    /// In that case, to know how to slice each underlying array, we'd have to walk the `type_ids`
-    /// and `offsets` arrays (in O(N) time) to figure out how to slice the underlying arrays.
-    ///
-    /// Instead, we store the slice offset.
-    ///
-    /// Note that this offset is only for slicing into the **fields**, i.e. the geometry arrays.
-    /// The `type_ids` and `offsets` arrays are sliced as usual.
-    ///
-    /// TODO: when exporting this array, export to arrow2 and then slice from scratch because we
-    /// can't set the `offset` in a UnionArray constructor
-    pub(crate) slice_offset: usize,
 }
 
 impl GeometryArray {
@@ -174,7 +155,6 @@ impl GeometryArray {
             mline_string_xyz,
             mpolygon_xyz,
             gc_xyz,
-            slice_offset: 0,
             metadata,
         }
     }
@@ -437,7 +417,6 @@ impl GeometryArray {
             mpolygon_xyz: self.mpolygon_xyz.clone(),
             gc_xyz: self.gc_xyz.clone(),
 
-            slice_offset: self.slice_offset + offset,
             metadata: self.metadata.clone(),
         }
     }
@@ -1210,5 +1189,30 @@ mod test {
 
         assert_eq!(round_trip_arr.value_as_geo(0), geoms[0]);
         assert_eq!(round_trip_arr.value_as_geo(1), geoms[1]);
+    }
+
+    #[test]
+    fn test_slicing() {
+        let geoms: Vec<geo::Geometry> = vec![
+            geo::Geometry::Point(point::p0()),
+            geo::Geometry::LineString(linestring::ls0()),
+            geo::Geometry::Polygon(polygon::p0()),
+            geo::Geometry::MultiPoint(multipoint::mp0()),
+            geo::Geometry::MultiLineString(multilinestring::ml0()),
+            geo::Geometry::MultiPolygon(multipolygon::mp0()),
+        ];
+
+        let arr: GeometryArray = GeometryBuilder::from_geometries(
+            geoms.as_slice(),
+            Default::default(),
+            Default::default(),
+            false,
+        )
+        .unwrap()
+        .finish();
+
+        assert_eq!(arr.slice(1, 2).value_as_geo(0), geoms[1]);
+        assert_eq!(arr.slice(1, 2).value_as_geo(1), geoms[2]);
+        assert_eq!(arr.slice(3, 3).value_as_geo(2), geoms[5]);
     }
 }
