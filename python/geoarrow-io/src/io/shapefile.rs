@@ -7,10 +7,23 @@ use crate::util::to_arro3_table;
 use geoarrow::io::shapefile::{read_shapefile as _read_shapefile, ShapefileReaderOptions};
 use pyo3::prelude::*;
 use pyo3_arrow::export::Arro3Table;
+use pyo3_geoarrow::PyCoordType;
 
 #[pyfunction]
-// #[pyo3(signature = (file, *, batch_size=65536))]
-pub fn read_shapefile(shp_path: PathBuf) -> PyGeoArrowResult<Arro3Table> {
+#[pyo3(
+    signature = (
+        shp_path,
+        *,
+        batch_size=65536,
+        coord_type = PyCoordType::Interleaved,
+    ),
+    text_signature = "(shp_path, *, batch_size=65536, coord_type='interleaved')"
+)]
+pub fn read_shapefile(
+    shp_path: PathBuf,
+    batch_size: usize,
+    coord_type: PyCoordType,
+) -> PyGeoArrowResult<Arro3Table> {
     let shp_path = shp_path.canonicalize()?;
     let mut dbf_path = shp_path.clone();
     dbf_path.set_extension("dbf");
@@ -27,7 +40,8 @@ pub fn read_shapefile(shp_path: PathBuf) -> PyGeoArrowResult<Arro3Table> {
 
     let options = ShapefileReaderOptions {
         crs,
-        ..Default::default()
+        batch_size: Some(batch_size),
+        coord_type: coord_type.into(),
     };
 
     let shp_file = BufReader::new(File::open(shp_path)?);
