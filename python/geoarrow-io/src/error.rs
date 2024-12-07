@@ -1,8 +1,9 @@
-use pyo3::exceptions::{PyException, PyTypeError, PyValueError};
+use pyo3::exceptions::{PyException, PyIOError, PyTypeError, PyValueError};
 use pyo3::prelude::*;
 
 pub enum PyGeoArrowError {
     GeoArrowError(geoarrow::error::GeoArrowError),
+    IOError(std::io::Error),
     PyArrowError(pyo3_arrow::error::PyArrowError),
     PyErr(PyErr),
     PythonizeError(pythonize::PythonizeError),
@@ -18,6 +19,7 @@ impl From<PyGeoArrowError> for PyErr {
     fn from(error: PyGeoArrowError) -> Self {
         match error {
             PyGeoArrowError::GeoArrowError(err) => PyException::new_err(err.to_string()),
+            PyGeoArrowError::IOError(err) => PyIOError::new_err(err.to_string()),
             PyGeoArrowError::PyErr(err) => err,
             PyGeoArrowError::PyArrowError(err) => err.into(),
             PyGeoArrowError::PythonizeError(err) => PyException::new_err(err.to_string()),
@@ -34,6 +36,12 @@ impl From<PyGeoArrowError> for PyErr {
 impl From<geoarrow::error::GeoArrowError> for PyGeoArrowError {
     fn from(other: geoarrow::error::GeoArrowError) -> Self {
         Self::GeoArrowError(other)
+    }
+}
+
+impl From<std::io::Error> for PyGeoArrowError {
+    fn from(value: std::io::Error) -> Self {
+        Self::IOError(value)
     }
 }
 
