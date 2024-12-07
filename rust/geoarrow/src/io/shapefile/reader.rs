@@ -6,7 +6,10 @@ use dbase::{FieldInfo, FieldType, FieldValue, Record};
 use geozero::FeatureProcessor;
 use shapefile::{Reader, ShapeReader, ShapeType};
 
-use crate::array::{MultiLineStringBuilder, MultiPointBuilder, MultiPolygonBuilder, PointBuilder};
+use crate::array::metadata::ArrayMetadata;
+use crate::array::{
+    CoordType, MultiLineStringBuilder, MultiPointBuilder, MultiPolygonBuilder, PointBuilder,
+};
 use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::io::geozero::table::builder::anyvalue::AnyBuilder;
@@ -14,9 +17,27 @@ use crate::io::geozero::table::builder::properties::PropertiesBatchBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
 use crate::table::Table;
 
+/// Options for the Shapefile reader
+#[derive(Debug, Clone, Default)]
+pub struct ShapefileReaderOptions {
+    /// The GeoArrow coordinate type to use in the geometry arrays.
+    pub coord_type: CoordType,
+
+    /// The number of rows in each batch.
+    pub batch_size: Option<usize>,
+
+    /// The CRS to assign to the file. Read this from the `.prj` file in the same directory with
+    /// the same name.
+    pub crs: Option<String>,
+}
+
 // TODO:
 // stretch goal: return a record batch reader.
-pub fn read_shapefile<T: Read + Seek>(shp_reader: T, dbf_reader: T) -> Result<Table> {
+pub fn read_shapefile<T: Read + Seek>(
+    shp_reader: T,
+    dbf_reader: T,
+    options: ShapefileReaderOptions,
+) -> Result<Table> {
     let dbf_reader = dbase::Reader::new(dbf_reader).unwrap();
     let shp_reader = ShapeReader::new(shp_reader).unwrap();
 
@@ -33,18 +54,18 @@ pub fn read_shapefile<T: Read + Seek>(shp_reader: T, dbf_reader: T) -> Result<Ta
         None
     };
 
-    // TODO: move to options
-    let coord_type = Default::default();
-    let batch_size = Some(65536);
+    let array_metadata = options
+        .crs
+        .map(|val| ArrayMetadata::from_unknown_crs_type(val))
+        .unwrap_or_default();
 
-    // TODO: propagate CRS
-    let options = GeoTableBuilderOptions::new(
-        coord_type,
+    let table_builder_options = GeoTableBuilderOptions::new(
+        options.coord_type,
         true,
-        batch_size,
+        options.batch_size,
         Some(schema),
         features_count,
-        Default::default(),
+        Arc::new(array_metadata),
     );
 
     let mut reader = Reader::new(shp_reader, dbf_reader);
@@ -53,8 +74,10 @@ pub fn read_shapefile<T: Read + Seek>(shp_reader: T, dbf_reader: T) -> Result<Ta
 
     match geometry_type {
         ShapeType::Point => {
-            let mut builder =
-                GeoTableBuilder::<PointBuilder>::new_with_options(Dimension::XY, options);
+            let mut builder = GeoTableBuilder::<PointBuilder>::new_with_options(
+                Dimension::XY,
+                table_builder_options,
+            );
 
             for geom_and_record in
                 reader.iter_shapes_and_records_as::<shapefile::Point, dbase::Record>()
@@ -77,8 +100,10 @@ pub fn read_shapefile<T: Read + Seek>(shp_reader: T, dbf_reader: T) -> Result<Ta
             builder.finish()
         }
         ShapeType::PointZ => {
-            let mut builder =
-                GeoTableBuilder::<PointBuilder>::new_with_options(Dimension::XYZ, options);
+            let mut builder = GeoTableBuilder::<PointBuilder>::new_with_options(
+                Dimension::XYZ,
+                table_builder_options,
+            );
 
             for geom_and_record in
                 reader.iter_shapes_and_records_as::<shapefile::PointZ, dbase::Record>()
@@ -101,8 +126,10 @@ pub fn read_shapefile<T: Read + Seek>(shp_reader: T, dbf_reader: T) -> Result<Ta
             builder.finish()
         }
         ShapeType::Multipoint => {
-            let mut builder =
-                GeoTableBuilder::<MultiPointBuilder>::new_with_options(Dimension::XY, options);
+            let mut builder = GeoTableBuilder::<MultiPointBuilder>::new_with_options(
+                Dimension::XY,
+                table_builder_options,
+            );
 
             for geom_and_record in
                 reader.iter_shapes_and_records_as::<shapefile::Multipoint, dbase::Record>()
@@ -125,8 +152,10 @@ pub fn read_shapefile<T: Read + Seek>(shp_reader: T, dbf_reader: T) -> Result<Ta
             builder.finish()
         }
         ShapeType::MultipointZ => {
-            let mut builder =
-                GeoTableBuilder::<MultiPointBuilder>::new_with_options(Dimension::XYZ, options);
+            let mut builder = GeoTableBuilder::<MultiPointBuilder>::new_with_options(
+                Dimension::XYZ,
+                table_builder_options,
+            );
 
             for geom_and_record in
                 reader.iter_shapes_and_records_as::<shapefile::MultipointZ, dbase::Record>()
@@ -149,8 +178,10 @@ pub fn read_shapefile<T: Read + Seek>(shp_reader: T, dbf_reader: T) -> Result<Ta
             builder.finish()
         }
         ShapeType::Polyline => {
-            let mut builder =
-                GeoTableBuilder::<MultiLineStringBuilder>::new_with_options(Dimension::XY, options);
+            let mut builder = GeoTableBuilder::<MultiLineStringBuilder>::new_with_options(
+                Dimension::XY,
+                table_builder_options,
+            );
 
             for geom_and_record in
                 reader.iter_shapes_and_records_as::<shapefile::Polyline, dbase::Record>()
@@ -175,7 +206,7 @@ pub fn read_shapefile<T: Read + Seek>(shp_reader: T, dbf_reader: T) -> Result<Ta
         ShapeType::PolylineZ => {
             let mut builder = GeoTableBuilder::<MultiLineStringBuilder>::new_with_options(
                 Dimension::XYZ,
-                options,
+                table_builder_options,
             );
 
             for geom_and_record in
@@ -199,8 +230,10 @@ pub fn read_shapefile<T: Read + Seek>(shp_reader: T, dbf_reader: T) -> Result<Ta
             builder.finish()
         }
         ShapeType::Polygon => {
-            let mut builder =
-                GeoTableBuilder::<MultiPolygonBuilder>::new_with_options(Dimension::XY, options);
+            let mut builder = GeoTableBuilder::<MultiPolygonBuilder>::new_with_options(
+                Dimension::XY,
+                table_builder_options,
+            );
 
             for geom_and_record in
                 reader.iter_shapes_and_records_as::<shapefile::Polygon, dbase::Record>()
@@ -223,8 +256,10 @@ pub fn read_shapefile<T: Read + Seek>(shp_reader: T, dbf_reader: T) -> Result<Ta
             builder.finish()
         }
         ShapeType::PolygonZ => {
-            let mut builder =
-                GeoTableBuilder::<MultiPolygonBuilder>::new_with_options(Dimension::XYZ, options);
+            let mut builder = GeoTableBuilder::<MultiPolygonBuilder>::new_with_options(
+                Dimension::XYZ,
+                table_builder_options,
+            );
 
             for geom_and_record in
                 reader.iter_shapes_and_records_as::<shapefile::PolygonZ, dbase::Record>()
@@ -251,6 +286,16 @@ pub fn read_shapefile<T: Read + Seek>(shp_reader: T, dbf_reader: T) -> Result<Ta
             t
         ))),
     }
+    // ?;
+
+    // // Assign CRS onto the table
+    // let geom_col_idx = table.default_geometry_column_idx()?;
+    // let col = table.geometry_column(Some(geom_col_idx))?;
+    // let field = col.data_type().to_field_with_metadata("geometry", true, &array_metadata);
+
+    // table.remove_column(geom_col_idx);
+    // table.append_column(field.into(), col.array_refs())?;
+    // Ok(table)
 }
 
 impl PropertiesBatchBuilder {
