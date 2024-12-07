@@ -1,19 +1,15 @@
 use arrow::array::AsArray;
-use arrow_array::RecordBatch;
+use arrow_array::{RecordBatch, RecordBatchIterator, RecordBatchReader};
 use arrow_csv::reader::Format;
 use arrow_csv::ReaderBuilder;
-use arrow_schema::{Schema, SchemaRef};
-use geozero::csv::CsvReader;
-use geozero::GeozeroDatasource;
+use arrow_schema::{ArrowError, Schema, SchemaRef};
 use std::io::Read;
+use std::sync::Arc;
 
 use crate::array::{CoordType, WKTArray};
-use crate::datatypes::Dimension;
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
-use crate::io::geozero::array::MixedGeometryStreamBuilder;
-use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
 use crate::io::wkt::read_wkt;
-use crate::table::Table;
 
 /// Options for the CSV reader.
 #[derive(Debug, Clone)]
@@ -109,56 +105,76 @@ pub fn infer_csv_schema(
     let format = options.to_format();
     let (schema, records_read) = format.infer_schema(reader, options.max_records)?;
 
-    let geometry_col_name = find_geometry_column(
-        &schema,
-        options.geometry_column_name.as_ref().map(|x| x.as_str()),
-    )?;
+    let geometry_col_name = find_geometry_column(&schema, options.geometry_column_name.as_deref())?;
 
     Ok((schema, records_read, geometry_col_name))
 }
 
 /// Read a CSV file to a Table
 ///
+/// This expects a geometry to be encoded as WKT within one column.
+///
 /// Note that this is Read and not Read + Seek. This means that you must infer the schema yourself
 /// before calling this function. This allows using with objects that are only `Read` in the case
 /// when you already know the file's schema.
+///
+/// This schema is expected to be the schema inferred by `arrow-csv`'s
+/// [`infer_schema`][Format::infer_schema]. That means the geometry should be a string in the
+/// schema.
 pub fn read_csv<R: Read>(
-    mut reader: R,
+    reader: R,
     schema: SchemaRef,
     options: CSVReaderOptions,
-) -> Result<Table> {
-    let geometry_column_name = find_geometry_column(
-        schema.as_ref(),
-        options.geometry_column_name.as_ref().map(|x| x.as_str()),
-    )?;
-    let mut builder = ReaderBuilder::new(schema)
+) -> Result<impl RecordBatchReader> {
+    let geometry_column_name =
+        find_geometry_column(schema.as_ref(), options.geometry_column_name.as_deref())?;
+    let geometry_column_index = schema.index_of(&geometry_column_name)?;
+
+    // Transform to output schema
+    let mut output_fields = schema.fields().to_vec();
+    output_fields[geometry_column_index] = NativeType::Geometry(options.coord_type)
+        .to_field_with_metadata("geometry", true, &Default::default())
+        .into();
+    let output_schema =
+        Arc::new(Schema::new(output_fields).with_metadata(schema.metadata().clone()));
+    let output_schema2 = output_schema.clone();
+
+    // Create builder
+    let builder = ReaderBuilder::new(schema)
         .with_format(options.to_format())
         .with_batch_size(options.batch_size);
 
-    // Transform to output schema
-    // TODO:
-    let output_schema = Schema::new(vec![]);
-
-    // TODO:
-    let geometry_column_index = 0;
-
     let reader = builder.build(reader)?;
-    for record_batch in reader {
-        let record_batch = record_batch?;
-        let column = record_batch.column(geometry_column_index);
-        let str_col = column.as_string::<i32>();
-        let wkt_arr = WKTArray::new(str_col.clone(), Default::default());
-        let geom_arr = read_wkt(&wkt_arr, options.coord_type, true)?;
+    let iter = reader.into_iter().map(move |batch| {
+        parse_batch(
+            batch,
+            output_schema.clone(),
+            geometry_column_index,
+            options.coord_type,
+        )
+    });
 
-        // Replace column in record batch
-        let mut columns = record_batch.columns().to_vec();
-        columns[geometry_column_index] = geom_arr.into_array_ref();
+    Ok(RecordBatchIterator::new(iter, output_schema2))
+}
 
-        let new_batch = RecordBatch::try_new(output_schema, columns).unwrap();
-        // TODO: yield this record batch.
-    }
+fn parse_batch(
+    batch: std::result::Result<RecordBatch, ArrowError>,
+    output_schema: SchemaRef,
+    geometry_column_index: usize,
+    coord_type: CoordType,
+) -> std::result::Result<RecordBatch, ArrowError> {
+    let batch = batch?;
+    let column = batch.column(geometry_column_index);
+    let str_col = column.as_string::<i32>();
+    let wkt_arr = WKTArray::new(str_col.clone(), Default::default());
+    let geom_arr = read_wkt(&wkt_arr, coord_type, true)
+        .map_err(|err| ArrowError::from_external_error(Box::new(err)))?;
 
-    todo!();
+    // Replace column in record batch
+    let mut columns = batch.columns().to_vec();
+    columns[geometry_column_index] = geom_arr.to_array_ref();
+
+    RecordBatch::try_new(output_schema, columns)
 }
 
 fn find_geometry_column(schema: &Schema, geometry_column_name: Option<&str>) -> Result<String> {
@@ -170,10 +186,10 @@ fn find_geometry_column(schema: &Schema, geometry_column_name: Option<&str>) -> 
         {
             Ok(geometry_col_name.to_string())
         } else {
-            return Err(GeoArrowError::General(format!(
+            Err(GeoArrowError::General(format!(
                 "CSV geometry column specified to have name '{}' but no such column found",
                 geometry_col_name
-            )));
+            )))
         }
     } else {
         let mut field_name: Option<String> = None;
