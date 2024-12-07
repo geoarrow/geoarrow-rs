@@ -52,7 +52,8 @@ pub struct CSVReaderOptions {
 
 impl CSVReaderOptions {
     fn to_format(&self) -> Format {
-        let mut format = Format::default();
+        // Default to having a header
+        let mut format = Format::default().with_header(true);
 
         if let Some(has_header) = self.has_header {
             format = format.with_header(has_header);
