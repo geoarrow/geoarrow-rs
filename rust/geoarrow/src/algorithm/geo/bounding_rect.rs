@@ -44,7 +44,12 @@ impl BoundingRect for PointArray {
             .map(|maybe_g| maybe_g.map(|geom| geom.bounding_rect()))
             .collect();
 
-        (output_geoms, Dimension::XY).into()
+        RectBuilder::from_nullable_rects(
+            output_geoms.iter().map(|x| x.as_ref()),
+            Dimension::XY,
+            self.metadata().clone(),
+        )
+        .finish()
     }
 }
 
@@ -68,7 +73,12 @@ macro_rules! iter_geo_impl {
                     .map(|maybe_g| maybe_g.and_then(|geom| geom.bounding_rect()))
                     .collect();
 
-                (output_geoms, Dimension::XY).into()
+                RectBuilder::from_nullable_rects(
+                    output_geoms.iter().map(|x| x.as_ref()),
+                    Dimension::XY,
+                    self.metadata().clone(),
+                )
+                .finish()
             }
         }
     };
