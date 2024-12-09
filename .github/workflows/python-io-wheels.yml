@@ -31,7 +31,7 @@ jobs:
           rust-toolchain: nightly
           target: ${{ matrix.target }}
           manylinux: manylinux_2_28
-          args: --release --out dist --find-interpreter -m python/geoarrow-io/Cargo.toml
+          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -m python/geoarrow-io/Cargo.toml
           before-script-linux: |
             yum update -y
             yum install openssl openssl-devel perl-IPC-Cmd -y
@@ -67,7 +67,7 @@ jobs:
   #         rust-toolchain: nightly
   #         target: ${{ matrix.target }}
   #         manylinux: auto
-  #         args: --release --out dist --find-interpreter -m python/geoarrow-io/Cargo.toml
+  #         args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -m python/geoarrow-io/Cargo.toml
 
   #     # This is currently failing with
   #     # python: command not found
@@ -120,7 +120,7 @@ jobs:
           RUSTFLAGS: "-Zinline-mir=no"
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --find-interpreter -m python/geoarrow-io/Cargo.toml
+          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -m python/geoarrow-io/Cargo.toml
           sccache: "true"
 
       - name: Install built wheel - ${{ matrix.platform.target }}
@@ -156,7 +156,7 @@ jobs:
         with:
           rust-toolchain: nightly
           target: ${{ matrix.target }}
-          args: --release --out dist --find-interpreter -m python/geoarrow-io/Cargo.toml
+          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -m python/geoarrow-io/Cargo.toml
 
       - name: Install built wheel
         run: |
@@ -193,7 +193,7 @@ jobs:
   #         target: ${{ matrix.target }}
   #         manylinux: musllinux_1_2
   # TODO: update rustflags env
-  #         args: --release --out dist --find-interpreter -m python/geoarrow-io/Cargo.toml
+  #         args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -m python/geoarrow-io/Cargo.toml
 
   #     - name: Install built wheel
   #       if: matrix.target == 'x86_64-unknown-linux-musl'
@@ -237,7 +237,7 @@ jobs:
   #         target: ${{ matrix.platform.target }}
   #         manylinux: musllinux_1_2
   # TODO: update rustflags env
-  #         args: --release --out dist --find-interpreter -m python/geoarrow-io/Cargo.toml
+  #         args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -m python/geoarrow-io/Cargo.toml
 
   #     - uses: uraimo/run-on-arch-action@v2.5.1
   #       name: Install built wheel
