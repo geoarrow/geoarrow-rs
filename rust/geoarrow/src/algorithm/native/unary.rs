@@ -111,7 +111,7 @@ pub trait UnaryPoint<'a>: ArrayAccessor<'a> + NativeArray {
         let builder = PointBuilder::from_points(
             result_geom_iter,
             output_dim,
-            Some(self.coord_type()),
+            self.coord_type(),
             self.metadata(),
         );
         let mut result = builder.finish();

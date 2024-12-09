@@ -879,13 +879,13 @@ impl<'a> GeometryBuilder {
     /// Create this builder from a slice of Geometries.
     pub fn from_geometries(
         geoms: &[impl GeometryTrait<T = f64>],
-        coord_type: Option<CoordType>,
+        coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(Some),
-            coord_type.unwrap_or_default(),
+            coord_type,
             metadata,
             prefer_multi,
         )?;
@@ -896,13 +896,13 @@ impl<'a> GeometryBuilder {
     /// Create this builder from a slice of nullable Geometries.
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
-        coord_type: Option<CoordType>,
+        coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(|x| x.as_ref()),
-            coord_type.unwrap_or_default(),
+            coord_type,
             metadata,
             prefer_multi,
         )?;
@@ -912,7 +912,7 @@ impl<'a> GeometryBuilder {
 
     pub(crate) fn from_wkb<W: OffsetSizeTrait>(
         wkb_objects: &[Option<WKB<'_, W>>],
-        coord_type: Option<CoordType>,
+        coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
