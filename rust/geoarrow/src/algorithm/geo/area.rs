@@ -93,6 +93,7 @@ iter_geo_impl!(MultiPolygonArray);
 iter_geo_impl!(MixedGeometryArray);
 iter_geo_impl!(GeometryCollectionArray);
 iter_geo_impl!(RectArray);
+iter_geo_impl!(GeometryArray);
 
 impl Area for &dyn NativeArray {
     type Output = Result<Float64Array>;
