@@ -2,106 +2,106 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/CHANGELOG/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/api/compute/enums/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/api/compute/functions/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/api/compute/types/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/api/core/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/api/core/constructors/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/api/core/enums/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/api/core/functions/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/api/core/types/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/api/core/geometry/array/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/api/core/geometry/chunked/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/api/core/geometry/scalar/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/api/io/arrow_ipc/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/api/io/csv/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/api/io/flatgeobuf/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/api/io/gdal/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/api/io/geojson/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/api/io/geoparquet/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/api/io/postgis/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/api/io/shapefile/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/ecosystem/geopandas/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/ecosystem/lonboard/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/ecosystem/pyogrio/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/ecosystem/shapely/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
     <url>
          <loc>https://geoarrow.org/geoarrow-rs/python/latest/performance/multithreading/</loc>
-         <lastmod>2024-12-06</lastmod>
+         <lastmod>2024-12-09</lastmod>
     </url>
 </urlset>

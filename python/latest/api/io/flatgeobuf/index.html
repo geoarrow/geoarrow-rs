@@ -1428,7 +1428,8 @@ location.</p>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">store</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n">ObjectStore</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">batch_size</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="mi">65536</span><span class="p">,</span>
-    <span class="n">bbox</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">bbox</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">coord_type</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="geoarrow.rust.core.enums.CoordType" href="../../core/enums/#geoarrow.rust.core.enums.CoordType">CoordType</a></span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-internal" title="geoarrow.rust.core.types.CoordTypeT" href="../../core/types/#geoarrow.rust.core.types.CoordTypeT">CoordTypeT</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="arro3.core.Table" href="https://kylebarron.dev/arro3/latest/api/core/table/#arro3.core.Table">Table</a></span>
 </code></pre></div>
 
@@ -1493,7 +1494,16 @@ constructor.</p>
               (<code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a>, <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a>, <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a>, <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a>] | None</code>)
           –
           <div class="doc-md-description">
-            <p>A spatial filter for reading rows, of the format (minx, miny, maxx, maxy). If set to</p>
+            <p>A spatial filter for reading rows, of the format (minx, miny, maxx, maxy). If set to
+<code>None</code>, no spatial filtering will be performed.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code>coord_type</code></b>
+              (<code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.enums.CoordType" href="../../core/enums/#geoarrow.rust.core.enums.CoordType">CoordType</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.types.CoordTypeT" href="../../core/types/#geoarrow.rust.core.types.CoordTypeT">CoordTypeT</a> | None</code>)
+          –
+          <div class="doc-md-description">
+            <p>The GeoArrow coordinate variant to use.</p>
           </div>
         </li>
     </ul>

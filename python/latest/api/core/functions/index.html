@@ -743,6 +743,24 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#crs-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      CRS Access
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.get_crs" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;get_crs
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1575,6 +1593,24 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#crs-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      CRS Access
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.get_crs" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;get_crs
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2317,6 +2353,77 @@ input: A GeoArrow Table.</p>
 
 
   </div>
+
+    </div>
+
+</div><h2 id="crs-access">CRS Access<a class="headerlink" href="#crs-access" title="Permanent link">&para;</a></h2>
+
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="geoarrow.rust.core.get_crs" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">geoarrow.rust.core.get_crs</span>
+
+
+<a href="#geoarrow.rust.core.get_crs" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">get_crs</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="arro3.core.types.ArrowArrayExportable" href="https://kylebarron.dev/arro3/latest/api/core/types/#arro3.core.types.ArrowArrayExportable">ArrowArrayExportable</a></span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-external" title="arro3.core.types.ArrowStreamExportable" href="https://kylebarron.dev/arro3/latest/api/core/types/#arro3.core.types.ArrowStreamExportable">ArrowStreamExportable</a></span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-external" title="arro3.core.types.ArrowSchemaExportable" href="https://kylebarron.dev/arro3/latest/api/core/types/#arro3.core.types.ArrowSchemaExportable">ArrowSchemaExportable</a></span><span class="p">,</span>
+    <span class="o">/</span><span class="p">,</span>
+    <span class="n">column</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="pyproj.CRS">CRS</span></span> <span class="o">|</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p>Get the CRS from a GeoArrow object.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+          <b><code>data</code></b>
+              (<code><a class="autorefs autorefs-external" title="arro3.core.types.ArrowArrayExportable" href="https://kylebarron.dev/arro3/latest/api/core/types/#arro3.core.types.ArrowArrayExportable">ArrowArrayExportable</a> | <a class="autorefs autorefs-external" title="arro3.core.types.ArrowStreamExportable" href="https://kylebarron.dev/arro3/latest/api/core/types/#arro3.core.types.ArrowStreamExportable">ArrowStreamExportable</a> | <a class="autorefs autorefs-external" title="arro3.core.types.ArrowSchemaExportable" href="https://kylebarron.dev/arro3/latest/api/core/types/#arro3.core.types.ArrowSchemaExportable">ArrowSchemaExportable</a></code>)
+          –
+          <div class="doc-md-description">
+            <p>A GeoArrow object. This can be an Array, ChunkedArray, ArrayReader, RecordBatchReader, Table, Field, or Schema.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code>column</code></b>
+              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a> | None</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>The name of the geometry column to retrieve, if there's more than one. For Schema, Table, and RecordBatchReader inputs, there may be more than one geometry column included. If there are multiple geometry columns, you must pass this <code>column</code> parameter. If there is only one geometry column, it will be inferred. Defaults to None.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/exceptions.html#ValueError">ValueError</a></code>
+            –
+          <div class="doc-md-description">
+            <p>If no geometry column could be found.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="pyproj.CRS">CRS</span> | None</code>
+          –
+          <div class="doc-md-description">
+            <p>a pyproj CRS object.</p>
+          </div>
+        </li>
+    </ul>
 
     </div>
 

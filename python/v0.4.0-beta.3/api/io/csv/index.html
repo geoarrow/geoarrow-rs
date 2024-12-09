@@ -1295,9 +1295,17 @@
 <a href="#geoarrow.rust.io.read_csv" class="headerlink" title="Permanent link">&para;</a></h2>
 <div class="doc-signature codehilite"><pre><span></span><code><span class="nf">read_csv</span><span class="p">(</span>
     <span class="n">file</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-external" title="typing.BinaryIO" href="https://docs.python.org/3/library/typing.html#typing.BinaryIO">BinaryIO</a></span><span class="p">,</span>
-    <span class="n">geometry_column_name</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">batch_size</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="mi">65536</span>
+    <span class="n">geometry_name</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="mi">65536</span><span class="p">,</span>
+    <span class="n">coord_type</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="geoarrow.rust.core.enums.CoordType" href="../../core/enums/#geoarrow.rust.core.enums.CoordType">CoordType</a></span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-internal" title="geoarrow.rust.core.types.CoordTypeT" href="../../core/types/#geoarrow.rust.core.types.CoordTypeT">CoordTypeT</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">has_header</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">max_records</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">delimiter</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">escape</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">quote</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">terminator</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">comment</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="arro3.core.Table" href="https://kylebarron.dev/arro3/latest/api/core/table/#arro3.core.Table">Table</a></span>
 </code></pre></div>
 
@@ -1316,9 +1324,14 @@
             <p>the path to the file or a Python file object in binary read mode.</p>
           </div>
         </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Other Parameters:</span></p>
+    <ul>
         <li class="doc-section-item field-body">
-          <b><code>geometry_column_name</code></b>
-              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>)
+          <b><code>geometry_name</code></b>
+              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a> | None</code>)
           –
           <div class="doc-md-description">
             <p>the name of the geometry column within the CSV.</p>
@@ -1326,12 +1339,76 @@
         </li>
         <li class="doc-section-item field-body">
           <b><code>batch_size</code></b>
-              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></code>, default:
-                  <code>65536</code>
-)
+              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></code>)
           –
           <div class="doc-md-description">
             <p>the number of rows to include in each internal batch of the table.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code>coord_type</code></b>
+              (<code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.enums.CoordType" href="../../core/enums/#geoarrow.rust.core.enums.CoordType">CoordType</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.types.CoordTypeT" href="../../core/types/#geoarrow.rust.core.types.CoordTypeT">CoordTypeT</a> | None</code>)
+          –
+          <div class="doc-md-description">
+            <p>The coordinate type. Defaults to None.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code>has_header</code></b>
+              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></code>)
+          –
+          <div class="doc-md-description">
+            <p>Set whether the CSV file has a header. Defaults to <code>True</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code>max_records</code></b>
+              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a> | None</code>)
+          –
+          <div class="doc-md-description">
+            <p>The maximum number of records to read to infer schema. Defaults to
+<code>None</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code>delimiter</code></b>
+              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a> | None</code>)
+          –
+          <div class="doc-md-description">
+            <p>Set the CSV file's column delimiter as a byte character. Defaults to
+<code>None</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code>escape</code></b>
+              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a> | None</code>)
+          –
+          <div class="doc-md-description">
+            <p>Set the CSV escape character. Defaults to <code>None</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code>quote</code></b>
+              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a> | None</code>)
+          –
+          <div class="doc-md-description">
+            <p>Set the CSV quote character. Defaults to <code>None</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code>terminator</code></b>
+              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a> | None</code>)
+          –
+          <div class="doc-md-description">
+            <p>Set the line terminator. Defaults to <code>None</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code>comment</code></b>
+              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a> | None</code>)
+          –
+          <div class="doc-md-description">
+            <p>Set the comment character. Defaults to <code>None</code>.</p>
           </div>
         </li>
     </ul>

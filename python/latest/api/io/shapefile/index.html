@@ -1276,7 +1276,10 @@
 
 <a href="#geoarrow.rust.io.read_shapefile" class="headerlink" title="Permanent link">&para;</a></h2>
 <div class="doc-signature codehilite"><pre><span></span><code><span class="nf">read_shapefile</span><span class="p">(</span>
-    <span class="n">shp_file</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="typing.BinaryIO" href="https://docs.python.org/3/library/typing.html#typing.BinaryIO">BinaryIO</a></span><span class="p">],</span> <span class="n">dbf_file</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="typing.BinaryIO" href="https://docs.python.org/3/library/typing.html#typing.BinaryIO">BinaryIO</a></span><span class="p">]</span>
+    <span class="n">shp_path</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="mi">65536</span><span class="p">,</span>
+    <span class="n">coord_type</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="geoarrow.rust.core.enums.CoordType" href="../../core/enums/#geoarrow.rust.core.enums.CoordType">CoordType</a></span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-internal" title="geoarrow.rust.core.types.CoordTypeT" href="../../core/types/#geoarrow.rust.core.types.CoordTypeT">CoordTypeT</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="arro3.core.Table" href="https://kylebarron.dev/arro3/latest/api/core/table/#arro3.core.Table">Table</a></span>
 </code></pre></div>
 
@@ -1284,28 +1287,36 @@
 
         <p>Read a Shapefile into an Arrow Table.</p>
 <p>The returned Arrow table will have geometry information in native GeoArrow encoding.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Coordinate Reference System information is not currently read from the Shapefile.</p>
-</div>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
     <ul>
         <li class="doc-section-item field-body">
           <b><code>shp_file</code></b>
-              (<code><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a>, <a class="autorefs autorefs-external" title="typing.BinaryIO" href="https://docs.python.org/3/library/typing.html#typing.BinaryIO">BinaryIO</a>]</code>)
           –
           <div class="doc-md-description">
-            <p>the path to the <code>.shp</code> file or the <code>.shp</code> file as a Python file object in binary read mode.</p>
+            <p>the path to the <code>.shp</code> file</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Other Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+          <b><code>batch_size</code></b>
+              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></code>)
+          –
+          <div class="doc-md-description">
+            <p>the number of rows to include in each internal batch of the table.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
-          <b><code>dbf_file</code></b>
-              (<code><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a>, <a class="autorefs autorefs-external" title="typing.BinaryIO" href="https://docs.python.org/3/library/typing.html#typing.BinaryIO">BinaryIO</a>]</code>)
+          <b><code>coord_type</code></b>
+              (<code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.enums.CoordType" href="../../core/enums/#geoarrow.rust.core.enums.CoordType">CoordType</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.types.CoordTypeT" href="../../core/types/#geoarrow.rust.core.types.CoordTypeT">CoordTypeT</a> | None</code>)
           –
           <div class="doc-md-description">
-            <p>the path to the <code>.dbf</code> file or the <code>.dbf</code> file as a Python file object in binary read mode.</p>
+            <p>The coordinate type. Defaults to None.</p>
           </div>
         </li>
     </ul>
