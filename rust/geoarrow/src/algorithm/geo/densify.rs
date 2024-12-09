@@ -6,8 +6,9 @@ use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
-use geo::Densify as _Densify;
 use geo::Euclidean;
+use geo::{CoordFloat, Densify as _Densify};
+use num_traits::FromPrimitive;
 
 /// Return a new linear geometry containing both existing and new interpolated coordinates with
 /// a maximum distance of `max_distance` between them.
@@ -21,7 +22,7 @@ pub trait Densify {
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
-    ($type:ty, $geo_type:ty) => {
+    ($type:ty, $builder_type:ty, $method:ident, $geo_type:ty) => {
         impl Densify for $type {
             type Output = $type;
 
@@ -31,29 +32,124 @@ macro_rules! iter_geo_impl {
                     .map(|maybe_g| maybe_g.map(|geom| geom.densify::<Euclidean>(max_distance)))
                     .collect();
 
-                (output_geoms, Dimension::XY).into()
+                <$builder_type>::$method(
+                    output_geoms.as_slice(),
+                    Dimension::XY,
+                    Some(self.coord_type()),
+                    self.metadata.clone(),
+                )
+                .finish()
             }
         }
     };
 }
 
-iter_geo_impl!(LineStringArray, geo::LineString);
-iter_geo_impl!(PolygonArray, geo::Polygon);
-iter_geo_impl!(MultiLineStringArray, geo::MultiLineString);
-iter_geo_impl!(MultiPolygonArray, geo::MultiPolygon);
+iter_geo_impl!(
+    LineStringArray,
+    LineStringBuilder,
+    from_nullable_line_strings,
+    geo::LineString
+);
+iter_geo_impl!(
+    PolygonArray,
+    PolygonBuilder,
+    from_nullable_polygons,
+    geo::Polygon
+);
+iter_geo_impl!(
+    MultiLineStringArray,
+    MultiLineStringBuilder,
+    from_nullable_multi_line_strings,
+    geo::MultiLineString
+);
+iter_geo_impl!(
+    MultiPolygonArray,
+    MultiPolygonBuilder,
+    from_nullable_multi_polygons,
+    geo::MultiPolygon
+);
+
+#[repr(transparent)]
+struct GeometryDensifyWrapper<'a, T: CoordFloat>(&'a geo::Geometry<T>);
+
+impl<F: geo::CoordFloat + FromPrimitive> geo::Densify<F> for GeometryDensifyWrapper<'_, F> {
+    type Output = geo::Geometry<F>;
+
+    fn densify<MetricSpace>(&self, max_segment_length: F) -> Self::Output
+    where
+        MetricSpace: geo::Distance<F, geo::Point<F>, geo::Point<F>> + geo::InterpolatePoint<F>,
+    {
+        match &self.0 {
+            geo::Geometry::Point(g) => geo::Geometry::Point(*g),
+            geo::Geometry::LineString(g) => {
+                geo::Geometry::LineString(g.densify::<MetricSpace>(max_segment_length))
+            }
+            geo::Geometry::Polygon(g) => {
+                geo::Geometry::Polygon(g.densify::<MetricSpace>(max_segment_length))
+            }
+            geo::Geometry::MultiPoint(g) => geo::Geometry::MultiPoint(g.clone()),
+            geo::Geometry::MultiLineString(g) => {
+                geo::Geometry::MultiLineString(g.densify::<MetricSpace>(max_segment_length))
+            }
+            geo::Geometry::MultiPolygon(g) => {
+                geo::Geometry::MultiPolygon(g.densify::<MetricSpace>(max_segment_length))
+            }
+            geo::Geometry::Triangle(g) => {
+                geo::Geometry::Polygon(g.densify::<MetricSpace>(max_segment_length))
+            }
+            geo::Geometry::Rect(g) => {
+                geo::Geometry::Polygon(g.densify::<MetricSpace>(max_segment_length))
+            }
+            geo::Geometry::Line(g) => {
+                geo::Geometry::LineString(g.densify::<MetricSpace>(max_segment_length))
+            }
+            geo::Geometry::GeometryCollection(g) => {
+                let mut output = Vec::with_capacity(g.len());
+                for inner_geom in g.iter() {
+                    output.push(
+                        GeometryDensifyWrapper(inner_geom)
+                            .densify::<MetricSpace>(max_segment_length),
+                    );
+                }
+                geo::Geometry::GeometryCollection(geo::GeometryCollection::new_from(output))
+            }
+        }
+    }
+}
+
+impl Densify for GeometryArray {
+    type Output = Result<Self>;
+
+    fn densify(&self, max_distance: f64) -> Self::Output {
+        let output_geoms: Vec<Option<geo::Geometry>> = self
+            .iter_geo()
+            .map(|maybe_g| {
+                maybe_g.map(|geom| GeometryDensifyWrapper(&geom).densify::<Euclidean>(max_distance))
+            })
+            .collect();
+
+        Ok(GeometryBuilder::from_nullable_geometries(
+            output_geoms.as_slice(),
+            Some(self.coord_type()),
+            self.metadata.clone(),
+            false,
+        )?
+        .finish())
+    }
+}
 
 impl Densify for &dyn NativeArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
     fn densify(&self, max_distance: f64) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
-            LineString(_, XY) => Arc::new(self.as_line_string().densify(max_distance)),
-            Polygon(_, XY) => Arc::new(self.as_polygon().densify(max_distance)),
-            MultiLineString(_, XY) => Arc::new(self.as_multi_line_string().densify(max_distance)),
-            MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon().densify(max_distance)),
+            LineString(_, _) => Arc::new(self.as_line_string().densify(max_distance)),
+            Polygon(_, _) => Arc::new(self.as_polygon().densify(max_distance)),
+            MultiLineString(_, _) => Arc::new(self.as_multi_line_string().densify(max_distance)),
+            MultiPolygon(_, _) => Arc::new(self.as_multi_polygon().densify(max_distance)),
+            Geometry(_) => Arc::new(self.as_geometry().densify(max_distance)?),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -83,14 +179,13 @@ impl Densify for &dyn ChunkedNativeArray {
     type Output = Result<Arc<dyn ChunkedNativeArray>>;
 
     fn densify(&self, max_distance: f64) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
-            LineString(_, XY) => Arc::new(self.as_line_string().densify(max_distance)),
-            Polygon(_, XY) => Arc::new(self.as_polygon().densify(max_distance)),
-            MultiLineString(_, XY) => Arc::new(self.as_multi_line_string().densify(max_distance)),
-            MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon().densify(max_distance)),
+            LineString(_, _) => Arc::new(self.as_line_string().densify(max_distance)),
+            Polygon(_, _) => Arc::new(self.as_polygon().densify(max_distance)),
+            MultiLineString(_, _) => Arc::new(self.as_multi_line_string().densify(max_distance)),
+            MultiPolygon(_, _) => Arc::new(self.as_multi_polygon().densify(max_distance)),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
