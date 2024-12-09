@@ -383,13 +383,13 @@ impl PolygonBuilder {
     pub fn from_polygons(
         geoms: &[impl PolygonTrait<T = f64>],
         dim: Dimension,
-        coord_type: Option<CoordType>,
+        coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(Some),
             dim,
-            coord_type.unwrap_or_default(),
+            coord_type,
             metadata,
         );
         array.extend_from_iter(geoms.iter().map(Some));
@@ -399,13 +399,13 @@ impl PolygonBuilder {
     pub fn from_nullable_polygons(
         geoms: &[Option<impl PolygonTrait<T = f64>>],
         dim: Dimension,
-        coord_type: Option<CoordType>,
+        coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(|x| x.as_ref()),
             dim,
-            coord_type.unwrap_or_default(),
+            coord_type,
             metadata,
         );
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
@@ -415,16 +415,11 @@ impl PolygonBuilder {
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         dim: Dimension,
-        coord_type: Option<CoordType>,
+        coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
         let capacity = PolygonCapacity::from_geometries(geoms.iter().map(|x| x.as_ref()))?;
-        let mut array = Self::with_capacity_and_options(
-            dim,
-            capacity,
-            coord_type.unwrap_or_default(),
-            metadata,
-        );
+        let mut array = Self::with_capacity_and_options(dim, capacity, coord_type, metadata);
         array.extend_from_geometry_iter(geoms.iter().map(|x| x.as_ref()))?;
         Ok(array)
     }
@@ -432,7 +427,7 @@ impl PolygonBuilder {
     pub(crate) fn from_wkb<W: OffsetSizeTrait>(
         wkb_objects: &[Option<WKB<'_, W>>],
         dim: Dimension,
-        coord_type: Option<CoordType>,
+        coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
         let wkb_objects2 = wkb_objects

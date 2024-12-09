@@ -36,7 +36,7 @@ impl FromWKB for PointArray {
         dim: Dimension,
     ) -> Result<Self> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
-        let builder = PointBuilder::from_wkb(&wkb_objects, dim, Some(coord_type), arr.metadata())?;
+        let builder = PointBuilder::from_wkb(&wkb_objects, dim, coord_type, arr.metadata())?;
         Ok(builder.finish())
     }
 }
@@ -52,8 +52,7 @@ macro_rules! impl_from_wkb {
                 dim: Dimension,
             ) -> Result<Self> {
                 let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
-                let builder =
-                    <$builder>::from_wkb(&wkb_objects, dim, Some(coord_type), arr.metadata())?;
+                let builder = <$builder>::from_wkb(&wkb_objects, dim, coord_type, arr.metadata())?;
                 Ok(builder.finish())
             }
         }
@@ -75,13 +74,8 @@ impl FromWKB for MixedGeometryArray {
         dim: Dimension,
     ) -> Result<Self> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
-        let builder = MixedGeometryBuilder::from_wkb(
-            &wkb_objects,
-            dim,
-            Some(coord_type),
-            arr.metadata(),
-            true,
-        )?;
+        let builder =
+            MixedGeometryBuilder::from_wkb(&wkb_objects, dim, coord_type, arr.metadata(), true)?;
         Ok(builder.finish())
     }
 }
@@ -98,7 +92,7 @@ impl FromWKB for GeometryCollectionArray {
         let builder = GeometryCollectionBuilder::from_wkb(
             &wkb_objects,
             dim,
-            Some(coord_type),
+            coord_type,
             arr.metadata(),
             true,
         )?;
@@ -118,7 +112,7 @@ impl FromWKB for Arc<dyn NativeArray> {
         let builder = GeometryCollectionBuilder::from_wkb(
             &wkb_objects,
             dim,
-            Some(coord_type),
+            coord_type,
             arr.metadata(),
             true,
         )?;
@@ -191,44 +185,38 @@ pub fn from_wkb<O: OffsetSizeTrait>(
     let wkb_objects: Vec<Option<crate::scalar::WKB<'_, O>>> = arr.iter().collect();
     match target_geo_data_type {
         Point(coord_type, dim) => {
-            let builder =
-                PointBuilder::from_wkb(&wkb_objects, dim, Some(coord_type), arr.metadata())?;
+            let builder = PointBuilder::from_wkb(&wkb_objects, dim, coord_type, arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
         LineString(coord_type, dim) => {
             let builder =
-                LineStringBuilder::from_wkb(&wkb_objects, dim, Some(coord_type), arr.metadata())?;
+                LineStringBuilder::from_wkb(&wkb_objects, dim, coord_type, arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
         Polygon(coord_type, dim) => {
-            let builder =
-                PolygonBuilder::from_wkb(&wkb_objects, dim, Some(coord_type), arr.metadata())?;
+            let builder = PolygonBuilder::from_wkb(&wkb_objects, dim, coord_type, arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
         MultiPoint(coord_type, dim) => {
             let builder =
-                MultiPointBuilder::from_wkb(&wkb_objects, dim, Some(coord_type), arr.metadata())?;
+                MultiPointBuilder::from_wkb(&wkb_objects, dim, coord_type, arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
         MultiLineString(coord_type, dim) => {
-            let builder = MultiLineStringBuilder::from_wkb(
-                &wkb_objects,
-                dim,
-                Some(coord_type),
-                arr.metadata(),
-            )?;
+            let builder =
+                MultiLineStringBuilder::from_wkb(&wkb_objects, dim, coord_type, arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
         MultiPolygon(coord_type, dim) => {
             let builder =
-                MultiPolygonBuilder::from_wkb(&wkb_objects, dim, Some(coord_type), arr.metadata())?;
+                MultiPolygonBuilder::from_wkb(&wkb_objects, dim, coord_type, arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
         Mixed(coord_type, dim) => {
             let builder = MixedGeometryBuilder::from_wkb(
                 &wkb_objects,
                 dim,
-                Some(coord_type),
+                coord_type,
                 arr.metadata(),
                 prefer_multi,
             )?;
@@ -238,7 +226,7 @@ pub fn from_wkb<O: OffsetSizeTrait>(
             let builder = GeometryCollectionBuilder::from_wkb(
                 &wkb_objects,
                 dim,
-                Some(coord_type),
+                coord_type,
                 arr.metadata(),
                 prefer_multi,
             )?;
@@ -249,12 +237,8 @@ pub fn from_wkb<O: OffsetSizeTrait>(
             target_geo_data_type,
         ))),
         Geometry(coord_type) => {
-            let builder = GeometryBuilder::from_wkb(
-                &wkb_objects,
-                Some(coord_type),
-                arr.metadata(),
-                prefer_multi,
-            )?;
+            let builder =
+                GeometryBuilder::from_wkb(&wkb_objects, coord_type, arr.metadata(), prefer_multi)?;
             Ok(Arc::new(builder.finish()))
         }
     }

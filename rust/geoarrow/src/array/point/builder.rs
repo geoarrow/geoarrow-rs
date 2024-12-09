@@ -230,15 +230,11 @@ impl PointBuilder {
     pub fn from_points<'a>(
         geoms: impl ExactSizeIterator<Item = &'a (impl PointTrait<T = f64> + 'a)>,
         dim: Dimension,
-        coord_type: Option<CoordType>,
+        coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
-        let mut mutable_array = Self::with_capacity_and_options(
-            dim,
-            geoms.len(),
-            coord_type.unwrap_or_default(),
-            metadata,
-        );
+        let mut mutable_array =
+            Self::with_capacity_and_options(dim, geoms.len(), coord_type, metadata);
         geoms
             .into_iter()
             .for_each(|maybe_point| mutable_array.push_point(Some(maybe_point)));
@@ -248,15 +244,11 @@ impl PointBuilder {
     pub fn from_nullable_points<'a>(
         geoms: impl ExactSizeIterator<Item = Option<&'a (impl PointTrait<T = f64> + 'a)>>,
         dim: Dimension,
-        coord_type: Option<CoordType>,
+        coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
-        let mut mutable_array = Self::with_capacity_and_options(
-            dim,
-            geoms.len(),
-            coord_type.unwrap_or_default(),
-            metadata,
-        );
+        let mut mutable_array =
+            Self::with_capacity_and_options(dim, geoms.len(), coord_type, metadata);
         geoms
             .into_iter()
             .for_each(|maybe_point| mutable_array.push_point(maybe_point));
@@ -266,16 +258,11 @@ impl PointBuilder {
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         dim: Dimension,
-        coord_type: Option<CoordType>,
+        coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
         let capacity = geoms.len();
-        let mut array = Self::with_capacity_and_options(
-            dim,
-            capacity,
-            coord_type.unwrap_or_default(),
-            metadata,
-        );
+        let mut array = Self::with_capacity_and_options(dim, capacity, coord_type, metadata);
         array.extend_from_geometry_iter(geoms.iter().map(|x| x.as_ref()))?;
         Ok(array)
     }
@@ -283,7 +270,7 @@ impl PointBuilder {
     pub(crate) fn from_wkb<O: OffsetSizeTrait>(
         wkb_objects: &[Option<WKB<'_, O>>],
         dim: Dimension,
-        coord_type: Option<CoordType>,
+        coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
         let wkb_objects2 = wkb_objects
