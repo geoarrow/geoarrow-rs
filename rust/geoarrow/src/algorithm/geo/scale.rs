@@ -99,7 +99,6 @@ pub trait Scale: Sized {
     ) -> Self::Output;
 }
 
-// Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl Scale for PointArray {
     type Output = Self;
 
@@ -108,7 +107,12 @@ impl Scale for PointArray {
         x_factor: &BroadcastablePrimitive<Float64Type>,
         y_factor: &BroadcastablePrimitive<Float64Type>,
     ) -> Self {
-        let mut output_array = PointBuilder::with_capacity(Dimension::XY, self.buffer_lengths());
+        let mut output_array = PointBuilder::with_capacity_and_options(
+            Dimension::XY,
+            self.buffer_lengths(),
+            self.coord_type(),
+            self.metadata().clone(),
+        );
 
         self.iter_geo()
             .zip(x_factor)
@@ -130,7 +134,12 @@ impl Scale for PointArray {
         y_factor: &BroadcastablePrimitive<Float64Type>,
         origin: geo::Point,
     ) -> Self {
-        let mut output_array = PointBuilder::with_capacity(Dimension::XY, self.buffer_lengths());
+        let mut output_array = PointBuilder::with_capacity_and_options(
+            Dimension::XY,
+            self.buffer_lengths(),
+            self.coord_type(),
+            self.metadata().clone(),
+        );
 
         self.iter_geo()
             .zip(x_factor)
@@ -160,8 +169,12 @@ macro_rules! iter_geo_impl {
                 x_factor: &BroadcastablePrimitive<Float64Type>,
                 y_factor: &BroadcastablePrimitive<Float64Type>,
             ) -> Self {
-                let mut output_array =
-                    <$builder_type>::with_capacity(Dimension::XY, self.buffer_lengths());
+                let mut output_array = <$builder_type>::with_capacity_and_options(
+                    Dimension::XY,
+                    self.buffer_lengths(),
+                    self.coord_type(),
+                    self.metadata().clone(),
+                );
 
                 self.iter_geo().zip(x_factor).zip(y_factor).for_each(
                     |((maybe_g, x_factor), y_factor)| {
@@ -184,8 +197,12 @@ macro_rules! iter_geo_impl {
                 y_factor: &BroadcastablePrimitive<Float64Type>,
                 origin: geo::Point,
             ) -> Self {
-                let mut output_array =
-                    <$builder_type>::with_capacity(Dimension::XY, self.buffer_lengths());
+                let mut output_array = <$builder_type>::with_capacity_and_options(
+                    Dimension::XY,
+                    self.buffer_lengths(),
+                    self.coord_type(),
+                    self.metadata().clone(),
+                );
 
                 self.iter_geo().zip(x_factor).zip(y_factor).for_each(
                     |((maybe_g, x_factor), y_factor)| {
@@ -221,6 +238,63 @@ iter_geo_impl!(
 );
 iter_geo_impl!(MultiPolygonArray, MultiPolygonBuilder, push_multi_polygon);
 
+impl Scale for GeometryArray {
+    type Output = Result<Self>;
+
+    fn scale_xy(
+        &self,
+        x_factor: &BroadcastablePrimitive<Float64Type>,
+        y_factor: &BroadcastablePrimitive<Float64Type>,
+    ) -> Self::Output {
+        let mut output_array = GeometryBuilder::with_capacity_and_options(
+            self.buffer_lengths(),
+            self.coord_type(),
+            self.metadata().clone(),
+            false,
+        );
+
+        self.iter_geo().zip(x_factor).zip(y_factor).try_for_each(
+            |((maybe_g, x_factor), y_factor)| {
+                output_array.push_geometry(
+                    maybe_g
+                        .map(|geom| geom.scale_xy(x_factor.unwrap(), y_factor.unwrap()))
+                        .as_ref(),
+                )
+            },
+        )?;
+
+        Ok(output_array.finish())
+    }
+
+    fn scale_around_point(
+        &self,
+        x_factor: &BroadcastablePrimitive<Float64Type>,
+        y_factor: &BroadcastablePrimitive<Float64Type>,
+        origin: geo::Point,
+    ) -> Self::Output {
+        let mut output_array = GeometryBuilder::with_capacity_and_options(
+            self.buffer_lengths(),
+            self.coord_type(),
+            self.metadata().clone(),
+            false,
+        );
+
+        self.iter_geo().zip(x_factor).zip(y_factor).try_for_each(
+            |((maybe_g, x_factor), y_factor)| {
+                output_array.push_geometry(
+                    maybe_g
+                        .map(|geom| {
+                            geom.scale_around_point(x_factor.unwrap(), y_factor.unwrap(), origin)
+                        })
+                        .as_ref(),
+                )
+            },
+        )?;
+
+        Ok(output_array.finish())
+    }
+}
+
 impl Scale for &dyn NativeArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
@@ -235,19 +309,19 @@ impl Scale for &dyn NativeArray {
             }};
         }
 
-        use Dimension::*;
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
-            Point(_, XY) => impl_method!(as_point),
-            LineString(_, XY) => impl_method!(as_line_string),
-            Polygon(_, XY) => impl_method!(as_polygon),
-            MultiPoint(_, XY) => impl_method!(as_multi_point),
-            MultiLineString(_, XY) => impl_method!(as_multi_line_string),
-            MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
-            // Mixed(_, XY) => impl_method!(as_mixed),
-            // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
-            // Rect(XY) => impl_method!(as_rect),
+            Point(_, _) => impl_method!(as_point),
+            LineString(_, _) => impl_method!(as_line_string),
+            Polygon(_, _) => impl_method!(as_polygon),
+            MultiPoint(_, _) => impl_method!(as_multi_point),
+            MultiLineString(_, _) => impl_method!(as_multi_line_string),
+            MultiPolygon(_, _) => impl_method!(as_multi_polygon),
+            Geometry(_) => Arc::new(self.as_geometry().scale_xy(x_factor, y_factor)?),
+            // Mixed(_, _) => impl_method!(as_mixed),
+            // GeometryCollection(_, _) => impl_method!(as_geometry_collection),
+            // Rect(_) => impl_method!(as_rect),
             _ => todo!("unsupported data type"),
         };
 
@@ -269,19 +343,22 @@ impl Scale for &dyn NativeArray {
             }};
         }
 
-        use Dimension::*;
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
-            Point(_, XY) => impl_method!(as_point),
-            LineString(_, XY) => impl_method!(as_line_string),
-            Polygon(_, XY) => impl_method!(as_polygon),
-            MultiPoint(_, XY) => impl_method!(as_multi_point),
-            MultiLineString(_, XY) => impl_method!(as_multi_line_string),
-            MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
-            // Mixed(_, XY) => impl_method!(as_mixed),
-            // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
-            // Rect(XY) => impl_method!(as_rect),
+            Point(_, _) => impl_method!(as_point),
+            LineString(_, _) => impl_method!(as_line_string),
+            Polygon(_, _) => impl_method!(as_polygon),
+            MultiPoint(_, _) => impl_method!(as_multi_point),
+            MultiLineString(_, _) => impl_method!(as_multi_line_string),
+            MultiPolygon(_, _) => impl_method!(as_multi_polygon),
+            Geometry(_) => Arc::new(
+                self.as_geometry()
+                    .scale_around_point(x_factor, y_factor, origin)?,
+            ),
+            // Mixed(_, _) => impl_method!(as_mixed),
+            // GeometryCollection(_, _) => impl_method!(as_geometry_collection),
+            // Rect(_) => impl_method!(as_rect),
             _ => todo!("unsupported data type"),
         };
 

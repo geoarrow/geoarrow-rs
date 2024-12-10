@@ -1,7 +1,7 @@
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray, ChunkedPointArray};
 use crate::datatypes::{Dimension, NativeType};
-use crate::error::{GeoArrowError, Result};
+use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use geo::algorithm::centroid::Centroid as GeoCentroid;
@@ -74,6 +74,22 @@ impl Centroid for PointArray {
     }
 }
 
+impl Centroid for RectArray {
+    type Output = PointArray;
+
+    fn centroid(&self) -> Self::Output {
+        let mut output_array = PointBuilder::with_capacity_and_options(
+            Dimension::XY,
+            self.len(),
+            self.coord_type(),
+            self.metadata().clone(),
+        );
+        self.iter_geo()
+            .for_each(|maybe_g| output_array.push_point(maybe_g.map(|g| g.centroid()).as_ref()));
+        output_array.into()
+    }
+}
+
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty) => {
@@ -81,7 +97,12 @@ macro_rules! iter_geo_impl {
             type Output = PointArray;
 
             fn centroid(&self) -> Self::Output {
-                let mut output_array = PointBuilder::with_capacity(Dimension::XY, self.len());
+                let mut output_array = PointBuilder::with_capacity_and_options(
+                    Dimension::XY,
+                    self.len(),
+                    self.coord_type(),
+                    self.metadata().clone(),
+                );
                 self.iter_geo().for_each(|maybe_g| {
                     output_array.push_point(maybe_g.and_then(|g| g.centroid()).as_ref())
                 });
@@ -98,24 +119,25 @@ iter_geo_impl!(MultiLineStringArray);
 iter_geo_impl!(MultiPolygonArray);
 iter_geo_impl!(MixedGeometryArray);
 iter_geo_impl!(GeometryCollectionArray);
+iter_geo_impl!(GeometryArray);
 
 impl Centroid for &dyn NativeArray {
     type Output = Result<PointArray>;
 
     fn centroid(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, XY) => self.as_point().centroid(),
-            LineString(_, XY) => self.as_line_string().centroid(),
-            Polygon(_, XY) => self.as_polygon().centroid(),
-            MultiPoint(_, XY) => self.as_multi_point().centroid(),
-            MultiLineString(_, XY) => self.as_multi_line_string().centroid(),
-            MultiPolygon(_, XY) => self.as_multi_polygon().centroid(),
-            Mixed(_, XY) => self.as_mixed().centroid(),
-            GeometryCollection(_, XY) => self.as_geometry_collection().centroid(),
-            _ => return Err(GeoArrowError::IncorrectType("".into())),
+            Point(_, _) => self.as_point().centroid(),
+            LineString(_, _) => self.as_line_string().centroid(),
+            Polygon(_, _) => self.as_polygon().centroid(),
+            MultiPoint(_, _) => self.as_multi_point().centroid(),
+            MultiLineString(_, _) => self.as_multi_line_string().centroid(),
+            MultiPolygon(_, _) => self.as_multi_polygon().centroid(),
+            Mixed(_, _) => self.as_mixed().centroid(),
+            GeometryCollection(_, _) => self.as_geometry_collection().centroid(),
+            Rect(_) => self.as_rect().centroid(),
+            Geometry(_) => self.as_geometry().centroid(),
         };
         Ok(result)
     }
@@ -133,19 +155,19 @@ impl Centroid for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedPointArray>;
 
     fn centroid(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point().centroid(),
-            LineString(_, XY) => self.as_line_string().centroid(),
-            Polygon(_, XY) => self.as_polygon().centroid(),
-            MultiPoint(_, XY) => self.as_multi_point().centroid(),
-            MultiLineString(_, XY) => self.as_multi_line_string().centroid(),
-            MultiPolygon(_, XY) => self.as_multi_polygon().centroid(),
-            Mixed(_, XY) => self.as_mixed().centroid(),
-            GeometryCollection(_, XY) => self.as_geometry_collection().centroid(),
-            _ => Err(GeoArrowError::IncorrectType("".into())),
+            Point(_, _) => self.as_point().centroid(),
+            LineString(_, _) => self.as_line_string().centroid(),
+            Polygon(_, _) => self.as_polygon().centroid(),
+            MultiPoint(_, _) => self.as_multi_point().centroid(),
+            MultiLineString(_, _) => self.as_multi_line_string().centroid(),
+            MultiPolygon(_, _) => self.as_multi_polygon().centroid(),
+            Mixed(_, _) => self.as_mixed().centroid(),
+            GeometryCollection(_, _) => self.as_geometry_collection().centroid(),
+            Rect(_) => self.as_rect().centroid(),
+            Geometry(_) => self.as_geometry().centroid(),
         }
     }
 }

@@ -1,7 +1,7 @@
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray, ChunkedPolygonArray};
 use crate::datatypes::{Dimension, NativeType};
-use crate::error::{GeoArrowError, Result};
+use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use geo::algorithm::convex_hull::ConvexHull as GeoConvexHull;
@@ -61,7 +61,13 @@ macro_rules! iter_geo_impl {
                     .map(|maybe_g| maybe_g.map(|geom| geom.convex_hull()))
                     .collect();
 
-                (output_geoms, Dimension::XY).into()
+                PolygonBuilder::from_nullable_polygons(
+                    output_geoms.as_slice(),
+                    Dimension::XY,
+                    self.coord_type(),
+                    self.metadata().clone(),
+                )
+                .finish()
             }
         }
     };
@@ -76,25 +82,25 @@ iter_geo_impl!(MultiPolygonArray);
 iter_geo_impl!(MixedGeometryArray);
 iter_geo_impl!(GeometryCollectionArray);
 iter_geo_impl!(RectArray);
+iter_geo_impl!(GeometryArray);
 
 impl ConvexHull for &dyn NativeArray {
     type Output = Result<PolygonArray>;
 
     fn convex_hull(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, XY) => self.as_point().convex_hull(),
-            LineString(_, XY) => self.as_line_string().convex_hull(),
-            Polygon(_, XY) => self.as_polygon().convex_hull(),
-            MultiPoint(_, XY) => self.as_multi_point().convex_hull(),
-            MultiLineString(_, XY) => self.as_multi_line_string().convex_hull(),
-            MultiPolygon(_, XY) => self.as_multi_polygon().convex_hull(),
-            Mixed(_, XY) => self.as_mixed().convex_hull(),
-            GeometryCollection(_, XY) => self.as_geometry_collection().convex_hull(),
-            Rect(XY) => self.as_rect().convex_hull(),
-            _ => return Err(GeoArrowError::IncorrectType("".into())),
+            Point(_, _) => self.as_point().convex_hull(),
+            LineString(_, _) => self.as_line_string().convex_hull(),
+            Polygon(_, _) => self.as_polygon().convex_hull(),
+            MultiPoint(_, _) => self.as_multi_point().convex_hull(),
+            MultiLineString(_, _) => self.as_multi_line_string().convex_hull(),
+            MultiPolygon(_, _) => self.as_multi_polygon().convex_hull(),
+            Mixed(_, _) => self.as_mixed().convex_hull(),
+            GeometryCollection(_, _) => self.as_geometry_collection().convex_hull(),
+            Rect(_) => self.as_rect().convex_hull(),
+            Geometry(_) => self.as_geometry().convex_hull(),
         };
         Ok(result)
     }
@@ -113,20 +119,19 @@ impl ConvexHull for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedPolygonArray>;
 
     fn convex_hull(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point().convex_hull(),
-            LineString(_, XY) => self.as_line_string().convex_hull(),
-            Polygon(_, XY) => self.as_polygon().convex_hull(),
-            MultiPoint(_, XY) => self.as_multi_point().convex_hull(),
-            MultiLineString(_, XY) => self.as_multi_line_string().convex_hull(),
-            MultiPolygon(_, XY) => self.as_multi_polygon().convex_hull(),
-            Mixed(_, XY) => self.as_mixed().convex_hull(),
-            GeometryCollection(_, XY) => self.as_geometry_collection().convex_hull(),
-            Rect(XY) => self.as_rect().convex_hull(),
-            _ => Err(GeoArrowError::IncorrectType("".into())),
+            Point(_, _) => self.as_point().convex_hull(),
+            LineString(_, _) => self.as_line_string().convex_hull(),
+            Polygon(_, _) => self.as_polygon().convex_hull(),
+            MultiPoint(_, _) => self.as_multi_point().convex_hull(),
+            MultiLineString(_, _) => self.as_multi_line_string().convex_hull(),
+            MultiPolygon(_, _) => self.as_multi_polygon().convex_hull(),
+            Mixed(_, _) => self.as_mixed().convex_hull(),
+            GeometryCollection(_, _) => self.as_geometry_collection().convex_hull(),
+            Rect(_) => self.as_rect().convex_hull(),
+            Geometry(_) => self.as_geometry().convex_hull(),
         }
     }
 }

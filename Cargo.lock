@@ -1317,6 +1317,7 @@ dependencies = [
  "http-range-client",
  "indexmap",
  "lexical-core 0.8.5",
+ "num-traits",
  "object_store",
  "parquet",
  "phf",

@@ -1,7 +1,7 @@
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
-use crate::datatypes::{Dimension, NativeType};
-use crate::error::{GeoArrowError, Result};
+use crate::datatypes::NativeType;
+use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::builder::BooleanBuilder;
@@ -59,24 +59,26 @@ iter_geo_impl!(MultiLineStringArray);
 iter_geo_impl!(MultiPolygonArray);
 iter_geo_impl!(MixedGeometryArray);
 iter_geo_impl!(GeometryCollectionArray);
+iter_geo_impl!(RectArray);
+iter_geo_impl!(GeometryArray);
 
 impl HasDimensions for &dyn NativeArray {
     type Output = Result<BooleanArray>;
 
     fn is_empty(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, XY) => HasDimensions::is_empty(self.as_point()),
-            LineString(_, XY) => HasDimensions::is_empty(self.as_line_string()),
-            Polygon(_, XY) => HasDimensions::is_empty(self.as_polygon()),
-            MultiPoint(_, XY) => HasDimensions::is_empty(self.as_multi_point()),
-            MultiLineString(_, XY) => HasDimensions::is_empty(self.as_multi_line_string()),
-            MultiPolygon(_, XY) => HasDimensions::is_empty(self.as_multi_polygon()),
-            Mixed(_, XY) => HasDimensions::is_empty(self.as_mixed()),
-            GeometryCollection(_, XY) => HasDimensions::is_empty(self.as_geometry_collection()),
-            _ => return Err(GeoArrowError::IncorrectType("".into())),
+            Point(_, _) => HasDimensions::is_empty(self.as_point()),
+            LineString(_, _) => HasDimensions::is_empty(self.as_line_string()),
+            Polygon(_, _) => HasDimensions::is_empty(self.as_polygon()),
+            MultiPoint(_, _) => HasDimensions::is_empty(self.as_multi_point()),
+            MultiLineString(_, _) => HasDimensions::is_empty(self.as_multi_line_string()),
+            MultiPolygon(_, _) => HasDimensions::is_empty(self.as_multi_polygon()),
+            Mixed(_, _) => HasDimensions::is_empty(self.as_mixed()),
+            GeometryCollection(_, _) => HasDimensions::is_empty(self.as_geometry_collection()),
+            Rect(_) => HasDimensions::is_empty(self.as_rect()),
+            Geometry(_) => HasDimensions::is_empty(self.as_geometry()),
         };
         Ok(result)
     }
@@ -95,19 +97,19 @@ impl HasDimensions for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<BooleanArray>>;
 
     fn is_empty(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => HasDimensions::is_empty(self.as_point()),
-            LineString(_, XY) => HasDimensions::is_empty(self.as_line_string()),
-            Polygon(_, XY) => HasDimensions::is_empty(self.as_polygon()),
-            MultiPoint(_, XY) => HasDimensions::is_empty(self.as_multi_point()),
-            MultiLineString(_, XY) => HasDimensions::is_empty(self.as_multi_line_string()),
-            MultiPolygon(_, XY) => HasDimensions::is_empty(self.as_multi_polygon()),
-            Mixed(_, XY) => HasDimensions::is_empty(self.as_mixed()),
-            GeometryCollection(_, XY) => HasDimensions::is_empty(self.as_geometry_collection()),
-            _ => Err(GeoArrowError::IncorrectType("".into())),
+            Point(_, _) => HasDimensions::is_empty(self.as_point()),
+            LineString(_, _) => HasDimensions::is_empty(self.as_line_string()),
+            Polygon(_, _) => HasDimensions::is_empty(self.as_polygon()),
+            MultiPoint(_, _) => HasDimensions::is_empty(self.as_multi_point()),
+            MultiLineString(_, _) => HasDimensions::is_empty(self.as_multi_line_string()),
+            MultiPolygon(_, _) => HasDimensions::is_empty(self.as_multi_polygon()),
+            Mixed(_, _) => HasDimensions::is_empty(self.as_mixed()),
+            GeometryCollection(_, _) => HasDimensions::is_empty(self.as_geometry_collection()),
+            Rect(_) => HasDimensions::is_empty(self.as_rect()),
+            Geometry(_) => HasDimensions::is_empty(self.as_geometry()),
         }
     }
 }

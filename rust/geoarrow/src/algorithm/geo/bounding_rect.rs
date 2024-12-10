@@ -1,7 +1,7 @@
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray};
 use crate::datatypes::{Dimension, NativeType};
-use crate::error::{GeoArrowError, Result};
+use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use geo::algorithm::bounding_rect::BoundingRect as GeoBoundingRect;
@@ -44,7 +44,20 @@ impl BoundingRect for PointArray {
             .map(|maybe_g| maybe_g.map(|geom| geom.bounding_rect()))
             .collect();
 
-        (output_geoms, Dimension::XY).into()
+        RectBuilder::from_nullable_rects(
+            output_geoms.iter().map(|x| x.as_ref()),
+            Dimension::XY,
+            self.metadata().clone(),
+        )
+        .finish()
+    }
+}
+
+impl BoundingRect for RectArray {
+    type Output = RectArray;
+
+    fn bounding_rect(&self) -> Self::Output {
+        self.clone()
     }
 }
 
@@ -60,7 +73,12 @@ macro_rules! iter_geo_impl {
                     .map(|maybe_g| maybe_g.and_then(|geom| geom.bounding_rect()))
                     .collect();
 
-                (output_geoms, Dimension::XY).into()
+                RectBuilder::from_nullable_rects(
+                    output_geoms.iter().map(|x| x.as_ref()),
+                    Dimension::XY,
+                    self.metadata().clone(),
+                )
+                .finish()
             }
         }
     };
@@ -73,24 +91,25 @@ iter_geo_impl!(MultiLineStringArray);
 iter_geo_impl!(MultiPolygonArray);
 iter_geo_impl!(MixedGeometryArray);
 iter_geo_impl!(GeometryCollectionArray);
+iter_geo_impl!(GeometryArray);
 
 impl BoundingRect for &dyn NativeArray {
     type Output = Result<RectArray>;
 
     fn bounding_rect(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, XY) => self.as_point().bounding_rect(),
-            LineString(_, XY) => self.as_line_string().bounding_rect(),
-            Polygon(_, XY) => self.as_polygon().bounding_rect(),
-            MultiPoint(_, XY) => self.as_multi_point().bounding_rect(),
-            MultiLineString(_, XY) => self.as_multi_line_string().bounding_rect(),
-            MultiPolygon(_, XY) => self.as_multi_polygon().bounding_rect(),
-            Mixed(_, XY) => self.as_mixed().bounding_rect(),
-            GeometryCollection(_, XY) => self.as_geometry_collection().bounding_rect(),
-            _ => return Err(GeoArrowError::IncorrectType("".into())),
+            Point(_, _) => self.as_point().bounding_rect(),
+            LineString(_, _) => self.as_line_string().bounding_rect(),
+            Polygon(_, _) => self.as_polygon().bounding_rect(),
+            MultiPoint(_, _) => self.as_multi_point().bounding_rect(),
+            MultiLineString(_, _) => self.as_multi_line_string().bounding_rect(),
+            MultiPolygon(_, _) => self.as_multi_polygon().bounding_rect(),
+            Mixed(_, _) => self.as_mixed().bounding_rect(),
+            GeometryCollection(_, _) => self.as_geometry_collection().bounding_rect(),
+            Geometry(_) => self.as_geometry().bounding_rect(),
+            Rect(_) => self.as_rect().bounding_rect(),
         };
         Ok(result)
     }
@@ -109,19 +128,19 @@ impl BoundingRect for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedGeometryArray<RectArray>>;
 
     fn bounding_rect(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point().bounding_rect(),
-            LineString(_, XY) => self.as_line_string().bounding_rect(),
-            Polygon(_, XY) => self.as_polygon().bounding_rect(),
-            MultiPoint(_, XY) => self.as_multi_point().bounding_rect(),
-            MultiLineString(_, XY) => self.as_multi_line_string().bounding_rect(),
-            MultiPolygon(_, XY) => self.as_multi_polygon().bounding_rect(),
-            Mixed(_, XY) => self.as_mixed().bounding_rect(),
-            GeometryCollection(_, XY) => self.as_geometry_collection().bounding_rect(),
-            _ => Err(GeoArrowError::IncorrectType("".into())),
+            Point(_, _) => self.as_point().bounding_rect(),
+            LineString(_, _) => self.as_line_string().bounding_rect(),
+            Polygon(_, _) => self.as_polygon().bounding_rect(),
+            MultiPoint(_, _) => self.as_multi_point().bounding_rect(),
+            MultiLineString(_, _) => self.as_multi_line_string().bounding_rect(),
+            MultiPolygon(_, _) => self.as_multi_polygon().bounding_rect(),
+            Mixed(_, _) => self.as_mixed().bounding_rect(),
+            GeometryCollection(_, _) => self.as_geometry_collection().bounding_rect(),
+            Geometry(_) => self.as_geometry().bounding_rect(),
+            Rect(_) => self.as_rect().bounding_rect(),
         }
     }
 }
