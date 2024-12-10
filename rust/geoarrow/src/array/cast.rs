@@ -59,16 +59,6 @@ pub trait AsNativeArray {
         self.as_multi_polygon_opt().unwrap()
     }
 
-    /// Downcast this to a [`MixedGeometryArray`] with `i32` offsets returning `None` if not
-    /// possible
-    fn as_mixed_opt(&self) -> Option<&MixedGeometryArray>;
-
-    /// Downcast this to a [`MixedGeometryArray`] with `i32` offsets panicking if not possible
-    #[inline]
-    fn as_mixed(&self) -> &MixedGeometryArray {
-        self.as_mixed_opt().unwrap()
-    }
-
     /// Downcast this to a [`GeometryCollectionArray`] with `i32` offsets returning `None` if not
     /// possible
     fn as_geometry_collection_opt(&self) -> Option<&GeometryCollectionArray>;
@@ -127,11 +117,6 @@ impl AsNativeArray for &dyn NativeArray {
     #[inline]
     fn as_multi_polygon_opt(&self) -> Option<&MultiPolygonArray> {
         self.as_any().downcast_ref::<MultiPolygonArray>()
-    }
-
-    #[inline]
-    fn as_mixed_opt(&self) -> Option<&MixedGeometryArray> {
-        self.as_any().downcast_ref::<MixedGeometryArray>()
     }
 
     #[inline]
@@ -240,16 +225,6 @@ pub trait AsChunkedNativeArray {
         self.as_multi_polygon_opt().unwrap()
     }
 
-    /// Downcast this to a [`ChunkedMixedGeometryArray`] with `i32` offsets returning `None` if not
-    /// possible
-    fn as_mixed_opt(&self) -> Option<&ChunkedMixedGeometryArray>;
-
-    /// Downcast this to a [`ChunkedMixedGeometryArray`] with `i32` offsets panicking if not possible
-    #[inline]
-    fn as_mixed(&self) -> &ChunkedMixedGeometryArray {
-        self.as_mixed_opt().unwrap()
-    }
-
     /// Downcast this to a [`ChunkedGeometryCollectionArray`] with `i32` offsets returning `None` if not
     /// possible
     fn as_geometry_collection_opt(&self) -> Option<&ChunkedGeometryCollectionArray>;
@@ -308,11 +283,6 @@ impl AsChunkedNativeArray for &dyn ChunkedNativeArray {
     #[inline]
     fn as_multi_polygon_opt(&self) -> Option<&ChunkedMultiPolygonArray> {
         self.as_any().downcast_ref::<ChunkedMultiPolygonArray>()
-    }
-
-    #[inline]
-    fn as_mixed_opt(&self) -> Option<&ChunkedMixedGeometryArray> {
-        self.as_any().downcast_ref::<ChunkedMixedGeometryArray>()
     }
 
     #[inline]
