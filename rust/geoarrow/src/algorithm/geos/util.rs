@@ -1,10 +1,10 @@
 use arrow_array::{ArrowPrimitiveType, PrimitiveArray};
 use arrow_buffer::BufferBuilder;
 
-use crate::array::PolygonArray;
+use crate::array::{GeometryArray, GeometryBuilder, PolygonArray};
 use crate::datatypes::Dimension;
 use crate::error::GeoArrowError;
-use crate::io::geos::scalar::GEOSPolygon;
+use crate::io::geos::scalar::{GEOSGeometry, GEOSPolygon};
 use crate::trait_::NativeGEOSGeometryAccessor;
 
 // Note: This is derived from arrow-rs here:
@@ -68,4 +68,38 @@ where
     }
 
     Ok(PolygonArray::from((buffer, output_dim)))
+}
+
+pub(super) fn try_unary_geometry<'a, F>(
+    array: &'a dyn NativeGEOSGeometryAccessor<'a>,
+    op: F,
+) -> std::result::Result<GeometryArray, GeoArrowError>
+where
+    F: Fn(geos::Geometry) -> std::result::Result<geos::Geometry, geos::Error>,
+{
+    let len = array.len();
+
+    let mut buffer = vec![None; len];
+
+    let f = |idx| {
+        unsafe {
+            buffer[idx] = Some(GEOSGeometry::new(op(
+                array.value_as_geometry_unchecked(idx)?
+            )?))
+        };
+        Ok::<_, geos::Error>(())
+    };
+
+    match array.nulls() {
+        Some(nulls) => nulls.try_for_each_valid_idx(f)?,
+        None => (0..len).try_for_each(f)?,
+    }
+
+    Ok(GeometryBuilder::from_nullable_geometries(
+        buffer.as_slice(),
+        array.coord_type(),
+        array.metadata().clone(),
+        true,
+    )?
+    .finish())
 }
