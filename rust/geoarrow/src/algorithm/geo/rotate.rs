@@ -97,40 +97,6 @@ pub trait Rotate<DegreesT> {
 // │ Implementations for RHS arrays │
 // └────────────────────────────────┘
 
-// Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl Rotate<Float64Array> for PointArray {
-    type Output = Self;
-
-    fn rotate_around_centroid(&self, degrees: &Float64Array) -> Self {
-        let centroids = self.centroid();
-        let transforms: Vec<AffineTransform> = centroids
-            .iter_geo_values()
-            .zip(degrees.values().iter())
-            .map(|(point, angle)| AffineTransform::rotate(*angle, point))
-            .collect();
-        self.affine_transform(transforms.as_slice())
-    }
-
-    fn rotate_around_center(&self, degrees: &Float64Array) -> Self {
-        let centers = self.center();
-        let transforms: Vec<AffineTransform> = centers
-            .iter_geo_values()
-            .zip(degrees.values().iter())
-            .map(|(point, angle)| AffineTransform::rotate(*angle, point))
-            .collect();
-        self.affine_transform(transforms.as_slice())
-    }
-
-    fn rotate_around_point(&self, degrees: &Float64Array, point: geo::Point) -> Self {
-        let transforms: Vec<AffineTransform> = degrees
-            .values()
-            .iter()
-            .map(|degrees| AffineTransform::rotate(*degrees, point))
-            .collect();
-        self.affine_transform(transforms.as_slice())
-    }
-}
-
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty) => {
@@ -169,6 +135,7 @@ macro_rules! iter_geo_impl {
     };
 }
 
+iter_geo_impl!(PointArray);
 iter_geo_impl!(LineStringArray);
 iter_geo_impl!(PolygonArray);
 iter_geo_impl!(MultiPointArray);

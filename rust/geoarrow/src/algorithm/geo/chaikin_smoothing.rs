@@ -43,7 +43,7 @@ macro_rules! iter_geo_impl {
                 <$builder_type>::$method(
                     output_geoms.as_slice(),
                     Dimension::XY,
-                    Some(self.coord_type()),
+                    self.coord_type(),
                     self.metadata.clone(),
                 )
                 .finish()
@@ -90,7 +90,7 @@ impl ChaikinSmoothing for GeometryArray {
 
         Ok(GeometryBuilder::from_nullable_geometries(
             output_geoms.as_slice(),
-            Some(self.coord_type()),
+            self.coord_type(),
             self.metadata.clone(),
             false,
         )?

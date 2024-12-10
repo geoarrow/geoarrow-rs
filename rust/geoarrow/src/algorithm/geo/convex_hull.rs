@@ -64,7 +64,7 @@ macro_rules! iter_geo_impl {
                 PolygonBuilder::from_nullable_polygons(
                     output_geoms.as_slice(),
                     Dimension::XY,
-                    Some(self.coord_type()),
+                    self.coord_type(),
                     self.metadata().clone(),
                 )
                 .finish()
