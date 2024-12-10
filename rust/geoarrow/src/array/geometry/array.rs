@@ -181,6 +181,7 @@ impl GeometryArray {
         )
     }
 
+    // TODO: handle slicing
     pub fn has_points(&self, dim: Dimension) -> bool {
         match dim {
             Dimension::XY => !self.point_xy.is_empty(),
@@ -220,6 +221,13 @@ impl GeometryArray {
         match dim {
             Dimension::XY => !self.mpolygon_xy.is_empty(),
             Dimension::XYZ => !self.mpolygon_xyz.is_empty(),
+        }
+    }
+
+    pub fn has_geometry_collections(&self, dim: Dimension) -> bool {
+        match dim {
+            Dimension::XY => !self.gc_xy.is_empty(),
+            Dimension::XYZ => !self.gc_xyz.is_empty(),
         }
     }
 
@@ -448,6 +456,56 @@ impl GeometryArray {
             self.gc_xyz.into_coord_type(coord_type),
             self.metadata,
         )
+    }
+
+    // TODO: recursively expand the types from the geometry collection array
+    pub fn contains_types(&self) -> HashSet<NativeType> {
+        let mut types = HashSet::new();
+        if self.has_points(Dimension::XY) {
+            types.insert(self.point_xy.data_type());
+        }
+        if self.has_line_strings(Dimension::XY) {
+            types.insert(self.line_string_xy.data_type());
+        }
+        if self.has_polygons(Dimension::XY) {
+            types.insert(self.polygon_xy.data_type());
+        }
+        if self.has_multi_points(Dimension::XY) {
+            types.insert(self.mpoint_xy.data_type());
+        }
+        if self.has_multi_line_strings(Dimension::XY) {
+            types.insert(self.mline_string_xy.data_type());
+        }
+        if self.has_multi_polygons(Dimension::XY) {
+            types.insert(self.mpolygon_xy.data_type());
+        }
+        if self.has_geometry_collections(Dimension::XY) {
+            types.insert(self.gc_xy.data_type());
+        }
+
+        if self.has_points(Dimension::XYZ) {
+            types.insert(self.point_xyz.data_type());
+        }
+        if self.has_line_strings(Dimension::XYZ) {
+            types.insert(self.line_string_xyz.data_type());
+        }
+        if self.has_polygons(Dimension::XYZ) {
+            types.insert(self.polygon_xyz.data_type());
+        }
+        if self.has_multi_points(Dimension::XYZ) {
+            types.insert(self.mpoint_xyz.data_type());
+        }
+        if self.has_multi_line_strings(Dimension::XYZ) {
+            types.insert(self.mline_string_xyz.data_type());
+        }
+        if self.has_multi_polygons(Dimension::XYZ) {
+            types.insert(self.mpolygon_xyz.data_type());
+        }
+        if self.has_geometry_collections(Dimension::XYZ) {
+            types.insert(self.gc_xyz.data_type());
+        }
+
+        types
     }
 }
 

@@ -519,35 +519,62 @@ impl Downcast for &dyn NativeArray {
 /// Given a set of types, return a single type that the result should be casted to
 fn resolve_types(types: &HashSet<NativeType>) -> NativeType {
     if types.is_empty() {
+        // TODO: error here
         panic!("empty types");
-    } else if types.len() == 1 {
-        *types.iter().next().unwrap()
-    } else if types.len() == 2 {
-        let mut extension_name_set = HashSet::new();
-        // let mut coord_types = HashSet::new();
-        types.iter().for_each(|t| {
-            extension_name_set.insert(t.extension_name());
-        });
-        if extension_name_set.contains("geoarrow.point")
-            && extension_name_set.contains("geoarrow.multipoint")
-        {
-            NativeType::MultiPoint(Default::default(), Dimension::XY)
-        } else if extension_name_set.contains("geoarrow.linestring")
-            && extension_name_set.contains("geoarrow.multilinestring")
-        {
-            NativeType::MultiLineString(Default::default(), Dimension::XY)
-        } else if extension_name_set.contains("geoarrow.polygon")
-            && extension_name_set.contains("geoarrow.multipolygon")
-        {
-            NativeType::MultiPolygon(Default::default(), Dimension::XY)
-        } else if extension_name_set.contains("geoarrow.geometrycollection") {
-            NativeType::GeometryCollection(Default::default(), Dimension::XY)
-        } else {
-            NativeType::Mixed(Default::default(), Dimension::XY)
-        }
-    } else {
-        NativeType::Mixed(Default::default(), Dimension::XY)
     }
+
+    // If only one type, we can cast to that.
+    if types.len() == 1 {
+        return *types.iter().next().unwrap();
+    }
+
+    // If Geometry is in the type set, short circuit to that.
+    if types.contains(&NativeType::Geometry(CoordType::Interleaved)) {
+        return NativeType::Geometry(CoordType::Interleaved);
+    } else if types.contains(&NativeType::Geometry(CoordType::Separated)) {
+        return NativeType::Geometry(CoordType::Separated);
+    }
+
+    // Since we don't have NativeType::Geometry, dimension should never be null
+    let dimensions: HashSet<Dimension> =
+        HashSet::from_iter(types.iter().map(|ty| ty.dimension().unwrap()));
+    let coord_types: HashSet<CoordType> =
+        HashSet::from_iter(types.iter().map(|ty| ty.coord_type()));
+
+    // Just take the first one
+    let coord_type = *coord_types.iter().next().unwrap();
+
+    // For data with multiple dimensions, we must cast to GeometryArray
+    if dimensions.len() > 1 {
+        return NativeType::Geometry(coord_type);
+    }
+    // Otherwise, we have just one dimension
+    let dimension = *dimensions.iter().next().unwrap();
+
+    // We want to compare geometry types without looking at dimension or coord type. This is a
+    // slight hack but for now we do that by the string geometry type.
+    let geometry_type_names: HashSet<&str> =
+        HashSet::from_iter(types.iter().map(|x| x.extension_name()));
+
+    if geometry_type_names.len() == 2 {
+        if geometry_type_names.contains("geoarrow.point")
+            && geometry_type_names.contains("geoarrow.multipoint")
+        {
+            return NativeType::MultiPoint(coord_type, dimension);
+        } else if geometry_type_names.contains("geoarrow.linestring")
+            && geometry_type_names.contains("geoarrow.multilinestring")
+        {
+            return NativeType::MultiLineString(coord_type, dimension);
+        } else if geometry_type_names.contains("geoarrow.polygon")
+            && geometry_type_names.contains("geoarrow.multipolygon")
+        {
+            return NativeType::MultiPolygon(coord_type, dimension);
+        } else if geometry_type_names.contains("geoarrow.geometrycollection") {
+            return NativeType::GeometryCollection(coord_type, dimension);
+        }
+    }
+
+    NativeType::Geometry(coord_type)
 }
 
 impl Downcast for ChunkedPointArray {
