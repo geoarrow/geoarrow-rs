@@ -74,11 +74,6 @@ impl_data! {
     pub struct MultiPolygonData(pub(crate) geoarrow::array::MultiPolygonArray);
 }
 impl_data! {
-    /// An immutable array of Geometry geometries in WebAssembly memory using GeoArrow's
-    /// in-memory representation.
-    pub struct MixedGeometryData(pub(crate) geoarrow::array::MixedGeometryArray);
-}
-impl_data! {
     /// An immutable array of GeometryCollection geometries in WebAssembly memory using GeoArrow's
     /// in-memory representation.
     pub struct GeometryCollectionData(pub(crate) geoarrow::array::GeometryCollectionArray);

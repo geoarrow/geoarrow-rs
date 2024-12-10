@@ -54,11 +54,6 @@ impl_vector! {
     pub struct MultiPolygonVector(pub(crate) geoarrow::chunked_array::ChunkedMultiPolygonArray);
 }
 impl_vector! {
-    /// An immutable chunked array of Geometry geometries in WebAssembly memory using
-    /// GeoArrow's in-memory representation.
-    pub struct MixedGeometryVector(pub(crate) geoarrow::chunked_array::ChunkedMixedGeometryArray);
-}
-impl_vector! {
     /// An immutable chunked array of GeometryCollection geometries in WebAssembly memory using
     /// GeoArrow's in-memory representation.
     pub struct GeometryCollectionVector(pub(crate) geoarrow::chunked_array::ChunkedGeometryCollectionArray);
