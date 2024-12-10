@@ -159,7 +159,7 @@ fn infer_flatgeobuf_geometry_type(schema: &Schema) -> Result<flatgeobuf::Geometr
         MultiPoint(_, _) => flatgeobuf::GeometryType::MultiPoint,
         MultiLineString(_, _) => flatgeobuf::GeometryType::MultiLineString,
         MultiPolygon(_, _) => flatgeobuf::GeometryType::MultiPolygon,
-        Mixed(_, _) | Rect(_) | Geometry(_) => flatgeobuf::GeometryType::Unknown,
+        Rect(_) | Geometry(_) => flatgeobuf::GeometryType::Unknown,
         GeometryCollection(_, _) => flatgeobuf::GeometryType::GeometryCollection,
     };
     Ok(geometry_type)

@@ -27,7 +27,6 @@ impl GeozeroGeometry for NativeArrayDyn {
                 impl_process!(as_multi_line_string)
             }
             MultiPolygon(_, _) => impl_process!(as_multi_polygon),
-            Mixed(_, _) => impl_process!(as_mixed),
             GeometryCollection(_, _) => {
                 impl_process!(as_geometry_collection)
             }

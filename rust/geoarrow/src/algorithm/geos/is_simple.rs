@@ -51,7 +51,6 @@ impl IsSimple for &dyn NativeArray {
             MultiPoint(_, _) => self.as_multi_point().is_simple(),
             MultiLineString(_, _) => self.as_multi_line_string().is_simple(),
             MultiPolygon(_, _) => self.as_multi_polygon().is_simple(),
-            Mixed(_, _) => self.as_mixed().is_simple(),
             GeometryCollection(_, _) => self.as_geometry_collection().is_simple(),
             Rect(_) => self.as_rect().is_simple(),
             Geometry(_) => self.as_geometry().is_simple(),

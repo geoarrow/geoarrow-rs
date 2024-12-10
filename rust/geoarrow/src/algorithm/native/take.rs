@@ -232,7 +232,6 @@ impl Take for &dyn NativeArray {
             MultiPoint(_, XY) => Arc::new(self.as_multi_point().take(indices)?),
             MultiLineString(_, XY) => Arc::new(self.as_multi_line_string().take(indices)?),
             MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon().take(indices)?),
-            Mixed(_, XY) => Arc::new(self.as_mixed().take(indices)?),
             GeometryCollection(_, XY) => Arc::new(self.as_geometry_collection().take(indices)?),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -250,7 +249,6 @@ impl Take for &dyn NativeArray {
             MultiPoint(_, XY) => Arc::new(self.as_multi_point().take_range(range)?),
             MultiLineString(_, XY) => Arc::new(self.as_multi_line_string().take_range(range)?),
             MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon().take_range(range)?),
-            Mixed(_, XY) => Arc::new(self.as_mixed().take_range(range)?),
             GeometryCollection(_, XY) => Arc::new(self.as_geometry_collection().take_range(range)?),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };

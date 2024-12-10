@@ -137,7 +137,6 @@ impl ChamberlainDuquetteArea for &dyn NativeArray {
                 .as_multi_line_string()
                 .chamberlain_duquette_signed_area(),
             MultiPolygon(_, _) => self.as_multi_polygon().chamberlain_duquette_signed_area(),
-            Mixed(_, _) => self.as_mixed().chamberlain_duquette_signed_area(),
             GeometryCollection(_, _) => self
                 .as_geometry_collection()
                 .chamberlain_duquette_signed_area(),
@@ -159,7 +158,6 @@ impl ChamberlainDuquetteArea for &dyn NativeArray {
                 .as_multi_line_string()
                 .chamberlain_duquette_unsigned_area(),
             MultiPolygon(_, _) => self.as_multi_polygon().chamberlain_duquette_unsigned_area(),
-            Mixed(_, _) => self.as_mixed().chamberlain_duquette_unsigned_area(),
             GeometryCollection(_, _) => self
                 .as_geometry_collection()
                 .chamberlain_duquette_unsigned_area(),
@@ -207,7 +205,6 @@ impl ChamberlainDuquetteArea for &dyn ChunkedNativeArray {
                 .as_multi_line_string()
                 .chamberlain_duquette_signed_area(),
             MultiPolygon(_, _) => self.as_multi_polygon().chamberlain_duquette_signed_area(),
-            Mixed(_, _) => self.as_mixed().chamberlain_duquette_signed_area(),
             GeometryCollection(_, _) => self
                 .as_geometry_collection()
                 .chamberlain_duquette_signed_area(),
@@ -228,7 +225,6 @@ impl ChamberlainDuquetteArea for &dyn ChunkedNativeArray {
                 .as_multi_line_string()
                 .chamberlain_duquette_unsigned_area(),
             MultiPolygon(_, _) => self.as_multi_polygon().chamberlain_duquette_unsigned_area(),
-            Mixed(_, _) => self.as_mixed().chamberlain_duquette_unsigned_area(),
             GeometryCollection(_, _) => self
                 .as_geometry_collection()
                 .chamberlain_duquette_unsigned_area(),

@@ -393,10 +393,6 @@ fn process_geometry_n<P: GeomProcessor>(
             let geom = arr.as_multi_polygon().value(i);
             process_multi_polygon(&geom, 0, processor)?;
         }
-        Mixed(_, _) => {
-            let geom = arr.as_mixed().value(i);
-            process_geometry(&geom, 0, processor)?;
-        }
         GeometryCollection(_, _) => {
             let geom = arr.as_geometry_collection().value(i);
             process_geometry_collection(&geom, 0, processor)?;

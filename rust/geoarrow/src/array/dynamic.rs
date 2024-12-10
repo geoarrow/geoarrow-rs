@@ -38,7 +38,6 @@ impl NativeArrayDyn {
             MultiPoint(_, _) => Arc::new(MultiPointArray::try_from((array, field))?),
             MultiLineString(_, _) => Arc::new(MultiLineStringArray::try_from((array, field))?),
             MultiPolygon(_, _) => Arc::new(MultiPolygonArray::try_from((array, field))?),
-            Mixed(_, _) => Arc::new(MixedGeometryArray::try_from((array, field))?),
             GeometryCollection(_, _) => {
                 Arc::new(GeometryCollectionArray::try_from((array, field))?)
             }

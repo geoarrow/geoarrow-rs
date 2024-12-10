@@ -64,7 +64,6 @@ impl Cast for PointArray {
         match to_type {
             Point(_, _) => Ok(Arc::new(array)),
             MultiPoint(_, _) => Ok(Arc::new(MultiPointArray::from(array))),
-            Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::from(array))),
             GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::from(array))),
             Geometry(_) => Ok(Arc::new(GeometryArray::from(array))),
             dt => Err(GeoArrowError::General(format!(
@@ -85,7 +84,6 @@ impl Cast for LineStringArray {
         match to_type {
             LineString(_, _) => Ok(Arc::new(array)),
             MultiLineString(_, _) => Ok(Arc::new(MultiLineStringArray::from(array))),
-            Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::from(array))),
             GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::from(array))),
             Geometry(_) => Ok(Arc::new(GeometryArray::from(array))),
             dt => Err(GeoArrowError::General(format!(
@@ -106,7 +104,6 @@ impl Cast for PolygonArray {
         match to_type {
             Polygon(_, _) => Ok(Arc::new(array)),
             MultiPolygon(_, _) => Ok(Arc::new(MultiPolygonArray::from(array))),
-            Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::from(array))),
             GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::from(array))),
             Geometry(_) => Ok(Arc::new(GeometryArray::from(array))),
             dt => Err(GeoArrowError::General(format!(
@@ -127,7 +124,6 @@ impl Cast for MultiPointArray {
         match to_type {
             Point(_, _) => Ok(Arc::new(PointArray::try_from(array)?)),
             MultiPoint(_, _) => Ok(Arc::new(array)),
-            Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::from(array))),
             GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::from(array))),
             Geometry(_) => Ok(Arc::new(GeometryArray::from(array))),
             dt => Err(GeoArrowError::General(format!(
@@ -147,7 +143,6 @@ impl Cast for MultiLineStringArray {
 
         match to_type {
             LineString(_, _) => Ok(Arc::new(LineStringArray::try_from(array)?)),
-            Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::from(array))),
             GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::from(array))),
             Geometry(_) => Ok(Arc::new(GeometryArray::from(array))),
             dt => Err(GeoArrowError::General(format!(
@@ -167,7 +162,6 @@ impl Cast for MultiPolygonArray {
 
         match to_type {
             Polygon(_, _) => Ok(Arc::new(PolygonArray::try_from(array)?)),
-            Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::from(array))),
             GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::from(array))),
             Geometry(_) => Ok(Arc::new(GeometryArray::from(array))),
             dt => Err(GeoArrowError::General(format!(
@@ -192,7 +186,6 @@ impl Cast for MixedGeometryArray {
             MultiPoint(_, _) => Ok(Arc::new(MultiPointArray::try_from(array)?)),
             MultiLineString(_, _) => Ok(Arc::new(MultiLineStringArray::try_from(array)?)),
             MultiPolygon(_, _) => Ok(Arc::new(MultiPolygonArray::try_from(array)?)),
-            Mixed(_, _) => Ok(Arc::new(array)),
             GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::from(array))),
             dt => Err(GeoArrowError::General(format!(
                 "invalid cast to type {dt:?}"
@@ -216,7 +209,6 @@ impl Cast for GeometryCollectionArray {
             MultiPoint(_, _) => Ok(Arc::new(MultiPointArray::try_from(array)?)),
             MultiLineString(_, _) => Ok(Arc::new(MultiLineStringArray::try_from(array)?)),
             MultiPolygon(_, _) => Ok(Arc::new(MultiPolygonArray::try_from(array)?)),
-            Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::try_from(array)?)),
             GeometryCollection(_, _) => Ok(Arc::new(array)),
             Geometry(_) => Ok(Arc::new(GeometryArray::from(array))),
             dt => Err(GeoArrowError::General(format!(
@@ -255,7 +247,6 @@ impl Cast for &dyn NativeArray {
             MultiPoint(_, _) => self.as_ref().as_multi_point().cast(to_type),
             MultiLineString(_, _) => self.as_ref().as_multi_line_string().cast(to_type),
             MultiPolygon(_, _) => self.as_ref().as_multi_polygon().cast(to_type),
-            Mixed(_, _) => self.as_ref().as_mixed().cast(to_type),
             GeometryCollection(_, _) => self.as_ref().as_geometry_collection().cast(to_type),
             Geometry(_) => self.as_ref().as_geometry().cast(to_type),
             _ => todo!(),
@@ -291,7 +282,6 @@ macro_rules! impl_chunked_cast {
                     MultiPoint(_, _) => impl_cast!(as_multi_point),
                     MultiLineString(_, _) => impl_cast!(as_multi_line_string),
                     MultiPolygon(_, _) => impl_cast!(as_multi_polygon),
-                    Mixed(_, _) => impl_cast!(as_mixed),
                     GeometryCollection(_, _) => impl_cast!(as_geometry_collection),
                     Rect(_) => impl_cast!(as_rect),
                     Geometry(_) => impl_cast!(as_geometry),

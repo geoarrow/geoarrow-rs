@@ -14,7 +14,8 @@ pub use geometrycollection::{
     GeometryCollectionArray, GeometryCollectionBuilder, GeometryCollectionCapacity,
 };
 pub use linestring::{LineStringArray, LineStringBuilder, LineStringCapacity};
-pub use mixed::{MixedCapacity, MixedGeometryArray, MixedGeometryBuilder};
+// Don't expose in the public API. Prefer GeometryArray
+pub(crate) use mixed::{MixedCapacity, MixedGeometryArray, MixedGeometryBuilder};
 pub use multilinestring::{MultiLineStringArray, MultiLineStringBuilder, MultiLineStringCapacity};
 pub use multipoint::{MultiPointArray, MultiPointBuilder, MultiPointCapacity};
 pub use multipolygon::{MultiPolygonArray, MultiPolygonBuilder, MultiPolygonCapacity};
