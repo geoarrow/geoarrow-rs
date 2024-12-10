@@ -8,10 +8,7 @@ use arrow_schema::{DataType, Field, UnionMode};
 use crate::array::geometry::GeometryBuilder;
 use crate::array::geometry::GeometryCapacity;
 use crate::array::metadata::ArrayMetadata;
-use crate::array::{
-    CoordType, GeometryCollectionArray, LineStringArray, MixedGeometryArray, MultiLineStringArray,
-    MultiPointArray, MultiPolygonArray, PointArray, PolygonArray, WKBArray,
-};
+use crate::array::*;
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Geometry;
@@ -737,6 +734,8 @@ impl TryFrom<&UnionArray> for GeometryArray {
                         )));
                     };
 
+                    dbg!(type_id);
+
                     match type_id {
                         1 => {
                             point_xy = Some(
@@ -971,6 +970,93 @@ impl_to_geometry_array!(
 );
 impl_to_geometry_array!(MultiPolygonArray, 1, 11, mpolygon_xy, mpolygon_xyz);
 impl_to_geometry_array!(GeometryCollectionArray, 1, 11, gc_xy, gc_xyz);
+
+impl From<MixedGeometryArray> for GeometryArray {
+    fn from(value: MixedGeometryArray) -> Self {
+        use Dimension::*;
+
+        // TODO: include slice offset
+        let mut point_xy: Option<PointArray> = None;
+        let mut line_string_xy: Option<LineStringArray> = None;
+        let mut polygon_xy: Option<PolygonArray> = None;
+        let mut mpoint_xy: Option<MultiPointArray> = None;
+        let mut mline_string_xy: Option<MultiLineStringArray> = None;
+        let mut mpolygon_xy: Option<MultiPolygonArray> = None;
+
+        let mut point_xyz: Option<PointArray> = None;
+        let mut line_string_xyz: Option<LineStringArray> = None;
+        let mut polygon_xyz: Option<PolygonArray> = None;
+        let mut mpoint_xyz: Option<MultiPointArray> = None;
+        let mut mline_string_xyz: Option<MultiLineStringArray> = None;
+        let mut mpolygon_xyz: Option<MultiPolygonArray> = None;
+
+        let coord_type = value.coord_type();
+        match value.dimension() {
+            XY => {
+                point_xy = Some(value.points);
+                line_string_xy = Some(value.line_strings);
+                polygon_xy = Some(value.polygons);
+                mpoint_xy = Some(value.multi_points);
+                mline_string_xy = Some(value.multi_line_strings);
+                mpolygon_xy = Some(value.multi_polygons);
+            }
+            XYZ => {
+                point_xyz = Some(value.points);
+                line_string_xyz = Some(value.line_strings);
+                polygon_xyz = Some(value.polygons);
+                mpoint_xyz = Some(value.multi_points);
+                mline_string_xyz = Some(value.multi_line_strings);
+                mpolygon_xyz = Some(value.multi_polygons);
+            }
+        }
+
+        Self::new(
+            value.type_ids,
+            value.offsets,
+            point_xy.unwrap_or(
+                PointBuilder::new_with_options(XY, coord_type, Default::default()).finish(),
+            ),
+            line_string_xy.unwrap_or(
+                LineStringBuilder::new_with_options(XY, coord_type, Default::default()).finish(),
+            ),
+            polygon_xy.unwrap_or(
+                PolygonBuilder::new_with_options(XY, coord_type, Default::default()).finish(),
+            ),
+            mpoint_xy.unwrap_or(
+                MultiPointBuilder::new_with_options(XY, coord_type, Default::default()).finish(),
+            ),
+            mline_string_xy.unwrap_or(
+                MultiLineStringBuilder::new_with_options(XY, coord_type, Default::default())
+                    .finish(),
+            ),
+            mpolygon_xy.unwrap_or(
+                MultiPolygonBuilder::new_with_options(XY, coord_type, Default::default()).finish(),
+            ),
+            Default::default(),
+            point_xyz.unwrap_or(
+                PointBuilder::new_with_options(XYZ, coord_type, Default::default()).finish(),
+            ),
+            line_string_xyz.unwrap_or(
+                LineStringBuilder::new_with_options(XYZ, coord_type, Default::default()).finish(),
+            ),
+            polygon_xyz.unwrap_or(
+                PolygonBuilder::new_with_options(XYZ, coord_type, Default::default()).finish(),
+            ),
+            mpoint_xyz.unwrap_or(
+                MultiPointBuilder::new_with_options(XYZ, coord_type, Default::default()).finish(),
+            ),
+            mline_string_xyz.unwrap_or(
+                MultiLineStringBuilder::new_with_options(XYZ, coord_type, Default::default())
+                    .finish(),
+            ),
+            mpolygon_xyz.unwrap_or(
+                MultiPolygonBuilder::new_with_options(XYZ, coord_type, Default::default()).finish(),
+            ),
+            Default::default(),
+            value.metadata,
+        )
+    }
+}
 
 impl TryFrom<GeometryArray> for MixedGeometryArray {
     type Error = GeoArrowError;
