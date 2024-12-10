@@ -4,12 +4,13 @@ use arrow_array::{BooleanArray, PrimitiveArray};
 use arrow_buffer::ArrowNativeType;
 use arrow_buffer::{BooleanBufferBuilder, BufferBuilder, MutableBuffer, NullBuffer};
 use arrow_data::ArrayData;
+use geo_traits::GeometryTrait;
 
 use crate::array::*;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 
-pub trait Binary<'a, Rhs: ArrayAccessor<'a> = Self>: ArrayAccessor<'a> {
+pub trait Binary<'a, Rhs: ArrayAccessor<'a> = Self>: ArrayAccessor<'a> + NativeArray {
     fn binary_boolean<F>(&'a self, rhs: &'a Rhs, op: F) -> Result<BooleanArray>
     where
         F: Fn(Self::Item, Rhs::Item) -> bool,
@@ -115,6 +116,43 @@ pub trait Binary<'a, Rhs: ArrayAccessor<'a> = Self>: ArrayAccessor<'a> {
             let values = buffer.finish().into();
             Ok(PrimitiveArray::new(values, Some(nulls)))
         }
+    }
+
+    fn try_binary_geometry<F, G>(
+        &'a self,
+        rhs: &'a Rhs,
+        op: F,
+        prefer_multi: bool,
+    ) -> Result<GeometryArray>
+    where
+        G: GeometryTrait<T = f64>,
+        F: Fn(Self::Item, Rhs::Item) -> Result<G>,
+    {
+        if self.len() != rhs.len() {
+            return Err(GeoArrowError::General(
+                "Cannot perform binary operation on arrays of different length".to_string(),
+            ));
+        }
+
+        let mut builder = GeometryBuilder::with_capacity_and_options(
+            Default::default(),
+            self.coord_type(),
+            self.metadata().clone(),
+            prefer_multi,
+        );
+
+        if self.is_empty() {
+            return Ok(builder.finish());
+        }
+
+        for (left, right) in self.iter().zip(rhs.iter()) {
+            if let (Some(left), Some(right)) = (left, right) {
+                builder.push_geometry(Some(&op(left, right)?))?;
+            } else {
+                builder.push_null();
+            }
+        }
+        Ok(builder.finish())
     }
 }
 

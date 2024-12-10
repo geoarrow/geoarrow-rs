@@ -1,5 +1,5 @@
 use crate::error::{GeoArrowError, Result};
-use crate::io::geos::scalar::coord::GEOSConstCoord;
+use crate::io::geos::scalar::coord::{coord_to_geos, GEOSConstCoord};
 use crate::scalar::Point;
 use geo_traits::PointTrait;
 use geos::{Geom, GeometryTypes};
@@ -8,12 +8,18 @@ impl<'a> TryFrom<&'a Point<'_>> for geos::Geometry {
     type Error = geos::Error;
 
     fn try_from(point: &'a Point<'_>) -> std::result::Result<geos::Geometry, geos::Error> {
-        if let Some(coord) = PointTrait::coord(&point) {
-            let coord_seq = (&coord).try_into()?;
-            Ok(geos::Geometry::create_point(coord_seq)?)
-        } else {
-            Ok(geos::Geometry::create_empty_point()?)
-        }
+        to_geos_point(point)
+    }
+}
+
+pub(crate) fn to_geos_point(
+    point: &impl PointTrait<T = f64>,
+) -> std::result::Result<geos::Geometry, geos::Error> {
+    if let Some(coord) = point.coord() {
+        let coord_seq = coord_to_geos(&coord)?;
+        Ok(geos::Geometry::create_point(coord_seq)?)
+    } else {
+        Ok(geos::Geometry::create_empty_point()?)
     }
 }
 
