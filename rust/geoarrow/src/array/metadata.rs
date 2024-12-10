@@ -104,6 +104,10 @@ impl ArrayMetadata {
         Self::default().with_unknown_crs_type(value)
     }
 
+    pub fn from_authority_code(value: String) -> Self {
+        Self::default().with_authority_code(value)
+    }
+
     pub fn with_projjson(mut self, value: Value) -> Self {
         self.crs = Some(value);
         self.crs_type = Some(CRSType::Projjson);
@@ -119,6 +123,12 @@ impl ArrayMetadata {
     pub fn with_unknown_crs_type(mut self, value: String) -> Self {
         self.crs = Some(Value::String(value));
         self.crs_type = None;
+        self
+    }
+
+    pub fn with_authority_code(mut self, value: String) -> Self {
+        self.crs = Some(Value::String(value));
+        self.crs_type = Some(CRSType::AuthorityCode);
         self
     }
 
