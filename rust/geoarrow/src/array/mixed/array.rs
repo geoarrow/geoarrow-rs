@@ -451,7 +451,7 @@ impl ArrayBase for MixedGeometryArray {
         if array_metadata.should_serialize() {
             metadata.insert(
                 "ARROW:extension:metadata".to_string(),
-                serde_json::to_string(array_metadata).unwrap(),
+                serde_json::to_string(array_metadata.as_ref()).unwrap(),
             );
         }
         Arc::new(Field::new(name, data_type, nullable).with_metadata(metadata))

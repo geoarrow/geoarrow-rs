@@ -63,10 +63,7 @@ impl PyNativeType {
                 coord_type.unwrap().into(),
                 dimension.unwrap().into(),
             ))),
-            "geometry" => Ok(Self(NativeType::Mixed(
-                coord_type.unwrap().into(),
-                dimension.unwrap().into(),
-            ))),
+            "geometry" => Ok(Self(NativeType::Geometry(coord_type.unwrap().into()))),
             "geometrycollection" => Ok(Self(NativeType::GeometryCollection(
                 coord_type.unwrap().into(),
                 dimension.unwrap().into(),
