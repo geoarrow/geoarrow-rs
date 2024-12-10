@@ -1,13 +1,14 @@
 use arrow_array::types::ArrowPrimitiveType;
-use arrow_array::{BooleanArray, OffsetSizeTrait, PrimitiveArray};
+use arrow_array::{BooleanArray, PrimitiveArray};
 use arrow_buffer::{BooleanBufferBuilder, BufferBuilder};
 
 use crate::array::*;
 use crate::datatypes::Dimension;
+use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 use geo_traits::*;
 
-pub trait Unary<'a>: ArrayAccessor<'a> {
+pub trait Unary<'a>: ArrayAccessor<'a> + NativeArray {
     // Note: This is derived from arrow-rs here:
     // https://github.com/apache/arrow-rs/blob/3ed7cc61d4157263ef2ab5c2d12bc7890a5315b3/arrow-array/src/array/primitive_array.rs#L753-L767
     fn unary_primitive<F, O>(&'a self, op: F) -> PrimitiveArray<O>
@@ -85,6 +86,32 @@ pub trait Unary<'a>: ArrayAccessor<'a> {
 
         Ok(BooleanArray::new(buffer.finish(), nulls))
     }
+
+    fn try_unary_geometry<F, G>(&'a self, op: F, prefer_multi: bool) -> Result<GeometryArray>
+    where
+        F: Fn(Self::Item) -> Result<G>,
+        G: GeometryTrait<T = f64>,
+    {
+        let mut builder = GeometryBuilder::with_capacity_and_options(
+            Default::default(),
+            self.coord_type(),
+            self.metadata().clone(),
+            prefer_multi,
+        );
+
+        if self.is_empty() {
+            return Ok(builder.finish());
+        }
+
+        for val in self.iter() {
+            if let Some(val) = val {
+                builder.push_geometry(Some(&op(val)?))?;
+            } else {
+                builder.push_null();
+            }
+        }
+        Ok(builder.finish())
+    }
 }
 
 impl Unary<'_> for PointArray {}
@@ -97,7 +124,7 @@ impl Unary<'_> for MixedGeometryArray {}
 impl Unary<'_> for GeometryCollectionArray {}
 impl Unary<'_> for RectArray {}
 impl Unary<'_> for GeometryArray {}
-impl<O: OffsetSizeTrait> Unary<'_> for WKBArray<O> {}
+// impl<O: OffsetSizeTrait> Unary<'_> for WKBArray<O> {}
 
 #[allow(dead_code)]
 pub trait UnaryPoint<'a>: ArrayAccessor<'a> + NativeArray {
@@ -111,7 +138,7 @@ pub trait UnaryPoint<'a>: ArrayAccessor<'a> + NativeArray {
         let builder = PointBuilder::from_points(
             result_geom_iter,
             output_dim,
-            Some(self.coord_type()),
+            self.coord_type(),
             self.metadata(),
         );
         let mut result = builder.finish();

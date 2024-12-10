@@ -1,4 +1,5 @@
 use crate::error::{GeoArrowError, Result};
+use crate::io::geos::scalar::linestring::to_geos_line_string;
 use crate::io::geos::scalar::GEOSConstLineString;
 use crate::scalar::MultiLineString;
 use geo_traits::MultiLineStringTrait;
@@ -10,14 +11,21 @@ impl<'a> TryFrom<&'a MultiLineString<'_>> for geos::Geometry {
     fn try_from(
         value: &'a MultiLineString<'_>,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
-        geos::Geometry::create_multiline_string(
-            value
-                .line_strings()
-                .map(|line| (&line).try_into())
-                .collect::<std::result::Result<Vec<_>, geos::Error>>()?,
-        )
+        to_geos_multi_line_string(&value)
     }
 }
+
+pub(crate) fn to_geos_multi_line_string(
+    multi_line_string: &impl MultiLineStringTrait<T = f64>,
+) -> std::result::Result<geos::Geometry, geos::Error> {
+    geos::Geometry::create_multiline_string(
+        multi_line_string
+            .line_strings()
+            .map(|line| to_geos_line_string(&line))
+            .collect::<std::result::Result<Vec<_>, geos::Error>>()?,
+    )
+}
+
 /// A GEOS geometry known to be a MultiLineString
 #[derive(Clone)]
 pub struct GEOSMultiLineString(pub(crate) geos::Geometry);

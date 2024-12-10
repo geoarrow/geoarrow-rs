@@ -45,9 +45,12 @@ jobs:
           python-version: 3.x
       - name: Build wheels
         uses: PyO3/maturin-action@v1
+        env:
+          RUSTFLAGS: "-Zinline-mir=no"
         with:
+          rust-toolchain: nightly
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --find-interpreter --manifest-path python/${{ matrix.module }}/Cargo.toml
+          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 --manifest-path python/${{ matrix.module }}/Cargo.toml
           sccache: "true"
           manylinux: auto
       - name: Upload wheels
@@ -80,9 +83,11 @@ jobs:
   #         python-version: 3.x
   #     - name: Build wheels
   #       uses: PyO3/maturin-action@v1
+  # env:
+  #   RUSTFLAGS: "-Zinline-mir=no"
   #       with:
   #         target: ${{ matrix.platform.target }}
-  #         args: --release --out dist --find-interpreter --manifest-path python/${{ matrix.module }}/Cargo.toml
+  #         args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 --manifest-path python/${{ matrix.module }}/Cargo.toml
   #         sccache: "true"
   #         manylinux: musllinux_1_2
   #     - name: Upload wheels
@@ -111,9 +116,12 @@ jobs:
           architecture: ${{ matrix.platform.target }}
       - name: Build wheels
         uses: PyO3/maturin-action@v1
+        env:
+          RUSTFLAGS: "-Zinline-mir=no"
         with:
+          rust-toolchain: nightly
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --find-interpreter --manifest-path python/${{ matrix.module }}/Cargo.toml
+          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 --manifest-path python/${{ matrix.module }}/Cargo.toml
           sccache: "true"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
@@ -141,9 +149,12 @@ jobs:
           python-version: 3.x
       - name: Build wheels
         uses: PyO3/maturin-action@v1
+        env:
+          RUSTFLAGS: "-Zinline-mir=no"
         with:
+          rust-toolchain: nightly
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --find-interpreter --manifest-path python/${{ matrix.module }}/Cargo.toml
+          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 --manifest-path python/${{ matrix.module }}/Cargo.toml
           sccache: "true"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
@@ -177,16 +188,16 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - run: |
-          echo RUSTFLAGS="-Zinline-mir=no" >> $GITHUB_ENV
       - run: pip install pyodide-build
       - name: Build wheels
         uses: PyO3/maturin-action@v1
+        env:
+          RUSTFLAGS: "-Zinline-mir=no"
         with:
-          target: ${{ matrix.platform.target }}
-          args: --release --out dist --find-interpreter --no-default-features --manifest-path python/${{ matrix.module }}/Cargo.toml
-          sccache: "true"
           rust-toolchain: nightly
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 --no-default-features --manifest-path python/${{ matrix.module }}/Cargo.toml
+          sccache: "true"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:

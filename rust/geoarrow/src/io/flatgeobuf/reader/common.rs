@@ -9,7 +9,7 @@ use crate::array::metadata::{ArrayMetadata, CRSType};
 use crate::array::CoordType;
 
 /// Options for the FlatGeobuf reader
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct FlatGeobufReaderOptions {
     /// The GeoArrow coordinate type to use in the geometry arrays.
     pub coord_type: CoordType,
