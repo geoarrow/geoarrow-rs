@@ -32,7 +32,7 @@ pub(crate) static GEOARROW_EXTENSION_NAMES: Set<&'static str> = phf_set! {
     "ogc.wkb",
 };
 
-/// An Arrow table that MAY contain one or more geospatial columns.
+/// An Arrow table that may contain one or more geospatial columns.
 ///
 /// This Table object is designed to be interoperable with non-geospatial Arrow libraries, and thus
 /// does not _require_ a geometry column.

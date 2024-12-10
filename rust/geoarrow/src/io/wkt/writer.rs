@@ -12,9 +12,13 @@ use wkt::to_wkt::{
     write_multi_point, write_multi_polygon, write_point, write_polygon, write_rect,
 };
 
+/// Serialize a geometry array to Well-Known Text
 pub trait ToWKT {
+    /// The output type of the operation. You can specify whether you want to use i32 or i64
+    /// offsets for the Arrow string array.
     type Output<O: OffsetSizeTrait>;
 
+    /// Convert to WKT.
     fn to_wkt<O: OffsetSizeTrait>(&self) -> Self::Output<O>;
 }
 
@@ -41,16 +45,6 @@ impl ToWKT for &dyn NativeArray {
         }
 
         match self.data_type() {
-            // Point(_, _) => {
-            //     for maybe_geom in self.as_point().iter() {
-            //         if let Some(geom) = maybe_geom {
-            //             write_point(&mut output_array, &geom)?;
-            //             output_array.append_value("");
-            //         } else {
-            //             output_array.append_null();
-            //         }
-            //     }
-            // }
             Point(_, _) => impl_to_wkt!(as_point, write_point),
             LineString(_, _) => impl_to_wkt!(as_line_string, write_linestring),
             Polygon(_, _) => impl_to_wkt!(as_polygon, write_polygon),
