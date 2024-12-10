@@ -4,6 +4,8 @@ mod combined;
 mod interleaved;
 mod separated;
 
+pub(crate) use combined::{coord_to_geos, coords_to_geos};
+
 #[derive(Clone)]
 pub struct GEOSConstCoord {
     pub(crate) coords: geos::CoordSeq,
@@ -33,5 +35,17 @@ impl CoordTrait for GEOSConstCoord {
 
     fn y(&self) -> Self::T {
         self.coords.get_y(self.geom_index).unwrap()
+    }
+}
+
+pub(crate) fn dims_to_geos(dim: geo_traits::Dimensions) -> geos::CoordDimensions {
+    match dim {
+        geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => {
+            geos::CoordDimensions::TwoD
+        }
+        geo_traits::Dimensions::Xyz | geo_traits::Dimensions::Unknown(3) => {
+            geos::CoordDimensions::ThreeD
+        }
+        _ => panic!("Invalid coord dimension for GEOS: {:?}", dim),
     }
 }

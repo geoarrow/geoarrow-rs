@@ -1,3 +1,4 @@
+use crate::io::geos::scalar::geometry::to_geos_geometry;
 use crate::io::geos::scalar::GEOSGeometry;
 use crate::scalar::GeometryCollection;
 use geo_traits::GeometryCollectionTrait;
@@ -9,13 +10,18 @@ impl<'a> TryFrom<&'a GeometryCollection<'_>> for geos::Geometry {
     fn try_from(
         value: &'a GeometryCollection<'_>,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
-        geos::Geometry::create_geometry_collection(
-            value
-                .geometries()
-                .map(|geometry| (&geometry).try_into())
-                .collect::<std::result::Result<Vec<_>, geos::Error>>()?,
-        )
+        to_geos_geometry_collection(&value)
     }
+}
+
+pub(crate) fn to_geos_geometry_collection(
+    gc: &impl GeometryCollectionTrait<T = f64>,
+) -> std::result::Result<geos::Geometry, geos::Error> {
+    geos::Geometry::create_geometry_collection(
+        gc.geometries()
+            .map(|geometry| to_geos_geometry(&geometry))
+            .collect::<std::result::Result<Vec<_>, geos::Error>>()?,
+    )
 }
 
 #[derive(Clone)]

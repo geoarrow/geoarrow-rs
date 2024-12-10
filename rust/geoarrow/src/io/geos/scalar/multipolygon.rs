@@ -1,4 +1,5 @@
 use crate::error::{GeoArrowError, Result};
+use crate::io::geos::scalar::polygon::to_geos_polygon;
 use crate::io::geos::scalar::GEOSConstPolygon;
 use crate::scalar::MultiPolygon;
 use geo_traits::MultiPolygonTrait;
@@ -8,13 +9,19 @@ impl<'a> TryFrom<&'a MultiPolygon<'_>> for geos::Geometry {
     type Error = geos::Error;
 
     fn try_from(value: &'a MultiPolygon<'_>) -> std::result::Result<geos::Geometry, geos::Error> {
-        geos::Geometry::create_multipolygon(
-            value
-                .polygons()
-                .map(|polygon| (&polygon).try_into())
-                .collect::<std::result::Result<Vec<_>, geos::Error>>()?,
-        )
+        to_geos_multi_polygon(value)
     }
+}
+
+pub(crate) fn to_geos_multi_polygon(
+    multi_polygon: &impl MultiPolygonTrait<T = f64>,
+) -> std::result::Result<geos::Geometry, geos::Error> {
+    geos::Geometry::create_multipolygon(
+        multi_polygon
+            .polygons()
+            .map(|polygon| to_geos_polygon(&polygon))
+            .collect::<std::result::Result<Vec<_>, geos::Error>>()?,
+    )
 }
 
 #[derive(Clone)]
