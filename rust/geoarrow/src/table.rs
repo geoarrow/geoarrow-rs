@@ -152,7 +152,7 @@ impl Table {
     /// let index = table.default_geometry_column_idx().unwrap();
     ///
     /// // Change to separated storage of coordinates
-    /// table.cast_geometry(index, &NativeType::LineString(CoordType::Separated, Dimension::XY)).unwrap();
+    /// table.cast_geometry(index, NativeType::LineString(CoordType::Separated, Dimension::XY)).unwrap();
     /// # }
     /// ```
     pub fn cast_geometry(&mut self, index: usize, to_type: NativeType) -> Result<()> {
