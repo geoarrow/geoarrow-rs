@@ -95,29 +95,34 @@ impl Default for CSVReaderOptions {
     }
 }
 
-/// Infer a CSV file's schema
+/// Infer a CSV file's schema.
+///
+/// By default, the reader will **scan the entire CSV file** to infer the data's
+/// schema. If your data is large, you can limit the number of records scanned
+/// with the [CSVReaderOptions].
+///
 /// Returns (Schema, records_read, geometry column name)
 ///
 /// Note that the geometry column in the Schema is still left as a String.
 pub fn infer_csv_schema(
     reader: impl Read,
     options: &CSVReaderOptions,
-) -> Result<(Schema, usize, String)> {
+) -> Result<(SchemaRef, usize, String)> {
     let format = options.to_format();
     let (schema, records_read) = format.infer_schema(reader, options.max_records)?;
 
     let geometry_col_name = find_geometry_column(&schema, options.geometry_column_name.as_deref())?;
 
-    Ok((schema, records_read, geometry_col_name))
+    Ok((Arc::new(schema), records_read, geometry_col_name))
 }
 
-/// Read a CSV file to a Table
+/// Read a CSV file to a [RecordBatchReader].
 ///
 /// This expects a geometry to be encoded as WKT within one column.
 ///
-/// Note that this is Read and not Read + Seek. This means that you must infer the schema yourself
-/// before calling this function. This allows using with objects that are only `Read` in the case
-/// when you already know the file's schema.
+/// Note that the input required here is [`Read`] and not [`Read`] + [`Seek`][std::io::Seek]. This
+/// means that you must infer the schema yourself before calling this function. This allows using
+/// with objects that are only `Read` in the case when you already know the file's schema.
 ///
 /// This schema is expected to be the schema inferred by `arrow-csv`'s
 /// [`infer_schema`][Format::infer_schema]. That means the geometry should be a string in the

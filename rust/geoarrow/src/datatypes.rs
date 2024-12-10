@@ -469,7 +469,7 @@ impl NativeType {
             Mixed(_, _) => "geoarrow.geometry",
             GeometryCollection(_, _) => "geoarrow.geometrycollection",
             Rect(_) => "geoarrow.box",
-            Geometry(_) => "geoarrow.unknown",
+            Geometry(_) => "geoarrow.geometry",
         }
     }
 
@@ -794,7 +794,7 @@ fn parse_multi_polygon(field: &Field) -> Result<NativeType> {
     }
 }
 
-fn parse_geometry(field: &Field) -> Result<NativeType> {
+fn parse_mixed(field: &Field) -> Result<NativeType> {
     match field.data_type() {
         DataType::Union(fields, _) => {
             let mut coord_types: HashSet<CoordType> = HashSet::new();
@@ -927,13 +927,13 @@ fn parse_geometry_collection(field: &Field) -> Result<NativeType> {
     // We need to parse the _inner_ type of the geometry collection as a union so that we can check
     // what coordinate type it's using.
     match field.data_type() {
-        DataType::List(inner_field) => match parse_geometry(inner_field)? {
+        DataType::List(inner_field) => match parse_mixed(inner_field)? {
             NativeType::Mixed(coord_type, dim) => {
                 Ok(NativeType::GeometryCollection(coord_type, dim))
             }
             _ => panic!(),
         },
-        DataType::LargeList(inner_field) => match parse_geometry(inner_field)? {
+        DataType::LargeList(inner_field) => match parse_mixed(inner_field)? {
             NativeType::Mixed(coord_type, dim) => {
                 Ok(NativeType::GeometryCollection(coord_type, dim))
             }
@@ -970,7 +970,7 @@ fn parse_rect(field: &Field) -> NativeType {
     }
 }
 
-fn parse_unknown(field: &Field) -> Result<NativeType> {
+fn parse_geometry(field: &Field) -> Result<NativeType> {
     if let DataType::Union(fields, _mode) = field.data_type() {
         let mut coord_types: HashSet<CoordType> = HashSet::new();
 
@@ -1090,10 +1090,10 @@ impl TryFrom<&Field> for NativeType {
                 "geoarrow.multipoint" => parse_multi_point(field)?,
                 "geoarrow.multilinestring" => parse_multi_linestring(field)?,
                 "geoarrow.multipolygon" => parse_multi_polygon(field)?,
-                "geoarrow.geometry" => parse_geometry(field)?,
                 "geoarrow.geometrycollection" => parse_geometry_collection(field)?,
                 "geoarrow.box" => parse_rect(field),
-                "geoarrow.unknown" => parse_unknown(field)?,
+                "geoarrow.geometry" => parse_geometry(field)?,
+                // "geoarrow.geometry" => parse_mixed(field)?,
                 name => return Err(GeoArrowError::General(format!("Expected GeoArrow native type, got '{}'.\nIf you're passing a serialized GeoArrow type like 'geoarrow.wkb' or 'geoarrow.wkt', you need to parse to a native representation.", name))),
             };
             Ok(data_type)
