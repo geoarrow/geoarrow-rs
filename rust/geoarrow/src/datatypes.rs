@@ -794,7 +794,6 @@ fn parse_multi_polygon(field: &Field) -> Result<NativeType> {
     }
 }
 
-#[allow(dead_code)]
 fn parse_mixed(field: &Field) -> Result<NativeType> {
     match field.data_type() {
         DataType::Union(fields, _) => {
