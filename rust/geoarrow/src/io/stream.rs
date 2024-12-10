@@ -3,8 +3,8 @@ use crate::table::Table;
 use arrow_array::{RecordBatchIterator, RecordBatchReader as _RecordBatchReader};
 use arrow_schema::SchemaRef;
 
-/// A newtype wrapper around an [arrow_array::RecordBatchReader] so that we can impl the
-/// [geozero::GeozeroDatasource] trait.
+/// A newtype wrapper around an [`arrow_array::RecordBatchReader`] so that we can implement the
+/// [`geozero::GeozeroDatasource`] trait on it.
 pub struct RecordBatchReader(Option<Box<dyn _RecordBatchReader>>);
 
 impl RecordBatchReader {
