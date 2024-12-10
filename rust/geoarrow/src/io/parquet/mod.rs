@@ -66,7 +66,7 @@ mod test;
 mod writer;
 
 pub use reader::{
-    GeoParquetDatasetMetadata, GeoParquetReaderMetadata, GeoParquetReaderOptions,
+    expand_glob, GeoParquetDatasetMetadata, GeoParquetReaderMetadata, GeoParquetReaderOptions,
     GeoParquetRecordBatchReader, GeoParquetRecordBatchReaderBuilder,
 };
 #[cfg(feature = "parquet_async")]
