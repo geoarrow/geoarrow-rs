@@ -469,7 +469,7 @@ impl NativeType {
             Mixed(_, _) => "geoarrow.geometry",
             GeometryCollection(_, _) => "geoarrow.geometrycollection",
             Rect(_) => "geoarrow.box",
-            Geometry(_) => "geoarrow.unknown",
+            Geometry(_) => "geoarrow.geometry",
         }
     }
 
@@ -1092,8 +1092,9 @@ impl TryFrom<&Field> for NativeType {
                 "geoarrow.multipolygon" => parse_multi_polygon(field)?,
                 "geoarrow.geometrycollection" => parse_geometry_collection(field)?,
                 "geoarrow.box" => parse_rect(field),
-                "geoarrow.unknown" => parse_geometry(field)?,
-                "geoarrow.geometry" => parse_mixed(field)?,
+                "geoarrow.geometry" => parse_geometry(field)?,
+                // We always parse geoarrow.geometry to a GeometryArray
+                // "geoarrow.geometry" => parse_mixed(field)?,
                 name => return Err(GeoArrowError::General(format!("Expected GeoArrow native type, got '{}'.\nIf you're passing a serialized GeoArrow type like 'geoarrow.wkb' or 'geoarrow.wkt', you need to parse to a native representation.", name))),
             };
             Ok(data_type)
@@ -1162,7 +1163,7 @@ impl TryFrom<&Field> for AnyType {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::array::MixedGeometryBuilder;
+    use crate::array::GeometryBuilder;
     use crate::{ArrayBase, NativeArray};
 
     #[test]
@@ -1177,7 +1178,7 @@ mod test {
         let data_type: NativeType = field.as_ref().try_into().unwrap();
         assert_eq!(ml_array.data_type(), data_type);
 
-        let mut builder = MixedGeometryBuilder::new(Dimension::XY);
+        let mut builder = GeometryBuilder::new();
         builder.push_point(Some(&crate::test::point::p0())).unwrap();
         builder.push_point(Some(&crate::test::point::p1())).unwrap();
         builder.push_point(Some(&crate::test::point::p2())).unwrap();
@@ -1187,9 +1188,9 @@ mod test {
         builder
             .push_multi_line_string(Some(&crate::test::multilinestring::ml1()))
             .unwrap();
-        let mixed_array = builder.finish();
-        let field = mixed_array.extension_field();
+        let geom_array = builder.finish();
+        let field = geom_array.extension_field();
         let data_type: NativeType = field.as_ref().try_into().unwrap();
-        assert_eq!(mixed_array.data_type(), data_type);
+        assert_eq!(geom_array.data_type(), data_type);
     }
 }
