@@ -928,13 +928,13 @@ fn parse_geometry_collection(field: &Field) -> Result<NativeType> {
     // We need to parse the _inner_ type of the geometry collection as a union so that we can check
     // what coordinate type it's using.
     match field.data_type() {
-        DataType::List(inner_field) => match parse_geometry(inner_field)? {
+        DataType::List(inner_field) => match parse_mixed(inner_field)? {
             NativeType::Mixed(coord_type, dim) => {
                 Ok(NativeType::GeometryCollection(coord_type, dim))
             }
             _ => panic!(),
         },
-        DataType::LargeList(inner_field) => match parse_geometry(inner_field)? {
+        DataType::LargeList(inner_field) => match parse_mixed(inner_field)? {
             NativeType::Mixed(coord_type, dim) => {
                 Ok(NativeType::GeometryCollection(coord_type, dim))
             }

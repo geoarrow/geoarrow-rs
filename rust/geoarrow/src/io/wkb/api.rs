@@ -303,7 +303,7 @@ impl ToWKB for &dyn ChunkedNativeArray {
                 ChunkedGeometryArray::new(self.as_geometry_collection().map(|chunk| chunk.into()))
             }
             Rect(_) => todo!(),
-            Geometry(_) => ChunkedGeometryArray::new(self.as_mixed().map(|chunk| chunk.into())),
+            Geometry(_) => ChunkedGeometryArray::new(self.as_geometry().map(|chunk| chunk.into())),
         }
     }
 }
