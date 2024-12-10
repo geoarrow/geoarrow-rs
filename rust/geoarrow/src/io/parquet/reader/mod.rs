@@ -1,12 +1,14 @@
 #[cfg(feature = "parquet_async")]
 mod r#async;
 mod builder;
+mod glob;
 mod metadata;
 mod options;
 mod parse;
 mod spatial_filter;
 
 pub use builder::{GeoParquetRecordBatchReader, GeoParquetRecordBatchReaderBuilder};
+pub use glob::expand_glob;
 pub use metadata::{GeoParquetDatasetMetadata, GeoParquetReaderMetadata};
 pub use options::GeoParquetReaderOptions;
 #[cfg(feature = "parquet_async")]
