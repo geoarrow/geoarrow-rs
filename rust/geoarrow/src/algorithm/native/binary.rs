@@ -4,12 +4,13 @@ use arrow_array::{BooleanArray, PrimitiveArray};
 use arrow_buffer::ArrowNativeType;
 use arrow_buffer::{BooleanBufferBuilder, BufferBuilder, MutableBuffer, NullBuffer};
 use arrow_data::ArrayData;
+use geo_traits::GeometryTrait;
 
 use crate::array::*;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 
-pub trait Binary<'a, Rhs: ArrayAccessor<'a> = Self>: ArrayAccessor<'a> {
+pub trait Binary<'a, Rhs: ArrayAccessor<'a> = Self>: ArrayAccessor<'a> + NativeArray {
     fn binary_boolean<F>(&'a self, rhs: &'a Rhs, op: F) -> Result<BooleanArray>
     where
         F: Fn(Self::Item, Rhs::Item) -> bool,
@@ -116,11 +117,47 @@ pub trait Binary<'a, Rhs: ArrayAccessor<'a> = Self>: ArrayAccessor<'a> {
             Ok(PrimitiveArray::new(values, Some(nulls)))
         }
     }
+
+    fn try_binary_geometry<F, G>(
+        &'a self,
+        rhs: &'a Rhs,
+        op: F,
+        prefer_multi: bool,
+    ) -> Result<GeometryArray>
+    where
+        G: GeometryTrait<T = f64>,
+        F: Fn(Self::Item, Rhs::Item) -> Result<G>,
+    {
+        if self.len() != rhs.len() {
+            return Err(GeoArrowError::General(
+                "Cannot perform binary operation on arrays of different length".to_string(),
+            ));
+        }
+
+        let mut builder = GeometryBuilder::with_capacity_and_options(
+            Default::default(),
+            self.coord_type(),
+            self.metadata().clone(),
+            prefer_multi,
+        );
+
+        if self.is_empty() {
+            return Ok(builder.finish());
+        }
+
+        for (left, right) in self.iter().zip(rhs.iter()) {
+            if let (Some(left), Some(right)) = (left, right) {
+                builder.push_geometry(Some(&op(left, right)?))?;
+            } else {
+                builder.push_null();
+            }
+        }
+        Ok(builder.finish())
+    }
 }
 
 // Implementations on PointArray
 impl Binary<'_, PointArray> for PointArray {}
-impl Binary<'_, PointArray> for RectArray {}
 impl Binary<'_, PointArray> for LineStringArray {}
 impl Binary<'_, PointArray> for PolygonArray {}
 impl Binary<'_, PointArray> for MultiPointArray {}
@@ -128,10 +165,11 @@ impl Binary<'_, PointArray> for MultiLineStringArray {}
 impl Binary<'_, PointArray> for MultiPolygonArray {}
 impl Binary<'_, PointArray> for MixedGeometryArray {}
 impl Binary<'_, PointArray> for GeometryCollectionArray {}
+impl Binary<'_, PointArray> for RectArray {}
+impl Binary<'_, PointArray> for GeometryArray {}
 
 // Implementations on LineStringArray
 impl Binary<'_, LineStringArray> for PointArray {}
-impl Binary<'_, LineStringArray> for RectArray {}
 impl Binary<'_, LineStringArray> for LineStringArray {}
 impl Binary<'_, LineStringArray> for PolygonArray {}
 impl Binary<'_, LineStringArray> for MultiPointArray {}
@@ -139,10 +177,11 @@ impl Binary<'_, LineStringArray> for MultiLineStringArray {}
 impl Binary<'_, LineStringArray> for MultiPolygonArray {}
 impl Binary<'_, LineStringArray> for MixedGeometryArray {}
 impl Binary<'_, LineStringArray> for GeometryCollectionArray {}
+impl Binary<'_, LineStringArray> for RectArray {}
+impl Binary<'_, LineStringArray> for GeometryArray {}
 
 // Implementations on PolygonArray
 impl Binary<'_, PolygonArray> for PointArray {}
-impl Binary<'_, PolygonArray> for RectArray {}
 impl Binary<'_, PolygonArray> for LineStringArray {}
 impl Binary<'_, PolygonArray> for PolygonArray {}
 impl Binary<'_, PolygonArray> for MultiPointArray {}
@@ -150,10 +189,11 @@ impl Binary<'_, PolygonArray> for MultiLineStringArray {}
 impl Binary<'_, PolygonArray> for MultiPolygonArray {}
 impl Binary<'_, PolygonArray> for MixedGeometryArray {}
 impl Binary<'_, PolygonArray> for GeometryCollectionArray {}
+impl Binary<'_, PolygonArray> for RectArray {}
+impl Binary<'_, PolygonArray> for GeometryArray {}
 
 // Implementations on MultiPointArray
 impl Binary<'_, MultiPointArray> for PointArray {}
-impl Binary<'_, MultiPointArray> for RectArray {}
 impl Binary<'_, MultiPointArray> for LineStringArray {}
 impl Binary<'_, MultiPointArray> for PolygonArray {}
 impl Binary<'_, MultiPointArray> for MultiPointArray {}
@@ -161,10 +201,11 @@ impl Binary<'_, MultiPointArray> for MultiLineStringArray {}
 impl Binary<'_, MultiPointArray> for MultiPolygonArray {}
 impl Binary<'_, MultiPointArray> for MixedGeometryArray {}
 impl Binary<'_, MultiPointArray> for GeometryCollectionArray {}
+impl Binary<'_, MultiPointArray> for RectArray {}
+impl Binary<'_, MultiPointArray> for GeometryArray {}
 
 // Implementations on MultiLineStringArray
 impl Binary<'_, MultiLineStringArray> for PointArray {}
-impl Binary<'_, MultiLineStringArray> for RectArray {}
 impl Binary<'_, MultiLineStringArray> for LineStringArray {}
 impl Binary<'_, MultiLineStringArray> for PolygonArray {}
 impl Binary<'_, MultiLineStringArray> for MultiPointArray {}
@@ -172,10 +213,11 @@ impl Binary<'_, MultiLineStringArray> for MultiLineStringArray {}
 impl Binary<'_, MultiLineStringArray> for MultiPolygonArray {}
 impl Binary<'_, MultiLineStringArray> for MixedGeometryArray {}
 impl Binary<'_, MultiLineStringArray> for GeometryCollectionArray {}
+impl Binary<'_, MultiLineStringArray> for RectArray {}
+impl Binary<'_, MultiLineStringArray> for GeometryArray {}
 
 // Implementations on MultiPolygonArray
 impl Binary<'_, MultiPolygonArray> for PointArray {}
-impl Binary<'_, MultiPolygonArray> for RectArray {}
 impl Binary<'_, MultiPolygonArray> for LineStringArray {}
 impl Binary<'_, MultiPolygonArray> for PolygonArray {}
 impl Binary<'_, MultiPolygonArray> for MultiPointArray {}
@@ -183,10 +225,11 @@ impl Binary<'_, MultiPolygonArray> for MultiLineStringArray {}
 impl Binary<'_, MultiPolygonArray> for MultiPolygonArray {}
 impl Binary<'_, MultiPolygonArray> for MixedGeometryArray {}
 impl Binary<'_, MultiPolygonArray> for GeometryCollectionArray {}
+impl Binary<'_, MultiPolygonArray> for RectArray {}
+impl Binary<'_, MultiPolygonArray> for GeometryArray {}
 
 // Implementations on MixedGeometryArray
 impl Binary<'_, MixedGeometryArray> for PointArray {}
-impl Binary<'_, MixedGeometryArray> for RectArray {}
 impl Binary<'_, MixedGeometryArray> for LineStringArray {}
 impl Binary<'_, MixedGeometryArray> for PolygonArray {}
 impl Binary<'_, MixedGeometryArray> for MultiPointArray {}
@@ -194,10 +237,11 @@ impl Binary<'_, MixedGeometryArray> for MultiLineStringArray {}
 impl Binary<'_, MixedGeometryArray> for MultiPolygonArray {}
 impl Binary<'_, MixedGeometryArray> for MixedGeometryArray {}
 impl Binary<'_, MixedGeometryArray> for GeometryCollectionArray {}
+impl Binary<'_, MixedGeometryArray> for RectArray {}
+impl Binary<'_, MixedGeometryArray> for GeometryArray {}
 
 // Implementations on GeometryCollectionArray
 impl Binary<'_, GeometryCollectionArray> for PointArray {}
-impl Binary<'_, GeometryCollectionArray> for RectArray {}
 impl Binary<'_, GeometryCollectionArray> for LineStringArray {}
 impl Binary<'_, GeometryCollectionArray> for PolygonArray {}
 impl Binary<'_, GeometryCollectionArray> for MultiPointArray {}
@@ -205,3 +249,29 @@ impl Binary<'_, GeometryCollectionArray> for MultiLineStringArray {}
 impl Binary<'_, GeometryCollectionArray> for MultiPolygonArray {}
 impl Binary<'_, GeometryCollectionArray> for MixedGeometryArray {}
 impl Binary<'_, GeometryCollectionArray> for GeometryCollectionArray {}
+impl Binary<'_, GeometryCollectionArray> for RectArray {}
+impl Binary<'_, GeometryCollectionArray> for GeometryArray {}
+
+// Implementations on RectArray
+impl Binary<'_, RectArray> for PointArray {}
+impl Binary<'_, RectArray> for LineStringArray {}
+impl Binary<'_, RectArray> for PolygonArray {}
+impl Binary<'_, RectArray> for MultiPointArray {}
+impl Binary<'_, RectArray> for MultiLineStringArray {}
+impl Binary<'_, RectArray> for MultiPolygonArray {}
+impl Binary<'_, RectArray> for MixedGeometryArray {}
+impl Binary<'_, RectArray> for GeometryCollectionArray {}
+impl Binary<'_, RectArray> for RectArray {}
+impl Binary<'_, RectArray> for GeometryArray {}
+
+// Implementations on GeometryArray
+impl Binary<'_, GeometryArray> for PointArray {}
+impl Binary<'_, GeometryArray> for LineStringArray {}
+impl Binary<'_, GeometryArray> for PolygonArray {}
+impl Binary<'_, GeometryArray> for MultiPointArray {}
+impl Binary<'_, GeometryArray> for MultiLineStringArray {}
+impl Binary<'_, GeometryArray> for MultiPolygonArray {}
+impl Binary<'_, GeometryArray> for MixedGeometryArray {}
+impl Binary<'_, GeometryArray> for GeometryCollectionArray {}
+impl Binary<'_, GeometryArray> for RectArray {}
+impl Binary<'_, GeometryArray> for GeometryArray {}

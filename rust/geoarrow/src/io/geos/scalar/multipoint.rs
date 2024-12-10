@@ -1,4 +1,5 @@
 use crate::error::{GeoArrowError, Result};
+use crate::io::geos::scalar::point::to_geos_point;
 use crate::io::geos::scalar::GEOSConstPoint;
 use crate::scalar::MultiPoint;
 use geo_traits::MultiPointTrait;
@@ -8,13 +9,19 @@ impl<'a> TryFrom<&'a MultiPoint<'_>> for geos::Geometry {
     type Error = geos::Error;
 
     fn try_from(value: &'a MultiPoint<'_>) -> std::result::Result<geos::Geometry, geos::Error> {
-        geos::Geometry::create_multipoint(
-            value
-                .points()
-                .map(|point| (&point).try_into())
-                .collect::<std::result::Result<Vec<_>, geos::Error>>()?,
-        )
+        to_geos_multi_point(value)
     }
+}
+
+pub(crate) fn to_geos_multi_point(
+    multi_point: &impl MultiPointTrait<T = f64>,
+) -> std::result::Result<geos::Geometry, geos::Error> {
+    geos::Geometry::create_multipoint(
+        multi_point
+            .points()
+            .map(|point| to_geos_point(&point))
+            .collect::<std::result::Result<Vec<_>, geos::Error>>()?,
+    )
 }
 
 #[derive(Clone)]

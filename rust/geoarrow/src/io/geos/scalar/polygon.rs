@@ -1,4 +1,5 @@
 use crate::error::{GeoArrowError, Result};
+use crate::io::geos::scalar::linestring::to_geos_linear_ring;
 use crate::io::geos::scalar::GEOSConstLinearRing;
 use crate::scalar::Polygon;
 use geo_traits::PolygonTrait;
@@ -8,16 +9,22 @@ impl<'a> TryFrom<&'a Polygon<'_>> for geos::Geometry {
     type Error = geos::Error;
 
     fn try_from(value: &'a Polygon<'_>) -> std::result::Result<geos::Geometry, geos::Error> {
-        if let Some(exterior) = value.exterior() {
-            let exterior = exterior.to_geos_linear_ring()?;
-            let interiors = value
-                .interiors()
-                .map(|interior| interior.to_geos_linear_ring())
-                .collect::<std::result::Result<Vec<_>, geos::Error>>()?;
-            geos::Geometry::create_polygon(exterior, interiors)
-        } else {
-            geos::Geometry::create_empty_polygon()
-        }
+        to_geos_polygon(value)
+    }
+}
+
+pub(crate) fn to_geos_polygon(
+    polygon: &impl PolygonTrait<T = f64>,
+) -> std::result::Result<geos::Geometry, geos::Error> {
+    if let Some(exterior) = polygon.exterior() {
+        let exterior = to_geos_linear_ring(&exterior)?;
+        let interiors = polygon
+            .interiors()
+            .map(|interior| to_geos_linear_ring(&interior))
+            .collect::<std::result::Result<Vec<_>, geos::Error>>()?;
+        geos::Geometry::create_polygon(exterior, interiors)
+    } else {
+        geos::Geometry::create_empty_polygon()
     }
 }
 
