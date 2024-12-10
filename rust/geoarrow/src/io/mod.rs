@@ -6,7 +6,7 @@
 pub mod crs;
 #[cfg(feature = "csv")]
 pub mod csv;
-pub mod display;
+pub(crate) mod display;
 #[cfg(feature = "flatgeobuf")]
 pub mod flatgeobuf;
 #[cfg(feature = "gdal")]
@@ -14,7 +14,7 @@ pub mod gdal;
 pub mod geojson;
 pub mod geojson_lines;
 #[cfg(feature = "geos")]
-pub mod geos;
+pub(crate) mod geos;
 pub mod geozero;
 pub mod ipc;
 #[cfg(feature = "parquet")]

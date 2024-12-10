@@ -64,7 +64,7 @@ pub fn read_csv(
 
     file.seek(SeekFrom::Start(pos))?;
 
-    let record_batch_reader = csv::read_csv(file, schema.into(), options)?;
+    let record_batch_reader = csv::read_csv(file, schema, options)?;
     let schema = record_batch_reader.schema();
     let batches = record_batch_reader.collect::<std::result::Result<Vec<_>, _>>()?;
     Ok(PyTable::try_new(batches, schema)?.into())

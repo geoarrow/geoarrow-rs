@@ -1,3 +1,6 @@
+//! Defines CRS transforms used for writing GeoArrow data to file formats that require different
+//! CRS representations.
+
 use std::fmt::Debug;
 
 use serde_json::Value;
@@ -51,7 +54,9 @@ pub trait CRSTransform: Debug {
     }
 }
 
-/// A default implementation for [CRSTransform] which errors on any CRS conversion.
+/// A default implementation for [CRSTransform] which does not do any CRS conversion.
+///
+/// Instead of raising an error, this will **silently drop any CRS information when writing data**.
 #[derive(Debug, Clone, Default)]
 pub struct DefaultCRSTransform {}
 
