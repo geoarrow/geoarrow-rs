@@ -12,7 +12,7 @@ use crate::algorithm::native::{Cast, Downcast};
 use crate::array::metadata::ArrayMetadata;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedNativeArray, ChunkedNativeArrayDyn};
-use crate::datatypes::{AnyType, Dimension, NativeType, SerializedType};
+use crate::datatypes::{AnyType, NativeType, SerializedType};
 use crate::error::{GeoArrowError, Result};
 use crate::io::wkb::from_wkb;
 use crate::schema::GeoSchemaExt;
@@ -187,9 +187,8 @@ impl Table {
         index: usize,
         target_geo_data_type: Option<NativeType>,
     ) -> Result<Self> {
-        // TODO: don't always default to XY
         let target_geo_data_type =
-            target_geo_data_type.unwrap_or(NativeType::Mixed(Default::default(), Dimension::XY));
+            target_geo_data_type.unwrap_or(NativeType::Geometry(Default::default()));
 
         let orig_field = self.schema().field(index);
         let geoarray_metadata = ArrayMetadata::try_from(orig_field)?;

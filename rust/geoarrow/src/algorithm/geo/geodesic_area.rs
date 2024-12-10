@@ -314,7 +314,6 @@ impl GeodesicArea for &dyn NativeArray {
             MultiPoint(_, XY) => self.as_multi_point().geodesic_area_signed(),
             MultiLineString(_, XY) => self.as_multi_line_string().geodesic_area_signed(),
             MultiPolygon(_, XY) => self.as_multi_polygon().geodesic_area_signed(),
-            Mixed(_, XY) => self.as_mixed().geodesic_area_signed(),
             GeometryCollection(_, XY) => self.as_geometry_collection().geodesic_area_signed(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -332,7 +331,6 @@ impl GeodesicArea for &dyn NativeArray {
             MultiPoint(_, XY) => self.as_multi_point().geodesic_area_unsigned(),
             MultiLineString(_, XY) => self.as_multi_line_string().geodesic_area_unsigned(),
             MultiPolygon(_, XY) => self.as_multi_polygon().geodesic_area_unsigned(),
-            Mixed(_, XY) => self.as_mixed().geodesic_area_unsigned(),
             GeometryCollection(_, XY) => self.as_geometry_collection().geodesic_area_unsigned(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -350,7 +348,6 @@ impl GeodesicArea for &dyn NativeArray {
             MultiPoint(_, XY) => self.as_multi_point().geodesic_perimeter(),
             MultiLineString(_, XY) => self.as_multi_line_string().geodesic_perimeter(),
             MultiPolygon(_, XY) => self.as_multi_polygon().geodesic_perimeter(),
-            Mixed(_, XY) => self.as_mixed().geodesic_perimeter(),
             GeometryCollection(_, XY) => self.as_geometry_collection().geodesic_perimeter(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -368,7 +365,6 @@ impl GeodesicArea for &dyn NativeArray {
             MultiPoint(_, XY) => self.as_multi_point().geodesic_perimeter_area_signed(),
             MultiLineString(_, XY) => self.as_multi_line_string().geodesic_perimeter_area_signed(),
             MultiPolygon(_, XY) => self.as_multi_polygon().geodesic_perimeter_area_signed(),
-            Mixed(_, XY) => self.as_mixed().geodesic_perimeter_area_signed(),
             GeometryCollection(_, XY) => self
                 .as_geometry_collection()
                 .geodesic_perimeter_area_signed(),
@@ -390,7 +386,6 @@ impl GeodesicArea for &dyn NativeArray {
                 .as_multi_line_string()
                 .geodesic_perimeter_area_unsigned(),
             MultiPolygon(_, XY) => self.as_multi_polygon().geodesic_perimeter_area_unsigned(),
-            Mixed(_, XY) => self.as_mixed().geodesic_perimeter_area_unsigned(),
             GeometryCollection(_, XY) => self
                 .as_geometry_collection()
                 .geodesic_perimeter_area_unsigned(),
@@ -451,7 +446,6 @@ impl GeodesicArea for &dyn ChunkedNativeArray {
             MultiPoint(_, XY) => self.as_multi_point().geodesic_area_signed(),
             MultiLineString(_, XY) => self.as_multi_line_string().geodesic_area_signed(),
             MultiPolygon(_, XY) => self.as_multi_polygon().geodesic_area_signed(),
-            Mixed(_, XY) => self.as_mixed().geodesic_area_signed(),
             GeometryCollection(_, XY) => self.as_geometry_collection().geodesic_area_signed(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
@@ -468,7 +462,6 @@ impl GeodesicArea for &dyn ChunkedNativeArray {
             MultiPoint(_, XY) => self.as_multi_point().geodesic_area_unsigned(),
             MultiLineString(_, XY) => self.as_multi_line_string().geodesic_area_unsigned(),
             MultiPolygon(_, XY) => self.as_multi_polygon().geodesic_area_unsigned(),
-            Mixed(_, XY) => self.as_mixed().geodesic_area_unsigned(),
             GeometryCollection(_, XY) => self.as_geometry_collection().geodesic_area_unsigned(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
@@ -485,7 +478,6 @@ impl GeodesicArea for &dyn ChunkedNativeArray {
             MultiPoint(_, XY) => self.as_multi_point().geodesic_perimeter(),
             MultiLineString(_, XY) => self.as_multi_line_string().geodesic_perimeter(),
             MultiPolygon(_, XY) => self.as_multi_polygon().geodesic_perimeter(),
-            Mixed(_, XY) => self.as_mixed().geodesic_perimeter(),
             GeometryCollection(_, XY) => self.as_geometry_collection().geodesic_perimeter(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
@@ -502,7 +494,6 @@ impl GeodesicArea for &dyn ChunkedNativeArray {
             MultiPoint(_, XY) => self.as_multi_point().geodesic_perimeter_area_signed(),
             MultiLineString(_, XY) => self.as_multi_line_string().geodesic_perimeter_area_signed(),
             MultiPolygon(_, XY) => self.as_multi_polygon().geodesic_perimeter_area_signed(),
-            Mixed(_, XY) => self.as_mixed().geodesic_perimeter_area_signed(),
             GeometryCollection(_, XY) => self
                 .as_geometry_collection()
                 .geodesic_perimeter_area_signed(),
@@ -523,7 +514,6 @@ impl GeodesicArea for &dyn ChunkedNativeArray {
                 .as_multi_line_string()
                 .geodesic_perimeter_area_unsigned(),
             MultiPolygon(_, XY) => self.as_multi_polygon().geodesic_perimeter_area_unsigned(),
-            Mixed(_, XY) => self.as_mixed().geodesic_perimeter_area_unsigned(),
             GeometryCollection(_, XY) => self
                 .as_geometry_collection()
                 .geodesic_perimeter_area_unsigned(),

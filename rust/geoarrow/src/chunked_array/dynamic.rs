@@ -64,7 +64,6 @@ impl ChunkedNativeArrayDyn {
             MultiPoint(_, _) => impl_downcast!(MultiPointArray),
             MultiLineString(_, _) => impl_downcast!(MultiLineStringArray),
             MultiPolygon(_, _) => impl_downcast!(MultiPolygonArray),
-            Mixed(_, _) => impl_downcast!(MixedGeometryArray),
             GeometryCollection(_, _) => {
                 impl_downcast!(GeometryCollectionArray)
             }
@@ -120,7 +119,6 @@ impl ChunkedNativeArrayDyn {
                 MultiPoint(_, _) => impl_downcast!(as_multi_point),
                 MultiLineString(_, _) => impl_downcast!(as_multi_line_string),
                 MultiPolygon(_, _) => impl_downcast!(as_multi_polygon),
-                Mixed(_, _) => impl_downcast!(as_mixed),
                 GeometryCollection(_, _) => impl_downcast!(as_geometry_collection),
                 Rect(_) => impl_downcast!(as_rect),
                 Geometry(_) => impl_downcast!(as_geometry),

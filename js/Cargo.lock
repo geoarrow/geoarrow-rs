@@ -687,6 +687,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "crossbeam-deque"
+version = "0.8.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "613f8cc01fe9cf1a3eb3d7f488fd2fa8388403e97039e2f73692932e291a770d"
+dependencies = [
+ "crossbeam-epoch",
+ "crossbeam-utils",
+]
+
+[[package]]
+name = "crossbeam-epoch"
+version = "0.9.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5b82ac4a3c2ca9c3460964f020e1402edd5753411d7737aa39c3714ad1b5420e"
+dependencies = [
+ "crossbeam-utils",
+]
+
+[[package]]
+name = "crossbeam-utils"
+version = "0.8.20"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "22ec99545bb0ed0ea7bb9b8e1e9122ea386ff8a48c0922e43f36d45ab09e0e80"
+
+[[package]]
 name = "crunchy"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -869,8 +894,9 @@ dependencies = [
 
 [[package]]
 name = "flatgeobuf"
-version = "4.4.0"
-source = "git+https://github.com/flatgeobuf/flatgeobuf?rev=f554f2768b612e131e9f55d014eaa5b911a7f1b5#f554f2768b612e131e9f55d014eaa5b911a7f1b5"
+version = "4.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f2d78ca20e47a9f45703d3a811f7f24935ce2d3a3f7b947fd433489ddd8daad6"
 dependencies = [
  "byteorder",
  "fallible-streaming-iterator",
@@ -1014,14 +1040,15 @@ dependencies = [
 
 [[package]]
 name = "geo"
-version = "0.28.0"
+version = "0.29.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f811f663912a69249fa620dcd2a005db7254529da2d8a0b23942e81f47084501"
+checksum = "34f0e6e028c581e82e6822a68869514e94c25e7f8ea669a2d8595bdf7461ccc5"
 dependencies = [
  "earcutr",
  "float_next_after",
  "geo-types",
  "geographiclib-rs",
+ "i_overlay",
  "log",
  "num-traits",
  "robust",
@@ -1059,6 +1086,7 @@ checksum = "b6f47c611187777bbca61ea7aba780213f5f3441fd36294ab333e96cfa791b65"
 dependencies = [
  "approx",
  "num-traits",
+ "rayon",
  "rstar",
  "serde",
 ]
@@ -1087,6 +1115,7 @@ dependencies = [
  "half",
  "indexmap",
  "lexical-core 0.8.5",
+ "num-traits",
  "parquet",
  "phf",
  "rstar",
@@ -1096,7 +1125,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "wkb",
- "wkt 0.11.1 (git+https://github.com/georust/wkt?rev=94c32cdbdaf9523b3d71cd4b2d5d3a033efadacb)",
+ "wkt 0.12.0",
 ]
 
 [[package]]
@@ -1185,7 +1214,7 @@ dependencies = [
  "scroll",
  "serde_json",
  "thiserror",
- "wkt 0.11.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "wkt 0.11.1",
 ]
 
 [[package]]
@@ -1484,6 +1513,50 @@ dependencies = [
  "tower-service",
  "tracing",
 ]
+
+[[package]]
+name = "i_float"
+version = "1.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "775f9961a8d2f879725da8aff789bb20a3ddf297473e0c90af75e69313919490"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "i_key_sort"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "347c253b4748a1a28baf94c9ce133b6b166f08573157e05afe718812bc599fcd"
+
+[[package]]
+name = "i_overlay"
+version = "1.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "06740cd31c1f963823e007d8e6edcd2db634b2856f4f613e3df01737fd852482"
+dependencies = [
+ "i_float",
+ "i_key_sort",
+ "i_shape",
+ "i_tree",
+ "rayon",
+]
+
+[[package]]
+name = "i_shape"
+version = "1.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "27dbe9e5238d6b9c694c08415bf00fb370b089949bd818ab01f41f8927b8774c"
+dependencies = [
+ "i_float",
+ "serde",
+]
+
+[[package]]
+name = "i_tree"
+version = "0.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "155181bc97d770181cf9477da51218a19ee92a8e5be642e796661aee2b601139"
 
 [[package]]
 name = "iana-time-zone"
@@ -2420,6 +2493,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f531f927c2953e31880daaf95178ca85128a55067ee115f12b39cd4f8f1cfebb"
 dependencies = [
  "futures",
+]
+
+[[package]]
+name = "rayon"
+version = "1.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b418a60154510ca1a002a752ca9714984e21e4241e804d32555251faf8b78ffa"
+dependencies = [
+ "either",
+ "rayon-core",
+]
+
+[[package]]
+name = "rayon-core"
+version = "1.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1465873a3dfdaa8ae7cb14b4383657caab0b3e8a0aa9ae8e04b044854c8dfce2"
+dependencies = [
+ "crossbeam-deque",
+ "crossbeam-utils",
 ]
 
 [[package]]
@@ -3693,8 +3786,9 @@ dependencies = [
 
 [[package]]
 name = "wkb"
-version = "0.1.0"
-source = "git+https://github.com/kylebarron/wkb?rev=51a95fff591c7e66ea10f6effaba0d48b3b0a392#51a95fff591c7e66ea10f6effaba0d48b3b0a392"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1e2c084338d6407d24c5a43208aca32128a5d62107eab5ca18314395c4aa3f0"
 dependencies = [
  "byteorder",
  "geo-traits",
@@ -3716,8 +3810,9 @@ dependencies = [
 
 [[package]]
 name = "wkt"
-version = "0.11.1"
-source = "git+https://github.com/georust/wkt?rev=94c32cdbdaf9523b3d71cd4b2d5d3a033efadacb#94c32cdbdaf9523b3d71cd4b2d5d3a033efadacb"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e1c591649bd1c9d4e28459758bbb5fb5c0edc7a67060b52422f4761c94ffe961"
 dependencies = [
  "geo-traits",
  "geo-types",

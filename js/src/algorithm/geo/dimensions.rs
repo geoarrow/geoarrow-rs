@@ -29,7 +29,6 @@ impl_alg!(PolygonData);
 impl_alg!(MultiPointData);
 impl_alg!(MultiLineStringData);
 impl_alg!(MultiPolygonData);
-impl_alg!(MixedGeometryData);
 impl_alg!(GeometryCollectionData);
 
 macro_rules! impl_vector {
@@ -56,5 +55,4 @@ impl_vector!(PolygonVector);
 impl_vector!(MultiPointVector);
 impl_vector!(MultiLineStringVector);
 impl_vector!(MultiPolygonVector);
-impl_vector!(MixedGeometryVector);
 impl_vector!(GeometryCollectionVector);

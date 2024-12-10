@@ -162,6 +162,8 @@ impl_contains_point!(MultiLineStringArray);
 impl_contains_point!(MultiPolygonArray);
 impl_contains_point!(MixedGeometryArray);
 impl_contains_point!(GeometryCollectionArray);
+impl_contains_point!(GeometryArray);
+impl_contains_point!(RectArray);
 
 impl<G: GeometryTrait<T = f64>> ContainsGeometry<G> for &dyn NativeArray {
     fn contains(&self, rhs: &G) -> BooleanArray {
@@ -174,12 +176,11 @@ impl<G: GeometryTrait<T = f64>> ContainsGeometry<G> for &dyn NativeArray {
             MultiPoint(_, _) => ContainsGeometry::contains(self.as_multi_point(), rhs),
             MultiLineString(_, _) => ContainsGeometry::contains(self.as_multi_line_string(), rhs),
             MultiPolygon(_, _) => ContainsGeometry::contains(self.as_multi_polygon(), rhs),
-            Mixed(_, _) => ContainsGeometry::contains(self.as_mixed(), rhs),
             GeometryCollection(_, _) => {
                 ContainsGeometry::contains(self.as_geometry_collection(), rhs)
             }
-            Rect(_) => ContainsGeometry::contains(self.as_mixed(), rhs),
-            Geometry(_) => ContainsGeometry::contains(self.as_mixed(), rhs),
+            Rect(_) => ContainsGeometry::contains(self.as_rect(), rhs),
+            Geometry(_) => ContainsGeometry::contains(self.as_geometry(), rhs),
         }
     }
 }

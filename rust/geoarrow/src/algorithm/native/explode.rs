@@ -197,7 +197,6 @@ impl Explode for &dyn ChunkedNativeArray {
             MultiPoint(_, _) => self.as_multi_point().explode(),
             MultiLineString(_, _) => self.as_multi_line_string().explode(),
             MultiPolygon(_, _) => self.as_multi_polygon().explode(),
-            Mixed(_, _) => self.as_mixed().explode(),
             GeometryCollection(_, _) => self.as_geometry_collection().explode(),
             Rect(_) => self.as_rect().explode(),
             _ => todo!("explode unknown"),

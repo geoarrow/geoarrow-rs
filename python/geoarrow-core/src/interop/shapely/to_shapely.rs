@@ -104,7 +104,6 @@ fn pyarray_to_shapely(py: Python, input: PyArray) -> PyGeoArrowResult<Bound<PyAn
                     multipolygon_arr(py, array.as_ref().as_multi_polygon().clone())
                 }
                 Rect(_) => rect_arr(py, array.as_ref().as_rect().clone()),
-                Mixed(_, _) => via_wkb(py, array),
                 GeometryCollection(_, _) => via_wkb(py, array),
                 Geometry(_) => via_wkb(py, array),
             }

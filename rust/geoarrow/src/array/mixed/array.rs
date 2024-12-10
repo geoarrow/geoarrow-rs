@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use arrow_array::{Array, OffsetSizeTrait, UnionArray};
@@ -13,7 +13,7 @@ use crate::array::{
     CoordType, GeometryCollectionArray, LineStringArray, MultiLineStringArray, MultiPointArray,
     MultiPolygonArray, PointArray, PolygonArray, WKBArray,
 };
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::{mixed_data_type, Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Geometry;
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
@@ -55,8 +55,10 @@ use geo_traits::GeometryTrait;
 /// - 37: GeometryCollection ZM
 #[derive(Debug, Clone, PartialEq)]
 pub struct MixedGeometryArray {
-    /// Always NativeType::Mixed
-    data_type: NativeType,
+    // We store the coord type and dimension separately because there's no NativeType::Mixed
+    // variant
+    coord_type: CoordType,
+    dim: Dimension,
 
     pub(crate) metadata: Arc<ArrayMetadata>,
 
@@ -124,9 +126,9 @@ impl MixedGeometryArray {
 
         let dim = dimensions.into_iter().next().unwrap();
 
-        let data_type = NativeType::Mixed(coord_type, dim);
         Self {
-            data_type,
+            coord_type,
+            dim,
             type_ids,
             offsets,
             points,
@@ -366,7 +368,8 @@ impl MixedGeometryArray {
             "offset + length may not exceed length of array"
         );
         Self {
-            data_type: self.data_type,
+            coord_type: self.coord_type,
+            dim: self.dim,
             type_ids: self.type_ids.slice(offset, length),
             offsets: self.offsets.slice(offset, length),
             points: self.points.clone(),
@@ -429,18 +432,33 @@ impl ArrayBase for MixedGeometryArray {
     }
 
     fn storage_type(&self) -> DataType {
-        self.data_type.to_data_type()
+        mixed_data_type(self.coord_type, self.dim)
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        Arc::new(
-            self.data_type
-                .to_field_with_metadata("geometry", true, &self.metadata),
-        )
+        let name = "geometry";
+        let nullable = true;
+        let array_metadata = &self.metadata;
+        let data_type = self.storage_type();
+
+        // Note: this is currently copied from to_field_with_metadata
+        let extension_name = self.extension_name();
+        let mut metadata = HashMap::with_capacity(2);
+        metadata.insert(
+            "ARROW:extension:name".to_string(),
+            extension_name.to_string(),
+        );
+        if array_metadata.should_serialize() {
+            metadata.insert(
+                "ARROW:extension:metadata".to_string(),
+                serde_json::to_string(array_metadata.as_ref()).unwrap(),
+            );
+        }
+        Arc::new(Field::new(name, data_type, nullable).with_metadata(metadata))
     }
 
     fn extension_name(&self) -> &str {
-        self.data_type.extension_name()
+        "geoarrow.geometry"
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {
@@ -471,11 +489,16 @@ impl ArrayBase for MixedGeometryArray {
 
 impl NativeArray for MixedGeometryArray {
     fn data_type(&self) -> NativeType {
-        self.data_type
+        // self.data_type
+        todo!("mixed array does not have native type")
+    }
+
+    fn dimension(&self) -> Dimension {
+        self.dim
     }
 
     fn coord_type(&self) -> crate::array::CoordType {
-        self.data_type.coord_type()
+        self.coord_type
     }
 
     fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
@@ -583,7 +606,7 @@ impl IntoArrow for MixedGeometryArray {
     type ArrowArray = UnionArray;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let union_fields = match self.data_type.to_data_type() {
+        let union_fields = match mixed_data_type(self.coord_type, self.dim) {
             DataType::Union(union_fields, _) => union_fields,
             _ => unreachable!(),
         };

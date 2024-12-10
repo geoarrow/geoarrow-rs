@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::array::metadata::ArrayMetadata;
-use crate::array::{CoordType, MixedGeometryArray, MixedGeometryBuilder};
+use crate::array::{CoordType, GeometryArray, MixedGeometryArray, MixedGeometryBuilder};
 use crate::datatypes::Dimension;
 use crate::io::geozero::scalar::process_geometry;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
@@ -112,8 +112,9 @@ impl MixedGeometryStreamBuilder {
         self.builder.push_null()
     }
 
-    pub fn finish(self) -> MixedGeometryArray {
-        self.builder.finish()
+    pub fn finish(self) -> GeometryArray {
+        // Hack until the MixedGeometryStreamBuilder is updated to build a GeometryBuilder directly
+        self.builder.finish().into()
     }
 }
 

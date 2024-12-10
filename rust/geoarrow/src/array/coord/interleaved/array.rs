@@ -132,7 +132,8 @@ impl InterleavedCoordBuffer {
     pub fn from_arrow(array: &FixedSizeListArray, dim: Dimension) -> Result<Self> {
         if array.value_length() != dim.size() as i32 {
             return Err(GeoArrowError::General(
-                "Expected this FixedSizeListArray to have size 2".to_string(),
+                format!( "Expected the FixedSizeListArray to match the dimension. Array length is {}, dimension is: {:?} have size 2", array.value_length(), dim)
+
             ));
         }
 

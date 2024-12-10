@@ -592,7 +592,7 @@ pub type ChunkedMultiLineStringArray = ChunkedGeometryArray<MultiLineStringArray
 /// A chunked multi-polygon array.
 pub type ChunkedMultiPolygonArray = ChunkedGeometryArray<MultiPolygonArray>;
 /// A chunked mixed geometry array.
-pub type ChunkedMixedGeometryArray = ChunkedGeometryArray<MixedGeometryArray>;
+pub(crate) type ChunkedMixedGeometryArray = ChunkedGeometryArray<MixedGeometryArray>;
 /// A chunked geometry collection array.
 pub type ChunkedGeometryCollectionArray = ChunkedGeometryArray<GeometryCollectionArray>;
 /// A chunked rect array.

@@ -84,7 +84,6 @@ impl_geodesic_area!(PolygonData);
 impl_geodesic_area!(MultiPointData);
 impl_geodesic_area!(MultiLineStringData);
 impl_geodesic_area!(MultiPolygonData);
-impl_geodesic_area!(MixedGeometryData);
 impl_geodesic_area!(GeometryCollectionData);
 
 macro_rules! impl_vector {
@@ -168,5 +167,4 @@ impl_vector!(PolygonVector);
 impl_vector!(MultiPointVector);
 impl_vector!(MultiLineStringVector);
 impl_vector!(MultiPolygonVector);
-impl_vector!(MixedGeometryVector);
 impl_vector!(GeometryCollectionVector);

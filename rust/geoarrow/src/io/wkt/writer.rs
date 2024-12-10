@@ -53,7 +53,6 @@ impl ToWKT for &dyn NativeArray {
                 impl_to_wkt!(as_multi_line_string, write_multi_linestring)
             }
             MultiPolygon(_, _) => impl_to_wkt!(as_multi_polygon, write_multi_polygon),
-            Mixed(_, _) => impl_to_wkt!(as_mixed, write_geometry),
             GeometryCollection(_, _) => {
                 impl_to_wkt!(as_geometry_collection, write_geometry_collection)
             }
@@ -85,7 +84,6 @@ impl ToWKT for &dyn ChunkedNativeArray {
             MultiPoint(_, _) => impl_to_wkt!(as_multi_point),
             MultiLineString(_, _) => impl_to_wkt!(as_multi_line_string),
             MultiPolygon(_, _) => impl_to_wkt!(as_multi_polygon),
-            Mixed(_, _) => impl_to_wkt!(as_mixed),
             GeometryCollection(_, _) => impl_to_wkt!(as_geometry_collection),
             Rect(_) => impl_to_wkt!(as_rect),
             Geometry(_) => impl_to_wkt!(as_geometry),

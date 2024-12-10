@@ -23,7 +23,6 @@ impl_bounding_rect!(PolygonData);
 impl_bounding_rect!(MultiPointData);
 impl_bounding_rect!(MultiLineStringData);
 impl_bounding_rect!(MultiPolygonData);
-impl_bounding_rect!(MixedGeometryData);
 impl_bounding_rect!(GeometryCollectionData);
 
 macro_rules! impl_vector {
@@ -46,5 +45,4 @@ impl_vector!(PolygonVector);
 impl_vector!(MultiPointVector);
 impl_vector!(MultiLineStringVector);
 impl_vector!(MultiPolygonVector);
-impl_vector!(MixedGeometryVector);
 impl_vector!(GeometryCollectionVector);

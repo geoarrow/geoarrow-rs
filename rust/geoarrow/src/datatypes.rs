@@ -129,11 +129,10 @@ pub enum NativeType {
     /// offsets.
     MultiPolygon(CoordType, Dimension),
 
-    /// Represents a [MixedGeometryArray][crate::array::MixedGeometryArray] or
-    /// [ChunkedMixedGeometryArray][crate::chunked_array::ChunkedMixedGeometryArray] with `i32`
-    /// offsets.
-    Mixed(CoordType, Dimension),
-
+    // Represents a [MixedGeometryArray][crate::array::MixedGeometryArray] or
+    // [ChunkedMixedGeometryArray][crate::chunked_array::ChunkedMixedGeometryArray] with `i32`
+    // offsets.
+    // Mixed(CoordType, Dimension),
     /// Represents a [GeometryCollectionArray][crate::array::GeometryCollectionArray] or
     /// [ChunkedGeometryCollectionArray][crate::chunked_array::ChunkedGeometryCollectionArray] with
     /// `i32` offsets.
@@ -244,7 +243,7 @@ fn multi_polygon_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
     DataType::List(polygons_field)
 }
 
-fn mixed_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
+pub(crate) fn mixed_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
     let mut fields = vec![];
     let mut type_ids = vec![];
 
@@ -391,7 +390,6 @@ impl NativeType {
             MultiPoint(ct, _) => *ct,
             MultiLineString(ct, _) => *ct,
             MultiPolygon(ct, _) => *ct,
-            Mixed(ct, _) => *ct,
             GeometryCollection(ct, _) => *ct,
             Rect(_) => CoordType::Separated,
             Geometry(ct) => *ct,
@@ -410,7 +408,6 @@ impl NativeType {
             MultiPoint(_, dim) => Some(*dim),
             MultiLineString(_, dim) => Some(*dim),
             MultiPolygon(_, dim) => Some(*dim),
-            Mixed(_, dim) => Some(*dim),
             GeometryCollection(_, dim) => Some(*dim),
             Rect(dim) => Some(*dim),
             Geometry(_) => None,
@@ -440,7 +437,6 @@ impl NativeType {
             MultiPoint(coord_type, dim) => multi_point_data_type(*coord_type, *dim),
             MultiLineString(coord_type, dim) => multi_line_string_data_type(*coord_type, *dim),
             MultiPolygon(coord_type, dim) => multi_polygon_data_type(*coord_type, *dim),
-            Mixed(coord_type, dim) => mixed_data_type(*coord_type, *dim),
             GeometryCollection(coord_type, dim) => geometry_collection_data_type(*coord_type, *dim),
             Rect(dim) => rect_data_type(*dim),
             Geometry(coord_type) => unknown_data_type(*coord_type),
@@ -466,7 +462,6 @@ impl NativeType {
             MultiPoint(_, _) => "geoarrow.multipoint",
             MultiLineString(_, _) => "geoarrow.multilinestring",
             MultiPolygon(_, _) => "geoarrow.multipolygon",
-            Mixed(_, _) => "geoarrow.geometry",
             GeometryCollection(_, _) => "geoarrow.geometrycollection",
             Rect(_) => "geoarrow.box",
             Geometry(_) => "geoarrow.geometry",
@@ -551,7 +546,6 @@ impl NativeType {
             MultiPoint(_, dim) => MultiPoint(coord_type, dim),
             MultiLineString(_, dim) => MultiLineString(coord_type, dim),
             MultiPolygon(_, dim) => MultiPolygon(coord_type, dim),
-            Mixed(_, dim) => Mixed(coord_type, dim),
             GeometryCollection(_, dim) => GeometryCollection(coord_type, dim),
             Rect(dim) => Rect(dim),
             Geometry(_) => Geometry(coord_type),
@@ -577,7 +571,6 @@ impl NativeType {
             MultiPoint(coord_type, _) => MultiPoint(coord_type, dim),
             MultiLineString(coord_type, _) => MultiLineString(coord_type, dim),
             MultiPolygon(coord_type, _) => MultiPolygon(coord_type, dim),
-            Mixed(coord_type, _) => Mixed(coord_type, dim),
             GeometryCollection(coord_type, _) => GeometryCollection(coord_type, dim),
             Rect(_) => Rect(dim),
             Geometry(coord_type) => Geometry(coord_type),
@@ -794,7 +787,7 @@ fn parse_multi_polygon(field: &Field) -> Result<NativeType> {
     }
 }
 
-fn parse_mixed(field: &Field) -> Result<NativeType> {
+fn parse_mixed(field: &Field) -> Result<(CoordType, Dimension)> {
     match field.data_type() {
         DataType::Union(fields, _) => {
             let mut coord_types: HashSet<CoordType> = HashSet::new();
@@ -917,7 +910,7 @@ fn parse_mixed(field: &Field) -> Result<NativeType> {
 
             let coord_type = coord_types.drain().next().unwrap();
             let dimension = dimensions.drain().next().unwrap();
-            Ok(NativeType::Mixed(coord_type, dimension))
+            Ok((coord_type, dimension))
         }
         _ => panic!("Unexpected data type"),
     }
@@ -927,18 +920,10 @@ fn parse_geometry_collection(field: &Field) -> Result<NativeType> {
     // We need to parse the _inner_ type of the geometry collection as a union so that we can check
     // what coordinate type it's using.
     match field.data_type() {
-        DataType::List(inner_field) => match parse_mixed(inner_field)? {
-            NativeType::Mixed(coord_type, dim) => {
-                Ok(NativeType::GeometryCollection(coord_type, dim))
-            }
-            _ => panic!(),
-        },
-        DataType::LargeList(inner_field) => match parse_mixed(inner_field)? {
-            NativeType::Mixed(coord_type, dim) => {
-                Ok(NativeType::GeometryCollection(coord_type, dim))
-            }
-            _ => panic!(),
-        },
+        DataType::List(inner_field) | DataType::LargeList(inner_field) => {
+            let (coord_type, dim) = parse_mixed(inner_field)?;
+            Ok(NativeType::GeometryCollection(coord_type, dim))
+        }
         _ => panic!(),
     }
 }

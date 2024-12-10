@@ -6,9 +6,8 @@ use arrow_array::{BooleanArray, RecordBatch};
 use arrow_schema::{Field, Schema};
 use bytes::Bytes;
 
-use crate::array::MixedGeometryBuilder;
+use crate::array::GeometryBuilder;
 use crate::chunked_array::ChunkedNativeArrayDyn;
-use crate::datatypes::Dimension;
 use crate::error::Result;
 use crate::io::parquet::{write_geoparquet, GeoParquetRecordBatchReaderBuilder};
 use crate::table::Table;
@@ -42,7 +41,7 @@ fn round_trip_nybb() -> Result<()> {
 // Test from https://github.com/geoarrow/geoarrow-rs/pull/717
 #[test]
 fn mixed_geometry_roundtrip() {
-    let mut builder = MixedGeometryBuilder::new(Dimension::XY);
+    let mut builder = GeometryBuilder::new();
     builder
         .push_point(Some(&geo::point!(x: -105., y: 40.)))
         .unwrap();

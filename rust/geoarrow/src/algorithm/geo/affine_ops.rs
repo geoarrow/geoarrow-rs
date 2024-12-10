@@ -246,7 +246,6 @@ impl AffineOps<&AffineTransform> for &dyn NativeArray {
             MultiPoint(_, _) => impl_downcast!(as_multi_point),
             MultiLineString(_, _) => impl_downcast!(as_multi_line_string),
             MultiPolygon(_, _) => impl_downcast!(as_multi_polygon),
-            Mixed(_, _) => Arc::new(self.as_mixed().affine_transform(transform)?),
             GeometryCollection(_, _) => {
                 Arc::new(self.as_geometry_collection().affine_transform(transform)?)
             }
@@ -324,7 +323,6 @@ impl AffineOps<&AffineTransform> for &dyn ChunkedNativeArray {
             MultiPoint(_, _) => impl_downcast!(as_multi_point),
             MultiLineString(_, _) => impl_downcast!(as_multi_line_string),
             MultiPolygon(_, _) => impl_downcast!(as_multi_polygon),
-            Mixed(_, _) => Arc::new(self.as_mixed().affine_transform(transform)?),
             GeometryCollection(_, _) => {
                 Arc::new(self.as_geometry_collection().affine_transform(transform)?)
             }
@@ -494,7 +492,6 @@ impl AffineOps<&[AffineTransform]> for &dyn NativeArray {
                 Arc::new(self.as_multi_line_string().affine_transform(transform))
             }
             MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon().affine_transform(transform)),
-            Mixed(_, XY) => Arc::new(self.as_mixed().affine_transform(transform)?),
             GeometryCollection(_, XY) => {
                 Arc::new(self.as_geometry_collection().affine_transform(transform)?)
             }
