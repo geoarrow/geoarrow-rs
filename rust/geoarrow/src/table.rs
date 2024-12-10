@@ -29,7 +29,6 @@ pub(crate) static GEOARROW_EXTENSION_NAMES: Set<&'static str> = phf_set! {
     "geoarrow.geometrycollection",
     "geoarrow.wkb",
     "geoarrow.wkt",
-    "geoarrow.unknown",
     "ogc.wkb",
 };
 

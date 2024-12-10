@@ -189,9 +189,11 @@ impl MixedGeometryArray {
                     return true;
                 }
             }
+
+            return false;
         }
 
-        false
+        true
     }
 
     pub fn has_line_strings(&self) -> bool {
@@ -206,9 +208,11 @@ impl MixedGeometryArray {
                     return true;
                 }
             }
+
+            return false;
         }
 
-        false
+        true
     }
 
     pub fn has_polygons(&self) -> bool {
@@ -223,9 +227,11 @@ impl MixedGeometryArray {
                     return true;
                 }
             }
+
+            return false;
         }
 
-        false
+        true
     }
 
     pub fn has_multi_points(&self) -> bool {
@@ -240,9 +246,11 @@ impl MixedGeometryArray {
                     return true;
                 }
             }
+
+            return false;
         }
 
-        false
+        true
     }
 
     pub fn has_multi_line_strings(&self) -> bool {
@@ -257,9 +265,11 @@ impl MixedGeometryArray {
                     return true;
                 }
             }
+
+            return false;
         }
 
-        false
+        true
     }
 
     pub fn has_multi_polygons(&self) -> bool {
@@ -274,9 +284,11 @@ impl MixedGeometryArray {
                     return true;
                 }
             }
+
+            return false;
         }
 
-        false
+        true
     }
 
     pub fn has_only_points(&self) -> bool {

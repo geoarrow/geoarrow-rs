@@ -356,6 +356,7 @@ mod test {
             true,
         )
         .unwrap();
+
         let rt_ref = roundtrip.as_ref();
         let rt_mixed_arr = rt_ref.as_mixed();
         let downcasted = rt_mixed_arr.downcast().unwrap();

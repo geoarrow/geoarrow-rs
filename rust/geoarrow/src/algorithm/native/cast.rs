@@ -294,7 +294,7 @@ macro_rules! impl_chunked_cast {
                     Mixed(_, _) => impl_cast!(as_mixed),
                     GeometryCollection(_, _) => impl_cast!(as_geometry_collection),
                     Rect(_) => impl_cast!(as_rect),
-                    Geometry(_) => todo!("cast to unknown"),
+                    Geometry(_) => impl_cast!(as_geometry),
                 };
                 Ok(result)
             }
@@ -312,3 +312,4 @@ impl_chunked_cast!(ChunkedMultiLineStringArray);
 impl_chunked_cast!(ChunkedMultiPolygonArray);
 impl_chunked_cast!(ChunkedMixedGeometryArray);
 impl_chunked_cast!(ChunkedGeometryCollectionArray);
+impl_chunked_cast!(ChunkedUnknownGeometryArray);

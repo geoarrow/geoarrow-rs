@@ -469,7 +469,7 @@ impl NativeType {
             Mixed(_, _) => "geoarrow.geometry",
             GeometryCollection(_, _) => "geoarrow.geometrycollection",
             Rect(_) => "geoarrow.box",
-            Geometry(_) => "geoarrow.unknown",
+            Geometry(_) => "geoarrow.geometry",
         }
     }
 
@@ -794,7 +794,8 @@ fn parse_multi_polygon(field: &Field) -> Result<NativeType> {
     }
 }
 
-fn parse_geometry(field: &Field) -> Result<NativeType> {
+#[allow(dead_code)]
+fn parse_mixed(field: &Field) -> Result<NativeType> {
     match field.data_type() {
         DataType::Union(fields, _) => {
             let mut coord_types: HashSet<CoordType> = HashSet::new();
@@ -970,7 +971,7 @@ fn parse_rect(field: &Field) -> NativeType {
     }
 }
 
-fn parse_unknown(field: &Field) -> Result<NativeType> {
+fn parse_geometry(field: &Field) -> Result<NativeType> {
     if let DataType::Union(fields, _mode) = field.data_type() {
         let mut coord_types: HashSet<CoordType> = HashSet::new();
 
@@ -1090,10 +1091,11 @@ impl TryFrom<&Field> for NativeType {
                 "geoarrow.multipoint" => parse_multi_point(field)?,
                 "geoarrow.multilinestring" => parse_multi_linestring(field)?,
                 "geoarrow.multipolygon" => parse_multi_polygon(field)?,
-                "geoarrow.geometry" => parse_geometry(field)?,
                 "geoarrow.geometrycollection" => parse_geometry_collection(field)?,
                 "geoarrow.box" => parse_rect(field),
-                "geoarrow.unknown" => parse_unknown(field)?,
+                "geoarrow.geometry" => parse_geometry(field)?,
+                // We always parse geoarrow.geometry to a GeometryArray
+                // "geoarrow.geometry" => parse_mixed(field)?,
                 name => return Err(GeoArrowError::General(format!("Expected GeoArrow native type, got '{}'.\nIf you're passing a serialized GeoArrow type like 'geoarrow.wkb' or 'geoarrow.wkt', you need to parse to a native representation.", name))),
             };
             Ok(data_type)
@@ -1162,7 +1164,7 @@ impl TryFrom<&Field> for AnyType {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::array::MixedGeometryBuilder;
+    use crate::array::GeometryBuilder;
     use crate::{ArrayBase, NativeArray};
 
     #[test]
@@ -1177,7 +1179,7 @@ mod test {
         let data_type: NativeType = field.as_ref().try_into().unwrap();
         assert_eq!(ml_array.data_type(), data_type);
 
-        let mut builder = MixedGeometryBuilder::new(Dimension::XY);
+        let mut builder = GeometryBuilder::new();
         builder.push_point(Some(&crate::test::point::p0())).unwrap();
         builder.push_point(Some(&crate::test::point::p1())).unwrap();
         builder.push_point(Some(&crate::test::point::p2())).unwrap();
@@ -1187,9 +1189,9 @@ mod test {
         builder
             .push_multi_line_string(Some(&crate::test::multilinestring::ml1()))
             .unwrap();
-        let mixed_array = builder.finish();
-        let field = mixed_array.extension_field();
+        let geom_array = builder.finish();
+        let field = geom_array.extension_field();
         let data_type: NativeType = field.as_ref().try_into().unwrap();
-        assert_eq!(mixed_array.data_type(), data_type);
+        assert_eq!(geom_array.data_type(), data_type);
     }
 }
