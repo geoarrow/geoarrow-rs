@@ -1,8 +1,8 @@
 use crate::algorithm::geo::utils::zeroes;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
-use crate::datatypes::{Dimension, NativeType};
-use crate::error::{GeoArrowError, Result};
+use crate::datatypes::NativeType;
+use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::builder::Float64Builder;
@@ -119,50 +119,52 @@ iter_geo_impl!(PolygonArray);
 iter_geo_impl!(MultiPolygonArray);
 iter_geo_impl!(MixedGeometryArray);
 iter_geo_impl!(GeometryCollectionArray);
+iter_geo_impl!(GeometryArray);
+iter_geo_impl!(RectArray);
 
 impl ChamberlainDuquetteArea for &dyn NativeArray {
     type Output = Result<Float64Array>;
 
     fn chamberlain_duquette_signed_area(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, XY) => self.as_point().chamberlain_duquette_signed_area(),
-            LineString(_, XY) => self.as_line_string().chamberlain_duquette_signed_area(),
-            Polygon(_, XY) => self.as_polygon().chamberlain_duquette_signed_area(),
-            MultiPoint(_, XY) => self.as_multi_point().chamberlain_duquette_signed_area(),
-            MultiLineString(_, XY) => self
+            Point(_, _) => self.as_point().chamberlain_duquette_signed_area(),
+            LineString(_, _) => self.as_line_string().chamberlain_duquette_signed_area(),
+            Polygon(_, _) => self.as_polygon().chamberlain_duquette_signed_area(),
+            MultiPoint(_, _) => self.as_multi_point().chamberlain_duquette_signed_area(),
+            MultiLineString(_, _) => self
                 .as_multi_line_string()
                 .chamberlain_duquette_signed_area(),
-            MultiPolygon(_, XY) => self.as_multi_polygon().chamberlain_duquette_signed_area(),
-            Mixed(_, XY) => self.as_mixed().chamberlain_duquette_signed_area(),
-            GeometryCollection(_, XY) => self
+            MultiPolygon(_, _) => self.as_multi_polygon().chamberlain_duquette_signed_area(),
+            Mixed(_, _) => self.as_mixed().chamberlain_duquette_signed_area(),
+            GeometryCollection(_, _) => self
                 .as_geometry_collection()
                 .chamberlain_duquette_signed_area(),
-            _ => return Err(GeoArrowError::IncorrectType("".into())),
+            Rect(_) => self.as_rect().chamberlain_duquette_signed_area(),
+            Geometry(_) => self.as_geometry().chamberlain_duquette_signed_area(),
         };
         Ok(result)
     }
 
     fn chamberlain_duquette_unsigned_area(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, XY) => self.as_point().chamberlain_duquette_unsigned_area(),
-            LineString(_, XY) => self.as_line_string().chamberlain_duquette_unsigned_area(),
-            Polygon(_, XY) => self.as_polygon().chamberlain_duquette_unsigned_area(),
-            MultiPoint(_, XY) => self.as_multi_point().chamberlain_duquette_unsigned_area(),
-            MultiLineString(_, XY) => self
+            Point(_, _) => self.as_point().chamberlain_duquette_unsigned_area(),
+            LineString(_, _) => self.as_line_string().chamberlain_duquette_unsigned_area(),
+            Polygon(_, _) => self.as_polygon().chamberlain_duquette_unsigned_area(),
+            MultiPoint(_, _) => self.as_multi_point().chamberlain_duquette_unsigned_area(),
+            MultiLineString(_, _) => self
                 .as_multi_line_string()
                 .chamberlain_duquette_unsigned_area(),
-            MultiPolygon(_, XY) => self.as_multi_polygon().chamberlain_duquette_unsigned_area(),
-            Mixed(_, XY) => self.as_mixed().chamberlain_duquette_unsigned_area(),
-            GeometryCollection(_, XY) => self
+            MultiPolygon(_, _) => self.as_multi_polygon().chamberlain_duquette_unsigned_area(),
+            Mixed(_, _) => self.as_mixed().chamberlain_duquette_unsigned_area(),
+            GeometryCollection(_, _) => self
                 .as_geometry_collection()
                 .chamberlain_duquette_unsigned_area(),
-            _ => return Err(GeoArrowError::IncorrectType("".into())),
+            Rect(_) => self.as_rect().chamberlain_duquette_unsigned_area(),
+            Geometry(_) => self.as_geometry().chamberlain_duquette_unsigned_area(),
         };
         Ok(result)
     }
@@ -194,44 +196,44 @@ impl ChamberlainDuquetteArea for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn chamberlain_duquette_signed_area(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point().chamberlain_duquette_signed_area(),
-            LineString(_, XY) => self.as_line_string().chamberlain_duquette_signed_area(),
-            Polygon(_, XY) => self.as_polygon().chamberlain_duquette_signed_area(),
-            MultiPoint(_, XY) => self.as_multi_point().chamberlain_duquette_signed_area(),
-            MultiLineString(_, XY) => self
+            Point(_, _) => self.as_point().chamberlain_duquette_signed_area(),
+            LineString(_, _) => self.as_line_string().chamberlain_duquette_signed_area(),
+            Polygon(_, _) => self.as_polygon().chamberlain_duquette_signed_area(),
+            MultiPoint(_, _) => self.as_multi_point().chamberlain_duquette_signed_area(),
+            MultiLineString(_, _) => self
                 .as_multi_line_string()
                 .chamberlain_duquette_signed_area(),
-            MultiPolygon(_, XY) => self.as_multi_polygon().chamberlain_duquette_signed_area(),
-            Mixed(_, XY) => self.as_mixed().chamberlain_duquette_signed_area(),
-            GeometryCollection(_, XY) => self
+            MultiPolygon(_, _) => self.as_multi_polygon().chamberlain_duquette_signed_area(),
+            Mixed(_, _) => self.as_mixed().chamberlain_duquette_signed_area(),
+            GeometryCollection(_, _) => self
                 .as_geometry_collection()
                 .chamberlain_duquette_signed_area(),
-            _ => Err(GeoArrowError::IncorrectType("".into())),
+            Rect(_) => self.as_rect().chamberlain_duquette_unsigned_area(),
+            Geometry(_) => self.as_geometry().chamberlain_duquette_unsigned_area(),
         }
     }
 
     fn chamberlain_duquette_unsigned_area(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point().chamberlain_duquette_unsigned_area(),
-            LineString(_, XY) => self.as_line_string().chamberlain_duquette_unsigned_area(),
-            Polygon(_, XY) => self.as_polygon().chamberlain_duquette_unsigned_area(),
-            MultiPoint(_, XY) => self.as_multi_point().chamberlain_duquette_unsigned_area(),
-            MultiLineString(_, XY) => self
+            Point(_, _) => self.as_point().chamberlain_duquette_unsigned_area(),
+            LineString(_, _) => self.as_line_string().chamberlain_duquette_unsigned_area(),
+            Polygon(_, _) => self.as_polygon().chamberlain_duquette_unsigned_area(),
+            MultiPoint(_, _) => self.as_multi_point().chamberlain_duquette_unsigned_area(),
+            MultiLineString(_, _) => self
                 .as_multi_line_string()
                 .chamberlain_duquette_unsigned_area(),
-            MultiPolygon(_, XY) => self.as_multi_polygon().chamberlain_duquette_unsigned_area(),
-            Mixed(_, XY) => self.as_mixed().chamberlain_duquette_unsigned_area(),
-            GeometryCollection(_, XY) => self
+            MultiPolygon(_, _) => self.as_multi_polygon().chamberlain_duquette_unsigned_area(),
+            Mixed(_, _) => self.as_mixed().chamberlain_duquette_unsigned_area(),
+            GeometryCollection(_, _) => self
                 .as_geometry_collection()
                 .chamberlain_duquette_unsigned_area(),
-            _ => Err(GeoArrowError::IncorrectType("".into())),
+            Rect(_) => self.as_rect().chamberlain_duquette_unsigned_area(),
+            Geometry(_) => self.as_geometry().chamberlain_duquette_unsigned_area(),
         }
     }
 }

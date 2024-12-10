@@ -73,6 +73,7 @@ half = { version = "2.4.1" }
 http-range-client = { version = "0.8", optional = true }
 indexmap = { version = "2" }
 lexical-core = { version = "0.8.5" }
+num-traits = "0.2.19"
 object_store = { version = "0.11", optional = true }
 parquet = { version = "53", optional = true, default-features = false, features = [
   "arrow",

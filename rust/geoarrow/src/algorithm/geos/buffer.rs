@@ -1,5 +1,5 @@
-use crate::algorithm::geos::util::try_unary_polygon;
-use crate::array::{PointArray, PolygonArray};
+use crate::algorithm::geos::util::{try_unary_geometry, try_unary_polygon};
+use crate::array::{GeometryArray, PointArray, PolygonArray};
 use crate::error::Result;
 use crate::NativeArray;
 use geos::{BufferParams, Geom};
@@ -25,6 +25,18 @@ impl Buffer for PointArray {
             |g| g.buffer_with_params(width, buffer_params),
             self.dimension(),
         )
+    }
+}
+
+impl Buffer for GeometryArray {
+    type Output = Result<GeometryArray>;
+
+    fn buffer(&self, width: f64, quadsegs: i32) -> Self::Output {
+        try_unary_geometry(self, |g| g.buffer(width, quadsegs))
+    }
+
+    fn buffer_with_params(&self, width: f64, buffer_params: &BufferParams) -> Self::Output {
+        try_unary_geometry(self, |g| g.buffer_with_params(width, buffer_params))
     }
 }
 

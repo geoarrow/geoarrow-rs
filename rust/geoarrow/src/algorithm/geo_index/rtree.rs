@@ -110,7 +110,7 @@ impl RTree for &dyn ChunkedNativeArray {
             Mixed(_, _) => impl_method!(as_mixed),
             GeometryCollection(_, _) => impl_method!(as_geometry_collection),
             Rect(_) => impl_method!(as_rect),
-            Geometry(_) => todo!("Chunked unknown array"), // impl_method!(as_unknown),
+            Geometry(_) => impl_method!(as_geometry),
         };
         Ok(result)
     }
