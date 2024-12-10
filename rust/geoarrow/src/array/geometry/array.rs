@@ -459,7 +459,7 @@ impl GeometryArray {
     }
 
     // TODO: recursively expand the types from the geometry collection array
-    pub fn contains_types(&self) -> HashSet<NativeType> {
+    pub fn contained_types(&self) -> HashSet<NativeType> {
         let mut types = HashSet::new();
         if self.has_points(Dimension::XY) {
             types.insert(self.point_xy.data_type());

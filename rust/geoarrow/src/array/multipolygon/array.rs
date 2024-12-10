@@ -595,12 +595,13 @@ impl TryFrom<MixedGeometryArray> for MultiPolygonArray {
             return Err(GeoArrowError::General("Unable to cast".to_string()));
         }
 
+        let (offset, length) = value.slice_offset_length();
         if value.has_only_polygons() {
-            return Ok(value.polygons.into());
+            return Ok(value.polygons.slice(offset, length).into());
         }
 
         if value.has_only_multi_polygons() {
-            return Ok(value.multi_polygons);
+            return Ok(value.multi_polygons.slice(offset, length));
         }
 
         let mut capacity = value.multi_polygons.buffer_lengths();

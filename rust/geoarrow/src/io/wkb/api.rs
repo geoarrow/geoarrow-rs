@@ -122,7 +122,7 @@ impl FromWKB for Arc<dyn NativeArray> {
             arr.metadata(),
             true,
         )?;
-        Ok(builder.finish().downcast())
+        builder.finish().downcast()
     }
 }
 
@@ -374,7 +374,7 @@ mod test {
         .unwrap();
         let rt_ref = roundtrip.as_ref();
         let rt_mixed_arr = rt_ref.as_mixed();
-        let downcasted = rt_mixed_arr.downcast();
+        let downcasted = rt_mixed_arr.downcast().unwrap();
         let downcasted_ref = downcasted.as_ref();
         let rt_point_arr = downcasted_ref.as_point();
         assert_eq!(&arr, rt_point_arr);

@@ -73,6 +73,10 @@ pub struct MixedGeometryArray {
     pub(crate) multi_points: MultiPointArray,
     pub(crate) multi_line_strings: MultiLineStringArray,
     pub(crate) multi_polygons: MultiPolygonArray,
+
+    /// We don't need a separate slice_length, because that's the length of the full
+    /// MixedGeometryArray
+    slice_offset: usize,
 }
 
 impl MixedGeometryArray {
@@ -121,7 +125,6 @@ impl MixedGeometryArray {
         let dim = dimensions.into_iter().next().unwrap();
 
         let data_type = NativeType::Mixed(coord_type, dim);
-
         Self {
             data_type,
             type_ids,
@@ -133,6 +136,7 @@ impl MixedGeometryArray {
             multi_line_strings,
             multi_polygons,
             metadata,
+            slice_offset: 0,
         }
     }
 
@@ -148,28 +152,131 @@ impl MixedGeometryArray {
         )
     }
 
+    /// Return `true` if this array has been sliced.
+    pub(crate) fn is_sliced(&self) -> bool {
+        // Note this is still not a valid check, because it could've been sliced with start 0 but
+        // length less than the full length.
+        // self.slice_offset > 0 || self.slice_length
+
+        let mut child_lengths = 0;
+        child_lengths += self.points.len();
+        child_lengths += self.line_strings.len();
+        child_lengths += self.polygons.len();
+        child_lengths += self.multi_points.len();
+        child_lengths += self.multi_line_strings.len();
+        child_lengths += self.multi_polygons.len();
+
+        child_lengths > self.len()
+    }
+
+    /// The offset and length by which this array has been sliced.
+    ///
+    /// If this array has not been sliced, the slice offset will be `0`. The length will always be
+    /// equal to `self.len()`.
+    pub(crate) fn slice_offset_length(&self) -> (usize, usize) {
+        (self.slice_offset, self.len())
+    }
+
     pub fn has_points(&self) -> bool {
-        !self.points.is_empty()
+        if self.points.is_empty() {
+            return false;
+        }
+
+        // If the array has been sliced, check a point type id still exists
+        if self.is_sliced() {
+            for t in self.type_ids.iter() {
+                if *t % 10 == 1 {
+                    return true;
+                }
+            }
+        }
+
+        false
     }
 
     pub fn has_line_strings(&self) -> bool {
-        !self.line_strings.is_empty()
+        if self.line_strings.is_empty() {
+            return false;
+        }
+
+        // If the array has been sliced, check a point type id still exists
+        if self.is_sliced() {
+            for t in self.type_ids.iter() {
+                if *t % 10 == 2 {
+                    return true;
+                }
+            }
+        }
+
+        false
     }
 
     pub fn has_polygons(&self) -> bool {
-        !self.polygons.is_empty()
+        if self.polygons.is_empty() {
+            return false;
+        }
+
+        // If the array has been sliced, check a point type id still exists
+        if self.is_sliced() {
+            for t in self.type_ids.iter() {
+                if *t % 10 == 3 {
+                    return true;
+                }
+            }
+        }
+
+        false
     }
 
     pub fn has_multi_points(&self) -> bool {
-        !self.multi_points.is_empty()
+        if self.multi_points.is_empty() {
+            return false;
+        }
+
+        // If the array has been sliced, check a point type id still exists
+        if self.is_sliced() {
+            for t in self.type_ids.iter() {
+                if *t % 10 == 4 {
+                    return true;
+                }
+            }
+        }
+
+        false
     }
 
     pub fn has_multi_line_strings(&self) -> bool {
-        !self.multi_line_strings.is_empty()
+        if self.multi_line_strings.is_empty() {
+            return false;
+        }
+
+        // If the array has been sliced, check a point type id still exists
+        if self.is_sliced() {
+            for t in self.type_ids.iter() {
+                if *t % 10 == 5 {
+                    return true;
+                }
+            }
+        }
+
+        false
     }
 
     pub fn has_multi_polygons(&self) -> bool {
-        !self.multi_polygons.is_empty()
+        if self.multi_polygons.is_empty() {
+            return false;
+        }
+
+        // If the array has been sliced, check a point type id still exists
+        if self.is_sliced() {
+            for t in self.type_ids.iter() {
+                if *t % 10 == 6 {
+                    return true;
+                }
+            }
+        }
+
+        false
     }
 
     pub fn has_only_points(&self) -> bool {
@@ -257,6 +364,7 @@ impl MixedGeometryArray {
             multi_line_strings: self.multi_line_strings.clone(),
             multi_polygons: self.multi_polygons.clone(),
             metadata: self.metadata.clone(),
+            slice_offset: self.slice_offset + offset,
         }
     }
 
@@ -276,6 +384,30 @@ impl MixedGeometryArray {
             self.multi_polygons.into_coord_type(coord_type),
             self.metadata,
         )
+    }
+
+    pub fn contained_types(&self) -> HashSet<NativeType> {
+        let mut types = HashSet::new();
+        if self.has_points() {
+            types.insert(self.points.data_type());
+        }
+        if self.has_line_strings() {
+            types.insert(self.line_strings.data_type());
+        }
+        if self.has_polygons() {
+            types.insert(self.polygons.data_type());
+        }
+        if self.has_multi_points() {
+            types.insert(self.multi_points.data_type());
+        }
+        if self.has_multi_line_strings() {
+            types.insert(self.multi_line_strings.data_type());
+        }
+        if self.has_multi_polygons() {
+            types.insert(self.multi_polygons.data_type());
+        }
+
+        types
     }
 }
 

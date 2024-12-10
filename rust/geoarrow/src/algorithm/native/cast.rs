@@ -28,7 +28,7 @@ impl Default for CastOptions {
 
 /// Note: not currently used and outdated
 #[allow(dead_code)]
-fn can_cast_types(from_type: &NativeType, to_type: &NativeType) -> bool {
+fn can_cast_types(from_type: NativeType, to_type: NativeType) -> bool {
     if from_type == to_type {
         return true;
     }
@@ -51,13 +51,13 @@ pub trait Cast {
     type Output;
 
     /// Note: **does not currently implement dimension casts**
-    fn cast(&self, to_type: &NativeType) -> Self::Output;
+    fn cast(&self, to_type: NativeType) -> Self::Output;
 }
 
 impl Cast for PointArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &NativeType) -> Self::Output {
+    fn cast(&self, to_type: NativeType) -> Self::Output {
         use NativeType::*;
 
         let array = self.to_coord_type(to_type.coord_type());
@@ -77,7 +77,7 @@ impl Cast for PointArray {
 impl Cast for LineStringArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &NativeType) -> Self::Output {
+    fn cast(&self, to_type: NativeType) -> Self::Output {
         use NativeType::*;
 
         let array = self.to_coord_type(to_type.coord_type());
@@ -98,7 +98,7 @@ impl Cast for LineStringArray {
 impl Cast for PolygonArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &NativeType) -> Self::Output {
+    fn cast(&self, to_type: NativeType) -> Self::Output {
         use NativeType::*;
 
         let array = self.to_coord_type(to_type.coord_type());
@@ -119,7 +119,7 @@ impl Cast for PolygonArray {
 impl Cast for MultiPointArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &NativeType) -> Self::Output {
+    fn cast(&self, to_type: NativeType) -> Self::Output {
         use NativeType::*;
 
         let array = self.to_coord_type(to_type.coord_type());
@@ -140,7 +140,7 @@ impl Cast for MultiPointArray {
 impl Cast for MultiLineStringArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &NativeType) -> Self::Output {
+    fn cast(&self, to_type: NativeType) -> Self::Output {
         use NativeType::*;
 
         let array = self.to_coord_type(to_type.coord_type());
@@ -160,7 +160,7 @@ impl Cast for MultiLineStringArray {
 impl Cast for MultiPolygonArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &NativeType) -> Self::Output {
+    fn cast(&self, to_type: NativeType) -> Self::Output {
         use NativeType::*;
 
         let array = self.to_coord_type(to_type.coord_type());
@@ -180,7 +180,7 @@ impl Cast for MultiPolygonArray {
 impl Cast for MixedGeometryArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &NativeType) -> Self::Output {
+    fn cast(&self, to_type: NativeType) -> Self::Output {
         use NativeType::*;
 
         let array = self.to_coord_type(to_type.coord_type());
@@ -194,7 +194,6 @@ impl Cast for MixedGeometryArray {
             MultiPolygon(_, _) => Ok(Arc::new(MultiPolygonArray::try_from(array)?)),
             Mixed(_, _) => Ok(Arc::new(array)),
             GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::from(array))),
-            // Geometry(_) => Ok(Arc::new(GeometryArray::from(array))),
             dt => Err(GeoArrowError::General(format!(
                 "invalid cast to type {dt:?}"
             ))),
@@ -205,7 +204,7 @@ impl Cast for MixedGeometryArray {
 impl Cast for GeometryCollectionArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &NativeType) -> Self::Output {
+    fn cast(&self, to_type: NativeType) -> Self::Output {
         use NativeType::*;
 
         let array = self.to_coord_type(to_type.coord_type());
@@ -230,7 +229,7 @@ impl Cast for GeometryCollectionArray {
 impl Cast for GeometryArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &NativeType) -> Self::Output {
+    fn cast(&self, to_type: NativeType) -> Self::Output {
         // TODO: validate dimension
         let array = self.to_coord_type(to_type.coord_type());
         let mixed_array = MixedGeometryArray::try_from(array)?;
@@ -241,7 +240,7 @@ impl Cast for GeometryArray {
 impl Cast for &dyn NativeArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &NativeType) -> Self::Output {
+    fn cast(&self, to_type: NativeType) -> Self::Output {
         // TODO: not working :/
         // if self.data_type() == to_type {
         //     return Ok(Arc::new(self.to_owned()));
@@ -269,7 +268,7 @@ macro_rules! impl_chunked_cast {
         impl Cast for $chunked_array {
             type Output = Result<Arc<dyn ChunkedNativeArray>>;
 
-            fn cast(&self, to_type: &NativeType) -> Self::Output {
+            fn cast(&self, to_type: NativeType) -> Self::Output {
                 macro_rules! impl_cast {
                     ($method:ident) => {
                         Arc::new(ChunkedGeometryArray::new(

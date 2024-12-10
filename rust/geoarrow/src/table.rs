@@ -156,7 +156,7 @@ impl Table {
     /// table.cast_geometry(index, &NativeType::LineString(CoordType::Separated, Dimension::XY)).unwrap();
     /// # }
     /// ```
-    pub fn cast_geometry(&mut self, index: usize, to_type: &NativeType) -> Result<()> {
+    pub fn cast_geometry(&mut self, index: usize, to_type: NativeType) -> Result<()> {
         let orig_field = self.schema().field(index);
 
         let array_slices = self

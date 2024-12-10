@@ -412,12 +412,13 @@ impl TryFrom<MixedGeometryArray> for PointArray {
             return Err(GeoArrowError::General("Unable to cast".to_string()));
         }
 
+        let (offset, length) = value.slice_offset_length();
         if value.has_only_points() {
-            return Ok(value.points);
+            return Ok(value.points.slice(offset, length));
         }
 
         if value.has_only_multi_points() {
-            return value.multi_points.try_into();
+            return value.multi_points.slice(offset, length).try_into();
         }
 
         let mut builder = PointBuilder::with_capacity_and_options(
