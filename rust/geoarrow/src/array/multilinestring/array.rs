@@ -513,12 +513,13 @@ impl TryFrom<MixedGeometryArray> for MultiLineStringArray {
             return Err(GeoArrowError::General("Unable to cast".to_string()));
         }
 
+        let (offset, length) = value.slice_offset_length();
         if value.has_only_line_strings() {
-            return Ok(value.line_strings.into());
+            return Ok(value.line_strings.slice(offset, length).into());
         }
 
         if value.has_only_multi_line_strings() {
-            return Ok(value.multi_line_strings);
+            return Ok(value.multi_line_strings.slice(offset, length));
         }
 
         let mut capacity = value.multi_line_strings.buffer_lengths();

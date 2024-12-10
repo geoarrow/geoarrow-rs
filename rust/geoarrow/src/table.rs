@@ -29,7 +29,6 @@ pub(crate) static GEOARROW_EXTENSION_NAMES: Set<&'static str> = phf_set! {
     "geoarrow.geometrycollection",
     "geoarrow.wkb",
     "geoarrow.wkt",
-    "geoarrow.unknown",
     "ogc.wkb",
 };
 
@@ -153,10 +152,10 @@ impl Table {
     /// let index = table.default_geometry_column_idx().unwrap();
     ///
     /// // Change to separated storage of coordinates
-    /// table.cast_geometry(index, &NativeType::LineString(CoordType::Separated, Dimension::XY)).unwrap();
+    /// table.cast_geometry(index, NativeType::LineString(CoordType::Separated, Dimension::XY)).unwrap();
     /// # }
     /// ```
-    pub fn cast_geometry(&mut self, index: usize, to_type: &NativeType) -> Result<()> {
+    pub fn cast_geometry(&mut self, index: usize, to_type: NativeType) -> Result<()> {
         let orig_field = self.schema().field(index);
 
         let array_slices = self

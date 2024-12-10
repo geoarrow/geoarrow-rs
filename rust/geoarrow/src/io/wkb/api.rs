@@ -116,7 +116,7 @@ impl FromWKB for Arc<dyn NativeArray> {
             arr.metadata(),
             true,
         )?;
-        Ok(builder.finish().downcast())
+        builder.finish().downcast()
     }
 }
 
@@ -303,7 +303,7 @@ impl ToWKB for &dyn ChunkedNativeArray {
                 ChunkedGeometryArray::new(self.as_geometry_collection().map(|chunk| chunk.into()))
             }
             Rect(_) => todo!(),
-            Geometry(_) => ChunkedGeometryArray::new(self.as_mixed().map(|chunk| chunk.into())),
+            Geometry(_) => ChunkedGeometryArray::new(self.as_geometry().map(|chunk| chunk.into())),
         }
     }
 }
@@ -356,9 +356,10 @@ mod test {
             true,
         )
         .unwrap();
+
         let rt_ref = roundtrip.as_ref();
         let rt_mixed_arr = rt_ref.as_mixed();
-        let downcasted = rt_mixed_arr.downcast();
+        let downcasted = rt_mixed_arr.downcast().unwrap();
         let downcasted_ref = downcasted.as_ref();
         let rt_point_arr = downcasted_ref.as_point();
         assert_eq!(&arr, rt_point_arr);
