@@ -734,8 +734,6 @@ impl TryFrom<&UnionArray> for GeometryArray {
                         )));
                     };
 
-                    dbg!(type_id);
-
                     match type_id {
                         1 => {
                             point_xy = Some(
