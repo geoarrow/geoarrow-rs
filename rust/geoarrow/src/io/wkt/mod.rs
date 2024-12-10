@@ -10,7 +10,7 @@
 //! use geoarrow::array::metadata::ArrayMetadata;
 //! use geoarrow::array::{AsNativeArray, CoordType, GeometryArray, WKTArray};
 //! use geoarrow::datatypes::NativeType;
-//! use geoarrow::io::wkt::read_wkt;
+//! use geoarrow::io::wkt::{read_wkt, ToWKT};
 //! use geoarrow::trait_::ArrayAccessor;
 //! use geoarrow::NativeArray;
 //!

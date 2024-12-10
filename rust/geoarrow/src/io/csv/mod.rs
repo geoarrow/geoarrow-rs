@@ -7,9 +7,9 @@
 //!
 //! use arrow_array::RecordBatchReader;
 //!
-//! use crate::array::CoordType;
-//! use crate::io::csv::{infer_csv_schema, read_csv, CSVReaderOptions};
-//! use crate::table::Table;
+//! use geoarrow::array::CoordType;
+//! use geoarrow::io::csv::{infer_csv_schema, read_csv, CSVReaderOptions};
+//! use geoarrow::table::Table;
 //!
 //! let s = r#"
 //! address,type,datetime,report location,incident number
