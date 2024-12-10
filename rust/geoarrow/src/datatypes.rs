@@ -1190,6 +1190,6 @@ mod test {
         let mixed_array = builder.finish();
         let field = mixed_array.extension_field();
         let data_type: NativeType = field.as_ref().try_into().unwrap();
-        assert_eq!(mixed_array.data_type(), data_type);
+        assert_eq!(NativeType::Geometry(Default::default()), data_type);
     }
 }
