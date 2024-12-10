@@ -341,7 +341,7 @@ mod test {
             from_wkb(&wkb_arr, NativeType::Geometry(CoordType::Interleaved), true).unwrap();
 
         let rt_ref = roundtrip.as_ref();
-        let rt_mixed_arr = rt_ref.as_mixed();
+        let rt_mixed_arr = rt_ref.as_geometry();
         let downcasted = rt_mixed_arr.downcast().unwrap();
         let downcasted_ref = downcasted.as_ref();
         let rt_point_arr = downcasted_ref.as_point();
@@ -359,8 +359,8 @@ mod test {
         )
         .unwrap();
         let rt_ref = roundtrip_mixed.as_ref();
-        let rt_mixed_arr = rt_ref.as_mixed();
-        assert!(rt_mixed_arr.has_points());
+        let rt_mixed_arr = rt_ref.as_geometry();
+        assert!(rt_mixed_arr.has_points(Dimension::XYZ));
 
         let roundtrip_point = from_wkb(
             &wkb_arr,
