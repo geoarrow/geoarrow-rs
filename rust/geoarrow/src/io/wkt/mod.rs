@@ -32,7 +32,7 @@
 //!
 //! // Parse this WKT array to an `Arc<dyn NativeArray>`
 //! let geometry_array: Arc<dyn NativeArray> =
-//!     read_wkt(&wkt_array, CoordType::Separated, true).unwrap();
+//!     read_wkt(&wkt_array, CoordType::Separated, false).unwrap();
 //!
 //! // All parsed WKT data currently has `NativeType::Geometry`, because there's no way to know in
 //! // advance what the geometry type of the WKT is.
