@@ -469,7 +469,7 @@ impl NativeType {
             Mixed(_, _) => "geoarrow.geometry",
             GeometryCollection(_, _) => "geoarrow.geometrycollection",
             Rect(_) => "geoarrow.box",
-            Geometry(_) => "geoarrow.geometry",
+            Geometry(_) => "geoarrow.unknown",
         }
     }
 
@@ -1092,8 +1092,8 @@ impl TryFrom<&Field> for NativeType {
                 "geoarrow.multipolygon" => parse_multi_polygon(field)?,
                 "geoarrow.geometrycollection" => parse_geometry_collection(field)?,
                 "geoarrow.box" => parse_rect(field),
-                "geoarrow.geometry" => parse_geometry(field)?,
-                // "geoarrow.geometry" => parse_mixed(field)?,
+                "geoarrow.unknown" => parse_geometry(field)?,
+                "geoarrow.geometry" => parse_mixed(field)?,
                 name => return Err(GeoArrowError::General(format!("Expected GeoArrow native type, got '{}'.\nIf you're passing a serialized GeoArrow type like 'geoarrow.wkb' or 'geoarrow.wkt', you need to parse to a native representation.", name))),
             };
             Ok(data_type)
@@ -1190,6 +1190,6 @@ mod test {
         let mixed_array = builder.finish();
         let field = mixed_array.extension_field();
         let data_type: NativeType = field.as_ref().try_into().unwrap();
-        assert_eq!(NativeType::Geometry(Default::default()), data_type);
+        assert_eq!(mixed_array.data_type(), data_type);
     }
 }
