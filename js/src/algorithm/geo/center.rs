@@ -26,7 +26,6 @@ impl_center!(PolygonData);
 impl_center!(MultiPointData);
 impl_center!(MultiLineStringData);
 impl_center!(MultiPolygonData);
-impl_center!(MixedGeometryData);
 impl_center!(GeometryCollectionData);
 
 macro_rules! impl_chunked {
@@ -52,5 +51,4 @@ impl_chunked!(PolygonVector);
 impl_chunked!(MultiPointVector);
 impl_chunked!(MultiLineStringVector);
 impl_chunked!(MultiPolygonVector);
-impl_chunked!(MixedGeometryVector);
 impl_chunked!(GeometryCollectionVector);

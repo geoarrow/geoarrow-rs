@@ -43,6 +43,5 @@ impl_data!(PolygonData);
 impl_data!(MultiPointData);
 impl_data!(MultiLineStringData);
 impl_data!(MultiPolygonData);
-impl_data!(MixedGeometryData);
 impl_data!(GeometryCollectionData);
 impl_data!(RectData);
