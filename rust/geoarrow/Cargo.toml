@@ -61,7 +61,8 @@ dbase = "0.5.0"
 enum-as-inner = "0.6.1"
 # Set default-features = false because async not working in wasm right now
 # For geo-traits impl
-flatgeobuf = { version = "4.5", optional = true, default-features = false }
+# flatgeobuf = { version = "4.5", optional = true, default-features = false }
+flatgeobuf = { git = "https://github.com/kylebarron/flatgeobuf", rev = "848215aa2f0892dbe8f27ce3b662992590721572", optional = true, default-features = false }
 futures = { version = "0.3", optional = true }
 gdal = { version = "0.17", optional = true }
 geo = "0.29.3"
