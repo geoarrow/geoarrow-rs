@@ -1287,7 +1287,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow"
-version = "0.4.0-beta.1"
+version = "0.4.0-beta.2"
 dependencies = [
  "approx",
  "arrow",
