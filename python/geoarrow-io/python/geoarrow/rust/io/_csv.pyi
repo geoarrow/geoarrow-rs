@@ -58,22 +58,34 @@ def read_csv(
 
     Example:
 
-    ```
+    ```py
     csv_text = """
     address,type,datetime,report location,incident number
     904 7th Av,Car Fire,05/22/2019 12:55:00 PM,POINT (-122.329051 47.6069),F190051945
     9610 53rd Av S,Aid Response,05/22/2019 12:55:00 PM,POINT (-122.266529 47.515984),F190051946"
     """
 
-    reader = read_csv(BytesIO(csv_text.encode()), geometry_name="report location")
-    reader.read_all()
+    table = read_csv(BytesIO(csv_text.encode()), geometry_name="report location")
+    ```
+
+    Or, if you'd like to stream the data, you can pass `downcast_geometry=False`:
+
+    ```py
+    record_batch_reader = read_csv(
+        path_to_csv,
+        geometry_name="report location",
+        downcast_geometry=False,
+        batch_size=100_000,
+    )
+    for record_batch in record_batch_reader:
+        # Use each record batch.
     ```
 
     Args:
         file: the path to the file or a Python file object in binary read mode.
 
     Other args:
-        geometry_name: the name of the geometry column within the CSV.
+        geometry_name: the name of the geometry column within the CSV. By default, will look for a column named "geometry", case insensitive.
         downcast_geometry: Whether to simplify the type of the geometry column. When `downcast_geometry` is `False`, the GeoArrow geometry column is of type "Geometry", which is fully generic. When `downcast_geometry` is `True`, the GeoArrow geometry column will be simplified to its most basic representation. That is, if the table only includes points, the GeoArrow geometry column will be converted to a Point-type array.
 
             Downcasting is only possible when all chunks have been loaded into memory.
@@ -92,7 +104,7 @@ def read_csv(
         comment: Set the comment character. Defaults to `None`.
 
     Returns:
-        A Table if `downcast_geometry` is `True` (the default). If `downcast_geometry`
+        A `Table` if `downcast_geometry` is `True` (the default). If `downcast_geometry`
         is `False`, returns a `RecordBatchReader`, enabling streaming processing.
     '''
 
