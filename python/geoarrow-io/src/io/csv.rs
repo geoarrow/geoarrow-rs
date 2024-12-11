@@ -1,14 +1,13 @@
-use std::io::{Seek, SeekFrom};
-
 use crate::error::PyGeoArrowResult;
 use crate::io::input::sync::{FileReader, FileWriter};
-use arrow::array::RecordBatchReader;
+use geoarrow::algorithm::native::DowncastTable;
 use geoarrow::io::csv;
-use geoarrow::io::csv::CSVReaderOptions;
+use geoarrow::io::csv::{CSVReader, CSVReaderOptions};
+use geoarrow::table::Table;
 use pyo3::prelude::*;
-use pyo3_arrow::export::Arro3Table;
+use pyo3_arrow::export::{Arro3RecordBatchReader, Arro3Table};
 use pyo3_arrow::input::AnyRecordBatch;
-use pyo3_arrow::PyTable;
+use pyo3_arrow::{PyRecordBatchReader, PyTable};
 use pyo3_geoarrow::PyCoordType;
 
 #[pyfunction]
@@ -26,12 +25,14 @@ use pyo3_geoarrow::PyCoordType;
         quote=None,
         terminator=None,
         comment=None,
+        downcast_geometry=true,
     ),
-    text_signature = "(file, *, geometry_name=None, batch_size=65536, coord_type='interleaved', has_header=True,max_records=None, delimiter=None, escape=None, quote=None, terminator=None, comment=None)"
+    text_signature = "(file, *, geometry_name=None, batch_size=65536, coord_type='interleaved', has_header=True,max_records=None, delimiter=None, escape=None, quote=None, terminator=None, comment=None, downcast_geometry=True)"
 )]
 #[allow(clippy::too_many_arguments)]
 pub fn read_csv(
-    mut file: FileReader,
+    py: Python,
+    file: FileReader,
     geometry_name: Option<String>,
     batch_size: usize,
     coord_type: PyCoordType,
@@ -42,8 +43,9 @@ pub fn read_csv(
     quote: Option<char>,
     terminator: Option<char>,
     comment: Option<char>,
-) -> PyGeoArrowResult<Arro3Table> {
-    let mut options = CSVReaderOptions {
+    downcast_geometry: bool,
+) -> PyGeoArrowResult<PyObject> {
+    let options = CSVReaderOptions {
         coord_type: coord_type.into(),
         batch_size,
         geometry_column_name: geometry_name,
@@ -55,19 +57,22 @@ pub fn read_csv(
         terminator,
         comment,
     };
+    let reader = CSVReader::try_new(file, options)?;
 
-    let pos = file.stream_position()?;
-    let (schema, _rows_read, geometry_col_name) = csv::infer_csv_schema(&mut file, &options)?;
-
-    // So we don't have to search for the geometry column a second time if not provided
-    options.geometry_column_name = Some(geometry_col_name);
-
-    file.seek(SeekFrom::Start(pos))?;
-
-    let record_batch_reader = csv::read_csv(file, schema, options)?;
-    let schema = record_batch_reader.schema();
-    let batches = record_batch_reader.collect::<std::result::Result<Vec<_>, _>>()?;
-    Ok(PyTable::try_new(batches, schema)?.into())
+    if downcast_geometry {
+        // Load the file into a table and then downcast
+        let batch_reader = geoarrow::io::RecordBatchReader::new(Box::new(reader));
+        let table = Table::try_from(batch_reader)?;
+        let table = table.downcast()?;
+        let (batches, schema) = table.into_inner();
+        Ok(Arro3Table::from(PyTable::try_new(batches, schema)?)
+            .into_pyobject(py)?
+            .unbind())
+    } else {
+        let batch_reader = PyRecordBatchReader::new(Box::new(reader));
+        let batch_reader = Arro3RecordBatchReader::from(batch_reader);
+        Ok(batch_reader.into_pyobject(py)?.unbind())
+    }
 }
 
 #[pyfunction]
