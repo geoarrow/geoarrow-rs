@@ -1358,16 +1358,14 @@ dependencies = [
 
 [[package]]
 name = "geos"
-version = "9.0.0"
+version = "9.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "468b7ac7233c0f417b2c161d28b6d1e88c025eaf79303b69e6e1aa40a2ac1367"
+checksum = "56d199db00644057267a8a68ee72df92aa59a32036b487b2a2b76fd0b3fca32b"
 dependencies = [
  "c_vec",
- "geo-types",
  "geos-sys",
  "libc",
  "num",
- "wkt 0.10.3",
 ]
 
 [[package]]
@@ -4305,18 +4303,6 @@ dependencies = [
  "byteorder",
  "geo-traits",
  "num_enum",
- "thiserror",
-]
-
-[[package]]
-name = "wkt"
-version = "0.10.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3c2252781f8927974e8ba6a67c965a759a2b88ea2b1825f6862426bbb1c8f41"
-dependencies = [
- "geo-types",
- "log",
- "num-traits",
  "thiserror",
 ]
 
