@@ -95,6 +95,9 @@ impl Default for CSVReaderOptions {
     }
 }
 
+/// Returns (Schema, records_read, geometry column name)
+///
+/// Note that the geometry column in the Schema is still left as a String.
 fn infer_csv_schema(
     reader: impl Read,
     options: &CSVReaderOptions,
@@ -107,6 +110,7 @@ fn infer_csv_schema(
     Ok((Arc::new(schema), records_read, geometry_col_name))
 }
 
+/// A CSV reader that parses a WKT-encoded geometry column
 pub struct CSVReader<R> {
     reader: arrow_csv::Reader<R>,
     output_schema: SchemaRef,
@@ -126,10 +130,6 @@ impl<R: Read + Seek> CSVReader<R> {
     /// By default, the reader will **scan the entire CSV file** to infer the data's
     /// schema. If your data is large, you can limit the number of records scanned
     /// with the [CSVReaderOptions].
-    ///
-    /// Returns (Schema, records_read, geometry column name)
-    ///
-    /// Note that the geometry column in the Schema is still left as a String.
     pub fn try_new(mut reader: R, options: CSVReaderOptions) -> Result<Self> {
         let (schema, _read_records, _geometry_column_name) =
             infer_csv_schema(&mut reader, &options)?;

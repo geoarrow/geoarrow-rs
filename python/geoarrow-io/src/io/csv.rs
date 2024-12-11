@@ -1,11 +1,13 @@
 use crate::error::PyGeoArrowResult;
 use crate::io::input::sync::{FileReader, FileWriter};
+use geoarrow::algorithm::native::DowncastTable;
 use geoarrow::io::csv;
 use geoarrow::io::csv::{CSVReader, CSVReaderOptions};
+use geoarrow::table::Table;
 use pyo3::prelude::*;
-use pyo3_arrow::export::Arro3RecordBatchReader;
+use pyo3_arrow::export::{Arro3RecordBatchReader, Arro3Table};
 use pyo3_arrow::input::AnyRecordBatch;
-use pyo3_arrow::PyRecordBatchReader;
+use pyo3_arrow::{PyRecordBatchReader, PyTable};
 use pyo3_geoarrow::PyCoordType;
 
 #[pyfunction]
@@ -23,11 +25,13 @@ use pyo3_geoarrow::PyCoordType;
         quote=None,
         terminator=None,
         comment=None,
+        downcast_geometry=true,
     ),
-    text_signature = "(file, *, geometry_name=None, batch_size=65536, coord_type='interleaved', has_header=True,max_records=None, delimiter=None, escape=None, quote=None, terminator=None, comment=None)"
+    text_signature = "(file, *, geometry_name=None, batch_size=65536, coord_type='interleaved', has_header=True,max_records=None, delimiter=None, escape=None, quote=None, terminator=None, comment=None, downcast_geometry=True)"
 )]
 #[allow(clippy::too_many_arguments)]
 pub fn read_csv(
+    py: Python,
     file: FileReader,
     geometry_name: Option<String>,
     batch_size: usize,
@@ -39,7 +43,8 @@ pub fn read_csv(
     quote: Option<char>,
     terminator: Option<char>,
     comment: Option<char>,
-) -> PyGeoArrowResult<Arro3RecordBatchReader> {
+    downcast_geometry: bool,
+) -> PyGeoArrowResult<PyObject> {
     let options = CSVReaderOptions {
         coord_type: coord_type.into(),
         batch_size,
@@ -53,7 +58,21 @@ pub fn read_csv(
         comment,
     };
     let reader = CSVReader::try_new(file, options)?;
-    Ok(PyRecordBatchReader::new(Box::new(reader)).into())
+
+    if downcast_geometry {
+        // Load the file into a table and then downcast
+        let batch_reader = geoarrow::io::RecordBatchReader::new(Box::new(reader));
+        let table = Table::try_from(batch_reader)?;
+        let table = table.downcast()?;
+        let (batches, schema) = table.into_inner();
+        Ok(Arro3Table::from(PyTable::try_new(batches, schema)?)
+            .into_pyobject(py)?
+            .unbind())
+    } else {
+        let batch_reader = PyRecordBatchReader::new(Box::new(reader));
+        let batch_reader = Arro3RecordBatchReader::from(batch_reader);
+        Ok(batch_reader.into_pyobject(py)?.unbind())
+    }
 }
 
 #[pyfunction]
