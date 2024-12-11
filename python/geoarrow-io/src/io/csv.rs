@@ -1,14 +1,11 @@
-use std::io::{Seek, SeekFrom};
-
 use crate::error::PyGeoArrowResult;
 use crate::io::input::sync::{FileReader, FileWriter};
-use arrow::array::RecordBatchReader;
 use geoarrow::io::csv;
-use geoarrow::io::csv::CSVReaderOptions;
+use geoarrow::io::csv::{CSVReader, CSVReaderOptions};
 use pyo3::prelude::*;
-use pyo3_arrow::export::Arro3Table;
+use pyo3_arrow::export::Arro3RecordBatchReader;
 use pyo3_arrow::input::AnyRecordBatch;
-use pyo3_arrow::PyTable;
+use pyo3_arrow::PyRecordBatchReader;
 use pyo3_geoarrow::PyCoordType;
 
 #[pyfunction]
@@ -31,7 +28,7 @@ use pyo3_geoarrow::PyCoordType;
 )]
 #[allow(clippy::too_many_arguments)]
 pub fn read_csv(
-    mut file: FileReader,
+    file: FileReader,
     geometry_name: Option<String>,
     batch_size: usize,
     coord_type: PyCoordType,
@@ -42,8 +39,8 @@ pub fn read_csv(
     quote: Option<char>,
     terminator: Option<char>,
     comment: Option<char>,
-) -> PyGeoArrowResult<Arro3Table> {
-    let mut options = CSVReaderOptions {
+) -> PyGeoArrowResult<Arro3RecordBatchReader> {
+    let options = CSVReaderOptions {
         coord_type: coord_type.into(),
         batch_size,
         geometry_column_name: geometry_name,
@@ -55,19 +52,8 @@ pub fn read_csv(
         terminator,
         comment,
     };
-
-    let pos = file.stream_position()?;
-    let (schema, _rows_read, geometry_col_name) = csv::infer_csv_schema(&mut file, &options)?;
-
-    // So we don't have to search for the geometry column a second time if not provided
-    options.geometry_column_name = Some(geometry_col_name);
-
-    file.seek(SeekFrom::Start(pos))?;
-
-    let record_batch_reader = csv::read_csv(file, schema, options)?;
-    let schema = record_batch_reader.schema();
-    let batches = record_batch_reader.collect::<std::result::Result<Vec<_>, _>>()?;
-    Ok(PyTable::try_new(batches, schema)?.into())
+    let reader = CSVReader::try_new(file, options)?;
+    Ok(PyRecordBatchReader::new(Box::new(reader)).into())
 }
 
 #[pyfunction]

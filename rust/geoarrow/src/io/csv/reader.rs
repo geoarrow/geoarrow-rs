@@ -1,9 +1,9 @@
 use arrow::array::AsArray;
-use arrow_array::{RecordBatch, RecordBatchIterator, RecordBatchReader};
+use arrow_array::RecordBatch;
 use arrow_csv::reader::Format;
 use arrow_csv::ReaderBuilder;
 use arrow_schema::{ArrowError, Schema, SchemaRef};
-use std::io::Read;
+use std::io::{Read, Seek};
 use std::sync::Arc;
 
 use crate::array::{CoordType, WKTArray};
@@ -95,16 +95,7 @@ impl Default for CSVReaderOptions {
     }
 }
 
-/// Infer a CSV file's schema.
-///
-/// By default, the reader will **scan the entire CSV file** to infer the data's
-/// schema. If your data is large, you can limit the number of records scanned
-/// with the [CSVReaderOptions].
-///
-/// Returns (Schema, records_read, geometry column name)
-///
-/// Note that the geometry column in the Schema is still left as a String.
-pub fn infer_csv_schema(
+fn infer_csv_schema(
     reader: impl Read,
     options: &CSVReaderOptions,
 ) -> Result<(SchemaRef, usize, String)> {
@@ -116,51 +107,103 @@ pub fn infer_csv_schema(
     Ok((Arc::new(schema), records_read, geometry_col_name))
 }
 
-/// Read a CSV file to a [RecordBatchReader].
-///
-/// This expects a geometry to be encoded as WKT within one column.
-///
-/// Note that the input required here is [`Read`] and not [`Read`] + [`Seek`][std::io::Seek]. This
-/// means that you must infer the schema yourself before calling this function. This allows using
-/// with objects that are only `Read` in the case when you already know the file's schema.
-///
-/// This schema is expected to be the schema inferred by `arrow-csv`'s
-/// [`infer_schema`][Format::infer_schema]. That means the geometry should be a string in the
-/// schema.
-pub fn read_csv<R: Read>(
-    reader: R,
-    schema: SchemaRef,
-    options: CSVReaderOptions,
-) -> Result<impl RecordBatchReader> {
-    let geometry_column_name =
-        find_geometry_column(schema.as_ref(), options.geometry_column_name.as_deref())?;
-    let geometry_column_index = schema.index_of(&geometry_column_name)?;
+pub struct CSVReader<R> {
+    reader: arrow_csv::Reader<R>,
+    output_schema: SchemaRef,
+    geometry_column_index: usize,
+    coord_type: CoordType,
+}
 
-    // Transform to output schema
-    let mut output_fields = schema.fields().to_vec();
-    output_fields[geometry_column_index] = NativeType::Geometry(options.coord_type)
-        .to_field_with_metadata("geometry", true, &Default::default())
-        .into();
-    let output_schema =
-        Arc::new(Schema::new(output_fields).with_metadata(schema.metadata().clone()));
-    let output_schema2 = output_schema.clone();
+impl<R> CSVReader<R> {
+    pub fn schema(&self) -> SchemaRef {
+        self.output_schema.clone()
+    }
+}
 
-    // Create builder
-    let builder = ReaderBuilder::new(schema)
-        .with_format(options.to_format())
-        .with_batch_size(options.batch_size);
+impl<R: Read + Seek> CSVReader<R> {
+    /// Create a new CSV reader, automatically inferring a CSV file's schema.
+    ///
+    /// By default, the reader will **scan the entire CSV file** to infer the data's
+    /// schema. If your data is large, you can limit the number of records scanned
+    /// with the [CSVReaderOptions].
+    ///
+    /// Returns (Schema, records_read, geometry column name)
+    ///
+    /// Note that the geometry column in the Schema is still left as a String.
+    pub fn try_new(mut reader: R, options: CSVReaderOptions) -> Result<Self> {
+        let (schema, _read_records, _geometry_column_name) =
+            infer_csv_schema(&mut reader, &options)?;
+        reader.rewind()?;
 
-    let reader = builder.build(reader)?;
-    let iter = reader.into_iter().map(move |batch| {
-        parse_batch(
-            batch,
-            output_schema.clone(),
+        Self::try_new_with_schema(reader, schema, options)
+    }
+}
+
+impl<R: Read> CSVReader<R> {
+    /// Read a CSV file to a [RecordBatchReader].
+    ///
+    /// This expects a geometry to be encoded as WKT within one column.
+    ///
+    /// Note that the input required here is [`Read`] and not [`Read`] + [`Seek`][std::io::Seek]. This
+    /// means that you must infer the schema yourself before calling this function. This allows using
+    /// with objects that are only `Read` in the case when you already know the file's schema.
+    ///
+    /// This schema is expected to be the schema inferred by `arrow-csv`'s
+    /// [`infer_schema`][Format::infer_schema]. That means the geometry should be a string in the
+    /// schema.
+    pub fn try_new_with_schema(
+        reader: R,
+        schema: SchemaRef,
+        options: CSVReaderOptions,
+    ) -> Result<Self> {
+        let geometry_column_name =
+            find_geometry_column(schema.as_ref(), options.geometry_column_name.as_deref())?;
+        let geometry_column_index = schema.index_of(&geometry_column_name)?;
+
+        // Transform to output schema
+        let mut output_fields = schema.fields().to_vec();
+        output_fields[geometry_column_index] = NativeType::Geometry(options.coord_type)
+            .to_field_with_metadata("geometry", true, &Default::default())
+            .into();
+        let output_schema =
+            Arc::new(Schema::new(output_fields).with_metadata(schema.metadata().clone()));
+        let output_schema2 = output_schema.clone();
+
+        // Create builder
+        let builder = ReaderBuilder::new(schema)
+            .with_format(options.to_format())
+            .with_batch_size(options.batch_size);
+
+        let reader = builder.build(reader)?;
+        Ok(Self {
+            reader,
+            output_schema: output_schema2,
             geometry_column_index,
-            options.coord_type,
-        )
-    });
+            coord_type: options.coord_type,
+        })
+    }
+}
 
-    Ok(RecordBatchIterator::new(iter, output_schema2))
+impl<R: Read> Iterator for CSVReader<R> {
+    type Item = std::result::Result<RecordBatch, ArrowError>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let x = &mut self.reader;
+        x.next().map(move |batch| {
+            parse_batch(
+                batch,
+                self.output_schema.clone(),
+                self.geometry_column_index,
+                self.coord_type,
+            )
+        })
+    }
+}
+
+impl<R: Read> arrow_array::RecordBatchReader for CSVReader<R> {
+    fn schema(&self) -> SchemaRef {
+        self.schema()
+    }
 }
 
 fn parse_batch(

@@ -41,6 +41,18 @@ impl From<&Table> for RecordBatchReader {
     }
 }
 
+impl TryFrom<RecordBatchReader> for Table {
+    type Error = GeoArrowError;
+
+    fn try_from(mut value: RecordBatchReader) -> Result<Self, Self::Error> {
+        let reader = value
+            .take()
+            .ok_or(GeoArrowError::General("Closed stream".to_string()))?;
+        let schema = reader.schema();
+        Table::try_new(reader.collect::<Result<_, _>>()?, schema)
+    }
+}
+
 impl From<Box<dyn _RecordBatchReader>> for RecordBatchReader {
     fn from(value: Box<dyn _RecordBatchReader>) -> Self {
         Self(Some(value))
