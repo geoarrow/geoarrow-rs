@@ -956,18 +956,18 @@ macro_rules! impl_to_geometry_array {
 }
 
 impl_to_geometry_array!(PointArray, 1, 11, point_xy, point_xyz);
-impl_to_geometry_array!(LineStringArray, 1, 11, line_string_xy, line_string_xy);
-impl_to_geometry_array!(PolygonArray, 1, 11, polygon_xy, polygon_xyz);
-impl_to_geometry_array!(MultiPointArray, 1, 11, mpoint_xy, mpoint_xyz);
+impl_to_geometry_array!(LineStringArray, 2, 12, line_string_xy, line_string_xy);
+impl_to_geometry_array!(PolygonArray, 3, 13, polygon_xy, polygon_xyz);
+impl_to_geometry_array!(MultiPointArray, 4, 14, mpoint_xy, mpoint_xyz);
 impl_to_geometry_array!(
     MultiLineStringArray,
-    1,
-    11,
+    5,
+    15,
     mline_string_xy,
     mline_string_xyz
 );
-impl_to_geometry_array!(MultiPolygonArray, 1, 11, mpolygon_xy, mpolygon_xyz);
-impl_to_geometry_array!(GeometryCollectionArray, 1, 11, gc_xy, gc_xyz);
+impl_to_geometry_array!(MultiPolygonArray, 6, 16, mpolygon_xy, mpolygon_xyz);
+impl_to_geometry_array!(GeometryCollectionArray, 7, 17, gc_xy, gc_xyz);
 
 impl From<MixedGeometryArray> for GeometryArray {
     fn from(value: MixedGeometryArray) -> Self {
