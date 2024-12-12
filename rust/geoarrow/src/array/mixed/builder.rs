@@ -529,12 +529,12 @@ impl From<MixedGeometryBuilder> for MixedGeometryArray {
         Self::new(
             other.types.into(),
             other.offsets.into(),
-            other.points.into(),
-            other.line_strings.into(),
-            other.polygons.into(),
-            other.multi_points.into(),
-            other.multi_line_strings.into(),
-            other.multi_polygons.into(),
+            Some(other.points.into()),
+            Some(other.line_strings.into()),
+            Some(other.polygons.into()),
+            Some(other.multi_points.into()),
+            Some(other.multi_line_strings.into()),
+            Some(other.multi_polygons.into()),
             other.metadata,
         )
     }
