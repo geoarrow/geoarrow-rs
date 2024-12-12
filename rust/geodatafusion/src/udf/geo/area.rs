@@ -20,7 +20,7 @@ pub fn area() -> ScalarUDF {
     create_udf(
         "st_area",
         vec![NativeType::Geometry(CoordType::Separated).to_data_type()],
-        DataType::Float64.into(),
+        DataType::Float64,
         Volatility::Immutable,
         udf,
     )

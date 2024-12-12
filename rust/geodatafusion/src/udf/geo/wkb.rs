@@ -10,6 +10,8 @@ use geoarrow::datatypes::NativeType;
 use geoarrow::io::wkb::to_wkb;
 use geoarrow::{ArrayBase, NativeArray};
 
+use crate::udf::geo::util::geometry_data_type;
+
 /// Returns the Well-Known Binary representation of the geometry.
 ///
 /// There are 2 variants of the function. The first variant takes no endian encoding paramater and
@@ -26,8 +28,8 @@ pub fn as_binary() -> ScalarUDF {
 
     create_udf(
         "st_asbinary",
-        vec![NativeType::Geometry(CoordType::Separated).to_data_type()],
-        DataType::Binary.into(),
+        vec![geometry_data_type()],
+        DataType::Binary,
         Volatility::Immutable,
         udf,
     )
@@ -52,9 +54,7 @@ pub fn from_wkb() -> ScalarUDF {
     create_udf(
         "st_geomfromwkb",
         vec![DataType::Binary],
-        NativeType::Geometry(CoordType::Separated)
-            .to_data_type()
-            .into(),
+        geometry_data_type(),
         Volatility::Immutable,
         udf,
     )

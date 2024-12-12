@@ -4,10 +4,10 @@ use datafusion::logical_expr::{ColumnarValue, ScalarUDF, Volatility};
 use datafusion::prelude::create_udf;
 use geoarrow::algorithm::geo::Centroid;
 use geoarrow::array::{CoordType, GeometryArray};
-use geoarrow::datatypes::NativeType;
 use geoarrow::ArrayBase;
 
 use crate::error::GeoDataFusionResult;
+use crate::udf::geo::util::{geometry_data_type, parse_single_arg_to_geometry_array};
 
 /// ST_Centroid
 ///
@@ -15,20 +15,15 @@ use crate::error::GeoDataFusionResult;
 pub fn centroid() -> ScalarUDF {
     create_udf(
         "st_centroid",
-        vec![NativeType::Geometry(CoordType::Separated).to_data_type()],
-        NativeType::Geometry(CoordType::Separated)
-            .to_data_type()
-            .into(),
+        vec![geometry_data_type()],
+        geometry_data_type(),
         Volatility::Immutable,
         Arc::new(|args: &[ColumnarValue]| Ok(_centroid(args)?)),
     )
 }
 
 fn _centroid(args: &[ColumnarValue]) -> GeoDataFusionResult<ColumnarValue> {
-    let args = ColumnarValue::values_to_arrays(args)?;
-    let arg = args.into_iter().next().unwrap();
-    let geom_arr = GeometryArray::try_from(arg.as_ref()).unwrap();
-
+    let geom_arr = parse_single_arg_to_geometry_array(args)?;
     let point_array = geom_arr.centroid().into_coord_type(CoordType::Separated);
     Ok(GeometryArray::from(point_array).into_array_ref().into())
 }

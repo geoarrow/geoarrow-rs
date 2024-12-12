@@ -4,7 +4,7 @@
 //! traits](../../geo_traits).
 
 mod binary;
-pub mod bounding_rect;
+pub(crate) mod bounding_rect;
 mod cast;
 mod concatenate;
 pub(crate) mod downcast;
@@ -19,6 +19,7 @@ pub(crate) mod type_id;
 mod unary;
 
 pub use binary::Binary;
+pub use bounding_rect::BoundingRectArray;
 pub use cast::Cast;
 pub use concatenate::Concatenate;
 pub use downcast::{Downcast, DowncastTable};

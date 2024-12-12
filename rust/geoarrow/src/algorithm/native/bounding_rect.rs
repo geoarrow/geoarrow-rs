@@ -6,6 +6,10 @@ use geo_traits::{
     MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
 };
 
+use crate::array::*;
+use crate::datatypes::Dimension;
+use crate::trait_::ArrayAccessor;
+
 #[derive(Debug, Clone, Copy)]
 pub struct BoundingRect {
     minx: f64,
@@ -299,6 +303,58 @@ pub fn bounding_rect_rect(geom: &impl RectTrait<T = f64>) -> ([f64; 2], [f64; 2]
     let mut rect = BoundingRect::new();
     rect.add_rect(geom);
     rect.into()
+}
+
+/// Calculation of the bounding rectangle of a geometry.
+pub trait BoundingRectArray {
+    type Output;
+
+    fn bounding_rect(&self) -> Self::Output;
+}
+
+/// Implementation that iterates over geo objects
+macro_rules! array_impl {
+    ($type:ty, $bounding_rect_fn:ident) => {
+        impl BoundingRectArray for $type {
+            type Output = RectArray;
+
+            fn bounding_rect(&self) -> Self::Output {
+                let mut builder = RectBuilder::with_capacity_and_options(
+                    Dimension::XY,
+                    self.len(),
+                    self.metadata().clone(),
+                );
+                for geom in self.iter() {
+                    if let Some(geom) = geom {
+                        let ([minx, miny], [maxx, maxy]) = $bounding_rect_fn(&geom);
+                        builder.push_box2d(Some([minx, miny, maxx, maxy]));
+                    } else {
+                        builder.push_null();
+                    }
+                }
+
+                builder.finish()
+            }
+        }
+    };
+}
+
+array_impl!(PointArray, bounding_rect_point);
+array_impl!(LineStringArray, bounding_rect_linestring);
+array_impl!(PolygonArray, bounding_rect_polygon);
+array_impl!(MultiPointArray, bounding_rect_multipoint);
+array_impl!(MultiLineStringArray, bounding_rect_multilinestring);
+array_impl!(MultiPolygonArray, bounding_rect_multipolygon);
+array_impl!(MixedGeometryArray, bounding_rect_geometry);
+array_impl!(GeometryCollectionArray, bounding_rect_geometry_collection);
+array_impl!(GeometryArray, bounding_rect_geometry);
+
+impl BoundingRectArray for RectArray {
+    type Output = RectArray;
+
+    fn bounding_rect(&self) -> Self::Output {
+        self.clone()
+    }
 }
 
 // TODO: add tests from geo
