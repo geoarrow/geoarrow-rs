@@ -10,8 +10,9 @@ use crate::array::metadata::ArrayMetadata;
 use crate::array::mixed::builder::MixedGeometryBuilder;
 use crate::array::mixed::MixedCapacity;
 use crate::array::{
-    CoordType, GeometryCollectionArray, LineStringArray, MultiLineStringArray, MultiPointArray,
-    MultiPolygonArray, PointArray, PolygonArray, WKBArray,
+    CoordType, GeometryCollectionArray, LineStringArray, LineStringBuilder, MultiLineStringArray,
+    MultiLineStringBuilder, MultiPointArray, MultiPointBuilder, MultiPolygonArray,
+    MultiPolygonBuilder, PointArray, PointBuilder, PolygonArray, PolygonBuilder, WKBArray,
 };
 use crate::datatypes::{mixed_data_type, Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
@@ -96,34 +97,56 @@ impl MixedGeometryArray {
     pub fn new(
         type_ids: ScalarBuffer<i8>,
         offsets: ScalarBuffer<i32>,
-        points: PointArray,
-        line_strings: LineStringArray,
-        polygons: PolygonArray,
-        multi_points: MultiPointArray,
-        multi_line_strings: MultiLineStringArray,
-        multi_polygons: MultiPolygonArray,
+        points: Option<PointArray>,
+        line_strings: Option<LineStringArray>,
+        polygons: Option<PolygonArray>,
+        multi_points: Option<MultiPointArray>,
+        multi_line_strings: Option<MultiLineStringArray>,
+        multi_polygons: Option<MultiPolygonArray>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let mut coord_types = HashSet::new();
-        coord_types.insert(points.coord_type());
-        coord_types.insert(line_strings.coord_type());
-        coord_types.insert(polygons.coord_type());
-        coord_types.insert(multi_points.coord_type());
-        coord_types.insert(multi_line_strings.coord_type());
-        coord_types.insert(multi_polygons.coord_type());
-        assert_eq!(coord_types.len(), 1);
-
-        let coord_type = coord_types.into_iter().next().unwrap();
+        if let Some(points) = &points {
+            coord_types.insert(points.coord_type());
+        }
+        if let Some(line_strings) = &line_strings {
+            coord_types.insert(line_strings.coord_type());
+        }
+        if let Some(polygons) = &polygons {
+            coord_types.insert(polygons.coord_type());
+        }
+        if let Some(multi_points) = &multi_points {
+            coord_types.insert(multi_points.coord_type());
+        }
+        if let Some(multi_line_strings) = &multi_line_strings {
+            coord_types.insert(multi_line_strings.coord_type());
+        }
+        if let Some(multi_polygons) = &multi_polygons {
+            coord_types.insert(multi_polygons.coord_type());
+        }
+        assert!(coord_types.len() <= 1);
+        let coord_type = coord_types.into_iter().next().unwrap_or_default();
 
         let mut dimensions = HashSet::new();
-        dimensions.insert(points.dimension());
-        dimensions.insert(line_strings.dimension());
-        dimensions.insert(polygons.dimension());
-        dimensions.insert(multi_points.dimension());
-        dimensions.insert(multi_line_strings.dimension());
-        dimensions.insert(multi_polygons.dimension());
+        if let Some(points) = &points {
+            dimensions.insert(points.dimension());
+        }
+        if let Some(line_strings) = &line_strings {
+            dimensions.insert(line_strings.dimension());
+        }
+        if let Some(polygons) = &polygons {
+            dimensions.insert(polygons.dimension());
+        }
+        if let Some(multi_points) = &multi_points {
+            dimensions.insert(multi_points.dimension());
+        }
+        if let Some(multi_line_strings) = &multi_line_strings {
+            dimensions.insert(multi_line_strings.dimension());
+        }
+        if let Some(multi_polygons) = &multi_polygons {
+            dimensions.insert(multi_polygons.dimension());
+        }
         assert_eq!(dimensions.len(), 1);
-
         let dim = dimensions.into_iter().next().unwrap();
 
         Self {
@@ -131,12 +154,25 @@ impl MixedGeometryArray {
             dim,
             type_ids,
             offsets,
-            points,
-            line_strings,
-            polygons,
-            multi_points,
-            multi_line_strings,
-            multi_polygons,
+            points: points.unwrap_or(
+                PointBuilder::new_with_options(dim, coord_type, Default::default()).finish(),
+            ),
+            line_strings: line_strings.unwrap_or(
+                LineStringBuilder::new_with_options(dim, coord_type, Default::default()).finish(),
+            ),
+            polygons: polygons.unwrap_or(
+                PolygonBuilder::new_with_options(dim, coord_type, Default::default()).finish(),
+            ),
+            multi_points: multi_points.unwrap_or(
+                MultiPointBuilder::new_with_options(dim, coord_type, Default::default()).finish(),
+            ),
+            multi_line_strings: multi_line_strings.unwrap_or(
+                MultiLineStringBuilder::new_with_options(dim, coord_type, Default::default())
+                    .finish(),
+            ),
+            multi_polygons: multi_polygons.unwrap_or(
+                MultiPolygonBuilder::new_with_options(dim, coord_type, Default::default()).finish(),
+            ),
             metadata,
             slice_offset: 0,
         }
@@ -391,12 +427,12 @@ impl MixedGeometryArray {
         Self::new(
             self.type_ids,
             self.offsets,
-            self.points.into_coord_type(coord_type),
-            self.line_strings.into_coord_type(coord_type),
-            self.polygons.into_coord_type(coord_type),
-            self.multi_points.into_coord_type(coord_type),
-            self.multi_line_strings.into_coord_type(coord_type),
-            self.multi_polygons.into_coord_type(coord_type),
+            Some(self.points.into_coord_type(coord_type)),
+            Some(self.line_strings.into_coord_type(coord_type)),
+            Some(self.polygons.into_coord_type(coord_type)),
+            Some(self.multi_points.into_coord_type(coord_type)),
+            Some(self.multi_line_strings.into_coord_type(coord_type)),
+            Some(self.multi_polygons.into_coord_type(coord_type)),
             self.metadata,
         )
     }
@@ -706,12 +742,12 @@ impl TryFrom<(&UnionArray, Dimension)> for MixedGeometryArray {
         Ok(Self::new(
             type_ids,
             offsets,
-            points.unwrap_or_default(),
-            line_strings.unwrap_or_default(),
-            polygons.unwrap_or_default(),
-            multi_points.unwrap_or_default(),
-            multi_line_strings.unwrap_or_default(),
-            multi_polygons.unwrap_or_default(),
+            points,
+            line_strings,
+            polygons,
+            multi_points,
+            multi_line_strings,
+            multi_polygons,
             Default::default(),
         ))
     }
@@ -786,12 +822,12 @@ impl From<PointArray> for MixedGeometryArray {
         Self::new(
             ScalarBuffer::from(type_ids),
             ScalarBuffer::from_iter(0..value.len() as i32),
-            value,
-            Default::default(),
-            Default::default(),
-            Default::default(),
-            Default::default(),
-            Default::default(),
+            Some(value),
+            None,
+            None,
+            None,
+            None,
+            None,
             metadata,
         )
     }
@@ -807,12 +843,12 @@ impl From<LineStringArray> for MixedGeometryArray {
         Self::new(
             ScalarBuffer::from(type_ids),
             ScalarBuffer::from_iter(0..value.len() as i32),
-            Default::default(),
-            value,
-            Default::default(),
-            Default::default(),
-            Default::default(),
-            Default::default(),
+            None,
+            Some(value),
+            None,
+            None,
+            None,
+            None,
             metadata,
         )
     }
@@ -828,12 +864,12 @@ impl From<PolygonArray> for MixedGeometryArray {
         Self::new(
             ScalarBuffer::from(type_ids),
             ScalarBuffer::from_iter(0..value.len() as i32),
-            Default::default(),
-            Default::default(),
-            value,
-            Default::default(),
-            Default::default(),
-            Default::default(),
+            None,
+            None,
+            Some(value),
+            None,
+            None,
+            None,
             metadata,
         )
     }
@@ -849,12 +885,12 @@ impl From<MultiPointArray> for MixedGeometryArray {
         Self::new(
             ScalarBuffer::from(type_ids),
             ScalarBuffer::from_iter(0..value.len() as i32),
-            Default::default(),
-            Default::default(),
-            Default::default(),
-            value,
-            Default::default(),
-            Default::default(),
+            None,
+            None,
+            None,
+            Some(value),
+            None,
+            None,
             metadata,
         )
     }
@@ -870,12 +906,12 @@ impl From<MultiLineStringArray> for MixedGeometryArray {
         Self::new(
             ScalarBuffer::from(type_ids),
             ScalarBuffer::from_iter(0..value.len() as i32),
-            Default::default(),
-            Default::default(),
-            Default::default(),
-            Default::default(),
-            value,
-            Default::default(),
+            None,
+            None,
+            None,
+            None,
+            Some(value),
+            None,
             metadata,
         )
     }
@@ -891,12 +927,12 @@ impl From<MultiPolygonArray> for MixedGeometryArray {
         Self::new(
             ScalarBuffer::from(type_ids),
             ScalarBuffer::from_iter(0..value.len() as i32),
-            Default::default(),
-            Default::default(),
-            Default::default(),
-            Default::default(),
-            Default::default(),
-            value,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(value),
             metadata,
         )
     }
