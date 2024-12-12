@@ -25,6 +25,7 @@ async-stream = { version = "0.3", optional = true }
 async-trait = { version = "0.1", optional = true }
 geo = "*"
 geoarrow = { path = "../geoarrow", features = ["flatgeobuf"] }
+thiserror = "1"
 
 [dev-dependencies]
 tokio = { version = "1.9", features = ["macros", "fs", "rt-multi-thread"] }

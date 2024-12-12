@@ -8,8 +8,8 @@ use geoarrow::algorithm::geo::Area;
 use geoarrow::array::{CoordType, GeometryArray};
 use geoarrow::datatypes::NativeType;
 
-pub fn area_udf() -> ScalarUDF {
-    let area = Arc::new(|args: &[ColumnarValue]| {
+pub fn area() -> ScalarUDF {
+    let udf = Arc::new(|args: &[ColumnarValue]| {
         let args = ColumnarValue::values_to_arrays(args)?;
         let arg = args.into_iter().next().unwrap();
         let geom_arr = GeometryArray::try_from(arg.as_ref()).unwrap();
@@ -18,11 +18,11 @@ pub fn area_udf() -> ScalarUDF {
     });
 
     create_udf(
-        "area",
+        "st_area",
         vec![NativeType::Geometry(CoordType::Separated).to_data_type()],
         DataType::Float64.into(),
         Volatility::Immutable,
-        area,
+        udf,
     )
 }
 
@@ -39,12 +39,10 @@ mod test {
     use std::fs::File;
     use std::sync::Arc;
 
-    use crate::area::area_udf;
+    use super::*;
 
     fn load_file() -> RecordBatch {
-        let mut file =
-            File::open("/Users/kyle/github/geoarrow/geoarrow-rs/fixtures/flatgeobuf/countries.fgb")
-                .unwrap();
+        let mut file = File::open("../../fixtures/flatgeobuf/countries.fgb").unwrap();
         let table = read_flatgeobuf(&mut file, Default::default()).unwrap();
         let geometry = table.geometry_column(None).unwrap();
         let geometry = geometry
@@ -61,16 +59,16 @@ mod test {
 
         let batch = load_file();
 
-        ctx.register_batch("table", batch).unwrap();
+        ctx.register_batch("t", batch).unwrap();
         Ok(ctx)
     }
 
     #[tokio::test]
     async fn test() -> Result<()> {
         let ctx = create_context()?;
-        ctx.register_udf(area_udf());
+        ctx.register_udf(area());
 
-        let sql_df = ctx.sql("SELECT area(geometry) FROM table;").await?;
+        let sql_df = ctx.sql("SELECT ST_Area(geometry) FROM t;").await?;
         // print the results
         sql_df.show().await?;
 

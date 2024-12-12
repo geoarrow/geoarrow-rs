@@ -1852,6 +1852,7 @@ dependencies = [
  "datafusion",
  "geo 0.28.0",
  "geoarrow",
+ "thiserror",
  "tokio",
 ]
 

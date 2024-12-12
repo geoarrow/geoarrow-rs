@@ -996,49 +996,376 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryArray {
     }
 }
 
-macro_rules! impl_to_geometry_array {
-    ($source_array:ty, $typeid_xy:expr, $typeid_xyz:expr, $child_xy:ident, $child_xyz:ident) => {
-        impl From<$source_array> for GeometryArray {
-            fn from(value: $source_array) -> Self {
-                let dim = value.dimension();
-                let type_ids = match dim {
-                    Dimension::XY => vec![$typeid_xy; value.len()],
-                    Dimension::XYZ => vec![$typeid_xyz; value.len()],
-                };
-                let mut slf = Self {
-                    data_type: NativeType::Geometry(value.coord_type()),
-                    metadata: value.metadata().clone(),
-                    type_ids: type_ids.into(),
-                    offsets: ScalarBuffer::from_iter(0..value.len() as i32),
-                    ..Default::default()
-                };
-                match dim {
-                    Dimension::XY => {
-                        slf.$child_xy = value;
-                    }
-                    Dimension::XYZ => {
-                        slf.$child_xyz = value;
-                    }
-                }
-                slf
-            }
+impl From<PointArray> for GeometryArray {
+    fn from(value: PointArray) -> Self {
+        let dim = value.dimension();
+        let type_ids = match dim {
+            Dimension::XY => vec![1; value.len()],
+            Dimension::XYZ => vec![11; value.len()],
         }
-    };
+        .into();
+        let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
+        let metadata = value.metadata().clone();
+        match dim {
+            Dimension::XY => Self::new(
+                type_ids,
+                offsets,
+                Some(value),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                metadata,
+            ),
+            Dimension::XYZ => Self::new(
+                type_ids,
+                offsets,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(value),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                metadata,
+            ),
+        }
+    }
 }
 
-impl_to_geometry_array!(PointArray, 1, 11, point_xy, point_xyz);
-impl_to_geometry_array!(LineStringArray, 2, 12, line_string_xy, line_string_xy);
-impl_to_geometry_array!(PolygonArray, 3, 13, polygon_xy, polygon_xyz);
-impl_to_geometry_array!(MultiPointArray, 4, 14, mpoint_xy, mpoint_xyz);
-impl_to_geometry_array!(
-    MultiLineStringArray,
-    5,
-    15,
-    mline_string_xy,
-    mline_string_xyz
-);
-impl_to_geometry_array!(MultiPolygonArray, 6, 16, mpolygon_xy, mpolygon_xyz);
-impl_to_geometry_array!(GeometryCollectionArray, 7, 17, gc_xy, gc_xyz);
+impl From<LineStringArray> for GeometryArray {
+    fn from(value: LineStringArray) -> Self {
+        let dim = value.dimension();
+        let type_ids = match dim {
+            Dimension::XY => vec![2; value.len()],
+            Dimension::XYZ => vec![12; value.len()],
+        }
+        .into();
+        let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
+        let metadata = value.metadata().clone();
+        match dim {
+            Dimension::XY => Self::new(
+                type_ids,
+                offsets,
+                None,
+                Some(value),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                metadata,
+            ),
+            Dimension::XYZ => Self::new(
+                type_ids,
+                offsets,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(value),
+                None,
+                None,
+                None,
+                None,
+                None,
+                metadata,
+            ),
+        }
+    }
+}
+
+impl From<PolygonArray> for GeometryArray {
+    fn from(value: PolygonArray) -> Self {
+        let dim = value.dimension();
+        let type_ids = match dim {
+            Dimension::XY => vec![3; value.len()],
+            Dimension::XYZ => vec![13; value.len()],
+        }
+        .into();
+        let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
+        let metadata = value.metadata().clone();
+        match dim {
+            Dimension::XY => Self::new(
+                type_ids,
+                offsets,
+                None,
+                None,
+                Some(value),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                metadata,
+            ),
+            Dimension::XYZ => Self::new(
+                type_ids,
+                offsets,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(value),
+                None,
+                None,
+                None,
+                None,
+                metadata,
+            ),
+        }
+    }
+}
+
+impl From<MultiPointArray> for GeometryArray {
+    fn from(value: MultiPointArray) -> Self {
+        let dim = value.dimension();
+        let type_ids = match dim {
+            Dimension::XY => vec![4; value.len()],
+            Dimension::XYZ => vec![14; value.len()],
+        }
+        .into();
+        let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
+        let metadata = value.metadata().clone();
+        match dim {
+            Dimension::XY => Self::new(
+                type_ids,
+                offsets,
+                None,
+                None,
+                None,
+                Some(value),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                metadata,
+            ),
+            Dimension::XYZ => Self::new(
+                type_ids,
+                offsets,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(value),
+                None,
+                None,
+                None,
+                metadata,
+            ),
+        }
+    }
+}
+
+impl From<MultiLineStringArray> for GeometryArray {
+    fn from(value: MultiLineStringArray) -> Self {
+        let dim = value.dimension();
+        let type_ids = match dim {
+            Dimension::XY => vec![5; value.len()],
+            Dimension::XYZ => vec![15; value.len()],
+        }
+        .into();
+        let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
+        let metadata = value.metadata().clone();
+        match dim {
+            Dimension::XY => Self::new(
+                type_ids,
+                offsets,
+                None,
+                None,
+                None,
+                None,
+                Some(value),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                metadata,
+            ),
+            Dimension::XYZ => Self::new(
+                type_ids,
+                offsets,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(value),
+                None,
+                None,
+                metadata,
+            ),
+        }
+    }
+}
+
+impl From<MultiPolygonArray> for GeometryArray {
+    fn from(value: MultiPolygonArray) -> Self {
+        let dim = value.dimension();
+        let type_ids = match dim {
+            Dimension::XY => vec![6; value.len()],
+            Dimension::XYZ => vec![16; value.len()],
+        }
+        .into();
+        let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
+        let metadata = value.metadata().clone();
+        match dim {
+            Dimension::XY => Self::new(
+                type_ids,
+                offsets,
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(value),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                metadata,
+            ),
+            Dimension::XYZ => Self::new(
+                type_ids,
+                offsets,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(value),
+                None,
+                metadata,
+            ),
+        }
+    }
+}
+
+impl From<GeometryCollectionArray> for GeometryArray {
+    fn from(value: GeometryCollectionArray) -> Self {
+        let dim = value.dimension();
+        let type_ids = match dim {
+            Dimension::XY => vec![7; value.len()],
+            Dimension::XYZ => vec![17; value.len()],
+        }
+        .into();
+        let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
+        let metadata = value.metadata().clone();
+        match dim {
+            Dimension::XY => Self::new(
+                type_ids,
+                offsets,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(value),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                metadata,
+            ),
+            Dimension::XYZ => Self::new(
+                type_ids,
+                offsets,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(value),
+                metadata,
+            ),
+        }
+    }
+}
 
 impl From<MixedGeometryArray> for GeometryArray {
     fn from(value: MixedGeometryArray) -> Self {
