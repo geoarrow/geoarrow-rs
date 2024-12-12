@@ -96,62 +96,133 @@ impl GeometryArray {
     pub fn new(
         type_ids: ScalarBuffer<i8>,
         offsets: ScalarBuffer<i32>,
-        point_xy: PointArray,
-        line_string_xy: LineStringArray,
-        polygon_xy: PolygonArray,
-        mpoint_xy: MultiPointArray,
-        mline_string_xy: MultiLineStringArray,
-        mpolygon_xy: MultiPolygonArray,
-        gc_xy: GeometryCollectionArray,
-        point_xyz: PointArray,
-        line_string_xyz: LineStringArray,
-        polygon_xyz: PolygonArray,
-        mpoint_xyz: MultiPointArray,
-        mline_string_xyz: MultiLineStringArray,
-        mpolygon_xyz: MultiPolygonArray,
-        gc_xyz: GeometryCollectionArray,
+        point_xy: Option<PointArray>,
+        line_string_xy: Option<LineStringArray>,
+        polygon_xy: Option<PolygonArray>,
+        mpoint_xy: Option<MultiPointArray>,
+        mline_string_xy: Option<MultiLineStringArray>,
+        mpolygon_xy: Option<MultiPolygonArray>,
+        gc_xy: Option<GeometryCollectionArray>,
+        point_xyz: Option<PointArray>,
+        line_string_xyz: Option<LineStringArray>,
+        polygon_xyz: Option<PolygonArray>,
+        mpoint_xyz: Option<MultiPointArray>,
+        mline_string_xyz: Option<MultiLineStringArray>,
+        mpolygon_xyz: Option<MultiPolygonArray>,
+        gc_xyz: Option<GeometryCollectionArray>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let mut coord_types = HashSet::new();
-        coord_types.insert(point_xy.coord_type());
-        coord_types.insert(line_string_xy.coord_type());
-        coord_types.insert(polygon_xy.coord_type());
-        coord_types.insert(mpoint_xy.coord_type());
-        coord_types.insert(mline_string_xy.coord_type());
-        coord_types.insert(mpolygon_xy.coord_type());
-        coord_types.insert(gc_xy.coord_type());
+        if let Some(point_xy) = &point_xy {
+            coord_types.insert(point_xy.coord_type());
+        }
+        if let Some(line_string_xy) = &line_string_xy {
+            coord_types.insert(line_string_xy.coord_type());
+        }
+        if let Some(polygon_xy) = &polygon_xy {
+            coord_types.insert(polygon_xy.coord_type());
+        }
+        if let Some(mpoint_xy) = &mpoint_xy {
+            coord_types.insert(mpoint_xy.coord_type());
+        }
+        if let Some(mline_string_xy) = &mline_string_xy {
+            coord_types.insert(mline_string_xy.coord_type());
+        }
+        if let Some(mpolygon_xy) = &mpolygon_xy {
+            coord_types.insert(mpolygon_xy.coord_type());
+        }
+        if let Some(gc_xy) = &gc_xy {
+            coord_types.insert(gc_xy.coord_type());
+        }
 
-        coord_types.insert(point_xyz.coord_type());
-        coord_types.insert(line_string_xyz.coord_type());
-        coord_types.insert(polygon_xyz.coord_type());
-        coord_types.insert(mpoint_xyz.coord_type());
-        coord_types.insert(mline_string_xyz.coord_type());
-        coord_types.insert(mpolygon_xyz.coord_type());
-        coord_types.insert(gc_xyz.coord_type());
-        assert_eq!(coord_types.len(), 1);
+        if let Some(point_xyz) = &point_xyz {
+            coord_types.insert(point_xyz.coord_type());
+        }
+        if let Some(line_string_xyz) = &line_string_xyz {
+            coord_types.insert(line_string_xyz.coord_type());
+        }
+        if let Some(polygon_xyz) = &polygon_xyz {
+            coord_types.insert(polygon_xyz.coord_type());
+        }
+        if let Some(mpoint_xyz) = &mpoint_xyz {
+            coord_types.insert(mpoint_xyz.coord_type());
+        }
+        if let Some(mline_string_xyz) = &mline_string_xyz {
+            coord_types.insert(mline_string_xyz.coord_type());
+        }
+        if let Some(mpolygon_xyz) = &mpolygon_xyz {
+            coord_types.insert(mpolygon_xyz.coord_type());
+        }
+        if let Some(gc_xyz) = &gc_xyz {
+            coord_types.insert(gc_xyz.coord_type());
+        }
+        assert!(coord_types.len() <= 1);
 
-        let coord_type = coord_types.into_iter().next().unwrap();
+        let coord_type = coord_types.into_iter().next().unwrap_or_default();
 
         let data_type = NativeType::Geometry(coord_type);
 
+        use Dimension::*;
         Self {
             data_type,
             type_ids,
             offsets,
-            point_xy,
-            line_string_xy,
-            polygon_xy,
-            mpoint_xy,
-            mline_string_xy,
-            mpolygon_xy,
-            gc_xy,
-            point_xyz,
-            line_string_xyz,
-            polygon_xyz,
-            mpoint_xyz,
-            mline_string_xyz,
-            mpolygon_xyz,
-            gc_xyz,
+            point_xy: point_xy.unwrap_or(
+                PointBuilder::new_with_options(XY, coord_type, Default::default()).finish(),
+            ),
+            line_string_xy: line_string_xy.unwrap_or(
+                LineStringBuilder::new_with_options(XY, coord_type, Default::default()).finish(),
+            ),
+            polygon_xy: polygon_xy.unwrap_or(
+                PolygonBuilder::new_with_options(XY, coord_type, Default::default()).finish(),
+            ),
+            mpoint_xy: mpoint_xy.unwrap_or(
+                MultiPointBuilder::new_with_options(XY, coord_type, Default::default()).finish(),
+            ),
+            mline_string_xy: mline_string_xy.unwrap_or(
+                MultiLineStringBuilder::new_with_options(XY, coord_type, Default::default())
+                    .finish(),
+            ),
+            mpolygon_xy: mpolygon_xy.unwrap_or(
+                MultiPolygonBuilder::new_with_options(XY, coord_type, Default::default()).finish(),
+            ),
+            gc_xy: gc_xy.unwrap_or(
+                GeometryCollectionBuilder::new_with_options(
+                    XY,
+                    coord_type,
+                    Default::default(),
+                    false,
+                )
+                .finish(),
+            ),
+            point_xyz: point_xyz.unwrap_or(
+                PointBuilder::new_with_options(XYZ, coord_type, Default::default()).finish(),
+            ),
+            line_string_xyz: line_string_xyz.unwrap_or(
+                LineStringBuilder::new_with_options(XYZ, coord_type, Default::default()).finish(),
+            ),
+            polygon_xyz: polygon_xyz.unwrap_or(
+                PolygonBuilder::new_with_options(XYZ, coord_type, Default::default()).finish(),
+            ),
+            mpoint_xyz: mpoint_xyz.unwrap_or(
+                MultiPointBuilder::new_with_options(XYZ, coord_type, Default::default()).finish(),
+            ),
+            mline_string_xyz: mline_string_xyz.unwrap_or(
+                MultiLineStringBuilder::new_with_options(XYZ, coord_type, Default::default())
+                    .finish(),
+            ),
+            mpolygon_xyz: mpolygon_xyz.unwrap_or(
+                MultiPolygonBuilder::new_with_options(XYZ, coord_type, Default::default()).finish(),
+            ),
+            gc_xyz: gc_xyz.unwrap_or(
+                GeometryCollectionBuilder::new_with_options(
+                    XYZ,
+                    coord_type,
+                    Default::default(),
+                    false,
+                )
+                .finish(),
+            ),
             metadata,
         }
     }
@@ -437,20 +508,20 @@ impl GeometryArray {
         Self::new(
             self.type_ids,
             self.offsets,
-            self.point_xy.into_coord_type(coord_type),
-            self.line_string_xy.into_coord_type(coord_type),
-            self.polygon_xy.into_coord_type(coord_type),
-            self.mpoint_xy.into_coord_type(coord_type),
-            self.mline_string_xy.into_coord_type(coord_type),
-            self.mpolygon_xy.into_coord_type(coord_type),
-            self.gc_xy.into_coord_type(coord_type),
-            self.point_xyz.into_coord_type(coord_type),
-            self.line_string_xyz.into_coord_type(coord_type),
-            self.polygon_xyz.into_coord_type(coord_type),
-            self.mpoint_xyz.into_coord_type(coord_type),
-            self.mline_string_xyz.into_coord_type(coord_type),
-            self.mpolygon_xyz.into_coord_type(coord_type),
-            self.gc_xyz.into_coord_type(coord_type),
+            Some(self.point_xy.into_coord_type(coord_type)),
+            Some(self.line_string_xy.into_coord_type(coord_type)),
+            Some(self.polygon_xy.into_coord_type(coord_type)),
+            Some(self.mpoint_xy.into_coord_type(coord_type)),
+            Some(self.mline_string_xy.into_coord_type(coord_type)),
+            Some(self.mpolygon_xy.into_coord_type(coord_type)),
+            Some(self.gc_xy.into_coord_type(coord_type)),
+            Some(self.point_xyz.into_coord_type(coord_type)),
+            Some(self.line_string_xyz.into_coord_type(coord_type)),
+            Some(self.polygon_xyz.into_coord_type(coord_type)),
+            Some(self.mpoint_xyz.into_coord_type(coord_type)),
+            Some(self.mline_string_xyz.into_coord_type(coord_type)),
+            Some(self.mpolygon_xyz.into_coord_type(coord_type)),
+            Some(self.gc_xyz.into_coord_type(coord_type)),
             self.metadata,
         )
     }
@@ -852,20 +923,20 @@ impl TryFrom<&UnionArray> for GeometryArray {
         Ok(Self::new(
             type_ids,
             offsets,
-            point_xy.unwrap_or_default(),
-            line_string_xy.unwrap_or_default(),
-            polygon_xy.unwrap_or_default(),
-            mpoint_xy.unwrap_or_default(),
-            mline_string_xy.unwrap_or_default(),
-            mpolygon_xy.unwrap_or_default(),
-            gc_xy.unwrap_or_default(),
-            point_xyz.unwrap_or_default(),
-            line_string_xyz.unwrap_or_default(),
-            polygon_xyz.unwrap_or_default(),
-            mpoint_xyz.unwrap_or_default(),
-            mline_string_xyz.unwrap_or_default(),
-            mpolygon_xyz.unwrap_or_default(),
-            gc_xyz.unwrap_or_default(),
+            point_xy,
+            line_string_xy,
+            polygon_xy,
+            mpoint_xy,
+            mline_string_xy,
+            mpolygon_xy,
+            gc_xy,
+            point_xyz,
+            line_string_xyz,
+            polygon_xyz,
+            mpoint_xyz,
+            mline_string_xyz,
+            mpolygon_xyz,
+            gc_xyz,
             Default::default(),
         ))
     }
@@ -988,7 +1059,6 @@ impl From<MixedGeometryArray> for GeometryArray {
         let mut mline_string_xyz: Option<MultiLineStringArray> = None;
         let mut mpolygon_xyz: Option<MultiPolygonArray> = None;
 
-        let coord_type = value.coord_type();
         match value.dimension() {
             XY => {
                 point_xy = Some(value.points);
@@ -1011,46 +1081,20 @@ impl From<MixedGeometryArray> for GeometryArray {
         Self::new(
             value.type_ids,
             value.offsets,
-            point_xy.unwrap_or(
-                PointBuilder::new_with_options(XY, coord_type, Default::default()).finish(),
-            ),
-            line_string_xy.unwrap_or(
-                LineStringBuilder::new_with_options(XY, coord_type, Default::default()).finish(),
-            ),
-            polygon_xy.unwrap_or(
-                PolygonBuilder::new_with_options(XY, coord_type, Default::default()).finish(),
-            ),
-            mpoint_xy.unwrap_or(
-                MultiPointBuilder::new_with_options(XY, coord_type, Default::default()).finish(),
-            ),
-            mline_string_xy.unwrap_or(
-                MultiLineStringBuilder::new_with_options(XY, coord_type, Default::default())
-                    .finish(),
-            ),
-            mpolygon_xy.unwrap_or(
-                MultiPolygonBuilder::new_with_options(XY, coord_type, Default::default()).finish(),
-            ),
-            Default::default(),
-            point_xyz.unwrap_or(
-                PointBuilder::new_with_options(XYZ, coord_type, Default::default()).finish(),
-            ),
-            line_string_xyz.unwrap_or(
-                LineStringBuilder::new_with_options(XYZ, coord_type, Default::default()).finish(),
-            ),
-            polygon_xyz.unwrap_or(
-                PolygonBuilder::new_with_options(XYZ, coord_type, Default::default()).finish(),
-            ),
-            mpoint_xyz.unwrap_or(
-                MultiPointBuilder::new_with_options(XYZ, coord_type, Default::default()).finish(),
-            ),
-            mline_string_xyz.unwrap_or(
-                MultiLineStringBuilder::new_with_options(XYZ, coord_type, Default::default())
-                    .finish(),
-            ),
-            mpolygon_xyz.unwrap_or(
-                MultiPolygonBuilder::new_with_options(XYZ, coord_type, Default::default()).finish(),
-            ),
-            Default::default(),
+            point_xy,
+            line_string_xy,
+            polygon_xy,
+            mpoint_xy,
+            mline_string_xy,
+            mpolygon_xy,
+            None,
+            point_xyz,
+            line_string_xyz,
+            polygon_xyz,
+            mpoint_xyz,
+            mline_string_xyz,
+            mpolygon_xyz,
+            None,
             value.metadata,
         )
     }
@@ -1069,12 +1113,12 @@ impl TryFrom<GeometryArray> for MixedGeometryArray {
                 Ok(MixedGeometryArray::new(
                     value.type_ids,
                     value.offsets,
-                    value.point_xy,
-                    value.line_string_xy,
-                    value.polygon_xy,
-                    value.mpoint_xy,
-                    value.mline_string_xy,
-                    value.mpolygon_xy,
+                    Some(value.point_xy),
+                    Some(value.line_string_xy),
+                    Some(value.polygon_xy),
+                    Some(value.mpoint_xy),
+                    Some(value.mline_string_xy),
+                    Some(value.mpolygon_xy),
                     value.metadata,
                 ))
             } else {
@@ -1088,12 +1132,12 @@ impl TryFrom<GeometryArray> for MixedGeometryArray {
                 Ok(MixedGeometryArray::new(
                     value.type_ids,
                     value.offsets,
-                    value.point_xyz,
-                    value.line_string_xyz,
-                    value.polygon_xyz,
-                    value.mpoint_xyz,
-                    value.mline_string_xyz,
-                    value.mpolygon_xyz,
+                    Some(value.point_xyz),
+                    Some(value.line_string_xyz),
+                    Some(value.polygon_xyz),
+                    Some(value.mpoint_xyz),
+                    Some(value.mline_string_xyz),
+                    Some(value.mpolygon_xyz),
                     value.metadata,
                 ))
             } else {

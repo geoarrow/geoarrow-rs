@@ -49,6 +49,7 @@ impl AnyBuilder {
     ///
     /// This is a relative hack around the geozero type system because we have an already-parsed
     /// datetime value and geozero only supports string-formatted timestamps.
+    #[allow(dead_code)]
     pub(crate) fn from_timestamp_value_prefill(
         value: DateTime<Utc>,
         row_index: usize,

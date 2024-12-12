@@ -55,6 +55,7 @@ impl PropertiesBatchBuilder {
     ///
     /// This is a relative hack around the geozero type system because we have an already-parsed
     /// datetime value and geozero only supports string-formatted timestamps.
+    #[allow(dead_code)]
     pub(crate) fn add_timestamp_property(
         &mut self,
         name: &str,
