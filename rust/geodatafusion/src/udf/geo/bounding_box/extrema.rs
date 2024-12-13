@@ -1,100 +1,33 @@
-//! Box functions
-
 use std::any::Any;
 use std::sync::{Arc, OnceLock};
 
 use arrow::array::Float64Builder;
 use arrow_array::ArrayRef;
 use arrow_schema::DataType;
-use datafusion::error::DataFusionError;
 use datafusion::logical_expr::scalar_doc_sections::DOC_SECTION_OTHER;
-use datafusion::logical_expr::{
-    ColumnarValue, Documentation, ScalarUDF, ScalarUDFImpl, Signature, Volatility,
-};
-use datafusion::prelude::create_udf;
+use datafusion::logical_expr::{ColumnarValue, Documentation, ScalarUDFImpl, Signature};
 use geo_traits::{CoordTrait, RectTrait};
 use geoarrow::algorithm::native::BoundingRectArray;
-use geoarrow::array::{GeometryArray, RectArray};
-use geoarrow::datatypes::Dimension;
+use geoarrow::array::RectArray;
 use geoarrow::trait_::ArrayAccessor;
-use geoarrow::ArrayBase;
 
+use crate::data_types::{any_single_geometry_type_input, parse_to_native_array};
 use crate::error::GeoDataFusionResult;
-use crate::udf::geo::util::{
-    box2d_data_type, box3d_data_type, geometry_data_type, parse_single_arg_to_geometry_array,
-};
 
-/// Box2D
-///
-/// - Returns a BOX2D representing the maximum extents of the geometry.
-pub fn box_2d() -> ScalarUDF {
-    create_udf(
-        "box2d",
-        vec![geometry_data_type()],
-        box2d_data_type(),
-        Volatility::Immutable,
-        Arc::new(|args: &[ColumnarValue]| Ok(_box2d(args)?)),
-    )
-}
-
-fn _box2d(args: &[ColumnarValue]) -> GeoDataFusionResult<ColumnarValue> {
-    let geom_arr = parse_single_arg_to_geometry_array(args)?;
-    Ok(geom_arr.bounding_rect().into_array_ref().into())
-}
-
-/// Returns X minima of a bounding box 2d or 3d or a geometry
-pub fn xmin() -> ScalarUDF {
-    XMin::new().into()
-}
-
-/// Returns Y minima of a bounding box 2d or 3d or a geometry
-pub fn ymin() -> ScalarUDF {
-    YMin::new().into()
-}
-
-/// Returns X maxima of a bounding box 2d or 3d or a geometry
-pub fn xmax() -> ScalarUDF {
-    XMax::new().into()
-}
-
-/// Returns Y maxima of a bounding box 2d or 3d or a geometry
-pub fn ymax() -> ScalarUDF {
-    YMax::new().into()
-}
-
-fn rect_array_from_array_ref(array: ArrayRef) -> datafusion::error::Result<RectArray> {
-    let data_type = array.data_type();
-    if box2d_data_type().equals_datatype(data_type) {
-        RectArray::try_from((array.as_ref(), Dimension::XY))
-            .map_err(|err| DataFusionError::External(Box::new(err)))
-    } else if box3d_data_type().equals_datatype(data_type) {
-        RectArray::try_from((array.as_ref(), Dimension::XYZ))
-            .map_err(|err| DataFusionError::External(Box::new(err)))
-    } else if geometry_data_type().equals_datatype(data_type) {
-        let geom_array = GeometryArray::try_from(array.as_ref())
-            .map_err(|err| DataFusionError::External(Box::new(err)))?;
-        Ok(geom_array.bounding_rect())
-    } else {
-        return Err(DataFusionError::Execution(format!(
-            "Unsupported input data type: {}",
-            data_type
-        )));
-    }
+fn rect_array_from_array_ref(array: ArrayRef) -> GeoDataFusionResult<RectArray> {
+    let native_arr = parse_to_native_array(array)?;
+    Ok(native_arr.as_ref().bounding_rect()?)
 }
 
 #[derive(Debug)]
-struct XMin {
+pub(super) struct XMin {
     signature: Signature,
 }
 
 impl XMin {
-    fn new() -> Self {
+    pub(super) fn new() -> Self {
         Self {
-            signature: Signature::uniform(
-                1,
-                vec![box2d_data_type(), box3d_data_type(), geometry_data_type()],
-                Volatility::Immutable,
-            ),
+            signature: any_single_geometry_type_input(),
         }
     }
 }
@@ -155,18 +88,14 @@ impl ScalarUDFImpl for XMin {
 }
 
 #[derive(Debug)]
-struct YMin {
+pub(super) struct YMin {
     signature: Signature,
 }
 
 impl YMin {
-    fn new() -> Self {
+    pub(super) fn new() -> Self {
         Self {
-            signature: Signature::uniform(
-                1,
-                vec![box2d_data_type(), box3d_data_type(), geometry_data_type()],
-                Volatility::Immutable,
-            ),
+            signature: any_single_geometry_type_input(),
         }
     }
 }
@@ -227,18 +156,14 @@ impl ScalarUDFImpl for YMin {
 }
 
 #[derive(Debug)]
-struct XMax {
+pub(super) struct XMax {
     signature: Signature,
 }
 
 impl XMax {
-    fn new() -> Self {
+    pub(super) fn new() -> Self {
         Self {
-            signature: Signature::uniform(
-                1,
-                vec![box2d_data_type(), box3d_data_type(), geometry_data_type()],
-                Volatility::Immutable,
-            ),
+            signature: any_single_geometry_type_input(),
         }
     }
 }
@@ -297,18 +222,14 @@ impl ScalarUDFImpl for XMax {
 }
 
 #[derive(Debug)]
-struct YMax {
+pub(super) struct YMax {
     signature: Signature,
 }
 
 impl YMax {
-    fn new() -> Self {
+    pub(super) fn new() -> Self {
         Self {
-            signature: Signature::uniform(
-                1,
-                vec![box2d_data_type(), box3d_data_type(), geometry_data_type()],
-                Volatility::Immutable,
-            ),
+            signature: any_single_geometry_type_input(),
         }
     }
 }
