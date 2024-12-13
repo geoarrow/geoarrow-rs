@@ -7,7 +7,8 @@ use geo_traits::{
 };
 
 use crate::array::*;
-use crate::datatypes::Dimension;
+use crate::datatypes::{Dimension, NativeType};
+use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 
 #[derive(Debug, Clone, Copy)]
@@ -354,6 +355,27 @@ impl BoundingRectArray for RectArray {
 
     fn bounding_rect(&self) -> Self::Output {
         self.clone()
+    }
+}
+
+impl BoundingRectArray for &dyn NativeArray {
+    type Output = Result<RectArray>;
+
+    fn bounding_rect(&self) -> Self::Output {
+        use NativeType::*;
+
+        let result = match self.data_type() {
+            Point(_, _) => self.as_point().bounding_rect(),
+            LineString(_, _) => self.as_line_string().bounding_rect(),
+            Polygon(_, _) => self.as_polygon().bounding_rect(),
+            MultiPoint(_, _) => self.as_multi_point().bounding_rect(),
+            MultiLineString(_, _) => self.as_multi_line_string().bounding_rect(),
+            MultiPolygon(_, _) => self.as_multi_polygon().bounding_rect(),
+            GeometryCollection(_, _) => self.as_geometry_collection().bounding_rect(),
+            Geometry(_) => self.as_geometry().bounding_rect(),
+            Rect(_) => self.as_rect().bounding_rect(),
+        };
+        Ok(result)
     }
 }
 

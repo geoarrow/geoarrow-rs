@@ -4,7 +4,7 @@ mod extrema;
 use datafusion::prelude::SessionContext;
 
 /// Register all provided bounding box functions
-pub fn register_constructors(ctx: &SessionContext) {
+pub fn register_udfs(ctx: &SessionContext) {
     ctx.register_udf(extrema::XMin::new().into());
     ctx.register_udf(extrema::YMin::new().into());
     ctx.register_udf(extrema::XMax::new().into());

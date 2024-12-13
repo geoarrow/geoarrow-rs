@@ -3,19 +3,16 @@
 mod accessors;
 mod bounding_box;
 mod constructors;
-mod coord_dim;
-mod linear_ref;
 mod measurement;
 mod processing;
-
-pub use coord_dim::coord_dim;
 
 use datafusion::prelude::SessionContext;
 
 /// Register all provided [geo] functions
 pub fn register_geo(ctx: &SessionContext) {
-    constructors::register_constructors(ctx);
-    measurement::register_measurement(ctx);
-
-    ctx.register_udf(coord_dim());
+    accessors::register_udfs(ctx);
+    bounding_box::register_udfs(ctx);
+    constructors::register_udfs(ctx);
+    measurement::register_udfs(ctx);
+    processing::register_udfs(ctx);
 }

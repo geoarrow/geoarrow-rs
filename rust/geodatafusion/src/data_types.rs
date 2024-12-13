@@ -15,22 +15,6 @@ pub const BOX2D_TYPE: NativeType = NativeType::Rect(Dimension::XY);
 pub const BOX3D_TYPE: NativeType = NativeType::Rect(Dimension::XYZ);
 pub const GEOMETRY_TYPE: NativeType = NativeType::Geometry(CoordType::Separated);
 
-/// Accepts Geometry, Point2D, or Point3D as input types
-pub(crate) fn parse_to_geometry_array(array: ArrayRef) -> GeoDataFusionResult<GeometryArray> {
-    let data_type = array.data_type();
-    if data_type.equals_datatype(&POINT2D_TYPE.into()) {
-        let point_array = PointArray::try_from((array.as_ref(), Dimension::XY))?;
-        Ok(GeometryArray::from(point_array))
-    } else if data_type.equals_datatype(&POINT3D_TYPE.into()) {
-        let point_array = PointArray::try_from((array.as_ref(), Dimension::XYZ))?;
-        Ok(GeometryArray::from(point_array))
-    } else if data_type.equals_datatype(&GEOMETRY_TYPE.into()) {
-        Ok(GeometryArray::try_from(array.as_ref())?)
-    } else {
-        Err(DataFusionError::Execution(format!("Unexpected input data type: {}", data_type)).into())
-    }
-}
-
 pub(crate) fn any_single_geometry_type_input() -> Signature {
     Signature::uniform(
         1,
