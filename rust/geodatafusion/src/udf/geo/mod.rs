@@ -1,16 +1,16 @@
 //! User-defined functions that wrap the [geo] crate.
 
-mod area;
 mod r#box;
 mod centroid;
+mod constructors;
 mod convex_hull;
 mod coord_dim;
 mod envelope;
-pub(crate) mod util;
+mod linear_ref;
+mod measurement;
 mod wkb;
 mod wkt;
 
-pub use area::area;
 pub use centroid::centroid;
 pub use convex_hull::convex_hull;
 pub use coord_dim::coord_dim;
@@ -22,8 +22,10 @@ pub use wkt::{as_text, from_text};
 use datafusion::prelude::SessionContext;
 
 /// Register all provided [geo] functions
-pub fn register_geo(ctx: SessionContext) {
-    ctx.register_udf(area());
+pub fn register_geo(ctx: &SessionContext) {
+    constructors::register_constructors(ctx);
+    measurement::register_measurement(ctx);
+
     ctx.register_udf(as_binary());
     ctx.register_udf(as_text());
     ctx.register_udf(centroid());
