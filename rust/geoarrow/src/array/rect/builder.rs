@@ -6,7 +6,7 @@ use crate::scalar::Rect;
 use crate::trait_::IntoArrow;
 use arrow_array::{Array, StructArray};
 use arrow_buffer::NullBufferBuilder;
-use geo_traits::RectTrait;
+use geo_traits::{CoordTrait, RectTrait};
 use std::sync::Arc;
 
 /// The GeoArrow equivalent to `Vec<Option<Rect>>`: a mutable collection of Rects.
@@ -166,6 +166,14 @@ impl RectBuilder {
             self.upper.push_nan_coord();
             self.validity.append_null();
         }
+    }
+
+    /// Push min and max coordinates of a rect to the builder.
+    #[inline]
+    pub fn push_min_max(&mut self, min: &impl CoordTrait<T = f64>, max: &impl CoordTrait<T = f64>) {
+        self.lower.push_coord(min);
+        self.upper.push_coord(max);
+        self.validity.append_non_null()
     }
 
     /// Create this builder from a iterator of Rects.

@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use arrow::array::AsArray;
 use arrow::datatypes::Float64Type;
-use arrow_array::{Array, ArrayRef, Float64Array, StructArray};
-use arrow_buffer::NullBuffer;
+use arrow_array::{Array, ArrayRef, StructArray};
+use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field};
 
 use crate::array::metadata::ArrayMetadata;
@@ -182,14 +182,12 @@ impl IntoArrow for RectArray {
     fn into_arrow(self) -> Self::ArrowArray {
         let fields = rect_fields(self.data_type.dimension().unwrap());
         let mut arrays: Vec<ArrayRef> = vec![];
-        for buf in self.lower.buffers {
-            arrays.push(Arc::new(Float64Array::new(buf, None)));
-        }
-        for buf in self.upper.buffers {
-            arrays.push(Arc::new(Float64Array::new(buf, None)));
-        }
-        let validity = self.validity;
 
+        // values_array takes care of the correct number of dimensions
+        arrays.extend_from_slice(self.lower.values_array().as_slice());
+        arrays.extend_from_slice(self.upper.values_array().as_slice());
+
+        let validity = self.validity;
         StructArray::new(fields, arrays, validity)
     }
 }
@@ -202,23 +200,24 @@ impl TryFrom<(&StructArray, Dimension)> for RectArray {
         let columns = value.columns();
         assert_eq!(columns.len(), dim.size() * 2);
 
-        let lower = match dim {
-            Dimension::XY => {
-                core::array::from_fn(|i| columns[i].as_primitive::<Float64Type>().values().clone())
+        let dim_size = dim.size();
+        let lower = core::array::from_fn(|i| {
+            if i < dim_size {
+                columns[i].as_primitive::<Float64Type>().values().clone()
+            } else {
+                ScalarBuffer::from(vec![])
             }
-            Dimension::XYZ => {
-                core::array::from_fn(|i| columns[i].as_primitive::<Float64Type>().values().clone())
+        });
+        let upper = core::array::from_fn(|i| {
+            if i < dim_size {
+                columns[dim_size + i]
+                    .as_primitive::<Float64Type>()
+                    .values()
+                    .clone()
+            } else {
+                ScalarBuffer::from(vec![])
             }
-        };
-        let upper = match dim {
-            Dimension::XY => {
-                core::array::from_fn(|i| columns[i].as_primitive::<Float64Type>().values().clone())
-            }
-            Dimension::XYZ => {
-                core::array::from_fn(|i| columns[i].as_primitive::<Float64Type>().values().clone())
-            }
-        };
-
+        });
         Ok(Self::new(
             SeparatedCoordBuffer::new(lower, dim),
             SeparatedCoordBuffer::new(upper, dim),
@@ -269,5 +268,31 @@ impl<G: RectTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for RectArray {
     fn from(other: (Vec<Option<G>>, Dimension)) -> Self {
         let mut_arr: RectBuilder = other.into();
         mut_arr.into()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::algorithm::native::eq::rect_eq;
+    use crate::array::RectBuilder;
+    use crate::datatypes::Dimension;
+
+    #[test]
+    fn rect_array_round_trip() {
+        let rect = geo::Rect::new(
+            geo::coord! { x: 0.0, y: 5.0 },
+            geo::coord! { x: 10.0, y: 15.0 },
+        );
+        let mut builder =
+            RectBuilder::with_capacity_and_options(Dimension::XY, 1, Default::default());
+        builder.push_rect(Some(&rect));
+        builder.push_min_max(&rect.min(), &rect.max());
+        let rect_arr = builder.finish();
+
+        let arrow_arr = rect_arr.into_array_ref();
+        let rect_arr_again = RectArray::try_from((arrow_arr.as_ref(), Dimension::XY)).unwrap();
+        let rect_again = rect_arr_again.value(0);
+        assert!(rect_eq(&rect, &rect_again));
     }
 }
