@@ -16,11 +16,11 @@ use crate::data_types::{BOX2D_TYPE, POINT2D_TYPE};
 use crate::error::GeoDataFusionResult;
 
 #[derive(Debug)]
-pub(super) struct Box2D {
+pub(super) struct MakeBox2D {
     signature: Signature,
 }
 
-impl Box2D {
+impl MakeBox2D {
     pub fn new() -> Self {
         Self {
             signature: Signature::exact(
@@ -33,7 +33,7 @@ impl Box2D {
 
 static DOCUMENTATION: OnceLock<Documentation> = OnceLock::new();
 
-impl ScalarUDFImpl for Box2D {
+impl ScalarUDFImpl for MakeBox2D {
     fn as_any(&self) -> &dyn Any {
         self
     }
