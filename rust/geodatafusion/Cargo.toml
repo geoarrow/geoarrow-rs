@@ -1,0 +1,32 @@
+
+[package]
+name = "geodatafusion"
+version = "0.1.0-dev"
+authors = ["Kyle Barron <kylebarron2@gmail.com>"]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/geoarrow/geoarrow-rs"
+description = "Rust implementation of GeoArrow"
+categories = ["science::geo"]
+rust-version = "1.82"
+
+
+[dependencies]
+datafusion = "43"
+arrow = { version = "53.3", features = ["ffi"] }
+arrow-array = { version = "53.3", features = ["chrono-tz"] }
+arrow-buffer = "53.3"
+arrow-cast = { version = "53.3" }
+arrow-csv = { version = "53", optional = true }
+arrow-data = "53.3"
+arrow-ipc = "53.3"
+arrow-schema = "53.3"
+async-stream = { version = "0.3", optional = true }
+async-trait = { version = "0.1", optional = true }
+geo = "0.29.3"
+geo-traits = "0.2"
+geoarrow = { path = "../geoarrow", features = ["flatgeobuf"] }
+thiserror = "1"
+
+[dev-dependencies]
+tokio = { version = "1.9", features = ["macros", "fs", "rt-multi-thread"] }
