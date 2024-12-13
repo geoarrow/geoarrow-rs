@@ -166,7 +166,7 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 
 | Name                       | Implemented | Description                                                                                            |
 | -------------------------- | ----------- | ------------------------------------------------------------------------------------------------------ |
-| ST_Box2dFromGeoHash        |             | Return a BOX2D from a GeoHash string.                                                                  |
+| ST_Box2dFromGeoHash        | ✅          | Return a BOX2D from a GeoHash string.                                                                  |
 | ST_GeomFromGeoHash         |             | Return a geometry from a GeoHash string.                                                               |
 | ST_GeomFromGML             |             | Takes as input GML representation of geometry and outputs a PostGIS geometry object                    |
 | ST_GeomFromGeoJSON         |             | Takes as input a geojson representation of a geometry and outputs a PostGIS geometry object            |
@@ -174,7 +174,7 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_GeomFromTWKB            |             | Creates a geometry instance from a TWKB ("Tiny Well-Known Binary") geometry representation.            |
 | ST_GMLToSQL                |             | Return a specified ST_Geometry value from GML representation. This is an alias name for ST_GeomFromGML |
 | ST_LineFromEncodedPolyline |             | Creates a LineString from an Encoded Polyline.                                                         |
-| ST_PointFromGeoHash        |             | Return a point from a GeoHash string.                                                                  |
+| ST_PointFromGeoHash        | ✅          | Return a point from a GeoHash string.                                                                  |
 | ST_FromFlatGeobufToTable   |             | Creates a table based on the structure of FlatGeobuf data.                                             |
 | ST_FromFlatGeobuf          |             | Reads FlatGeobuf data.                                                                                 |
 
@@ -212,7 +212,7 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_AsSVG             |             | Returns SVG path data for a geometry.                                                 |
 | ST_AsTWKB            |             | Returns the geometry as TWKB, aka "Tiny Well-Known Binary"                            |
 | ST_AsX3D             |             | Returns a Geometry in X3D xml node element format: ISO-IEC-19776-1.2-X3DEncodings-XML |
-| ST_GeoHash           |             | Return a GeoHash representation of the geometry.                                      |
+| ST_GeoHash           | ✅          | Return a GeoHash representation of the geometry.                                      |
 
 ### Operators
 
