@@ -4,7 +4,7 @@
 //! traits](../../geo_traits).
 
 mod binary;
-pub(crate) mod bounding_rect;
+pub mod bounding_rect;
 mod cast;
 mod concatenate;
 pub(crate) mod downcast;
