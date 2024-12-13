@@ -1,5 +1,6 @@
 //! Geometry Input and Output
 
+mod union_example;
 mod wkb;
 mod wkt;
 

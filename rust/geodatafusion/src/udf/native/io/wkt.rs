@@ -2,6 +2,7 @@ use std::any::Any;
 use std::sync::OnceLock;
 
 use arrow::array::AsArray;
+use arrow_array::Array;
 use arrow_schema::DataType;
 use datafusion::logical_expr::scalar_doc_sections::DOC_SECTION_OTHER;
 use datafusion::logical_expr::{
@@ -53,14 +54,13 @@ impl ScalarUDFImpl for AsText {
 
     fn documentation(&self) -> Option<&Documentation> {
         Some(AS_TEXT_DOC.get_or_init(|| {
-            Documentation::builder()
-                .with_doc_section(DOC_SECTION_OTHER)
-                .with_description(
-                    "Returns the OGC Well-Known Text (WKT) representation of the geometry/geography.",
-                )
-                .with_argument("g1", "geometry")
-                .build()
-                .unwrap()
+            Documentation::builder(
+                DOC_SECTION_OTHER,
+                "Returns the OGC Well-Known Text (WKT) representation of the geometry/geography.",
+                "ST_AsText(geometry)",
+            )
+            .with_argument("g1", "geometry")
+            .build()
         }))
     }
 }
@@ -82,9 +82,8 @@ pub(super) struct GeomFromText {
 
 impl GeomFromText {
     pub fn new() -> Self {
-        // TODO: extend to allow specifying little/big endian
         Self {
-            signature: Signature::coercible(vec![DataType::Utf8], Volatility::Immutable),
+            signature: Signature::exact(vec![DataType::Utf8], Volatility::Immutable),
         }
     }
 }
@@ -97,7 +96,7 @@ impl ScalarUDFImpl for GeomFromText {
     }
 
     fn name(&self) -> &str {
-        "st_astext"
+        "st_geomfromtext"
     }
 
     fn signature(&self) -> &Signature {
@@ -114,14 +113,13 @@ impl ScalarUDFImpl for GeomFromText {
 
     fn documentation(&self) -> Option<&Documentation> {
         Some(GEOM_FROM_TEXT_DOC.get_or_init(|| {
-            Documentation::builder()
-                .with_doc_section(DOC_SECTION_OTHER)
-                .with_description(
-                    "Constructs a geometry object from the OGC Well-Known text representation.",
-                )
-                .with_argument("g1", "geometry")
-                .build()
-                .unwrap()
+            Documentation::builder(
+                DOC_SECTION_OTHER,
+                "Constructs a geometry object from the OGC Well-Known text representation.",
+                "ST_GeomFromText(text)",
+            )
+            .with_argument("g1", "geometry")
+            .build()
         }))
     }
 }
@@ -133,5 +131,30 @@ fn geom_from_text_impl(args: &[ColumnarValue]) -> GeoDataFusionResult<ColumnarVa
         .unwrap();
     let wkt_arr = WKTArray::new(array.as_string::<i32>().clone(), Default::default());
     let native_arr = read_wkt(&wkt_arr, CoordType::Separated, false)?;
-    Ok(native_arr.to_array_ref().into())
+    dbg!("native_arr");
+
+    let arrow_arr = native_arr.to_array_ref();
+    if let DataType::Union(_fields, mode) = arrow_arr.data_type() {
+        dbg!(mode);
+    }
+
+    Ok(arrow_arr.into())
+}
+
+#[cfg(test)]
+mod test {
+    use datafusion::prelude::*;
+
+    use crate::udf::native::register_native;
+
+    #[tokio::test]
+    async fn test() {
+        let ctx = SessionContext::new();
+        register_native(&ctx);
+
+        let out = ctx.sql("SELECT ST_GeomFromText('LINESTRING(-71.160281 42.258729,-71.160837 42.259113,-71.161144 42.25932)');").await.unwrap();
+        // TODO: fix this error upstream
+        // https://github.com/apache/datafusion/issues/13762
+        out.show().await.unwrap_err();
+    }
 }

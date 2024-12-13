@@ -52,12 +52,13 @@ impl ScalarUDFImpl for CoordDim {
 
     fn documentation(&self) -> Option<&Documentation> {
         Some(DOCUMENTATION.get_or_init(|| {
-            Documentation::builder()
-                .with_doc_section(DOC_SECTION_OTHER)
-                .with_description("Return the coordinate dimension of the ST_Geometry value.")
-                .with_argument("g1", "geometry")
-                .build()
-                .unwrap()
+            Documentation::builder(
+                DOC_SECTION_OTHER,
+                "Return the coordinate dimension of the ST_Geometry value.",
+                "ST_CoordDim(geometry)",
+            )
+            .with_argument("g1", "geometry")
+            .build()
         }))
     }
 }

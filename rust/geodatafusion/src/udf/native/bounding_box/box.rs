@@ -48,12 +48,13 @@ impl ScalarUDFImpl for Box2D {
 
     fn documentation(&self) -> Option<&Documentation> {
         Some(DOCUMENTATION.get_or_init(|| {
-            Documentation::builder()
-                .with_doc_section(DOC_SECTION_OTHER)
-                .with_description("Returns a box2d representing the 2D extent of the geometry.")
-                .with_argument("geom", "geometry")
-                .build()
-                .unwrap()
+            Documentation::builder(
+                DOC_SECTION_OTHER,
+                "Returns a box2d representing the 2D extent of the geometry.",
+                "ST_Box2D(geometry)",
+            )
+            .with_argument("geom", "geometry")
+            .build()
         }))
     }
 }

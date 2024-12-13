@@ -1,4 +1,5 @@
 mod centroid;
+mod chaikin_smoothing;
 mod convex_hull;
 
 use datafusion::prelude::SessionContext;

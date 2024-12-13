@@ -47,12 +47,13 @@ impl ScalarUDFImpl for Area {
 
     fn documentation(&self) -> Option<&Documentation> {
         Some(DOCUMENTATION.get_or_init(|| {
-            Documentation::builder()
-                .with_doc_section(DOC_SECTION_OTHER)
-                .with_description("Returns the area of a polygonal geometry.")
-                .with_argument("geom", "geometry")
-                .build()
-                .unwrap()
+            Documentation::builder(
+                DOC_SECTION_OTHER,
+                "Returns the area of a polygonal geometry.",
+                "ST_Area(geom)",
+            )
+            .with_argument("geom", "geometry")
+            .build()
         }))
     }
 }
