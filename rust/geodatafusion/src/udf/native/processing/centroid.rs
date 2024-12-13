@@ -49,14 +49,13 @@ impl ScalarUDFImpl for Centroid {
 
     fn documentation(&self) -> Option<&Documentation> {
         Some(DOCUMENTATION.get_or_init(|| {
-            Documentation::builder()
-                .with_doc_section(DOC_SECTION_OTHER)
-                .with_description(
-                    "Computes a point which is the geometric center of mass of a geometry.",
-                )
-                .with_argument("g1", "geometry")
-                .build()
-                .unwrap()
+            Documentation::builder(
+                DOC_SECTION_OTHER,
+                "Computes a point which is the geometric center of mass of a geometry.",
+                "ST_Centroid(geometry)",
+            )
+            .with_argument("g1", "geometry")
+            .build()
         }))
     }
 }

@@ -49,14 +49,9 @@ impl ScalarUDFImpl for ConvexHull {
 
     fn documentation(&self) -> Option<&Documentation> {
         Some(DOCUMENTATION.get_or_init(|| {
-            Documentation::builder()
-                .with_doc_section(DOC_SECTION_OTHER)
-                .with_description(
-                    "Computes the convex hull of a geometry. The convex hull is the smallest convex geometry that encloses all geometries in the input.",
-                )
+            Documentation::builder(DOC_SECTION_OTHER, "Computes the convex hull of a geometry. The convex hull is the smallest convex geometry that encloses all geometries in the input.", "ST_ConvexHull(geometry)")
                 .with_argument("g1", "geometry")
                 .build()
-                .unwrap()
         }))
     }
 }

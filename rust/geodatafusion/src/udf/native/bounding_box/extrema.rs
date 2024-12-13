@@ -70,19 +70,19 @@ impl ScalarUDFImpl for XMin {
 
     fn documentation(&self) -> Option<&Documentation> {
         Some(XMIN_DOC.get_or_init(|| {
-            Documentation::builder()
-                .with_doc_section(DOC_SECTION_OTHER)
-                .with_description("Returns X minima of a bounding box 2d or 3d or a geometry")
-                .with_syntax_example("ST_XMin(geometry)")
-                .with_argument("box", "The geometry or box input")
-                .with_related_udf("st_xmin")
-                .with_related_udf("st_ymin")
-                .with_related_udf("st_zmin")
-                .with_related_udf("st_xmax")
-                .with_related_udf("st_ymax")
-                .with_related_udf("st_zmax")
-                .build()
-                .unwrap()
+            Documentation::builder(
+                DOC_SECTION_OTHER,
+                "Returns X minima of a bounding box 2d or 3d or a geometry",
+                "ST_XMin(geometry)",
+            )
+            .with_argument("box", "The geometry or box input")
+            .with_related_udf("st_xmin")
+            .with_related_udf("st_ymin")
+            .with_related_udf("st_zmin")
+            .with_related_udf("st_xmax")
+            .with_related_udf("st_ymax")
+            .with_related_udf("st_zmax")
+            .build()
         }))
     }
 }
@@ -138,19 +138,19 @@ impl ScalarUDFImpl for YMin {
 
     fn documentation(&self) -> Option<&Documentation> {
         Some(YMIN_DOC.get_or_init(|| {
-            Documentation::builder()
-                .with_doc_section(DOC_SECTION_OTHER)
-                .with_description("Returns Y minima of a bounding box 2d or 3d or a geometry")
-                .with_syntax_example("ST_YMin(geometry)")
-                .with_argument("box", "The geometry or box input")
-                .with_related_udf("st_xmin")
-                .with_related_udf("st_ymin")
-                .with_related_udf("st_zmin")
-                .with_related_udf("st_xmax")
-                .with_related_udf("st_ymax")
-                .with_related_udf("st_zmax")
-                .build()
-                .unwrap()
+            Documentation::builder(
+                DOC_SECTION_OTHER,
+                "Returns Y minima of a bounding box 2d or 3d or a geometry",
+                "ST_YMin(geometry)",
+            )
+            .with_argument("box", "The geometry or box input")
+            .with_related_udf("st_xmin")
+            .with_related_udf("st_ymin")
+            .with_related_udf("st_zmin")
+            .with_related_udf("st_xmax")
+            .with_related_udf("st_ymax")
+            .with_related_udf("st_zmax")
+            .build()
         }))
     }
 }
@@ -204,19 +204,19 @@ impl ScalarUDFImpl for XMax {
 
     fn documentation(&self) -> Option<&Documentation> {
         Some(XMAX_DOC.get_or_init(|| {
-            Documentation::builder()
-                .with_doc_section(DOC_SECTION_OTHER)
-                .with_description("Returns X maxima of a bounding box 2d or 3d or a geometry")
-                .with_syntax_example("ST_XMax(geometry)")
-                .with_argument("box", "The geometry or box input")
-                .with_related_udf("st_xmin")
-                .with_related_udf("st_ymin")
-                .with_related_udf("st_zmin")
-                .with_related_udf("st_xmax")
-                .with_related_udf("st_ymax")
-                .with_related_udf("st_zmax")
-                .build()
-                .unwrap()
+            Documentation::builder(
+                DOC_SECTION_OTHER,
+                "Returns X maxima of a bounding box 2d or 3d or a geometry",
+                "ST_XMax(geometry)",
+            )
+            .with_argument("box", "The geometry or box input")
+            .with_related_udf("st_xmin")
+            .with_related_udf("st_ymin")
+            .with_related_udf("st_zmin")
+            .with_related_udf("st_xmax")
+            .with_related_udf("st_ymax")
+            .with_related_udf("st_zmax")
+            .build()
         }))
     }
 }
@@ -270,19 +270,19 @@ impl ScalarUDFImpl for YMax {
 
     fn documentation(&self) -> Option<&Documentation> {
         Some(YMAX_DOC.get_or_init(|| {
-            Documentation::builder()
-                .with_doc_section(DOC_SECTION_OTHER)
-                .with_description("Returns Y maxima of a bounding box 2d or 3d or a geometry")
-                .with_syntax_example("ST_YMax(geometry)")
-                .with_argument("box", "The geometry or box input")
-                .with_related_udf("st_xmin")
-                .with_related_udf("st_ymin")
-                .with_related_udf("st_zmin")
-                .with_related_udf("st_xmax")
-                .with_related_udf("st_ymax")
-                .with_related_udf("st_zmax")
-                .build()
-                .unwrap()
+            Documentation::builder(
+                DOC_SECTION_OTHER,
+                "Returns Y maxima of a bounding box 2d or 3d or a geometry",
+                "ST_YMax(geometry)",
+            )
+            .with_argument("box", "The geometry or box input")
+            .with_related_udf("st_xmin")
+            .with_related_udf("st_ymin")
+            .with_related_udf("st_zmin")
+            .with_related_udf("st_xmax")
+            .with_related_udf("st_ymax")
+            .with_related_udf("st_zmax")
+            .build()
         }))
     }
 }

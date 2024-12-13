@@ -54,14 +54,13 @@ impl ScalarUDFImpl for AsBinary {
 
     fn documentation(&self) -> Option<&Documentation> {
         Some(AS_BINARY_DOC.get_or_init(|| {
-            Documentation::builder()
-                .with_doc_section(DOC_SECTION_OTHER)
-                .with_description(
-                    "Returns the OGC/ISO Well-Known Binary (WKB) representation of the geometry.",
-                )
-                .with_argument("g1", "geometry")
-                .build()
-                .unwrap()
+            Documentation::builder(
+                DOC_SECTION_OTHER,
+                "Returns the OGC/ISO Well-Known Binary (WKB) representation of the geometry.",
+                "ST_AsBinary(geometry)",
+            )
+            .with_argument("g1", "geometry")
+            .build()
         }))
     }
 }
@@ -84,7 +83,7 @@ pub(super) struct GeomFromWKB {
 impl GeomFromWKB {
     pub fn new() -> Self {
         Self {
-            signature: Signature::coercible(vec![DataType::Binary], Volatility::Immutable),
+            signature: Signature::exact(vec![DataType::Binary], Volatility::Immutable),
         }
     }
 }
@@ -114,14 +113,9 @@ impl ScalarUDFImpl for GeomFromWKB {
 
     fn documentation(&self) -> Option<&Documentation> {
         Some(GEOM_FROM_WKB_DOC.get_or_init(|| {
-            Documentation::builder()
-                .with_doc_section(DOC_SECTION_OTHER)
-                .with_description(
-                    "Takes a well-known binary representation of a geometry and a Spatial Reference System ID (SRID) and creates an instance of the appropriate geometry type",
-                )
+            Documentation::builder(DOC_SECTION_OTHER, "Takes a well-known binary representation of a geometry and a Spatial Reference System ID (SRID) and creates an instance of the appropriate geometry type", "ST_GeomFromWKB(buffer)")
                 .with_argument("geom", "WKB buffers")
                 .build()
-                .unwrap()
         }))
     }
 }

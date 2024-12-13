@@ -55,14 +55,9 @@ impl ScalarUDFImpl for StartPoint {
 
     fn documentation(&self) -> Option<&Documentation> {
         Some(START_POINT_DOCUMENTATION.get_or_init(|| {
-            Documentation::builder()
-                .with_doc_section(DOC_SECTION_OTHER)
-                .with_description(
-                    "Returns the first point of a LINESTRING geometry as a POINT. Returns NULL if the input is not a LINESTRING",
-                )
+            Documentation::builder(DOC_SECTION_OTHER, "Returns the first point of a LINESTRING geometry as a POINT. Returns NULL if the input is not a LINESTRING", "ST_StartPoint(line_string)" )
                 .with_argument("g1", "geometry")
                 .build()
-                .unwrap()
         }))
     }
 }

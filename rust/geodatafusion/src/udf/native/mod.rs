@@ -9,8 +9,8 @@ mod processing;
 
 use datafusion::prelude::SessionContext;
 
-/// Register all provided [geo] functions
-pub fn register_geo(ctx: &SessionContext) {
+/// Register all provided native-Rust functions
+pub fn register_native(ctx: &SessionContext) {
     accessors::register_udfs(ctx);
     bounding_box::register_udfs(ctx);
     constructors::register_udfs(ctx);

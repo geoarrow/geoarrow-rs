@@ -79,16 +79,16 @@ impl ScalarUDFImpl for Point {
 
     fn documentation(&self) -> Option<&Documentation> {
         Some(POINT_DOC.get_or_init(|| {
-            Documentation::builder()
-                .with_doc_section(DOC_SECTION_OTHER)
-                .with_description("Returns a Point with the given X and Y coordinate values.")
-                .with_syntax_example("ST_Point(-71.104, 42.315)")
-                .with_argument("x", "x value")
-                .with_argument("y", "y value")
-                .with_related_udf("st_makepoint")
-                .with_related_udf("st_pointz")
-                .build()
-                .unwrap()
+            Documentation::builder(
+                DOC_SECTION_OTHER,
+                "Returns a Point with the given X and Y coordinate values.",
+                "ST_Point(-71.104, 42.315)",
+            )
+            .with_argument("x", "x value")
+            .with_argument("y", "y value")
+            .with_related_udf("st_makepoint")
+            .with_related_udf("st_pointz")
+            .build()
         }))
     }
 }
@@ -218,17 +218,17 @@ impl ScalarUDFImpl for MakePoint {
 
     fn documentation(&self) -> Option<&Documentation> {
         Some(MAKE_POINT_DOC.get_or_init(|| {
-            Documentation::builder()
-                .with_doc_section(DOC_SECTION_OTHER)
-                .with_description("Creates a 2D XY or 3D XYZ Point geometry.")
-                .with_syntax_example("ST_MakePoint(-71.104, 42.315)")
-                .with_argument("x", "x value")
-                .with_argument("y", "y value")
-                .with_argument("z", "z value")
-                .with_related_udf("st_point")
-                .with_related_udf("st_pointz")
-                .build()
-                .unwrap()
+            Documentation::builder(
+                DOC_SECTION_OTHER,
+                "Creates a 2D XY or 3D XYZ Point geometry.",
+                "ST_MakePoint(-71.104, 42.315)",
+            )
+            .with_argument("x", "x value")
+            .with_argument("y", "y value")
+            .with_argument("z", "z value")
+            .with_related_udf("st_point")
+            .with_related_udf("st_pointz")
+            .build()
         }))
     }
 }
