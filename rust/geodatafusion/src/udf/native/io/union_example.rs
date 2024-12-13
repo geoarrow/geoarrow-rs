@@ -1,5 +1,5 @@
 use std::any::Any;
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
 
 use arrow::array::UnionBuilder;
 use arrow::datatypes::{Float64Type, Int32Type};
@@ -10,19 +10,18 @@ use datafusion::logical_expr::{
 };
 
 #[derive(Debug)]
-pub(super) struct UnionExample {
+pub struct UnionExample {
     signature: Signature,
 }
 
 impl UnionExample {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Self {
             signature: Signature::nullary(Volatility::Immutable),
         }
     }
 }
-
-static DOC: OnceLock<Documentation> = OnceLock::new();
 
 impl ScalarUDFImpl for UnionExample {
     fn as_any(&self) -> &dyn Any {
@@ -46,10 +45,6 @@ impl ScalarUDFImpl for UnionExample {
             ],
         );
         Ok(DataType::Union(fields, UnionMode::Dense))
-    }
-
-    fn invoke(&self, args: &[ColumnarValue]) -> datafusion::error::Result<ColumnarValue> {
-        todo!()
     }
 
     fn invoke_no_args(&self, _number_rows: usize) -> datafusion::error::Result<ColumnarValue> {
@@ -79,7 +74,6 @@ impl ScalarUDFImpl for UnionExample {
 
     fn documentation(&self) -> Option<&Documentation> {
         None
-        // Some(DOC.get_or_init(|| Documentation::builder().build().unwrap()))
     }
 }
 
@@ -94,6 +88,8 @@ mod test {
         ctx.register_udf(UnionExample::new().into());
 
         let out = ctx.sql("SELECT example_union();").await.unwrap();
-        out.show().await.unwrap();
+        // TODO: fix this error upstream
+        // https://github.com/apache/datafusion/issues/13762
+        out.show().await.unwrap_err();
     }
 }

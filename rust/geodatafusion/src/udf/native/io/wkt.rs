@@ -134,7 +134,7 @@ fn geom_from_text_impl(args: &[ColumnarValue]) -> GeoDataFusionResult<ColumnarVa
     dbg!("native_arr");
 
     let arrow_arr = native_arr.to_array_ref();
-    if let DataType::Union(x, mode) = arrow_arr.data_type() {
+    if let DataType::Union(_fields, mode) = arrow_arr.data_type() {
         dbg!(mode);
     }
 
@@ -153,10 +153,8 @@ mod test {
         register_native(&ctx);
 
         let out = ctx.sql("SELECT ST_GeomFromText('LINESTRING(-71.160281 42.258729,-71.160837 42.259113,-71.161144 42.25932)');").await.unwrap();
-        dbg!("out");
-        let err = out.show().await.unwrap_err();
-
-        let root_err = err.find_root();
-        dbg!(root_err);
+        // TODO: fix this error upstream
+        // https://github.com/apache/datafusion/issues/13762
+        out.show().await.unwrap_err();
     }
 }
