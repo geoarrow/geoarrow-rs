@@ -955,7 +955,7 @@ dependencies = [
 [[package]]
 name = "datafusion"
 version = "43.0.0"
-source = "git+https://github.com/apache/datafusion?rev=03e39da62e403e064d21b57e9d6c200464c03749#03e39da62e403e064d21b57e9d6c200464c03749"
+source = "git+https://github.com/kylebarron/datafusion?rev=170432e3179ed72f413ffcd4d7edfe0007db296d#170432e3179ed72f413ffcd4d7edfe0007db296d"
 dependencies = [
  "arrow",
  "arrow-array",
@@ -1005,7 +1005,7 @@ dependencies = [
 [[package]]
 name = "datafusion-catalog"
 version = "43.0.0"
-source = "git+https://github.com/apache/datafusion?rev=03e39da62e403e064d21b57e9d6c200464c03749#03e39da62e403e064d21b57e9d6c200464c03749"
+source = "git+https://github.com/kylebarron/datafusion?rev=170432e3179ed72f413ffcd4d7edfe0007db296d#170432e3179ed72f413ffcd4d7edfe0007db296d"
 dependencies = [
  "arrow-schema",
  "async-trait",
@@ -1019,7 +1019,7 @@ dependencies = [
 [[package]]
 name = "datafusion-common"
 version = "43.0.0"
-source = "git+https://github.com/apache/datafusion?rev=03e39da62e403e064d21b57e9d6c200464c03749#03e39da62e403e064d21b57e9d6c200464c03749"
+source = "git+https://github.com/kylebarron/datafusion?rev=170432e3179ed72f413ffcd4d7edfe0007db296d#170432e3179ed72f413ffcd4d7edfe0007db296d"
 dependencies = [
  "ahash",
  "arrow",
@@ -1042,7 +1042,7 @@ dependencies = [
 [[package]]
 name = "datafusion-common-runtime"
 version = "43.0.0"
-source = "git+https://github.com/apache/datafusion?rev=03e39da62e403e064d21b57e9d6c200464c03749#03e39da62e403e064d21b57e9d6c200464c03749"
+source = "git+https://github.com/kylebarron/datafusion?rev=170432e3179ed72f413ffcd4d7edfe0007db296d#170432e3179ed72f413ffcd4d7edfe0007db296d"
 dependencies = [
  "log",
  "tokio",
@@ -1051,12 +1051,12 @@ dependencies = [
 [[package]]
 name = "datafusion-doc"
 version = "43.0.0"
-source = "git+https://github.com/apache/datafusion?rev=03e39da62e403e064d21b57e9d6c200464c03749#03e39da62e403e064d21b57e9d6c200464c03749"
+source = "git+https://github.com/kylebarron/datafusion?rev=170432e3179ed72f413ffcd4d7edfe0007db296d#170432e3179ed72f413ffcd4d7edfe0007db296d"
 
 [[package]]
 name = "datafusion-execution"
 version = "43.0.0"
-source = "git+https://github.com/apache/datafusion?rev=03e39da62e403e064d21b57e9d6c200464c03749#03e39da62e403e064d21b57e9d6c200464c03749"
+source = "git+https://github.com/kylebarron/datafusion?rev=170432e3179ed72f413ffcd4d7edfe0007db296d#170432e3179ed72f413ffcd4d7edfe0007db296d"
 dependencies = [
  "arrow",
  "dashmap",
@@ -1074,7 +1074,7 @@ dependencies = [
 [[package]]
 name = "datafusion-expr"
 version = "43.0.0"
-source = "git+https://github.com/apache/datafusion?rev=03e39da62e403e064d21b57e9d6c200464c03749#03e39da62e403e064d21b57e9d6c200464c03749"
+source = "git+https://github.com/kylebarron/datafusion?rev=170432e3179ed72f413ffcd4d7edfe0007db296d#170432e3179ed72f413ffcd4d7edfe0007db296d"
 dependencies = [
  "arrow",
  "chrono",
@@ -1094,7 +1094,7 @@ dependencies = [
 [[package]]
 name = "datafusion-expr-common"
 version = "43.0.0"
-source = "git+https://github.com/apache/datafusion?rev=03e39da62e403e064d21b57e9d6c200464c03749#03e39da62e403e064d21b57e9d6c200464c03749"
+source = "git+https://github.com/kylebarron/datafusion?rev=170432e3179ed72f413ffcd4d7edfe0007db296d#170432e3179ed72f413ffcd4d7edfe0007db296d"
 dependencies = [
  "arrow",
  "datafusion-common",
@@ -1104,7 +1104,7 @@ dependencies = [
 [[package]]
 name = "datafusion-functions"
 version = "43.0.0"
-source = "git+https://github.com/apache/datafusion?rev=03e39da62e403e064d21b57e9d6c200464c03749#03e39da62e403e064d21b57e9d6c200464c03749"
+source = "git+https://github.com/kylebarron/datafusion?rev=170432e3179ed72f413ffcd4d7edfe0007db296d#170432e3179ed72f413ffcd4d7edfe0007db296d"
 dependencies = [
  "arrow",
  "arrow-buffer",
@@ -1116,6 +1116,7 @@ dependencies = [
  "datafusion-doc",
  "datafusion-execution",
  "datafusion-expr",
+ "datafusion-expr-common",
  "datafusion-macros",
  "hashbrown 0.14.5",
  "hex",
@@ -1132,7 +1133,7 @@ dependencies = [
 [[package]]
 name = "datafusion-functions-aggregate"
 version = "43.0.0"
-source = "git+https://github.com/apache/datafusion?rev=03e39da62e403e064d21b57e9d6c200464c03749#03e39da62e403e064d21b57e9d6c200464c03749"
+source = "git+https://github.com/kylebarron/datafusion?rev=170432e3179ed72f413ffcd4d7edfe0007db296d#170432e3179ed72f413ffcd4d7edfe0007db296d"
 dependencies = [
  "ahash",
  "arrow",
@@ -1153,7 +1154,7 @@ dependencies = [
 [[package]]
 name = "datafusion-functions-aggregate-common"
 version = "43.0.0"
-source = "git+https://github.com/apache/datafusion?rev=03e39da62e403e064d21b57e9d6c200464c03749#03e39da62e403e064d21b57e9d6c200464c03749"
+source = "git+https://github.com/kylebarron/datafusion?rev=170432e3179ed72f413ffcd4d7edfe0007db296d#170432e3179ed72f413ffcd4d7edfe0007db296d"
 dependencies = [
  "ahash",
  "arrow",
@@ -1165,7 +1166,7 @@ dependencies = [
 [[package]]
 name = "datafusion-functions-nested"
 version = "43.0.0"
-source = "git+https://github.com/apache/datafusion?rev=03e39da62e403e064d21b57e9d6c200464c03749#03e39da62e403e064d21b57e9d6c200464c03749"
+source = "git+https://github.com/kylebarron/datafusion?rev=170432e3179ed72f413ffcd4d7edfe0007db296d#170432e3179ed72f413ffcd4d7edfe0007db296d"
 dependencies = [
  "arrow",
  "arrow-array",
@@ -1186,7 +1187,7 @@ dependencies = [
 [[package]]
 name = "datafusion-functions-table"
 version = "43.0.0"
-source = "git+https://github.com/apache/datafusion?rev=03e39da62e403e064d21b57e9d6c200464c03749#03e39da62e403e064d21b57e9d6c200464c03749"
+source = "git+https://github.com/kylebarron/datafusion?rev=170432e3179ed72f413ffcd4d7edfe0007db296d#170432e3179ed72f413ffcd4d7edfe0007db296d"
 dependencies = [
  "arrow",
  "async-trait",
@@ -1201,7 +1202,7 @@ dependencies = [
 [[package]]
 name = "datafusion-functions-window"
 version = "43.0.0"
-source = "git+https://github.com/apache/datafusion?rev=03e39da62e403e064d21b57e9d6c200464c03749#03e39da62e403e064d21b57e9d6c200464c03749"
+source = "git+https://github.com/kylebarron/datafusion?rev=170432e3179ed72f413ffcd4d7edfe0007db296d#170432e3179ed72f413ffcd4d7edfe0007db296d"
 dependencies = [
  "datafusion-common",
  "datafusion-doc",
@@ -1217,7 +1218,7 @@ dependencies = [
 [[package]]
 name = "datafusion-functions-window-common"
 version = "43.0.0"
-source = "git+https://github.com/apache/datafusion?rev=03e39da62e403e064d21b57e9d6c200464c03749#03e39da62e403e064d21b57e9d6c200464c03749"
+source = "git+https://github.com/kylebarron/datafusion?rev=170432e3179ed72f413ffcd4d7edfe0007db296d#170432e3179ed72f413ffcd4d7edfe0007db296d"
 dependencies = [
  "datafusion-common",
  "datafusion-physical-expr-common",
@@ -1226,7 +1227,7 @@ dependencies = [
 [[package]]
 name = "datafusion-macros"
 version = "43.0.0"
-source = "git+https://github.com/apache/datafusion?rev=03e39da62e403e064d21b57e9d6c200464c03749#03e39da62e403e064d21b57e9d6c200464c03749"
+source = "git+https://github.com/kylebarron/datafusion?rev=170432e3179ed72f413ffcd4d7edfe0007db296d#170432e3179ed72f413ffcd4d7edfe0007db296d"
 dependencies = [
  "quote",
  "syn 2.0.79",
@@ -1235,7 +1236,7 @@ dependencies = [
 [[package]]
 name = "datafusion-optimizer"
 version = "43.0.0"
-source = "git+https://github.com/apache/datafusion?rev=03e39da62e403e064d21b57e9d6c200464c03749#03e39da62e403e064d21b57e9d6c200464c03749"
+source = "git+https://github.com/kylebarron/datafusion?rev=170432e3179ed72f413ffcd4d7edfe0007db296d#170432e3179ed72f413ffcd4d7edfe0007db296d"
 dependencies = [
  "arrow",
  "chrono",
@@ -1253,7 +1254,7 @@ dependencies = [
 [[package]]
 name = "datafusion-physical-expr"
 version = "43.0.0"
-source = "git+https://github.com/apache/datafusion?rev=03e39da62e403e064d21b57e9d6c200464c03749#03e39da62e403e064d21b57e9d6c200464c03749"
+source = "git+https://github.com/kylebarron/datafusion?rev=170432e3179ed72f413ffcd4d7edfe0007db296d#170432e3179ed72f413ffcd4d7edfe0007db296d"
 dependencies = [
  "ahash",
  "arrow",
@@ -1277,7 +1278,7 @@ dependencies = [
 [[package]]
 name = "datafusion-physical-expr-common"
 version = "43.0.0"
-source = "git+https://github.com/apache/datafusion?rev=03e39da62e403e064d21b57e9d6c200464c03749#03e39da62e403e064d21b57e9d6c200464c03749"
+source = "git+https://github.com/kylebarron/datafusion?rev=170432e3179ed72f413ffcd4d7edfe0007db296d#170432e3179ed72f413ffcd4d7edfe0007db296d"
 dependencies = [
  "ahash",
  "arrow",
@@ -1290,7 +1291,7 @@ dependencies = [
 [[package]]
 name = "datafusion-physical-optimizer"
 version = "43.0.0"
-source = "git+https://github.com/apache/datafusion?rev=03e39da62e403e064d21b57e9d6c200464c03749#03e39da62e403e064d21b57e9d6c200464c03749"
+source = "git+https://github.com/kylebarron/datafusion?rev=170432e3179ed72f413ffcd4d7edfe0007db296d#170432e3179ed72f413ffcd4d7edfe0007db296d"
 dependencies = [
  "arrow",
  "datafusion-common",
@@ -1306,7 +1307,7 @@ dependencies = [
 [[package]]
 name = "datafusion-physical-plan"
 version = "43.0.0"
-source = "git+https://github.com/apache/datafusion?rev=03e39da62e403e064d21b57e9d6c200464c03749#03e39da62e403e064d21b57e9d6c200464c03749"
+source = "git+https://github.com/kylebarron/datafusion?rev=170432e3179ed72f413ffcd4d7edfe0007db296d#170432e3179ed72f413ffcd4d7edfe0007db296d"
 dependencies = [
  "ahash",
  "arrow",
@@ -1337,7 +1338,7 @@ dependencies = [
 [[package]]
 name = "datafusion-sql"
 version = "43.0.0"
-source = "git+https://github.com/apache/datafusion?rev=03e39da62e403e064d21b57e9d6c200464c03749#03e39da62e403e064d21b57e9d6c200464c03749"
+source = "git+https://github.com/kylebarron/datafusion?rev=170432e3179ed72f413ffcd4d7edfe0007db296d#170432e3179ed72f413ffcd4d7edfe0007db296d"
 dependencies = [
  "arrow",
  "arrow-array",
