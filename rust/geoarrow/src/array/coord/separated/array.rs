@@ -173,8 +173,19 @@ impl SeparatedCoordBuffer {
     }
 
     pub fn value_unchecked(&self, index: usize) -> SeparatedCoord {
+        let dim_size = self.dim.size();
+
+        // Don't slice buffers outside of valid dimensions
+        let buffers = core::array::from_fn(|i| {
+            if i < dim_size {
+                self.buffers[i].clone().slice(index, 1)
+            } else {
+                self.buffers[i].clone()
+            }
+        });
+
         SeparatedCoord {
-            buffers: self.buffers.clone().map(|buffer| buffer.slice(index, 1)),
+            buffers,
             dim: self.dim,
         }
     }
