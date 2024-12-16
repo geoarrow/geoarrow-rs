@@ -29,6 +29,22 @@ pub(crate) fn any_single_geometry_type_input() -> Signature {
     )
 }
 
+pub(crate) fn any_two_geometry_type_input() -> Signature {
+    // TODO: not sure if this is correct. We want the types to vary and each one can be a different
+    // type.
+    Signature::uniform(
+        2,
+        vec![
+            POINT2D_TYPE.into(),
+            POINT3D_TYPE.into(),
+            BOX2D_TYPE.into(),
+            BOX3D_TYPE.into(),
+            GEOMETRY_TYPE.into(),
+        ],
+        Volatility::Immutable,
+    )
+}
+
 /// This will not cast a PointArray to a GeometryArray
 pub(crate) fn parse_to_native_array(array: ArrayRef) -> GeoDataFusionResult<Arc<dyn NativeArray>> {
     let data_type = array.data_type();
@@ -49,4 +65,8 @@ pub(crate) fn parse_to_native_array(array: ArrayRef) -> GeoDataFusionResult<Arc<
     } else {
         Err(DataFusionError::Execution(format!("Unexpected input data type: {}", data_type)).into())
     }
+}
+
+pub(crate) fn parse_to_geometry_array(array: ArrayRef) -> GeoDataFusionResult<GeometryArray> {
+    Ok(parse_to_native_array(array)?.into())
 }
