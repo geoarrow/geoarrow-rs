@@ -18,7 +18,7 @@ pub(crate) fn process_line_string<P: GeomProcessor>(
     Ok(())
 }
 
-impl GeozeroGeometry for LineString<'_> {
+impl GeozeroGeometry for LineString {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,

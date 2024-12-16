@@ -249,6 +249,10 @@ impl MultiPolygonArray {
             self.metadata,
         )
     }
+
+    fn value(&self, index: usize) -> MultiPolygon {
+        MultiPolygon::new(self.slice(index, 1))
+    }
 }
 
 impl ArrayBase for MultiPolygonArray {
@@ -350,13 +354,7 @@ impl GeometryArraySelfMethods for MultiPolygonArray {
 
 impl NativeGeometryAccessor for MultiPolygonArray {
     unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry {
-        Geometry::MultiPolygon(MultiPolygon::new(
-            &self.coords,
-            &self.geom_offsets,
-            &self.polygon_offsets,
-            &self.ring_offsets,
-            index,
-        ))
+        Geometry::MultiPolygon(self.value(index))
     }
 }
 
@@ -366,29 +364,17 @@ impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for MultiPolygonArray {
         &'a self,
         index: usize,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
-        let geom = MultiPolygon::new(
-            &self.coords,
-            &self.geom_offsets,
-            &self.polygon_offsets,
-            &self.ring_offsets,
-            index,
-        );
+        let geom = self.value(index);
         (&geom).try_into()
     }
 }
 
 impl<'a> ArrayAccessor<'a> for MultiPolygonArray {
-    type Item = MultiPolygon<'a>;
+    type Item = MultiPolygon;
     type ItemGeo = geo::MultiPolygon;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        MultiPolygon::new(
-            &self.coords,
-            &self.geom_offsets,
-            &self.polygon_offsets,
-            &self.ring_offsets,
-            index,
-        )
+        self.value(index)
     }
 }
 

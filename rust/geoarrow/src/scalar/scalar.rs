@@ -65,7 +65,7 @@ impl GeometryScalar {
         }
     }
 
-    pub fn as_geometry(&self) -> Option<Geometry<'_>> {
+    pub fn as_geometry(&self) -> Option<Geometry> {
         // Note: we use `.downcast_ref` directly here because we need to pass in the generic
         // TODO: may be able to change this now that we don't have <O>
         //

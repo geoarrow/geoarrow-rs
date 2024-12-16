@@ -411,7 +411,7 @@ pub type SerializedArrayRef = Arc<dyn SerializedArray>;
 /// Trait for accessing generic `Geometry` scalars
 pub trait NativeGeometryAccessor: NativeArray {
     /// Returns the element at index `i` as a `Geometry`, not considering validity.
-    fn value_as_geometry(&self, index: usize) -> Geometry<'_> {
+    fn value_as_geometry(&self, index: usize) -> Geometry {
         assert!(index <= self.len());
         unsafe { self.value_as_geometry_unchecked(index) }
     }
@@ -421,10 +421,10 @@ pub trait NativeGeometryAccessor: NativeArray {
     /// # Safety
     ///
     /// Caller is responsible for ensuring that the index is within the bounds of the array
-    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> Geometry<'_>;
+    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> Geometry;
 
     /// Returns the value at slot `i` as a `Geometry`, considering validity.
-    fn get_as_geometry(&self, index: usize) -> Option<Geometry<'_>> {
+    fn get_as_geometry(&self, index: usize) -> Option<Geometry> {
         if self.is_null(index) {
             return None;
         }
@@ -437,7 +437,7 @@ pub trait NativeGeometryAccessor: NativeArray {
     /// # Safety
     ///
     /// Caller is responsible for ensuring that the index is within the bounds of the array
-    unsafe fn get_as_geometry_unchecked(&self, index: usize) -> Option<Geometry<'_>> {
+    unsafe fn get_as_geometry_unchecked(&self, index: usize) -> Option<Geometry> {
         if self.is_null(index) {
             return None;
         }

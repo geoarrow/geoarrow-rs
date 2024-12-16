@@ -14,7 +14,7 @@ pub trait RTree<'a> {
 }
 
 impl<'a> RTree<'a> for PointArray {
-    type RTreeObject = crate::scalar::Point<'a>;
+    type RTreeObject = crate::scalar::Point;
 
     fn rstar_tree(&'a self) -> rstar::RTree<Self::RTreeObject> {
         // Note: for points we don't memoize with CachedEnvelope
@@ -23,7 +23,7 @@ impl<'a> RTree<'a> for PointArray {
 }
 
 impl<'a> RTree<'a> for RectArray {
-    type RTreeObject = crate::scalar::Rect<'a>;
+    type RTreeObject = crate::scalar::Rect;
 
     fn rstar_tree(&'a self) -> rstar::RTree<Self::RTreeObject> {
         // Note: for rects we don't memoize with CachedEnvelope
@@ -43,13 +43,10 @@ macro_rules! iter_cached_impl {
     };
 }
 
-iter_cached_impl!(LineStringArray, crate::scalar::LineString<'a>);
-iter_cached_impl!(PolygonArray, crate::scalar::Polygon<'a>);
-iter_cached_impl!(MultiPointArray, crate::scalar::MultiPoint<'a>);
-iter_cached_impl!(MultiLineStringArray, crate::scalar::MultiLineString<'a>);
-iter_cached_impl!(MultiPolygonArray, crate::scalar::MultiPolygon<'a>);
-iter_cached_impl!(MixedGeometryArray, crate::scalar::Geometry<'a>);
-iter_cached_impl!(
-    GeometryCollectionArray,
-    crate::scalar::GeometryCollection<'a>
-);
+iter_cached_impl!(LineStringArray, crate::scalar::LineString);
+iter_cached_impl!(PolygonArray, crate::scalar::Polygon);
+iter_cached_impl!(MultiPointArray, crate::scalar::MultiPoint);
+iter_cached_impl!(MultiLineStringArray, crate::scalar::MultiLineString);
+iter_cached_impl!(MultiPolygonArray, crate::scalar::MultiPolygon);
+iter_cached_impl!(MixedGeometryArray, crate::scalar::Geometry);
+iter_cached_impl!(GeometryCollectionArray, crate::scalar::GeometryCollection);

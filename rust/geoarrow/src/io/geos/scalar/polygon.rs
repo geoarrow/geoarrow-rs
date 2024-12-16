@@ -5,10 +5,10 @@ use crate::scalar::Polygon;
 use geo_traits::PolygonTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<'a> TryFrom<&'a Polygon<'_>> for geos::Geometry {
+impl<'a> TryFrom<&'a Polygon> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: &'a Polygon<'_>) -> std::result::Result<geos::Geometry, geos::Error> {
+    fn try_from(value: &'a Polygon) -> std::result::Result<geos::Geometry, geos::Error> {
         to_geos_polygon(value)
     }
 }

@@ -1,54 +1,38 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_multipoint;
 use crate::algorithm::native::eq::multi_point_eq;
 use crate::array::util::OffsetBufferUtils;
-use crate::array::CoordBuffer;
-use crate::datatypes::Dimension;
+use crate::array::{MultiPointArray, PointArray};
 use crate::scalar::Point;
-use crate::trait_::NativeScalar;
-use arrow_buffer::OffsetBuffer;
+use crate::trait_::{ArrayAccessor, NativeScalar};
+use crate::ArrayBase;
 use geo_traits::to_geo::ToGeoMultiPoint;
 use geo_traits::MultiPointTrait;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a MultiPoint
 #[derive(Debug, Clone)]
-pub struct MultiPoint<'a> {
-    /// Buffer of coordinates
-    pub(crate) coords: &'a CoordBuffer,
-
-    /// Offsets into the coordinate array where each geometry starts
-    pub(crate) geom_offsets: &'a OffsetBuffer<i32>,
-
-    pub(crate) geom_index: usize,
-
+pub struct MultiPoint {
+    array: MultiPointArray,
     start_offset: usize,
 }
 
-impl<'a> MultiPoint<'a> {
-    pub fn new(
-        coords: &'a CoordBuffer,
-        geom_offsets: &'a OffsetBuffer<i32>,
-        geom_index: usize,
-    ) -> Self {
-        let (start_offset, _) = geom_offsets.start_end(geom_index);
+impl MultiPoint {
+    pub fn new(array: MultiPointArray) -> Self {
+        assert_eq!(array.len(), 1);
+        assert!(!array.is_null(0));
+        let (start_offset, _) = array.geom_offsets.start_end(0);
         Self {
-            coords,
-            geom_offsets,
-            geom_index,
+            array,
             start_offset,
         }
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, usize) {
-        (
-            self.coords.clone(),
-            self.geom_offsets.clone(),
-            self.geom_index,
-        )
+    pub fn into_inner(self) -> MultiPointArray {
+        self.array
     }
 }
 
-impl NativeScalar for MultiPoint<'_> {
+impl NativeScalar for MultiPoint {
     type ScalarGeo = geo::MultiPoint;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -65,73 +49,69 @@ impl NativeScalar for MultiPoint<'_> {
     }
 }
 
-impl<'a> MultiPointTrait for MultiPoint<'a> {
+impl<'a> MultiPointTrait for MultiPoint {
     type T = f64;
     type PointType<'b>
-        = Point<'a>
+        = Point
     where
         Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        match self.coords.dim() {
-            Dimension::XY => geo_traits::Dimensions::Xy,
-            Dimension::XYZ => geo_traits::Dimensions::Xyz,
-        }
+        self.array.coords.dim().into()
     }
 
     fn num_points(&self) -> usize {
-        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        let (start, end) = self.array.geom_offsets.start_end(0);
         end - start
     }
 
     unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
-        Point::new(self.coords, self.start_offset + i)
+        let arr = PointArray::new(self.array.coords.clone(), None, Default::default());
+        arr.value(self.start_offset + i)
     }
 }
 
-impl<'a> MultiPointTrait for &'a MultiPoint<'a> {
+impl<'a> MultiPointTrait for &'a MultiPoint {
     type T = f64;
     type PointType<'b>
-        = Point<'a>
+        = Point
     where
         Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        match self.coords.dim() {
-            Dimension::XY => geo_traits::Dimensions::Xy,
-            Dimension::XYZ => geo_traits::Dimensions::Xyz,
-        }
+        self.array.coords.dim().into()
     }
 
     fn num_points(&self) -> usize {
-        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        let (start, end) = self.array.geom_offsets.start_end(0);
         end - start
     }
 
     unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
-        Point::new(self.coords, self.start_offset + i)
+        let arr = PointArray::new(self.array.coords.clone(), None, Default::default());
+        arr.value(self.start_offset + i)
     }
 }
 
-impl From<MultiPoint<'_>> for geo::MultiPoint {
-    fn from(value: MultiPoint<'_>) -> Self {
+impl From<MultiPoint> for geo::MultiPoint {
+    fn from(value: MultiPoint) -> Self {
         (&value).into()
     }
 }
 
-impl From<&MultiPoint<'_>> for geo::MultiPoint {
-    fn from(value: &MultiPoint<'_>) -> Self {
+impl From<&MultiPoint> for geo::MultiPoint {
+    fn from(value: &MultiPoint) -> Self {
         value.to_multi_point()
     }
 }
 
-impl From<MultiPoint<'_>> for geo::Geometry {
-    fn from(value: MultiPoint<'_>) -> Self {
+impl From<MultiPoint> for geo::Geometry {
+    fn from(value: MultiPoint) -> Self {
         geo::Geometry::MultiPoint(value.into())
     }
 }
 
-impl RTreeObject for MultiPoint<'_> {
+impl RTreeObject for MultiPoint {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -140,7 +120,7 @@ impl RTreeObject for MultiPoint<'_> {
     }
 }
 
-impl<G: MultiPointTrait<T = f64>> PartialEq<G> for MultiPoint<'_> {
+impl<G: MultiPointTrait<T = f64>> PartialEq<G> for MultiPoint {
     fn eq(&self, other: &G) -> bool {
         multi_point_eq(self, other)
     }

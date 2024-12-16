@@ -5,23 +5,23 @@ use crate::scalar::LineString;
 use geo_traits::LineStringTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<'a> TryFrom<&'a LineString<'_>> for geos::Geometry {
+impl<'a> TryFrom<&'a LineString> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: &'a LineString<'_>) -> std::result::Result<geos::Geometry, geos::Error> {
-        let (start, end) = value.geom_offsets.start_end(value.geom_index);
+    fn try_from(value: &'a LineString) -> std::result::Result<geos::Geometry, geos::Error> {
+        let (start, end) = value.array.geom_offsets.start_end(0);
 
-        let sliced_coords = value.coords.clone().slice(start, end - start);
+        let sliced_coords = value.array.coords.clone().slice(start, end - start);
 
         geos::Geometry::create_line_string(sliced_coords.try_into()?)
     }
 }
 
-impl LineString<'_> {
+impl LineString {
     pub fn to_geos_linear_ring(&self) -> std::result::Result<geos::Geometry, geos::Error> {
-        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        let (start, end) = self.array.geom_offsets.start_end(0);
 
-        let sliced_coords = self.coords.clone().slice(start, end - start);
+        let sliced_coords = self.array.coords.clone().slice(start, end - start);
 
         geos::Geometry::create_linear_ring(sliced_coords.try_into()?)
     }

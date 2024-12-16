@@ -6,12 +6,11 @@ use geozero::{GeomProcessor, GeozeroGeometry};
 
 use crate::scalar::WKB;
 
-impl<O: OffsetSizeTrait> GeozeroGeometry for WKB<'_, O> {
+impl<O: OffsetSizeTrait> GeozeroGeometry for WKB<O> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
     {
-        let slice = self.arr.value(self.geom_index);
-        process_wkb_geom(&mut Cursor::new(slice), processor)
+        process_wkb_geom(&mut Cursor::new(self.as_ref()), processor)
     }
 }

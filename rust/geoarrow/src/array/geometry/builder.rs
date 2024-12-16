@@ -911,7 +911,7 @@ impl<'a> GeometryBuilder {
     }
 
     pub(crate) fn from_wkb<W: OffsetSizeTrait>(
-        wkb_objects: &[Option<WKB<'_, W>>],
+        wkb_objects: &[Option<WKB<W>>],
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
@@ -989,7 +989,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryBuilder {
         );
 
         let metadata = value.metadata.clone();
-        let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
+        let wkb_objects: Vec<Option<WKB<O>>> = value.iter().collect();
         Self::from_wkb(&wkb_objects, Default::default(), metadata, true)
     }
 }

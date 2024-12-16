@@ -4,7 +4,7 @@ use crate::array::util::OffsetBufferUtils;
 use crate::array::LineStringArray;
 use crate::scalar::Coord;
 use crate::trait_::NativeScalar;
-use crate::{ArrayBase, NativeArray};
+use crate::ArrayBase;
 use geo_traits::to_geo::ToGeoLineString;
 use geo_traits::LineStringTrait;
 use rstar::{RTreeObject, AABB};
@@ -14,7 +14,7 @@ use rstar::{RTreeObject, AABB};
 /// This is stored as a [LineStringArray] with length 1. That element may not be null.
 #[derive(Debug, Clone)]
 pub struct LineString {
-    array: LineStringArray,
+    pub(crate) array: LineStringArray,
     start_offset: usize,
 }
 
@@ -59,11 +59,11 @@ impl<'a> LineStringTrait for LineString {
         Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        self.0.dimension().into()
+        self.array.coords.dim().into()
     }
 
     fn num_coords(&self) -> usize {
-        let (start, end) = self.0.geom_offsets.start_end(0);
+        let (start, end) = self.array.geom_offsets.start_end(0);
         end - start
     }
 
@@ -80,11 +80,11 @@ impl<'a> LineStringTrait for &'a LineString {
         Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        self.0.dimension().into()
+        self.array.coords.dim().into()
     }
 
     fn num_coords(&self) -> usize {
-        let (start, end) = self.0.geom_offsets.start_end(0);
+        let (start, end) = self.array.geom_offsets.start_end(0);
         end - start
     }
 

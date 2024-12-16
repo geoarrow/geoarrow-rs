@@ -5,10 +5,10 @@ use crate::scalar::MultiPolygon;
 use geo_traits::MultiPolygonTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<'a> TryFrom<&'a MultiPolygon<'_>> for geos::Geometry {
+impl<'a> TryFrom<&'a MultiPolygon> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: &'a MultiPolygon<'_>) -> std::result::Result<geos::Geometry, geos::Error> {
+    fn try_from(value: &'a MultiPolygon) -> std::result::Result<geos::Geometry, geos::Error> {
         to_geos_multi_polygon(value)
     }
 }

@@ -5,12 +5,10 @@ use crate::scalar::MultiLineString;
 use geo_traits::MultiLineStringTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<'a> TryFrom<&'a MultiLineString<'_>> for geos::Geometry {
+impl<'a> TryFrom<&'a MultiLineString> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(
-        value: &'a MultiLineString<'_>,
-    ) -> std::result::Result<geos::Geometry, geos::Error> {
+    fn try_from(value: &'a MultiLineString) -> std::result::Result<geos::Geometry, geos::Error> {
         to_geos_multi_line_string(&value)
     }
 }

@@ -39,7 +39,7 @@ pub(crate) fn process_polygon<P: GeomProcessor>(
     Ok(())
 }
 
-impl GeozeroGeometry for Polygon<'_> {
+impl GeozeroGeometry for Polygon {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,

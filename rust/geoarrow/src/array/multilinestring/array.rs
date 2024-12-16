@@ -197,6 +197,10 @@ impl MultiLineStringArray {
             self.metadata,
         )
     }
+
+    fn value(&self, index: usize) -> MultiLineString {
+        MultiLineString::new(self.slice(index, 1))
+    }
 }
 
 impl ArrayBase for MultiLineStringArray {
@@ -296,12 +300,7 @@ impl GeometryArraySelfMethods for MultiLineStringArray {
 
 impl NativeGeometryAccessor for MultiLineStringArray {
     unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry {
-        Geometry::MultiLineString(MultiLineString::new(
-            &self.coords,
-            &self.geom_offsets,
-            &self.ring_offsets,
-            index,
-        ))
+        Geometry::MultiLineString(self.value(index))
     }
 }
 
@@ -311,18 +310,17 @@ impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for MultiLineStringArray 
         &'a self,
         index: usize,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
-        let geom =
-            MultiLineString::new(&self.coords, &self.geom_offsets, &self.ring_offsets, index);
+        let geom = self.value(index);
         (&geom).try_into()
     }
 }
 
 impl<'a> ArrayAccessor<'a> for MultiLineStringArray {
-    type Item = MultiLineString<'a>;
+    type Item = MultiLineString;
     type ItemGeo = geo::MultiLineString;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        MultiLineString::new(&self.coords, &self.geom_offsets, &self.ring_offsets, index)
+        self.value(index)
     }
 }
 

@@ -320,7 +320,7 @@ impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for PolygonArray {
 }
 
 impl<'a> ArrayAccessor<'a> for PolygonArray {
-    type Item = Polygon<'a>;
+    type Item = Polygon;
     type ItemGeo = geo::Polygon;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {

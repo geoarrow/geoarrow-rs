@@ -35,7 +35,7 @@ impl FromWKB for PointArray {
         coord_type: CoordType,
         dim: Dimension,
     ) -> Result<Self> {
-        let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
+        let wkb_objects: Vec<Option<WKB<O>>> = arr.iter().collect();
         let builder = PointBuilder::from_wkb(&wkb_objects, dim, coord_type, arr.metadata())?;
         Ok(builder.finish())
     }
@@ -51,7 +51,7 @@ macro_rules! impl_from_wkb {
                 coord_type: CoordType,
                 dim: Dimension,
             ) -> Result<Self> {
-                let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
+                let wkb_objects: Vec<Option<WKB<O>>> = arr.iter().collect();
                 let builder = <$builder>::from_wkb(&wkb_objects, dim, coord_type, arr.metadata())?;
                 Ok(builder.finish())
             }
@@ -73,7 +73,7 @@ impl FromWKB for MixedGeometryArray {
         coord_type: CoordType,
         dim: Dimension,
     ) -> Result<Self> {
-        let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
+        let wkb_objects: Vec<Option<WKB<O>>> = arr.iter().collect();
         let builder =
             MixedGeometryBuilder::from_wkb(&wkb_objects, dim, coord_type, arr.metadata(), true)?;
         Ok(builder.finish())
@@ -88,7 +88,7 @@ impl FromWKB for GeometryCollectionArray {
         coord_type: CoordType,
         dim: Dimension,
     ) -> Result<Self> {
-        let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
+        let wkb_objects: Vec<Option<WKB<O>>> = arr.iter().collect();
         let builder = GeometryCollectionBuilder::from_wkb(
             &wkb_objects,
             dim,
@@ -108,7 +108,7 @@ impl FromWKB for Arc<dyn NativeArray> {
         coord_type: CoordType,
         dim: Dimension,
     ) -> Result<Self> {
-        let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
+        let wkb_objects: Vec<Option<WKB<O>>> = arr.iter().collect();
         let builder = GeometryCollectionBuilder::from_wkb(
             &wkb_objects,
             dim,
@@ -182,7 +182,7 @@ pub fn from_wkb<O: OffsetSizeTrait>(
     prefer_multi: bool,
 ) -> Result<Arc<dyn NativeArray>> {
     use NativeType::*;
-    let wkb_objects: Vec<Option<crate::scalar::WKB<'_, O>>> = arr.iter().collect();
+    let wkb_objects: Vec<Option<crate::scalar::WKB<O>>> = arr.iter().collect();
     match target_geo_data_type {
         Point(coord_type, dim) => {
             let builder = PointBuilder::from_wkb(&wkb_objects, dim, coord_type, arr.metadata())?;

@@ -142,8 +142,8 @@ iter_geo_impl!(MultiPolygonArray, MultiPolygonArray);
 // └──────────────────────────────────────────┘
 
 // Note: this implementation is outside the macro because it is not generic over O
-impl<'a> Within<Point<'a>> for PointArray {
-    fn is_within(&self, rhs: &Point<'a>) -> BooleanArray {
+impl<'a> Within<Point> for PointArray {
+    fn is_within(&self, rhs: &Point) -> BooleanArray {
         let mut output_array = BooleanBuilder::with_capacity(self.len());
 
         self.iter_geo().for_each(|maybe_point| {
@@ -175,51 +175,51 @@ macro_rules! iter_geo_impl_geoarrow_scalar {
 }
 
 // Implementations on PointArray
-iter_geo_impl_geoarrow_scalar!(PointArray, LineString<'a>);
-iter_geo_impl_geoarrow_scalar!(PointArray, Polygon<'a>);
-iter_geo_impl_geoarrow_scalar!(PointArray, MultiPoint<'a>);
-iter_geo_impl_geoarrow_scalar!(PointArray, MultiLineString<'a>);
-iter_geo_impl_geoarrow_scalar!(PointArray, MultiPolygon<'a>);
+iter_geo_impl_geoarrow_scalar!(PointArray, LineString);
+iter_geo_impl_geoarrow_scalar!(PointArray, Polygon);
+iter_geo_impl_geoarrow_scalar!(PointArray, MultiPoint);
+iter_geo_impl_geoarrow_scalar!(PointArray, MultiLineString);
+iter_geo_impl_geoarrow_scalar!(PointArray, MultiPolygon);
 
 // Implementations on LineStringArray
-iter_geo_impl_geoarrow_scalar!(LineStringArray, Point<'a>);
-iter_geo_impl_geoarrow_scalar!(LineStringArray, LineString<'a>);
-iter_geo_impl_geoarrow_scalar!(LineStringArray, Polygon<'a>);
-iter_geo_impl_geoarrow_scalar!(LineStringArray, MultiPoint<'a>);
-iter_geo_impl_geoarrow_scalar!(LineStringArray, MultiLineString<'a>);
-iter_geo_impl_geoarrow_scalar!(LineStringArray, MultiPolygon<'a>);
+iter_geo_impl_geoarrow_scalar!(LineStringArray, Point);
+iter_geo_impl_geoarrow_scalar!(LineStringArray, LineString);
+iter_geo_impl_geoarrow_scalar!(LineStringArray, Polygon);
+iter_geo_impl_geoarrow_scalar!(LineStringArray, MultiPoint);
+iter_geo_impl_geoarrow_scalar!(LineStringArray, MultiLineString);
+iter_geo_impl_geoarrow_scalar!(LineStringArray, MultiPolygon);
 
 // Implementations on PolygonArray
-iter_geo_impl_geoarrow_scalar!(PolygonArray, Point<'a>);
-iter_geo_impl_geoarrow_scalar!(PolygonArray, LineString<'a>);
-iter_geo_impl_geoarrow_scalar!(PolygonArray, Polygon<'a>);
-iter_geo_impl_geoarrow_scalar!(PolygonArray, MultiPoint<'a>);
-iter_geo_impl_geoarrow_scalar!(PolygonArray, MultiLineString<'a>);
-iter_geo_impl_geoarrow_scalar!(PolygonArray, MultiPolygon<'a>);
+iter_geo_impl_geoarrow_scalar!(PolygonArray, Point);
+iter_geo_impl_geoarrow_scalar!(PolygonArray, LineString);
+iter_geo_impl_geoarrow_scalar!(PolygonArray, Polygon);
+iter_geo_impl_geoarrow_scalar!(PolygonArray, MultiPoint);
+iter_geo_impl_geoarrow_scalar!(PolygonArray, MultiLineString);
+iter_geo_impl_geoarrow_scalar!(PolygonArray, MultiPolygon);
 
 // Implementations on MultiPointArray
-iter_geo_impl_geoarrow_scalar!(MultiPointArray, Point<'a>);
-iter_geo_impl_geoarrow_scalar!(MultiPointArray, LineString<'a>);
-iter_geo_impl_geoarrow_scalar!(MultiPointArray, Polygon<'a>);
-iter_geo_impl_geoarrow_scalar!(MultiPointArray, MultiPoint<'a>);
-iter_geo_impl_geoarrow_scalar!(MultiPointArray, MultiLineString<'a>);
-iter_geo_impl_geoarrow_scalar!(MultiPointArray, MultiPolygon<'a>);
+iter_geo_impl_geoarrow_scalar!(MultiPointArray, Point);
+iter_geo_impl_geoarrow_scalar!(MultiPointArray, LineString);
+iter_geo_impl_geoarrow_scalar!(MultiPointArray, Polygon);
+iter_geo_impl_geoarrow_scalar!(MultiPointArray, MultiPoint);
+iter_geo_impl_geoarrow_scalar!(MultiPointArray, MultiLineString);
+iter_geo_impl_geoarrow_scalar!(MultiPointArray, MultiPolygon);
 
 // Implementations on MultiLineStringArray
-iter_geo_impl_geoarrow_scalar!(MultiLineStringArray, Point<'a>);
-iter_geo_impl_geoarrow_scalar!(MultiLineStringArray, LineString<'a>);
-iter_geo_impl_geoarrow_scalar!(MultiLineStringArray, Polygon<'a>);
-iter_geo_impl_geoarrow_scalar!(MultiLineStringArray, MultiPoint<'a>);
-iter_geo_impl_geoarrow_scalar!(MultiLineStringArray, MultiLineString<'a>);
-iter_geo_impl_geoarrow_scalar!(MultiLineStringArray, MultiPolygon<'a>);
+iter_geo_impl_geoarrow_scalar!(MultiLineStringArray, Point);
+iter_geo_impl_geoarrow_scalar!(MultiLineStringArray, LineString);
+iter_geo_impl_geoarrow_scalar!(MultiLineStringArray, Polygon);
+iter_geo_impl_geoarrow_scalar!(MultiLineStringArray, MultiPoint);
+iter_geo_impl_geoarrow_scalar!(MultiLineStringArray, MultiLineString);
+iter_geo_impl_geoarrow_scalar!(MultiLineStringArray, MultiPolygon);
 
 // Implementations on MultiPolygonArray
-iter_geo_impl_geoarrow_scalar!(MultiPolygonArray, Point<'a>);
-iter_geo_impl_geoarrow_scalar!(MultiPolygonArray, LineString<'a>);
-iter_geo_impl_geoarrow_scalar!(MultiPolygonArray, Polygon<'a>);
-iter_geo_impl_geoarrow_scalar!(MultiPolygonArray, MultiPoint<'a>);
-iter_geo_impl_geoarrow_scalar!(MultiPolygonArray, MultiLineString<'a>);
-iter_geo_impl_geoarrow_scalar!(MultiPolygonArray, MultiPolygon<'a>);
+iter_geo_impl_geoarrow_scalar!(MultiPolygonArray, Point);
+iter_geo_impl_geoarrow_scalar!(MultiPolygonArray, LineString);
+iter_geo_impl_geoarrow_scalar!(MultiPolygonArray, Polygon);
+iter_geo_impl_geoarrow_scalar!(MultiPolygonArray, MultiPoint);
+iter_geo_impl_geoarrow_scalar!(MultiPolygonArray, MultiLineString);
+iter_geo_impl_geoarrow_scalar!(MultiPolygonArray, MultiPolygon);
 
 // ┌─────────────────────────────────────┐
 // │ Implementations for RHS geo scalars │

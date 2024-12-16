@@ -607,7 +607,7 @@ impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for MixedGeometryArray {
 }
 
 impl<'a> ArrayAccessor<'a> for MixedGeometryArray {
-    type Item = Geometry<'a>;
+    type Item = Geometry;
     type ItemGeo = geo::Geometry;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {

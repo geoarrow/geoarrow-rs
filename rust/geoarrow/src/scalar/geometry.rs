@@ -11,18 +11,18 @@ use rstar::{RTreeObject, AABB};
 
 /// A Geometry is an enum over the various underlying _zero copy_ GeoArrow scalar types.
 #[derive(Debug)]
-pub enum Geometry<'a> {
-    Point(crate::scalar::Point<'a>),
-    LineString(crate::scalar::LineString<'a>),
-    Polygon(crate::scalar::Polygon<'a>),
-    MultiPoint(crate::scalar::MultiPoint<'a>),
-    MultiLineString(crate::scalar::MultiLineString<'a>),
-    MultiPolygon(crate::scalar::MultiPolygon<'a>),
-    GeometryCollection(crate::scalar::GeometryCollection<'a>),
-    Rect(crate::scalar::Rect<'a>),
+pub enum Geometry {
+    Point(crate::scalar::Point),
+    LineString(crate::scalar::LineString),
+    Polygon(crate::scalar::Polygon),
+    MultiPoint(crate::scalar::MultiPoint),
+    MultiLineString(crate::scalar::MultiLineString),
+    MultiPolygon(crate::scalar::MultiPolygon),
+    GeometryCollection(crate::scalar::GeometryCollection),
+    Rect(crate::scalar::Rect),
 }
 
-impl NativeScalar for Geometry<'_> {
+impl NativeScalar for Geometry {
     type ScalarGeo = geo::Geometry;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -48,38 +48,38 @@ impl NativeScalar for Geometry<'_> {
     }
 }
 
-impl GeometryTrait for Geometry<'_> {
+impl GeometryTrait for Geometry {
     type T = f64;
     type PointType<'b>
-        = Point<'b>
+        = Point
     where
         Self: 'b;
     type LineStringType<'b>
-        = LineString<'b>
+        = LineString
     where
         Self: 'b;
     type PolygonType<'b>
-        = Polygon<'b>
+        = Polygon
     where
         Self: 'b;
     type MultiPointType<'b>
-        = MultiPoint<'b>
+        = MultiPoint
     where
         Self: 'b;
     type MultiLineStringType<'b>
-        = MultiLineString<'b>
+        = MultiLineString
     where
         Self: 'b;
     type MultiPolygonType<'b>
-        = MultiPolygon<'b>
+        = MultiPolygon
     where
         Self: 'b;
     type GeometryCollectionType<'b>
-        = GeometryCollection<'b>
+        = GeometryCollection
     where
         Self: 'b;
     type RectType<'b>
-        = Rect<'b>
+        = Rect
     where
         Self: 'b;
     type LineType<'b>
@@ -108,14 +108,14 @@ impl GeometryTrait for Geometry<'_> {
         &self,
     ) -> geo_traits::GeometryType<
         '_,
-        Point<'_>,
-        LineString<'_>,
-        Polygon<'_>,
-        MultiPoint<'_>,
-        MultiLineString<'_>,
-        MultiPolygon<'_>,
-        GeometryCollection<'_>,
-        Rect<'_>,
+        Point,
+        LineString,
+        Polygon,
+        MultiPoint,
+        MultiLineString,
+        MultiPolygon,
+        GeometryCollection,
+        Rect,
         UnimplementedTriangle<f64>,
         UnimplementedLine<f64>,
     > {
@@ -132,38 +132,38 @@ impl GeometryTrait for Geometry<'_> {
     }
 }
 
-impl<'a> GeometryTrait for &'a Geometry<'a> {
+impl<'a> GeometryTrait for &'a Geometry {
     type T = f64;
     type PointType<'b>
-        = Point<'b>
+        = Point
     where
         Self: 'b;
     type LineStringType<'b>
-        = LineString<'b>
+        = LineString
     where
         Self: 'b;
     type PolygonType<'b>
-        = Polygon<'b>
+        = Polygon
     where
         Self: 'b;
     type MultiPointType<'b>
-        = MultiPoint<'b>
+        = MultiPoint
     where
         Self: 'b;
     type MultiLineStringType<'b>
-        = MultiLineString<'b>
+        = MultiLineString
     where
         Self: 'b;
     type MultiPolygonType<'b>
-        = MultiPolygon<'b>
+        = MultiPolygon
     where
         Self: 'b;
     type GeometryCollectionType<'b>
-        = GeometryCollection<'b>
+        = GeometryCollection
     where
         Self: 'b;
     type RectType<'b>
-        = Rect<'b>
+        = Rect
     where
         Self: 'b;
     type LineType<'b>
@@ -192,14 +192,14 @@ impl<'a> GeometryTrait for &'a Geometry<'a> {
         &self,
     ) -> geo_traits::GeometryType<
         'a,
-        Point<'a>,
-        LineString<'a>,
-        Polygon<'a>,
-        MultiPoint<'a>,
-        MultiLineString<'a>,
-        MultiPolygon<'a>,
-        GeometryCollection<'a>,
-        Rect<'a>,
+        Point,
+        LineString,
+        Polygon,
+        MultiPoint,
+        MultiLineString,
+        MultiPolygon,
+        GeometryCollection,
+        Rect,
         UnimplementedTriangle<f64>,
         UnimplementedLine<f64>,
     > {
@@ -216,7 +216,7 @@ impl<'a> GeometryTrait for &'a Geometry<'a> {
     }
 }
 
-impl RTreeObject for Geometry<'_> {
+impl RTreeObject for Geometry {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -233,19 +233,19 @@ impl RTreeObject for Geometry<'_> {
     }
 }
 
-impl From<Geometry<'_>> for geo::Geometry {
-    fn from(value: Geometry<'_>) -> Self {
+impl From<Geometry> for geo::Geometry {
+    fn from(value: Geometry) -> Self {
         (&value).into()
     }
 }
 
-impl From<&Geometry<'_>> for geo::Geometry {
-    fn from(value: &Geometry<'_>) -> Self {
+impl From<&Geometry> for geo::Geometry {
+    fn from(value: &Geometry) -> Self {
         ToGeoGeometry::to_geometry(value)
     }
 }
 
-impl<G: GeometryTrait<T = f64>> PartialEq<G> for Geometry<'_> {
+impl<G: GeometryTrait<T = f64>> PartialEq<G> for Geometry {
     fn eq(&self, other: &G) -> bool {
         geometry_eq(self, other)
     }

@@ -3,10 +3,10 @@ use crate::scalar::Coord;
 use geo_traits::CoordTrait;
 use geos::{CoordDimensions, CoordSeq};
 
-impl<'a> TryFrom<&'a Coord<'_>> for geos::CoordSeq {
+impl<'a> TryFrom<&'a Coord> for geos::CoordSeq {
     type Error = geos::Error;
 
-    fn try_from(coord: &'a Coord<'_>) -> std::result::Result<geos::CoordSeq, geos::Error> {
+    fn try_from(coord: &'a Coord) -> std::result::Result<geos::CoordSeq, geos::Error> {
         coord_to_geos(coord)
     }
 }

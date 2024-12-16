@@ -2,7 +2,6 @@ use crate::algorithm::native::bounding_rect::bounding_rect_polygon;
 use crate::algorithm::native::eq::polygon_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{LineStringArray, PolygonArray};
-use crate::datatypes::Dimension;
 use crate::scalar::LineString;
 use crate::trait_::{ArrayAccessor, NativeScalar};
 use crate::ArrayBase;
@@ -74,10 +73,7 @@ impl<'a> PolygonTrait for Polygon {
         Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        match self.array.coords.dim() {
-            Dimension::XY => geo_traits::Dimensions::Xy,
-            Dimension::XYZ => geo_traits::Dimensions::Xyz,
-        }
+        self.array.coords.dim().into()
     }
 
     fn exterior(&self) -> Option<Self::RingType<'_>> {
@@ -119,10 +115,7 @@ impl<'a> PolygonTrait for &'a Polygon {
         Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        match self.array.coords.dim() {
-            Dimension::XY => geo_traits::Dimensions::Xy,
-            Dimension::XYZ => geo_traits::Dimensions::Xyz,
-        }
+        self.array.coords.dim().into()
     }
 
     fn exterior(&self) -> Option<Self::RingType<'_>> {

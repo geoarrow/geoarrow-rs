@@ -31,10 +31,10 @@ pub struct RectArray {
     metadata: Arc<ArrayMetadata>,
 
     /// Separated arrays for each of the "lower" dimensions
-    lower: SeparatedCoordBuffer,
+    pub(crate) lower: SeparatedCoordBuffer,
 
     /// Separated arrays for each of the "upper" dimensions
-    upper: SeparatedCoordBuffer,
+    pub(crate) upper: SeparatedCoordBuffer,
 
     validity: Option<NullBuffer>,
 }
@@ -82,6 +82,10 @@ impl RectArray {
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
             metadata: self.metadata(),
         }
+    }
+
+    fn value(&self, index: usize) -> Rect {
+        Rect::new(self.slice(index, 1))
     }
 }
 
@@ -168,11 +172,11 @@ impl GeometryArraySelfMethods for RectArray {
 }
 
 impl<'a> ArrayAccessor<'a> for RectArray {
-    type Item = Rect<'a>;
+    type Item = Rect;
     type ItemGeo = geo::Rect;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        Rect::new(&self.lower, &self.upper, index)
+        self.value(index)
     }
 }
 

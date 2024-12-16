@@ -62,7 +62,7 @@ impl CoordBuffer {
         self.len() == 0
     }
 
-    pub fn value(&self, index: usize) -> Coord<'_> {
+    pub fn value(&self, index: usize) -> Coord {
         match self {
             CoordBuffer::Interleaved(c) => Coord::Interleaved(c.value(index)),
             CoordBuffer::Separated(c) => Coord::Separated(c.value(index)),

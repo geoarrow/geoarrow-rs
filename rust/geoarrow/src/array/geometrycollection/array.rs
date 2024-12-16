@@ -127,6 +127,10 @@ impl GeometryCollectionArray {
             self.metadata,
         )
     }
+
+    fn value(&self, index: usize) -> GeometryCollection {
+        GeometryCollection::new(self.slice(index, 1))
+    }
 }
 
 impl ArrayBase for GeometryCollectionArray {
@@ -214,11 +218,7 @@ impl GeometryArraySelfMethods for GeometryCollectionArray {
 
 impl NativeGeometryAccessor for GeometryCollectionArray {
     unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry {
-        Geometry::GeometryCollection(GeometryCollection::new(
-            &self.array,
-            &self.geom_offsets,
-            index,
-        ))
+        Geometry::GeometryCollection(self.value(index))
     }
 }
 
@@ -228,17 +228,17 @@ impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for GeometryCollectionArr
         &'a self,
         index: usize,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
-        let geom = GeometryCollection::new(&self.array, &self.geom_offsets, index);
+        let geom = self.value(index);
         (&geom).try_into()
     }
 }
 
 impl<'a> ArrayAccessor<'a> for GeometryCollectionArray {
-    type Item = GeometryCollection<'a>;
+    type Item = GeometryCollection;
     type ItemGeo = geo::GeometryCollection;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        GeometryCollection::new(&self.array, &self.geom_offsets, index)
+        self.value(index)
     }
 }
 

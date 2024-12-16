@@ -12,7 +12,7 @@ pub use multipoint::MultiPoint;
 pub use multipolygon::MultiPolygon;
 pub use point::Point;
 pub use polygon::Polygon;
-pub use rect::{OwnedRect, Rect};
+pub use rect::Rect;
 pub use scalar::GeometryScalar;
 
 mod binary;

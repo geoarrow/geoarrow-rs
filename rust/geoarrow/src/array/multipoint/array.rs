@@ -179,6 +179,10 @@ impl MultiPointArray {
             self.metadata,
         )
     }
+
+    fn value(&self, index: usize) -> MultiPoint {
+        MultiPoint::new(self.slice(index, 1))
+    }
 }
 
 impl ArrayBase for MultiPointArray {
@@ -271,7 +275,7 @@ impl GeometryArraySelfMethods for MultiPointArray {
 
 impl NativeGeometryAccessor for MultiPointArray {
     unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry {
-        Geometry::MultiPoint(MultiPoint::new(&self.coords, &self.geom_offsets, index))
+        Geometry::MultiPoint(self.value(index))
     }
 }
 
@@ -281,17 +285,17 @@ impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for MultiPointArray {
         &'a self,
         index: usize,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
-        let geom = MultiPoint::new(&self.coords, &self.geom_offsets, index);
+        let geom = self.value(index);
         (&geom).try_into()
     }
 }
 
 impl<'a> ArrayAccessor<'a> for MultiPointArray {
-    type Item = MultiPoint<'a>;
+    type Item = MultiPoint;
     type ItemGeo = geo::MultiPoint;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        MultiPoint::new(&self.coords, &self.geom_offsets, index)
+        self.value(index)
     }
 }
 

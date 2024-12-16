@@ -4,10 +4,10 @@ use crate::scalar::Point;
 use geo_traits::PointTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<'a> TryFrom<&'a Point<'_>> for geos::Geometry {
+impl<'a> TryFrom<&'a Point> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(point: &'a Point<'_>) -> std::result::Result<geos::Geometry, geos::Error> {
+    fn try_from(point: &'a Point) -> std::result::Result<geos::Geometry, geos::Error> {
         to_geos_point(point)
     }
 }

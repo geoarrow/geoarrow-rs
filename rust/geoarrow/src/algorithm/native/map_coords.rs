@@ -32,7 +32,7 @@ pub trait MapCoords {
 
 // Scalar impls
 
-impl MapCoords for Coord<'_> {
+impl MapCoords for Coord {
     type Output = geo::Coord;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
@@ -44,7 +44,7 @@ impl MapCoords for Coord<'_> {
     }
 }
 
-impl MapCoords for Point<'_> {
+impl MapCoords for Point {
     type Output = geo::Point;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
@@ -56,7 +56,7 @@ impl MapCoords for Point<'_> {
     }
 }
 
-impl MapCoords for LineString<'_> {
+impl MapCoords for LineString {
     type Output = geo::LineString;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
@@ -72,7 +72,7 @@ impl MapCoords for LineString<'_> {
     }
 }
 
-impl MapCoords for Polygon<'_> {
+impl MapCoords for Polygon {
     type Output = geo::Polygon;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
@@ -94,7 +94,7 @@ impl MapCoords for Polygon<'_> {
     }
 }
 
-impl MapCoords for MultiPoint<'_> {
+impl MapCoords for MultiPoint {
     type Output = geo::MultiPoint;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
@@ -110,7 +110,7 @@ impl MapCoords for MultiPoint<'_> {
     }
 }
 
-impl MapCoords for MultiLineString<'_> {
+impl MapCoords for MultiLineString {
     type Output = geo::MultiLineString;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
@@ -126,7 +126,7 @@ impl MapCoords for MultiLineString<'_> {
     }
 }
 
-impl MapCoords for MultiPolygon<'_> {
+impl MapCoords for MultiPolygon {
     // TODO: support empty polygons within a multi polygon
     type Output = geo::MultiPolygon;
 
@@ -143,7 +143,7 @@ impl MapCoords for MultiPolygon<'_> {
     }
 }
 
-impl MapCoords for Geometry<'_> {
+impl MapCoords for Geometry {
     type Output = geo::Geometry;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
@@ -171,7 +171,7 @@ impl MapCoords for Geometry<'_> {
     }
 }
 
-impl MapCoords for GeometryCollection<'_> {
+impl MapCoords for GeometryCollection {
     type Output = geo::GeometryCollection;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
@@ -187,7 +187,7 @@ impl MapCoords for GeometryCollection<'_> {
     }
 }
 
-impl MapCoords for Rect<'_> {
+impl MapCoords for Rect {
     type Output = geo::Rect;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>

@@ -268,7 +268,7 @@ impl PointBuilder {
     }
 
     pub(crate) fn from_wkb<O: OffsetSizeTrait>(
-        wkb_objects: &[Option<WKB<'_, O>>],
+        wkb_objects: &[Option<WKB<O>>],
         dim: Dimension,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
@@ -378,7 +378,7 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for PointBuilder {
 
     fn try_from((value, dim): (WKBArray<O>, Dimension)) -> Result<Self> {
         let metadata = value.metadata.clone();
-        let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
+        let wkb_objects: Vec<Option<WKB<O>>> = value.iter().collect();
         Self::from_wkb(&wkb_objects, dim, Default::default(), metadata)
     }
 }

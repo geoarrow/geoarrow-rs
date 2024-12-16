@@ -98,6 +98,10 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         arr.metadata = metadata;
         arr
     }
+
+    fn value(&self, index: usize) -> WKB<O> {
+        WKB::new(self.slice(index, 1))
+    }
 }
 
 impl<O: OffsetSizeTrait> ArrayBase for WKBArray<O> {
@@ -159,11 +163,11 @@ impl<O: OffsetSizeTrait> SerializedArray for WKBArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> ArrayAccessor<'a> for WKBArray<O> {
-    type Item = WKB<'a, O>;
+    type Item = WKB<O>;
     type ItemGeo = geo::Geometry;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        WKB::new(&self.array, index)
+        self.value(index)
     }
 }
 

@@ -1,58 +1,38 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_multilinestring;
 use crate::algorithm::native::eq::multi_line_string_eq;
 use crate::array::util::OffsetBufferUtils;
-use crate::array::CoordBuffer;
+use crate::array::{LineStringArray, MultiLineStringArray};
 use crate::scalar::LineString;
-use crate::trait_::NativeScalar;
-use arrow_buffer::OffsetBuffer;
+use crate::trait_::{ArrayAccessor, NativeScalar};
+use crate::ArrayBase;
 use geo_traits::to_geo::ToGeoMultiLineString;
 use geo_traits::MultiLineStringTrait;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a MultiLineString
 #[derive(Debug, Clone)]
-pub struct MultiLineString<'a> {
-    pub(crate) coords: &'a CoordBuffer,
-
-    /// Offsets into the ring array where each geometry starts
-    pub(crate) geom_offsets: &'a OffsetBuffer<i32>,
-
-    /// Offsets into the coordinate array where each ring starts
-    pub(crate) ring_offsets: &'a OffsetBuffer<i32>,
-
-    pub(crate) geom_index: usize,
-
+pub struct MultiLineString {
+    array: MultiLineStringArray,
     start_offset: usize,
 }
 
-impl<'a> MultiLineString<'a> {
-    pub fn new(
-        coords: &'a CoordBuffer,
-        geom_offsets: &'a OffsetBuffer<i32>,
-        ring_offsets: &'a OffsetBuffer<i32>,
-        geom_index: usize,
-    ) -> Self {
-        let (start_offset, _) = geom_offsets.start_end(geom_index);
+impl MultiLineString {
+    pub fn new(array: MultiLineStringArray) -> Self {
+        assert_eq!(array.len(), 1);
+        assert!(!array.is_null(0));
+        let (start_offset, _) = array.geom_offsets.start_end(0);
         Self {
-            coords,
-            geom_offsets,
-            ring_offsets,
-            geom_index,
+            array,
             start_offset,
         }
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, OffsetBuffer<i32>, usize) {
-        (
-            self.coords.clone(),
-            self.geom_offsets.clone(),
-            self.ring_offsets.clone(),
-            self.geom_index,
-        )
+    pub fn into_inner(self) -> MultiLineStringArray {
+        self.array
     }
 }
 
-impl NativeScalar for MultiLineString<'_> {
+impl NativeScalar for MultiLineString {
     type ScalarGeo = geo::MultiLineString;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -69,67 +49,79 @@ impl NativeScalar for MultiLineString<'_> {
     }
 }
 
-impl<'a> MultiLineStringTrait for MultiLineString<'a> {
+impl<'a> MultiLineStringTrait for MultiLineString {
     type T = f64;
     type LineStringType<'b>
-        = LineString<'a>
+        = LineString
     where
         Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        self.coords.dim().into()
+        self.array.coords.dim().into()
     }
 
     fn num_line_strings(&self) -> usize {
-        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        let (start, end) = self.array.geom_offsets.start_end(0);
         end - start
     }
 
     unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
-        LineString::new(self.coords, self.ring_offsets, self.start_offset + i)
+        let arr = LineStringArray::new(
+            self.array.coords.clone(),
+            self.array.ring_offsets.clone(),
+            None,
+            Default::default(),
+        );
+        arr.value(self.start_offset + i)
     }
 }
 
-impl<'a> MultiLineStringTrait for &'a MultiLineString<'a> {
+impl<'a> MultiLineStringTrait for &'a MultiLineString {
     type T = f64;
     type LineStringType<'b>
-        = LineString<'a>
+        = LineString
     where
         Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        self.coords.dim().into()
+        self.array.coords.dim().into()
     }
 
     fn num_line_strings(&self) -> usize {
-        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        let (start, end) = self.array.geom_offsets.start_end(0);
         end - start
     }
 
     unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
-        LineString::new(self.coords, self.ring_offsets, self.start_offset + i)
+        let arr = LineStringArray::new(
+            self.array.coords.clone(),
+            self.array.ring_offsets.clone(),
+            None,
+            Default::default(),
+        );
+        arr.value(self.start_offset + i)
     }
 }
 
-impl From<MultiLineString<'_>> for geo::MultiLineString {
-    fn from(value: MultiLineString<'_>) -> Self {
+impl From<MultiLineString> for geo::MultiLineString {
+    fn from(value: MultiLineString) -> Self {
         (&value).into()
     }
 }
 
-impl From<&MultiLineString<'_>> for geo::MultiLineString {
-    fn from(value: &MultiLineString<'_>) -> Self {
+impl From<&MultiLineString> for geo::MultiLineString {
+    fn from(value: &MultiLineString) -> Self {
         value.to_multi_line_string()
     }
 }
 
-impl From<MultiLineString<'_>> for geo::Geometry {
-    fn from(value: MultiLineString<'_>) -> Self {
+impl From<MultiLineString> for geo::Geometry {
+    fn from(value: MultiLineString) -> Self {
         geo::Geometry::MultiLineString(value.into())
     }
 }
 
-impl RTreeObject for MultiLineString<'_> {
+impl RTreeObject for MultiLineString {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -138,7 +130,7 @@ impl RTreeObject for MultiLineString<'_> {
     }
 }
 
-impl<G: MultiLineStringTrait<T = f64>> PartialEq<G> for MultiLineString<'_> {
+impl<G: MultiLineStringTrait<T = f64>> PartialEq<G> for MultiLineString {
     fn eq(&self, other: &G) -> bool {
         multi_line_string_eq(self, other)
     }

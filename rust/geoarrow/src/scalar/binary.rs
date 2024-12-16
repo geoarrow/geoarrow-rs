@@ -1,6 +1,8 @@
+use crate::array::WKBArray;
 use crate::error::Result;
 use crate::trait_::NativeScalar;
-use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
+use crate::ArrayBase;
+use arrow_array::OffsetSizeTrait;
 use geo::BoundingRect;
 use geo_traits::to_geo::ToGeoGeometry;
 use geo_traits::GeometryTrait;
@@ -11,15 +13,14 @@ use rstar::{RTreeObject, AABB};
 /// This is zero-cost to _create_ from a [WKBArray] but the WKB has not been preprocessed yet, so
 /// it's not constant-time to access coordinate values.
 #[derive(Debug, Clone)]
-pub struct WKB<'a, O: OffsetSizeTrait> {
-    pub(crate) arr: &'a GenericBinaryArray<O>,
-    pub(crate) geom_index: usize,
-}
+pub struct WKB<O: OffsetSizeTrait>(WKBArray<O>);
 
-impl<'a, O: OffsetSizeTrait> WKB<'a, O> {
+impl<O: OffsetSizeTrait> WKB<O> {
     /// Construct a new WKB.
-    pub(crate) fn new(arr: &'a GenericBinaryArray<O>, geom_index: usize) -> Self {
-        Self { arr, geom_index }
+    pub(crate) fn new(array: WKBArray<O>) -> Self {
+        assert_eq!(array.len(), 1);
+        assert!(!array.is_null(0));
+        Self(array)
     }
 
     /// Access the byte slice of this WKB object.
@@ -27,10 +28,8 @@ impl<'a, O: OffsetSizeTrait> WKB<'a, O> {
         self.as_ref()
     }
 
-    pub fn into_owned_inner(self) -> (GenericBinaryArray<O>, usize) {
-        // TODO: hard slice?
-        // let owned = self.into_owned();
-        (self.arr.clone(), self.geom_index)
+    pub fn into_inner(self) -> WKBArray<O> {
+        self.0
     }
 
     pub fn parse(&self) -> Result<impl GeometryTrait<T = f64> + use<'_, O>> {
@@ -38,7 +37,7 @@ impl<'a, O: OffsetSizeTrait> WKB<'a, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> NativeScalar for WKB<'_, O> {
+impl<O: OffsetSizeTrait> NativeScalar for WKB<O> {
     type ScalarGeo = geo::Geometry;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -55,39 +54,39 @@ impl<O: OffsetSizeTrait> NativeScalar for WKB<'_, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> AsRef<[u8]> for WKB<'_, O> {
+impl<O: OffsetSizeTrait> AsRef<[u8]> for WKB<O> {
     fn as_ref(&self) -> &[u8] {
-        self.arr.value(self.geom_index)
+        self.0.array.value(0)
     }
 }
 
-// impl<O: OffsetSizeTrait> TryFrom<&WKB<'_, O>> for geo::Geometry {
+// impl<O: OffsetSizeTrait> TryFrom<&WKB<O>> for geo::Geometry {
 //     type Error = GeoArrowError;
-//     fn try_from(value: &WKB<'_, O>) -> std::result::Result<Self, Self::Error> {
+//     fn try_from(value: &WKB<O>) -> std::result::Result<Self, Self::Error> {
 //         Ok(geometry_to_geo(&value.parse()?))
 //     }
 // }
 
-// impl<O: OffsetSizeTrait> TryFrom<WKB<'_, O>> for geo::Geometry {
+// impl<O: OffsetSizeTrait> TryFrom<WKB<O>> for geo::Geometry {
 //     type Error = GeoArrowError;
-//     fn try_from(value: WKB<'_, O>) -> std::result::Result<Self, Self::Error> {
+//     fn try_from(value: WKB<O>) -> std::result::Result<Self, Self::Error> {
 //         (&value).try_into()
 //     }
 // }
 
-impl<O: OffsetSizeTrait> From<&WKB<'_, O>> for geo::Geometry {
-    fn from(value: &WKB<'_, O>) -> Self {
+impl<O: OffsetSizeTrait> From<&WKB<O>> for geo::Geometry {
+    fn from(value: &WKB<O>) -> Self {
         value.parse().unwrap().to_geometry()
     }
 }
 
-impl<O: OffsetSizeTrait> From<WKB<'_, O>> for geo::Geometry {
-    fn from(value: WKB<'_, O>) -> Self {
+impl<O: OffsetSizeTrait> From<WKB<O>> for geo::Geometry {
+    fn from(value: WKB<O>) -> Self {
         (&value).into()
     }
 }
 
-impl<O: OffsetSizeTrait> RTreeObject for WKB<'_, O> {
+impl<O: OffsetSizeTrait> RTreeObject for WKB<O> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -99,8 +98,8 @@ impl<O: OffsetSizeTrait> RTreeObject for WKB<'_, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> PartialEq for WKB<'_, O> {
+impl<O: OffsetSizeTrait> PartialEq for WKB<O> {
     fn eq(&self, other: &Self) -> bool {
-        self.arr.value(self.geom_index) == other.arr.value(other.geom_index)
+        self.0.array.value(0) == other.0.array.value(0)
     }
 }

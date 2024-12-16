@@ -496,7 +496,7 @@ impl<'a> MixedGeometryBuilder {
     }
 
     pub(crate) fn from_wkb<W: OffsetSizeTrait>(
-        wkb_objects: &[Option<WKB<'_, W>>],
+        wkb_objects: &[Option<WKB<W>>],
         dim: Dimension,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
@@ -567,7 +567,7 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MixedGeometryBuil
         );
 
         let metadata = value.metadata.clone();
-        let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
+        let wkb_objects: Vec<Option<WKB<O>>> = value.iter().collect();
         Self::from_wkb(&wkb_objects, dim, Default::default(), metadata, true)
     }
 }
