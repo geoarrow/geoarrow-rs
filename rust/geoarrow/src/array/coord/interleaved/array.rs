@@ -116,15 +116,17 @@ impl InterleavedCoordBuffer {
         self.len() == 0
     }
 
-    pub fn value(&self, index: usize) -> InterleavedCoord<'_> {
+    pub fn value(&self, index: usize) -> InterleavedCoord {
         assert!(index <= self.len());
         self.value_unchecked(index)
     }
 
-    pub fn value_unchecked(&self, index: usize) -> InterleavedCoord<'_> {
+    pub fn value_unchecked(&self, index: usize) -> InterleavedCoord {
         InterleavedCoord {
-            coords: &self.coords,
-            i: index,
+            coords: self
+                .coords
+                .clone()
+                .slice(index * self.dim.size(), self.dim.size()),
             dim: self.dim,
         }
     }

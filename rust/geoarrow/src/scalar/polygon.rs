@@ -1,59 +1,55 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_polygon;
 use crate::algorithm::native::eq::polygon_eq;
 use crate::array::util::OffsetBufferUtils;
-use crate::array::CoordBuffer;
+use crate::array::{LineStringArray, PolygonArray};
 use crate::datatypes::Dimension;
 use crate::scalar::LineString;
-use crate::trait_::NativeScalar;
-use arrow_buffer::OffsetBuffer;
+use crate::trait_::{ArrayAccessor, NativeScalar};
+use crate::ArrayBase;
 use geo_traits::to_geo::ToGeoPolygon;
 use geo_traits::PolygonTrait;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a Polygon
+///
+/// This is stored as a [PolygonArray] with length 1. That element may not be null.
 #[derive(Debug, Clone)]
-pub struct Polygon<'a> {
-    pub(crate) coords: &'a CoordBuffer,
-
-    /// Offsets into the ring array where each geometry starts
-    pub(crate) geom_offsets: &'a OffsetBuffer<i32>,
-
-    /// Offsets into the coordinate array where each ring starts
-    pub(crate) ring_offsets: &'a OffsetBuffer<i32>,
-
-    pub(crate) geom_index: usize,
-
+pub struct Polygon {
+    array: PolygonArray,
     start_offset: usize,
 }
 
-impl<'a> Polygon<'a> {
-    pub fn new(
-        coords: &'a CoordBuffer,
-        geom_offsets: &'a OffsetBuffer<i32>,
-        ring_offsets: &'a OffsetBuffer<i32>,
-        geom_index: usize,
-    ) -> Self {
-        let (start_offset, _) = geom_offsets.start_end(geom_index);
+// <'a> {
+//     pub(crate) coords: &'a CoordBuffer,
+
+//     /// Offsets into the ring array where each geometry starts
+//     pub(crate) geom_offsets: &'a OffsetBuffer<i32>,
+
+//     /// Offsets into the coordinate array where each ring starts
+//     pub(crate) ring_offsets: &'a OffsetBuffer<i32>,
+
+//     pub(crate) geom_index: usize,
+
+//     start_offset: usize,
+// }
+
+impl Polygon {
+    pub fn new(array: PolygonArray) -> Self {
+        assert_eq!(array.len(), 1);
+        assert!(!array.is_null(0));
+        let (start_offset, _) = array.geom_offsets.start_end(0);
         Self {
-            coords,
-            geom_offsets,
-            ring_offsets,
-            geom_index,
+            array,
             start_offset,
         }
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, OffsetBuffer<i32>, usize) {
-        (
-            self.coords.clone(),
-            self.geom_offsets.clone(),
-            self.ring_offsets.clone(),
-            self.geom_index,
-        )
+    pub fn into_inner(self) -> PolygonArray {
+        self.array
     }
 }
 
-impl NativeScalar for Polygon<'_> {
+impl NativeScalar for Polygon {
     type ScalarGeo = geo::Polygon;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -70,91 +66,115 @@ impl NativeScalar for Polygon<'_> {
     }
 }
 
-impl<'a> PolygonTrait for Polygon<'a> {
+impl<'a> PolygonTrait for Polygon {
     type T = f64;
     type RingType<'b>
-        = LineString<'a>
+        = LineString
     where
         Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        match self.coords.dim() {
+        match self.array.coords.dim() {
             Dimension::XY => geo_traits::Dimensions::Xy,
             Dimension::XYZ => geo_traits::Dimensions::Xyz,
         }
     }
 
     fn exterior(&self) -> Option<Self::RingType<'_>> {
-        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        let (start, end) = self.array.geom_offsets.start_end(0);
         if start == end {
             None
         } else {
-            Some(LineString::new(self.coords, self.ring_offsets, start))
+            let arr = LineStringArray::new(
+                self.array.coords.clone(),
+                self.array.ring_offsets.clone(),
+                None,
+                Default::default(),
+            );
+            Some(arr.value(start))
         }
     }
 
     fn num_interiors(&self) -> usize {
-        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        let (start, end) = self.array.geom_offsets.start_end(0);
         end - start - 1
     }
 
     unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
-        LineString::new(self.coords, self.ring_offsets, self.start_offset + 1 + i)
+        let arr = LineStringArray::new(
+            self.array.coords.clone(),
+            self.array.ring_offsets.clone(),
+            None,
+            Default::default(),
+        );
+        arr.value(self.start_offset + 1 + i)
     }
 }
 
-impl<'a> PolygonTrait for &'a Polygon<'a> {
+impl<'a> PolygonTrait for &'a Polygon {
     type T = f64;
     type RingType<'b>
-        = LineString<'a>
+        = LineString
     where
         Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        match self.coords.dim() {
+        match self.array.coords.dim() {
             Dimension::XY => geo_traits::Dimensions::Xy,
             Dimension::XYZ => geo_traits::Dimensions::Xyz,
         }
     }
 
     fn exterior(&self) -> Option<Self::RingType<'_>> {
-        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        let (start, end) = self.array.geom_offsets.start_end(0);
         if start == end {
             None
         } else {
-            Some(LineString::new(self.coords, self.ring_offsets, start))
+            let arr = LineStringArray::new(
+                self.array.coords.clone(),
+                self.array.ring_offsets.clone(),
+                None,
+                Default::default(),
+            );
+            Some(arr.value(start))
         }
     }
 
     fn num_interiors(&self) -> usize {
-        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        let (start, end) = self.array.geom_offsets.start_end(0);
         end - start - 1
     }
 
     unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
-        LineString::new(self.coords, self.ring_offsets, self.start_offset + 1 + i)
+        let arr = LineStringArray::new(
+            self.array.coords.clone(),
+            self.array.ring_offsets.clone(),
+            None,
+            Default::default(),
+        );
+        arr.value(self.start_offset + 1 + i)
     }
 }
 
-impl From<Polygon<'_>> for geo::Polygon {
-    fn from(value: Polygon<'_>) -> Self {
+impl From<Polygon> for geo::Polygon {
+    fn from(value: Polygon) -> Self {
         (&value).into()
     }
 }
 
-impl From<&Polygon<'_>> for geo::Polygon {
-    fn from(value: &Polygon<'_>) -> Self {
+impl From<&Polygon> for geo::Polygon {
+    fn from(value: &Polygon) -> Self {
         value.to_polygon()
     }
 }
 
-impl From<Polygon<'_>> for geo::Geometry {
-    fn from(value: Polygon<'_>) -> Self {
+impl From<Polygon> for geo::Geometry {
+    fn from(value: Polygon) -> Self {
         geo::Geometry::Polygon(value.into())
     }
 }
 
-impl RTreeObject for Polygon<'_> {
+impl RTreeObject for Polygon {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -163,7 +183,7 @@ impl RTreeObject for Polygon<'_> {
     }
 }
 
-impl<G: PolygonTrait<T = f64>> PartialEq<G> for Polygon<'_> {
+impl<G: PolygonTrait<T = f64>> PartialEq<G> for Polygon {
     fn eq(&self, other: &G) -> bool {
         polygon_eq(self, other)
     }

@@ -216,7 +216,7 @@ impl GeometryArraySelfMethods for PointArray {
 
 impl NativeGeometryAccessor for PointArray {
     unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry {
-        Geometry::Point(Point::new(&self.coords, index))
+        Geometry::Point(Point::new(self.slice(index, 1)))
     }
 }
 
@@ -226,17 +226,17 @@ impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for PointArray {
         &'a self,
         index: usize,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
-        let geom = Point::new(&self.coords, index);
+        let geom = Point::new(self.slice(index, 1));
         (&geom).try_into()
     }
 }
 
 impl<'a> ArrayAccessor<'a> for PointArray {
-    type Item = Point<'a>;
+    type Item = Point;
     type ItemGeo = geo::Point;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        Point::new(&self.coords, index)
+        Point::new(self.slice(index, 1))
     }
 }
 

@@ -201,6 +201,10 @@ impl PolygonArray {
             self.metadata,
         )
     }
+
+    fn value(&self, index: usize) -> Polygon {
+        Polygon::new(self.slice(index, 1))
+    }
 }
 
 impl ArrayBase for PolygonArray {
@@ -300,12 +304,7 @@ impl GeometryArraySelfMethods for PolygonArray {
 
 impl NativeGeometryAccessor for PolygonArray {
     unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry {
-        Geometry::Polygon(Polygon::new(
-            &self.coords,
-            &self.geom_offsets,
-            &self.ring_offsets,
-            index,
-        ))
+        Geometry::Polygon(self.value(index))
     }
 }
 
@@ -315,7 +314,7 @@ impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for PolygonArray {
         &'a self,
         index: usize,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
-        let geom = Polygon::new(&self.coords, &self.geom_offsets, &self.ring_offsets, index);
+        let geom = self.value(index);
         (&geom).try_into()
     }
 }
@@ -325,7 +324,7 @@ impl<'a> ArrayAccessor<'a> for PolygonArray {
     type ItemGeo = geo::Polygon;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        Polygon::new(&self.coords, &self.geom_offsets, &self.ring_offsets, index)
+        self.value(index)
     }
 }
 

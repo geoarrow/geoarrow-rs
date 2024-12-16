@@ -1,17 +1,17 @@
-//! GeoArrow scalars, which are references onto a full GeoArrow array at a specific index.
+//! GeoArrow scalars, which are slices of a full GeoArrow array at a specific index.
 
 #![allow(missing_docs)] // FIXME
 
-pub use binary::{OwnedWKB, WKB};
+pub use binary::WKB;
 pub use coord::{Coord, InterleavedCoord, SeparatedCoord};
-pub use geometry::{Geometry, OwnedGeometry};
-pub use geometrycollection::{GeometryCollection, OwnedGeometryCollection};
-pub use linestring::{LineString, OwnedLineString};
-pub use multilinestring::{MultiLineString, OwnedMultiLineString};
-pub use multipoint::{MultiPoint, OwnedMultiPoint};
-pub use multipolygon::{MultiPolygon, OwnedMultiPolygon};
-pub use point::{OwnedPoint, Point};
-pub use polygon::{OwnedPolygon, Polygon};
+pub use geometry::Geometry;
+pub use geometrycollection::GeometryCollection;
+pub use linestring::LineString;
+pub use multilinestring::MultiLineString;
+pub use multipoint::MultiPoint;
+pub use multipolygon::MultiPolygon;
+pub use point::Point;
+pub use polygon::Polygon;
 pub use rect::{OwnedRect, Rect};
 pub use scalar::GeometryScalar;
 

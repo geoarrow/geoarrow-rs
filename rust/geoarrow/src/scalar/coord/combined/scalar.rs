@@ -6,12 +6,12 @@ use geo_traits::to_geo::ToGeoCoord;
 use geo_traits::CoordTrait;
 
 #[derive(Debug, Clone)]
-pub enum Coord<'a> {
-    Separated(SeparatedCoord<'a>),
-    Interleaved(InterleavedCoord<'a>),
+pub enum Coord {
+    Separated(SeparatedCoord),
+    Interleaved(InterleavedCoord),
 }
 
-impl Coord<'_> {
+impl Coord {
     /// Return `true` if all values in the coordinate are f64::NAN
     pub(crate) fn is_nan(&self) -> bool {
         match self {
@@ -21,7 +21,7 @@ impl Coord<'_> {
     }
 }
 
-impl NativeScalar for Coord<'_> {
+impl NativeScalar for Coord {
     type ScalarGeo = geo::Coord;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -39,25 +39,25 @@ impl NativeScalar for Coord<'_> {
     }
 }
 
-impl From<Coord<'_>> for geo::Coord {
+impl From<Coord> for geo::Coord {
     fn from(value: Coord) -> Self {
         (&value).into()
     }
 }
 
-impl From<&Coord<'_>> for geo::Coord {
+impl From<&Coord> for geo::Coord {
     fn from(value: &Coord) -> Self {
         value.to_coord()
     }
 }
 
-impl From<Coord<'_>> for geo::Point {
+impl From<Coord> for geo::Point {
     fn from(value: Coord) -> Self {
         (&value).into()
     }
 }
 
-impl From<&Coord<'_>> for geo::Point {
+impl From<&Coord> for geo::Point {
     fn from(value: &Coord) -> Self {
         match value {
             Coord::Separated(c) => c.into(),
@@ -66,7 +66,7 @@ impl From<&Coord<'_>> for geo::Point {
     }
 }
 
-impl RTreeObject for Coord<'_> {
+impl RTreeObject for Coord {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -77,25 +77,25 @@ impl RTreeObject for Coord<'_> {
     }
 }
 
-impl PartialEq for Coord<'_> {
+impl PartialEq for Coord {
     fn eq(&self, other: &Self) -> bool {
         self.x_y() == other.x_y()
     }
 }
 
-impl PartialEq<InterleavedCoord<'_>> for Coord<'_> {
-    fn eq(&self, other: &InterleavedCoord<'_>) -> bool {
+impl PartialEq<InterleavedCoord> for Coord {
+    fn eq(&self, other: &InterleavedCoord) -> bool {
         self.x_y() == other.x_y()
     }
 }
 
-impl PartialEq<SeparatedCoord<'_>> for Coord<'_> {
-    fn eq(&self, other: &SeparatedCoord<'_>) -> bool {
+impl PartialEq<SeparatedCoord> for Coord {
+    fn eq(&self, other: &SeparatedCoord) -> bool {
         self.x_y() == other.x_y()
     }
 }
 
-impl CoordTrait for Coord<'_> {
+impl CoordTrait for Coord {
     type T = f64;
 
     fn dim(&self) -> geo_traits::Dimensions {
@@ -127,7 +127,7 @@ impl CoordTrait for Coord<'_> {
     }
 }
 
-impl CoordTrait for &Coord<'_> {
+impl CoordTrait for &Coord {
     type T = f64;
 
     fn dim(&self) -> geo_traits::Dimensions {

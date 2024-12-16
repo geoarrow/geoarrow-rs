@@ -9,20 +9,19 @@ use geo_traits::to_geo::ToGeoCoord;
 use geo_traits::CoordTrait;
 
 #[derive(Debug, Clone)]
-pub struct InterleavedCoord<'a> {
-    pub(crate) coords: &'a ScalarBuffer<f64>,
-    pub(crate) i: usize,
+pub struct InterleavedCoord {
+    pub(crate) coords: ScalarBuffer<f64>,
     pub(crate) dim: Dimension,
 }
 
-impl InterleavedCoord<'_> {
+impl InterleavedCoord {
     /// Return `true` if all values in the coordinate are f64::NAN
     pub(crate) fn is_nan(&self) -> bool {
         (0..self.dim.size()).all(|coord_dim| self.nth_or_panic(coord_dim).is_nan())
     }
 }
 
-impl NativeScalar for InterleavedCoord<'_> {
+impl NativeScalar for InterleavedCoord {
     type ScalarGeo = geo::Coord;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -40,32 +39,32 @@ impl NativeScalar for InterleavedCoord<'_> {
     }
 }
 
-impl From<InterleavedCoord<'_>> for geo::Coord {
+impl From<InterleavedCoord> for geo::Coord {
     fn from(value: InterleavedCoord) -> Self {
         (&value).into()
     }
 }
 
-impl From<&InterleavedCoord<'_>> for geo::Coord {
+impl From<&InterleavedCoord> for geo::Coord {
     fn from(value: &InterleavedCoord) -> Self {
         value.to_coord()
     }
 }
 
-impl From<InterleavedCoord<'_>> for geo::Point {
-    fn from(value: InterleavedCoord<'_>) -> Self {
+impl From<InterleavedCoord> for geo::Point {
+    fn from(value: InterleavedCoord) -> Self {
         (&value).into()
     }
 }
 
-impl From<&InterleavedCoord<'_>> for geo::Point {
-    fn from(value: &InterleavedCoord<'_>) -> Self {
+impl From<&InterleavedCoord> for geo::Point {
+    fn from(value: &InterleavedCoord) -> Self {
         let coord: geo::Coord = value.into();
         coord.into()
     }
 }
 
-impl RTreeObject for InterleavedCoord<'_> {
+impl RTreeObject for InterleavedCoord {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -73,19 +72,19 @@ impl RTreeObject for InterleavedCoord<'_> {
     }
 }
 
-impl PartialEq for InterleavedCoord<'_> {
+impl PartialEq for InterleavedCoord {
     fn eq(&self, other: &Self) -> bool {
         coord_eq(self, other)
     }
 }
 
-impl PartialEq<SeparatedCoord<'_>> for InterleavedCoord<'_> {
-    fn eq(&self, other: &SeparatedCoord<'_>) -> bool {
+impl PartialEq<SeparatedCoord> for InterleavedCoord {
+    fn eq(&self, other: &SeparatedCoord) -> bool {
         coord_eq(self, other)
     }
 }
 
-impl CoordTrait for InterleavedCoord<'_> {
+impl CoordTrait for InterleavedCoord {
     type T = f64;
 
     fn dim(&self) -> geo_traits::Dimensions {
@@ -94,19 +93,19 @@ impl CoordTrait for InterleavedCoord<'_> {
 
     fn nth_or_panic(&self, n: usize) -> Self::T {
         debug_assert!(n < self.dim.size());
-        *self.coords.get(self.i * self.dim.size() + n).unwrap()
+        *self.coords.get(n).unwrap()
     }
 
     fn x(&self) -> Self::T {
-        *self.coords.get(self.i * self.dim.size()).unwrap()
+        *self.coords.get(0).unwrap()
     }
 
     fn y(&self) -> Self::T {
-        *self.coords.get(self.i * self.dim.size() + 1).unwrap()
+        *self.coords.get(1).unwrap()
     }
 }
 
-impl CoordTrait for &InterleavedCoord<'_> {
+impl CoordTrait for &InterleavedCoord {
     type T = f64;
 
     fn dim(&self) -> geo_traits::Dimensions {
@@ -115,15 +114,15 @@ impl CoordTrait for &InterleavedCoord<'_> {
 
     fn nth_or_panic(&self, n: usize) -> Self::T {
         debug_assert!(n < self.dim.size());
-        *self.coords.get(self.i * self.dim.size() + n).unwrap()
+        *self.coords.get(n).unwrap()
     }
 
     fn x(&self) -> Self::T {
-        *self.coords.get(self.i * self.dim.size()).unwrap()
+        *self.coords.get(0).unwrap()
     }
 
     fn y(&self) -> Self::T {
-        *self.coords.get(self.i * self.dim.size() + 1).unwrap()
+        *self.coords.get(1).unwrap()
     }
 }
 

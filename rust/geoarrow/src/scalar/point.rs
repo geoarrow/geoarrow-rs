@@ -1,30 +1,32 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_point;
 use crate::algorithm::native::eq::point_eq;
-use crate::array::CoordBuffer;
+use crate::array::PointArray;
 use crate::scalar::Coord;
-use crate::trait_::NativeScalar;
+use crate::trait_::{ArrayAccessor, NativeScalar};
+use crate::{ArrayBase, NativeArray};
 use geo_traits::to_geo::ToGeoPoint;
 use geo_traits::PointTrait;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a Point
+///
+/// This is stored as a [PointArray] with length 1. That element may not be null.
 #[derive(Debug, Clone)]
-pub struct Point<'a> {
-    coords: &'a CoordBuffer,
-    geom_index: usize,
-}
+pub struct Point(PointArray);
 
-impl<'a> Point<'a> {
-    pub fn new(coords: &'a CoordBuffer, geom_index: usize) -> Self {
-        Point { coords, geom_index }
+impl Point {
+    pub fn new(arr: PointArray) -> Self {
+        assert_eq!(arr.len(), 1);
+        assert!(!arr.is_null(0));
+        Self(arr)
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer, usize) {
-        (self.coords.clone(), self.geom_index)
+    pub fn into_inner(self) -> PointArray {
+        self.0
     }
 }
 
-impl NativeScalar for Point<'_> {
+impl NativeScalar for Point {
     type ScalarGeo = geo::Point;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -41,19 +43,19 @@ impl NativeScalar for Point<'_> {
     }
 }
 
-impl<'a> PointTrait for Point<'a> {
+impl PointTrait for Point {
     type T = f64;
     type CoordType<'b>
-        = Coord<'a>
+        = Coord
     where
         Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        self.coords.dim().into()
+        self.0.dimension().into()
     }
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
-        let coord = self.coords.value(self.geom_index);
+        let coord = self.0.value(0);
         if coord.is_nan() {
             None
         } else {
@@ -62,19 +64,19 @@ impl<'a> PointTrait for Point<'a> {
     }
 }
 
-impl<'a> PointTrait for &Point<'a> {
+impl<'a> PointTrait for &Point {
     type T = f64;
     type CoordType<'b>
-        = Coord<'a>
+        = Coord
     where
         Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        self.coords.dim().into()
+        self.0.dimension().into()
     }
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
-        let coord = self.coords.value(self.geom_index);
+        let coord = self.0.value(0);
         if coord.is_nan() {
             None
         } else {
@@ -83,25 +85,25 @@ impl<'a> PointTrait for &Point<'a> {
     }
 }
 
-impl From<Point<'_>> for geo::Point {
-    fn from(value: Point<'_>) -> Self {
+impl From<Point> for geo::Point {
+    fn from(value: Point) -> Self {
         (&value).into()
     }
 }
 
-impl From<&Point<'_>> for geo::Point {
-    fn from(value: &Point<'_>) -> Self {
+impl From<&Point> for geo::Point {
+    fn from(value: &Point) -> Self {
         value.to_point()
     }
 }
 
-impl From<Point<'_>> for geo::Geometry {
-    fn from(value: Point<'_>) -> Self {
+impl From<Point> for geo::Geometry {
+    fn from(value: Point) -> Self {
         geo::Geometry::Point(value.into())
     }
 }
 
-impl RTreeObject for Point<'_> {
+impl RTreeObject for Point {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -110,7 +112,7 @@ impl RTreeObject for Point<'_> {
     }
 }
 
-impl<G: PointTrait<T = f64>> PartialEq<G> for Point<'_> {
+impl<G: PointTrait<T = f64>> PartialEq<G> for Point {
     fn eq(&self, other: &G) -> bool {
         point_eq(self, other)
     }

@@ -183,6 +183,10 @@ impl LineStringArray {
             self.metadata,
         )
     }
+
+    fn value(&self, index: usize) -> LineString {
+        LineString::new(self.slice(index, 1))
+    }
 }
 
 impl ArrayBase for LineStringArray {
@@ -284,7 +288,7 @@ impl GeometryArraySelfMethods for LineStringArray {
 
 impl NativeGeometryAccessor for LineStringArray {
     unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry {
-        Geometry::LineString(LineString::new(&self.coords, &self.geom_offsets, index))
+        Geometry::LineString(self.value(index))
     }
 }
 
@@ -294,17 +298,17 @@ impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for LineStringArray {
         &'a self,
         index: usize,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
-        let geom = LineString::new(&self.coords, &self.geom_offsets, index);
+        let geom = self.value(index);
         (&geom).try_into()
     }
 }
 
 impl<'a> ArrayAccessor<'a> for LineStringArray {
-    type Item = LineString<'a>;
+    type Item = LineString;
     type ItemGeo = geo::LineString;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        LineString::new(&self.coords, &self.geom_offsets, index)
+        self.value(index)
     }
 }
 

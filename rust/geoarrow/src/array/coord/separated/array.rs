@@ -167,15 +167,14 @@ impl SeparatedCoordBuffer {
         self.len() == 0
     }
 
-    pub fn value(&self, index: usize) -> SeparatedCoord<'_> {
+    pub fn value(&self, index: usize) -> SeparatedCoord {
         assert!(index <= self.len());
         self.value_unchecked(index)
     }
 
-    pub fn value_unchecked(&self, index: usize) -> SeparatedCoord<'_> {
+    pub fn value_unchecked(&self, index: usize) -> SeparatedCoord {
         SeparatedCoord {
-            buffers: &self.buffers,
-            i: index,
+            buffers: self.buffers.clone().map(|buffer| buffer.slice(index, 1)),
             dim: self.dim,
         }
     }
