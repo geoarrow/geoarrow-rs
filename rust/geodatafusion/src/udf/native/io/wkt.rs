@@ -153,8 +153,6 @@ mod test {
         register_native(&ctx);
 
         let out = ctx.sql("SELECT ST_GeomFromText('LINESTRING(-71.160281 42.258729,-71.160837 42.259113,-71.161144 42.25932)');").await.unwrap();
-        // TODO: fix this error upstream
-        // https://github.com/apache/datafusion/issues/13762
-        out.show().await.unwrap_err();
+        out.show().await.unwrap();
     }
 }
