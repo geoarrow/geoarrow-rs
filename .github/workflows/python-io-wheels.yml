@@ -57,7 +57,7 @@ jobs:
           target: ${{ matrix.platform.target }}
           # As of Nov 2024, it was necessary to manually specify -i 3.13 to get
           # maturin to find the executable. --find-interpreter did not find it.
-          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -i pypy3.10 --manifest-path ${{ matrix.module }}/Cargo.toml
+          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -i pypy3.10 --manifest-path python/${{ matrix.module }}/Cargo.toml
           sccache: "true"
           manylinux: ${{ matrix.platform.manylinux }}
 
