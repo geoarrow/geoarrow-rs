@@ -8,7 +8,7 @@ use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 use geo_traits::*;
 
-pub trait Unary<'a>: ArrayAccessor<'a> + NativeArray {
+pub trait Unary<'a>: ArrayAccessor + NativeArray {
     // Note: This is derived from arrow-rs here:
     // https://github.com/apache/arrow-rs/blob/3ed7cc61d4157263ef2ab5c2d12bc7890a5315b3/arrow-array/src/array/primitive_array.rs#L753-L767
     fn unary_primitive<F, O>(&'a self, op: F) -> PrimitiveArray<O>
@@ -127,7 +127,7 @@ impl Unary<'_> for GeometryArray {}
 // impl<O: OffsetSizeTrait> Unary<'_> for WKBArray<O> {}
 
 #[allow(dead_code)]
-pub trait UnaryPoint<'a>: ArrayAccessor<'a> + NativeArray {
+pub trait UnaryPoint<'a>: ArrayAccessor + NativeArray {
     fn unary_point<F, G>(&'a self, op: F, output_dim: Dimension) -> PointArray
     where
         G: PointTrait<T = f64> + 'a,

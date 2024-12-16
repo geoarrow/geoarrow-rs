@@ -509,7 +509,7 @@ impl<G: NativeArray> ChunkedGeometryArray<G> {
     }
 }
 
-impl<'a, G: NativeArray + ArrayAccessor<'a>> ChunkedGeometryArray<G> {
+impl<'a, G: NativeArray + ArrayAccessor> ChunkedGeometryArray<G> {
     /// Returns a value from this chunked array, ignoring validity.
     ///
     /// # Examples

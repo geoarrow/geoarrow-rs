@@ -506,7 +506,7 @@ pub trait NativeGEOSGeometryAccessor<'a>: NativeArray {
 ///
 /// The value at null indexes is unspecified, and implementations must not rely on a specific
 /// value such as [`Default::default`] being returned, however, it must not be undefined.
-pub trait ArrayAccessor<'a>: ArrayBase {
+pub trait ArrayAccessor: ArrayBase {
     /// The [geoarrow scalar object][crate::scalar] for this geometry array type.
     type Item: Send + Sync + NativeScalar;
 
@@ -532,7 +532,7 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     /// # Panics
     ///
     /// Panics if the value is outside the bounds of the array.
-    fn value(&'a self, index: usize) -> Self::Item {
+    fn value(&self, index: usize) -> Self::Item {
         assert!(index <= self.len());
         unsafe { self.value_unchecked(index) }
     }
@@ -555,7 +555,7 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     /// # Safety
     ///
     /// Caller is responsible for ensuring that the index is within the bounds of the array
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item;
+    unsafe fn value_unchecked(&self, index: usize) -> Self::Item;
 
     /// Returns the value at slot `i` as an Arrow scalar, considering validity.
     ///
@@ -569,7 +569,7 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// assert!(array.get(0).is_some());
     /// ```
-    fn get(&'a self, index: usize) -> Option<Self::Item> {
+    fn get(&self, index: usize) -> Option<Self::Item> {
         if self.is_null(index) {
             return None;
         }
@@ -595,7 +595,7 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     /// # Safety
     ///
     /// Caller is responsible for ensuring that the index is within the bounds of the array
-    unsafe fn get_unchecked(&'a self, index: usize) -> Option<Self::Item> {
+    unsafe fn get_unchecked(&self, index: usize) -> Option<Self::Item> {
         if self.is_null(index) {
             return None;
         }
@@ -618,7 +618,7 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     /// assert_eq!(value.coord().unwrap().x(), 1.);
     /// assert_eq!(value.coord().unwrap().y(), 2.);
     /// ```
-    fn value_as_geo(&'a self, i: usize) -> Self::ItemGeo {
+    fn value_as_geo(&self, i: usize) -> Self::ItemGeo {
         self.value(i).into()
     }
 
@@ -634,7 +634,7 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// assert!(array.get_as_geo(0).is_some());
     /// ```
-    fn get_as_geo(&'a self, i: usize) -> Option<Self::ItemGeo> {
+    fn get_as_geo(&self, i: usize) -> Option<Self::ItemGeo> {
         if self.is_null(i) {
             return None;
         }
@@ -654,7 +654,7 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// let maybe_points: Vec<Option<_>> = array.iter().collect();
     /// ```
-    fn iter(&'a self) -> impl ExactSizeIterator<Item = Option<Self::Item>> + 'a {
+    fn iter(&self) -> impl ExactSizeIterator<Item = Option<Self::Item>> {
         (0..self.len()).map(|i| unsafe { self.get_unchecked(i) })
     }
 
@@ -670,7 +670,7 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// let points: Vec<_> = array.iter_values().collect();
     /// ```
-    fn iter_values(&'a self) -> impl ExactSizeIterator<Item = Self::Item> + 'a {
+    fn iter_values(&self) -> impl ExactSizeIterator<Item = Self::Item> {
         (0..self.len()).map(|i| unsafe { self.value_unchecked(i) })
     }
 
@@ -686,7 +686,7 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// let maybe_points: Vec<Option<_>> = array.iter_geo().collect();
     /// ```
-    fn iter_geo(&'a self) -> impl ExactSizeIterator<Item = Option<Self::ItemGeo>> + 'a {
+    fn iter_geo(&self) -> impl ExactSizeIterator<Item = Option<Self::ItemGeo>> {
         (0..self.len()).map(|i| unsafe { self.get_unchecked(i) }.map(|x| x.into()))
     }
 
@@ -702,7 +702,7 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// let points: Vec<_> = array.iter_geo_values().collect();
     /// ```
-    fn iter_geo_values(&'a self) -> impl ExactSizeIterator<Item = Self::ItemGeo> + 'a {
+    fn iter_geo_values(&self) -> impl ExactSizeIterator<Item = Self::ItemGeo> {
         (0..self.len()).map(|i| unsafe { self.value_unchecked(i) }.into())
     }
 }

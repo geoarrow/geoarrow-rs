@@ -303,11 +303,11 @@ impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for LineStringArray {
     }
 }
 
-impl<'a> ArrayAccessor<'a> for LineStringArray {
+impl ArrayAccessor for LineStringArray {
     type Item = LineString;
     type ItemGeo = geo::LineString;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+    unsafe fn value_unchecked(&self, index: usize) -> Self::Item {
         self.value(index)
     }
 }

@@ -290,11 +290,11 @@ impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for MultiPointArray {
     }
 }
 
-impl<'a> ArrayAccessor<'a> for MultiPointArray {
+impl ArrayAccessor for MultiPointArray {
     type Item = MultiPoint;
     type ItemGeo = geo::MultiPoint;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+    unsafe fn value_unchecked(&self, index: usize) -> Self::Item {
         self.value(index)
     }
 }

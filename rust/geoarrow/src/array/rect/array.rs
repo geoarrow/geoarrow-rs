@@ -171,11 +171,11 @@ impl GeometryArraySelfMethods for RectArray {
     }
 }
 
-impl<'a> ArrayAccessor<'a> for RectArray {
+impl ArrayAccessor for RectArray {
     type Item = Rect;
     type ItemGeo = geo::Rect;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+    unsafe fn value_unchecked(&self, index: usize) -> Self::Item {
         self.value(index)
     }
 }

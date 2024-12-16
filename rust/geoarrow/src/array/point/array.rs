@@ -231,11 +231,11 @@ impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for PointArray {
     }
 }
 
-impl<'a> ArrayAccessor<'a> for PointArray {
+impl ArrayAccessor for PointArray {
     type Item = Point;
     type ItemGeo = geo::Point;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+    unsafe fn value_unchecked(&self, index: usize) -> Self::Item {
         Point::new(self.slice(index, 1))
     }
 }

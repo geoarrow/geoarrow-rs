@@ -319,11 +319,11 @@ impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for PolygonArray {
     }
 }
 
-impl<'a> ArrayAccessor<'a> for PolygonArray {
+impl ArrayAccessor for PolygonArray {
     type Item = Polygon;
     type ItemGeo = geo::Polygon;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+    unsafe fn value_unchecked(&self, index: usize) -> Self::Item {
         self.value(index)
     }
 }

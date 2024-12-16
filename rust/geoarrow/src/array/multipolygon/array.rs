@@ -369,11 +369,11 @@ impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for MultiPolygonArray {
     }
 }
 
-impl<'a> ArrayAccessor<'a> for MultiPolygonArray {
+impl ArrayAccessor for MultiPolygonArray {
     type Item = MultiPolygon;
     type ItemGeo = geo::MultiPolygon;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+    unsafe fn value_unchecked(&self, index: usize) -> Self::Item {
         self.value(index)
     }
 }

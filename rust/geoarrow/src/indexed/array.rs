@@ -56,7 +56,7 @@ impl<G: NativeArray> IndexedGeometryArray<G> {
     }
 }
 
-impl<'a, G: NativeArray + ArrayAccessor<'a>> IndexedGeometryArray<G> {
+impl<'a, G: NativeArray + ArrayAccessor> IndexedGeometryArray<G> {
     /// Intended for e.g. intersects against a scalar with a single bounding box
     pub fn unary_boolean<F>(&'a self, rhs_rect: &impl RectTrait<T = f64>, op: F) -> BooleanArray
     where
@@ -91,7 +91,7 @@ impl<'a, G: NativeArray + ArrayAccessor<'a>> IndexedGeometryArray<G> {
         op: F,
     ) -> Result<BooleanArray>
     where
-        G2: NativeArray + ArrayAccessor<'a>,
+        G2: NativeArray + ArrayAccessor,
         F: Fn(G::Item, G2::Item) -> Result<bool>,
     {
         if self.len() != other.len() {

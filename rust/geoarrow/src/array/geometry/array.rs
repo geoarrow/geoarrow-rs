@@ -701,11 +701,11 @@ impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for GeometryArray {
     }
 }
 
-impl<'a> ArrayAccessor<'a> for GeometryArray {
+impl ArrayAccessor for GeometryArray {
     type Item = Geometry;
     type ItemGeo = geo::Geometry;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+    unsafe fn value_unchecked(&self, index: usize) -> Self::Item {
         let type_id = self.type_ids[index];
         let offset = self.offsets[index] as usize;
 

@@ -162,11 +162,11 @@ impl<O: OffsetSizeTrait> SerializedArray for WKBArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> ArrayAccessor<'a> for WKBArray<O> {
+impl<O: OffsetSizeTrait> ArrayAccessor for WKBArray<O> {
     type Item = WKB<O>;
     type ItemGeo = geo::Geometry;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+    unsafe fn value_unchecked(&self, index: usize) -> Self::Item {
         self.value(index)
     }
 }

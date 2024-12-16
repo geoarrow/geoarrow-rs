@@ -315,11 +315,11 @@ impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for MultiLineStringArray 
     }
 }
 
-impl<'a> ArrayAccessor<'a> for MultiLineStringArray {
+impl ArrayAccessor for MultiLineStringArray {
     type Item = MultiLineString;
     type ItemGeo = geo::MultiLineString;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+    unsafe fn value_unchecked(&self, index: usize) -> Self::Item {
         self.value(index)
     }
 }
