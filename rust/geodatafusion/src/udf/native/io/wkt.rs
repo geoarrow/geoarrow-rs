@@ -2,7 +2,6 @@ use std::any::Any;
 use std::sync::OnceLock;
 
 use arrow::array::AsArray;
-use arrow_array::Array;
 use arrow_schema::DataType;
 use datafusion::logical_expr::scalar_doc_sections::DOC_SECTION_OTHER;
 use datafusion::logical_expr::{
@@ -131,14 +130,7 @@ fn geom_from_text_impl(args: &[ColumnarValue]) -> GeoDataFusionResult<ColumnarVa
         .unwrap();
     let wkt_arr = WKTArray::new(array.as_string::<i32>().clone(), Default::default());
     let native_arr = read_wkt(&wkt_arr, CoordType::Separated, false)?;
-    dbg!("native_arr");
-
-    let arrow_arr = native_arr.to_array_ref();
-    if let DataType::Union(_fields, mode) = arrow_arr.data_type() {
-        dbg!(mode);
-    }
-
-    Ok(arrow_arr.into())
+    Ok(native_arr.to_array_ref().into())
 }
 
 #[cfg(test)]
@@ -153,8 +145,6 @@ mod test {
         register_native(&ctx);
 
         let out = ctx.sql("SELECT ST_GeomFromText('LINESTRING(-71.160281 42.258729,-71.160837 42.259113,-71.161144 42.25932)');").await.unwrap();
-        // TODO: fix this error upstream
-        // https://github.com/apache/datafusion/issues/13762
-        out.show().await.unwrap_err();
+        out.show().await.unwrap();
     }
 }
