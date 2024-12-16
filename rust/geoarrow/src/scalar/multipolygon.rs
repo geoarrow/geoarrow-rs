@@ -49,7 +49,7 @@ impl NativeScalar for MultiPolygon {
     }
 }
 
-impl<'a> MultiPolygonTrait for MultiPolygon {
+impl MultiPolygonTrait for MultiPolygon {
     type T = f64;
     type PolygonType<'b>
         = Polygon
@@ -77,7 +77,7 @@ impl<'a> MultiPolygonTrait for MultiPolygon {
     }
 }
 
-impl<'a> MultiPolygonTrait for &'a MultiPolygon {
+impl MultiPolygonTrait for &MultiPolygon {
     type T = f64;
     type PolygonType<'b>
         = Polygon

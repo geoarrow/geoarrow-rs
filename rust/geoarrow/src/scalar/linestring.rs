@@ -51,7 +51,7 @@ impl NativeScalar for LineString {
     }
 }
 
-impl<'a> LineStringTrait for LineString {
+impl LineStringTrait for LineString {
     type T = f64;
     type CoordType<'b>
         = Coord
@@ -72,7 +72,7 @@ impl<'a> LineStringTrait for LineString {
     }
 }
 
-impl<'a> LineStringTrait for &'a LineString {
+impl LineStringTrait for &LineString {
     type T = f64;
     type CoordType<'b>
         = Coord

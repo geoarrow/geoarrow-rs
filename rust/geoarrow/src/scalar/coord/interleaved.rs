@@ -97,7 +97,7 @@ impl CoordTrait for InterleavedCoord {
     }
 
     fn x(&self) -> Self::T {
-        *self.coords.get(0).unwrap()
+        *self.coords.first().unwrap()
     }
 
     fn y(&self) -> Self::T {
@@ -118,7 +118,7 @@ impl CoordTrait for &InterleavedCoord {
     }
 
     fn x(&self) -> Self::T {
-        *self.coords.get(0).unwrap()
+        *self.coords.first().unwrap()
     }
 
     fn y(&self) -> Self::T {

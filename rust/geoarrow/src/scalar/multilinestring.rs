@@ -49,7 +49,7 @@ impl NativeScalar for MultiLineString {
     }
 }
 
-impl<'a> MultiLineStringTrait for MultiLineString {
+impl MultiLineStringTrait for MultiLineString {
     type T = f64;
     type LineStringType<'b>
         = LineString
@@ -76,7 +76,7 @@ impl<'a> MultiLineStringTrait for MultiLineString {
     }
 }
 
-impl<'a> MultiLineStringTrait for &'a MultiLineString {
+impl MultiLineStringTrait for &MultiLineString {
     type T = f64;
     type LineStringType<'b>
         = LineString

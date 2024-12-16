@@ -65,7 +65,7 @@ impl NativeScalar for Polygon {
     }
 }
 
-impl<'a> PolygonTrait for Polygon {
+impl PolygonTrait for Polygon {
     type T = f64;
     type RingType<'b>
         = LineString
@@ -107,7 +107,7 @@ impl<'a> PolygonTrait for Polygon {
     }
 }
 
-impl<'a> PolygonTrait for &'a Polygon {
+impl PolygonTrait for &Polygon {
     type T = f64;
     type RingType<'b>
         = LineString

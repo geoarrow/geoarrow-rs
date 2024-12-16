@@ -2,7 +2,7 @@ use crate::algorithm::native::bounding_rect::bounding_rect_point;
 use crate::algorithm::native::eq::point_eq;
 use crate::array::PointArray;
 use crate::scalar::Coord;
-use crate::trait_::{ArrayAccessor, NativeScalar};
+use crate::trait_::NativeScalar;
 use crate::{ArrayBase, NativeArray};
 use geo_traits::to_geo::ToGeoPoint;
 use geo_traits::PointTrait;
@@ -55,7 +55,7 @@ impl PointTrait for Point {
     }
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
-        let coord = self.0.value(0);
+        let coord = self.0.coords.value(0);
         if coord.is_nan() {
             None
         } else {
@@ -64,7 +64,7 @@ impl PointTrait for Point {
     }
 }
 
-impl<'a> PointTrait for &Point {
+impl PointTrait for &Point {
     type T = f64;
     type CoordType<'b>
         = Coord
@@ -76,7 +76,7 @@ impl<'a> PointTrait for &Point {
     }
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
-        let coord = self.0.value(0);
+        let coord = self.0.coords.value(0);
         if coord.is_nan() {
             None
         } else {

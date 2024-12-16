@@ -70,7 +70,7 @@ impl GeometryCollectionTrait for GeometryCollection {
     }
 }
 
-impl<'a> GeometryCollectionTrait for &'a GeometryCollection {
+impl GeometryCollectionTrait for &GeometryCollection {
     type T = f64;
     type GeometryType<'b>
         = Geometry

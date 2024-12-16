@@ -186,7 +186,7 @@ iter_geo_impl!(MultiPolygonArray, PointArray);
 // └─────────────────────────────────┘
 
 // Note: this implementation is outside the macro because it is not generic over O
-impl<'a> EuclideanDistance<Point> for PointArray {
+impl EuclideanDistance<Point> for PointArray {
     /// Minimum distance between two Points
     fn euclidean_distance(&self, other: &Point) -> Float64Array {
         let mut output_array = Float64Builder::with_capacity(self.len());

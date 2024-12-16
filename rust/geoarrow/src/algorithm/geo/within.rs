@@ -142,7 +142,7 @@ iter_geo_impl!(MultiPolygonArray, MultiPolygonArray);
 // └──────────────────────────────────────────┘
 
 // Note: this implementation is outside the macro because it is not generic over O
-impl<'a> Within<Point> for PointArray {
+impl Within<Point> for PointArray {
     fn is_within(&self, rhs: &Point) -> BooleanArray {
         let mut output_array = BooleanBuilder::with_capacity(self.len());
 

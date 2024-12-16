@@ -44,7 +44,7 @@ impl NativeScalar for Rect {
 }
 
 // TODO: support 3d rects
-impl<'a> RectTrait for Rect {
+impl RectTrait for Rect {
     type T = f64;
     type CoordType<'b>
         = SeparatedCoord

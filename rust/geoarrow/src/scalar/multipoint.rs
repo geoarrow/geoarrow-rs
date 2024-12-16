@@ -49,7 +49,7 @@ impl NativeScalar for MultiPoint {
     }
 }
 
-impl<'a> MultiPointTrait for MultiPoint {
+impl MultiPointTrait for MultiPoint {
     type T = f64;
     type PointType<'b>
         = Point
@@ -71,7 +71,7 @@ impl<'a> MultiPointTrait for MultiPoint {
     }
 }
 
-impl<'a> MultiPointTrait for &'a MultiPoint {
+impl MultiPointTrait for &MultiPoint {
     type T = f64;
     type PointType<'b>
         = Point
