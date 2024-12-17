@@ -175,6 +175,41 @@ impl SeparatedCoordBufferBuilder {
         Ok(())
     }
 
+    pub fn push_xy(&mut self, x: f64, y: f64) {
+        self.try_push_xy(x, y).unwrap()
+    }
+
+    pub fn try_push_xy(&mut self, x: f64, y: f64) -> Result<()> {
+        if !matches!(self.dim, Dimension::XY) {
+            return Err(GeoArrowError::General(format!(
+                "Tried to push xy but internal dimension is {:?}.",
+                self.dim
+            )));
+        }
+
+        self.buffers[0].push(x);
+        self.buffers[1].push(y);
+        Ok(())
+    }
+
+    pub fn push_xyz(&mut self, x: f64, y: f64, z: f64) {
+        self.try_push_xyz(x, y, z).unwrap()
+    }
+
+    pub fn try_push_xyz(&mut self, x: f64, y: f64, z: f64) -> Result<()> {
+        if !matches!(self.dim, Dimension::XYZ) {
+            return Err(GeoArrowError::General(format!(
+                "Tried to push xyz but internal dimension is {:?}.",
+                self.dim
+            )));
+        }
+
+        self.buffers[0].push(x);
+        self.buffers[1].push(y);
+        self.buffers[2].push(z);
+        Ok(())
+    }
+
     pub fn from_coords<G: CoordTrait<T = f64>>(coords: &[G], dim: Dimension) -> Result<Self> {
         let mut buffer = SeparatedCoordBufferBuilder::with_capacity(coords.len(), dim);
         for coord in coords {
