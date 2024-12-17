@@ -34,6 +34,10 @@ pub use chaikin_smoothing::ChaikinSmoothing;
 mod chamberlain_duquette_area;
 pub use chamberlain_duquette_area::ChamberlainDuquetteArea;
 
+/// Calculate the concave hull of geometries.
+mod concave_hull;
+pub use concave_hull::ConcaveHull;
+
 /// Determine whether `Geometry` `A` completely encloses `Geometry` `B`.
 mod contains;
 pub use contains::Contains;
@@ -73,6 +77,10 @@ pub use geodesic_length::GeodesicLength;
 /// Calculate the Haversine length of a Line.
 mod haversine_length;
 pub use haversine_length::HaversineLength;
+
+/// Calculation of interior points.
+mod interior_point;
+pub use interior_point::InteriorPoint;
 
 /// Determine whether `Geometry` `A` intersects `Geometry` `B`.
 mod intersects;

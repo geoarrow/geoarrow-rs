@@ -266,7 +266,7 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_BuildArea                |             | Creates a polygonal geometry formed by the linework of a geometry.                                |
 | ST_Centroid                 | ✅          | Returns the geometric center of a geometry.                                                       |
 | ST_ChaikinSmoothing         |             | Returns a smoothed version of a geometry, using the Chaikin algorithm                             |
-| ST_ConcaveHull              |             | Computes a possibly concave geometry that contains all input geometry vertices                    |
+| ST_ConcaveHull              | ✅          | Computes a possibly concave geometry that contains all input geometry vertices                    |
 | ST_ConvexHull               | ✅          | Computes the convex hull of a geometry.                                                           |
 | ST_DelaunayTriangles        |             | Returns the Delaunay triangulation of the vertices of a geometry.                                 |
 | ST_FilterByM                |             | Removes vertices based on their M value                                                           |
@@ -279,7 +279,7 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_MinimumBoundingRadius    |             | Returns the center point and radius of the smallest circle that contains a geometry.              |
 | ST_OrientedEnvelope         |             | Returns a minimum-area rectangle containing a geometry.                                           |
 | ST_OffsetCurve              |             | Returns an offset line at a given distance and side from an input line.                           |
-| ST_PointOnSurface           |             | Computes a point guaranteed to lie in a polygon, or on a geometry.                                |
+| ST_PointOnSurface           | ✅          | Computes a point guaranteed to lie in a polygon, or on a geometry.                                |
 | ST_Polygonize               |             | Computes a collection of polygons formed from the linework of a set of geometries.                |
 | ST_ReducePrecision          |             | Returns a valid geometry with points rounded to a grid tolerance.                                 |
 | ST_SharedPaths              |             | Returns a collection containing paths shared by the two input linestrings/multilinestrings.       |
