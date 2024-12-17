@@ -135,11 +135,8 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | -------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ST_BdPolyFromText    |             | Construct a Polygon given an arbitrary collection of closed linestrings as a MultiLineString Well-Known text representation.                          |
 | ST_BdMPolyFromText   |             | Construct a MultiPolygon given an arbitrary collection of closed linestrings as a MultiLineString text representation Well-Known text representation. |
-| ST_GeogFromText      |             | Return a specified geography value from Well-Known Text representation or extended (WKT).                                                             |
-| ST_GeographyFromText |             | Return a specified geography value from Well-Known Text representation or extended (WKT).                                                             |
 | ST_GeomCollFromText  |             | Makes a collection Geometry from collection WKT with the given SRID. If SRID is not given, it defaults to 0.                                          |
 | ST_GeomFromEWKT      |             | Return a specified ST_Geometry value from Extended Well-Known Text representation (EWKT).                                                             |
-| ST_GeomFromMARC21    |             | Takes MARC21/XML geographic data as input and returns a PostGIS geometry object.                                                                      |
 | ST_GeometryFromText  |             | Return a specified ST_Geometry value from Well-Known Text representation (WKT). This is an alias name for ST_GeomFromText                             |
 | ST_GeomFromText      | ✅          | Return a specified ST_Geometry value from Well-Known Text representation (WKT).                                                                       |
 | ST_LineFromText      |             | Makes a Geometry from WKT representation with the given SRID. If SRID is not given, it defaults to 0.                                                 |
@@ -154,7 +151,6 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 
 | Name                 | Implemented | Description                                                                                                                                   |
 | -------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| ST_GeogFromWKB       |             | Creates a geography instance from a Well-Known Binary geometry representation (WKB) or extended Well Known Binary (EWKB).                     |
 | ST_GeomFromEWKB      |             | Return a specified ST_Geometry value from Extended Well-Known Binary representation (EWKB).                                                   |
 | ST_GeomFromWKB       | ✅          | Creates a geometry instance from a Well-Known Binary geometry representation (WKB) and optional SRID.                                         |
 | ST_LineFromWKB       |             | Makes a LINESTRING from WKB with the given SRID                                                                                               |
@@ -206,12 +202,10 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_AsGML             |             | Return the geometry as a GML version 2 or 3 element.                                  |
 | ST_AsKML             |             | Return the geometry as a KML element.                                                 |
 | ST_AsLatLonText      |             | Return the Degrees, Minutes, Seconds representation of the given point.               |
-| ST_AsMARC21          |             | Returns geometry as a MARC21/XML record with a geographic datafield (034).            |
 | ST_AsMVTGeom         |             | Transforms a geometry into the coordinate space of a MVT tile.                        |
 | ST_AsMVT             |             | Aggregate function returning a MVT representation of a set of rows.                   |
 | ST_AsSVG             |             | Returns SVG path data for a geometry.                                                 |
 | ST_AsTWKB            |             | Returns the geometry as TWKB, aka "Tiny Well-Known Binary"                            |
-| ST_AsX3D             |             | Returns a Geometry in X3D xml node element format: ISO-IEC-19776-1.2-X3DEncodings-XML |
 | ST_GeoHash           | ✅          | Return a GeoHash representation of the geometry.                                      |
 
 ### Operators
@@ -289,10 +283,10 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_Polygonize               |             | Computes a collection of polygons formed from the linework of a set of geometries.                |
 | ST_ReducePrecision          |             | Returns a valid geometry with points rounded to a grid tolerance.                                 |
 | ST_SharedPaths              |             | Returns a collection containing paths shared by the two input linestrings/multilinestrings.       |
-| ST_Simplify                 |             | Returns a simplified representation of a geometry, using the Douglas-Peucker algorithm.           |
-| ST_SimplifyPreserveTopology |             | Returns a simplified and valid representation of a geometry, using the Douglas-Peucker algorithm. |
+| ST_Simplify                 | ✅          | Returns a simplified representation of a geometry, using the Douglas-Peucker algorithm.           |
+| ST_SimplifyPreserveTopology | ✅          | Returns a simplified and valid representation of a geometry, using the Douglas-Peucker algorithm. |
 | ST_SimplifyPolygonHull      |             | Computes a simplifed topology-preserving outer or inner hull of a polygonal geometry.             |
-| ST_SimplifyVW               |             | Returns a simplified representation of a geometry, using the Visvalingam-Whyatt algorithm         |
+| ST_SimplifyVW               | ✅          | Returns a simplified representation of a geometry, using the Visvalingam-Whyatt algorithm         |
 | ST_SetEffectiveArea         |             | Sets the effective area for each vertex, using the Visvalingam-Whyatt algorithm.                  |
 | ST_TriangulatePolygon       |             | Computes the constrained Delaunay triangulation of polygons                                       |
 | ST_VoronoiLines             |             | Returns the boundaries of the Voronoi diagram of the vertices of a geometry.                      |

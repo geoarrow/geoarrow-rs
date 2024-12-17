@@ -37,17 +37,17 @@ pub fn simplify(
     match input {
         AnyNativeInput::Array(arr) => {
             let out = match method {
-                SimplifyMethod::Rdp => arr.as_ref().simplify(&epsilon)?,
-                SimplifyMethod::Vw => arr.as_ref().simplify_vw(&epsilon)?,
-                SimplifyMethod::VwPreserve => arr.as_ref().simplify_vw_preserve(&epsilon)?,
+                SimplifyMethod::Rdp => arr.as_ref().simplify(&epsilon.into())?,
+                SimplifyMethod::Vw => arr.as_ref().simplify_vw(&epsilon.into())?,
+                SimplifyMethod::VwPreserve => arr.as_ref().simplify_vw_preserve(&epsilon.into())?,
             };
             return_geometry_array(py, out)
         }
         AnyNativeInput::Chunked(arr) => {
             let out = match method {
-                SimplifyMethod::Rdp => arr.as_ref().simplify(&epsilon)?,
-                SimplifyMethod::Vw => arr.as_ref().simplify_vw(&epsilon)?,
-                SimplifyMethod::VwPreserve => arr.as_ref().simplify_vw_preserve(&epsilon)?,
+                SimplifyMethod::Rdp => arr.as_ref().simplify(&epsilon.into())?,
+                SimplifyMethod::Vw => arr.as_ref().simplify_vw(&epsilon.into())?,
+                SimplifyMethod::VwPreserve => arr.as_ref().simplify_vw_preserve(&epsilon.into())?,
             };
             return_chunked_geometry_array(py, out)
         }
