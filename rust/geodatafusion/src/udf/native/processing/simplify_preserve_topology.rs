@@ -9,17 +9,17 @@ use datafusion::logical_expr::{
     ColumnarValue, Documentation, ScalarUDFImpl, Signature, Volatility,
 };
 use geoarrow::algorithm::broadcasting::BroadcastablePrimitive;
-use geoarrow::algorithm::geo::Simplify as _Simplify;
+use geoarrow::algorithm::geo::SimplifyVwPreserve as _;
 
 use crate::data_types::{parse_to_native_array, GEOMETRY_TYPE};
 use crate::error::GeoDataFusionResult;
 
 #[derive(Debug)]
-pub(super) struct Simplify {
+pub(super) struct SimplifyPreserveTopology {
     signature: Signature,
 }
 
-impl Simplify {
+impl SimplifyPreserveTopology {
     pub fn new() -> Self {
         Self {
             signature: Signature::exact(
@@ -32,13 +32,13 @@ impl Simplify {
 
 static DOCUMENTATION: OnceLock<Documentation> = OnceLock::new();
 
-impl ScalarUDFImpl for Simplify {
+impl ScalarUDFImpl for SimplifyPreserveTopology {
     fn as_any(&self) -> &dyn Any {
         self
     }
 
     fn name(&self) -> &str {
-        "st_simplify"
+        "st_simplifypreservetopology"
     }
 
     fn signature(&self) -> &Signature {
@@ -57,10 +57,10 @@ impl ScalarUDFImpl for Simplify {
         Some(DOCUMENTATION.get_or_init(|| {
             Documentation::builder(
                 DOC_SECTION_OTHER,
-                "Computes a simplified representation of a geometry using the Douglas-Peucker algorithm. The simplification tolerance is a distance value, in the units of the input SRS. Simplification removes vertices which are within the tolerance distance of the simplified linework. The result may not be valid even if the input is.
+                "Computes a simplified representation of a geometry using a variant of the Visvalingam-Whyatt algorithm which limits simplification to ensure the result has the same topology as the input. The simplification tolerance is a distance value, in the units of the input SRS. Simplification removes vertices which are within the tolerance distance of the simplified linework, as long as topology is preserved. The result will be valid and simple if the input is.
 
-The function can be called with any kind of geometry (including GeometryCollections), but only line and polygon elements are simplified. Endpoints of linear geometry are preserved.",
-                "ST_Simplify(geometry, epsilon)",
+The function can be called with any kind of geometry (including GeometryCollections), but only line and polygon elements are simplified. For polygonal inputs, the result will have the same number of rings (shells and holes), and the rings will not cross. Ring endpoints may be simplified. For linear inputs, the result will have the same number of lines, and lines will not intersect if they did not do so in the original geometry. Endpoints of linear geometry are preserved.",
+                "ST_SimplifyPreserveTopology(geometry, epsilon)",
             )
             .with_argument("geom", "geometry")
             .with_argument("tolerance", "float")
@@ -79,42 +79,13 @@ fn simplify_impl(args: &[ColumnarValue]) -> GeoDataFusionResult<ColumnarValue> {
         ColumnarValue::Scalar(epsilon) => {
             let epsilon = epsilon.to_scalar()?.into_inner();
             let epsilon = epsilon.as_primitive::<Float64Type>().value(0);
-            native_array.as_ref().simplify(&epsilon.into())?
+            native_array
+                .as_ref()
+                .simplify_vw_preserve(&epsilon.into())?
         }
         ColumnarValue::Array(epsilon) => native_array
             .as_ref()
-            .simplify(&BroadcastablePrimitive::Array(epsilon.as_primitive()))?,
+            .simplify_vw_preserve(&BroadcastablePrimitive::Array(epsilon.as_primitive()))?,
     };
     Ok(output.to_array_ref().into())
-}
-
-#[cfg(test)]
-mod test {
-    use datafusion::prelude::*;
-    use geo::line_string;
-    use geoarrow::array::GeometryArray;
-    use geoarrow::trait_::ArrayAccessor;
-
-    use crate::udf::native::register_native;
-
-    #[tokio::test]
-    async fn test() {
-        let ctx = SessionContext::new();
-        register_native(&ctx);
-
-        let out = ctx.sql(
-            "SELECT ST_Simplify(ST_GeomFromText('LINESTRING(0.0 0.0, 5.0 4.0, 11.0 5.5, 17.3 3.2, 27.8 0.1)'), 1.0);").await.unwrap();
-        let batches = out.collect().await.unwrap();
-        let column = batches.first().unwrap().columns().first().unwrap().clone();
-        let geom_arr = GeometryArray::try_from(column.as_ref()).unwrap();
-        let expected = line_string![
-            (x: 0.0, y: 0.0),
-            (x: 5.0, y: 4.0),
-            (x: 11.0, y: 5.5),
-            (x: 27.8, y: 0.1),
-        ];
-        // Not sure why rust-analyzer is complaining
-        let _expected = geo::Geometry::LineString(expected);
-        assert_eq!(geom_arr.value_as_geo(0), _expected);
-    }
 }

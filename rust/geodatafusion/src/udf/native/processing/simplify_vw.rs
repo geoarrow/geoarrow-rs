@@ -9,17 +9,17 @@ use datafusion::logical_expr::{
     ColumnarValue, Documentation, ScalarUDFImpl, Signature, Volatility,
 };
 use geoarrow::algorithm::broadcasting::BroadcastablePrimitive;
-use geoarrow::algorithm::geo::Simplify as _Simplify;
+use geoarrow::algorithm::geo::SimplifyVw as _;
 
 use crate::data_types::{parse_to_native_array, GEOMETRY_TYPE};
 use crate::error::GeoDataFusionResult;
 
 #[derive(Debug)]
-pub(super) struct Simplify {
+pub(super) struct SimplifyVw {
     signature: Signature,
 }
 
-impl Simplify {
+impl SimplifyVw {
     pub fn new() -> Self {
         Self {
             signature: Signature::exact(
@@ -32,13 +32,13 @@ impl Simplify {
 
 static DOCUMENTATION: OnceLock<Documentation> = OnceLock::new();
 
-impl ScalarUDFImpl for Simplify {
+impl ScalarUDFImpl for SimplifyVw {
     fn as_any(&self) -> &dyn Any {
         self
     }
 
     fn name(&self) -> &str {
-        "st_simplify"
+        "st_simplifyvw"
     }
 
     fn signature(&self) -> &Signature {
@@ -57,10 +57,10 @@ impl ScalarUDFImpl for Simplify {
         Some(DOCUMENTATION.get_or_init(|| {
             Documentation::builder(
                 DOC_SECTION_OTHER,
-                "Computes a simplified representation of a geometry using the Douglas-Peucker algorithm. The simplification tolerance is a distance value, in the units of the input SRS. Simplification removes vertices which are within the tolerance distance of the simplified linework. The result may not be valid even if the input is.
+                "Returns a simplified representation of a geometry using the Visvalingam-Whyatt algorithm. The simplification tolerance is an area value, in the units of the input SRS. Simplification removes vertices which form \"corners\" with area less than the tolerance. The result may not be valid even if the input is.
 
 The function can be called with any kind of geometry (including GeometryCollections), but only line and polygon elements are simplified. Endpoints of linear geometry are preserved.",
-                "ST_Simplify(geometry, epsilon)",
+                "ST_SimplifyVW(geometry, epsilon)",
             )
             .with_argument("geom", "geometry")
             .with_argument("tolerance", "float")
@@ -79,11 +79,11 @@ fn simplify_impl(args: &[ColumnarValue]) -> GeoDataFusionResult<ColumnarValue> {
         ColumnarValue::Scalar(epsilon) => {
             let epsilon = epsilon.to_scalar()?.into_inner();
             let epsilon = epsilon.as_primitive::<Float64Type>().value(0);
-            native_array.as_ref().simplify(&epsilon.into())?
+            native_array.as_ref().simplify_vw(&epsilon.into())?
         }
         ColumnarValue::Array(epsilon) => native_array
             .as_ref()
-            .simplify(&BroadcastablePrimitive::Array(epsilon.as_primitive()))?,
+            .simplify_vw(&BroadcastablePrimitive::Array(epsilon.as_primitive()))?,
     };
     Ok(output.to_array_ref().into())
 }
@@ -103,18 +103,16 @@ mod test {
         register_native(&ctx);
 
         let out = ctx.sql(
-            "SELECT ST_Simplify(ST_GeomFromText('LINESTRING(0.0 0.0, 5.0 4.0, 11.0 5.5, 17.3 3.2, 27.8 0.1)'), 1.0);").await.unwrap();
+            "SELECT ST_SimplifyVW(ST_GeomFromText('LINESTRING(5 2, 3 8, 6 20, 7 25, 10 10)'), 30);").await.unwrap();
         let batches = out.collect().await.unwrap();
         let column = batches.first().unwrap().columns().first().unwrap().clone();
         let geom_arr = GeometryArray::try_from(column.as_ref()).unwrap();
         let expected = line_string![
-            (x: 0.0, y: 0.0),
-            (x: 5.0, y: 4.0),
-            (x: 11.0, y: 5.5),
-            (x: 27.8, y: 0.1),
+            (x: 5.0, y: 2.0),
+            (x: 7.0, y: 25.0),
+            (x: 10.0, y: 10.0),
         ];
-        // Not sure why rust-analyzer is complaining
-        let _expected = geo::Geometry::LineString(expected);
-        assert_eq!(geom_arr.value_as_geo(0), _expected);
+        let expected = geo::Geometry::LineString(expected);
+        assert_eq!(geom_arr.value_as_geo(0), expected);
     }
 }

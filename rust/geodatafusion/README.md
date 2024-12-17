@@ -284,9 +284,9 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_ReducePrecision          |             | Returns a valid geometry with points rounded to a grid tolerance.                                 |
 | ST_SharedPaths              |             | Returns a collection containing paths shared by the two input linestrings/multilinestrings.       |
 | ST_Simplify                 | ✅          | Returns a simplified representation of a geometry, using the Douglas-Peucker algorithm.           |
-| ST_SimplifyPreserveTopology |             | Returns a simplified and valid representation of a geometry, using the Douglas-Peucker algorithm. |
+| ST_SimplifyPreserveTopology | ✅          | Returns a simplified and valid representation of a geometry, using the Douglas-Peucker algorithm. |
 | ST_SimplifyPolygonHull      |             | Computes a simplifed topology-preserving outer or inner hull of a polygonal geometry.             |
-| ST_SimplifyVW               |             | Returns a simplified representation of a geometry, using the Visvalingam-Whyatt algorithm         |
+| ST_SimplifyVW               | ✅          | Returns a simplified representation of a geometry, using the Visvalingam-Whyatt algorithm         |
 | ST_SetEffectiveArea         |             | Sets the effective area for each vertex, using the Visvalingam-Whyatt algorithm.                  |
 | ST_TriangulatePolygon       |             | Computes the constrained Delaunay triangulation of polygons                                       |
 | ST_VoronoiLines             |             | Returns the boundaries of the Voronoi diagram of the vertices of a geometry.                      |
