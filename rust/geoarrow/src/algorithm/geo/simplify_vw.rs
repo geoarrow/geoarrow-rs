@@ -42,7 +42,7 @@ pub trait SimplifyVw {
     /// ];
     /// let line_string_array: LineStringArray = (vec![line_string].as_slice(), Dimension::XY).into();
     ///
-    /// let simplified_array = line_string_array.simplify_vw(&30.0);
+    /// let simplified_array = line_string_array.simplify_vw(&30.0.into());
     ///
     /// let expected = line_string![
     ///     (x: 5.0, y: 2.0),

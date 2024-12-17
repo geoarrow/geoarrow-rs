@@ -83,9 +83,13 @@ fn simplify_impl(args: &[ColumnarValue]) -> GeoDataFusionResult<ColumnarValue> {
                 .as_ref()
                 .simplify_vw_preserve(&epsilon.into())?
         }
-        ColumnarValue::Array(epsilon) => native_array
-            .as_ref()
-            .simplify_vw_preserve(&BroadcastablePrimitive::Array(epsilon.as_primitive()))?,
+        ColumnarValue::Array(epsilon) => {
+            native_array
+                .as_ref()
+                .simplify_vw_preserve(&BroadcastablePrimitive::Array(
+                    epsilon.as_primitive().clone(),
+                ))?
+        }
     };
     Ok(output.to_array_ref().into())
 }

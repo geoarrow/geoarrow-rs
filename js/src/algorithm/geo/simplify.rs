@@ -21,7 +21,7 @@ macro_rules! impl_simplify {
             #[wasm_bindgen]
             pub fn simplify(&self, epsilon: f64) -> Self {
                 use geoarrow::algorithm::geo::Simplify;
-                Simplify::simplify(&self.0, &epsilon).into()
+                Simplify::simplify(&self.0, &epsilon.into()).into()
             }
         }
     };

@@ -43,7 +43,7 @@ pub trait Simplify {
     /// ];
     /// let line_string_array: LineStringArray = (vec![line_string].as_slice(), Dimension::XY).into();
     ///
-    /// let simplified_array = line_string_array.simplify(&1.0);
+    /// let simplified_array = line_string_array.simplify(&1.0.into());
     ///
     /// let expected = line_string![
     ///     (x: 0.0, y: 0.0),

@@ -21,7 +21,7 @@ macro_rules! impl_simplify_vw {
             #[wasm_bindgen(js_name = simplifyVw)]
             pub fn simplify_vw(&self, epsilon: f64) -> Self {
                 use geoarrow::algorithm::geo::SimplifyVw;
-                SimplifyVw::simplify_vw(&self.0, &epsilon).into()
+                SimplifyVw::simplify_vw(&self.0, &epsilon.into()).into()
             }
         }
     };
