@@ -9,12 +9,12 @@ use arrow_buffer::ArrowNativeType;
 /// [`IntoIterator`] is implemented for this, where it will iterate over the `Array` variant
 /// normally but will iterate over the `Scalar` variant forever.
 #[derive(Debug, Clone)]
-pub enum BroadcastablePrimitive<T>
+pub enum BroadcastablePrimitive<'a, T>
 where
     T: ArrowPrimitiveType,
 {
     Scalar(T::Native),
-    Array(PrimitiveArray<T>),
+    Array(&'a PrimitiveArray<T>),
 }
 
 pub enum BroadcastIter<'a, T: ArrowPrimitiveType> {
@@ -22,7 +22,22 @@ pub enum BroadcastIter<'a, T: ArrowPrimitiveType> {
     Array(ArrayIter<&'a PrimitiveArray<T>>),
 }
 
-impl<'a, T> IntoIterator for &'a BroadcastablePrimitive<T>
+impl<'a, T> IntoIterator for BroadcastablePrimitive<'a, T>
+where
+    T: ArrowPrimitiveType,
+{
+    type Item = Option<T::Native>;
+    type IntoIter = BroadcastIter<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        match self {
+            BroadcastablePrimitive::Array(arr) => BroadcastIter::Array(arr.iter()),
+            BroadcastablePrimitive::Scalar(val) => BroadcastIter::Scalar(val),
+        }
+    }
+}
+
+impl<'a, T> IntoIterator for &'a BroadcastablePrimitive<'a, T>
 where
     T: ArrowPrimitiveType,
 {
@@ -51,11 +66,19 @@ where
     }
 }
 
-impl<N: ArrowNativeType, P: ArrowPrimitiveType<Native = N>> From<N> for BroadcastablePrimitive<P> {
-    fn from(value: N) -> Self {
+impl<T: ArrowNativeType, P: ArrowPrimitiveType<Native = T>> From<T>
+    for BroadcastablePrimitive<'_, P>
+{
+    fn from(value: T) -> Self {
         BroadcastablePrimitive::Scalar(value)
     }
 }
+
+// impl<'a, T: ArrowPrimitiveType> From<&'a PrimitiveArray<T>> for BroadcastablePrimitive<'_, T> {
+//     fn from(value: &'a PrimitiveArray<T>) -> Self {
+//         BroadcastablePrimitive::Array(value)
+//     }
+// }
 
 #[cfg(test)]
 mod tests {
