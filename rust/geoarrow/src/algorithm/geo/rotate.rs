@@ -1,14 +1,14 @@
 use std::sync::Arc;
 
-use crate::algorithm::geo::{AffineOps, Center, Centroid};
+use crate::algorithm::broadcasting::{BroadcastablePoint, BroadcastablePrimitive};
 use crate::array::MultiPointArray;
 use crate::array::*;
 use crate::datatypes::{Dimension, NativeType};
-use crate::error::Result;
+use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
-use arrow_array::Float64Array;
-use geo::AffineTransform;
+use arrow::datatypes::Float64Type;
+use geo::Rotate as _;
 
 /// Rotate geometries around a point by an angle, in degrees.
 ///
@@ -21,7 +21,7 @@ use geo::AffineTransform;
 /// [`Translate`](crate::algorithm::geo::Translate), or [`Rotate`](crate::algorithm::geo::Rotate),
 /// it is more efficient to compose the transformations and apply them as a single operation using
 /// the [`AffineOps`](crate::algorithm::geo::AffineOps) trait.
-pub trait Rotate<DegreesT> {
+pub trait Rotate {
     type Output;
 
     /// Rotate a geometry around its [centroid](Centroid) by an angle, in degrees
@@ -52,7 +52,8 @@ pub trait Rotate<DegreesT> {
     /// assert_relative_eq!(expected, rotated);
     /// ```
     #[must_use]
-    fn rotate_around_centroid(&self, degrees: &DegreesT) -> Self::Output;
+    fn rotate_around_centroid(&self, degrees: &BroadcastablePrimitive<Float64Type>)
+        -> Self::Output;
 
     /// Rotate a geometry around the center of its [bounding
     /// box](crate::algorithm::geo::BoundingRect) by an angle, in degrees.
@@ -60,7 +61,7 @@ pub trait Rotate<DegreesT> {
     /// Positive angles are counter-clockwise, and negative angles are clockwise rotations.
     ///
     #[must_use]
-    fn rotate_around_center(&self, degrees: &DegreesT) -> Self::Output;
+    fn rotate_around_center(&self, degrees: &BroadcastablePrimitive<Float64Type>) -> Self::Output;
 
     /// Rotate a Geometry around an arbitrary point by an angle, given in degrees
     ///
@@ -90,285 +91,336 @@ pub trait Rotate<DegreesT> {
     /// ]);
     /// ```
     #[must_use]
-    fn rotate_around_point(&self, degrees: &DegreesT, point: geo::Point) -> Self::Output;
+    fn rotate_around_point(
+        &self,
+        degrees: &BroadcastablePrimitive<Float64Type>,
+        point: &BroadcastablePoint,
+    ) -> Self::Output;
 }
 
-// ┌────────────────────────────────┐
-// │ Implementations for RHS arrays │
-// └────────────────────────────────┘
+impl Rotate for PointArray {
+    type Output = Self;
+
+    fn rotate_around_centroid(&self, degrees: &BroadcastablePrimitive<Float64Type>) -> PointArray {
+        let mut builder = PointBuilder::with_capacity_and_options(
+            Dimension::XY,
+            self.buffer_lengths(),
+            self.coord_type(),
+            self.metadata().clone(),
+        );
+
+        self.iter_geo().zip(degrees).for_each(|(maybe_g, degrees)| {
+            if let (Some(mut geom), Some(degrees)) = (maybe_g, degrees) {
+                geom.rotate_around_centroid_mut(degrees);
+                builder.push_point(Some(&geom));
+            } else {
+                builder.push_null();
+            }
+        });
+
+        builder.finish()
+    }
+
+    fn rotate_around_center(&self, degrees: &BroadcastablePrimitive<Float64Type>) -> Self {
+        let mut builder = PointBuilder::with_capacity_and_options(
+            Dimension::XY,
+            self.buffer_lengths(),
+            self.coord_type(),
+            self.metadata().clone(),
+        );
+
+        self.iter_geo().zip(degrees).for_each(|(maybe_g, degrees)| {
+            if let (Some(mut geom), Some(degrees)) = (maybe_g, degrees) {
+                geom.rotate_around_center_mut(degrees);
+                builder.push_point(Some(&geom));
+            } else {
+                builder.push_null();
+            }
+        });
+
+        builder.finish()
+    }
+
+    fn rotate_around_point(
+        &self,
+        degrees: &BroadcastablePrimitive<Float64Type>,
+        point: &BroadcastablePoint,
+    ) -> Self {
+        let mut builder = PointBuilder::with_capacity_and_options(
+            Dimension::XY,
+            self.buffer_lengths(),
+            self.coord_type(),
+            self.metadata().clone(),
+        );
+
+        self.iter_geo()
+            .zip(degrees)
+            .zip(point)
+            .for_each(|((maybe_g, degrees), point)| {
+                if let (Some(mut geom), Some(degrees), Some(point)) = (maybe_g, degrees, point) {
+                    geom.rotate_around_point_mut(degrees, point);
+                    builder.push_point(Some(&geom));
+                } else {
+                    builder.push_null();
+                }
+            });
+
+        builder.finish()
+    }
+}
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
-    ($type:ty) => {
-        impl Rotate<Float64Array> for $type {
+    ($type:ty, $builder_type:ty, $push_func:ident) => {
+        impl Rotate for $type {
             type Output = Self;
 
-            fn rotate_around_centroid(&self, degrees: &Float64Array) -> $type {
-                let centroids = self.centroid();
-                let transforms: Vec<AffineTransform> = centroids
-                    .iter_geo_values()
-                    .zip(degrees.values().iter())
-                    .map(|(point, angle)| AffineTransform::rotate(*angle, point))
-                    .collect();
-                self.affine_transform(transforms.as_slice())
+            fn rotate_around_centroid(
+                &self,
+                degrees: &BroadcastablePrimitive<Float64Type>,
+            ) -> Self {
+                let mut builder = <$builder_type>::with_capacity_and_options(
+                    Dimension::XY,
+                    self.buffer_lengths(),
+                    self.coord_type(),
+                    self.metadata().clone(),
+                );
+
+                self.iter_geo().zip(degrees).for_each(|(maybe_g, degrees)| {
+                    if let (Some(mut geom), Some(degrees)) = (maybe_g, degrees) {
+                        geom.rotate_around_centroid_mut(degrees);
+                        builder.$push_func(Some(&geom)).unwrap();
+                    } else {
+                        builder.push_null();
+                    }
+                });
+
+                builder.finish()
             }
 
-            fn rotate_around_center(&self, degrees: &Float64Array) -> Self {
-                let centers = self.center();
-                let transforms: Vec<AffineTransform> = centers
-                    .iter_geo_values()
-                    .zip(degrees.values().iter())
-                    .map(|(point, angle)| AffineTransform::rotate(*angle, point))
-                    .collect();
-                self.affine_transform(transforms.as_slice())
+            fn rotate_around_center(&self, degrees: &BroadcastablePrimitive<Float64Type>) -> Self {
+                let mut builder = <$builder_type>::with_capacity_and_options(
+                    Dimension::XY,
+                    self.buffer_lengths(),
+                    self.coord_type(),
+                    self.metadata().clone(),
+                );
+
+                self.iter_geo().zip(degrees).for_each(|(maybe_g, degrees)| {
+                    if let (Some(mut geom), Some(degrees)) = (maybe_g, degrees) {
+                        geom.rotate_around_center_mut(degrees);
+                        builder.$push_func(Some(&geom)).unwrap();
+                    } else {
+                        builder.push_null();
+                    }
+                });
+
+                builder.finish()
             }
 
-            fn rotate_around_point(&self, degrees: &Float64Array, point: geo::Point) -> Self {
-                let transforms: Vec<AffineTransform> = degrees
-                    .values()
-                    .iter()
-                    .map(|degrees| AffineTransform::rotate(*degrees, point))
-                    .collect();
-                self.affine_transform(transforms.as_slice())
+            fn rotate_around_point(
+                &self,
+                degrees: &BroadcastablePrimitive<Float64Type>,
+                point: &BroadcastablePoint,
+            ) -> Self {
+                let mut builder = <$builder_type>::with_capacity_and_options(
+                    Dimension::XY,
+                    self.buffer_lengths(),
+                    self.coord_type(),
+                    self.metadata().clone(),
+                );
+
+                self.iter_geo()
+                    .zip(degrees)
+                    .zip(point)
+                    .for_each(|((maybe_g, degrees), point)| {
+                        if let (Some(mut geom), Some(degrees), Some(point)) =
+                            (maybe_g, degrees, point)
+                        {
+                            geom.rotate_around_point_mut(degrees, point);
+                            builder.$push_func(Some(&geom)).unwrap();
+                        } else {
+                            builder.push_null();
+                        }
+                    });
+
+                builder.finish()
             }
         }
     };
 }
 
-iter_geo_impl!(PointArray);
-iter_geo_impl!(LineStringArray);
-iter_geo_impl!(PolygonArray);
-iter_geo_impl!(MultiPointArray);
-iter_geo_impl!(MultiLineStringArray);
-iter_geo_impl!(MultiPolygonArray);
+iter_geo_impl!(LineStringArray, LineStringBuilder, push_line_string);
+iter_geo_impl!(PolygonArray, PolygonBuilder, push_polygon);
+iter_geo_impl!(MultiPointArray, MultiPointBuilder, push_multi_point);
+iter_geo_impl!(
+    MultiLineStringArray,
+    MultiLineStringBuilder,
+    push_multi_line_string
+);
+iter_geo_impl!(MultiPolygonArray, MultiPolygonBuilder, push_multi_polygon);
+// iter_geo_impl!(GeometryArray, GeometryBuilder, push_geometry);
 
-// ┌─────────────────────────────────┐
-// │ Implementations for RHS scalars │
-// └─────────────────────────────────┘
+impl Rotate for GeometryArray {
+    type Output = Result<Self>;
 
-// Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl Rotate<f64> for PointArray {
-    type Output = Self;
+    fn rotate_around_centroid(
+        &self,
+        degrees: &BroadcastablePrimitive<Float64Type>,
+    ) -> Self::Output {
+        let mut builder = GeometryBuilder::with_capacity_and_options(
+            self.buffer_lengths(),
+            self.coord_type(),
+            self.metadata().clone(),
+            false,
+        );
 
-    fn rotate_around_centroid(&self, degrees: &f64) -> Self {
-        let centroids = self.centroid();
-        let transforms: Vec<AffineTransform> = centroids
-            .iter_geo_values()
-            .map(|point| AffineTransform::rotate(*degrees, point))
-            .collect();
-        self.affine_transform(transforms.as_slice())
+        self.iter_geo()
+            .zip(degrees)
+            .try_for_each(|(maybe_g, degrees)| {
+                if let (Some(mut geom), Some(degrees)) = (maybe_g, degrees) {
+                    geom.rotate_around_centroid_mut(degrees);
+                    builder.push_geometry(Some(&geom))?;
+                } else {
+                    builder.push_null();
+                }
+                Ok::<_, GeoArrowError>(())
+            })?;
+
+        Ok(builder.finish())
     }
 
-    fn rotate_around_center(&self, degrees: &f64) -> Self {
-        let centers = self.center();
-        let transforms: Vec<AffineTransform> = centers
-            .iter_geo_values()
-            .map(|point| AffineTransform::rotate(*degrees, point))
-            .collect();
-        self.affine_transform(transforms.as_slice())
+    fn rotate_around_center(&self, degrees: &BroadcastablePrimitive<Float64Type>) -> Self::Output {
+        let mut builder = GeometryBuilder::with_capacity_and_options(
+            self.buffer_lengths(),
+            self.coord_type(),
+            self.metadata().clone(),
+            false,
+        );
+
+        self.iter_geo()
+            .zip(degrees)
+            .try_for_each(|(maybe_g, degrees)| {
+                if let (Some(mut geom), Some(degrees)) = (maybe_g, degrees) {
+                    geom.rotate_around_center_mut(degrees);
+                    builder.push_geometry(Some(&geom))?;
+                } else {
+                    builder.push_null();
+                }
+                Ok::<_, GeoArrowError>(())
+            })?;
+
+        Ok(builder.finish())
     }
 
-    fn rotate_around_point(&self, degrees: &f64, point: geo::Point) -> Self {
-        let transform = AffineTransform::rotate(*degrees, point);
-        self.affine_transform(&transform)
+    fn rotate_around_point(
+        &self,
+        degrees: &BroadcastablePrimitive<Float64Type>,
+        point: &BroadcastablePoint,
+    ) -> Self::Output {
+        let mut builder = GeometryBuilder::with_capacity_and_options(
+            self.buffer_lengths(),
+            self.coord_type(),
+            self.metadata().clone(),
+            false,
+        );
+
+        self.iter_geo()
+            .zip(degrees)
+            .zip(point)
+            .try_for_each(|((maybe_g, degrees), point)| {
+                if let (Some(mut geom), Some(degrees), Some(point)) = (maybe_g, degrees, point) {
+                    geom.rotate_around_point_mut(degrees, point);
+                    builder.push_geometry(Some(&geom))?;
+                } else {
+                    builder.push_null();
+                }
+                Ok::<_, GeoArrowError>(())
+            })?;
+
+        Ok(builder.finish())
     }
 }
 
-/// Implementation that iterates over geo objects
-macro_rules! iter_geo_impl_scalar {
-    ($type:ty) => {
-        impl Rotate<f64> for $type {
-            type Output = Self;
-
-            fn rotate_around_centroid(&self, degrees: &f64) -> $type {
-                let centroids = self.centroid();
-                let transforms: Vec<AffineTransform> = centroids
-                    .iter_geo_values()
-                    .map(|point| AffineTransform::rotate(*degrees, point))
-                    .collect();
-                self.affine_transform(transforms.as_slice())
-            }
-
-            fn rotate_around_center(&self, degrees: &f64) -> Self {
-                let centers = self.center();
-                let transforms: Vec<AffineTransform> = centers
-                    .iter_geo_values()
-                    .map(|point| AffineTransform::rotate(*degrees, point))
-                    .collect();
-                self.affine_transform(transforms.as_slice())
-            }
-
-            fn rotate_around_point(&self, degrees: &f64, point: geo::Point) -> Self {
-                let transform = AffineTransform::rotate(*degrees, point);
-                self.affine_transform(&transform)
-            }
-        }
-    };
-}
-
-iter_geo_impl_scalar!(LineStringArray);
-iter_geo_impl_scalar!(PolygonArray);
-iter_geo_impl_scalar!(MultiPointArray);
-iter_geo_impl_scalar!(MultiLineStringArray);
-iter_geo_impl_scalar!(MultiPolygonArray);
-
-impl Rotate<f64> for &dyn NativeArray {
+impl Rotate for &dyn NativeArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
-    fn rotate_around_centroid(&self, degrees: &f64) -> Self::Output {
+    fn rotate_around_centroid(
+        &self,
+        degrees: &BroadcastablePrimitive<Float64Type>,
+    ) -> Self::Output {
         macro_rules! impl_method {
             ($method:ident) => {{
                 Arc::new(self.$method().rotate_around_centroid(degrees))
             }};
         }
 
-        use Dimension::*;
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
-            Point(_, XY) => impl_method!(as_point),
-            LineString(_, XY) => impl_method!(as_line_string),
-            Polygon(_, XY) => impl_method!(as_polygon),
-            MultiPoint(_, XY) => impl_method!(as_multi_point),
-            MultiLineString(_, XY) => impl_method!(as_multi_line_string),
-            MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
-            // Mixed(_, XY) => impl_method!(as_mixed),
-            // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
-            // Rect(XY) => impl_method!(as_rect),
+            Point(_, _) => impl_method!(as_point),
+            LineString(_, _) => impl_method!(as_line_string),
+            Polygon(_, _) => impl_method!(as_polygon),
+            MultiPoint(_, _) => impl_method!(as_multi_point),
+            MultiLineString(_, _) => impl_method!(as_multi_line_string),
+            MultiPolygon(_, _) => impl_method!(as_multi_polygon),
+            Geometry(_) => Arc::new(self.as_geometry().rotate_around_centroid(degrees)?),
+            // GeometryCollection(_, _) => impl_method!(as_geometry_collection),
+            // Rect(_) => impl_method!(as_rect),
             _ => todo!("unsupported data type"),
         };
 
         Ok(result)
     }
 
-    fn rotate_around_center(&self, degrees: &f64) -> Self::Output {
+    fn rotate_around_center(&self, degrees: &BroadcastablePrimitive<Float64Type>) -> Self::Output {
         macro_rules! impl_method {
             ($method:ident) => {{
                 Arc::new(self.$method().rotate_around_center(degrees))
             }};
         }
 
-        use Dimension::*;
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
-            Point(_, XY) => impl_method!(as_point),
-            LineString(_, XY) => impl_method!(as_line_string),
-            Polygon(_, XY) => impl_method!(as_polygon),
-            MultiPoint(_, XY) => impl_method!(as_multi_point),
-            MultiLineString(_, XY) => impl_method!(as_multi_line_string),
-            MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
-            // Mixed(_, XY) => impl_method!(as_mixed),
-            // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
-            // Rect(XY) => impl_method!(as_rect),
+            Point(_, _) => impl_method!(as_point),
+            LineString(_, _) => impl_method!(as_line_string),
+            Polygon(_, _) => impl_method!(as_polygon),
+            MultiPoint(_, _) => impl_method!(as_multi_point),
+            MultiLineString(_, _) => impl_method!(as_multi_line_string),
+            MultiPolygon(_, _) => impl_method!(as_multi_polygon),
+            Geometry(_) => Arc::new(self.as_geometry().rotate_around_centroid(degrees)?),
+            // GeometryCollection(_, _) => impl_method!(as_geometry_collection),
+            // Rect(_) => impl_method!(as_rect),
             _ => todo!("unsupported data type"),
         };
 
         Ok(result)
     }
 
-    fn rotate_around_point(&self, degrees: &f64, point: geo::Point) -> Self::Output {
+    fn rotate_around_point(
+        &self,
+        degrees: &BroadcastablePrimitive<Float64Type>,
+        point: &BroadcastablePoint,
+    ) -> Self::Output {
         macro_rules! impl_method {
             ($method:ident) => {{
                 Arc::new(self.$method().rotate_around_point(degrees, point))
             }};
         }
 
-        use Dimension::*;
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
-            Point(_, XY) => impl_method!(as_point),
-            LineString(_, XY) => impl_method!(as_line_string),
-            Polygon(_, XY) => impl_method!(as_polygon),
-            MultiPoint(_, XY) => impl_method!(as_multi_point),
-            MultiLineString(_, XY) => impl_method!(as_multi_line_string),
-            MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
-            // Mixed(_, XY) => impl_method!(as_mixed),
-            // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
-            // Rect(XY) => impl_method!(as_rect),
-            _ => todo!("unsupported data type"),
-        };
-
-        Ok(result)
-    }
-}
-
-impl Rotate<Float64Array> for &dyn NativeArray {
-    type Output = Result<Arc<dyn NativeArray>>;
-
-    fn rotate_around_centroid(&self, degrees: &Float64Array) -> Self::Output {
-        macro_rules! impl_method {
-            ($method:ident) => {{
-                Arc::new(self.$method().rotate_around_centroid(degrees))
-            }};
-        }
-
-        use Dimension::*;
-        use NativeType::*;
-
-        let result: Arc<dyn NativeArray> = match self.data_type() {
-            Point(_, XY) => impl_method!(as_point),
-            LineString(_, XY) => impl_method!(as_line_string),
-            Polygon(_, XY) => impl_method!(as_polygon),
-            MultiPoint(_, XY) => impl_method!(as_multi_point),
-            MultiLineString(_, XY) => impl_method!(as_multi_line_string),
-            MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
-            // Mixed(_, XY) => impl_method!(as_mixed),
-            // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
-            // Rect(XY) => impl_method!(as_rect),
-            _ => todo!("unsupported data type"),
-        };
-
-        Ok(result)
-    }
-
-    fn rotate_around_center(&self, degrees: &Float64Array) -> Self::Output {
-        macro_rules! impl_method {
-            ($method:ident) => {{
-                Arc::new(self.$method().rotate_around_center(degrees))
-            }};
-        }
-
-        use Dimension::*;
-        use NativeType::*;
-
-        let result: Arc<dyn NativeArray> = match self.data_type() {
-            Point(_, XY) => impl_method!(as_point),
-            LineString(_, XY) => impl_method!(as_line_string),
-            Polygon(_, XY) => impl_method!(as_polygon),
-            MultiPoint(_, XY) => impl_method!(as_multi_point),
-            MultiLineString(_, XY) => impl_method!(as_multi_line_string),
-            MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
-            // Mixed(_, XY) => impl_method!(as_mixed),
-            // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
-            // Rect(XY) => impl_method!(as_rect),
-            _ => todo!("unsupported data type"),
-        };
-
-        Ok(result)
-    }
-
-    fn rotate_around_point(&self, degrees: &Float64Array, point: geo::Point) -> Self::Output {
-        macro_rules! impl_method {
-            ($method:ident) => {{
-                Arc::new(self.$method().rotate_around_point(degrees, point))
-            }};
-        }
-
-        use Dimension::*;
-        use NativeType::*;
-
-        let result: Arc<dyn NativeArray> = match self.data_type() {
-            Point(_, XY) => impl_method!(as_point),
-            LineString(_, XY) => impl_method!(as_line_string),
-            Polygon(_, XY) => impl_method!(as_polygon),
-            MultiPoint(_, XY) => impl_method!(as_multi_point),
-            MultiLineString(_, XY) => impl_method!(as_multi_line_string),
-            MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
-            // Mixed(_, XY) => impl_method!(as_mixed),
-            // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
-            // Rect(XY) => impl_method!(as_rect),
+            Point(_, _) => impl_method!(as_point),
+            LineString(_, _) => impl_method!(as_line_string),
+            Polygon(_, _) => impl_method!(as_polygon),
+            MultiPoint(_, _) => impl_method!(as_multi_point),
+            MultiLineString(_, _) => impl_method!(as_multi_line_string),
+            MultiPolygon(_, _) => impl_method!(as_multi_polygon),
+            Geometry(_) => Arc::new(self.as_geometry().rotate_around_centroid(degrees)?),
+            // GeometryCollection(_, _) => impl_method!(as_geometry_collection),
+            // Rect(_) => impl_method!(as_rect),
             _ => todo!("unsupported data type"),
         };
 
