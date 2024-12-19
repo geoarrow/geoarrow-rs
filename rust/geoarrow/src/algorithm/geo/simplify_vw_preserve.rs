@@ -1,11 +1,13 @@
 use std::sync::Arc;
 
+use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray};
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
+use arrow::datatypes::Float64Type;
 use geo::SimplifyVwPreserve as _SimplifyVwPreserve;
 
 /// Simplifies a geometry, attempting to preserve its topology by removing self-intersections
@@ -43,7 +45,7 @@ pub trait SimplifyVwPreserve {
     ///   points to form a valid geometry.
     /// - The tolerance used to remove a point is `epsilon`, in keeping with GEOS. JTS uses
     ///   `epsilon ^ 2`
-    fn simplify_vw_preserve(&self, epsilon: &f64) -> Self::Output;
+    fn simplify_vw_preserve(&self, epsilon: &BroadcastablePrimitive<Float64Type>) -> Self::Output;
 }
 
 /// Implementation that returns the identity
@@ -52,7 +54,7 @@ macro_rules! identity_impl {
         impl SimplifyVwPreserve for $type {
             type Output = Self;
 
-            fn simplify_vw_preserve(&self, _epsilon: &f64) -> Self {
+            fn simplify_vw_preserve(&self, _epsilon: &BroadcastablePrimitive<Float64Type>) -> Self {
                 self.clone()
             }
         }
@@ -64,47 +66,119 @@ identity_impl!(MultiPointArray);
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
-    ($type:ty, $geo_type:ty) => {
+    ($type:ty, $builder_type:ty, $method:ident, $geo_type:ty) => {
         impl SimplifyVwPreserve for $type {
             type Output = Self;
 
-            fn simplify_vw_preserve(&self, epsilon: &f64) -> Self {
+            fn simplify_vw_preserve(&self, epsilon: &BroadcastablePrimitive<Float64Type>) -> Self {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()
-                    .map(|maybe_g| maybe_g.map(|geom| geom.simplify_vw_preserve(epsilon)))
+                    .zip(epsilon)
+                    .map(|(maybe_g, epsilon)| {
+                        if let (Some(geom), Some(eps)) = (maybe_g, epsilon) {
+                            Some(geom.simplify_vw_preserve(&eps))
+                        } else {
+                            None
+                        }
+                    })
                     .collect();
 
-                (output_geoms, Dimension::XY).into()
+                <$builder_type>::$method(
+                    output_geoms.as_slice(),
+                    Dimension::XY,
+                    self.coord_type(),
+                    self.metadata.clone(),
+                )
+                .finish()
             }
         }
     };
 }
 
-iter_geo_impl!(LineStringArray, geo::LineString);
-iter_geo_impl!(PolygonArray, geo::Polygon);
-iter_geo_impl!(MultiLineStringArray, geo::MultiLineString);
-iter_geo_impl!(MultiPolygonArray, geo::MultiPolygon);
-// iter_geo_impl!(MixedGeometryArray, geo::Geometry);
-// iter_geo_impl!(GeometryCollectionArray, geo::GeometryCollection);
+iter_geo_impl!(
+    LineStringArray,
+    LineStringBuilder,
+    from_nullable_line_strings,
+    geo::LineString
+);
+iter_geo_impl!(
+    PolygonArray,
+    PolygonBuilder,
+    from_nullable_polygons,
+    geo::Polygon
+);
+iter_geo_impl!(
+    MultiLineStringArray,
+    MultiLineStringBuilder,
+    from_nullable_multi_line_strings,
+    geo::MultiLineString
+);
+iter_geo_impl!(
+    MultiPolygonArray,
+    MultiPolygonBuilder,
+    from_nullable_multi_polygons,
+    geo::MultiPolygon
+);
+
+impl SimplifyVwPreserve for GeometryArray {
+    type Output = Result<Self>;
+
+    fn simplify_vw_preserve(&self, epsilon: &BroadcastablePrimitive<Float64Type>) -> Self::Output {
+        let output_geoms: Vec<Option<geo::Geometry>> = self
+            .iter_geo()
+            .zip(epsilon)
+            .map(|(maybe_g, epsilon)| {
+                if let (Some(geom), Some(eps)) = (maybe_g, epsilon) {
+                    let out = match geom {
+                        geo::Geometry::LineString(g) => {
+                            geo::Geometry::LineString(g.simplify_vw_preserve(&eps))
+                        }
+                        geo::Geometry::Polygon(g) => {
+                            geo::Geometry::Polygon(g.simplify_vw_preserve(&eps))
+                        }
+                        geo::Geometry::MultiLineString(g) => {
+                            geo::Geometry::MultiLineString(g.simplify_vw_preserve(&eps))
+                        }
+                        geo::Geometry::MultiPolygon(g) => {
+                            geo::Geometry::MultiPolygon(g.simplify_vw_preserve(&eps))
+                        }
+                        g => g,
+                    };
+                    Some(out)
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        let builder = GeometryBuilder::from_nullable_geometries(
+            output_geoms.as_slice(),
+            self.coord_type(),
+            self.metadata().clone(),
+            false,
+        )?;
+        Ok(builder.finish())
+    }
+}
 
 impl SimplifyVwPreserve for &dyn NativeArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
-    fn simplify_vw_preserve(&self, epsilon: &f64) -> Self::Output {
-        use Dimension::*;
+    fn simplify_vw_preserve(&self, epsilon: &BroadcastablePrimitive<Float64Type>) -> Self::Output {
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
-            Point(_, XY) => Arc::new(self.as_point().simplify_vw_preserve(epsilon)),
-            LineString(_, XY) => Arc::new(self.as_line_string().simplify_vw_preserve(epsilon)),
-            Polygon(_, XY) => Arc::new(self.as_polygon().simplify_vw_preserve(epsilon)),
-            MultiPoint(_, XY) => Arc::new(self.as_multi_point().simplify_vw_preserve(epsilon)),
-            MultiLineString(_, XY) => {
+            Point(_, _) => Arc::new(self.as_point().simplify_vw_preserve(epsilon)),
+            LineString(_, _) => Arc::new(self.as_line_string().simplify_vw_preserve(epsilon)),
+            Polygon(_, _) => Arc::new(self.as_polygon().simplify_vw_preserve(epsilon)),
+            MultiPoint(_, _) => Arc::new(self.as_multi_point().simplify_vw_preserve(epsilon)),
+            MultiLineString(_, _) => {
                 Arc::new(self.as_multi_line_string().simplify_vw_preserve(epsilon))
             }
-            MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon().simplify_vw_preserve(epsilon)),
-            // Mixed(_, XY) => self.as_mixed().simplify_vw_preserve(epsilon),
-            // GeometryCollection(_, XY) => self.as_geometry_collection().simplify_vw_preserve(),
+            MultiPolygon(_, _) => Arc::new(self.as_multi_polygon().simplify_vw_preserve(epsilon)),
+            Geometry(_) => Arc::new(self.as_geometry().simplify_vw_preserve(epsilon)?),
+            // Mixed(_, _) => self.as_mixed().simplify_vw_preserve(epsilon),
+            // GeometryCollection(_, _) => self.as_geometry_collection().simplify_vw_preserve(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -114,7 +188,7 @@ impl SimplifyVwPreserve for &dyn NativeArray {
 impl SimplifyVwPreserve for ChunkedGeometryArray<PointArray> {
     type Output = Self;
 
-    fn simplify_vw_preserve(&self, epsilon: &f64) -> Self::Output {
+    fn simplify_vw_preserve(&self, epsilon: &BroadcastablePrimitive<Float64Type>) -> Self::Output {
         self.map(|chunk| chunk.simplify_vw_preserve(epsilon))
             .try_into()
             .unwrap()
@@ -127,7 +201,7 @@ macro_rules! chunked_impl {
         impl SimplifyVwPreserve for $type {
             type Output = Self;
 
-            fn simplify_vw_preserve(&self, epsilon: &f64) -> Self {
+            fn simplify_vw_preserve(&self, epsilon: &BroadcastablePrimitive<Float64Type>) -> Self {
                 self.map(|chunk| chunk.simplify_vw_preserve(epsilon))
                     .try_into()
                     .unwrap()
@@ -145,21 +219,20 @@ chunked_impl!(ChunkedGeometryArray<MultiPolygonArray>);
 impl SimplifyVwPreserve for &dyn ChunkedNativeArray {
     type Output = Result<Arc<dyn ChunkedNativeArray>>;
 
-    fn simplify_vw_preserve(&self, epsilon: &f64) -> Self::Output {
-        use Dimension::*;
+    fn simplify_vw_preserve(&self, epsilon: &BroadcastablePrimitive<Float64Type>) -> Self::Output {
         use NativeType::*;
 
         let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
-            Point(_, XY) => Arc::new(self.as_point().simplify_vw_preserve(epsilon)),
-            LineString(_, XY) => Arc::new(self.as_line_string().simplify_vw_preserve(epsilon)),
-            Polygon(_, XY) => Arc::new(self.as_polygon().simplify_vw_preserve(epsilon)),
-            MultiPoint(_, XY) => Arc::new(self.as_multi_point().simplify_vw_preserve(epsilon)),
-            MultiLineString(_, XY) => {
+            Point(_, _) => Arc::new(self.as_point().simplify_vw_preserve(epsilon)),
+            LineString(_, _) => Arc::new(self.as_line_string().simplify_vw_preserve(epsilon)),
+            Polygon(_, _) => Arc::new(self.as_polygon().simplify_vw_preserve(epsilon)),
+            MultiPoint(_, _) => Arc::new(self.as_multi_point().simplify_vw_preserve(epsilon)),
+            MultiLineString(_, _) => {
                 Arc::new(self.as_multi_line_string().simplify_vw_preserve(epsilon))
             }
-            MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon().simplify_vw_preserve(epsilon)),
-            // Mixed(_, XY) => self.as_mixed().simplify_vw_preserve(epsilon),
-            // GeometryCollection(_, XY) => self.as_geometry_collection().simplify_vw_preserve(),
+            MultiPolygon(_, _) => Arc::new(self.as_multi_polygon().simplify_vw_preserve(epsilon)),
+            // Mixed(_, _) => self.as_mixed().simplify_vw_preserve(epsilon),
+            // GeometryCollection(_, _) => self.as_geometry_collection().simplify_vw_preserve(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)

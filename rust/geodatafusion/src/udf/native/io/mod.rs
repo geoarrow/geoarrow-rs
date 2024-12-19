@@ -1,7 +1,6 @@
 //! Geometry Input and Output
 
 mod geohash;
-mod union_example;
 mod wkb;
 mod wkt;
 
