@@ -143,6 +143,34 @@ impl CoordBufferBuilder {
             CoordBufferBuilder::Separated(cb) => cb.try_push_point(point),
         }
     }
+
+    pub fn push_xy(&mut self, x: f64, y: f64) {
+        match self {
+            CoordBufferBuilder::Interleaved(cb) => cb.push_xy(x, y),
+            CoordBufferBuilder::Separated(cb) => cb.push_xy(x, y),
+        }
+    }
+
+    pub fn try_push_xy(&mut self, x: f64, y: f64) -> Result<()> {
+        match self {
+            CoordBufferBuilder::Interleaved(cb) => cb.try_push_xy(x, y),
+            CoordBufferBuilder::Separated(cb) => cb.try_push_xy(x, y),
+        }
+    }
+
+    pub fn push_xyz(&mut self, x: f64, y: f64, z: f64) {
+        match self {
+            CoordBufferBuilder::Interleaved(cb) => cb.push_xyz(x, y, z),
+            CoordBufferBuilder::Separated(cb) => cb.push_xyz(x, y, z),
+        }
+    }
+
+    pub fn try_push_xyz(&mut self, x: f64, y: f64, z: f64) -> Result<()> {
+        match self {
+            CoordBufferBuilder::Interleaved(cb) => cb.try_push_xyz(x, y, z),
+            CoordBufferBuilder::Separated(cb) => cb.try_push_xyz(x, y, z),
+        }
+    }
 }
 
 impl From<CoordBufferBuilder> for CoordBuffer {
