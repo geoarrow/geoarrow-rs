@@ -1816,6 +1816,7 @@ dependencies = [
  "geo-traits",
  "geos",
  "geozero",
+ "glob",
  "half",
  "http-range-client",
  "indexmap",
