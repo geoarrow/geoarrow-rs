@@ -3,7 +3,6 @@ use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::PyTuple;
 mod algorithm;
-pub mod broadcasting;
 pub mod ffi;
 mod util;
 

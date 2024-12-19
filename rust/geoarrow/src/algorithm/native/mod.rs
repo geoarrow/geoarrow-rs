@@ -19,6 +19,7 @@ pub(crate) mod type_id;
 mod unary;
 
 pub use binary::Binary;
+pub use bounding_rect::BoundingRectArray;
 pub use cast::Cast;
 pub use concatenate::Concatenate;
 pub use downcast::{Downcast, DowncastTable};

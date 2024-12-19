@@ -6,7 +6,7 @@ use crate::scalar::Rect;
 use crate::trait_::IntoArrow;
 use arrow_array::{Array, StructArray};
 use arrow_buffer::NullBufferBuilder;
-use geo_traits::RectTrait;
+use geo_traits::{CoordTrait, RectTrait};
 use std::sync::Arc;
 
 /// The GeoArrow equivalent to `Vec<Option<Rect>>`: a mutable collection of Rects.
@@ -147,6 +147,33 @@ impl RectBuilder {
     #[inline]
     pub fn push_null(&mut self) {
         self.push_rect(None::<&Rect>);
+    }
+
+    /// Push a 2D box to the builder.
+    ///
+    /// The array should be `[minx, miny, maxx, maxy]`.
+    #[inline]
+    pub fn push_box2d(&mut self, value: Option<[f64; 4]>) {
+        if let Some(value) = value {
+            self.lower
+                .push_coord(&geo::coord! { x: value[0], y: value[1] });
+            self.upper
+                .push_coord(&geo::coord! { x: value[2], y: value[3] });
+            self.validity.append_non_null()
+        } else {
+            // Since it's a struct, we still need to push coords when null
+            self.lower.push_nan_coord();
+            self.upper.push_nan_coord();
+            self.validity.append_null();
+        }
+    }
+
+    /// Push min and max coordinates of a rect to the builder.
+    #[inline]
+    pub fn push_min_max(&mut self, min: &impl CoordTrait<T = f64>, max: &impl CoordTrait<T = f64>) {
+        self.lower.push_coord(min);
+        self.upper.push_coord(max);
+        self.validity.append_non_null()
     }
 
     /// Create this builder from a iterator of Rects.

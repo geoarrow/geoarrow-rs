@@ -96,27 +96,28 @@ jobs:
       - name: Test
         run: cargo check ${{ matrix.args }}
 
-  build-benchmarks:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: "recursive"
-      # We use nightly for now so that we can pass RUSTFLAGS below to work around
-      # https://github.com/geoarrow/geoarrow-rs/issues/716
-      - uses: dtolnay/rust-toolchain@nightly
-      - uses: Swatinem/rust-cache@v2
-      - uses: prefix-dev/setup-pixi@v0.8.1
-        with:
-          activate-environment: true
-          cache: true
-          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
-          manifest-path: build/pixi.toml
-      - name: Tweak environment to find GDAL
-        run: |
-          echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/envs/default/lib/pkgconfig" >> "$GITHUB_ENV"
-          echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/envs/default/lib" >> "$GITHUB_ENV"
-      - name: Build benchmarks with no features
-        run: RUSTFLAGS="-Zinline-mir=no" cargo bench --no-run
-      - name: Build benchmarks with all features
-        run: RUSTFLAGS="-Zinline-mir=no" cargo bench --no-run --all-features
+  # We don't build benchmarks on CI because they're quite slow to compile
+  # build-benchmarks:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         submodules: "recursive"
+  #     # We use nightly for now so that we can pass RUSTFLAGS below to work around
+  #     # https://github.com/geoarrow/geoarrow-rs/issues/716
+  #     - uses: dtolnay/rust-toolchain@nightly
+  #     - uses: Swatinem/rust-cache@v2
+  #     - uses: prefix-dev/setup-pixi@v0.8.1
+  #       with:
+  #         activate-environment: true
+  #         cache: true
+  #         cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+  #         manifest-path: build/pixi.toml
+  #     - name: Tweak environment to find GDAL
+  #       run: |
+  #         echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/envs/default/lib/pkgconfig" >> "$GITHUB_ENV"
+  #         echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/envs/default/lib" >> "$GITHUB_ENV"
+  #     - name: Build benchmarks with no features
+  #       run: RUSTFLAGS="-Zinline-mir=no" cargo bench --no-run
+  #     - name: Build benchmarks with all features
+  #       run: RUSTFLAGS="-Zinline-mir=no" cargo bench --no-run --all-features

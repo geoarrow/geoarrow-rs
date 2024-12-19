@@ -146,6 +146,12 @@ pub enum NativeType {
     Geometry(CoordType),
 }
 
+impl From<NativeType> for DataType {
+    fn from(value: NativeType) -> Self {
+        value.to_data_type()
+    }
+}
+
 /// A type enum representing "serialized" GeoArrow geometry types.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SerializedType {

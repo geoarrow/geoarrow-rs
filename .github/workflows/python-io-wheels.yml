@@ -12,16 +12,41 @@ concurrency:
 
 jobs:
   linux:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.platform.runner }}
     strategy:
       matrix:
-        target: [x86_64]
+        platform:
+          - runner: ubuntu-latest
+            target: x86_64
+            manylinux: auto
+          - runner: ubuntu-latest
+            target: x86
+            manylinux: auto
+          - runner: ubuntu-latest
+            target: aarch64
+            manylinux: "2_28"
+          - runner: ubuntu-latest
+            target: armv7
+            manylinux: auto
+          - runner: ubuntu-latest
+            target: s390x
+            manylinux: auto
+          - runner: ubuntu-latest
+            target: ppc64le
+            manylinux: auto
+        module:
+          - geoarrow-io
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: 3.x
-          architecture: x64
+          enable-cache: true
+          version: "0.4.x"
+
+      - name: Install Python versions
+        run: uv python install 3.9 3.10 3.11 3.12 3.13 pypy3.10
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
@@ -29,71 +54,18 @@ jobs:
           RUSTFLAGS: "-Zinline-mir=no"
         with:
           rust-toolchain: nightly
-          target: ${{ matrix.target }}
-          manylinux: manylinux_2_28
-          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -m python/geoarrow-io/Cargo.toml
-          before-script-linux: |
-            yum update -y
-            yum install openssl openssl-devel perl-IPC-Cmd -y
-
-      - name: Install built wheel
-        if: matrix.target == 'x86_64'
-        run: |
-          pip install geoarrow-rust-io --find-links dist --force-reinstall
-          python -c "import geoarrow.rust.io"
+          target: ${{ matrix.platform.target }}
+          # As of Nov 2024, it was necessary to manually specify -i 3.13 to get
+          # maturin to find the executable. --find-interpreter did not find it.
+          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -i pypy3.10 --manifest-path python/${{ matrix.module }}/Cargo.toml
+          sccache: "true"
+          manylinux: ${{ matrix.platform.manylinux }}
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-linux-${{ matrix.target }}
+          name: wheels-linux-${{ matrix.platform.target }}-${{ matrix.module }}
           path: dist
-
-  # linux-cross:
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       target: [aarch64, armv7, s390x, ppc64le, ppc64]
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-python@v4
-  #       with:
-  #         python-version: 3.x
-
-  #     - name: Build wheels
-  #       uses: PyO3/maturin-action@v1
-  # env:
-  #   RUSTFLAGS: "-Zinline-mir=no"
-  #       with:
-  #         rust-toolchain: nightly
-  #         target: ${{ matrix.target }}
-  #         manylinux: auto
-  #         args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -m python/geoarrow-io/Cargo.toml
-
-  #     # This is currently failing with
-  #     # python: command not found
-
-  #     # - uses: uraimo/run-on-arch-action@v2.5.1
-  #     #   if: matrix.target == 'aarch64'
-  #     #   name: Install built wheel
-  #     #   with:
-  #     #     arch: ${{ matrix.target }}
-  #     #     distro: ubuntu20.04
-  #     #     githubToken: ${{ github.token }}
-  #     #     install: |
-  #     #       apt-get update
-  #     #       apt-get install -y --no-install-recommends python3 python3-pip
-  #     #       pip3 install -U pip
-  #     #     run: |
-  #     #       pip install geoarrow-rust-io --find-links dist --force-reinstall
-  #     #       python -c "import geoarrow.rust.io"
-
-  #     # Have to set path from root
-  #     # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
-  #     - name: Upload wheels
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: wheels
-  #         path: dist/*.whl
 
   macos:
     name: Build ${{ matrix.platform.target }} wheels on ${{ matrix.platform.runner }}

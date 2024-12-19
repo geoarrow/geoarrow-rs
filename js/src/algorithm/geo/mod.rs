@@ -13,7 +13,7 @@ pub mod euclidean_length;
 pub mod geodesic_area;
 pub mod geodesic_length;
 pub mod haversine_length;
-pub mod rotate;
+// pub mod rotate;
 pub mod scale;
 pub mod simplify;
 pub mod simplify_vw;
