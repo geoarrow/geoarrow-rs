@@ -59,9 +59,8 @@ bytes = { version = "1.5.0", optional = true }
 chrono = { version = "0.4" }
 dbase = "0.5.0"
 enum-as-inner = "0.6.1"
-# Set default-features = false because async not working in wasm right now
-# For geo-traits impl
-flatgeobuf = { version = "4.5", optional = true, default-features = false }
+flatgeobuf = { git = "https://github.com/kylebarron/flatgeobuf", rev = "06e987d6d3d73edb95124a14cdaab9ee8e6e57ac", version = "4.5", optional = true, default-features = false }
+# flatgeobuf = { version = "4.5", optional = true, default-features = false }
 futures = { version = "0.3", optional = true }
 gdal = { version = "0.17", optional = true }
 geo = "0.29.3"
@@ -70,7 +69,8 @@ geo-traits = "0.2"
 geos = { version = "9.1.1", features = ["v3_10_0"], optional = true }
 geozero = { version = "0.14", features = ["with-wkb"] }
 half = { version = "2.4.1" }
-http-range-client = { version = "0.8", optional = true }
+http-range-client = { git = "https://github.com/pka/http-range-client", rev = "5699e32fafc416ce683bfbf1d179f80b0b6549a3", version = "0.8", optional = true, default-features = false }
+# http-range-client = { version = "0.8", optional = true, default-features = false }
 indexmap = { version = "2" }
 lexical-core = { version = "0.8.5" }
 num-traits = "0.2.19"
