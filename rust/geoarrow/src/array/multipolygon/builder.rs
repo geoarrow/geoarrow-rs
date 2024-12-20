@@ -54,6 +54,7 @@ impl MultiPolygonBuilder {
         Self::new_with_options(dim, Default::default(), Default::default())
     }
 
+    /// Creates a new empty [`MultiPolygonBuilder`] with the provided options.
     pub fn new_with_options(
         dim: Dimension,
         coord_type: CoordType,
@@ -67,6 +68,7 @@ impl MultiPolygonBuilder {
         Self::with_capacity_and_options(dim, capacity, Default::default(), Default::default())
     }
 
+    /// Creates a new empty [`MultiPolygonBuilder`] with the provided capacity and options.
     pub fn with_capacity_and_options(
         dim: Dimension,
         capacity: MultiPolygonCapacity,
@@ -92,10 +94,10 @@ impl MultiPolygonBuilder {
         }
     }
 
-    /// Reserves capacity for at least `additional` more LineStrings to be inserted
-    /// in the given `Vec<T>`. The collection may reserve more space to
-    /// speculatively avoid frequent reallocations. After calling `reserve`,
-    /// capacity will be greater than or equal to `self.len() + additional`.
+    /// Reserves capacity for at least `additional` more MultiPolygons.
+    ///
+    /// The collection may reserve more space to speculatively avoid frequent reallocations. After
+    /// calling `reserve`, capacity will be greater than or equal to `self.len() + additional`.
     /// Does nothing if capacity is already sufficient.
     pub fn reserve(&mut self, additional: MultiPolygonCapacity) {
         self.coords.reserve(additional.coord_capacity);
@@ -104,18 +106,17 @@ impl MultiPolygonBuilder {
         self.geom_offsets.reserve(additional.geom_capacity);
     }
 
-    /// Reserves the minimum capacity for at least `additional` more LineStrings to
-    /// be inserted in the given `Vec<T>`. Unlike [`reserve`], this will not
-    /// deliberately over-allocate to speculatively avoid frequent allocations.
-    /// After calling `reserve_exact`, capacity will be greater than or equal to
-    /// `self.len() + additional`. Does nothing if the capacity is already
-    /// sufficient.
+    /// Reserves the minimum capacity for at least `additional` more MultiPolygons.
+    ///
+    /// Unlike [`reserve`], this will not deliberately over-allocate to speculatively avoid
+    /// frequent allocations. After calling `reserve_exact`, capacity will be greater than or equal
+    /// to `self.len() + additional`. Does nothing if the capacity is already sufficient.
     ///
     /// Note that the allocator may give the collection more space than it
     /// requests. Therefore, capacity can not be relied upon to be precisely
     /// minimal. Prefer [`reserve`] if future insertions are expected.
     ///
-    /// [`reserve`]: Vec::reserve
+    /// [`reserve`]: Self::reserve
     pub fn reserve_exact(&mut self, additional: MultiPolygonCapacity) {
         self.coords.reserve_exact(additional.coord_capacity);
         self.ring_offsets.reserve_exact(additional.ring_capacity);
@@ -173,14 +174,12 @@ impl MultiPolygonBuilder {
         )
     }
 
-    pub fn into_array_ref(self) -> ArrayRef {
-        Arc::new(self.into_arrow())
-    }
-
+    /// Consume the builder and convert to an immutable [`MultiPolygonArray`]
     pub fn finish(self) -> MultiPolygonArray {
         self.into()
     }
 
+    /// Creates a new builder with a capacity inferred by the provided iterator.
     pub fn with_capacity_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
         dim: Dimension,
@@ -193,6 +192,8 @@ impl MultiPolygonBuilder {
         )
     }
 
+    /// Creates a new builder with the provided options and a capacity inferred by the provided
+    /// iterator.
     pub fn with_capacity_and_options_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
         dim: Dimension,
@@ -203,6 +204,8 @@ impl MultiPolygonBuilder {
         Self::with_capacity_and_options(dim, capacity, coord_type, metadata)
     }
 
+    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
+    /// geometries.
     pub fn reserve_from_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
@@ -211,6 +214,8 @@ impl MultiPolygonBuilder {
         self.reserve(capacity)
     }
 
+    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
+    /// geometries.
     pub fn reserve_exact_from_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
@@ -317,6 +322,9 @@ impl MultiPolygonBuilder {
         Ok(())
     }
 
+    /// Add a new geometry to this builder
+    ///
+    /// This will error if the geometry type is not Polygon or MultiPolygon.
     #[inline]
     pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
         if let Some(value) = value {
@@ -332,6 +340,7 @@ impl MultiPolygonBuilder {
         Ok(())
     }
 
+    /// Extend this builder with the given geometries
     pub fn extend_from_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait<T = f64> + 'a)>>,
@@ -342,6 +351,7 @@ impl MultiPolygonBuilder {
             .unwrap();
     }
 
+    /// Extend this builder with the given geometries
     pub fn extend_from_geometry_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
@@ -414,6 +424,7 @@ impl MultiPolygonBuilder {
         self.validity.append(false);
     }
 
+    /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_multi_polygons(
         geoms: &[impl MultiPolygonTrait<T = f64>],
         dim: Dimension,
@@ -430,6 +441,7 @@ impl MultiPolygonBuilder {
         array
     }
 
+    /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_nullable_multi_polygons(
         geoms: &[Option<impl MultiPolygonTrait<T = f64>>],
         dim: Dimension,
@@ -446,6 +458,7 @@ impl MultiPolygonBuilder {
         array
     }
 
+    /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         dim: Dimension,

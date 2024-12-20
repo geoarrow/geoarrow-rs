@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, AddAssign};
 
 use crate::error::{GeoArrowError, Result};
 use geo_traits::{GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
@@ -31,6 +31,7 @@ impl MultiPointCapacity {
         self.coord_capacity == 0 && self.geom_capacity == 0
     }
 
+    /// Add the capacity of a point
     #[inline]
     pub fn add_point(&mut self, point: Option<&impl PointTrait>) {
         self.geom_capacity += 1;
@@ -44,6 +45,7 @@ impl MultiPointCapacity {
         self.coord_capacity += 1;
     }
 
+    /// Add the capacity of the given MultiPoint
     #[inline]
     pub fn add_multi_point(&mut self, maybe_multi_point: Option<&impl MultiPointTrait>) {
         self.geom_capacity += 1;
@@ -58,6 +60,9 @@ impl MultiPointCapacity {
         self.coord_capacity += multi_point.num_points();
     }
 
+    /// Add the capacity of the given Geometry
+    ///
+    /// The type of the geometry must be either Point or MultiPoint
     #[inline]
     pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait>) -> Result<()> {
         self.geom_capacity += 1;
@@ -72,19 +77,22 @@ impl MultiPointCapacity {
         Ok(())
     }
 
-    pub fn add_point_capacity(&mut self, point_capacity: usize) {
+    pub(crate) fn add_point_capacity(&mut self, point_capacity: usize) {
         self.coord_capacity += point_capacity;
         self.geom_capacity += point_capacity;
     }
 
+    /// The coordinate buffer capacity
     pub fn coord_capacity(&self) -> usize {
         self.coord_capacity
     }
 
+    /// The geometry offsets buffer capacity
     pub fn geom_capacity(&self) -> usize {
         self.geom_capacity
     }
 
+    /// Construct a new counter pre-filled with the given MultiPoints
     pub fn from_multi_points<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
     ) -> Self {
@@ -97,6 +105,7 @@ impl MultiPointCapacity {
         counter
     }
 
+    /// Construct a new counter pre-filled with the given geometries
     pub fn from_geometries<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
     ) -> Result<Self> {
@@ -128,5 +137,12 @@ impl Add for MultiPointCapacity {
         let coord_capacity = self.coord_capacity + rhs.coord_capacity;
         let geom_capacity = self.geom_capacity + rhs.geom_capacity;
         Self::new(coord_capacity, geom_capacity)
+    }
+}
+
+impl AddAssign for MultiPointCapacity {
+    fn add_assign(&mut self, rhs: Self) {
+        self.coord_capacity += rhs.coord_capacity;
+        self.geom_capacity += rhs.geom_capacity;
     }
 }

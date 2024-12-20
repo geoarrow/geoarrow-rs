@@ -73,10 +73,6 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         validity_len + self.buffer_lengths().num_bytes::<O>()
     }
 
-    pub fn into_inner(self) -> GenericBinaryArray<O> {
-        self.array
-    }
-
     /// Slices this [`WKBArray`] in place.
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
@@ -93,6 +89,7 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         }
     }
 
+    /// Replace the [ArrayMetadata] in the array with the given metadata
     pub fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> Self {
         let mut arr = self.clone();
         arr.metadata = metadata;

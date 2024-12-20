@@ -44,22 +44,27 @@ impl MultiPolygonCapacity {
             && self.geom_capacity == 0
     }
 
+    /// The coordinate buffer capacity
     pub fn coord_capacity(&self) -> usize {
         self.coord_capacity
     }
 
+    /// The ring offset buffer capacity
     pub fn ring_capacity(&self) -> usize {
         self.ring_capacity
     }
 
+    /// The polygon offset buffer capacity
     pub fn polygon_capacity(&self) -> usize {
         self.polygon_capacity
     }
 
+    /// The geometry offset buffer capacity
     pub fn geom_capacity(&self) -> usize {
         self.geom_capacity
     }
 
+    /// Add the capacity of the given Polygon
     #[inline]
     pub fn add_polygon<'a>(&mut self, polygon: Option<&'a (impl PolygonTrait + 'a)>) {
         self.geom_capacity += 1;
@@ -82,6 +87,7 @@ impl MultiPolygonCapacity {
         }
     }
 
+    /// Add the capacity of the given MultiPolygon
     #[inline]
     pub fn add_multi_polygon<'a>(
         &mut self,
@@ -110,6 +116,10 @@ impl MultiPolygonCapacity {
         }
     }
 
+    /// Add the capacity of the given Geometry
+    ///
+    /// The type of the geometry must be either Polygon or MultiPolygon
+    #[inline]
     pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait>) -> Result<()> {
         if let Some(geom) = value {
             match geom.as_type() {
@@ -123,16 +133,7 @@ impl MultiPolygonCapacity {
         Ok(())
     }
 
-    pub fn add_polygon_capacity(&mut self, capacity: PolygonCapacity) {
-        // NOTE: I think this will overallocate if there are null values?
-        // Because it assumes that every geometry has exactly one polygon, which won't be true if
-        // there are null values?
-        self.coord_capacity += capacity.coord_capacity();
-        self.ring_capacity += capacity.ring_capacity();
-        self.polygon_capacity += capacity.geom_capacity();
-        self.geom_capacity += capacity.geom_capacity();
-    }
-
+    /// Construct a new counter pre-filled with the given MultiPolygons
     pub fn from_multi_polygons<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
     ) -> Self {
@@ -143,6 +144,7 @@ impl MultiPolygonCapacity {
         counter
     }
 
+    /// Construct a new counter pre-filled with the given geometries
     pub fn from_geometries<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
     ) -> Result<Self> {

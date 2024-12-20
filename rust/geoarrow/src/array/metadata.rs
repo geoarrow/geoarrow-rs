@@ -92,46 +92,62 @@ impl ArrayMetadata {
         self.crs.is_some() || self.edges.is_some()
     }
 
+    /// Construct from a PROJJSON object.
+    ///
+    /// Note that `value` should be a _parsed_ JSON object; this should not contain
+    /// `Value::String`.
     pub fn from_projjson(value: Value) -> Self {
         Self::default().with_projjson(value)
     }
 
+    /// Construct from a WKT:2019 string.
     pub fn from_wkt2_2019(value: String) -> Self {
         Self::default().with_wkt2_2019(value)
     }
 
+    /// Construct from an opaque string.
     pub fn from_unknown_crs_type(value: String) -> Self {
         Self::default().with_unknown_crs_type(value)
     }
 
+    /// Construct from an authority:code string.
     pub fn from_authority_code(value: String) -> Self {
         Self::default().with_authority_code(value)
     }
 
+    /// Set the CRS using a PROJJSON object.
+    ///
+    /// Note that `value` should be a _parsed_ JSON object; this should not contain
+    /// `Value::String`.
     pub fn with_projjson(mut self, value: Value) -> Self {
         self.crs = Some(value);
         self.crs_type = Some(CRSType::Projjson);
         self
     }
 
+    /// Set the CRS using a WKT:2019 string.
     pub fn with_wkt2_2019(mut self, value: String) -> Self {
         self.crs = Some(Value::String(value));
         self.crs_type = Some(CRSType::Wkt2_2019);
         self
     }
 
+    /// Set the CRS using an opaque string.
     pub fn with_unknown_crs_type(mut self, value: String) -> Self {
         self.crs = Some(Value::String(value));
         self.crs_type = None;
         self
     }
 
+    /// Set the CRS using an authority:code string.
     pub fn with_authority_code(mut self, value: String) -> Self {
+        assert!(value.contains(':'), "':' should be authority:code CRS");
         self.crs = Some(Value::String(value));
         self.crs_type = Some(CRSType::AuthorityCode);
         self
     }
 
+    /// Set the edge type.
     pub fn with_edges(mut self, edges: Edges) -> Self {
         self.edges = Some(edges);
         self

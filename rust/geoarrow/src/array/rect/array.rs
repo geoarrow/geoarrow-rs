@@ -40,6 +40,7 @@ pub struct RectArray {
 }
 
 impl RectArray {
+    /// Construct a new [`RectArray`] from parts
     pub fn new(
         lower: SeparatedCoordBuffer,
         upper: SeparatedCoordBuffer,
@@ -57,10 +58,16 @@ impl RectArray {
         }
     }
 
+    /// Access the coordinate buffer of the "lower" corner of the RectArray
+    ///
+    /// Note that this needs to be interpreted in conjunction with the [null buffer][Self::nulls].
     pub fn lower(&self) -> &SeparatedCoordBuffer {
         &self.lower
     }
 
+    /// Access the coordinate buffer of the "upper" corner of the RectArray
+    ///
+    /// Note that this needs to be interpreted in conjunction with the [null buffer][Self::nulls].
     pub fn upper(&self) -> &SeparatedCoordBuffer {
         &self.upper
     }

@@ -140,14 +140,17 @@ impl PolygonArray {
         Field::new_list(name, self.vertices_field(), false).into()
     }
 
+    /// Access the underlying coordinate buffer
     pub fn coords(&self) -> &CoordBuffer {
         &self.coords
     }
 
+    /// Access the underlying geometry offsets buffer
     pub fn geom_offsets(&self) -> &OffsetBuffer<i32> {
         &self.geom_offsets
     }
 
+    /// Access the underlying ring offsets buffer
     pub fn ring_offsets(&self) -> &OffsetBuffer<i32> {
         &self.ring_offsets
     }
@@ -188,10 +191,12 @@ impl PolygonArray {
         }
     }
 
+    /// Change the coordinate type of this array.
     pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
         self.clone().into_coord_type(coord_type)
     }
 
+    /// Change the coordinate type of this array.
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
         Self::new(
             self.coords.into_coord_type(coord_type),

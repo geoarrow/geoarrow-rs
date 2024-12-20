@@ -250,49 +250,49 @@ impl GeometryArray {
     }
 
     // TODO: handle slicing
-    pub fn has_points(&self, dim: Dimension) -> bool {
+    pub(crate) fn has_points(&self, dim: Dimension) -> bool {
         match dim {
             Dimension::XY => !self.point_xy.is_empty(),
             Dimension::XYZ => !self.point_xyz.is_empty(),
         }
     }
 
-    pub fn has_line_strings(&self, dim: Dimension) -> bool {
+    pub(crate) fn has_line_strings(&self, dim: Dimension) -> bool {
         match dim {
             Dimension::XY => !self.line_string_xy.is_empty(),
             Dimension::XYZ => !self.line_string_xyz.is_empty(),
         }
     }
 
-    pub fn has_polygons(&self, dim: Dimension) -> bool {
+    pub(crate) fn has_polygons(&self, dim: Dimension) -> bool {
         match dim {
             Dimension::XY => !self.polygon_xy.is_empty(),
             Dimension::XYZ => !self.polygon_xyz.is_empty(),
         }
     }
 
-    pub fn has_multi_points(&self, dim: Dimension) -> bool {
+    pub(crate) fn has_multi_points(&self, dim: Dimension) -> bool {
         match dim {
             Dimension::XY => !self.mpoint_xy.is_empty(),
             Dimension::XYZ => !self.mpoint_xyz.is_empty(),
         }
     }
 
-    pub fn has_multi_line_strings(&self, dim: Dimension) -> bool {
+    pub(crate) fn has_multi_line_strings(&self, dim: Dimension) -> bool {
         match dim {
             Dimension::XY => !self.mline_string_xy.is_empty(),
             Dimension::XYZ => !self.mline_string_xyz.is_empty(),
         }
     }
 
-    pub fn has_multi_polygons(&self, dim: Dimension) -> bool {
+    pub(crate) fn has_multi_polygons(&self, dim: Dimension) -> bool {
         match dim {
             Dimension::XY => !self.mpolygon_xy.is_empty(),
             Dimension::XYZ => !self.mpolygon_xyz.is_empty(),
         }
     }
 
-    pub fn has_geometry_collections(&self, dim: Dimension) -> bool {
+    pub(crate) fn has_geometry_collections(&self, dim: Dimension) -> bool {
         match dim {
             Dimension::XY => !self.gc_xy.is_empty(),
             Dimension::XYZ => !self.gc_xyz.is_empty(),
@@ -500,10 +500,12 @@ impl GeometryArray {
         }
     }
 
+    /// Change the coordinate type of this array.
     pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
         self.clone().into_coord_type(coord_type)
     }
 
+    /// Change the coordinate type of this array.
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
         Self::new(
             self.type_ids,
@@ -527,7 +529,8 @@ impl GeometryArray {
     }
 
     // TODO: recursively expand the types from the geometry collection array
-    pub fn contained_types(&self) -> HashSet<NativeType> {
+    #[allow(dead_code)]
+    pub(crate) fn contained_types(&self) -> HashSet<NativeType> {
         let mut types = HashSet::new();
         if self.has_points(Dimension::XY) {
             types.insert(self.point_xy.data_type());

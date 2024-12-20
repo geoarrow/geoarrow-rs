@@ -111,14 +111,17 @@ impl MultiPointArray {
         Field::new("points", self.coords.storage_type(), false).into()
     }
 
+    /// Access the underlying coord buffer
     pub fn coords(&self) -> &CoordBuffer {
         &self.coords
     }
 
-    pub fn into_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, Option<NullBuffer>) {
+    #[allow(dead_code)]
+    pub(crate) fn into_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, Option<NullBuffer>) {
         (self.coords, self.geom_offsets, self.validity)
     }
 
+    /// Access the underlying geometry offsets buffer
     pub fn geom_offsets(&self) -> &OffsetBuffer<i32> {
         &self.geom_offsets
     }
@@ -167,10 +170,12 @@ impl MultiPointArray {
         }
     }
 
+    /// Change the coordinate type of this array.
     pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
         self.clone().into_coord_type(coord_type)
     }
 
+    /// Change the coordinate type of this array.
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
         Self::new(
             self.coords.into_coord_type(coord_type),

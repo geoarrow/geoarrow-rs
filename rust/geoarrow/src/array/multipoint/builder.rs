@@ -37,7 +37,7 @@ impl MultiPointBuilder {
         Self::new_with_options(dim, Default::default(), Default::default())
     }
 
-    /// Creates a new [`MultiPointBuilder`] with a specified [`CoordType`]
+    /// Creates a new [`MultiPointBuilder`] with options
     pub fn new_with_options(
         dim: Dimension,
         coord_type: CoordType,
@@ -45,12 +45,13 @@ impl MultiPointBuilder {
     ) -> Self {
         Self::with_capacity_and_options(dim, Default::default(), coord_type, metadata)
     }
+
     /// Creates a new [`MultiPointBuilder`] with a capacity.
     pub fn with_capacity(dim: Dimension, capacity: MultiPointCapacity) -> Self {
         Self::with_capacity_and_options(dim, capacity, Default::default(), Default::default())
     }
 
-    // with capacity and options enables us to write with_capacity based on this method
+    /// Creates a new [`MultiPointBuilder`] with capacity and options
     pub fn with_capacity_and_options(
         dim: Dimension,
         capacity: MultiPointCapacity,
@@ -73,28 +74,27 @@ impl MultiPointBuilder {
         }
     }
 
-    /// Reserves capacity for at least `additional` more MultiPoints to be inserted
-    /// in the given `Vec<T>`. The collection may reserve more space to
-    /// speculatively avoid frequent reallocations. After calling `reserve`,
-    /// capacity will be greater than or equal to `self.len() + additional`.
+    /// Reserves capacity for at least `additional` more MultiPoints.
+    ///
+    /// The collection may reserve more space to speculatively avoid frequent reallocations. After
+    /// calling `reserve`, capacity will be greater than or equal to `self.len() + additional`.
     /// Does nothing if capacity is already sufficient.
     pub fn reserve(&mut self, capacity: MultiPointCapacity) {
         self.coords.reserve(capacity.coord_capacity);
         self.geom_offsets.reserve(capacity.geom_capacity);
     }
 
-    /// Reserves the minimum capacity for at least `additional` more MultiPoints to
-    /// be inserted in the given `Vec<T>`. Unlike [`reserve`], this will not
-    /// deliberately over-allocate to speculatively avoid frequent allocations.
-    /// After calling `reserve_exact`, capacity will be greater than or equal to
-    /// `self.len() + additional`. Does nothing if the capacity is already
-    /// sufficient.
+    /// Reserves the minimum capacity for at least `additional` more MultiPoints.
+    ///
+    /// Unlike [`reserve`], this will not deliberately over-allocate to speculatively avoid
+    /// frequent allocations. After calling `reserve_exact`, capacity will be greater than or equal
+    /// to `self.len() + additional`. Does nothing if the capacity is already sufficient.
     ///
     /// Note that the allocator may give the collection more space than it
     /// requests. Therefore, capacity can not be relied upon to be precisely
     /// minimal. Prefer [`reserve`] if future insertions are expected.
     ///
-    /// [`reserve`]: Vec::reserve
+    /// [`reserve`]: Self::reserve
     pub fn reserve_exact(&mut self, capacity: MultiPointCapacity) {
         self.coords.reserve_exact(capacity.coord_capacity);
         self.geom_offsets.reserve_exact(capacity.geom_capacity);
@@ -136,14 +136,12 @@ impl MultiPointBuilder {
         (self.coords, self.geom_offsets, self.validity)
     }
 
-    pub fn into_array_ref(self) -> ArrayRef {
-        Arc::new(self.into_arrow())
-    }
-
+    /// Consume the builder and convert to an immutable [`MultiPointArray`]
     pub fn finish(self) -> MultiPointArray {
         self.into()
     }
 
+    /// Creates a new builder with a capacity inferred by the provided iterator.
     pub fn with_capacity_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
         dim: Dimension,
@@ -156,6 +154,8 @@ impl MultiPointBuilder {
         )
     }
 
+    /// Creates a new builder with the provided options and a capacity inferred by the provided
+    /// iterator.
     pub fn with_capacity_and_options_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
         dim: Dimension,
@@ -166,6 +166,8 @@ impl MultiPointBuilder {
         Self::with_capacity_and_options(dim, counter, coord_type, metadata)
     }
 
+    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
+    /// geometries.
     pub fn reserve_from_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
@@ -174,6 +176,8 @@ impl MultiPointBuilder {
         self.reserve(counter)
     }
 
+    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
+    /// geometries.
     pub fn reserve_exact_from_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
@@ -182,6 +186,7 @@ impl MultiPointBuilder {
         self.reserve_exact(counter)
     }
 
+    /// Extend this builder with the given geometries
     pub fn extend_from_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait<T = f64> + 'a)>>,
@@ -192,6 +197,7 @@ impl MultiPointBuilder {
             .unwrap();
     }
 
+    /// Extend this builder with the given geometries
     pub fn extend_from_geometry_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
@@ -239,6 +245,9 @@ impl MultiPointBuilder {
         Ok(())
     }
 
+    /// Add a new geometry to this builder
+    ///
+    /// This will error if the geometry type is not Point or MultiPoint.
     #[inline]
     pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
         if let Some(value) = value {
@@ -295,6 +304,7 @@ impl MultiPointBuilder {
         self.validity.append(false);
     }
 
+    /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_multi_points(
         geoms: &[impl MultiPointTrait<T = f64>],
         dim: Dimension,
@@ -311,6 +321,7 @@ impl MultiPointBuilder {
         array
     }
 
+    /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_nullable_multi_points(
         geoms: &[Option<impl MultiPointTrait<T = f64>>],
         dim: Dimension,
@@ -327,6 +338,7 @@ impl MultiPointBuilder {
         array
     }
 
+    /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         dim: Dimension,
@@ -390,7 +402,7 @@ impl GeometryArrayBuilder for MultiPointBuilder {
     }
 
     fn into_array_ref(self) -> ArrayRef {
-        self.into_array_ref()
+        Arc::new(self.into_arrow())
     }
 
     fn coord_type(&self) -> CoordType {

@@ -4,7 +4,7 @@ use crate::datatypes::Dimension;
 use crate::error::GeoArrowError;
 use crate::scalar::Rect;
 use crate::trait_::IntoArrow;
-use arrow_array::{Array, StructArray};
+use arrow_array::{ArrayRef, StructArray};
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, RectTrait};
 use std::sync::Arc;
@@ -14,10 +14,10 @@ use std::sync::Arc;
 /// Converting an [`RectBuilder`] into a [`RectArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct RectBuilder {
-    pub metadata: Arc<ArrayMetadata>,
-    pub lower: SeparatedCoordBufferBuilder,
-    pub upper: SeparatedCoordBufferBuilder,
-    pub validity: NullBufferBuilder,
+    pub(crate) metadata: Arc<ArrayMetadata>,
+    pub(crate) lower: SeparatedCoordBufferBuilder,
+    pub(crate) upper: SeparatedCoordBufferBuilder,
+    pub(crate) validity: NullBufferBuilder,
 }
 
 impl RectBuilder {
@@ -26,6 +26,7 @@ impl RectBuilder {
         Self::new_with_options(dim, Default::default())
     }
 
+    /// Creates a new empty [`RectBuilder`] with the provided options.
     pub fn new_with_options(dim: Dimension, metadata: Arc<ArrayMetadata>) -> Self {
         Self::with_capacity_and_options(dim, 0, metadata)
     }
@@ -35,7 +36,7 @@ impl RectBuilder {
         Self::with_capacity_and_options(dim, capacity, Default::default())
     }
 
-    /// Creates a new [`RectBuilder`] with a capacity.
+    /// Creates a new [`RectBuilder`] with a capacity and options.
     pub fn with_capacity_and_options(
         dim: Dimension,
         capacity: usize,
@@ -49,28 +50,27 @@ impl RectBuilder {
         }
     }
 
-    /// Reserves capacity for at least `additional` more points to be inserted
-    /// in the given `Vec<T>`. The collection may reserve more space to
-    /// speculatively avoid frequent reallocations. After calling `reserve`,
-    /// capacity will be greater than or equal to `self.len() + additional`.
+    /// Reserves capacity for at least `additional` more Rects.
+    ///
+    /// The collection may reserve more space to speculatively avoid frequent reallocations. After
+    /// calling `reserve`, capacity will be greater than or equal to `self.len() + additional`.
     /// Does nothing if capacity is already sufficient.
     pub fn reserve(&mut self, additional: usize) {
         self.lower.reserve(additional);
         self.upper.reserve(additional);
     }
 
-    /// Reserves the minimum capacity for at least `additional` more points to
-    /// be inserted in the given `Vec<T>`. Unlike [`reserve`], this will not
-    /// deliberately over-allocate to speculatively avoid frequent allocations.
-    /// After calling `reserve_exact`, capacity will be greater than or equal to
-    /// `self.len() + additional`. Does nothing if the capacity is already
-    /// sufficient.
+    /// Reserves the minimum capacity for at least `additional` more Rects.
+    ///
+    /// Unlike [`reserve`], this will not deliberately over-allocate to speculatively avoid
+    /// frequent allocations. After calling `reserve_exact`, capacity will be greater than or equal
+    /// to `self.len() + additional`. Does nothing if the capacity is already sufficient.
     ///
     /// Note that the allocator may give the collection more space than it
     /// requests. Therefore, capacity can not be relied upon to be precisely
     /// minimal. Prefer [`reserve`] if future insertions are expected.
     ///
-    /// [`reserve`]: Vec::reserve
+    /// [`reserve`]: Self::reserve
     pub fn reserve_exact(&mut self, additional: usize) {
         self.lower.reserve_exact(additional);
         self.upper.reserve_exact(additional);
@@ -122,6 +122,7 @@ impl RectBuilder {
         Arc::new(self.into_arrow())
     }
 
+    /// Consume the builder and convert to an immutable [`RectArray`]
     pub fn finish(self) -> RectArray {
         self.into()
     }
@@ -225,7 +226,7 @@ impl From<RectBuilder> for RectArray {
             other.lower.into(),
             other.upper.into(),
             other.validity.finish(),
-            Default::default(),
+            other.metadata,
         )
     }
 }

@@ -38,6 +38,7 @@ impl LineStringBuilder {
         Self::new_with_options(dim, Default::default(), Default::default())
     }
 
+    /// Creates a new empty [`LineStringBuilder`] with the provided options.
     pub fn new_with_options(
         dim: Dimension,
         coord_type: CoordType,
@@ -51,6 +52,7 @@ impl LineStringBuilder {
         Self::with_capacity_and_options(dim, capacity, Default::default(), Default::default())
     }
 
+    /// Creates a new empty [`LineStringBuilder`] with the provided capacity and options.
     pub fn with_capacity_and_options(
         dim: Dimension,
         capacity: LineStringCapacity,
@@ -73,28 +75,27 @@ impl LineStringBuilder {
         }
     }
 
-    /// Reserves capacity for at least `additional` more LineStrings to be inserted
-    /// in the given `Vec<T>`. The collection may reserve more space to
-    /// speculatively avoid frequent reallocations. After calling `reserve`,
-    /// capacity will be greater than or equal to `self.len() + additional`.
+    /// Reserves capacity for at least `additional` more LineStrings.
+    ///
+    /// The collection may reserve more space to speculatively avoid frequent reallocations. After
+    /// calling `reserve`, capacity will be greater than or equal to `self.len() + additional`.
     /// Does nothing if capacity is already sufficient.
     pub fn reserve(&mut self, additional: LineStringCapacity) {
         self.coords.reserve(additional.coord_capacity());
         self.geom_offsets.reserve(additional.geom_capacity());
     }
 
-    /// Reserves the minimum capacity for at least `additional` more LineStrings to
-    /// be inserted in the given `Vec<T>`. Unlike [`reserve`], this will not
-    /// deliberately over-allocate to speculatively avoid frequent allocations.
-    /// After calling `reserve_exact`, capacity will be greater than or equal to
-    /// `self.len() + additional`. Does nothing if the capacity is already
-    /// sufficient.
+    /// Reserves the minimum capacity for at least `additional` more LineStrings.
+    ///
+    /// Unlike [`reserve`], this will not deliberately over-allocate to speculatively avoid
+    /// frequent allocations. After calling `reserve_exact`, capacity will be greater than or equal
+    /// to `self.len() + additional`. Does nothing if the capacity is already sufficient.
     ///
     /// Note that the allocator may give the collection more space than it
     /// requests. Therefore, capacity can not be relied upon to be precisely
     /// minimal. Prefer [`reserve`] if future insertions are expected.
     ///
-    /// [`reserve`]: Vec::reserve
+    /// [`reserve`]: Self::reserve
     pub fn reserve_exact(&mut self, additional: LineStringCapacity) {
         self.coords.reserve_exact(additional.coord_capacity());
         self.geom_offsets.reserve_exact(additional.geom_capacity());
@@ -151,14 +152,12 @@ impl LineStringBuilder {
         self.validity.append(false);
     }
 
-    pub fn into_array_ref(self) -> ArrayRef {
-        Arc::new(self.into_arrow())
-    }
-
+    /// Consume the builder and convert to an immutable [`LineStringArray`]
     pub fn finish(self) -> LineStringArray {
         self.into()
     }
 
+    /// Creates a new builder with a capacity inferred by the provided iterator.
     pub fn with_capacity_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
         dim: Dimension,
@@ -171,6 +170,8 @@ impl LineStringBuilder {
         )
     }
 
+    /// Creates a new builder with the provided options and a capacity inferred by the provided
+    /// iterator.
     pub fn with_capacity_and_options_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
         dim: Dimension,
@@ -181,6 +182,8 @@ impl LineStringBuilder {
         Self::with_capacity_and_options(dim, counter, coord_type, metadata)
     }
 
+    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
+    /// geometries.
     pub fn reserve_from_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
@@ -189,6 +192,8 @@ impl LineStringBuilder {
         self.reserve(counter)
     }
 
+    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
+    /// geometries.
     pub fn reserve_exact_from_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
@@ -197,6 +202,7 @@ impl LineStringBuilder {
         self.reserve_exact(counter)
     }
 
+    /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_line_strings(
         geoms: &[impl LineStringTrait<T = f64>],
         dim: Dimension,
@@ -213,6 +219,7 @@ impl LineStringBuilder {
         array
     }
 
+    /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_nullable_line_strings(
         geoms: &[Option<impl LineStringTrait<T = f64>>],
         dim: Dimension,
@@ -251,6 +258,7 @@ impl LineStringBuilder {
         Ok(())
     }
 
+    /// Extend this builder with the given geometries
     pub fn extend_from_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait<T = f64> + 'a)>>,
@@ -261,6 +269,7 @@ impl LineStringBuilder {
             .unwrap();
     }
 
+    /// Extend this builder with the given geometries
     pub fn extend_from_geometry_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
@@ -280,6 +289,9 @@ impl LineStringBuilder {
         self.coords.try_push_coord(coord)
     }
 
+    /// Add a new geometry to this builder
+    ///
+    /// This will error if the geometry type is not LineString or a MultiLineString with length 1.
     #[inline]
     pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
         if let Some(value) = value {
@@ -300,6 +312,7 @@ impl LineStringBuilder {
         Ok(())
     }
 
+    /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         dim: Dimension,

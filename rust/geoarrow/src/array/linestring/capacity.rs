@@ -45,6 +45,9 @@ impl LineStringCapacity {
         self.coord_capacity += line_string.num_coords();
     }
 
+    /// Add the capacity of the given Geometry
+    ///
+    /// The type of the geometry must be LineString
     #[inline]
     pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait>) -> Result<()> {
         self.geom_capacity += 1;
@@ -58,10 +61,12 @@ impl LineStringCapacity {
         Ok(())
     }
 
+    /// The coordinate buffer capacity
     pub fn coord_capacity(&self) -> usize {
         self.coord_capacity
     }
 
+    /// The geometry offset buffer capacity
     pub fn geom_capacity(&self) -> usize {
         self.geom_capacity
     }
@@ -79,6 +84,7 @@ impl LineStringCapacity {
         counter
     }
 
+    /// Construct a new counter pre-filled with the given geometries
     pub fn from_geometries<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
     ) -> Result<Self> {

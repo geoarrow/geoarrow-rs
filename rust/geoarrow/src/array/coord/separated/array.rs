@@ -13,6 +13,10 @@ use crate::scalar::SeparatedCoord;
 use crate::trait_::IntoArrow;
 use geo_traits::CoordTrait;
 
+/// The GeoArrow equivalent to `Vec<Option<Coord>>`: an immutable collection of coordinates.
+///
+/// This stores all coordinates in separated fashion as multiple underlying buffers: `xxx` and
+/// `yyy`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SeparatedCoordBuffer {
     /// We always store a buffer for all 4 dimensions. The buffers for dimension 3 and 4 may be
@@ -85,11 +89,12 @@ impl SeparatedCoordBuffer {
         }
     }
 
+    /// The dimension of this coordinate buffer
     pub fn dim(&self) -> Dimension {
         self.dim
     }
 
-    pub fn values_array(&self) -> Vec<ArrayRef> {
+    pub(crate) fn values_array(&self) -> Vec<ArrayRef> {
         match self.dim {
             Dimension::XY => {
                 vec![
@@ -107,7 +112,7 @@ impl SeparatedCoordBuffer {
         }
     }
 
-    pub fn values_field(&self) -> Vec<Field> {
+    pub(crate) fn values_field(&self) -> Vec<Field> {
         match self.dim {
             Dimension::XY => {
                 vec![
@@ -125,7 +130,7 @@ impl SeparatedCoordBuffer {
         }
     }
 
-    pub fn slice(&self, offset: usize, length: usize) -> Self {
+    pub(crate) fn slice(&self, offset: usize, length: usize) -> Self {
         assert!(
             offset + length <= self.len(),
             "offset + length may not exceed length of array"
@@ -143,36 +148,31 @@ impl SeparatedCoordBuffer {
         }
     }
 
-    pub fn storage_type(&self) -> DataType {
+    pub(crate) fn storage_type(&self) -> DataType {
         coord_type_to_data_type(CoordType::Separated, self.dim)
     }
 
-    pub fn into_array_ref(self) -> ArrayRef {
-        Arc::new(self.into_arrow())
-    }
-
-    pub fn to_array_ref(&self) -> ArrayRef {
-        self.clone().into_array_ref()
-    }
-
+    /// The coordinate type
     pub fn coord_type(&self) -> CoordType {
         CoordType::Separated
     }
 
+    /// The number of coordinates
     pub fn len(&self) -> usize {
         self.buffers[0].len()
     }
 
+    /// Whether the coordinate buffer is empty
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
-    pub fn value(&self, index: usize) -> SeparatedCoord<'_> {
+    pub(crate) fn value(&self, index: usize) -> SeparatedCoord<'_> {
         assert!(index <= self.len());
         self.value_unchecked(index)
     }
 
-    pub fn value_unchecked(&self, index: usize) -> SeparatedCoord<'_> {
+    pub(crate) fn value_unchecked(&self, index: usize) -> SeparatedCoord<'_> {
         SeparatedCoord {
             buffers: &self.buffers,
             i: index,
@@ -180,7 +180,7 @@ impl SeparatedCoordBuffer {
         }
     }
 
-    pub fn from_arrow(array: &StructArray, dim: Dimension) -> Result<Self> {
+    pub(crate) fn from_arrow(array: &StructArray, dim: Dimension) -> Result<Self> {
         let arrays = array.columns();
         assert_eq!(arrays.len(), dim.size());
 
@@ -193,7 +193,11 @@ impl SeparatedCoordBuffer {
         Self::try_new(buffers, dim)
     }
 
-    pub fn from_coords<G: CoordTrait<T = f64>>(coords: &[G], dim: Dimension) -> Result<Self> {
+    /// Construct from an iterator of coordinates
+    pub fn from_coords<'a>(
+        coords: impl ExactSizeIterator<Item = &'a (impl CoordTrait<T = f64> + 'a)>,
+        dim: Dimension,
+    ) -> Result<Self> {
         Ok(SeparatedCoordBufferBuilder::from_coords(coords, dim)?.into())
     }
 }

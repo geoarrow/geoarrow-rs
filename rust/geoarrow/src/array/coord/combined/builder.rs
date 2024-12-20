@@ -12,11 +12,14 @@ use geo_traits::{CoordTrait, PointTrait};
 /// Converting an [`CoordBufferBuilder`] into a [`CoordBuffer`] is `O(1)`.
 #[derive(Debug, Clone)]
 pub enum CoordBufferBuilder {
+    /// Interleaved coordinates
     Interleaved(InterleavedCoordBufferBuilder),
+    /// Separated coordinates
     Separated(SeparatedCoordBufferBuilder),
 }
 
 impl CoordBufferBuilder {
+    /// Initialize a buffer of a given length with all coordinates set to 0.0
     pub fn initialize(len: usize, interleaved: bool, dim: Dimension) -> Self {
         match interleaved {
             true => {
@@ -40,18 +43,17 @@ impl CoordBufferBuilder {
         }
     }
 
-    /// Reserves the minimum capacity for at least `additional` more coordinates to
-    /// be inserted in the given `Vec<T>`. Unlike [`reserve`], this will not
-    /// deliberately over-allocate to speculatively avoid frequent allocations.
-    /// After calling `reserve_exact`, capacity will be greater than or equal to
-    /// `self.len() + additional`. Does nothing if the capacity is already
-    /// sufficient.
+    /// Reserves the minimum capacity for at least `additional` more coordinates.
+    ///
+    /// Unlike [`reserve`], this will not deliberately over-allocate to speculatively avoid
+    /// frequent allocations. After calling `reserve_exact`, capacity will be greater than or equal
+    /// to `self.len() + additional`. Does nothing if the capacity is already sufficient.
     ///
     /// Note that the allocator may give the collection more space than it
     /// requests. Therefore, capacity can not be relied upon to be precisely
     /// minimal. Prefer [`reserve`] if future insertions are expected.
     ///
-    /// [`reserve`]: Vec::reserve
+    /// [`reserve`]: Self::reserve
     pub fn reserve_exact(&mut self, additional: usize) {
         match self {
             CoordBufferBuilder::Interleaved(cb) => cb.reserve_exact(additional),
@@ -67,6 +69,7 @@ impl CoordBufferBuilder {
         }
     }
 
+    /// The number of coordinates
     pub fn len(&self) -> usize {
         match self {
             CoordBufferBuilder::Interleaved(cb) => cb.len(),
@@ -74,10 +77,12 @@ impl CoordBufferBuilder {
         }
     }
 
+    /// Whether the buffer is empty
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
+    /// The underlying coordinate type
     pub fn coord_type(&self) -> CoordType {
         match self {
             CoordBufferBuilder::Interleaved(_) => CoordType::Interleaved,
