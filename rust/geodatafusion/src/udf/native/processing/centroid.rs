@@ -82,15 +82,24 @@ mod test {
     use geoarrow::algorithm::native::Cast;
     use geoarrow::array::CoordType;
     use geoarrow::datatypes::NativeType;
-    use geoarrow::io::flatgeobuf::read_flatgeobuf;
+    use geoarrow::io::flatgeobuf::{FlatGeobufReaderBuilder, FlatGeobufReaderOptions};
+    use geoarrow::table::Table;
     use std::fs::File;
     use std::sync::Arc;
 
     use super::*;
 
     fn load_file() -> RecordBatch {
-        let mut file = File::open("../../fixtures/flatgeobuf/countries.fgb").unwrap();
-        let table = read_flatgeobuf(&mut file, Default::default()).unwrap();
+        let file = File::open("../../fixtures/flatgeobuf/countries.fgb").unwrap();
+        let reader_builder = FlatGeobufReaderBuilder::open(file).unwrap();
+        let options = FlatGeobufReaderOptions {
+            coord_type: CoordType::Separated,
+            ..Default::default()
+        };
+        let reader = reader_builder.read(options).unwrap();
+        let table =
+            Table::try_from(Box::new(reader) as Box<dyn arrow_array::RecordBatchReader>).unwrap();
+
         let geometry = table.geometry_column(None).unwrap();
         let geometry = geometry
             .as_ref()
