@@ -62,6 +62,11 @@ impl InterleavedCoordBuffer {
         Ok(InterleavedCoordBufferBuilder::from_coords(coords, dim)?.into())
     }
 
+    /// Access the underlying coordinate buffer.
+    pub fn coords(&self) -> &ScalarBuffer<f64> {
+        &self.coords
+    }
+
     pub(crate) fn values_array(&self) -> Float64Array {
         Float64Array::new(self.coords.clone(), None)
     }

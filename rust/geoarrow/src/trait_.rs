@@ -87,6 +87,8 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// This is `O(1)`.
     ///
+    /// Note that **this will omit any spatial extension information**.
+    ///
     /// # Examples
     ///
     /// ```
@@ -104,6 +106,8 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     /// Converts this array into an arced [`arrow`] array.
     ///
     /// This is `O(1)`.
+    ///
+    /// Note that **this will omit any spatial extension information**.
     ///
     /// # Examples
     ///
@@ -1023,6 +1027,8 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     // }
 
     /// Converts this builder into an [`ArrayRef`], a dynamic array reference.
+    ///
+    /// Note that **this will omit any spatial extension information**.
     ///
     /// # Examples
     ///
