@@ -1,7 +1,7 @@
 use crate::algorithm::native::eq::geometry_eq;
+use crate::io::geo::geometry_to_geo;
 use crate::scalar::*;
 use crate::trait_::NativeScalar;
-use geo_traits::to_geo::ToGeoGeometry;
 use geo_traits::{
     GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
     MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait, UnimplementedLine,
@@ -241,7 +241,7 @@ impl From<Geometry<'_>> for geo::Geometry {
 
 impl From<&Geometry<'_>> for geo::Geometry {
     fn from(value: &Geometry<'_>) -> Self {
-        ToGeoGeometry::to_geometry(value)
+        geometry_to_geo(value)
     }
 }
 
