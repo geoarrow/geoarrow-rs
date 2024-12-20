@@ -2,7 +2,7 @@ use std::mem::replace;
 use std::sync::Arc;
 
 use arrow_array::RecordBatch;
-use arrow_schema::Schema;
+use arrow_schema::SchemaRef;
 use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
 
 use crate::array::metadata::ArrayMetadata;
@@ -30,7 +30,7 @@ pub struct GeoTableBuilderOptions {
     pub batch_size: usize,
 
     /// If known, the schema of properties. Must not include the schema of the geometry.
-    pub properties_schema: Option<Arc<Schema>>,
+    pub properties_schema: Option<SchemaRef>,
 
     /// The number of rows to be read
     pub num_rows: Option<usize>,
@@ -41,7 +41,7 @@ impl GeoTableBuilderOptions {
         coord_type: CoordType,
         prefer_multi: bool,
         batch_size: Option<usize>,
-        properties_schema: Option<Arc<Schema>>,
+        properties_schema: Option<SchemaRef>,
         num_rows: Option<usize>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
