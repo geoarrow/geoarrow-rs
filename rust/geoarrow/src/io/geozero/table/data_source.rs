@@ -25,9 +25,7 @@ use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, GeozeroDatasource, P
 
 impl GeozeroDatasource for RecordBatchReader {
     fn process<P: FeatureProcessor>(&mut self, processor: &mut P) -> Result<(), GeozeroError> {
-        let reader = self.take().ok_or(GeozeroError::Dataset(
-            "Cannot read from closed RecordBatchReader".to_string(),
-        ))?;
+        let reader = self.inner_mut();
         let schema = reader.schema();
         let geom_indices = schema.as_ref().geometry_columns();
         let geometry_column_index = if geom_indices.len() != 1 {

@@ -30,6 +30,11 @@ pub struct CSVReaderOptions {
     /// When `true`, the first row of the CSV file is treated as a header row
     pub has_header: Option<bool>,
 
+    /// The maximum number of records to read for schema inference.
+    ///
+    /// See [`arrow_csv::reader::Format::infer_schema`].
+    ///
+    /// **By default, all rows are read to infer the CSV schema.**
     pub max_records: Option<usize>,
 
     /// Specify a custom delimiter character, defaults to comma `','`
@@ -119,6 +124,7 @@ pub struct CSVReader<R> {
 }
 
 impl<R> CSVReader<R> {
+    /// Access the schema of this reader
     pub fn schema(&self) -> SchemaRef {
         self.output_schema.clone()
     }

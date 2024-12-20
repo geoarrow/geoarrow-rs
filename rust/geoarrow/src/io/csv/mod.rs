@@ -1,5 +1,13 @@
 //! Read from and write to CSV files.
 //!
+//! The CSV reader implements [`RecordBatchReader`], so you can iterate over the batches of the CSV
+//! without materializing the entire file in memory.
+//!
+//! [`RecordBatchReader`]: arrow_array::RecordBatchReader
+//!
+//! Additionally, the CSV writer takes in a [`RecordBatchReader`], so you can write an Arrow
+//! iterator to CSV without materializing all batches in memory at once.
+//!
 //! # Examples
 //!
 //! ```
