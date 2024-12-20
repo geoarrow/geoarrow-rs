@@ -11,6 +11,8 @@ use geo_traits::MultiPolygonTrait;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a MultiPolygon
+///
+/// This implements [MultiPolygonTrait], which you can use to extract data.
 #[derive(Debug, Clone)]
 pub struct MultiPolygon<'a> {
     pub(crate) coords: &'a CoordBuffer,
@@ -30,7 +32,7 @@ pub struct MultiPolygon<'a> {
 }
 
 impl<'a> MultiPolygon<'a> {
-    pub fn new(
+    pub(crate) fn new(
         coords: &'a CoordBuffer,
         geom_offsets: &'a OffsetBuffer<i32>,
         polygon_offsets: &'a OffsetBuffer<i32>,
@@ -48,7 +50,7 @@ impl<'a> MultiPolygon<'a> {
         }
     }
 
-    pub fn into_owned_inner(
+    pub(crate) fn into_owned_inner(
         self,
     ) -> (
         CoordBuffer,

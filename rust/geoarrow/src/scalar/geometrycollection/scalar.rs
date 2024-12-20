@@ -12,6 +12,8 @@ use geo_traits::GeometryCollectionTrait;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a GeometryCollection
+///
+/// This implements [GeometryCollectionTrait], which you can use to extract data.
 #[derive(Debug, Clone)]
 pub struct GeometryCollection<'a> {
     pub(crate) array: &'a MixedGeometryArray,
@@ -25,7 +27,7 @@ pub struct GeometryCollection<'a> {
 }
 
 impl<'a> GeometryCollection<'a> {
-    pub fn new(
+    pub(crate) fn new(
         array: &'a MixedGeometryArray,
         geom_offsets: &'a OffsetBuffer<i32>,
         geom_index: usize,
@@ -39,7 +41,8 @@ impl<'a> GeometryCollection<'a> {
         }
     }
 
-    pub fn into_inner(&self) -> (&MixedGeometryArray, &OffsetBuffer<i32>, usize) {
+    #[allow(clippy::wrong_self_convention)]
+    pub(crate) fn into_inner(&self) -> (&MixedGeometryArray, &OffsetBuffer<i32>, usize) {
         (self.array, self.geom_offsets, self.geom_index)
     }
 }

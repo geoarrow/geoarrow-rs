@@ -7,6 +7,9 @@ use crate::trait_::NativeScalar;
 use geo_traits::to_geo::ToGeoRect;
 use geo_traits::RectTrait;
 
+/// An Arrow equivalent of a Rect
+///
+/// This implements [RectTrait], which you can use to extract data.
 #[derive(Debug, Clone)]
 pub struct Rect<'a> {
     lower: &'a SeparatedCoordBuffer,
@@ -15,7 +18,7 @@ pub struct Rect<'a> {
 }
 
 impl<'a> Rect<'a> {
-    pub fn new(
+    pub(crate) fn new(
         lower: &'a SeparatedCoordBuffer,
         upper: &'a SeparatedCoordBuffer,
         geom_index: usize,
@@ -26,7 +29,8 @@ impl<'a> Rect<'a> {
             geom_index,
         }
     }
-    pub fn into_owned_inner(self) -> (SeparatedCoordBuffer, SeparatedCoordBuffer, usize) {
+
+    pub(crate) fn into_owned_inner(self) -> (SeparatedCoordBuffer, SeparatedCoordBuffer, usize) {
         // TODO: make hard slice?
         (self.lower.clone(), self.upper.clone(), self.geom_index)
     }

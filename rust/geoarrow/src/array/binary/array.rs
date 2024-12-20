@@ -21,7 +21,9 @@ use geo_traits::GeometryTrait;
 ///
 /// This array implements [`SerializedArray`], not [`NativeArray`]. This means that you'll need to
 /// parse the `WKBArray` into a native-typed GeoArrow array (such as
-/// [`PointArray`][crate::array::PointArray]) before using it for computations.
+/// [`GeometryArray`][crate::array::GeometryArray]) before using it for computations.
+///
+/// Refer to [`crate::io::wkb`] for encoding and decoding this array to the native array types.
 #[derive(Debug, Clone, PartialEq)]
 pub struct WKBArray<O: OffsetSizeTrait> {
     pub(crate) data_type: SerializedType,

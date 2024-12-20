@@ -53,8 +53,6 @@
 //! second pass.
 //!
 
-// #![allow(missing_docs)] // FIXME
-
 pub use binary::{WKBArray, WKBBuilder, WKBCapacity};
 pub use cast::{AsChunkedNativeArray, AsNativeArray, AsSerializedArray};
 pub use coord::{

@@ -10,6 +10,8 @@ use geo_traits::LineStringTrait;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a LineString
+///
+/// This implements [LineStringTrait], which you can use to extract data.
 #[derive(Debug, Clone)]
 pub struct LineString<'a> {
     pub(crate) coords: &'a CoordBuffer,
@@ -23,7 +25,7 @@ pub struct LineString<'a> {
 }
 
 impl<'a> LineString<'a> {
-    pub fn new(
+    pub(crate) fn new(
         coords: &'a CoordBuffer,
         geom_offsets: &'a OffsetBuffer<i32>,
         geom_index: usize,
@@ -37,7 +39,7 @@ impl<'a> LineString<'a> {
         }
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, usize) {
+    pub(crate) fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, usize) {
         (
             self.coords.clone(),
             self.geom_offsets.clone(),
