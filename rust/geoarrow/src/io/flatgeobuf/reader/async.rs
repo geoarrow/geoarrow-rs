@@ -16,6 +16,7 @@ use crate::io::geozero::array::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
 use crate::table::Table;
 
+/// Read a FlatGeobuf file to a Table asynchronously from object storage.
 pub async fn read_flatgeobuf_async(
     reader: Arc<dyn ObjectStore>,
     location: Path,

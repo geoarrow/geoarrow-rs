@@ -12,8 +12,8 @@ use std::sync::Arc;
 
 /// Write a Table to CSV
 pub fn write_csv<W: Write, S: Into<RecordBatchReader>>(stream: S, writer: W) -> Result<()> {
-    let mut stream: RecordBatchReader = stream.into();
-    let reader = stream.take().unwrap();
+    let stream: RecordBatchReader = stream.into();
+    let reader = stream.into_inner();
 
     let mut csv_writer = arrow_csv::Writer::new(writer);
     for batch in reader {
