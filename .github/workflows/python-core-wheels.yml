@@ -181,6 +181,7 @@ jobs:
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
+          rust-toolchain: nightly
           target: ${{ matrix.platform.target }}
           args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 --no-default-features --manifest-path python/${{ matrix.module }}/Cargo.toml
           sccache: "true"
