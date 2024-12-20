@@ -50,10 +50,7 @@ jobs:
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
-        env:
-          RUSTFLAGS: "-Zinline-mir=no"
         with:
-          rust-toolchain: nightly
           target: ${{ matrix.platform.target }}
           # As of Nov 2024, it was necessary to manually specify -i 3.13 to get
           # maturin to find the executable. --find-interpreter did not find it.
@@ -88,10 +85,7 @@ jobs:
 
       - name: Build wheels - ${{ matrix.platform.target }}
         uses: PyO3/maturin-action@v1
-        env:
-          RUSTFLAGS: "-Zinline-mir=no"
         with:
-          rust-toolchain: nightly
           target: ${{ matrix.platform.target }}
           args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -m python/geoarrow-io/Cargo.toml
           sccache: "true"
@@ -124,10 +118,7 @@ jobs:
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
-        env:
-          RUSTFLAGS: "-Zinline-mir=no"
         with:
-          rust-toolchain: nightly
           target: ${{ matrix.target }}
           args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -m python/geoarrow-io/Cargo.toml
 
@@ -162,10 +153,8 @@ jobs:
   #     - name: Build wheels
   #       uses: PyO3/maturin-action@v1
   #       with:
-  #         rust-toolchain: nightly
   #         target: ${{ matrix.target }}
   #         manylinux: musllinux_1_2
-  # TODO: update rustflags env
   #         args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -m python/geoarrow-io/Cargo.toml
 
   #     - name: Install built wheel
@@ -206,10 +195,8 @@ jobs:
   #     - name: Build wheels
   #       uses: PyO3/maturin-action@v1
   #       with:
-  #         rust-toolchain: nightly
   #         target: ${{ matrix.platform.target }}
   #         manylinux: musllinux_1_2
-  # TODO: update rustflags env
   #         args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -m python/geoarrow-io/Cargo.toml
 
   #     - uses: uraimo/run-on-arch-action@v2.5.1
