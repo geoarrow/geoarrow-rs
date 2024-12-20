@@ -5,7 +5,7 @@ use crate::array::{CoordBuffer, CoordType};
 use crate::datatypes::{Dimension, NativeType, SerializedType};
 use crate::error::Result;
 use crate::scalar::Geometry;
-use arrow_array::{Array, ArrayRef};
+use arrow_array::ArrayRef;
 use arrow_buffer::{NullBuffer, NullBufferBuilder};
 use arrow_schema::{DataType, Field};
 use geo_traits::GeometryTrait;
@@ -1033,5 +1033,5 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     /// let builder = PointBuilder::new(Dimension::XY);
     /// let array_ref = builder.into_array_ref();
     /// ```
-    fn into_array_ref(self) -> Arc<dyn Array>;
+    fn into_array_ref(self) -> ArrayRef;
 }

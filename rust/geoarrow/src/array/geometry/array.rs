@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use arrow_array::{Array, OffsetSizeTrait, UnionArray};
+use arrow_array::{Array, ArrayRef, OffsetSizeTrait, UnionArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field, UnionMode};
 
@@ -597,11 +597,11 @@ impl ArrayBase for GeometryArray {
         self.data_type.extension_name()
     }
 
-    fn into_array_ref(self) -> Arc<dyn Array> {
+    fn into_array_ref(self) -> ArrayRef {
         Arc::new(self.into_arrow())
     }
 
-    fn to_array_ref(&self) -> arrow_array::ArrayRef {
+    fn to_array_ref(&self) -> ArrayRef {
         self.clone().into_array_ref()
     }
 

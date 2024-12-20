@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
+use arrow_array::{ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 
 use crate::array::geometrycollection::GeometryCollectionCapacity;
@@ -414,7 +414,7 @@ impl GeometryArrayBuilder for GeometryCollectionBuilder {
         &self.validity
     }
 
-    fn into_array_ref(self) -> Arc<dyn Array> {
+    fn into_array_ref(self) -> ArrayRef {
         Arc::new(self.into_arrow())
     }
 

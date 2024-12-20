@@ -117,7 +117,8 @@ impl RectBuilder {
         (self.lower, self.upper, self.validity)
     }
 
-    pub fn into_arrow_ref(self) -> Arc<dyn Array> {
+    /// Convert to an [`ArrayRef`]
+    pub fn into_arrow_ref(self) -> ArrayRef {
         Arc::new(self.into_arrow())
     }
 

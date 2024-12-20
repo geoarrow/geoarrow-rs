@@ -11,7 +11,7 @@ use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
-use arrow_array::{Array, OffsetSizeTrait};
+use arrow_array::{ArrayRef, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
 
@@ -315,7 +315,7 @@ impl GeometryArrayBuilder for PointBuilder {
         &self.validity
     }
 
-    fn into_array_ref(self) -> Arc<dyn Array> {
+    fn into_array_ref(self) -> ArrayRef {
         self.into_arrow()
     }
 
@@ -335,7 +335,7 @@ impl Default for PointBuilder {
 }
 
 impl IntoArrow for PointBuilder {
-    type ArrowArray = Arc<dyn Array>;
+    type ArrowArray = ArrayRef;
 
     fn into_arrow(self) -> Self::ArrowArray {
         let point_array: PointArray = self.into();
@@ -350,7 +350,7 @@ impl From<PointBuilder> for PointArray {
     }
 }
 
-impl From<PointBuilder> for Arc<dyn Array> {
+impl From<PointBuilder> for ArrayRef {
     fn from(arr: PointBuilder) -> Self {
         arr.into_array_ref()
     }

@@ -30,6 +30,9 @@ pub struct PointArray {
     pub(crate) validity: Option<NullBuffer>,
 }
 
+/// Perform checks:
+///
+/// - Validity mask must have the same length as the coordinates.
 pub(super) fn check(coords: &CoordBuffer, validity_len: Option<usize>) -> Result<()> {
     if validity_len.map_or(false, |len| len != coords.len()) {
         return Err(GeoArrowError::General(
@@ -82,10 +85,14 @@ impl PointArray {
         })
     }
 
+    /// Access the underlying coordinate buffer
+    ///
+    /// Note that some coordinates may be null, depending on the value of [`Self::nulls`]
     pub fn coords(&self) -> &CoordBuffer {
         &self.coords
     }
 
+    /// Access the
     pub fn into_inner(self) -> (CoordBuffer, Option<NullBuffer>) {
         (self.coords, self.validity)
     }
@@ -154,7 +161,7 @@ impl ArrayBase for PointArray {
         self.into_arrow()
     }
 
-    fn to_array_ref(&self) -> arrow_array::ArrayRef {
+    fn to_array_ref(&self) -> ArrayRef {
         self.clone().into_array_ref()
     }
 
@@ -241,7 +248,7 @@ impl<'a> ArrayAccessor<'a> for PointArray {
 }
 
 impl IntoArrow for PointArray {
-    type ArrowArray = Arc<dyn Array>;
+    type ArrowArray = ArrayRef;
 
     fn into_arrow(self) -> Self::ArrowArray {
         let validity = self.validity;

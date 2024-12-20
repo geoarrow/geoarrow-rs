@@ -135,6 +135,7 @@ impl AsNativeArray for &dyn NativeArray {
     }
 }
 
+/// Trait to downcast an Arrow array to a serialized array
 pub trait AsSerializedArray {
     /// Downcast this to a [`WKBArray`] with `i32` offsets returning `None` if not possible
     fn as_wkb_opt(&self) -> Option<&WKBArray<i32>>;

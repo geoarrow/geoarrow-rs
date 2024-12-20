@@ -1,7 +1,9 @@
 use std::sync::Arc;
 
 use arrow::array::AsArray;
-use arrow_array::{Array, GenericStringArray, LargeStringArray, OffsetSizeTrait, StringArray};
+use arrow_array::{
+    Array, ArrayRef, GenericStringArray, LargeStringArray, OffsetSizeTrait, StringArray,
+};
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
 
@@ -49,6 +51,7 @@ impl<O: OffsetSizeTrait> WKTArray<O> {
         self.len() == 0
     }
 
+    /// Consume self and access the underlying data.
     pub fn into_inner(self) -> GenericStringArray<O> {
         self.array
     }
@@ -69,6 +72,7 @@ impl<O: OffsetSizeTrait> WKTArray<O> {
         }
     }
 
+    /// Replace the [`ArrayMetadata`] contained in this array.
     pub fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> Self {
         let mut arr = self.clone();
         arr.metadata = metadata;
@@ -95,12 +99,12 @@ impl<O: OffsetSizeTrait> ArrayBase for WKTArray<O> {
         self.data_type.extension_name()
     }
 
-    fn into_array_ref(self) -> Arc<dyn Array> {
+    fn into_array_ref(self) -> ArrayRef {
         // Recreate a BinaryArray so that we can force it to have geoarrow.wkb extension type
         Arc::new(self.into_arrow())
     }
 
-    fn to_array_ref(&self) -> arrow_array::ArrayRef {
+    fn to_array_ref(&self) -> ArrayRef {
         self.clone().into_array_ref()
     }
 

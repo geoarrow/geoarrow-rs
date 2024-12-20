@@ -8,7 +8,7 @@ use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Coord;
 use crate::trait_::IntoArrow;
-use arrow_array::{Array, FixedSizeListArray, StructArray};
+use arrow_array::{Array, ArrayRef, FixedSizeListArray, StructArray};
 use arrow_schema::DataType;
 
 /// An Arrow representation of an array of coordinates.
@@ -69,11 +69,11 @@ impl CoordBuffer {
         }
     }
 
-    pub fn into_array_ref(self) -> Arc<dyn Array> {
+    pub fn into_array_ref(self) -> ArrayRef {
         self.into_arrow()
     }
 
-    pub fn to_array_ref(&self) -> arrow_array::ArrayRef {
+    pub fn to_array_ref(&self) -> ArrayRef {
         self.clone().into_array_ref()
     }
 
@@ -136,7 +136,7 @@ impl CoordBuffer {
 }
 
 impl IntoArrow for CoordBuffer {
-    type ArrowArray = Arc<dyn Array>;
+    type ArrowArray = ArrayRef;
 
     fn into_arrow(self) -> Self::ArrowArray {
         match self {

@@ -5,7 +5,7 @@ use crate::datatypes::{coord_type_to_data_type, Dimension};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::InterleavedCoord;
 use crate::trait_::IntoArrow;
-use arrow_array::{Array, FixedSizeListArray, Float64Array};
+use arrow_array::{Array, ArrayRef, FixedSizeListArray, Float64Array};
 use arrow_buffer::ScalarBuffer;
 use arrow_schema::{DataType, Field};
 use geo_traits::CoordTrait;
@@ -89,11 +89,11 @@ impl InterleavedCoordBuffer {
         }
     }
 
-    pub fn into_array_ref(self) -> Arc<dyn Array> {
+    pub fn into_array_ref(self) -> ArrayRef {
         Arc::new(self.into_arrow())
     }
 
-    pub fn to_array_ref(&self) -> arrow_array::ArrayRef {
+    pub fn to_array_ref(&self) -> ArrayRef {
         self.clone().into_array_ref()
     }
 

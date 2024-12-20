@@ -12,7 +12,7 @@ use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
-use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
+use arrow_array::{ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
 
@@ -136,7 +136,7 @@ impl MultiPointBuilder {
         (self.coords, self.geom_offsets, self.validity)
     }
 
-    pub fn into_array_ref(self) -> Arc<dyn Array> {
+    pub fn into_array_ref(self) -> ArrayRef {
         Arc::new(self.into_arrow())
     }
 
@@ -389,7 +389,7 @@ impl GeometryArrayBuilder for MultiPointBuilder {
         &self.validity
     }
 
-    fn into_array_ref(self) -> Arc<dyn Array> {
+    fn into_array_ref(self) -> ArrayRef {
         self.into_array_ref()
     }
 

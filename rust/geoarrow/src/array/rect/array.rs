@@ -104,11 +104,11 @@ impl ArrayBase for RectArray {
         self.data_type.extension_name()
     }
 
-    fn into_array_ref(self) -> Arc<dyn Array> {
+    fn into_array_ref(self) -> ArrayRef {
         Arc::new(self.into_arrow())
     }
 
-    fn to_array_ref(&self) -> arrow_array::ArrayRef {
+    fn to_array_ref(&self) -> ArrayRef {
         self.clone().into_array_ref()
     }
 

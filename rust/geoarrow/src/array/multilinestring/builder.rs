@@ -12,7 +12,7 @@ use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
-use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
+use arrow_array::{ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
 
@@ -158,7 +158,7 @@ impl MultiLineStringBuilder {
         )
     }
 
-    pub fn into_array_ref(self) -> Arc<dyn Array> {
+    pub fn into_array_ref(self) -> ArrayRef {
         Arc::new(self.into_arrow())
     }
 
@@ -443,7 +443,7 @@ impl GeometryArrayBuilder for MultiLineStringBuilder {
         &self.validity
     }
 
-    fn into_array_ref(self) -> Arc<dyn Array> {
+    fn into_array_ref(self) -> ArrayRef {
         Arc::new(self.into_arrow())
     }
 

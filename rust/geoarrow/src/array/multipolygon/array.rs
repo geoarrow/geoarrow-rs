@@ -13,7 +13,7 @@ use crate::scalar::{Geometry, MultiPolygon};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
 use crate::{ArrayBase, NativeArray};
 use arrow::array::AsArray;
-use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
+use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use geo_traits::MultiPolygonTrait;
 
 use arrow_buffer::{NullBuffer, OffsetBuffer};
@@ -270,11 +270,11 @@ impl ArrayBase for MultiPolygonArray {
         self.data_type.extension_name()
     }
 
-    fn into_array_ref(self) -> Arc<dyn Array> {
+    fn into_array_ref(self) -> ArrayRef {
         Arc::new(self.into_arrow())
     }
 
-    fn to_array_ref(&self) -> arrow_array::ArrayRef {
+    fn to_array_ref(&self) -> ArrayRef {
         self.clone().into_array_ref()
     }
 
