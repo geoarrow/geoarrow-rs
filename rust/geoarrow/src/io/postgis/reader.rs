@@ -167,6 +167,7 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
     }
 }
 
+/// Execute a SQL string against a PostGIS database, returning the result as an Arrow table.
 pub async fn read_postgis<'c, E: Executor<'c, Database = Postgres>>(
     executor: E,
     sql: &str,

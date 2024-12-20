@@ -4,7 +4,8 @@ use crate::error::Result;
 use crate::io::geos::scalar::GEOSMultiPolygon;
 
 impl MultiPolygonBuilder {
-    pub fn from_geos(value: Vec<Option<geos::Geometry>>, dim: Dimension) -> Result<Self> {
+    #[allow(dead_code)]
+    pub(crate) fn from_geos(value: Vec<Option<geos::Geometry>>, dim: Dimension) -> Result<Self> {
         // TODO: don't use new_unchecked
         let geos_objects: Vec<Option<GEOSMultiPolygon>> = value
             .into_iter()
@@ -15,7 +16,8 @@ impl MultiPolygonBuilder {
 }
 
 impl MultiPolygonArray {
-    pub fn from_geos(value: Vec<Option<geos::Geometry>>, dim: Dimension) -> Result<Self> {
+    #[allow(dead_code)]
+    pub(crate) fn from_geos(value: Vec<Option<geos::Geometry>>, dim: Dimension) -> Result<Self> {
         let mutable_arr = MultiPolygonBuilder::from_geos(value, dim)?;
         Ok(mutable_arr.into())
     }

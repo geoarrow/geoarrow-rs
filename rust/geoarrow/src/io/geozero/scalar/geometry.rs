@@ -45,7 +45,9 @@ impl GeozeroGeometry for Geometry<'_> {
     }
 }
 
+/// Convert a geozero scalar data source to an [OwnedGeometry].
 pub trait ToGeometry<O: OffsetSizeTrait> {
+    /// Convert a geozero scalar data source to an [OwnedGeometry].
     fn to_geometry(&self, dim: Dimension) -> geozero::error::Result<OwnedGeometry>;
 }
 

@@ -18,8 +18,10 @@ use arrow_array::OffsetSizeTrait;
 /// determine the exact buffer sizes, then making a single set of allocations and filling those new
 /// arrays with the WKB coordinate values.
 pub trait FromWKB: Sized {
+    /// The input array type. Either [`WKBArray`] or [`ChunkedWKBArray`]
     type Input<O: OffsetSizeTrait>;
 
+    /// Parse the WKB input.
     fn from_wkb<O: OffsetSizeTrait>(
         arr: &Self::Input<O>,
         coord_type: CoordType,
@@ -100,6 +102,20 @@ impl FromWKB for GeometryCollectionArray {
     }
 }
 
+impl FromWKB for GeometryArray {
+    type Input<O: OffsetSizeTrait> = WKBArray<O>;
+
+    fn from_wkb<O: OffsetSizeTrait>(
+        arr: &WKBArray<O>,
+        coord_type: CoordType,
+        _dim: Dimension,
+    ) -> Result<Self> {
+        let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
+        let builder = GeometryBuilder::from_wkb(&wkb_objects, coord_type, arr.metadata(), true)?;
+        Ok(builder.finish())
+    }
+}
+
 impl FromWKB for Arc<dyn NativeArray> {
     type Input<O: OffsetSizeTrait> = WKBArray<O>;
 
@@ -108,15 +124,7 @@ impl FromWKB for Arc<dyn NativeArray> {
         coord_type: CoordType,
         dim: Dimension,
     ) -> Result<Self> {
-        let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
-        let builder = GeometryCollectionBuilder::from_wkb(
-            &wkb_objects,
-            dim,
-            coord_type,
-            arr.metadata(),
-            true,
-        )?;
-        builder.finish().downcast()
+        Ok(Arc::new(GeometryArray::from_wkb(arr, coord_type, dim)?))
     }
 }
 
@@ -175,15 +183,17 @@ impl FromWKB for Arc<dyn ChunkedNativeArray> {
 ///
 /// This supports either ISO or EWKB-flavored data.
 ///
-/// Does not downcast automatically
+/// The returned array is guaranteed to have exactly the type of `target_type`.
+///
+/// `NativeType::Rect` is currently not allowed.
 pub fn from_wkb<O: OffsetSizeTrait>(
     arr: &WKBArray<O>,
-    target_geo_data_type: NativeType,
+    target_type: NativeType,
     prefer_multi: bool,
 ) -> Result<Arc<dyn NativeArray>> {
     use NativeType::*;
     let wkb_objects: Vec<Option<crate::scalar::WKB<'_, O>>> = arr.iter().collect();
-    match target_geo_data_type {
+    match target_type {
         Point(coord_type, dim) => {
             let builder = PointBuilder::from_wkb(&wkb_objects, dim, coord_type, arr.metadata())?;
             Ok(Arc::new(builder.finish()))
@@ -224,7 +234,7 @@ pub fn from_wkb<O: OffsetSizeTrait>(
         }
         Rect(_) => Err(GeoArrowError::General(format!(
             "Unexpected data type {:?}",
-            target_geo_data_type,
+            target_type,
         ))),
         Geometry(coord_type) => {
             let builder =
@@ -240,8 +250,10 @@ pub fn from_wkb<O: OffsetSizeTrait>(
 /// determine the exact buffer sizes, then making a single set of allocations and filling those new
 /// arrays with the WKB coordinate values.
 pub trait ToWKB: Sized {
+    /// The output type, either [WKBArray] or [ChunkedWKBArray]
     type Output<O: OffsetSizeTrait>;
 
+    /// Encode as WKB
     fn to_wkb<O: OffsetSizeTrait>(&self) -> Self::Output<O>;
 }
 
@@ -259,8 +271,7 @@ impl ToWKB for &dyn NativeArray {
             MultiLineString(_, _) => self.as_multi_line_string().into(),
             MultiPolygon(_, _) => self.as_multi_polygon().into(),
             GeometryCollection(_, _) => self.as_geometry_collection().into(),
-
-            Rect(_) => todo!(),
+            Rect(_) => self.as_rect().into(),
             Geometry(_) => self.as_geometry().into(),
         }
     }
@@ -308,7 +319,7 @@ pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn NativeArray) -> WKBArray<O> {
         MultiLineString(_, _) => arr.as_multi_line_string().into(),
         MultiPolygon(_, _) => arr.as_multi_polygon().into(),
         GeometryCollection(_, _) => arr.as_geometry_collection().into(),
-        Rect(_) => todo!(),
+        Rect(_) => arr.as_rect().into(),
         Geometry(_) => arr.as_geometry().into(),
     }
 }

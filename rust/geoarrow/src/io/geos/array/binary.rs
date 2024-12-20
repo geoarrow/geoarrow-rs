@@ -6,7 +6,8 @@ use crate::array::WKBArray;
 use crate::error::Result;
 
 impl<O: OffsetSizeTrait> WKBArray<O> {
-    pub fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
+    #[allow(dead_code)]
+    pub(crate) fn from_geos(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         let mut builder = GenericBinaryBuilder::new();
         for maybe_geom in value {
             if let Some(geom) = maybe_geom {
