@@ -8,7 +8,8 @@
 //! hit this regression, and thus allows building geoarrow without using latest nightly and a
 //! custom `RUSTFLAGS`.
 //!
-//! Note that it's only
+//! Note that it's only `GeometryTrait` and `GeometryCollectionTrait` that hit this compiler bug.
+//! Other traits can use the upstream impls.
 
 use geo::{CoordNum, Geometry, GeometryCollection};
 
