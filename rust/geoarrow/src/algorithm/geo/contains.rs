@@ -2,11 +2,11 @@ use crate::algorithm::native::{Binary, Unary};
 use crate::array::*;
 use crate::datatypes::NativeType;
 use crate::error::GeoArrowError;
+use crate::io::geo::geometry_to_geo;
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
 use arrow_array::BooleanArray;
 use geo::Contains as _Contains;
-use geo_traits::to_geo::*;
 use geo_traits::GeometryTrait;
 
 /// Checks if `rhs` is completely contained within `self`.
@@ -135,7 +135,7 @@ pub trait ContainsGeometry<Rhs> {
 
 impl<G: GeometryTrait<T = f64>> ContainsGeometry<G> for PointArray {
     fn contains(&self, rhs: &G) -> BooleanArray {
-        let rhs = rhs.to_geometry();
+        let rhs = geometry_to_geo(rhs);
         self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
             .unwrap()
     }
@@ -145,7 +145,7 @@ macro_rules! impl_contains_point {
     ($array:ty) => {
         impl<G: GeometryTrait<T = f64>> ContainsGeometry<G> for $array {
             fn contains(&self, rhs: &G) -> BooleanArray {
-                let rhs = rhs.to_geometry();
+                let rhs = geometry_to_geo(rhs);
                 self.try_unary_boolean::<_, GeoArrowError>(|geom| {
                     Ok(geom.to_geo_geometry().contains(&rhs))
                 })

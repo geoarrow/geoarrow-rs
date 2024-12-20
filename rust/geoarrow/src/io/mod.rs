@@ -11,6 +11,7 @@ pub(crate) mod display;
 pub mod flatgeobuf;
 #[cfg(feature = "gdal")]
 pub mod gdal;
+pub(crate) mod geo;
 pub mod geojson;
 pub mod geojson_lines;
 #[cfg(feature = "geos")]

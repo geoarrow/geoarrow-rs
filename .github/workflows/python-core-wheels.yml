@@ -45,10 +45,7 @@ jobs:
           python-version: 3.x
       - name: Build wheels
         uses: PyO3/maturin-action@v1
-        env:
-          RUSTFLAGS: "-Zinline-mir=no"
         with:
-          rust-toolchain: nightly
           target: ${{ matrix.platform.target }}
           args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 --manifest-path python/${{ matrix.module }}/Cargo.toml
           sccache: "true"
@@ -83,8 +80,6 @@ jobs:
   #         python-version: 3.x
   #     - name: Build wheels
   #       uses: PyO3/maturin-action@v1
-  # env:
-  #   RUSTFLAGS: "-Zinline-mir=no"
   #       with:
   #         target: ${{ matrix.platform.target }}
   #         args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 --manifest-path python/${{ matrix.module }}/Cargo.toml
@@ -116,10 +111,7 @@ jobs:
           architecture: ${{ matrix.platform.target }}
       - name: Build wheels
         uses: PyO3/maturin-action@v1
-        env:
-          RUSTFLAGS: "-Zinline-mir=no"
         with:
-          rust-toolchain: nightly
           target: ${{ matrix.platform.target }}
           args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 --manifest-path python/${{ matrix.module }}/Cargo.toml
           sccache: "true"
@@ -149,10 +141,7 @@ jobs:
           python-version: 3.x
       - name: Build wheels
         uses: PyO3/maturin-action@v1
-        env:
-          RUSTFLAGS: "-Zinline-mir=no"
         with:
-          rust-toolchain: nightly
           target: ${{ matrix.platform.target }}
           args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 --manifest-path python/${{ matrix.module }}/Cargo.toml
           sccache: "true"
@@ -191,8 +180,6 @@ jobs:
       - run: pip install pyodide-build
       - name: Build wheels
         uses: PyO3/maturin-action@v1
-        env:
-          RUSTFLAGS: "-Zinline-mir=no"
         with:
           rust-toolchain: nightly
           target: ${{ matrix.platform.target }}

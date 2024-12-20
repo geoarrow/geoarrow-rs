@@ -27,14 +27,10 @@ source emsdk_env.sh
 cd ..
 ```
 
-- The `RUSTFLAGS` is temporary to get around this compiler bug.
-- You must use rust nightly
 - You must use `--no-default-features` to remove any async support. `tokio` does not compile for emscripten.
 
 ```bash
-RUSTFLAGS='-Zinline-mir=no' /
-    RUSTUP_TOOLCHAIN=nightly /
-    maturin build /
+maturin build /
     --no-default-features /
     --release /
     -o dist /
