@@ -9,7 +9,7 @@ pub struct OwnedWKB<O: OffsetSizeTrait> {
 }
 
 impl<O: OffsetSizeTrait> OwnedWKB<O> {
-    pub fn new(arr: GenericBinaryArray<O>, geom_index: usize) -> Self {
+    pub(crate) fn new(arr: GenericBinaryArray<O>, geom_index: usize) -> Self {
         Self { arr, geom_index }
     }
 }

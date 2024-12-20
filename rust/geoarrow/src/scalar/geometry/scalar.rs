@@ -9,16 +9,26 @@ use geo_traits::{
 };
 use rstar::{RTreeObject, AABB};
 
-/// A Geometry is an enum over the various underlying _zero copy_ GeoArrow scalar types.
+/// An Arrow equivalent of a Geometry
+///
+/// This implements [GeometryTrait], which you can use to extract data.
 #[derive(Debug)]
 pub enum Geometry<'a> {
+    /// Point geometry
     Point(crate::scalar::Point<'a>),
+    /// LineString geometry
     LineString(crate::scalar::LineString<'a>),
+    /// Polygon geometry
     Polygon(crate::scalar::Polygon<'a>),
+    /// MultiPoint geometry
     MultiPoint(crate::scalar::MultiPoint<'a>),
+    /// MultiLineString geometry
     MultiLineString(crate::scalar::MultiLineString<'a>),
+    /// MultiPolygon geometry
     MultiPolygon(crate::scalar::MultiPolygon<'a>),
+    /// GeometryCollection geometry
     GeometryCollection(crate::scalar::GeometryCollection<'a>),
+    /// Rect geometry
     Rect(crate::scalar::Rect<'a>),
 }
 

@@ -10,6 +10,8 @@ use geo_traits::MultiLineStringTrait;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a MultiLineString
+///
+/// This implements [MultiLineStringTrait], which you can use to extract data.
 #[derive(Debug, Clone)]
 pub struct MultiLineString<'a> {
     pub(crate) coords: &'a CoordBuffer,
@@ -26,7 +28,7 @@ pub struct MultiLineString<'a> {
 }
 
 impl<'a> MultiLineString<'a> {
-    pub fn new(
+    pub(crate) fn new(
         coords: &'a CoordBuffer,
         geom_offsets: &'a OffsetBuffer<i32>,
         ring_offsets: &'a OffsetBuffer<i32>,
@@ -42,7 +44,9 @@ impl<'a> MultiLineString<'a> {
         }
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, OffsetBuffer<i32>, usize) {
+    pub(crate) fn into_owned_inner(
+        self,
+    ) -> (CoordBuffer, OffsetBuffer<i32>, OffsetBuffer<i32>, usize) {
         (
             self.coords.clone(),
             self.geom_offsets.clone(),

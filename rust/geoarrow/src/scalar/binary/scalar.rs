@@ -10,6 +10,11 @@ use rstar::{RTreeObject, AABB};
 ///
 /// This is zero-cost to _create_ from a [WKBArray] but the WKB has not been preprocessed yet, so
 /// it's not constant-time to access coordinate values.
+///
+/// This does not directly implement [GeometryTrait], because it first needs to be parsed. Use
+/// [`parse`] to access an opaque object that does implement [GeometryTrait].
+///
+/// [`parse`]: WKB::parse
 #[derive(Debug, Clone)]
 pub struct WKB<'a, O: OffsetSizeTrait> {
     pub(crate) arr: &'a GenericBinaryArray<O>,
@@ -27,12 +32,13 @@ impl<'a, O: OffsetSizeTrait> WKB<'a, O> {
         self.as_ref()
     }
 
-    pub fn into_owned_inner(self) -> (GenericBinaryArray<O>, usize) {
+    pub(crate) fn into_owned_inner(self) -> (GenericBinaryArray<O>, usize) {
         // TODO: hard slice?
         // let owned = self.into_owned();
         (self.arr.clone(), self.geom_index)
     }
 
+    /// Parse this WKB buffer to a geometry.
     pub fn parse(&self) -> Result<impl GeometryTrait<T = f64> + use<'_, O>> {
         Ok(wkb::reader::read_wkb(self.as_ref())?)
     }

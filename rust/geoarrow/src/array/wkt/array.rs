@@ -19,10 +19,10 @@ use crate::ArrayBase;
 ///
 /// This is semantically equivalent to `Vec<Option<WKT>>` due to the internal validity bitmap.
 ///
-/// This array _can_ be used directly for operations, but that will incur costly encoding to and
-/// from WKT on every operation. Instead, you usually want to use the WKBArray only for
-/// serialization purposes (e.g. to and from [GeoParquet](https://geoparquet.org/)) but convert to
-/// strongly-typed arrays (such as the [`PointArray`][crate::array::PointArray]) for computations.
+/// This is a wrapper around an Arrow [GenericStringArray], but additionally stores an
+/// [ArrayMetadata] so that we can persist CRS information about the data.
+///
+/// Refer to [`crate::io::wkt`] for encoding and decoding this array to the native array types.
 #[derive(Debug, Clone, PartialEq)]
 pub struct WKTArray<O: OffsetSizeTrait> {
     pub(crate) data_type: SerializedType,

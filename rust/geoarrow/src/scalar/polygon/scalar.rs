@@ -11,6 +11,8 @@ use geo_traits::PolygonTrait;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a Polygon
+///
+/// This implements [PolygonTrait], which you can use to extract data.
 #[derive(Debug, Clone)]
 pub struct Polygon<'a> {
     pub(crate) coords: &'a CoordBuffer,
@@ -27,7 +29,7 @@ pub struct Polygon<'a> {
 }
 
 impl<'a> Polygon<'a> {
-    pub fn new(
+    pub(crate) fn new(
         coords: &'a CoordBuffer,
         geom_offsets: &'a OffsetBuffer<i32>,
         ring_offsets: &'a OffsetBuffer<i32>,
@@ -43,7 +45,9 @@ impl<'a> Polygon<'a> {
         }
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, OffsetBuffer<i32>, usize) {
+    pub(crate) fn into_owned_inner(
+        self,
+    ) -> (CoordBuffer, OffsetBuffer<i32>, OffsetBuffer<i32>, usize) {
         (
             self.coords.clone(),
             self.geom_offsets.clone(),
