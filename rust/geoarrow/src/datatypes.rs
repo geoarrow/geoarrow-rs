@@ -333,9 +333,9 @@ fn rect_data_type(dim: Dimension) -> DataType {
     DataType::Struct(rect_fields(dim))
 }
 
-fn unknown_data_type(coord_type: CoordType) -> DataType {
+fn geometry_data_type(coord_type: CoordType) -> DataType {
     let mut fields = vec![];
-    let type_ids = vec![1, 2, 3, 4, 5, 6, 11, 12, 13, 14, 15, 16];
+    let type_ids = vec![1, 2, 3, 4, 5, 6, 7, 11, 12, 13, 14, 15, 16, 17];
 
     // Note: we manually construct the fields because these fields shouldn't have their own
     // GeoArrow extension metadata
@@ -344,42 +344,72 @@ fn unknown_data_type(coord_type: CoordType) -> DataType {
         NativeType::Point(coord_type, Dimension::XY).to_data_type(),
         true,
     ));
-
-    let linestring = NativeType::LineString(coord_type, Dimension::XY);
-    fields.push(Field::new("", linestring.to_data_type(), true));
-
-    let polygon = NativeType::Polygon(coord_type, Dimension::XY);
-    fields.push(Field::new("", polygon.to_data_type(), true));
-
-    let multi_point = NativeType::MultiPoint(coord_type, Dimension::XY);
-    fields.push(Field::new("", multi_point.to_data_type(), true));
-
-    let multi_line_string = NativeType::MultiLineString(coord_type, Dimension::XY);
-    fields.push(Field::new("", multi_line_string.to_data_type(), true));
-
-    let multi_polygon = NativeType::MultiPolygon(coord_type, Dimension::XY);
-    fields.push(Field::new("", multi_polygon.to_data_type(), true));
+    fields.push(Field::new(
+        "",
+        NativeType::LineString(coord_type, Dimension::XY).to_data_type(),
+        true,
+    ));
+    fields.push(Field::new(
+        "",
+        NativeType::Polygon(coord_type, Dimension::XY).to_data_type(),
+        true,
+    ));
+    fields.push(Field::new(
+        "",
+        NativeType::MultiPoint(coord_type, Dimension::XY).to_data_type(),
+        true,
+    ));
+    fields.push(Field::new(
+        "",
+        NativeType::MultiLineString(coord_type, Dimension::XY).to_data_type(),
+        true,
+    ));
+    fields.push(Field::new(
+        "",
+        NativeType::MultiPolygon(coord_type, Dimension::XY).to_data_type(),
+        true,
+    ));
+    fields.push(Field::new(
+        "",
+        NativeType::GeometryCollection(coord_type, Dimension::XY).to_data_type(),
+        true,
+    ));
 
     fields.push(Field::new(
         "",
         NativeType::Point(coord_type, Dimension::XYZ).to_data_type(),
         true,
     ));
-
-    let linestring = NativeType::LineString(coord_type, Dimension::XYZ);
-    fields.push(Field::new("", linestring.to_data_type(), true));
-
-    let polygon = NativeType::Polygon(coord_type, Dimension::XYZ);
-    fields.push(Field::new("", polygon.to_data_type(), true));
-
-    let multi_point = NativeType::MultiPoint(coord_type, Dimension::XYZ);
-    fields.push(Field::new("", multi_point.to_data_type(), true));
-
-    let multi_line_string = NativeType::MultiLineString(coord_type, Dimension::XYZ);
-    fields.push(Field::new("", multi_line_string.to_data_type(), true));
-
-    let multi_polygon = NativeType::MultiPolygon(coord_type, Dimension::XYZ);
-    fields.push(Field::new("", multi_polygon.to_data_type(), true));
+    fields.push(Field::new(
+        "",
+        NativeType::LineString(coord_type, Dimension::XYZ).to_data_type(),
+        true,
+    ));
+    fields.push(Field::new(
+        "",
+        NativeType::Polygon(coord_type, Dimension::XYZ).to_data_type(),
+        true,
+    ));
+    fields.push(Field::new(
+        "",
+        NativeType::MultiPoint(coord_type, Dimension::XYZ).to_data_type(),
+        true,
+    ));
+    fields.push(Field::new(
+        "",
+        NativeType::MultiLineString(coord_type, Dimension::XYZ).to_data_type(),
+        true,
+    ));
+    fields.push(Field::new(
+        "",
+        NativeType::MultiPolygon(coord_type, Dimension::XYZ).to_data_type(),
+        true,
+    ));
+    fields.push(Field::new(
+        "",
+        NativeType::GeometryCollection(coord_type, Dimension::XYZ).to_data_type(),
+        true,
+    ));
 
     let union_fields = UnionFields::new(type_ids, fields);
     DataType::Union(union_fields, UnionMode::Dense)
@@ -445,7 +475,7 @@ impl NativeType {
             MultiPolygon(coord_type, dim) => multi_polygon_data_type(*coord_type, *dim),
             GeometryCollection(coord_type, dim) => geometry_collection_data_type(*coord_type, *dim),
             Rect(dim) => rect_data_type(*dim),
-            Geometry(coord_type) => unknown_data_type(*coord_type),
+            Geometry(coord_type) => geometry_data_type(*coord_type),
         }
     }
 

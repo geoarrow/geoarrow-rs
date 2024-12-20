@@ -676,18 +676,14 @@ impl NativeGeometryAccessor for GeometryArray {
             4 => Geometry::MultiPoint(self.mpoint_xy.value(offset)),
             5 => Geometry::MultiLineString(self.mline_string_xy.value(offset)),
             6 => Geometry::MultiPolygon(self.mpolygon_xy.value(offset)),
-            7 => {
-                panic!("nested geometry collections not supported")
-            }
+            7 => Geometry::GeometryCollection(self.gc_xy.value(offset)),
             11 => Geometry::Point(self.point_xyz.value(offset)),
             12 => Geometry::LineString(self.line_string_xyz.value(offset)),
             13 => Geometry::Polygon(self.polygon_xyz.value(offset)),
             14 => Geometry::MultiPoint(self.mpoint_xyz.value(offset)),
             15 => Geometry::MultiLineString(self.mline_string_xyz.value(offset)),
             16 => Geometry::MultiPolygon(self.mpolygon_xyz.value(offset)),
-            17 => {
-                panic!("nested geometry collections not supported")
-            }
+            17 => Geometry::GeometryCollection(self.gc_xyz.value(offset)),
             _ => panic!("unknown type_id {}", type_id),
         }
     }
@@ -719,18 +715,14 @@ impl<'a> ArrayAccessor<'a> for GeometryArray {
             4 => Geometry::MultiPoint(self.mpoint_xy.value(offset)),
             5 => Geometry::MultiLineString(self.mline_string_xy.value(offset)),
             6 => Geometry::MultiPolygon(self.mpolygon_xy.value(offset)),
-            7 => {
-                panic!("nested geometry collections not supported")
-            }
+            7 => Geometry::GeometryCollection(self.gc_xy.value(offset)),
             11 => Geometry::Point(self.point_xyz.value(offset)),
             12 => Geometry::LineString(self.line_string_xyz.value(offset)),
             13 => Geometry::Polygon(self.polygon_xyz.value(offset)),
             14 => Geometry::MultiPoint(self.mpoint_xyz.value(offset)),
             15 => Geometry::MultiLineString(self.mline_string_xyz.value(offset)),
             16 => Geometry::MultiPolygon(self.mpolygon_xyz.value(offset)),
-            17 => {
-                panic!("nested geometry collections not supported")
-            }
+            17 => Geometry::GeometryCollection(self.gc_xyz.value(offset)),
             _ => panic!("unknown type_id {}", type_id),
         }
     }
@@ -752,12 +744,14 @@ impl IntoArrow for GeometryArray {
             self.mpoint_xy.into_array_ref(),
             self.mline_string_xy.into_array_ref(),
             self.mpolygon_xy.into_array_ref(),
+            self.gc_xy.into_array_ref(),
             self.point_xyz.into_array_ref(),
             self.line_string_xyz.into_array_ref(),
             self.polygon_xyz.into_array_ref(),
             self.mpoint_xyz.into_array_ref(),
             self.mline_string_xyz.into_array_ref(),
             self.mpolygon_xyz.into_array_ref(),
+            self.gc_xyz.into_array_ref(),
         ];
 
         UnionArray::try_new(

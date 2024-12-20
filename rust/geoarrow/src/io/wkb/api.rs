@@ -77,7 +77,7 @@ impl FromWKB for MixedGeometryArray {
     ) -> Result<Self> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
         let builder =
-            MixedGeometryBuilder::from_wkb(&wkb_objects, dim, coord_type, arr.metadata(), true)?;
+            MixedGeometryBuilder::from_wkb(&wkb_objects, dim, coord_type, arr.metadata(), false)?;
         Ok(builder.finish())
     }
 }
@@ -96,7 +96,7 @@ impl FromWKB for GeometryCollectionArray {
             dim,
             coord_type,
             arr.metadata(),
-            true,
+            false,
         )?;
         Ok(builder.finish())
     }
@@ -111,7 +111,7 @@ impl FromWKB for GeometryArray {
         _dim: Dimension,
     ) -> Result<Self> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
-        let builder = GeometryBuilder::from_wkb(&wkb_objects, coord_type, arr.metadata(), true)?;
+        let builder = GeometryBuilder::from_wkb(&wkb_objects, coord_type, arr.metadata(), false)?;
         Ok(builder.finish())
     }
 }
