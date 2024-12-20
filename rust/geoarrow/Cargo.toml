@@ -23,7 +23,7 @@ flatgeobuf_async = [
 gdal = ["dep:gdal"]
 geos = ["dep:geos"]
 ipc_compression = ["arrow-ipc/lz4", "arrow-ipc/zstd"]
-parquet = ["dep:parquet"]
+parquet = ["dep:parquet", "dep:glob"]
 parquet_async = [
   "parquet",
   "parquet/async",
@@ -68,6 +68,7 @@ geo-index = "0.1.1"
 geo-traits = "0.2"
 geos = { version = "9.1.1", features = ["v3_10_0"], optional = true }
 geozero = { version = "0.14", features = ["with-wkb"] }
+glob = { version = "0.3.1", optional = true }
 half = { version = "2.4.1" }
 # TODO: update to 0.9 when released
 http-range-client = { git = "https://github.com/pka/http-range-client", rev = "5699e32fafc416ce683bfbf1d179f80b0b6549a3", version = "0.8", optional = true, default-features = false }
