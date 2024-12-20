@@ -5,7 +5,7 @@
 use std::ops::Deref;
 use std::sync::Arc;
 
-use arrow_array::{Array, ArrayRef, RecordBatch, RecordBatchIterator, RecordBatchReader};
+use arrow_array::{ArrayRef, RecordBatch, RecordBatchIterator, RecordBatchReader};
 use arrow_schema::{ArrowError, FieldRef, Schema, SchemaBuilder, SchemaRef};
 
 use crate::algorithm::native::{Cast, Downcast};
@@ -487,12 +487,7 @@ impl Table {
     /// table.set_column(0, field.into(), vec![Arc::new(array)]).unwrap();
     /// # }
     /// ```
-    pub fn set_column(
-        &mut self,
-        i: usize,
-        field: FieldRef,
-        column: Vec<Arc<dyn Array>>,
-    ) -> Result<()> {
+    pub fn set_column(&mut self, i: usize, field: FieldRef, column: Vec<ArrayRef>) -> Result<()> {
         let mut fields = self.schema().fields().deref().to_vec();
         fields[i] = field;
         let schema = Arc::new(Schema::new_with_metadata(
@@ -552,7 +547,7 @@ impl Table {
     /// assert_eq!(index, 7);
     /// # }
     /// ```
-    pub fn append_column(&mut self, field: FieldRef, column: Vec<Arc<dyn Array>>) -> Result<usize> {
+    pub fn append_column(&mut self, field: FieldRef, column: Vec<ArrayRef>) -> Result<usize> {
         assert_eq!(self.batches().len(), column.len());
 
         let new_batches = self

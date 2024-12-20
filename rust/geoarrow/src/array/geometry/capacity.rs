@@ -40,6 +40,7 @@ pub struct GeometryCapacity {
 }
 
 impl GeometryCapacity {
+    /// Create a new capacity with known sizes.
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         nulls: usize,
@@ -102,6 +103,8 @@ impl GeometryCapacity {
         }
     }
 
+    /// Set whether this capacity counter should prefer allocating "single-type" geometries like
+    /// Point/LineString/Polygon in the arrays of their "Multi" counterparts.
     pub fn with_prefer_multi(mut self, prefer_multi: bool) -> Self {
         self.prefer_multi = prefer_multi;
         self
@@ -123,6 +126,7 @@ impl GeometryCapacity {
             && self.mpolygon_xyz.is_empty()
     }
 
+    /// The total number of geometries across all geometry types.
     pub fn total_num_geoms(&self) -> usize {
         let mut total = 0;
         total += self.point_xy;
@@ -140,58 +144,72 @@ impl GeometryCapacity {
         total
     }
 
+    /// The number of point_xy geometries
     pub fn point_xy(&self) -> usize {
         self.point_xy
     }
 
+    /// The number of line_string_xy geometries
     pub fn line_string_xy(&self) -> LineStringCapacity {
         self.line_string_xy
     }
 
+    /// The number of polygon_xy geometries
     pub fn polygon_xy(&self) -> PolygonCapacity {
         self.polygon_xy
     }
 
+    /// The number of multi point_xy geometries
     pub fn mpoint_xy(&self) -> MultiPointCapacity {
         self.mpoint_xy
     }
 
+    /// The number of multi line_string_xy geometries
     pub fn mline_string_xy(&self) -> MultiLineStringCapacity {
         self.mline_string_xy
     }
 
+    /// The number of multi polygon_xy geometries
     pub fn mpolygon_xy(&self) -> MultiPolygonCapacity {
         self.mpolygon_xy
     }
 
+    /// The number of gc_xy geometries
     pub fn gc_xy(&self) -> GeometryCollectionCapacity {
         self.gc_xy
     }
 
+    /// The number of point_xyz geometries
     pub fn point_xyz(&self) -> usize {
         self.point_xyz
     }
 
+    /// The number of line_string_xyz geometries
     pub fn line_string_xyz(&self) -> LineStringCapacity {
         self.line_string_xyz
     }
 
+    /// The number of polygon_xyz geometries
     pub fn polygon_xyz(&self) -> PolygonCapacity {
         self.polygon_xyz
     }
 
+    /// The number of multi point_xyz geometries
     pub fn mpoint_xyz(&self) -> MultiPointCapacity {
         self.mpoint_xyz
     }
 
+    /// The number of multi line_string_xyz geometries
     pub fn mline_string_xyz(&self) -> MultiLineStringCapacity {
         self.mline_string_xyz
     }
 
+    /// The number of multi polygon_xyz geometries
     pub fn mpolygon_xyz(&self) -> MultiPolygonCapacity {
         self.mpolygon_xyz
     }
 
+    /// The number of gc_xyz geometries
     pub fn gc_xyz(&self) -> GeometryCollectionCapacity {
         self.gc_xyz
     }
@@ -241,6 +259,7 @@ impl GeometryCapacity {
     //         && self.multi_line_string.is_empty()
     // }
 
+    /// Add the capacity of the given Point
     #[inline]
     pub fn add_point(&mut self, point: Option<&impl PointTrait>) {
         if let Some(point) = point {
@@ -266,6 +285,7 @@ impl GeometryCapacity {
         }
     }
 
+    /// Add the capacity of the given LineString
     #[inline]
     pub fn add_line_string(&mut self, line_string: Option<&impl LineStringTrait>) {
         if let Some(line_string) = line_string {
@@ -291,6 +311,7 @@ impl GeometryCapacity {
         }
     }
 
+    /// Add the capacity of the given Polygon
     #[inline]
     pub fn add_polygon(&mut self, polygon: Option<&impl PolygonTrait>) {
         if let Some(polygon) = polygon {
@@ -316,6 +337,7 @@ impl GeometryCapacity {
         }
     }
 
+    /// Add the capacity of the given MultiPoint
     #[inline]
     pub fn add_multi_point(&mut self, multi_point: Option<&impl MultiPointTrait>) {
         if let Some(multi_point) = multi_point {
@@ -333,6 +355,7 @@ impl GeometryCapacity {
         }
     }
 
+    /// Add the capacity of the given MultiLineString
     #[inline]
     pub fn add_multi_line_string(&mut self, multi_line_string: Option<&impl MultiLineStringTrait>) {
         if let Some(multi_line_string) = multi_line_string {
@@ -352,6 +375,7 @@ impl GeometryCapacity {
         }
     }
 
+    /// Add the capacity of the given MultiPolygon
     #[inline]
     pub fn add_multi_polygon(&mut self, multi_polygon: Option<&impl MultiPolygonTrait>) {
         if let Some(multi_polygon) = multi_polygon {
@@ -369,6 +393,7 @@ impl GeometryCapacity {
         }
     }
 
+    /// Add the capacity of the given Geometry
     #[inline]
     pub fn add_geometry(&mut self, geom: Option<&impl GeometryTrait>) -> Result<()> {
         if let Some(geom) = geom {
@@ -390,6 +415,7 @@ impl GeometryCapacity {
         Ok(())
     }
 
+    /// Add the capacity of the given GeometryCollection
     #[inline]
     pub fn add_geometry_collection(
         &mut self,
@@ -411,6 +437,7 @@ impl GeometryCapacity {
         Ok(())
     }
 
+    /// Construct a new counter pre-filled with the given geometries
     pub fn from_geometries<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
         prefer_multi: bool,
@@ -422,6 +449,7 @@ impl GeometryCapacity {
         Ok(counter)
     }
 
+    /// Construct a new counter pre-filled with the given geometries
     pub fn from_owned_geometries<'a>(
         geoms: impl Iterator<Item = Option<(impl GeometryTrait + 'a)>>,
         prefer_multi: bool,

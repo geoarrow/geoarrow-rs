@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
+use arrow_array::{ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 
 use crate::array::geometrycollection::GeometryCollectionCapacity;
@@ -43,6 +43,7 @@ impl<'a> GeometryCollectionBuilder {
         )
     }
 
+    /// Creates a new empty [`GeometryCollectionBuilder`] with the provided options.
     pub fn new_with_options(
         dim: Dimension,
         coord_type: CoordType,
@@ -52,6 +53,7 @@ impl<'a> GeometryCollectionBuilder {
         Self::with_capacity_and_options(dim, Default::default(), coord_type, metadata, prefer_multi)
     }
 
+    /// Creates a new empty [`GeometryCollectionBuilder`] with the provided capacity.
     pub fn with_capacity(dim: Dimension, capacity: GeometryCollectionCapacity) -> Self {
         Self::with_capacity_and_options(
             dim,
@@ -62,6 +64,7 @@ impl<'a> GeometryCollectionBuilder {
         )
     }
 
+    /// Creates a new empty [`GeometryCollectionBuilder`] with the provided capacity and options.
     pub fn with_capacity_and_options(
         dim: Dimension,
         capacity: GeometryCollectionCapacity,
@@ -69,7 +72,6 @@ impl<'a> GeometryCollectionBuilder {
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Self {
-        // Should we be storing array metadata on child arrays?
         Self {
             geoms: MixedGeometryBuilder::with_capacity_and_options(
                 dim,
@@ -84,42 +86,39 @@ impl<'a> GeometryCollectionBuilder {
         }
     }
 
-    /// Reserves capacity for at least `additional` more LineStrings to be inserted
-    /// in the given `Vec<T>`. The collection may reserve more space to
-    /// speculatively avoid frequent reallocations. After calling `reserve`,
-    /// capacity will be greater than or equal to `self.len() + additional`.
+    /// Reserves capacity for at least `additional` more GeometryCollections.
+    ///
+    /// The collection may reserve more space to speculatively avoid frequent reallocations. After
+    /// calling `reserve`, capacity will be greater than or equal to `self.len() + additional`.
     /// Does nothing if capacity is already sufficient.
     pub fn reserve(&mut self, additional: GeometryCollectionCapacity) {
         self.geoms.reserve(additional.mixed_capacity);
         self.geom_offsets.reserve(additional.geom_capacity);
     }
 
-    /// Reserves the minimum capacity for at least `additional` more LineStrings to
-    /// be inserted in the given `Vec<T>`. Unlike [`reserve`], this will not
-    /// deliberately over-allocate to speculatively avoid frequent allocations.
-    /// After calling `reserve_exact`, capacity will be greater than or equal to
-    /// `self.len() + additional`. Does nothing if the capacity is already
-    /// sufficient.
+    /// Reserves the minimum capacity for at least `additional` more GeometryCollections.
+    ///
+    /// Unlike [`reserve`], this will not deliberately over-allocate to speculatively avoid
+    /// frequent allocations. After calling `reserve_exact`, capacity will be greater than or equal
+    /// to `self.len() + additional`. Does nothing if the capacity is already sufficient.
     ///
     /// Note that the allocator may give the collection more space than it
     /// requests. Therefore, capacity can not be relied upon to be precisely
     /// minimal. Prefer [`reserve`] if future insertions are expected.
     ///
-    /// [`reserve`]: Vec::reserve
+    /// [`reserve`]: Self::reserve
     pub fn reserve_exact(&mut self, additional: GeometryCollectionCapacity) {
         self.geoms.reserve_exact(additional.mixed_capacity);
         self.geom_offsets.reserve_exact(additional.geom_capacity);
     }
 
-    /// Extract the low-level APIs from the [`GeometryCollectionBuilder`].
-    pub fn into_inner(self) -> (MixedGeometryBuilder, OffsetsBuilder<i32>, NullBufferBuilder) {
-        (self.geoms, self.geom_offsets, self.validity)
-    }
-
+    /// Consume the builder and convert to an immutable [`GeometryCollectionArray`]
     pub fn finish(self) -> GeometryCollectionArray {
         self.into()
     }
 
+    /// Creates a new [`GeometryCollectionBuilder`] with a capacity inferred by the provided
+    /// iterator.
     pub fn with_capacity_from_iter(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
         dim: Dimension,
@@ -133,6 +132,8 @@ impl<'a> GeometryCollectionBuilder {
         )
     }
 
+    /// Creates a new [`GeometryCollectionBuilder`] with the provided options and a capacity
+    /// inferred by the provided iterator.
     pub fn with_capacity_and_options_from_iter(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
         dim: Dimension,
@@ -150,6 +151,8 @@ impl<'a> GeometryCollectionBuilder {
         ))
     }
 
+    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
+    /// geometries.
     pub fn reserve_from_iter(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
@@ -159,6 +162,8 @@ impl<'a> GeometryCollectionBuilder {
         Ok(())
     }
 
+    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
+    /// geometries.
     pub fn reserve_exact_from_iter(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
@@ -276,6 +281,7 @@ impl<'a> GeometryCollectionBuilder {
         Ok(())
     }
 
+    /// Extend this builder with the given geometries
     pub fn extend_from_iter(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait<T = f64> + 'a)>>,
@@ -299,6 +305,7 @@ impl<'a> GeometryCollectionBuilder {
         self.validity.append(false);
     }
 
+    /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_geometry_collections(
         geoms: &[impl GeometryCollectionTrait<T = f64>],
         dim: Dimension,
@@ -317,6 +324,7 @@ impl<'a> GeometryCollectionBuilder {
         Ok(array)
     }
 
+    /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_nullable_geometry_collections(
         geoms: &[Option<impl GeometryCollectionTrait<T = f64>>],
         dim: Dimension,
@@ -335,6 +343,7 @@ impl<'a> GeometryCollectionBuilder {
         Ok(array)
     }
 
+    /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_geometries(
         geoms: &[impl GeometryTrait<T = f64>],
         dim: Dimension,
@@ -351,6 +360,7 @@ impl<'a> GeometryCollectionBuilder {
         Ok(array)
     }
 
+    /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         dim: Dimension,
@@ -414,7 +424,7 @@ impl GeometryArrayBuilder for GeometryCollectionBuilder {
         &self.validity
     }
 
-    fn into_array_ref(self) -> Arc<dyn Array> {
+    fn into_array_ref(self) -> ArrayRef {
         Arc::new(self.into_arrow())
     }
 

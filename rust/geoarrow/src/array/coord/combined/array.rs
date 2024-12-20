@@ -8,7 +8,7 @@ use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Coord;
 use crate::trait_::IntoArrow;
-use arrow_array::{Array, FixedSizeListArray, StructArray};
+use arrow_array::{Array, ArrayRef, FixedSizeListArray, StructArray};
 use arrow_schema::DataType;
 
 /// An Arrow representation of an array of coordinates.
@@ -25,18 +25,22 @@ use arrow_schema::DataType;
 /// validity masks.
 #[derive(Debug, Clone)]
 pub enum CoordBuffer {
+    /// Interleaved coordinates
     Interleaved(InterleavedCoordBuffer),
+    /// Separated coordinates
     Separated(SeparatedCoordBuffer),
 }
 
 impl CoordBuffer {
-    pub fn slice(&self, offset: usize, length: usize) -> Self {
+    /// Slice this buffer
+    pub(crate) fn slice(&self, offset: usize, length: usize) -> Self {
         match self {
             CoordBuffer::Interleaved(c) => CoordBuffer::Interleaved(c.slice(offset, length)),
             CoordBuffer::Separated(c) => CoordBuffer::Separated(c.slice(offset, length)),
         }
     }
 
+    /// The underlying coordinate type
     pub fn coord_type(&self) -> CoordType {
         match self {
             CoordBuffer::Interleaved(cb) => cb.coord_type(),
@@ -44,13 +48,15 @@ impl CoordBuffer {
         }
     }
 
-    pub fn storage_type(&self) -> DataType {
+    /// The arrow [DataType] for this coordinate buffer.
+    pub(crate) fn storage_type(&self) -> DataType {
         match self {
             CoordBuffer::Interleaved(c) => c.storage_type(),
             CoordBuffer::Separated(c) => c.storage_type(),
         }
     }
 
+    /// The length of this coordinate buffer
     pub fn len(&self) -> usize {
         match self {
             CoordBuffer::Interleaved(c) => c.len(),
@@ -58,25 +64,23 @@ impl CoordBuffer {
         }
     }
 
+    /// Whether this coordinate buffer is empty
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
-    pub fn value(&self, index: usize) -> Coord<'_> {
+    pub(crate) fn value(&self, index: usize) -> Coord<'_> {
         match self {
             CoordBuffer::Interleaved(c) => Coord::Interleaved(c.value(index)),
             CoordBuffer::Separated(c) => Coord::Separated(c.value(index)),
         }
     }
 
-    pub fn into_array_ref(self) -> Arc<dyn Array> {
+    pub(crate) fn into_array_ref(self) -> ArrayRef {
         self.into_arrow()
     }
 
-    pub fn to_array_ref(&self) -> arrow_array::ArrayRef {
-        self.clone().into_array_ref()
-    }
-
+    /// The dimension of this coordinate buffer
     pub fn dim(&self) -> Dimension {
         match self {
             CoordBuffer::Interleaved(c) => c.dim(),
@@ -84,11 +88,16 @@ impl CoordBuffer {
         }
     }
 
-    pub fn with_coords(self, coords: CoordBuffer) -> Self {
+    #[allow(dead_code)]
+    pub(crate) fn with_coords(self, coords: CoordBuffer) -> Self {
         assert_eq!(coords.len(), self.len());
         coords
     }
 
+    /// Convert this coordinate array into the given [CoordType]
+    ///
+    /// This is a no-op if the coord_type matches the existing coord type. Otherwise a full clone
+    /// of the underlying coordinate buffers will be performed.
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
         let dim = self.dim();
         match (self, coord_type) {
@@ -113,7 +122,7 @@ impl CoordBuffer {
         }
     }
 
-    pub fn from_arrow(value: &dyn Array, dim: Dimension) -> Result<Self> {
+    pub(crate) fn from_arrow(value: &dyn Array, dim: Dimension) -> Result<Self> {
         match value.data_type() {
             DataType::Struct(_) => {
                 let downcasted = value.as_any().downcast_ref::<StructArray>().unwrap();
@@ -136,7 +145,7 @@ impl CoordBuffer {
 }
 
 impl IntoArrow for CoordBuffer {
-    type ArrowArray = Arc<dyn Array>;
+    type ArrowArray = ArrayRef;
 
     fn into_arrow(self) -> Self::ArrowArray {
         match self {

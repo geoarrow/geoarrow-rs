@@ -9,8 +9,8 @@ use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, SerializedArray};
 use arrow::array::AsArray;
-use arrow_array::OffsetSizeTrait;
 use arrow_array::{Array, BinaryArray, GenericBinaryArray, LargeBinaryArray};
+use arrow_array::{ArrayRef, OffsetSizeTrait};
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
 use geo_traits::GeometryTrait;
@@ -73,10 +73,6 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         validity_len + self.buffer_lengths().num_bytes::<O>()
     }
 
-    pub fn into_inner(self) -> GenericBinaryArray<O> {
-        self.array
-    }
-
     /// Slices this [`WKBArray`] in place.
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
@@ -93,6 +89,7 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         }
     }
 
+    /// Replace the [ArrayMetadata] in the array with the given metadata
     pub fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> Self {
         let mut arr = self.clone();
         arr.metadata = metadata;
@@ -119,12 +116,12 @@ impl<O: OffsetSizeTrait> ArrayBase for WKBArray<O> {
         self.data_type.extension_name()
     }
 
-    fn into_array_ref(self) -> Arc<dyn Array> {
+    fn into_array_ref(self) -> ArrayRef {
         // Recreate a BinaryArray so that we can force it to have geoarrow.wkb extension type
         Arc::new(self.into_arrow())
     }
 
-    fn to_array_ref(&self) -> arrow_array::ArrayRef {
+    fn to_array_ref(&self) -> ArrayRef {
         self.clone().into_array_ref()
     }
 

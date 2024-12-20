@@ -712,7 +712,7 @@ pub trait ChunkedArrayBase: std::fmt::Debug + Send + Sync {
     /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
     /// let arrays = chunked_array.array_refs();
     /// ```
-    fn array_refs(&self) -> Vec<Arc<dyn Array>>;
+    fn array_refs(&self) -> Vec<ArrayRef>;
 }
 
 /// A trait implemented by all chunked geometry arrays.
@@ -833,7 +833,7 @@ impl ChunkedArrayBase for ChunkedPointArray {
         self.chunks.len()
     }
 
-    fn array_refs(&self) -> Vec<Arc<dyn Array>> {
+    fn array_refs(&self) -> Vec<ArrayRef> {
         self.chunks
             .iter()
             .map(|chunk| chunk.to_array_ref())
@@ -892,7 +892,7 @@ impl<O: OffsetSizeTrait> ChunkedArrayBase for ChunkedWKBArray<O> {
     //     self
     // }
 
-    fn array_refs(&self) -> Vec<Arc<dyn Array>> {
+    fn array_refs(&self) -> Vec<ArrayRef> {
         self.chunks
             .iter()
             .map(|chunk| chunk.to_array_ref())
@@ -921,7 +921,7 @@ macro_rules! impl_trait {
                 self.chunks.len()
             }
 
-            fn array_refs(&self) -> Vec<Arc<dyn Array>> {
+            fn array_refs(&self) -> Vec<ArrayRef> {
                 self.chunks
                     .iter()
                     .map(|chunk| chunk.to_array_ref())
@@ -976,7 +976,7 @@ impl ChunkedArrayBase for ChunkedRectArray {
         self.chunks.len()
     }
 
-    fn array_refs(&self) -> Vec<Arc<dyn Array>> {
+    fn array_refs(&self) -> Vec<ArrayRef> {
         self.chunks
             .iter()
             .map(|chunk| chunk.to_array_ref())

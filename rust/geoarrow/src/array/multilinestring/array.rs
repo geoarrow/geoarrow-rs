@@ -14,7 +14,7 @@ use crate::scalar::{Geometry, MultiLineString};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
 use crate::{ArrayBase, NativeArray};
 use arrow::array::AsArray;
-use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
+use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 use geo_traits::MultiLineStringTrait;
@@ -136,14 +136,17 @@ impl MultiLineStringArray {
         Field::new_list("linestrings", self.vertices_field(), false).into()
     }
 
+    /// Access the underlying coordinate buffer
     pub fn coords(&self) -> &CoordBuffer {
         &self.coords
     }
 
+    /// Access the underlying geometry offsets buffer
     pub fn geom_offsets(&self) -> &OffsetBuffer<i32> {
         &self.geom_offsets
     }
 
+    /// Access the underlying ring offsets buffer
     pub fn ring_offsets(&self) -> &OffsetBuffer<i32> {
         &self.ring_offsets
     }
@@ -184,10 +187,12 @@ impl MultiLineStringArray {
         }
     }
 
+    /// Change the coordinate type of this array.
     pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
         self.clone().into_coord_type(coord_type)
     }
 
+    /// Change the coordinate type of this array.
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
         Self::new(
             self.coords.into_coord_type(coord_type),
@@ -218,11 +223,11 @@ impl ArrayBase for MultiLineStringArray {
         self.data_type.extension_name()
     }
 
-    fn into_array_ref(self) -> Arc<dyn Array> {
+    fn into_array_ref(self) -> ArrayRef {
         Arc::new(self.into_arrow())
     }
 
-    fn to_array_ref(&self) -> arrow_array::ArrayRef {
+    fn to_array_ref(&self) -> ArrayRef {
         self.clone().into_array_ref()
     }
 

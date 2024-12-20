@@ -447,6 +447,7 @@ impl<'a> MixedGeometryBuilder {
         todo!("push null geometry")
     }
 
+    /// Extend this builder with the given geometries
     pub fn extend_from_iter(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,

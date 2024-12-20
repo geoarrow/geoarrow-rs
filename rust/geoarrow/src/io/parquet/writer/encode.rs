@@ -1,6 +1,4 @@
-use std::sync::Arc;
-
-use arrow_array::{Array, RecordBatch};
+use arrow_array::{Array, ArrayRef, RecordBatch};
 use arrow_schema::Field;
 
 use crate::algorithm::native::bounding_rect::BoundingRect;
@@ -38,7 +36,7 @@ fn encode_column(
     array: &dyn Array,
     field: &Field,
     column_info: &mut ColumnInfo,
-) -> Result<(Arc<dyn Array>, BoundingRect)> {
+) -> Result<(ArrayRef, BoundingRect)> {
     let geo_arr = NativeArrayDyn::from_arrow_array(array, field)?.into_inner();
     let array_bounds = geo_arr.as_ref().total_bounds();
     let encoded_array = match column_info.encoding {
@@ -49,13 +47,13 @@ fn encode_column(
 }
 
 /// Encode column as WKB
-fn encode_wkb_column(geo_arr: &dyn NativeArray) -> Result<Arc<dyn Array>> {
+fn encode_wkb_column(geo_arr: &dyn NativeArray) -> Result<ArrayRef> {
     Ok(geo_arr.as_ref().to_wkb::<i32>().to_array_ref())
 }
 
 /// Encode column as GeoArrow.
 ///
 /// Note that the GeoParquet specification requires separated coord type!
-fn encode_native_column(geo_arr: &dyn NativeArray) -> Result<Arc<dyn Array>> {
+fn encode_native_column(geo_arr: &dyn NativeArray) -> Result<ArrayRef> {
     Ok(geo_arr.to_coord_type(CoordType::Separated).to_array_ref())
 }

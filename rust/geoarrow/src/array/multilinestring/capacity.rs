@@ -35,18 +35,22 @@ impl MultiLineStringCapacity {
         self.coord_capacity == 0 && self.ring_capacity == 0 && self.geom_capacity == 0
     }
 
+    /// The coordinate buffer capacity
     pub fn coord_capacity(&self) -> usize {
         self.coord_capacity
     }
 
+    /// The ring offset buffer capacity
     pub fn ring_capacity(&self) -> usize {
         self.ring_capacity
     }
 
+    /// The geometry offset buffer capacity
     pub fn geom_capacity(&self) -> usize {
         self.geom_capacity
     }
 
+    /// Add the capacity of the given LineString
     #[inline]
     pub fn add_line_string(&mut self, maybe_line_string: Option<&impl LineStringTrait>) {
         self.geom_capacity += 1;
@@ -57,6 +61,7 @@ impl MultiLineStringCapacity {
         }
     }
 
+    /// Add the capacity of the given MultiLineString
     #[inline]
     pub fn add_multi_line_string(&mut self, multi_line_string: Option<&impl MultiLineStringTrait>) {
         self.geom_capacity += 1;
@@ -71,6 +76,10 @@ impl MultiLineStringCapacity {
         }
     }
 
+    /// Add the capacity of the given Geometry
+    ///
+    /// The type of the geometry must be either LineString or MultiLineString
+    #[inline]
     pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait>) -> Result<()> {
         if let Some(geom) = value {
             match geom.as_type() {
@@ -84,12 +93,7 @@ impl MultiLineStringCapacity {
         Ok(())
     }
 
-    pub fn add_line_string_capacity(&mut self, line_string_capacity: LineStringCapacity) {
-        self.coord_capacity += line_string_capacity.coord_capacity();
-        self.ring_capacity += line_string_capacity.geom_capacity();
-        self.geom_capacity += line_string_capacity.geom_capacity();
-    }
-
+    /// Construct a new counter pre-filled with the given MultiLineStrings
     pub fn from_multi_line_strings<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
     ) -> Self {
@@ -100,6 +104,7 @@ impl MultiLineStringCapacity {
         counter
     }
 
+    /// Construct a new counter pre-filled with the given geometries
     pub fn from_geometries<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
     ) -> Result<Self> {
