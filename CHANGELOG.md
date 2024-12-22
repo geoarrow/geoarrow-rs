@@ -11,6 +11,7 @@
   - `GeometryArrayRef` renamed to `NativeArrayRef`.
   - `GeometryArrayTrait` renamed to `NativeScalar`.
   - `GeometryArrayDyn` renamed to `NativeArrayDyn`.
+  - `GeometryArrayAccessor` renamed to `ArrayAccessor`.
   - `AsGeometryArray` renamed to `AsNativeArray`.
   - `AsChunkedGeometryArray` renamed to `AsChunkedNativeArray`.
   - `ChunkedGeometryArrayTrait` renamed to `ChunkedNativeArray`.
