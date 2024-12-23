@@ -5,4 +5,4 @@
 mod reader;
 mod scalar;
 
-pub use reader::{read_shapefile, ShapefileReaderOptions};
+pub use reader::{ShapefileReaderBuilder, ShapefileReaderOptions};
