@@ -1,15 +1,15 @@
 mod dynamic;
+mod geometry;
 mod geometrycollection;
 mod linestring;
-mod mixed;
 mod multilinestring;
 mod multipoint;
 mod multipolygon;
 mod point;
 mod polygon;
 
+pub use geometry::{GeometryStreamBuilder, ToGeometryArray};
 pub use linestring::ToLineStringArray;
-pub use mixed::{MixedGeometryStreamBuilder, ToMixedArray};
 pub use multilinestring::ToMultiLineStringArray;
 pub use multipoint::ToMultiPointArray;
 pub use multipolygon::ToMultiPolygonArray;

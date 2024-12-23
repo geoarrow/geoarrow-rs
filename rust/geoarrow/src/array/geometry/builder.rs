@@ -426,7 +426,7 @@ impl<'a> GeometryBuilder {
     }
 
     #[inline]
-    pub(crate) fn add_point_type(&mut self, dim: Dimension) {
+    fn add_point_type(&mut self, dim: Dimension) {
         match dim {
             Dimension::XY => {
                 self.offsets.push(self.point_xy.len().try_into().unwrap());
@@ -508,7 +508,7 @@ impl<'a> GeometryBuilder {
     }
 
     #[inline]
-    pub(crate) fn add_line_string_type(&mut self, dim: Dimension) {
+    fn add_line_string_type(&mut self, dim: Dimension) {
         match dim {
             Dimension::XY => {
                 self.offsets
@@ -589,7 +589,7 @@ impl<'a> GeometryBuilder {
     }
 
     #[inline]
-    pub(crate) fn add_polygon_type(&mut self, dim: Dimension) {
+    fn add_polygon_type(&mut self, dim: Dimension) {
         match dim {
             Dimension::XY => {
                 self.offsets.push(self.polygon_xy.len().try_into().unwrap());
@@ -644,7 +644,7 @@ impl<'a> GeometryBuilder {
     }
 
     #[inline]
-    pub(crate) fn add_multi_point_type(&mut self, dim: Dimension) {
+    fn add_multi_point_type(&mut self, dim: Dimension) {
         match dim {
             Dimension::XY => {
                 self.offsets.push(self.mpoint_xy.len().try_into().unwrap());
@@ -700,7 +700,7 @@ impl<'a> GeometryBuilder {
     }
 
     #[inline]
-    pub(crate) fn add_multi_line_string_type(&mut self, dim: Dimension) {
+    fn add_multi_line_string_type(&mut self, dim: Dimension) {
         match dim {
             Dimension::XY => {
                 self.offsets
@@ -756,7 +756,7 @@ impl<'a> GeometryBuilder {
     }
 
     #[inline]
-    pub(crate) fn add_multi_polygon_type(&mut self, dim: Dimension) {
+    fn add_multi_polygon_type(&mut self, dim: Dimension) {
         match dim {
             Dimension::XY => {
                 self.offsets
@@ -846,7 +846,7 @@ impl<'a> GeometryBuilder {
     }
 
     #[inline]
-    pub(crate) fn add_geometry_collection_type(&mut self, dim: Dimension) {
+    fn add_geometry_collection_type(&mut self, dim: Dimension) {
         match dim {
             Dimension::XY => {
                 self.offsets.push(self.gc_xy.len().try_into().unwrap());
