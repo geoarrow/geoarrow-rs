@@ -6,3 +6,4 @@ mod multipoint;
 mod multipolygon;
 mod point;
 mod polygon;
+mod rect;

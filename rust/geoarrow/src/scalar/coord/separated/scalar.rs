@@ -7,6 +7,9 @@ use geo_traits::to_geo::ToGeoCoord;
 use geo_traits::CoordTrait;
 use rstar::{RTreeObject, AABB};
 
+/// An Arrow equivalent of a Coord
+///
+/// This implements [CoordTrait], which you can use to extract data.
 #[derive(Debug, Clone)]
 pub struct SeparatedCoord<'a> {
     pub(crate) buffers: &'a [ScalarBuffer<f64>; 4],

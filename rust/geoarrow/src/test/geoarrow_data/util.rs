@@ -1,10 +1,9 @@
 use std::fs::File;
-use std::sync::Arc;
 
-use arrow_array::Array;
+use arrow_array::ArrayRef;
 use arrow_ipc::reader::FileReader;
 
-pub(super) fn read_geometry_column(path: &str) -> Arc<dyn Array> {
+pub(super) fn read_geometry_column(path: &str) -> ArrayRef {
     let file = File::open(path).unwrap();
     let reader = FileReader::try_new(file, None).unwrap();
 

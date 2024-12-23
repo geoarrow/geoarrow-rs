@@ -1,7 +1,5 @@
 //! Reader and writer implementations of many common geospatial file formats, including
-//! interoperability with the `geozero` crate.
-
-#![allow(missing_docs)] // FIXME
+//! interoperability with the [`geozero`] crate.
 
 pub mod crs;
 #[cfg(feature = "csv")]
@@ -11,6 +9,7 @@ pub(crate) mod display;
 pub mod flatgeobuf;
 #[cfg(feature = "gdal")]
 pub mod gdal;
+pub(crate) mod geo;
 pub mod geojson;
 pub mod geojson_lines;
 #[cfg(feature = "geos")]

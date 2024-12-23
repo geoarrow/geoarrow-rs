@@ -89,6 +89,7 @@ impl<'a> GeometryBuilder {
         Self::new_with_options(Default::default(), Default::default(), DEFAULT_PREFER_MULTI)
     }
 
+    /// Creates a new empty [`GeometryBuilder`] with the given options.
     pub fn new_with_options(
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
@@ -97,7 +98,7 @@ impl<'a> GeometryBuilder {
         Self::with_capacity_and_options(Default::default(), coord_type, metadata, prefer_multi)
     }
 
-    /// Creates a new [`MixedGeometryBuilder`] with given capacity and no validity.
+    /// Creates a new [`GeometryBuilder`] with given capacity and no validity.
     pub fn with_capacity(capacity: GeometryCapacity) -> Self {
         Self::with_capacity_and_options(
             capacity,
@@ -107,6 +108,7 @@ impl<'a> GeometryBuilder {
         )
     }
 
+    /// Creates a new empty [`GeometryBuilder`] with the given capacity and options.
     pub fn with_capacity_and_options(
         capacity: GeometryCapacity,
         coord_type: CoordType,
@@ -211,6 +213,11 @@ impl<'a> GeometryBuilder {
         }
     }
 
+    /// Reserves capacity for at least `additional` more geometries.
+    ///
+    /// The collection may reserve more space to speculatively avoid frequent reallocations. After
+    /// calling `reserve`, capacity will be greater than or equal to `self.len() + additional`.
+    /// Does nothing if capacity is already sufficient.
     pub fn reserve(&mut self, capacity: GeometryCapacity) {
         let total_num_geoms = capacity.total_num_geoms();
         self.types.reserve(total_num_geoms);
@@ -233,6 +240,17 @@ impl<'a> GeometryBuilder {
         self.gc_xyz.reserve(capacity.gc_xyz());
     }
 
+    /// Reserves the minimum capacity for at least `additional` more Geometries.
+    ///
+    /// Unlike [`reserve`], this will not deliberately over-allocate to speculatively avoid
+    /// frequent allocations. After calling `reserve_exact`, capacity will be greater than or equal
+    /// to `self.len() + additional`. Does nothing if the capacity is already sufficient.
+    ///
+    /// Note that the allocator may give the collection more space than it
+    /// requests. Therefore, capacity can not be relied upon to be precisely
+    /// minimal. Prefer [`reserve`] if future insertions are expected.
+    ///
+    /// [`reserve`]: Self::reserve
     pub fn reserve_exact(&mut self, capacity: GeometryCapacity) {
         let total_num_geoms = capacity.total_num_geoms();
 
@@ -288,10 +306,12 @@ impl<'a> GeometryBuilder {
     //     })
     // }
 
+    /// Consume the builder and convert to an immutable [`GeometryArray`]
     pub fn finish(self) -> GeometryArray {
         self.into()
     }
 
+    /// Creates a new builder with a capacity inferred by the provided iterator.
     pub fn with_capacity_from_iter(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
     ) -> Result<Self> {
@@ -303,6 +323,8 @@ impl<'a> GeometryBuilder {
         )
     }
 
+    /// Creates a new builder with the provided options and a capacity inferred by the provided
+    /// iterator.
     pub fn with_capacity_and_options_from_iter(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
         coord_type: CoordType,
@@ -318,6 +340,8 @@ impl<'a> GeometryBuilder {
         ))
     }
 
+    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
+    /// geometries.
     pub fn reserve_from_iter(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
@@ -328,6 +352,8 @@ impl<'a> GeometryBuilder {
         Ok(())
     }
 
+    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
+    /// geometries.
     pub fn reserve_exact_from_iter(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
@@ -745,6 +771,7 @@ impl<'a> GeometryBuilder {
         }
     }
 
+    /// Add a new geometry to this builder
     #[inline]
     pub fn push_geometry(&mut self, value: Option<&'a impl GeometryTrait<T = f64>>) -> Result<()> {
         use geo_traits::GeometryType::*;
@@ -866,6 +893,7 @@ impl<'a> GeometryBuilder {
         }
     }
 
+    /// Extend this builder with the given geometries
     pub fn extend_from_iter(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,

@@ -31,12 +31,11 @@ impl<O: OffsetSizeTrait> Default for WKBBuilder<O> {
 
 impl<O: OffsetSizeTrait> WKBBuilder<O> {
     /// Creates a new empty [`WKBBuilder`].
-    /// # Implementation
-    /// This allocates a [`Vec`] of one element
     pub fn new() -> Self {
         Self::with_capacity(Default::default())
     }
 
+    /// Creates a new empty [`WKBBuilder`] with the provided options.
     pub fn new_with_options(metadata: Arc<ArrayMetadata>) -> Self {
         Self::with_capacity_and_options(Default::default(), metadata)
     }
@@ -46,6 +45,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         Self::with_capacity_and_options(capacity, Default::default())
     }
 
+    /// Creates a new empty [`WKBBuilder`] with the provided capacity and options.
     pub fn with_capacity_and_options(capacity: WKBCapacity, metadata: Arc<ArrayMetadata>) -> Self {
         Self(
             GenericBinaryBuilder::with_capacity(
@@ -56,12 +56,16 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         )
     }
 
+    /// Creates a new empty [`WKBBuilder`] with a capacity inferred by the provided geometry
+    /// iterator.
     pub fn with_capacity_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
     ) -> Self {
         Self::with_capacity_and_options_from_iter(geoms, Default::default())
     }
 
+    /// Creates a new empty [`WKBBuilder`] with the provided options and a capacity inferred by the
+    /// provided geometry iterator.
     pub fn with_capacity_and_options_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
         metadata: Arc<ArrayMetadata>,
@@ -205,6 +209,9 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         array
     }
 
+    /// Consume this builder and convert to a [WKBArray].
+    ///
+    /// This is `O(1)`.
     pub fn finish(self) -> WKBArray<O> {
         self.into()
     }

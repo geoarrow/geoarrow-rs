@@ -1,7 +1,9 @@
 use std::sync::Arc;
 
 use arrow::array::AsArray;
-use arrow_array::{Array, GenericStringArray, LargeStringArray, OffsetSizeTrait, StringArray};
+use arrow_array::{
+    Array, ArrayRef, GenericStringArray, LargeStringArray, OffsetSizeTrait, StringArray,
+};
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
 
@@ -17,10 +19,10 @@ use crate::ArrayBase;
 ///
 /// This is semantically equivalent to `Vec<Option<WKT>>` due to the internal validity bitmap.
 ///
-/// This array _can_ be used directly for operations, but that will incur costly encoding to and
-/// from WKT on every operation. Instead, you usually want to use the WKBArray only for
-/// serialization purposes (e.g. to and from [GeoParquet](https://geoparquet.org/)) but convert to
-/// strongly-typed arrays (such as the [`PointArray`][crate::array::PointArray]) for computations.
+/// This is a wrapper around an Arrow [GenericStringArray], but additionally stores an
+/// [ArrayMetadata] so that we can persist CRS information about the data.
+///
+/// Refer to [`crate::io::wkt`] for encoding and decoding this array to the native array types.
 #[derive(Debug, Clone, PartialEq)]
 pub struct WKTArray<O: OffsetSizeTrait> {
     pub(crate) data_type: SerializedType,
@@ -49,6 +51,7 @@ impl<O: OffsetSizeTrait> WKTArray<O> {
         self.len() == 0
     }
 
+    /// Consume self and access the underlying data.
     pub fn into_inner(self) -> GenericStringArray<O> {
         self.array
     }
@@ -69,6 +72,7 @@ impl<O: OffsetSizeTrait> WKTArray<O> {
         }
     }
 
+    /// Replace the [`ArrayMetadata`] contained in this array.
     pub fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> Self {
         let mut arr = self.clone();
         arr.metadata = metadata;
@@ -95,12 +99,12 @@ impl<O: OffsetSizeTrait> ArrayBase for WKTArray<O> {
         self.data_type.extension_name()
     }
 
-    fn into_array_ref(self) -> Arc<dyn Array> {
+    fn into_array_ref(self) -> ArrayRef {
         // Recreate a BinaryArray so that we can force it to have geoarrow.wkb extension type
         Arc::new(self.into_arrow())
     }
 
-    fn to_array_ref(&self) -> arrow_array::ArrayRef {
+    fn to_array_ref(&self) -> ArrayRef {
         self.clone().into_array_ref()
     }
 

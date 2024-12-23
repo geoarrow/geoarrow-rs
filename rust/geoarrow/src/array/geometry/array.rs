@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use arrow_array::{Array, OffsetSizeTrait, UnionArray};
+use arrow_array::{Array, ArrayRef, OffsetSizeTrait, UnionArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field, UnionMode};
 
@@ -250,49 +250,49 @@ impl GeometryArray {
     }
 
     // TODO: handle slicing
-    pub fn has_points(&self, dim: Dimension) -> bool {
+    pub(crate) fn has_points(&self, dim: Dimension) -> bool {
         match dim {
             Dimension::XY => !self.point_xy.is_empty(),
             Dimension::XYZ => !self.point_xyz.is_empty(),
         }
     }
 
-    pub fn has_line_strings(&self, dim: Dimension) -> bool {
+    pub(crate) fn has_line_strings(&self, dim: Dimension) -> bool {
         match dim {
             Dimension::XY => !self.line_string_xy.is_empty(),
             Dimension::XYZ => !self.line_string_xyz.is_empty(),
         }
     }
 
-    pub fn has_polygons(&self, dim: Dimension) -> bool {
+    pub(crate) fn has_polygons(&self, dim: Dimension) -> bool {
         match dim {
             Dimension::XY => !self.polygon_xy.is_empty(),
             Dimension::XYZ => !self.polygon_xyz.is_empty(),
         }
     }
 
-    pub fn has_multi_points(&self, dim: Dimension) -> bool {
+    pub(crate) fn has_multi_points(&self, dim: Dimension) -> bool {
         match dim {
             Dimension::XY => !self.mpoint_xy.is_empty(),
             Dimension::XYZ => !self.mpoint_xyz.is_empty(),
         }
     }
 
-    pub fn has_multi_line_strings(&self, dim: Dimension) -> bool {
+    pub(crate) fn has_multi_line_strings(&self, dim: Dimension) -> bool {
         match dim {
             Dimension::XY => !self.mline_string_xy.is_empty(),
             Dimension::XYZ => !self.mline_string_xyz.is_empty(),
         }
     }
 
-    pub fn has_multi_polygons(&self, dim: Dimension) -> bool {
+    pub(crate) fn has_multi_polygons(&self, dim: Dimension) -> bool {
         match dim {
             Dimension::XY => !self.mpolygon_xy.is_empty(),
             Dimension::XYZ => !self.mpolygon_xyz.is_empty(),
         }
     }
 
-    pub fn has_geometry_collections(&self, dim: Dimension) -> bool {
+    pub(crate) fn has_geometry_collections(&self, dim: Dimension) -> bool {
         match dim {
             Dimension::XY => !self.gc_xy.is_empty(),
             Dimension::XYZ => !self.gc_xyz.is_empty(),
@@ -500,10 +500,12 @@ impl GeometryArray {
         }
     }
 
+    /// Change the coordinate type of this array.
     pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
         self.clone().into_coord_type(coord_type)
     }
 
+    /// Change the coordinate type of this array.
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
         Self::new(
             self.type_ids,
@@ -527,7 +529,8 @@ impl GeometryArray {
     }
 
     // TODO: recursively expand the types from the geometry collection array
-    pub fn contained_types(&self) -> HashSet<NativeType> {
+    #[allow(dead_code)]
+    pub(crate) fn contained_types(&self) -> HashSet<NativeType> {
         let mut types = HashSet::new();
         if self.has_points(Dimension::XY) {
             types.insert(self.point_xy.data_type());
@@ -597,11 +600,11 @@ impl ArrayBase for GeometryArray {
         self.data_type.extension_name()
     }
 
-    fn into_array_ref(self) -> Arc<dyn Array> {
+    fn into_array_ref(self) -> ArrayRef {
         Arc::new(self.into_arrow())
     }
 
-    fn to_array_ref(&self) -> arrow_array::ArrayRef {
+    fn to_array_ref(&self) -> ArrayRef {
         self.clone().into_array_ref()
     }
 
@@ -673,18 +676,14 @@ impl NativeGeometryAccessor for GeometryArray {
             4 => Geometry::MultiPoint(self.mpoint_xy.value(offset)),
             5 => Geometry::MultiLineString(self.mline_string_xy.value(offset)),
             6 => Geometry::MultiPolygon(self.mpolygon_xy.value(offset)),
-            7 => {
-                panic!("nested geometry collections not supported")
-            }
+            7 => Geometry::GeometryCollection(self.gc_xy.value(offset)),
             11 => Geometry::Point(self.point_xyz.value(offset)),
             12 => Geometry::LineString(self.line_string_xyz.value(offset)),
             13 => Geometry::Polygon(self.polygon_xyz.value(offset)),
             14 => Geometry::MultiPoint(self.mpoint_xyz.value(offset)),
             15 => Geometry::MultiLineString(self.mline_string_xyz.value(offset)),
             16 => Geometry::MultiPolygon(self.mpolygon_xyz.value(offset)),
-            17 => {
-                panic!("nested geometry collections not supported")
-            }
+            17 => Geometry::GeometryCollection(self.gc_xyz.value(offset)),
             _ => panic!("unknown type_id {}", type_id),
         }
     }
@@ -716,18 +715,14 @@ impl<'a> ArrayAccessor<'a> for GeometryArray {
             4 => Geometry::MultiPoint(self.mpoint_xy.value(offset)),
             5 => Geometry::MultiLineString(self.mline_string_xy.value(offset)),
             6 => Geometry::MultiPolygon(self.mpolygon_xy.value(offset)),
-            7 => {
-                panic!("nested geometry collections not supported")
-            }
+            7 => Geometry::GeometryCollection(self.gc_xy.value(offset)),
             11 => Geometry::Point(self.point_xyz.value(offset)),
             12 => Geometry::LineString(self.line_string_xyz.value(offset)),
             13 => Geometry::Polygon(self.polygon_xyz.value(offset)),
             14 => Geometry::MultiPoint(self.mpoint_xyz.value(offset)),
             15 => Geometry::MultiLineString(self.mline_string_xyz.value(offset)),
             16 => Geometry::MultiPolygon(self.mpolygon_xyz.value(offset)),
-            17 => {
-                panic!("nested geometry collections not supported")
-            }
+            17 => Geometry::GeometryCollection(self.gc_xyz.value(offset)),
             _ => panic!("unknown type_id {}", type_id),
         }
     }
@@ -749,12 +744,14 @@ impl IntoArrow for GeometryArray {
             self.mpoint_xy.into_array_ref(),
             self.mline_string_xy.into_array_ref(),
             self.mpolygon_xy.into_array_ref(),
+            self.gc_xy.into_array_ref(),
             self.point_xyz.into_array_ref(),
             self.line_string_xyz.into_array_ref(),
             self.polygon_xyz.into_array_ref(),
             self.mpoint_xyz.into_array_ref(),
             self.mline_string_xyz.into_array_ref(),
             self.mpolygon_xyz.into_array_ref(),
+            self.gc_xyz.into_array_ref(),
         ];
 
         UnionArray::try_new(

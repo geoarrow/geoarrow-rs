@@ -8,6 +8,8 @@ use geo_traits::PointTrait;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a Point
+///
+/// This implements [PointTrait], which you can use to extract data.
 #[derive(Debug, Clone)]
 pub struct Point<'a> {
     coords: &'a CoordBuffer,
@@ -15,11 +17,11 @@ pub struct Point<'a> {
 }
 
 impl<'a> Point<'a> {
-    pub fn new(coords: &'a CoordBuffer, geom_index: usize) -> Self {
+    pub(crate) fn new(coords: &'a CoordBuffer, geom_index: usize) -> Self {
         Point { coords, geom_index }
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer, usize) {
+    pub(crate) fn into_owned_inner(self) -> (CoordBuffer, usize) {
         (self.coords.clone(), self.geom_index)
     }
 }

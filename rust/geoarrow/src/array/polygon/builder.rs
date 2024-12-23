@@ -12,7 +12,7 @@ use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
-use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
+use arrow_array::{ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 use geo_traits::{
     CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait,
@@ -51,6 +51,7 @@ impl PolygonBuilder {
         Self::new_with_options(dim, Default::default(), Default::default())
     }
 
+    /// Creates a new empty [`PolygonBuilder`] with the provided options.
     pub fn new_with_options(
         dim: Dimension,
         coord_type: CoordType,
@@ -64,6 +65,7 @@ impl PolygonBuilder {
         Self::with_capacity_and_options(dim, capacity, Default::default(), Default::default())
     }
 
+    /// Creates a new empty [`PolygonBuilder`] with the provided capacity and options.
     pub fn with_capacity_and_options(
         dim: Dimension,
         capacity: PolygonCapacity,
@@ -87,10 +89,10 @@ impl PolygonBuilder {
         }
     }
 
-    /// Reserves capacity for at least `additional` more LineStrings to be inserted
-    /// in the given `Vec<T>`. The collection may reserve more space to
-    /// speculatively avoid frequent reallocations. After calling `reserve`,
-    /// capacity will be greater than or equal to `self.len() + additional`.
+    /// Reserves capacity for at least `additional` more Polygons.
+    ///
+    /// The collection may reserve more space to speculatively avoid frequent reallocations. After
+    /// calling `reserve`, capacity will be greater than or equal to `self.len() + additional`.
     /// Does nothing if capacity is already sufficient.
     pub fn reserve(&mut self, capacity: PolygonCapacity) {
         self.coords.reserve(capacity.coord_capacity);
@@ -98,24 +100,25 @@ impl PolygonBuilder {
         self.geom_offsets.reserve(capacity.geom_capacity);
     }
 
-    /// Reserves the minimum capacity for at least `additional` more LineStrings to
-    /// be inserted in the given `Vec<T>`. Unlike [`reserve`], this will not
-    /// deliberately over-allocate to speculatively avoid frequent allocations.
-    /// After calling `reserve_exact`, capacity will be greater than or equal to
-    /// `self.len() + additional`. Does nothing if the capacity is already
-    /// sufficient.
+    /// Reserves the minimum capacity for at least `additional` more Polygons.
+    ///
+    /// Unlike [`reserve`], this will not deliberately over-allocate to speculatively avoid
+    /// frequent allocations. After calling `reserve_exact`, capacity will be greater than or equal
+    /// to `self.len() + additional`. Does nothing if the capacity is already sufficient.
     ///
     /// Note that the allocator may give the collection more space than it
     /// requests. Therefore, capacity can not be relied upon to be precisely
     /// minimal. Prefer [`reserve`] if future insertions are expected.
     ///
-    /// [`reserve`]: Vec::reserve
+    /// [`reserve`]: Self::reserve
     pub fn reserve_exact(&mut self, capacity: PolygonCapacity) {
         self.coords.reserve_exact(capacity.coord_capacity);
         self.ring_offsets.reserve_exact(capacity.ring_capacity);
         self.geom_offsets.reserve_exact(capacity.geom_capacity);
     }
 
+    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
+    /// geometries.
     pub fn reserve_from_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
@@ -124,6 +127,8 @@ impl PolygonBuilder {
         self.reserve(counter)
     }
 
+    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
+    /// geometries.
     pub fn reserve_exact_from_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
@@ -175,10 +180,6 @@ impl PolygonBuilder {
         )
     }
 
-    pub fn into_array_ref(self) -> Arc<dyn Array> {
-        Arc::new(self.into_arrow())
-    }
-
     /// Push a raw offset to the underlying geometry offsets buffer.
     ///
     /// # Safety
@@ -204,10 +205,12 @@ impl PolygonBuilder {
         Ok(())
     }
 
+    /// Consume the builder and convert to an immutable [`PolygonArray`]
     pub fn finish(self) -> PolygonArray {
         self.into()
     }
 
+    /// Creates a new builder with a capacity inferred by the provided iterator.
     pub fn with_capacity_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
         dim: Dimension,
@@ -220,6 +223,8 @@ impl PolygonBuilder {
         )
     }
 
+    /// Creates a new builder with the provided options and a capacity inferred by the provided
+    /// iterator.
     pub fn with_capacity_and_options_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
         dim: Dimension,
@@ -275,6 +280,7 @@ impl PolygonBuilder {
         Ok(())
     }
 
+    /// Add a new Rect to this builder
     #[inline]
     pub fn push_rect(&mut self, value: Option<&impl RectTrait<T = f64>>) -> Result<()> {
         if let Some(rect) = value {
@@ -315,6 +321,9 @@ impl PolygonBuilder {
         Ok(())
     }
 
+    /// Add a new geometry to this builder
+    ///
+    /// This will error if the geometry type is not Polygon, a MultiPolygon of length 1, or Rect.
     #[inline]
     pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
         if let Some(value) = value {
@@ -336,6 +345,7 @@ impl PolygonBuilder {
         Ok(())
     }
 
+    /// Extend this builder with the given geometries
     pub fn extend_from_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait<T = f64> + 'a)>>,
@@ -346,6 +356,7 @@ impl PolygonBuilder {
             .unwrap();
     }
 
+    /// Extend this builder with the given geometries
     pub fn extend_from_geometry_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
@@ -380,6 +391,7 @@ impl PolygonBuilder {
         self.validity.append(false);
     }
 
+    /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_polygons(
         geoms: &[impl PolygonTrait<T = f64>],
         dim: Dimension,
@@ -396,6 +408,7 @@ impl PolygonBuilder {
         array
     }
 
+    /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_nullable_polygons(
         geoms: &[Option<impl PolygonTrait<T = f64>>],
         dim: Dimension,
@@ -412,6 +425,7 @@ impl PolygonBuilder {
         array
     }
 
+    /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         dim: Dimension,
@@ -475,7 +489,7 @@ impl GeometryArrayBuilder for PolygonBuilder {
         &self.validity
     }
 
-    fn into_array_ref(self) -> Arc<dyn Array> {
+    fn into_array_ref(self) -> ArrayRef {
         Arc::new(self.into_arrow())
     }
 

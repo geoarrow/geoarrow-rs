@@ -39,10 +39,12 @@ impl WKBCapacity {
         self.buffer_capacity == 0 && self.offsets_capacity == 0
     }
 
+    /// The capacity of the underlying data buffer
     pub fn buffer_capacity(&self) -> usize {
         self.buffer_capacity
     }
 
+    /// The capacity of the underlying offsets buffer
     pub fn offsets_capacity(&self) -> usize {
         self.offsets_capacity
     }
@@ -223,6 +225,7 @@ impl WKBCapacity {
         counter
     }
 
+    /// Create a capacity counter from an iterator of Geometries.
     pub fn from_owned_geometries<'a>(
         geoms: impl Iterator<Item = Option<(impl GeometryTrait<T = f64> + 'a)>>,
     ) -> Self {

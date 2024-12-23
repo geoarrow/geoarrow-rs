@@ -34,18 +34,22 @@ impl PolygonCapacity {
         self.coord_capacity == 0 && self.ring_capacity == 0 && self.geom_capacity == 0
     }
 
+    /// The coordinate buffer capacity
     pub fn coord_capacity(&self) -> usize {
         self.coord_capacity
     }
 
+    /// The ring offset buffer capacity
     pub fn ring_capacity(&self) -> usize {
         self.ring_capacity
     }
 
+    /// The geometry offset buffer capacity
     pub fn geom_capacity(&self) -> usize {
         self.geom_capacity
     }
 
+    /// Add the capacity of the given Polygon
     #[inline]
     pub fn add_polygon<'a>(&mut self, polygon: Option<&'a (impl PolygonTrait + 'a)>) {
         self.geom_capacity += 1;
@@ -65,6 +69,7 @@ impl PolygonCapacity {
         }
     }
 
+    /// Add the capacity of the given Rect
     #[inline]
     pub fn add_rect<'a>(&mut self, rect: Option<&'a (impl RectTrait + 'a)>) {
         self.geom_capacity += 1;
@@ -76,6 +81,10 @@ impl PolygonCapacity {
         }
     }
 
+    /// Add the capacity of the given Geometry
+    ///
+    /// The type of the geometry must be either Polygon or Rect
+    #[inline]
     pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait>) -> Result<()> {
         if let Some(geom) = value {
             match geom.as_type() {
@@ -89,6 +98,7 @@ impl PolygonCapacity {
         Ok(())
     }
 
+    /// Construct a new counter pre-filled with the given Polygons
     pub fn from_polygons<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
     ) -> Self {
@@ -99,6 +109,7 @@ impl PolygonCapacity {
         counter
     }
 
+    /// Construct a new counter pre-filled with the given Rects
     pub fn from_rects<'a>(geoms: impl Iterator<Item = Option<&'a (impl RectTrait + 'a)>>) -> Self {
         let mut counter = Self::new_empty();
         for maybe_rect in geoms.into_iter() {
@@ -107,6 +118,7 @@ impl PolygonCapacity {
         counter
     }
 
+    /// Construct a new counter pre-filled with the given geometries
     pub fn from_geometries<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
     ) -> Result<Self> {

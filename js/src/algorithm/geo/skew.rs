@@ -1,6 +1,6 @@
 use crate::broadcasting::BroadcastableFloat;
 use crate::data::*;
-use crate::scalar::Point;
+// use crate::scalar::Point;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_skew {
@@ -28,22 +28,22 @@ macro_rules! impl_skew {
                 Skew::skew_xy(&self.0, &degrees_x.0, &degrees_y.0).into()
             }
 
-            /// An affine transformation which skews a geometry around a point of `origin`, sheared
-            /// by an angle along the x and y dimensions.
-            ///
-            /// The point of origin is *usually* given as the 2D bounding box centre of the
-            /// geometry, in which case you can just use [`skew`](Self::skew) or
-            /// [`skew_xy`](Self::skew_xy), but this method allows you to specify any point.
-            #[wasm_bindgen(js_name = skewAroundPoint)]
-            pub fn skew_around_point(
-                &self,
-                degrees_x: BroadcastableFloat,
-                degrees_y: BroadcastableFloat,
-                origin: Point,
-            ) -> Self {
-                use geoarrow::algorithm::geo::Skew;
-                Skew::skew_around_point(&self.0, &degrees_x.0, &degrees_y.0, origin.0.into()).into()
-            }
+            // /// An affine transformation which skews a geometry around a point of `origin`, sheared
+            // /// by an angle along the x and y dimensions.
+            // ///
+            // /// The point of origin is *usually* given as the 2D bounding box centre of the
+            // /// geometry, in which case you can just use [`skew`](Self::skew) or
+            // /// [`skew_xy`](Self::skew_xy), but this method allows you to specify any point.
+            // #[wasm_bindgen(js_name = skewAroundPoint)]
+            // pub fn skew_around_point(
+            //     &self,
+            //     degrees_x: BroadcastableFloat,
+            //     degrees_y: BroadcastableFloat,
+            //     origin: Point,
+            // ) -> Self {
+            //     use geoarrow::algorithm::geo::Skew;
+            //     Skew::skew_around_point(&self.0, &degrees_x.0, &degrees_y.0, origin.0.into()).into()
+            // }
         }
     };
 }

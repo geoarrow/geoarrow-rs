@@ -33,6 +33,7 @@ pub struct ShapefileReaderOptions {
 
 // TODO:
 // stretch goal: return a record batch reader.
+/// Read a Shapefile into a [Table].
 pub fn read_shapefile<T: Read + Seek>(
     shp_reader: T,
     dbf_reader: T,

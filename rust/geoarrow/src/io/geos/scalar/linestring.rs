@@ -18,7 +18,9 @@ impl<'a> TryFrom<&'a LineString<'_>> for geos::Geometry {
 }
 
 impl LineString<'_> {
-    pub fn to_geos_linear_ring(&self) -> std::result::Result<geos::Geometry, geos::Error> {
+    /// Convert to a GEOS LinearRing
+    #[allow(dead_code)]
+    pub(crate) fn to_geos_linear_ring(&self) -> std::result::Result<geos::Geometry, geos::Error> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
 
         let sliced_coords = self.coords.clone().slice(start, end - start);

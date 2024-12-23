@@ -40,6 +40,7 @@ pub struct RectArray {
 }
 
 impl RectArray {
+    /// Construct a new [`RectArray`] from parts
     pub fn new(
         lower: SeparatedCoordBuffer,
         upper: SeparatedCoordBuffer,
@@ -57,10 +58,16 @@ impl RectArray {
         }
     }
 
+    /// Access the coordinate buffer of the "lower" corner of the RectArray
+    ///
+    /// Note that this needs to be interpreted in conjunction with the [null buffer][Self::nulls].
     pub fn lower(&self) -> &SeparatedCoordBuffer {
         &self.lower
     }
 
+    /// Access the coordinate buffer of the "upper" corner of the RectArray
+    ///
+    /// Note that this needs to be interpreted in conjunction with the [null buffer][Self::nulls].
     pub fn upper(&self) -> &SeparatedCoordBuffer {
         &self.upper
     }
@@ -104,11 +111,11 @@ impl ArrayBase for RectArray {
         self.data_type.extension_name()
     }
 
-    fn into_array_ref(self) -> Arc<dyn Array> {
+    fn into_array_ref(self) -> ArrayRef {
         Arc::new(self.into_arrow())
     }
 
-    fn to_array_ref(&self) -> arrow_array::ArrayRef {
+    fn to_array_ref(&self) -> ArrayRef {
         self.clone().into_array_ref()
     }
 

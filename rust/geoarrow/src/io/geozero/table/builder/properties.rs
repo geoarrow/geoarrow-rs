@@ -10,7 +10,7 @@ use crate::io::geozero::table::builder::anyvalue::AnyBuilder;
 use indexmap::IndexMap;
 
 /// A builder for a single RecordBatch of properties
-// TODO: store an Arc<Schema> on this struct? Especially when known or user-provided?
+// TODO: store a SchemaRef on this struct? Especially when known or user-provided?
 // TODO: switch to ordered Vec of builders instead of a hashmap for sources like postgis
 pub(crate) struct PropertiesBatchBuilder {
     /// A mapping from column name to its builder.

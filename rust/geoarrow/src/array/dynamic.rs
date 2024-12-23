@@ -22,16 +22,16 @@ use crate::{ArrayBase, NativeArray};
 pub struct NativeArrayDyn(Arc<dyn NativeArray>);
 
 impl NativeArrayDyn {
+    /// Construct a new [NativeArrayDyn]
     pub fn new(array: Arc<dyn NativeArray>) -> Self {
         Self(array)
     }
 
+    /// Construct a new [NativeArrayDyn] from an Arrow [Array] and [Field].
+    // TODO: add an option to parse a serialized array to a native array here.
     pub fn from_arrow_array(array: &dyn Array, field: &Field) -> Result<Self> {
-        let data_type = NativeType::try_from(field)?;
-
-        // TODO: have to figure out when to parse as a MixedGeometry array vs Unknown Array
         use NativeType::*;
-        let geo_arr: Arc<dyn NativeArray> = match data_type {
+        let geo_arr: Arc<dyn NativeArray> = match NativeType::try_from(field)? {
             Point(_, _) => Arc::new(PointArray::try_from((array, field))?),
             LineString(_, _) => Arc::new(LineStringArray::try_from((array, field))?),
             Polygon(_, _) => Arc::new(PolygonArray::try_from((array, field))?),
@@ -48,10 +48,12 @@ impl NativeArrayDyn {
         Ok(Self(geo_arr))
     }
 
+    /// Access the underlying [`Arc<dyn NativeArray>`]
     pub fn inner(&self) -> &NativeArrayRef {
         &self.0
     }
 
+    /// Consume self and access the underlying [`Arc<dyn NativeArray>`]
     pub fn into_inner(self) -> NativeArrayRef {
         self.0
     }
@@ -140,15 +142,18 @@ impl Display for NativeArrayDyn {
     }
 }
 
+/// A wrapper around a SerializedArray of unknown type.
 #[derive(Debug, Clone)]
 #[repr(transparent)]
 pub struct SerializedArrayDyn(pub(crate) SerializedArrayRef);
 
 impl SerializedArrayDyn {
+    /// Construct a new [SerializedArrayDyn]
     pub fn new(array: SerializedArrayRef) -> Self {
         Self(array)
     }
 
+    /// Construct a new [SerializedArrayDyn] from an Arrow [Array] and [Field].
     pub fn from_arrow_array(array: &dyn Array, field: &Field) -> Result<Self> {
         let data_type = SerializedType::try_from(field)?;
 
@@ -162,10 +167,12 @@ impl SerializedArrayDyn {
         Ok(Self(geo_arr))
     }
 
+    /// Access the underlying [`Arc<dyn SerializedArray>`]
     pub fn inner(&self) -> &SerializedArrayRef {
         &self.0
     }
 
+    /// Consume self and access the underlying [`Arc<dyn SerializedArray>`]
     pub fn into_inner(self) -> SerializedArrayRef {
         self.0
     }

@@ -1,7 +1,7 @@
 use crate::algorithm::native::eq::geometry_eq;
+use crate::io::geo::geometry_to_geo;
 use crate::scalar::*;
 use crate::trait_::NativeScalar;
-use geo_traits::to_geo::ToGeoGeometry;
 use geo_traits::{
     GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
     MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait, UnimplementedLine,
@@ -9,16 +9,26 @@ use geo_traits::{
 };
 use rstar::{RTreeObject, AABB};
 
-/// A Geometry is an enum over the various underlying _zero copy_ GeoArrow scalar types.
+/// An Arrow equivalent of a Geometry
+///
+/// This implements [GeometryTrait], which you can use to extract data.
 #[derive(Debug)]
 pub enum Geometry<'a> {
+    /// Point geometry
     Point(crate::scalar::Point<'a>),
+    /// LineString geometry
     LineString(crate::scalar::LineString<'a>),
+    /// Polygon geometry
     Polygon(crate::scalar::Polygon<'a>),
+    /// MultiPoint geometry
     MultiPoint(crate::scalar::MultiPoint<'a>),
+    /// MultiLineString geometry
     MultiLineString(crate::scalar::MultiLineString<'a>),
+    /// MultiPolygon geometry
     MultiPolygon(crate::scalar::MultiPolygon<'a>),
+    /// GeometryCollection geometry
     GeometryCollection(crate::scalar::GeometryCollection<'a>),
+    /// Rect geometry
     Rect(crate::scalar::Rect<'a>),
 }
 
@@ -241,7 +251,7 @@ impl From<Geometry<'_>> for geo::Geometry {
 
 impl From<&Geometry<'_>> for geo::Geometry {
     fn from(value: &Geometry<'_>) -> Self {
-        ToGeoGeometry::to_geometry(value)
+        geometry_to_geo(value)
     }
 }
 

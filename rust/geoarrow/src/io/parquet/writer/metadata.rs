@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use arrow_array::ArrayRef;
-use arrow_schema::{Field, Schema};
+use arrow_schema::{Field, Schema, SchemaRef};
 use serde_json::Value;
 
 use crate::algorithm::native::bounding_rect::BoundingRect;
@@ -155,7 +155,7 @@ impl ColumnInfo {
 }
 
 pub struct GeoParquetMetadataBuilder {
-    pub output_schema: Arc<Schema>,
+    pub output_schema: SchemaRef,
     pub primary_column: Option<String>,
     pub columns: HashMap<usize, ColumnInfo>,
 }
@@ -287,10 +287,7 @@ pub fn get_geometry_types(data_type: &NativeType) -> HashSet<GeoParquetGeometryT
     geometry_types
 }
 
-fn create_output_schema(
-    input_schema: &Schema,
-    columns: &HashMap<usize, ColumnInfo>,
-) -> Arc<Schema> {
+fn create_output_schema(input_schema: &Schema, columns: &HashMap<usize, ColumnInfo>) -> SchemaRef {
     let mut fields = input_schema.fields().to_vec();
     for (column_idx, column_info) in columns.iter() {
         let existing_field = input_schema.field(*column_idx);

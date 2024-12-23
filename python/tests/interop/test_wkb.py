@@ -24,10 +24,9 @@ def test_geometry_collection():
     retour = to_wkb(parsed_geoarrow)
     retour_shapely = shapely.from_wkb(retour[0].as_py())
 
-    # Need to unpack the geoms because they're returned as multi-geoms
-    assert retour_shapely.geoms[0].geoms[0] == point
-    assert retour_shapely.geoms[1].geoms[0] == point2
-    assert retour_shapely.geoms[2].geoms[0] == line_string
+    assert retour_shapely.geoms[0] == point
+    assert retour_shapely.geoms[1] == point2
+    assert retour_shapely.geoms[2] == line_string
 
 
 def test_ewkb_srid():

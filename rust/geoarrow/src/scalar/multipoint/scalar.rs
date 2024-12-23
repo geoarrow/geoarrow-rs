@@ -11,6 +11,8 @@ use geo_traits::MultiPointTrait;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a MultiPoint
+///
+/// This implements [MultiPointTrait], which you can use to extract data.
 #[derive(Debug, Clone)]
 pub struct MultiPoint<'a> {
     /// Buffer of coordinates
@@ -25,7 +27,7 @@ pub struct MultiPoint<'a> {
 }
 
 impl<'a> MultiPoint<'a> {
-    pub fn new(
+    pub(crate) fn new(
         coords: &'a CoordBuffer,
         geom_offsets: &'a OffsetBuffer<i32>,
         geom_index: usize,
@@ -39,7 +41,7 @@ impl<'a> MultiPoint<'a> {
         }
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, usize) {
+    pub(crate) fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, usize) {
         (
             self.coords.clone(),
             self.geom_offsets.clone(),

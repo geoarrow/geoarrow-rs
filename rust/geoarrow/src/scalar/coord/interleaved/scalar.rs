@@ -8,6 +8,9 @@ use crate::trait_::NativeScalar;
 use geo_traits::to_geo::ToGeoCoord;
 use geo_traits::CoordTrait;
 
+/// An Arrow equivalent of a Coord
+///
+/// This implements [CoordTrait], which you can use to extract data.
 #[derive(Debug, Clone)]
 pub struct InterleavedCoord<'a> {
     pub(crate) coords: &'a ScalarBuffer<f64>,

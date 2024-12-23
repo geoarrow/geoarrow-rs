@@ -9,8 +9,8 @@ pub mod ffi;
 pub mod io;
 // #[cfg(feature = "geodesy")]
 // pub mod reproject;
-#[cfg(feature = "scalar")]
-pub mod scalar;
+// #[cfg(feature = "scalar")]
+// pub mod scalar;
 #[cfg(feature = "vector")]
 pub mod vector;
 // pub mod transform_origin;

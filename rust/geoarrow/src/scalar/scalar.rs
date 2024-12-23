@@ -16,6 +16,7 @@ use crate::trait_::{ArrayAccessor, NativeArrayRef, NativeScalar};
 pub struct GeometryScalar(NativeArrayRef);
 
 impl GeometryScalar {
+    /// Create a new scalar from an array of length 1
     pub fn try_new(array: NativeArrayRef) -> Result<Self> {
         if array.len() != 1 {
             Err(GeoArrowError::General(format!(
@@ -27,19 +28,29 @@ impl GeometryScalar {
         }
     }
 
+    /// The data type of this scalar
     pub fn data_type(&self) -> NativeType {
         self.0.data_type()
     }
 
+    /// Access the underlying array.
+    ///
+    /// The array will have a single element.
     pub fn inner(&self) -> &NativeArrayRef {
         &self.0
     }
 
+    /// Access the underlying array.
+    ///
+    /// The array will have a single element.
     pub fn into_inner(self) -> NativeArrayRef {
         self.0
     }
 
-    pub fn dimension(&self) -> Dimension {
+    /// Access the underlying dimension
+    ///
+    /// If the type of the array is `Geometry`, dimension will be `None`.
+    pub fn dimension(&self) -> Option<Dimension> {
         use NativeType::*;
         match self.data_type() {
             Point(_, dim)
@@ -49,22 +60,12 @@ impl GeometryScalar {
             | MultiLineString(_, dim)
             | MultiPolygon(_, dim)
             | GeometryCollection(_, dim)
-            | Rect(dim) => dim,
-            Geometry(_) => todo!(), // WKB => {
-                                    //     let arr = self.0.as_ref();
-                                    //     let wkb_arr = arr.as_wkb().value(0);
-                                    //     let wkb_obj = wkb_arr.to_wkb_object();
-                                    //     wkb_obj.dimension()
-                                    // }
-                                    // LargeWKB => {
-                                    //     let arr = self.0.as_ref();
-                                    //     let wkb_arr = arr.as_large_wkb().value(0);
-                                    //     let wkb_obj = wkb_arr.to_wkb_object();
-                                    //     wkb_obj.dimension()
-                                    // }
+            | Rect(dim) => Some(dim),
+            Geometry(_) => None,
         }
     }
 
+    /// Convert to a [Geometry]
     pub fn as_geometry(&self) -> Option<Geometry<'_>> {
         // Note: we use `.downcast_ref` directly here because we need to pass in the generic
         // TODO: may be able to change this now that we don't have <O>
@@ -122,6 +123,7 @@ impl GeometryScalar {
         }
     }
 
+    /// Convert to a [geo::Geometry].
     pub fn to_geo(&self) -> geo::Geometry {
         macro_rules! impl_to_geo {
             ($cast_func:ident) => {{
@@ -144,6 +146,7 @@ impl GeometryScalar {
         }
     }
 
+    /// Convert to a [geo::Point].
     pub fn to_geo_point(&self) -> Result<geo::Point> {
         match self.to_geo() {
             geo::Geometry::Point(g) => Ok(g),
@@ -154,6 +157,7 @@ impl GeometryScalar {
         }
     }
 
+    /// Convert to a [geo::LineString].
     pub fn to_geo_line_string(&self) -> Result<geo::LineString> {
         match self.to_geo() {
             geo::Geometry::LineString(g) => Ok(g),
@@ -164,6 +168,7 @@ impl GeometryScalar {
         }
     }
 
+    /// Convert to a [geo::Polygon].
     pub fn to_geo_polygon(&self) -> Result<geo::Polygon> {
         match self.to_geo() {
             geo::Geometry::Polygon(g) => Ok(g),
@@ -174,6 +179,7 @@ impl GeometryScalar {
         }
     }
 
+    /// Convert to a [geo::MultiPoint].
     pub fn to_geo_multi_point(&self) -> Result<geo::MultiPoint> {
         match self.to_geo() {
             geo::Geometry::MultiPoint(g) => Ok(g),
@@ -184,6 +190,7 @@ impl GeometryScalar {
         }
     }
 
+    /// Convert to a [geo::MultiLineString].
     pub fn to_geo_multi_line_string(&self) -> Result<geo::MultiLineString> {
         match self.to_geo() {
             geo::Geometry::MultiLineString(g) => Ok(g),
@@ -194,6 +201,7 @@ impl GeometryScalar {
         }
     }
 
+    /// Convert to a [geo::MultiPolygon].
     pub fn to_geo_multi_polygon(&self) -> Result<geo::MultiPolygon> {
         match self.to_geo() {
             geo::Geometry::MultiPolygon(g) => Ok(g),

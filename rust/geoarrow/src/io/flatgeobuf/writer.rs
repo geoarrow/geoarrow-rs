@@ -20,11 +20,11 @@ pub struct FlatGeobufWriterOptions {
     pub detect_type: bool,
     /// Convert single to multi geometries, if `geometry_type` is multi type or Unknown
     pub promote_to_multi: bool,
-    // Dataset title
+    /// Dataset title
     pub title: Option<String>,
-    // Dataset description (intended for free form long text)
+    /// Dataset description (intended for free form long text)
     pub description: Option<String>,
-    // Dataset metadata (intended to be application specific and
+    /// Dataset metadata (intended to be application specific and
     pub metadata: Option<String>,
     /// A method for transforming CRS to WKT
     ///
@@ -119,7 +119,7 @@ pub fn write_flatgeobuf_with_options<W: Write, S: Into<RecordBatchReader>>(
 ) -> Result<()> {
     let mut stream: RecordBatchReader = stream.into();
 
-    let schema = stream.schema()?;
+    let schema = stream.schema();
     let fields = &schema.fields;
     let geom_col_idxs = schema.as_ref().geometry_columns();
     if geom_col_idxs.len() != 1 {
@@ -133,7 +133,7 @@ pub fn write_flatgeobuf_with_options<W: Write, S: Into<RecordBatchReader>>(
     let wkt_crs_str = options.create_wkt_crs(&array_meta)?;
     let fgb_options = options.create_fgb_options(geo_data_type, wkt_crs_str.as_deref());
 
-    let geometry_type = infer_flatgeobuf_geometry_type(stream.schema()?.as_ref())?;
+    let geometry_type = infer_flatgeobuf_geometry_type(stream.schema().as_ref())?;
 
     let mut fgb = FgbWriter::create_with_options(name, geometry_type, fgb_options)?;
     stream.process(&mut fgb)?;

@@ -48,11 +48,17 @@ impl InterleavedCoordBuffer {
         Ok(Self { coords, dim })
     }
 
-    pub fn from_vec(coords: Vec<f64>, dim: Dimension) -> Result<Self> {
+    // Currently used by a test
+    #[allow(dead_code)]
+    pub(crate) fn from_vec(coords: Vec<f64>, dim: Dimension) -> Result<Self> {
         Self::try_new(coords.into(), dim)
     }
 
-    pub fn from_coords<G: CoordTrait<T = f64>>(coords: &[G], dim: Dimension) -> Result<Self> {
+    /// Construct from an iterator of coordinates.
+    pub fn from_coords<'a>(
+        coords: impl ExactSizeIterator<Item = &'a (impl CoordTrait<T = f64> + 'a)>,
+        dim: Dimension,
+    ) -> Result<Self> {
         Ok(InterleavedCoordBufferBuilder::from_coords(coords, dim)?.into())
     }
 
@@ -61,22 +67,23 @@ impl InterleavedCoordBuffer {
         &self.coords
     }
 
-    pub fn values_array(&self) -> Float64Array {
+    pub(crate) fn values_array(&self) -> Float64Array {
         Float64Array::new(self.coords.clone(), None)
     }
 
+    /// The dimension of this coordinate buffer
     pub fn dim(&self) -> Dimension {
         self.dim
     }
 
-    pub fn values_field(&self) -> Field {
+    pub(crate) fn values_field(&self) -> Field {
         match self.dim {
             Dimension::XY => Field::new("xy", DataType::Float64, false),
             Dimension::XYZ => Field::new("xyz", DataType::Float64, false),
         }
     }
 
-    pub fn slice(&self, offset: usize, length: usize) -> Self {
+    pub(crate) fn slice(&self, offset: usize, length: usize) -> Self {
         assert!(
             offset + length <= self.len(),
             "offset + length may not exceed length of array"
@@ -89,39 +96,34 @@ impl InterleavedCoordBuffer {
         }
     }
 
-    pub fn into_array_ref(self) -> Arc<dyn Array> {
-        Arc::new(self.into_arrow())
-    }
-
-    pub fn to_array_ref(&self) -> arrow_array::ArrayRef {
-        self.clone().into_array_ref()
-    }
-
-    pub fn storage_type(&self) -> DataType {
+    pub(crate) fn storage_type(&self) -> DataType {
         coord_type_to_data_type(CoordType::Interleaved, self.dim)
     }
 
     // todo switch to:
     // pub const coord_type: CoordType = CoordType::Interleaved;
 
+    /// The coordinate type
     pub fn coord_type(&self) -> CoordType {
         CoordType::Interleaved
     }
 
+    /// The number of coordinates
     pub fn len(&self) -> usize {
         self.coords.len() / self.dim.size()
     }
 
+    /// Whether this buffer is empty
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
-    pub fn value(&self, index: usize) -> InterleavedCoord<'_> {
+    pub(crate) fn value(&self, index: usize) -> InterleavedCoord<'_> {
         assert!(index <= self.len());
         self.value_unchecked(index)
     }
 
-    pub fn value_unchecked(&self, index: usize) -> InterleavedCoord<'_> {
+    pub(crate) fn value_unchecked(&self, index: usize) -> InterleavedCoord<'_> {
         InterleavedCoord {
             coords: &self.coords,
             i: index,
@@ -129,7 +131,7 @@ impl InterleavedCoordBuffer {
         }
     }
 
-    pub fn from_arrow(array: &FixedSizeListArray, dim: Dimension) -> Result<Self> {
+    pub(crate) fn from_arrow(array: &FixedSizeListArray, dim: Dimension) -> Result<Self> {
         if array.value_length() != dim.size() as i32 {
             return Err(GeoArrowError::General(
                 format!( "Expected the FixedSizeListArray to match the dimension. Array length is {}, dimension is: {:?} have size 2", array.value_length(), dim)

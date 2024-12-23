@@ -167,11 +167,7 @@ pub fn parse_record_batch(batch: RecordBatch, target_schema: SchemaRef) -> Resul
 }
 
 /// Parse a single column based on provided GeoParquet metadata and target field
-fn parse_array(
-    array: ArrayRef,
-    orig_field: &Field,
-    target_field: &Field,
-) -> Result<Arc<dyn Array>> {
+fn parse_array(array: ArrayRef, orig_field: &Field, target_field: &Field) -> Result<ArrayRef> {
     use NativeType::*;
 
     let orig_type = AnyType::try_from(orig_field)?;
@@ -202,7 +198,7 @@ fn parse_array(
     }
 }
 
-fn parse_wkb_column(arr: &dyn Array, target_geo_data_type: NativeType) -> Result<Arc<dyn Array>> {
+fn parse_wkb_column(arr: &dyn Array, target_geo_data_type: NativeType) -> Result<ArrayRef> {
     match arr.data_type() {
         DataType::Binary => {
             let wkb_arr = WKBArray::<i32>::try_from(arr)?;
@@ -221,14 +217,14 @@ fn parse_wkb_column(arr: &dyn Array, target_geo_data_type: NativeType) -> Result
     }
 }
 
-fn parse_point_column(array: &dyn Array, dim: Dimension) -> Result<Arc<dyn Array>> {
+fn parse_point_column(array: &dyn Array, dim: Dimension) -> Result<ArrayRef> {
     let geom_arr: PointArray = (array, dim).try_into()?;
     Ok(geom_arr.into_array_ref())
 }
 
 macro_rules! impl_parse_fn {
     ($fn_name:ident, $geoarrow_type:ty) => {
-        fn $fn_name(array: &dyn Array, dim: Dimension) -> Result<Arc<dyn Array>> {
+        fn $fn_name(array: &dyn Array, dim: Dimension) -> Result<ArrayRef> {
             match array.data_type() {
                 DataType::List(_) | DataType::LargeList(_) => {
                     let geom_arr: $geoarrow_type = (array, dim).try_into()?;

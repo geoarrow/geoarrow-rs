@@ -83,21 +83,17 @@ PYODIDE_EMSCRIPTEN_VERSION=$(pyodide config get emscripten_version)
 source ~/github/emscripten-core/emsdk/emsdk_env.sh
 ```
 
-Note that the addition of `RUSTFLAGS="-Zinline-mir=no"` is temporary due to https://github.com/rust-lang/rust/issues/128887.
-
 Build `geoarrow-rust-core` and `geoarrow-rust-io`:
 
 ```bash
-RUSTFLAGS="-Zinline-mir=no" RUSTUP_TOOLCHAIN=nightly \
-    maturin build \
+maturin build \
     --release \
     --no-default-features \
     -o dist \
     -m geoarrow-core/Cargo.toml \
     --target wasm32-unknown-emscripten \
     -i python3.11
-RUSTFLAGS="-Zinline-mir=no" RUSTUP_TOOLCHAIN=nightly \
-    maturin build \
+maturin build \
     --release \
     --no-default-features \
     -o dist \
