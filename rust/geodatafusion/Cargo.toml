@@ -10,6 +10,8 @@ description = "Rust implementation of GeoArrow"
 categories = ["science::geo"]
 rust-version = "1.82"
 
+[features]
+geos = ["geoarrow/geos"]
 
 [dependencies]
 datafusion = { git = "https://github.com/kylebarron/datafusion", rev = "170432e3179ed72f413ffcd4d7edfe0007db296d" }
