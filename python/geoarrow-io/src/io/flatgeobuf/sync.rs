@@ -3,10 +3,12 @@ use crate::io::input::sync::FileWriter;
 use crate::io::input::{construct_reader, AnyFileReader};
 use crate::util::to_arro3_table;
 
+use arrow::array::RecordBatchReader;
 use geoarrow::io::flatgeobuf::{
-    read_flatgeobuf as _read_flatgeobuf, write_flatgeobuf_with_options as _write_flatgeobuf,
+    write_flatgeobuf_with_options as _write_flatgeobuf, FlatGeobufReaderBuilder,
     FlatGeobufReaderOptions, FlatGeobufWriterOptions,
 };
+use geoarrow::table::Table;
 use pyo3::prelude::*;
 use pyo3_arrow::export::Arro3Table;
 use pyo3_arrow::input::AnyRecordBatch;
@@ -44,13 +46,15 @@ pub fn read_flatgeobuf(
                 Ok(to_arro3_table(table))
             })
         }
-        AnyFileReader::Sync(mut sync_reader) => {
+        AnyFileReader::Sync(sync_reader) => {
             let options = FlatGeobufReaderOptions {
                 batch_size: Some(batch_size),
                 bbox,
                 ..Default::default()
             };
-            let table = _read_flatgeobuf(&mut sync_reader, options)?;
+            let reader_builder = FlatGeobufReaderBuilder::open(sync_reader)?;
+            let reader = reader_builder.read(options)?;
+            let table = Table::try_from(Box::new(reader) as Box<dyn RecordBatchReader>).unwrap();
             Ok(to_arro3_table(table))
         }
     }

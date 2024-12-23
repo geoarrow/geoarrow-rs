@@ -1,12 +1,18 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use geoarrow::algorithm::geo::Area;
 use geoarrow::array::{AsChunkedNativeArray, MultiPolygonArray};
-use geoarrow::io::flatgeobuf::read_flatgeobuf;
+use geoarrow::io::flatgeobuf::FlatGeobufReaderBuilder;
+use geoarrow::table::Table;
 use std::fs::File;
 
 fn load_file() -> MultiPolygonArray {
-    let mut file = File::open("fixtures/flatgeobuf/countries.fgb").unwrap();
-    let table = read_flatgeobuf(&mut file, Default::default()).unwrap();
+    let file = File::open("fixtures/flatgeobuf/countries.fgb").unwrap();
+    let reader_builder = FlatGeobufReaderBuilder::open(file).unwrap();
+    let record_batch_reader = reader_builder.read(Default::default()).unwrap();
+    let table =
+        Table::try_from(Box::new(record_batch_reader) as Box<dyn arrow_array::RecordBatchReader>)
+            .unwrap();
+
     table
         .geometry_column(None)
         .unwrap()

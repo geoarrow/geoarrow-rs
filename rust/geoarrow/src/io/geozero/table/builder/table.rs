@@ -231,8 +231,6 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
 
         table.append_column(geom_field, geom_col.array_refs())?;
         Ok(table)
-        // TODO: 3d downcasting not yet supported
-        // table.downcast(false)
     }
 }
 

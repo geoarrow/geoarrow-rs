@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use arrow_array::RecordBatch;
-use arrow_schema::{Field, Schema, SchemaBuilder};
+use arrow_schema::{Schema, SchemaBuilder};
 use chrono::{DateTime, Utc};
 use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
 
@@ -122,8 +122,9 @@ impl PropertiesBatchBuilder {
         let mut columns = Vec::with_capacity(self.columns.len());
 
         for (name, builder) in self.columns.into_iter() {
+            let field = builder.field().with_name(name);
             let array = builder.finish()?;
-            schema_builder.push(Field::new(name, array.data_type().clone(), true));
+            schema_builder.push(field);
             columns.push(array);
         }
 

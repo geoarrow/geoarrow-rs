@@ -1,7 +1,8 @@
 use std::io::Cursor;
 
+use arrow_array::RecordBatchReader;
 use arrow_wasm::Table;
-use geoarrow::io::flatgeobuf::{read_flatgeobuf as _read_flatgeobuf, FlatGeobufReaderOptions};
+use geoarrow::io::flatgeobuf::{FlatGeobufReaderBuilder, FlatGeobufReaderOptions};
 // use parquet_wasm::utils::assert_parquet_file_not_empty;
 use wasm_bindgen::prelude::*;
 
@@ -27,12 +28,14 @@ use crate::error::WasmResult;
 #[wasm_bindgen(js_name = readFlatGeobuf)]
 pub fn read_flatgeobuf(file: &[u8], batch_size: Option<usize>) -> WasmResult<Table> {
     // assert_parquet_file_not_empty(parquet_file)?;
-    let mut cursor = Cursor::new(file);
+    let cursor = Cursor::new(file);
     let options = FlatGeobufReaderOptions {
         batch_size,
         ..Default::default()
     };
-    let geo_table = _read_flatgeobuf(&mut cursor, options)?;
-    let (batches, schema) = geo_table.into_inner();
+    let reader_builder = FlatGeobufReaderBuilder::open(cursor)?;
+    let record_batch_reader = reader_builder.read(options)?;
+    let schema = record_batch_reader.schema();
+    let batches = record_batch_reader.collect::<std::result::Result<_, _>>()?;
     Ok(Table::new(schema, batches))
 }

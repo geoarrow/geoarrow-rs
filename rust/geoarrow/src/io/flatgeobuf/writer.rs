@@ -168,7 +168,8 @@ fn infer_flatgeobuf_geometry_type(schema: &Schema) -> Result<flatgeobuf::Geometr
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::io::flatgeobuf::read_flatgeobuf;
+    use crate::io::flatgeobuf::FlatGeobufReaderBuilder;
+    use crate::table::Table;
     use crate::test::point;
     use std::io::{BufWriter, Cursor};
 
@@ -180,8 +181,13 @@ mod test {
         let writer = BufWriter::new(&mut output_buffer);
         write_flatgeobuf(&table, writer, "name").unwrap();
 
-        let mut reader = Cursor::new(output_buffer);
-        let new_table = read_flatgeobuf(&mut reader, Default::default()).unwrap();
+        let reader = Cursor::new(output_buffer);
+        let reader_builder = FlatGeobufReaderBuilder::open(reader).unwrap();
+        let record_batch_reader = reader_builder.read(Default::default()).unwrap();
+        let new_table = Table::try_from(
+            Box::new(record_batch_reader) as Box<dyn arrow_array::RecordBatchReader>
+        )
+        .unwrap();
 
         // Note: backwards row order is due to the reordering during the spatial index
         let batch = &new_table.batches()[0];
@@ -203,8 +209,13 @@ mod test {
         };
         write_flatgeobuf_with_options(&table, writer, "name", options).unwrap();
 
-        let mut reader = Cursor::new(output_buffer);
-        let new_table = read_flatgeobuf(&mut reader, Default::default()).unwrap();
+        let reader = Cursor::new(output_buffer);
+        let reader_builder = FlatGeobufReaderBuilder::open(reader).unwrap();
+        let record_batch_reader = reader_builder.read(Default::default()).unwrap();
+        let new_table = Table::try_from(
+            Box::new(record_batch_reader) as Box<dyn arrow_array::RecordBatchReader>
+        )
+        .unwrap();
         assert_eq!(table, new_table);
     }
 
@@ -216,8 +227,13 @@ mod test {
         let writer = BufWriter::new(&mut output_buffer);
         write_flatgeobuf(&table, writer, "name").unwrap();
 
-        let mut reader = Cursor::new(output_buffer);
-        let new_table = read_flatgeobuf(&mut reader, Default::default()).unwrap();
+        let reader = Cursor::new(output_buffer);
+        let reader_builder = FlatGeobufReaderBuilder::open(reader).unwrap();
+        let record_batch_reader = reader_builder.read(Default::default()).unwrap();
+        let new_table = Table::try_from(
+            Box::new(record_batch_reader) as Box<dyn arrow_array::RecordBatchReader>
+        )
+        .unwrap();
 
         // Note: backwards row order is due to the reordering during the spatial index
         let batch = &new_table.batches()[0];
