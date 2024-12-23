@@ -267,7 +267,7 @@ impl<'a> MixedGeometryBuilder {
     }
 
     #[inline]
-    pub(crate) fn add_point_type(&mut self) {
+    fn add_point_type(&mut self) {
         self.offsets.push(self.points.len().try_into().unwrap());
         match self.dim {
             Dimension::XY => self.types.push(1),
@@ -298,7 +298,7 @@ impl<'a> MixedGeometryBuilder {
     }
 
     #[inline]
-    pub(crate) fn add_line_string_type(&mut self) {
+    fn add_line_string_type(&mut self) {
         self.offsets
             .push(self.line_strings.len().try_into().unwrap());
         match self.dim {
@@ -327,7 +327,7 @@ impl<'a> MixedGeometryBuilder {
     }
 
     #[inline]
-    pub(crate) fn add_polygon_type(&mut self) {
+    fn add_polygon_type(&mut self) {
         self.offsets.push(self.polygons.len().try_into().unwrap());
         match self.dim {
             Dimension::XY => self.types.push(3),
@@ -350,7 +350,7 @@ impl<'a> MixedGeometryBuilder {
     }
 
     #[inline]
-    pub(crate) fn add_multi_point_type(&mut self) {
+    fn add_multi_point_type(&mut self) {
         self.offsets
             .push(self.multi_points.len().try_into().unwrap());
         match self.dim {
@@ -374,7 +374,7 @@ impl<'a> MixedGeometryBuilder {
     }
 
     #[inline]
-    pub(crate) fn add_multi_line_string_type(&mut self) {
+    fn add_multi_line_string_type(&mut self) {
         self.offsets
             .push(self.multi_line_strings.len().try_into().unwrap());
         match self.dim {
@@ -398,7 +398,7 @@ impl<'a> MixedGeometryBuilder {
     }
 
     #[inline]
-    pub(crate) fn add_multi_polygon_type(&mut self) {
+    fn add_multi_polygon_type(&mut self) {
         self.offsets
             .push(self.multi_polygons.len().try_into().unwrap());
         match self.dim {

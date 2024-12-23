@@ -5,7 +5,7 @@ use std::io::BufRead;
 use crate::array::CoordType;
 use crate::datatypes::Dimension;
 use crate::error::Result;
-use crate::io::geozero::array::MixedGeometryStreamBuilder;
+use crate::io::geozero::array::GeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
 use crate::table::Table;
 
@@ -26,7 +26,7 @@ pub fn read_geojson_lines<R: BufRead>(reader: R, batch_size: Option<usize>) -> R
         Default::default(),
     );
     let mut geo_table =
-        GeoTableBuilder::<MixedGeometryStreamBuilder>::new_with_options(Dimension::XY, options);
+        GeoTableBuilder::<GeometryStreamBuilder>::new_with_options(Dimension::XY, options);
     geojson_line_reader.process(&mut geo_table)?;
     geo_table.finish()
 }

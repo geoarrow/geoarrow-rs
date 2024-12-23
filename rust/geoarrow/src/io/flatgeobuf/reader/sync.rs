@@ -24,7 +24,7 @@ use crate::array::*;
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::io::flatgeobuf::reader::common::{infer_schema, parse_crs, FlatGeobufReaderOptions};
-use crate::io::geozero::array::MixedGeometryStreamBuilder;
+use crate::io::geozero::array::GeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
 use arrow_array::{RecordBatch, RecordBatchReader};
 use arrow_schema::{ArrowError, Schema, SchemaRef};
@@ -237,7 +237,7 @@ impl<R: Read> FlatGeobufRecordBatchReader<R, NotSeekable> {
                 impl_read!(builder)
             }
             NativeType::Geometry(_) | NativeType::GeometryCollection(_, _) => {
-                let mut builder = GeoTableBuilder::<MixedGeometryStreamBuilder>::new_with_options(
+                let mut builder = GeoTableBuilder::<GeometryStreamBuilder>::new_with_options(
                     // TODO: I think this is unused? remove.
                     Dimension::XY,
                     options,
@@ -312,7 +312,7 @@ impl<R: Read + Seek> FlatGeobufRecordBatchReader<R, Seekable> {
                 impl_read!(builder)
             }
             NativeType::Geometry(_) => {
-                let mut builder = GeoTableBuilder::<MixedGeometryStreamBuilder>::new_with_options(
+                let mut builder = GeoTableBuilder::<GeometryStreamBuilder>::new_with_options(
                     // TODO: I think this is unused? remove.
                     Dimension::XY,
                     options,
