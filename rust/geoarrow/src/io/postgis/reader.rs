@@ -12,7 +12,7 @@ use std::sync::Arc;
 
 use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
-use crate::io::geozero::array::MixedGeometryStreamBuilder;
+use crate::io::geozero::array::GeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
 use crate::table::Table;
 use crate::trait_::GeometryArrayBuilder;
@@ -174,7 +174,7 @@ pub async fn read_postgis<'c, E: Executor<'c, Database = Postgres>>(
 ) -> Result<Option<Table>> {
     let query = sqlx::query::<Postgres>(sql);
     let mut result_stream = query.fetch(executor);
-    let mut table_builder: Option<GeoTableBuilder<MixedGeometryStreamBuilder>> = None;
+    let mut table_builder: Option<GeoTableBuilder<GeometryStreamBuilder>> = None;
 
     // TODO: try out chunking with `result_stream.try_chunks`
     let mut row_idx = 0;

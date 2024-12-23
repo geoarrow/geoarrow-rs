@@ -24,7 +24,7 @@ use crate::array::*;
 use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::io::flatgeobuf::reader::common::{infer_schema, parse_crs, FlatGeobufReaderOptions};
-use crate::io::geozero::array::MixedGeometryStreamBuilder;
+use crate::io::geozero::array::GeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
 use crate::table::Table;
 use flatgeobuf::{FallibleStreamingIterator, FgbReader, GeometryType};
@@ -99,10 +99,8 @@ pub fn read_flatgeobuf<R: Read + Seek>(
         (GeometryType::MultiLineString, false) => impl_read!(MultiLineStringBuilder, Dimension::XY),
         (GeometryType::MultiPolygon, false) => impl_read!(MultiPolygonBuilder, Dimension::XY),
         (GeometryType::Unknown, false) => {
-            let mut builder = GeoTableBuilder::<MixedGeometryStreamBuilder>::new_with_options(
-                Dimension::XY,
-                options,
-            );
+            let mut builder =
+                GeoTableBuilder::<GeometryStreamBuilder>::new_with_options(Dimension::XY, options);
             selection.process_features(&mut builder)?;
             let table = builder.finish()?;
             table.downcast()
@@ -122,10 +120,8 @@ pub fn read_flatgeobuf<R: Read + Seek>(
         (GeometryType::MultiLineString, true) => impl_read!(MultiLineStringBuilder, Dimension::XYZ),
         (GeometryType::MultiPolygon, true) => impl_read!(MultiPolygonBuilder, Dimension::XYZ),
         (GeometryType::Unknown, true) => {
-            let mut builder = GeoTableBuilder::<MixedGeometryStreamBuilder>::new_with_options(
-                Dimension::XYZ,
-                options,
-            );
+            let mut builder =
+                GeoTableBuilder::<GeometryStreamBuilder>::new_with_options(Dimension::XYZ, options);
             selection.process_features(&mut builder)?;
             let table = builder.finish()?;
             // TODO: 3d downcasting not implemented
