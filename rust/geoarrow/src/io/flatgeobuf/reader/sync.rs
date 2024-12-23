@@ -35,7 +35,7 @@ use geozero::{FeatureProcessor, FeatureProperties};
 use std::io::{Read, Seek};
 use std::sync::Arc;
 
-/// A builder for [FlatGeobufRecordBatchReader]
+/// A builder for [FlatGeobufReader]
 pub struct FlatGeobufReaderBuilder<R> {
     reader: FgbReader<R>,
 }
@@ -86,12 +86,12 @@ impl<R: Read> FlatGeobufReaderBuilder<R> {
     pub fn read_seq(
         self,
         options: FlatGeobufReaderOptions,
-    ) -> Result<FlatGeobufRecordBatchReader<R, NotSeekable>> {
+    ) -> Result<FlatGeobufReader<R, NotSeekable>> {
         let (data_type, properties_schema, array_metadata) = self.infer_from_header()?;
         if let Some((min_x, min_y, max_x, max_y)) = options.bbox {
             let selection = self.reader.select_bbox_seq(min_x, min_y, max_x, max_y)?;
             let num_rows = selection.features_count();
-            Ok(FlatGeobufRecordBatchReader {
+            Ok(FlatGeobufReader {
                 selection,
                 data_type,
                 batch_size: options.batch_size.unwrap_or(65_536),
@@ -102,7 +102,7 @@ impl<R: Read> FlatGeobufReaderBuilder<R> {
         } else {
             let selection = self.reader.select_all_seq()?;
             let num_rows = selection.features_count();
-            Ok(FlatGeobufRecordBatchReader {
+            Ok(FlatGeobufReader {
                 selection,
                 data_type,
                 batch_size: options.batch_size.unwrap_or(65_536),
@@ -116,15 +116,12 @@ impl<R: Read> FlatGeobufReaderBuilder<R> {
 
 impl<R: Read + Seek> FlatGeobufReaderBuilder<R> {
     /// Read features
-    pub fn read(
-        self,
-        options: FlatGeobufReaderOptions,
-    ) -> Result<FlatGeobufRecordBatchReader<R, Seekable>> {
+    pub fn read(self, options: FlatGeobufReaderOptions) -> Result<FlatGeobufReader<R, Seekable>> {
         let (data_type, properties_schema, array_metadata) = self.infer_from_header()?;
         if let Some((min_x, min_y, max_x, max_y)) = options.bbox {
             let selection = self.reader.select_bbox(min_x, min_y, max_x, max_y)?;
             let num_rows = selection.features_count();
-            Ok(FlatGeobufRecordBatchReader {
+            Ok(FlatGeobufReader {
                 selection,
                 data_type,
                 batch_size: options.batch_size.unwrap_or(65_536),
@@ -135,7 +132,7 @@ impl<R: Read + Seek> FlatGeobufReaderBuilder<R> {
         } else {
             let selection = self.reader.select_all()?;
             let num_rows = selection.features_count();
-            Ok(FlatGeobufRecordBatchReader {
+            Ok(FlatGeobufReader {
                 selection,
                 data_type,
                 batch_size: options.batch_size.unwrap_or(65_536),
@@ -150,7 +147,7 @@ impl<R: Read + Seek> FlatGeobufReaderBuilder<R> {
 /// An iterator over record batches from a FlatGeobuf file.
 ///
 /// This implements [arrow_array::RecordBatchReader], which you can use to access data.
-pub struct FlatGeobufRecordBatchReader<R, S> {
+pub struct FlatGeobufReader<R, S> {
     selection: FeatureIter<R, S>,
     data_type: NativeType,
     batch_size: usize,
@@ -159,7 +156,7 @@ pub struct FlatGeobufRecordBatchReader<R, S> {
     array_metadata: Arc<ArrayMetadata>,
 }
 
-impl<R, S> FlatGeobufRecordBatchReader<R, S> {
+impl<R, S> FlatGeobufReader<R, S> {
     fn construct_options(&self) -> GeoTableBuilderOptions {
         let coord_type = self.data_type.coord_type();
         let mut batch_size = self.batch_size;
@@ -177,7 +174,7 @@ impl<R, S> FlatGeobufRecordBatchReader<R, S> {
     }
 }
 
-impl<R: Read> FlatGeobufRecordBatchReader<R, NotSeekable> {
+impl<R: Read> FlatGeobufReader<R, NotSeekable> {
     fn process_batch(&mut self) -> Result<Option<RecordBatch>> {
         let options = self.construct_options();
         let batch_size = options.batch_size;
@@ -252,7 +249,7 @@ impl<R: Read> FlatGeobufRecordBatchReader<R, NotSeekable> {
     }
 }
 
-impl<R: Read + Seek> FlatGeobufRecordBatchReader<R, Seekable> {
+impl<R: Read + Seek> FlatGeobufReader<R, Seekable> {
     fn process_batch(&mut self) -> Result<Option<RecordBatch>> {
         let options = self.construct_options();
         let batch_size = options.batch_size;
@@ -332,7 +329,7 @@ impl<R: Read + Seek> FlatGeobufRecordBatchReader<R, Seekable> {
     }
 }
 
-impl<R: Read> Iterator for FlatGeobufRecordBatchReader<R, NotSeekable> {
+impl<R: Read> Iterator for FlatGeobufReader<R, NotSeekable> {
     type Item = std::result::Result<RecordBatch, ArrowError>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -342,7 +339,7 @@ impl<R: Read> Iterator for FlatGeobufRecordBatchReader<R, NotSeekable> {
     }
 }
 
-impl<R: Read> RecordBatchReader for FlatGeobufRecordBatchReader<R, NotSeekable> {
+impl<R: Read> RecordBatchReader for FlatGeobufReader<R, NotSeekable> {
     fn schema(&self) -> SchemaRef {
         let geom_field =
             self.data_type
@@ -356,7 +353,7 @@ impl<R: Read> RecordBatchReader for FlatGeobufRecordBatchReader<R, NotSeekable> 
     }
 }
 
-impl<R: Read + Seek> Iterator for FlatGeobufRecordBatchReader<R, Seekable> {
+impl<R: Read + Seek> Iterator for FlatGeobufReader<R, Seekable> {
     type Item = std::result::Result<RecordBatch, ArrowError>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -366,7 +363,7 @@ impl<R: Read + Seek> Iterator for FlatGeobufRecordBatchReader<R, Seekable> {
     }
 }
 
-impl<R: Read + Seek> RecordBatchReader for FlatGeobufRecordBatchReader<R, Seekable> {
+impl<R: Read + Seek> RecordBatchReader for FlatGeobufReader<R, Seekable> {
     fn schema(&self) -> SchemaRef {
         let geom_field =
             self.data_type

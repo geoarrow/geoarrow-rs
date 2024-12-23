@@ -895,7 +895,7 @@ dependencies = [
 [[package]]
 name = "flatgeobuf"
 version = "4.5.0"
-source = "git+https://github.com/kylebarron/flatgeobuf?rev=06e987d6d3d73edb95124a14cdaab9ee8e6e57ac#06e987d6d3d73edb95124a14cdaab9ee8e6e57ac"
+source = "git+https://github.com/flatgeobuf/flatgeobuf?rev=f7563617549f8ab0c111e83ee423996f100ddb0c#f7563617549f8ab0c111e83ee423996f100ddb0c"
 dependencies = [
  "byteorder",
  "fallible-streaming-iterator",
@@ -1092,7 +1092,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow"
-version = "0.4.0-beta.2"
+version = "0.4.0-beta.3"
 dependencies = [
  "arrow",
  "arrow-array",

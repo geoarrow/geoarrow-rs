@@ -5,5 +5,5 @@ mod writer;
 
 #[cfg(feature = "flatgeobuf_async")]
 pub use reader::read_flatgeobuf_async;
-pub use reader::{FlatGeobufReaderBuilder, FlatGeobufReaderOptions, FlatGeobufRecordBatchReader};
+pub use reader::{FlatGeobufReader, FlatGeobufReaderBuilder, FlatGeobufReaderOptions};
 pub use writer::{write_flatgeobuf, write_flatgeobuf_with_options, FlatGeobufWriterOptions};
