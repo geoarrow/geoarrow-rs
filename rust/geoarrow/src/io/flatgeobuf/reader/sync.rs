@@ -455,7 +455,7 @@ mod test {
         .unwrap();
 
         let geom_col = table.geometry_column(None).unwrap();
-        assert!(matches!(geom_col.data_type(), NativeType::Point(_, _)));
+        assert!(matches!(geom_col.data_type(), NativeType::Geometry(_)));
 
         let (batches, schema) = table.into_inner();
         assert_eq!(batches[0].num_rows(), 1);
