@@ -74,6 +74,7 @@ impl<'a> MultiPointTrait for MultiPoint<'a> {
     where
         Self: 'b;
 
+    #[inline]
     fn dim(&self) -> geo_traits::Dimensions {
         match self.coords.dim() {
             Dimension::XY => geo_traits::Dimensions::Xy,
@@ -81,11 +82,13 @@ impl<'a> MultiPointTrait for MultiPoint<'a> {
         }
     }
 
+    #[inline]
     fn num_points(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
+    #[inline]
     unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
         Point::new(self.coords, self.start_offset + i)
     }
@@ -98,6 +101,7 @@ impl<'a> MultiPointTrait for &'a MultiPoint<'a> {
     where
         Self: 'b;
 
+    #[inline]
     fn dim(&self) -> geo_traits::Dimensions {
         match self.coords.dim() {
             Dimension::XY => geo_traits::Dimensions::Xy,
@@ -105,11 +109,13 @@ impl<'a> MultiPointTrait for &'a MultiPoint<'a> {
         }
     }
 
+    #[inline]
     fn num_points(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
+    #[inline]
     unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
         Point::new(self.coords, self.start_offset + i)
     }

@@ -89,18 +89,22 @@ impl PartialEq<InterleavedCoord<'_>> for SeparatedCoord<'_> {
 impl CoordTrait for SeparatedCoord<'_> {
     type T = f64;
 
+    #[inline]
     fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 
+    #[inline]
     fn nth_or_panic(&self, n: usize) -> Self::T {
         self.buffers[n][self.i]
     }
 
+    #[inline]
     fn x(&self) -> Self::T {
         self.buffers[0][self.i]
     }
 
+    #[inline]
     fn y(&self) -> Self::T {
         self.buffers[1][self.i]
     }
@@ -109,18 +113,22 @@ impl CoordTrait for SeparatedCoord<'_> {
 impl CoordTrait for &SeparatedCoord<'_> {
     type T = f64;
 
+    #[inline]
     fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 
+    #[inline]
     fn nth_or_panic(&self, n: usize) -> Self::T {
         self.buffers[n][self.i]
     }
 
+    #[inline]
     fn x(&self) -> Self::T {
         self.buffers[0][self.i]
     }
 
+    #[inline]
     fn y(&self) -> Self::T {
         self.buffers[1][self.i]
     }

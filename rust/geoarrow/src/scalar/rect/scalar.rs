@@ -54,7 +54,6 @@ impl NativeScalar for Rect<'_> {
     }
 }
 
-// TODO: support 3d rects
 impl<'a> RectTrait for Rect<'a> {
     type T = f64;
     type CoordType<'b>
@@ -62,14 +61,40 @@ impl<'a> RectTrait for Rect<'a> {
     where
         Self: 'b;
 
+    #[inline]
     fn dim(&self) -> geo_traits::Dimensions {
         self.lower.dim.into()
     }
 
+    #[inline]
     fn min(&self) -> Self::CoordType<'_> {
         self.lower.value(self.geom_index)
     }
 
+    #[inline]
+    fn max(&self) -> Self::CoordType<'_> {
+        self.upper.value(self.geom_index)
+    }
+}
+
+impl<'a> RectTrait for &'a Rect<'a> {
+    type T = f64;
+    type CoordType<'b>
+        = SeparatedCoord<'a>
+    where
+        Self: 'b;
+
+    #[inline]
+    fn dim(&self) -> geo_traits::Dimensions {
+        self.lower.dim.into()
+    }
+
+    #[inline]
+    fn min(&self) -> Self::CoordType<'_> {
+        self.lower.value(self.geom_index)
+    }
+
+    #[inline]
     fn max(&self) -> Self::CoordType<'_> {
         self.upper.value(self.geom_index)
     }

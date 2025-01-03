@@ -72,15 +72,18 @@ impl<'a> LineStringTrait for LineString<'a> {
     where
         Self: 'b;
 
+    #[inline]
     fn dim(&self) -> geo_traits::Dimensions {
         self.coords.dim().into()
     }
 
+    #[inline]
     fn num_coords(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
+    #[inline]
     unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
         self.coords.value(self.start_offset + i)
     }
@@ -93,15 +96,18 @@ impl<'a> LineStringTrait for &'a LineString<'a> {
     where
         Self: 'b;
 
+    #[inline]
     fn dim(&self) -> geo_traits::Dimensions {
         self.coords.dim().into()
     }
 
+    #[inline]
     fn num_coords(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
+    #[inline]
     unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
         self.coords.value(self.start_offset + i)
     }

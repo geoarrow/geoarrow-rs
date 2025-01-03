@@ -81,6 +81,7 @@ impl<'a> PolygonTrait for Polygon<'a> {
     where
         Self: 'b;
 
+    #[inline]
     fn dim(&self) -> geo_traits::Dimensions {
         match self.coords.dim() {
             Dimension::XY => geo_traits::Dimensions::Xy,
@@ -88,6 +89,7 @@ impl<'a> PolygonTrait for Polygon<'a> {
         }
     }
 
+    #[inline]
     fn exterior(&self) -> Option<Self::RingType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if start == end {
@@ -97,11 +99,13 @@ impl<'a> PolygonTrait for Polygon<'a> {
         }
     }
 
+    #[inline]
     fn num_interiors(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start - 1
     }
 
+    #[inline]
     unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
         LineString::new(self.coords, self.ring_offsets, self.start_offset + 1 + i)
     }
@@ -114,6 +118,7 @@ impl<'a> PolygonTrait for &'a Polygon<'a> {
     where
         Self: 'b;
 
+    #[inline]
     fn dim(&self) -> geo_traits::Dimensions {
         match self.coords.dim() {
             Dimension::XY => geo_traits::Dimensions::Xy,
@@ -121,6 +126,7 @@ impl<'a> PolygonTrait for &'a Polygon<'a> {
         }
     }
 
+    #[inline]
     fn exterior(&self) -> Option<Self::RingType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if start == end {
@@ -130,11 +136,13 @@ impl<'a> PolygonTrait for &'a Polygon<'a> {
         }
     }
 
+    #[inline]
     fn num_interiors(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start - 1
     }
 
+    #[inline]
     unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
         LineString::new(self.coords, self.ring_offsets, self.start_offset + 1 + i)
     }

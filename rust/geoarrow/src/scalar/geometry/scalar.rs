@@ -101,6 +101,7 @@ impl GeometryTrait for Geometry<'_> {
     where
         Self: 'b;
 
+    #[inline]
     fn dim(&self) -> geo_traits::Dimensions {
         match self {
             Geometry::Point(p) => p.dim(),
@@ -114,6 +115,7 @@ impl GeometryTrait for Geometry<'_> {
         }
     }
 
+    #[inline]
     fn as_type(
         &self,
     ) -> geo_traits::GeometryType<
@@ -185,6 +187,7 @@ impl<'a> GeometryTrait for &'a Geometry<'a> {
     where
         Self: 'b;
 
+    #[inline]
     fn dim(&self) -> geo_traits::Dimensions {
         match self {
             Geometry::Point(p) => p.dim(),
@@ -198,6 +201,7 @@ impl<'a> GeometryTrait for &'a Geometry<'a> {
         }
     }
 
+    #[inline]
     fn as_type(
         &self,
     ) -> geo_traits::GeometryType<

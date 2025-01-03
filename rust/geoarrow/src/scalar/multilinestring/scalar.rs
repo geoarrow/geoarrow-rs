@@ -80,15 +80,18 @@ impl<'a> MultiLineStringTrait for MultiLineString<'a> {
     where
         Self: 'b;
 
+    #[inline]
     fn dim(&self) -> geo_traits::Dimensions {
         self.coords.dim().into()
     }
 
+    #[inline]
     fn num_line_strings(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
+    #[inline]
     unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
         LineString::new(self.coords, self.ring_offsets, self.start_offset + i)
     }
@@ -101,15 +104,18 @@ impl<'a> MultiLineStringTrait for &'a MultiLineString<'a> {
     where
         Self: 'b;
 
+    #[inline]
     fn dim(&self) -> geo_traits::Dimensions {
         self.coords.dim().into()
     }
 
+    #[inline]
     fn num_line_strings(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
+    #[inline]
     unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
         LineString::new(self.coords, self.ring_offsets, self.start_offset + i)
     }

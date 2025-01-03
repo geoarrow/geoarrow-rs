@@ -103,6 +103,7 @@ impl PartialEq<SeparatedCoord<'_>> for Coord<'_> {
 impl CoordTrait for Coord<'_> {
     type T = f64;
 
+    #[inline]
     fn dim(&self) -> geo_traits::Dimensions {
         match self {
             Coord::Interleaved(c) => c.dim(),
@@ -110,6 +111,7 @@ impl CoordTrait for Coord<'_> {
         }
     }
 
+    #[inline]
     fn nth_or_panic(&self, n: usize) -> Self::T {
         match self {
             Coord::Interleaved(c) => c.nth_or_panic(n),
@@ -117,6 +119,7 @@ impl CoordTrait for Coord<'_> {
         }
     }
 
+    #[inline]
     fn x(&self) -> Self::T {
         match self {
             Coord::Interleaved(c) => c.x(),
@@ -124,6 +127,7 @@ impl CoordTrait for Coord<'_> {
         }
     }
 
+    #[inline]
     fn y(&self) -> Self::T {
         match self {
             Coord::Interleaved(c) => c.y(),
@@ -135,6 +139,7 @@ impl CoordTrait for Coord<'_> {
 impl CoordTrait for &Coord<'_> {
     type T = f64;
 
+    #[inline]
     fn dim(&self) -> geo_traits::Dimensions {
         match self {
             Coord::Interleaved(c) => c.dim(),
@@ -142,6 +147,7 @@ impl CoordTrait for &Coord<'_> {
         }
     }
 
+    #[inline]
     fn nth_or_panic(&self, n: usize) -> Self::T {
         match self {
             Coord::Interleaved(c) => c.nth_or_panic(n),
@@ -149,6 +155,7 @@ impl CoordTrait for &Coord<'_> {
         }
     }
 
+    #[inline]
     fn x(&self) -> Self::T {
         match self {
             Coord::Interleaved(c) => c.x(),
@@ -156,6 +163,7 @@ impl CoordTrait for &Coord<'_> {
         }
     }
 
+    #[inline]
     fn y(&self) -> Self::T {
         match self {
             Coord::Interleaved(c) => c.y(),

@@ -93,6 +93,7 @@ impl<'a> MultiPolygonTrait for MultiPolygon<'a> {
     where
         Self: 'b;
 
+    #[inline]
     fn dim(&self) -> geo_traits::Dimensions {
         match self.coords.dim() {
             Dimension::XY => geo_traits::Dimensions::Xy,
@@ -100,11 +101,13 @@ impl<'a> MultiPolygonTrait for MultiPolygon<'a> {
         }
     }
 
+    #[inline]
     fn num_polygons(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
+    #[inline]
     unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
         Polygon::new(
             self.coords,
@@ -122,6 +125,7 @@ impl<'a> MultiPolygonTrait for &'a MultiPolygon<'a> {
     where
         Self: 'b;
 
+    #[inline]
     fn dim(&self) -> geo_traits::Dimensions {
         match self.coords.dim() {
             Dimension::XY => geo_traits::Dimensions::Xy,
@@ -129,11 +133,13 @@ impl<'a> MultiPolygonTrait for &'a MultiPolygon<'a> {
         }
     }
 
+    #[inline]
     fn num_polygons(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
+    #[inline]
     unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
         Polygon::new(
             self.coords,

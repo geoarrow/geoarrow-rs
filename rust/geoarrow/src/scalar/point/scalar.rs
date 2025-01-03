@@ -50,10 +50,12 @@ impl<'a> PointTrait for Point<'a> {
     where
         Self: 'b;
 
+    #[inline]
     fn dim(&self) -> geo_traits::Dimensions {
         self.coords.dim().into()
     }
 
+    #[inline]
     fn coord(&self) -> Option<Self::CoordType<'_>> {
         let coord = self.coords.value(self.geom_index);
         if coord.is_nan() {
@@ -71,10 +73,12 @@ impl<'a> PointTrait for &Point<'a> {
     where
         Self: 'b;
 
+    #[inline]
     fn dim(&self) -> geo_traits::Dimensions {
         self.coords.dim().into()
     }
 
+    #[inline]
     fn coord(&self) -> Option<Self::CoordType<'_>> {
         let coord = self.coords.value(self.geom_index);
         if coord.is_nan() {
@@ -106,6 +110,7 @@ impl From<Point<'_>> for geo::Geometry {
 impl RTreeObject for Point<'_> {
     type Envelope = AABB<[f64; 2]>;
 
+    #[inline]
     fn envelope(&self) -> Self::Envelope {
         let (lower, upper) = bounding_rect_point(self);
         AABB::from_corners(lower, upper)
@@ -113,6 +118,7 @@ impl RTreeObject for Point<'_> {
 }
 
 impl<G: PointTrait<T = f64>> PartialEq<G> for Point<'_> {
+    #[inline]
     fn eq(&self, other: &G) -> bool {
         point_eq(self, other)
     }

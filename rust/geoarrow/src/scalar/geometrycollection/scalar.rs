@@ -71,6 +71,7 @@ impl<'a> GeometryCollectionTrait for GeometryCollection<'a> {
     where
         Self: 'b;
 
+    #[inline]
     fn dim(&self) -> geo_traits::Dimensions {
         match self.array.dimension() {
             Dimension::XY => geo_traits::Dimensions::Xy,
@@ -78,11 +79,13 @@ impl<'a> GeometryCollectionTrait for GeometryCollection<'a> {
         }
     }
 
+    #[inline]
     fn num_geometries(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
+    #[inline]
     unsafe fn geometry_unchecked(&self, i: usize) -> Self::GeometryType<'_> {
         self.array.value(self.start_offset + i)
     }
@@ -95,6 +98,7 @@ impl<'a> GeometryCollectionTrait for &'a GeometryCollection<'a> {
     where
         Self: 'b;
 
+    #[inline]
     fn dim(&self) -> geo_traits::Dimensions {
         match self.array.dimension() {
             Dimension::XY => geo_traits::Dimensions::Xy,
@@ -102,11 +106,13 @@ impl<'a> GeometryCollectionTrait for &'a GeometryCollection<'a> {
         }
     }
 
+    #[inline]
     fn num_geometries(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
+    #[inline]
     unsafe fn geometry_unchecked(&self, i: usize) -> Self::GeometryType<'_> {
         self.array.value(self.start_offset + i)
     }

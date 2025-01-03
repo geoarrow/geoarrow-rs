@@ -71,12 +71,14 @@ impl From<&InterleavedCoord<'_>> for geo::Point {
 impl RTreeObject for InterleavedCoord<'_> {
     type Envelope = AABB<[f64; 2]>;
 
+    #[inline]
     fn envelope(&self) -> Self::Envelope {
         AABB::from_point([self.x(), self.y()])
     }
 }
 
 impl PartialEq for InterleavedCoord<'_> {
+    #[inline]
     fn eq(&self, other: &Self) -> bool {
         coord_eq(self, other)
     }
@@ -91,19 +93,23 @@ impl PartialEq<SeparatedCoord<'_>> for InterleavedCoord<'_> {
 impl CoordTrait for InterleavedCoord<'_> {
     type T = f64;
 
+    #[inline]
     fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 
+    #[inline]
     fn nth_or_panic(&self, n: usize) -> Self::T {
         debug_assert!(n < self.dim.size());
         *self.coords.get(self.i * self.dim.size() + n).unwrap()
     }
 
+    #[inline]
     fn x(&self) -> Self::T {
         *self.coords.get(self.i * self.dim.size()).unwrap()
     }
 
+    #[inline]
     fn y(&self) -> Self::T {
         *self.coords.get(self.i * self.dim.size() + 1).unwrap()
     }
@@ -112,19 +118,23 @@ impl CoordTrait for InterleavedCoord<'_> {
 impl CoordTrait for &InterleavedCoord<'_> {
     type T = f64;
 
+    #[inline]
     fn dim(&self) -> geo_traits::Dimensions {
         self.dim.into()
     }
 
+    #[inline]
     fn nth_or_panic(&self, n: usize) -> Self::T {
         debug_assert!(n < self.dim.size());
         *self.coords.get(self.i * self.dim.size() + n).unwrap()
     }
 
+    #[inline]
     fn x(&self) -> Self::T {
         *self.coords.get(self.i * self.dim.size()).unwrap()
     }
 
+    #[inline]
     fn y(&self) -> Self::T {
         *self.coords.get(self.i * self.dim.size() + 1).unwrap()
     }
