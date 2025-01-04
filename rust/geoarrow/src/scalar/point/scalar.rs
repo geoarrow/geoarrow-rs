@@ -1,10 +1,9 @@
-use crate::algorithm::native::bounding_rect::bounding_rect_point;
 use crate::algorithm::native::eq::point_eq;
 use crate::array::CoordBuffer;
 use crate::scalar::Coord;
 use crate::trait_::NativeScalar;
 use geo_traits::to_geo::ToGeoPoint;
-use geo_traits::PointTrait;
+use geo_traits::{CoordTrait, PointTrait};
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a Point
@@ -107,8 +106,7 @@ impl RTreeObject for Point<'_> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
-        let (lower, upper) = bounding_rect_point(self);
-        AABB::from_corners(lower, upper)
+        AABB::from_point([self.coord().unwrap().x(), self.coord().unwrap().y()])
     }
 }
 
