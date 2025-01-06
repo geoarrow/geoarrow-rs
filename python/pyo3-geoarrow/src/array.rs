@@ -19,7 +19,12 @@ use pyo3::types::{PyCapsule, PyTuple, PyType};
 use pyo3_arrow::ffi::to_array_pycapsules;
 use pyo3_arrow::PyArray;
 
-#[pyclass(module = "geoarrow.rust.core._rust", name = "NativeArray", subclass)]
+#[pyclass(
+    module = "geoarrow.rust.core._rust",
+    name = "NativeArray",
+    subclass,
+    frozen
+)]
 pub struct PyNativeArray(pub(crate) NativeArrayDyn);
 
 impl PyNativeArray {
@@ -184,7 +189,8 @@ impl TryFrom<PyArray> for PyNativeArray {
 #[pyclass(
     module = "geoarrow.rust.core._rust",
     name = "SerializedArray",
-    subclass
+    subclass,
+    frozen
 )]
 pub struct PySerializedArray(pub(crate) SerializedArrayDyn);
 
