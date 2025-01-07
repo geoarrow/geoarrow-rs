@@ -1479,6 +1479,30 @@ impl TryFrom<GeometryArray> for MixedGeometryArray {
     }
 }
 
+impl From<RectArray> for GeometryArray {
+    fn from(value: RectArray) -> Self {
+        PolygonArray::from(value).into()
+    }
+}
+
+impl From<Arc<dyn NativeArray>> for GeometryArray {
+    fn from(value: Arc<dyn NativeArray>) -> Self {
+        use NativeType::*;
+
+        match value.data_type() {
+            Point(_, _) => value.as_ref().as_point().clone().into(),
+            LineString(_, _) => value.as_ref().as_line_string().clone().into(),
+            Polygon(_, _) => value.as_ref().as_polygon().clone().into(),
+            MultiPoint(_, _) => value.as_ref().as_multi_point().clone().into(),
+            MultiLineString(_, _) => value.as_ref().as_multi_line_string().clone().into(),
+            MultiPolygon(_, _) => value.as_ref().as_multi_polygon().clone().into(),
+            Geometry(_) => value.as_ref().as_geometry().clone(),
+            GeometryCollection(_, _) => value.as_ref().as_geometry_collection().clone().into(),
+            Rect(_) => value.as_ref().as_rect().clone().into(),
+        }
+    }
+}
+
 /// Default to an empty array
 impl Default for GeometryArray {
     fn default() -> Self {
