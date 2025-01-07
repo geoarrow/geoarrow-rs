@@ -19,7 +19,8 @@ use crate::PyNativeType;
 #[pyclass(
     module = "geoarrow.rust.core._rust",
     name = "ChunkedNativeArray",
-    subclass
+    subclass,
+    frozen
 )]
 pub struct PyChunkedNativeArray(pub(crate) Arc<dyn ChunkedNativeArray>);
 

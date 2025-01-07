@@ -133,7 +133,7 @@ pub fn write_parquet(
     Ok(())
 }
 
-#[pyclass(module = "geoarrow.rust.io._io")]
+#[pyclass(module = "geoarrow.rust.io._io", frozen)]
 pub struct ParquetWriter {
     file: Mutex<Option<_GeoParquetWriter<FileWriter>>>,
 }
@@ -155,7 +155,7 @@ impl ParquetWriter {
 
     pub fn __enter__(&self) {}
 
-    pub fn write_batch(&mut self, batch: PyRecordBatch) -> PyGeoArrowResult<()> {
+    pub fn write_batch(&self, batch: PyRecordBatch) -> PyGeoArrowResult<()> {
         if let Some(file) = self.file.lock().unwrap().as_mut() {
             file.write_batch(batch.as_ref())?;
             Ok(())
@@ -164,7 +164,7 @@ impl ParquetWriter {
         }
     }
 
-    pub fn write_table(&mut self, table: AnyRecordBatch) -> PyGeoArrowResult<()> {
+    pub fn write_table(&self, table: AnyRecordBatch) -> PyGeoArrowResult<()> {
         if let Some(file) = self.file.lock().unwrap().as_mut() {
             for batch in table.into_reader()? {
                 file.write_batch(&batch?)?;
@@ -175,7 +175,7 @@ impl ParquetWriter {
         }
     }
 
-    pub fn close(&mut self) -> PyGeoArrowResult<()> {
+    pub fn close(&self) -> PyGeoArrowResult<()> {
         if let Some(file) = self.file.lock().unwrap().take() {
             file.finish()?;
             Ok(())
@@ -191,7 +191,7 @@ impl ParquetWriter {
     /// Exit the context manager
     #[allow(unused_variables)]
     pub fn __exit__(
-        &mut self,
+        &self,
         r#type: PyObject,
         value: PyObject,
         traceback: PyObject,

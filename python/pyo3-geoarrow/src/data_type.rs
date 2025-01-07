@@ -10,7 +10,12 @@ use pyo3::types::{PyCapsule, PyType};
 use pyo3_arrow::ffi::to_schema_pycapsule;
 use pyo3_arrow::PyField;
 
-#[pyclass(module = "geoarrow.rust.core._rust", name = "NativeType", subclass)]
+#[pyclass(
+    module = "geoarrow.rust.core._rust",
+    name = "NativeType",
+    subclass,
+    frozen
+)]
 pub struct PyNativeType(pub(crate) NativeType);
 
 impl PyNativeType {
@@ -154,7 +159,12 @@ impl TryFrom<PyField> for PyNativeType {
     }
 }
 
-#[pyclass(module = "geoarrow.rust.core._rust", name = "SerializedType", subclass)]
+#[pyclass(
+    module = "geoarrow.rust.core._rust",
+    name = "SerializedType",
+    subclass,
+    frozen
+)]
 pub struct PySerializedType(pub(crate) SerializedType);
 
 impl PySerializedType {
