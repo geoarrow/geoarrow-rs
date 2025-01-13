@@ -4,9 +4,9 @@ use std::sync::Arc;
 use arrow_array::RecordBatch;
 use arrow_schema::{Schema, SchemaRef};
 use flatgeobuf::{AsyncFeatureIter, HttpFgbReader};
+use futures::future::BoxFuture;
 use futures::task::{Context, Poll};
 use futures::{ready, FutureExt, Stream};
-use futures::future::BoxFuture;
 use geozero::{FeatureProcessor, FeatureProperties};
 use http_range_client::{AsyncBufferedHttpRangeClient, AsyncHttpRangeClient};
 use object_store::path::Path;
@@ -83,22 +83,24 @@ impl FlatGeobufStreamBuilder<ObjectStoreWrapper> {
     }
 }
 
-
 enum StreamState<T: AsyncHttpRangeClient> {
     Init(Option<FlatGeobufStreamReader<T>>),
-    Reading(BoxFuture<'static, Result<(FlatGeobufStreamReader<T>, Option<RecordBatch>)>>)
+    Reading(BoxFuture<'static, Result<(FlatGeobufStreamReader<T>, Option<RecordBatch>)>>),
 }
 
 struct FlatGeobufStreamReader<T: AsyncHttpRangeClient> {
     selection: AsyncFeatureIter<T>,
-    data_type: NativeType
+    data_type: NativeType,
 }
 
 impl<T> FlatGeobufStreamReader<T>
 where
-    T: AsyncHttpRangeClient
+    T: AsyncHttpRangeClient,
 {
-    async fn next_batch(mut self, options: GeoTableBuilderOptions) -> Result<(Self, Option<RecordBatch>)> {
+    async fn next_batch(
+        mut self,
+        options: GeoTableBuilderOptions,
+    ) -> Result<(Self, Option<RecordBatch>)> {
         let batch_size = options.batch_size;
 
         macro_rules! impl_read {
@@ -183,7 +185,6 @@ pub struct FlatGeobufStream<T: AsyncHttpRangeClient> {
     state: StreamState<T>,
 }
 
-
 impl<T: AsyncHttpRangeClient> FlatGeobufStream<T> {
     /// Access the schema of the batches emitted from this stream.
     pub fn schema(&self) -> SchemaRef {
@@ -220,7 +221,7 @@ impl<T: AsyncHttpRangeClient> FlatGeobufStream<T> {
         batch_size: usize,
         properties_schema: SchemaRef,
         num_rows_remaining: Option<usize>,
-        array_metadata: Arc<ArrayMetadata>
+        array_metadata: Arc<ArrayMetadata>,
     ) -> Self {
         Self {
             data_type,
@@ -228,10 +229,12 @@ impl<T: AsyncHttpRangeClient> FlatGeobufStream<T> {
             properties_schema,
             num_rows_remaining,
             array_metadata,
-            state: StreamState::Init(Some(FlatGeobufStreamReader { data_type, selection})),
+            state: StreamState::Init(Some(FlatGeobufStreamReader {
+                data_type,
+                selection,
+            })),
         }
     }
-
 }
 
 impl<T> Stream for FlatGeobufStream<T>
@@ -252,7 +255,7 @@ where
                 let fut = reader.next_batch(self.construct_options()).boxed();
                 self.state = StreamState::Reading(fut);
                 self.poll_next(cx)
-            },
+            }
             StreamState::Reading(f) => {
                 match ready!(f.poll_unpin(cx)) {
                     Ok((reader, maybe_batch)) => {
@@ -262,17 +265,15 @@ where
                                     self.num_rows_remaining = Some(num_rows - batch.num_rows());
                                 }
                                 self.state = StreamState::Init(Some(reader));
-                                return Poll::Ready(Some(Ok(batch)))
-                            },
+                                return Poll::Ready(Some(Ok(batch)));
+                            }
                             // no more record batches
-                            None => return Poll::Ready(None)
+                            None => return Poll::Ready(None),
                         }
-                    },
-                    Err(err) => {
-                        return Poll::Ready(Some(Err(err)))
                     }
+                    Err(err) => return Poll::Ready(Some(Err(err))),
                 }
-            },
+            }
         }
     }
 }

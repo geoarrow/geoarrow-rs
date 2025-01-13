@@ -7,5 +7,5 @@ mod sync;
 
 pub use common::FlatGeobufReaderOptions;
 #[cfg(feature = "flatgeobuf_async")]
-pub use r#async::{FlatGeobufStreamBuilder, FlatGeobufStream};
+pub use r#async::{FlatGeobufStream, FlatGeobufStreamBuilder};
 pub use sync::{FlatGeobufReader, FlatGeobufReaderBuilder};
