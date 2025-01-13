@@ -23,14 +23,12 @@ use crate::array::metadata::ArrayMetadata;
 use crate::array::*;
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::io::flatgeobuf::reader::common::{infer_schema, parse_crs, FlatGeobufReaderOptions};
+use crate::io::flatgeobuf::reader::common::{infer_from_header, FlatGeobufReaderOptions};
 use crate::io::geozero::array::GeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
 use arrow_array::{RecordBatch, RecordBatchReader};
 use arrow_schema::{ArrowError, Schema, SchemaRef};
-use flatgeobuf::{
-    FallibleStreamingIterator, FeatureIter, FgbReader, GeometryType, NotSeekable, Seekable,
-};
+use flatgeobuf::{FallibleStreamingIterator, FeatureIter, FgbReader, NotSeekable, Seekable};
 use geozero::{FeatureProcessor, FeatureProperties};
 use std::io::{Read, Seek};
 use std::sync::Arc;
@@ -47,47 +45,13 @@ impl<R: Read> FlatGeobufReaderBuilder<R> {
         Ok(Self { reader })
     }
 
-    fn infer_from_header(&self) -> Result<(NativeType, SchemaRef, Arc<ArrayMetadata>)> {
-        use Dimension::*;
-
-        let header = self.reader.header();
-        if header.has_m() | header.has_t() | header.has_tm() {
-            return Err(GeoArrowError::General(
-                "Only XY and XYZ dimensions are supported".to_string(),
-            ));
-        }
-        let has_z = header.has_z();
-
-        let properties_schema = infer_schema(header);
-        let geometry_type = header.geometry_type();
-        let array_metadata = parse_crs(header.crs());
-        // TODO: pass through arg
-        let coord_type = CoordType::Interleaved;
-        let data_type = match (geometry_type, has_z) {
-            (GeometryType::Point, false) => NativeType::Point(coord_type, XY),
-            (GeometryType::LineString, false) => NativeType::LineString(coord_type, XY),
-            (GeometryType::Polygon, false) => NativeType::Polygon(coord_type, XY),
-            (GeometryType::MultiPoint, false) => NativeType::MultiPoint(coord_type, XY),
-            (GeometryType::MultiLineString, false) => NativeType::MultiLineString(coord_type, XY),
-            (GeometryType::MultiPolygon, false) => NativeType::MultiPolygon(coord_type, XY),
-            (GeometryType::Point, true) => NativeType::Point(coord_type, XYZ),
-            (GeometryType::LineString, true) => NativeType::LineString(coord_type, XYZ),
-            (GeometryType::Polygon, true) => NativeType::Polygon(coord_type, XYZ),
-            (GeometryType::MultiPoint, true) => NativeType::MultiPoint(coord_type, XYZ),
-            (GeometryType::MultiLineString, true) => NativeType::MultiLineString(coord_type, XYZ),
-            (GeometryType::MultiPolygon, true) => NativeType::MultiPolygon(coord_type, XYZ),
-            (GeometryType::Unknown, _) => NativeType::Geometry(coord_type),
-            _ => panic!("Unsupported type"),
-        };
-        Ok((data_type, properties_schema, array_metadata))
-    }
-
     /// Read features sequentially, without using `Seek`
     pub fn read_seq(
         self,
         options: FlatGeobufReaderOptions,
     ) -> Result<FlatGeobufReader<R, NotSeekable>> {
-        let (data_type, properties_schema, array_metadata) = self.infer_from_header()?;
+        let (data_type, properties_schema, array_metadata) =
+            infer_from_header(self.reader.header())?;
         if let Some((min_x, min_y, max_x, max_y)) = options.bbox {
             let selection = self.reader.select_bbox_seq(min_x, min_y, max_x, max_y)?;
             let num_rows = selection.features_count();
@@ -117,7 +81,8 @@ impl<R: Read> FlatGeobufReaderBuilder<R> {
 impl<R: Read + Seek> FlatGeobufReaderBuilder<R> {
     /// Read features
     pub fn read(self, options: FlatGeobufReaderOptions) -> Result<FlatGeobufReader<R, Seekable>> {
-        let (data_type, properties_schema, array_metadata) = self.infer_from_header()?;
+        let (data_type, properties_schema, array_metadata) =
+            infer_from_header(self.reader.header())?;
         if let Some((min_x, min_y, max_x, max_y)) = options.bbox {
             let selection = self.reader.select_bbox(min_x, min_y, max_x, max_y)?;
             let num_rows = selection.features_count();

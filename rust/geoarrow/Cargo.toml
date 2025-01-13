@@ -19,6 +19,7 @@ flatgeobuf_async = [
   "dep:bytes",
   "dep:http-range-client",
   "dep:object_store",
+  "dep:futures"
 ]
 gdal = ["dep:gdal"]
 geos = ["dep:geos"]
