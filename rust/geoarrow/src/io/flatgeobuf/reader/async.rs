@@ -84,7 +84,7 @@ impl FlatGeobufStreamBuilder<ObjectStoreWrapper> {
 }
 
 enum StreamState<T: AsyncHttpRangeClient> {
-    Init(Option<FlatGeobufStreamReader<T>>),
+    Init(Box<Option<FlatGeobufStreamReader<T>>>),
     Reading(BoxFuture<'static, Result<(FlatGeobufStreamReader<T>, Option<RecordBatch>)>>),
 }
 
@@ -229,10 +229,10 @@ impl<T: AsyncHttpRangeClient> FlatGeobufStream<T> {
             properties_schema,
             num_rows_remaining,
             array_metadata,
-            state: StreamState::Init(Some(FlatGeobufStreamReader {
+            state: StreamState::Init(Box::new(Some(FlatGeobufStreamReader {
                 data_type,
                 selection,
-            })),
+            }))),
         }
     }
 }
@@ -264,14 +264,14 @@ where
                                 if let Some(num_rows) = self.num_rows_remaining {
                                     self.num_rows_remaining = Some(num_rows - batch.num_rows());
                                 }
-                                self.state = StreamState::Init(Some(reader));
-                                return Poll::Ready(Some(Ok(batch)));
+                                self.state = StreamState::Init(Box::new(Some(reader)));
+                                Poll::Ready(Some(Ok(batch)))
                             }
                             // no more record batches
-                            None => return Poll::Ready(None),
+                            None => Poll::Ready(None),
                         }
                     }
-                    Err(err) => return Poll::Ready(Some(Err(err))),
+                    Err(err) => Poll::Ready(Some(Err(err))),
                 }
             }
         }
