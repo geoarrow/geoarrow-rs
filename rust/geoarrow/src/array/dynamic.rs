@@ -89,8 +89,8 @@ impl ArrayBase for NativeArrayDyn {
     }
 
     fn into_array_ref(self) -> ArrayRef {
-        todo!()
-        // self.0.as_ref().clone().into_array_ref()
+        // We can't move out of the Arc
+        self.to_array_ref()
     }
 
     fn to_array_ref(&self) -> ArrayRef {
@@ -196,8 +196,8 @@ impl ArrayBase for SerializedArrayDyn {
     }
 
     fn into_array_ref(self) -> ArrayRef {
-        todo!()
-        // self.0.as_ref().clone().into_array_ref()
+        // We can't move out of the Arc
+        self.to_array_ref()
     }
 
     fn to_array_ref(&self) -> ArrayRef {
