@@ -1,7 +1,6 @@
 #![allow(deprecated)]
 
 use std::str::FromStr;
-use std::sync::Arc;
 
 use crate::array::{from_arrow_array, AsNativeArray};
 use crate::datatypes::NativeType;
@@ -359,7 +358,7 @@ fn process_properties<P: PropertyProcessor>(
 }
 
 fn process_geometry_n<P: GeomProcessor>(
-    geometry_column: &Arc<dyn NativeArray>,
+    geometry_column: &dyn NativeArray,
     within_batch_row_idx: usize,
     processor: &mut P,
 ) -> Result<(), GeozeroError> {
