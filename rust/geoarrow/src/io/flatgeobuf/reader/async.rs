@@ -6,7 +6,7 @@ use arrow_schema::{Schema, SchemaRef};
 use flatgeobuf::{AsyncFeatureIter, HttpFgbReader};
 use futures::future::BoxFuture;
 use futures::task::{Context, Poll};
-use futures::{ready, FutureExt, Stream};
+use futures::{ready, FutureExt, Stream, TryStreamExt};
 use geozero::{FeatureProcessor, FeatureProperties};
 use http_range_client::{AsyncBufferedHttpRangeClient, AsyncHttpRangeClient};
 use object_store::path::Path;
@@ -20,6 +20,7 @@ use crate::io::flatgeobuf::reader::common::{infer_from_header, FlatGeobufReaderO
 use crate::io::flatgeobuf::reader::object_store_reader::ObjectStoreWrapper;
 use crate::io::geozero::array::GeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
+use crate::table::Table;
 
 /// A builder for [FlatGeobufReader]
 pub struct FlatGeobufStreamBuilder<T: AsyncHttpRangeClient> {
@@ -276,6 +277,20 @@ where
             }
         }
     }
+}
+
+pub async fn read_flatgeobuf_async(
+    store: Arc<dyn ObjectStore>,
+    location: Path,
+    options: FlatGeobufReaderOptions,
+) -> Result<Table> {
+    let builder = FlatGeobufStreamBuilder::new_from_store(
+        store, location
+    )
+    .await?;
+    let reader = builder.read(options).await?;
+    let schema = reader.schema();
+    Ok(Table::try_new(reader.try_collect().await?, schema)?)
 }
 
 #[cfg(test)]
