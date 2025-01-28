@@ -14,29 +14,29 @@ rust-version = "1.82"
 csv = ["dep:arrow-csv", "geozero/with-csv"]
 flatgeobuf = ["dep:flatgeobuf"]
 flatgeobuf_async = [
-  "flatgeobuf/http",
-  "dep:async-trait",
-  "dep:bytes",
-  "dep:http-range-client",
-  "dep:object_store",
+    "flatgeobuf/http",
+    "dep:async-trait",
+    "dep:bytes",
+    "dep:http-range-client",
+    "dep:object_store",
 ]
 gdal = ["dep:gdal"]
 geos = ["dep:geos"]
 ipc_compression = ["arrow-ipc/lz4", "arrow-ipc/zstd"]
 parquet = ["dep:parquet"]
 parquet_async = [
-  "parquet",
-  "parquet/async",
-  "dep:async-stream",
-  "dep:futures",
-  "dep:tokio",
+    "parquet",
+    "parquet/async",
+    "dep:async-stream",
+    "dep:futures",
+    "dep:tokio",
 ]
 parquet_compression = [
-  "parquet/snap",
-  "parquet/brotli",
-  "parquet/flate2",
-  "parquet/lz4",
-  "parquet/zstd",
+    "parquet/snap",
+    "parquet/brotli",
+    "parquet/flate2",
+    "parquet/lz4",
+    "parquet/zstd",
 ]
 polylabel = ["dep:polylabel"]
 postgis = ["dep:futures", "dep:sqlx"]
@@ -64,7 +64,7 @@ flatgeobuf = { git = "https://github.com/flatgeobuf/flatgeobuf", rev = "f7563617
 futures = { version = "0.3", optional = true }
 gdal = { version = "0.17", optional = true }
 geo = "0.29.3"
-geo-index = "0.1.1"
+geo-index = "0.2.0"
 geo-traits = "0.2"
 geos = { version = "9.1.1", features = ["v3_10_0"], optional = true }
 geozero = { version = "0.14", features = ["with-wkb"] }
@@ -75,13 +75,13 @@ lexical-core = { version = "0.8.5" }
 num-traits = "0.2.19"
 object_store = { version = "0.11", optional = true }
 parquet = { version = "53", optional = true, default-features = false, features = [
-  "arrow",
+    "arrow",
 ] }
 phf = { version = "0.11", features = ["macros"] }
 polylabel = { version = "3.2.0", optional = true }
 proj = { version = "0.27.2", optional = true, features = [
-  "pkg_config",
-  "geo-types",
+    "pkg_config",
+    "geo-types",
 ] }
 rayon = { version = "1.8.0", optional = true }
 rstar = "0.12"
@@ -89,11 +89,11 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 shapefile = "0.6"
 sqlx = { version = "0.7", optional = true, default-features = false, features = [
-  "chrono",
-  "json",
-  "postgres",
-  "runtime-tokio",
-  "tls-rustls",
+    "chrono",
+    "json",
+    "postgres",
+    "runtime-tokio",
+    "tls-rustls",
 ] }
 thiserror = "1"
 tokio = { version = "1", default-features = false, optional = true }
@@ -111,8 +111,8 @@ sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
 tokio = { version = "1.9", features = ["macros", "fs", "rt-multi-thread"] }
 object_store = { version = "0.11", features = ["http", "aws"] }
 parquet = { version = "53", default-features = false, features = [
-  "arrow",
-  "object_store",
+    "arrow",
+    "object_store",
 ] }
 
 
