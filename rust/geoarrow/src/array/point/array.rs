@@ -34,7 +34,7 @@ pub struct PointArray {
 ///
 /// - Validity mask must have the same length as the coordinates.
 pub(super) fn check(coords: &CoordBuffer, validity_len: Option<usize>) -> Result<()> {
-    if validity_len.map_or(false, |len| len != coords.len()) {
+    if validity_len.is_some_and(|len| len != coords.len()) {
         return Err(GeoArrowError::General(
             "validity mask length must match the number of values".to_string(),
         ));

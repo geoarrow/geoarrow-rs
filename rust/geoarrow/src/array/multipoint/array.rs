@@ -45,7 +45,7 @@ pub(super) fn check(
     validity_len: Option<usize>,
     geom_offsets: &OffsetBuffer<i32>,
 ) -> Result<()> {
-    if validity_len.map_or(false, |len| len != geom_offsets.len_proxy()) {
+    if validity_len.is_some_and(|len| len != geom_offsets.len_proxy()) {
         return Err(GeoArrowError::General(
             "validity mask length must match the number of values".to_string(),
         ));
