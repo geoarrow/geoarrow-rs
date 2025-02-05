@@ -146,6 +146,22 @@ pub enum NativeType {
     Geometry(CoordType),
 }
 
+// pub struct PointType((CoordType, Dimension));
+
+// impl ExtensionType for PointType {
+//     const NAME: &'static str = "geoarrow.point";
+
+//     type Metadata = (CoordType, Dimension);
+
+//     fn metadata(&self) -> &Self::Metadata {
+//         &self.0
+//     }
+
+//     fn serialize_metadata(&self) -> Option<String> {
+//         // We need the CRS here?
+//     }
+// }
+
 impl From<NativeType> for DataType {
     fn from(value: NativeType) -> Self {
         value.to_data_type()
@@ -340,73 +356,73 @@ fn geometry_data_type(coord_type: CoordType) -> DataType {
     // Note: we manually construct the fields because these fields shouldn't have their own
     // GeoArrow extension metadata
     fields.push(Field::new(
-        "",
+        "Point",
         NativeType::Point(coord_type, Dimension::XY).to_data_type(),
         true,
     ));
     fields.push(Field::new(
-        "",
+        "LineString",
         NativeType::LineString(coord_type, Dimension::XY).to_data_type(),
         true,
     ));
     fields.push(Field::new(
-        "",
+        "Polygon",
         NativeType::Polygon(coord_type, Dimension::XY).to_data_type(),
         true,
     ));
     fields.push(Field::new(
-        "",
+        "MultiPoint",
         NativeType::MultiPoint(coord_type, Dimension::XY).to_data_type(),
         true,
     ));
     fields.push(Field::new(
-        "",
+        "MultiLineString",
         NativeType::MultiLineString(coord_type, Dimension::XY).to_data_type(),
         true,
     ));
     fields.push(Field::new(
-        "",
+        "MultiPolygon",
         NativeType::MultiPolygon(coord_type, Dimension::XY).to_data_type(),
         true,
     ));
     fields.push(Field::new(
-        "",
+        "GeometryCollection",
         NativeType::GeometryCollection(coord_type, Dimension::XY).to_data_type(),
         true,
     ));
 
     fields.push(Field::new(
-        "",
+        "Point Z",
         NativeType::Point(coord_type, Dimension::XYZ).to_data_type(),
         true,
     ));
     fields.push(Field::new(
-        "",
+        "LineString Z",
         NativeType::LineString(coord_type, Dimension::XYZ).to_data_type(),
         true,
     ));
     fields.push(Field::new(
-        "",
+        "Polygon Z",
         NativeType::Polygon(coord_type, Dimension::XYZ).to_data_type(),
         true,
     ));
     fields.push(Field::new(
-        "",
+        "MultiPoint Z",
         NativeType::MultiPoint(coord_type, Dimension::XYZ).to_data_type(),
         true,
     ));
     fields.push(Field::new(
-        "",
+        "MultiLineString Z",
         NativeType::MultiLineString(coord_type, Dimension::XYZ).to_data_type(),
         true,
     ));
     fields.push(Field::new(
-        "",
+        "MultiPolygon Z",
         NativeType::MultiPolygon(coord_type, Dimension::XYZ).to_data_type(),
         true,
     ));
     fields.push(Field::new(
-        "",
+        "GeometryCollection Z",
         NativeType::GeometryCollection(coord_type, Dimension::XYZ).to_data_type(),
         true,
     ));
