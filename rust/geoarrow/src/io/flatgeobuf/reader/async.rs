@@ -284,10 +284,7 @@ pub async fn read_flatgeobuf_async(
     location: Path,
     options: FlatGeobufReaderOptions,
 ) -> Result<Table> {
-    let builder = FlatGeobufStreamBuilder::new_from_store(
-        store, location
-    )
-    .await?;
+    let builder = FlatGeobufStreamBuilder::new_from_store(store, location).await?;
     let reader = builder.read(options).await?;
     let schema = reader.schema();
     Ok(Table::try_new(reader.try_collect().await?, schema)?)
