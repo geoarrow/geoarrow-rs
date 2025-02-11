@@ -131,3 +131,8 @@ wasm-bindgen-test = "0.3.13"
 # Tell `rustc` to optimize for small code size.
 opt-level = "s"
 lto = true
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(wasm_bindgen_unstable_test_coverage)',
+] }

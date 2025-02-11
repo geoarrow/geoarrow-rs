@@ -1,3 +1,4 @@
+use crate::algorithm::native::bounding_rect::bounding_rect_geometry_collection;
 use crate::algorithm::native::eq::geometry_collection_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::MixedGeometryArray;
@@ -118,24 +119,98 @@ impl From<&GeometryCollection<'_>> for geo::GeometryCollection {
     }
 }
 
-impl From<GeometryCollection<'_>> for geo::Geometry {
+impl From<GeometryCollection<'_>> for geo::GeometryCollection {
     fn from(value: GeometryCollection<'_>) -> Self {
-        geo::Geometry::GeometryCollection(value.into())
+        (&value).into()
     }
 }
+
+// We can't implement both
+// ```
+// impl From<GeometryCollection<'_>> for geo::GeometryCollection
+// ```
+// and
+// ```
+// impl From<GeometryCollection<'_>> for geo::Geometry
+// ```
+// because of this problematic blanket impl
+// (https://github.com/georust/geo/blob/ef55eabe9029b27f753d4c40db9f656e3670202e/geo-types/src/geometry/geometry_collection.rs#L113-L120).
+//
+// Thus we need to choose either one or the other to implement.
+//
+// If we implemented only `for geo::Geometry`, then the default blanket impl for
+// `geo::GeometryCollection` would be **wrong** because it would doubly-nest the
+// `GeometryCollection`:
+//
+// ```rs
+// GeometryCollection(
+//     [
+//         GeometryCollection(
+//             GeometryCollection(
+//                 [
+//                     Point(
+//                         Point(
+//                             Coord {
+//                                 x: 0.0,
+//                                 y: 0.0,
+//                             },
+//                         ),
+//                     ),
+//                 ],
+//             ),
+//         ),
+//     ],
+// )
+// ```
+//
+// Therefore we must implement only `for geo::GeometryCollection`
+// impl From<&GeometryCollection<'_>> for geo::Geometry {
+//     fn from(value: &GeometryCollection<'_>) -> Self {
+//         geo::Geometry::GeometryCollection(geometry_collection_to_geo(value))
+//     }
+// }
+
+// impl From<GeometryCollection<'_>> for geo::Geometry {
+//     fn from(value: GeometryCollection<'_>) -> Self {
+//         geo::Geometry::GeometryCollection(geometry_collection_to_geo(&value))
+//     }
+// }
 
 impl RTreeObject for GeometryCollection<'_> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
-        todo!()
-        // let (lower, upper) = bounding_rect_multilinestring(self);
-        // AABB::from_corners(lower, upper)
+        let (lower, upper) = bounding_rect_geometry_collection(self);
+        AABB::from_corners(lower, upper)
     }
 }
 
 impl<G: GeometryCollectionTrait<T = f64>> PartialEq<G> for GeometryCollection<'_> {
     fn eq(&self, other: &G) -> bool {
         geometry_collection_eq(self, other)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use arrow_buffer::OffsetBufferBuilder;
+
+    use crate::array::PointArray;
+
+    use super::*;
+
+    #[test]
+    fn stack_overflow_repro_issue_979() {
+        let orig_point = geo::point!(x: 0., y: 0.);
+        let array: MixedGeometryArray =
+            PointArray::from((vec![orig_point].as_slice(), Dimension::XY)).into();
+        let mut offsets = OffsetBufferBuilder::new(1);
+        offsets.push_length(1);
+        let offsets = offsets.finish();
+        let gc = GeometryCollection::new(&array, &offsets, 0);
+
+        let out: geo::GeometryCollection = gc.into();
+        assert_eq!(out.0.len(), 1, "should be one point");
+        assert_eq!(out.0[0], geo::Geometry::Point(orig_point));
     }
 }
