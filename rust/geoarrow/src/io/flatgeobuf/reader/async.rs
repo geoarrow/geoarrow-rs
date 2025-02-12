@@ -279,6 +279,7 @@ where
     }
 }
 
+/// Read a FlatGeobuf file to a Table asynchronously from object storage.
 pub async fn read_flatgeobuf_async(
     store: Arc<dyn ObjectStore>,
     location: Path,
