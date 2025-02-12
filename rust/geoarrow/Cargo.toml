@@ -19,7 +19,7 @@ flatgeobuf_async = [
   "dep:bytes",
   "dep:http-range-client",
   "dep:object_store",
-  "dep:futures"
+  "dep:futures",
 ]
 gdal = ["dep:gdal"]
 geos = ["dep:geos"]
@@ -60,8 +60,7 @@ bytes = { version = "1.5.0", optional = true }
 chrono = { version = "0.4" }
 dbase = "0.5.0"
 enum-as-inner = "0.6.1"
-# TODO: update to 4.6 when released
-flatgeobuf = { git = "https://github.com/flatgeobuf/flatgeobuf", rev = "f7563617549f8ab0c111e83ee423996f100ddb0c", version = "4.5", optional = true, default-features = false }
+flatgeobuf = { version = "4.6", optional = true, default-features = false }
 futures = { version = "0.3", optional = true }
 gdal = { version = "0.17", optional = true }
 geo = "0.29.3"
