@@ -66,7 +66,7 @@ gdal = { version = "0.17", optional = true }
 geo = "0.29.3"
 geo-index = "0.1.1"
 geo-traits = "0.2"
-geos = { version = "9.1.1", features = ["v3_10_0"], optional = true }
+geos = { version = "10", features = ["v3_10_0"], optional = true }
 geozero = { version = "0.14", features = ["with-wkb"] }
 half = { version = "2.4.1" }
 http-range-client = { version = "0.9", optional = true, default-features = false }
