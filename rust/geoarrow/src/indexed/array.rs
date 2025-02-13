@@ -9,7 +9,7 @@ use crate::NativeArray;
 use arrow_array::builder::BooleanBuilder;
 use arrow_array::BooleanArray;
 use arrow_buffer::{BooleanBufferBuilder, NullBuffer};
-use geo_index::rtree::{OwnedRTree, RTreeIndex};
+use geo_index::rtree::{RTree as OwnedRTree, RTreeIndex, RTreeMetadata};
 use geo_traits::{CoordTrait, RectTrait};
 
 // TODO: also store Option<ValidOffsets>
@@ -43,14 +43,14 @@ impl<G: NativeArray> IndexedGeometryArray<G> {
         self.len() == 0
     }
 
-    pub fn search(&self, min_x: f64, min_y: f64, max_x: f64, max_y: f64) -> Vec<usize> {
+    pub fn search(&self, min_x: f64, min_y: f64, max_x: f64, max_y: f64) -> Vec<u32> {
         self.index.search(min_x, min_y, max_x, max_y)
     }
 
     pub fn intersection_candidates_with_other<'a, G2: NativeArray>(
         &'a self,
         other: &'a IndexedGeometryArray<G2>,
-    ) -> impl Iterator<Item = (usize, usize)> + 'a {
+    ) -> impl Iterator<Item = (u32, u32)> + 'a {
         self.index
             .intersection_candidates_with_other_tree(&other.index)
     }
@@ -75,6 +75,7 @@ impl<'a, G: NativeArray + ArrayAccessor<'a>> IndexedGeometryArray<G> {
             rhs_rect.max().x(),
             rhs_rect.max().y(),
         ) {
+            let candidate_idx = candidate_idx as usize;
             buffer.set_bit(candidate_idx, op(self.array.value(candidate_idx)));
         }
 
@@ -115,6 +116,9 @@ impl<'a, G: NativeArray + ArrayAccessor<'a>> IndexedGeometryArray<G> {
                 continue;
             }
 
+            let left_candidate_idx = left_candidate_idx as usize;
+            let right_candidate_idx = right_candidate_idx as usize;
+
             let left = self.array.value(left_candidate_idx);
             let right = other.array.value(right_candidate_idx);
 
@@ -141,27 +145,15 @@ pub type IndexedRectArray = IndexedGeometryArray<RectArray>;
 pub type IndexedUnknownGeometryArray = IndexedGeometryArray<Arc<dyn NativeArray>>;
 
 impl<G: NativeArray> RTreeIndex<f64> for IndexedGeometryArray<G> {
+    fn metadata(&self) -> &RTreeMetadata<f64> {
+        self.index.metadata()
+    }
+
     fn boxes(&self) -> &[f64] {
         self.index.boxes()
     }
 
-    fn indices(&self) -> std::borrow::Cow<'_, geo_index::indices::Indices> {
+    fn indices(&self) -> geo_index::indices::Indices {
         self.index.indices()
-    }
-
-    fn num_items(&self) -> usize {
-        self.index.num_items()
-    }
-
-    fn num_nodes(&self) -> usize {
-        self.index.num_nodes()
-    }
-
-    fn node_size(&self) -> usize {
-        self.index.node_size()
-    }
-
-    fn level_bounds(&self) -> &[usize] {
-        self.index.level_bounds()
     }
 }
