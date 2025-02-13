@@ -1811,12 +1811,13 @@ dependencies = [
 
 [[package]]
 name = "geo-index"
-version = "0.1.1"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "818dd7464a1edadbe7932a09b8e3672216597557100f23d1315f351e46c2c20e"
+checksum = "8e6b2a121e60180a118037426b1e93d7f5904ebd95cf6e841a575195a65a31ce"
 dependencies = [
  "bytemuck",
  "float_next_after",
+ "geo-traits",
  "num-traits",
  "thiserror 1.0.69",
  "tinyvec",
