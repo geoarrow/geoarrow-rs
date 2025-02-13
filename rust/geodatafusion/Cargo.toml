@@ -12,15 +12,15 @@ rust-version = "1.82"
 
 
 [dependencies]
-datafusion = { git = "https://github.com/kylebarron/datafusion", rev = "170432e3179ed72f413ffcd4d7edfe0007db296d" }
-arrow = { version = "53.3", features = ["ffi"] }
-arrow-array = { version = "53.3", features = ["chrono-tz"] }
-arrow-buffer = "53.3"
-arrow-cast = { version = "53.3" }
-arrow-csv = { version = "53", optional = true }
-arrow-data = "53.3"
-arrow-ipc = "53.3"
-arrow-schema = "53.3"
+datafusion = "45"
+arrow = { version = "54.1", features = ["ffi"] }
+arrow-array = { version = "54.1", features = ["chrono-tz"] }
+arrow-buffer = "54.1"
+arrow-cast = { version = "54.1" }
+arrow-csv = { version = "54.1", optional = true }
+arrow-data = "54.1"
+arrow-ipc = "54.1"
+arrow-schema = "54.1"
 async-stream = { version = "0.3", optional = true }
 async-trait = { version = "0.1", optional = true }
 geo = "0.29.3"
