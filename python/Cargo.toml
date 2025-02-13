@@ -27,7 +27,8 @@ indexmap = "2.5.0"
 numpy = "0.23"
 object_store = "0.11"
 parquet = "53"
-pyo3 = { version = "0.23.0", features = ["hashbrown", "serde", "anyhow"] }
+# Breaking change in 0.23.4: https://github.com/PyO3/pyo3/issues/4909
+pyo3 = { version = "=0.23.3", features = ["hashbrown", "serde", "anyhow"] }
 # pyo3-arrow = "0.6"
 pyo3-arrow = { git = "https://github.com/kylebarron/arro3", rev = "3709db90908795f10caed6be1509483ca3f9e7c0" }
 pyo3-geoarrow = { path = "./pyo3-geoarrow" }
