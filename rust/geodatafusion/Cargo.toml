@@ -12,7 +12,7 @@ rust-version = "1.82"
 
 
 [dependencies]
-datafusion = { git = "https://github.com/kylebarron/datafusion", rev = "170432e3179ed72f413ffcd4d7edfe0007db296d" }
+datafusion = "45"
 arrow = { version = "54.1", features = ["ffi"] }
 arrow-array = { version = "54.1", features = ["chrono-tz"] }
 arrow-buffer = "54.1"
