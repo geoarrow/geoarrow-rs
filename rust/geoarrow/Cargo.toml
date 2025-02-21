@@ -1,7 +1,7 @@
 
 [package]
 name = "geoarrow"
-version = "0.4.0-beta.3"
+version = "0.4.0-beta.4"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
