@@ -10,7 +10,7 @@ use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use geo_index::rtree::sort::HilbertSort;
-use geo_index::rtree::{OwnedRTree, RTreeBuilder};
+use geo_index::rtree::{RTree as OwnedRTree, RTreeBuilder};
 
 pub trait RTree {
     type Output;
@@ -19,7 +19,7 @@ pub trait RTree {
         self.create_rtree_with_node_size(16)
     }
 
-    fn create_rtree_with_node_size(&self, node_size: usize) -> Self::Output;
+    fn create_rtree_with_node_size(&self, node_size: u16) -> Self::Output;
 }
 
 macro_rules! impl_rtree {
@@ -27,9 +27,10 @@ macro_rules! impl_rtree {
         impl RTree for $struct_name {
             type Output = OwnedRTree<f64>;
 
-            fn create_rtree_with_node_size(&self, node_size: usize) -> Self::Output {
+            fn create_rtree_with_node_size(&self, node_size: u16) -> Self::Output {
                 assert_eq!(self.null_count(), 0);
-                let mut builder = RTreeBuilder::new_with_node_size(self.len(), node_size);
+                let mut builder =
+                    RTreeBuilder::new_with_node_size(self.len().try_into().unwrap(), node_size);
 
                 self.iter().flatten().for_each(|geom| {
                     let ([min_x, min_y], [max_x, max_y]) = $bounding_rect_fn(&geom);
@@ -56,7 +57,7 @@ impl_rtree!(GeometryArray, bounding_rect_geometry);
 impl RTree for &dyn NativeArray {
     type Output = OwnedRTree<f64>;
 
-    fn create_rtree_with_node_size(&self, node_size: usize) -> Self::Output {
+    fn create_rtree_with_node_size(&self, node_size: u16) -> Self::Output {
         use NativeType::*;
 
         macro_rules! impl_method {
@@ -82,7 +83,7 @@ impl RTree for &dyn NativeArray {
 impl<G: NativeArray> RTree for ChunkedGeometryArray<G> {
     type Output = Vec<OwnedRTree<f64>>;
 
-    fn create_rtree_with_node_size(&self, node_size: usize) -> Self::Output {
+    fn create_rtree_with_node_size(&self, node_size: u16) -> Self::Output {
         self.map(|chunk| chunk.as_ref().create_rtree_with_node_size(node_size))
     }
 }
@@ -90,7 +91,7 @@ impl<G: NativeArray> RTree for ChunkedGeometryArray<G> {
 impl RTree for &dyn ChunkedNativeArray {
     type Output = Result<Vec<OwnedRTree<f64>>>;
 
-    fn create_rtree_with_node_size(&self, node_size: usize) -> Self::Output {
+    fn create_rtree_with_node_size(&self, node_size: u16) -> Self::Output {
         use NativeType::*;
 
         macro_rules! impl_method {

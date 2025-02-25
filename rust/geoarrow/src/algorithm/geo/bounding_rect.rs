@@ -142,3 +142,31 @@ impl BoundingRect for &dyn ChunkedNativeArray {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    use geo::point;
+
+    use crate::array::{GeometryCollectionArray, PointArray};
+    use crate::datatypes::Dimension;
+    use crate::ArrayBase;
+
+    #[test]
+    fn stack_overflow_repro_issue_979() {
+        let points: Vec<geo::Point<f64>> = vec![
+            point! {x: -104.991, y: 39.7392},
+            point! {x: -73.7897, y: 40.7379},
+        ];
+        let point_array: PointArray = (points.as_slice(), Dimension::XY).into();
+        assert!(point_array.is_valid(0));
+        assert!(point_array.is_valid(1));
+        let _ = point_array.bounding_rect();
+
+        let gc_array: GeometryCollectionArray = point_array.into();
+        assert!(gc_array.is_valid(0));
+        assert!(gc_array.is_valid(1));
+        let _ = gc_array.bounding_rect();
+    }
+}

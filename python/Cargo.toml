@@ -4,7 +4,7 @@ resolver = "2"
 
 [workspace.package]
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
-version = "0.4.0-beta.3"
+version = "0.4.0-beta.4"
 edition = "2021"
 homepage = "https://geoarrow.org/geoarrow-rs/"
 repository = "https://github.com/geoarrow/geoarrow-rs"
@@ -14,10 +14,10 @@ categories = ["wasm", "science::geo"]
 rust-version = "1.82"
 
 [workspace.dependencies]
-arrow = "53"
-arrow-array = "53"
-arrow-buffer = "53"
-arrow-schema = "53"
+arrow = "54"
+arrow-array = "54"
+arrow-buffer = "54"
+arrow-schema = "54"
 geo-traits = "0.2"
 geoarrow = { path = "../rust/geoarrow" }
 # Uncomment when publishing
@@ -26,10 +26,10 @@ geozero = "0.14"
 indexmap = "2.5.0"
 numpy = "0.23"
 object_store = "0.11"
-parquet = "53"
-pyo3 = { version = "0.23.0", features = ["hashbrown", "serde", "anyhow"] }
-# pyo3-arrow = "0.6"
-pyo3-arrow = { git = "https://github.com/kylebarron/arro3", rev = "3709db90908795f10caed6be1509483ca3f9e7c0" }
+parquet = "54"
+# Breaking change in 0.23.4: https://github.com/PyO3/pyo3/issues/4909
+pyo3 = { version = "=0.23.4", features = ["hashbrown", "serde", "anyhow"] }
+pyo3-arrow = "0.7.1"
 pyo3-geoarrow = { path = "./pyo3-geoarrow" }
 serde_json = "1"
 thiserror = "1"

@@ -80,9 +80,9 @@ wasm-bindgen-futures = "0.4.42"
 # logging them with `console.error`. This is great for development, but requires
 # all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
 # code size when deploying.
-arrow-array = "53"
-arrow-buffer = "53"
-arrow-wasm = { git = "https://github.com/kylebarron/arrow-wasm", rev = "5c43bb0c3209738dd6620243b1d84d90833e92c9" }
+arrow-array = "54.1"
+arrow-buffer = "54.1"
+arrow-wasm = { git = "https://github.com/kylebarron/arrow-wasm", rev = "517f3085cbb1747d741884a9ad9f0d20bcc7d5ff" }
 async-stream = { version = "0.3.5", optional = true }
 async-trait = { version = "0.1.77", optional = true }
 bytes = { version = "1", optional = true }
@@ -97,7 +97,7 @@ object_store = { version = "0.11", optional = true }
 object-store-wasm = { git = "https://github.com/H-Plus-Time/object-store-wasm", rev = "b296d680fc67f3213a3f8de445b8fc5f590dc7e1", optional = true, default-features = false, features = [
     "http",
 ] }
-parquet = { version = "53", optional = true, features = ["arrow", "base64"] }
+parquet = { version = "54.1", optional = true, features = ["arrow", "base64"] }
 range-reader = { version = "0.2", optional = true }
 reqwest = { version = "*", optional = true }
 thiserror = "1"

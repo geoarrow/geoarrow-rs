@@ -2,11 +2,13 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use arrow_schema::{DataType, Field, SchemaBuilder, SchemaRef, TimeUnit};
-use flatgeobuf::{ColumnType, Crs, Header};
+use flatgeobuf::{ColumnType, Crs, GeometryType, Header};
 use serde_json::Value;
 
 use crate::array::metadata::{ArrayMetadata, CRSType};
 use crate::array::CoordType;
+use crate::datatypes::{Dimension, NativeType};
+use crate::error::{GeoArrowError, Result};
 
 /// Options for the FlatGeobuf reader
 #[derive(Debug, Clone)]
@@ -100,4 +102,40 @@ pub(super) fn parse_crs(crs: Option<Crs<'_>>) -> Arc<ArrayMetadata> {
     };
 
     Default::default()
+}
+
+pub(super) fn infer_from_header(
+    header: Header<'_>,
+) -> Result<(NativeType, SchemaRef, Arc<ArrayMetadata>)> {
+    use Dimension::*;
+
+    if header.has_m() | header.has_t() | header.has_tm() {
+        return Err(GeoArrowError::General(
+            "Only XY and XYZ dimensions are supported".to_string(),
+        ));
+    }
+    let has_z = header.has_z();
+
+    let properties_schema = infer_schema(header);
+    let geometry_type = header.geometry_type();
+    let array_metadata = parse_crs(header.crs());
+    // TODO: pass through arg
+    let coord_type = CoordType::Interleaved;
+    let data_type = match (geometry_type, has_z) {
+        (GeometryType::Point, false) => NativeType::Point(coord_type, XY),
+        (GeometryType::LineString, false) => NativeType::LineString(coord_type, XY),
+        (GeometryType::Polygon, false) => NativeType::Polygon(coord_type, XY),
+        (GeometryType::MultiPoint, false) => NativeType::MultiPoint(coord_type, XY),
+        (GeometryType::MultiLineString, false) => NativeType::MultiLineString(coord_type, XY),
+        (GeometryType::MultiPolygon, false) => NativeType::MultiPolygon(coord_type, XY),
+        (GeometryType::Point, true) => NativeType::Point(coord_type, XYZ),
+        (GeometryType::LineString, true) => NativeType::LineString(coord_type, XYZ),
+        (GeometryType::Polygon, true) => NativeType::Polygon(coord_type, XYZ),
+        (GeometryType::MultiPoint, true) => NativeType::MultiPoint(coord_type, XYZ),
+        (GeometryType::MultiLineString, true) => NativeType::MultiLineString(coord_type, XYZ),
+        (GeometryType::MultiPolygon, true) => NativeType::MultiPolygon(coord_type, XYZ),
+        (GeometryType::Unknown, _) => NativeType::Geometry(coord_type),
+        _ => panic!("Unsupported type"),
+    };
+    Ok((data_type, properties_schema, array_metadata))
 }

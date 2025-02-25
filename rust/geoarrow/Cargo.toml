@@ -1,7 +1,7 @@
 
 [package]
 name = "geoarrow"
-version = "0.4.0-beta.3"
+version = "0.4.0-beta.4"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
@@ -19,6 +19,7 @@ flatgeobuf_async = [
   "dep:bytes",
   "dep:http-range-client",
   "dep:object_store",
+  "dep:futures",
 ]
 gdal = ["dep:gdal"]
 geos = ["dep:geos"]
@@ -45,28 +46,27 @@ rayon = ["dep:rayon"]
 
 
 [dependencies]
-arrow = { version = "53.3", features = ["ffi"] }
-arrow-array = { version = "53.3", features = ["chrono-tz"] }
-arrow-buffer = "53.3"
-arrow-cast = { version = "53.3" }
-arrow-csv = { version = "53", optional = true }
-arrow-data = "53.3"
-arrow-ipc = "53.3"
-arrow-schema = "53.3"
+arrow = { version = "54.1", features = ["ffi"] }
+arrow-array = { version = "54.1", features = ["chrono-tz"] }
+arrow-buffer = "54.1"
+arrow-cast = { version = "54.1" }
+arrow-csv = { version = "54.1", optional = true }
+arrow-data = "54.1"
+arrow-ipc = "54.1"
+arrow-schema = "54.1"
 async-stream = { version = "0.3", optional = true }
 async-trait = { version = "0.1", optional = true }
 bytes = { version = "1.5.0", optional = true }
 chrono = { version = "0.4" }
 dbase = "0.5.0"
 enum-as-inner = "0.6.1"
-# TODO: update to 4.6 when released
-flatgeobuf = { git = "https://github.com/flatgeobuf/flatgeobuf", rev = "f7563617549f8ab0c111e83ee423996f100ddb0c", version = "4.5", optional = true, default-features = false }
+flatgeobuf = { version = "4.6", optional = true, default-features = false }
 futures = { version = "0.3", optional = true }
 gdal = { version = "0.17", optional = true }
 geo = "0.29.3"
-geo-index = "0.1.1"
+geo-index = "0.2"
 geo-traits = "0.2"
-geos = { version = "9.1.1", features = ["v3_10_0"], optional = true }
+geos = { version = "10", features = ["v3_10_0"], optional = true }
 geozero = { version = "0.14", features = ["with-wkb"] }
 half = { version = "2.4.1" }
 http-range-client = { version = "0.9", optional = true, default-features = false }
@@ -74,7 +74,7 @@ indexmap = { version = "2" }
 lexical-core = { version = "0.8.5" }
 num-traits = "0.2.19"
 object_store = { version = "0.11", optional = true }
-parquet = { version = "53", optional = true, default-features = false, features = [
+parquet = { version = "54.1", optional = true, default-features = false, features = [
   "arrow",
 ] }
 phf = { version = "0.11", features = ["macros"] }
@@ -110,7 +110,7 @@ geozero = { version = "0.14", features = ["with-wkb"] }
 sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
 tokio = { version = "1.9", features = ["macros", "fs", "rt-multi-thread"] }
 object_store = { version = "0.11", features = ["http", "aws"] }
-parquet = { version = "53", default-features = false, features = [
+parquet = { version = "54.1", default-features = false, features = [
   "arrow",
   "object_store",
 ] }
