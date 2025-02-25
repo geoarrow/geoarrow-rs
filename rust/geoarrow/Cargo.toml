@@ -30,7 +30,6 @@ parquet_async = [
   "parquet/async",
   "dep:async-stream",
   "dep:futures",
-  "dep:tokio",
 ]
 parquet_compression = [
   "parquet/snap",
@@ -96,7 +95,6 @@ sqlx = { version = "0.7", optional = true, default-features = false, features = 
   "tls-rustls",
 ] }
 thiserror = "1"
-tokio = { version = "1", default-features = false, optional = true }
 wkt = "0.12"
 wkb = "0.8"
 

@@ -4,12 +4,12 @@ use crate::io::parquet::writer::metadata::GeoParquetMetadataBuilder;
 use crate::io::parquet::writer::options::GeoParquetWriterOptions;
 use arrow_array::{RecordBatch, RecordBatchReader};
 use arrow_schema::Schema;
+use parquet::arrow::async_writer::AsyncFileWriter;
 use parquet::arrow::AsyncArrowWriter;
 use parquet::file::metadata::KeyValue;
-use tokio::io::AsyncWrite;
 
 /// Write a [RecordBatchReader] to GeoParquet.
-pub async fn write_geoparquet_async<W: AsyncWrite + Unpin + Send>(
+pub async fn write_geoparquet_async<W: AsyncFileWriter>(
     stream: Box<dyn RecordBatchReader>,
     writer: W,
     options: &GeoParquetWriterOptions,
@@ -25,12 +25,12 @@ pub async fn write_geoparquet_async<W: AsyncWrite + Unpin + Send>(
 }
 
 /// An asynchronous GeoParquet file writer
-pub struct GeoParquetWriterAsync<W: AsyncWrite + Unpin + Send> {
+pub struct GeoParquetWriterAsync<W: AsyncFileWriter> {
     writer: AsyncArrowWriter<W>,
     metadata_builder: GeoParquetMetadataBuilder,
 }
 
-impl<W: AsyncWrite + Unpin + Send> GeoParquetWriterAsync<W> {
+impl<W: AsyncFileWriter> GeoParquetWriterAsync<W> {
     /// Construct a new [GeoParquetWriterAsync]
     pub fn try_new(writer: W, schema: &Schema, options: &GeoParquetWriterOptions) -> Result<Self> {
         let metadata_builder = GeoParquetMetadataBuilder::try_new(schema, options)?;
