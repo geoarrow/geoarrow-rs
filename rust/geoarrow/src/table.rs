@@ -125,6 +125,7 @@ impl Table {
         }
 
         let mut builder = SchemaBuilder::from(schema.fields());
+        *builder.metadata_mut() = schema.metadata.clone();
         builder.push(geometry.extension_field());
         let new_schema = Arc::new(builder.finish());
 
@@ -619,5 +620,33 @@ impl TryFrom<Box<dyn arrow_array::RecordBatchReader + Send>> for Table {
             .into_iter()
             .collect::<std::result::Result<Vec<_>, ArrowError>>()?;
         Table::try_new(batches, schema)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::datatypes::Dimension;
+    use crate::{array::PointArray, chunked_array::ChunkedGeometryArray, table::Table};
+    use arrow_array::{Int32Array, RecordBatch};
+    use arrow_schema::{DataType, Field, Schema};
+    use std::collections::HashMap;
+    use std::sync::Arc;
+
+    #[test]
+    fn keep_metadata() {
+        let point = geo::point!(x: 1., y: 2.);
+        let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
+        let chunked_array = ChunkedGeometryArray::new(vec![array]);
+        let id_array = Int32Array::from(vec![1]);
+        let mut metadata = HashMap::new();
+        metadata.insert("foo".to_string(), "bar".to_string());
+        let schema_ref = Arc::new(
+            Schema::new(vec![Field::new("id", DataType::Int32, false)]).with_metadata(metadata),
+        );
+        let batch = RecordBatch::try_new(schema_ref.clone(), vec![Arc::new(id_array)]).unwrap();
+        let table =
+            Table::from_arrow_and_geometry(vec![batch], schema_ref, Arc::new(chunked_array))
+                .unwrap();
+        assert_eq!(table.schema.metadata["foo"], "bar");
     }
 }
