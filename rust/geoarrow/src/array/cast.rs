@@ -88,6 +88,54 @@ pub trait AsNativeArray {
     }
 }
 
+impl<T: NativeArray> AsNativeArray for T {
+    #[inline]
+    fn as_point_opt(&self) -> Option<&PointArray> {
+        self.as_any().downcast_ref::<PointArray>()
+    }
+
+    #[inline]
+    fn as_line_string_opt(&self) -> Option<&LineStringArray> {
+        self.as_any().downcast_ref::<LineStringArray>()
+    }
+
+    #[inline]
+    fn as_polygon_opt(&self) -> Option<&PolygonArray> {
+        self.as_any().downcast_ref::<PolygonArray>()
+    }
+
+    #[inline]
+    fn as_multi_point_opt(&self) -> Option<&MultiPointArray> {
+        self.as_any().downcast_ref::<MultiPointArray>()
+    }
+
+    #[inline]
+    fn as_multi_line_string_opt(&self) -> Option<&MultiLineStringArray> {
+        self.as_any().downcast_ref::<MultiLineStringArray>()
+    }
+
+    #[inline]
+    fn as_multi_polygon_opt(&self) -> Option<&MultiPolygonArray> {
+        self.as_any().downcast_ref::<MultiPolygonArray>()
+    }
+
+    #[inline]
+    fn as_geometry_collection_opt(&self) -> Option<&GeometryCollectionArray> {
+        self.as_any().downcast_ref::<GeometryCollectionArray>()
+    }
+
+    #[inline]
+    fn as_rect_opt(&self) -> Option<&RectArray> {
+        self.as_any().downcast_ref::<RectArray>()
+    }
+
+    #[inline]
+    fn as_geometry_opt(&self) -> Option<&GeometryArray> {
+        self.as_any().downcast_ref::<GeometryArray>()
+    }
+}
+
+// #[deprecated]
 impl AsNativeArray for &dyn NativeArray {
     #[inline]
     fn as_point_opt(&self) -> Option<&PointArray> {
