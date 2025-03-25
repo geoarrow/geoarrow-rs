@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::io::input::{construct_reader, AnyFileReader, AsyncFileReader};
-use crate::io::parquet::options::create_options;
+use crate::io::parquet::options::{create_options, PyGeoParquetBboxCovering};
 #[cfg(feature = "async")]
 use crate::runtime::get_runtime;
 use crate::util::to_arro3_table;
@@ -28,7 +28,6 @@ use pyo3_arrow::PyArray;
 use pyo3_async_runtimes::tokio::future_into_py;
 use pyo3_geoarrow::CRS;
 use pyo3_object_store::PyObjectStore;
-use pythonize::depythonize;
 
 #[pyfunction]
 #[pyo3(signature = (path, *, store=None, batch_size=None))]
@@ -143,10 +142,9 @@ impl ParquetFile {
     pub fn row_group_bounds(
         &self,
         row_group_idx: usize,
-        bbox_paths: Option<Bound<'_, PyAny>>,
+        bbox_paths: Option<PyGeoParquetBboxCovering>,
     ) -> PyGeoArrowResult<Option<Vec<f64>>> {
-        let paths: Option<GeoParquetBboxCovering> =
-            bbox_paths.map(|x| depythonize(&x)).transpose()?;
+        let paths: Option<GeoParquetBboxCovering> = bbox_paths.map(|x| x.into());
 
         if let Some(bounds) = self
             .geoparquet_meta
@@ -167,10 +165,9 @@ impl ParquetFile {
     pub fn row_groups_bounds(
         &self,
         py: Python,
-        bbox_paths: Option<Bound<'_, PyAny>>,
+        bbox_paths: Option<PyGeoParquetBboxCovering>,
     ) -> PyGeoArrowResult<PyObject> {
-        let paths: Option<GeoParquetBboxCovering> =
-            bbox_paths.map(|x| depythonize(&x)).transpose()?;
+        let paths: Option<GeoParquetBboxCovering> = bbox_paths.map(|x| x.into());
         let bounds = self.geoparquet_meta.row_groups_bounds(paths.as_ref())?;
         Ok(
             PyArray::new(bounds.to_array_ref(), bounds.extension_field())
@@ -192,7 +189,7 @@ impl ParquetFile {
         limit: Option<usize>,
         offset: Option<usize>,
         bbox: Option<[f64; 4]>,
-        bbox_paths: Option<Bound<'_, PyAny>>,
+        bbox_paths: Option<PyGeoParquetBboxCovering>,
     ) -> PyGeoArrowResult<PyObject> {
         let reader = ParquetObjectReader::new(self.store.clone(), self.object_meta.clone());
         let options = create_options(batch_size, limit, offset, bbox, bbox_paths)?;
@@ -220,7 +217,7 @@ impl ParquetFile {
         limit: Option<usize>,
         offset: Option<usize>,
         bbox: Option<[f64; 4]>,
-        bbox_paths: Option<Bound<'_, PyAny>>,
+        bbox_paths: Option<PyGeoParquetBboxCovering>,
     ) -> PyGeoArrowResult<Arro3Table> {
         let runtime = get_runtime(py)?;
         let reader = ParquetObjectReader::new(self.store.clone(), self.object_meta.clone());
@@ -430,7 +427,7 @@ impl ParquetDataset {
         limit: Option<usize>,
         offset: Option<usize>,
         bbox: Option<[f64; 4]>,
-        bbox_paths: Option<Bound<'_, PyAny>>,
+        bbox_paths: Option<PyGeoParquetBboxCovering>,
     ) -> PyGeoArrowResult<Bound<'py, PyAny>> {
         let options = create_options(batch_size, limit, offset, bbox, bbox_paths)?;
         let readers = self.to_readers(options)?;
@@ -450,7 +447,7 @@ impl ParquetDataset {
         limit: Option<usize>,
         offset: Option<usize>,
         bbox: Option<[f64; 4]>,
-        bbox_paths: Option<Bound<'_, PyAny>>,
+        bbox_paths: Option<PyGeoParquetBboxCovering>,
     ) -> PyGeoArrowResult<Arro3Table> {
         let runtime = get_runtime(py)?;
         let options = create_options(batch_size, limit, offset, bbox, bbox_paths)?;

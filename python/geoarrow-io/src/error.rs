@@ -6,7 +6,6 @@ pub enum PyGeoArrowError {
     IOError(std::io::Error),
     PyArrowError(pyo3_arrow::error::PyArrowError),
     PyErr(PyErr),
-    PythonizeError(pythonize::PythonizeError),
     #[cfg(feature = "async")]
     ObjectStoreError(object_store::Error),
     #[cfg(feature = "async")]
@@ -22,7 +21,6 @@ impl From<PyGeoArrowError> for PyErr {
             PyGeoArrowError::IOError(err) => PyIOError::new_err(err.to_string()),
             PyGeoArrowError::PyErr(err) => err,
             PyGeoArrowError::PyArrowError(err) => err.into(),
-            PyGeoArrowError::PythonizeError(err) => PyException::new_err(err.to_string()),
             #[cfg(feature = "async")]
             PyGeoArrowError::ObjectStoreError(err) => PyException::new_err(err.to_string()),
             #[cfg(feature = "async")]
@@ -48,12 +46,6 @@ impl From<std::io::Error> for PyGeoArrowError {
 impl From<pyo3_arrow::error::PyArrowError> for PyGeoArrowError {
     fn from(other: pyo3_arrow::error::PyArrowError) -> Self {
         Self::PyArrowError(other)
-    }
-}
-
-impl From<pythonize::PythonizeError> for PyGeoArrowError {
-    fn from(other: pythonize::PythonizeError) -> Self {
-        Self::PythonizeError(other)
     }
 }
 
