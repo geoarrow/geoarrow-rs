@@ -41,8 +41,8 @@ fn _io(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
 
     #[cfg(feature = "async")]
     {
-        pyo3_object_store::register_store_module(py, m, "geoarrow.rust.io")?;
-        pyo3_object_store::register_exceptions_module(py, m, "geoarrow.rust.io")?;
+        pyo3_object_store::register_store_module(py, m, "geoarrow.rust.io", "store")?;
+        pyo3_object_store::register_exceptions_module(py, m, "geoarrow.rust.io", "exceptions")?;
 
         m.add_class::<crate::io::parquet::ParquetFile>()?;
         m.add_class::<crate::io::parquet::ParquetDataset>()?;
