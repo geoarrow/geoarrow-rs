@@ -318,30 +318,30 @@ mod test {
         assert_eq!(table.len(), 179);
     }
 
-    // #[tokio::test]
-    // async fn test_countries_bbox() {
-    //     let fs = Arc::new(LocalFileSystem::new_with_prefix(current_dir().unwrap()).unwrap());
-    //     let options = FlatGeobufReaderOptions {
-    //         bbox: Some((0., -90., 180., 90.)),
-    //         ..Default::default()
-    //     };
-    //     let table =
-    //         read_flatgeobuf_async(fs, Path::from("fixtures/flatgeobuf/countries.fgb"), options)
-    //             .await
-    //             .unwrap();
-    //     assert_eq!(table.len(), 133);
-    // }
+    #[tokio::test]
+    async fn test_countries_bbox() {
+        let fs = Arc::new(LocalFileSystem::new_with_prefix(current_dir().unwrap()).unwrap());
+        let options = FlatGeobufReaderOptions {
+            bbox: Some((0., -90., 180., 90.)),
+            ..Default::default()
+        };
+        let table =
+            read_flatgeobuf_async(fs, Path::from("fixtures/flatgeobuf/countries.fgb"), options)
+                .await
+                .unwrap();
+        assert_eq!(table.len(), 133);
+    }
 
-    // #[tokio::test]
-    // async fn test_nz_buildings() {
-    //     let fs = Arc::new(LocalFileSystem::new_with_prefix(current_dir().unwrap()).unwrap());
-    //     let options = FlatGeobufReaderOptions::default();
-    //     let _table = read_flatgeobuf_async(
-    //         fs,
-    //         Path::from("fixtures/flatgeobuf/nz-building-outlines-small.fgb"),
-    //         options,
-    //     )
-    //     .await
-    //     .unwrap();
-    // }
+    #[tokio::test]
+    async fn test_nz_buildings() {
+        let fs = Arc::new(LocalFileSystem::new_with_prefix(current_dir().unwrap()).unwrap());
+        let options = FlatGeobufReaderOptions::default();
+        let _table = read_flatgeobuf_async(
+            fs,
+            Path::from("fixtures/flatgeobuf/nz-building-outlines-small.fgb"),
+            options,
+        )
+        .await
+        .unwrap();
+    }
 }
