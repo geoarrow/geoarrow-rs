@@ -9,7 +9,7 @@ use object_store::{
 };
 use pyo3::pybacked::PyBackedStr;
 #[cfg(feature = "async")]
-use pyo3_object_store::PyObjectStore;
+use pyo3_object_store::AnyObjectStore;
 use sync::FileReader;
 
 use pyo3::prelude::*;
@@ -36,9 +36,11 @@ pub fn construct_async_reader(
     store: Option<Bound<PyAny>>,
 ) -> PyGeoArrowResult<AsyncFileReader> {
     // If the user passed an object store instance, use that
+
+    use pyo3_object_store::AnyObjectStore;
     if let Some(store) = store {
         let async_reader = AsyncFileReader {
-            store: store.extract::<PyObjectStore>()?.into_inner(),
+            store: store.extract::<AnyObjectStore>()?.into(),
             path: file.extract::<String>()?.into(),
         };
         return Ok(async_reader);
@@ -67,7 +69,7 @@ pub fn construct_reader(
     #[cfg(feature = "async")]
     if let Some(store) = store {
         let async_reader = AsyncFileReader {
-            store: store.extract::<PyObjectStore>()?.into_inner(),
+            store: store.extract::<AnyObjectStore>()?.into(),
             path: file.extract::<String>()?.into(),
         };
         return Ok(AnyFileReader::Async(async_reader));
