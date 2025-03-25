@@ -7,7 +7,7 @@ use crate::error::Result;
 use crate::scalar::Geometry;
 use arrow_array::ArrayRef;
 use arrow_buffer::{NullBuffer, NullBufferBuilder};
-use arrow_schema::{DataType, Field};
+use arrow_schema::{DataType, Field, FieldRef};
 use geo_traits::GeometryTrait;
 use std::any::Any;
 use std::sync::Arc;
@@ -247,6 +247,84 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     }
 }
 
+impl<T: ArrayBase> ArrayBase for &T {
+    fn as_any(&self) -> &dyn std::any::Any {
+        T::as_any(self)
+    }
+
+    fn storage_type(&self) -> DataType {
+        T::storage_type(self)
+    }
+
+    fn extension_field(&self) -> FieldRef {
+        T::extension_field(self)
+    }
+
+    fn extension_name(&self) -> &str {
+        T::extension_name(self)
+    }
+
+    fn into_array_ref(self) -> ArrayRef {
+        // We can't move out of the Arc
+        self.to_array_ref()
+    }
+
+    fn to_array_ref(&self) -> ArrayRef {
+        T::to_array_ref(self)
+    }
+
+    fn len(&self) -> usize {
+        T::len(self)
+    }
+
+    fn nulls(&self) -> Option<&NullBuffer> {
+        T::nulls(self)
+    }
+
+    fn metadata(&self) -> Arc<ArrayMetadata> {
+        T::metadata(self)
+    }
+}
+
+impl ArrayBase for Arc<dyn ArrayBase> {
+    fn as_any(&self) -> &dyn std::any::Any {
+        self.as_ref().as_any()
+    }
+
+    fn storage_type(&self) -> DataType {
+        self.as_ref().storage_type()
+    }
+
+    fn extension_field(&self) -> FieldRef {
+        self.as_ref().extension_field()
+    }
+
+    fn extension_name(&self) -> &str {
+        self.as_ref().extension_name()
+    }
+
+    fn into_array_ref(self) -> ArrayRef {
+        // We can't move out of the Arc
+        self.to_array_ref()
+    }
+
+    fn to_array_ref(&self) -> ArrayRef {
+        self.as_ref().to_array_ref()
+    }
+
+    fn len(&self) -> usize {
+        self.as_ref().len()
+    }
+
+    fn nulls(&self) -> Option<&NullBuffer> {
+        self.as_ref().nulls()
+    }
+
+    fn metadata(&self) -> Arc<ArrayMetadata> {
+        self.as_ref().metadata()
+    }
+}
+
 /// A trait to represent native-encoded GeoArrow arrays
 ///
 /// This encompasses the core GeoArrow [native encoding](https://github.com/geoarrow/geoarrow/blob/main/format.md#native-encoding) types.
@@ -335,7 +413,7 @@ pub trait NativeArray: ArrayBase {
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// let array_ref = array.as_ref();
     /// ```
-    fn as_ref(&self) -> &dyn NativeArray;
+    // fn as_ref(&self) -> &dyn NativeArray;
 
     /// Returns a zero-copy slice of this array with the indicated offset and length.
     ///
@@ -367,6 +445,97 @@ pub trait NativeArray: ArrayBase {
 
 /// Type alias for a dynamic reference to something that implements [NativeArray].
 pub type NativeArrayRef = Arc<dyn NativeArray>;
+
+impl<T: NativeArray> NativeArray for &T {
+    fn data_type(&self) -> NativeType {
+        T::data_type(self)
+    }
+
+    fn coord_type(&self) -> CoordType {
+        T::coord_type(self)
+    }
+
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
+        T::to_coord_type(self, coord_type)
+    }
+
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> NativeArrayRef {
+        T::with_metadata(self, metadata)
+    }
+
+    // fn as_ref(&self) -> &dyn NativeArray {
+    //     T::as_ref(self)
+    // }
+
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
+        T::slice(self, offset, length)
+    }
+}
+
+impl ArrayBase for Arc<dyn NativeArray> {
+    fn as_any(&self) -> &dyn std::any::Any {
+        AsRef::as_ref(self).as_any()
+    }
+
+    fn storage_type(&self) -> DataType {
+        AsRef::as_ref(self).storage_type()
+    }
+
+    fn extension_field(&self) -> FieldRef {
+        AsRef::as_ref(self).extension_field()
+    }
+
+    fn extension_name(&self) -> &str {
+        AsRef::as_ref(self).extension_name()
+    }
+
+    fn into_array_ref(self) -> ArrayRef {
+        // We can't move out of the Arc
+        self.to_array_ref()
+    }
+
+    fn to_array_ref(&self) -> ArrayRef {
+        AsRef::as_ref(self).to_array_ref()
+    }
+
+    fn len(&self) -> usize {
+        AsRef::as_ref(self).len()
+    }
+
+    fn nulls(&self) -> Option<&NullBuffer> {
+        AsRef::as_ref(self).nulls()
+    }
+
+    fn metadata(&self) -> Arc<ArrayMetadata> {
+        AsRef::as_ref(self).metadata()
+    }
+}
+
+impl NativeArray for Arc<dyn NativeArray> {
+    fn data_type(&self) -> NativeType {
+        AsRef::as_ref(self).data_type()
+    }
+
+    fn coord_type(&self) -> CoordType {
+        AsRef::as_ref(self).coord_type()
+    }
+
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
+        AsRef::as_ref(self).to_coord_type(coord_type)
+    }
+
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> NativeArrayRef {
+        AsRef::as_ref(self).with_metadata(metadata)
+    }
+
+    // fn as_ref(&self) -> &dyn NativeArray {
+    //     AsRef::as_ref(self).as_ref()
+    // }
+
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
+        AsRef::as_ref(self).slice(offset, length)
+    }
+}
 
 /// A trait to represent serialized GeoArrow arrays
 ///

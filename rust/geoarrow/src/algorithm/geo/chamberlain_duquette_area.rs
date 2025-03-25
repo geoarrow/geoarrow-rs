@@ -1,6 +1,6 @@
 use crate::algorithm::geo::utils::zeroes;
 use crate::array::*;
-use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
+use crate::chunked_array::{ChunkedArray, ChunkedNativeArray};
 use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
@@ -168,12 +168,12 @@ impl ChamberlainDuquetteArea for &dyn NativeArray {
     }
 }
 
-impl<G: NativeArray> ChamberlainDuquetteArea for ChunkedGeometryArray<G> {
+impl ChamberlainDuquetteArea for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn chamberlain_duquette_signed_area(&self) -> Self::Output {
-        let mut output_chunks = Vec::with_capacity(self.chunks.len());
-        for chunk in self.chunks.iter() {
+        let mut output_chunks = Vec::with_capacity(self.num_chunks());
+        for chunk in self.geometry_chunks().iter() {
             output_chunks.push(chunk.as_ref().chamberlain_duquette_signed_area()?);
         }
 
@@ -181,55 +181,11 @@ impl<G: NativeArray> ChamberlainDuquetteArea for ChunkedGeometryArray<G> {
     }
 
     fn chamberlain_duquette_unsigned_area(&self) -> Self::Output {
-        let mut output_chunks = Vec::with_capacity(self.chunks.len());
-        for chunk in self.chunks.iter() {
+        let mut output_chunks = Vec::with_capacity(self.num_chunks());
+        for chunk in self.geometry_chunks().iter() {
             output_chunks.push(chunk.as_ref().chamberlain_duquette_unsigned_area()?);
         }
 
         Ok(ChunkedArray::new(output_chunks))
-    }
-}
-
-impl ChamberlainDuquetteArea for &dyn ChunkedNativeArray {
-    type Output = Result<ChunkedArray<Float64Array>>;
-
-    fn chamberlain_duquette_signed_area(&self) -> Self::Output {
-        use NativeType::*;
-
-        match self.data_type() {
-            Point(_, _) => self.as_point().chamberlain_duquette_signed_area(),
-            LineString(_, _) => self.as_line_string().chamberlain_duquette_signed_area(),
-            Polygon(_, _) => self.as_polygon().chamberlain_duquette_signed_area(),
-            MultiPoint(_, _) => self.as_multi_point().chamberlain_duquette_signed_area(),
-            MultiLineString(_, _) => self
-                .as_multi_line_string()
-                .chamberlain_duquette_signed_area(),
-            MultiPolygon(_, _) => self.as_multi_polygon().chamberlain_duquette_signed_area(),
-            GeometryCollection(_, _) => self
-                .as_geometry_collection()
-                .chamberlain_duquette_signed_area(),
-            Rect(_) => self.as_rect().chamberlain_duquette_unsigned_area(),
-            Geometry(_) => self.as_geometry().chamberlain_duquette_unsigned_area(),
-        }
-    }
-
-    fn chamberlain_duquette_unsigned_area(&self) -> Self::Output {
-        use NativeType::*;
-
-        match self.data_type() {
-            Point(_, _) => self.as_point().chamberlain_duquette_unsigned_area(),
-            LineString(_, _) => self.as_line_string().chamberlain_duquette_unsigned_area(),
-            Polygon(_, _) => self.as_polygon().chamberlain_duquette_unsigned_area(),
-            MultiPoint(_, _) => self.as_multi_point().chamberlain_duquette_unsigned_area(),
-            MultiLineString(_, _) => self
-                .as_multi_line_string()
-                .chamberlain_duquette_unsigned_area(),
-            MultiPolygon(_, _) => self.as_multi_polygon().chamberlain_duquette_unsigned_area(),
-            GeometryCollection(_, _) => self
-                .as_geometry_collection()
-                .chamberlain_duquette_unsigned_area(),
-            Rect(_) => self.as_rect().chamberlain_duquette_unsigned_area(),
-            Geometry(_) => self.as_geometry().chamberlain_duquette_unsigned_area(),
-        }
     }
 }
