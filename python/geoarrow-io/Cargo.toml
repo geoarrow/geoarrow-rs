@@ -50,7 +50,7 @@ pyo3-async-runtimes = { version = "0.24", features = [
     "tokio-runtime",
 ], optional = true }
 pyo3-object_store = { version = "0.4", optional = true }
-geo = "0.29.3"
+geo = "0.30"
 geo-traits = { workspace = true }
 geoarrow = { workspace = true, features = [
     "csv",

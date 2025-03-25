@@ -6,8 +6,8 @@ use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
-use geo::Euclidean;
-use geo::{CoordFloat, Densify as _Densify};
+use geo::line_measures::Densify as _Densify;
+use geo::{CoordFloat, Euclidean};
 use num_traits::FromPrimitive;
 
 /// Return a new linear geometry containing both existing and new interpolated coordinates with
@@ -29,7 +29,7 @@ macro_rules! iter_geo_impl {
             fn densify(&self, max_distance: f64) -> Self::Output {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()
-                    .map(|maybe_g| maybe_g.map(|geom| geom.densify::<Euclidean>(max_distance)))
+                    .map(|maybe_g| maybe_g.map(|geom| Euclidean.densify(&geom, max_distance)))
                     .collect();
 
                 <$builder_type>::$method(
@@ -72,44 +72,36 @@ iter_geo_impl!(
 #[repr(transparent)]
 struct GeometryDensifyWrapper<'a, T: CoordFloat>(&'a geo::Geometry<T>);
 
-impl<F: geo::CoordFloat + FromPrimitive> geo::Densify<F> for GeometryDensifyWrapper<'_, F> {
-    type Output = geo::Geometry<F>;
-
-    fn densify<MetricSpace>(&self, max_segment_length: F) -> Self::Output
-    where
-        MetricSpace: geo::Distance<F, geo::Point<F>, geo::Point<F>> + geo::InterpolatePoint<F>,
-    {
+impl<F: geo::CoordFloat + FromPrimitive> GeometryDensifyWrapper<'_, F> {
+    fn densify(&self, max_segment_length: F) -> geo::Geometry<F> {
         match &self.0 {
             geo::Geometry::Point(g) => geo::Geometry::Point(*g),
             geo::Geometry::LineString(g) => {
-                geo::Geometry::LineString(g.densify::<MetricSpace>(max_segment_length))
+                geo::Geometry::LineString(Euclidean.densify(g, max_segment_length))
             }
             geo::Geometry::Polygon(g) => {
-                geo::Geometry::Polygon(g.densify::<MetricSpace>(max_segment_length))
+                geo::Geometry::Polygon(Euclidean.densify(g, max_segment_length))
             }
             geo::Geometry::MultiPoint(g) => geo::Geometry::MultiPoint(g.clone()),
             geo::Geometry::MultiLineString(g) => {
-                geo::Geometry::MultiLineString(g.densify::<MetricSpace>(max_segment_length))
+                geo::Geometry::MultiLineString(Euclidean.densify(g, max_segment_length))
             }
             geo::Geometry::MultiPolygon(g) => {
-                geo::Geometry::MultiPolygon(g.densify::<MetricSpace>(max_segment_length))
+                geo::Geometry::MultiPolygon(Euclidean.densify(g, max_segment_length))
             }
             geo::Geometry::Triangle(g) => {
-                geo::Geometry::Polygon(g.densify::<MetricSpace>(max_segment_length))
+                geo::Geometry::Polygon(Euclidean.densify(g, max_segment_length))
             }
             geo::Geometry::Rect(g) => {
-                geo::Geometry::Polygon(g.densify::<MetricSpace>(max_segment_length))
+                geo::Geometry::Polygon(Euclidean.densify(g, max_segment_length))
             }
             geo::Geometry::Line(g) => {
-                geo::Geometry::LineString(g.densify::<MetricSpace>(max_segment_length))
+                geo::Geometry::LineString(Euclidean.densify(g, max_segment_length))
             }
             geo::Geometry::GeometryCollection(g) => {
                 let mut output = Vec::with_capacity(g.len());
                 for inner_geom in g.iter() {
-                    output.push(
-                        GeometryDensifyWrapper(inner_geom)
-                            .densify::<MetricSpace>(max_segment_length),
-                    );
+                    output.push(GeometryDensifyWrapper(inner_geom).densify(max_segment_length));
                 }
                 geo::Geometry::GeometryCollection(geo::GeometryCollection::new_from(output))
             }
@@ -123,9 +115,7 @@ impl Densify for GeometryArray {
     fn densify(&self, max_distance: f64) -> Self::Output {
         let output_geoms: Vec<Option<geo::Geometry>> = self
             .iter_geo()
-            .map(|maybe_g| {
-                maybe_g.map(|geom| GeometryDensifyWrapper(&geom).densify::<Euclidean>(max_distance))
-            })
+            .map(|maybe_g| maybe_g.map(|geom| GeometryDensifyWrapper(&geom).densify(max_distance)))
             .collect();
 
         Ok(GeometryBuilder::from_nullable_geometries(

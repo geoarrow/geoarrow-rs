@@ -7,6 +7,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
 use arrow_array::Float64Array;
+// use geo::line_measures::LengthMeasurable;
 use geo::{Euclidean, Length};
 
 pub trait EuclideanLength {
@@ -61,7 +62,7 @@ macro_rules! iter_geo_impl {
             type Output = Float64Array;
 
             fn euclidean_length(&self) -> Self::Output {
-                self.unary_primitive(|geom| geom.to_geo().length::<Euclidean>())
+                self.unary_primitive(|geom| Euclidean.length(&geom.to_geo()))
             }
         }
     };

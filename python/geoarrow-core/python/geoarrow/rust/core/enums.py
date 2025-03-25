@@ -12,7 +12,8 @@ class StrEnum(str, Enum):
     def __str__(self):
         return str(self.value)
 
-    def _generate_next_value_(name, *_):
+    @staticmethod
+    def _generate_next_value_(name, start, count, last_values):
         return name.lower()
 
 

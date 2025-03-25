@@ -7,7 +7,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::Float64Array;
-use geo::LineInterpolatePoint as _LineInterpolatePoint;
+use geo::{Euclidean, InterpolateLine};
 
 /// Returns an option of the point that lies a given fraction along the line.
 ///
@@ -53,7 +53,7 @@ impl LineInterpolatePoint<&Float64Array> for LineStringArray {
             .zip(p)
             .for_each(|(first, second)| match (first, second) {
                 (Some(first), Some(fraction)) => {
-                    if let Some(val) = first.line_interpolate_point(fraction) {
+                    if let Some(val) = Euclidean.point_at_ratio_from_start(&first, fraction) {
                         output_array.push_point(Some(&val))
                     } else {
                         output_array.push_empty()
@@ -112,7 +112,7 @@ impl LineInterpolatePoint<f64> for LineStringArray {
 
         self.iter_geo().for_each(|maybe_line_string| {
             if let Some(line_string) = maybe_line_string {
-                if let Some(val) = line_string.line_interpolate_point(p) {
+                if let Some(val) = Euclidean.point_at_ratio_from_start(&line_string, p) {
                     output_array.push_point(Some(&val))
                 } else {
                     output_array.push_empty()

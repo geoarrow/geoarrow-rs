@@ -16,7 +16,7 @@ arrow = { workspace = true, features = ["ffi", "chrono-tz"] }
 arrow-array = { workspace = true }
 arrow-buffer = { workspace = true }
 arrow-schema = { workspace = true }
-geo = "0.29.3"
+geo = "0.30"
 geoarrow = { workspace = true }
 geozero = { workspace = true }
 indexmap = { workspace = true }
