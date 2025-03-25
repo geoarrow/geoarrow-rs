@@ -27,7 +27,7 @@ use pyo3_arrow::export::{Arro3Schema, Arro3Table};
 use pyo3_arrow::PyArray;
 use pyo3_async_runtimes::tokio::future_into_py;
 use pyo3_geoarrow::CRS;
-use pyo3_object_store::PyObjectStore;
+use pyo3_object_store::AnyObjectStore;
 
 #[pyfunction]
 #[pyo3(signature = (path, *, store=None, batch_size=None))]
@@ -89,15 +89,17 @@ pub struct ParquetFile {
 impl ParquetFile {
     // TODO: change this to aenter
     #[new]
-    pub fn new(py: Python, path: String, store: PyObjectStore) -> PyGeoArrowResult<Self> {
+    pub fn new(py: Python, path: String, store: AnyObjectStore) -> PyGeoArrowResult<Self> {
         let runtime = get_runtime(py)?;
+        let store = store.into_dyn();
+        let cloned_store = store.clone();
         let store_ref = store.as_ref();
         let (object_meta, geoparquet_meta) = runtime.block_on(async move {
             let object_meta = store_ref
                 .head(&path.into())
                 .await
                 .map_err(GeoArrowError::ObjectStoreError)?;
-            let mut reader = ParquetObjectReader::new(store_ref.clone(), object_meta.clone());
+            let mut reader = ParquetObjectReader::new(cloned_store.clone(), object_meta.clone());
             let arrow_meta = ArrowReaderMetadata::load_async(&mut reader, Default::default())
                 .await
                 .map_err(GeoArrowError::ParquetError)?;
@@ -107,7 +109,7 @@ impl ParquetFile {
         Ok(Self {
             object_meta,
             geoparquet_meta,
-            store: store.into_inner(),
+            store,
         })
     }
 
@@ -378,17 +380,19 @@ impl ParquetDataset {
 #[pymethods]
 impl ParquetDataset {
     #[new]
-    pub fn new(py: Python, paths: Vec<String>, store: PyObjectStore) -> PyGeoArrowResult<Self> {
+    pub fn new(py: Python, paths: Vec<String>, store: AnyObjectStore) -> PyGeoArrowResult<Self> {
         let runtime = get_runtime(py)?;
-        let store_ref = store.as_ref().clone();
+        let store = store.into_dyn();
+        let cloned_store = store.clone();
+
         let meta = runtime.block_on(async move {
-            let meta = fetch_arrow_metadata_objects(paths, store_ref).await?;
+            let meta = fetch_arrow_metadata_objects(paths, store.clone()).await?;
             Ok::<_, PyGeoArrowError>(meta)
         })?;
 
         Ok(Self {
             meta: GeoParquetDatasetMetadata::from_files(meta)?,
-            store: store.into_inner().clone(),
+            store: cloned_store,
         })
     }
 
