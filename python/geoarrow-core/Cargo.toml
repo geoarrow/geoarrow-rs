@@ -29,7 +29,7 @@ arrow-buffer = { workspace = true }
 pyo3 = { workspace = true }
 pyo3-arrow = { workspace = true }
 pyo3-geoarrow = { path = "../pyo3-geoarrow" }
-geo = "0.29.3"
+geo = "0.30"
 geoarrow = { workspace = true }
 geozero = { version = "0.14", features = ["with-svg"] }
 numpy = { workspace = true }

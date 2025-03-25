@@ -23,7 +23,7 @@ arrow-ipc = "54.1"
 arrow-schema = "54.1"
 async-stream = { version = "0.3", optional = true }
 async-trait = { version = "0.1", optional = true }
-geo = "0.29.3"
+geo = "0.30"
 geohash = "0.13.1"
 geo-traits = "0.2"
 geoarrow = { path = "../geoarrow", features = ["flatgeobuf"] }
