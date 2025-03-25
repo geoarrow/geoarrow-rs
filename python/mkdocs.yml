@@ -95,8 +95,6 @@ theme:
     text: Roboto
     code: Roboto Mono
 
-  # logo: img/geopolars_logo.svg
-
   features:
     - content.code.annotate
     - content.code.copy
@@ -142,6 +140,9 @@ plugins:
           import:
             - https://arrow.apache.org/docs/objects.inv
             - https://contextily.readthedocs.io/en/stable/objects.inv
+            - https://developmentseed.org/lonboard/latest/objects.inv
+            - https://developmentseed.org/obstore/latest/objects.inv
+            - https://docs.pola.rs/api/python/stable/objects.inv
             - https://docs.python.org/3/objects.inv
             - https://fiona.readthedocs.io/en/stable/objects.inv
             - https://geopandas.org/en/stable/objects.inv
@@ -150,7 +151,6 @@ plugins:
             - https://matplotlib.org/stable/objects.inv
             - https://numpy.org/doc/stable/objects.inv
             - https://pandas.pydata.org/pandas-docs/stable/objects.inv
-            - https://pola-rs.github.io/polars/py-polars/html/objects.inv
             - https://pyepsg.readthedocs.io/en/stable/objects.inv
             - https://pygeos.readthedocs.io/en/latest/objects.inv
             - https://pyogrio.readthedocs.io/en/stable/objects.inv
