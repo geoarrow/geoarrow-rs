@@ -81,7 +81,7 @@ macro_rules! iter_geo_impl {
             type Output = Float64Array;
 
             fn geodesic_length(&self) -> Self::Output {
-                self.unary_primitive(|geom| geom.to_geo().length::<Geodesic>())
+                self.unary_primitive(|geom| Geodesic.length(&geom.to_geo()))
             }
         }
     };

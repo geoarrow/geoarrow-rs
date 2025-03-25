@@ -102,7 +102,7 @@ impl EuclideanDistance<PointArray> for PointArray {
             .zip(other.iter_geo())
             .for_each(|(first, second)| match (first, second) {
                 (Some(first), Some(second)) => {
-                    output_array.append_value(Euclidean::distance(&first, &second))
+                    output_array.append_value(Euclidean.distance(&first, &second))
                 }
                 _ => output_array.append_null(),
             });
@@ -123,7 +123,7 @@ macro_rules! iter_geo_impl {
                     .zip(other.iter_geo())
                     .for_each(|(first, second)| match (first, second) {
                         (Some(first), Some(second)) => {
-                            output_array.append_value(Euclidean::distance(&first, &second))
+                            output_array.append_value(Euclidean.distance(&first, &second))
                         }
                         _ => output_array.append_null(),
                     });
@@ -192,7 +192,7 @@ impl<'a> EuclideanDistance<Point<'a>> for PointArray {
         let mut output_array = Float64Builder::with_capacity(self.len());
 
         self.iter_geo().for_each(|maybe_point| {
-            let output = maybe_point.map(|point| Euclidean::distance(&point, &other.to_geo()));
+            let output = maybe_point.map(|point| Euclidean.distance(&point, &other.to_geo()));
             output_array.append_option(output)
         });
 
@@ -209,7 +209,7 @@ macro_rules! iter_geo_impl_scalar {
                 let other_geo = other.to_geo();
 
                 self.iter_geo().for_each(|maybe_geom| {
-                    let output = maybe_geom.map(|geom| Euclidean::distance(&geom, &other_geo));
+                    let output = maybe_geom.map(|geom| Euclidean.distance(&geom, &other_geo));
                     output_array.append_option(output)
                 });
 

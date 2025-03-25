@@ -75,7 +75,7 @@ macro_rules! iter_geo_impl {
             type Output = Float64Array;
 
             fn haversine_length(&self) -> Self::Output {
-                self.unary_primitive(|geom| geom.to_geo().length::<Haversine>())
+                self.unary_primitive(|geom| Haversine.length(&geom.to_geo()))
             }
         }
     };

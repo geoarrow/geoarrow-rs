@@ -6,7 +6,9 @@ use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
 use arrow_array::Float64Array;
-use geo::FrechetDistance as _FrechetDistance;
+use geo::line_measures::FrechetDistance as _FrechetDistance;
+use geo::Euclidean;
+// use geo::FrechetDistance as _FrechetDistance;
 use geo_traits::to_geo::ToGeoLineString;
 use geo_traits::LineStringTrait;
 
@@ -31,7 +33,7 @@ impl FrechetDistance<LineStringArray> for LineStringArray {
 
     fn frechet_distance(&self, rhs: &LineStringArray) -> Self::Output {
         self.try_binary_primitive(rhs, |left, right| {
-            Ok(left.to_geo().frechet_distance(&right.to_geo()))
+            Ok(Euclidean.frechet_distance(&left.to_geo(), &right.to_geo()))
         })
         .unwrap()
     }
@@ -97,7 +99,7 @@ impl<G: LineStringTrait<T = f64>> FrechetDistanceLineString<G> for LineStringArr
     fn frechet_distance(&self, rhs: &G) -> Self::Output {
         let rhs = rhs.to_line_string();
         self.try_unary_primitive(|geom| {
-            Ok::<_, GeoArrowError>(geom.to_geo().frechet_distance(&rhs))
+            Ok::<_, GeoArrowError>(Euclidean.frechet_distance(&geom.to_geo(), &rhs))
         })
         .unwrap()
     }
