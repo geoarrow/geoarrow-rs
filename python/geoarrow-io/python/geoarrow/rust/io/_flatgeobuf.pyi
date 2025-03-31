@@ -134,6 +134,7 @@ def write_flatgeobuf(
     title: str | None = None,
     description: str | None = None,
     metadata: str | None = None,
+    name: str | None = None,
 ) -> None:
     """
     Write to a FlatGeobuf file on disk.
@@ -147,4 +148,6 @@ def write_flatgeobuf(
         title: Dataset title. Defaults to `None`.
         description: Dataset description (intended for free form long text).
         metadata: Dataset metadata (intended to be application specific).
+        name: the string passed to `FgbWriter::create` and is what OGR observes as the layer name of the file. By default, this will try to use the file name, but can be overrided.
+
     """
