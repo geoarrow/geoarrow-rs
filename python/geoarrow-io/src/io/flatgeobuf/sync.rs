@@ -68,7 +68,8 @@ pub fn read_flatgeobuf(
     write_index=true,
     title=None,
     description=None,
-    metadata=None
+    metadata=None,
+    name=None,
 ))]
 #[allow(clippy::too_many_arguments)]
 pub fn write_flatgeobuf(
@@ -79,8 +80,9 @@ pub fn write_flatgeobuf(
     title: Option<String>,
     description: Option<String>,
     metadata: Option<String>,
+    name: Option<String>,
 ) -> PyGeoArrowResult<()> {
-    let name = file.file_stem(py);
+    let name = name.unwrap_or_else(|| file.file_stem(py).unwrap_or("".to_string()));
 
     let options = FlatGeobufWriterOptions {
         write_index,
@@ -92,11 +94,6 @@ pub fn write_flatgeobuf(
         ..Default::default()
     };
 
-    _write_flatgeobuf(
-        table.into_reader()?,
-        file,
-        name.as_deref().unwrap_or(""),
-        options,
-    )?;
+    _write_flatgeobuf(table.into_reader()?, file, &name, options)?;
     Ok(())
 }
