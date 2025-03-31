@@ -27,6 +27,7 @@ nav:
           - api/core/geometry/array.md
           - api/core/geometry/chunked.md
           - api/core/geometry/scalar.md
+          - api/core/geometry/type.md
           - api/core/constructors.md
           - api/core/functions.md
           - api/core/enums.md
@@ -58,9 +59,10 @@ nav:
   # - "How it works?": how-it-works.md
 
 watch:
+  - docs
+  - geoarrow-compute/python
   - geoarrow-core/python
   - geoarrow-io/python
-  - docs
 
 theme:
   name: material
@@ -118,7 +120,8 @@ plugins:
       enable_inventory: true
       handlers:
         python:
-          paths: [geoarrow-core/python, geoarrow-io/python]
+          paths:
+            [geoarrow-compute/python, geoarrow-core/python, geoarrow-io/python]
           options:
             # We set allow_inspection: false to ensure that all docstrings come
             # from the pyi files, not the Rust-facing doc comments.
@@ -137,7 +140,7 @@ plugins:
 
             # merge_init_into_class: true
 
-          import:
+          inventories:
             - https://arrow.apache.org/docs/objects.inv
             - https://contextily.readthedocs.io/en/stable/objects.inv
             - https://developmentseed.org/lonboard/latest/objects.inv

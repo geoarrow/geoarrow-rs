@@ -1,13 +1,5 @@
 # Development
 
-```
-uv run maturin develop -m geoarrow-core/Cargo.toml
-uv run maturin develop -m geoarrow-compute/Cargo.toml
-uv run maturin develop -m geoarrow-io/Cargo.toml
-uv run mkdocs serve
-```
-
-
 To install versions of the package under active development, you need to have Rust installed, e.g. with rustup:
 
 ```

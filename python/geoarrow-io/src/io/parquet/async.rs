@@ -78,7 +78,7 @@ async fn read_parquet_async_inner(
 }
 
 /// Reader interface for a single Parquet file.
-#[pyclass(module = "geoarrow.rust.io._io", frozen)]
+#[pyclass(module = "geoarrow.rust.io", frozen)]
 pub struct ParquetFile {
     object_meta: object_store::ObjectMeta,
     geoparquet_meta: GeoParquetReaderMetadata,
@@ -322,7 +322,7 @@ async fn fetch_arrow_metadata_objects(
 
 /// Encapsulates details of reading a complete Parquet dataset possibly consisting of multiple
 /// files and partitions in subdirectories.
-#[pyclass(module = "geoarrow.rust.io._io", frozen)]
+#[pyclass(module = "geoarrow.rust.io", frozen)]
 pub struct ParquetDataset {
     meta: GeoParquetDatasetMetadata,
     // metas: HashMap<object_store::path::Path, Vec<(ParquetObjectReader, GeoParquetReaderMetadata)>>,

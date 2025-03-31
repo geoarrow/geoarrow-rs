@@ -2,7 +2,7 @@ from __future__ import annotations
 import json
 from typing import cast
 
-import pyproj
+from pyproj.crs.crs import CRS
 from arro3.core.types import (
     ArrowArrayExportable,
     ArrowSchemaExportable,
@@ -15,7 +15,7 @@ def get_crs(
     data: ArrowArrayExportable | ArrowStreamExportable | ArrowSchemaExportable,
     /,
     column: str | None = None,
-) -> pyproj.CRS | None:
+) -> CRS | None:
     """Get the CRS from a GeoArrow object.
 
     Args:
@@ -57,10 +57,10 @@ def get_crs(
     raise ValueError("Unsupported input.")
 
 
-def parse_metadata(metadata: dict[str, str]) -> pyproj.CRS | None:
+def parse_metadata(metadata: dict[str, str]) -> CRS | None:
     ext_meta = json.loads(metadata.get("ARROW:extension:metadata", "{}"))
     crs_val = ext_meta.get("crs")
-    return pyproj.CRS.from_user_input(crs_val) if crs_val is not None else None
+    return CRS.from_user_input(crs_val) if crs_val is not None else None
 
 
 def get_geometry_field(schema: Schema, column: str | None = None) -> Field:

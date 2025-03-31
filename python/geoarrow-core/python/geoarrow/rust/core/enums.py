@@ -12,21 +12,17 @@ class StrEnum(str, Enum):
     def __str__(self):
         return str(self.value)
 
-    @staticmethod
-    def _generate_next_value_(name, start, count, last_values):
-        return name.lower()
-
 
 class CoordType(StrEnum):
     """Available GeoArrow coordinate types."""
 
-    Interleaved = auto()
+    Interleaved = "interleaved"
     """Interleaved coordinate layout.
 
     All coordinates are stored in a single buffer, as `XYXYXY`.
     """
 
-    Separated = auto()
+    Separated = "separated"
     """Separated coordinate layout.
 
     Coordinates are stored in a separate buffer per dimension, e.g. `XXXX` and `YYYY`.
@@ -36,10 +32,10 @@ class CoordType(StrEnum):
 class Dimension(StrEnum):
     """Geometry dimensions."""
 
-    XY = auto()
+    XY = "xy"
     """Two dimensions, X and Y
     """
 
-    XYZ = auto()
+    XYZ = "xyz"
     """Three dimensions, X, Y, and Z
     """
