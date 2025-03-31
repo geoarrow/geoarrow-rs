@@ -5,6 +5,7 @@
       filters:
         - "!^_"
       members:
+        - CoordsInput
         - points
         - linestrings
         - polygons

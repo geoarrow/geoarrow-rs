@@ -17,7 +17,7 @@ use crate::scalar::PyGeometry;
 use crate::PyNativeType;
 
 #[pyclass(
-    module = "geoarrow.rust.core._rust",
+    module = "geoarrow.rust.core",
     name = "ChunkedNativeArray",
     subclass,
     frozen
@@ -106,8 +106,8 @@ impl PyChunkedNativeArray {
     }
 
     #[classmethod]
-    pub fn from_arrow(_cls: &Bound<PyType>, data: &Bound<PyAny>) -> PyResult<Self> {
-        data.extract()
+    pub fn from_arrow(_cls: &Bound<PyType>, data: Self) -> Self {
+        data
     }
 
     #[classmethod]

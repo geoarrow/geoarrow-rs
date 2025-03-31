@@ -1,6 +1,6 @@
-# ChunkedNativeArray
+# Chunked Array
 
-::: geoarrow.rust.core
+::: geoarrow.rust.core.ChunkedNativeArray
     options:
       filters:
         - "!^_"
@@ -9,5 +9,3 @@
         - "^__eq"
         - "^__getitem"
         - "^__repr"
-      members:
-        - ChunkedNativeArray

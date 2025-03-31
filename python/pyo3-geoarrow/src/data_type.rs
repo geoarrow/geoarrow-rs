@@ -1,21 +1,14 @@
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::{PyCoordType, PyDimension};
 
-use geoarrow::array::CoordType;
-use geoarrow::datatypes::{Dimension, NativeType, SerializedType};
+use geoarrow::datatypes::{NativeType, SerializedType};
 use pyo3::exceptions::PyValueError;
-use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyType};
 use pyo3_arrow::ffi::to_schema_pycapsule;
 use pyo3_arrow::PyField;
 
-#[pyclass(
-    module = "geoarrow.rust.core._rust",
-    name = "NativeType",
-    subclass,
-    frozen
-)]
+#[pyclass(module = "geoarrow.rust.core", name = "NativeType", subclass, frozen)]
 pub struct PyNativeType(pub(crate) NativeType);
 
 impl PyNativeType {
@@ -98,8 +91,8 @@ impl PyNativeType {
     }
 
     #[classmethod]
-    fn from_arrow(_cls: &Bound<PyType>, data: &Bound<PyAny>) -> PyResult<Self> {
-        data.extract()
+    fn from_arrow(_cls: &Bound<PyType>, data: Self) -> Self {
+        data
     }
 
     #[classmethod]
@@ -112,24 +105,13 @@ impl PyNativeType {
     }
 
     #[getter]
-    fn coord_type(&self, py: Python) -> PyResult<PyObject> {
-        let enums_mod = py.import(intern!(py, "geoarrow.rust.core.enums"))?;
-        let coord_type = enums_mod.getattr(intern!(py, "CoordType"))?;
-        match self.0.coord_type() {
-            CoordType::Interleaved => Ok(coord_type.getattr(intern!(py, "Interleaved"))?.into()),
-            CoordType::Separated => Ok(coord_type.getattr(intern!(py, "Separated"))?.into()),
-        }
+    fn coord_type(&self) -> PyCoordType {
+        self.0.coord_type().into()
     }
 
     #[getter]
-    fn dimension(&self, py: Python) -> PyResult<PyObject> {
-        let enums_mod = py.import(intern!(py, "geoarrow.rust.core.enums"))?;
-        let coord_type = enums_mod.getattr(intern!(py, "Dimension"))?;
-        match self.0.dimension() {
-            Some(Dimension::XY) => Ok(coord_type.getattr(intern!(py, "XY"))?.into()),
-            Some(Dimension::XYZ) => Ok(coord_type.getattr(intern!(py, "XYZ"))?.into()),
-            None => Ok(py.None()),
-        }
+    fn dimension(&self) -> Option<PyDimension> {
+        self.0.dimension().map(|d| d.into())
     }
 }
 
@@ -160,7 +142,7 @@ impl TryFrom<PyField> for PyNativeType {
 }
 
 #[pyclass(
-    module = "geoarrow.rust.core._rust",
+    module = "geoarrow.rust.core",
     name = "SerializedType",
     subclass,
     frozen
@@ -214,8 +196,8 @@ impl PySerializedType {
     }
 
     #[classmethod]
-    fn from_arrow(_cls: &Bound<PyType>, data: &Bound<PyAny>) -> PyResult<Self> {
-        data.extract()
+    fn from_arrow(_cls: &Bound<PyType>, data: Self) -> Self {
+        data
     }
 
     #[classmethod]

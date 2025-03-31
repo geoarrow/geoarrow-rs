@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from typing import Literal, Union
 
-import pyproj
+# The top-level import doesn't work for docs interlinking
+from pyproj.crs.crs import CRS
 
-CRSInput = Union[pyproj.CRS, str, dict, int]
+CRSInput = Union[CRS, str, dict, int]
 """Acceptable input for the CRS parameter."""
 
 IntFloat = Union[int, float]

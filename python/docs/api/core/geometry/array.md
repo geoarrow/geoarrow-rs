@@ -1,6 +1,6 @@
-# NativeArray
+# Array
 
-::: geoarrow.rust.core
+::: geoarrow.rust.core.NativeArray
     options:
       filters:
         - "!^_"
@@ -9,5 +9,12 @@
         - "^__eq"
         - "^__getitem"
         - "^__repr"
-      members:
-        - NativeArray
+::: geoarrow.rust.core.SerializedArray
+    options:
+      filters:
+        - "!^_"
+        - "^__arrow"
+        - "^__geo"
+        - "^__eq"
+        - "^__getitem"
+        - "^__repr"

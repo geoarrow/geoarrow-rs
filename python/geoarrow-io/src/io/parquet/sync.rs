@@ -133,7 +133,7 @@ pub fn write_parquet(
     Ok(())
 }
 
-#[pyclass(module = "geoarrow.rust.io._io", frozen)]
+#[pyclass(module = "geoarrow.rust.io", frozen)]
 pub struct ParquetWriter {
     file: Mutex<Option<_GeoParquetWriter<FileWriter>>>,
 }

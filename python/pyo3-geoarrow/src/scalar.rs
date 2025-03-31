@@ -13,12 +13,7 @@ use pyo3_arrow::ffi::to_array_pycapsules;
 use crate::error::PyGeoArrowResult;
 
 /// This is modeled as a geospatial array of length 1
-#[pyclass(
-    module = "geoarrow.rust.core._rust",
-    name = "Geometry",
-    subclass,
-    frozen
-)]
+#[pyclass(module = "geoarrow.rust.core", name = "Geometry", subclass, frozen)]
 pub struct PyGeometry(pub(crate) GeometryScalar);
 
 impl PyGeometry {

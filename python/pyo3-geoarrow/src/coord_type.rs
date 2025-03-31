@@ -1,5 +1,6 @@
 use geoarrow::array::CoordType;
 use pyo3::exceptions::PyValueError;
+use pyo3::intern;
 use pyo3::prelude::*;
 
 #[derive(Debug, Clone, Copy)]
@@ -24,6 +25,30 @@ impl From<PyCoordType> for CoordType {
         match value {
             PyCoordType::Interleaved => Self::Interleaved,
             PyCoordType::Separated => Self::Separated,
+        }
+    }
+}
+
+impl From<CoordType> for PyCoordType {
+    fn from(value: CoordType) -> Self {
+        match value {
+            CoordType::Interleaved => Self::Interleaved,
+            CoordType::Separated => Self::Separated,
+        }
+    }
+}
+
+impl<'py> IntoPyObject<'py> for PyCoordType {
+    type Target = PyAny;
+    type Output = Bound<'py, PyAny>;
+    type Error = PyErr;
+
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        let enums_mod = py.import(intern!(py, "geoarrow.rust.core.enums"))?;
+        let enum_cls = enums_mod.getattr(intern!(py, "CoordType"))?;
+        match self {
+            Self::Interleaved => enum_cls.getattr(intern!(py, "Interleaved")),
+            Self::Separated => enum_cls.getattr(intern!(py, "Separated")),
         }
     }
 }

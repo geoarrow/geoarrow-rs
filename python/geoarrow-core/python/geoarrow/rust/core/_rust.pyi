@@ -28,16 +28,15 @@ try:
 except ImportError:
     pass
 
-from geoarrow.rust.core._constructors import linestrings as linestrings
-from geoarrow.rust.core._constructors import multilinestrings as multilinestrings
-from geoarrow.rust.core._constructors import multipoints as multipoints
-from geoarrow.rust.core._constructors import multipolygons as multipolygons
-from geoarrow.rust.core._constructors import points as points
-from geoarrow.rust.core._constructors import polygons as polygons
-from geoarrow.rust.core.types import CRSInput
-
+from ._constructors import CoordsInput as CoordsInput
+from ._constructors import linestrings as linestrings
+from ._constructors import multilinestrings as multilinestrings
+from ._constructors import multipoints as multipoints
+from ._constructors import multipolygons as multipolygons
+from ._constructors import points as points
+from ._constructors import polygons as polygons
 from .enums import CoordType, Dimension
-from .types import CoordTypeT, DimensionT
+from .types import CoordTypeT, CRSInput, DimensionT
 
 class Geometry:
     """
@@ -215,14 +214,14 @@ class NativeType:
             "geometry",
             "geometrycollection",
         ],
-        dimension: Dimension | DimensionT,
-        coord_type: CoordType | CoordTypeT,
+        dimension: DimensionT,
+        coord_type: CoordTypeT,
     ) -> None: ...
     @overload
     def __init__(
         self,
         type: Literal["box"],
-        dimension: Dimension | DimensionT,
+        dimension: DimensionT,
         coord_type: None = None,
     ) -> None: ...
     def __init__(
@@ -238,15 +237,13 @@ class NativeType:
             "geometrycollection",
             "box",
         ],
-        dimension: Dimension | DimensionT | None = None,
-        coord_type: CoordType | CoordTypeT | None = None,
+        dimension: DimensionT | None = None,
+        coord_type: CoordTypeT | None = None,
     ) -> None:
         """Create a new NativeType
 
         Args:
-            type: The string type of the geometry. One of `"point"`, `"linestring"`,
-                `"polygon"`, `"multipoint"`, `"multilinestring"`, `"multipolygon"`,
-                `"geometry"`, `"geometrycollection"`, `"box"`.
+            type: The string type of the geometry.
             dimension: The coordinate dimension. Either "XY" or "XYZ". Defaults to None.
             coord_type: The coordinate type. Defaults to None.
         """
@@ -492,18 +489,18 @@ def from_shapely(input, *, crs: CRSInput | None = None) -> NativeArray:
 def from_wkb(
     input: ArrowArrayExportable,
     *,
-    coord_type: CoordType | CoordTypeT = CoordType.Interleaved,
+    coord_type: CoordTypeT = CoordType.Interleaved,
 ) -> NativeArray: ...
 @overload
 def from_wkb(
     input: ArrowStreamExportable,
     *,
-    coord_type: CoordType | CoordTypeT = CoordType.Interleaved,
+    coord_type: CoordTypeT = CoordType.Interleaved,
 ) -> ChunkedNativeArray: ...
 def from_wkb(
     input: ArrowArrayExportable | ArrowStreamExportable,
     *,
-    coord_type: CoordType | CoordTypeT = CoordType.Interleaved,
+    coord_type: CoordTypeT = CoordType.Interleaved,
 ) -> NativeArray | ChunkedNativeArray:
     """
     Parse an Arrow BinaryArray from WKB to its GeoArrow-native counterpart.
@@ -525,18 +522,18 @@ def from_wkb(
 def from_wkt(
     input: ArrowArrayExportable,
     *,
-    coord_type: CoordType | CoordTypeT = CoordType.Interleaved,
+    coord_type: CoordTypeT = CoordType.Interleaved,
 ) -> NativeArray: ...
 @overload
 def from_wkt(
     input: ArrowStreamExportable,
     *,
-    coord_type: CoordType | CoordTypeT = CoordType.Interleaved,
+    coord_type: CoordTypeT = CoordType.Interleaved,
 ) -> ChunkedNativeArray: ...
 def from_wkt(
     input: ArrowArrayExportable | ArrowStreamExportable,
     *,
-    coord_type: CoordType | CoordTypeT = CoordType.Interleaved,
+    coord_type: CoordTypeT = CoordType.Interleaved,
 ) -> NativeArray | ChunkedNativeArray:
     """
     Parse an Arrow StringArray from WKT to its GeoArrow-native counterpart.
