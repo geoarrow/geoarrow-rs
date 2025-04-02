@@ -1,3 +1,5 @@
+#[cfg(feature = "async")]
+pub mod r#async;
 pub mod sync;
 
 use std::sync::Arc;
@@ -10,7 +12,7 @@ use object_store::{
 use pyo3::pybacked::PyBackedStr;
 #[cfg(feature = "async")]
 use pyo3_object_store::AnyObjectStore;
-use sync::FileReader;
+use sync::PySyncReader;
 
 use pyo3::prelude::*;
 use url::Url;
@@ -22,7 +24,7 @@ pub struct AsyncFileReader {
 }
 
 pub enum AnyFileReader {
-    Sync(FileReader),
+    Sync(PySyncReader),
     #[cfg(feature = "async")]
     Async(AsyncFileReader),
 }
