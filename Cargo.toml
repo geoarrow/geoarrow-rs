@@ -1,5 +1,5 @@
 [workspace]
-members = ["rust/geoarrow", "rust/geodatafusion"]
+members = ["rust/geoarrow", "rust/geoarrow-schema", "rust/geodatafusion"]
 exclude = ["js"]
 resolver = "2"
 

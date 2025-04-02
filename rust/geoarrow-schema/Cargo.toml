@@ -1,0 +1,19 @@
+
+[package]
+name = "geoarrow-schema"
+version = "0.1.0-dev"
+authors = ["Kyle Barron <kylebarron2@gmail.com>"]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/geoarrow/geoarrow-rs"
+description = "Rust implementation of GeoArrow"
+categories = ["science::geo"]
+rust-version = "1.82"
+
+
+[dependencies]
+arrow-schema = "54.3.1"
+geo-traits = "0.2.0"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "1"
