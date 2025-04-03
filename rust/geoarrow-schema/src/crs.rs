@@ -26,6 +26,7 @@ pub struct Crs {
     /// The `"crs_type"` should be omitted if the producer cannot guarantee the validity
     /// of any of the above values (e.g., if it just serialized a CRS object
     /// specifically into one of these representations).
+    #[serde(skip_serializing_if = "Option::is_none")]
     crs_type: Option<CrsType>,
 }
 

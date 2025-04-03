@@ -51,6 +51,16 @@ impl Dimension {
             );
         }
     }
+
+    /// Returns the number of dimensions.
+    pub fn size(&self) -> usize {
+        match self {
+            Dimension::XY => 2,
+            Dimension::XYZ => 3,
+            Dimension::XYM => 3,
+            Dimension::XYZM => 4,
+        }
+    }
 }
 
 impl From<Dimension> for geo_traits::Dimensions {
@@ -73,7 +83,9 @@ impl TryFrom<geo_traits::Dimensions> for Dimension {
             geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => Ok(Dimension::XY),
             geo_traits::Dimensions::Xyz | geo_traits::Dimensions::Unknown(3) => Ok(Dimension::XYZ),
             geo_traits::Dimensions::Xym => Ok(Dimension::XYM),
-            geo_traits::Dimensions::Xyzm => Ok(Dimension::XYZM),
+            geo_traits::Dimensions::Xyzm | geo_traits::Dimensions::Unknown(4) => {
+                Ok(Dimension::XYZM)
+            }
             _ => Err(ArrowError::SchemaError(format!(
                 "Unsupported dimension {:?}",
                 value
