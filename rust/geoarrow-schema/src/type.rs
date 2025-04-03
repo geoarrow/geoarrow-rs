@@ -1388,9 +1388,9 @@ impl WktType {
     ///
     /// ```
     /// use arrow_schema::DataType;
-    /// use geoarrow_schema::WkbType;
+    /// use geoarrow_schema::WktType;
     ///
-    /// let geom_type = WkbType::new(Default::default());
+    /// let geom_type = WktType::new(Default::default());
     ///
     /// assert_eq!(geom_type.data_type(false), DataType::Utf8);
     /// ```
