@@ -30,7 +30,7 @@ impl ExtensionType for PointType {
     }
 
     fn supports_data_type(&self, data_type: &DataType) -> Result<(), ArrowError> {
-        let (coord_type, dim) = parse_point_data_type(data_type)?;
+        let (coord_type, dim) = parse_point(data_type)?;
         if coord_type != self.coord_type {
             return Err(ArrowError::SchemaError(format!(
                 "Expected coordinate type {:?}, but got {:?}",
@@ -47,7 +47,7 @@ impl ExtensionType for PointType {
     }
 
     fn try_new(data_type: &DataType, metadata: Self::Metadata) -> Result<Self, ArrowError> {
-        let (coord_type, dim) = parse_point_data_type(data_type)?;
+        let (coord_type, dim) = parse_point(data_type)?;
         Ok(Self {
             coord_type,
             dim,
@@ -56,7 +56,7 @@ impl ExtensionType for PointType {
     }
 }
 
-fn parse_point_data_type(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowError> {
+fn parse_point(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowError> {
     match data_type {
         DataType::FixedSizeList(inner_field, _list_size) => Ok((
             CoordType::Interleaved,
@@ -125,7 +125,7 @@ impl ExtensionType for LineStringType {
 fn parse_linestring(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowError> {
     match data_type {
         DataType::List(inner_field) | DataType::LargeList(inner_field) => {
-            parse_point_data_type(inner_field.data_type())
+            parse_point(inner_field.data_type())
         }
         dt => Err(ArrowError::SchemaError(format!(
             "Unexpected data type {dt}"
@@ -186,15 +186,19 @@ impl ExtensionType for PolygonType {
 fn parse_polygon(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowError> {
     match data_type {
         DataType::List(inner1) => match inner1.data_type() {
-            DataType::List(inner2) => parse_point_data_type(inner2.data_type()),
-            _ => panic!(),
+            DataType::List(inner2) => parse_point(inner2.data_type()),
+            dt => Err(ArrowError::SchemaError(format!(
+                "Unexpected inner polygon data type: {dt}"
+            ))),
         },
         DataType::LargeList(inner1) => match inner1.data_type() {
-            DataType::LargeList(inner2) => parse_point_data_type(inner2.data_type()),
-            _ => panic!(),
+            DataType::LargeList(inner2) => parse_point(inner2.data_type()),
+            dt => Err(ArrowError::SchemaError(format!(
+                "Unexpected inner polygon data type: {dt}"
+            ))),
         },
         dt => Err(ArrowError::SchemaError(format!(
-            "Unexpected data type {dt}"
+            "Unexpected root data type parsing polygon {dt}"
         ))),
     }
 }
@@ -223,7 +227,7 @@ impl ExtensionType for MultiPointType {
     }
 
     fn supports_data_type(&self, data_type: &DataType) -> Result<(), ArrowError> {
-        let (coord_type, dim) = parse_multipoint_data_type(data_type)?;
+        let (coord_type, dim) = parse_multipoint(data_type)?;
         if coord_type != self.coord_type {
             return Err(ArrowError::SchemaError(format!(
                 "Expected coordinate type {:?}, but got {:?}",
@@ -240,7 +244,7 @@ impl ExtensionType for MultiPointType {
     }
 
     fn try_new(data_type: &DataType, metadata: Self::Metadata) -> Result<Self, ArrowError> {
-        let (coord_type, dim) = parse_multipoint_data_type(data_type)?;
+        let (coord_type, dim) = parse_multipoint(data_type)?;
         Ok(Self {
             coord_type,
             dim,
@@ -249,10 +253,10 @@ impl ExtensionType for MultiPointType {
     }
 }
 
-fn parse_multipoint_data_type(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowError> {
+fn parse_multipoint(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowError> {
     match data_type {
-        DataType::List(inner_field) => parse_point_data_type(inner_field.data_type()),
-        DataType::LargeList(inner_field) => parse_point_data_type(inner_field.data_type()),
+        DataType::List(inner_field) => parse_point(inner_field.data_type()),
+        DataType::LargeList(inner_field) => parse_point(inner_field.data_type()),
         dt => Err(ArrowError::SchemaError(format!(
             "Unexpected data type {dt}"
         ))),
@@ -312,15 +316,19 @@ impl ExtensionType for MultiLineStringType {
 fn parse_multilinestring(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowError> {
     match data_type {
         DataType::List(inner1) => match inner1.data_type() {
-            DataType::List(inner2) => parse_point_data_type(inner2.data_type()),
-            _ => panic!(),
+            DataType::List(inner2) => parse_point(inner2.data_type()),
+            dt => Err(ArrowError::SchemaError(format!(
+                "Unexpected inner multilinestring data type: {dt}"
+            ))),
         },
         DataType::LargeList(inner1) => match inner1.data_type() {
-            DataType::LargeList(inner2) => parse_point_data_type(inner2.data_type()),
-            _ => panic!(),
+            DataType::LargeList(inner2) => parse_point(inner2.data_type()),
+            dt => Err(ArrowError::SchemaError(format!(
+                "Unexpected inner multilinestring data type: {dt}"
+            ))),
         },
         dt => Err(ArrowError::SchemaError(format!(
-            "Unexpected data type {dt}"
+            "Unexpected data type parsing multilinestring: {dt}"
         ))),
     }
 }
@@ -379,17 +387,25 @@ fn parse_multipolygon(data_type: &DataType) -> Result<(CoordType, Dimension), Ar
     match data_type {
         DataType::List(inner1) => match inner1.data_type() {
             DataType::List(inner2) => match inner2.data_type() {
-                DataType::List(inner3) => parse_point_data_type(inner3.data_type()),
-                _ => panic!(),
+                DataType::List(inner3) => parse_point(inner3.data_type()),
+                dt => Err(ArrowError::SchemaError(format!(
+                    "Unexpected inner2 multipolygon data type: {dt}"
+                ))),
             },
-            _ => panic!(),
+            dt => Err(ArrowError::SchemaError(format!(
+                "Unexpected inner1 multipolygon data type: {dt}"
+            ))),
         },
         DataType::LargeList(inner1) => match inner1.data_type() {
             DataType::LargeList(inner2) => match inner2.data_type() {
-                DataType::LargeList(inner3) => parse_point_data_type(inner3.data_type()),
-                _ => panic!(),
+                DataType::LargeList(inner3) => parse_point(inner3.data_type()),
+                dt => Err(ArrowError::SchemaError(format!(
+                    "Unexpected inner2 multipolygon data type: {dt}"
+                ))),
             },
-            _ => panic!(),
+            dt => Err(ArrowError::SchemaError(format!(
+                "Unexpected inner1 multipolygon data type: {dt}"
+            ))),
         },
         dt => Err(ArrowError::SchemaError(format!(
             "Unexpected data type {dt}"
@@ -465,31 +481,35 @@ fn parse_mixed(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowErro
                 }
 
                 match type_id {
-                    1 => impl_type_id!(Dimension::XY, parse_point_data_type),
+                    1 => impl_type_id!(Dimension::XY, parse_point),
                     2 => impl_type_id!(Dimension::XY, parse_linestring),
                     3 => impl_type_id!(Dimension::XY, parse_polygon),
-                    4 => impl_type_id!(Dimension::XY, parse_multipoint_data_type),
+                    4 => impl_type_id!(Dimension::XY, parse_multipoint),
                     5 => impl_type_id!(Dimension::XY, parse_multilinestring),
                     6 => impl_type_id!(Dimension::XY, parse_multipolygon),
-                    11 => impl_type_id!(Dimension::XYZ, parse_point_data_type),
+                    11 => impl_type_id!(Dimension::XYZ, parse_point),
                     12 => impl_type_id!(Dimension::XYZ, parse_linestring),
                     13 => impl_type_id!(Dimension::XYZ, parse_polygon),
-                    14 => impl_type_id!(Dimension::XYZ, parse_multipoint_data_type),
+                    14 => impl_type_id!(Dimension::XYZ, parse_multipoint),
                     15 => impl_type_id!(Dimension::XYZ, parse_multilinestring),
                     16 => impl_type_id!(Dimension::XYZ, parse_multipolygon),
-                    21 => impl_type_id!(Dimension::XYM, parse_point_data_type),
+                    21 => impl_type_id!(Dimension::XYM, parse_point),
                     22 => impl_type_id!(Dimension::XYM, parse_linestring),
                     23 => impl_type_id!(Dimension::XYM, parse_polygon),
-                    24 => impl_type_id!(Dimension::XYM, parse_multipoint_data_type),
+                    24 => impl_type_id!(Dimension::XYM, parse_multipoint),
                     25 => impl_type_id!(Dimension::XYM, parse_multilinestring),
                     26 => impl_type_id!(Dimension::XYM, parse_multipolygon),
-                    31 => impl_type_id!(Dimension::XYZM, parse_point_data_type),
+                    31 => impl_type_id!(Dimension::XYZM, parse_point),
                     32 => impl_type_id!(Dimension::XYZM, parse_linestring),
                     33 => impl_type_id!(Dimension::XYZM, parse_polygon),
-                    34 => impl_type_id!(Dimension::XYZM, parse_multipoint_data_type),
+                    34 => impl_type_id!(Dimension::XYZM, parse_multipoint),
                     35 => impl_type_id!(Dimension::XYZM, parse_multilinestring),
                     36 => impl_type_id!(Dimension::XYZM, parse_multipolygon),
-                    id => panic!("unexpected type id {}", id),
+                    id => {
+                        return Err(ArrowError::SchemaError(format!(
+                            "Unexpected type id parsing mixed: {id}"
+                        )))
+                    }
                 };
                 Ok::<_, ArrowError>(())
             })?;
@@ -509,7 +529,9 @@ fn parse_mixed(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowErro
             let dimension = dimensions.drain().next().unwrap();
             Ok((coord_type, dimension))
         }
-        _ => panic!("Unexpected data type"),
+        dt => Err(ArrowError::SchemaError(format!(
+            "Unexpected mixed data type: {dt}"
+        ))),
     }
 }
 
@@ -520,7 +542,9 @@ fn parse_geometry_collection(data_type: &DataType) -> Result<(CoordType, Dimensi
         DataType::List(inner_field) | DataType::LargeList(inner_field) => {
             parse_mixed(inner_field.data_type())
         }
-        _ => panic!(),
+        dt => Err(ArrowError::SchemaError(format!(
+            "Unexpected geometry collection data type: {dt}"
+        ))),
     }
 }
 
@@ -581,31 +605,35 @@ fn parse_geometry(data_type: &DataType) -> Result<CoordType, ArrowError> {
             }
 
             match type_id {
-                1 => impl_type_id!(Dimension::XY, parse_point_data_type),
+                1 => impl_type_id!(Dimension::XY, parse_point),
                 2 => impl_type_id!(Dimension::XY, parse_linestring),
                 3 => impl_type_id!(Dimension::XY, parse_polygon),
-                4 => impl_type_id!(Dimension::XY, parse_multipoint_data_type),
+                4 => impl_type_id!(Dimension::XY, parse_multipoint),
                 5 => impl_type_id!(Dimension::XY, parse_multilinestring),
                 6 => impl_type_id!(Dimension::XY, parse_multipolygon),
-                11 => impl_type_id!(Dimension::XYZ, parse_point_data_type),
+                11 => impl_type_id!(Dimension::XYZ, parse_point),
                 12 => impl_type_id!(Dimension::XYZ, parse_linestring),
                 13 => impl_type_id!(Dimension::XYZ, parse_polygon),
-                14 => impl_type_id!(Dimension::XYZ, parse_multipoint_data_type),
+                14 => impl_type_id!(Dimension::XYZ, parse_multipoint),
                 15 => impl_type_id!(Dimension::XYZ, parse_multilinestring),
                 16 => impl_type_id!(Dimension::XYZ, parse_multipolygon),
-                21 => impl_type_id!(Dimension::XYM, parse_point_data_type),
+                21 => impl_type_id!(Dimension::XYM, parse_point),
                 22 => impl_type_id!(Dimension::XYM, parse_linestring),
                 23 => impl_type_id!(Dimension::XYM, parse_polygon),
-                24 => impl_type_id!(Dimension::XYM, parse_multipoint_data_type),
+                24 => impl_type_id!(Dimension::XYM, parse_multipoint),
                 25 => impl_type_id!(Dimension::XYM, parse_multilinestring),
                 26 => impl_type_id!(Dimension::XYM, parse_multipolygon),
-                31 => impl_type_id!(Dimension::XYZM, parse_point_data_type),
+                31 => impl_type_id!(Dimension::XYZM, parse_point),
                 32 => impl_type_id!(Dimension::XYZM, parse_linestring),
                 33 => impl_type_id!(Dimension::XYZM, parse_polygon),
-                34 => impl_type_id!(Dimension::XYZM, parse_multipoint_data_type),
+                34 => impl_type_id!(Dimension::XYZM, parse_multipoint),
                 35 => impl_type_id!(Dimension::XYZM, parse_multilinestring),
                 36 => impl_type_id!(Dimension::XYZM, parse_multipolygon),
-                id => panic!("unexpected type id {}", id),
+                id => {
+                    return Err(ArrowError::SchemaError(format!(
+                        "Unexpected type id parsing geometry: {id}"
+                    )))
+                }
             };
             Ok::<_, ArrowError>(())
         })?;
@@ -646,7 +674,7 @@ impl ExtensionType for BoxType {
     }
 
     fn supports_data_type(&self, data_type: &DataType) -> Result<(), ArrowError> {
-        let dim = parse_rect(data_type)?;
+        let dim = parse_box(data_type)?;
         if dim != self.dim {
             return Err(ArrowError::SchemaError(format!(
                 "Expected dimension {:?}, but got {:?}",
@@ -657,20 +685,36 @@ impl ExtensionType for BoxType {
     }
 
     fn try_new(data_type: &DataType, metadata: Self::Metadata) -> Result<Self, ArrowError> {
-        let dim = parse_rect(data_type)?;
+        let dim = parse_box(data_type)?;
         Ok(Self { dim, metadata })
     }
 }
 
-fn parse_rect(data_type: &DataType) -> Result<Dimension, ArrowError> {
-    // TODO: check child names for higher dimensions
+fn parse_box(data_type: &DataType) -> Result<Dimension, ArrowError> {
     match data_type {
         DataType::Struct(struct_fields) => match struct_fields.len() {
             4 => Ok(Dimension::XY),
-            6 => Ok(Dimension::XYZ),
-            _ => panic!("unexpected number of struct fields"),
+            6 => {
+                let names: HashSet<&str> =
+                    struct_fields.iter().map(|f| f.name().as_str()).collect();
+                if names.contains("mmin") && names.contains("mmax") {
+                    Ok(Dimension::XYM)
+                } else if names.contains("zmin") && names.contains("zmax") {
+                    Ok(Dimension::XYZ)
+                } else {
+                    Err(ArrowError::SchemaError(format!("unexpected either mmin and mmax or zmin and zmax for struct with 6 fields. Got names: {:?}", names)))
+                }
+            }
+            8 => Ok(Dimension::XYZM),
+            num_fields => Err(ArrowError::SchemaError(format!(
+                "unexpected number of struct fields: {}",
+                num_fields
+            ))),
         },
-        _ => panic!("unexpected data type parsing rect"),
+        dt => Err(ArrowError::SchemaError(format!(
+            "unexpected data type parsing box: {:?}",
+            dt
+        ))),
     }
 }
 
