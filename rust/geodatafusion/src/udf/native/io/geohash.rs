@@ -296,7 +296,7 @@ mod test {
             .schema()
             .field(0)
             .data_type()
-            .equals_datatype(&POINT2D_TYPE.into()));
+            .equals_datatype(&POINT2D_TYPE().into()));
 
         let point_array =
             PointArray::try_from((batch.columns()[0].as_ref(), Dimension::XY)).unwrap();

@@ -24,7 +24,7 @@ impl MakeBox2D {
     pub fn new() -> Self {
         Self {
             signature: Signature::exact(
-                vec![POINT2D_TYPE.into(), POINT2D_TYPE.into()],
+                vec![POINT2D_TYPE().into(), POINT2D_TYPE().into()],
                 Volatility::Immutable,
             ),
         }
@@ -120,7 +120,7 @@ mod test {
             .schema()
             .field(0)
             .data_type()
-            .equals_datatype(&BOX2D_TYPE.into()));
+            .equals_datatype(&BOX2D_TYPE().into()));
 
         let rect_array = RectArray::try_from((batch.columns()[0].as_ref(), Dimension::XY)).unwrap();
         let rect = rect_array.value(0);

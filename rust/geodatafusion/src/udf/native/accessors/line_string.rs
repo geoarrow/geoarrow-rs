@@ -46,7 +46,7 @@ impl ScalarUDFImpl for StartPoint {
     }
 
     fn return_type(&self, _arg_types: &[DataType]) -> datafusion::error::Result<DataType> {
-        Ok(POINT2D_TYPE.into())
+        Ok(POINT2D_TYPE().into())
     }
 
     fn invoke(&self, args: &[ColumnarValue]) -> datafusion::error::Result<ColumnarValue> {

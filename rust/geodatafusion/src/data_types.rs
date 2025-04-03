@@ -10,6 +10,7 @@ use geoarrow_schema::{BoxType, CoordType, Dimension, GeometryType, PointType};
 
 use crate::error::GeoDataFusionResult;
 
+#[allow(non_snake_case)]
 pub fn POINT2D_TYPE() -> NativeType {
     NativeType::Point(PointType::new(
         CoordType::Separated,
@@ -18,6 +19,7 @@ pub fn POINT2D_TYPE() -> NativeType {
     ))
 }
 
+#[allow(non_snake_case)]
 pub fn POINT3D_TYPE() -> NativeType {
     NativeType::Point(PointType::new(
         CoordType::Separated,
@@ -26,14 +28,17 @@ pub fn POINT3D_TYPE() -> NativeType {
     ))
 }
 
+#[allow(non_snake_case)]
 pub fn BOX2D_TYPE() -> NativeType {
     NativeType::Rect(BoxType::new(Dimension::XY, Default::default()))
 }
 
+#[allow(non_snake_case)]
 pub fn BOX3D_TYPE() -> NativeType {
     NativeType::Rect(BoxType::new(Dimension::XYZ, Default::default()))
 }
 
+#[allow(non_snake_case)]
 pub fn GEOMETRY_TYPE() -> NativeType {
     NativeType::Geometry(GeometryType::new(CoordType::Separated, Default::default()))
 }

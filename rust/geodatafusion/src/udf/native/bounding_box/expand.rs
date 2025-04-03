@@ -85,7 +85,7 @@ fn expand_impl(args: &[ColumnarValue]) -> GeoDataFusionResult<ColumnarValue> {
 
     let dx = factor1.as_primitive::<Float64Type>();
 
-    if BOX2D_TYPE
+    if BOX2D_TYPE()
         .to_data_type()
         .equals_datatype(rect_array.data_type())
     {
@@ -167,7 +167,7 @@ mod test {
             .schema()
             .field(0)
             .data_type()
-            .equals_datatype(&BOX2D_TYPE.into()));
+            .equals_datatype(&BOX2D_TYPE().into()));
 
         let rect_array = RectArray::try_from((batch.columns()[0].as_ref(), Dimension::XY)).unwrap();
         let rect = rect_array.value(0);
