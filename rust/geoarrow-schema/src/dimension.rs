@@ -83,7 +83,9 @@ impl TryFrom<geo_traits::Dimensions> for Dimension {
             geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => Ok(Dimension::XY),
             geo_traits::Dimensions::Xyz | geo_traits::Dimensions::Unknown(3) => Ok(Dimension::XYZ),
             geo_traits::Dimensions::Xym => Ok(Dimension::XYM),
-            geo_traits::Dimensions::Xyzm => Ok(Dimension::XYZM),
+            geo_traits::Dimensions::Xyzm | geo_traits::Dimensions::Unknown(4) => {
+                Ok(Dimension::XYZM)
+            }
             _ => Err(ArrowError::SchemaError(format!(
                 "Unsupported dimension {:?}",
                 value
