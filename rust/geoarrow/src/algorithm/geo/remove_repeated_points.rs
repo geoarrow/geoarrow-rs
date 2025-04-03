@@ -7,6 +7,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use geo::RemoveRepeatedPoints as _RemoveRepeatedPoints;
+use geoarrow_schema::Dimension;
 
 /// Remove repeated points from a `MultiPoint` and repeated consecutive coordinates
 /// from `LineString`, `Polygon`, `MultiLineString` and `MultiPolygon`.

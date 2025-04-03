@@ -9,6 +9,7 @@ use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::types::Float64Type;
 use geo::Scale as _Scale;
+use geoarrow_schema::Dimension;
 
 /// An affine transformation which scales geometries up or down by a factor.
 ///

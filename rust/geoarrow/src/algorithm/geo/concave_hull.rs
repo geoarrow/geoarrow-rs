@@ -7,6 +7,7 @@ use crate::NativeArray;
 use arrow::datatypes::Float64Type;
 use geo::algorithm::ConcaveHull as _;
 use geo::Polygon;
+use geoarrow_schema::Dimension;
 
 /// Returns a polygon which covers a geometry. Unlike convex hulls, which also cover
 /// their geometry, a concave hull does so while trying to further minimize its area by

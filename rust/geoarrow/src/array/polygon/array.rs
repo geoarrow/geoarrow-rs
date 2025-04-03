@@ -21,7 +21,7 @@ use geo_traits::PolygonTrait;
 
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
-use geoarrow_schema::{CoordType, Metadata, PolygonType};
+use geoarrow_schema::{CoordType, Dimension, Metadata, PolygonType};
 
 use super::PolygonBuilder;
 

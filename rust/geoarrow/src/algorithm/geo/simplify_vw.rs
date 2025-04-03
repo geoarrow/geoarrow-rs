@@ -9,6 +9,7 @@ use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow::datatypes::Float64Type;
 use geo::SimplifyVw as _SimplifyVw;
+use geoarrow_schema::Dimension;
 
 /// Simplifies a geometry.
 ///
@@ -94,7 +95,7 @@ macro_rules! iter_geo_impl {
                     output_geoms.as_slice(),
                     Dimension::XY,
                     self.coord_type(),
-                    self.metadata.clone(),
+                    self.metadata().clone(),
                 )
                 .finish()
             }

@@ -6,6 +6,7 @@ use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use geo::algorithm::convex_hull::ConvexHull as GeoConvexHull;
 use geo::Polygon;
+use geoarrow_schema::Dimension;
 
 /// Returns the convex hull of a Polygon. The hull is always oriented counter-clockwise.
 ///

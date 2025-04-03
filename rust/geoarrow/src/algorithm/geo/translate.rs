@@ -8,6 +8,7 @@ use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::types::Float64Type;
 use geo::Translate as _Translate;
+use geoarrow_schema::Dimension;
 
 pub trait Translate {
     type Output;

@@ -7,8 +7,6 @@
 
 use std::sync::Arc;
 
-use geoarrow_schema::Dimension;
-
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::datatypes::NativeType;
@@ -25,27 +23,6 @@ pub struct CastOptions {
 impl Default for CastOptions {
     fn default() -> Self {
         Self { safe: true }
-    }
-}
-
-/// Note: not currently used and outdated
-#[allow(dead_code)]
-fn can_cast_types(from_type: NativeType, to_type: NativeType) -> bool {
-    if from_type == to_type {
-        return true;
-    }
-
-    use Dimension::*;
-    use NativeType::*;
-
-    match (from_type, to_type) {
-        (Point(_, XY), Point(_, XY) | MultiPoint(_, XY)) => true,
-        (LineString(_, XY), LineString(_, XY) | MultiLineString(_, XY)) => true,
-        (Polygon(_, XY), Polygon(_, XY) | MultiPolygon(_, XY)) => true,
-        (MultiPoint(_, XY), MultiPoint(_, XY)) => true,
-        (MultiLineString(_, XY), MultiLineString(_, XY)) => true,
-        (MultiPolygon(_, XY), MultiPolygon(_, XY)) => true,
-        _ => todo!(),
     }
 }
 
@@ -268,7 +245,12 @@ macro_rules! impl_chunked_cast {
                             self.geometry_chunks()
                                 .iter()
                                 .map(|chunk| {
-                                    Ok(chunk.as_ref().cast(to_type)?.as_ref().$method().clone())
+                                    Ok(chunk
+                                        .as_ref()
+                                        .cast(to_type.clone())?
+                                        .as_ref()
+                                        .$method()
+                                        .clone())
                                 })
                                 .collect::<Result<Vec<_>>>()?,
                         ))

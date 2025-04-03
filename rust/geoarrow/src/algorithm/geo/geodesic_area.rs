@@ -352,6 +352,7 @@ impl GeodesicArea for &dyn NativeArray {
     }
 
     fn geodesic_perimeter_area_signed(&self) -> Self::OutputDouble {
+        use NativeType::*;
         let result = match self.data_type() {
             Point(_) => self.as_point().geodesic_perimeter_area_signed(),
             LineString(_) => self.as_line_string().geodesic_perimeter_area_signed(),

@@ -5,6 +5,7 @@ use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use geo::BoundingRect;
+use geoarrow_schema::Dimension;
 
 /// Compute the center of geometries
 ///

@@ -155,6 +155,7 @@ mod tests {
     use crate::array::LineStringArray;
     use arrow_array::Array;
     use geo::line_string;
+    use geoarrow_schema::Dimension;
 
     #[test]
     fn vincenty_length_geoarrow() {

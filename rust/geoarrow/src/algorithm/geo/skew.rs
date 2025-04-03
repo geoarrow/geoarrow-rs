@@ -9,6 +9,7 @@ use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::types::Float64Type;
 use geo::Skew as _Skew;
+use geoarrow_schema::Dimension;
 
 /// An affine transformation which skews a geometry, sheared by angles along x and y dimensions.
 ///

@@ -5,6 +5,7 @@ use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use geo::algorithm::centroid::Centroid as GeoCentroid;
+use geoarrow_schema::Dimension;
 
 /// Calculation of the centroid.
 ///

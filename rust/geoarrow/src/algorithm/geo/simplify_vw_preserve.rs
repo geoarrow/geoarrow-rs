@@ -9,6 +9,7 @@ use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow::datatypes::Float64Type;
 use geo::SimplifyVwPreserve as _SimplifyVwPreserve;
+use geoarrow_schema::Dimension;
 
 /// Simplifies a geometry, attempting to preserve its topology by removing self-intersections
 ///
@@ -87,7 +88,7 @@ macro_rules! iter_geo_impl {
                     output_geoms.as_slice(),
                     Dimension::XY,
                     self.coord_type(),
-                    self.metadata.clone(),
+                    self.metadata().clone(),
                 )
                 .finish()
             }

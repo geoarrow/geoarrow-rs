@@ -7,6 +7,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use geo::ChaikinSmoothing as _ChaikinSmoothing;
+use geoarrow_schema::Dimension;
 
 /// Smoothen `LineString`, `Polygon`, `MultiLineString` and `MultiPolygon` using Chaikins algorithm.
 ///
@@ -44,7 +45,7 @@ macro_rules! iter_geo_impl {
                     output_geoms.as_slice(),
                     Dimension::XY,
                     self.coord_type(),
-                    self.data_type.metadata().clone(),
+                    self.metadata().clone(),
                 )
                 .finish()
             }
@@ -91,7 +92,7 @@ impl ChaikinSmoothing for GeometryArray {
         Ok(GeometryBuilder::from_nullable_geometries(
             output_geoms.as_slice(),
             self.coord_type(),
-            self.metadata.clone(),
+            self.metadata().clone(),
             false,
         )?
         .finish())

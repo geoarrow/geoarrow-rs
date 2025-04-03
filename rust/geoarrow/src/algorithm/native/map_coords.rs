@@ -4,6 +4,7 @@ use geo_traits::{
     CoordTrait, GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait,
     MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
 };
+use geoarrow_schema::Dimension;
 
 use crate::array::mixed::builder::DEFAULT_PREFER_MULTI;
 use crate::array::*;

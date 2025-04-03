@@ -8,6 +8,7 @@ use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use geo::line_measures::Densify as _Densify;
 use geo::{CoordFloat, Euclidean};
+use geoarrow_schema::Dimension;
 use num_traits::FromPrimitive;
 
 /// Return a new linear geometry containing both existing and new interpolated coordinates with
@@ -36,7 +37,7 @@ macro_rules! iter_geo_impl {
                     output_geoms.as_slice(),
                     Dimension::XY,
                     self.coord_type(),
-                    self.metadata.clone(),
+                    self.metadata().clone(),
                 )
                 .finish()
             }
@@ -121,7 +122,7 @@ impl Densify for GeometryArray {
         Ok(GeometryBuilder::from_nullable_geometries(
             output_geoms.as_slice(),
             self.coord_type(),
-            self.metadata.clone(),
+            self.metadata().clone(),
             false,
         )?
         .finish())
