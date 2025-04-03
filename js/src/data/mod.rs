@@ -3,7 +3,7 @@ pub mod coord;
 use arrow_array::BinaryArray;
 use arrow_buffer::Buffer;
 pub use coord::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
-use geoarrow::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 
 use crate::error::WasmResult;
 use crate::utils::vec_to_offsets;

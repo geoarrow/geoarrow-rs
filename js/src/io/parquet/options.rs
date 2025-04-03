@@ -1,6 +1,6 @@
 use geo::coord;
-use geoarrow::array::CoordType;
 use geoarrow::io::parquet::GeoParquetReaderOptions;
+use geoarrow_schema::CoordType;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]

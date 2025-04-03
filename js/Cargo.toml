@@ -91,6 +91,7 @@ futures = { version = "0.3.30", optional = true }
 geo = "0.30"
 geo-traits = "0.2"
 geoarrow = { path = "../rust/geoarrow" }
+geoarrow-schema = { path = "../rust/geoarrow-schema" }
 geodesy = { version = "0.12", optional = true, features = ["js"] }
 object_store = { version = "0.11", optional = true }
 # Use released version when it supports object-store 0.11
