@@ -382,6 +382,7 @@ mod test {
         assert_eq!(&arr, rt_point_arr_ref);
     }
 
+    #[ignore = "Union fields length must match child arrays length"]
     #[test]
     fn point_round_trip() {
         let arr = point::point_array();

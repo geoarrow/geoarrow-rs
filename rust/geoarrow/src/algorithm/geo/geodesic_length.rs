@@ -34,7 +34,7 @@ pub trait GeodesicLength {
     /// use geo::LineString;
     /// use geoarrow::array::LineStringArray;
     /// use geoarrow::algorithm::geo::GeodesicLength;
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let linestring = LineString::from(vec![
     ///     // New York City

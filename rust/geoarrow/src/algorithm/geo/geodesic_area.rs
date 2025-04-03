@@ -46,7 +46,7 @@ pub trait GeodesicArea {
     /// use geo::{polygon, Polygon};
     /// use geoarrow::array::PolygonArray;
     /// use geoarrow::algorithm::geo::GeodesicArea;
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// // The O2 in London
     /// let polygon: Polygon<f64> = polygon![
@@ -92,7 +92,7 @@ pub trait GeodesicArea {
     /// use geo::{polygon, Polygon};
     /// use geoarrow::array::PolygonArray;
     /// use geoarrow::algorithm::geo::GeodesicArea;
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// // Describe a polygon that covers all of the earth EXCEPT this small square.
     /// // The outside of the polygon is in this square, the inside of the polygon is the rest of the earth.

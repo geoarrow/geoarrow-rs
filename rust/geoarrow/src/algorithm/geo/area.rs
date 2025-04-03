@@ -18,7 +18,7 @@ use geo::prelude::Area as GeoArea;
 ///
 /// use geoarrow::algorithm::geo::Area;
 /// use geoarrow::array::PolygonArray;
-/// use geoarrow::datatypes::Dimension;
+/// use geoarrow_schema::Dimension;
 ///
 /// let polygon = polygon![
 ///     (x: 0., y: 0.),

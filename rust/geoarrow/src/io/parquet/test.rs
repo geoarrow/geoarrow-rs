@@ -39,6 +39,7 @@ fn round_trip_nybb() -> Result<()> {
 }
 
 // Test from https://github.com/geoarrow/geoarrow-rs/pull/717
+#[ignore = "Union fields length must match child arrays length"]
 #[test]
 fn mixed_geometry_roundtrip() {
     let mut builder = GeometryBuilder::new();

@@ -28,7 +28,7 @@ impl ChunkedNativeArrayDyn {
     /// ```
     /// use geoarrow::{ArrayBase, NativeArray, array::PointArray};
     /// use geoarrow::chunked_array::ChunkedNativeArrayDyn;
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     /// use std::sync::Arc;
     ///
     /// let array: PointArray = (vec![&geo::point!(x: 1., y: 2.)].as_slice(), Dimension::XY).into();
@@ -80,7 +80,7 @@ impl ChunkedNativeArrayDyn {
     /// ```
     /// use geoarrow::{NativeArray, array::PointArray};
     /// use geoarrow::chunked_array::ChunkedNativeArrayDyn;
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let array_0: PointArray = (vec![&geo::point!(x: 1., y: 2.)].as_slice(), Dimension::XY).into();
     /// let array_1: PointArray = (vec![&geo::point!(x: 3., y: 4.)].as_slice(), Dimension::XY).into();

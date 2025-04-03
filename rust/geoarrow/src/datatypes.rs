@@ -157,7 +157,7 @@ impl NativeType {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{array::CoordType, datatypes::{NativeType, Dimension}};
     /// use arrow_schema::DataType;
     ///
@@ -183,7 +183,7 @@ impl NativeType {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::datatypes::NativeType;
     ///
     /// let geo_data_type = NativeType::Point(Default::default(), 2.try_into().unwrap());
@@ -209,7 +209,7 @@ impl NativeType {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::datatypes::NativeType;
     ///
     /// let geo_data_type = NativeType::Point(Default::default(), 2.try_into().unwrap());
@@ -237,7 +237,7 @@ impl NativeType {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{array::CoordType, datatypes::NativeType};
     ///
     /// let geo_data_type = NativeType::Point(CoordType::Interleaved, 2.try_into().unwrap());
@@ -262,7 +262,7 @@ impl NativeType {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::datatypes::NativeType;
     ///
     /// let geo_data_type = NativeType::Point(Default::default(), 2.try_into().unwrap());

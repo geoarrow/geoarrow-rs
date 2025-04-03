@@ -28,7 +28,7 @@ use geo::prelude::ChamberlainDuquetteArea as GeoChamberlainDuquetteArea;
 /// use geoarrow::array::PolygonArray;
 /// use geoarrow::NativeArray;
 /// use geoarrow::algorithm::geo::ChamberlainDuquetteArea;
-/// use geoarrow::datatypes::Dimension;
+/// use geoarrow_schema::Dimension;
 ///
 /// // The O2 in London
 /// let mut polygon: Polygon<f64> = polygon![

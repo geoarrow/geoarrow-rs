@@ -20,8 +20,8 @@ use crate::ArrayBase;
 ///
 /// This is semantically equivalent to `Vec<Option<WKT>>` due to the internal validity bitmap.
 ///
-/// This is a wrapper around an Arrow [GenericStringArray], but additionally stores an
-/// [ArrayMetadata] so that we can persist CRS information about the data.
+/// This is a wrapper around an Arrow [GenericStringArray], but additionally stores
+/// [Metadata] so that we can persist CRS information about the data.
 ///
 /// Refer to [`crate::io::wkt`] for encoding and decoding this array to the native array types.
 #[derive(Debug, Clone, PartialEq)]
@@ -65,7 +65,7 @@ impl<O: OffsetSizeTrait> WKTArray<O> {
         }
     }
 
-    /// Replace the [`ArrayMetadata`] contained in this array.
+    /// Replace the [`Metadata`] contained in this array.
     pub fn with_metadata(&self, metadata: Arc<Metadata>) -> Self {
         let mut arr = self.clone();
         arr.data_type = self.data_type.clone().with_metadata(metadata);

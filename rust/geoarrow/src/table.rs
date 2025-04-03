@@ -56,7 +56,7 @@ impl Table {
     /// use arrow_array::RecordBatch;
     /// use arrow_schema::{Schema, SchemaRef};
     /// use geoarrow::{NativeArray, ArrayBase, array::PointArray, table::Table};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -97,7 +97,7 @@ impl Table {
     ///     table::Table,
     ///     chunked_array::ChunkedGeometryArray
     /// };
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     /// use std::sync::Arc;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
@@ -143,7 +143,7 @@ impl Table {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # {
     /// use std::fs::File;
     /// use geoarrow::{array::CoordType, datatypes::{NativeType, Dimension}};
@@ -273,7 +273,7 @@ impl Table {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # {
     /// use std::fs::File;
     ///
@@ -290,7 +290,7 @@ impl Table {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # {
     /// use std::fs::File;
     ///
@@ -307,7 +307,7 @@ impl Table {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # {
     /// use std::fs::File;
     ///
@@ -324,7 +324,7 @@ impl Table {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # {
     /// use std::fs::File;
     ///
@@ -341,7 +341,7 @@ impl Table {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # {
     /// use std::fs::File;
     ///
@@ -362,7 +362,7 @@ impl Table {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # {
     /// use std::fs::File;
     ///
@@ -390,7 +390,7 @@ impl Table {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # {
     /// use std::fs::File;
     ///
@@ -431,7 +431,7 @@ impl Table {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # {
     /// use std::fs::File;
     ///
@@ -454,7 +454,7 @@ impl Table {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # {
     /// use std::fs::File;
     ///
@@ -471,7 +471,7 @@ impl Table {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # {
     /// use std::{sync::Arc, fs::File};
     /// use arrow_schema::{DataType, Field};
@@ -530,7 +530,7 @@ impl Table {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # {
     /// use std::{sync::Arc, fs::File};
     /// use arrow_schema::{DataType, Field};

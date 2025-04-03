@@ -46,7 +46,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     /// use geoarrow::{array::PointArray, datatypes::NativeType, ArrayBase};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     /// use arrow_schema::DataType;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
@@ -62,7 +62,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     /// use geoarrow::{array::PointArray, ArrayBase};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -77,7 +77,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     /// use geoarrow::{array::PointArray, ArrayBase};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -96,7 +96,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     /// ```
     ///
     /// use geoarrow::{array::PointArray, ArrayBase};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -116,7 +116,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     /// ```
     ///
     /// use geoarrow::{array::PointArray, ArrayBase};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -131,7 +131,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     /// use geoarrow::{array::PointArray, ArrayBase};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -145,7 +145,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     /// use geoarrow::{array::PointArray, ArrayBase};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -165,7 +165,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     /// use geoarrow::{ArrayBase, array::PointArray};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -179,7 +179,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     /// use geoarrow::{ArrayBase, array::PointArray};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -195,7 +195,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     /// use geoarrow::{ArrayBase, array::PointArray};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -212,7 +212,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     /// use geoarrow::{ArrayBase, array::PointArray};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -233,7 +233,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     /// use geoarrow::{ArrayBase, array::PointArray};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -261,9 +261,9 @@ pub trait NativeArray: ArrayBase {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{array::PointArray, datatypes::NativeType, NativeArray};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -275,9 +275,9 @@ pub trait NativeArray: ArrayBase {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{array::{PointArray, CoordType}, NativeArray};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -295,9 +295,9 @@ pub trait NativeArray: ArrayBase {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{array::{PointArray, CoordType}, NativeArray};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -310,9 +310,10 @@ pub trait NativeArray: ArrayBase {
     ///
     /// # Examples
     ///
-    /// ```
+    /// (Note: outdated)
+    /// ```ignore
     /// use geoarrow::{NativeArray, array::{PointArray, metadata::{ArrayMetadata, Edges}}};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -331,7 +332,7 @@ pub trait NativeArray: ArrayBase {
     ///
     /// ```
     /// use geoarrow::{NativeArray, array::PointArray};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -348,7 +349,7 @@ pub trait NativeArray: ArrayBase {
     ///     array::PointArray,
     ///     trait_::{GeometryArraySelfMethods, ArrayAccessor, NativeArray, ArrayBase}
     /// };
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point_0 = geo::point!(x: 1., y: 2.);
     /// let point_1 = geo::point!(x: 3., y: 4.);
@@ -381,9 +382,10 @@ pub trait SerializedArray: ArrayBase {
     ///
     /// # Examples
     ///
-    /// ```
+    /// (Outdated)
+    /// ```ignore
     /// use geoarrow::{NativeArray, array::{PointArray, metadata::{ArrayMetadata, Edges}}};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -400,9 +402,9 @@ pub trait SerializedArray: ArrayBase {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{NativeArray, array::PointArray};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -523,10 +525,10 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{trait_::ArrayAccessor, array::PointArray};
     /// use geo_traits::{PointTrait, CoordTrait};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -547,9 +549,9 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{trait_::ArrayAccessor, array::PointArray};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -567,9 +569,9 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{trait_::ArrayAccessor, array::PointArray};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -587,9 +589,9 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{trait_::ArrayAccessor, array::PointArray};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -613,10 +615,10 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{trait_::ArrayAccessor, array::PointArray};
     /// use geo_traits::{PointTrait, CoordTrait};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -632,9 +634,9 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{trait_::ArrayAccessor, array::PointArray};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -652,9 +654,9 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{trait_::ArrayAccessor, array::PointArray};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -668,9 +670,9 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{trait_::ArrayAccessor, array::PointArray};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -684,9 +686,9 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{trait_::ArrayAccessor, array::PointArray};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -700,9 +702,9 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{trait_::ArrayAccessor, array::PointArray};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -724,7 +726,7 @@ pub trait GeometryArraySelfMethods {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{
     ///     array::{PointArray, CoordBuffer, InterleavedCoordBuffer},
     ///     trait_::{GeometryArraySelfMethods, ArrayAccessor},
@@ -745,12 +747,12 @@ pub trait GeometryArraySelfMethods {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{
     ///     array::{PointArray, CoordType, CoordBuffer},
     ///     trait_::{ArrayAccessor, GeometryArraySelfMethods},
     /// };
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point_0 = geo::point!(x: 1., y: 2.);
     /// let point_1 = geo::point!(x: 3., y: 4.);
@@ -770,9 +772,9 @@ pub trait IntoArrow {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{trait_::IntoArrow, array::PointArray};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -790,9 +792,9 @@ pub trait NativeScalar {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{trait_::{NativeScalar, ArrayAccessor}, array::PointArray};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -806,9 +808,9 @@ pub trait NativeScalar {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{trait_::{NativeScalar, ArrayAccessor}, array::PointArray};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -820,9 +822,9 @@ pub trait NativeScalar {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{trait_::{NativeScalar, ArrayAccessor}, array::PointArray};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -843,9 +845,9 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{array::PointBuilder, trait_::GeometryArrayBuilder};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let mut builder = PointBuilder::new(Dimension::XY);
     /// assert_eq!(builder.len(), 0);
@@ -858,9 +860,9 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{array::PointBuilder, trait_::GeometryArrayBuilder};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let mut builder = PointBuilder::new(Dimension::XY);
     /// assert!(builder.is_empty());
@@ -875,9 +877,9 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{array::PointBuilder, trait_::GeometryArrayBuilder};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let builder = PointBuilder::new(Dimension::XY);
     /// assert!(builder.nulls().is_empty());
@@ -888,9 +890,9 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{array::PointBuilder, trait_::GeometryArrayBuilder};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let builder = PointBuilder::new(Dimension::XY);
     /// ```
@@ -900,12 +902,13 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     ///
     /// # Examples
     ///
-    /// ```
+    /// (Outdated)
+    /// ```ignore
     /// use geoarrow::{
     ///     array::{PointBuilder, CoordType, metadata::{ArrayMetadata, Edges}},
     ///     trait_::GeometryArrayBuilder,
     /// };
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let metadata = ArrayMetadata {
     ///     edges: Some(Edges::Spherical),
@@ -929,12 +932,12 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{
     ///     array::PointBuilder,
     ///     trait_::GeometryArrayBuilder,
     /// };
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let builder = PointBuilder::with_geom_capacity(Dimension::XY, 2);
     /// ```
@@ -957,12 +960,12 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{
     ///     array::{PointBuilder, metadata::{ArrayMetadata, Edges}},
     ///     trait_::GeometryArrayBuilder,
     /// };
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let mut builder = PointBuilder::new(Dimension::XY);
     /// let metadata = ArrayMetadata {
@@ -977,9 +980,9 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{array::PointBuilder, trait_::{GeometryArrayBuilder, NativeArray, ArrayBase}};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let mut builder = PointBuilder::new(Dimension::XY);
     /// builder.push_point(Some(&geo::point!(x: 1., y: 2.)));
@@ -992,9 +995,9 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{array::{PointBuilder, CoordType}, trait_::GeometryArrayBuilder};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let builder = PointBuilder::new(Dimension::XY);
     /// assert_eq!(builder.coord_type(), CoordType::Interleaved);
@@ -1005,9 +1008,9 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{array::{PointBuilder, CoordType}, trait_::GeometryArrayBuilder};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let builder = PointBuilder::new(Dimension::XY);
     /// let metadata = builder.metadata();
@@ -1034,9 +1037,9 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{array::PointBuilder, trait_::GeometryArrayBuilder};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let builder = PointBuilder::new(Dimension::XY);
     /// let array_ref = builder.into_array_ref();

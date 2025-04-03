@@ -32,7 +32,7 @@ pub trait SimplifyVw {
     /// use geoarrow::array::LineStringArray;
     /// use geoarrow::trait_::ArrayAccessor;
     /// use geo::line_string;
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let line_string = line_string![
     ///     (x: 5.0, y: 2.0),

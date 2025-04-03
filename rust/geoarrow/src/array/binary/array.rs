@@ -85,7 +85,7 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         }
     }
 
-    /// Replace the [ArrayMetadata] in the array with the given metadata
+    /// Replace the [Metadata] in the array with the given metadata
     pub fn with_metadata(&self, metadata: Arc<Metadata>) -> Self {
         let mut arr = self.clone();
         arr.data_type = self.data_type.clone().with_metadata(metadata);
