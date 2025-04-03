@@ -4,22 +4,23 @@ use std::sync::Arc;
 use crate::algorithm::native::downcast::can_downcast_multi;
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::linestring::LineStringCapacity;
-use crate::array::metadata::ArrayMetadata;
 use crate::array::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::{
-    CoordBuffer, CoordType, GeometryCollectionArray, MixedGeometryArray, MultiLineStringArray,
+    CoordBuffer, GeometryCollectionArray, MixedGeometryArray, MultiLineStringArray,
     MultiPointArray, WKBArray,
 };
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, LineString};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
 use crate::{ArrayBase, NativeArray};
+
 use arrow::array::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field, FieldRef};
 use geo_traits::LineStringTrait;
+use geoarrow_schema::{CoordType, Dimension, LineStringType, Metadata};
 
 use super::LineStringBuilder;
 
@@ -29,10 +30,7 @@ use super::LineStringBuilder;
 /// bitmap.
 #[derive(Debug, Clone)]
 pub struct LineStringArray {
-    // Always NativeType::LineString
-    data_type: NativeType,
-
-    pub(crate) metadata: Arc<ArrayMetadata>,
+    data_type: LineStringType,
 
     pub(crate) coords: CoordBuffer,
 
@@ -78,7 +76,7 @@ impl LineStringArray {
         coords: CoordBuffer,
         geom_offsets: OffsetBuffer<i32>,
         validity: Option<NullBuffer>,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         Self::try_new(coords, geom_offsets, validity, metadata).unwrap()
     }
@@ -97,16 +95,14 @@ impl LineStringArray {
         coords: CoordBuffer,
         geom_offsets: OffsetBuffer<i32>,
         validity: Option<NullBuffer>,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Result<Self> {
         check(&coords, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
-        let data_type = NativeType::LineString(coords.coord_type(), coords.dim());
         Ok(Self {
-            data_type,
+            data_type: LineStringType::new(coords.coord_type(), coords.dim(), metadata),
             coords,
             geom_offsets,
             validity,
-            metadata,
         })
     }
 
@@ -166,11 +162,10 @@ impl LineStringArray {
         // Note: we **only** slice the geom_offsets and not any actual data. Otherwise the offsets
         // would be in the wrong location.
         Self {
-            data_type: self.data_type,
+            data_type: self.data_type.clone(),
             coords: self.coords.clone(),
             geom_offsets: self.geom_offsets.slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
-            metadata: self.metadata(),
         }
     }
 

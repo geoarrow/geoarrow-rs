@@ -7,7 +7,7 @@ use geozero::{GeomProcessor, GeozeroGeometry};
 
 use crate::array::metadata::ArrayMetadata;
 use crate::array::{CoordType, GeometryArray, GeometryBuilder};
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::trait_::GeometryArrayBuilder;
 use crate::NativeArray;
 

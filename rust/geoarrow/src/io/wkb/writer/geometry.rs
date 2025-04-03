@@ -78,7 +78,7 @@ impl<O: OffsetSizeTrait> From<&GeometryArray> for WKBArray<O> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::datatypes::Dimension;
+    use geoarrow_schema::Dimension;
     use crate::test::multilinestring::{ml0, ml1};
     use crate::test::point::{p0, p1};
 

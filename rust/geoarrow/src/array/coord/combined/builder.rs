@@ -3,7 +3,7 @@ use core::f64;
 use crate::array::{
     CoordBuffer, CoordType, InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder,
 };
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::error::Result;
 use geo_traits::{CoordTrait, PointTrait};
 

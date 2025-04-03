@@ -121,7 +121,7 @@ impl<G: LineStringTrait<T = f64>> FrechetDistanceLineString<G> for &dyn NativeAr
         use NativeType::*;
 
         let result = match self.data_type() {
-            LineString(_, XY) => {
+            LineString(_) => {
                 FrechetDistanceLineString::frechet_distance(self.as_line_string(), rhs)
             }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
@@ -139,7 +139,7 @@ impl<G: LineStringTrait<T = f64>> FrechetDistanceLineString<G> for &dyn ChunkedN
 
         let rhs = rhs.to_line_string();
         let result = match self.data_type() {
-            LineString(_, XY) => {
+            LineString(_) => {
                 FrechetDistanceLineString::frechet_distance(self.as_line_string(), &rhs)
             }
             _ => return Err(GeoArrowError::IncorrectType("".into())),

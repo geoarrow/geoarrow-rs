@@ -21,7 +21,7 @@
 
 use crate::array::metadata::ArrayMetadata;
 use crate::array::*;
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::io::flatgeobuf::reader::common::{infer_from_header, FlatGeobufReaderOptions};
 use crate::io::geozero::array::GeometryStreamBuilder;
@@ -29,6 +29,7 @@ use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
 use arrow_array::{RecordBatch, RecordBatchReader};
 use arrow_schema::{ArrowError, Schema, SchemaRef};
 use flatgeobuf::{FallibleStreamingIterator, FeatureIter, FgbReader, NotSeekable, Seekable};
+use geoarrow_schema::Dimension;
 use geozero::{FeatureProcessor, FeatureProperties};
 use std::io::{Read, Seek};
 use std::sync::Arc;
@@ -170,32 +171,38 @@ impl<R: Read> FlatGeobufReader<R, NotSeekable> {
         }
 
         match self.data_type {
-            NativeType::Point(_, dim) => {
-                let mut builder = GeoTableBuilder::<PointBuilder>::new_with_options(dim, options);
-                impl_read!(builder)
-            }
-            NativeType::LineString(_, dim) => {
+            NativeType::Point(t) => {
                 let mut builder =
-                    GeoTableBuilder::<LineStringBuilder>::new_with_options(dim, options);
+                    GeoTableBuilder::<PointBuilder>::new_with_options(t.dimension(), options);
                 impl_read!(builder)
             }
-            NativeType::Polygon(_, dim) => {
-                let mut builder = GeoTableBuilder::<PolygonBuilder>::new_with_options(dim, options);
-                impl_read!(builder)
-            }
-            NativeType::MultiPoint(_, dim) => {
+            NativeType::LineString(t) => {
                 let mut builder =
-                    GeoTableBuilder::<MultiPointBuilder>::new_with_options(dim, options);
+                    GeoTableBuilder::<LineStringBuilder>::new_with_options(t.dimension(), options);
                 impl_read!(builder)
             }
-            NativeType::MultiLineString(_, dim) => {
+            NativeType::Polygon(t) => {
                 let mut builder =
-                    GeoTableBuilder::<MultiLineStringBuilder>::new_with_options(dim, options);
+                    GeoTableBuilder::<PolygonBuilder>::new_with_options(t.dimension(), options);
                 impl_read!(builder)
             }
-            NativeType::MultiPolygon(_, dim) => {
+            NativeType::MultiPoint(t) => {
                 let mut builder =
-                    GeoTableBuilder::<MultiPolygonBuilder>::new_with_options(dim, options);
+                    GeoTableBuilder::<MultiPointBuilder>::new_with_options(t.dimension(), options);
+                impl_read!(builder)
+            }
+            NativeType::MultiLineString(t) => {
+                let mut builder = GeoTableBuilder::<MultiLineStringBuilder>::new_with_options(
+                    t.dimension(),
+                    options,
+                );
+                impl_read!(builder)
+            }
+            NativeType::MultiPolygon(t) => {
+                let mut builder = GeoTableBuilder::<MultiPolygonBuilder>::new_with_options(
+                    t.dimension(),
+                    options,
+                );
                 impl_read!(builder)
             }
             NativeType::Geometry(_) | NativeType::GeometryCollection(_, _) => {

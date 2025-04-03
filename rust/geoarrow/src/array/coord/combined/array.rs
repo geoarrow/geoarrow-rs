@@ -4,7 +4,7 @@ use crate::array::{
     CoordType, InterleavedCoordBuffer, InterleavedCoordBufferBuilder, SeparatedCoordBuffer,
     SeparatedCoordBufferBuilder,
 };
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Coord;
 use crate::trait_::IntoArrow;

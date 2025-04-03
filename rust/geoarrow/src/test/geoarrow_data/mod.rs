@@ -1,7 +1,7 @@
 pub mod util;
 
 use crate::array::*;
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::test::geoarrow_data::util::read_geometry_column;
 
 macro_rules! geoarrow_data_impl {

@@ -1,5 +1,5 @@
 use crate::array::{GeometryCollectionArray, GeometryCollectionBuilder};
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::error::GeoArrowError;
 use crate::io::geos::scalar::GEOSGeometryCollection;
 

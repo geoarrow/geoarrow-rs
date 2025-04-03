@@ -5,9 +5,10 @@ use geo_traits::{
     CoordTrait, GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait,
     MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
 };
+use geoarrow_schema::Dimension;
 
 use crate::array::*;
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 
@@ -365,13 +366,13 @@ impl BoundingRectArray for &dyn NativeArray {
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, _) => self.as_point().bounding_rect(),
-            LineString(_, _) => self.as_line_string().bounding_rect(),
-            Polygon(_, _) => self.as_polygon().bounding_rect(),
-            MultiPoint(_, _) => self.as_multi_point().bounding_rect(),
-            MultiLineString(_, _) => self.as_multi_line_string().bounding_rect(),
-            MultiPolygon(_, _) => self.as_multi_polygon().bounding_rect(),
-            GeometryCollection(_, _) => self.as_geometry_collection().bounding_rect(),
+            Point(_) => self.as_point().bounding_rect(),
+            LineString(_) => self.as_line_string().bounding_rect(),
+            Polygon(_) => self.as_polygon().bounding_rect(),
+            MultiPoint(_) => self.as_multi_point().bounding_rect(),
+            MultiLineString(_) => self.as_multi_line_string().bounding_rect(),
+            MultiPolygon(_) => self.as_multi_polygon().bounding_rect(),
+            GeometryCollection(_) => self.as_geometry_collection().bounding_rect(),
             Geometry(_) => self.as_geometry().bounding_rect(),
             Rect(_) => self.as_rect().bounding_rect(),
         };

@@ -625,10 +625,10 @@ impl TryFrom<Box<dyn arrow_array::RecordBatchReader + Send>> for Table {
 
 #[cfg(test)]
 mod tests {
-    use crate::datatypes::Dimension;
     use crate::{array::PointArray, chunked_array::ChunkedGeometryArray, table::Table};
     use arrow_array::{Int32Array, RecordBatch};
     use arrow_schema::{DataType, Field, Schema};
+    use geoarrow_schema::Dimension;
     use std::collections::HashMap;
     use std::sync::Arc;
 

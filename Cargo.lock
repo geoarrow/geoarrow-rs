@@ -1871,6 +1871,7 @@ dependencies = [
  "geo 0.30.0",
  "geo-index",
  "geo-traits",
+ "geoarrow-schema",
  "geos",
  "geozero",
  "half",

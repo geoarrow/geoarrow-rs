@@ -1,7 +1,7 @@
 use geo::{line_string, LineString};
 
 use crate::array::{LineStringArray, LineStringBuilder};
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 
 pub(crate) fn ls0() -> LineString {
     line_string![

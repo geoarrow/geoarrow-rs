@@ -6,93 +6,14 @@ use std::sync::Arc;
 
 use arrow_array::OffsetSizeTrait;
 use arrow_schema::{DataType, Field, Fields, UnionFields, UnionMode};
+use geoarrow_schema::{
+    BoxType, CoordType, Dimension, GeometryCollectionType, GeometryType, LineStringType,
+    MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType, WkbType,
+    WktType,
+};
 
 use crate::array::metadata::ArrayMetadata;
-use crate::array::CoordType;
 use crate::error::{GeoArrowError, Result};
-
-/// The dimension of the geometry array.
-///
-/// [Dimension] implements [TryFrom] for integers:
-///
-/// ```
-/// use geoarrow::datatypes::Dimension;
-///
-/// assert_eq!(Dimension::try_from(2).unwrap(), Dimension::XY);
-/// ```
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Dimension {
-    /// Two-dimensional.
-    XY,
-
-    /// Three-dimensional.
-    XYZ,
-}
-
-impl Dimension {
-    /// Returns the size of this dimension.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use geoarrow::datatypes::Dimension;
-    ///
-    /// assert_eq!(Dimension::XY.size(), 2);
-    /// assert_eq!(Dimension::XYZ.size(), 3);
-    /// ```
-    pub fn size(&self) -> usize {
-        match self {
-            Dimension::XY => 2,
-            Dimension::XYZ => 3,
-        }
-    }
-}
-
-impl TryFrom<usize> for Dimension {
-    type Error = GeoArrowError;
-
-    fn try_from(value: usize) -> std::result::Result<Self, Self::Error> {
-        match value {
-            2 => Ok(Dimension::XY),
-            3 => Ok(Dimension::XYZ),
-            v => Err(GeoArrowError::General(format!("Unexpected array size {v}"))),
-        }
-    }
-}
-
-impl TryFrom<i32> for Dimension {
-    type Error = GeoArrowError;
-
-    fn try_from(value: i32) -> std::result::Result<Self, Self::Error> {
-        let usize_num =
-            usize::try_from(value).map_err(|err| GeoArrowError::General(err.to_string()))?;
-        Dimension::try_from(usize_num)
-    }
-}
-
-impl From<Dimension> for geo_traits::Dimensions {
-    fn from(value: Dimension) -> Self {
-        match value {
-            Dimension::XY => geo_traits::Dimensions::Xy,
-            Dimension::XYZ => geo_traits::Dimensions::Xyz,
-        }
-    }
-}
-
-impl TryFrom<geo_traits::Dimensions> for Dimension {
-    type Error = GeoArrowError;
-
-    fn try_from(value: geo_traits::Dimensions) -> std::result::Result<Self, Self::Error> {
-        match value {
-            geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => Ok(Dimension::XY),
-            geo_traits::Dimensions::Xyz | geo_traits::Dimensions::Unknown(3) => Ok(Dimension::XYZ),
-            _ => Err(GeoArrowError::General(format!(
-                "Unsupported dimension {:?}",
-                value
-            ))),
-        }
-    }
-}
 
 /// A type enum representing "native" GeoArrow geometry types.
 ///
@@ -101,66 +22,46 @@ impl TryFrom<geo_traits::Dimensions> for Dimension {
 /// This type uniquely identifies the physical buffer layout of each geometry array type.
 /// It must always be possible to accurately downcast from a `dyn &NativeArray` or `dyn
 /// &ChunkedNativeArray` to a unique concrete array type using this enum.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum NativeType {
     /// Represents a [PointArray][crate::array::PointArray] or
     /// [ChunkedPointArray][crate::chunked_array::ChunkedPointArray].
-    Point(CoordType, Dimension),
+    Point(PointType),
 
     /// Represents a [LineStringArray][crate::array::LineStringArray] or
     /// [ChunkedLineStringArray][crate::chunked_array::ChunkedLineStringArray] with `i32` offsets.
-    LineString(CoordType, Dimension),
+    LineString(LineStringType),
 
     /// Represents a [PolygonArray][crate::array::PolygonArray] or
     /// [ChunkedPolygonArray][crate::chunked_array::ChunkedPolygonArray] with `i32` offsets.
-    Polygon(CoordType, Dimension),
+    Polygon(PolygonType),
 
     /// Represents a [MultiPointArray][crate::array::MultiPointArray] or
     /// [ChunkedMultiPointArray][crate::chunked_array::ChunkedMultiPointArray] with `i32` offsets.
-    MultiPoint(CoordType, Dimension),
+    MultiPoint(MultiPointType),
 
     /// Represents a [MultiLineStringArray][crate::array::MultiLineStringArray] or
     /// [ChunkedMultiLineStringArray][crate::chunked_array::ChunkedMultiLineStringArray] with `i32`
     /// offsets.
-    MultiLineString(CoordType, Dimension),
+    MultiLineString(MultiLineStringType),
 
     /// Represents a [MultiPolygonArray][crate::array::MultiPolygonArray] or
     /// [ChunkedMultiPolygonArray][crate::chunked_array::ChunkedMultiPolygonArray] with `i32`
     /// offsets.
-    MultiPolygon(CoordType, Dimension),
+    MultiPolygon(MultiPolygonType),
 
-    // Represents a [MixedGeometryArray][crate::array::MixedGeometryArray] or
-    // [ChunkedMixedGeometryArray][crate::chunked_array::ChunkedMixedGeometryArray] with `i32`
-    // offsets.
-    // Mixed(CoordType, Dimension),
     /// Represents a [GeometryCollectionArray][crate::array::GeometryCollectionArray] or
     /// [ChunkedGeometryCollectionArray][crate::chunked_array::ChunkedGeometryCollectionArray] with
     /// `i32` offsets.
-    GeometryCollection(CoordType, Dimension),
+    GeometryCollection(GeometryCollectionType),
 
     /// Represents a [RectArray][crate::array::RectArray] or
     /// [ChunkedRectArray][crate::chunked_array::ChunkedRectArray].
-    Rect(Dimension),
+    Rect(BoxType),
 
     /// Represents a mixed geometry array of unknown types or dimensions
-    Geometry(CoordType),
+    Geometry(GeometryType),
 }
-
-// pub struct PointType((CoordType, Dimension));
-
-// impl ExtensionType for PointType {
-//     const NAME: &'static str = "geoarrow.point";
-
-//     type Metadata = (CoordType, Dimension);
-
-//     fn metadata(&self) -> &Self::Metadata {
-//         &self.0
-//     }
-
-//     fn serialize_metadata(&self) -> Option<String> {
-//         // We need the CRS here?
-//     }
-// }
 
 impl From<NativeType> for DataType {
     fn from(value: NativeType) -> Self {
@@ -169,184 +70,34 @@ impl From<NativeType> for DataType {
 }
 
 /// A type enum representing "serialized" GeoArrow geometry types.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum SerializedType {
     /// Represents a [WKBArray][crate::array::WKBArray] or
     /// [ChunkedWKBArray][crate::chunked_array::ChunkedWKBArray] with `i32` offsets.
-    WKB,
+    WKB(WkbType),
 
     /// Represents a [WKBArray][crate::array::WKBArray] or
     /// [ChunkedWKBArray][crate::chunked_array::ChunkedWKBArray] with `i64` offsets.
-    LargeWKB,
+    LargeWKB(WkbType),
 
     /// Represents a [WKTArray][crate::array::WKTArray] or
     /// [ChunkedWKTArray][crate::chunked_array::ChunkedWKTArray] with `i32` offsets.
-    WKT,
+    WKT(WktType),
 
     /// Represents a [WKTArray][crate::array::WKTArray] or
     /// [ChunkedWKTArray][crate::chunked_array::ChunkedWKTArray] with `i64` offsets.
-    LargeWKT,
+    LargeWKT(WktType),
 }
 
 /// A type enum representing all possible GeoArrow geometry types, including both "native" and
 /// "serialized" encodings.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AnyType {
     /// A "native" GeoArrow encoding
     Native(NativeType),
 
     /// A "serialized" GeoArrow encoding, such as WKB or WKT
     Serialized(SerializedType),
-}
-
-pub(crate) fn coord_type_to_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
-    match (coord_type, dim) {
-        (CoordType::Interleaved, Dimension::XY) => {
-            let values_field = Field::new("xy", DataType::Float64, false);
-            DataType::FixedSizeList(Arc::new(values_field), 2)
-        }
-        (CoordType::Interleaved, Dimension::XYZ) => {
-            let values_field = Field::new("xyz", DataType::Float64, false);
-            DataType::FixedSizeList(Arc::new(values_field), 3)
-        }
-        (CoordType::Separated, Dimension::XY) => {
-            let values_fields = vec![
-                Field::new("x", DataType::Float64, false),
-                Field::new("y", DataType::Float64, false),
-            ];
-            DataType::Struct(values_fields.into())
-        }
-        (CoordType::Separated, Dimension::XYZ) => {
-            let values_fields = vec![
-                Field::new("x", DataType::Float64, false),
-                Field::new("y", DataType::Float64, false),
-                Field::new("z", DataType::Float64, false),
-            ];
-            DataType::Struct(values_fields.into())
-        }
-    }
-}
-
-fn point_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
-    coord_type_to_data_type(coord_type, dim)
-}
-
-fn line_string_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
-    let coords_type = coord_type_to_data_type(coord_type, dim);
-    let vertices_field = Field::new("vertices", coords_type, false).into();
-    DataType::List(vertices_field)
-}
-
-fn polygon_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
-    let coords_type = coord_type_to_data_type(coord_type, dim);
-    let vertices_field = Field::new("vertices", coords_type, false);
-    let rings_field = Field::new_list("rings", vertices_field, false).into();
-    DataType::List(rings_field)
-}
-
-fn multi_point_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
-    let coords_type = coord_type_to_data_type(coord_type, dim);
-    let vertices_field = Field::new("points", coords_type, false).into();
-    DataType::List(vertices_field)
-}
-
-fn multi_line_string_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
-    let coords_type = coord_type_to_data_type(coord_type, dim);
-    let vertices_field = Field::new("vertices", coords_type, false);
-    let linestrings_field = Field::new_list("linestrings", vertices_field, false).into();
-    DataType::List(linestrings_field)
-}
-
-fn multi_polygon_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
-    let coords_type = coord_type_to_data_type(coord_type, dim);
-    let vertices_field = Field::new("vertices", coords_type, false);
-    let rings_field = Field::new_list("rings", vertices_field, false);
-    let polygons_field = Field::new_list("polygons", rings_field, false).into();
-    DataType::List(polygons_field)
-}
-
-pub(crate) fn mixed_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
-    let mut fields = vec![];
-    let mut type_ids = vec![];
-
-    match dim {
-        Dimension::XY => type_ids.extend([1, 2, 3, 4, 5, 6]),
-        Dimension::XYZ => type_ids.extend([11, 12, 13, 14, 15, 16]),
-    }
-
-    // Note: we manually construct the fields because these fields shouldn't have their own
-    // GeoArrow extension metadata
-    fields.push(Field::new(
-        "",
-        NativeType::Point(coord_type, dim).to_data_type(),
-        true,
-    ));
-
-    let linestring = NativeType::LineString(coord_type, dim);
-    fields.push(Field::new("", linestring.to_data_type(), true));
-
-    let polygon = NativeType::Polygon(coord_type, dim);
-    fields.push(Field::new("", polygon.to_data_type(), true));
-
-    let multi_point = NativeType::MultiPoint(coord_type, dim);
-    fields.push(Field::new("", multi_point.to_data_type(), true));
-
-    let multi_line_string = NativeType::MultiLineString(coord_type, dim);
-    fields.push(Field::new("", multi_line_string.to_data_type(), true));
-
-    let multi_polygon = NativeType::MultiPolygon(coord_type, dim);
-    fields.push(Field::new("", multi_polygon.to_data_type(), true));
-
-    let union_fields = UnionFields::new(type_ids, fields);
-    DataType::Union(union_fields, UnionMode::Dense)
-}
-
-fn geometry_collection_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
-    let geometries_field = Field::new("geometries", mixed_data_type(coord_type, dim), false).into();
-    DataType::List(geometries_field)
-}
-
-fn wkb_data_type<O: OffsetSizeTrait>() -> DataType {
-    match O::IS_LARGE {
-        true => DataType::LargeBinary,
-        false => DataType::Binary,
-    }
-}
-
-fn wkt_data_type<O: OffsetSizeTrait>() -> DataType {
-    match O::IS_LARGE {
-        true => DataType::LargeUtf8,
-        false => DataType::Utf8,
-    }
-}
-
-pub(crate) fn rect_fields(dim: Dimension) -> Fields {
-    let values_fields = match dim {
-        Dimension::XY => {
-            vec![
-                Field::new("xmin", DataType::Float64, false),
-                Field::new("ymin", DataType::Float64, false),
-                Field::new("xmax", DataType::Float64, false),
-                Field::new("ymax", DataType::Float64, false),
-            ]
-        }
-        Dimension::XYZ => {
-            vec![
-                Field::new("xmin", DataType::Float64, false),
-                Field::new("ymin", DataType::Float64, false),
-                Field::new("zmin", DataType::Float64, false),
-                Field::new("xmax", DataType::Float64, false),
-                Field::new("ymax", DataType::Float64, false),
-                Field::new("zmax", DataType::Float64, false),
-            ]
-        }
-    };
-
-    values_fields.into()
-}
-
-fn rect_data_type(dim: Dimension) -> DataType {
-    DataType::Struct(rect_fields(dim))
 }
 
 fn geometry_data_type(coord_type: CoordType) -> DataType {
@@ -483,7 +234,7 @@ impl NativeType {
     pub fn to_data_type(&self) -> DataType {
         use NativeType::*;
         match self {
-            Point(coord_type, dim) => point_data_type(*coord_type, *dim),
+            Point(t) => t.data_type(),
             LineString(coord_type, dim) => line_string_data_type(*coord_type, *dim),
             Polygon(coord_type, dim) => polygon_data_type(*coord_type, *dim),
             MultiPoint(coord_type, dim) => multi_point_data_type(*coord_type, *dim),
@@ -508,13 +259,13 @@ impl NativeType {
     pub fn extension_name(&self) -> &'static str {
         use NativeType::*;
         match self {
-            Point(_, _) => "geoarrow.point",
-            LineString(_, _) => "geoarrow.linestring",
-            Polygon(_, _) => "geoarrow.polygon",
-            MultiPoint(_, _) => "geoarrow.multipoint",
-            MultiLineString(_, _) => "geoarrow.multilinestring",
-            MultiPolygon(_, _) => "geoarrow.multipolygon",
-            GeometryCollection(_, _) => "geoarrow.geometrycollection",
+            Point(_) => "geoarrow.point",
+            LineString(_) => "geoarrow.linestring",
+            Polygon(_) => "geoarrow.polygon",
+            MultiPoint(_) => "geoarrow.multipoint",
+            MultiLineString(_) => "geoarrow.multilinestring",
+            MultiPolygon(_) => "geoarrow.multipolygon",
+            GeometryCollection(_) => "geoarrow.geometrycollection",
             Rect(_) => "geoarrow.box",
             Geometry(_) => "geoarrow.geometry",
         }
@@ -592,7 +343,7 @@ impl NativeType {
     pub fn with_coord_type(self, coord_type: CoordType) -> NativeType {
         use NativeType::*;
         match self {
-            Point(_, dim) => Point(coord_type, dim),
+            Point(t) => Point(t.with_coord_type(coord_type)),
             LineString(_, dim) => LineString(coord_type, dim),
             Polygon(_, dim) => Polygon(coord_type, dim),
             MultiPoint(_, dim) => MultiPoint(coord_type, dim),

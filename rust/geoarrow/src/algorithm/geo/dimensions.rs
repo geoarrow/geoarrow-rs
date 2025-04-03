@@ -69,13 +69,13 @@ impl HasDimensions for &dyn NativeArray {
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, _) => HasDimensions::is_empty(self.as_point()),
-            LineString(_, _) => HasDimensions::is_empty(self.as_line_string()),
-            Polygon(_, _) => HasDimensions::is_empty(self.as_polygon()),
-            MultiPoint(_, _) => HasDimensions::is_empty(self.as_multi_point()),
-            MultiLineString(_, _) => HasDimensions::is_empty(self.as_multi_line_string()),
-            MultiPolygon(_, _) => HasDimensions::is_empty(self.as_multi_polygon()),
-            GeometryCollection(_, _) => HasDimensions::is_empty(self.as_geometry_collection()),
+            Point(_) => HasDimensions::is_empty(self.as_point()),
+            LineString(_) => HasDimensions::is_empty(self.as_line_string()),
+            Polygon(_) => HasDimensions::is_empty(self.as_polygon()),
+            MultiPoint(_) => HasDimensions::is_empty(self.as_multi_point()),
+            MultiLineString(_) => HasDimensions::is_empty(self.as_multi_line_string()),
+            MultiPolygon(_) => HasDimensions::is_empty(self.as_multi_polygon()),
+            GeometryCollection(_) => HasDimensions::is_empty(self.as_geometry_collection()),
             Rect(_) => HasDimensions::is_empty(self.as_rect()),
             Geometry(_) => HasDimensions::is_empty(self.as_geometry()),
         };
@@ -99,13 +99,13 @@ impl HasDimensions for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => HasDimensions::is_empty(self.as_point()),
-            LineString(_, _) => HasDimensions::is_empty(self.as_line_string()),
-            Polygon(_, _) => HasDimensions::is_empty(self.as_polygon()),
-            MultiPoint(_, _) => HasDimensions::is_empty(self.as_multi_point()),
-            MultiLineString(_, _) => HasDimensions::is_empty(self.as_multi_line_string()),
-            MultiPolygon(_, _) => HasDimensions::is_empty(self.as_multi_polygon()),
-            GeometryCollection(_, _) => HasDimensions::is_empty(self.as_geometry_collection()),
+            Point(_) => HasDimensions::is_empty(self.as_point()),
+            LineString(_) => HasDimensions::is_empty(self.as_line_string()),
+            Polygon(_) => HasDimensions::is_empty(self.as_polygon()),
+            MultiPoint(_) => HasDimensions::is_empty(self.as_multi_point()),
+            MultiLineString(_) => HasDimensions::is_empty(self.as_multi_line_string()),
+            MultiPolygon(_) => HasDimensions::is_empty(self.as_multi_polygon()),
+            GeometryCollection(_) => HasDimensions::is_empty(self.as_geometry_collection()),
             Rect(_) => HasDimensions::is_empty(self.as_rect()),
             Geometry(_) => HasDimensions::is_empty(self.as_geometry()),
         }

@@ -83,7 +83,7 @@ impl RectArray {
         );
 
         Self {
-            data_type: self.data_type,
+            data_type: self.data_type.clone(),
             lower: self.lower().slice(offset, length),
             upper: self.upper().slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
@@ -283,7 +283,7 @@ mod test {
     use super::*;
     use crate::algorithm::native::eq::rect_eq;
     use crate::array::RectBuilder;
-    use crate::datatypes::Dimension;
+    use geoarrow_schema::Dimension;
 
     #[test]
     fn rect_array_round_trip() {

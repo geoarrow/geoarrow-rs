@@ -2,7 +2,7 @@ use crate::algorithm::native::bounding_rect::bounding_rect_multipoint;
 use crate::algorithm::native::eq::multi_point_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::CoordBuffer;
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::scalar::Point;
 use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
@@ -151,7 +151,7 @@ impl<G: MultiPointTrait<T = f64>> PartialEq<G> for MultiPoint<'_> {
 #[cfg(test)]
 mod test {
     use crate::array::MultiPointArray;
-    use crate::datatypes::Dimension;
+    use geoarrow_schema::Dimension;
     use crate::test::multipoint::{mp0, mp1};
     use crate::trait_::ArrayAccessor;
 

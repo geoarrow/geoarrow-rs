@@ -1,6 +1,6 @@
 use crate::array::multipoint::MultiPointCapacity;
 use crate::array::{MultiPointArray, MultiPointBuilder};
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::io::geozero::scalar::process_multi_point;
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;

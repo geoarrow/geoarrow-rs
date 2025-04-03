@@ -1,5 +1,5 @@
 use crate::algorithm::native::eq::coord_eq;
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::scalar::InterleavedCoord;
 use crate::trait_::NativeScalar;
 use arrow_buffer::ScalarBuffer;
@@ -131,7 +131,7 @@ mod test {
     use arrow_buffer::ScalarBuffer;
 
     use crate::array::{InterleavedCoordBuffer, SeparatedCoordBuffer};
-    use crate::datatypes::Dimension;
+    use geoarrow_schema::Dimension;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

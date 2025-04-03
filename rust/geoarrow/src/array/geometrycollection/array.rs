@@ -107,7 +107,7 @@ impl GeometryCollectionArray {
         );
         // Note: we **only** slice the geom_offsets and not any actual data
         Self {
-            data_type: self.data_type,
+            data_type: self.data_type.clone(),
             array: self.array.clone(),
             geom_offsets: self.geom_offsets.slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),

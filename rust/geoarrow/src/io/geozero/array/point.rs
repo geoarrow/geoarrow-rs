@@ -1,5 +1,5 @@
 use crate::array::{PointArray, PointBuilder};
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::io::geozero::scalar::process_point;
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;

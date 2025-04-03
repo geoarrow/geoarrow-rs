@@ -3,7 +3,7 @@ use geozero::GeozeroDatasource;
 use std::io::Read;
 
 use crate::array::CoordType;
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::error::Result;
 use crate::io::geozero::array::GeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};

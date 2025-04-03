@@ -1,7 +1,7 @@
 use core::f64;
 
 use crate::array::SeparatedCoordBuffer;
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::error::{GeoArrowError, Result};
 use geo_traits::{CoordTrait, PointTrait};
 

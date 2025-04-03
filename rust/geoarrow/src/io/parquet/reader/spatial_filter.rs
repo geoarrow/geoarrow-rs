@@ -18,7 +18,7 @@ use parquet::schema::types::{ColumnPath, SchemaDescriptor};
 
 use crate::algorithm::geo::BoundingRect;
 use crate::array::{NativeArrayDyn, RectArray, RectBuilder};
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::metadata::GeoParquetBboxCovering;
 use crate::trait_::ArrayAccessor;

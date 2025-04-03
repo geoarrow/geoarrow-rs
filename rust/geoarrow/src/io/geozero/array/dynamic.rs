@@ -19,15 +19,15 @@ impl GeozeroGeometry for NativeArrayDyn {
         use NativeType::*;
 
         match self.inner().data_type() {
-            Point(_, _) => impl_process!(as_point),
-            LineString(_, _) => impl_process!(as_line_string),
-            Polygon(_, _) => impl_process!(as_polygon),
-            MultiPoint(_, _) => impl_process!(as_multi_point),
-            MultiLineString(_, _) => {
+            Point(_) => impl_process!(as_point),
+            LineString(_) => impl_process!(as_line_string),
+            Polygon(_) => impl_process!(as_polygon),
+            MultiPoint(_) => impl_process!(as_multi_point),
+            MultiLineString(_) => {
                 impl_process!(as_multi_line_string)
             }
-            MultiPolygon(_, _) => impl_process!(as_multi_polygon),
-            GeometryCollection(_, _) => {
+            MultiPolygon(_) => impl_process!(as_multi_polygon),
+            GeometryCollection(_) => {
                 impl_process!(as_geometry_collection)
             }
             _ => todo!(),

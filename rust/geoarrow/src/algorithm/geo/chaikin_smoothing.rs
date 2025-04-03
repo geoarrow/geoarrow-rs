@@ -105,12 +105,12 @@ impl ChaikinSmoothing for &dyn NativeArray {
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
-            LineString(_, _) => Arc::new(self.as_line_string().chaikin_smoothing(n_iterations)),
-            Polygon(_, _) => Arc::new(self.as_polygon().chaikin_smoothing(n_iterations)),
-            MultiLineString(_, _) => {
+            LineString(_) => Arc::new(self.as_line_string().chaikin_smoothing(n_iterations)),
+            Polygon(_) => Arc::new(self.as_polygon().chaikin_smoothing(n_iterations)),
+            MultiLineString(_) => {
                 Arc::new(self.as_multi_line_string().chaikin_smoothing(n_iterations))
             }
-            MultiPolygon(_, _) => Arc::new(self.as_multi_polygon().chaikin_smoothing(n_iterations)),
+            MultiPolygon(_) => Arc::new(self.as_multi_polygon().chaikin_smoothing(n_iterations)),
             Geometry(_) => Arc::new(self.as_geometry().chaikin_smoothing(n_iterations)?),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -144,12 +144,12 @@ impl ChaikinSmoothing for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
-            LineString(_, _) => Arc::new(self.as_line_string().chaikin_smoothing(n_iterations)),
-            Polygon(_, _) => Arc::new(self.as_polygon().chaikin_smoothing(n_iterations)),
-            MultiLineString(_, _) => {
+            LineString(_) => Arc::new(self.as_line_string().chaikin_smoothing(n_iterations)),
+            Polygon(_) => Arc::new(self.as_polygon().chaikin_smoothing(n_iterations)),
+            MultiLineString(_) => {
                 Arc::new(self.as_multi_line_string().chaikin_smoothing(n_iterations))
             }
-            MultiPolygon(_, _) => Arc::new(self.as_multi_polygon().chaikin_smoothing(n_iterations)),
+            MultiPolygon(_) => Arc::new(self.as_multi_polygon().chaikin_smoothing(n_iterations)),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)

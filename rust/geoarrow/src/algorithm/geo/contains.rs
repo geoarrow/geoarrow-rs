@@ -170,15 +170,13 @@ impl<G: GeometryTrait<T = f64>> ContainsGeometry<G> for &dyn NativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => ContainsGeometry::contains(self.as_point(), rhs),
-            LineString(_, _) => ContainsGeometry::contains(self.as_line_string(), rhs),
-            Polygon(_, _) => ContainsGeometry::contains(self.as_polygon(), rhs),
-            MultiPoint(_, _) => ContainsGeometry::contains(self.as_multi_point(), rhs),
-            MultiLineString(_, _) => ContainsGeometry::contains(self.as_multi_line_string(), rhs),
-            MultiPolygon(_, _) => ContainsGeometry::contains(self.as_multi_polygon(), rhs),
-            GeometryCollection(_, _) => {
-                ContainsGeometry::contains(self.as_geometry_collection(), rhs)
-            }
+            Point(_) => ContainsGeometry::contains(self.as_point(), rhs),
+            LineString(_) => ContainsGeometry::contains(self.as_line_string(), rhs),
+            Polygon(_) => ContainsGeometry::contains(self.as_polygon(), rhs),
+            MultiPoint(_) => ContainsGeometry::contains(self.as_multi_point(), rhs),
+            MultiLineString(_) => ContainsGeometry::contains(self.as_multi_line_string(), rhs),
+            MultiPolygon(_) => ContainsGeometry::contains(self.as_multi_polygon(), rhs),
+            GeometryCollection(_) => ContainsGeometry::contains(self.as_geometry_collection(), rhs),
             Rect(_) => ContainsGeometry::contains(self.as_rect(), rhs),
             Geometry(_) => ContainsGeometry::contains(self.as_geometry(), rhs),
         }

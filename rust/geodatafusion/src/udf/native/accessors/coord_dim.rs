@@ -71,7 +71,7 @@ fn coord_dim_impl(args: &[ColumnarValue]) -> GeoDataFusionResult<ColumnarValue> 
     let native_array = parse_to_native_array(array)?;
 
     match native_array.data_type() {
-        NativeType::Point(_, _) => {
+        NativeType::Point(_) => {
             let array_ref = native_array.as_ref();
             let arr = array_ref.as_point();
             let mut output_array = UInt8Builder::with_capacity(native_array.len());

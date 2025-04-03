@@ -9,7 +9,7 @@ use crate::array::*;
 use crate::chunked_array::{
     ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray, ChunkedNativeArrayDyn,
 };
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::table::Table;
 use crate::NativeArray;
@@ -137,18 +137,17 @@ impl Explode for &dyn NativeArray {
             }};
         }
 
-        use Dimension::*;
         use NativeType::*;
 
         let result: (Arc<dyn NativeArray>, Option<Int32Array>) = match self.data_type() {
-            Point(_, XY) => call_explode!(as_point),
-            LineString(_, XY) => call_explode!(as_line_string),
-            Polygon(_, XY) => call_explode!(as_polygon),
-            MultiPoint(_, XY) => call_explode!(as_multi_point),
-            MultiLineString(_, XY) => call_explode!(as_multi_line_string),
-            MultiPolygon(_, XY) => call_explode!(as_multi_polygon),
-            // Mixed(_, XY) => self.as_mixed::().explode(),
-            // GeometryCollection(_, XY) => self.as_geometry_collection::().explode(),
+            Point(_) => call_explode!(as_point),
+            LineString(_) => call_explode!(as_line_string),
+            Polygon(_) => call_explode!(as_polygon),
+            MultiPoint(_) => call_explode!(as_multi_point),
+            MultiLineString(_) => call_explode!(as_multi_line_string),
+            MultiPolygon(_) => call_explode!(as_multi_polygon),
+            // Mixed(_) => self.as_mixed::().explode(),
+            // GeometryCollection(_) => self.as_geometry_collection::().explode(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -191,13 +190,13 @@ impl Explode for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => self.as_point().explode(),
-            LineString(_, _) => self.as_line_string().explode(),
-            Polygon(_, _) => self.as_polygon().explode(),
-            MultiPoint(_, _) => self.as_multi_point().explode(),
-            MultiLineString(_, _) => self.as_multi_line_string().explode(),
-            MultiPolygon(_, _) => self.as_multi_polygon().explode(),
-            GeometryCollection(_, _) => self.as_geometry_collection().explode(),
+            Point(_) => self.as_point().explode(),
+            LineString(_) => self.as_line_string().explode(),
+            Polygon(_) => self.as_polygon().explode(),
+            MultiPoint(_) => self.as_multi_point().explode(),
+            MultiLineString(_) => self.as_multi_line_string().explode(),
+            MultiPolygon(_) => self.as_multi_polygon().explode(),
+            GeometryCollection(_) => self.as_geometry_collection().explode(),
             Rect(_) => self.as_rect().explode(),
             _ => todo!("explode unknown"),
         }

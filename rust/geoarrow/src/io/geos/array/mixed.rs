@@ -1,5 +1,5 @@
 use crate::array::{MixedGeometryArray, MixedGeometryBuilder};
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::error::GeoArrowError;
 use crate::io::geos::scalar::GEOSGeometry;
 

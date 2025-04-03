@@ -1,5 +1,5 @@
 use crate::array::{MultiPolygonArray, MultiPolygonBuilder};
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::error::Result;
 use crate::io::geos::scalar::GEOSMultiPolygon;
 

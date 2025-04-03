@@ -1,6 +1,6 @@
 use crate::algorithm::native::eq::multi_line_string_eq;
 use crate::array::{CoordBuffer, MultiLineStringArray};
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::scalar::{LineString, MultiLineString};
 use arrow_buffer::OffsetBuffer;
 use geo_traits::MultiLineStringTrait;

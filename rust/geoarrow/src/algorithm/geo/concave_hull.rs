@@ -106,11 +106,11 @@ impl ConcaveHull for &dyn NativeArray {
         use NativeType::*;
 
         let result = match self.data_type() {
-            LineString(_, _) => self.as_line_string().concave_hull(concavity),
-            Polygon(_, _) => self.as_polygon().concave_hull(concavity),
-            MultiPoint(_, _) => self.as_multi_point().concave_hull(concavity),
-            MultiLineString(_, _) => self.as_multi_line_string().concave_hull(concavity),
-            MultiPolygon(_, _) => self.as_multi_polygon().concave_hull(concavity),
+            LineString(_) => self.as_line_string().concave_hull(concavity),
+            Polygon(_) => self.as_polygon().concave_hull(concavity),
+            MultiPoint(_) => self.as_multi_point().concave_hull(concavity),
+            MultiLineString(_) => self.as_multi_line_string().concave_hull(concavity),
+            MultiPolygon(_) => self.as_multi_polygon().concave_hull(concavity),
             Geometry(_) => self.as_geometry().concave_hull(concavity)?,
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };

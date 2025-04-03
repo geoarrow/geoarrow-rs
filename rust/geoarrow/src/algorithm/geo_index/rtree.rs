@@ -67,13 +67,13 @@ impl RTree for &dyn NativeArray {
         }
 
         match self.data_type() {
-            Point(_, _) => impl_method!(as_point),
-            LineString(_, _) => impl_method!(as_line_string),
-            Polygon(_, _) => impl_method!(as_polygon),
-            MultiPoint(_, _) => impl_method!(as_multi_point),
-            MultiLineString(_, _) => impl_method!(as_multi_line_string),
-            MultiPolygon(_, _) => impl_method!(as_multi_polygon),
-            GeometryCollection(_, _) => impl_method!(as_geometry_collection),
+            Point(_) => impl_method!(as_point),
+            LineString(_) => impl_method!(as_line_string),
+            Polygon(_) => impl_method!(as_polygon),
+            MultiPoint(_) => impl_method!(as_multi_point),
+            MultiLineString(_) => impl_method!(as_multi_line_string),
+            MultiPolygon(_) => impl_method!(as_multi_polygon),
+            GeometryCollection(_) => impl_method!(as_geometry_collection),
             Rect(_) => impl_method!(as_rect),
             Geometry(_) => impl_method!(as_geometry),
         }
@@ -101,13 +101,13 @@ impl RTree for &dyn ChunkedNativeArray {
         }
 
         let result = match self.data_type() {
-            Point(_, _) => impl_method!(as_point),
-            LineString(_, _) => impl_method!(as_line_string),
-            Polygon(_, _) => impl_method!(as_polygon),
-            MultiPoint(_, _) => impl_method!(as_multi_point),
-            MultiLineString(_, _) => impl_method!(as_multi_line_string),
-            MultiPolygon(_, _) => impl_method!(as_multi_polygon),
-            GeometryCollection(_, _) => impl_method!(as_geometry_collection),
+            Point(_) => impl_method!(as_point),
+            LineString(_) => impl_method!(as_line_string),
+            Polygon(_) => impl_method!(as_polygon),
+            MultiPoint(_) => impl_method!(as_multi_point),
+            MultiLineString(_) => impl_method!(as_multi_line_string),
+            MultiPolygon(_) => impl_method!(as_multi_polygon),
+            GeometryCollection(_) => impl_method!(as_geometry_collection),
             Rect(_) => impl_method!(as_rect),
             Geometry(_) => impl_method!(as_geometry),
         };

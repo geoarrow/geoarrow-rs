@@ -10,7 +10,7 @@ use crate::array::metadata::ArrayMetadata;
 use crate::array::{
     CoordType, MultiLineStringBuilder, MultiPointBuilder, MultiPolygonBuilder, PointBuilder,
 };
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::io::geozero::table::builder::anyvalue::AnyBuilder;
 use crate::io::geozero::table::builder::properties::PropertiesBatchBuilder;

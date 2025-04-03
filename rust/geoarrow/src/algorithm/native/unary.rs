@@ -3,7 +3,7 @@ use arrow_array::{BooleanArray, PrimitiveArray};
 use arrow_buffer::{BooleanBufferBuilder, BufferBuilder};
 
 use crate::array::*;
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 use geo_traits::*;

@@ -92,14 +92,14 @@ impl HaversineLength for &dyn NativeArray {
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, XY) => self.as_point().haversine_length(),
-            LineString(_, XY) => self.as_line_string().haversine_length(),
-            // Polygon(_, XY) => self.as_polygon().haversine_length(),
-            MultiPoint(_, XY) => self.as_multi_point().haversine_length(),
-            MultiLineString(_, XY) => self.as_multi_line_string().haversine_length(),
-            // MultiPolygon(_, XY) => self.as_multi_polygon().haversine_length(),
-            // Mixed(_, XY) => self.as_mixed().haversine_length(),
-            // GeometryCollection(_, XY) => self.as_geometry_collection().haversine_length(),
+            Point(_) => self.as_point().haversine_length(),
+            LineString(_) => self.as_line_string().haversine_length(),
+            // Polygon(_) => self.as_polygon().haversine_length(),
+            MultiPoint(_) => self.as_multi_point().haversine_length(),
+            MultiLineString(_) => self.as_multi_line_string().haversine_length(),
+            // MultiPolygon(_) => self.as_multi_polygon().haversine_length(),
+            // Mixed(_) => self.as_mixed().haversine_length(),
+            // GeometryCollection(_) => self.as_geometry_collection().haversine_length(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -139,14 +139,14 @@ impl HaversineLength for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point().haversine_length(),
-            LineString(_, XY) => self.as_line_string().haversine_length(),
-            // Polygon(_, XY) => self.as_polygon().haversine_length(),
-            MultiPoint(_, XY) => self.as_multi_point().haversine_length(),
-            MultiLineString(_, XY) => self.as_multi_line_string().haversine_length(),
-            // MultiPolygon(_, XY) => self.as_multi_polygon().haversine_length(),
-            // Mixed(_, XY) => self.as_mixed().haversine_length(),
-            // GeometryCollection(_, XY) => self.as_geometry_collection().haversine_length(),
+            Point(_) => self.as_point().haversine_length(),
+            LineString(_) => self.as_line_string().haversine_length(),
+            // Polygon(_) => self.as_polygon().haversine_length(),
+            MultiPoint(_) => self.as_multi_point().haversine_length(),
+            MultiLineString(_) => self.as_multi_line_string().haversine_length(),
+            // MultiPolygon(_) => self.as_multi_polygon().haversine_length(),
+            // Mixed(_) => self.as_mixed().haversine_length(),
+            // GeometryCollection(_) => self.as_geometry_collection().haversine_length(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

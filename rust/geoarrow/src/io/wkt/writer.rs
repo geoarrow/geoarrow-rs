@@ -45,15 +45,15 @@ impl ToWKT for &dyn NativeArray {
         }
 
         match self.data_type() {
-            Point(_, _) => impl_to_wkt!(as_point, write_point),
-            LineString(_, _) => impl_to_wkt!(as_line_string, write_linestring),
-            Polygon(_, _) => impl_to_wkt!(as_polygon, write_polygon),
-            MultiPoint(_, _) => impl_to_wkt!(as_multi_point, write_multi_point),
-            MultiLineString(_, _) => {
+            Point(_) => impl_to_wkt!(as_point, write_point),
+            LineString(_) => impl_to_wkt!(as_line_string, write_linestring),
+            Polygon(_) => impl_to_wkt!(as_polygon, write_polygon),
+            MultiPoint(_) => impl_to_wkt!(as_multi_point, write_multi_point),
+            MultiLineString(_) => {
                 impl_to_wkt!(as_multi_line_string, write_multi_linestring)
             }
-            MultiPolygon(_, _) => impl_to_wkt!(as_multi_polygon, write_multi_polygon),
-            GeometryCollection(_, _) => {
+            MultiPolygon(_) => impl_to_wkt!(as_multi_polygon, write_multi_polygon),
+            GeometryCollection(_) => {
                 impl_to_wkt!(as_geometry_collection, write_geometry_collection)
             }
             Rect(_) => impl_to_wkt!(as_rect, write_rect),
@@ -78,13 +78,13 @@ impl ToWKT for &dyn ChunkedNativeArray {
         }
 
         match self.data_type() {
-            Point(_, _) => impl_to_wkt!(as_point),
-            LineString(_, _) => impl_to_wkt!(as_line_string),
-            Polygon(_, _) => impl_to_wkt!(as_polygon),
-            MultiPoint(_, _) => impl_to_wkt!(as_multi_point),
-            MultiLineString(_, _) => impl_to_wkt!(as_multi_line_string),
-            MultiPolygon(_, _) => impl_to_wkt!(as_multi_polygon),
-            GeometryCollection(_, _) => impl_to_wkt!(as_geometry_collection),
+            Point(_) => impl_to_wkt!(as_point),
+            LineString(_) => impl_to_wkt!(as_line_string),
+            Polygon(_) => impl_to_wkt!(as_polygon),
+            MultiPoint(_) => impl_to_wkt!(as_multi_point),
+            MultiLineString(_) => impl_to_wkt!(as_multi_line_string),
+            MultiPolygon(_) => impl_to_wkt!(as_multi_polygon),
+            GeometryCollection(_) => impl_to_wkt!(as_geometry_collection),
             Rect(_) => impl_to_wkt!(as_rect),
             Geometry(_) => impl_to_wkt!(as_geometry),
         }

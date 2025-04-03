@@ -1,7 +1,7 @@
 use geo::{point, MultiPoint};
 
 use crate::array::{MultiPointArray, MultiPointBuilder};
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 
 pub(crate) fn mp0() -> MultiPoint {
     MultiPoint::new(vec![

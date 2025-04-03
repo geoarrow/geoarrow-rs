@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
-use crate::array::{CoordType, InterleavedCoordBufferBuilder};
-use crate::datatypes::{coord_type_to_data_type, Dimension};
+use crate::array::InterleavedCoordBufferBuilder;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::InterleavedCoord;
 use crate::trait_::IntoArrow;
@@ -9,6 +8,7 @@ use arrow_array::{Array, FixedSizeListArray, Float64Array};
 use arrow_buffer::ScalarBuffer;
 use arrow_schema::{DataType, Field};
 use geo_traits::CoordTrait;
+use geoarrow_schema::{CoordType, Dimension, PointType};
 
 /// A an array of coordinates stored interleaved in a single buffer.
 #[derive(Debug, Clone, PartialEq)]
@@ -80,6 +80,8 @@ impl InterleavedCoordBuffer {
         match self.dim {
             Dimension::XY => Field::new("xy", DataType::Float64, false),
             Dimension::XYZ => Field::new("xyz", DataType::Float64, false),
+            Dimension::XYM => Field::new("xym", DataType::Float64, false),
+            Dimension::XYZM => Field::new("xyzm", DataType::Float64, false),
         }
     }
 
@@ -97,7 +99,7 @@ impl InterleavedCoordBuffer {
     }
 
     pub(crate) fn storage_type(&self) -> DataType {
-        coord_type_to_data_type(CoordType::Interleaved, self.dim)
+        PointType::new(CoordType::Interleaved, self.dim, Default::default()).data_type()
     }
 
     // todo switch to:

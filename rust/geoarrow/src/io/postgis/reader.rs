@@ -10,7 +10,7 @@ use sqlx::{Column, Decode, Executor, Postgres, Row, Type, TypeInfo};
 use std::io::Cursor;
 use std::sync::Arc;
 
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::io::geozero::array::GeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};

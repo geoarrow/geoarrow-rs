@@ -118,7 +118,7 @@ impl PointArray {
             "offset + length may not exceed length of array"
         );
         Self {
-            data_type: self.data_type,
+            data_type: self.data_type.clone(),
             coords: self.coords.slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
             metadata: self.metadata(),

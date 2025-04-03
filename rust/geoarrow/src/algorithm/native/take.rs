@@ -4,7 +4,7 @@ use std::sync::Arc;
 use crate::array::mixed::builder::DEFAULT_PREFER_MULTI;
 use crate::array::*;
 use crate::chunked_array::ChunkedGeometryArray;
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
@@ -222,34 +222,32 @@ impl Take for &dyn NativeArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
     fn take(&self, indices: &UInt32Array) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
-            Point(_, XY) => Arc::new(self.as_point().take(indices)),
-            LineString(_, XY) => Arc::new(self.as_line_string().take(indices)?),
-            Polygon(_, XY) => Arc::new(self.as_polygon().take(indices)?),
-            MultiPoint(_, XY) => Arc::new(self.as_multi_point().take(indices)?),
-            MultiLineString(_, XY) => Arc::new(self.as_multi_line_string().take(indices)?),
-            MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon().take(indices)?),
-            GeometryCollection(_, XY) => Arc::new(self.as_geometry_collection().take(indices)?),
+            Point(_) => Arc::new(self.as_point().take(indices)),
+            LineString(_) => Arc::new(self.as_line_string().take(indices)?),
+            Polygon(_) => Arc::new(self.as_polygon().take(indices)?),
+            MultiPoint(_) => Arc::new(self.as_multi_point().take(indices)?),
+            MultiLineString(_) => Arc::new(self.as_multi_line_string().take(indices)?),
+            MultiPolygon(_) => Arc::new(self.as_multi_polygon().take(indices)?),
+            GeometryCollection(_) => Arc::new(self.as_geometry_collection().take(indices)?),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
     }
 
     fn take_range(&self, range: &Range<usize>) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
-            Point(_, XY) => Arc::new(self.as_point().take_range(range)),
-            LineString(_, XY) => Arc::new(self.as_line_string().take_range(range)?),
-            Polygon(_, XY) => Arc::new(self.as_polygon().take_range(range)?),
-            MultiPoint(_, XY) => Arc::new(self.as_multi_point().take_range(range)?),
-            MultiLineString(_, XY) => Arc::new(self.as_multi_line_string().take_range(range)?),
-            MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon().take_range(range)?),
-            GeometryCollection(_, XY) => Arc::new(self.as_geometry_collection().take_range(range)?),
+            Point(_) => Arc::new(self.as_point().take_range(range)),
+            LineString(_) => Arc::new(self.as_line_string().take_range(range)?),
+            Polygon(_) => Arc::new(self.as_polygon().take_range(range)?),
+            MultiPoint(_) => Arc::new(self.as_multi_point().take_range(range)?),
+            MultiLineString(_) => Arc::new(self.as_multi_line_string().take_range(range)?),
+            MultiPolygon(_) => Arc::new(self.as_multi_polygon().take_range(range)?),
+            GeometryCollection(_) => Arc::new(self.as_geometry_collection().take_range(range)?),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)

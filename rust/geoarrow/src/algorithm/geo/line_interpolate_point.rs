@@ -74,7 +74,7 @@ impl LineInterpolatePoint<&Float64Array> for &dyn NativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            LineString(_, XY) => Ok(self.as_line_string().line_interpolate_point(fraction)),
+            LineString(_) => Ok(self.as_line_string().line_interpolate_point(fraction)),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
@@ -98,7 +98,7 @@ impl LineInterpolatePoint<&[Float64Array]> for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            LineString(_, XY) => Ok(self.as_line_string().line_interpolate_point(fraction)),
+            LineString(_) => Ok(self.as_line_string().line_interpolate_point(fraction)),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
@@ -134,7 +134,7 @@ impl LineInterpolatePoint<f64> for &dyn NativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            LineString(_, XY) => Ok(self.as_line_string().line_interpolate_point(fraction)),
+            LineString(_) => Ok(self.as_line_string().line_interpolate_point(fraction)),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
@@ -156,7 +156,7 @@ impl LineInterpolatePoint<f64> for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            LineString(_, XY) => Ok(self.as_line_string().line_interpolate_point(fraction)),
+            LineString(_) => Ok(self.as_line_string().line_interpolate_point(fraction)),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

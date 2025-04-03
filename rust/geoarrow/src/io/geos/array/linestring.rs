@@ -1,5 +1,5 @@
 use crate::array::{LineStringArray, LineStringBuilder};
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::error::Result;
 use crate::io::geos::scalar::GEOSLineString;
 

@@ -11,7 +11,7 @@ use parquet::schema::types::SchemaDescriptor;
 use serde_json::Value;
 
 use crate::array::{CoordType, RectArray, RectBuilder};
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::metadata::{GeoParquetBboxCovering, GeoParquetMetadata};
 use crate::io::parquet::reader::parse::infer_target_schema;

@@ -1,13 +1,15 @@
 use std::sync::Arc;
 
+use geo::AffineOps as _AffineOps;
+use geo::AffineTransform;
+use geoarrow_schema::Dimension;
+
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
-use geo::AffineOps as _AffineOps;
-use geo::AffineTransform;
 
 /// Apply an [`AffineTransform`] like [`scale`](AffineTransform::scale),
 /// [`skew`](AffineTransform::skew), or [`rotate`](AffineTransform::rotate) to geometries.
@@ -240,13 +242,13 @@ impl AffineOps<&AffineTransform> for &dyn NativeArray {
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
-            Point(_, _) => impl_downcast!(as_point),
-            LineString(_, _) => impl_downcast!(as_line_string),
-            Polygon(_, _) => impl_downcast!(as_polygon),
-            MultiPoint(_, _) => impl_downcast!(as_multi_point),
-            MultiLineString(_, _) => impl_downcast!(as_multi_line_string),
-            MultiPolygon(_, _) => impl_downcast!(as_multi_polygon),
-            GeometryCollection(_, _) => {
+            Point(_) => impl_downcast!(as_point),
+            LineString(_) => impl_downcast!(as_line_string),
+            Polygon(_) => impl_downcast!(as_polygon),
+            MultiPoint(_) => impl_downcast!(as_multi_point),
+            MultiLineString(_) => impl_downcast!(as_multi_line_string),
+            MultiPolygon(_) => impl_downcast!(as_multi_polygon),
+            GeometryCollection(_) => {
                 Arc::new(self.as_geometry_collection().affine_transform(transform)?)
             }
             Rect(_) => impl_downcast!(as_rect),
@@ -317,13 +319,13 @@ impl AffineOps<&AffineTransform> for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
-            Point(_, _) => impl_downcast!(as_point),
-            LineString(_, _) => impl_downcast!(as_line_string),
-            Polygon(_, _) => impl_downcast!(as_polygon),
-            MultiPoint(_, _) => impl_downcast!(as_multi_point),
-            MultiLineString(_, _) => impl_downcast!(as_multi_line_string),
-            MultiPolygon(_, _) => impl_downcast!(as_multi_polygon),
-            GeometryCollection(_, _) => {
+            Point(_) => impl_downcast!(as_point),
+            LineString(_) => impl_downcast!(as_line_string),
+            Polygon(_) => impl_downcast!(as_polygon),
+            MultiPoint(_) => impl_downcast!(as_multi_point),
+            MultiLineString(_) => impl_downcast!(as_multi_line_string),
+            MultiPolygon(_) => impl_downcast!(as_multi_polygon),
+            GeometryCollection(_) => {
                 Arc::new(self.as_geometry_collection().affine_transform(transform)?)
             }
             Rect(_) => impl_downcast!(as_rect),
@@ -480,19 +482,16 @@ impl AffineOps<&[AffineTransform]> for &dyn NativeArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
     fn affine_transform(&self, transform: &[AffineTransform]) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
-            Point(_, XY) => Arc::new(self.as_point().affine_transform(transform)),
-            LineString(_, XY) => Arc::new(self.as_line_string().affine_transform(transform)),
-            Polygon(_, XY) => Arc::new(self.as_polygon().affine_transform(transform)),
-            MultiPoint(_, XY) => Arc::new(self.as_multi_point().affine_transform(transform)),
-            MultiLineString(_, XY) => {
-                Arc::new(self.as_multi_line_string().affine_transform(transform))
-            }
-            MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon().affine_transform(transform)),
-            GeometryCollection(_, XY) => {
+            Point(_) => Arc::new(self.as_point().affine_transform(transform)),
+            LineString(_) => Arc::new(self.as_line_string().affine_transform(transform)),
+            Polygon(_) => Arc::new(self.as_polygon().affine_transform(transform)),
+            MultiPoint(_) => Arc::new(self.as_multi_point().affine_transform(transform)),
+            MultiLineString(_) => Arc::new(self.as_multi_line_string().affine_transform(transform)),
+            MultiPolygon(_) => Arc::new(self.as_multi_polygon().affine_transform(transform)),
+            GeometryCollection(_) => {
                 Arc::new(self.as_geometry_collection().affine_transform(transform)?)
             }
             _ => return Err(GeoArrowError::IncorrectType("".into())),

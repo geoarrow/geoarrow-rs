@@ -2,7 +2,7 @@ use crate::algorithm::native::bounding_rect::bounding_rect_multipolygon;
 use crate::algorithm::native::eq::multi_polygon_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::CoordBuffer;
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::scalar::Polygon;
 use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
@@ -180,7 +180,7 @@ impl<G: MultiPolygonTrait<T = f64>> PartialEq<G> for MultiPolygon<'_> {
 #[cfg(test)]
 mod test {
     use crate::array::MultiPolygonArray;
-    use crate::datatypes::Dimension;
+    use geoarrow_schema::Dimension;
     use crate::test::multipolygon::{mp0, mp1};
     use crate::trait_::ArrayAccessor;
 

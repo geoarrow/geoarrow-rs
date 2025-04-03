@@ -1,5 +1,5 @@
 use crate::array::InterleavedCoordBuffer;
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use geos::CoordSeq;
 
 impl TryFrom<InterleavedCoordBuffer> for CoordSeq {

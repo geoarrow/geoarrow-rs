@@ -1,6 +1,6 @@
 use crate::array::metadata::ArrayMetadata;
 use crate::array::{RectArray, SeparatedCoordBufferBuilder};
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::error::GeoArrowError;
 use crate::scalar::Rect;
 use crate::trait_::IntoArrow;

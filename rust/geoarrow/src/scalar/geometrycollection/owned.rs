@@ -1,6 +1,6 @@
 use crate::algorithm::native::eq::geometry_collection_eq;
 use crate::array::{GeometryCollectionArray, MixedGeometryArray};
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::scalar::{Geometry, GeometryCollection};
 use crate::NativeArray;
 use arrow_buffer::OffsetBuffer;

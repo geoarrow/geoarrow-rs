@@ -264,13 +264,13 @@ impl ToWKB for &dyn NativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => self.as_point().into(),
-            LineString(_, _) => self.as_line_string().into(),
-            Polygon(_, _) => self.as_polygon().into(),
-            MultiPoint(_, _) => self.as_multi_point().into(),
-            MultiLineString(_, _) => self.as_multi_line_string().into(),
-            MultiPolygon(_, _) => self.as_multi_polygon().into(),
-            GeometryCollection(_, _) => self.as_geometry_collection().into(),
+            Point(_) => self.as_point().into(),
+            LineString(_) => self.as_line_string().into(),
+            Polygon(_) => self.as_polygon().into(),
+            MultiPoint(_) => self.as_multi_point().into(),
+            MultiLineString(_) => self.as_multi_line_string().into(),
+            MultiPolygon(_) => self.as_multi_polygon().into(),
+            GeometryCollection(_) => self.as_geometry_collection().into(),
             Rect(_) => self.as_rect().into(),
             Geometry(_) => self.as_geometry().into(),
         }
@@ -284,21 +284,21 @@ impl ToWKB for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => ChunkedGeometryArray::new(self.as_point().map(|chunk| chunk.into())),
-            LineString(_, _) => {
+            Point(_) => ChunkedGeometryArray::new(self.as_point().map(|chunk| chunk.into())),
+            LineString(_) => {
                 ChunkedGeometryArray::new(self.as_line_string().map(|chunk| chunk.into()))
             }
-            Polygon(_, _) => ChunkedGeometryArray::new(self.as_polygon().map(|chunk| chunk.into())),
-            MultiPoint(_, _) => {
+            Polygon(_) => ChunkedGeometryArray::new(self.as_polygon().map(|chunk| chunk.into())),
+            MultiPoint(_) => {
                 ChunkedGeometryArray::new(self.as_multi_point().map(|chunk| chunk.into()))
             }
-            MultiLineString(_, _) => {
+            MultiLineString(_) => {
                 ChunkedGeometryArray::new(self.as_multi_line_string().map(|chunk| chunk.into()))
             }
-            MultiPolygon(_, _) => {
+            MultiPolygon(_) => {
                 ChunkedGeometryArray::new(self.as_multi_polygon().map(|chunk| chunk.into()))
             }
-            GeometryCollection(_, _) => {
+            GeometryCollection(_) => {
                 ChunkedGeometryArray::new(self.as_geometry_collection().map(|chunk| chunk.into()))
             }
             Rect(_) => todo!(),
@@ -312,13 +312,13 @@ pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn NativeArray) -> WKBArray<O> {
     use NativeType::*;
 
     match arr.data_type() {
-        Point(_, _) => arr.as_point().into(),
-        LineString(_, _) => arr.as_line_string().into(),
-        Polygon(_, _) => arr.as_polygon().into(),
-        MultiPoint(_, _) => arr.as_multi_point().into(),
-        MultiLineString(_, _) => arr.as_multi_line_string().into(),
-        MultiPolygon(_, _) => arr.as_multi_polygon().into(),
-        GeometryCollection(_, _) => arr.as_geometry_collection().into(),
+        Point(_) => arr.as_point().into(),
+        LineString(_) => arr.as_line_string().into(),
+        Polygon(_) => arr.as_polygon().into(),
+        MultiPoint(_) => arr.as_multi_point().into(),
+        MultiLineString(_) => arr.as_multi_line_string().into(),
+        MultiPolygon(_) => arr.as_multi_polygon().into(),
+        GeometryCollection(_) => arr.as_geometry_collection().into(),
         Rect(_) => arr.as_rect().into(),
         Geometry(_) => arr.as_geometry().into(),
     }

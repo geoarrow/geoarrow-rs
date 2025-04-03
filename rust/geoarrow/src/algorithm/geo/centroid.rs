@@ -128,13 +128,13 @@ impl Centroid for &dyn NativeArray {
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, _) => self.as_point().centroid(),
-            LineString(_, _) => self.as_line_string().centroid(),
-            Polygon(_, _) => self.as_polygon().centroid(),
-            MultiPoint(_, _) => self.as_multi_point().centroid(),
-            MultiLineString(_, _) => self.as_multi_line_string().centroid(),
-            MultiPolygon(_, _) => self.as_multi_polygon().centroid(),
-            GeometryCollection(_, _) => self.as_geometry_collection().centroid(),
+            Point(_) => self.as_point().centroid(),
+            LineString(_) => self.as_line_string().centroid(),
+            Polygon(_) => self.as_polygon().centroid(),
+            MultiPoint(_) => self.as_multi_point().centroid(),
+            MultiLineString(_) => self.as_multi_line_string().centroid(),
+            MultiPolygon(_) => self.as_multi_polygon().centroid(),
+            GeometryCollection(_) => self.as_geometry_collection().centroid(),
             Rect(_) => self.as_rect().centroid(),
             Geometry(_) => self.as_geometry().centroid(),
         };
@@ -157,13 +157,13 @@ impl Centroid for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => self.as_point().centroid(),
-            LineString(_, _) => self.as_line_string().centroid(),
-            Polygon(_, _) => self.as_polygon().centroid(),
-            MultiPoint(_, _) => self.as_multi_point().centroid(),
-            MultiLineString(_, _) => self.as_multi_line_string().centroid(),
-            MultiPolygon(_, _) => self.as_multi_polygon().centroid(),
-            GeometryCollection(_, _) => self.as_geometry_collection().centroid(),
+            Point(_) => self.as_point().centroid(),
+            LineString(_) => self.as_line_string().centroid(),
+            Polygon(_) => self.as_polygon().centroid(),
+            MultiPoint(_) => self.as_multi_point().centroid(),
+            MultiLineString(_) => self.as_multi_line_string().centroid(),
+            MultiPolygon(_) => self.as_multi_polygon().centroid(),
+            GeometryCollection(_) => self.as_geometry_collection().centroid(),
             Rect(_) => self.as_rect().centroid(),
             Geometry(_) => self.as_geometry().centroid(),
         }

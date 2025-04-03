@@ -312,15 +312,15 @@ impl Scale for &dyn NativeArray {
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
-            Point(_, _) => impl_method!(as_point),
-            LineString(_, _) => impl_method!(as_line_string),
-            Polygon(_, _) => impl_method!(as_polygon),
-            MultiPoint(_, _) => impl_method!(as_multi_point),
-            MultiLineString(_, _) => impl_method!(as_multi_line_string),
-            MultiPolygon(_, _) => impl_method!(as_multi_polygon),
+            Point(_) => impl_method!(as_point),
+            LineString(_) => impl_method!(as_line_string),
+            Polygon(_) => impl_method!(as_polygon),
+            MultiPoint(_) => impl_method!(as_multi_point),
+            MultiLineString(_) => impl_method!(as_multi_line_string),
+            MultiPolygon(_) => impl_method!(as_multi_polygon),
             Geometry(_) => Arc::new(self.as_geometry().scale_xy(x_factor, y_factor)?),
-            // Mixed(_, _) => impl_method!(as_mixed),
-            // GeometryCollection(_, _) => impl_method!(as_geometry_collection),
+            // Mixed(_) => impl_method!(as_mixed),
+            // GeometryCollection(_) => impl_method!(as_geometry_collection),
             // Rect(_) => impl_method!(as_rect),
             _ => todo!("unsupported data type"),
         };
@@ -346,18 +346,18 @@ impl Scale for &dyn NativeArray {
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
-            Point(_, _) => impl_method!(as_point),
-            LineString(_, _) => impl_method!(as_line_string),
-            Polygon(_, _) => impl_method!(as_polygon),
-            MultiPoint(_, _) => impl_method!(as_multi_point),
-            MultiLineString(_, _) => impl_method!(as_multi_line_string),
-            MultiPolygon(_, _) => impl_method!(as_multi_polygon),
+            Point(_) => impl_method!(as_point),
+            LineString(_) => impl_method!(as_line_string),
+            Polygon(_) => impl_method!(as_polygon),
+            MultiPoint(_) => impl_method!(as_multi_point),
+            MultiLineString(_) => impl_method!(as_multi_line_string),
+            MultiPolygon(_) => impl_method!(as_multi_polygon),
             Geometry(_) => Arc::new(
                 self.as_geometry()
                     .scale_around_point(x_factor, y_factor, origin)?,
             ),
-            // Mixed(_, _) => impl_method!(as_mixed),
-            // GeometryCollection(_, _) => impl_method!(as_geometry_collection),
+            // Mixed(_) => impl_method!(as_mixed),
+            // GeometryCollection(_) => impl_method!(as_geometry_collection),
             // Rect(_) => impl_method!(as_rect),
             _ => todo!("unsupported data type"),
         };

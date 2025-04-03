@@ -1,6 +1,6 @@
 use crate::algorithm::native::eq::rect_eq;
 use crate::array::{RectArray, SeparatedCoordBuffer};
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::scalar::{Rect, SeparatedCoord};
 use geo_traits::RectTrait;
 

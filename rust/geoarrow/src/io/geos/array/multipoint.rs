@@ -1,5 +1,5 @@
 use crate::array::{MultiPointArray, MultiPointBuilder};
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::error::Result;
 use crate::io::geos::scalar::GEOSMultiPoint;
 

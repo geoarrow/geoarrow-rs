@@ -129,9 +129,7 @@ impl<G: PointTrait<T = f64>> LineLocatePointScalar<G> for &dyn NativeArray {
         use NativeType::*;
 
         let result = match self.data_type() {
-            LineString(_, XY) => {
-                LineLocatePointScalar::line_locate_point(self.as_line_string(), rhs)
-            }
+            LineString(_) => LineLocatePointScalar::line_locate_point(self.as_line_string(), rhs),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -156,9 +154,7 @@ impl<G: PointTrait<T = f64>> LineLocatePointScalar<G> for &dyn ChunkedNativeArra
         use NativeType::*;
 
         let result = match self.data_type() {
-            LineString(_, XY) => {
-                LineLocatePointScalar::line_locate_point(self.as_line_string(), rhs)
-            }
+            LineString(_) => LineLocatePointScalar::line_locate_point(self.as_line_string(), rhs),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)

@@ -58,13 +58,13 @@ impl ChunkedNativeArrayDyn {
 
         let typ = NativeType::try_from(field)?;
         let ca: Arc<dyn ChunkedNativeArray> = match typ {
-            Point(_, _) => impl_downcast!(PointArray),
-            LineString(_, _) => impl_downcast!(LineStringArray),
-            Polygon(_, _) => impl_downcast!(PolygonArray),
-            MultiPoint(_, _) => impl_downcast!(MultiPointArray),
-            MultiLineString(_, _) => impl_downcast!(MultiLineStringArray),
-            MultiPolygon(_, _) => impl_downcast!(MultiPolygonArray),
-            GeometryCollection(_, _) => {
+            Point(_) => impl_downcast!(PointArray),
+            LineString(_) => impl_downcast!(LineStringArray),
+            Polygon(_) => impl_downcast!(PolygonArray),
+            MultiPoint(_) => impl_downcast!(MultiPointArray),
+            MultiLineString(_) => impl_downcast!(MultiLineStringArray),
+            MultiPolygon(_) => impl_downcast!(MultiPolygonArray),
+            GeometryCollection(_) => {
                 impl_downcast!(GeometryCollectionArray)
             }
             Rect(_) => impl_downcast!(RectArray),
@@ -113,13 +113,13 @@ impl ChunkedNativeArrayDyn {
 
             use NativeType::*;
             let result: Arc<dyn ChunkedNativeArray> = match data_types.drain().next().unwrap() {
-                Point(_, _) => impl_downcast!(as_point),
-                LineString(_, _) => impl_downcast!(as_line_string),
-                Polygon(_, _) => impl_downcast!(as_polygon),
-                MultiPoint(_, _) => impl_downcast!(as_multi_point),
-                MultiLineString(_, _) => impl_downcast!(as_multi_line_string),
-                MultiPolygon(_, _) => impl_downcast!(as_multi_polygon),
-                GeometryCollection(_, _) => impl_downcast!(as_geometry_collection),
+                Point(_) => impl_downcast!(as_point),
+                LineString(_) => impl_downcast!(as_line_string),
+                Polygon(_) => impl_downcast!(as_polygon),
+                MultiPoint(_) => impl_downcast!(as_multi_point),
+                MultiLineString(_) => impl_downcast!(as_multi_line_string),
+                MultiPolygon(_) => impl_downcast!(as_multi_polygon),
+                GeometryCollection(_) => impl_downcast!(as_geometry_collection),
                 Rect(_) => impl_downcast!(as_rect),
                 Geometry(_) => impl_downcast!(as_geometry),
             };

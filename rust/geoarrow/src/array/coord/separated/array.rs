@@ -5,9 +5,9 @@ use arrow::datatypes::Float64Type;
 use arrow_array::{ArrayRef, Float64Array, StructArray};
 use arrow_buffer::ScalarBuffer;
 use arrow_schema::{DataType, Field};
+use geoarrow_schema::{CoordType, Dimension, PointType};
 
-use crate::array::{CoordType, SeparatedCoordBufferBuilder};
-use crate::datatypes::{coord_type_to_data_type, Dimension};
+use crate::array::SeparatedCoordBufferBuilder;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::SeparatedCoord;
 use crate::trait_::IntoArrow;
@@ -28,8 +28,13 @@ pub struct SeparatedCoordBuffer {
 fn check(buffers: &[ScalarBuffer<f64>; 4], dim: Dimension) -> Result<()> {
     let all_same_length = match dim {
         Dimension::XY => buffers[0].len() == buffers[1].len(),
-        Dimension::XYZ => {
+        Dimension::XYZ | Dimension::XYM => {
             buffers[0].len() == buffers[1].len() && buffers[1].len() == buffers[2].len()
+        }
+        Dimension::XYZM => {
+            buffers[0].len() == buffers[1].len()
+                && buffers[1].len() == buffers[2].len()
+                && buffers[2].len() == buffers[3].len()
         }
     };
 
@@ -79,11 +84,19 @@ impl SeparatedCoordBuffer {
             Dimension::XY => {
                 vec![self.buffers[0].clone(), self.buffers[1].clone()]
             }
-            Dimension::XYZ => {
+            Dimension::XYZ | Dimension::XYM => {
                 vec![
                     self.buffers[0].clone(),
                     self.buffers[1].clone(),
                     self.buffers[2].clone(),
+                ]
+            }
+            Dimension::XYZM => {
+                vec![
+                    self.buffers[0].clone(),
+                    self.buffers[1].clone(),
+                    self.buffers[2].clone(),
+                    self.buffers[3].clone(),
                 ]
             }
         }
@@ -102,11 +115,19 @@ impl SeparatedCoordBuffer {
                     Arc::new(Float64Array::new(self.buffers[1].clone(), None)),
                 ]
             }
-            Dimension::XYZ => {
+            Dimension::XYZ | Dimension::XYM => {
                 vec![
                     Arc::new(Float64Array::new(self.buffers[0].clone(), None)),
                     Arc::new(Float64Array::new(self.buffers[1].clone(), None)),
                     Arc::new(Float64Array::new(self.buffers[2].clone(), None)),
+                ]
+            }
+            Dimension::XYZM => {
+                vec![
+                    Arc::new(Float64Array::new(self.buffers[0].clone(), None)),
+                    Arc::new(Float64Array::new(self.buffers[1].clone(), None)),
+                    Arc::new(Float64Array::new(self.buffers[2].clone(), None)),
+                    Arc::new(Float64Array::new(self.buffers[3].clone(), None)),
                 ]
             }
         }
@@ -125,6 +146,21 @@ impl SeparatedCoordBuffer {
                     Field::new("x", DataType::Float64, false),
                     Field::new("y", DataType::Float64, false),
                     Field::new("z", DataType::Float64, false),
+                ]
+            }
+            Dimension::XYM => {
+                vec![
+                    Field::new("x", DataType::Float64, false),
+                    Field::new("y", DataType::Float64, false),
+                    Field::new("m", DataType::Float64, false),
+                ]
+            }
+            Dimension::XYZM => {
+                vec![
+                    Field::new("x", DataType::Float64, false),
+                    Field::new("y", DataType::Float64, false),
+                    Field::new("z", DataType::Float64, false),
+                    Field::new("m", DataType::Float64, false),
                 ]
             }
         }
@@ -149,7 +185,7 @@ impl SeparatedCoordBuffer {
     }
 
     pub(crate) fn storage_type(&self) -> DataType {
-        coord_type_to_data_type(CoordType::Separated, self.dim)
+        PointType::new(CoordType::Separated, self.dim, Default::default()).data_type()
     }
 
     /// The coordinate type

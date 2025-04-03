@@ -457,13 +457,13 @@ impl MapCoords for &dyn NativeArray {
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
-            Point(_, XY) => Arc::new(self.as_point().try_map_coords(map_op)?),
-            LineString(_, XY) => Arc::new(self.as_line_string().try_map_coords(map_op)?),
-            Polygon(_, XY) => Arc::new(self.as_polygon().try_map_coords(map_op)?),
-            MultiPoint(_, XY) => Arc::new(self.as_multi_point().try_map_coords(map_op)?),
-            MultiLineString(_, XY) => Arc::new(self.as_multi_line_string().try_map_coords(map_op)?),
-            MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon().try_map_coords(map_op)?),
-            GeometryCollection(_, XY) => {
+            Point(_) => Arc::new(self.as_point().try_map_coords(map_op)?),
+            LineString(_) => Arc::new(self.as_line_string().try_map_coords(map_op)?),
+            Polygon(_) => Arc::new(self.as_polygon().try_map_coords(map_op)?),
+            MultiPoint(_) => Arc::new(self.as_multi_point().try_map_coords(map_op)?),
+            MultiLineString(_) => Arc::new(self.as_multi_line_string().try_map_coords(map_op)?),
+            MultiPolygon(_) => Arc::new(self.as_multi_polygon().try_map_coords(map_op)?),
+            GeometryCollection(_) => {
                 Arc::new(self.as_geometry_collection().try_map_coords(map_op)?)
             }
             Rect(XY) => Arc::new(self.as_rect().try_map_coords(map_op)?),
@@ -611,13 +611,13 @@ impl MapCoords for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
-            Point(_, XY) => Arc::new(self.as_point().try_map_coords(map_op)?),
-            LineString(_, XY) => Arc::new(self.as_line_string().try_map_coords(map_op)?),
-            Polygon(_, XY) => Arc::new(self.as_polygon().try_map_coords(map_op)?),
-            MultiPoint(_, XY) => Arc::new(self.as_multi_point().try_map_coords(map_op)?),
-            MultiLineString(_, XY) => Arc::new(self.as_multi_line_string().try_map_coords(map_op)?),
-            MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon().try_map_coords(map_op)?),
-            GeometryCollection(_, XY) => {
+            Point(_) => Arc::new(self.as_point().try_map_coords(map_op)?),
+            LineString(_) => Arc::new(self.as_line_string().try_map_coords(map_op)?),
+            Polygon(_) => Arc::new(self.as_polygon().try_map_coords(map_op)?),
+            MultiPoint(_) => Arc::new(self.as_multi_point().try_map_coords(map_op)?),
+            MultiLineString(_) => Arc::new(self.as_multi_line_string().try_map_coords(map_op)?),
+            MultiPolygon(_) => Arc::new(self.as_multi_polygon().try_map_coords(map_op)?),
+            GeometryCollection(_) => {
                 Arc::new(self.as_geometry_collection().try_map_coords(map_op)?)
             }
             Rect(XY) => Arc::new(self.as_rect().try_map_coords(map_op)?),

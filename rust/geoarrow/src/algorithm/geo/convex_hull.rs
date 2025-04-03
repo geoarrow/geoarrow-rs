@@ -91,13 +91,13 @@ impl ConvexHull for &dyn NativeArray {
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, _) => self.as_point().convex_hull(),
-            LineString(_, _) => self.as_line_string().convex_hull(),
-            Polygon(_, _) => self.as_polygon().convex_hull(),
-            MultiPoint(_, _) => self.as_multi_point().convex_hull(),
-            MultiLineString(_, _) => self.as_multi_line_string().convex_hull(),
-            MultiPolygon(_, _) => self.as_multi_polygon().convex_hull(),
-            GeometryCollection(_, _) => self.as_geometry_collection().convex_hull(),
+            Point(_) => self.as_point().convex_hull(),
+            LineString(_) => self.as_line_string().convex_hull(),
+            Polygon(_) => self.as_polygon().convex_hull(),
+            MultiPoint(_) => self.as_multi_point().convex_hull(),
+            MultiLineString(_) => self.as_multi_line_string().convex_hull(),
+            MultiPolygon(_) => self.as_multi_polygon().convex_hull(),
+            GeometryCollection(_) => self.as_geometry_collection().convex_hull(),
             Rect(_) => self.as_rect().convex_hull(),
             Geometry(_) => self.as_geometry().convex_hull(),
         };
@@ -121,13 +121,13 @@ impl ConvexHull for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => self.as_point().convex_hull(),
-            LineString(_, _) => self.as_line_string().convex_hull(),
-            Polygon(_, _) => self.as_polygon().convex_hull(),
-            MultiPoint(_, _) => self.as_multi_point().convex_hull(),
-            MultiLineString(_, _) => self.as_multi_line_string().convex_hull(),
-            MultiPolygon(_, _) => self.as_multi_polygon().convex_hull(),
-            GeometryCollection(_, _) => self.as_geometry_collection().convex_hull(),
+            Point(_) => self.as_point().convex_hull(),
+            LineString(_) => self.as_line_string().convex_hull(),
+            Polygon(_) => self.as_polygon().convex_hull(),
+            MultiPoint(_) => self.as_multi_point().convex_hull(),
+            MultiLineString(_) => self.as_multi_line_string().convex_hull(),
+            MultiPolygon(_) => self.as_multi_polygon().convex_hull(),
+            GeometryCollection(_) => self.as_geometry_collection().convex_hull(),
             Rect(_) => self.as_rect().convex_hull(),
             Geometry(_) => self.as_geometry().convex_hull(),
         }
@@ -139,7 +139,7 @@ mod tests {
     use super::ConvexHull;
     use crate::array::polygon::PolygonArray;
     use crate::array::{LineStringArray, MultiPointArray};
-    use crate::datatypes::Dimension;
+    use geoarrow_schema::Dimension;
     use crate::trait_::ArrayAccessor;
     use geo::{line_string, polygon, MultiPoint, Point};
 

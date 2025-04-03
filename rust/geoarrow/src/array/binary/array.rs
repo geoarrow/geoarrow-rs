@@ -86,7 +86,7 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         );
         Self {
             array: self.array.slice(offset, length),
-            data_type: self.data_type,
+            data_type: self.data_type.clone(),
             metadata: self.metadata(),
         }
     }

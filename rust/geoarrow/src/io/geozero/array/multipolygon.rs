@@ -2,7 +2,7 @@ use geozero::{GeomProcessor, GeozeroGeometry};
 
 use crate::array::multipolygon::MultiPolygonCapacity;
 use crate::array::{MultiPolygonArray, MultiPolygonBuilder};
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::io::geozero::scalar::process_multi_polygon;
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;

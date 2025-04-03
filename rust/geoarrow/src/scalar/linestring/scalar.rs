@@ -143,7 +143,7 @@ impl<G: LineStringTrait<T = f64>> PartialEq<G> for LineString<'_> {
 #[cfg(test)]
 mod test {
     use crate::array::LineStringArray;
-    use crate::datatypes::Dimension;
+    use geoarrow_schema::Dimension;
     use crate::test::linestring::{ls0, ls1};
     use crate::trait_::ArrayAccessor;
 

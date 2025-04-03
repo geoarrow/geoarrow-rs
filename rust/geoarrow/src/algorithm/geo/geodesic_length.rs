@@ -98,14 +98,14 @@ impl GeodesicLength for &dyn NativeArray {
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, XY) => self.as_point().geodesic_length(),
-            LineString(_, XY) => self.as_line_string().geodesic_length(),
-            // Polygon(_, XY) => self.as_polygon().geodesic_length(),
-            MultiPoint(_, XY) => self.as_multi_point().geodesic_length(),
-            MultiLineString(_, XY) => self.as_multi_line_string().geodesic_length(),
-            // MultiPolygon(_, XY) => self.as_multi_polygon().geodesic_length(),
-            // Mixed(_, XY) => self.as_mixed().geodesic_length(),
-            // GeometryCollection(_, XY) => self.as_geometry_collection().geodesic_length(),
+            Point(_) => self.as_point().geodesic_length(),
+            LineString(_) => self.as_line_string().geodesic_length(),
+            // Polygon(_) => self.as_polygon().geodesic_length(),
+            MultiPoint(_) => self.as_multi_point().geodesic_length(),
+            MultiLineString(_) => self.as_multi_line_string().geodesic_length(),
+            // MultiPolygon(_) => self.as_multi_polygon().geodesic_length(),
+            // Mixed(_) => self.as_mixed().geodesic_length(),
+            // GeometryCollection(_) => self.as_geometry_collection().geodesic_length(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -145,14 +145,14 @@ impl GeodesicLength for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point().geodesic_length(),
-            LineString(_, XY) => self.as_line_string().geodesic_length(),
-            // Polygon(_, XY) => self.as_polygon().geodesic_length(),
-            MultiPoint(_, XY) => self.as_multi_point().geodesic_length(),
-            MultiLineString(_, XY) => self.as_multi_line_string().geodesic_length(),
-            // MultiPolygon(_, XY) => self.as_multi_polygon().geodesic_length(),
-            // Mixed(_, XY) => self.as_mixed().geodesic_length(),
-            // GeometryCollection(_, XY) => self.as_geometry_collection().geodesic_length(),
+            Point(_) => self.as_point().geodesic_length(),
+            LineString(_) => self.as_line_string().geodesic_length(),
+            // Polygon(_) => self.as_polygon().geodesic_length(),
+            MultiPoint(_) => self.as_multi_point().geodesic_length(),
+            MultiLineString(_) => self.as_multi_line_string().geodesic_length(),
+            // MultiPolygon(_) => self.as_multi_polygon().geodesic_length(),
+            // Mixed(_) => self.as_mixed().geodesic_length(),
+            // GeometryCollection(_) => self.as_geometry_collection().geodesic_length(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

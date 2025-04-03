@@ -2,7 +2,7 @@ use arrow_array::{ArrowPrimitiveType, PrimitiveArray};
 use arrow_buffer::BufferBuilder;
 
 use crate::array::{GeometryArray, GeometryBuilder, PolygonArray};
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::error::GeoArrowError;
 use crate::io::geos::scalar::{GEOSGeometry, GEOSPolygon};
 use crate::trait_::NativeGEOSGeometryAccessor;

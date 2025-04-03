@@ -32,15 +32,13 @@ impl NativeArrayDyn {
     pub fn from_arrow_array(array: &dyn Array, field: &Field) -> Result<Self> {
         use NativeType::*;
         let geo_arr: Arc<dyn NativeArray> = match NativeType::try_from(field)? {
-            Point(_, _) => Arc::new(PointArray::try_from((array, field))?),
-            LineString(_, _) => Arc::new(LineStringArray::try_from((array, field))?),
-            Polygon(_, _) => Arc::new(PolygonArray::try_from((array, field))?),
-            MultiPoint(_, _) => Arc::new(MultiPointArray::try_from((array, field))?),
-            MultiLineString(_, _) => Arc::new(MultiLineStringArray::try_from((array, field))?),
-            MultiPolygon(_, _) => Arc::new(MultiPolygonArray::try_from((array, field))?),
-            GeometryCollection(_, _) => {
-                Arc::new(GeometryCollectionArray::try_from((array, field))?)
-            }
+            Point(_) => Arc::new(PointArray::try_from((array, field))?),
+            LineString(_) => Arc::new(LineStringArray::try_from((array, field))?),
+            Polygon(_) => Arc::new(PolygonArray::try_from((array, field))?),
+            MultiPoint(_) => Arc::new(MultiPointArray::try_from((array, field))?),
+            MultiLineString(_) => Arc::new(MultiLineStringArray::try_from((array, field))?),
+            MultiPolygon(_) => Arc::new(MultiPolygonArray::try_from((array, field))?),
+            GeometryCollection(_) => Arc::new(GeometryCollectionArray::try_from((array, field))?),
             Rect(_) => Arc::new(RectArray::try_from((array, field))?),
             Geometry(_) => Arc::new(GeometryArray::try_from((array, field))?),
         };
@@ -158,10 +156,10 @@ impl SerializedArrayDyn {
         let data_type = SerializedType::try_from(field)?;
 
         let geo_arr: SerializedArrayRef = match data_type {
-            SerializedType::WKB => Arc::new(WKBArray::<i32>::try_from((array, field))?),
-            SerializedType::LargeWKB => Arc::new(WKBArray::<i64>::try_from((array, field))?),
-            SerializedType::WKT => Arc::new(WKTArray::<i32>::try_from((array, field))?),
-            SerializedType::LargeWKT => Arc::new(WKTArray::<i64>::try_from((array, field))?),
+            SerializedType::WKB(_) => Arc::new(WKBArray::<i32>::try_from((array, field))?),
+            SerializedType::LargeWKB(_) => Arc::new(WKBArray::<i64>::try_from((array, field))?),
+            SerializedType::WKT(_) => Arc::new(WKTArray::<i32>::try_from((array, field))?),
+            SerializedType::LargeWKT(_) => Arc::new(WKTArray::<i64>::try_from((array, field))?),
         };
 
         Ok(Self(geo_arr))

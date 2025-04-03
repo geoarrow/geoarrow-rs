@@ -53,12 +53,12 @@ impl GeoParquetColumnEncoding {
         let new_encoding = match writer_encoding {
             GeoParquetWriterEncoding::WKB => Self::WKB,
             GeoParquetWriterEncoding::Native => match data_type {
-                NativeType::Point(_, _) => Self::Point,
-                NativeType::LineString(_, _) => Self::LineString,
-                NativeType::Polygon(_, _) => Self::Polygon,
-                NativeType::MultiPoint(_, _) => Self::MultiPoint,
-                NativeType::MultiLineString(_, _) => Self::MultiLineString,
-                NativeType::MultiPolygon(_, _) => Self::MultiPolygon,
+                NativeType::Point(_) => Self::Point,
+                NativeType::LineString(_) => Self::LineString,
+                NativeType::Polygon(_) => Self::Polygon,
+                NativeType::MultiPoint(_) => Self::MultiPoint,
+                NativeType::MultiLineString(_) => Self::MultiLineString,
+                NativeType::MultiPolygon(_) => Self::MultiPolygon,
                 dt => {
                     return Err(GeoArrowError::General(format!(
                         "unsupported data type for native encoding: {:?}",

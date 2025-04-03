@@ -129,15 +129,15 @@ impl ChamberlainDuquetteArea for &dyn NativeArray {
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, _) => self.as_point().chamberlain_duquette_signed_area(),
-            LineString(_, _) => self.as_line_string().chamberlain_duquette_signed_area(),
-            Polygon(_, _) => self.as_polygon().chamberlain_duquette_signed_area(),
-            MultiPoint(_, _) => self.as_multi_point().chamberlain_duquette_signed_area(),
-            MultiLineString(_, _) => self
+            Point(_) => self.as_point().chamberlain_duquette_signed_area(),
+            LineString(_) => self.as_line_string().chamberlain_duquette_signed_area(),
+            Polygon(_) => self.as_polygon().chamberlain_duquette_signed_area(),
+            MultiPoint(_) => self.as_multi_point().chamberlain_duquette_signed_area(),
+            MultiLineString(_) => self
                 .as_multi_line_string()
                 .chamberlain_duquette_signed_area(),
-            MultiPolygon(_, _) => self.as_multi_polygon().chamberlain_duquette_signed_area(),
-            GeometryCollection(_, _) => self
+            MultiPolygon(_) => self.as_multi_polygon().chamberlain_duquette_signed_area(),
+            GeometryCollection(_) => self
                 .as_geometry_collection()
                 .chamberlain_duquette_signed_area(),
             Rect(_) => self.as_rect().chamberlain_duquette_signed_area(),
@@ -150,15 +150,15 @@ impl ChamberlainDuquetteArea for &dyn NativeArray {
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, _) => self.as_point().chamberlain_duquette_unsigned_area(),
-            LineString(_, _) => self.as_line_string().chamberlain_duquette_unsigned_area(),
-            Polygon(_, _) => self.as_polygon().chamberlain_duquette_unsigned_area(),
-            MultiPoint(_, _) => self.as_multi_point().chamberlain_duquette_unsigned_area(),
-            MultiLineString(_, _) => self
+            Point(_) => self.as_point().chamberlain_duquette_unsigned_area(),
+            LineString(_) => self.as_line_string().chamberlain_duquette_unsigned_area(),
+            Polygon(_) => self.as_polygon().chamberlain_duquette_unsigned_area(),
+            MultiPoint(_) => self.as_multi_point().chamberlain_duquette_unsigned_area(),
+            MultiLineString(_) => self
                 .as_multi_line_string()
                 .chamberlain_duquette_unsigned_area(),
-            MultiPolygon(_, _) => self.as_multi_polygon().chamberlain_duquette_unsigned_area(),
-            GeometryCollection(_, _) => self
+            MultiPolygon(_) => self.as_multi_polygon().chamberlain_duquette_unsigned_area(),
+            GeometryCollection(_) => self
                 .as_geometry_collection()
                 .chamberlain_duquette_unsigned_area(),
             Rect(_) => self.as_rect().chamberlain_duquette_unsigned_area(),
@@ -197,15 +197,15 @@ impl ChamberlainDuquetteArea for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => self.as_point().chamberlain_duquette_signed_area(),
-            LineString(_, _) => self.as_line_string().chamberlain_duquette_signed_area(),
-            Polygon(_, _) => self.as_polygon().chamberlain_duquette_signed_area(),
-            MultiPoint(_, _) => self.as_multi_point().chamberlain_duquette_signed_area(),
-            MultiLineString(_, _) => self
+            Point(_) => self.as_point().chamberlain_duquette_signed_area(),
+            LineString(_) => self.as_line_string().chamberlain_duquette_signed_area(),
+            Polygon(_) => self.as_polygon().chamberlain_duquette_signed_area(),
+            MultiPoint(_) => self.as_multi_point().chamberlain_duquette_signed_area(),
+            MultiLineString(_) => self
                 .as_multi_line_string()
                 .chamberlain_duquette_signed_area(),
-            MultiPolygon(_, _) => self.as_multi_polygon().chamberlain_duquette_signed_area(),
-            GeometryCollection(_, _) => self
+            MultiPolygon(_) => self.as_multi_polygon().chamberlain_duquette_signed_area(),
+            GeometryCollection(_) => self
                 .as_geometry_collection()
                 .chamberlain_duquette_signed_area(),
             Rect(_) => self.as_rect().chamberlain_duquette_unsigned_area(),
@@ -217,15 +217,15 @@ impl ChamberlainDuquetteArea for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => self.as_point().chamberlain_duquette_unsigned_area(),
-            LineString(_, _) => self.as_line_string().chamberlain_duquette_unsigned_area(),
-            Polygon(_, _) => self.as_polygon().chamberlain_duquette_unsigned_area(),
-            MultiPoint(_, _) => self.as_multi_point().chamberlain_duquette_unsigned_area(),
-            MultiLineString(_, _) => self
+            Point(_) => self.as_point().chamberlain_duquette_unsigned_area(),
+            LineString(_) => self.as_line_string().chamberlain_duquette_unsigned_area(),
+            Polygon(_) => self.as_polygon().chamberlain_duquette_unsigned_area(),
+            MultiPoint(_) => self.as_multi_point().chamberlain_duquette_unsigned_area(),
+            MultiLineString(_) => self
                 .as_multi_line_string()
                 .chamberlain_duquette_unsigned_area(),
-            MultiPolygon(_, _) => self.as_multi_polygon().chamberlain_duquette_unsigned_area(),
-            GeometryCollection(_, _) => self
+            MultiPolygon(_) => self.as_multi_polygon().chamberlain_duquette_unsigned_area(),
+            GeometryCollection(_) => self
                 .as_geometry_collection()
                 .chamberlain_duquette_unsigned_area(),
             Rect(_) => self.as_rect().chamberlain_duquette_unsigned_area(),

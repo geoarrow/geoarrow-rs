@@ -4,12 +4,13 @@ use std::sync::Arc;
 use arrow_array::{Array, ArrayRef, OffsetSizeTrait, UnionArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field, UnionMode};
+use geoarrow_schema::Dimension;
 
 use crate::array::geometry::GeometryBuilder;
 use crate::array::geometry::GeometryCapacity;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::*;
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Geometry;
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
@@ -254,6 +255,7 @@ impl GeometryArray {
         match dim {
             Dimension::XY => !self.point_xy.is_empty(),
             Dimension::XYZ => !self.point_xyz.is_empty(),
+            _ => panic!("Unsupported dimension"),
         }
     }
 
@@ -261,6 +263,7 @@ impl GeometryArray {
         match dim {
             Dimension::XY => !self.line_string_xy.is_empty(),
             Dimension::XYZ => !self.line_string_xyz.is_empty(),
+            _ => panic!("Unsupported dimension"),
         }
     }
 
@@ -268,6 +271,7 @@ impl GeometryArray {
         match dim {
             Dimension::XY => !self.polygon_xy.is_empty(),
             Dimension::XYZ => !self.polygon_xyz.is_empty(),
+            _ => panic!("Unsupported dimension"),
         }
     }
 
@@ -275,6 +279,7 @@ impl GeometryArray {
         match dim {
             Dimension::XY => !self.mpoint_xy.is_empty(),
             Dimension::XYZ => !self.mpoint_xyz.is_empty(),
+            _ => panic!("Unsupported dimension"),
         }
     }
 
@@ -282,6 +287,7 @@ impl GeometryArray {
         match dim {
             Dimension::XY => !self.mline_string_xy.is_empty(),
             Dimension::XYZ => !self.mline_string_xyz.is_empty(),
+            _ => panic!("Unsupported dimension"),
         }
     }
 
@@ -289,6 +295,7 @@ impl GeometryArray {
         match dim {
             Dimension::XY => !self.mpolygon_xy.is_empty(),
             Dimension::XYZ => !self.mpolygon_xyz.is_empty(),
+            _ => panic!("Unsupported dimension"),
         }
     }
 
@@ -296,6 +303,7 @@ impl GeometryArray {
         match dim {
             Dimension::XY => !self.gc_xy.is_empty(),
             Dimension::XYZ => !self.gc_xyz.is_empty(),
+            _ => panic!("Unsupported dimension"),
         }
     }
 
@@ -319,6 +327,7 @@ impl GeometryArray {
                     || self.has_multi_line_strings(XYZ)
                     || self.has_multi_polygons(XYZ)
             }
+            _ => panic!("Unsupported dimension"),
         }
     }
 
@@ -476,7 +485,7 @@ impl GeometryArray {
             "offset + length may not exceed length of array"
         );
         Self {
-            data_type: self.data_type,
+            data_type: self.data_type.clone(),
             type_ids: self.type_ids.slice(offset, length),
             offsets: self.offsets.slice(offset, length),
 
@@ -999,6 +1008,7 @@ impl From<PointArray> for GeometryArray {
         let type_ids = match dim {
             Dimension::XY => vec![1; value.len()],
             Dimension::XYZ => vec![11; value.len()],
+            _ => panic!("Unsupported dimension"),
         }
         .into();
         let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
@@ -1042,6 +1052,7 @@ impl From<PointArray> for GeometryArray {
                 None,
                 metadata,
             ),
+            _ => panic!("Unsupported dimension"),
         }
     }
 }
@@ -1052,6 +1063,7 @@ impl From<LineStringArray> for GeometryArray {
         let type_ids = match dim {
             Dimension::XY => vec![2; value.len()],
             Dimension::XYZ => vec![12; value.len()],
+            _ => panic!("Unsupported dimension"),
         }
         .into();
         let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
@@ -1095,6 +1107,7 @@ impl From<LineStringArray> for GeometryArray {
                 None,
                 metadata,
             ),
+            _ => panic!("Unsupported dimension"),
         }
     }
 }
@@ -1105,6 +1118,7 @@ impl From<PolygonArray> for GeometryArray {
         let type_ids = match dim {
             Dimension::XY => vec![3; value.len()],
             Dimension::XYZ => vec![13; value.len()],
+            _ => panic!("Unsupported dimension"),
         }
         .into();
         let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
@@ -1148,6 +1162,7 @@ impl From<PolygonArray> for GeometryArray {
                 None,
                 metadata,
             ),
+            _ => panic!("Unsupported dimension"),
         }
     }
 }
@@ -1158,6 +1173,7 @@ impl From<MultiPointArray> for GeometryArray {
         let type_ids = match dim {
             Dimension::XY => vec![4; value.len()],
             Dimension::XYZ => vec![14; value.len()],
+            _ => panic!("Unsupported dimension"),
         }
         .into();
         let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
@@ -1201,6 +1217,7 @@ impl From<MultiPointArray> for GeometryArray {
                 None,
                 metadata,
             ),
+            _ => panic!("Unsupported dimension"),
         }
     }
 }
@@ -1211,6 +1228,7 @@ impl From<MultiLineStringArray> for GeometryArray {
         let type_ids = match dim {
             Dimension::XY => vec![5; value.len()],
             Dimension::XYZ => vec![15; value.len()],
+            _ => panic!("Unsupported dimension"),
         }
         .into();
         let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
@@ -1254,6 +1272,7 @@ impl From<MultiLineStringArray> for GeometryArray {
                 None,
                 metadata,
             ),
+            _ => panic!("Unsupported dimension"),
         }
     }
 }
@@ -1264,6 +1283,7 @@ impl From<MultiPolygonArray> for GeometryArray {
         let type_ids = match dim {
             Dimension::XY => vec![6; value.len()],
             Dimension::XYZ => vec![16; value.len()],
+            _ => panic!("Unsupported dimension"),
         }
         .into();
         let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
@@ -1307,6 +1327,7 @@ impl From<MultiPolygonArray> for GeometryArray {
                 None,
                 metadata,
             ),
+            _ => panic!("Unsupported dimension"),
         }
     }
 }
@@ -1317,6 +1338,7 @@ impl From<GeometryCollectionArray> for GeometryArray {
         let type_ids = match dim {
             Dimension::XY => vec![7; value.len()],
             Dimension::XYZ => vec![17; value.len()],
+            _ => panic!("Unsupported dimension"),
         }
         .into();
         let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
@@ -1360,6 +1382,7 @@ impl From<GeometryCollectionArray> for GeometryArray {
                 Some(value),
                 metadata,
             ),
+            _ => panic!("Unsupported dimension"),
         }
     }
 }
@@ -1400,6 +1423,7 @@ impl From<MixedGeometryArray> for GeometryArray {
                 mline_string_xyz = Some(value.multi_line_strings);
                 mpolygon_xyz = Some(value.multi_polygons);
             }
+            _ => panic!("Unsupported dimension"),
         }
 
         Self::new(

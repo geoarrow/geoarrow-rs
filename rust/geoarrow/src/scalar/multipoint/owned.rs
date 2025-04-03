@@ -1,6 +1,6 @@
 use crate::algorithm::native::eq::multi_point_eq;
 use crate::array::{CoordBuffer, MultiPointArray};
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::scalar::{MultiPoint, Point};
 use arrow_buffer::OffsetBuffer;
 use geo_traits::MultiPointTrait;

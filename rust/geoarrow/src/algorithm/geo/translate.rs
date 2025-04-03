@@ -139,14 +139,14 @@ impl Translate for &dyn NativeArray {
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
-            Point(_, XY) => impl_method!(as_point),
-            LineString(_, XY) => impl_method!(as_line_string),
-            Polygon(_, XY) => impl_method!(as_polygon),
-            MultiPoint(_, XY) => impl_method!(as_multi_point),
-            MultiLineString(_, XY) => impl_method!(as_multi_line_string),
-            MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
-            // Mixed(_, XY) => impl_method!(as_mixed),
-            // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
+            Point(_) => impl_method!(as_point),
+            LineString(_) => impl_method!(as_line_string),
+            Polygon(_) => impl_method!(as_polygon),
+            MultiPoint(_) => impl_method!(as_multi_point),
+            MultiLineString(_) => impl_method!(as_multi_line_string),
+            MultiPolygon(_) => impl_method!(as_multi_polygon),
+            // Mixed(_) => impl_method!(as_mixed),
+            // GeometryCollection(_) => impl_method!(as_geometry_collection),
             // Rect(XY) => impl_method!(as_rect),
             _ => todo!("unsupported data type"),
         };

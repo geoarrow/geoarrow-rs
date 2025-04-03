@@ -46,7 +46,7 @@ impl<O: OffsetSizeTrait> From<&MultiLineStringArray> for WKBArray<O> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::datatypes::Dimension;
+    use geoarrow_schema::Dimension;
     use crate::test::multilinestring::{ml0, ml1};
 
     #[test]

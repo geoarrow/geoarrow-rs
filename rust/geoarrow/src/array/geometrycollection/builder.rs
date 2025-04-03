@@ -8,7 +8,7 @@ use crate::array::metadata::ArrayMetadata;
 use crate::array::mixed::builder::DEFAULT_PREFER_MULTI;
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{CoordType, GeometryCollectionArray, MixedGeometryBuilder, WKBArray};
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};

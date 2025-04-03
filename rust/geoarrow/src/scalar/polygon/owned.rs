@@ -1,6 +1,6 @@
 use crate::algorithm::native::eq::polygon_eq;
 use crate::array::{CoordBuffer, PolygonArray};
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use crate::scalar::{LineString, Polygon};
 use arrow_buffer::OffsetBuffer;
 use geo_traits::PolygonTrait;

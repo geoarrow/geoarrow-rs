@@ -79,14 +79,14 @@ impl EuclideanLength for &dyn NativeArray {
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, XY) => self.as_point().euclidean_length(),
-            LineString(_, XY) => self.as_line_string().euclidean_length(),
-            // Polygon(_, XY) => self.as_polygon().euclidean_length(),
-            MultiPoint(_, XY) => self.as_multi_point().euclidean_length(),
-            MultiLineString(_, XY) => self.as_multi_line_string().euclidean_length(),
-            // MultiPolygon(_, XY) => self.as_multi_polygon().euclidean_length(),
-            // Mixed(_, XY) => self.as_mixed().euclidean_length(),
-            // GeometryCollection(_, XY) => self.as_geometry_collection().euclidean_length(),
+            Point(_) => self.as_point().euclidean_length(),
+            LineString(_) => self.as_line_string().euclidean_length(),
+            // Polygon(_) => self.as_polygon().euclidean_length(),
+            MultiPoint(_) => self.as_multi_point().euclidean_length(),
+            MultiLineString(_) => self.as_multi_line_string().euclidean_length(),
+            // MultiPolygon(_) => self.as_multi_polygon().euclidean_length(),
+            // Mixed(_) => self.as_mixed().euclidean_length(),
+            // GeometryCollection(_) => self.as_geometry_collection().euclidean_length(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -126,18 +126,18 @@ impl EuclideanLength for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point().euclidean_length(),
-            LineString(_, XY) => self.as_line_string().euclidean_length(),
-            // Polygon(_, XY) => self.as_polygon().euclidean_length(),
-            // LargePolygon(_, XY) => self.as_large_polygon().euclidean_length(),
-            MultiPoint(_, XY) => self.as_multi_point().euclidean_length(),
-            MultiLineString(_, XY) => self.as_multi_line_string().euclidean_length(),
-            // MultiPolygon(_, XY) => self.as_multi_polygon().euclidean_length(),
-            // LargeMultiPolygon(_, XY) => self.as_large_multi_polygon().euclidean_length(),
-            // Mixed(_, XY) => self.as_mixed().euclidean_length(),
-            // LargeMixed(_, XY) => self.as_large_mixed().euclidean_length(),
-            // GeometryCollection(_, XY) => self.as_geometry_collection().euclidean_length(),
-            // LargeGeometryCollection(_, XY) => {
+            Point(_) => self.as_point().euclidean_length(),
+            LineString(_) => self.as_line_string().euclidean_length(),
+            // Polygon(_) => self.as_polygon().euclidean_length(),
+            // LargePolygon(_) => self.as_large_polygon().euclidean_length(),
+            MultiPoint(_) => self.as_multi_point().euclidean_length(),
+            MultiLineString(_) => self.as_multi_line_string().euclidean_length(),
+            // MultiPolygon(_) => self.as_multi_polygon().euclidean_length(),
+            // LargeMultiPolygon(_) => self.as_large_multi_polygon().euclidean_length(),
+            // Mixed(_) => self.as_mixed().euclidean_length(),
+            // LargeMixed(_) => self.as_large_mixed().euclidean_length(),
+            // GeometryCollection(_) => self.as_geometry_collection().euclidean_length(),
+            // LargeGeometryCollection(_) => {
             //     self.as_large_geometry_collection().euclidean_length()
             // }
             _ => Err(GeoArrowError::IncorrectType("".into())),

@@ -46,13 +46,13 @@ impl IsValid for &dyn NativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => IsValid::is_valid(self.as_point()),
-            LineString(_, _) => IsValid::is_valid(self.as_line_string()),
-            Polygon(_, _) => IsValid::is_valid(self.as_polygon()),
-            MultiPoint(_, _) => IsValid::is_valid(self.as_multi_point()),
-            MultiLineString(_, _) => IsValid::is_valid(self.as_multi_line_string()),
-            MultiPolygon(_, _) => IsValid::is_valid(self.as_multi_polygon()),
-            GeometryCollection(_, _) => IsValid::is_valid(self.as_geometry_collection()),
+            Point(_) => IsValid::is_valid(self.as_point()),
+            LineString(_) => IsValid::is_valid(self.as_line_string()),
+            Polygon(_) => IsValid::is_valid(self.as_polygon()),
+            MultiPoint(_) => IsValid::is_valid(self.as_multi_point()),
+            MultiLineString(_) => IsValid::is_valid(self.as_multi_line_string()),
+            MultiPolygon(_) => IsValid::is_valid(self.as_multi_polygon()),
+            GeometryCollection(_) => IsValid::is_valid(self.as_geometry_collection()),
             Rect(_) => IsValid::is_valid(self.as_rect()),
             Geometry(_) => IsValid::is_valid(self.as_geometry()),
         }

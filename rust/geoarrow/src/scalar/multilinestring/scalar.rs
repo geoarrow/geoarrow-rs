@@ -151,7 +151,7 @@ impl<G: MultiLineStringTrait<T = f64>> PartialEq<G> for MultiLineString<'_> {
 #[cfg(test)]
 mod test {
     use crate::array::MultiLineStringArray;
-    use crate::datatypes::Dimension;
+    use geoarrow_schema::Dimension;
     use crate::test::multilinestring::{ml0, ml1};
     use crate::trait_::ArrayAccessor;
 

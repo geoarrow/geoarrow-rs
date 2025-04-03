@@ -173,12 +173,12 @@ impl Simplify for &dyn NativeArray {
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
-            Point(_, _) => Arc::new(self.as_point().simplify(epsilon)),
-            LineString(_, _) => Arc::new(self.as_line_string().simplify(epsilon)),
-            Polygon(_, _) => Arc::new(self.as_polygon().simplify(epsilon)),
-            MultiPoint(_, _) => Arc::new(self.as_multi_point().simplify(epsilon)),
-            MultiLineString(_, _) => Arc::new(self.as_multi_line_string().simplify(epsilon)),
-            MultiPolygon(_, _) => Arc::new(self.as_multi_polygon().simplify(epsilon)),
+            Point(_) => Arc::new(self.as_point().simplify(epsilon)),
+            LineString(_) => Arc::new(self.as_line_string().simplify(epsilon)),
+            Polygon(_) => Arc::new(self.as_polygon().simplify(epsilon)),
+            MultiPoint(_) => Arc::new(self.as_multi_point().simplify(epsilon)),
+            MultiLineString(_) => Arc::new(self.as_multi_line_string().simplify(epsilon)),
+            MultiPolygon(_) => Arc::new(self.as_multi_polygon().simplify(epsilon)),
             Geometry(_) => Arc::new(self.as_geometry().simplify(epsilon)?),
             // Mixed(_,_) => self.as_mixed().simplify(epsilon),
             // GeometryCollection(_,_) => self.as_geometry_collection().simplify(),
@@ -226,12 +226,12 @@ impl Simplify for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
-            Point(_, _) => Arc::new(self.as_point().simplify(epsilon)),
-            LineString(_, _) => Arc::new(self.as_line_string().simplify(epsilon)),
-            Polygon(_, _) => Arc::new(self.as_polygon().simplify(epsilon)),
-            MultiPoint(_, _) => Arc::new(self.as_multi_point().simplify(epsilon)),
-            MultiLineString(_, _) => Arc::new(self.as_multi_line_string().simplify(epsilon)),
-            MultiPolygon(_, _) => Arc::new(self.as_multi_polygon().simplify(epsilon)),
+            Point(_) => Arc::new(self.as_point().simplify(epsilon)),
+            LineString(_) => Arc::new(self.as_line_string().simplify(epsilon)),
+            Polygon(_) => Arc::new(self.as_polygon().simplify(epsilon)),
+            MultiPoint(_) => Arc::new(self.as_multi_point().simplify(epsilon)),
+            MultiLineString(_) => Arc::new(self.as_multi_line_string().simplify(epsilon)),
+            MultiPolygon(_) => Arc::new(self.as_multi_polygon().simplify(epsilon)),
             // Mixed(_,_) => self.as_mixed().simplify(epsilon),
             // GeometryCollection(_,_) => self.as_geometry_collection().simplify(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),

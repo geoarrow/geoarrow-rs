@@ -1,5 +1,5 @@
 use crate::array::{PolygonArray, PolygonBuilder};
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use geo::{polygon, Polygon};
 
 pub(crate) fn p0() -> Polygon {

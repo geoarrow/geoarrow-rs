@@ -1,11 +1,13 @@
+use core::panic;
 use std::io::Write;
 
 use arrow_schema::Schema;
 use flatgeobuf::{FgbCrs, FgbWriter, FgbWriterOptions};
+use geoarrow_schema::Dimension;
 use geozero::GeozeroDatasource;
 
 use crate::array::metadata::ArrayMetadata;
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::io::crs::{CRSTransform, DefaultCRSTransform};
 use crate::io::stream::RecordBatchReader;
@@ -73,6 +75,7 @@ impl FlatGeobufWriterOptions {
             Some(Dimension::XYZ) => (true, false),
             // TODO: not sure how to handle geometry arrays
             None => (false, false),
+            _ => panic!("XYM and XYZM not supported"),
         };
         let crs = FgbCrs {
             wkt: wkt_crs,
@@ -153,14 +156,14 @@ fn infer_flatgeobuf_geometry_type(schema: &Schema) -> Result<flatgeobuf::Geometr
 
     use NativeType::*;
     let geometry_type = match geo_data_type {
-        Point(_, _) => flatgeobuf::GeometryType::Point,
-        LineString(_, _) => flatgeobuf::GeometryType::LineString,
-        Polygon(_, _) => flatgeobuf::GeometryType::Polygon,
-        MultiPoint(_, _) => flatgeobuf::GeometryType::MultiPoint,
-        MultiLineString(_, _) => flatgeobuf::GeometryType::MultiLineString,
-        MultiPolygon(_, _) => flatgeobuf::GeometryType::MultiPolygon,
+        Point(_) => flatgeobuf::GeometryType::Point,
+        LineString(_) => flatgeobuf::GeometryType::LineString,
+        Polygon(_) => flatgeobuf::GeometryType::Polygon,
+        MultiPoint(_) => flatgeobuf::GeometryType::MultiPoint,
+        MultiLineString(_) => flatgeobuf::GeometryType::MultiLineString,
+        MultiPolygon(_) => flatgeobuf::GeometryType::MultiPolygon,
         Rect(_) | Geometry(_) => flatgeobuf::GeometryType::Unknown,
-        GeometryCollection(_, _) => flatgeobuf::GeometryType::GeometryCollection,
+        GeometryCollection(_) => flatgeobuf::GeometryType::GeometryCollection,
     };
     Ok(geometry_type)
 }
