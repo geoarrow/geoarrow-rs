@@ -1,9 +1,10 @@
 use arrow_array::{Array, ArrayRef, RecordBatch};
 use arrow_schema::Field;
+use geoarrow_schema::CoordType;
 
 use crate::algorithm::native::bounding_rect::BoundingRect;
 use crate::algorithm::native::TotalBounds;
-use crate::array::{CoordType, NativeArrayDyn};
+use crate::array::NativeArrayDyn;
 use crate::error::Result;
 use crate::io::parquet::metadata::GeoParquetColumnEncoding;
 use crate::io::parquet::writer::metadata::{ColumnInfo, GeoParquetMetadataBuilder};

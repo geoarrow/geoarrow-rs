@@ -1,7 +1,7 @@
 use crate::array::{MultiPolygonArray, MultiPolygonBuilder};
-use crate::datatypes::Dimension;
 use crate::error::Result;
 use crate::io::geos::scalar::GEOSMultiPolygon;
+use geoarrow_schema::Dimension;
 
 impl MultiPolygonBuilder {
     #[allow(dead_code)]

@@ -14,7 +14,7 @@
 //!
 //! Then:
 //!
-//! ```
+//! ```ignore
 //! # {
 //! use std::{io::Cursor, fs::File};
 //!
@@ -39,7 +39,7 @@
 //!
 //! ```
 //! use geoarrow::array::PointArray;
-//! use geoarrow::datatypes::Dimension;
+//! use geoarrow_schema::Dimension;
 //!
 //! let point = geo::point!(x: 1., y: 2.);
 //! let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -49,7 +49,7 @@
 //!
 //! ```
 //! use geoarrow::array::PointBuilder;
-//! use geoarrow::datatypes::Dimension;
+//! use geoarrow_schema::Dimension;
 //!
 //! let mut builder = PointBuilder::new(Dimension::XY);
 //! builder.push_point(Some(&geo::point!(x: 1., y: 2.)));

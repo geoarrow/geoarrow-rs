@@ -39,7 +39,7 @@ impl ScalarUDFImpl for Envelope {
     }
 
     fn return_type(&self, _arg_types: &[DataType]) -> datafusion::error::Result<DataType> {
-        Ok(GEOMETRY_TYPE.into())
+        Ok(GEOMETRY_TYPE().into())
     }
 
     fn invoke(&self, args: &[ColumnarValue]) -> datafusion::error::Result<ColumnarValue> {

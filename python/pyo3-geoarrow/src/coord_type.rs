@@ -1,4 +1,4 @@
-use geoarrow::array::CoordType;
+use geoarrow_schema::CoordType;
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;

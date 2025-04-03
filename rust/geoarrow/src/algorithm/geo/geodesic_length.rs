@@ -2,7 +2,7 @@ use crate::algorithm::geo::utils::zeroes;
 use crate::algorithm::native::Unary;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
@@ -34,7 +34,7 @@ pub trait GeodesicLength {
     /// use geo::LineString;
     /// use geoarrow::array::LineStringArray;
     /// use geoarrow::algorithm::geo::GeodesicLength;
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let linestring = LineString::from(vec![
     ///     // New York City
@@ -94,18 +94,17 @@ impl GeodesicLength for &dyn NativeArray {
     type Output = Result<Float64Array>;
 
     fn geodesic_length(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, XY) => self.as_point().geodesic_length(),
-            LineString(_, XY) => self.as_line_string().geodesic_length(),
-            // Polygon(_, XY) => self.as_polygon().geodesic_length(),
-            MultiPoint(_, XY) => self.as_multi_point().geodesic_length(),
-            MultiLineString(_, XY) => self.as_multi_line_string().geodesic_length(),
-            // MultiPolygon(_, XY) => self.as_multi_polygon().geodesic_length(),
-            // Mixed(_, XY) => self.as_mixed().geodesic_length(),
-            // GeometryCollection(_, XY) => self.as_geometry_collection().geodesic_length(),
+            Point(_) => self.as_point().geodesic_length(),
+            LineString(_) => self.as_line_string().geodesic_length(),
+            // Polygon(_) => self.as_polygon().geodesic_length(),
+            MultiPoint(_) => self.as_multi_point().geodesic_length(),
+            MultiLineString(_) => self.as_multi_line_string().geodesic_length(),
+            // MultiPolygon(_) => self.as_multi_polygon().geodesic_length(),
+            // Mixed(_) => self.as_mixed().geodesic_length(),
+            // GeometryCollection(_) => self.as_geometry_collection().geodesic_length(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -141,18 +140,17 @@ impl GeodesicLength for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn geodesic_length(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point().geodesic_length(),
-            LineString(_, XY) => self.as_line_string().geodesic_length(),
-            // Polygon(_, XY) => self.as_polygon().geodesic_length(),
-            MultiPoint(_, XY) => self.as_multi_point().geodesic_length(),
-            MultiLineString(_, XY) => self.as_multi_line_string().geodesic_length(),
-            // MultiPolygon(_, XY) => self.as_multi_polygon().geodesic_length(),
-            // Mixed(_, XY) => self.as_mixed().geodesic_length(),
-            // GeometryCollection(_, XY) => self.as_geometry_collection().geodesic_length(),
+            Point(_) => self.as_point().geodesic_length(),
+            LineString(_) => self.as_line_string().geodesic_length(),
+            // Polygon(_) => self.as_polygon().geodesic_length(),
+            MultiPoint(_) => self.as_multi_point().geodesic_length(),
+            MultiLineString(_) => self.as_multi_line_string().geodesic_length(),
+            // MultiPolygon(_) => self.as_multi_polygon().geodesic_length(),
+            // Mixed(_) => self.as_mixed().geodesic_length(),
+            // GeometryCollection(_) => self.as_geometry_collection().geodesic_length(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
@@ -164,6 +162,7 @@ mod tests {
     use crate::array::LineStringArray;
     use arrow_array::Array;
     use geo::line_string;
+    use geoarrow_schema::Dimension;
 
     #[test]
     fn geodesic_length_geoarrow() {

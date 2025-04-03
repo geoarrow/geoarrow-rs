@@ -20,6 +20,7 @@ arrow-buffer = "54"
 arrow-schema = "54"
 geo-traits = "0.2"
 geoarrow = { path = "../rust/geoarrow" }
+geoarrow-schema = { path = "../rust/geoarrow-schema" }
 # Uncomment when publishing
 # geoarrow = { version = "0.4.0-beta.1" }
 geozero = "0.14"

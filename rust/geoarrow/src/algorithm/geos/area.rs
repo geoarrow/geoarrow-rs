@@ -60,13 +60,13 @@ impl Area for &dyn NativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => self.as_point().area(),
-            LineString(_, _) => self.as_line_string().area(),
-            Polygon(_, _) => self.as_polygon().area(),
-            MultiPoint(_, _) => self.as_multi_point().area(),
-            MultiLineString(_, _) => self.as_multi_line_string().area(),
-            MultiPolygon(_, _) => self.as_multi_polygon().area(),
-            GeometryCollection(_, _) => self.as_geometry_collection().area(),
+            Point(_) => self.as_point().area(),
+            LineString(_) => self.as_line_string().area(),
+            Polygon(_) => self.as_polygon().area(),
+            MultiPoint(_) => self.as_multi_point().area(),
+            MultiLineString(_) => self.as_multi_line_string().area(),
+            MultiPolygon(_) => self.as_multi_polygon().area(),
+            GeometryCollection(_) => self.as_geometry_collection().area(),
             Rect(_) => self.as_rect().area(),
             Geometry(_) => self.as_geometry().area(),
         }

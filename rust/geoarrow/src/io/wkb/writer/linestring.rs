@@ -44,8 +44,8 @@ impl<O: OffsetSizeTrait> From<&LineStringArray> for WKBArray<O> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::datatypes::Dimension;
     use crate::test::linestring::{ls0, ls1};
+    use geoarrow_schema::Dimension;
 
     #[test]
     fn round_trip() {

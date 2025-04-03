@@ -1,5 +1,7 @@
 //! Geospatial operations on Arrow schemas
 
+use arrow_schema::extension::EXTENSION_TYPE_NAME_KEY;
+
 use crate::table::GEOARROW_EXTENSION_NAMES;
 
 /// Extra geospatial-specific functionality on Arrow schemas
@@ -16,7 +18,7 @@ impl GeoSchemaExt for &arrow_schema::Schema {
         let mut geom_indices = vec![];
         for (field_idx, field) in self.fields().iter().enumerate() {
             let meta = field.metadata();
-            if let Some(ext_name) = meta.get("ARROW:extension:name") {
+            if let Some(ext_name) = meta.get(EXTENSION_TYPE_NAME_KEY) {
                 if GEOARROW_EXTENSION_NAMES.contains(ext_name.as_str()) {
                     geom_indices.push(field_idx);
                 }

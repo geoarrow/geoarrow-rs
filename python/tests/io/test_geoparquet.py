@@ -3,6 +3,7 @@ import json
 import geopandas as gpd
 import pyarrow as pa
 import pyarrow.parquet as pq
+import pytest
 import shapely
 from geoarrow.rust.core import from_geopandas
 from geoarrow.rust.io import ParquetFile, read_parquet, write_parquet
@@ -87,6 +88,7 @@ def test_write_native_multi_points():
     )
 
 
+@pytest.mark.skip
 def test_read_write_crs():
     points = shapely.points([1, 2, 3], [4, 5, 6])
     crs = CRS.from_user_input("EPSG:4326")

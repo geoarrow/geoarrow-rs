@@ -1,7 +1,7 @@
 use geo::{polygon, MultiPolygon};
 
 use crate::array::MultiPolygonArray;
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 
 pub(crate) fn mp0() -> MultiPolygon {
     MultiPolygon::new(vec![

@@ -1,9 +1,9 @@
 use crate::algorithm::native::eq::multi_line_string_eq;
 use crate::array::{CoordBuffer, MultiLineStringArray};
-use crate::datatypes::Dimension;
 use crate::scalar::{LineString, MultiLineString};
 use arrow_buffer::OffsetBuffer;
 use geo_traits::MultiLineStringTrait;
+use geoarrow_schema::Dimension;
 
 #[derive(Clone, Debug)]
 pub struct OwnedMultiLineString {
@@ -81,6 +81,7 @@ impl MultiLineStringTrait for OwnedMultiLineString {
         match self.coords.dim() {
             Dimension::XY => geo_traits::Dimensions::Xy,
             Dimension::XYZ => geo_traits::Dimensions::Xyz,
+            _ => todo!("XYM and XYZM not supported yet"),
         }
     }
 

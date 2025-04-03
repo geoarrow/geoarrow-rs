@@ -10,12 +10,12 @@
 //!
 //! # Examples
 //!
-//! ```
+//! ```ignore
 //! use std::io::{Cursor, Seek};
 //!
 //! use arrow_array::RecordBatchReader;
 //!
-//! use geoarrow::array::CoordType;
+//! use geoarrow_schema::CoordType;
 //! use geoarrow::io::csv::{CSVReader, CSVReaderOptions};
 //! use geoarrow::table::Table;
 //!

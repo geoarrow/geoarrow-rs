@@ -1,7 +1,7 @@
 use crate::array::{LineStringArray, LineStringBuilder};
-use crate::datatypes::Dimension;
 use crate::error::Result;
 use crate::io::geos::scalar::GEOSLineString;
+use geoarrow_schema::Dimension;
 
 impl LineStringBuilder {
     #[allow(dead_code)]

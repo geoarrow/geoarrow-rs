@@ -5,11 +5,15 @@ use std::sync::Arc;
 
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
+use geoarrow_schema::{
+    CoordType, Dimension, GeometryCollectionType, GeometryType, MultiLineStringType,
+    MultiPointType, MultiPolygonType,
+};
 
 use crate::algorithm::native::cast::Cast;
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::schema::GeoSchemaExt;
 use crate::table::Table;
@@ -92,16 +96,17 @@ impl Downcast for MultiPointArray {
     type Output = Arc<dyn NativeArray>;
 
     fn downcasted_data_type(&self) -> NativeType {
-        match self.data_type() {
-            NativeType::MultiPoint(ct, dim) => {
-                if can_downcast_multi(&self.geom_offsets) {
-                    NativeType::Point(ct, dim)
-                } else {
-                    NativeType::MultiPoint(ct, dim)
-                }
-            }
-            _ => unreachable!(),
-        }
+        todo!("downcast");
+        // match self.data_type() {
+        //     NativeType::MultiPoint(ct, dim) => {
+        //         if can_downcast_multi(&self.geom_offsets) {
+        //             NativeType::Point(ct, dim)
+        //         } else {
+        //             NativeType::MultiPoint(ct, dim)
+        //         }
+        //     }
+        //     _ => unreachable!(),
+        // }
     }
     fn downcast(&self) -> Self::Output {
         if let Ok(array) = PointArray::try_from(self.clone()) {
@@ -116,16 +121,18 @@ impl Downcast for MultiLineStringArray {
     type Output = Arc<dyn NativeArray>;
 
     fn downcasted_data_type(&self) -> NativeType {
-        match self.data_type() {
-            NativeType::MultiLineString(ct, dim) => {
-                if can_downcast_multi(&self.geom_offsets) {
-                    NativeType::LineString(ct, dim)
-                } else {
-                    NativeType::MultiLineString(ct, dim)
-                }
-            }
-            _ => unreachable!(),
-        }
+        todo!("downcast");
+
+        // match self.data_type() {
+        //     NativeType::MultiLineString(ct, dim) => {
+        //         if can_downcast_multi(&self.geom_offsets) {
+        //             NativeType::LineString(ct, dim)
+        //         } else {
+        //             NativeType::MultiLineString(ct, dim)
+        //         }
+        //     }
+        //     _ => unreachable!(),
+        // }
     }
 
     fn downcast(&self) -> Self::Output {
@@ -141,16 +148,18 @@ impl Downcast for MultiPolygonArray {
     type Output = Arc<dyn NativeArray>;
 
     fn downcasted_data_type(&self) -> NativeType {
-        match self.data_type() {
-            NativeType::MultiPolygon(ct, dim) => {
-                if can_downcast_multi(&self.geom_offsets) {
-                    NativeType::Polygon(ct, dim)
-                } else {
-                    NativeType::MultiPolygon(ct, dim)
-                }
-            }
-            _ => unreachable!(),
-        }
+        todo!("downcast");
+
+        // match self.data_type() {
+        //     NativeType::MultiPolygon(ct, dim) => {
+        //         if can_downcast_multi(&self.geom_offsets) {
+        //             NativeType::Polygon(ct, dim)
+        //         } else {
+        //             NativeType::MultiPolygon(ct, dim)
+        //         }
+        //     }
+        //     _ => unreachable!(),
+        // }
     }
 
     fn downcast(&self) -> Self::Output {
@@ -170,12 +179,12 @@ impl Downcast for MixedGeometryArray {
     fn downcasted_data_type(&self) -> NativeType {
         let types = self.contained_types();
         if types.len() == 1 {
-            let typ = *types.iter().next().unwrap();
+            let typ = types.iter().next().unwrap().clone();
 
             // Only has non-multi geometry children
-            if matches!(typ, NativeType::Point(_, _))
-                || matches!(typ, NativeType::LineString(_, _))
-                || matches!(typ, NativeType::Polygon(_, _))
+            if matches!(typ, NativeType::Point(_))
+                || matches!(typ, NativeType::LineString(_))
+                || matches!(typ, NativeType::Polygon(_))
             {
                 return typ;
             }
@@ -270,13 +279,13 @@ impl Downcast for &dyn NativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => self.as_point().downcasted_data_type(),
-            LineString(_, _) => self.as_line_string().downcasted_data_type(),
-            Polygon(_, _) => self.as_polygon().downcasted_data_type(),
-            MultiPoint(_, _) => self.as_multi_point().downcasted_data_type(),
-            MultiLineString(_, _) => self.as_multi_line_string().downcasted_data_type(),
-            MultiPolygon(_, _) => self.as_multi_polygon().downcasted_data_type(),
-            GeometryCollection(_, _) => self.as_geometry_collection().downcasted_data_type(),
+            Point(_) => self.as_point().downcasted_data_type(),
+            LineString(_) => self.as_line_string().downcasted_data_type(),
+            Polygon(_) => self.as_polygon().downcasted_data_type(),
+            MultiPoint(_) => self.as_multi_point().downcasted_data_type(),
+            MultiLineString(_) => self.as_multi_line_string().downcasted_data_type(),
+            MultiPolygon(_) => self.as_multi_polygon().downcasted_data_type(),
+            GeometryCollection(_) => self.as_geometry_collection().downcasted_data_type(),
             Rect(_) => self.as_rect().downcasted_data_type(),
             Geometry(_) => self.as_geometry().downcasted_data_type(),
         }
@@ -286,13 +295,13 @@ impl Downcast for &dyn NativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => Ok(self.as_point().downcast()),
-            LineString(_, _) => Ok(self.as_line_string().downcast()),
-            Polygon(_, _) => Ok(self.as_polygon().downcast()),
-            MultiPoint(_, _) => Ok(self.as_multi_point().downcast()),
-            MultiLineString(_, _) => Ok(self.as_multi_line_string().downcast()),
-            MultiPolygon(_, _) => Ok(self.as_multi_polygon().downcast()),
-            GeometryCollection(_, _) => self.as_geometry_collection().downcast(),
+            Point(_) => Ok(self.as_point().downcast()),
+            LineString(_) => Ok(self.as_line_string().downcast()),
+            Polygon(_) => Ok(self.as_polygon().downcast()),
+            MultiPoint(_) => Ok(self.as_multi_point().downcast()),
+            MultiLineString(_) => Ok(self.as_multi_line_string().downcast()),
+            MultiPolygon(_) => Ok(self.as_multi_polygon().downcast()),
+            GeometryCollection(_) => self.as_geometry_collection().downcast(),
             Rect(_) => Ok(self.as_rect().downcast()),
             Geometry(_) => self.as_geometry().downcast(),
         }
@@ -308,14 +317,23 @@ fn resolve_types(types: &HashSet<NativeType>) -> NativeType {
 
     // If only one type, we can cast to that.
     if types.len() == 1 {
-        return *types.iter().next().unwrap();
+        return types.iter().next().unwrap().clone();
     }
 
     // If Geometry is in the type set, short circuit to that.
-    if types.contains(&NativeType::Geometry(CoordType::Interleaved)) {
-        return NativeType::Geometry(CoordType::Interleaved);
-    } else if types.contains(&NativeType::Geometry(CoordType::Separated)) {
-        return NativeType::Geometry(CoordType::Separated);
+    if types.contains(&NativeType::Geometry(GeometryType::new(
+        CoordType::Interleaved,
+        Default::default(),
+    ))) {
+        return NativeType::Geometry(GeometryType::new(
+            CoordType::Interleaved,
+            Default::default(),
+        ));
+    } else if types.contains(&NativeType::Geometry(GeometryType::new(
+        CoordType::Separated,
+        Default::default(),
+    ))) {
+        return NativeType::Geometry(GeometryType::new(CoordType::Separated, Default::default()));
     }
 
     // Since we don't have NativeType::Geometry, dimension should never be null
@@ -329,7 +347,7 @@ fn resolve_types(types: &HashSet<NativeType>) -> NativeType {
 
     // For data with multiple dimensions, we must cast to GeometryArray
     if dimensions.len() > 1 {
-        return NativeType::Geometry(coord_type);
+        return NativeType::Geometry(GeometryType::new(coord_type, Default::default()));
     }
     // Otherwise, we have just one dimension
     let dimension = *dimensions.iter().next().unwrap();
@@ -343,21 +361,37 @@ fn resolve_types(types: &HashSet<NativeType>) -> NativeType {
         if geometry_type_names.contains("geoarrow.point")
             && geometry_type_names.contains("geoarrow.multipoint")
         {
-            return NativeType::MultiPoint(coord_type, dimension);
+            return NativeType::MultiPoint(MultiPointType::new(
+                coord_type,
+                dimension,
+                Default::default(),
+            ));
         } else if geometry_type_names.contains("geoarrow.linestring")
             && geometry_type_names.contains("geoarrow.multilinestring")
         {
-            return NativeType::MultiLineString(coord_type, dimension);
+            return NativeType::MultiLineString(MultiLineStringType::new(
+                coord_type,
+                dimension,
+                Default::default(),
+            ));
         } else if geometry_type_names.contains("geoarrow.polygon")
             && geometry_type_names.contains("geoarrow.multipolygon")
         {
-            return NativeType::MultiPolygon(coord_type, dimension);
+            return NativeType::MultiPolygon(MultiPolygonType::new(
+                coord_type,
+                dimension,
+                Default::default(),
+            ));
         } else if geometry_type_names.contains("geoarrow.geometrycollection") {
-            return NativeType::GeometryCollection(coord_type, dimension);
+            return NativeType::GeometryCollection(GeometryCollectionType::new(
+                coord_type,
+                dimension,
+                Default::default(),
+            ));
         }
     }
 
-    NativeType::Geometry(coord_type)
+    NativeType::Geometry(GeometryType::new(coord_type, Default::default()))
 }
 
 impl Downcast for ChunkedPointArray {
@@ -423,13 +457,13 @@ impl Downcast for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => self.as_point().downcasted_data_type(),
-            LineString(_, _) => self.as_line_string().downcasted_data_type(),
-            Polygon(_, _) => self.as_polygon().downcasted_data_type(),
-            MultiPoint(_, _) => self.as_multi_point().downcasted_data_type(),
-            MultiLineString(_, _) => self.as_multi_line_string().downcasted_data_type(),
-            MultiPolygon(_, _) => self.as_multi_polygon().downcasted_data_type(),
-            GeometryCollection(_, _) => self.as_geometry_collection().downcasted_data_type(),
+            Point(_) => self.as_point().downcasted_data_type(),
+            LineString(_) => self.as_line_string().downcasted_data_type(),
+            Polygon(_) => self.as_polygon().downcasted_data_type(),
+            MultiPoint(_) => self.as_multi_point().downcasted_data_type(),
+            MultiLineString(_) => self.as_multi_line_string().downcasted_data_type(),
+            MultiPolygon(_) => self.as_multi_polygon().downcasted_data_type(),
+            GeometryCollection(_) => self.as_geometry_collection().downcasted_data_type(),
             Rect(_) => self.as_rect().downcasted_data_type(),
             Geometry(_) => self.as_geometry().downcasted_data_type(),
         }
@@ -439,13 +473,13 @@ impl Downcast for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => self.as_point().downcast(),
-            LineString(_, _) => self.as_line_string().downcast(),
-            Polygon(_, _) => self.as_polygon().downcast(),
-            MultiPoint(_, _) => self.as_multi_point().downcast(),
-            MultiLineString(_, _) => self.as_multi_line_string().downcast(),
-            MultiPolygon(_, _) => self.as_multi_polygon().downcast(),
-            GeometryCollection(_, _) => self.as_geometry_collection().downcast(),
+            Point(_) => self.as_point().downcast(),
+            LineString(_) => self.as_line_string().downcast(),
+            Polygon(_) => self.as_polygon().downcast(),
+            MultiPoint(_) => self.as_multi_point().downcast(),
+            MultiLineString(_) => self.as_multi_line_string().downcast(),
+            MultiPolygon(_) => self.as_multi_polygon().downcast(),
+            GeometryCollection(_) => self.as_geometry_collection().downcast(),
             Rect(_) => self.as_rect().downcast(),
             Geometry(_) => self.as_geometry().downcast(),
         }

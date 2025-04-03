@@ -56,8 +56,13 @@ macro_rules! define_basic_type {
             }
 
             /// Retrieve the underlying [`Metadata`]
-            pub fn metadata(&self) -> &Metadata {
+            pub fn metadata(&self) -> &Arc<Metadata> {
                 &self.metadata
+            }
+
+            /// Convert this type to a [`Field`], retaining extension metadata.
+            pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool) -> Field {
+                Field::new(name, self.data_type(), nullable).with_extension_type(self.clone())
             }
         }
     };
@@ -157,6 +162,7 @@ impl ExtensionType for PointType {
 
 fn parse_point(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowError> {
     match data_type {
+        // TODO: use list_size for dimension when 2, or 4
         DataType::FixedSizeList(inner_field, _list_size) => Ok((
             CoordType::Interleaved,
             Dimension::from_interleaved_field(inner_field),
@@ -937,7 +943,7 @@ impl GeometryType {
     }
 
     /// Retrieve the underlying [`Metadata`]
-    pub fn metadata(&self) -> &Metadata {
+    pub fn metadata(&self) -> &Arc<Metadata> {
         &self.metadata
     }
 
@@ -1015,6 +1021,11 @@ impl GeometryType {
         let union_fields = UnionFields::new(type_ids, fields);
         DataType::Union(union_fields, UnionMode::Dense)
     }
+
+    /// Convert this type to a [`Field`], retaining extension metadata.
+    pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool) -> Field {
+        Field::new(name, self.data_type(), nullable).with_extension_type(self.clone())
+    }
 }
 
 impl ExtensionType for GeometryType {
@@ -1075,24 +1086,28 @@ fn parse_geometry(data_type: &DataType) -> Result<CoordType, ArrowError> {
                 4 => impl_type_id!(Dimension::XY, parse_multipoint),
                 5 => impl_type_id!(Dimension::XY, parse_multilinestring),
                 6 => impl_type_id!(Dimension::XY, parse_multipolygon),
+                7 => impl_type_id!(Dimension::XY, parse_geometry_collection),
                 11 => impl_type_id!(Dimension::XYZ, parse_point),
                 12 => impl_type_id!(Dimension::XYZ, parse_linestring),
                 13 => impl_type_id!(Dimension::XYZ, parse_polygon),
                 14 => impl_type_id!(Dimension::XYZ, parse_multipoint),
                 15 => impl_type_id!(Dimension::XYZ, parse_multilinestring),
                 16 => impl_type_id!(Dimension::XYZ, parse_multipolygon),
+                17 => impl_type_id!(Dimension::XYZ, parse_geometry_collection),
                 21 => impl_type_id!(Dimension::XYM, parse_point),
                 22 => impl_type_id!(Dimension::XYM, parse_linestring),
                 23 => impl_type_id!(Dimension::XYM, parse_polygon),
                 24 => impl_type_id!(Dimension::XYM, parse_multipoint),
                 25 => impl_type_id!(Dimension::XYM, parse_multilinestring),
                 26 => impl_type_id!(Dimension::XYM, parse_multipolygon),
+                27 => impl_type_id!(Dimension::XYM, parse_geometry_collection),
                 31 => impl_type_id!(Dimension::XYZM, parse_point),
                 32 => impl_type_id!(Dimension::XYZM, parse_linestring),
                 33 => impl_type_id!(Dimension::XYZM, parse_polygon),
                 34 => impl_type_id!(Dimension::XYZM, parse_multipoint),
                 35 => impl_type_id!(Dimension::XYZM, parse_multilinestring),
                 36 => impl_type_id!(Dimension::XYZM, parse_multipolygon),
+                37 => impl_type_id!(Dimension::XYZM, parse_geometry_collection),
                 id => {
                     return Err(ArrowError::SchemaError(format!(
                         "Unexpected type id parsing geometry: {id}"
@@ -1143,7 +1158,7 @@ impl BoxType {
     }
 
     /// Retrieve the underlying [`Metadata`]
-    pub fn metadata(&self) -> &Metadata {
+    pub fn metadata(&self) -> &Arc<Metadata> {
         &self.metadata
     }
 
@@ -1216,6 +1231,11 @@ impl BoxType {
             }
         };
         DataType::Struct(values_fields.into())
+    }
+
+    /// Convert this type to a [`Field`], retaining extension metadata.
+    pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool) -> Field {
+        Field::new(name, self.data_type(), nullable).with_extension_type(self.clone())
     }
 }
 
@@ -1301,7 +1321,7 @@ impl WkbType {
     }
 
     /// Retrieve the underlying [`Metadata`]
-    pub fn metadata(&self) -> &Metadata {
+    pub fn metadata(&self) -> &Arc<Metadata> {
         &self.metadata
     }
 
@@ -1323,6 +1343,11 @@ impl WkbType {
         } else {
             DataType::Binary
         }
+    }
+
+    /// Convert this type to a [`Field`], retaining extension metadata.
+    pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool, large: bool) -> Field {
+        Field::new(name, self.data_type(large), nullable).with_extension_type(self.clone())
     }
 }
 
@@ -1378,7 +1403,7 @@ impl WktType {
     }
 
     /// Retrieve the underlying [`Metadata`]
-    pub fn metadata(&self) -> &Metadata {
+    pub fn metadata(&self) -> &Arc<Metadata> {
         &self.metadata
     }
 
@@ -1400,6 +1425,11 @@ impl WktType {
         } else {
             DataType::Utf8
         }
+    }
+
+    /// Convert this type to a [`Field`], retaining extension metadata.
+    pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool, large: bool) -> Field {
+        Field::new(name, self.data_type(large), nullable).with_extension_type(self.clone())
     }
 }
 

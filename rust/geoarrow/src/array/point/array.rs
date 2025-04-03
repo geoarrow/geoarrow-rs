@@ -1,31 +1,30 @@
 use std::sync::Arc;
 
+use arrow_array::{Array, ArrayRef, FixedSizeListArray, OffsetSizeTrait, StructArray};
+use arrow_buffer::NullBuffer;
+use arrow_schema::extension::ExtensionType;
+use arrow_schema::{DataType, Field};
+use geo_traits::PointTrait;
+use geoarrow_schema::{CoordType, Dimension, Metadata, PointType};
+
 use crate::algorithm::native::downcast::can_downcast_multi;
 use crate::algorithm::native::eq::point_eq;
-use crate::array::metadata::ArrayMetadata;
 use crate::array::{
-    CoordBuffer, CoordType, GeometryCollectionArray, InterleavedCoordBuffer, MixedGeometryArray,
+    CoordBuffer, GeometryCollectionArray, InterleavedCoordBuffer, MixedGeometryArray,
     MultiPointArray, PointBuilder, SeparatedCoordBuffer, WKBArray,
 };
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, Point};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
 use crate::{ArrayBase, NativeArray};
-use arrow_array::{Array, ArrayRef, FixedSizeListArray, OffsetSizeTrait, StructArray};
-use geo_traits::PointTrait;
-
-use arrow_buffer::NullBuffer;
-use arrow_schema::{DataType, Field};
 
 /// An immutable array of Point geometries using GeoArrow's in-memory representation.
 ///
 /// This is semantically equivalent to `Vec<Option<Point>>` due to the internal validity bitmap.
 #[derive(Debug, Clone)]
 pub struct PointArray {
-    // Always NativeType::Point
-    data_type: NativeType,
-    pub(crate) metadata: Arc<ArrayMetadata>,
+    data_type: PointType,
     pub(crate) coords: CoordBuffer,
     pub(crate) validity: Option<NullBuffer>,
 }
@@ -53,11 +52,7 @@ impl PointArray {
     /// # Panics
     ///
     /// - if the validity is not `None` and its length is different from the number of geometries
-    pub fn new(
-        coords: CoordBuffer,
-        validity: Option<NullBuffer>,
-        metadata: Arc<ArrayMetadata>,
-    ) -> Self {
+    pub fn new(coords: CoordBuffer, validity: Option<NullBuffer>, metadata: Arc<Metadata>) -> Self {
         Self::try_new(coords, validity, metadata).unwrap()
     }
 
@@ -73,15 +68,13 @@ impl PointArray {
     pub fn try_new(
         coords: CoordBuffer,
         validity: Option<NullBuffer>,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Result<Self> {
         check(&coords, validity.as_ref().map(|v| v.len()))?;
-        let data_type = NativeType::Point(coords.coord_type(), coords.dim());
         Ok(Self {
-            data_type,
+            data_type: PointType::new(coords.coord_type(), coords.dim(), metadata),
             coords,
             validity,
-            metadata,
         })
     }
 
@@ -118,10 +111,9 @@ impl PointArray {
             "offset + length may not exceed length of array"
         );
         Self {
-            data_type: self.data_type,
+            data_type: self.data_type.clone(),
             coords: self.coords.slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
-            metadata: self.metadata(),
         }
     }
 
@@ -132,10 +124,11 @@ impl PointArray {
 
     /// Change the coordinate type of this array.
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.metadata();
         Self::new(
             self.coords.into_coord_type(coord_type),
             self.validity,
-            self.metadata,
+            metadata,
         )
     }
 }
@@ -146,17 +139,15 @@ impl ArrayBase for PointArray {
     }
 
     fn storage_type(&self) -> DataType {
-        self.data_type.to_data_type()
+        self.data_type.data_type()
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        self.data_type
-            .to_field_with_metadata("geometry", true, &self.metadata)
-            .into()
+        self.data_type.to_field("geometry", true).into()
     }
 
     fn extension_name(&self) -> &str {
-        self.data_type.extension_name()
+        PointType::NAME
     }
 
     fn into_array_ref(self) -> ArrayRef {
@@ -167,8 +158,8 @@ impl ArrayBase for PointArray {
         self.clone().into_array_ref()
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
-        self.metadata.clone()
+    fn metadata(&self) -> Arc<Metadata> {
+        self.data_type.metadata().clone()
     }
 
     /// Returns the number of geometries in this array
@@ -186,7 +177,7 @@ impl ArrayBase for PointArray {
 
 impl NativeArray for PointArray {
     fn data_type(&self) -> NativeType {
-        self.data_type
+        NativeType::Point(self.data_type.clone())
     }
 
     fn coord_type(&self) -> CoordType {
@@ -197,9 +188,9 @@ impl NativeArray for PointArray {
         Arc::new(self.to_coord_type(coord_type))
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
+    fn with_metadata(&self, metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
-        arr.metadata = metadata;
+        arr.data_type = self.data_type.clone().with_metadata(metadata);
         Arc::new(arr)
     }
 
@@ -215,7 +206,8 @@ impl NativeArray for PointArray {
 impl GeometryArraySelfMethods for PointArray {
     fn with_coords(self, coords: CoordBuffer) -> Self {
         assert_eq!(coords.len(), self.coords.len());
-        Self::new(coords, self.validity, self.metadata)
+        let metadata = self.metadata();
+        Self::new(coords, self.validity, metadata)
     }
 
     fn into_coord_type(self, coord_type: CoordType) -> Self {
@@ -327,7 +319,8 @@ impl TryFrom<(&dyn Array, &Field)> for PointArray {
             .dimension()
             .ok_or(GeoArrowError::General("Expected dimension".to_string()))?;
         let mut arr: Self = (arr, dim).try_into()?;
-        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        let metadata = Arc::new(Metadata::try_from(field)?);
+        arr.data_type = arr.data_type.clone().with_metadata(metadata);
         Ok(arr)
     }
 }
@@ -400,12 +393,9 @@ impl TryFrom<MultiPointArray> for PointArray {
         if !can_downcast_multi(&value.geom_offsets) {
             return Err(GeoArrowError::General("Unable to cast".to_string()));
         }
+        let metadata = value.metadata();
 
-        Ok(PointArray::new(
-            value.coords,
-            value.validity,
-            value.metadata,
-        ))
+        Ok(PointArray::new(value.coords, value.validity, metadata))
     }
 }
 

@@ -4,12 +4,13 @@ use arrow::array::AsArray;
 use arrow::datatypes::Float64Type;
 use arrow_array::{Array, ArrayRef, StructArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
+use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
+use geoarrow_schema::{BoxType, CoordType, Dimension, Metadata};
 
-use crate::array::metadata::ArrayMetadata;
 use crate::array::rect::RectBuilder;
-use crate::array::{CoordBuffer, CoordType, SeparatedCoordBuffer};
-use crate::datatypes::{rect_fields, Dimension, NativeType};
+use crate::array::{CoordBuffer, SeparatedCoordBuffer};
+use crate::datatypes::NativeType;
 use crate::error::GeoArrowError;
 use crate::scalar::Rect;
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
@@ -25,10 +26,7 @@ use geo_traits::RectTrait;
 /// Internally this is implemented as a FixedSizeList, laid out as minx, miny, maxx, maxy.
 #[derive(Debug, Clone, PartialEq)]
 pub struct RectArray {
-    // Always NativeType::Rect
-    data_type: NativeType,
-
-    metadata: Arc<ArrayMetadata>,
+    data_type: BoxType,
 
     /// Separated arrays for each of the "lower" dimensions
     lower: SeparatedCoordBuffer,
@@ -45,16 +43,14 @@ impl RectArray {
         lower: SeparatedCoordBuffer,
         upper: SeparatedCoordBuffer,
         validity: Option<NullBuffer>,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         assert_eq!(lower.dim(), upper.dim());
-        let data_type = NativeType::Rect(lower.dim());
         Self {
-            data_type,
+            data_type: BoxType::new(lower.dim(), metadata),
             lower,
             upper,
             validity,
-            metadata,
         }
     }
 
@@ -83,11 +79,10 @@ impl RectArray {
         );
 
         Self {
-            data_type: self.data_type,
+            data_type: self.data_type.clone(),
             lower: self.lower().slice(offset, length),
             upper: self.upper().slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
-            metadata: self.metadata(),
         }
     }
 }
@@ -98,17 +93,15 @@ impl ArrayBase for RectArray {
     }
 
     fn storage_type(&self) -> DataType {
-        self.data_type.to_data_type()
+        self.data_type.data_type()
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        self.data_type
-            .to_field_with_metadata("geometry", true, &self.metadata)
-            .into()
+        self.data_type.to_field("geometry", true).into()
     }
 
     fn extension_name(&self) -> &str {
-        self.data_type.extension_name()
+        BoxType::NAME
     }
 
     fn into_array_ref(self) -> ArrayRef {
@@ -119,8 +112,8 @@ impl ArrayBase for RectArray {
         self.clone().into_array_ref()
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
-        self.metadata.clone()
+    fn metadata(&self) -> Arc<Metadata> {
+        self.data_type.metadata().clone()
     }
 
     /// Returns the number of geometries in this array
@@ -138,7 +131,7 @@ impl ArrayBase for RectArray {
 
 impl NativeArray for RectArray {
     fn data_type(&self) -> NativeType {
-        self.data_type
+        NativeType::Rect(self.data_type.clone())
     }
 
     fn coord_type(&self) -> CoordType {
@@ -149,9 +142,9 @@ impl NativeArray for RectArray {
         Arc::new(self.clone())
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
+    fn with_metadata(&self, metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
-        arr.metadata = metadata;
+        arr.data_type = self.data_type.clone().with_metadata(metadata);
         Arc::new(arr)
     }
 
@@ -187,7 +180,11 @@ impl IntoArrow for RectArray {
     type ArrowArray = StructArray;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let fields = rect_fields(self.data_type.dimension().unwrap());
+        let fields = match self.data_type.data_type() {
+            DataType::Struct(fields) => fields,
+            _ => unreachable!(),
+        };
+
         let mut arrays: Vec<ArrayRef> = vec![];
 
         // values_array takes care of the correct number of dimensions
@@ -259,7 +256,8 @@ impl TryFrom<(&dyn Array, &Field)> for RectArray {
             .dimension()
             .ok_or(GeoArrowError::General("Expected dimension".to_string()))?;
         let mut arr: Self = (arr, dim).try_into()?;
-        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        let metadata = Arc::new(Metadata::try_from(field)?);
+        arr.data_type = arr.data_type.clone().with_metadata(metadata);
         Ok(arr)
     }
 }
@@ -283,7 +281,7 @@ mod test {
     use super::*;
     use crate::algorithm::native::eq::rect_eq;
     use crate::array::RectBuilder;
-    use crate::datatypes::Dimension;
+    use geoarrow_schema::Dimension;
 
     #[test]
     fn rect_array_round_trip() {

@@ -1,4 +1,5 @@
-use arrow_schema::ArrowError;
+use arrow_schema::extension::EXTENSION_TYPE_METADATA_KEY;
+use arrow_schema::{ArrowError, Field};
 use serde::{Deserialize, Serialize};
 
 use crate::{Crs, Edges};
@@ -18,13 +19,21 @@ pub struct Metadata {
     /// If present, instructs consumers that edges follow a spherical path rather than a planar
     /// one. If this value is omitted, edges will be interpreted as planar.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub edges: Option<Edges>,
+    edges: Option<Edges>,
 }
 
 impl Metadata {
     /// Creates a new [`Metadata`] object.
     pub fn new(crs: Crs, edges: Option<Edges>) -> Self {
         Self { crs, edges }
+    }
+
+    pub fn crs(&self) -> &Crs {
+        &self.crs
+    }
+
+    pub fn edges(&self) -> Option<Edges> {
+        self.edges
     }
 
     pub(crate) fn serialize(&self) -> Option<String> {
@@ -35,13 +44,21 @@ impl Metadata {
         }
     }
 
-    pub(crate) fn deserialize(metadata: Option<&str>) -> Result<Self, ArrowError> {
+    pub(crate) fn deserialize<S: AsRef<str>>(metadata: Option<S>) -> Result<Self, ArrowError> {
         if let Some(ext_meta) = metadata {
-            Ok(serde_json::from_str(ext_meta)
+            Ok(serde_json::from_str(ext_meta.as_ref())
                 .map_err(|err| ArrowError::ExternalError(Box::new(err)))?)
         } else {
             Ok(Default::default())
         }
+    }
+}
+
+impl TryFrom<&Field> for Metadata {
+    type Error = ArrowError;
+
+    fn try_from(value: &Field) -> Result<Self, Self::Error> {
+        Self::deserialize(value.metadata().get(EXTENSION_TYPE_METADATA_KEY))
     }
 }
 

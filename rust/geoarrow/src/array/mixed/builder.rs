@@ -1,18 +1,18 @@
 use std::sync::Arc;
 
-use crate::array::metadata::ArrayMetadata;
+use arrow_array::{OffsetSizeTrait, UnionArray};
+use geo_traits::*;
+use geoarrow_schema::{CoordType, Dimension, Metadata};
+
 use crate::array::mixed::MixedCapacity;
 use crate::array::{
-    CoordType, LineStringBuilder, MixedGeometryArray, MultiLineStringBuilder, MultiPointBuilder,
+    LineStringBuilder, MixedGeometryArray, MultiLineStringBuilder, MultiPointBuilder,
     MultiPolygonBuilder, PointBuilder, PolygonBuilder, WKBArray,
 };
-use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use crate::{ArrayBase, NativeArray};
-use arrow_array::{OffsetSizeTrait, UnionArray};
-use geo_traits::*;
 
 pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 
@@ -30,7 +30,7 @@ pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 /// - All arrays must have the same coordinate layout (interleaved or separated)
 #[derive(Debug)]
 pub struct MixedGeometryBuilder {
-    metadata: Arc<ArrayMetadata>,
+    metadata: Arc<Metadata>,
 
     /// The dimension of this builder.
     ///
@@ -65,7 +65,7 @@ impl<'a> MixedGeometryBuilder {
     pub fn new(dim: Dimension) -> Self {
         Self::new_with_options(
             dim,
-            Default::default(),
+            CoordType::default_interleaved(),
             Default::default(),
             DEFAULT_PREFER_MULTI,
         )
@@ -74,7 +74,7 @@ impl<'a> MixedGeometryBuilder {
     pub fn new_with_options(
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Self {
         Self::with_capacity_and_options(dim, Default::default(), coord_type, metadata, prefer_multi)
@@ -85,7 +85,7 @@ impl<'a> MixedGeometryBuilder {
         Self::with_capacity_and_options(
             dim,
             capacity,
-            Default::default(),
+            CoordType::default_interleaved(),
             Default::default(),
             DEFAULT_PREFER_MULTI,
         )
@@ -95,7 +95,7 @@ impl<'a> MixedGeometryBuilder {
         dim: Dimension,
         capacity: MixedCapacity,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Self {
         // Don't store array metadata on child arrays
@@ -209,7 +209,7 @@ impl<'a> MixedGeometryBuilder {
         Self::with_capacity_and_options_from_iter(
             geoms,
             dim,
-            Default::default(),
+            CoordType::default_interleaved(),
             Default::default(),
             DEFAULT_PREFER_MULTI,
         )
@@ -219,7 +219,7 @@ impl<'a> MixedGeometryBuilder {
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let counter = MixedCapacity::from_geometries(geoms)?;
@@ -272,6 +272,7 @@ impl<'a> MixedGeometryBuilder {
         match self.dim {
             Dimension::XY => self.types.push(1),
             Dimension::XYZ => self.types.push(11),
+            _ => todo!("XYM and XYZM not supported"),
         }
     }
 
@@ -304,6 +305,7 @@ impl<'a> MixedGeometryBuilder {
         match self.dim {
             Dimension::XY => self.types.push(2),
             Dimension::XYZ => self.types.push(12),
+            _ => todo!("XYM and XYZM not supported"),
         }
     }
 
@@ -332,6 +334,7 @@ impl<'a> MixedGeometryBuilder {
         match self.dim {
             Dimension::XY => self.types.push(3),
             Dimension::XYZ => self.types.push(13),
+            _ => todo!("XYM and XYZM not supported"),
         }
     }
 
@@ -356,6 +359,7 @@ impl<'a> MixedGeometryBuilder {
         match self.dim {
             Dimension::XY => self.types.push(4),
             Dimension::XYZ => self.types.push(14),
+            _ => todo!("XYM and XYZM not supported"),
         }
     }
 
@@ -380,6 +384,7 @@ impl<'a> MixedGeometryBuilder {
         match self.dim {
             Dimension::XY => self.types.push(5),
             Dimension::XYZ => self.types.push(15),
+            _ => todo!("XYM and XYZM not supported"),
         }
     }
 
@@ -404,6 +409,7 @@ impl<'a> MixedGeometryBuilder {
         match self.dim {
             Dimension::XY => self.types.push(6),
             Dimension::XYZ => self.types.push(16),
+            _ => todo!("XYM and XYZM not supported"),
         }
     }
 
@@ -463,7 +469,7 @@ impl<'a> MixedGeometryBuilder {
         geoms: &[impl GeometryTrait<T = f64>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let mut array = Self::with_capacity_and_options_from_iter(
@@ -482,7 +488,7 @@ impl<'a> MixedGeometryBuilder {
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let mut array = Self::with_capacity_and_options_from_iter(
@@ -500,7 +506,7 @@ impl<'a> MixedGeometryBuilder {
         wkb_objects: &[Option<WKB<'_, W>>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let wkb_objects2 = wkb_objects
@@ -545,7 +551,13 @@ impl<G: GeometryTrait<T = f64>> TryFrom<(&[G], Dimension)> for MixedGeometryBuil
     type Error = GeoArrowError;
 
     fn try_from((geoms, dim): (&[G], Dimension)) -> Result<Self> {
-        Self::from_geometries(geoms, dim, Default::default(), Default::default(), true)
+        Self::from_geometries(
+            geoms,
+            dim,
+            CoordType::default_interleaved(),
+            Default::default(),
+            true,
+        )
     }
 }
 
@@ -553,7 +565,13 @@ impl<G: GeometryTrait<T = f64>> TryFrom<(Vec<Option<G>>, Dimension)> for MixedGe
     type Error = GeoArrowError;
 
     fn try_from((geoms, dim): (Vec<Option<G>>, Dimension)) -> Result<Self> {
-        Self::from_nullable_geometries(&geoms, dim, Default::default(), Default::default(), true)
+        Self::from_nullable_geometries(
+            &geoms,
+            dim,
+            CoordType::default_interleaved(),
+            Default::default(),
+            true,
+        )
     }
 }
 
@@ -567,9 +585,15 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MixedGeometryBuil
             "Parsing a WKBArray with null elements not supported",
         );
 
-        let metadata = value.metadata.clone();
+        let metadata = value.data_type.metadata().clone();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, dim, Default::default(), metadata, true)
+        Self::from_wkb(
+            &wkb_objects,
+            dim,
+            CoordType::default_interleaved(),
+            metadata,
+            true,
+        )
     }
 }
 
@@ -595,7 +619,7 @@ impl GeometryArrayBuilder for MixedGeometryBuilder {
         dim: Dimension,
         _geom_capacity: usize,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         // We don't know where to allocate the capacity
         Self::with_capacity_and_options(
@@ -619,11 +643,11 @@ impl GeometryArrayBuilder for MixedGeometryBuilder {
         self.points.coord_type()
     }
 
-    fn set_metadata(&mut self, metadata: Arc<ArrayMetadata>) {
+    fn set_metadata(&mut self, metadata: Arc<Metadata>) {
         self.metadata = metadata;
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
+    fn metadata(&self) -> Arc<Metadata> {
         self.metadata.clone()
     }
 }

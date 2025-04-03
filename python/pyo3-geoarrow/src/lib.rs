@@ -14,7 +14,7 @@ pub use array::{PyNativeArray, PySerializedArray};
 pub use chunked_array::PyChunkedNativeArray;
 pub use coord_buffer::PyCoordBuffer;
 pub use coord_type::PyCoordType;
-pub use crs::{PyprojCRSTransform, CRS};
+pub use crs::{PyCrs, PyprojCRSTransform};
 pub use data_type::{PyNativeType, PySerializedType};
 pub use dimension::PyDimension;
 pub use error::{PyGeoArrowError, PyGeoArrowResult};

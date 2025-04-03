@@ -45,13 +45,13 @@ impl IsSimple for &dyn NativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => self.as_point().is_simple(),
-            LineString(_, _) => self.as_line_string().is_simple(),
-            Polygon(_, _) => self.as_polygon().is_simple(),
-            MultiPoint(_, _) => self.as_multi_point().is_simple(),
-            MultiLineString(_, _) => self.as_multi_line_string().is_simple(),
-            MultiPolygon(_, _) => self.as_multi_polygon().is_simple(),
-            GeometryCollection(_, _) => self.as_geometry_collection().is_simple(),
+            Point(_) => self.as_point().is_simple(),
+            LineString(_) => self.as_line_string().is_simple(),
+            Polygon(_) => self.as_polygon().is_simple(),
+            MultiPoint(_) => self.as_multi_point().is_simple(),
+            MultiLineString(_) => self.as_multi_line_string().is_simple(),
+            MultiPolygon(_) => self.as_multi_polygon().is_simple(),
+            GeometryCollection(_) => self.as_geometry_collection().is_simple(),
             Rect(_) => self.as_rect().is_simple(),
             Geometry(_) => self.as_geometry().is_simple(),
         }

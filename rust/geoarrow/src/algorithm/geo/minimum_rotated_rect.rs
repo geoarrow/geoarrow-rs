@@ -1,11 +1,13 @@
+use geo::MinimumRotatedRect as _MinimumRotatedRect;
+use geoarrow_schema::Dimension;
+
 use crate::array::polygon::PolygonCapacity;
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray, ChunkedPolygonArray};
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
-use geo::MinimumRotatedRect as _MinimumRotatedRect;
 
 /// Return the minimum bounding rectangle(MBR) of geometry
 /// reference: <https://en.wikipedia.org/wiki/Minimum_bounding_box>
@@ -63,17 +65,16 @@ impl MinimumRotatedRect for &dyn NativeArray {
     type Output = Result<PolygonArray>;
 
     fn minimum_rotated_rect(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, XY) => self.as_point().minimum_rotated_rect(),
-            LineString(_, XY) => self.as_line_string().minimum_rotated_rect(),
-            Polygon(_, XY) => self.as_polygon().minimum_rotated_rect(),
-            MultiPoint(_, XY) => self.as_multi_point().minimum_rotated_rect(),
-            MultiLineString(_, XY) => self.as_multi_line_string().minimum_rotated_rect(),
-            MultiPolygon(_, XY) => self.as_multi_polygon().minimum_rotated_rect(),
-            GeometryCollection(_, XY) => self.as_geometry_collection().minimum_rotated_rect(),
+            Point(_) => self.as_point().minimum_rotated_rect(),
+            LineString(_) => self.as_line_string().minimum_rotated_rect(),
+            Polygon(_) => self.as_polygon().minimum_rotated_rect(),
+            MultiPoint(_) => self.as_multi_point().minimum_rotated_rect(),
+            MultiLineString(_) => self.as_multi_line_string().minimum_rotated_rect(),
+            MultiPolygon(_) => self.as_multi_polygon().minimum_rotated_rect(),
+            GeometryCollection(_) => self.as_geometry_collection().minimum_rotated_rect(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -93,17 +94,16 @@ impl MinimumRotatedRect for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedPolygonArray>;
 
     fn minimum_rotated_rect(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point().minimum_rotated_rect(),
-            LineString(_, XY) => self.as_line_string().minimum_rotated_rect(),
-            Polygon(_, XY) => self.as_polygon().minimum_rotated_rect(),
-            MultiPoint(_, XY) => self.as_multi_point().minimum_rotated_rect(),
-            MultiLineString(_, XY) => self.as_multi_line_string().minimum_rotated_rect(),
-            MultiPolygon(_, XY) => self.as_multi_polygon().minimum_rotated_rect(),
-            GeometryCollection(_, XY) => self.as_geometry_collection().minimum_rotated_rect(),
+            Point(_) => self.as_point().minimum_rotated_rect(),
+            LineString(_) => self.as_line_string().minimum_rotated_rect(),
+            Polygon(_) => self.as_polygon().minimum_rotated_rect(),
+            MultiPoint(_) => self.as_multi_point().minimum_rotated_rect(),
+            MultiLineString(_) => self.as_multi_line_string().minimum_rotated_rect(),
+            MultiPolygon(_) => self.as_multi_polygon().minimum_rotated_rect(),
+            GeometryCollection(_) => self.as_geometry_collection().minimum_rotated_rect(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

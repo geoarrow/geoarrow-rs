@@ -1,22 +1,22 @@
 use std::sync::Arc;
 
-use crate::array::metadata::ArrayMetadata;
-use crate::array::multipolygon::MultiPolygonCapacity;
-// use super::array::check;
-use crate::array::offset_builder::OffsetsBuilder;
-use crate::array::{
-    CoordBufferBuilder, CoordType, InterleavedCoordBufferBuilder, MultiPolygonArray,
-    SeparatedCoordBufferBuilder, WKBArray,
-};
-use crate::datatypes::Dimension;
-use crate::error::{GeoArrowError, Result};
-use crate::scalar::WKB;
-use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use arrow_array::{ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 use geo_traits::{
     CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait,
 };
+use geoarrow_schema::{CoordType, Dimension, Metadata};
+
+use crate::array::multipolygon::MultiPolygonCapacity;
+// use super::array::check;
+use crate::array::offset_builder::OffsetsBuilder;
+use crate::array::{
+    CoordBufferBuilder, InterleavedCoordBufferBuilder, MultiPolygonArray,
+    SeparatedCoordBufferBuilder, WKBArray,
+};
+use crate::error::{GeoArrowError, Result};
+use crate::scalar::WKB;
+use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 
 pub type MutableMultiPolygonParts = (
     CoordBufferBuilder,
@@ -31,7 +31,7 @@ pub type MutableMultiPolygonParts = (
 /// Converting an [`MultiPolygonBuilder`] into a [`MultiPolygonArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct MultiPolygonBuilder {
-    metadata: Arc<ArrayMetadata>,
+    metadata: Arc<Metadata>,
 
     pub(crate) coords: CoordBufferBuilder,
 
@@ -51,21 +51,26 @@ pub struct MultiPolygonBuilder {
 impl MultiPolygonBuilder {
     /// Creates a new empty [`MultiPolygonBuilder`].
     pub fn new(dim: Dimension) -> Self {
-        Self::new_with_options(dim, Default::default(), Default::default())
+        Self::new_with_options(dim, CoordType::default_interleaved(), Default::default())
     }
 
     /// Creates a new empty [`MultiPolygonBuilder`] with the provided options.
     pub fn new_with_options(
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         Self::with_capacity_and_options(dim, Default::default(), coord_type, metadata)
     }
 
     /// Creates a new [`MultiPolygonBuilder`] with a capacity.
     pub fn with_capacity(dim: Dimension, capacity: MultiPolygonCapacity) -> Self {
-        Self::with_capacity_and_options(dim, capacity, Default::default(), Default::default())
+        Self::with_capacity_and_options(
+            dim,
+            capacity,
+            CoordType::default_interleaved(),
+            Default::default(),
+        )
     }
 
     /// Creates a new empty [`MultiPolygonBuilder`] with the provided capacity and options.
@@ -73,7 +78,7 @@ impl MultiPolygonBuilder {
         dim: Dimension,
         capacity: MultiPolygonCapacity,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let coords = match coord_type {
             CoordType::Interleaved => CoordBufferBuilder::Interleaved(
@@ -144,7 +149,7 @@ impl MultiPolygonBuilder {
         polygon_offsets: OffsetsBuilder<i32>,
         ring_offsets: OffsetsBuilder<i32>,
         validity: NullBufferBuilder,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Result<Self> {
         // check(
         //     &coords.clone().into(),
@@ -187,7 +192,7 @@ impl MultiPolygonBuilder {
         Self::with_capacity_and_options_from_iter(
             geoms,
             dim,
-            Default::default(),
+            CoordType::default_interleaved(),
             Default::default(),
         )
     }
@@ -198,7 +203,7 @@ impl MultiPolygonBuilder {
         geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let capacity = MultiPolygonCapacity::from_multi_polygons(geoms);
         Self::with_capacity_and_options(dim, capacity, coord_type, metadata)
@@ -429,7 +434,7 @@ impl MultiPolygonBuilder {
         geoms: &[impl MultiPolygonTrait<T = f64>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(Some),
@@ -446,7 +451,7 @@ impl MultiPolygonBuilder {
         geoms: &[Option<impl MultiPolygonTrait<T = f64>>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(|x| x.as_ref()),
@@ -463,7 +468,7 @@ impl MultiPolygonBuilder {
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Result<Self> {
         let capacity = MultiPolygonCapacity::from_geometries(geoms.iter().map(|x| x.as_ref()))?;
         let mut array = Self::with_capacity_and_options(dim, capacity, coord_type, metadata);
@@ -475,7 +480,7 @@ impl MultiPolygonBuilder {
         wkb_objects: &[Option<WKB<'_, W>>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Result<Self> {
         let wkb_objects2 = wkb_objects
             .iter()
@@ -500,7 +505,7 @@ impl GeometryArrayBuilder for MultiPolygonBuilder {
         dim: Dimension,
         geom_capacity: usize,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let capacity = MultiPolygonCapacity::new(
             Default::default(),
@@ -535,11 +540,11 @@ impl GeometryArrayBuilder for MultiPolygonBuilder {
         self.coords.coord_type()
     }
 
-    fn set_metadata(&mut self, metadata: Arc<ArrayMetadata>) {
+    fn set_metadata(&mut self, metadata: Arc<Metadata>) {
         self.metadata = metadata;
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
+    fn metadata(&self) -> Arc<Metadata> {
         self.metadata.clone()
     }
 }
@@ -574,13 +579,23 @@ impl From<MultiPolygonBuilder> for MultiPolygonArray {
 
 impl<G: MultiPolygonTrait<T = f64>> From<(&[G], Dimension)> for MultiPolygonBuilder {
     fn from((geoms, dim): (&[G], Dimension)) -> Self {
-        Self::from_multi_polygons(geoms, dim, Default::default(), Default::default())
+        Self::from_multi_polygons(
+            geoms,
+            dim,
+            CoordType::default_interleaved(),
+            Default::default(),
+        )
     }
 }
 
 impl<G: MultiPolygonTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for MultiPolygonBuilder {
     fn from((geoms, dim): (Vec<Option<G>>, Dimension)) -> Self {
-        Self::from_nullable_multi_polygons(&geoms, dim, Default::default(), Default::default())
+        Self::from_nullable_multi_polygons(
+            &geoms,
+            dim,
+            CoordType::default_interleaved(),
+            Default::default(),
+        )
     }
 }
 
@@ -588,8 +603,13 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MultiPolygonBuild
     type Error = GeoArrowError;
 
     fn try_from((value, dim): (WKBArray<O>, Dimension)) -> Result<Self> {
-        let metadata = value.metadata.clone();
+        let metadata = value.data_type.metadata().clone();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, dim, Default::default(), metadata)
+        Self::from_wkb(
+            &wkb_objects,
+            dim,
+            CoordType::default_interleaved(),
+            metadata,
+        )
     }
 }

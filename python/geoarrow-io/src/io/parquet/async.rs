@@ -18,6 +18,7 @@ use geoarrow::io::parquet::{
 };
 use geoarrow::table::Table;
 use geoarrow::ArrayBase;
+use geoarrow_schema::CoordType;
 use object_store::{ObjectMeta, ObjectStore};
 use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::ParquetObjectReader;
@@ -26,7 +27,7 @@ use pyo3::prelude::*;
 use pyo3_arrow::export::{Arro3Schema, Arro3Table};
 use pyo3_arrow::PyArray;
 use pyo3_async_runtimes::tokio::future_into_py;
-use pyo3_geoarrow::CRS;
+use pyo3_geoarrow::PyCrs;
 use pyo3_object_store::AnyObjectStore;
 
 #[pyfunction]
@@ -125,14 +126,16 @@ impl ParquetFile {
 
     #[getter]
     fn schema_arrow(&self) -> PyGeoArrowResult<Arro3Schema> {
-        let schema = self.geoparquet_meta.resolved_schema(Default::default())?;
+        let schema = self
+            .geoparquet_meta
+            .resolved_schema(CoordType::default_interleaved())?;
         Ok(schema.into())
     }
 
     #[pyo3(signature = (column_name=None))]
     fn crs(&self, py: Python, column_name: Option<&str>) -> PyGeoArrowResult<PyObject> {
         if let Some(crs) = self.geoparquet_meta.crs(column_name)? {
-            Ok(CRS::from_projjson(crs.clone())
+            Ok(PyCrs::from_projjson(crs.clone())
                 .to_pyproj(py)
                 .map_err(PyErr::from)?)
         } else {
@@ -408,14 +411,16 @@ impl ParquetDataset {
 
     #[getter]
     fn schema_arrow(&self) -> PyGeoArrowResult<Arro3Schema> {
-        let schema = self.meta.resolved_schema(Default::default())?;
+        let schema = self
+            .meta
+            .resolved_schema(CoordType::default_interleaved())?;
         Ok(schema.into())
     }
 
     #[pyo3(signature = (column_name=None))]
     fn crs(&self, py: Python, column_name: Option<&str>) -> PyGeoArrowResult<PyObject> {
         if let Some(crs) = self.meta.crs(column_name)? {
-            Ok(CRS::from_projjson(crs.clone())
+            Ok(PyCrs::from_projjson(crs.clone())
                 .to_pyproj(py)
                 .map_err(PyErr::from)?)
         } else {
@@ -435,7 +440,9 @@ impl ParquetDataset {
     ) -> PyGeoArrowResult<Bound<'py, PyAny>> {
         let options = create_options(batch_size, limit, offset, bbox, bbox_paths)?;
         let readers = self.to_readers(options)?;
-        let output_schema = self.meta.resolved_schema(Default::default())?;
+        let output_schema = self
+            .meta
+            .resolved_schema(CoordType::default_interleaved())?;
 
         let fut = future_into_py(py, async move {
             Ok(Self::read_inner(readers, output_schema).await?)
@@ -456,7 +463,9 @@ impl ParquetDataset {
         let runtime = get_runtime(py)?;
         let options = create_options(batch_size, limit, offset, bbox, bbox_paths)?;
         let readers = self.to_readers(options)?;
-        let output_schema = self.meta.resolved_schema(Default::default())?;
+        let output_schema = self
+            .meta
+            .resolved_schema(CoordType::default_interleaved())?;
 
         runtime.block_on(Self::read_inner(readers, output_schema))
     }

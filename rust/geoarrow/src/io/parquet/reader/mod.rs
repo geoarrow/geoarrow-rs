@@ -18,7 +18,7 @@ use crate::error::GeoArrowError;
 pub(crate) fn parse_table_geometries_to_native(
     table: &crate::table::Table,
     metadata: &parquet::file::metadata::FileMetaData,
-    coord_type: &crate::array::CoordType,
+    coord_type: &geoarrow_schema::CoordType,
 ) -> crate::error::Result<crate::table::Table> {
     let mut table = table.clone();
     let geom_cols =
@@ -26,7 +26,7 @@ pub(crate) fn parse_table_geometries_to_native(
     geom_cols
         .iter()
         .try_for_each(|(geom_col_idx, target_geo_data_type)| {
-            table = table.parse_serialized_geometry(*geom_col_idx, *target_geo_data_type)?;
+            table = table.parse_serialized_geometry(*geom_col_idx, target_geo_data_type.clone())?;
             Ok::<_, GeoArrowError>(())
         })?;
     Ok(table)

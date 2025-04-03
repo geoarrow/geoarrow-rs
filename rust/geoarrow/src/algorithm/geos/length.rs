@@ -53,13 +53,13 @@ impl Length for &dyn NativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => self.as_point().length(),
-            LineString(_, _) => self.as_line_string().length(),
-            Polygon(_, _) => self.as_polygon().length(),
-            MultiPoint(_, _) => self.as_multi_point().length(),
-            MultiLineString(_, _) => self.as_multi_line_string().length(),
-            MultiPolygon(_, _) => self.as_multi_polygon().length(),
-            GeometryCollection(_, _) => self.as_geometry_collection().length(),
+            Point(_) => self.as_point().length(),
+            LineString(_) => self.as_line_string().length(),
+            Polygon(_) => self.as_polygon().length(),
+            MultiPoint(_) => self.as_multi_point().length(),
+            MultiLineString(_) => self.as_multi_line_string().length(),
+            MultiPolygon(_) => self.as_multi_polygon().length(),
+            GeometryCollection(_) => self.as_geometry_collection().length(),
             Rect(_) => self.as_rect().length(),
             Geometry(_) => self.as_geometry().length(),
         }

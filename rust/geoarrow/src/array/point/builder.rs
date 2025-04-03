@@ -1,26 +1,26 @@
 use core::f64;
 use std::sync::Arc;
 
-use crate::array::metadata::ArrayMetadata;
-// use super::array::check;
-use crate::array::{
-    CoordBufferBuilder, CoordType, InterleavedCoordBufferBuilder, PointArray,
-    SeparatedCoordBufferBuilder, WKBArray,
-};
-use crate::datatypes::Dimension;
-use crate::error::{GeoArrowError, Result};
-use crate::scalar::WKB;
-use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use arrow_array::{ArrayRef, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
+use geoarrow_schema::{CoordType, Dimension, Metadata};
+
+// use super::array::check;
+use crate::array::{
+    CoordBufferBuilder, InterleavedCoordBufferBuilder, PointArray, SeparatedCoordBufferBuilder,
+    WKBArray,
+};
+use crate::error::{GeoArrowError, Result};
+use crate::scalar::WKB;
+use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 
 /// The GeoArrow equivalent to `Vec<Option<Point>>`: a mutable collection of Points.
 ///
 /// Converting an [`PointBuilder`] into a [`PointArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct PointBuilder {
-    metadata: Arc<ArrayMetadata>,
+    metadata: Arc<Metadata>,
     pub(crate) coords: CoordBufferBuilder,
     pub(crate) validity: NullBufferBuilder,
 }
@@ -28,21 +28,26 @@ pub struct PointBuilder {
 impl PointBuilder {
     /// Creates a new empty [`PointBuilder`].
     pub fn new(dim: Dimension) -> Self {
-        Self::new_with_options(dim, Default::default(), Default::default())
+        Self::new_with_options(dim, CoordType::default_interleaved(), Default::default())
     }
 
     /// Creates a new empty [`PointBuilder`] with the provided options.
     pub fn new_with_options(
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         Self::with_capacity_and_options(dim, 0, coord_type, metadata)
     }
 
     /// Creates a new [`PointBuilder`] with a capacity.
     pub fn with_capacity(dim: Dimension, capacity: usize) -> Self {
-        Self::with_capacity_and_options(dim, capacity, Default::default(), Default::default())
+        Self::with_capacity_and_options(
+            dim,
+            capacity,
+            CoordType::default_interleaved(),
+            Default::default(),
+        )
     }
 
     /// Creates a new empty [`PointBuilder`] with the provided capacity and options.
@@ -50,7 +55,7 @@ impl PointBuilder {
         dim: Dimension,
         capacity: usize,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let coords = match coord_type {
             CoordType::Interleaved => CoordBufferBuilder::Interleaved(
@@ -105,7 +110,7 @@ impl PointBuilder {
     pub fn try_new(
         coords: CoordBufferBuilder,
         validity: NullBufferBuilder,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Result<Self> {
         // check(&coords.clone().into(), validity.as_ref().map(|x| x.len()))?;
         Ok(Self {
@@ -238,7 +243,7 @@ impl PointBuilder {
         geoms: impl ExactSizeIterator<Item = &'a (impl PointTrait<T = f64> + 'a)>,
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let mut mutable_array =
             Self::with_capacity_and_options(dim, geoms.len(), coord_type, metadata);
@@ -253,7 +258,7 @@ impl PointBuilder {
         geoms: impl ExactSizeIterator<Item = Option<&'a (impl PointTrait<T = f64> + 'a)>>,
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let mut mutable_array =
             Self::with_capacity_and_options(dim, geoms.len(), coord_type, metadata);
@@ -268,7 +273,7 @@ impl PointBuilder {
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Result<Self> {
         let capacity = geoms.len();
         let mut array = Self::with_capacity_and_options(dim, capacity, coord_type, metadata);
@@ -280,7 +285,7 @@ impl PointBuilder {
         wkb_objects: &[Option<WKB<'_, O>>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Result<Self> {
         let wkb_objects2 = wkb_objects
             .iter()
@@ -299,12 +304,12 @@ impl GeometryArrayBuilder for PointBuilder {
         dim: Dimension,
         geom_capacity: usize,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         Self::with_capacity_and_options(dim, geom_capacity, coord_type, metadata)
     }
 
-    fn set_metadata(&mut self, metadata: Arc<ArrayMetadata>) {
+    fn set_metadata(&mut self, metadata: Arc<Metadata>) {
         self.metadata = metadata;
     }
 
@@ -332,7 +337,7 @@ impl GeometryArrayBuilder for PointBuilder {
         self.coords.coord_type()
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
+    fn metadata(&self) -> Arc<Metadata> {
         self.metadata.clone()
     }
 }
@@ -367,7 +372,12 @@ impl From<PointBuilder> for ArrayRef {
 
 impl<G: PointTrait<T = f64>> From<(&[G], Dimension)> for PointBuilder {
     fn from((value, dim): (&[G], Dimension)) -> Self {
-        PointBuilder::from_points(value.iter(), dim, Default::default(), Default::default())
+        PointBuilder::from_points(
+            value.iter(),
+            dim,
+            CoordType::default_interleaved(),
+            Default::default(),
+        )
     }
 }
 
@@ -376,7 +386,7 @@ impl<G: PointTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for PointBuilder 
         PointBuilder::from_nullable_points(
             geoms.iter().map(|x| x.as_ref()),
             dim,
-            Default::default(),
+            CoordType::default_interleaved(),
             Default::default(),
         )
     }
@@ -386,8 +396,13 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for PointBuilder {
     type Error = GeoArrowError;
 
     fn try_from((value, dim): (WKBArray<O>, Dimension)) -> Result<Self> {
-        let metadata = value.metadata.clone();
+        let metadata = value.data_type.metadata().clone();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, dim, Default::default(), metadata)
+        Self::from_wkb(
+            &wkb_objects,
+            dim,
+            CoordType::default_interleaved(),
+            metadata,
+        )
     }
 }

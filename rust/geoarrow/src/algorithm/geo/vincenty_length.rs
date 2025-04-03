@@ -1,13 +1,14 @@
+use arrow_array::Float64Array;
+use geo::VincentyLength as _VincentyLength;
+
 use crate::algorithm::geo::utils::zeroes;
 use crate::algorithm::native::Unary;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
-use arrow_array::Float64Array;
-use geo::VincentyLength as _VincentyLength;
 
 /// Determine the length of a geometry using [Vincenty’s formulae].
 ///
@@ -27,7 +28,7 @@ pub trait VincentyLength {
     /// use geo::LineString;
     /// use geoarrow::array::LineStringArray;
     /// use geoarrow::algorithm::geo::VincentyLength;
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let linestring = LineString::<f64>::from(vec![
     ///     // New York City
@@ -87,18 +88,17 @@ impl VincentyLength for &dyn NativeArray {
     type Output = Result<Float64Array>;
 
     fn vincenty_length(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point().vincenty_length(),
-            LineString(_, XY) => self.as_line_string().vincenty_length(),
-            // Polygon(_, XY) => self.as_polygon().vincenty_length(),
-            MultiPoint(_, XY) => self.as_multi_point().vincenty_length(),
-            MultiLineString(_, XY) => self.as_multi_line_string().vincenty_length(),
-            // MultiPolygon(_, XY) => self.as_multi_polygon().vincenty_length(),
-            // Mixed(_, XY) => self.as_mixed().vincenty_length(),
-            // GeometryCollection(_, XY) => self.as_geometry_collection().vincenty_length(),
+            Point(_) => self.as_point().vincenty_length(),
+            LineString(_) => self.as_line_string().vincenty_length(),
+            // Polygon(_) => self.as_polygon().vincenty_length(),
+            MultiPoint(_) => self.as_multi_point().vincenty_length(),
+            MultiLineString(_) => self.as_multi_line_string().vincenty_length(),
+            // MultiPolygon(_) => self.as_multi_polygon().vincenty_length(),
+            // Mixed(_) => self.as_mixed().vincenty_length(),
+            // GeometryCollection(_) => self.as_geometry_collection().vincenty_length(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
@@ -133,18 +133,17 @@ impl VincentyLength for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn vincenty_length(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point().vincenty_length(),
-            LineString(_, XY) => self.as_line_string().vincenty_length(),
-            // Polygon(_, XY) => self.as_polygon().vincenty_length(),
-            MultiPoint(_, XY) => self.as_multi_point().vincenty_length(),
-            MultiLineString(_, XY) => self.as_multi_line_string().vincenty_length(),
-            // MultiPolygon(_, XY) => self.as_multi_polygon().vincenty_length(),
-            // Mixed(_, XY) => self.as_mixed().vincenty_length(),
-            // GeometryCollection(_, XY) => self.as_geometry_collection().vincenty_length(),
+            Point(_) => self.as_point().vincenty_length(),
+            LineString(_) => self.as_line_string().vincenty_length(),
+            // Polygon(_) => self.as_polygon().vincenty_length(),
+            MultiPoint(_) => self.as_multi_point().vincenty_length(),
+            MultiLineString(_) => self.as_multi_line_string().vincenty_length(),
+            // MultiPolygon(_) => self.as_multi_polygon().vincenty_length(),
+            // Mixed(_) => self.as_mixed().vincenty_length(),
+            // GeometryCollection(_) => self.as_geometry_collection().vincenty_length(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
@@ -156,6 +155,7 @@ mod tests {
     use crate::array::LineStringArray;
     use arrow_array::Array;
     use geo::line_string;
+    use geoarrow_schema::Dimension;
 
     #[test]
     fn vincenty_length_geoarrow() {

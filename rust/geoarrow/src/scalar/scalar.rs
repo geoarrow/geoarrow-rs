@@ -1,8 +1,10 @@
+use geoarrow_schema::Dimension;
+
 use crate::array::{
     AsNativeArray, GeometryArray, GeometryCollectionArray, LineStringArray, MultiLineStringArray,
     MultiPointArray, MultiPolygonArray, PointArray, PolygonArray, RectArray,
 };
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Geometry;
 use crate::trait_::{ArrayAccessor, NativeArrayRef, NativeScalar};
@@ -51,18 +53,7 @@ impl GeometryScalar {
     ///
     /// If the type of the array is `Geometry`, dimension will be `None`.
     pub fn dimension(&self) -> Option<Dimension> {
-        use NativeType::*;
-        match self.data_type() {
-            Point(_, dim)
-            | LineString(_, dim)
-            | Polygon(_, dim)
-            | MultiPoint(_, dim)
-            | MultiLineString(_, dim)
-            | MultiPolygon(_, dim)
-            | GeometryCollection(_, dim)
-            | Rect(dim) => Some(dim),
-            Geometry(_) => None,
-        }
+        self.data_type().dimension()
     }
 
     /// Convert to a [Geometry]
@@ -76,23 +67,23 @@ impl GeometryScalar {
         // to work around that.
 
         match self.data_type() {
-            NativeType::Point(_, _) => {
+            NativeType::Point(_) => {
                 let arr = self.0.as_any().downcast_ref::<PointArray>().unwrap();
                 arr.get(0).map(Geometry::Point)
             }
-            NativeType::LineString(_, _) => {
+            NativeType::LineString(_) => {
                 let arr = self.0.as_any().downcast_ref::<LineStringArray>().unwrap();
                 arr.get(0).map(Geometry::LineString)
             }
-            NativeType::Polygon(_, _) => {
+            NativeType::Polygon(_) => {
                 let arr = self.0.as_any().downcast_ref::<PolygonArray>().unwrap();
                 arr.get(0).map(Geometry::Polygon)
             }
-            NativeType::MultiPoint(_, _) => {
+            NativeType::MultiPoint(_) => {
                 let arr = self.0.as_any().downcast_ref::<MultiPointArray>().unwrap();
                 arr.get(0).map(Geometry::MultiPoint)
             }
-            NativeType::MultiLineString(_, _) => {
+            NativeType::MultiLineString(_) => {
                 let arr = self
                     .0
                     .as_any()
@@ -100,11 +91,11 @@ impl GeometryScalar {
                     .unwrap();
                 arr.get(0).map(Geometry::MultiLineString)
             }
-            NativeType::MultiPolygon(_, _) => {
+            NativeType::MultiPolygon(_) => {
                 let arr = self.0.as_any().downcast_ref::<MultiPolygonArray>().unwrap();
                 arr.get(0).map(Geometry::MultiPolygon)
             }
-            NativeType::GeometryCollection(_, _) => {
+            NativeType::GeometryCollection(_) => {
                 let arr = self
                     .0
                     .as_any()
@@ -134,13 +125,13 @@ impl GeometryScalar {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => impl_to_geo!(as_point),
-            LineString(_, _) => impl_to_geo!(as_line_string),
-            Polygon(_, _) => impl_to_geo!(as_polygon),
-            MultiPoint(_, _) => impl_to_geo!(as_multi_point),
-            MultiLineString(_, _) => impl_to_geo!(as_multi_line_string),
-            MultiPolygon(_, _) => impl_to_geo!(as_multi_polygon),
-            GeometryCollection(_, _) => impl_to_geo!(as_geometry_collection),
+            Point(_) => impl_to_geo!(as_point),
+            LineString(_) => impl_to_geo!(as_line_string),
+            Polygon(_) => impl_to_geo!(as_polygon),
+            MultiPoint(_) => impl_to_geo!(as_multi_point),
+            MultiLineString(_) => impl_to_geo!(as_multi_line_string),
+            MultiPolygon(_) => impl_to_geo!(as_multi_polygon),
+            GeometryCollection(_) => impl_to_geo!(as_geometry_collection),
             Rect(_) => impl_to_geo!(as_rect),
             Geometry(_) => impl_to_geo!(as_geometry),
         }
@@ -312,7 +303,7 @@ impl GeometryScalar {
 //         use NativeType::*;
 
 //         match self.data_type() {
-//             Point(_, XY) => {
+//             Point(_) => {
 //                 let arr = self.0.as_ref().as_point::<2>();
 
 //                 arr.get(0).map(Geometry::Point)

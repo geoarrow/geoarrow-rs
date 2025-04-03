@@ -2,7 +2,7 @@ use crate::algorithm::geo::utils::zeroes;
 use crate::algorithm::native::Unary;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
@@ -21,7 +21,7 @@ pub trait EuclideanLength {
     /// use geo::line_string;
     /// use geoarrow::array::LineStringArray;
     /// use geoarrow::algorithm::geo::EuclideanLength;
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let line_string = line_string![
     ///     (x: 40.02f64, y: 116.34),
@@ -75,18 +75,17 @@ impl EuclideanLength for &dyn NativeArray {
     type Output = Result<Float64Array>;
 
     fn euclidean_length(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, XY) => self.as_point().euclidean_length(),
-            LineString(_, XY) => self.as_line_string().euclidean_length(),
-            // Polygon(_, XY) => self.as_polygon().euclidean_length(),
-            MultiPoint(_, XY) => self.as_multi_point().euclidean_length(),
-            MultiLineString(_, XY) => self.as_multi_line_string().euclidean_length(),
-            // MultiPolygon(_, XY) => self.as_multi_polygon().euclidean_length(),
-            // Mixed(_, XY) => self.as_mixed().euclidean_length(),
-            // GeometryCollection(_, XY) => self.as_geometry_collection().euclidean_length(),
+            Point(_) => self.as_point().euclidean_length(),
+            LineString(_) => self.as_line_string().euclidean_length(),
+            // Polygon(_) => self.as_polygon().euclidean_length(),
+            MultiPoint(_) => self.as_multi_point().euclidean_length(),
+            MultiLineString(_) => self.as_multi_line_string().euclidean_length(),
+            // MultiPolygon(_) => self.as_multi_polygon().euclidean_length(),
+            // Mixed(_) => self.as_mixed().euclidean_length(),
+            // GeometryCollection(_) => self.as_geometry_collection().euclidean_length(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -122,22 +121,21 @@ impl EuclideanLength for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn euclidean_length(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point().euclidean_length(),
-            LineString(_, XY) => self.as_line_string().euclidean_length(),
-            // Polygon(_, XY) => self.as_polygon().euclidean_length(),
-            // LargePolygon(_, XY) => self.as_large_polygon().euclidean_length(),
-            MultiPoint(_, XY) => self.as_multi_point().euclidean_length(),
-            MultiLineString(_, XY) => self.as_multi_line_string().euclidean_length(),
-            // MultiPolygon(_, XY) => self.as_multi_polygon().euclidean_length(),
-            // LargeMultiPolygon(_, XY) => self.as_large_multi_polygon().euclidean_length(),
-            // Mixed(_, XY) => self.as_mixed().euclidean_length(),
-            // LargeMixed(_, XY) => self.as_large_mixed().euclidean_length(),
-            // GeometryCollection(_, XY) => self.as_geometry_collection().euclidean_length(),
-            // LargeGeometryCollection(_, XY) => {
+            Point(_) => self.as_point().euclidean_length(),
+            LineString(_) => self.as_line_string().euclidean_length(),
+            // Polygon(_) => self.as_polygon().euclidean_length(),
+            // LargePolygon(_) => self.as_large_polygon().euclidean_length(),
+            MultiPoint(_) => self.as_multi_point().euclidean_length(),
+            MultiLineString(_) => self.as_multi_line_string().euclidean_length(),
+            // MultiPolygon(_) => self.as_multi_polygon().euclidean_length(),
+            // LargeMultiPolygon(_) => self.as_large_multi_polygon().euclidean_length(),
+            // Mixed(_) => self.as_mixed().euclidean_length(),
+            // LargeMixed(_) => self.as_large_mixed().euclidean_length(),
+            // GeometryCollection(_) => self.as_geometry_collection().euclidean_length(),
+            // LargeGeometryCollection(_) => {
             //     self.as_large_geometry_collection().euclidean_length()
             // }
             _ => Err(GeoArrowError::IncorrectType("".into())),
@@ -151,6 +149,7 @@ mod tests {
     use crate::array::LineStringArray;
     use arrow_array::Array;
     use geo::line_string;
+    use geoarrow_schema::Dimension;
 
     #[test]
     fn euclidean_length_geoarrow_linestring() {

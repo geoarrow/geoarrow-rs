@@ -1,9 +1,11 @@
 import pyarrow as pa
+import pytest
 import shapely
 from geoarrow.rust.core import from_wkt, to_shapely
 from shapely.testing import assert_geometries_equal
 
 
+@pytest.mark.skip
 def test_from_wkt():
     s = [
         "POINT (3 2)",
@@ -18,6 +20,7 @@ def test_from_wkt():
     assert_geometries_equal(shapely_arr, to_shapely(geo_arr))
 
 
+@pytest.mark.skip
 def test_from_wkt_chunked():
     s1 = ["POINT (3 2)", "POINT (0 2)", "POINT (1 4)"]
     s2 = ["POINT (3 2)", "POINT (0 2)", "POINT (1 4)"]

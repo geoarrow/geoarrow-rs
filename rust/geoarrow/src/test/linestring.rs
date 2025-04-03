@@ -1,7 +1,7 @@
 use geo::{line_string, LineString};
 
 use crate::array::{LineStringArray, LineStringBuilder};
-use crate::datatypes::Dimension;
+use geoarrow_schema::{CoordType, Dimension};
 
 pub(crate) fn ls0() -> LineString {
     line_string![
@@ -23,7 +23,7 @@ pub(crate) fn ls_array() -> LineStringArray {
     LineStringBuilder::from_line_strings(
         &geoms,
         Dimension::XY,
-        Default::default(),
+        CoordType::Interleaved,
         Default::default(),
     )
     .finish()

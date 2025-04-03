@@ -3,12 +3,13 @@ use std::sync::Arc;
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray};
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow::datatypes::Float64Type;
 use geo::SimplifyVw as _SimplifyVw;
+use geoarrow_schema::Dimension;
 
 /// Simplifies a geometry.
 ///
@@ -31,7 +32,7 @@ pub trait SimplifyVw {
     /// use geoarrow::array::LineStringArray;
     /// use geoarrow::trait_::ArrayAccessor;
     /// use geo::line_string;
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let line_string = line_string![
     ///     (x: 5.0, y: 2.0),
@@ -94,7 +95,7 @@ macro_rules! iter_geo_impl {
                     output_geoms.as_slice(),
                     Dimension::XY,
                     self.coord_type(),
-                    self.metadata.clone(),
+                    self.metadata().clone(),
                 )
                 .finish()
             }
@@ -173,15 +174,15 @@ impl SimplifyVw for &dyn NativeArray {
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
-            Point(_, _) => Arc::new(self.as_point().simplify_vw(epsilon)),
-            LineString(_, _) => Arc::new(self.as_line_string().simplify_vw(epsilon)),
-            Polygon(_, _) => Arc::new(self.as_polygon().simplify_vw(epsilon)),
-            MultiPoint(_, _) => Arc::new(self.as_multi_point().simplify_vw(epsilon)),
-            MultiLineString(_, _) => Arc::new(self.as_multi_line_string().simplify_vw(epsilon)),
-            MultiPolygon(_, _) => Arc::new(self.as_multi_polygon().simplify_vw(epsilon)),
+            Point(_) => Arc::new(self.as_point().simplify_vw(epsilon)),
+            LineString(_) => Arc::new(self.as_line_string().simplify_vw(epsilon)),
+            Polygon(_) => Arc::new(self.as_polygon().simplify_vw(epsilon)),
+            MultiPoint(_) => Arc::new(self.as_multi_point().simplify_vw(epsilon)),
+            MultiLineString(_) => Arc::new(self.as_multi_line_string().simplify_vw(epsilon)),
+            MultiPolygon(_) => Arc::new(self.as_multi_polygon().simplify_vw(epsilon)),
             Geometry(_) => Arc::new(self.as_geometry().simplify_vw(epsilon)?),
-            // Mixed(_, _) => self.as_mixed().simplify_vw(epsilon),
-            // GeometryCollection(_, _) => self.as_geometry_collection().simplify_vw(),
+            // Mixed(_) => self.as_mixed().simplify_vw(epsilon),
+            // GeometryCollection(_) => self.as_geometry_collection().simplify_vw(),
             _ => return Err(GeoArrowError::IncorrectType("simplify vw".into())),
         };
         Ok(result)
@@ -226,14 +227,14 @@ impl SimplifyVw for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
-            Point(_, _) => Arc::new(self.as_point().simplify_vw(epsilon)),
-            LineString(_, _) => Arc::new(self.as_line_string().simplify_vw(epsilon)),
-            Polygon(_, _) => Arc::new(self.as_polygon().simplify_vw(epsilon)),
-            MultiPoint(_, _) => Arc::new(self.as_multi_point().simplify_vw(epsilon)),
-            MultiLineString(_, _) => Arc::new(self.as_multi_line_string().simplify_vw(epsilon)),
-            MultiPolygon(_, _) => Arc::new(self.as_multi_polygon().simplify_vw(epsilon)),
-            // Mixed(_, _) => self.as_mixed().simplify_vw(epsilon),
-            // GeometryCollection(_, _) => self.as_geometry_collection().simplify_vw(),
+            Point(_) => Arc::new(self.as_point().simplify_vw(epsilon)),
+            LineString(_) => Arc::new(self.as_line_string().simplify_vw(epsilon)),
+            Polygon(_) => Arc::new(self.as_polygon().simplify_vw(epsilon)),
+            MultiPoint(_) => Arc::new(self.as_multi_point().simplify_vw(epsilon)),
+            MultiLineString(_) => Arc::new(self.as_multi_line_string().simplify_vw(epsilon)),
+            MultiPolygon(_) => Arc::new(self.as_multi_polygon().simplify_vw(epsilon)),
+            // Mixed(_) => self.as_mixed().simplify_vw(epsilon),
+            // GeometryCollection(_) => self.as_geometry_collection().simplify_vw(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)

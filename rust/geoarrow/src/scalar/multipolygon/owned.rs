@@ -1,9 +1,9 @@
 use crate::algorithm::native::eq::multi_polygon_eq;
 use crate::array::{CoordBuffer, MultiPolygonArray};
-use crate::datatypes::Dimension;
 use crate::scalar::{MultiPolygon, Polygon};
 use arrow_buffer::OffsetBuffer;
 use geo_traits::MultiPolygonTrait;
+use geoarrow_schema::Dimension;
 
 #[derive(Clone, Debug)]
 pub struct OwnedMultiPolygon {
@@ -94,6 +94,7 @@ impl MultiPolygonTrait for OwnedMultiPolygon {
         match self.coords.dim() {
             Dimension::XY => geo_traits::Dimensions::Xy,
             Dimension::XYZ => geo_traits::Dimensions::Xyz,
+            _ => todo!("XYM and XYZM not supported yet"),
         }
     }
 

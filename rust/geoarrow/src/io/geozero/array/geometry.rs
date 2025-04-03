@@ -1,13 +1,12 @@
 use std::fmt::Debug;
 use std::sync::Arc;
 
+use geoarrow_schema::{CoordType, Dimension, Metadata};
 use geozero::error::GeozeroError;
 use geozero::geo_types::GeoWriter;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-use crate::array::metadata::ArrayMetadata;
-use crate::array::{CoordType, GeometryArray, GeometryBuilder};
-use crate::datatypes::Dimension;
+use crate::array::{GeometryArray, GeometryBuilder};
 use crate::trait_::GeometryArrayBuilder;
 use crate::NativeArray;
 
@@ -44,12 +43,12 @@ pub struct GeometryStreamBuilder {
 
 impl GeometryStreamBuilder {
     pub fn new() -> Self {
-        Self::new_with_options(Default::default(), Default::default(), true)
+        Self::new_with_options(CoordType::Interleaved, Default::default(), true)
     }
 
     pub fn new_with_options(
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Self {
         Self {
@@ -208,7 +207,7 @@ impl GeometryArrayBuilder for GeometryStreamBuilder {
     }
 
     fn new(dim: Dimension) -> Self {
-        Self::with_geom_capacity_and_options(dim, 0, Default::default(), Default::default())
+        Self::with_geom_capacity_and_options(dim, 0, CoordType::Interleaved, Default::default())
     }
 
     fn into_array_ref(self) -> Arc<dyn arrow_array::Array> {
@@ -219,12 +218,12 @@ impl GeometryArrayBuilder for GeometryStreamBuilder {
         _dim: Dimension,
         _geom_capacity: usize,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         Self::new_with_options(coord_type, metadata, true)
     }
 
-    fn set_metadata(&mut self, metadata: Arc<ArrayMetadata>) {
+    fn set_metadata(&mut self, metadata: Arc<Metadata>) {
         self.builder.set_metadata(metadata)
     }
 
@@ -236,7 +235,7 @@ impl GeometryArrayBuilder for GeometryStreamBuilder {
         self.builder.coord_type()
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
+    fn metadata(&self) -> Arc<Metadata> {
         self.builder.metadata()
     }
 }

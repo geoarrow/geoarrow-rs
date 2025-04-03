@@ -10,12 +10,12 @@ use sqlx::{Column, Decode, Executor, Postgres, Row, Type, TypeInfo};
 use std::io::Cursor;
 use std::sync::Arc;
 
-use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::io::geozero::array::GeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
 use crate::table::Table;
 use crate::trait_::GeometryArrayBuilder;
+use geoarrow_schema::Dimension;
 
 /// A wrapper for an EWKB-encoded postgis geometry
 pub struct PostgisEWKBGeometry<'a>(&'a [u8]);

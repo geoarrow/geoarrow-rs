@@ -2,12 +2,13 @@ use std::sync::Arc;
 
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use geo::line_measures::Densify as _Densify;
 use geo::{CoordFloat, Euclidean};
+use geoarrow_schema::Dimension;
 use num_traits::FromPrimitive;
 
 /// Return a new linear geometry containing both existing and new interpolated coordinates with
@@ -36,7 +37,7 @@ macro_rules! iter_geo_impl {
                     output_geoms.as_slice(),
                     Dimension::XY,
                     self.coord_type(),
-                    self.metadata.clone(),
+                    self.metadata().clone(),
                 )
                 .finish()
             }
@@ -121,7 +122,7 @@ impl Densify for GeometryArray {
         Ok(GeometryBuilder::from_nullable_geometries(
             output_geoms.as_slice(),
             self.coord_type(),
-            self.metadata.clone(),
+            self.metadata().clone(),
             false,
         )?
         .finish())
@@ -135,10 +136,10 @@ impl Densify for &dyn NativeArray {
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
-            LineString(_, _) => Arc::new(self.as_line_string().densify(max_distance)),
-            Polygon(_, _) => Arc::new(self.as_polygon().densify(max_distance)),
-            MultiLineString(_, _) => Arc::new(self.as_multi_line_string().densify(max_distance)),
-            MultiPolygon(_, _) => Arc::new(self.as_multi_polygon().densify(max_distance)),
+            LineString(_) => Arc::new(self.as_line_string().densify(max_distance)),
+            Polygon(_) => Arc::new(self.as_polygon().densify(max_distance)),
+            MultiLineString(_) => Arc::new(self.as_multi_line_string().densify(max_distance)),
+            MultiPolygon(_) => Arc::new(self.as_multi_polygon().densify(max_distance)),
             Geometry(_) => Arc::new(self.as_geometry().densify(max_distance)?),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -172,10 +173,10 @@ impl Densify for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
-            LineString(_, _) => Arc::new(self.as_line_string().densify(max_distance)),
-            Polygon(_, _) => Arc::new(self.as_polygon().densify(max_distance)),
-            MultiLineString(_, _) => Arc::new(self.as_multi_line_string().densify(max_distance)),
-            MultiPolygon(_, _) => Arc::new(self.as_multi_polygon().densify(max_distance)),
+            LineString(_) => Arc::new(self.as_line_string().densify(max_distance)),
+            Polygon(_) => Arc::new(self.as_polygon().densify(max_distance)),
+            MultiLineString(_) => Arc::new(self.as_multi_line_string().densify(max_distance)),
+            MultiPolygon(_) => Arc::new(self.as_multi_polygon().densify(max_distance)),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)

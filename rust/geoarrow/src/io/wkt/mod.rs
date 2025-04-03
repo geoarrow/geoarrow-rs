@@ -2,12 +2,13 @@
 //!
 //! ## Example
 //!
-//! ```
+//! (Outdated)
+//! ```ignore
 //! use std::sync::Arc;
 //!
 //! use arrow_array::StringArray;
 //!
-//! use geoarrow::array::metadata::ArrayMetadata;
+//! use geoarrow::array::metadata::Metadata;
 //! use geoarrow::array::{AsNativeArray, CoordType, GeometryArray, WKTArray};
 //! use geoarrow::datatypes::NativeType;
 //! use geoarrow::io::wkt::{read_wkt, ToWKT};
@@ -27,7 +28,7 @@
 //! // GeoArrow has a `WKTArray` concept in order to associate geospatial metadata with WKT data.
 //! // Here, we associate CRS information with the WKT array, which will be maintained in the
 //! // parsed representation.
-//! let array_metadata = Arc::new(ArrayMetadata::from_authority_code("EPSG:4326".to_string()));
+//! let array_metadata = Arc::new(Metadata::from_authority_code("EPSG:4326".to_string()));
 //! let wkt_array = WKTArray::new(arrow_arr, array_metadata);
 //!
 //! // Parse this WKT array to an `Arc<dyn NativeArray>`

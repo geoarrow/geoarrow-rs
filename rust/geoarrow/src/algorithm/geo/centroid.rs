@@ -1,10 +1,11 @@
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray, ChunkedPointArray};
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use geo::algorithm::centroid::Centroid as GeoCentroid;
+use geoarrow_schema::Dimension;
 
 /// Calculation of the centroid.
 ///
@@ -20,7 +21,7 @@ use geo::algorithm::centroid::Centroid as GeoCentroid;
 /// use geoarrow::algorithm::geo::Centroid;
 /// use geoarrow::array::PolygonArray;
 /// use geoarrow::trait_::ArrayAccessor;
-/// use geoarrow::datatypes::Dimension;
+/// use geoarrow_schema::Dimension;
 /// use geo::{point, polygon};
 ///
 /// // rhombus shaped polygon
@@ -49,7 +50,7 @@ pub trait Centroid {
     /// use geoarrow::algorithm::geo::Centroid;
     /// use geoarrow::array::LineStringArray;
     /// use geoarrow::trait_::ArrayAccessor;
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     /// use geo::{line_string, point};
     ///
     /// let line_string = line_string![
@@ -128,13 +129,13 @@ impl Centroid for &dyn NativeArray {
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, _) => self.as_point().centroid(),
-            LineString(_, _) => self.as_line_string().centroid(),
-            Polygon(_, _) => self.as_polygon().centroid(),
-            MultiPoint(_, _) => self.as_multi_point().centroid(),
-            MultiLineString(_, _) => self.as_multi_line_string().centroid(),
-            MultiPolygon(_, _) => self.as_multi_polygon().centroid(),
-            GeometryCollection(_, _) => self.as_geometry_collection().centroid(),
+            Point(_) => self.as_point().centroid(),
+            LineString(_) => self.as_line_string().centroid(),
+            Polygon(_) => self.as_polygon().centroid(),
+            MultiPoint(_) => self.as_multi_point().centroid(),
+            MultiLineString(_) => self.as_multi_line_string().centroid(),
+            MultiPolygon(_) => self.as_multi_polygon().centroid(),
+            GeometryCollection(_) => self.as_geometry_collection().centroid(),
             Rect(_) => self.as_rect().centroid(),
             Geometry(_) => self.as_geometry().centroid(),
         };
@@ -157,13 +158,13 @@ impl Centroid for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => self.as_point().centroid(),
-            LineString(_, _) => self.as_line_string().centroid(),
-            Polygon(_, _) => self.as_polygon().centroid(),
-            MultiPoint(_, _) => self.as_multi_point().centroid(),
-            MultiLineString(_, _) => self.as_multi_line_string().centroid(),
-            MultiPolygon(_, _) => self.as_multi_polygon().centroid(),
-            GeometryCollection(_, _) => self.as_geometry_collection().centroid(),
+            Point(_) => self.as_point().centroid(),
+            LineString(_) => self.as_line_string().centroid(),
+            Polygon(_) => self.as_polygon().centroid(),
+            MultiPoint(_) => self.as_multi_point().centroid(),
+            MultiLineString(_) => self.as_multi_line_string().centroid(),
+            MultiPolygon(_) => self.as_multi_polygon().centroid(),
+            GeometryCollection(_) => self.as_geometry_collection().centroid(),
             Rect(_) => self.as_rect().centroid(),
             Geometry(_) => self.as_geometry().centroid(),
         }

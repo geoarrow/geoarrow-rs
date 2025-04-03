@@ -7,12 +7,12 @@ use arrow_schema::DataType;
 use datafusion::logical_expr::scalar_doc_sections::DOC_SECTION_OTHER;
 use datafusion::logical_expr::{ColumnarValue, Documentation, ScalarUDFImpl, Signature};
 use geo_traits::LineStringTrait;
-use geoarrow::array::{AsNativeArray, CoordType, PointBuilder};
-use geoarrow::datatypes::Dimension;
+use geoarrow::array::{AsNativeArray, PointBuilder};
 use geoarrow::error::GeoArrowError;
 use geoarrow::scalar::Geometry;
 use geoarrow::trait_::ArrayAccessor;
 use geoarrow::ArrayBase;
+use geoarrow_schema::{CoordType, Dimension};
 
 use crate::data_types::{any_single_geometry_type_input, parse_to_native_array, POINT2D_TYPE};
 use crate::error::GeoDataFusionResult;
@@ -46,7 +46,7 @@ impl ScalarUDFImpl for StartPoint {
     }
 
     fn return_type(&self, _arg_types: &[DataType]) -> datafusion::error::Result<DataType> {
-        Ok(POINT2D_TYPE.into())
+        Ok(POINT2D_TYPE().into())
     }
 
     fn invoke(&self, args: &[ColumnarValue]) -> datafusion::error::Result<ColumnarValue> {

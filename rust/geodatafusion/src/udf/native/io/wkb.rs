@@ -7,10 +7,11 @@ use datafusion::logical_expr::scalar_doc_sections::DOC_SECTION_OTHER;
 use datafusion::logical_expr::{
     ColumnarValue, Documentation, ScalarUDFImpl, Signature, Volatility,
 };
-use geoarrow::array::{CoordType, WKBArray};
+use geoarrow::array::WKBArray;
 use geoarrow::datatypes::NativeType;
 use geoarrow::io::wkb::{from_wkb, to_wkb};
 use geoarrow::ArrayBase;
+use geoarrow_schema::{CoordType, GeometryType};
 
 use crate::data_types::{any_single_geometry_type_input, parse_to_native_array, GEOMETRY_TYPE};
 use crate::error::GeoDataFusionResult;
@@ -104,7 +105,7 @@ impl ScalarUDFImpl for GeomFromWKB {
     }
 
     fn return_type(&self, _arg_types: &[DataType]) -> datafusion::error::Result<DataType> {
-        Ok(GEOMETRY_TYPE.into())
+        Ok(GEOMETRY_TYPE().into())
     }
 
     fn invoke(&self, args: &[ColumnarValue]) -> datafusion::error::Result<ColumnarValue> {
@@ -126,6 +127,10 @@ fn geom_from_wkb_impl(args: &[ColumnarValue]) -> GeoDataFusionResult<ColumnarVal
         .next()
         .unwrap();
     let wkb_arr = WKBArray::new(array.as_binary::<i32>().clone(), Default::default());
-    let native_arr = from_wkb(&wkb_arr, NativeType::Geometry(CoordType::Separated), false)?;
+    let native_arr = from_wkb(
+        &wkb_arr,
+        NativeType::Geometry(GeometryType::new(CoordType::Separated, Default::default())),
+        false,
+    )?;
     Ok(native_arr.to_array_ref().into())
 }

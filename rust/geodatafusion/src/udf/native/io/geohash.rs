@@ -8,10 +8,10 @@ use datafusion::logical_expr::{
     ColumnarValue, Documentation, ScalarUDFImpl, Signature, Volatility,
 };
 use geo_traits::PointTrait;
-use geoarrow::array::{CoordType, PointArray, PointBuilder, RectBuilder};
-use geoarrow::datatypes::Dimension;
+use geoarrow::array::{PointArray, PointBuilder, RectBuilder};
 use geoarrow::trait_::{ArrayAccessor, NativeScalar};
 use geoarrow::ArrayBase;
+use geoarrow_schema::{CoordType, Dimension};
 
 use crate::data_types::{BOX2D_TYPE, POINT2D_TYPE};
 use crate::error::GeoDataFusionResult;
@@ -45,7 +45,7 @@ impl ScalarUDFImpl for Box2DFromGeoHash {
     }
 
     fn return_type(&self, _arg_types: &[DataType]) -> datafusion::error::Result<DataType> {
-        Ok(BOX2D_TYPE.into())
+        Ok(BOX2D_TYPE().into())
     }
 
     fn invoke(&self, args: &[ColumnarValue]) -> datafusion::error::Result<ColumnarValue> {
@@ -111,7 +111,7 @@ impl ScalarUDFImpl for PointFromGeoHash {
     }
 
     fn return_type(&self, _arg_types: &[DataType]) -> datafusion::error::Result<DataType> {
-        Ok(POINT2D_TYPE.into())
+        Ok(POINT2D_TYPE().into())
     }
 
     fn invoke(&self, args: &[ColumnarValue]) -> datafusion::error::Result<ColumnarValue> {
@@ -165,7 +165,7 @@ pub(super) struct GeoHash {
 impl GeoHash {
     pub fn new() -> Self {
         Self {
-            signature: Signature::exact(vec![POINT2D_TYPE.into()], Volatility::Immutable),
+            signature: Signature::exact(vec![POINT2D_TYPE().into()], Volatility::Immutable),
         }
     }
 }
@@ -238,11 +238,12 @@ mod test {
     use datafusion::prelude::*;
     use geo_traits::{CoordTrait, PointTrait, RectTrait};
     use geoarrow::array::{PointArray, RectArray};
-    use geoarrow::datatypes::Dimension;
     use geoarrow::trait_::ArrayAccessor;
 
     use crate::data_types::{BOX2D_TYPE, POINT2D_TYPE};
     use crate::udf::native::register_native;
+
+    use super::*;
 
     #[tokio::test]
     async fn test_box2d_from_geohash() {
@@ -264,7 +265,7 @@ mod test {
             .schema()
             .field(0)
             .data_type()
-            .equals_datatype(&BOX2D_TYPE.into()));
+            .equals_datatype(&BOX2D_TYPE().into()));
 
         let rect_array = RectArray::try_from((batch.columns()[0].as_ref(), Dimension::XY)).unwrap();
         let rect = rect_array.value(0);
@@ -295,7 +296,7 @@ mod test {
             .schema()
             .field(0)
             .data_type()
-            .equals_datatype(&POINT2D_TYPE.into()));
+            .equals_datatype(&POINT2D_TYPE().into()));
 
         let point_array =
             PointArray::try_from((batch.columns()[0].as_ref(), Dimension::XY)).unwrap();

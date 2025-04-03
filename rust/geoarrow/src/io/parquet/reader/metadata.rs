@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use arrow_schema::SchemaRef;
+use geoarrow_schema::{CoordType, Dimension};
 use parquet::arrow::arrow_reader::ArrowReaderMetadata;
 #[cfg(feature = "parquet_async")]
 use parquet::arrow::async_reader::AsyncFileReader;
@@ -10,8 +11,7 @@ use parquet::file::reader::ChunkReader;
 use parquet::schema::types::SchemaDescriptor;
 use serde_json::Value;
 
-use crate::array::{CoordType, RectArray, RectBuilder};
-use crate::datatypes::Dimension;
+use crate::array::{RectArray, RectBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::metadata::{GeoParquetBboxCovering, GeoParquetMetadata};
 use crate::io::parquet::reader::parse::infer_target_schema;

@@ -16,20 +16,20 @@ pub enum CoordType {
     Separated,
 }
 
-impl From<CoordType> for geoarrow::array::CoordType {
+impl From<CoordType> for geoarrow_schema::CoordType {
     fn from(value: CoordType) -> Self {
         match value {
-            CoordType::Interleaved => geoarrow::array::CoordType::Interleaved,
-            CoordType::Separated => geoarrow::array::CoordType::Separated,
+            CoordType::Interleaved => geoarrow_schema::CoordType::Interleaved,
+            CoordType::Separated => geoarrow_schema::CoordType::Separated,
         }
     }
 }
 
-impl From<geoarrow::array::CoordType> for CoordType {
-    fn from(value: geoarrow::array::CoordType) -> Self {
+impl From<geoarrow_schema::CoordType> for CoordType {
+    fn from(value: geoarrow_schema::CoordType) -> Self {
         match value {
-            geoarrow::array::CoordType::Interleaved => CoordType::Interleaved,
-            geoarrow::array::CoordType::Separated => CoordType::Separated,
+            geoarrow_schema::CoordType::Interleaved => CoordType::Interleaved,
+            geoarrow_schema::CoordType::Separated => CoordType::Separated,
         }
     }
 }

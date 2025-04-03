@@ -1,9 +1,9 @@
 use crate::array::multipoint::MultiPointCapacity;
 use crate::array::{MultiPointArray, MultiPointBuilder};
-use crate::datatypes::Dimension;
 use crate::io::geozero::scalar::process_multi_point;
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
+use geoarrow_schema::Dimension;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 impl GeozeroGeometry for MultiPointArray {

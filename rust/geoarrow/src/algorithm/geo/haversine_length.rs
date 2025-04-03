@@ -2,7 +2,7 @@ use crate::algorithm::geo::utils::zeroes;
 use crate::algorithm::native::Unary;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
@@ -30,7 +30,7 @@ pub trait HaversineLength {
     /// use geo::LineString;
     /// use geoarrow::array::LineStringArray;
     /// use geoarrow::algorithm::geo::HaversineLength;
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let linestring = LineString::<f64>::from(vec![
     ///     // New York City
@@ -88,18 +88,17 @@ impl HaversineLength for &dyn NativeArray {
     type Output = Result<Float64Array>;
 
     fn haversine_length(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, XY) => self.as_point().haversine_length(),
-            LineString(_, XY) => self.as_line_string().haversine_length(),
-            // Polygon(_, XY) => self.as_polygon().haversine_length(),
-            MultiPoint(_, XY) => self.as_multi_point().haversine_length(),
-            MultiLineString(_, XY) => self.as_multi_line_string().haversine_length(),
-            // MultiPolygon(_, XY) => self.as_multi_polygon().haversine_length(),
-            // Mixed(_, XY) => self.as_mixed().haversine_length(),
-            // GeometryCollection(_, XY) => self.as_geometry_collection().haversine_length(),
+            Point(_) => self.as_point().haversine_length(),
+            LineString(_) => self.as_line_string().haversine_length(),
+            // Polygon(_) => self.as_polygon().haversine_length(),
+            MultiPoint(_) => self.as_multi_point().haversine_length(),
+            MultiLineString(_) => self.as_multi_line_string().haversine_length(),
+            // MultiPolygon(_) => self.as_multi_polygon().haversine_length(),
+            // Mixed(_) => self.as_mixed().haversine_length(),
+            // GeometryCollection(_) => self.as_geometry_collection().haversine_length(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -135,18 +134,17 @@ impl HaversineLength for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn haversine_length(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, XY) => self.as_point().haversine_length(),
-            LineString(_, XY) => self.as_line_string().haversine_length(),
-            // Polygon(_, XY) => self.as_polygon().haversine_length(),
-            MultiPoint(_, XY) => self.as_multi_point().haversine_length(),
-            MultiLineString(_, XY) => self.as_multi_line_string().haversine_length(),
-            // MultiPolygon(_, XY) => self.as_multi_polygon().haversine_length(),
-            // Mixed(_, XY) => self.as_mixed().haversine_length(),
-            // GeometryCollection(_, XY) => self.as_geometry_collection().haversine_length(),
+            Point(_) => self.as_point().haversine_length(),
+            LineString(_) => self.as_line_string().haversine_length(),
+            // Polygon(_) => self.as_polygon().haversine_length(),
+            MultiPoint(_) => self.as_multi_point().haversine_length(),
+            MultiLineString(_) => self.as_multi_line_string().haversine_length(),
+            // MultiPolygon(_) => self.as_multi_polygon().haversine_length(),
+            // Mixed(_) => self.as_mixed().haversine_length(),
+            // GeometryCollection(_) => self.as_geometry_collection().haversine_length(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
@@ -158,6 +156,7 @@ mod tests {
     use crate::array::LineStringArray;
     use arrow_array::Array;
     use geo::line_string;
+    use geoarrow_schema::Dimension;
 
     #[test]
     fn haversine_length_geoarrow() {

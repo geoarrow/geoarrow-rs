@@ -1,10 +1,10 @@
 use crate::algorithm::native::eq::coord_eq;
-use crate::datatypes::Dimension;
 use crate::scalar::InterleavedCoord;
 use crate::trait_::NativeScalar;
 use arrow_buffer::ScalarBuffer;
 use geo_traits::to_geo::ToGeoCoord;
 use geo_traits::CoordTrait;
+use geoarrow_schema::Dimension;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a Coord
@@ -131,7 +131,7 @@ mod test {
     use arrow_buffer::ScalarBuffer;
 
     use crate::array::{InterleavedCoordBuffer, SeparatedCoordBuffer};
-    use crate::datatypes::Dimension;
+    use geoarrow_schema::Dimension;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

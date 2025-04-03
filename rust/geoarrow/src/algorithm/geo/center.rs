@@ -1,10 +1,11 @@
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray, ChunkedPointArray};
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use geo::BoundingRect;
+use geoarrow_schema::Dimension;
 
 /// Compute the center of geometries
 ///
@@ -82,13 +83,13 @@ impl Center for &dyn NativeArray {
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, _) => self.as_point().center(),
-            LineString(_, _) => self.as_line_string().center(),
-            Polygon(_, _) => self.as_polygon().center(),
-            MultiPoint(_, _) => self.as_multi_point().center(),
-            MultiLineString(_, _) => self.as_multi_line_string().center(),
-            MultiPolygon(_, _) => self.as_multi_polygon().center(),
-            GeometryCollection(_, _) => self.as_geometry_collection().center(),
+            Point(_) => self.as_point().center(),
+            LineString(_) => self.as_line_string().center(),
+            Polygon(_) => self.as_polygon().center(),
+            MultiPoint(_) => self.as_multi_point().center(),
+            MultiLineString(_) => self.as_multi_line_string().center(),
+            MultiPolygon(_) => self.as_multi_polygon().center(),
+            GeometryCollection(_) => self.as_geometry_collection().center(),
             Rect(_) => self.as_rect().center(),
             Geometry(_) => self.as_geometry().center(),
         };
@@ -111,13 +112,13 @@ impl Center for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => self.as_point().center(),
-            LineString(_, _) => self.as_line_string().center(),
-            Polygon(_, _) => self.as_polygon().center(),
-            MultiPoint(_, _) => self.as_multi_point().center(),
-            MultiLineString(_, _) => self.as_multi_line_string().center(),
-            MultiPolygon(_, _) => self.as_multi_polygon().center(),
-            GeometryCollection(_, _) => self.as_geometry_collection().center(),
+            Point(_) => self.as_point().center(),
+            LineString(_) => self.as_line_string().center(),
+            Polygon(_) => self.as_polygon().center(),
+            MultiPoint(_) => self.as_multi_point().center(),
+            MultiLineString(_) => self.as_multi_line_string().center(),
+            MultiPolygon(_) => self.as_multi_polygon().center(),
+            GeometryCollection(_) => self.as_geometry_collection().center(),
             Rect(_) => self.as_rect().center(),
             Geometry(_) => self.as_geometry().center(),
         }

@@ -68,13 +68,13 @@ impl TotalBounds for &dyn NativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => self.as_point().total_bounds(),
-            LineString(_, _) => self.as_line_string().total_bounds(),
-            Polygon(_, _) => self.as_polygon().total_bounds(),
-            MultiPoint(_, _) => self.as_multi_point().total_bounds(),
-            MultiLineString(_, _) => self.as_multi_line_string().total_bounds(),
-            MultiPolygon(_, _) => self.as_multi_polygon().total_bounds(),
-            GeometryCollection(_, _) => self.as_geometry_collection().total_bounds(),
+            Point(_) => self.as_point().total_bounds(),
+            LineString(_) => self.as_line_string().total_bounds(),
+            Polygon(_) => self.as_polygon().total_bounds(),
+            MultiPoint(_) => self.as_multi_point().total_bounds(),
+            MultiLineString(_) => self.as_multi_line_string().total_bounds(),
+            MultiPolygon(_) => self.as_multi_polygon().total_bounds(),
+            GeometryCollection(_) => self.as_geometry_collection().total_bounds(),
             Rect(_) => self.as_rect().total_bounds(),
             Geometry(_) => self.as_geometry().total_bounds(),
             // WKB => self.as_wkb().total_bounds(),
@@ -97,13 +97,13 @@ impl TotalBounds for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => self.as_point().total_bounds(),
-            LineString(_, _) => self.as_line_string().total_bounds(),
-            Polygon(_, _) => self.as_polygon().total_bounds(),
-            MultiPoint(_, _) => self.as_multi_point().total_bounds(),
-            MultiLineString(_, _) => self.as_multi_line_string().total_bounds(),
-            MultiPolygon(_, _) => self.as_multi_polygon().total_bounds(),
-            GeometryCollection(_, _) => self.as_geometry_collection().total_bounds(),
+            Point(_) => self.as_point().total_bounds(),
+            LineString(_) => self.as_line_string().total_bounds(),
+            Polygon(_) => self.as_polygon().total_bounds(),
+            MultiPoint(_) => self.as_multi_point().total_bounds(),
+            MultiLineString(_) => self.as_multi_line_string().total_bounds(),
+            MultiPolygon(_) => self.as_multi_polygon().total_bounds(),
+            GeometryCollection(_) => self.as_geometry_collection().total_bounds(),
             Rect(_) => self.as_rect().total_bounds(),
             Geometry(_) => self.as_geometry().total_bounds(),
         }

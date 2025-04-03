@@ -2,12 +2,12 @@ use crate::algorithm::native::bounding_rect::bounding_rect_polygon;
 use crate::algorithm::native::eq::polygon_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::CoordBuffer;
-use crate::datatypes::Dimension;
 use crate::scalar::LineString;
 use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
 use geo_traits::to_geo::ToGeoPolygon;
 use geo_traits::PolygonTrait;
+use geoarrow_schema::Dimension;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a Polygon
@@ -85,6 +85,7 @@ impl<'a> PolygonTrait for Polygon<'a> {
         match self.coords.dim() {
             Dimension::XY => geo_traits::Dimensions::Xy,
             Dimension::XYZ => geo_traits::Dimensions::Xyz,
+            _ => todo!("XYM and XYZM not supported yet"),
         }
     }
 
@@ -118,6 +119,7 @@ impl<'a> PolygonTrait for &'a Polygon<'a> {
         match self.coords.dim() {
             Dimension::XY => geo_traits::Dimensions::Xy,
             Dimension::XYZ => geo_traits::Dimensions::Xyz,
+            _ => todo!("XYM and XYZM not supported yet"),
         }
     }
 
@@ -176,9 +178,9 @@ impl<G: PolygonTrait<T = f64>> PartialEq<G> for Polygon<'_> {
 #[cfg(test)]
 mod test {
     use crate::array::PolygonArray;
-    use crate::datatypes::Dimension;
     use crate::test::polygon::{p0, p1};
     use crate::trait_::ArrayAccessor;
+    use geoarrow_schema::Dimension;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

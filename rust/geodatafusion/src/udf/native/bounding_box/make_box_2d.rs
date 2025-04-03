@@ -8,9 +8,9 @@ use datafusion::logical_expr::{
 };
 use geo_traits::PointTrait;
 use geoarrow::array::{PointArray, RectBuilder};
-use geoarrow::datatypes::Dimension;
 use geoarrow::trait_::ArrayAccessor;
 use geoarrow::ArrayBase;
+use geoarrow_schema::Dimension;
 
 use crate::data_types::{BOX2D_TYPE, POINT2D_TYPE};
 use crate::error::GeoDataFusionResult;
@@ -24,7 +24,7 @@ impl MakeBox2D {
     pub fn new() -> Self {
         Self {
             signature: Signature::exact(
-                vec![POINT2D_TYPE.into(), POINT2D_TYPE.into()],
+                vec![POINT2D_TYPE().into(), POINT2D_TYPE().into()],
                 Volatility::Immutable,
             ),
         }
@@ -47,7 +47,7 @@ impl ScalarUDFImpl for MakeBox2D {
     }
 
     fn return_type(&self, _arg_types: &[DataType]) -> datafusion::error::Result<DataType> {
-        Ok(BOX2D_TYPE.into())
+        Ok(BOX2D_TYPE().into())
     }
 
     fn invoke(&self, args: &[ColumnarValue]) -> datafusion::error::Result<ColumnarValue> {
@@ -96,11 +96,12 @@ mod test {
     use datafusion::prelude::*;
     use geo_traits::{CoordTrait, RectTrait};
     use geoarrow::array::RectArray;
-    use geoarrow::datatypes::Dimension;
     use geoarrow::trait_::ArrayAccessor;
 
     use crate::data_types::BOX2D_TYPE;
     use crate::udf::native::register_native;
+
+    use super::*;
 
     #[tokio::test]
     async fn test() {
@@ -119,7 +120,7 @@ mod test {
             .schema()
             .field(0)
             .data_type()
-            .equals_datatype(&BOX2D_TYPE.into()));
+            .equals_datatype(&BOX2D_TYPE().into()));
 
         let rect_array = RectArray::try_from((batch.columns()[0].as_ref(), Dimension::XY)).unwrap();
         let rect = rect_array.value(0);

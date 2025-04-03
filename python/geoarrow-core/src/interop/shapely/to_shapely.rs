@@ -93,25 +93,23 @@ fn pyarray_to_shapely(py: Python, input: PyArray) -> PyGeoArrowResult<Bound<PyAn
 
             use NativeType::*;
             match typ {
-                Point(_, _) => point_arr(py, array.as_ref().as_point().clone()),
-                LineString(_, _) => linestring_arr(py, array.as_ref().as_line_string().clone()),
-                Polygon(_, _) => polygon_arr(py, array.as_ref().as_polygon().clone()),
-                MultiPoint(_, _) => multipoint_arr(py, array.as_ref().as_multi_point().clone()),
-                MultiLineString(_, _) => {
+                Point(_) => point_arr(py, array.as_ref().as_point().clone()),
+                LineString(_) => linestring_arr(py, array.as_ref().as_line_string().clone()),
+                Polygon(_) => polygon_arr(py, array.as_ref().as_polygon().clone()),
+                MultiPoint(_) => multipoint_arr(py, array.as_ref().as_multi_point().clone()),
+                MultiLineString(_) => {
                     multilinestring_arr(py, array.as_ref().as_multi_line_string().clone())
                 }
-                MultiPolygon(_, _) => {
-                    multipolygon_arr(py, array.as_ref().as_multi_polygon().clone())
-                }
+                MultiPolygon(_) => multipolygon_arr(py, array.as_ref().as_multi_polygon().clone()),
                 Rect(_) => rect_arr(py, array.as_ref().as_rect().clone()),
-                GeometryCollection(_, _) => via_wkb(py, array),
+                GeometryCollection(_) => via_wkb(py, array),
                 Geometry(_) => via_wkb(py, array),
             }
         }
         AnyType::Serialized(typ) => {
             let array = SerializedArrayDyn::from_arrow_array(&array, &field)?.into_inner();
             match typ {
-                SerializedType::WKB => wkb_arr(py, array.as_ref().as_wkb().clone()),
+                SerializedType::WKB(_) => wkb_arr(py, array.as_ref().as_wkb().clone()),
                 t => Err(PyValueError::new_err(format!("unsupported type {:?}", t)).into()),
             }
         }

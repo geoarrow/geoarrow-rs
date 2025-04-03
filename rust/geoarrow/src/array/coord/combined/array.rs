@@ -1,15 +1,16 @@
 use std::sync::Arc;
 
+use arrow_array::{Array, ArrayRef, FixedSizeListArray, StructArray};
+use arrow_schema::DataType;
+use geoarrow_schema::{CoordType, Dimension};
+
 use crate::array::{
-    CoordType, InterleavedCoordBuffer, InterleavedCoordBufferBuilder, SeparatedCoordBuffer,
+    InterleavedCoordBuffer, InterleavedCoordBufferBuilder, SeparatedCoordBuffer,
     SeparatedCoordBufferBuilder,
 };
-use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Coord;
 use crate::trait_::IntoArrow;
-use arrow_array::{Array, ArrayRef, FixedSizeListArray, StructArray};
-use arrow_schema::DataType;
 
 /// An Arrow representation of an array of coordinates.
 ///

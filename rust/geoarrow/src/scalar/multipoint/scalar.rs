@@ -2,12 +2,12 @@ use crate::algorithm::native::bounding_rect::bounding_rect_multipoint;
 use crate::algorithm::native::eq::multi_point_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::CoordBuffer;
-use crate::datatypes::Dimension;
 use crate::scalar::Point;
 use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
 use geo_traits::to_geo::ToGeoMultiPoint;
 use geo_traits::MultiPointTrait;
+use geoarrow_schema::Dimension;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a MultiPoint
@@ -78,6 +78,7 @@ impl<'a> MultiPointTrait for MultiPoint<'a> {
         match self.coords.dim() {
             Dimension::XY => geo_traits::Dimensions::Xy,
             Dimension::XYZ => geo_traits::Dimensions::Xyz,
+            _ => todo!("XYM and XYZM not supported yet"),
         }
     }
 
@@ -102,6 +103,7 @@ impl<'a> MultiPointTrait for &'a MultiPoint<'a> {
         match self.coords.dim() {
             Dimension::XY => geo_traits::Dimensions::Xy,
             Dimension::XYZ => geo_traits::Dimensions::Xyz,
+            _ => todo!("XYM and XYZM not supported yet"),
         }
     }
 
@@ -151,9 +153,9 @@ impl<G: MultiPointTrait<T = f64>> PartialEq<G> for MultiPoint<'_> {
 #[cfg(test)]
 mod test {
     use crate::array::MultiPointArray;
-    use crate::datatypes::Dimension;
     use crate::test::multipoint::{mp0, mp1};
     use crate::trait_::ArrayAccessor;
+    use geoarrow_schema::Dimension;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

@@ -1,25 +1,25 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::sync::Arc;
 
 use arrow_array::{Array, ArrayRef, OffsetSizeTrait, UnionArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field, UnionMode};
+use geo_traits::GeometryTrait;
+use geoarrow_schema::{CoordType, Dimension, GeometryCollectionType, Metadata};
 
 use crate::algorithm::native::downcast::can_downcast_multi;
-use crate::array::metadata::ArrayMetadata;
 use crate::array::mixed::builder::MixedGeometryBuilder;
 use crate::array::mixed::MixedCapacity;
 use crate::array::{
-    CoordType, GeometryCollectionArray, LineStringArray, LineStringBuilder, MultiLineStringArray,
+    GeometryCollectionArray, LineStringArray, LineStringBuilder, MultiLineStringArray,
     MultiLineStringBuilder, MultiPointArray, MultiPointBuilder, MultiPolygonArray,
     MultiPolygonBuilder, PointArray, PointBuilder, PolygonArray, PolygonBuilder, WKBArray,
 };
-use crate::datatypes::{mixed_data_type, Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Geometry;
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
 use crate::{ArrayBase, NativeArray};
-use geo_traits::GeometryTrait;
 
 /// # Invariants
 ///
@@ -61,7 +61,7 @@ pub struct MixedGeometryArray {
     coord_type: CoordType,
     dim: Dimension,
 
-    pub(crate) metadata: Arc<ArrayMetadata>,
+    pub(crate) metadata: Arc<Metadata>,
 
     /// Invariant: every item in `type_ids` is `> 0 && < fields.len()` if `type_ids` are not provided. If `type_ids` exist in the NativeType, then every item in `type_ids` is `> 0 && `
     pub(crate) type_ids: ScalarBuffer<i8>,
@@ -103,7 +103,7 @@ impl MixedGeometryArray {
         multi_points: Option<MultiPointArray>,
         multi_line_strings: Option<MultiLineStringArray>,
         multi_polygons: Option<MultiPolygonArray>,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let mut coord_types = HashSet::new();
         if let Some(points) = &points {
@@ -125,7 +125,10 @@ impl MixedGeometryArray {
             coord_types.insert(multi_polygons.coord_type());
         }
         assert!(coord_types.len() <= 1);
-        let coord_type = coord_types.into_iter().next().unwrap_or_default();
+        let coord_type = coord_types
+            .into_iter()
+            .next()
+            .unwrap_or(CoordType::Interleaved);
 
         let mut dimensions = HashSet::new();
         if let Some(points) = &points {
@@ -424,6 +427,7 @@ impl MixedGeometryArray {
     }
 
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.metadata();
         Self::new(
             self.type_ids,
             self.offsets,
@@ -433,7 +437,7 @@ impl MixedGeometryArray {
             Some(self.multi_points.into_coord_type(coord_type)),
             Some(self.multi_line_strings.into_coord_type(coord_type)),
             Some(self.multi_polygons.into_coord_type(coord_type)),
-            self.metadata,
+            metadata,
         )
     }
 
@@ -468,29 +472,19 @@ impl ArrayBase for MixedGeometryArray {
     }
 
     fn storage_type(&self) -> DataType {
-        mixed_data_type(self.coord_type, self.dim)
+        match GeometryCollectionType::new(self.coord_type, self.dim, Default::default()).data_type()
+        {
+            DataType::List(inner_field) => inner_field.data_type().clone(),
+            _ => unreachable!(),
+        }
     }
 
     fn extension_field(&self) -> Arc<Field> {
         let name = "geometry";
         let nullable = true;
-        let array_metadata = &self.metadata;
         let data_type = self.storage_type();
 
-        // Note: this is currently copied from to_field_with_metadata
-        let extension_name = self.extension_name();
-        let mut metadata = HashMap::with_capacity(2);
-        metadata.insert(
-            "ARROW:extension:name".to_string(),
-            extension_name.to_string(),
-        );
-        if array_metadata.should_serialize() {
-            metadata.insert(
-                "ARROW:extension:metadata".to_string(),
-                serde_json::to_string(array_metadata.as_ref()).unwrap(),
-            );
-        }
-        Arc::new(Field::new(name, data_type, nullable).with_metadata(metadata))
+        Arc::new(Field::new(name, data_type, nullable))
     }
 
     fn extension_name(&self) -> &str {
@@ -505,7 +499,7 @@ impl ArrayBase for MixedGeometryArray {
         self.clone().into_array_ref()
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
+    fn metadata(&self) -> Arc<Metadata> {
         self.metadata.clone()
     }
 
@@ -533,7 +527,7 @@ impl NativeArray for MixedGeometryArray {
         self.dim
     }
 
-    fn coord_type(&self) -> crate::array::CoordType {
+    fn coord_type(&self) -> CoordType {
         self.coord_type
     }
 
@@ -541,10 +535,8 @@ impl NativeArray for MixedGeometryArray {
         Arc::new(self.clone().into_coord_type(coord_type))
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
-        let mut arr = self.clone();
-        arr.metadata = metadata;
-        Arc::new(arr)
+    fn with_metadata(&self, _metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
+        unimplemented!("mixed array does not store its own GeoArrow metadata");
     }
 
     fn as_ref(&self) -> &dyn NativeArray {
@@ -561,7 +553,7 @@ impl GeometryArraySelfMethods for MixedGeometryArray {
         todo!();
     }
 
-    fn into_coord_type(self, _coord_type: crate::array::CoordType) -> Self {
+    fn into_coord_type(self, _coord_type: CoordType) -> Self {
         todo!();
     }
 }
@@ -642,7 +634,7 @@ impl IntoArrow for MixedGeometryArray {
     type ArrowArray = UnionArray;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let union_fields = match mixed_data_type(self.coord_type, self.dim) {
+        let union_fields = match self.storage_type() {
             DataType::Union(union_fields, _) => union_fields,
             _ => unreachable!(),
         };
@@ -779,8 +771,10 @@ impl TryFrom<(&dyn Array, &Field)> for MixedGeometryArray {
         let dim = geom_type
             .dimension()
             .ok_or(GeoArrowError::General("Expected dimension".to_string()))?;
-        let mut arr: Self = (arr, dim).try_into()?;
-        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        let arr: Self = (arr, dim).try_into()?;
+        // Mixed array doesn't have geoarrow metadata
+        // let metadata = Arc::new(Metadata::try_from(field)?);
+        // arr.data_type = arr.data_type.clone().with_metadata(metadata);
         Ok(arr)
     }
 }
@@ -817,8 +811,9 @@ impl From<PointArray> for MixedGeometryArray {
         let type_ids = match value.dimension() {
             Dimension::XY => vec![1; value.len()],
             Dimension::XYZ => vec![11; value.len()],
+            _ => todo!("XYM and XYZM not supported yet"),
         };
-        let metadata = value.metadata.clone();
+        let metadata = value.metadata();
         Self::new(
             ScalarBuffer::from(type_ids),
             ScalarBuffer::from_iter(0..value.len() as i32),
@@ -838,8 +833,9 @@ impl From<LineStringArray> for MixedGeometryArray {
         let type_ids = match value.dimension() {
             Dimension::XY => vec![2; value.len()],
             Dimension::XYZ => vec![12; value.len()],
+            _ => todo!("XYM and XYZM not supported yet"),
         };
-        let metadata = value.metadata.clone();
+        let metadata = value.metadata();
         Self::new(
             ScalarBuffer::from(type_ids),
             ScalarBuffer::from_iter(0..value.len() as i32),
@@ -859,8 +855,9 @@ impl From<PolygonArray> for MixedGeometryArray {
         let type_ids = match value.dimension() {
             Dimension::XY => vec![3; value.len()],
             Dimension::XYZ => vec![13; value.len()],
+            _ => todo!("XYM and XYZM not supported yet"),
         };
-        let metadata = value.metadata.clone();
+        let metadata = value.metadata();
         Self::new(
             ScalarBuffer::from(type_ids),
             ScalarBuffer::from_iter(0..value.len() as i32),
@@ -880,8 +877,9 @@ impl From<MultiPointArray> for MixedGeometryArray {
         let type_ids = match value.dimension() {
             Dimension::XY => vec![4; value.len()],
             Dimension::XYZ => vec![14; value.len()],
+            _ => todo!("XYM and XYZM not supported yet"),
         };
-        let metadata = value.metadata.clone();
+        let metadata = value.metadata();
         Self::new(
             ScalarBuffer::from(type_ids),
             ScalarBuffer::from_iter(0..value.len() as i32),
@@ -901,8 +899,9 @@ impl From<MultiLineStringArray> for MixedGeometryArray {
         let type_ids = match value.dimension() {
             Dimension::XY => vec![5; value.len()],
             Dimension::XYZ => vec![15; value.len()],
+            _ => todo!("XYM and XYZM not supported yet"),
         };
-        let metadata = value.metadata.clone();
+        let metadata = value.metadata();
         Self::new(
             ScalarBuffer::from(type_ids),
             ScalarBuffer::from_iter(0..value.len() as i32),
@@ -922,8 +921,9 @@ impl From<MultiPolygonArray> for MixedGeometryArray {
         let type_ids = match value.dimension() {
             Dimension::XY => vec![6; value.len()],
             Dimension::XYZ => vec![16; value.len()],
+            _ => todo!("XYM and XYZM not supported yet"),
         };
-        let metadata = value.metadata.clone();
+        let metadata = value.metadata();
         Self::new(
             ScalarBuffer::from(type_ids),
             ScalarBuffer::from_iter(0..value.len() as i32),

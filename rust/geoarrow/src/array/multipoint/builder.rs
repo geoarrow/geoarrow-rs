@@ -1,27 +1,27 @@
 use std::sync::Arc;
 
-use crate::array::metadata::ArrayMetadata;
+use arrow_array::{ArrayRef, GenericListArray, OffsetSizeTrait};
+use arrow_buffer::NullBufferBuilder;
+use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
+use geoarrow_schema::{CoordType, Dimension, Metadata};
+
 use crate::array::multipoint::MultiPointCapacity;
 // use super::array::check;
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{
-    CoordBufferBuilder, CoordType, InterleavedCoordBufferBuilder, LineStringBuilder,
-    MultiPointArray, SeparatedCoordBufferBuilder, WKBArray,
+    CoordBufferBuilder, InterleavedCoordBufferBuilder, LineStringBuilder, MultiPointArray,
+    SeparatedCoordBufferBuilder, WKBArray,
 };
-use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
-use arrow_array::{ArrayRef, GenericListArray, OffsetSizeTrait};
-use arrow_buffer::NullBufferBuilder;
-use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
 
 /// The GeoArrow equivalent to `Vec<Option<MultiPoint>>`: a mutable collection of MultiPoints.
 ///
 /// Converting an [`MultiPointBuilder`] into a [`MultiPointArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct MultiPointBuilder {
-    metadata: Arc<ArrayMetadata>,
+    metadata: Arc<Metadata>,
 
     coords: CoordBufferBuilder,
 
@@ -34,21 +34,26 @@ pub struct MultiPointBuilder {
 impl MultiPointBuilder {
     /// Creates a new empty [`MultiPointBuilder`].
     pub fn new(dim: Dimension) -> Self {
-        Self::new_with_options(dim, Default::default(), Default::default())
+        Self::new_with_options(dim, CoordType::default_interleaved(), Default::default())
     }
 
     /// Creates a new [`MultiPointBuilder`] with options
     pub fn new_with_options(
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         Self::with_capacity_and_options(dim, Default::default(), coord_type, metadata)
     }
 
     /// Creates a new [`MultiPointBuilder`] with a capacity.
     pub fn with_capacity(dim: Dimension, capacity: MultiPointCapacity) -> Self {
-        Self::with_capacity_and_options(dim, capacity, Default::default(), Default::default())
+        Self::with_capacity_and_options(
+            dim,
+            capacity,
+            CoordType::default_interleaved(),
+            Default::default(),
+        )
     }
 
     /// Creates a new [`MultiPointBuilder`] with capacity and options
@@ -56,7 +61,7 @@ impl MultiPointBuilder {
         dim: Dimension,
         capacity: MultiPointCapacity,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let coords = match coord_type {
             CoordType::Interleaved => CoordBufferBuilder::Interleaved(
@@ -116,7 +121,7 @@ impl MultiPointBuilder {
         coords: CoordBufferBuilder,
         geom_offsets: OffsetsBuilder<i32>,
         validity: NullBufferBuilder,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Result<Self> {
         // check(
         //     &coords.clone().into(),
@@ -149,7 +154,7 @@ impl MultiPointBuilder {
         Self::with_capacity_and_options_from_iter(
             geoms,
             dim,
-            Default::default(),
+            CoordType::default_interleaved(),
             Default::default(),
         )
     }
@@ -160,7 +165,7 @@ impl MultiPointBuilder {
         geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let counter = MultiPointCapacity::from_multi_points(geoms);
         Self::with_capacity_and_options(dim, counter, coord_type, metadata)
@@ -309,7 +314,7 @@ impl MultiPointBuilder {
         geoms: &[impl MultiPointTrait<T = f64>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(Some),
@@ -326,7 +331,7 @@ impl MultiPointBuilder {
         geoms: &[Option<impl MultiPointTrait<T = f64>>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(|x| x.as_ref()),
@@ -343,7 +348,7 @@ impl MultiPointBuilder {
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Result<Self> {
         let capacity = MultiPointCapacity::from_geometries(geoms.iter().map(|x| x.as_ref()))?;
         let mut array = Self::with_capacity_and_options(dim, capacity, coord_type, metadata);
@@ -354,7 +359,7 @@ impl MultiPointBuilder {
         wkb_objects: &[Option<WKB<'_, W>>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Result<Self> {
         let wkb_objects2 = wkb_objects
             .iter()
@@ -379,7 +384,7 @@ impl GeometryArrayBuilder for MultiPointBuilder {
         dim: Dimension,
         geom_capacity: usize,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let capacity = MultiPointCapacity::new(0, geom_capacity);
         Self::with_capacity_and_options(dim, capacity, coord_type, metadata)
@@ -409,11 +414,11 @@ impl GeometryArrayBuilder for MultiPointBuilder {
         self.coords.coord_type()
     }
 
-    fn set_metadata(&mut self, metadata: Arc<ArrayMetadata>) {
+    fn set_metadata(&mut self, metadata: Arc<Metadata>) {
         self.metadata = metadata;
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
+    fn metadata(&self) -> Arc<Metadata> {
         self.metadata.clone()
     }
 }
@@ -452,13 +457,23 @@ impl From<MultiPointBuilder> for GenericListArray<i32> {
 
 impl<G: MultiPointTrait<T = f64>> From<(&[G], Dimension)> for MultiPointBuilder {
     fn from((geoms, dim): (&[G], Dimension)) -> Self {
-        Self::from_multi_points(geoms, dim, Default::default(), Default::default())
+        Self::from_multi_points(
+            geoms,
+            dim,
+            CoordType::default_interleaved(),
+            Default::default(),
+        )
     }
 }
 
 impl<G: MultiPointTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for MultiPointBuilder {
     fn from((geoms, dim): (Vec<Option<G>>, Dimension)) -> Self {
-        Self::from_nullable_multi_points(&geoms, dim, Default::default(), Default::default())
+        Self::from_nullable_multi_points(
+            &geoms,
+            dim,
+            CoordType::default_interleaved(),
+            Default::default(),
+        )
     }
 }
 
@@ -466,9 +481,14 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MultiPointBuilder
     type Error = GeoArrowError;
 
     fn try_from((value, dim): (WKBArray<O>, Dimension)) -> Result<Self> {
-        let metadata = value.metadata.clone();
+        let metadata = value.data_type.metadata().clone();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, dim, Default::default(), metadata)
+        Self::from_wkb(
+            &wkb_objects,
+            dim,
+            CoordType::default_interleaved(),
+            metadata,
+        )
     }
 }
 

@@ -1,19 +1,19 @@
 use std::sync::Arc;
 
+use arrow_array::{OffsetSizeTrait, UnionArray};
+use geo_traits::*;
+use geoarrow_schema::{CoordType, Dimension, Metadata};
+
 use crate::array::geometry::array::GeometryArray;
 use crate::array::geometry::capacity::GeometryCapacity;
-use crate::array::metadata::ArrayMetadata;
 use crate::array::{
-    CoordType, GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder,
-    MultiPointBuilder, MultiPolygonBuilder, PointBuilder, PolygonBuilder, WKBArray,
+    GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder, MultiPointBuilder,
+    MultiPolygonBuilder, PointBuilder, PolygonBuilder, WKBArray,
 };
-use crate::datatypes::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use crate::{ArrayBase, NativeArray};
-use arrow_array::{OffsetSizeTrait, UnionArray};
-use geo_traits::*;
 
 pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 
@@ -32,7 +32,7 @@ pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 /// - All arrays must have the same coordinate layout (interleaved or separated)
 #[derive(Debug)]
 pub struct GeometryBuilder {
-    metadata: Arc<ArrayMetadata>,
+    metadata: Arc<Metadata>,
 
     // Invariant: every item in `types` is `> 0 && < fields.len()`
     types: Vec<i8>,
@@ -86,13 +86,17 @@ pub struct GeometryBuilder {
 impl<'a> GeometryBuilder {
     /// Creates a new empty [`GeometryBuilder`].
     pub fn new() -> Self {
-        Self::new_with_options(Default::default(), Default::default(), DEFAULT_PREFER_MULTI)
+        Self::new_with_options(
+            CoordType::Interleaved,
+            Default::default(),
+            DEFAULT_PREFER_MULTI,
+        )
     }
 
     /// Creates a new empty [`GeometryBuilder`] with the given options.
     pub fn new_with_options(
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Self {
         Self::with_capacity_and_options(Default::default(), coord_type, metadata, prefer_multi)
@@ -102,7 +106,7 @@ impl<'a> GeometryBuilder {
     pub fn with_capacity(capacity: GeometryCapacity) -> Self {
         Self::with_capacity_and_options(
             capacity,
-            Default::default(),
+            CoordType::Interleaved,
             Default::default(),
             DEFAULT_PREFER_MULTI,
         )
@@ -112,7 +116,7 @@ impl<'a> GeometryBuilder {
     pub fn with_capacity_and_options(
         capacity: GeometryCapacity,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Self {
         use Dimension::*;
@@ -317,7 +321,7 @@ impl<'a> GeometryBuilder {
     ) -> Result<Self> {
         Self::with_capacity_and_options_from_iter(
             geoms,
-            Default::default(),
+            CoordType::Interleaved,
             Default::default(),
             DEFAULT_PREFER_MULTI,
         )
@@ -328,7 +332,7 @@ impl<'a> GeometryBuilder {
     pub fn with_capacity_and_options_from_iter(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let counter = GeometryCapacity::from_geometries(geoms, prefer_multi)?;
@@ -436,6 +440,7 @@ impl<'a> GeometryBuilder {
                 self.offsets.push(self.point_xyz.len().try_into().unwrap());
                 self.types.push(11)
             }
+            _ => todo!("Handle M and ZM dimensions"),
         }
     }
 
@@ -520,6 +525,7 @@ impl<'a> GeometryBuilder {
                     .push(self.line_string_xyz.len().try_into().unwrap());
                 self.types.push(12)
             }
+            _ => todo!("Handle M and ZM dimensions"),
         }
     }
 
@@ -600,6 +606,7 @@ impl<'a> GeometryBuilder {
                     .push(self.polygon_xyz.len().try_into().unwrap());
                 self.types.push(13)
             }
+            _ => todo!("Handle M and ZM dimensions"),
         }
     }
 
@@ -654,6 +661,7 @@ impl<'a> GeometryBuilder {
                 self.offsets.push(self.mpoint_xyz.len().try_into().unwrap());
                 self.types.push(14)
             }
+            _ => todo!("Handle M and ZM dimensions"),
         }
     }
 
@@ -712,6 +720,7 @@ impl<'a> GeometryBuilder {
                     .push(self.mline_string_xyz.len().try_into().unwrap());
                 self.types.push(15)
             }
+            _ => todo!("Handle M and ZM dimensions"),
         }
     }
 
@@ -768,6 +777,7 @@ impl<'a> GeometryBuilder {
                     .push(self.mpolygon_xyz.len().try_into().unwrap());
                 self.types.push(16)
             }
+            _ => todo!("Handle M and ZM dimensions"),
         }
     }
 
@@ -856,6 +866,7 @@ impl<'a> GeometryBuilder {
                 self.offsets.push(self.gc_xyz.len().try_into().unwrap());
                 self.types.push(17)
             }
+            _ => todo!("Handle M and ZM dimensions"),
         }
     }
 
@@ -908,7 +919,7 @@ impl<'a> GeometryBuilder {
     pub fn from_geometries(
         geoms: &[impl GeometryTrait<T = f64>],
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let mut array = Self::with_capacity_and_options_from_iter(
@@ -925,7 +936,7 @@ impl<'a> GeometryBuilder {
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let mut array = Self::with_capacity_and_options_from_iter(
@@ -941,7 +952,7 @@ impl<'a> GeometryBuilder {
     pub(crate) fn from_wkb<W: OffsetSizeTrait>(
         wkb_objects: &[Option<WKB<'_, W>>],
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let wkb_objects2 = wkb_objects
@@ -994,7 +1005,7 @@ impl<G: GeometryTrait<T = f64>> TryFrom<&[G]> for GeometryBuilder {
     type Error = GeoArrowError;
 
     fn try_from(geoms: &[G]) -> Result<Self> {
-        Self::from_geometries(geoms, Default::default(), Default::default(), true)
+        Self::from_geometries(geoms, CoordType::Interleaved, Default::default(), true)
     }
 }
 
@@ -1002,7 +1013,7 @@ impl<G: GeometryTrait<T = f64>> TryFrom<Vec<Option<G>>> for GeometryBuilder {
     type Error = GeoArrowError;
 
     fn try_from(geoms: Vec<Option<G>>) -> Result<Self> {
-        Self::from_nullable_geometries(&geoms, Default::default(), Default::default(), true)
+        Self::from_nullable_geometries(&geoms, CoordType::Interleaved, Default::default(), true)
     }
 }
 
@@ -1016,9 +1027,9 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryBuilder {
             "Parsing a WKBArray with null elements not supported",
         );
 
-        let metadata = value.metadata.clone();
+        let metadata = value.metadata();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, Default::default(), metadata, true)
+        Self::from_wkb(&wkb_objects, CoordType::Interleaved, metadata, true)
     }
 }
 
@@ -1044,7 +1055,7 @@ impl GeometryArrayBuilder for GeometryBuilder {
         _dim: Dimension,
         _geom_capacity: usize,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         // We don't know where to allocate the capacity
         Self::with_capacity_and_options(
@@ -1067,11 +1078,11 @@ impl GeometryArrayBuilder for GeometryBuilder {
         self.point_xy.coord_type()
     }
 
-    fn set_metadata(&mut self, metadata: Arc<ArrayMetadata>) {
+    fn set_metadata(&mut self, metadata: Arc<Metadata>) {
         self.metadata = metadata;
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
+    fn metadata(&self) -> Arc<Metadata> {
         self.metadata.clone()
     }
 }

@@ -367,31 +367,31 @@ fn process_geometry_n<P: GeomProcessor>(
     let i = within_batch_row_idx;
     use NativeType::*;
     match arr.data_type() {
-        Point(_, _) => {
+        Point(_) => {
             let geom = arr.as_point().value(i);
             process_point(&geom, 0, processor)?;
         }
-        LineString(_, _) => {
+        LineString(_) => {
             let geom = arr.as_line_string().value(i);
             process_line_string(&geom, 0, processor)?;
         }
-        Polygon(_, _) => {
+        Polygon(_) => {
             let geom = arr.as_polygon().value(i);
             process_polygon(&geom, true, 0, processor)?;
         }
-        MultiPoint(_, _) => {
+        MultiPoint(_) => {
             let geom = arr.as_multi_point().value(i);
             process_multi_point(&geom, 0, processor)?;
         }
-        MultiLineString(_, _) => {
+        MultiLineString(_) => {
             let geom = arr.as_multi_line_string().value(i);
             process_multi_line_string(&geom, 0, processor)?;
         }
-        MultiPolygon(_, _) => {
+        MultiPolygon(_) => {
             let geom = arr.as_multi_polygon().value(i);
             process_multi_polygon(&geom, 0, processor)?;
         }
-        GeometryCollection(_, _) => {
+        GeometryCollection(_) => {
             let geom = arr.as_geometry_collection().value(i);
             process_geometry_collection(&geom, 0, processor)?;
         }

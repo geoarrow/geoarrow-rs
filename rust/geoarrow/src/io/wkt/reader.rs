@@ -2,9 +2,9 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use arrow_array::OffsetSizeTrait;
+use geoarrow_schema::{CoordType, Metadata};
 
-use crate::array::metadata::ArrayMetadata;
-use crate::array::{CoordType, GeometryArray, GeometryBuilder, WKTArray};
+use crate::array::{GeometryArray, GeometryBuilder, WKTArray};
 use crate::error::{GeoArrowError, Result};
 use crate::{ArrayBase, NativeArray};
 
@@ -25,7 +25,7 @@ pub fn read_wkt<O: OffsetSizeTrait>(
 fn from_str_iter<'a>(
     iter: impl Iterator<Item = Option<&'a str>>,
     coord_type: CoordType,
-    metadata: Arc<ArrayMetadata>,
+    metadata: Arc<Metadata>,
     prefer_multi: bool,
 ) -> Result<GeometryArray> {
     let mut builder = GeometryBuilder::new_with_options(coord_type, metadata, prefer_multi);
@@ -59,7 +59,7 @@ mod test {
         wkt_geoms.iter().for_each(|s| builder.append_value(s));
         let arr = WKTArray::new(builder.finish(), Default::default());
 
-        let parsed = read_wkt(&arr, Default::default(), false).unwrap();
+        let parsed = read_wkt(&arr, CoordType::Interleaved, false).unwrap();
         let parsed_ref = parsed.as_ref();
         let geom_arr = parsed_ref.as_geometry();
 

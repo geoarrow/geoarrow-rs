@@ -44,9 +44,9 @@ impl<O: OffsetSizeTrait> From<&PolygonArray> for WKBArray<O> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::datatypes::Dimension;
     use crate::test::polygon::{p0, p1};
     use crate::trait_::ArrayAccessor;
+    use geoarrow_schema::Dimension;
     use geozero::{CoordDimensions, ToWkb};
 
     #[test]

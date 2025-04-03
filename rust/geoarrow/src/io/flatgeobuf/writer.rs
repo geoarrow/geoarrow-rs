@@ -1,11 +1,13 @@
+use core::panic;
 use std::io::Write;
 
 use arrow_schema::Schema;
 use flatgeobuf::{FgbCrs, FgbWriter, FgbWriterOptions};
+use geoarrow_schema::Dimension;
+use geoarrow_schema::Metadata;
 use geozero::GeozeroDatasource;
 
-use crate::array::metadata::ArrayMetadata;
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::io::crs::{CRSTransform, DefaultCRSTransform};
 use crate::io::stream::RecordBatchReader;
@@ -49,16 +51,16 @@ impl Default for FlatGeobufWriterOptions {
 }
 
 impl FlatGeobufWriterOptions {
-    /// Create a WKT CRS from whatever CRS exists in the [ArrayMetadata].
+    /// Create a WKT CRS from whatever CRS exists in the [Metadata].
     ///
     /// This uses the [CRSTransform] supplied in the [FlatGeobufWriterOptions].
     ///
-    /// If no CRS exists in the ArrayMetadata, None will be returned here.
-    fn create_wkt_crs(&self, array_meta: &ArrayMetadata) -> Result<Option<String>> {
+    /// If no CRS exists in the Metadata, None will be returned here.
+    fn create_wkt_crs(&self, array_meta: &Metadata) -> Result<Option<String>> {
         if let Some(crs_transform) = &self.crs_transform {
-            crs_transform.extract_wkt(array_meta)
+            crs_transform.extract_wkt(array_meta.crs())
         } else {
-            DefaultCRSTransform::default().extract_wkt(array_meta)
+            DefaultCRSTransform::default().extract_wkt(array_meta.crs())
         }
     }
 
@@ -73,6 +75,7 @@ impl FlatGeobufWriterOptions {
             Some(Dimension::XYZ) => (true, false),
             // TODO: not sure how to handle geometry arrays
             None => (false, false),
+            _ => panic!("XYM and XYZM not supported"),
         };
         let crs = FgbCrs {
             wkt: wkt_crs,
@@ -128,7 +131,7 @@ pub fn write_flatgeobuf_with_options<W: Write, S: Into<RecordBatchReader>>(
 
     let geometry_field = &fields[geom_col_idxs[0]];
     let geo_data_type = NativeType::try_from(geometry_field.as_ref())?;
-    let array_meta = ArrayMetadata::try_from(geometry_field.as_ref())?;
+    let array_meta = Metadata::try_from(geometry_field.as_ref())?;
 
     let wkt_crs_str = options.create_wkt_crs(&array_meta)?;
     let fgb_options = options.create_fgb_options(geo_data_type, wkt_crs_str.as_deref());
@@ -153,14 +156,14 @@ fn infer_flatgeobuf_geometry_type(schema: &Schema) -> Result<flatgeobuf::Geometr
 
     use NativeType::*;
     let geometry_type = match geo_data_type {
-        Point(_, _) => flatgeobuf::GeometryType::Point,
-        LineString(_, _) => flatgeobuf::GeometryType::LineString,
-        Polygon(_, _) => flatgeobuf::GeometryType::Polygon,
-        MultiPoint(_, _) => flatgeobuf::GeometryType::MultiPoint,
-        MultiLineString(_, _) => flatgeobuf::GeometryType::MultiLineString,
-        MultiPolygon(_, _) => flatgeobuf::GeometryType::MultiPolygon,
+        Point(_) => flatgeobuf::GeometryType::Point,
+        LineString(_) => flatgeobuf::GeometryType::LineString,
+        Polygon(_) => flatgeobuf::GeometryType::Polygon,
+        MultiPoint(_) => flatgeobuf::GeometryType::MultiPoint,
+        MultiLineString(_) => flatgeobuf::GeometryType::MultiLineString,
+        MultiPolygon(_) => flatgeobuf::GeometryType::MultiPolygon,
         Rect(_) | Geometry(_) => flatgeobuf::GeometryType::Unknown,
-        GeometryCollection(_, _) => flatgeobuf::GeometryType::GeometryCollection,
+        GeometryCollection(_) => flatgeobuf::GeometryType::GeometryCollection,
     };
     Ok(geometry_type)
 }

@@ -1,7 +1,7 @@
 use crate::array::{PolygonArray, PolygonBuilder};
-use crate::datatypes::Dimension;
 use crate::error::Result;
 use crate::io::geos::scalar::GEOSPolygon;
+use geoarrow_schema::Dimension;
 
 impl PolygonBuilder {
     #[allow(dead_code)]

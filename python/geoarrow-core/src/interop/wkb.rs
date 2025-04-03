@@ -1,8 +1,9 @@
 use geoarrow::array::WKBArray;
 use geoarrow::chunked_array::{ChunkedArrayBase, ChunkedWKBArray};
-use geoarrow::datatypes::{Dimension, SerializedType};
+use geoarrow::datatypes::SerializedType;
 use geoarrow::io::wkb::{to_wkb as _to_wkb, FromWKB, ToWKB};
 use geoarrow::ArrayBase;
+use geoarrow_schema::Dimension;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3_arrow::input::AnyArray;
@@ -29,11 +30,11 @@ pub fn from_wkb(
             let (arr, field) = arr.into_inner();
             let typ = SerializedType::try_from(field.as_ref())?;
             let geo_array = match typ {
-                SerializedType::WKB => {
+                SerializedType::WKB(_) => {
                     let wkb_arr = WKBArray::<i32>::try_from((arr.as_ref(), field.as_ref()))?;
                     FromWKB::from_wkb(&wkb_arr, coord_type, Dimension::XY)?
                 }
-                SerializedType::LargeWKB => {
+                SerializedType::LargeWKB(_) => {
                     let wkb_arr = WKBArray::<i64>::try_from((arr.as_ref(), field.as_ref()))?;
                     FromWKB::from_wkb(&wkb_arr, coord_type, Dimension::XY)?
                 }
@@ -45,14 +46,14 @@ pub fn from_wkb(
             let (chunks, field) = s.into_chunked_array()?.into_inner();
             let typ = SerializedType::try_from(field.as_ref())?;
             let geo_array = match typ {
-                SerializedType::WKB => {
+                SerializedType::WKB(_) => {
                     let chunks = chunks
                         .into_iter()
                         .map(|chunk| WKBArray::<i32>::try_from((chunk.as_ref(), field.as_ref())))
                         .collect::<Result<Vec<_>, _>>()?;
                     FromWKB::from_wkb(&ChunkedWKBArray::new(chunks), coord_type, Dimension::XY)?
                 }
-                SerializedType::LargeWKB => {
+                SerializedType::LargeWKB(_) => {
                     let chunks = chunks
                         .into_iter()
                         .map(|chunk| WKBArray::<i64>::try_from((chunk.as_ref(), field.as_ref())))

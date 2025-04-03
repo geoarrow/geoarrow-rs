@@ -1,9 +1,9 @@
 use crate::array::polygon::PolygonCapacity;
 use crate::array::{PolygonArray, PolygonBuilder};
-use crate::datatypes::Dimension;
 use crate::io::geozero::scalar::process_polygon;
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
+use geoarrow_schema::Dimension;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 impl GeozeroGeometry for PolygonArray {

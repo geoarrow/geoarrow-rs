@@ -1,9 +1,11 @@
 use crate::array::*;
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
+
 use geo::algorithm::interior_point::InteriorPoint as _;
+use geoarrow_schema::Dimension;
 
 /// Calculation of interior points.
 ///
@@ -92,13 +94,13 @@ impl InteriorPoint for &dyn NativeArray {
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, _) => self.as_point().interior_point(),
-            LineString(_, _) => self.as_line_string().interior_point(),
-            Polygon(_, _) => self.as_polygon().interior_point(),
-            MultiPoint(_, _) => self.as_multi_point().interior_point(),
-            MultiLineString(_, _) => self.as_multi_line_string().interior_point(),
-            MultiPolygon(_, _) => self.as_multi_polygon().interior_point(),
-            GeometryCollection(_, _) => self.as_geometry_collection().interior_point(),
+            Point(_) => self.as_point().interior_point(),
+            LineString(_) => self.as_line_string().interior_point(),
+            Polygon(_) => self.as_polygon().interior_point(),
+            MultiPoint(_) => self.as_multi_point().interior_point(),
+            MultiLineString(_) => self.as_multi_line_string().interior_point(),
+            MultiPolygon(_) => self.as_multi_polygon().interior_point(),
+            GeometryCollection(_) => self.as_geometry_collection().interior_point(),
             Rect(_) => self.as_rect().interior_point(),
             Geometry(_) => self.as_geometry().interior_point(),
         };

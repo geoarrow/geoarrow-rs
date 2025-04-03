@@ -1,9 +1,9 @@
 //! Bindings to the [`proj`] crate for coordinate reprojection.
 
 use crate::array::*;
-use crate::datatypes::Dimension;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
+use geoarrow_schema::Dimension;
 use proj::{Proj, Transform};
 
 /// Reproject an array using PROJ

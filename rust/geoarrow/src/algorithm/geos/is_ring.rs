@@ -45,13 +45,13 @@ impl IsRing for &dyn NativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => self.as_point().is_ring(),
-            LineString(_, _) => self.as_line_string().is_ring(),
-            Polygon(_, _) => self.as_polygon().is_ring(),
-            MultiPoint(_, _) => self.as_multi_point().is_ring(),
-            MultiLineString(_, _) => self.as_multi_line_string().is_ring(),
-            MultiPolygon(_, _) => self.as_multi_polygon().is_ring(),
-            GeometryCollection(_, _) => self.as_geometry_collection().is_ring(),
+            Point(_) => self.as_point().is_ring(),
+            LineString(_) => self.as_line_string().is_ring(),
+            Polygon(_) => self.as_polygon().is_ring(),
+            MultiPoint(_) => self.as_multi_point().is_ring(),
+            MultiLineString(_) => self.as_multi_line_string().is_ring(),
+            MultiPolygon(_) => self.as_multi_polygon().is_ring(),
+            GeometryCollection(_) => self.as_geometry_collection().is_ring(),
             Rect(_) => self.as_rect().is_ring(),
             Geometry(_) => self.as_geometry().is_ring(),
         }

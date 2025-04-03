@@ -1,25 +1,26 @@
-use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::algorithm::native::downcast::can_downcast_multi;
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::linestring::LineStringCapacity;
-use crate::array::metadata::ArrayMetadata;
 use crate::array::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::{
-    CoordBuffer, CoordType, GeometryCollectionArray, MixedGeometryArray, MultiLineStringArray,
+    CoordBuffer, GeometryCollectionArray, MixedGeometryArray, MultiLineStringArray,
     MultiPointArray, WKBArray,
 };
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, LineString};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
 use crate::{ArrayBase, NativeArray};
+
 use arrow::array::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
+use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field, FieldRef};
 use geo_traits::LineStringTrait;
+use geoarrow_schema::{CoordType, Dimension, LineStringType, Metadata};
 
 use super::LineStringBuilder;
 
@@ -29,10 +30,7 @@ use super::LineStringBuilder;
 /// bitmap.
 #[derive(Debug, Clone)]
 pub struct LineStringArray {
-    // Always NativeType::LineString
-    data_type: NativeType,
-
-    pub(crate) metadata: Arc<ArrayMetadata>,
+    data_type: LineStringType,
 
     pub(crate) coords: CoordBuffer,
 
@@ -78,7 +76,7 @@ impl LineStringArray {
         coords: CoordBuffer,
         geom_offsets: OffsetBuffer<i32>,
         validity: Option<NullBuffer>,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         Self::try_new(coords, geom_offsets, validity, metadata).unwrap()
     }
@@ -97,16 +95,14 @@ impl LineStringArray {
         coords: CoordBuffer,
         geom_offsets: OffsetBuffer<i32>,
         validity: Option<NullBuffer>,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Result<Self> {
         check(&coords, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
-        let data_type = NativeType::LineString(coords.coord_type(), coords.dim());
         Ok(Self {
-            data_type,
+            data_type: LineStringType::new(coords.coord_type(), coords.dim(), metadata),
             coords,
             geom_offsets,
             validity,
-            metadata,
         })
     }
 
@@ -166,11 +162,10 @@ impl LineStringArray {
         // Note: we **only** slice the geom_offsets and not any actual data. Otherwise the offsets
         // would be in the wrong location.
         Self {
-            data_type: self.data_type,
+            data_type: self.data_type.clone(),
             coords: self.coords.clone(),
             geom_offsets: self.geom_offsets.slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
-            metadata: self.metadata(),
         }
     }
 
@@ -181,11 +176,12 @@ impl LineStringArray {
 
     /// Change the coordinate type of this array.
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.metadata();
         Self::new(
             self.coords.into_coord_type(coord_type),
             self.geom_offsets,
             self.validity,
-            self.metadata,
+            metadata,
         )
     }
 }
@@ -196,26 +192,17 @@ impl ArrayBase for LineStringArray {
     }
 
     fn storage_type(&self) -> DataType {
-        self.data_type.to_data_type()
+        self.data_type.data_type()
     }
 
     fn extension_field(&self) -> FieldRef {
-        let mut metadata = HashMap::with_capacity(2);
-        metadata.insert(
-            "ARROW:extension:name".to_string(),
-            self.extension_name().to_string(),
-        );
-        if self.metadata.should_serialize() {
-            metadata.insert(
-                "ARROW:extension:metadata".to_string(),
-                serde_json::to_string(self.metadata.as_ref()).unwrap(),
-            );
-        }
-        Arc::new(Field::new("", self.storage_type(), true).with_metadata(metadata))
+        Field::new("", self.storage_type(), true)
+            .with_extension_type(self.data_type.clone())
+            .into()
     }
 
     fn extension_name(&self) -> &str {
-        self.data_type.extension_name()
+        LineStringType::NAME
     }
 
     fn into_array_ref(self) -> ArrayRef {
@@ -226,8 +213,8 @@ impl ArrayBase for LineStringArray {
         self.clone().into_array_ref()
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
-        self.metadata.clone()
+    fn metadata(&self) -> Arc<Metadata> {
+        self.data_type.metadata().clone()
     }
 
     /// Returns the number of geometries in this array
@@ -245,7 +232,7 @@ impl ArrayBase for LineStringArray {
 
 impl NativeArray for LineStringArray {
     fn data_type(&self) -> NativeType {
-        self.data_type
+        NativeType::LineString(self.data_type.clone())
     }
 
     fn coord_type(&self) -> CoordType {
@@ -256,9 +243,9 @@ impl NativeArray for LineStringArray {
         Arc::new(self.clone().into_coord_type(coord_type))
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
+    fn with_metadata(&self, metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
-        arr.metadata = metadata;
+        arr.data_type = self.data_type.clone().with_metadata(metadata);
         Arc::new(arr)
     }
 
@@ -273,16 +260,18 @@ impl NativeArray for LineStringArray {
 
 impl GeometryArraySelfMethods for LineStringArray {
     fn with_coords(self, coords: CoordBuffer) -> Self {
+        let metadata = self.metadata();
         assert_eq!(coords.len(), self.coords.len());
-        Self::new(coords, self.geom_offsets, self.validity, self.metadata)
+        Self::new(coords, self.geom_offsets, self.validity, metadata)
     }
 
     fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.metadata();
         Self::new(
             self.coords.into_coord_type(coord_type),
             self.geom_offsets,
             self.validity,
-            self.metadata,
+            metadata,
         )
     }
 }
@@ -387,7 +376,8 @@ impl TryFrom<(&dyn Array, &Field)> for LineStringArray {
             .dimension()
             .ok_or(GeoArrowError::General("Expected dimension".to_string()))?;
         let mut arr: Self = (arr, dim).try_into()?;
-        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        let metadata = Arc::new(Metadata::try_from(field)?);
+        arr.data_type = arr.data_type.clone().with_metadata(metadata);
         Ok(arr)
     }
 }
@@ -410,12 +400,8 @@ impl<G: LineStringTrait<T = f64>> From<(&[G], Dimension)> for LineStringArray {
 /// the semantic type
 impl From<LineStringArray> for MultiPointArray {
     fn from(value: LineStringArray) -> Self {
-        Self::new(
-            value.coords,
-            value.geom_offsets,
-            value.validity,
-            value.metadata,
-        )
+        let metadata = value.metadata();
+        Self::new(value.coords, value.geom_offsets, value.validity, metadata)
     }
 }
 
@@ -461,11 +447,12 @@ impl TryFrom<MultiLineStringArray> for LineStringArray {
             return Err(GeoArrowError::General("Unable to cast".to_string()));
         }
 
+        let metadata = value.metadata();
         Ok(LineStringArray::new(
             value.coords,
             value.ring_offsets,
             value.validity,
-            value.metadata,
+            metadata,
         ))
     }
 }

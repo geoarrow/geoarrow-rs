@@ -1,7 +1,7 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use geoarrow::algorithm::geos::Buffer;
 use geoarrow::array::{CoordBuffer, InterleavedCoordBuffer, PointArray, PolygonArray};
-use geoarrow::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 
 fn generate_data() -> PointArray {
     let coords = vec![0.0; 100_000];

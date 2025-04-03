@@ -45,13 +45,13 @@ impl IsEmpty for &dyn NativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => IsEmpty::is_empty(self.as_point()),
-            LineString(_, _) => IsEmpty::is_empty(self.as_line_string()),
-            Polygon(_, _) => IsEmpty::is_empty(self.as_polygon()),
-            MultiPoint(_, _) => IsEmpty::is_empty(self.as_multi_point()),
-            MultiLineString(_, _) => IsEmpty::is_empty(self.as_multi_line_string()),
-            MultiPolygon(_, _) => IsEmpty::is_empty(self.as_multi_polygon()),
-            GeometryCollection(_, _) => IsEmpty::is_empty(self.as_geometry_collection()),
+            Point(_) => IsEmpty::is_empty(self.as_point()),
+            LineString(_) => IsEmpty::is_empty(self.as_line_string()),
+            Polygon(_) => IsEmpty::is_empty(self.as_polygon()),
+            MultiPoint(_) => IsEmpty::is_empty(self.as_multi_point()),
+            MultiLineString(_) => IsEmpty::is_empty(self.as_multi_line_string()),
+            MultiPolygon(_) => IsEmpty::is_empty(self.as_multi_polygon()),
+            GeometryCollection(_) => IsEmpty::is_empty(self.as_geometry_collection()),
             Rect(_) => IsEmpty::is_empty(self.as_rect()),
             Geometry(_) => IsEmpty::is_empty(self.as_geometry()),
         }

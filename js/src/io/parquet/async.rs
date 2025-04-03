@@ -9,6 +9,7 @@ use geoarrow::io::parquet::{
     GeoParquetDatasetMetadata, GeoParquetReaderMetadata, GeoParquetReaderOptions,
     GeoParquetRecordBatchStream, GeoParquetRecordBatchStreamBuilder,
 };
+use geoarrow_schema::CoordType;
 use object_store::{ObjectMeta, ObjectStore};
 use object_store_wasm::http::HttpStore;
 use parquet::arrow::arrow_reader::ArrowReaderMetadata;
@@ -238,7 +239,9 @@ impl ParquetDataset {
     pub async fn read(&self, options: JsValue) -> WasmResult<Table> {
         let options: Option<JsParquetReaderOptions> = serde_wasm_bindgen::from_value(options)?;
         let readers = self.to_readers(options.unwrap_or_default().into())?;
-        let output_schema = self.meta.resolved_schema(Default::default())?;
+        let output_schema = self
+            .meta
+            .resolved_schema(CoordType::default_interleaved())?;
 
         let request_futures = readers.into_iter().map(|reader| reader.read_table());
         let tables = futures::future::join_all(request_futures)

@@ -1,7 +1,7 @@
 use geo::coord;
-use geoarrow::array::CoordType;
 use geoarrow::io::parquet::metadata::GeoParquetBboxCovering;
 use geoarrow::io::parquet::GeoParquetReaderOptions;
+use geoarrow_schema::CoordType;
 use pyo3::prelude::*;
 
 use crate::error::PyGeoArrowResult;

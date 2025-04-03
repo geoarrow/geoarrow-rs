@@ -1,11 +1,13 @@
 use polylabel::polylabel;
 
+use geoarrow_schema::Dimension;
+
 use crate::algorithm::native::UnaryPoint;
 use crate::array::{AsChunkedNativeArray, AsNativeArray, PointArray, PolygonArray};
 use crate::chunked_array::{
     ChunkedGeometryArray, ChunkedNativeArray, ChunkedPointArray, ChunkedPolygonArray,
 };
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
@@ -38,7 +40,7 @@ impl Polylabel for &dyn NativeArray {
 
     fn polylabel(&self, tolerance: f64) -> Self::Output {
         match self.data_type() {
-            NativeType::Polygon(_, Dimension::XY) => self.as_polygon().polylabel(tolerance),
+            NativeType::Polygon(_) => self.as_polygon().polylabel(tolerance),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
@@ -58,7 +60,7 @@ impl Polylabel for &dyn ChunkedNativeArray {
 
     fn polylabel(&self, tolerance: f64) -> Self::Output {
         match self.data_type() {
-            NativeType::Polygon(_, Dimension::XY) => self.as_polygon().polylabel(tolerance),
+            NativeType::Polygon(_) => self.as_polygon().polylabel(tolerance),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

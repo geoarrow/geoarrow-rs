@@ -3,10 +3,10 @@ use arrow_array::{BooleanArray, PrimitiveArray};
 use arrow_buffer::{BooleanBufferBuilder, BufferBuilder};
 
 use crate::array::*;
-use crate::datatypes::Dimension;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 use geo_traits::*;
+use geoarrow_schema::Dimension;
 
 pub trait Unary<'a>: ArrayAccessor<'a> + NativeArray {
     // Note: This is derived from arrow-rs here:

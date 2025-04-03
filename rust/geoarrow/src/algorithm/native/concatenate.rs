@@ -2,9 +2,9 @@ use std::collections::HashSet;
 
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::datatypes::Dimension;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
+use geoarrow_schema::Dimension;
 
 pub trait Concatenate: Sized {
     type Output;

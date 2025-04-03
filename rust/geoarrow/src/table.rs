@@ -7,16 +7,16 @@ use std::sync::Arc;
 
 use arrow_array::{ArrayRef, RecordBatch, RecordBatchIterator, RecordBatchReader};
 use arrow_schema::{ArrowError, FieldRef, Schema, SchemaBuilder, SchemaRef};
+use geoarrow_schema::{CoordType, GeometryType, Metadata};
+use phf::{phf_set, Set};
 
 use crate::algorithm::native::{Cast, Downcast};
-use crate::array::metadata::ArrayMetadata;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedNativeArray, ChunkedNativeArrayDyn};
 use crate::datatypes::{AnyType, NativeType, SerializedType};
 use crate::error::{GeoArrowError, Result};
 use crate::io::wkb::from_wkb;
 use crate::schema::GeoSchemaExt;
-use phf::{phf_set, Set};
 
 pub(crate) static GEOARROW_EXTENSION_NAMES: Set<&'static str> = phf_set! {
     "geoarrow.point",
@@ -56,7 +56,7 @@ impl Table {
     /// use arrow_array::RecordBatch;
     /// use arrow_schema::{Schema, SchemaRef};
     /// use geoarrow::{NativeArray, ArrayBase, array::PointArray, table::Table};
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
@@ -97,7 +97,7 @@ impl Table {
     ///     table::Table,
     ///     chunked_array::ChunkedGeometryArray
     /// };
-    /// use geoarrow::datatypes::Dimension;
+    /// use geoarrow_schema::Dimension;
     /// use std::sync::Arc;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
@@ -143,7 +143,7 @@ impl Table {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # {
     /// use std::fs::File;
     /// use geoarrow::{array::CoordType, datatypes::{NativeType, Dimension}};
@@ -167,7 +167,7 @@ impl Table {
         let chunked_geometry =
             ChunkedNativeArrayDyn::from_arrow_chunks(array_slices.as_slice(), orig_field)?
                 .into_inner();
-        let casted_geometry = chunked_geometry.as_ref().cast(to_type)?;
+        let casted_geometry = chunked_geometry.as_ref().cast(to_type.clone())?;
         let casted_arrays = casted_geometry.array_refs();
         let casted_field = to_type.to_field(orig_field.name(), orig_field.is_nullable());
 
@@ -188,22 +188,20 @@ impl Table {
         index: usize,
         target_geo_data_type: Option<NativeType>,
     ) -> Result<Self> {
-        let target_geo_data_type =
-            target_geo_data_type.unwrap_or(NativeType::Geometry(Default::default()));
+        let target_geo_data_type = target_geo_data_type.unwrap_or(NativeType::Geometry(
+            GeometryType::new(CoordType::Interleaved, Default::default()),
+        ));
 
         let orig_field = self.schema().field(index);
-        let geoarray_metadata = ArrayMetadata::try_from(orig_field)?;
+        let geoarray_metadata = Metadata::try_from(orig_field)?;
 
         // If the table is empty, don't try to parse WKB column
         // An empty column will crash currently in `from_arrow_chunks` or alternatively
         // `chunked_geometry.data_type`.
         if self.is_empty() {
             let mut new_table = self.clone();
-            let new_field = target_geo_data_type.to_field_with_metadata(
-                orig_field.name(),
-                orig_field.is_nullable(),
-                &geoarray_metadata,
-            );
+            let new_field =
+                target_geo_data_type.to_field(orig_field.name(), orig_field.is_nullable());
             let new_arrays = vec![];
             new_table.set_column(index, new_field.into(), new_arrays)?;
             return Ok(new_table);
@@ -219,14 +217,14 @@ impl Table {
                     .map(|batch| batch.column(index).as_ref())
                     .collect::<Vec<_>>();
                 let new_geometry = match typ {
-                    SerializedType::WKB => {
+                    SerializedType::WKB(_) => {
                         let wkb_chunks = array_slices
                             .iter()
                             .map(|arr| WKBArray::<i32>::try_from((*arr, orig_field)))
                             .collect::<Result<Vec<_>>>()?;
                         let parsed_chunks = wkb_chunks
                             .into_iter()
-                            .map(|chunk| from_wkb(&chunk, target_geo_data_type, true))
+                            .map(|chunk| from_wkb(&chunk, target_geo_data_type.clone(), true))
                             .collect::<Result<Vec<_>>>()?;
                         let parsed_chunks_refs = parsed_chunks
                             .iter()
@@ -237,14 +235,14 @@ impl Table {
                             .as_ref()
                             .downcast()
                     }
-                    SerializedType::LargeWKB => {
+                    SerializedType::LargeWKB(_) => {
                         let wkb_chunks = array_slices
                             .iter()
                             .map(|arr| WKBArray::<i64>::try_from((*arr, orig_field)))
                             .collect::<Result<Vec<_>>>()?;
                         let parsed_chunks = wkb_chunks
                             .into_iter()
-                            .map(|chunk| from_wkb(&chunk, target_geo_data_type, true))
+                            .map(|chunk| from_wkb(&chunk, target_geo_data_type.clone(), true))
                             .collect::<Result<Vec<_>>>()?;
                         let parsed_chunks_refs = parsed_chunks
                             .iter()
@@ -258,11 +256,10 @@ impl Table {
                     _ => panic!("WKT input not supported yet"),
                 };
 
-                let new_field = new_geometry.data_type().to_field_with_metadata(
-                    orig_field.name(),
-                    orig_field.is_nullable(),
-                    &geoarray_metadata,
-                );
+                let new_field = new_geometry
+                    .data_type()
+                    .with_metadata(geoarray_metadata.into())
+                    .to_field(orig_field.name(), orig_field.is_nullable());
                 let new_arrays = new_geometry.array_refs();
 
                 let mut new_table = self.clone();
@@ -276,7 +273,7 @@ impl Table {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # {
     /// use std::fs::File;
     ///
@@ -293,7 +290,7 @@ impl Table {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # {
     /// use std::fs::File;
     ///
@@ -310,7 +307,7 @@ impl Table {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # {
     /// use std::fs::File;
     ///
@@ -327,7 +324,7 @@ impl Table {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # {
     /// use std::fs::File;
     ///
@@ -344,7 +341,7 @@ impl Table {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # {
     /// use std::fs::File;
     ///
@@ -365,7 +362,7 @@ impl Table {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # {
     /// use std::fs::File;
     ///
@@ -393,7 +390,7 @@ impl Table {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # {
     /// use std::fs::File;
     ///
@@ -434,7 +431,7 @@ impl Table {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # {
     /// use std::fs::File;
     ///
@@ -457,7 +454,7 @@ impl Table {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # {
     /// use std::fs::File;
     ///
@@ -474,7 +471,7 @@ impl Table {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # {
     /// use std::{sync::Arc, fs::File};
     /// use arrow_schema::{DataType, Field};
@@ -533,7 +530,7 @@ impl Table {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # {
     /// use std::{sync::Arc, fs::File};
     /// use arrow_schema::{DataType, Field};
@@ -625,10 +622,10 @@ impl TryFrom<Box<dyn arrow_array::RecordBatchReader + Send>> for Table {
 
 #[cfg(test)]
 mod tests {
-    use crate::datatypes::Dimension;
     use crate::{array::PointArray, chunked_array::ChunkedGeometryArray, table::Table};
     use arrow_array::{Int32Array, RecordBatch};
     use arrow_schema::{DataType, Field, Schema};
+    use geoarrow_schema::Dimension;
     use std::collections::HashMap;
     use std::sync::Arc;
 

@@ -1,19 +1,21 @@
 use std::sync::Arc;
 
-use crate::array::binary::WKBCapacity;
-use crate::array::metadata::ArrayMetadata;
-use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
-use crate::array::{CoordType, WKBBuilder};
-use crate::datatypes::{NativeType, SerializedType};
-use crate::error::{GeoArrowError, Result};
-use crate::scalar::WKB;
-use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, SerializedArray};
 use arrow::array::AsArray;
 use arrow_array::{Array, BinaryArray, GenericBinaryArray, LargeBinaryArray};
 use arrow_array::{ArrayRef, OffsetSizeTrait};
 use arrow_buffer::NullBuffer;
+use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
 use geo_traits::GeometryTrait;
+use geoarrow_schema::{CoordType, Metadata, WkbType};
+
+use crate::array::binary::WKBCapacity;
+use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
+use crate::array::WKBBuilder;
+use crate::datatypes::{NativeType, SerializedType};
+use crate::error::{GeoArrowError, Result};
+use crate::scalar::WKB;
+use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, SerializedArray};
 
 /// An immutable array of WKB geometries using GeoArrow's in-memory representation.
 ///
@@ -26,23 +28,16 @@ use geo_traits::GeometryTrait;
 /// Refer to [`crate::io::wkb`] for encoding and decoding this array to the native array types.
 #[derive(Debug, Clone, PartialEq)]
 pub struct WKBArray<O: OffsetSizeTrait> {
-    pub(crate) data_type: SerializedType,
-    pub(crate) metadata: Arc<ArrayMetadata>,
+    pub(crate) data_type: WkbType,
     pub(crate) array: GenericBinaryArray<O>,
 }
 
 // Implement geometry accessors
 impl<O: OffsetSizeTrait> WKBArray<O> {
     /// Create a new WKBArray from a BinaryArray
-    pub fn new(array: GenericBinaryArray<O>, metadata: Arc<ArrayMetadata>) -> Self {
-        let data_type = match O::IS_LARGE {
-            true => SerializedType::LargeWKB,
-            false => SerializedType::WKB,
-        };
-
+    pub fn new(array: GenericBinaryArray<O>, metadata: Arc<Metadata>) -> Self {
         Self {
-            data_type,
-            metadata,
+            data_type: WkbType::new(metadata),
             array,
         }
     }
@@ -86,15 +81,14 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         );
         Self {
             array: self.array.slice(offset, length),
-            data_type: self.data_type,
-            metadata: self.metadata(),
+            data_type: self.data_type.clone(),
         }
     }
 
-    /// Replace the [ArrayMetadata] in the array with the given metadata
-    pub fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> Self {
+    /// Replace the [Metadata] in the array with the given metadata
+    pub fn with_metadata(&self, metadata: Arc<Metadata>) -> Self {
         let mut arr = self.clone();
-        arr.metadata = metadata;
+        arr.data_type = self.data_type.clone().with_metadata(metadata);
         arr
     }
 }
@@ -105,17 +99,17 @@ impl<O: OffsetSizeTrait> ArrayBase for WKBArray<O> {
     }
 
     fn storage_type(&self) -> DataType {
-        self.data_type.to_data_type()
+        self.data_type.data_type(O::IS_LARGE)
     }
 
     fn extension_field(&self) -> Arc<Field> {
         self.data_type
-            .to_field_with_metadata("geometry", true, &self.metadata)
+            .to_field("geometry", true, O::IS_LARGE)
             .into()
     }
 
     fn extension_name(&self) -> &str {
-        self.data_type.extension_name()
+        WkbType::NAME
     }
 
     fn into_array_ref(self) -> ArrayRef {
@@ -127,8 +121,8 @@ impl<O: OffsetSizeTrait> ArrayBase for WKBArray<O> {
         self.clone().into_array_ref()
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
-        self.metadata.clone()
+    fn metadata(&self) -> Arc<Metadata> {
+        self.data_type.metadata().clone()
     }
 
     /// Returns the number of geometries in this array
@@ -145,10 +139,14 @@ impl<O: OffsetSizeTrait> ArrayBase for WKBArray<O> {
 
 impl<O: OffsetSizeTrait> SerializedArray for WKBArray<O> {
     fn data_type(&self) -> SerializedType {
-        self.data_type
+        if O::IS_LARGE {
+            SerializedType::LargeWKB(self.data_type.clone())
+        } else {
+            SerializedType::WKB(self.data_type.clone())
+        }
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> Arc<dyn SerializedArray> {
+    fn with_metadata(&self, metadata: Arc<Metadata>) -> Arc<dyn SerializedArray> {
         Arc::new(self.with_metadata(metadata))
     }
 
@@ -231,7 +229,8 @@ impl TryFrom<(&dyn Array, &Field)> for WKBArray<i32> {
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
         let mut arr: Self = arr.try_into()?;
-        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        let metadata = Arc::new(Metadata::try_from(field)?);
+        arr.data_type = arr.data_type.clone().with_metadata(metadata);
         Ok(arr)
     }
 }
@@ -241,18 +240,20 @@ impl TryFrom<(&dyn Array, &Field)> for WKBArray<i64> {
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
         let mut arr: Self = arr.try_into()?;
-        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        let metadata = Arc::new(Metadata::try_from(field)?);
+        arr.data_type = arr.data_type.clone().with_metadata(metadata);
         Ok(arr)
     }
 }
 
 impl From<WKBArray<i32>> for WKBArray<i64> {
     fn from(value: WKBArray<i32>) -> Self {
+        let metadata = value.metadata();
         let binary_array = value.array;
         let (offsets, values, nulls) = binary_array.into_parts();
         Self::new(
             LargeBinaryArray::new(offsets_buffer_i32_to_i64(&offsets), values, nulls),
-            value.metadata,
+            metadata,
         )
     }
 }
@@ -261,11 +262,12 @@ impl TryFrom<WKBArray<i64>> for WKBArray<i32> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<i64>) -> Result<Self> {
+        let metadata = value.metadata();
         let binary_array = value.array;
         let (offsets, values, nulls) = binary_array.into_parts();
         Ok(Self::new(
             BinaryArray::new(offsets_buffer_i64_to_i32(&offsets)?, values, nulls),
-            value.metadata,
+            metadata,
         ))
     }
 }

@@ -18,7 +18,7 @@ use geo::prelude::Area as GeoArea;
 ///
 /// use geoarrow::algorithm::geo::Area;
 /// use geoarrow::array::PolygonArray;
-/// use geoarrow::datatypes::Dimension;
+/// use geoarrow_schema::Dimension;
 ///
 /// let polygon = polygon![
 ///     (x: 0., y: 0.),
@@ -102,13 +102,13 @@ impl Area for &dyn NativeArray {
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, _) => self.as_point().signed_area(),
-            LineString(_, _) => self.as_line_string().signed_area(),
-            Polygon(_, _) => self.as_polygon().signed_area(),
-            MultiPoint(_, _) => self.as_multi_point().signed_area(),
-            MultiLineString(_, _) => self.as_multi_line_string().signed_area(),
-            MultiPolygon(_, _) => self.as_multi_polygon().signed_area(),
-            GeometryCollection(_, _) => self.as_geometry_collection().signed_area(),
+            Point(_) => self.as_point().signed_area(),
+            LineString(_) => self.as_line_string().signed_area(),
+            Polygon(_) => self.as_polygon().signed_area(),
+            MultiPoint(_) => self.as_multi_point().signed_area(),
+            MultiLineString(_) => self.as_multi_line_string().signed_area(),
+            MultiPolygon(_) => self.as_multi_polygon().signed_area(),
+            GeometryCollection(_) => self.as_geometry_collection().signed_area(),
             Rect(_) => self.as_rect().signed_area(),
             Geometry(_) => self.as_geometry().signed_area(),
         };
@@ -119,13 +119,13 @@ impl Area for &dyn NativeArray {
         use NativeType::*;
 
         let result = match self.data_type() {
-            Point(_, _) => self.as_point().unsigned_area(),
-            LineString(_, _) => self.as_line_string().unsigned_area(),
-            Polygon(_, _) => self.as_polygon().unsigned_area(),
-            MultiPoint(_, _) => self.as_multi_point().unsigned_area(),
-            MultiLineString(_, _) => self.as_multi_line_string().unsigned_area(),
-            MultiPolygon(_, _) => self.as_multi_polygon().unsigned_area(),
-            GeometryCollection(_, _) => self.as_geometry_collection().unsigned_area(),
+            Point(_) => self.as_point().unsigned_area(),
+            LineString(_) => self.as_line_string().unsigned_area(),
+            Polygon(_) => self.as_polygon().unsigned_area(),
+            MultiPoint(_) => self.as_multi_point().unsigned_area(),
+            MultiLineString(_) => self.as_multi_line_string().unsigned_area(),
+            MultiPolygon(_) => self.as_multi_polygon().unsigned_area(),
+            GeometryCollection(_) => self.as_geometry_collection().unsigned_area(),
             Rect(_) => self.as_rect().unsigned_area(),
             Geometry(_) => self.as_geometry().unsigned_area(),
         };
@@ -154,13 +154,13 @@ impl Area for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => self.as_point().signed_area(),
-            LineString(_, _) => self.as_line_string().signed_area(),
-            Polygon(_, _) => self.as_polygon().signed_area(),
-            MultiPoint(_, _) => self.as_multi_point().signed_area(),
-            MultiLineString(_, _) => self.as_multi_line_string().signed_area(),
-            MultiPolygon(_, _) => self.as_multi_polygon().signed_area(),
-            GeometryCollection(_, _) => self.as_geometry_collection().signed_area(),
+            Point(_) => self.as_point().signed_area(),
+            LineString(_) => self.as_line_string().signed_area(),
+            Polygon(_) => self.as_polygon().signed_area(),
+            MultiPoint(_) => self.as_multi_point().signed_area(),
+            MultiLineString(_) => self.as_multi_line_string().signed_area(),
+            MultiPolygon(_) => self.as_multi_polygon().signed_area(),
+            GeometryCollection(_) => self.as_geometry_collection().signed_area(),
             Rect(_) => self.as_rect().signed_area(),
             Geometry(_) => self.as_geometry().unsigned_area(),
         }
@@ -170,13 +170,13 @@ impl Area for &dyn ChunkedNativeArray {
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, _) => self.as_point().unsigned_area(),
-            LineString(_, _) => self.as_line_string().unsigned_area(),
-            Polygon(_, _) => self.as_polygon().unsigned_area(),
-            MultiPoint(_, _) => self.as_multi_point().unsigned_area(),
-            MultiLineString(_, _) => self.as_multi_line_string().unsigned_area(),
-            MultiPolygon(_, _) => self.as_multi_polygon().unsigned_area(),
-            GeometryCollection(_, _) => self.as_geometry_collection().unsigned_area(),
+            Point(_) => self.as_point().unsigned_area(),
+            LineString(_) => self.as_line_string().unsigned_area(),
+            Polygon(_) => self.as_polygon().unsigned_area(),
+            MultiPoint(_) => self.as_multi_point().unsigned_area(),
+            MultiLineString(_) => self.as_multi_line_string().unsigned_area(),
+            MultiPolygon(_) => self.as_multi_polygon().unsigned_area(),
+            GeometryCollection(_) => self.as_geometry_collection().unsigned_area(),
             Rect(_) => self.as_rect().unsigned_area(),
             Geometry(_) => self.as_geometry().unsigned_area(),
         }

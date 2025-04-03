@@ -1,5 +1,5 @@
 use arrow_buffer::ScalarBuffer;
-use geoarrow::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use wasm_bindgen::prelude::*;
 
 // TODO: remove InterleavedCoordBuffer and SeparatedCoordBuffer structs?

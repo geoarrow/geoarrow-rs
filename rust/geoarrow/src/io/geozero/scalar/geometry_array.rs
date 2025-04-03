@@ -38,13 +38,13 @@ pub fn process_geometry_scalar_array<P: GeomProcessor>(
     use NativeType::*;
 
     match geom.data_type() {
-        Point(_, _) => impl_process!(process_point, as_point),
-        LineString(_, _) => impl_process!(process_line_string, as_line_string),
-        Polygon(_, _) => impl_process!(process_polygon, true, as_polygon),
-        MultiPoint(_, _) => impl_process!(process_multi_point, as_multi_point),
-        MultiLineString(_, _) => impl_process!(process_multi_line_string, as_multi_line_string),
-        MultiPolygon(_, _) => impl_process!(process_multi_polygon, as_multi_polygon),
-        GeometryCollection(_, _) => {
+        Point(_) => impl_process!(process_point, as_point),
+        LineString(_) => impl_process!(process_line_string, as_line_string),
+        Polygon(_) => impl_process!(process_polygon, true, as_polygon),
+        MultiPoint(_) => impl_process!(process_multi_point, as_multi_point),
+        MultiLineString(_) => impl_process!(process_multi_line_string, as_multi_line_string),
+        MultiPolygon(_) => impl_process!(process_multi_polygon, as_multi_polygon),
+        GeometryCollection(_) => {
             impl_process!(process_geometry_collection, as_geometry_collection)
         }
 

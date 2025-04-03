@@ -11,9 +11,9 @@ use datafusion::logical_expr::{
     ColumnarValue, Documentation, ScalarUDFImpl, Signature, TypeSignature, Volatility,
 };
 use geo_traits::CoordTrait;
-use geoarrow::array::{CoordType, GeometryArray, PointBuilder};
-use geoarrow::datatypes::Dimension;
+use geoarrow::array::{GeometryArray, PointBuilder};
 use geoarrow::ArrayBase;
+use geoarrow_schema::{CoordType, Dimension};
 
 use crate::data_types::{POINT2D_TYPE, POINT3D_TYPE};
 
@@ -49,7 +49,7 @@ impl ScalarUDFImpl for Point {
     }
 
     fn return_type(&self, _arg_types: &[DataType]) -> datafusion::error::Result<DataType> {
-        Ok(POINT2D_TYPE.into())
+        Ok(POINT2D_TYPE().into())
     }
 
     fn invoke(&self, args: &[ColumnarValue]) -> datafusion::error::Result<ColumnarValue> {
@@ -164,8 +164,8 @@ impl ScalarUDFImpl for MakePoint {
 
     fn return_type(&self, arg_types: &[DataType]) -> datafusion::error::Result<DataType> {
         match arg_types.len() {
-            2 => Ok(POINT2D_TYPE.into()),
-            3 => Ok(POINT3D_TYPE.into()),
+            2 => Ok(POINT2D_TYPE().into()),
+            3 => Ok(POINT3D_TYPE().into()),
             _ => unreachable!(),
         }
     }

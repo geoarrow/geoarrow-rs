@@ -1,5 +1,5 @@
 use crate::array::SeparatedCoordBuffer;
-use crate::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use geos::CoordSeq;
 
 impl TryFrom<SeparatedCoordBuffer> for CoordSeq {
@@ -16,6 +16,7 @@ impl TryFrom<SeparatedCoordBuffer> for CoordSeq {
                 Some(&value.buffers[2]),
                 None,
             ),
+            _ => todo!("XYM and XYZM not supported yet"),
         }
     }
 }
