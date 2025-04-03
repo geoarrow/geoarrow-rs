@@ -26,7 +26,7 @@ use pyo3::prelude::*;
 use pyo3_arrow::export::{Arro3Schema, Arro3Table};
 use pyo3_arrow::PyArray;
 use pyo3_async_runtimes::tokio::future_into_py;
-use pyo3_geoarrow::CRS;
+use pyo3_geoarrow::PyCrs;
 use pyo3_object_store::AnyObjectStore;
 
 #[pyfunction]
@@ -132,7 +132,7 @@ impl ParquetFile {
     #[pyo3(signature = (column_name=None))]
     fn crs(&self, py: Python, column_name: Option<&str>) -> PyGeoArrowResult<PyObject> {
         if let Some(crs) = self.geoparquet_meta.crs(column_name)? {
-            Ok(CRS::from_projjson(crs.clone())
+            Ok(PyCrs::from_projjson(crs.clone())
                 .to_pyproj(py)
                 .map_err(PyErr::from)?)
         } else {
@@ -415,7 +415,7 @@ impl ParquetDataset {
     #[pyo3(signature = (column_name=None))]
     fn crs(&self, py: Python, column_name: Option<&str>) -> PyGeoArrowResult<PyObject> {
         if let Some(crs) = self.meta.crs(column_name)? {
-            Ok(CRS::from_projjson(crs.clone())
+            Ok(PyCrs::from_projjson(crs.clone())
                 .to_pyproj(py)
                 .map_err(PyErr::from)?)
         } else {

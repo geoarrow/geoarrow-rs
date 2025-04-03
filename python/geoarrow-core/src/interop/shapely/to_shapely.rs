@@ -109,7 +109,7 @@ fn pyarray_to_shapely(py: Python, input: PyArray) -> PyGeoArrowResult<Bound<PyAn
         AnyType::Serialized(typ) => {
             let array = SerializedArrayDyn::from_arrow_array(&array, &field)?.into_inner();
             match typ {
-                SerializedType::WKB => wkb_arr(py, array.as_ref().as_wkb().clone()),
+                SerializedType::WKB(_) => wkb_arr(py, array.as_ref().as_wkb().clone()),
                 t => Err(PyValueError::new_err(format!("unsupported type {:?}", t)).into()),
             }
         }

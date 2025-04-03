@@ -1175,6 +1175,7 @@ dependencies = [
  "arrow-buffer",
  "geo 0.30.0",
  "geoarrow",
+ "geoarrow-schema",
  "geozero",
  "numpy",
  "pyo3",
@@ -1196,6 +1197,7 @@ dependencies = [
  "geo 0.30.0",
  "geo-traits",
  "geoarrow",
+ "geoarrow-schema",
  "object_store",
  "parquet",
  "pyo3",
@@ -1219,7 +1221,6 @@ dependencies = [
  "geo-traits",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -2657,6 +2658,7 @@ dependencies = [
  "arrow-schema",
  "geo 0.30.0",
  "geoarrow",
+ "geoarrow-schema",
  "geozero",
  "indexmap",
  "pyo3",

@@ -39,3 +39,11 @@ class Dimension(StrEnum):
     XYZ = "xyz"
     """Three dimensions, X, Y, and Z
     """
+
+    XYM = "xym"
+    """Three dimensions, X, Y, and M
+    """
+
+    XYZM = "xyzm"
+    """Four dimensions, X, Y, Z, and M
+    """

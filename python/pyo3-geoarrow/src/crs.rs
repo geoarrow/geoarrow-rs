@@ -1,6 +1,6 @@
-use geoarrow::array::metadata::{ArrayMetadata, CRSType};
 use geoarrow::error::GeoArrowError;
 use geoarrow::io::crs::CRSTransform;
+use geoarrow_schema::{Crs, CrsType, Metadata};
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
@@ -14,9 +14,9 @@ use crate::error::PyGeoArrowResult;
 /// `pyproj` Python APIs.
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Clone, Debug)]
-pub struct CRS(ArrayMetadata);
+pub struct PyCrs(Metadata);
 
-impl<'py> FromPyObject<'py> for CRS {
+impl<'py> FromPyObject<'py> for PyCrs {
     fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
         let py = ob.py();
         let pyproj = py.import(intern!(py, "pyproj"))?;
@@ -36,21 +36,19 @@ impl<'py> FromPyObject<'py> for CRS {
         let projjson_value = serde_json::from_str(&projjson_string)
             .map_err(|err| PyValueError::new_err(err.to_string()))?;
 
-        Ok(Self(ArrayMetadata {
-            crs: Some(projjson_value),
-            crs_type: Some(CRSType::Projjson),
-            ..Default::default()
-        }))
+        let crs = Crs::from_projjson(projjson_value);
+        Ok(Self(Metadata::new(crs, None)))
     }
 }
 
-impl CRS {
+impl PyCrs {
     pub fn from_projjson(value: Value) -> Self {
-        Self(ArrayMetadata::from_projjson(value))
+        let crs = Crs::from_projjson(value);
+        Self(Metadata::new(crs, None))
     }
 
     #[allow(dead_code)]
-    pub fn into_inner(self) -> ArrayMetadata {
+    pub fn into_inner(self) -> Metadata {
         self.0
     }
 
@@ -59,15 +57,17 @@ impl CRS {
         let pyproj = py.import(intern!(py, "pyproj"))?;
         let crs_class = pyproj.getattr(intern!(py, "CRS"))?;
 
-        let crs_obj = match self.0.crs_type {
-            Some(CRSType::Projjson) => {
+        let crs_obj = match self.0.crs().crs_type() {
+            Some(CrsType::Projjson) => {
                 let args = PyTuple::new(
                     py,
-                    vec![serde_json::to_string(&self.0.crs.as_ref().unwrap())?],
+                    vec![serde_json::to_string(
+                        &self.0.crs().crs_value().as_ref().unwrap(),
+                    )?],
                 )?;
                 crs_class.call_method1(intern!(py, "from_json"), args)?
             }
-            Some(CRSType::AuthorityCode) => match self.0.crs.as_ref().unwrap() {
+            Some(CrsType::AuthorityCode) => match self.0.crs().crs_value().as_ref().unwrap() {
                 Value::String(value) => {
                     let (authority, code) =
                         value.split_once(':').expect("expected : in authority code");
@@ -76,14 +76,14 @@ impl CRS {
                 }
                 _ => panic!("Expected string value"),
             },
-            Some(CRSType::Wkt2_2019) => match self.0.crs.as_ref().unwrap() {
+            Some(CrsType::Wkt2_2019) => match self.0.crs().crs_value().as_ref().unwrap() {
                 Value::String(value) => {
                     let args = PyTuple::new(py, vec![value])?;
                     crs_class.call_method1(intern!(py, "from_wkt"), args)?
                 }
                 _ => panic!("Expected string value"),
             },
-            _ => match self.0.crs.as_ref() {
+            _ => match self.0.crs().crs_value().as_ref() {
                 None => py.None().into_bound(py),
                 Some(Value::String(value)) => {
                     let args = PyTuple::new(py, vec![value])?;
@@ -125,6 +125,12 @@ impl CRS {
     }
 }
 
+impl From<Crs> for PyCrs {
+    fn from(value: Crs) -> Self {
+        Self(Metadata::new(value, None))
+    }
+}
+
 /// An implementation of [CRSTransform] using pyproj.
 #[derive(Debug)]
 pub struct PyprojCRSTransform {}
@@ -142,18 +148,15 @@ impl Default for PyprojCRSTransform {
 }
 
 impl CRSTransform for PyprojCRSTransform {
-    fn _convert_to_projjson(
-        &self,
-        meta: &geoarrow::array::metadata::ArrayMetadata,
-    ) -> geoarrow::error::Result<Option<Value>> {
-        let crs = CRS(meta.clone());
+    fn _convert_to_projjson(&self, crs: &Crs) -> geoarrow::error::Result<Option<Value>> {
+        let crs = PyCrs::from(crs.clone());
         let projjson = Python::with_gil(|py| crs.to_projjson(py))
             .map_err(|err| GeoArrowError::General(err.to_string()))?;
         Ok(projjson)
     }
 
-    fn _convert_to_wkt(&self, meta: &ArrayMetadata) -> geoarrow::error::Result<Option<String>> {
-        let crs = CRS(meta.clone());
+    fn _convert_to_wkt(&self, crs: &Crs) -> geoarrow::error::Result<Option<String>> {
+        let crs = PyCrs::from(crs.clone());
         let wkt = Python::with_gil(|py| crs.to_wkt(py))
             .map_err(|err| GeoArrowError::General(err.to_string()))?;
         Ok(wkt)

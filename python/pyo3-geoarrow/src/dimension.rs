@@ -1,4 +1,4 @@
-use geoarrow::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
@@ -8,6 +8,8 @@ use pyo3::prelude::*;
 pub enum PyDimension {
     XY,
     XYZ,
+    XYM,
+    XYZM,
 }
 
 impl<'a> FromPyObject<'a> for PyDimension {
@@ -16,6 +18,8 @@ impl<'a> FromPyObject<'a> for PyDimension {
         match s.to_lowercase().as_str() {
             "xy" => Ok(Self::XY),
             "xyz" => Ok(Self::XYZ),
+            "xym" => Ok(Self::XYM),
+            "xyzm" => Ok(Self::XYZM),
             _ => Err(PyValueError::new_err("Unexpected dimension")),
         }
     }
@@ -26,6 +30,8 @@ impl From<PyDimension> for Dimension {
         match value {
             PyDimension::XY => Self::XY,
             PyDimension::XYZ => Self::XYZ,
+            PyDimension::XYM => Self::XYM,
+            PyDimension::XYZM => Self::XYZM,
         }
     }
 }
@@ -35,6 +41,8 @@ impl From<Dimension> for PyDimension {
         match value {
             Dimension::XY => Self::XY,
             Dimension::XYZ => Self::XYZ,
+            Dimension::XYM => Self::XYM,
+            Dimension::XYZM => Self::XYZM,
         }
     }
 }
@@ -50,6 +58,8 @@ impl<'py> IntoPyObject<'py> for PyDimension {
         match self {
             Self::XY => enum_cls.getattr(intern!(py, "XY")),
             Self::XYZ => enum_cls.getattr(intern!(py, "XYZ")),
+            Self::XYM => enum_cls.getattr(intern!(py, "XYM")),
+            Self::XYZM => enum_cls.getattr(intern!(py, "XYZM")),
         }
     }
 }

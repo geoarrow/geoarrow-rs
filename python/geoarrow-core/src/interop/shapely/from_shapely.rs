@@ -6,15 +6,15 @@ use crate::constructors::{
 use crate::ffi::to_python::native_array_to_pyobject;
 use crate::interop::shapely::utils::import_shapely;
 use arrow_array::builder::BinaryBuilder;
-use geoarrow::array::metadata::ArrayMetadata;
-use geoarrow::datatypes::{Dimension, NativeType};
+use geoarrow::datatypes::NativeType;
+use geoarrow_schema::{Dimension, GeometryCollectionType, Metadata};
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::pybacked::PyBackedBytes;
 use pyo3::types::{PyDict, PyString, PyTuple};
 use pyo3::PyAny;
-use pyo3_geoarrow::{PyGeoArrowResult, CRS};
+use pyo3_geoarrow::{PyCrs, PyGeoArrowResult};
 
 /// Check that the value of the GeometryType enum returned from shapely.to_ragged_array matches the
 /// expected variant for this geometry array.
@@ -80,7 +80,7 @@ fn call_to_wkb<'a>(
 pub fn from_shapely(
     py: Python,
     input: &Bound<PyAny>,
-    crs: Option<CRS>,
+    crs: Option<PyCrs>,
 ) -> PyGeoArrowResult<PyObject> {
     let numpy_mod = py.import(intern!(py, "numpy"))?;
     let shapely_mod = import_shapely(py)?;
@@ -160,7 +160,11 @@ pub fn from_shapely(
         let wkb_arr = make_wkb_arr(py, input, metadata)?;
         let geom_arr = geoarrow::io::wkb::from_wkb(
             &wkb_arr,
-            NativeType::GeometryCollection(Default::default(), Dimension::XY),
+            NativeType::GeometryCollection(GeometryCollectionType::new(
+                Default::default(),
+                Dimension::XY,
+                Default::default(),
+            )),
             false,
         )?;
         native_array_to_pyobject(py, geom_arr)
@@ -170,7 +174,7 @@ pub fn from_shapely(
 fn make_wkb_arr(
     py: Python,
     input: &Bound<PyAny>,
-    metadata: Arc<ArrayMetadata>,
+    metadata: Arc<Metadata>,
 ) -> PyGeoArrowResult<geoarrow::array::WKBArray<i32>> {
     let shapely_mod = import_shapely(py)?;
     let wkb_result = call_to_wkb(py, &shapely_mod, input)?;
@@ -198,7 +202,7 @@ macro_rules! impl_chunked_from_shapely {
                 py: Python,
                 input: &Bound<PyAny>,
                 chunk_size: usize,
-                crs: Option<CRS>,
+                crs: Option<PyCrs>,
             ) -> PyGeoArrowResult<Self> {
                 let len = input.len()?;
                 let num_chunks = (len as f64 / chunk_size as f64).ceil() as usize;

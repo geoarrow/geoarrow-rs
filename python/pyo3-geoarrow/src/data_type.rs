@@ -2,6 +2,10 @@ use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::{PyCoordType, PyDimension};
 
 use geoarrow::datatypes::{NativeType, SerializedType};
+use geoarrow_schema::{
+    BoxType, GeometryCollectionType, GeometryType, LineStringType, MultiLineStringType,
+    MultiPointType, MultiPolygonType, PointType, PolygonType, WkbType, WktType,
+};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyType};
@@ -37,36 +41,51 @@ impl PyNativeType {
         coord_type: Option<PyCoordType>,
     ) -> PyResult<Self> {
         match r#type.to_lowercase().as_str() {
-            "point" => Ok(Self(NativeType::Point(
+            "point" => Ok(Self(NativeType::Point(PointType::new(
                 coord_type.unwrap().into(),
                 dimension.unwrap().into(),
-            ))),
-            "linestring" => Ok(Self(NativeType::LineString(
+                Default::default(),
+            )))),
+            "linestring" => Ok(Self(NativeType::LineString(LineStringType::new(
                 coord_type.unwrap().into(),
                 dimension.unwrap().into(),
-            ))),
-            "polygon" => Ok(Self(NativeType::Polygon(
+                Default::default(),
+            )))),
+            "polygon" => Ok(Self(NativeType::Polygon(PolygonType::new(
                 coord_type.unwrap().into(),
                 dimension.unwrap().into(),
-            ))),
-            "multipoint" => Ok(Self(NativeType::MultiPoint(
+                Default::default(),
+            )))),
+            "multipoint" => Ok(Self(NativeType::MultiPoint(MultiPointType::new(
                 coord_type.unwrap().into(),
                 dimension.unwrap().into(),
-            ))),
-            "multilinestring" => Ok(Self(NativeType::MultiLineString(
+                Default::default(),
+            )))),
+            "multilinestring" => Ok(Self(NativeType::MultiLineString(MultiLineStringType::new(
                 coord_type.unwrap().into(),
                 dimension.unwrap().into(),
-            ))),
-            "multipolygon" => Ok(Self(NativeType::MultiPolygon(
+                Default::default(),
+            )))),
+            "multipolygon" => Ok(Self(NativeType::MultiPolygon(MultiPolygonType::new(
                 coord_type.unwrap().into(),
                 dimension.unwrap().into(),
-            ))),
-            "geometry" => Ok(Self(NativeType::Geometry(coord_type.unwrap().into()))),
+                Default::default(),
+            )))),
+            "geometry" => Ok(Self(NativeType::Geometry(GeometryType::new(
+                coord_type.unwrap().into(),
+                Default::default(),
+            )))),
             "geometrycollection" => Ok(Self(NativeType::GeometryCollection(
-                coord_type.unwrap().into(),
-                dimension.unwrap().into(),
+                GeometryCollectionType::new(
+                    coord_type.unwrap().into(),
+                    dimension.unwrap().into(),
+                    Default::default(),
+                ),
             ))),
-            "box" | "rect" => Ok(Self(NativeType::Rect(dimension.unwrap().into()))),
+            "box" | "rect" => Ok(Self(NativeType::Rect(BoxType::new(
+                dimension.unwrap().into(),
+                Default::default(),
+            )))),
             _ => Err(PyValueError::new_err("Unknown geometry type input")),
         }
     }
@@ -170,8 +189,8 @@ impl PySerializedType {
     #[new]
     fn py_new(r#type: &str) -> PyResult<Self> {
         match r#type.to_lowercase().as_str() {
-            "wkb" => Ok(Self(SerializedType::WKB)),
-            "wkt" => Ok(Self(SerializedType::WKT)),
+            "wkb" => Ok(Self(SerializedType::WKB(WkbType::new(Default::default())))),
+            "wkt" => Ok(Self(SerializedType::WKT(WktType::new(Default::default())))),
             _ => Err(PyValueError::new_err("Unknown geometry type input")),
         }
     }

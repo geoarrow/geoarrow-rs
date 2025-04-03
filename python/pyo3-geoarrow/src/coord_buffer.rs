@@ -4,7 +4,7 @@ use arrow_array::Array;
 use arrow_buffer::ScalarBuffer;
 use arrow_schema::DataType;
 use geoarrow::array::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
-use geoarrow::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyList, PyTuple};
