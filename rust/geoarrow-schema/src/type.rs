@@ -6,6 +6,7 @@ use arrow_schema::{ArrowError, DataType};
 use crate::metadata::Metadata;
 use crate::{CoordType, Dimension};
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct PointType {
     coord_type: CoordType,
     dim: Dimension,
@@ -72,6 +73,7 @@ fn parse_point(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowErro
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct LineStringType {
     coord_type: CoordType,
     dim: Dimension,
@@ -133,6 +135,7 @@ fn parse_linestring(data_type: &DataType) -> Result<(CoordType, Dimension), Arro
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct PolygonType {
     coord_type: CoordType,
     dim: Dimension,
@@ -203,6 +206,7 @@ fn parse_polygon(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowEr
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct MultiPointType {
     coord_type: CoordType,
     dim: Dimension,
@@ -263,6 +267,7 @@ fn parse_multipoint(data_type: &DataType) -> Result<(CoordType, Dimension), Arro
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct MultiLineStringType {
     coord_type: CoordType,
     dim: Dimension,
@@ -333,6 +338,7 @@ fn parse_multilinestring(data_type: &DataType) -> Result<(CoordType, Dimension),
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct MultiPolygonType {
     coord_type: CoordType,
     dim: Dimension,
@@ -413,6 +419,7 @@ fn parse_multipolygon(data_type: &DataType) -> Result<(CoordType, Dimension), Ar
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct GeometryCollectionType {
     coord_type: CoordType,
     dim: Dimension,
@@ -548,6 +555,7 @@ fn parse_geometry_collection(data_type: &DataType) -> Result<(CoordType, Dimensi
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct GeometryType {
     coord_type: CoordType,
     metadata: Metadata,
@@ -651,6 +659,7 @@ fn parse_geometry(data_type: &DataType) -> Result<CoordType, ArrowError> {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct BoxType {
     dim: Dimension,
     metadata: Metadata,
@@ -718,6 +727,7 @@ fn parse_box(data_type: &DataType) -> Result<Dimension, ArrowError> {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct WkbType {
     metadata: Metadata,
 }
@@ -755,6 +765,7 @@ impl ExtensionType for WkbType {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct WktType {
     metadata: Metadata,
 }

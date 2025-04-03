@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct Crs {
     /// One of:
     ///
@@ -73,7 +73,7 @@ impl Crs {
 }
 
 /// An optional string disambiguating the value of the `crs` field.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum CrsType {
     /// Indicates that the `"crs"` field was written as
     /// [PROJJSON](https://proj.org/specifications/projjson.html).

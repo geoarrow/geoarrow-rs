@@ -9,7 +9,7 @@ use crate::edges::Edges;
 ///
 /// This is serialized to JSON when a [`geoarrow`](self) array is exported to an [`arrow`] array and
 /// deserialized when imported from an [`arrow`] array.
-#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct Metadata {
     // Raise the underlying crs fields to this level.
     // https://serde.rs/attr-flatten.html
