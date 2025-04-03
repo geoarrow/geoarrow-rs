@@ -197,7 +197,7 @@ impl MultiLineStringBuilder {
         Self::with_capacity_and_options_from_iter(
             geoms,
             dim,
-            Default::default(),
+            CoordType::default_interleaved(),
             Default::default(),
         )
     }
@@ -507,7 +507,12 @@ impl From<MultiLineStringBuilder> for MultiLineStringArray {
 
 impl<G: MultiLineStringTrait<T = f64>> From<(&[G], Dimension)> for MultiLineStringBuilder {
     fn from((geoms, dim): (&[G], Dimension)) -> Self {
-        Self::from_multi_line_strings(geoms, dim, Default::default(), Default::default())
+        Self::from_multi_line_strings(
+            geoms,
+            dim,
+            CoordType::default_interleaved(),
+            Default::default(),
+        )
     }
 }
 
@@ -515,7 +520,12 @@ impl<G: MultiLineStringTrait<T = f64>> From<(Vec<Option<G>>, Dimension)>
     for MultiLineStringBuilder
 {
     fn from((geoms, dim): (Vec<Option<G>>, Dimension)) -> Self {
-        Self::from_nullable_multi_line_strings(&geoms, dim, Default::default(), Default::default())
+        Self::from_nullable_multi_line_strings(
+            &geoms,
+            dim,
+            CoordType::default_interleaved(),
+            Default::default(),
+        )
     }
 }
 
@@ -525,7 +535,12 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MultiLineStringBu
     fn try_from((value, dim): (WKBArray<O>, Dimension)) -> Result<Self> {
         let metadata = value.data_type.metadata().clone();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, dim, Default::default(), metadata)
+        Self::from_wkb(
+            &wkb_objects,
+            dim,
+            CoordType::default_interleaved(),
+            metadata,
+        )
     }
 }
 

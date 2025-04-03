@@ -2,7 +2,7 @@ use geo::polygon;
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use geoarrow::array::{PolygonArray, PolygonBuilder};
-use geoarrow_schema::Dimension;
+use geoarrow_schema::{CoordType, Dimension};
 
 fn create_data() -> Vec<geo::Polygon> {
     // An L shape
@@ -28,7 +28,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
             let mut_arr = PolygonBuilder::from_polygons(
                 &data,
                 Dimension::XY,
-                Default::default(),
+                CoordType::default_interleaved(),
                 Default::default(),
             );
             let _arr: PolygonArray = mut_arr.into();

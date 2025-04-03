@@ -51,7 +51,7 @@ pub struct MultiPolygonBuilder {
 impl MultiPolygonBuilder {
     /// Creates a new empty [`MultiPolygonBuilder`].
     pub fn new(dim: Dimension) -> Self {
-        Self::new_with_options(dim, Default::default(), Default::default())
+        Self::new_with_options(dim, CoordType::default_interleaved(), Default::default())
     }
 
     /// Creates a new empty [`MultiPolygonBuilder`] with the provided options.
@@ -65,7 +65,12 @@ impl MultiPolygonBuilder {
 
     /// Creates a new [`MultiPolygonBuilder`] with a capacity.
     pub fn with_capacity(dim: Dimension, capacity: MultiPolygonCapacity) -> Self {
-        Self::with_capacity_and_options(dim, capacity, Default::default(), Default::default())
+        Self::with_capacity_and_options(
+            dim,
+            capacity,
+            CoordType::default_interleaved(),
+            Default::default(),
+        )
     }
 
     /// Creates a new empty [`MultiPolygonBuilder`] with the provided capacity and options.
@@ -187,7 +192,7 @@ impl MultiPolygonBuilder {
         Self::with_capacity_and_options_from_iter(
             geoms,
             dim,
-            Default::default(),
+            CoordType::default_interleaved(),
             Default::default(),
         )
     }
@@ -574,13 +579,23 @@ impl From<MultiPolygonBuilder> for MultiPolygonArray {
 
 impl<G: MultiPolygonTrait<T = f64>> From<(&[G], Dimension)> for MultiPolygonBuilder {
     fn from((geoms, dim): (&[G], Dimension)) -> Self {
-        Self::from_multi_polygons(geoms, dim, Default::default(), Default::default())
+        Self::from_multi_polygons(
+            geoms,
+            dim,
+            CoordType::default_interleaved(),
+            Default::default(),
+        )
     }
 }
 
 impl<G: MultiPolygonTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for MultiPolygonBuilder {
     fn from((geoms, dim): (Vec<Option<G>>, Dimension)) -> Self {
-        Self::from_nullable_multi_polygons(&geoms, dim, Default::default(), Default::default())
+        Self::from_nullable_multi_polygons(
+            &geoms,
+            dim,
+            CoordType::default_interleaved(),
+            Default::default(),
+        )
     }
 }
 
@@ -590,6 +605,11 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MultiPolygonBuild
     fn try_from((value, dim): (WKBArray<O>, Dimension)) -> Result<Self> {
         let metadata = value.data_type.metadata().clone();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, dim, Default::default(), metadata)
+        Self::from_wkb(
+            &wkb_objects,
+            dim,
+            CoordType::default_interleaved(),
+            metadata,
+        )
     }
 }

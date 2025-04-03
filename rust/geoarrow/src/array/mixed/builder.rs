@@ -65,7 +65,7 @@ impl<'a> MixedGeometryBuilder {
     pub fn new(dim: Dimension) -> Self {
         Self::new_with_options(
             dim,
-            Default::default(),
+            CoordType::default_interleaved(),
             Default::default(),
             DEFAULT_PREFER_MULTI,
         )
@@ -85,7 +85,7 @@ impl<'a> MixedGeometryBuilder {
         Self::with_capacity_and_options(
             dim,
             capacity,
-            Default::default(),
+            CoordType::default_interleaved(),
             Default::default(),
             DEFAULT_PREFER_MULTI,
         )
@@ -209,7 +209,7 @@ impl<'a> MixedGeometryBuilder {
         Self::with_capacity_and_options_from_iter(
             geoms,
             dim,
-            Default::default(),
+            CoordType::default_interleaved(),
             Default::default(),
             DEFAULT_PREFER_MULTI,
         )
@@ -551,7 +551,13 @@ impl<G: GeometryTrait<T = f64>> TryFrom<(&[G], Dimension)> for MixedGeometryBuil
     type Error = GeoArrowError;
 
     fn try_from((geoms, dim): (&[G], Dimension)) -> Result<Self> {
-        Self::from_geometries(geoms, dim, Default::default(), Default::default(), true)
+        Self::from_geometries(
+            geoms,
+            dim,
+            CoordType::default_interleaved(),
+            Default::default(),
+            true,
+        )
     }
 }
 
@@ -559,7 +565,13 @@ impl<G: GeometryTrait<T = f64>> TryFrom<(Vec<Option<G>>, Dimension)> for MixedGe
     type Error = GeoArrowError;
 
     fn try_from((geoms, dim): (Vec<Option<G>>, Dimension)) -> Result<Self> {
-        Self::from_nullable_geometries(&geoms, dim, Default::default(), Default::default(), true)
+        Self::from_nullable_geometries(
+            &geoms,
+            dim,
+            CoordType::default_interleaved(),
+            Default::default(),
+            true,
+        )
     }
 }
 
@@ -575,7 +587,13 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MixedGeometryBuil
 
         let metadata = value.data_type.metadata().clone();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, dim, Default::default(), metadata, true)
+        Self::from_wkb(
+            &wkb_objects,
+            dim,
+            CoordType::default_interleaved(),
+            metadata,
+            true,
+        )
     }
 }
 

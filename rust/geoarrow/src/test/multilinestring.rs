@@ -1,7 +1,7 @@
 use geo::{line_string, MultiLineString};
 
 use crate::array::{MultiLineStringArray, MultiLineStringBuilder};
-use geoarrow_schema::Dimension;
+use geoarrow_schema::{CoordType, Dimension};
 
 pub(crate) fn ml0() -> MultiLineString {
     MultiLineString::new(vec![line_string![
@@ -34,7 +34,7 @@ pub(crate) fn ml_array() -> MultiLineStringArray {
     MultiLineStringBuilder::from_multi_line_strings(
         &geoms,
         Dimension::XY,
-        Default::default(),
+        CoordType::default_interleaved(),
         Default::default(),
     )
     .finish()

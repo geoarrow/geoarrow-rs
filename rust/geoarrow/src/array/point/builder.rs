@@ -28,7 +28,7 @@ pub struct PointBuilder {
 impl PointBuilder {
     /// Creates a new empty [`PointBuilder`].
     pub fn new(dim: Dimension) -> Self {
-        Self::new_with_options(dim, Default::default(), Default::default())
+        Self::new_with_options(dim, CoordType::default_interleaved(), Default::default())
     }
 
     /// Creates a new empty [`PointBuilder`] with the provided options.
@@ -42,7 +42,12 @@ impl PointBuilder {
 
     /// Creates a new [`PointBuilder`] with a capacity.
     pub fn with_capacity(dim: Dimension, capacity: usize) -> Self {
-        Self::with_capacity_and_options(dim, capacity, Default::default(), Default::default())
+        Self::with_capacity_and_options(
+            dim,
+            capacity,
+            CoordType::default_interleaved(),
+            Default::default(),
+        )
     }
 
     /// Creates a new empty [`PointBuilder`] with the provided capacity and options.
@@ -367,7 +372,12 @@ impl From<PointBuilder> for ArrayRef {
 
 impl<G: PointTrait<T = f64>> From<(&[G], Dimension)> for PointBuilder {
     fn from((value, dim): (&[G], Dimension)) -> Self {
-        PointBuilder::from_points(value.iter(), dim, Default::default(), Default::default())
+        PointBuilder::from_points(
+            value.iter(),
+            dim,
+            CoordType::default_interleaved(),
+            Default::default(),
+        )
     }
 }
 
@@ -376,7 +386,7 @@ impl<G: PointTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for PointBuilder 
         PointBuilder::from_nullable_points(
             geoms.iter().map(|x| x.as_ref()),
             dim,
-            Default::default(),
+            CoordType::default_interleaved(),
             Default::default(),
         )
     }
@@ -388,6 +398,11 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for PointBuilder {
     fn try_from((value, dim): (WKBArray<O>, Dimension)) -> Result<Self> {
         let metadata = value.data_type.metadata().clone();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, dim, Default::default(), metadata)
+        Self::from_wkb(
+            &wkb_objects,
+            dim,
+            CoordType::default_interleaved(),
+            metadata,
+        )
     }
 }
