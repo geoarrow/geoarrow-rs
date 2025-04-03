@@ -1,13 +1,12 @@
 use std::fmt::Debug;
 use std::sync::Arc;
 
+use geoarrow_schema::{CoordType, Dimension, Metadata};
 use geozero::error::GeozeroError;
 use geozero::geo_types::GeoWriter;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-use crate::array::metadata::ArrayMetadata;
-use crate::array::{CoordType, GeometryArray, GeometryBuilder};
-use geoarrow_schema::Dimension;
+use crate::array::{GeometryArray, GeometryBuilder};
 use crate::trait_::GeometryArrayBuilder;
 use crate::NativeArray;
 
@@ -49,7 +48,7 @@ impl GeometryStreamBuilder {
 
     pub fn new_with_options(
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Self {
         Self {
@@ -219,12 +218,12 @@ impl GeometryArrayBuilder for GeometryStreamBuilder {
         _dim: Dimension,
         _geom_capacity: usize,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         Self::new_with_options(coord_type, metadata, true)
     }
 
-    fn set_metadata(&mut self, metadata: Arc<ArrayMetadata>) {
+    fn set_metadata(&mut self, metadata: Arc<Metadata>) {
         self.builder.set_metadata(metadata)
     }
 
@@ -236,7 +235,7 @@ impl GeometryArrayBuilder for GeometryStreamBuilder {
         self.builder.coord_type()
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
+    fn metadata(&self) -> Arc<Metadata> {
         self.builder.metadata()
     }
 }

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::algorithm::geo::{AffineOps, Center, Centroid};
 use crate::array::MultiPointArray;
 use crate::array::*;
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
@@ -222,7 +222,6 @@ impl Rotate<f64> for &dyn NativeArray {
             }};
         }
 
-        use Dimension::*;
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
@@ -248,7 +247,6 @@ impl Rotate<f64> for &dyn NativeArray {
             }};
         }
 
-        use Dimension::*;
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
@@ -274,7 +272,6 @@ impl Rotate<f64> for &dyn NativeArray {
             }};
         }
 
-        use Dimension::*;
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
@@ -304,7 +301,6 @@ impl Rotate<Float64Array> for &dyn NativeArray {
             }};
         }
 
-        use Dimension::*;
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
@@ -330,7 +326,6 @@ impl Rotate<Float64Array> for &dyn NativeArray {
             }};
         }
 
-        use Dimension::*;
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
@@ -356,7 +351,6 @@ impl Rotate<Float64Array> for &dyn NativeArray {
             }};
         }
 
-        use Dimension::*;
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {

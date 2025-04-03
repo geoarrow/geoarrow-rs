@@ -1,31 +1,29 @@
 use std::sync::Arc;
 
+use arrow_array::{Array, ArrayRef, FixedSizeListArray, OffsetSizeTrait, StructArray};
+use arrow_buffer::NullBuffer;
+use arrow_schema::{DataType, Field};
+use geo_traits::PointTrait;
+use geoarrow_schema::{Dimension, Metadata, PointType};
+
 use crate::algorithm::native::downcast::can_downcast_multi;
 use crate::algorithm::native::eq::point_eq;
-use crate::array::metadata::ArrayMetadata;
 use crate::array::{
     CoordBuffer, CoordType, GeometryCollectionArray, InterleavedCoordBuffer, MixedGeometryArray,
     MultiPointArray, PointBuilder, SeparatedCoordBuffer, WKBArray,
 };
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, Point};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
 use crate::{ArrayBase, NativeArray};
-use arrow_array::{Array, ArrayRef, FixedSizeListArray, OffsetSizeTrait, StructArray};
-use geo_traits::PointTrait;
-
-use arrow_buffer::NullBuffer;
-use arrow_schema::{DataType, Field};
 
 /// An immutable array of Point geometries using GeoArrow's in-memory representation.
 ///
 /// This is semantically equivalent to `Vec<Option<Point>>` due to the internal validity bitmap.
 #[derive(Debug, Clone)]
 pub struct PointArray {
-    // Always NativeType::Point
-    data_type: NativeType,
-    pub(crate) metadata: Arc<ArrayMetadata>,
+    data_type: PointType,
     pub(crate) coords: CoordBuffer,
     pub(crate) validity: Option<NullBuffer>,
 }
@@ -53,11 +51,7 @@ impl PointArray {
     /// # Panics
     ///
     /// - if the validity is not `None` and its length is different from the number of geometries
-    pub fn new(
-        coords: CoordBuffer,
-        validity: Option<NullBuffer>,
-        metadata: Arc<ArrayMetadata>,
-    ) -> Self {
+    pub fn new(coords: CoordBuffer, validity: Option<NullBuffer>, metadata: Arc<Metadata>) -> Self {
         Self::try_new(coords, validity, metadata).unwrap()
     }
 
@@ -73,15 +67,13 @@ impl PointArray {
     pub fn try_new(
         coords: CoordBuffer,
         validity: Option<NullBuffer>,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Result<Self> {
         check(&coords, validity.as_ref().map(|v| v.len()))?;
-        let data_type = NativeType::Point(coords.coord_type(), coords.dim());
         Ok(Self {
-            data_type,
+            data_type: PointType::new(coords.coord_type(), coords.dim(), metadata),
             coords,
             validity,
-            metadata,
         })
     }
 
@@ -121,7 +113,6 @@ impl PointArray {
             data_type: self.data_type.clone(),
             coords: self.coords.slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
-            metadata: self.metadata(),
         }
     }
 
@@ -167,7 +158,7 @@ impl ArrayBase for PointArray {
         self.clone().into_array_ref()
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
+    fn metadata(&self) -> Arc<Metadata> {
         self.metadata.clone()
     }
 
@@ -186,7 +177,7 @@ impl ArrayBase for PointArray {
 
 impl NativeArray for PointArray {
     fn data_type(&self) -> NativeType {
-        self.data_type
+        NativeType::Point(self.data_type.clone())
     }
 
     fn coord_type(&self) -> CoordType {
@@ -197,7 +188,7 @@ impl NativeArray for PointArray {
         Arc::new(self.to_coord_type(coord_type))
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
+    fn with_metadata(&self, metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
         arr.metadata = metadata;
         Arc::new(arr)

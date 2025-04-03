@@ -56,8 +56,8 @@
 pub use binary::{WKBArray, WKBBuilder, WKBCapacity};
 pub use cast::{AsChunkedNativeArray, AsNativeArray, AsSerializedArray};
 pub use coord::{
-    CoordBuffer, CoordBufferBuilder, CoordType, InterleavedCoordBuffer,
-    InterleavedCoordBufferBuilder, SeparatedCoordBuffer, SeparatedCoordBufferBuilder,
+    CoordBuffer, CoordBufferBuilder, InterleavedCoordBuffer, InterleavedCoordBufferBuilder,
+    SeparatedCoordBuffer, SeparatedCoordBufferBuilder,
 };
 pub use dynamic::{NativeArrayDyn, SerializedArrayDyn};
 pub use geometry::{GeometryArray, GeometryBuilder, GeometryCapacity};

@@ -1,13 +1,14 @@
+use arrow_array::Float64Array;
+use geo::VincentyLength as _VincentyLength;
+
 use crate::algorithm::geo::utils::zeroes;
 use crate::algorithm::native::Unary;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
-use arrow_array::Float64Array;
-use geo::VincentyLength as _VincentyLength;
 
 /// Determine the length of a geometry using [Vincenty’s formulae].
 ///
@@ -87,7 +88,6 @@ impl VincentyLength for &dyn NativeArray {
     type Output = Result<Float64Array>;
 
     fn vincenty_length(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
@@ -133,7 +133,6 @@ impl VincentyLength for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn vincenty_length(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {

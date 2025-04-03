@@ -4,13 +4,13 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
 use std::str::FromStr;
 
-use crate::array::metadata::{ArrayMetadata, Edges};
-use crate::array::CoordType;
-use crate::datatypes::{Dimension, NativeType};
+use crate::array::metadata::Edges;
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::GeoParquetWriterEncoding;
 
 use arrow_schema::Schema;
+use geoarrow_schema::{CoordType, Crs, Edges, Metadata};
 use parquet::file::metadata::FileMetaData;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -643,27 +643,25 @@ impl GeoParquetMetadata {
     }
 }
 
-impl From<GeoParquetColumnMetadata> for ArrayMetadata {
+impl From<GeoParquetColumnMetadata> for Metadata {
     fn from(value: GeoParquetColumnMetadata) -> Self {
-        let mut meta = if let Some(crs) = value.crs {
-            ArrayMetadata::from_projjson(crs)
-        } else {
-            ArrayMetadata::default()
-        };
-        if let Some(edges) = value.edges {
+        let edges = if let Some(edges) = value.edges {
             if edges.as_str() == "spherical" {
-                meta = meta.with_edges(Edges::Spherical);
+                Some(Edges::Spherical)
+            } else {
+                None
             }
+        } else {
+            None
         };
-        meta
+        if let Some(crs) = value.crs {
+            Metadata::new(Crs::from_projjson(crs), edges)
+        } else {
+            Metadata::default()
+        }
     }
 }
 
-impl From<&GeoParquetColumnMetadata> for ArrayMetadata {
-    fn from(value: &GeoParquetColumnMetadata) -> Self {
-        value.clone().into()
-    }
-}
 // TODO: deduplicate with `resolve_types` in `downcast.rs`
 pub(crate) fn infer_geo_data_type(
     geometry_types: &HashSet<GeoParquetGeometryType>,

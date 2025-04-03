@@ -1,17 +1,18 @@
 use std::sync::Arc;
 
-use crate::array::mixed::builder::DEFAULT_PREFER_MULTI;
-use crate::array::*;
-use crate::chunked_array::*;
-use crate::datatypes::{Dimension, NativeType};
-use crate::error::{GeoArrowError, Result};
-use crate::scalar::*;
-use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
 use geo_traits::{
     CoordTrait, GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait,
     MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
 };
+
+use crate::array::mixed::builder::DEFAULT_PREFER_MULTI;
+use crate::array::*;
+use crate::chunked_array::*;
+use crate::datatypes::NativeType;
+use crate::error::{GeoArrowError, Result};
+use crate::scalar::*;
+use crate::trait_::ArrayAccessor;
+use crate::NativeArray;
 
 /// Note: this will currently always create a _two-dimensional_ output array because it returns a [`geo::Coord`].
 pub trait MapCoords {
@@ -453,7 +454,6 @@ impl MapCoords for &dyn NativeArray {
         F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        use Dimension::*;
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
@@ -466,7 +466,7 @@ impl MapCoords for &dyn NativeArray {
             GeometryCollection(_) => {
                 Arc::new(self.as_geometry_collection().try_map_coords(map_op)?)
             }
-            Rect(XY) => Arc::new(self.as_rect().try_map_coords(map_op)?),
+            Rect(_) => Arc::new(self.as_rect().try_map_coords(map_op)?),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -607,7 +607,6 @@ impl MapCoords for &dyn ChunkedNativeArray {
         F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        use Dimension::*;
         use NativeType::*;
 
         let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
@@ -620,7 +619,7 @@ impl MapCoords for &dyn ChunkedNativeArray {
             GeometryCollection(_) => {
                 Arc::new(self.as_geometry_collection().try_map_coords(map_op)?)
             }
-            Rect(XY) => Arc::new(self.as_rect().try_map_coords(map_op)?),
+            Rect(_) => Arc::new(self.as_rect().try_map_coords(map_op)?),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)

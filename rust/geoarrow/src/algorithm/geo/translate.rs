@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::*;
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
@@ -135,7 +135,6 @@ impl Translate for &dyn NativeArray {
             }};
         }
 
-        use Dimension::*;
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {

@@ -2,7 +2,7 @@ use crate::algorithm::geo::utils::zeroes;
 use crate::algorithm::native::Unary;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
@@ -88,7 +88,6 @@ impl HaversineLength for &dyn NativeArray {
     type Output = Result<Float64Array>;
 
     fn haversine_length(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         let result = match self.data_type() {
@@ -135,7 +134,6 @@ impl HaversineLength for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn haversine_length(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {

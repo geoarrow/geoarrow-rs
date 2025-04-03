@@ -3,22 +3,20 @@ use std::sync::Arc;
 
 use arrow_array::RecordBatch;
 use arrow_schema::SchemaRef;
+use geo_traits::GeometryTrait;
+use geoarrow_schema::{CoordType, Dimension, Metadata};
 use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
 
-use crate::array::metadata::ArrayMetadata;
-use crate::array::CoordType;
 use crate::chunked_array::ChunkedNativeArrayDyn;
-use geoarrow_schema::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::io::geozero::table::builder::properties::PropertiesBatchBuilder;
 use crate::table::Table;
 use crate::trait_::{GeometryArrayBuilder, NativeArray};
-use geo_traits::GeometryTrait;
 
 /// Options for creating a GeoTableBuilder.
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeoTableBuilderOptions {
-    pub metadata: Arc<ArrayMetadata>,
+    pub metadata: Arc<Metadata>,
 
     /// The [CoordType] of the generated geometry arrays
     pub coord_type: CoordType,
@@ -43,7 +41,7 @@ impl GeoTableBuilderOptions {
         batch_size: Option<usize>,
         properties_schema: Option<SchemaRef>,
         num_rows: Option<usize>,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         Self {
             coord_type,

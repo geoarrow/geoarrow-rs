@@ -1,5 +1,5 @@
 use crate::array::*;
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;

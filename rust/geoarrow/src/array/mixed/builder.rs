@@ -1,18 +1,18 @@
 use std::sync::Arc;
 
-use crate::array::metadata::ArrayMetadata;
+use arrow_array::{OffsetSizeTrait, UnionArray};
+use geo_traits::*;
+use geoarrow_schema::Dimension;
+
 use crate::array::mixed::MixedCapacity;
 use crate::array::{
-    CoordType, LineStringBuilder, MixedGeometryArray, MultiLineStringBuilder, MultiPointBuilder,
+    LineStringBuilder, MixedGeometryArray, MultiLineStringBuilder, MultiPointBuilder,
     MultiPolygonBuilder, PointBuilder, PolygonBuilder, WKBArray,
 };
-use geoarrow_schema::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use crate::{ArrayBase, NativeArray};
-use arrow_array::{OffsetSizeTrait, UnionArray};
-use geo_traits::*;
 
 pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 
@@ -30,7 +30,7 @@ pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 /// - All arrays must have the same coordinate layout (interleaved or separated)
 #[derive(Debug)]
 pub struct MixedGeometryBuilder {
-    metadata: Arc<ArrayMetadata>,
+    metadata: Arc<Metadata>,
 
     /// The dimension of this builder.
     ///
@@ -74,7 +74,7 @@ impl<'a> MixedGeometryBuilder {
     pub fn new_with_options(
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Self {
         Self::with_capacity_and_options(dim, Default::default(), coord_type, metadata, prefer_multi)
@@ -95,7 +95,7 @@ impl<'a> MixedGeometryBuilder {
         dim: Dimension,
         capacity: MixedCapacity,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Self {
         // Don't store array metadata on child arrays
@@ -219,7 +219,7 @@ impl<'a> MixedGeometryBuilder {
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let counter = MixedCapacity::from_geometries(geoms)?;
@@ -463,7 +463,7 @@ impl<'a> MixedGeometryBuilder {
         geoms: &[impl GeometryTrait<T = f64>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let mut array = Self::with_capacity_and_options_from_iter(
@@ -482,7 +482,7 @@ impl<'a> MixedGeometryBuilder {
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let mut array = Self::with_capacity_and_options_from_iter(
@@ -500,7 +500,7 @@ impl<'a> MixedGeometryBuilder {
         wkb_objects: &[Option<WKB<'_, W>>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let wkb_objects2 = wkb_objects
@@ -595,7 +595,7 @@ impl GeometryArrayBuilder for MixedGeometryBuilder {
         dim: Dimension,
         _geom_capacity: usize,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         // We don't know where to allocate the capacity
         Self::with_capacity_and_options(
@@ -619,11 +619,11 @@ impl GeometryArrayBuilder for MixedGeometryBuilder {
         self.points.coord_type()
     }
 
-    fn set_metadata(&mut self, metadata: Arc<ArrayMetadata>) {
+    fn set_metadata(&mut self, metadata: Arc<Metadata>) {
         self.metadata = metadata;
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
+    fn metadata(&self) -> Arc<Metadata> {
         self.metadata.clone()
     }
 }

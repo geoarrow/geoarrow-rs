@@ -1,14 +1,16 @@
 use std::sync::Arc;
 
+use arrow_array::OffsetSizeTrait;
+use geoarrow_schema::{CoordType, Dimension};
+
 use crate::algorithm::native::Downcast;
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
-use arrow_array::OffsetSizeTrait;
 
 /// An optimized implementation of converting from WKB-encoded geometries.
 ///
@@ -194,39 +196,65 @@ pub fn from_wkb<O: OffsetSizeTrait>(
     use NativeType::*;
     let wkb_objects: Vec<Option<crate::scalar::WKB<'_, O>>> = arr.iter().collect();
     match target_type {
-        Point(coord_type, dim) => {
-            let builder = PointBuilder::from_wkb(&wkb_objects, dim, coord_type, arr.metadata())?;
+        Point(t) => {
+            let builder = PointBuilder::from_wkb(
+                &wkb_objects,
+                t.dimension(),
+                t.coord_type(),
+                arr.metadata(),
+            )?;
             Ok(Arc::new(builder.finish()))
         }
-        LineString(coord_type, dim) => {
-            let builder =
-                LineStringBuilder::from_wkb(&wkb_objects, dim, coord_type, arr.metadata())?;
+        LineString(t) => {
+            let builder = LineStringBuilder::from_wkb(
+                &wkb_objects,
+                t.dimension(),
+                t.coord_type(),
+                arr.metadata(),
+            )?;
             Ok(Arc::new(builder.finish()))
         }
-        Polygon(coord_type, dim) => {
-            let builder = PolygonBuilder::from_wkb(&wkb_objects, dim, coord_type, arr.metadata())?;
+        Polygon(t) => {
+            let builder = PolygonBuilder::from_wkb(
+                &wkb_objects,
+                t.dimension(),
+                t.coord_type(),
+                arr.metadata(),
+            )?;
             Ok(Arc::new(builder.finish()))
         }
-        MultiPoint(coord_type, dim) => {
-            let builder =
-                MultiPointBuilder::from_wkb(&wkb_objects, dim, coord_type, arr.metadata())?;
+        MultiPoint(t) => {
+            let builder = MultiPointBuilder::from_wkb(
+                &wkb_objects,
+                t.dimension(),
+                t.coord_type(),
+                arr.metadata(),
+            )?;
             Ok(Arc::new(builder.finish()))
         }
-        MultiLineString(coord_type, dim) => {
-            let builder =
-                MultiLineStringBuilder::from_wkb(&wkb_objects, dim, coord_type, arr.metadata())?;
+        MultiLineString(t) => {
+            let builder = MultiLineStringBuilder::from_wkb(
+                &wkb_objects,
+                t.dimension(),
+                t.coord_type(),
+                arr.metadata(),
+            )?;
             Ok(Arc::new(builder.finish()))
         }
-        MultiPolygon(coord_type, dim) => {
-            let builder =
-                MultiPolygonBuilder::from_wkb(&wkb_objects, dim, coord_type, arr.metadata())?;
+        MultiPolygon(t) => {
+            let builder = MultiPolygonBuilder::from_wkb(
+                &wkb_objects,
+                t.dimension(),
+                t.coord_type(),
+                arr.metadata(),
+            )?;
             Ok(Arc::new(builder.finish()))
         }
-        GeometryCollection(coord_type, dim) => {
+        GeometryCollection(t) => {
             let builder = GeometryCollectionBuilder::from_wkb(
                 &wkb_objects,
-                dim,
-                coord_type,
+                t.dimension(),
+                t.coord_type(),
                 arr.metadata(),
                 prefer_multi,
             )?;
@@ -326,6 +354,8 @@ pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn NativeArray) -> WKBArray<O> {
 
 #[cfg(test)]
 mod test {
+    use geoarrow_schema::PointType;
+
     use super::*;
     use crate::test::point;
 
@@ -335,7 +365,11 @@ mod test {
         let wkb_arr: WKBArray<i32> = to_wkb(&arr);
         let roundtrip = from_wkb(
             &wkb_arr,
-            NativeType::Point(CoordType::Interleaved, Dimension::XY),
+            NativeType::Point(PointType::new(
+                CoordType::Interleaved,
+                Dimension::XY,
+                Default::default(),
+            )),
             true,
         )
         .unwrap();
@@ -375,7 +409,11 @@ mod test {
 
         let roundtrip_point = from_wkb(
             &wkb_arr,
-            NativeType::Point(CoordType::Interleaved, Dimension::XYZ),
+            NativeType::Point(PointType::new(
+                CoordType::Interleaved,
+                Dimension::XYZ,
+                Default::default(),
+            )),
             false,
         )
         .unwrap();

@@ -5,7 +5,7 @@ use arrow_array::OffsetSizeTrait;
 use num_enum::TryFromPrimitive;
 
 use crate::array::CoordType;
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::io::wkb::common::WKBType;
 use crate::scalar::WKB;

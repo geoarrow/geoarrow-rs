@@ -2,7 +2,7 @@ use crate::algorithm::native::MapChunks;
 use crate::array::LineStringArray;
 use crate::array::*;
 use crate::chunked_array::{ChunkedLineStringArray, ChunkedNativeArray, ChunkedPointArray};
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
@@ -70,7 +70,6 @@ impl LineInterpolatePoint<&Float64Array> for &dyn NativeArray {
     type Output = Result<PointArray>;
 
     fn line_interpolate_point(&self, fraction: &Float64Array) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
@@ -94,7 +93,6 @@ impl LineInterpolatePoint<&[Float64Array]> for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedPointArray>;
 
     fn line_interpolate_point(&self, fraction: &[Float64Array]) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
@@ -130,7 +128,6 @@ impl LineInterpolatePoint<f64> for &dyn NativeArray {
     type Output = Result<PointArray>;
 
     fn line_interpolate_point(&self, fraction: f64) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
@@ -152,7 +149,6 @@ impl LineInterpolatePoint<f64> for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedPointArray>;
 
     fn line_interpolate_point(&self, fraction: f64) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {

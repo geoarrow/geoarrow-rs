@@ -14,7 +14,7 @@ use object_store::ObjectStore;
 
 use crate::array::metadata::ArrayMetadata;
 use crate::array::*;
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::io::flatgeobuf::reader::common::{infer_from_header, FlatGeobufReaderOptions};
 use crate::io::flatgeobuf::reader::object_store_reader::ObjectStoreWrapper;
@@ -182,7 +182,7 @@ pub struct FlatGeobufStream<T: AsyncHttpRangeClient> {
     batch_size: usize,
     properties_schema: SchemaRef,
     num_rows_remaining: Option<usize>,
-    array_metadata: Arc<ArrayMetadata>,
+    array_metadata: Arc<Metadata>,
     state: StreamState<T>,
 }
 
@@ -222,7 +222,7 @@ impl<T: AsyncHttpRangeClient> FlatGeobufStream<T> {
         batch_size: usize,
         properties_schema: SchemaRef,
         num_rows_remaining: Option<usize>,
-        array_metadata: Arc<ArrayMetadata>,
+        array_metadata: Arc<Metadata>,
     ) -> Self {
         Self {
             data_type,

@@ -1,8 +1,8 @@
 use geo::Rect;
+use geoarrow_schema::CoordType;
 use parquet::arrow::arrow_reader::ArrowReaderBuilder;
 use parquet::arrow::ProjectionMask;
 
-use crate::array::CoordType;
 use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::metadata::{GeoParquetBboxCovering, GeoParquetMetadata};
 use crate::io::parquet::reader::spatial_filter::{
@@ -12,7 +12,7 @@ use crate::io::parquet::reader::spatial_filter::{
 /// Options for reading (Geo)Parquet
 ///
 /// Geospatial options will only be applied if the target file has geospatial metadata.
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct GeoParquetReaderOptions {
     /// The number of rows in each batch. If not provided, the upstream [parquet] default is 1024.
     batch_size: Option<usize>,
@@ -41,6 +41,21 @@ pub struct GeoParquetReaderOptions {
     /// The paths in the Parquet schema to the bounding box columns. This will not be necessary as
     /// of GeoParquet 1.1.
     bbox_paths: Option<GeoParquetBboxCovering>,
+}
+
+impl Default for GeoParquetReaderOptions {
+    fn default() -> Self {
+        Self {
+            batch_size: None,
+            row_groups: None,
+            limit: None,
+            offset: None,
+            mask: None,
+            coord_type: CoordType::Separated,
+            bbox: None,
+            bbox_paths: None,
+        }
+    }
 }
 
 impl GeoParquetReaderOptions {

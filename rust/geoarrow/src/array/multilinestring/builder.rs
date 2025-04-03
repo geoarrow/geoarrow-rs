@@ -22,7 +22,7 @@ use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, Multi
 /// Converting an [`MultiLineStringBuilder`] into a [`MultiLineStringArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct MultiLineStringBuilder {
-    metadata: Arc<ArrayMetadata>,
+    metadata: Arc<Metadata>,
 
     pub(crate) coords: CoordBufferBuilder,
 
@@ -53,7 +53,7 @@ impl MultiLineStringBuilder {
     pub fn new_with_options(
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         Self::with_capacity_and_options(dim, Default::default(), coord_type, metadata)
     }
@@ -68,7 +68,7 @@ impl MultiLineStringBuilder {
         dim: Dimension,
         capacity: MultiLineStringCapacity,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let coords = match coord_type {
             CoordType::Interleaved => CoordBufferBuilder::Interleaved(
@@ -132,7 +132,7 @@ impl MultiLineStringBuilder {
         geom_offsets: OffsetsBuilder<i32>,
         ring_offsets: OffsetsBuilder<i32>,
         validity: NullBufferBuilder,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Result<Self> {
         // check(
         //     &coords.clone().into(),
@@ -208,7 +208,7 @@ impl MultiLineStringBuilder {
         geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let counter = MultiLineStringCapacity::from_multi_line_strings(geoms);
         Self::with_capacity_and_options(dim, counter, coord_type, metadata)
@@ -369,7 +369,7 @@ impl MultiLineStringBuilder {
         geoms: &[impl MultiLineStringTrait<T = f64>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(Some),
@@ -386,7 +386,7 @@ impl MultiLineStringBuilder {
         geoms: &[Option<impl MultiLineStringTrait<T = f64>>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(|x| x.as_ref()),
@@ -403,7 +403,7 @@ impl MultiLineStringBuilder {
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Result<Self> {
         let capacity = MultiLineStringCapacity::from_geometries(geoms.iter().map(|x| x.as_ref()))?;
         let mut array = Self::with_capacity_and_options(dim, capacity, coord_type, metadata);
@@ -415,7 +415,7 @@ impl MultiLineStringBuilder {
         wkb_objects: &[Option<WKB<'_, W>>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Result<Self> {
         let wkb_objects2 = wkb_objects
             .iter()
@@ -434,7 +434,7 @@ impl GeometryArrayBuilder for MultiLineStringBuilder {
         dim: Dimension,
         geom_capacity: usize,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let capacity = MultiLineStringCapacity::new(0, 0, geom_capacity);
         Self::with_capacity_and_options(dim, capacity, coord_type, metadata)
@@ -464,11 +464,11 @@ impl GeometryArrayBuilder for MultiLineStringBuilder {
         self.coords.coord_type()
     }
 
-    fn set_metadata(&mut self, metadata: Arc<ArrayMetadata>) {
+    fn set_metadata(&mut self, metadata: Arc<Metadata>) {
         self.metadata = metadata;
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
+    fn metadata(&self) -> Arc<Metadata> {
         self.metadata.clone()
     }
 }

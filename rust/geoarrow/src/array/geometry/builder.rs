@@ -32,7 +32,7 @@ pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 /// - All arrays must have the same coordinate layout (interleaved or separated)
 #[derive(Debug)]
 pub struct GeometryBuilder {
-    metadata: Arc<ArrayMetadata>,
+    metadata: Arc<Metadata>,
 
     // Invariant: every item in `types` is `> 0 && < fields.len()`
     types: Vec<i8>,
@@ -92,7 +92,7 @@ impl<'a> GeometryBuilder {
     /// Creates a new empty [`GeometryBuilder`] with the given options.
     pub fn new_with_options(
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Self {
         Self::with_capacity_and_options(Default::default(), coord_type, metadata, prefer_multi)
@@ -112,7 +112,7 @@ impl<'a> GeometryBuilder {
     pub fn with_capacity_and_options(
         capacity: GeometryCapacity,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Self {
         use Dimension::*;
@@ -328,7 +328,7 @@ impl<'a> GeometryBuilder {
     pub fn with_capacity_and_options_from_iter(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let counter = GeometryCapacity::from_geometries(geoms, prefer_multi)?;
@@ -908,7 +908,7 @@ impl<'a> GeometryBuilder {
     pub fn from_geometries(
         geoms: &[impl GeometryTrait<T = f64>],
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let mut array = Self::with_capacity_and_options_from_iter(
@@ -925,7 +925,7 @@ impl<'a> GeometryBuilder {
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let mut array = Self::with_capacity_and_options_from_iter(
@@ -941,7 +941,7 @@ impl<'a> GeometryBuilder {
     pub(crate) fn from_wkb<W: OffsetSizeTrait>(
         wkb_objects: &[Option<WKB<'_, W>>],
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let wkb_objects2 = wkb_objects
@@ -1044,7 +1044,7 @@ impl GeometryArrayBuilder for GeometryBuilder {
         _dim: Dimension,
         _geom_capacity: usize,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         // We don't know where to allocate the capacity
         Self::with_capacity_and_options(
@@ -1067,11 +1067,11 @@ impl GeometryArrayBuilder for GeometryBuilder {
         self.point_xy.coord_type()
     }
 
-    fn set_metadata(&mut self, metadata: Arc<ArrayMetadata>) {
+    fn set_metadata(&mut self, metadata: Arc<Metadata>) {
         self.metadata = metadata;
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
+    fn metadata(&self) -> Arc<Metadata> {
         self.metadata.clone()
     }
 }

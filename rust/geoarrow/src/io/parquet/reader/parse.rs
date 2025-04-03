@@ -5,12 +5,16 @@ use std::sync::Arc;
 
 use arrow_array::{Array, ArrayRef, RecordBatch};
 use arrow_schema::{DataType, Field, FieldRef, Schema, SchemaRef};
+use geoarrow_schema::{
+    CoordType, Dimension, GeometryType, LineStringType, Metadata, MultiLineStringType,
+    MultiPointType, MultiPolygonType, PointType, PolygonType,
+};
 
 use crate::array::{
-    CoordType, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
-    PointArray, PolygonArray, WKBArray,
+    LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
+    PolygonArray, WKBArray,
 };
-use crate::datatypes::{AnyType, Dimension, NativeType, SerializedType};
+use crate::datatypes::{AnyType, NativeType, SerializedType};
 use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::metadata::{
     infer_geo_data_type, GeoParquetColumnEncoding, GeoParquetColumnMetadata,
@@ -46,6 +50,8 @@ fn infer_target_field(
     column_meta: &GeoParquetColumnMetadata,
     coord_type: CoordType,
 ) -> Result<FieldRef> {
+    let metadata = Arc::new(Metadata::from(column_meta));
+
     let target_geo_data_type: NativeType = match column_meta.encoding {
         GeoParquetColumnEncoding::WKB => {
             infer_target_wkb_type(&column_meta.geometry_types, coord_type)?
@@ -55,9 +61,17 @@ fn infer_target_field(
                 .geometry_types
                 .contains(&GeoParquetGeometryType::PointZ)
             {
-                NativeType::Point(CoordType::Separated, Dimension::XYZ)
+                NativeType::Point(PointType::new(
+                    CoordType::Separated,
+                    Dimension::XYZ,
+                    metadata,
+                ))
             } else {
-                NativeType::Point(CoordType::Separated, Dimension::XY)
+                NativeType::Point(PointType::new(
+                    CoordType::Separated,
+                    Dimension::XY,
+                    metadata,
+                ))
             }
         }
         GeoParquetColumnEncoding::LineString => {
@@ -65,9 +79,17 @@ fn infer_target_field(
                 .geometry_types
                 .contains(&GeoParquetGeometryType::LineStringZ)
             {
-                NativeType::LineString(CoordType::Separated, Dimension::XYZ)
+                NativeType::LineString(LineStringType::new(
+                    CoordType::Separated,
+                    Dimension::XYZ,
+                    metadata,
+                ))
             } else {
-                NativeType::LineString(CoordType::Separated, Dimension::XY)
+                NativeType::LineString(LineStringType::new(
+                    CoordType::Separated,
+                    Dimension::XY,
+                    metadata,
+                ))
             }
         }
         GeoParquetColumnEncoding::Polygon => {
@@ -75,9 +97,17 @@ fn infer_target_field(
                 .geometry_types
                 .contains(&GeoParquetGeometryType::LineStringZ)
             {
-                NativeType::Polygon(CoordType::Separated, Dimension::XYZ)
+                NativeType::Polygon(PolygonType::new(
+                    CoordType::Separated,
+                    Dimension::XYZ,
+                    metadata,
+                ))
             } else {
-                NativeType::Polygon(CoordType::Separated, Dimension::XY)
+                NativeType::Polygon(PolygonType::new(
+                    CoordType::Separated,
+                    Dimension::XY,
+                    metadata,
+                ))
             }
         }
         GeoParquetColumnEncoding::MultiPoint => {
@@ -88,9 +118,17 @@ fn infer_target_field(
                     .geometry_types
                     .contains(&GeoParquetGeometryType::MultiPointZ)
             {
-                NativeType::MultiPoint(CoordType::Separated, Dimension::XYZ)
+                NativeType::MultiPoint(MultiPointType::new(
+                    CoordType::Separated,
+                    Dimension::XYZ,
+                    metadata,
+                ))
             } else {
-                NativeType::MultiPoint(CoordType::Separated, Dimension::XY)
+                NativeType::MultiPoint(MultiPointType::new(
+                    CoordType::Separated,
+                    Dimension::XY,
+                    metadata,
+                ))
             }
         }
         GeoParquetColumnEncoding::MultiLineString => {
@@ -101,9 +139,17 @@ fn infer_target_field(
                     .geometry_types
                     .contains(&GeoParquetGeometryType::MultiLineStringZ)
             {
-                NativeType::MultiLineString(CoordType::Separated, Dimension::XYZ)
+                NativeType::MultiLineString(MultiLineStringType::new(
+                    CoordType::Separated,
+                    Dimension::XYZ,
+                    metadata,
+                ))
             } else {
-                NativeType::MultiLineString(CoordType::Separated, Dimension::XY)
+                NativeType::MultiLineString(MultiLineStringType::new(
+                    CoordType::Separated,
+                    Dimension::XY,
+                    metadata,
+                ))
             }
         }
         GeoParquetColumnEncoding::MultiPolygon => {
@@ -114,16 +160,24 @@ fn infer_target_field(
                     .geometry_types
                     .contains(&GeoParquetGeometryType::MultiPolygonZ)
             {
-                NativeType::MultiPolygon(CoordType::Separated, Dimension::XYZ)
+                NativeType::MultiPolygon(MultiPolygonType::new(
+                    CoordType::Separated,
+                    Dimension::XYZ,
+                    metadata,
+                ))
             } else {
-                NativeType::MultiPolygon(CoordType::Separated, Dimension::XY)
+                NativeType::MultiPolygon(MultiPolygonType::new(
+                    CoordType::Separated,
+                    Dimension::XY,
+                    metadata,
+                ))
             }
         }
     };
-    Ok(Arc::new(target_geo_data_type.to_field_with_metadata(
+
+    Ok(Arc::new(target_geo_data_type.to_field(
         existing_field.name(),
         existing_field.is_nullable(),
-        &column_meta.into(),
     )))
 }
 
@@ -132,8 +186,9 @@ fn infer_target_wkb_type(
     coord_type: CoordType,
 ) -> Result<NativeType> {
     Ok(
-        infer_geo_data_type(geometry_types, coord_type)?
-            .unwrap_or(NativeType::Geometry(coord_type)),
+        infer_geo_data_type(geometry_types, coord_type)?.unwrap_or(NativeType::Geometry(
+            GeometryType::new(coord_type, metadata),
+        )),
     )
 }
 
@@ -174,12 +229,12 @@ fn parse_array(array: ArrayRef, orig_field: &Field, target_field: &Field) -> Res
     let arr = array.as_ref();
     match orig_type {
         AnyType::Native(t) => match t {
-            Point(_, dim) => parse_point_column(arr, dim),
-            LineString(_, dim) => parse_line_string_column(arr, dim),
-            Polygon(_, dim) => parse_polygon_column(arr, dim),
-            MultiPoint(_, dim) => parse_multi_point_column(arr, dim),
-            MultiLineString(_, dim) => parse_multi_line_string_column(arr, dim),
-            MultiPolygon(_, dim) => parse_multi_polygon_column(arr, dim),
+            Point(t) => parse_point_column(arr, t.dimension()),
+            LineString(t) => parse_line_string_column(arr, t.dimension()),
+            Polygon(t) => parse_polygon_column(arr, t.dimension()),
+            MultiPoint(t) => parse_multi_point_column(arr, t.dimension()),
+            MultiLineString(t) => parse_multi_line_string_column(arr, t.dimension()),
+            MultiPolygon(t) => parse_multi_polygon_column(arr, t.dimension()),
             other => Err(GeoArrowError::General(format!(
                 "Unexpected geometry encoding: {:?}",
                 other

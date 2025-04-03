@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use arrow_array::ArrayRef;
+use arrow_schema::extension::{EXTENSION_TYPE_METADATA_KEY, EXTENSION_TYPE_NAME_KEY};
 use arrow_schema::{Field, Schema, SchemaRef};
 use serde_json::Value;
 
@@ -165,7 +166,7 @@ impl GeoParquetMetadataBuilder {
         let mut columns = HashMap::new();
 
         for (col_idx, field) in schema.fields().iter().enumerate() {
-            if let Some(ext_name) = field.metadata().get("ARROW:extension:name") {
+            if let Some(ext_name) = field.metadata().get(EXTENSION_TYPE_NAME_KEY) {
                 if !ext_name.starts_with("geoarrow") {
                     continue;
                 }
@@ -173,7 +174,7 @@ impl GeoParquetMetadataBuilder {
                 let column_name = schema.field(col_idx).name().clone();
 
                 let array_meta =
-                    if let Some(ext_meta) = field.metadata().get("ARROW:extension:metadata") {
+                    if let Some(ext_meta) = field.metadata().get(EXTENSION_TYPE_METADATA_KEY) {
                         serde_json::from_str(ext_meta)?
                     } else {
                         ArrayMetadata::default()

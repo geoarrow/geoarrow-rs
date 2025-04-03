@@ -1,23 +1,25 @@
 use std::sync::Arc;
 
+use arrow::array::AsArray;
+use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
+use arrow_buffer::{NullBuffer, OffsetBuffer};
+use arrow_schema::extension::ExtensionType;
+use arrow_schema::{DataType, Field};
+use geo_traits::MultiLineStringTrait;
+use geoarrow_schema::{Metadata, MultiLineStringType};
+
 use crate::algorithm::native::eq::offset_buffer_eq;
-use crate::array::metadata::ArrayMetadata;
 use crate::array::multilinestring::MultiLineStringCapacity;
 use crate::array::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::{
-    CoordBuffer, CoordType, GeometryCollectionArray, LineStringArray, MixedGeometryArray,
-    PolygonArray, WKBArray,
+    CoordBuffer, GeometryCollectionArray, LineStringArray, MixedGeometryArray, PolygonArray,
+    WKBArray,
 };
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, MultiLineString};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
 use crate::{ArrayBase, NativeArray};
-use arrow::array::AsArray;
-use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
-use arrow_buffer::{NullBuffer, OffsetBuffer};
-use arrow_schema::{DataType, Field};
-use geo_traits::MultiLineStringTrait;
 
 use super::MultiLineStringBuilder;
 
@@ -27,10 +29,7 @@ use super::MultiLineStringBuilder;
 /// bitmap.
 #[derive(Debug, Clone)]
 pub struct MultiLineStringArray {
-    // Always NativeType::MultiLineString
-    data_type: NativeType,
-
-    pub(crate) metadata: Arc<ArrayMetadata>,
+    data_type: MultiLineStringType,
 
     pub(crate) coords: CoordBuffer,
 
@@ -88,7 +87,7 @@ impl MultiLineStringArray {
         geom_offsets: OffsetBuffer<i32>,
         ring_offsets: OffsetBuffer<i32>,
         validity: Option<NullBuffer>,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         Self::try_new(coords, geom_offsets, ring_offsets, validity, metadata).unwrap()
     }
@@ -109,7 +108,7 @@ impl MultiLineStringArray {
         geom_offsets: OffsetBuffer<i32>,
         ring_offsets: OffsetBuffer<i32>,
         validity: Option<NullBuffer>,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Result<Self> {
         check(
             &coords,
@@ -117,14 +116,12 @@ impl MultiLineStringArray {
             &ring_offsets,
             validity.as_ref().map(|v| v.len()),
         )?;
-        let data_type = NativeType::MultiLineString(coords.coord_type(), coords.dim());
         Ok(Self {
-            data_type,
+            data_type: MultiLineStringType::new(coords.coord_type(), coords.dim(), metadata),
             coords,
             geom_offsets,
             ring_offsets,
             validity,
-            metadata,
         })
     }
 
@@ -183,7 +180,6 @@ impl MultiLineStringArray {
             geom_offsets: self.geom_offsets.slice(offset, length),
             ring_offsets: self.ring_offsets.clone(),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
-            metadata: self.metadata(),
         }
     }
 
@@ -199,7 +195,7 @@ impl MultiLineStringArray {
             self.geom_offsets,
             self.ring_offsets,
             self.validity,
-            self.metadata,
+            self.metadata(),
         )
     }
 }
@@ -210,7 +206,7 @@ impl ArrayBase for MultiLineStringArray {
     }
 
     fn storage_type(&self) -> DataType {
-        self.data_type.to_data_type()
+        self.data_type.data_type()
     }
 
     fn extension_field(&self) -> Arc<Field> {
@@ -220,7 +216,7 @@ impl ArrayBase for MultiLineStringArray {
     }
 
     fn extension_name(&self) -> &str {
-        self.data_type.extension_name()
+        MultiLineStringType::NAME
     }
 
     fn into_array_ref(self) -> ArrayRef {
@@ -231,8 +227,8 @@ impl ArrayBase for MultiLineStringArray {
         self.clone().into_array_ref()
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
-        self.metadata.clone()
+    fn metadata(&self) -> Arc<Metadata> {
+        self.data_type.metadata().clone()
     }
 
     /// Returns the number of geometries in this array
@@ -250,7 +246,7 @@ impl ArrayBase for MultiLineStringArray {
 
 impl NativeArray for MultiLineStringArray {
     fn data_type(&self) -> NativeType {
-        self.data_type
+        NativeType::MultiLineString(self.data_type.clone())
     }
 
     fn coord_type(&self) -> CoordType {
@@ -261,9 +257,9 @@ impl NativeArray for MultiLineStringArray {
         Arc::new(self.clone().into_coord_type(coord_type))
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
+    fn with_metadata(&self, metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
-        arr.metadata = metadata;
+        arr.data_type = self.data_type.clone().with_metadata(metadata);
         Arc::new(arr)
     }
 
@@ -284,7 +280,7 @@ impl GeometryArraySelfMethods for MultiLineStringArray {
             self.geom_offsets,
             self.ring_offsets,
             self.validity,
-            self.metadata,
+            self.metadata(),
         )
     }
 
@@ -294,7 +290,7 @@ impl GeometryArraySelfMethods for MultiLineStringArray {
             self.geom_offsets,
             self.ring_offsets,
             self.validity,
-            self.metadata,
+            self.metadata(),
         )
     }
 }

@@ -1,8 +1,10 @@
+use geoarrow_schema::Dimension;
+
 use crate::array::{
     AsNativeArray, GeometryArray, GeometryCollectionArray, LineStringArray, MultiLineStringArray,
     MultiPointArray, MultiPolygonArray, PointArray, PolygonArray, RectArray,
 };
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Geometry;
 use crate::trait_::{ArrayAccessor, NativeArrayRef, NativeScalar};
@@ -51,18 +53,7 @@ impl GeometryScalar {
     ///
     /// If the type of the array is `Geometry`, dimension will be `None`.
     pub fn dimension(&self) -> Option<Dimension> {
-        use NativeType::*;
-        match self.data_type() {
-            Point(_, dim)
-            | LineString(_, dim)
-            | Polygon(_, dim)
-            | MultiPoint(_, dim)
-            | MultiLineString(_, dim)
-            | MultiPolygon(_, dim)
-            | GeometryCollection(_, dim)
-            | Rect(dim) => Some(dim),
-            Geometry(_) => None,
-        }
+        self.data_type().dimension()
     }
 
     /// Convert to a [Geometry]

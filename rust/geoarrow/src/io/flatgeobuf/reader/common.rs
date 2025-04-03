@@ -1,13 +1,16 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use arrow_schema::extension::EXTENSION_TYPE_NAME_KEY;
 use arrow_schema::{DataType, Field, SchemaBuilder, SchemaRef, TimeUnit};
 use flatgeobuf::{ColumnType, Crs, GeometryType, Header};
-use serde_json::Value;
+use geoarrow_schema::{
+    CoordType, Dimension, LineStringType, Metadata, MultiLineStringType, MultiPointType,
+    MultiPolygonType, PointType, PolygonType,
+};
 
-use crate::array::metadata::{ArrayMetadata, CRSType};
-use crate::array::CoordType;
-use crate::datatypes::{Dimension, NativeType};
+use crate::array::metadata::CRSType;
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 
 /// Options for the FlatGeobuf reader
@@ -28,7 +31,7 @@ pub struct FlatGeobufReaderOptions {
 impl Default for FlatGeobufReaderOptions {
     fn default() -> Self {
         Self {
-            coord_type: Default::default(),
+            coord_type: CoordType::Interleaved,
             batch_size: Some(65_536),
             bbox: None,
         }
@@ -55,7 +58,10 @@ pub(super) fn infer_schema(header: Header<'_>) -> SchemaRef {
             ColumnType::String => Field::new(col.name(), DataType::Utf8, col.nullable()),
             ColumnType::Json => {
                 let mut metadata = HashMap::with_capacity(1);
-                metadata.insert("ARROW:extension:name".to_string(), "arrow.json".to_string());
+                metadata.insert(
+                    EXTENSION_TYPE_NAME_KEY.to_string(),
+                    "arrow.json".to_string(),
+                );
                 Field::new(col.name(), DataType::Utf8, col.nullable()).with_metadata(metadata)
             }
             ColumnType::DateTime => Field::new(
@@ -74,29 +80,27 @@ pub(super) fn infer_schema(header: Header<'_>) -> SchemaRef {
     Arc::new(schema.finish())
 }
 
-/// Parse CRS information provided by FlatGeobuf into an [ArrayMetadata].
+/// Parse CRS information provided by FlatGeobuf into a [Metadata].
 ///
 /// WKT is preferred if it exists. Otherwise, authority code will be used as a fallback.
-pub(super) fn parse_crs(crs: Option<Crs<'_>>) -> Arc<ArrayMetadata> {
+pub(super) fn parse_crs(crs: Option<Crs<'_>>) -> Arc<Metadata> {
     if let Some(crs) = crs {
-        let mut meta = ArrayMetadata::default();
         if let Some(wkt) = crs.wkt() {
-            meta.crs = Some(Value::String(wkt.to_string()));
-            return Arc::new(meta);
+            // We use unknown CRS because we don't know for sure it's WKT 2019
+            let crs = geoarrow_schema::Crs::from_unknown_crs_type(wkt.to_string());
+            return Arc::new(Metadata::new(crs, None));
         }
 
         if let Some(org) = crs.org() {
             let code = crs.code();
             if code != 0 {
-                meta.crs = Some(Value::String(format!("{org}:{code}")));
-                meta.crs_type = Some(CRSType::AuthorityCode);
-                return Arc::new(meta);
+                let crs = geoarrow_schema::Crs::from_authority_code(format!("{org}:{code}"));
+                return Arc::new(Metadata::new(crs, None));
             }
 
             if let Some(code) = crs.code_string() {
-                meta.crs = Some(Value::String(format!("{org}:{code}")));
-                meta.crs_type = Some(CRSType::AuthorityCode);
-                return Arc::new(meta);
+                let crs = geoarrow_schema::Crs::from_authority_code(format!("{org}:{code}"));
+                return Arc::new(Metadata::new(crs, None));
             }
         };
     };
@@ -104,9 +108,7 @@ pub(super) fn parse_crs(crs: Option<Crs<'_>>) -> Arc<ArrayMetadata> {
     Default::default()
 }
 
-pub(super) fn infer_from_header(
-    header: Header<'_>,
-) -> Result<(NativeType, SchemaRef, Arc<ArrayMetadata>)> {
+pub(super) fn infer_from_header(header: Header<'_>) -> Result<(NativeType, SchemaRef)> {
     use Dimension::*;
 
     if header.has_m() | header.has_t() | header.has_tm() {
@@ -118,24 +120,46 @@ pub(super) fn infer_from_header(
 
     let properties_schema = infer_schema(header);
     let geometry_type = header.geometry_type();
-    let array_metadata = parse_crs(header.crs());
+    let metadata = parse_crs(header.crs());
     // TODO: pass through arg
     let coord_type = CoordType::Interleaved;
     let data_type = match (geometry_type, has_z) {
-        (GeometryType::Point, false) => NativeType::Point(coord_type, XY),
-        (GeometryType::LineString, false) => NativeType::LineString(coord_type, XY),
-        (GeometryType::Polygon, false) => NativeType::Polygon(coord_type, XY),
-        (GeometryType::MultiPoint, false) => NativeType::MultiPoint(coord_type, XY),
-        (GeometryType::MultiLineString, false) => NativeType::MultiLineString(coord_type, XY),
-        (GeometryType::MultiPolygon, false) => NativeType::MultiPolygon(coord_type, XY),
-        (GeometryType::Point, true) => NativeType::Point(coord_type, XYZ),
-        (GeometryType::LineString, true) => NativeType::LineString(coord_type, XYZ),
-        (GeometryType::Polygon, true) => NativeType::Polygon(coord_type, XYZ),
-        (GeometryType::MultiPoint, true) => NativeType::MultiPoint(coord_type, XYZ),
-        (GeometryType::MultiLineString, true) => NativeType::MultiLineString(coord_type, XYZ),
-        (GeometryType::MultiPolygon, true) => NativeType::MultiPolygon(coord_type, XYZ),
-        (GeometryType::Unknown, _) => NativeType::Geometry(coord_type),
+        (GeometryType::Point, false) => NativeType::Point(PointType::new(coord_type, XY, metadata)),
+        (GeometryType::LineString, false) => {
+            NativeType::LineString(LineStringType::new(coord_type, XY, metadata))
+        }
+        (GeometryType::Polygon, false) => {
+            NativeType::Polygon(PolygonType::new(coord_type, XY, metadata))
+        }
+        (GeometryType::MultiPoint, false) => {
+            NativeType::MultiPoint(MultiPointType::new(coord_type, XY, metadata))
+        }
+        (GeometryType::MultiLineString, false) => {
+            NativeType::MultiLineString(MultiLineStringType::new(coord_type, XY, metadata))
+        }
+        (GeometryType::MultiPolygon, false) => {
+            NativeType::MultiPolygon(MultiPolygonType::new(coord_type, XY, metadata))
+        }
+        (GeometryType::Point, true) => NativeType::Point(PointType::new(coord_type, XYZ, metadata)),
+        (GeometryType::LineString, true) => {
+            NativeType::LineString(LineStringType::new(coord_type, XYZ, metadata))
+        }
+        (GeometryType::Polygon, true) => {
+            NativeType::Polygon(PolygonType::new(coord_type, XYZ, metadata))
+        }
+        (GeometryType::MultiPoint, true) => {
+            NativeType::MultiPoint(MultiPointType::new(coord_type, XYZ, metadata))
+        }
+        (GeometryType::MultiLineString, true) => {
+            NativeType::MultiLineString(MultiLineStringType::new(coord_type, XYZ, metadata))
+        }
+        (GeometryType::MultiPolygon, true) => {
+            NativeType::MultiPolygon(MultiPolygonType::new(coord_type, XYZ, metadata))
+        }
+        (GeometryType::Unknown, _) => {
+            NativeType::Geometry(geoarrow_schema::GeometryType::new(coord_type, metadata))
+        }
         _ => panic!("Unsupported type"),
     };
-    Ok((data_type, properties_schema, array_metadata))
+    Ok((data_type, properties_schema))
 }

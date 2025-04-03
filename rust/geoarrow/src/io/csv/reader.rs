@@ -3,10 +3,11 @@ use arrow_array::RecordBatch;
 use arrow_csv::reader::Format;
 use arrow_csv::ReaderBuilder;
 use arrow_schema::{ArrowError, Schema, SchemaRef};
+use geoarrow_schema::CoordType;
 use std::io::{Read, Seek};
 use std::sync::Arc;
 
-use crate::array::{CoordType, WKTArray};
+use crate::array::WKTArray;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::io::wkt::read_wkt;

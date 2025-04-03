@@ -1,7 +1,7 @@
 use crate::array::polygon::PolygonCapacity;
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray, ChunkedPolygonArray};
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
@@ -63,7 +63,6 @@ impl MinimumRotatedRect for &dyn NativeArray {
     type Output = Result<PolygonArray>;
 
     fn minimum_rotated_rect(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         let result = match self.data_type() {
@@ -93,7 +92,6 @@ impl MinimumRotatedRect for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedPolygonArray>;
 
     fn minimum_rotated_rect(&self) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {

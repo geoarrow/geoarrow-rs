@@ -5,8 +5,8 @@ use arrow::datatypes::Float64Type;
 use arrow_array::{Array, ArrayRef, StructArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field};
+use geoarrow_schema::BoxType;
 
-use crate::array::metadata::ArrayMetadata;
 use crate::array::rect::RectBuilder;
 use crate::array::{CoordBuffer, CoordType, SeparatedCoordBuffer};
 use crate::datatypes::{rect_fields, Dimension, NativeType};
@@ -25,10 +25,7 @@ use geo_traits::RectTrait;
 /// Internally this is implemented as a FixedSizeList, laid out as minx, miny, maxx, maxy.
 #[derive(Debug, Clone, PartialEq)]
 pub struct RectArray {
-    // Always NativeType::Rect
-    data_type: NativeType,
-
-    metadata: Arc<ArrayMetadata>,
+    data_type: BoxType,
 
     /// Separated arrays for each of the "lower" dimensions
     lower: SeparatedCoordBuffer,
@@ -45,16 +42,14 @@ impl RectArray {
         lower: SeparatedCoordBuffer,
         upper: SeparatedCoordBuffer,
         validity: Option<NullBuffer>,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         assert_eq!(lower.dim(), upper.dim());
-        let data_type = NativeType::Rect(lower.dim());
         Self {
-            data_type,
+            data_type: BoxType::new(lower.dim(), metadata),
             lower,
             upper,
             validity,
-            metadata,
         }
     }
 
@@ -119,7 +114,7 @@ impl ArrayBase for RectArray {
         self.clone().into_array_ref()
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
+    fn metadata(&self) -> Arc<Metadata> {
         self.metadata.clone()
     }
 
@@ -149,7 +144,7 @@ impl NativeArray for RectArray {
         Arc::new(self.clone())
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
+    fn with_metadata(&self, metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
         arr.metadata = metadata;
         Arc::new(arr)

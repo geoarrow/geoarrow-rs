@@ -7,9 +7,7 @@ use arrow_buffer::NullBuffer;
 use arrow_schema::Field;
 use arrow_schema::{DataType, FieldRef};
 
-use crate::array::metadata::ArrayMetadata;
 use crate::array::wkt::WKTArray;
-use crate::array::CoordType;
 use crate::array::*;
 use crate::datatypes::{NativeType, SerializedType};
 use crate::error::Result;
@@ -103,7 +101,7 @@ impl ArrayBase for NativeArrayDyn {
         self.0.nulls()
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
+    fn metadata(&self) -> Arc<Metadata> {
         self.0.metadata()
     }
 }
@@ -121,7 +119,7 @@ impl NativeArray for NativeArrayDyn {
         self.0.to_coord_type(coord_type)
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> NativeArrayRef {
+    fn with_metadata(&self, metadata: Arc<Metadata>) -> NativeArrayRef {
         self.0.with_metadata(metadata)
     }
 
@@ -210,7 +208,7 @@ impl ArrayBase for SerializedArrayDyn {
         self.0.nulls()
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
+    fn metadata(&self) -> Arc<Metadata> {
         self.0.metadata()
     }
 }
@@ -224,7 +222,7 @@ impl SerializedArray for SerializedArrayDyn {
         self.0.as_ref()
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> Arc<dyn SerializedArray> {
+    fn with_metadata(&self, metadata: Arc<Metadata>) -> Arc<dyn SerializedArray> {
         self.0.with_metadata(metadata)
     }
 }

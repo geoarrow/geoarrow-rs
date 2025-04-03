@@ -1,6 +1,6 @@
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray, ChunkedPolygonArray};
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
@@ -139,9 +139,9 @@ mod tests {
     use super::ConvexHull;
     use crate::array::polygon::PolygonArray;
     use crate::array::{LineStringArray, MultiPointArray};
-    use geoarrow_schema::Dimension;
     use crate::trait_::ArrayAccessor;
     use geo::{line_string, polygon, MultiPoint, Point};
+    use geoarrow_schema::Dimension;
 
     #[test]
     fn convex_hull_for_multipoint() {

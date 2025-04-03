@@ -23,7 +23,7 @@ use geo_traits::{
 /// Converting an [`GeometryCollectionBuilder`] into a [`GeometryCollectionArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct GeometryCollectionBuilder {
-    metadata: Arc<ArrayMetadata>,
+    metadata: Arc<Metadata>,
 
     pub(crate) geoms: MixedGeometryBuilder,
 
@@ -47,7 +47,7 @@ impl<'a> GeometryCollectionBuilder {
     pub fn new_with_options(
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Self {
         Self::with_capacity_and_options(dim, Default::default(), coord_type, metadata, prefer_multi)
@@ -69,7 +69,7 @@ impl<'a> GeometryCollectionBuilder {
         dim: Dimension,
         capacity: GeometryCollectionCapacity,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Self {
         Self {
@@ -138,7 +138,7 @@ impl<'a> GeometryCollectionBuilder {
         geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let counter = GeometryCollectionCapacity::from_geometry_collections(geoms)?;
@@ -310,7 +310,7 @@ impl<'a> GeometryCollectionBuilder {
         geoms: &[impl GeometryCollectionTrait<T = f64>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let mut array = Self::with_capacity_and_options_from_iter(
@@ -329,7 +329,7 @@ impl<'a> GeometryCollectionBuilder {
         geoms: &[Option<impl GeometryCollectionTrait<T = f64>>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let mut array = Self::with_capacity_and_options_from_iter(
@@ -348,7 +348,7 @@ impl<'a> GeometryCollectionBuilder {
         geoms: &[impl GeometryTrait<T = f64>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let capacity = GeometryCollectionCapacity::from_geometries(geoms.iter().map(Some))?;
@@ -365,7 +365,7 @@ impl<'a> GeometryCollectionBuilder {
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let capacity =
@@ -382,7 +382,7 @@ impl<'a> GeometryCollectionBuilder {
         wkb_objects: &[Option<WKB<'_, W>>],
         dim: Dimension,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let wkb_objects2 = wkb_objects
@@ -402,7 +402,7 @@ impl GeometryArrayBuilder for GeometryCollectionBuilder {
         dim: Dimension,
         geom_capacity: usize,
         coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let capacity = GeometryCollectionCapacity::new(Default::default(), geom_capacity);
         Self::with_capacity_and_options(dim, capacity, coord_type, metadata, DEFAULT_PREFER_MULTI)
@@ -432,11 +432,11 @@ impl GeometryArrayBuilder for GeometryCollectionBuilder {
         self.geoms.coord_type()
     }
 
-    fn set_metadata(&mut self, metadata: Arc<ArrayMetadata>) {
+    fn set_metadata(&mut self, metadata: Arc<Metadata>) {
         self.metadata = metadata;
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
+    fn metadata(&self) -> Arc<Metadata> {
         self.metadata.clone()
     }
 }

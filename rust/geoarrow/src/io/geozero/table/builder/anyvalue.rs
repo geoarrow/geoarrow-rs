@@ -13,6 +13,7 @@ use arrow_array::builder::{
 };
 use arrow_array::ArrayRef;
 use arrow_cast::parse::string_to_datetime;
+use arrow_schema::extension::EXTENSION_TYPE_NAME_KEY;
 use arrow_schema::{DataType, Field, TimeUnit};
 use chrono::{DateTime, Utc};
 use enum_as_inner::EnumAsInner;
@@ -130,7 +131,7 @@ impl AnyBuilder {
         use AnyBuilder::*;
 
         // Short circuit check for JSON type
-        if let Some(ext_val) = field.metadata().get("ARROW:extension:name") {
+        if let Some(ext_val) = field.metadata().get(EXTENSION_TYPE_NAME_KEY) {
             if ext_val.as_str() == "arrow.json" {
                 return Json(StringBuilder::with_capacity(capacity, 0));
             }
@@ -259,7 +260,10 @@ impl AnyBuilder {
             String(_) => Field::new("", DataType::Utf8, true),
             Json(_) => {
                 let mut metadata = HashMap::with_capacity(1);
-                metadata.insert("ARROW:extension:name".to_string(), "arrow.json".to_string());
+                metadata.insert(
+                    EXTENSION_TYPE_NAME_KEY.to_string(),
+                    "arrow.json".to_string(),
+                );
                 Field::new("", DataType::Utf8, true).with_metadata(metadata)
             }
             Date32(_) => Field::new("", DataType::Date32, true),

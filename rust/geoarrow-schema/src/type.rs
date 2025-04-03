@@ -56,8 +56,13 @@ macro_rules! define_basic_type {
             }
 
             /// Retrieve the underlying [`Metadata`]
-            pub fn metadata(&self) -> &Metadata {
+            pub fn metadata(&self) -> &Arc<Metadata> {
                 &self.metadata
+            }
+
+            /// Convert this type to a [`Field`], retaining extension metadata.
+            pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool) -> Field {
+                Field::new(name, self.data_type(), nullable).with_extension_type(self.clone())
             }
         }
     };
@@ -157,6 +162,7 @@ impl ExtensionType for PointType {
 
 fn parse_point(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowError> {
     match data_type {
+        // TODO: use list_size for dimension when 2, or 4
         DataType::FixedSizeList(inner_field, _list_size) => Ok((
             CoordType::Interleaved,
             Dimension::from_interleaved_field(inner_field),
@@ -937,7 +943,7 @@ impl GeometryType {
     }
 
     /// Retrieve the underlying [`Metadata`]
-    pub fn metadata(&self) -> &Metadata {
+    pub fn metadata(&self) -> &Arc<Metadata> {
         &self.metadata
     }
 
@@ -1014,6 +1020,11 @@ impl GeometryType {
 
         let union_fields = UnionFields::new(type_ids, fields);
         DataType::Union(union_fields, UnionMode::Dense)
+    }
+
+    /// Convert this type to a [`Field`], retaining extension metadata.
+    pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool) -> Field {
+        Field::new(name, self.data_type(), nullable).with_extension_type(self.clone())
     }
 }
 
@@ -1143,7 +1154,7 @@ impl BoxType {
     }
 
     /// Retrieve the underlying [`Metadata`]
-    pub fn metadata(&self) -> &Metadata {
+    pub fn metadata(&self) -> &Arc<Metadata> {
         &self.metadata
     }
 
@@ -1216,6 +1227,11 @@ impl BoxType {
             }
         };
         DataType::Struct(values_fields.into())
+    }
+
+    /// Convert this type to a [`Field`], retaining extension metadata.
+    pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool) -> Field {
+        Field::new(name, self.data_type(), nullable).with_extension_type(self.clone())
     }
 }
 
@@ -1301,7 +1317,7 @@ impl WkbType {
     }
 
     /// Retrieve the underlying [`Metadata`]
-    pub fn metadata(&self) -> &Metadata {
+    pub fn metadata(&self) -> &Arc<Metadata> {
         &self.metadata
     }
 
@@ -1323,6 +1339,11 @@ impl WkbType {
         } else {
             DataType::Binary
         }
+    }
+
+    /// Convert this type to a [`Field`], retaining extension metadata.
+    pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool, large: bool) -> Field {
+        Field::new(name, self.data_type(large), nullable).with_extension_type(self.clone())
     }
 }
 
@@ -1378,7 +1399,7 @@ impl WktType {
     }
 
     /// Retrieve the underlying [`Metadata`]
-    pub fn metadata(&self) -> &Metadata {
+    pub fn metadata(&self) -> &Arc<Metadata> {
         &self.metadata
     }
 
@@ -1400,6 +1421,11 @@ impl WktType {
         } else {
             DataType::Utf8
         }
+    }
+
+    /// Convert this type to a [`Field`], retaining extension metadata.
+    pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool, large: bool) -> Field {
+        Field::new(name, self.data_type(large), nullable).with_extension_type(self.clone())
     }
 }
 

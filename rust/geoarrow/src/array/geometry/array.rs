@@ -4,18 +4,17 @@ use std::sync::Arc;
 use arrow_array::{Array, ArrayRef, OffsetSizeTrait, UnionArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field, UnionMode};
-use geoarrow_schema::Dimension;
+use geo_traits::GeometryTrait;
+use geoarrow_schema::{Dimension, GeometryType};
 
 use crate::array::geometry::GeometryBuilder;
 use crate::array::geometry::GeometryCapacity;
-use crate::array::metadata::ArrayMetadata;
 use crate::array::*;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Geometry;
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
 use crate::{ArrayBase, NativeArray};
-use geo_traits::GeometryTrait;
 
 /// # Invariants
 ///
@@ -52,10 +51,7 @@ use geo_traits::GeometryTrait;
 /// - 37: GeometryCollection ZM
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometryArray {
-    /// Always NativeType::Unknown
-    data_type: NativeType,
-
-    pub(crate) metadata: Arc<ArrayMetadata>,
+    data_type: GeometryType,
 
     /// Invariant: every item in `type_ids` is `> 0 && < fields.len()` if `type_ids` are not
     /// provided. If `type_ids` exist in the NativeType, then every item in `type_ids` is `> 0 && `
@@ -111,7 +107,7 @@ impl GeometryArray {
         mline_string_xyz: Option<MultiLineStringArray>,
         mpolygon_xyz: Option<MultiPolygonArray>,
         gc_xyz: Option<GeometryCollectionArray>,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let mut coord_types = HashSet::new();
         if let Some(point_xy) = &point_xy {
@@ -161,11 +157,9 @@ impl GeometryArray {
 
         let coord_type = coord_types.into_iter().next().unwrap_or_default();
 
-        let data_type = NativeType::Geometry(coord_type);
-
         use Dimension::*;
         Self {
-            data_type,
+            data_type: GeometryType::new(coord_type, metadata),
             type_ids,
             offsets,
             point_xy: point_xy.unwrap_or(
@@ -224,7 +218,6 @@ impl GeometryArray {
                 )
                 .finish(),
             ),
-            metadata,
         }
     }
 
@@ -617,7 +610,7 @@ impl ArrayBase for GeometryArray {
         self.clone().into_array_ref()
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
+    fn metadata(&self) -> Arc<Metadata> {
         self.metadata.clone()
     }
 
@@ -648,7 +641,7 @@ impl NativeArray for GeometryArray {
         Arc::new(self.clone().into_coord_type(coord_type))
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
+    fn with_metadata(&self, metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
         arr.metadata = metadata;
         Arc::new(arr)

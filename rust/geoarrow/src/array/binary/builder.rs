@@ -1,19 +1,20 @@
 use std::sync::Arc;
 
-use crate::array::binary::WKBCapacity;
-use crate::array::metadata::ArrayMetadata;
-use crate::error::{GeoArrowError, Result};
 use arrow_array::builder::GenericBinaryBuilder;
 use arrow_array::OffsetSizeTrait;
 use geo_traits::{
     GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
     MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait,
 };
+use geoarrow_schema::Metadata;
 use wkb::writer::{
     write_geometry_collection, write_line_string, write_multi_line_string, write_multi_point,
     write_multi_polygon, write_point, write_polygon,
 };
 use wkb::Endianness;
+
+use crate::array::binary::WKBCapacity;
+use crate::error::{GeoArrowError, Result};
 
 use super::array::WKBArray;
 
@@ -21,7 +22,7 @@ use super::array::WKBArray;
 ///
 /// Converting a [`WKBBuilder`] into a [`WKBArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct WKBBuilder<O: OffsetSizeTrait>(GenericBinaryBuilder<O>, Arc<ArrayMetadata>);
+pub struct WKBBuilder<O: OffsetSizeTrait>(GenericBinaryBuilder<O>, Arc<Metadata>);
 
 impl<O: OffsetSizeTrait> Default for WKBBuilder<O> {
     fn default() -> Self {
@@ -36,7 +37,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     }
 
     /// Creates a new empty [`WKBBuilder`] with the provided options.
-    pub fn new_with_options(metadata: Arc<ArrayMetadata>) -> Self {
+    pub fn new_with_options(metadata: Arc<Metadata>) -> Self {
         Self::with_capacity_and_options(Default::default(), metadata)
     }
 
@@ -46,7 +47,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     }
 
     /// Creates a new empty [`WKBBuilder`] with the provided capacity and options.
-    pub fn with_capacity_and_options(capacity: WKBCapacity, metadata: Arc<ArrayMetadata>) -> Self {
+    pub fn with_capacity_and_options(capacity: WKBCapacity, metadata: Arc<Metadata>) -> Self {
         Self(
             GenericBinaryBuilder::with_capacity(
                 capacity.offsets_capacity,
@@ -68,7 +69,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     /// provided geometry iterator.
     pub fn with_capacity_and_options_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let counter = WKBCapacity::from_geometries(geoms);
         Self::with_capacity_and_options(counter, metadata)

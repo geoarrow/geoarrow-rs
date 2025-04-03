@@ -2,14 +2,13 @@ use std::sync::Arc;
 
 use crate::algorithm::native::downcast::can_downcast_multi;
 use crate::algorithm::native::eq::offset_buffer_eq;
-use crate::array::metadata::ArrayMetadata;
 use crate::array::polygon::PolygonCapacity;
 use crate::array::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::{
-    CoordBuffer, CoordType, GeometryCollectionArray, MixedGeometryArray, MultiLineStringArray,
+    CoordBuffer, GeometryCollectionArray, MixedGeometryArray, MultiLineStringArray,
     MultiPolygonArray, RectArray, WKBArray,
 };
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, Polygon};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
@@ -17,10 +16,12 @@ use crate::{ArrayBase, NativeArray};
 use arrow::array::AsArray;
 use arrow_array::{Array, OffsetSizeTrait};
 use arrow_array::{ArrayRef, GenericListArray};
+use arrow_schema::extension::ExtensionType;
 use geo_traits::PolygonTrait;
 
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
+use geoarrow_schema::PolygonType;
 
 use super::PolygonBuilder;
 
@@ -30,10 +31,7 @@ use super::PolygonBuilder;
 #[derive(Debug, Clone)]
 // #[derive(Debug, Clone, PartialEq)]
 pub struct PolygonArray {
-    // Always NativeType::Polygon
-    data_type: NativeType,
-
-    pub(crate) metadata: Arc<ArrayMetadata>,
+    data_type: PolygonType,
 
     pub(crate) coords: CoordBuffer,
 
@@ -91,7 +89,7 @@ impl PolygonArray {
         geom_offsets: OffsetBuffer<i32>,
         ring_offsets: OffsetBuffer<i32>,
         validity: Option<NullBuffer>,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         Self::try_new(coords, geom_offsets, ring_offsets, validity, metadata).unwrap()
     }
@@ -112,7 +110,7 @@ impl PolygonArray {
         geom_offsets: OffsetBuffer<i32>,
         ring_offsets: OffsetBuffer<i32>,
         validity: Option<NullBuffer>,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Result<Self> {
         check(
             &coords,
@@ -120,14 +118,12 @@ impl PolygonArray {
             &ring_offsets,
             validity.as_ref().map(|v| v.len()),
         )?;
-        let data_type = NativeType::Polygon(coords.coord_type(), coords.dim());
         Ok(Self {
-            data_type,
+            data_type: PolygonType::new(coords.coord_type(), coords.dim(), metadata),
             coords,
             geom_offsets,
             ring_offsets,
             validity,
-            metadata,
         })
     }
 
@@ -187,7 +183,6 @@ impl PolygonArray {
             geom_offsets: self.geom_offsets.slice(offset, length),
             ring_offsets: self.ring_offsets.clone(),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
-            metadata: self.metadata.clone(),
         }
     }
 
@@ -214,7 +209,7 @@ impl ArrayBase for PolygonArray {
     }
 
     fn storage_type(&self) -> DataType {
-        self.data_type.to_data_type()
+        self.data_type.data_type()
     }
 
     fn extension_field(&self) -> Arc<Field> {
@@ -224,7 +219,7 @@ impl ArrayBase for PolygonArray {
     }
 
     fn extension_name(&self) -> &str {
-        self.data_type.extension_name()
+        PolygonType::NAME
     }
 
     fn into_array_ref(self) -> ArrayRef {
@@ -235,7 +230,7 @@ impl ArrayBase for PolygonArray {
         self.clone().into_array_ref()
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
+    fn metadata(&self) -> Arc<Metadata> {
         self.metadata.clone()
     }
 
@@ -254,7 +249,7 @@ impl ArrayBase for PolygonArray {
 
 impl NativeArray for PolygonArray {
     fn data_type(&self) -> NativeType {
-        self.data_type
+        NativeType::Polygon(self.data_type.clone())
     }
 
     fn coord_type(&self) -> CoordType {
@@ -265,7 +260,7 @@ impl NativeArray for PolygonArray {
         Arc::new(self.clone().into_coord_type(coord_type))
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
+    fn with_metadata(&self, metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
         arr.metadata = metadata;
         Arc::new(arr)

@@ -3,23 +3,24 @@ use std::sync::Arc;
 
 use arrow_array::{Array, ArrayRef, OffsetSizeTrait, UnionArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
+use arrow_schema::extension::{EXTENSION_TYPE_METADATA_KEY, EXTENSION_TYPE_NAME_KEY};
 use arrow_schema::{DataType, Field, UnionMode};
+use geo_traits::GeometryTrait;
+use geoarrow_schema::CoordType;
 
 use crate::algorithm::native::downcast::can_downcast_multi;
-use crate::array::metadata::ArrayMetadata;
 use crate::array::mixed::builder::MixedGeometryBuilder;
 use crate::array::mixed::MixedCapacity;
 use crate::array::{
-    CoordType, GeometryCollectionArray, LineStringArray, LineStringBuilder, MultiLineStringArray,
+    GeometryCollectionArray, LineStringArray, LineStringBuilder, MultiLineStringArray,
     MultiLineStringBuilder, MultiPointArray, MultiPointBuilder, MultiPolygonArray,
     MultiPolygonBuilder, PointArray, PointBuilder, PolygonArray, PolygonBuilder, WKBArray,
 };
-use crate::datatypes::{mixed_data_type, Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Geometry;
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
 use crate::{ArrayBase, NativeArray};
-use geo_traits::GeometryTrait;
 
 /// # Invariants
 ///
@@ -61,7 +62,7 @@ pub struct MixedGeometryArray {
     coord_type: CoordType,
     dim: Dimension,
 
-    pub(crate) metadata: Arc<ArrayMetadata>,
+    pub(crate) metadata: Arc<Metadata>,
 
     /// Invariant: every item in `type_ids` is `> 0 && < fields.len()` if `type_ids` are not provided. If `type_ids` exist in the NativeType, then every item in `type_ids` is `> 0 && `
     pub(crate) type_ids: ScalarBuffer<i8>,
@@ -103,7 +104,7 @@ impl MixedGeometryArray {
         multi_points: Option<MultiPointArray>,
         multi_line_strings: Option<MultiLineStringArray>,
         multi_polygons: Option<MultiPolygonArray>,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let mut coord_types = HashSet::new();
         if let Some(points) = &points {
@@ -125,7 +126,10 @@ impl MixedGeometryArray {
             coord_types.insert(multi_polygons.coord_type());
         }
         assert!(coord_types.len() <= 1);
-        let coord_type = coord_types.into_iter().next().unwrap_or_default();
+        let coord_type = coord_types
+            .into_iter()
+            .next()
+            .unwrap_or(CoordType::Interleaved);
 
         let mut dimensions = HashSet::new();
         if let Some(points) = &points {
@@ -481,12 +485,12 @@ impl ArrayBase for MixedGeometryArray {
         let extension_name = self.extension_name();
         let mut metadata = HashMap::with_capacity(2);
         metadata.insert(
-            "ARROW:extension:name".to_string(),
+            EXTENSION_TYPE_NAME_KEY.to_string(),
             extension_name.to_string(),
         );
         if array_metadata.should_serialize() {
             metadata.insert(
-                "ARROW:extension:metadata".to_string(),
+                EXTENSION_TYPE_METADATA_KEY.to_string(),
                 serde_json::to_string(array_metadata.as_ref()).unwrap(),
             );
         }
@@ -505,7 +509,7 @@ impl ArrayBase for MixedGeometryArray {
         self.clone().into_array_ref()
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
+    fn metadata(&self) -> Arc<Metadata> {
         self.metadata.clone()
     }
 
@@ -541,7 +545,7 @@ impl NativeArray for MixedGeometryArray {
         Arc::new(self.clone().into_coord_type(coord_type))
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
+    fn with_metadata(&self, metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
         arr.metadata = metadata;
         Arc::new(arr)
@@ -818,7 +822,7 @@ impl From<PointArray> for MixedGeometryArray {
             Dimension::XY => vec![1; value.len()],
             Dimension::XYZ => vec![11; value.len()],
         };
-        let metadata = value.metadata.clone();
+        let metadata = value.metadata();
         Self::new(
             ScalarBuffer::from(type_ids),
             ScalarBuffer::from_iter(0..value.len() as i32),
@@ -839,7 +843,7 @@ impl From<LineStringArray> for MixedGeometryArray {
             Dimension::XY => vec![2; value.len()],
             Dimension::XYZ => vec![12; value.len()],
         };
-        let metadata = value.metadata.clone();
+        let metadata = value.metadata();
         Self::new(
             ScalarBuffer::from(type_ids),
             ScalarBuffer::from_iter(0..value.len() as i32),
@@ -860,7 +864,7 @@ impl From<PolygonArray> for MixedGeometryArray {
             Dimension::XY => vec![3; value.len()],
             Dimension::XYZ => vec![13; value.len()],
         };
-        let metadata = value.metadata.clone();
+        let metadata = value.metadata();
         Self::new(
             ScalarBuffer::from(type_ids),
             ScalarBuffer::from_iter(0..value.len() as i32),
@@ -881,7 +885,7 @@ impl From<MultiPointArray> for MixedGeometryArray {
             Dimension::XY => vec![4; value.len()],
             Dimension::XYZ => vec![14; value.len()],
         };
-        let metadata = value.metadata.clone();
+        let metadata = value.metadata();
         Self::new(
             ScalarBuffer::from(type_ids),
             ScalarBuffer::from_iter(0..value.len() as i32),
@@ -902,7 +906,7 @@ impl From<MultiLineStringArray> for MixedGeometryArray {
             Dimension::XY => vec![5; value.len()],
             Dimension::XYZ => vec![15; value.len()],
         };
-        let metadata = value.metadata.clone();
+        let metadata = value.metadata();
         Self::new(
             ScalarBuffer::from(type_ids),
             ScalarBuffer::from_iter(0..value.len() as i32),
@@ -923,7 +927,7 @@ impl From<MultiPolygonArray> for MixedGeometryArray {
             Dimension::XY => vec![6; value.len()],
             Dimension::XYZ => vec![16; value.len()],
         };
-        let metadata = value.metadata.clone();
+        let metadata = value.metadata();
         Self::new(
             ScalarBuffer::from(type_ids),
             ScalarBuffer::from_iter(0..value.len() as i32),

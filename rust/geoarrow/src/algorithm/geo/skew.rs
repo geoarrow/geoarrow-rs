@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::LineStringArray;
 use crate::array::*;
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
@@ -261,7 +261,6 @@ impl Skew for &dyn NativeArray {
             }};
         }
 
-        use Dimension::*;
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
@@ -297,7 +296,6 @@ impl Skew for &dyn NativeArray {
             }};
         }
 
-        use Dimension::*;
         use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {

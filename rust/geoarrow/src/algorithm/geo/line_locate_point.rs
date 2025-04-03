@@ -1,7 +1,7 @@
 use crate::algorithm::native::MapChunks;
 use crate::array::{AsChunkedNativeArray, AsNativeArray, LineStringArray, PointArray};
 use crate::chunked_array::{ChunkedArray, ChunkedLineStringArray, ChunkedNativeArray};
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::{ArrayBase, NativeArray};
@@ -52,11 +52,10 @@ impl LineLocatePoint<&dyn NativeArray> for &dyn NativeArray {
     type Output = Result<Float64Array>;
 
     fn line_locate_point(&self, rhs: &dyn NativeArray) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         let result = match (self.data_type(), rhs.data_type()) {
-            (LineString(_, XY), Point(_, XY)) => {
+            (LineString(_), Point(_)) => {
                 LineLocatePoint::line_locate_point(self.as_line_string(), rhs.as_point())
             }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
@@ -80,11 +79,10 @@ impl LineLocatePoint<&dyn ChunkedNativeArray> for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn line_locate_point(&self, rhs: &dyn ChunkedNativeArray) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         let result = match (self.data_type(), rhs.data_type()) {
-            (LineString(_, XY), Point(_, XY)) => {
+            (LineString(_), Point(_)) => {
                 LineLocatePoint::line_locate_point(self.as_line_string(), &rhs.as_point().chunks)
             }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
@@ -125,7 +123,6 @@ impl<G: PointTrait<T = f64>> LineLocatePointScalar<G> for &dyn NativeArray {
     type Output = Result<Float64Array>;
 
     fn line_locate_point(&self, rhs: G) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         let result = match self.data_type() {
@@ -150,7 +147,6 @@ impl<G: PointTrait<T = f64>> LineLocatePointScalar<G> for &dyn ChunkedNativeArra
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn line_locate_point(&self, rhs: G) -> Self::Output {
-        use Dimension::*;
         use NativeType::*;
 
         let result = match self.data_type() {

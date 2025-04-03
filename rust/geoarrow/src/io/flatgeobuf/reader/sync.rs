@@ -119,7 +119,7 @@ pub struct FlatGeobufReader<R, S> {
     batch_size: usize,
     properties_schema: SchemaRef,
     num_rows_remaining: Option<usize>,
-    array_metadata: Arc<ArrayMetadata>,
+    array_metadata: Arc<Metadata>,
 }
 
 impl<R, S> FlatGeobufReader<R, S> {

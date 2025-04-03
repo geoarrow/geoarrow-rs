@@ -13,7 +13,7 @@ use crate::array::{
     CoordBuffer, CoordType, LineStringArray, MixedGeometryArray, MultiLineStringArray,
     MultiPointArray, MultiPolygonArray, PointArray, PolygonArray, WKBArray,
 };
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, GeometryCollection};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
@@ -29,7 +29,7 @@ pub struct GeometryCollectionArray {
     // Always NativeType::GeometryCollection
     data_type: NativeType,
 
-    metadata: Arc<ArrayMetadata>,
+    metadata: Arc<Metadata>,
 
     pub(crate) array: MixedGeometryArray,
 
@@ -50,7 +50,7 @@ impl GeometryCollectionArray {
         array: MixedGeometryArray,
         geom_offsets: OffsetBuffer<i32>,
         validity: Option<NullBuffer>,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let coord_type = array.coord_type();
         let data_type = NativeType::GeometryCollection(coord_type, array.dimension());
@@ -158,7 +158,7 @@ impl ArrayBase for GeometryCollectionArray {
         self.clone().into_array_ref()
     }
 
-    fn metadata(&self) -> Arc<ArrayMetadata> {
+    fn metadata(&self) -> Arc<Metadata> {
         self.metadata.clone()
     }
 
@@ -189,7 +189,7 @@ impl NativeArray for GeometryCollectionArray {
         Arc::new(self.clone().into_coord_type(coord_type))
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
+    fn with_metadata(&self, metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
         arr.metadata = metadata;
         Arc::new(arr)

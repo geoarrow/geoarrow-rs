@@ -1,10 +1,9 @@
 use std::io::BufRead;
 
-use geoarrow_schema::Dimension;
+use geoarrow_schema::{CoordType, Dimension};
 use geozero::geojson::GeoJsonLineReader;
 use geozero::GeozeroDatasource;
 
-use crate::array::CoordType;
 use crate::error::Result;
 use crate::io::geozero::array::GeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};

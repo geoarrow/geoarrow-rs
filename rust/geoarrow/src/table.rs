@@ -7,6 +7,7 @@ use std::sync::Arc;
 
 use arrow_array::{ArrayRef, RecordBatch, RecordBatchIterator, RecordBatchReader};
 use arrow_schema::{ArrowError, FieldRef, Schema, SchemaBuilder, SchemaRef};
+use geoarrow_schema::{CoordType, GeometryType};
 
 use crate::algorithm::native::{Cast, Downcast};
 use crate::array::metadata::ArrayMetadata;
@@ -167,7 +168,7 @@ impl Table {
         let chunked_geometry =
             ChunkedNativeArrayDyn::from_arrow_chunks(array_slices.as_slice(), orig_field)?
                 .into_inner();
-        let casted_geometry = chunked_geometry.as_ref().cast(to_type)?;
+        let casted_geometry = chunked_geometry.as_ref().cast(to_type.clone())?;
         let casted_arrays = casted_geometry.array_refs();
         let casted_field = to_type.to_field(orig_field.name(), orig_field.is_nullable());
 
@@ -188,8 +189,9 @@ impl Table {
         index: usize,
         target_geo_data_type: Option<NativeType>,
     ) -> Result<Self> {
-        let target_geo_data_type =
-            target_geo_data_type.unwrap_or(NativeType::Geometry(Default::default()));
+        let target_geo_data_type = target_geo_data_type.unwrap_or(NativeType::Geometry(
+            GeometryType::new(CoordType::Interleaved, Default::default()),
+        ));
 
         let orig_field = self.schema().field(index);
         let geoarray_metadata = ArrayMetadata::try_from(orig_field)?;
@@ -219,7 +221,7 @@ impl Table {
                     .map(|batch| batch.column(index).as_ref())
                     .collect::<Vec<_>>();
                 let new_geometry = match typ {
-                    SerializedType::WKB => {
+                    SerializedType::WKB(_) => {
                         let wkb_chunks = array_slices
                             .iter()
                             .map(|arr| WKBArray::<i32>::try_from((*arr, orig_field)))
@@ -237,7 +239,7 @@ impl Table {
                             .as_ref()
                             .downcast()
                     }
-                    SerializedType::LargeWKB => {
+                    SerializedType::LargeWKB(_) => {
                         let wkb_chunks = array_slices
                             .iter()
                             .map(|arr| WKBArray::<i64>::try_from((*arr, orig_field)))

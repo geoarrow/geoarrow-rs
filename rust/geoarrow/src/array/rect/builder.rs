@@ -14,7 +14,7 @@ use std::sync::Arc;
 /// Converting an [`RectBuilder`] into a [`RectArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct RectBuilder {
-    pub(crate) metadata: Arc<ArrayMetadata>,
+    pub(crate) metadata: Arc<Metadata>,
     pub(crate) lower: SeparatedCoordBufferBuilder,
     pub(crate) upper: SeparatedCoordBufferBuilder,
     pub(crate) validity: NullBufferBuilder,
@@ -27,7 +27,7 @@ impl RectBuilder {
     }
 
     /// Creates a new empty [`RectBuilder`] with the provided options.
-    pub fn new_with_options(dim: Dimension, metadata: Arc<ArrayMetadata>) -> Self {
+    pub fn new_with_options(dim: Dimension, metadata: Arc<Metadata>) -> Self {
         Self::with_capacity_and_options(dim, 0, metadata)
     }
 
@@ -40,7 +40,7 @@ impl RectBuilder {
     pub fn with_capacity_and_options(
         dim: Dimension,
         capacity: usize,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         Self {
             lower: SeparatedCoordBufferBuilder::with_capacity(capacity, dim),
@@ -91,7 +91,7 @@ impl RectBuilder {
         lower: SeparatedCoordBufferBuilder,
         upper: SeparatedCoordBufferBuilder,
         validity: NullBufferBuilder,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Result<Self, GeoArrowError> {
         if lower.len() != upper.len() {
             return Err(GeoArrowError::General(
@@ -182,7 +182,7 @@ impl RectBuilder {
     pub fn from_rects<'a>(
         geoms: impl ExactSizeIterator<Item = &'a (impl RectTrait<T = f64> + 'a)>,
         dim: Dimension,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let mut mutable_array = Self::with_capacity_and_options(dim, geoms.len(), metadata);
         geoms
@@ -195,7 +195,7 @@ impl RectBuilder {
     pub fn from_nullable_rects<'a>(
         geoms: impl ExactSizeIterator<Item = Option<&'a (impl RectTrait<T = f64> + 'a)>>,
         dim: Dimension,
-        metadata: Arc<ArrayMetadata>,
+        metadata: Arc<Metadata>,
     ) -> Self {
         let mut mutable_array = Self::with_capacity_and_options(dim, geoms.len(), metadata);
         geoms

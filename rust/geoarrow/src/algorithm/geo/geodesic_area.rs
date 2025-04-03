@@ -1,7 +1,7 @@
 use crate::algorithm::geo::utils::zeroes;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
@@ -304,7 +304,6 @@ impl GeodesicArea for &dyn NativeArray {
     type OutputDouble = Result<(Float64Array, Float64Array)>;
 
     fn geodesic_area_signed(&self) -> Self::OutputSingle {
-        use Dimension::*;
         use NativeType::*;
 
         let result = match self.data_type() {
@@ -321,7 +320,6 @@ impl GeodesicArea for &dyn NativeArray {
     }
 
     fn geodesic_area_unsigned(&self) -> Self::OutputSingle {
-        use Dimension::*;
         use NativeType::*;
 
         let result = match self.data_type() {
@@ -338,7 +336,6 @@ impl GeodesicArea for &dyn NativeArray {
     }
 
     fn geodesic_perimeter(&self) -> Self::OutputSingle {
-        use Dimension::*;
         use NativeType::*;
 
         let result = match self.data_type() {
@@ -355,9 +352,6 @@ impl GeodesicArea for &dyn NativeArray {
     }
 
     fn geodesic_perimeter_area_signed(&self) -> Self::OutputDouble {
-        use Dimension::*;
-        use NativeType::*;
-
         let result = match self.data_type() {
             Point(_) => self.as_point().geodesic_perimeter_area_signed(),
             LineString(_) => self.as_line_string().geodesic_perimeter_area_signed(),
@@ -374,9 +368,7 @@ impl GeodesicArea for &dyn NativeArray {
     }
 
     fn geodesic_perimeter_area_unsigned(&self) -> Self::OutputDouble {
-        use Dimension::*;
         use NativeType::*;
-
         let result = match self.data_type() {
             Point(_) => self.as_point().geodesic_perimeter_area_unsigned(),
             LineString(_) => self.as_line_string().geodesic_perimeter_area_unsigned(),
@@ -436,7 +428,6 @@ impl GeodesicArea for &dyn ChunkedNativeArray {
     type OutputDouble = Result<(ChunkedArray<Float64Array>, ChunkedArray<Float64Array>)>;
 
     fn geodesic_area_signed(&self) -> Self::OutputSingle {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
@@ -452,11 +443,9 @@ impl GeodesicArea for &dyn ChunkedNativeArray {
     }
 
     fn geodesic_area_unsigned(&self) -> Self::OutputSingle {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            Point(_) => self.as_point().geodesic_area_unsigned(),
             LineString(_) => self.as_line_string().geodesic_area_unsigned(),
             Polygon(_) => self.as_polygon().geodesic_area_unsigned(),
             MultiPoint(_) => self.as_multi_point().geodesic_area_unsigned(),
@@ -468,12 +457,10 @@ impl GeodesicArea for &dyn ChunkedNativeArray {
     }
 
     fn geodesic_perimeter(&self) -> Self::OutputSingle {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
             Point(_) => self.as_point().geodesic_perimeter(),
-            LineString(_) => self.as_line_string().geodesic_perimeter(),
             Polygon(_) => self.as_polygon().geodesic_perimeter(),
             MultiPoint(_) => self.as_multi_point().geodesic_perimeter(),
             MultiLineString(_) => self.as_multi_line_string().geodesic_perimeter(),
@@ -484,13 +471,11 @@ impl GeodesicArea for &dyn ChunkedNativeArray {
     }
 
     fn geodesic_perimeter_area_signed(&self) -> Self::OutputDouble {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
             Point(_) => self.as_point().geodesic_perimeter_area_signed(),
             LineString(_) => self.as_line_string().geodesic_perimeter_area_signed(),
-            Polygon(_) => self.as_polygon().geodesic_perimeter_area_signed(),
             MultiPoint(_) => self.as_multi_point().geodesic_perimeter_area_signed(),
             MultiLineString(_) => self.as_multi_line_string().geodesic_perimeter_area_signed(),
             MultiPolygon(_) => self.as_multi_polygon().geodesic_perimeter_area_signed(),
@@ -502,7 +487,6 @@ impl GeodesicArea for &dyn ChunkedNativeArray {
     }
 
     fn geodesic_perimeter_area_unsigned(&self) -> Self::OutputDouble {
-        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
