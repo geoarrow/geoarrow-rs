@@ -8,7 +8,11 @@ use crate::metadata::Metadata;
 use crate::{CoordType, Dimension};
 
 macro_rules! define_basic_type {
-    ($struct_name:ident) => {
+    (
+        $(#[$($attrss:meta)*])*
+        $struct_name:ident
+    ) => {
+        $(#[$($attrss)*])*
         #[derive(Debug, Clone, PartialEq, Eq, Hash)]
         pub struct $struct_name {
             coord_type: CoordType,
@@ -71,6 +75,16 @@ impl PointType {
     /// Convert to the corresponding [`DataType`].
     ///
     /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
+    ///
+    /// ```
+    /// use arrow_schema::{DataType, Field};
+    /// use geoarrow_schema::{CoordType, Dimension, PointType};
+    ///
+    /// let geom_type = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+    /// let expected_type =
+    ///     DataType::FixedSizeList(Field::new("xy", DataType::Float64, false).into(), 2);
+    /// assert_eq!(geom_type.data_type(), expected_type);
+    /// ```
     pub fn data_type(&self) -> DataType {
         coord_type_to_data_type(self.coord_type, self.dim)
     }
@@ -140,6 +154,22 @@ impl LineStringType {
     /// Convert to the corresponding [`DataType`].
     ///
     /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
+    ///
+    /// ```
+    /// use arrow_schema::{DataType, Field};
+    /// use geoarrow_schema::{CoordType, Dimension, LineStringType};
+    ///
+    /// let geom_type = LineStringType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let expected_coord_type = DataType::Struct(
+    ///     vec![
+    ///         Field::new("x", DataType::Float64, false),
+    ///         Field::new("y", DataType::Float64, false),
+    ///     ]
+    ///     .into(),
+    /// );
+    /// let expected_type = DataType::List(Field::new("vertices", expected_coord_type, false).into());
+    /// assert_eq!(geom_type.data_type(), expected_type);
+    /// ```
     pub fn data_type(&self) -> DataType {
         let coords_type = coord_type_to_data_type(self.coord_type, self.dim);
         let vertices_field = Field::new("vertices", coords_type, false).into();
@@ -206,6 +236,26 @@ impl PolygonType {
     /// Convert to the corresponding [`DataType`].
     ///
     /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
+    ///
+    /// ```
+    /// use arrow_schema::{DataType, Field};
+    /// use geoarrow_schema::{CoordType, Dimension, PolygonType};
+    ///
+    /// let geom_type = PolygonType::new(CoordType::Separated, Dimension::XYZ, Default::default());
+    ///
+    /// let expected_coord_type = DataType::Struct(
+    ///     vec![
+    ///         Field::new("x", DataType::Float64, false),
+    ///         Field::new("y", DataType::Float64, false),
+    ///         Field::new("z", DataType::Float64, false),
+    ///     ]
+    ///     .into(),
+    /// );
+    /// let vertices_field = Field::new("vertices", expected_coord_type, false);
+    /// let rings_field = Field::new_list("rings", vertices_field, false);
+    /// let expected_type = DataType::List(rings_field.into());
+    /// assert_eq!(geom_type.data_type(), expected_type);
+    /// ```
     pub fn data_type(&self) -> DataType {
         let coords_type = coord_type_to_data_type(self.coord_type, self.dim);
         let vertices_field = Field::new("vertices", coords_type, false);
@@ -282,6 +332,25 @@ impl MultiPointType {
     /// Convert to the corresponding [`DataType`].
     ///
     /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
+    ///
+    /// ```
+    /// use arrow_schema::{DataType, Field};
+    /// use geoarrow_schema::{CoordType, Dimension, MultiPointType};
+    ///
+    /// let geom_type = MultiPointType::new(CoordType::Separated, Dimension::XYZ, Default::default());
+    ///
+    /// let expected_coord_type = DataType::Struct(
+    ///     vec![
+    ///         Field::new("x", DataType::Float64, false),
+    ///         Field::new("y", DataType::Float64, false),
+    ///         Field::new("z", DataType::Float64, false),
+    ///     ]
+    ///     .into(),
+    /// );
+    /// let vertices_field = Field::new("points", expected_coord_type, false);
+    /// let expected_type = DataType::List(vertices_field.into());
+    /// assert_eq!(geom_type.data_type(), expected_type);
+    /// ```
     pub fn data_type(&self) -> DataType {
         let coords_type = coord_type_to_data_type(self.coord_type, self.dim);
         let vertices_field = Field::new("points", coords_type, false).into();
@@ -347,6 +416,27 @@ impl MultiLineStringType {
     /// Convert to the corresponding [`DataType`].
     ///
     /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
+    ///
+    /// ```
+    /// use arrow_schema::{DataType, Field};
+    /// use geoarrow_schema::{CoordType, Dimension, MultiLineStringType};
+    ///
+    /// let geom_type =
+    ///     MultiLineStringType::new(CoordType::Separated, Dimension::XYZ, Default::default());
+    ///
+    /// let expected_coord_type = DataType::Struct(
+    ///     vec![
+    ///         Field::new("x", DataType::Float64, false),
+    ///         Field::new("y", DataType::Float64, false),
+    ///         Field::new("z", DataType::Float64, false),
+    ///     ]
+    ///     .into(),
+    /// );
+    /// let vertices_field = Field::new("vertices", expected_coord_type, false);
+    /// let linestrings_field = Field::new_list("linestrings", vertices_field, false);
+    /// let expected_type = DataType::List(linestrings_field.into());
+    /// assert_eq!(geom_type.data_type(), expected_type);
+    /// ```
     pub fn data_type(&self) -> DataType {
         let coords_type = coord_type_to_data_type(self.coord_type, self.dim);
         let vertices_field = Field::new("vertices", coords_type, false);
@@ -423,6 +513,27 @@ impl MultiPolygonType {
     /// Convert to the corresponding [`DataType`].
     ///
     /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
+    ///
+    /// ```
+    /// use arrow_schema::{DataType, Field};
+    /// use geoarrow_schema::{CoordType, Dimension, MultiPolygonType};
+    ///
+    /// let geom_type = MultiPolygonType::new(CoordType::Separated, Dimension::XYM, Default::default());
+    ///
+    /// let expected_coord_type = DataType::Struct(
+    ///     vec![
+    ///         Field::new("x", DataType::Float64, false),
+    ///         Field::new("y", DataType::Float64, false),
+    ///         Field::new("m", DataType::Float64, false),
+    ///     ]
+    ///     .into(),
+    /// );
+    /// let vertices_field = Field::new("vertices", expected_coord_type, false);
+    /// let rings_field = Field::new_list("rings", vertices_field, false);
+    /// let polygons_field = Field::new_list("polygons", rings_field, false);
+    /// let expected_type = DataType::List(polygons_field.into());
+    /// assert_eq!(geom_type.data_type(), expected_type);
+    /// ```
     pub fn data_type(&self) -> DataType {
         let coords_type = coord_type_to_data_type(self.coord_type, self.dim);
         let vertices_field = Field::new("vertices", coords_type, false);
@@ -961,6 +1072,28 @@ impl BoxType {
     /// Convert to the corresponding [`DataType`].
     ///
     /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
+    ///
+    /// ```
+    /// use arrow_schema::{DataType, Field};
+    /// use geoarrow_schema::{BoxType, Dimension};
+    ///
+    /// let geom_type = BoxType::new(Dimension::XYZM, Default::default());
+    ///
+    /// let expected_type = DataType::Struct(
+    ///     vec![
+    ///         Field::new("xmin", DataType::Float64, false),
+    ///         Field::new("ymin", DataType::Float64, false),
+    ///         Field::new("zmin", DataType::Float64, false),
+    ///         Field::new("mmin", DataType::Float64, false),
+    ///         Field::new("xmax", DataType::Float64, false),
+    ///         Field::new("ymax", DataType::Float64, false),
+    ///         Field::new("zmax", DataType::Float64, false),
+    ///         Field::new("mmax", DataType::Float64, false),
+    ///     ]
+    ///     .into(),
+    /// );
+    /// assert_eq!(geom_type.data_type(), expected_type);
+    /// ```
     pub fn data_type(&self) -> DataType {
         let values_fields = match self.dim {
             Dimension::XY => {
@@ -1097,6 +1230,15 @@ impl WkbType {
     /// Convert to the corresponding [`DataType`].
     ///
     /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
+    ///
+    /// ```
+    /// use arrow_schema::DataType;
+    /// use geoarrow_schema::WkbType;
+    ///
+    /// let geom_type = WkbType::new(Default::default());
+    ///
+    /// assert_eq!(geom_type.data_type(false), DataType::Binary);
+    /// ```
     pub fn data_type(&self, large: bool) -> DataType {
         if large {
             DataType::LargeBinary
@@ -1165,6 +1307,15 @@ impl WktType {
     /// Convert to the corresponding [`DataType`].
     ///
     /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
+    ///
+    /// ```
+    /// use arrow_schema::DataType;
+    /// use geoarrow_schema::WkbType;
+    ///
+    /// let geom_type = WkbType::new(Default::default());
+    ///
+    /// assert_eq!(geom_type.data_type(false), DataType::Utf8);
+    /// ```
     pub fn data_type(&self, large: bool) -> DataType {
         if large {
             DataType::LargeUtf8
