@@ -27,6 +27,7 @@ geo = "0.30"
 geohash = "0.13.1"
 geo-traits = "0.2"
 geoarrow = { path = "../geoarrow", features = ["flatgeobuf"] }
+geoarrow-schema = { path = "../geoarrow-schema" }
 thiserror = "1"
 
 [dev-dependencies]

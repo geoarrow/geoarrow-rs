@@ -5,7 +5,10 @@ use std::sync::Arc;
 
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
-use geoarrow_schema::Dimension;
+use geoarrow_schema::{
+    CoordType, Dimension, GeometryCollectionType, GeometryType, MultiLineStringType,
+    MultiPointType, MultiPolygonType,
+};
 
 use crate::algorithm::native::cast::Cast;
 use crate::array::*;
@@ -93,16 +96,17 @@ impl Downcast for MultiPointArray {
     type Output = Arc<dyn NativeArray>;
 
     fn downcasted_data_type(&self) -> NativeType {
-        match self.data_type() {
-            NativeType::MultiPoint(ct, dim) => {
-                if can_downcast_multi(&self.geom_offsets) {
-                    NativeType::Point(ct, dim)
-                } else {
-                    NativeType::MultiPoint(ct, dim)
-                }
-            }
-            _ => unreachable!(),
-        }
+        todo!("downcast");
+        // match self.data_type() {
+        //     NativeType::MultiPoint(ct, dim) => {
+        //         if can_downcast_multi(&self.geom_offsets) {
+        //             NativeType::Point(ct, dim)
+        //         } else {
+        //             NativeType::MultiPoint(ct, dim)
+        //         }
+        //     }
+        //     _ => unreachable!(),
+        // }
     }
     fn downcast(&self) -> Self::Output {
         if let Ok(array) = PointArray::try_from(self.clone()) {
@@ -117,16 +121,18 @@ impl Downcast for MultiLineStringArray {
     type Output = Arc<dyn NativeArray>;
 
     fn downcasted_data_type(&self) -> NativeType {
-        match self.data_type() {
-            NativeType::MultiLineString(ct, dim) => {
-                if can_downcast_multi(&self.geom_offsets) {
-                    NativeType::LineString(ct, dim)
-                } else {
-                    NativeType::MultiLineString(ct, dim)
-                }
-            }
-            _ => unreachable!(),
-        }
+        todo!("downcast");
+
+        // match self.data_type() {
+        //     NativeType::MultiLineString(ct, dim) => {
+        //         if can_downcast_multi(&self.geom_offsets) {
+        //             NativeType::LineString(ct, dim)
+        //         } else {
+        //             NativeType::MultiLineString(ct, dim)
+        //         }
+        //     }
+        //     _ => unreachable!(),
+        // }
     }
 
     fn downcast(&self) -> Self::Output {
@@ -142,16 +148,18 @@ impl Downcast for MultiPolygonArray {
     type Output = Arc<dyn NativeArray>;
 
     fn downcasted_data_type(&self) -> NativeType {
-        match self.data_type() {
-            NativeType::MultiPolygon(ct, dim) => {
-                if can_downcast_multi(&self.geom_offsets) {
-                    NativeType::Polygon(ct, dim)
-                } else {
-                    NativeType::MultiPolygon(ct, dim)
-                }
-            }
-            _ => unreachable!(),
-        }
+        todo!("downcast");
+
+        // match self.data_type() {
+        //     NativeType::MultiPolygon(ct, dim) => {
+        //         if can_downcast_multi(&self.geom_offsets) {
+        //             NativeType::Polygon(ct, dim)
+        //         } else {
+        //             NativeType::MultiPolygon(ct, dim)
+        //         }
+        //     }
+        //     _ => unreachable!(),
+        // }
     }
 
     fn downcast(&self) -> Self::Output {
@@ -171,12 +179,12 @@ impl Downcast for MixedGeometryArray {
     fn downcasted_data_type(&self) -> NativeType {
         let types = self.contained_types();
         if types.len() == 1 {
-            let typ = *types.iter().next().unwrap();
+            let typ = types.iter().next().unwrap().clone();
 
             // Only has non-multi geometry children
-            if matches!(typ, NativeType::Point(_, _))
-                || matches!(typ, NativeType::LineString(_, _))
-                || matches!(typ, NativeType::Polygon(_, _))
+            if matches!(typ, NativeType::Point(_))
+                || matches!(typ, NativeType::LineString(_))
+                || matches!(typ, NativeType::Polygon(_))
             {
                 return typ;
             }
@@ -309,14 +317,23 @@ fn resolve_types(types: &HashSet<NativeType>) -> NativeType {
 
     // If only one type, we can cast to that.
     if types.len() == 1 {
-        return *types.iter().next().unwrap();
+        return types.iter().next().unwrap().clone();
     }
 
     // If Geometry is in the type set, short circuit to that.
-    if types.contains(&NativeType::Geometry(CoordType::Interleaved)) {
-        return NativeType::Geometry(CoordType::Interleaved);
-    } else if types.contains(&NativeType::Geometry(CoordType::Separated)) {
-        return NativeType::Geometry(CoordType::Separated);
+    if types.contains(&NativeType::Geometry(GeometryType::new(
+        CoordType::Interleaved,
+        Default::default(),
+    ))) {
+        return NativeType::Geometry(GeometryType::new(
+            CoordType::Interleaved,
+            Default::default(),
+        ));
+    } else if types.contains(&NativeType::Geometry(GeometryType::new(
+        CoordType::Separated,
+        Default::default(),
+    ))) {
+        return NativeType::Geometry(GeometryType::new(CoordType::Separated, Default::default()));
     }
 
     // Since we don't have NativeType::Geometry, dimension should never be null
@@ -330,7 +347,7 @@ fn resolve_types(types: &HashSet<NativeType>) -> NativeType {
 
     // For data with multiple dimensions, we must cast to GeometryArray
     if dimensions.len() > 1 {
-        return NativeType::Geometry(coord_type);
+        return NativeType::Geometry(GeometryType::new(coord_type, Default::default()));
     }
     // Otherwise, we have just one dimension
     let dimension = *dimensions.iter().next().unwrap();
@@ -344,21 +361,37 @@ fn resolve_types(types: &HashSet<NativeType>) -> NativeType {
         if geometry_type_names.contains("geoarrow.point")
             && geometry_type_names.contains("geoarrow.multipoint")
         {
-            return NativeType::MultiPoint(coord_type, dimension);
+            return NativeType::MultiPoint(MultiPointType::new(
+                coord_type,
+                dimension,
+                Default::default(),
+            ));
         } else if geometry_type_names.contains("geoarrow.linestring")
             && geometry_type_names.contains("geoarrow.multilinestring")
         {
-            return NativeType::MultiLineString(coord_type, dimension);
+            return NativeType::MultiLineString(MultiLineStringType::new(
+                coord_type,
+                dimension,
+                Default::default(),
+            ));
         } else if geometry_type_names.contains("geoarrow.polygon")
             && geometry_type_names.contains("geoarrow.multipolygon")
         {
-            return NativeType::MultiPolygon(coord_type, dimension);
+            return NativeType::MultiPolygon(MultiPolygonType::new(
+                coord_type,
+                dimension,
+                Default::default(),
+            ));
         } else if geometry_type_names.contains("geoarrow.geometrycollection") {
-            return NativeType::GeometryCollection(coord_type, dimension);
+            return NativeType::GeometryCollection(GeometryCollectionType::new(
+                coord_type,
+                dimension,
+                Default::default(),
+            ));
         }
     }
 
-    NativeType::Geometry(coord_type)
+    NativeType::Geometry(GeometryType::new(coord_type, Default::default()))
 }
 
 impl Downcast for ChunkedPointArray {

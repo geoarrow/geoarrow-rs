@@ -23,7 +23,7 @@ impl SimplifyVw {
     pub fn new() -> Self {
         Self {
             signature: Signature::exact(
-                vec![GEOMETRY_TYPE.into(), DataType::Float64],
+                vec![GEOMETRY_TYPE().into(), DataType::Float64],
                 Volatility::Immutable,
             ),
         }

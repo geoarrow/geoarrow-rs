@@ -3,7 +3,7 @@ use geo::polygon;
 use criterion::{criterion_group, criterion_main, Criterion};
 use geoarrow::algorithm::geo::Translate;
 use geoarrow::array::PolygonArray;
-use geoarrow::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 
 fn create_data() -> PolygonArray {
     // An L shape

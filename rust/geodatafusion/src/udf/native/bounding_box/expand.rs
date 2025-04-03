@@ -10,10 +10,10 @@ use datafusion::logical_expr::{
 };
 use geo_traits::{CoordTrait, RectTrait};
 use geoarrow::array::{RectArray, RectBuilder};
-use geoarrow::datatypes::Dimension;
 use geoarrow::error::GeoArrowError;
 use geoarrow::trait_::ArrayAccessor;
 use geoarrow::ArrayBase;
+use geoarrow_schema::Dimension;
 
 use crate::data_types::BOX2D_TYPE;
 use crate::error::GeoDataFusionResult;
@@ -28,9 +28,9 @@ impl Expand {
         Self {
             signature: Signature::one_of(
                 vec![
-                    TypeSignature::Exact(vec![BOX2D_TYPE.into(), DataType::Float64]),
+                    TypeSignature::Exact(vec![BOX2D_TYPE().into(), DataType::Float64]),
                     TypeSignature::Exact(vec![
-                        BOX2D_TYPE.into(),
+                        BOX2D_TYPE().into(),
                         DataType::Float64,
                         DataType::Float64,
                     ]),
@@ -142,11 +142,12 @@ mod test {
     use datafusion::prelude::*;
     use geo_traits::{CoordTrait, RectTrait};
     use geoarrow::array::RectArray;
-    use geoarrow::datatypes::Dimension;
     use geoarrow::trait_::ArrayAccessor;
 
     use crate::data_types::BOX2D_TYPE;
     use crate::udf::native::register_native;
+
+    use super::*;
 
     #[tokio::test]
     async fn test() {

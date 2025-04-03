@@ -4,13 +4,15 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
 use std::str::FromStr;
 
-use crate::array::metadata::Edges;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::GeoParquetWriterEncoding;
 
 use arrow_schema::Schema;
-use geoarrow_schema::{CoordType, Crs, Edges, Metadata};
+use geoarrow_schema::{
+    CoordType, Crs, Dimension, Edges, GeometryCollectionType, GeometryType, LineStringType,
+    Metadata, MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType,
+};
 use parquet::file::metadata::FileMetaData;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -673,20 +675,76 @@ pub(crate) fn infer_geo_data_type(
         // TODO: for unknown geometry type, should we leave it as WKB?
         0 => Ok(None),
         1 => Ok(Some(match *geometry_types.iter().next().unwrap() {
-            Point => NativeType::Point(coord_type, Dimension::XY),
-            LineString => NativeType::LineString(coord_type, Dimension::XY),
-            Polygon => NativeType::Polygon(coord_type, Dimension::XY),
-            MultiPoint => NativeType::MultiPoint(coord_type, Dimension::XY),
-            MultiLineString => NativeType::MultiLineString(coord_type, Dimension::XY),
-            MultiPolygon => NativeType::MultiPolygon(coord_type, Dimension::XY),
-            GeometryCollection => NativeType::GeometryCollection(coord_type, Dimension::XY),
-            PointZ => NativeType::Point(coord_type, Dimension::XYZ),
-            LineStringZ => NativeType::LineString(coord_type, Dimension::XYZ),
-            PolygonZ => NativeType::Polygon(coord_type, Dimension::XYZ),
-            MultiPointZ => NativeType::MultiPoint(coord_type, Dimension::XYZ),
-            MultiLineStringZ => NativeType::MultiLineString(coord_type, Dimension::XYZ),
-            MultiPolygonZ => NativeType::MultiPolygon(coord_type, Dimension::XYZ),
-            GeometryCollectionZ => NativeType::GeometryCollection(coord_type, Dimension::XYZ),
+            Point => NativeType::Point(PointType::new(
+                coord_type,
+                Dimension::XY,
+                Default::default(),
+            )),
+            LineString => NativeType::LineString(LineStringType::new(
+                coord_type,
+                Dimension::XY,
+                Default::default(),
+            )),
+            Polygon => NativeType::Polygon(PolygonType::new(
+                coord_type,
+                Dimension::XY,
+                Default::default(),
+            )),
+            MultiPoint => NativeType::MultiPoint(MultiPointType::new(
+                coord_type,
+                Dimension::XY,
+                Default::default(),
+            )),
+            MultiLineString => NativeType::MultiLineString(MultiLineStringType::new(
+                coord_type,
+                Dimension::XY,
+                Default::default(),
+            )),
+            MultiPolygon => NativeType::MultiPolygon(MultiPolygonType::new(
+                coord_type,
+                Dimension::XY,
+                Default::default(),
+            )),
+            GeometryCollection => NativeType::GeometryCollection(GeometryCollectionType::new(
+                coord_type,
+                Dimension::XY,
+                Default::default(),
+            )),
+            PointZ => NativeType::Point(PointType::new(
+                coord_type,
+                Dimension::XYZ,
+                Default::default(),
+            )),
+            LineStringZ => NativeType::LineString(LineStringType::new(
+                coord_type,
+                Dimension::XYZ,
+                Default::default(),
+            )),
+            PolygonZ => NativeType::Polygon(PolygonType::new(
+                coord_type,
+                Dimension::XYZ,
+                Default::default(),
+            )),
+            MultiPointZ => NativeType::MultiPoint(MultiPointType::new(
+                coord_type,
+                Dimension::XYZ,
+                Default::default(),
+            )),
+            MultiLineStringZ => NativeType::MultiLineString(MultiLineStringType::new(
+                coord_type,
+                Dimension::XYZ,
+                Default::default(),
+            )),
+            MultiPolygonZ => NativeType::MultiPolygon(MultiPolygonType::new(
+                coord_type,
+                Dimension::XYZ,
+                Default::default(),
+            )),
+            GeometryCollectionZ => NativeType::GeometryCollection(GeometryCollectionType::new(
+                coord_type,
+                Dimension::XYZ,
+                Default::default(),
+            )),
         })),
         _ => {
             // Check if we can cast to MultiPoint
@@ -699,7 +757,11 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == point_count {
-                return Ok(Some(NativeType::MultiPoint(coord_type, Dimension::XY)));
+                return Ok(Some(NativeType::MultiPoint(MultiPointType::new(
+                    coord_type,
+                    Dimension::XY,
+                    Default::default(),
+                ))));
             }
 
             // Check if we can cast to MultiPointZ
@@ -711,7 +773,11 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == point_count {
-                return Ok(Some(NativeType::MultiPoint(coord_type, Dimension::XYZ)));
+                return Ok(Some(NativeType::MultiPoint(MultiPointType::new(
+                    coord_type,
+                    Dimension::XYZ,
+                    Default::default(),
+                ))));
             }
 
             // Check if we can cast to MultiLineString
@@ -724,7 +790,11 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == linestring_count {
-                return Ok(Some(NativeType::MultiLineString(coord_type, Dimension::XY)));
+                return Ok(Some(NativeType::MultiLineString(MultiLineStringType::new(
+                    coord_type,
+                    Dimension::XY,
+                    Default::default(),
+                ))));
             }
 
             // Check if we can cast to MultiLineStringZ
@@ -736,10 +806,11 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == linestring_count {
-                return Ok(Some(NativeType::MultiLineString(
+                return Ok(Some(NativeType::MultiLineString(MultiLineStringType::new(
                     coord_type,
                     Dimension::XYZ,
-                )));
+                    Default::default(),
+                ))));
             }
 
             // Check if we can cast to MultiPolygon
@@ -752,7 +823,11 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == polygon_count {
-                return Ok(Some(NativeType::MultiPolygon(coord_type, Dimension::XY)));
+                return Ok(Some(NativeType::MultiPolygon(MultiPolygonType::new(
+                    coord_type,
+                    Dimension::XY,
+                    Default::default(),
+                ))));
             }
 
             // Check if we can cast to MultiPolygonZ
@@ -764,10 +839,17 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == polygon_count {
-                return Ok(Some(NativeType::MultiPolygon(coord_type, Dimension::XYZ)));
+                return Ok(Some(NativeType::MultiPolygon(MultiPolygonType::new(
+                    coord_type,
+                    Dimension::XYZ,
+                    Default::default(),
+                ))));
             }
 
-            Ok(Some(NativeType::Geometry(coord_type)))
+            Ok(Some(NativeType::Geometry(GeometryType::new(
+                coord_type,
+                Default::default(),
+            ))))
         }
     }
 }

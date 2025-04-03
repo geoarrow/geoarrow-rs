@@ -5,8 +5,9 @@ use arrow_schema::DataType;
 use datafusion::logical_expr::scalar_doc_sections::DOC_SECTION_OTHER;
 use datafusion::logical_expr::{ColumnarValue, Documentation, ScalarUDFImpl, Signature};
 use geoarrow::algorithm::geo::ConvexHull as _ConvexHull;
-use geoarrow::array::{CoordType, GeometryArray};
+use geoarrow::array::GeometryArray;
 use geoarrow::ArrayBase;
+use geoarrow_schema::CoordType;
 
 use crate::data_types::{any_single_geometry_type_input, parse_to_native_array, GEOMETRY_TYPE};
 use crate::error::GeoDataFusionResult;
@@ -40,7 +41,7 @@ impl ScalarUDFImpl for ConvexHull {
     }
 
     fn return_type(&self, _arg_types: &[DataType]) -> datafusion::error::Result<DataType> {
-        Ok(GEOMETRY_TYPE.into())
+        Ok(GEOMETRY_TYPE().into())
     }
 
     fn invoke(&self, args: &[ColumnarValue]) -> datafusion::error::Result<ColumnarValue> {

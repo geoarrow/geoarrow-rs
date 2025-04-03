@@ -7,7 +7,8 @@ use std::sync::Arc;
 
 use arrow_array::{ArrayRef, RecordBatch, RecordBatchIterator, RecordBatchReader};
 use arrow_schema::{ArrowError, FieldRef, Schema, SchemaBuilder, SchemaRef};
-use geoarrow_schema::{CoordType, GeometryType};
+use geoarrow_schema::{CoordType, GeometryType, Metadata};
+use phf::{phf_set, Set};
 
 use crate::algorithm::native::{Cast, Downcast};
 use crate::array::*;
@@ -16,8 +17,6 @@ use crate::datatypes::{AnyType, NativeType, SerializedType};
 use crate::error::{GeoArrowError, Result};
 use crate::io::wkb::from_wkb;
 use crate::schema::GeoSchemaExt;
-use geoarrow_schema::Metadata;
-use phf::{phf_set, Set};
 
 pub(crate) static GEOARROW_EXTENSION_NAMES: Set<&'static str> = phf_set! {
     "geoarrow.point",
@@ -225,7 +224,7 @@ impl Table {
                             .collect::<Result<Vec<_>>>()?;
                         let parsed_chunks = wkb_chunks
                             .into_iter()
-                            .map(|chunk| from_wkb(&chunk, target_geo_data_type, true))
+                            .map(|chunk| from_wkb(&chunk, target_geo_data_type.clone(), true))
                             .collect::<Result<Vec<_>>>()?;
                         let parsed_chunks_refs = parsed_chunks
                             .iter()
@@ -243,7 +242,7 @@ impl Table {
                             .collect::<Result<Vec<_>>>()?;
                         let parsed_chunks = wkb_chunks
                             .into_iter()
-                            .map(|chunk| from_wkb(&chunk, target_geo_data_type, true))
+                            .map(|chunk| from_wkb(&chunk, target_geo_data_type.clone(), true))
                             .collect::<Result<Vec<_>>>()?;
                         let parsed_chunks_refs = parsed_chunks
                             .iter()

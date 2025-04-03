@@ -136,7 +136,7 @@ impl NativeType {
     }
 
     /// Returns this geodata type with the provided [Metadata].
-    pub fn metadata<'a>(&'a self) -> &'a Arc<Metadata> {
+    pub fn metadata(&self) -> &Arc<Metadata> {
         use NativeType::*;
         match self {
             Point(t) => t.metadata(),
@@ -430,8 +430,28 @@ impl TryFrom<&Field> for SerializedType {
 
         if let Some(extension_name) = field.metadata().get(EXTENSION_TYPE_NAME_KEY) {
             let data_type = match extension_name.as_str() {
-                "geoarrow.wkb" | "ogc.wkb" => parse_wkb(field),
-                "geoarrow.wkt" => parse_wkt(field),
+                "geoarrow.wkb" | "ogc.wkb" => match field.data_type() {
+                    DataType::Binary => SerializedType::WKB(WkbType::new(metadata.into())),
+                    DataType::LargeBinary => {
+                        SerializedType::LargeWKB(WkbType::new(metadata.into()))
+                    }
+                    _ => {
+                        return Err(GeoArrowError::General(format!(
+                            "Expected binary type for geoarrow.wkb, got '{}'",
+                            field.data_type()
+                        )))
+                    }
+                },
+                "geoarrow.wkt" => match field.data_type() {
+                    DataType::Utf8 => SerializedType::WKT(WktType::new(metadata.into())),
+                    DataType::LargeUtf8 => SerializedType::LargeWKT(WktType::new(metadata.into())),
+                    _ => {
+                        return Err(GeoArrowError::General(format!(
+                            "Expected string type for geoarrow.wkt, got '{}'",
+                            field.data_type()
+                        )))
+                    }
+                },
                 name => {
                     return Err(GeoArrowError::General(format!(
                         "Expected GeoArrow serialized type, got '{}'",

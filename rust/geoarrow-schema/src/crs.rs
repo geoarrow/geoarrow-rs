@@ -72,6 +72,20 @@ impl Crs {
         self.crs_type
     }
 
+    /// Access the underlying CRS value.
+    ///
+    /// The return value is one of:
+    ///
+    /// - A JSON object ([`Value::Object`]) describing the coordinate reference system (CRS)
+    ///   using [PROJJSON](https://proj.org/specifications/projjson.html).
+    /// - A string ([`Value::String`]) containing a serialized CRS representation. This option
+    ///   is intended as a fallback for producers (e.g., database drivers or
+    ///   file readers) that are provided a CRS in some form but do not have the
+    ///   means to convert it to PROJJSON.
+    /// - Omitted, indicating that the producer does not have any information about
+    ///   the CRS.
+    ///
+    /// Consult [`crs_type`][Self::crs_type] to accurately determine the CRS type.
     pub fn crs_value(&self) -> Option<&Value> {
         self.crs.as_ref()
     }

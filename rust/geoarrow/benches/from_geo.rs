@@ -2,7 +2,7 @@ use geo::polygon;
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use geoarrow::array::{PolygonArray, PolygonBuilder};
-use geoarrow::datatypes::Dimension;
+use geoarrow_schema::Dimension;
 
 fn create_data() -> Vec<geo::Polygon> {
     // An L shape

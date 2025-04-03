@@ -39,7 +39,7 @@ impl ScalarUDFImpl for Box2D {
     }
 
     fn return_type(&self, _arg_types: &[DataType]) -> datafusion::error::Result<DataType> {
-        Ok(BOX2D_TYPE.into())
+        Ok(BOX2D_TYPE().into())
     }
 
     fn invoke(&self, args: &[ColumnarValue]) -> datafusion::error::Result<ColumnarValue> {

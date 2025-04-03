@@ -80,8 +80,8 @@ fn coord_dim_impl(args: &[ColumnarValue]) -> GeoDataFusionResult<ColumnarValue> 
             }
             Ok(ColumnarValue::Array(Arc::new(output_array.finish())))
         }
-        NativeType::Rect(dim) => Ok(ColumnarValue::Scalar(ScalarValue::UInt8(Some(
-            dim.size().try_into().unwrap(),
+        NativeType::Rect(t) => Ok(ColumnarValue::Scalar(ScalarValue::UInt8(Some(
+            t.dimension().size().try_into().unwrap(),
         )))),
         NativeType::Geometry(_) => {
             let array_ref = native_array.as_ref();

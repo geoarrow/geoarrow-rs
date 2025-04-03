@@ -75,10 +75,10 @@ mod test {
     use datafusion::error::Result;
     use datafusion::prelude::SessionContext;
     use geoarrow::algorithm::native::Cast;
-    use geoarrow::array::CoordType;
     use geoarrow::datatypes::NativeType;
     use geoarrow::io::flatgeobuf::{FlatGeobufReaderBuilder, FlatGeobufReaderOptions};
     use geoarrow::table::Table;
+    use geoarrow_schema::{CoordType, GeometryType};
     use std::fs::File;
     use std::sync::Arc;
 
@@ -98,7 +98,10 @@ mod test {
         let geometry = table.geometry_column(None).unwrap();
         let geometry = geometry
             .as_ref()
-            .cast(NativeType::Geometry(CoordType::Separated))
+            .cast(NativeType::Geometry(GeometryType::new(
+                CoordType::Separated,
+                Default::default(),
+            )))
             .unwrap();
         let field = geometry.extension_field();
         let chunk = geometry.array_refs()[0].clone();
