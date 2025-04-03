@@ -17,6 +17,7 @@ macro_rules! define_basic_type {
         }
 
         impl $struct_name {
+            /// Construct a new type from parts.
             pub fn new(coord_type: CoordType, dim: Dimension, metadata: Arc<Metadata>) -> Self {
                 Self {
                     coord_type,
@@ -25,26 +26,32 @@ macro_rules! define_basic_type {
                 }
             }
 
+            /// Change the underlying [`CoordType`]
             pub fn with_coord_type(self, coord_type: CoordType) -> Self {
                 Self { coord_type, ..self }
             }
 
+            /// Change the underlying [`Dimension`]
             pub fn with_dimension(self, dim: Dimension) -> Self {
                 Self { dim, ..self }
             }
 
+            /// Change the underlying [`Metadata`]
             pub fn with_metadata(self, metadata: Arc<Metadata>) -> Self {
                 Self { metadata, ..self }
             }
 
+            /// Retrieve the underlying [`CoordType`]
             pub fn coord_type(&self) -> CoordType {
                 self.coord_type
             }
 
+            /// Retrieve the underlying [`Dimension`]
             pub fn dimension(&self) -> Dimension {
                 self.dim
             }
 
+            /// Retrieve the underlying [`Metadata`]
             pub fn metadata(&self) -> &Metadata {
                 &self.metadata
             }
@@ -61,6 +68,9 @@ define_basic_type!(MultiPolygonType);
 define_basic_type!(GeometryCollectionType);
 
 impl PointType {
+    /// Convert to the corresponding [`DataType`].
+    ///
+    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     pub fn data_type(&self) -> DataType {
         coord_type_to_data_type(self.coord_type, self.dim)
     }
@@ -127,6 +137,9 @@ fn parse_point(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowErro
 }
 
 impl LineStringType {
+    /// Convert to the corresponding [`DataType`].
+    ///
+    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     pub fn data_type(&self) -> DataType {
         let coords_type = coord_type_to_data_type(self.coord_type, self.dim);
         let vertices_field = Field::new("vertices", coords_type, false).into();
@@ -190,6 +203,9 @@ fn parse_linestring(data_type: &DataType) -> Result<(CoordType, Dimension), Arro
 }
 
 impl PolygonType {
+    /// Convert to the corresponding [`DataType`].
+    ///
+    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     pub fn data_type(&self) -> DataType {
         let coords_type = coord_type_to_data_type(self.coord_type, self.dim);
         let vertices_field = Field::new("vertices", coords_type, false);
@@ -263,6 +279,9 @@ fn parse_polygon(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowEr
 }
 
 impl MultiPointType {
+    /// Convert to the corresponding [`DataType`].
+    ///
+    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     pub fn data_type(&self) -> DataType {
         let coords_type = coord_type_to_data_type(self.coord_type, self.dim);
         let vertices_field = Field::new("points", coords_type, false).into();
@@ -325,6 +344,9 @@ fn parse_multipoint(data_type: &DataType) -> Result<(CoordType, Dimension), Arro
 }
 
 impl MultiLineStringType {
+    /// Convert to the corresponding [`DataType`].
+    ///
+    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     pub fn data_type(&self) -> DataType {
         let coords_type = coord_type_to_data_type(self.coord_type, self.dim);
         let vertices_field = Field::new("vertices", coords_type, false);
@@ -398,6 +420,9 @@ fn parse_multilinestring(data_type: &DataType) -> Result<(CoordType, Dimension),
 }
 
 impl MultiPolygonType {
+    /// Convert to the corresponding [`DataType`].
+    ///
+    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     pub fn data_type(&self) -> DataType {
         let coords_type = coord_type_to_data_type(self.coord_type, self.dim);
         let vertices_field = Field::new("vertices", coords_type, false);
@@ -482,6 +507,9 @@ fn parse_multipolygon(data_type: &DataType) -> Result<(CoordType, Dimension), Ar
 }
 
 impl GeometryCollectionType {
+    /// Convert to the corresponding [`DataType`].
+    ///
+    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     pub fn data_type(&self) -> DataType {
         let geometries_field = Field::new(
             "geometries",
@@ -696,14 +724,37 @@ pub struct GeometryType {
 }
 
 impl GeometryType {
+    /// Construct a new type from parts.
+    pub fn new(coord_type: CoordType, metadata: Arc<Metadata>) -> Self {
+        Self {
+            coord_type,
+            metadata,
+        }
+    }
+
+    /// Change the underlying [`CoordType`]
     pub fn with_coord_type(self, coord_type: CoordType) -> Self {
         Self { coord_type, ..self }
     }
 
+    /// Change the underlying [`Metadata`]
     pub fn with_metadata(self, metadata: Arc<Metadata>) -> Self {
         Self { metadata, ..self }
     }
 
+    /// Retrieve the underlying [`CoordType`]
+    pub fn coord_type(&self) -> CoordType {
+        self.coord_type
+    }
+
+    /// Retrieve the underlying [`Metadata`]
+    pub fn metadata(&self) -> &Metadata {
+        &self.metadata
+    }
+
+    /// Convert to the corresponding [`DataType`].
+    ///
+    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     pub fn data_type(&self) -> DataType {
         let mut fields = vec![];
         let type_ids = vec![
@@ -882,14 +933,34 @@ pub struct BoxType {
 }
 
 impl BoxType {
+    /// Construct a new type from parts.
+    pub fn new(dim: Dimension, metadata: Arc<Metadata>) -> Self {
+        Self { dim, metadata }
+    }
+
+    /// Change the underlying [`Dimension`]
     pub fn with_dimension(self, dim: Dimension) -> Self {
         Self { dim, ..self }
     }
 
+    /// Change the underlying [`Metadata`]
     pub fn with_metadata(self, metadata: Arc<Metadata>) -> Self {
         Self { metadata, ..self }
     }
 
+    /// Retrieve the underlying [`CoordType`]
+    pub fn dimension(&self) -> Dimension {
+        self.dim
+    }
+
+    /// Retrieve the underlying [`Metadata`]
+    pub fn metadata(&self) -> &Metadata {
+        &self.metadata
+    }
+
+    /// Convert to the corresponding [`DataType`].
+    ///
+    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     pub fn data_type(&self) -> DataType {
         let values_fields = match self.dim {
             Dimension::XY => {
@@ -1008,10 +1079,24 @@ pub struct WkbType {
 }
 
 impl WkbType {
+    /// Construct a new type from parts.
+    pub fn new(metadata: Arc<Metadata>) -> Self {
+        Self { metadata }
+    }
+
+    /// Change the underlying [`Metadata`]
     pub fn with_metadata(self, metadata: Arc<Metadata>) -> Self {
         Self { metadata }
     }
 
+    /// Retrieve the underlying [`Metadata`]
+    pub fn metadata(&self) -> &Metadata {
+        &self.metadata
+    }
+
+    /// Convert to the corresponding [`DataType`].
+    ///
+    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     pub fn data_type(&self, large: bool) -> DataType {
         if large {
             DataType::LargeBinary
@@ -1062,10 +1147,24 @@ pub struct WktType {
 }
 
 impl WktType {
+    /// Construct a new type from parts.
+    pub fn new(metadata: Arc<Metadata>) -> Self {
+        Self { metadata }
+    }
+
+    /// Change the underlying [`Metadata`]
     pub fn with_metadata(self, metadata: Arc<Metadata>) -> Self {
         Self { metadata }
     }
 
+    /// Retrieve the underlying [`Metadata`]
+    pub fn metadata(&self) -> &Metadata {
+        &self.metadata
+    }
+
+    /// Convert to the corresponding [`DataType`].
+    ///
+    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     pub fn data_type(&self, large: bool) -> DataType {
         if large {
             DataType::LargeUtf8
