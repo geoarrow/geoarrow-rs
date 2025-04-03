@@ -27,13 +27,8 @@ impl Metadata {
         Self { crs, edges }
     }
 
-    /// Returns true if the metadata should be serialized.
-    fn should_serialize(&self) -> bool {
-        self.crs.should_serialize() || self.edges.is_some()
-    }
-
     pub(crate) fn serialize(&self) -> Option<String> {
-        if self.should_serialize() {
+        if self.crs.should_serialize() || self.edges.is_some() {
             Some(serde_json::to_string(&self).unwrap())
         } else {
             None
