@@ -63,13 +63,34 @@ macro_rules! define_basic_type {
     };
 }
 
-define_basic_type!(PointType);
-define_basic_type!(LineStringType);
-define_basic_type!(PolygonType);
-define_basic_type!(MultiPointType);
-define_basic_type!(MultiLineStringType);
-define_basic_type!(MultiPolygonType);
-define_basic_type!(GeometryCollectionType);
+define_basic_type!(
+    /// A type representing a Point geometry, implementing the [`ExtensionType`] trait.
+    PointType
+);
+define_basic_type!(
+    /// A type representing a LineString geometry, implementing the [`ExtensionType`] trait.
+    LineStringType
+);
+define_basic_type!(
+    /// A type representing a Polygon geometry, implementing the [`ExtensionType`] trait.
+    PolygonType
+);
+define_basic_type!(
+    /// A type representing a MultiPoint geometry, implementing the [`ExtensionType`] trait.
+    MultiPointType
+);
+define_basic_type!(
+    /// A type representing a MultiLineString geometry, implementing the [`ExtensionType`] trait.
+    MultiLineStringType
+);
+define_basic_type!(
+    /// A type representing a MultiPolygon geometry, implementing the [`ExtensionType`] trait.
+    MultiPolygonType
+);
+define_basic_type!(
+    /// A type representing a GeometryCollection geometry, implementing the [`ExtensionType`] trait.
+    GeometryCollectionType
+);
 
 impl PointType {
     /// Convert to the corresponding [`DataType`].
@@ -621,6 +642,63 @@ impl GeometryCollectionType {
     /// Convert to the corresponding [`DataType`].
     ///
     /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
+    ///
+    /// ```
+    /// use std::sync::Arc;
+    ///
+    /// use arrow_schema::{DataType, Field, UnionFields, UnionMode};
+    /// use geoarrow_schema::{
+    ///     CoordType, Dimension, GeometryCollectionType, LineStringType, Metadata, MultiLineStringType,
+    ///     MultiPointType, MultiPolygonType, PointType, PolygonType,
+    /// };
+    ///
+    /// let coord_type = CoordType::Interleaved;
+    /// let dim = Dimension::XY;
+    /// let metadata = Arc::new(Metadata::default());
+    /// let geom_type = GeometryCollectionType::new(coord_type, dim, metadata.clone());
+    ///
+    /// let fields = vec![
+    ///     Field::new(
+    ///         "Point",
+    ///         PointType::new(coord_type, dim, metadata.clone()).data_type(),
+    ///         true,
+    ///     ),
+    ///     Field::new(
+    ///         "LineString",
+    ///         LineStringType::new(coord_type, dim, metadata.clone()).data_type(),
+    ///         true,
+    ///     ),
+    ///     Field::new(
+    ///         "Polygon",
+    ///         PolygonType::new(coord_type, dim, metadata.clone()).data_type(),
+    ///         true,
+    ///     ),
+    ///     Field::new(
+    ///         "MultiPoint",
+    ///         MultiPointType::new(coord_type, dim, metadata.clone()).data_type(),
+    ///         true,
+    ///     ),
+    ///     Field::new(
+    ///         "MultiLineString",
+    ///         MultiLineStringType::new(coord_type, dim, metadata.clone()).data_type(),
+    ///         true,
+    ///     ),
+    ///     Field::new(
+    ///         "MultiPolygon",
+    ///         MultiPolygonType::new(coord_type, dim, metadata.clone()).data_type(),
+    ///         true,
+    ///     ),
+    /// ];
+    /// let type_ids = vec![1, 2, 3, 4, 5, 6];
+    ///
+    /// let union_fields = UnionFields::new(type_ids, fields);
+    /// let union_data_type = DataType::Union(union_fields, UnionMode::Dense);
+    ///
+    /// let geometries_field = Field::new("geometries", union_data_type, false).into();
+    /// let expected_type = DataType::List(geometries_field);
+    ///
+    /// assert_eq!(geom_type.data_type(), expected_type);
+    /// ```
     pub fn data_type(&self) -> DataType {
         let geometries_field = Field::new(
             "geometries",
@@ -1464,5 +1542,12 @@ mod test {
 
         let expected = r#"{"crs":"EPSG:4326","crs_type":"authority_code","edges":"spherical"}"#;
         assert_eq!(type_.serialize_metadata().as_deref(), Some(expected));
+    }
+
+    #[test]
+    fn geometry_data_type() {
+        let typ =
+            GeometryCollectionType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        dbg!(typ.data_type());
     }
 }
