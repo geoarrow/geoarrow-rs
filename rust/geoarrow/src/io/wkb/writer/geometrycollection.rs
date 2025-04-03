@@ -46,9 +46,9 @@ impl<O: OffsetSizeTrait> From<&GeometryCollectionArray> for WKBArray<O> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use geoarrow_schema::Dimension;
     use crate::test::multipoint;
     use crate::test::multipolygon;
+    use geoarrow_schema::Dimension;
 
     #[ignore = "failing test, need to come back to this"]
     #[test]

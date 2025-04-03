@@ -6,11 +6,11 @@ use arrow_schema::{DataType, Field, Schema};
 use geo::{point, Point};
 
 use crate::array::{PointArray, PointBuilder};
-use geoarrow_schema::Dimension;
 use crate::table::Table;
 use crate::test::properties;
 use crate::ArrayBase;
 use geo_traits::CoordTrait;
+use geoarrow_schema::Dimension;
 
 pub(crate) fn p0() -> Point {
     point!(

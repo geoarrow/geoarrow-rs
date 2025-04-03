@@ -1,10 +1,10 @@
 use crate::algorithm::native::eq::coord_eq;
-use geoarrow_schema::Dimension;
 use crate::scalar::InterleavedCoord;
 use crate::trait_::NativeScalar;
 use arrow_buffer::ScalarBuffer;
 use geo_traits::to_geo::ToGeoCoord;
 use geo_traits::CoordTrait;
+use geoarrow_schema::Dimension;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a Coord

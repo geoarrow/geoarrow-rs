@@ -1,8 +1,8 @@
 use crate::array::{PointArray, PointBuilder};
-use geoarrow_schema::Dimension;
 use crate::io::geozero::scalar::process_point;
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
+use geoarrow_schema::Dimension;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 impl GeozeroGeometry for PointArray {

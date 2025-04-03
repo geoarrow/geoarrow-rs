@@ -1,9 +1,9 @@
 use core::f64;
 
 use crate::array::InterleavedCoordBuffer;
-use geoarrow_schema::Dimension;
 use crate::error::{GeoArrowError, Result};
 use geo_traits::{CoordTrait, PointTrait};
+use geoarrow_schema::Dimension;
 
 /// The GeoArrow equivalent to `Vec<Coord>`: a mutable collection of coordinates.
 ///

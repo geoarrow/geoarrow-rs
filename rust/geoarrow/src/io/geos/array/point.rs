@@ -1,7 +1,7 @@
 use crate::array::{PointArray, PointBuilder};
-use geoarrow_schema::Dimension;
 use crate::error::Result;
 use crate::io::geos::scalar::GEOSPoint;
+use geoarrow_schema::Dimension;
 
 impl PointBuilder {
     #[allow(dead_code)]

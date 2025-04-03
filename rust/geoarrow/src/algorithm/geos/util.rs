@@ -2,10 +2,10 @@ use arrow_array::{ArrowPrimitiveType, PrimitiveArray};
 use arrow_buffer::BufferBuilder;
 
 use crate::array::{GeometryArray, GeometryBuilder, PolygonArray};
-use geoarrow_schema::Dimension;
 use crate::error::GeoArrowError;
 use crate::io::geos::scalar::{GEOSGeometry, GEOSPolygon};
 use crate::trait_::NativeGEOSGeometryAccessor;
+use geoarrow_schema::Dimension;
 
 // Note: This is derived from arrow-rs here:
 // https://github.com/apache/arrow-rs/blob/3ed7cc61d4157263ef2ab5c2d12bc7890a5315b3/arrow-array/src/array/primitive_array.rs#L806-L830

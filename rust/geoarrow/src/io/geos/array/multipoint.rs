@@ -1,7 +1,7 @@
 use crate::array::{MultiPointArray, MultiPointBuilder};
-use geoarrow_schema::Dimension;
 use crate::error::Result;
 use crate::io::geos::scalar::GEOSMultiPoint;
+use geoarrow_schema::Dimension;
 
 impl MultiPointBuilder {
     #[allow(dead_code)]

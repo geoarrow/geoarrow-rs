@@ -46,8 +46,8 @@ impl<O: OffsetSizeTrait> From<&PointArray> for WKBArray<O> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use geoarrow_schema::Dimension;
     use crate::test::point::{p0, p1, p2};
+    use geoarrow_schema::Dimension;
 
     #[test]
     fn round_trip() {

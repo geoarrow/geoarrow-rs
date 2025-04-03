@@ -46,8 +46,8 @@ impl<O: OffsetSizeTrait> From<&MultiPolygonArray> for WKBArray<O> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use geoarrow_schema::Dimension;
     use crate::test::multipolygon::{mp0, mp1};
+    use geoarrow_schema::Dimension;
 
     #[test]
     fn round_trip() {

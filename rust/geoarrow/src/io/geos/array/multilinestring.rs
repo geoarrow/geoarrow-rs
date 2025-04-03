@@ -1,7 +1,7 @@
 use crate::array::{MultiLineStringArray, MultiLineStringBuilder};
-use geoarrow_schema::Dimension;
 use crate::error::Result;
 use crate::io::geos::scalar::GEOSMultiLineString;
+use geoarrow_schema::Dimension;
 
 impl MultiLineStringBuilder {
     #[allow(dead_code)]

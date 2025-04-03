@@ -151,9 +151,9 @@ impl<G: MultiLineStringTrait<T = f64>> PartialEq<G> for MultiLineString<'_> {
 #[cfg(test)]
 mod test {
     use crate::array::MultiLineStringArray;
-    use geoarrow_schema::Dimension;
     use crate::test::multilinestring::{ml0, ml1};
     use crate::trait_::ArrayAccessor;
+    use geoarrow_schema::Dimension;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

@@ -1,12 +1,12 @@
-use geoarrow_schema::Metadata;
 use crate::array::{RectArray, SeparatedCoordBufferBuilder};
-use geoarrow_schema::Dimension;
 use crate::error::GeoArrowError;
 use crate::scalar::Rect;
 use crate::trait_::IntoArrow;
 use arrow_array::{ArrayRef, StructArray};
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, RectTrait};
+use geoarrow_schema::Dimension;
+use geoarrow_schema::Metadata;
 use std::sync::Arc;
 
 /// The GeoArrow equivalent to `Vec<Option<Rect>>`: a mutable collection of Rects.

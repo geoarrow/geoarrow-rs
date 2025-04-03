@@ -143,9 +143,9 @@ impl<G: LineStringTrait<T = f64>> PartialEq<G> for LineString<'_> {
 #[cfg(test)]
 mod test {
     use crate::array::LineStringArray;
-    use geoarrow_schema::Dimension;
     use crate::test::linestring::{ls0, ls1};
     use crate::trait_::ArrayAccessor;
+    use geoarrow_schema::Dimension;
 
     /// Test Eq where the current index is true but another index is false
     #[test]
