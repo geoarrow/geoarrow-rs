@@ -1,9 +1,9 @@
 use crate::algorithm::native::eq::multi_point_eq;
 use crate::array::{CoordBuffer, MultiPointArray};
-use geoarrow_schema::Dimension;
 use crate::scalar::{MultiPoint, Point};
 use arrow_buffer::OffsetBuffer;
 use geo_traits::MultiPointTrait;
+use geoarrow_schema::Dimension;
 
 #[derive(Clone, Debug)]
 pub struct OwnedMultiPoint {
@@ -62,6 +62,7 @@ impl MultiPointTrait for OwnedMultiPoint {
         match self.coords.dim() {
             Dimension::XY => geo_traits::Dimensions::Xy,
             Dimension::XYZ => geo_traits::Dimensions::Xyz,
+            _ => todo!("XYM and XYZM not supported yet"),
         }
     }
 

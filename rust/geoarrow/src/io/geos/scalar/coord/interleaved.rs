@@ -9,6 +9,7 @@ impl TryFrom<InterleavedCoordBuffer> for CoordSeq {
         match value.dim {
             Dimension::XY => CoordSeq::new_from_buffer(&value.coords, value.len(), false, false),
             Dimension::XYZ => CoordSeq::new_from_buffer(&value.coords, value.len(), true, false),
+            _ => todo!("XYM and XYZM not supported yet"),
         }
     }
 }

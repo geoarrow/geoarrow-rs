@@ -2,7 +2,6 @@ use crate::algorithm::native::bounding_rect::bounding_rect_geometry_collection;
 use crate::algorithm::native::eq::geometry_collection_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::MixedGeometryArray;
-use geoarrow_schema::Dimension;
 use crate::io::geo::geometry_collection_to_geo;
 use crate::scalar::Geometry;
 use crate::trait_::ArrayAccessor;
@@ -10,6 +9,7 @@ use crate::trait_::NativeScalar;
 use crate::NativeArray;
 use arrow_buffer::OffsetBuffer;
 use geo_traits::GeometryCollectionTrait;
+use geoarrow_schema::Dimension;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a GeometryCollection
@@ -76,6 +76,7 @@ impl<'a> GeometryCollectionTrait for GeometryCollection<'a> {
         match self.array.dimension() {
             Dimension::XY => geo_traits::Dimensions::Xy,
             Dimension::XYZ => geo_traits::Dimensions::Xyz,
+            _ => todo!("XYM and XYZM not supported yet"),
         }
     }
 
@@ -100,6 +101,7 @@ impl<'a> GeometryCollectionTrait for &'a GeometryCollection<'a> {
         match self.array.dimension() {
             Dimension::XY => geo_traits::Dimensions::Xy,
             Dimension::XYZ => geo_traits::Dimensions::Xyz,
+            _ => todo!("XYM and XYZM not supported yet"),
         }
     }
 

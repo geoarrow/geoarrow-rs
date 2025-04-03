@@ -139,7 +139,11 @@ impl<O: OffsetSizeTrait> ArrayBase for WKBArray<O> {
 
 impl<O: OffsetSizeTrait> SerializedArray for WKBArray<O> {
     fn data_type(&self) -> SerializedType {
-        self.data_type
+        if O::IS_LARGE {
+            SerializedType::LargeWKB(self.data_type.clone())
+        } else {
+            SerializedType::WKB(self.data_type.clone())
+        }
     }
 
     fn with_metadata(&self, metadata: Arc<Metadata>) -> Arc<dyn SerializedArray> {
@@ -225,7 +229,8 @@ impl TryFrom<(&dyn Array, &Field)> for WKBArray<i32> {
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
         let mut arr: Self = arr.try_into()?;
-        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        let metadata = Arc::new(Metadata::try_from(field)?);
+        arr.data_type = arr.data_type.clone().with_metadata(metadata);
         Ok(arr)
     }
 }
@@ -235,18 +240,20 @@ impl TryFrom<(&dyn Array, &Field)> for WKBArray<i64> {
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
         let mut arr: Self = arr.try_into()?;
-        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        let metadata = Arc::new(Metadata::try_from(field)?);
+        arr.data_type = arr.data_type.clone().with_metadata(metadata);
         Ok(arr)
     }
 }
 
 impl From<WKBArray<i32>> for WKBArray<i64> {
     fn from(value: WKBArray<i32>) -> Self {
+        let metadata = value.metadata();
         let binary_array = value.array;
         let (offsets, values, nulls) = binary_array.into_parts();
         Self::new(
             LargeBinaryArray::new(offsets_buffer_i32_to_i64(&offsets), values, nulls),
-            value.metadata,
+            metadata,
         )
     }
 }
@@ -255,11 +262,12 @@ impl TryFrom<WKBArray<i64>> for WKBArray<i32> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<i64>) -> Result<Self> {
+        let metadata = value.metadata();
         let binary_array = value.array;
         let (offsets, values, nulls) = binary_array.into_parts();
         Ok(Self::new(
             BinaryArray::new(offsets_buffer_i64_to_i32(&offsets)?, values, nulls),
-            value.metadata,
+            metadata,
         ))
     }
 }

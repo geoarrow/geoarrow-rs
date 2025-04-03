@@ -1,8 +1,8 @@
 use crate::algorithm::native::eq::rect_eq;
 use crate::array::{RectArray, SeparatedCoordBuffer};
-use geoarrow_schema::Dimension;
 use crate::scalar::{Rect, SeparatedCoord};
 use geo_traits::RectTrait;
+use geoarrow_schema::Dimension;
 
 #[derive(Clone, Debug)]
 pub struct OwnedRect {
@@ -55,6 +55,7 @@ impl RectTrait for OwnedRect {
         match self.lower.dim() {
             Dimension::XY => geo_traits::Dimensions::Xy,
             Dimension::XYZ => geo_traits::Dimensions::Xyz,
+            _ => todo!("XYM and XYZM not supported yet"),
         }
     }
 

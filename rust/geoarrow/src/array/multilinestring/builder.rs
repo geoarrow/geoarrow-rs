@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::array::metadata::ArrayMetadata;
+use geoarrow_schema::Metadata;
 use crate::array::multilinestring::MultiLineStringCapacity;
 // use super::array::check;
 use crate::array::offset_builder::OffsetsBuilder;

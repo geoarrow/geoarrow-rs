@@ -3,13 +3,13 @@ use std::sync::Arc;
 use arrow::array::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
+use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
 use geo_traits::GeometryCollectionTrait;
 use geoarrow_schema::{CoordType, Dimension, GeometryCollectionType, Metadata};
 
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::geometrycollection::{GeometryCollectionBuilder, GeometryCollectionCapacity};
-use crate::array::metadata::ArrayMetadata;
 use crate::array::util::offsets_buffer_i64_to_i32;
 use crate::array::{
     CoordBuffer, LineStringArray, MixedGeometryArray, MultiLineStringArray, MultiPointArray,
@@ -133,7 +133,7 @@ impl ArrayBase for GeometryCollectionArray {
     }
 
     fn storage_type(&self) -> DataType {
-        self.data_type.to_data_type()
+        self.data_type.data_type()
     }
 
     fn extension_field(&self) -> Arc<Field> {
@@ -141,7 +141,7 @@ impl ArrayBase for GeometryCollectionArray {
     }
 
     fn extension_name(&self) -> &str {
-        self.data_type.extension_name()
+        GeometryCollectionType::NAME
     }
 
     fn into_array_ref(self) -> ArrayRef {
@@ -172,7 +172,7 @@ impl ArrayBase for GeometryCollectionArray {
 
 impl NativeArray for GeometryCollectionArray {
     fn data_type(&self) -> NativeType {
-        NativeType::GeometryCollection(self.data_type)
+        NativeType::GeometryCollection(self.data_type.clone())
     }
 
     fn coord_type(&self) -> CoordType {
@@ -185,7 +185,7 @@ impl NativeArray for GeometryCollectionArray {
 
     fn with_metadata(&self, metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
-        arr.metadata = metadata;
+        arr.data_type = self.data_type.clone().with_metadata(metadata);
         Arc::new(arr)
     }
 
@@ -313,7 +313,8 @@ impl TryFrom<(&dyn Array, &Field)> for GeometryCollectionArray {
             .dimension()
             .ok_or(GeoArrowError::General("Expected dimension".to_string()))?;
         let mut arr: Self = (arr, dim).try_into()?;
-        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        let metadata = Arc::new(Metadata::try_from(field)?);
+        arr.data_type = arr.data_type.clone().with_metadata(metadata);
         Ok(arr)
     }
 }

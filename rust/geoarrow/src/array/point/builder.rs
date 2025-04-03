@@ -1,7 +1,7 @@
 use core::f64;
 use std::sync::Arc;
 
-use crate::array::metadata::ArrayMetadata;
+use geoarrow_schema::Metadata;
 // use super::array::check;
 use crate::array::{
     CoordBufferBuilder, CoordType, InterleavedCoordBufferBuilder, PointArray,

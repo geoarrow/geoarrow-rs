@@ -1,6 +1,8 @@
 //! Contains the implementation of [`NativeType`], which defines all geometry arrays in this
 //! crate.
 
+use std::sync::Arc;
+
 use arrow_schema::extension::{
     ExtensionType, EXTENSION_TYPE_METADATA_KEY, EXTENSION_TYPE_NAME_KEY,
 };
@@ -133,6 +135,21 @@ impl NativeType {
         }
     }
 
+    /// Returns this geodata type with the provided [Metadata].
+    pub fn metadata<'a>(&'a self) -> &'a Arc<Metadata> {
+        use NativeType::*;
+        match self {
+            Point(t) => t.metadata(),
+            LineString(t) => t.metadata(),
+            Polygon(t) => t.metadata(),
+            MultiPoint(t) => t.metadata(),
+            MultiLineString(t) => t.metadata(),
+            MultiPolygon(t) => t.metadata(),
+            GeometryCollection(t) => t.metadata(),
+            Rect(t) => t.metadata(),
+            Geometry(t) => t.metadata(),
+        }
+    }
     /// Converts a [`NativeType`] into the relevant arrow [`DataType`].
     ///
     /// Note that an arrow [`DataType`] will lose the accompanying GeoArrow metadata if it is not
@@ -263,6 +280,22 @@ impl NativeType {
             GeometryCollection(t) => GeometryCollection(t.with_dimension(dim)),
             Rect(t) => Rect(t.with_dimension(dim)),
             Geometry(t) => Geometry(t),
+        }
+    }
+
+    /// Returns this geodata type with the provided [Metadata].
+    pub fn with_metadata(self, meta: Arc<Metadata>) -> NativeType {
+        use NativeType::*;
+        match self {
+            Point(t) => Point(t.with_metadata(meta)),
+            LineString(t) => LineString(t.with_metadata(meta)),
+            Polygon(t) => Polygon(t.with_metadata(meta)),
+            MultiPoint(t) => MultiPoint(t.with_metadata(meta)),
+            MultiLineString(t) => MultiLineString(t.with_metadata(meta)),
+            MultiPolygon(t) => MultiPolygon(t.with_metadata(meta)),
+            GeometryCollection(t) => GeometryCollection(t.with_metadata(meta)),
+            Rect(t) => Rect(t.with_metadata(meta)),
+            Geometry(t) => Geometry(t.with_metadata(meta)),
         }
     }
 }

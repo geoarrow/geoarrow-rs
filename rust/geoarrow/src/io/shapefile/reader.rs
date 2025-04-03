@@ -3,11 +3,10 @@ use std::sync::Arc;
 
 use arrow_schema::{DataType, Field, Schema, SchemaRef};
 use dbase::{FieldInfo, FieldType, FieldValue, Record};
-use geoarrow_schema::{CoordType, Dimension};
+use geoarrow_schema::{CoordType, Crs, Dimension, Metadata};
 use geozero::FeatureProcessor;
 use shapefile::{Reader, ShapeReader, ShapeType};
 
-use crate::array::metadata::ArrayMetadata;
 use crate::array::{MultiLineStringBuilder, MultiPointBuilder, MultiPolygonBuilder, PointBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::geozero::table::builder::anyvalue::AnyBuilder;
@@ -53,9 +52,9 @@ pub fn read_shapefile<T: Read + Seek>(
         None
     };
 
-    let array_metadata = options
+    let crs = options
         .crs
-        .map(ArrayMetadata::from_unknown_crs_type)
+        .map(Crs::from_unknown_crs_type)
         .unwrap_or_default();
 
     let table_builder_options = GeoTableBuilderOptions::new(
@@ -64,7 +63,7 @@ pub fn read_shapefile<T: Read + Seek>(
         options.batch_size,
         Some(schema),
         features_count,
-        Arc::new(array_metadata),
+        Arc::new(Metadata::new(crs, None)),
     );
 
     let mut reader = Reader::new(shp_reader, dbf_reader);

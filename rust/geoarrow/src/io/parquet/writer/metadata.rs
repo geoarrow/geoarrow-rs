@@ -179,7 +179,7 @@ impl GeoParquetMetadataBuilder {
 
                 let array_meta =
                     if let Some(ext_meta) = field.metadata().get(EXTENSION_TYPE_METADATA_KEY) {
-                        serde_json::from_str(ext_meta)?
+                        serde_json::from_str::<()>(ext_meta)?
                     } else {
                         ArrayMetadata::default()
                     };

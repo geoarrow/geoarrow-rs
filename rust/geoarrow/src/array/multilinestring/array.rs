@@ -6,7 +6,7 @@ use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
 use geo_traits::MultiLineStringTrait;
-use geoarrow_schema::{CoordType, Metadata, MultiLineStringType};
+use geoarrow_schema::{CoordType, Dimension, Metadata, MultiLineStringType};
 
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::multilinestring::MultiLineStringCapacity;
@@ -420,7 +420,8 @@ impl TryFrom<(&dyn Array, &Field)> for MultiLineStringArray {
             .dimension()
             .ok_or(GeoArrowError::General("Expected dimension".to_string()))?;
         let mut arr: Self = (arr, dim).try_into()?;
-        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        let metadata = Arc::new(Metadata::try_from(field)?);
+        arr.data_type = arr.data_type.clone().with_metadata(metadata);
         Ok(arr)
     }
 }

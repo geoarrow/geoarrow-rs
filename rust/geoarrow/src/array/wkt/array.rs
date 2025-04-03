@@ -7,7 +7,7 @@ use arrow_array::{
 use arrow_buffer::NullBuffer;
 use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
-use geoarrow_schema::WktType;
+use geoarrow_schema::{Metadata, WktType};
 
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 use crate::array::SerializedArray;
@@ -119,7 +119,11 @@ impl<O: OffsetSizeTrait> ArrayBase for WKTArray<O> {
 
 impl<O: OffsetSizeTrait> SerializedArray for WKTArray<O> {
     fn data_type(&self) -> SerializedType {
-        self.data_type
+        if O::IS_LARGE {
+            SerializedType::LargeWKT(self.data_type.clone())
+        } else {
+            SerializedType::WKT(self.data_type.clone())
+        }
     }
 
     fn with_metadata(&self, metadata: Arc<Metadata>) -> Arc<dyn SerializedArray> {
@@ -198,7 +202,8 @@ impl TryFrom<(&dyn Array, &Field)> for WKTArray<i32> {
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
         let mut arr: Self = arr.try_into()?;
-        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        let metadata = Arc::new(Metadata::try_from(field)?);
+        arr.data_type = arr.data_type.clone().with_metadata(metadata);
         Ok(arr)
     }
 }
@@ -208,18 +213,20 @@ impl TryFrom<(&dyn Array, &Field)> for WKTArray<i64> {
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
         let mut arr: Self = arr.try_into()?;
-        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        let metadata = Arc::new(Metadata::try_from(field)?);
+        arr.data_type = arr.data_type.clone().with_metadata(metadata);
         Ok(arr)
     }
 }
 
 impl From<WKTArray<i32>> for WKTArray<i64> {
     fn from(value: WKTArray<i32>) -> Self {
+        let metadata = value.metadata();
         let binary_array = value.array;
         let (offsets, values, nulls) = binary_array.into_parts();
         Self::new(
             LargeStringArray::new(offsets_buffer_i32_to_i64(&offsets), values, nulls),
-            value.metadata,
+            metadata,
         )
     }
 }
@@ -228,11 +235,12 @@ impl TryFrom<WKTArray<i64>> for WKTArray<i32> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKTArray<i64>) -> Result<Self> {
+        let metadata = value.metadata();
         let binary_array = value.array;
         let (offsets, values, nulls) = binary_array.into_parts();
         Ok(Self::new(
             StringArray::new(offsets_buffer_i64_to_i32(&offsets)?, values, nulls),
-            value.metadata,
+            metadata,
         ))
     }
 }

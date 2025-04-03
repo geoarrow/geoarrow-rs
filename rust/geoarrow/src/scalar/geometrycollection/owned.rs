@@ -1,10 +1,10 @@
 use crate::algorithm::native::eq::geometry_collection_eq;
 use crate::array::{GeometryCollectionArray, MixedGeometryArray};
-use geoarrow_schema::Dimension;
 use crate::scalar::{Geometry, GeometryCollection};
 use crate::NativeArray;
 use arrow_buffer::OffsetBuffer;
 use geo_traits::GeometryCollectionTrait;
+use geoarrow_schema::Dimension;
 
 #[derive(Clone, Debug)]
 pub struct OwnedGeometryCollection {
@@ -67,6 +67,7 @@ impl GeometryCollectionTrait for OwnedGeometryCollection {
         match self.array.dimension() {
             Dimension::XY => geo_traits::Dimensions::Xy,
             Dimension::XYZ => geo_traits::Dimensions::Xyz,
+            _ => todo!("XYM and XYZM not supported yet"),
         }
     }
 

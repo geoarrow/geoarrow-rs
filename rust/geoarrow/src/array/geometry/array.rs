@@ -3,9 +3,10 @@ use std::sync::Arc;
 
 use arrow_array::{Array, ArrayRef, OffsetSizeTrait, UnionArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
+use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field, UnionMode};
 use geo_traits::GeometryTrait;
-use geoarrow_schema::{Dimension, GeometryType, Metadata};
+use geoarrow_schema::{CoordType, Dimension, GeometryType, Metadata};
 
 use crate::array::geometry::GeometryBuilder;
 use crate::array::geometry::GeometryCapacity;
@@ -331,6 +332,7 @@ impl GeometryArray {
         match dim {
             XY => self.has_dimension(XY) && !self.has_dimension(XYZ),
             XYZ => self.has_dimension(XYZ) && !self.has_dimension(XY),
+            _ => todo!("support xym and xyzm"),
         }
     }
 
@@ -497,8 +499,6 @@ impl GeometryArray {
             mline_string_xyz: self.mline_string_xyz.clone(),
             mpolygon_xyz: self.mpolygon_xyz.clone(),
             gc_xyz: self.gc_xyz.clone(),
-
-            metadata: self.metadata.clone(),
         }
     }
 
@@ -589,18 +589,15 @@ impl ArrayBase for GeometryArray {
     }
 
     fn storage_type(&self) -> DataType {
-        self.data_type.to_data_type()
+        self.data_type.data_type()
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        Arc::new(
-            self.data_type
-                .to_field_with_metadata("geometry", true, &self.metadata),
-        )
+        Arc::new(self.data_type.to_field("geometry", true))
     }
 
     fn extension_name(&self) -> &str {
-        self.data_type.extension_name()
+        GeometryType::NAME
     }
 
     fn into_array_ref(self) -> ArrayRef {
@@ -631,10 +628,10 @@ impl ArrayBase for GeometryArray {
 
 impl NativeArray for GeometryArray {
     fn data_type(&self) -> NativeType {
-        self.data_type
+        NativeType::Geometry(self.data_type.clone())
     }
 
-    fn coord_type(&self) -> crate::array::CoordType {
+    fn coord_type(&self) -> CoordType {
         self.data_type.coord_type()
     }
 
@@ -735,7 +732,7 @@ impl IntoArrow for GeometryArray {
     type ArrowArray = UnionArray;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let union_fields = match self.data_type.to_data_type() {
+        let union_fields = match self.data_type.data_type() {
             DataType::Union(union_fields, _) => union_fields,
             _ => unreachable!(),
         };
@@ -964,7 +961,8 @@ impl TryFrom<(&dyn Array, &Field)> for GeometryArray {
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
         let mut arr: Self = arr.try_into()?;
-        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        let metadata = Arc::new(Metadata::try_from(field)?);
+        arr.data_type = arr.data_type.clone().with_metadata(metadata);
         Ok(arr)
     }
 }
@@ -1450,6 +1448,8 @@ impl TryFrom<GeometryArray> for MixedGeometryArray {
     /// - the contained geometries are not all of the same dimension
     /// - any geometry collection child exists
     fn try_from(value: GeometryArray) -> std::result::Result<Self, Self::Error> {
+        let metadata = value.metadata();
+
         if value.has_only_dimension(Dimension::XY) {
             if value.gc_xy.is_empty() {
                 Ok(MixedGeometryArray::new(
@@ -1461,7 +1461,7 @@ impl TryFrom<GeometryArray> for MixedGeometryArray {
                     Some(value.mpoint_xy),
                     Some(value.mline_string_xy),
                     Some(value.mpolygon_xy),
-                    value.metadata,
+                    metadata,
                 ))
             } else {
                 Err(GeoArrowError::General(
@@ -1480,7 +1480,7 @@ impl TryFrom<GeometryArray> for MixedGeometryArray {
                     Some(value.mpoint_xyz),
                     Some(value.mline_string_xyz),
                     Some(value.mpolygon_xyz),
-                    value.metadata,
+                    metadata,
                 ))
             } else {
                 Err(GeoArrowError::General(

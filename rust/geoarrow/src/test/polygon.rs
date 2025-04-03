@@ -1,6 +1,6 @@
 use crate::array::{PolygonArray, PolygonBuilder};
-use geoarrow_schema::Dimension;
 use geo::{polygon, Polygon};
+use geoarrow_schema::{CoordType, Dimension};
 
 pub(crate) fn p0() -> Polygon {
     polygon![
@@ -35,7 +35,7 @@ pub(crate) fn p_array() -> PolygonArray {
     PolygonBuilder::from_polygons(
         &geoms,
         Dimension::XY,
-        Default::default(),
+        CoordType::Interleaved,
         Default::default(),
     )
     .finish()

@@ -4,9 +4,9 @@ use std::io::Write;
 use arrow_schema::Schema;
 use flatgeobuf::{FgbCrs, FgbWriter, FgbWriterOptions};
 use geoarrow_schema::Dimension;
+use geoarrow_schema::Metadata;
 use geozero::GeozeroDatasource;
 
-use crate::array::metadata::ArrayMetadata;
 use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::io::crs::{CRSTransform, DefaultCRSTransform};
@@ -56,7 +56,7 @@ impl FlatGeobufWriterOptions {
     /// This uses the [CRSTransform] supplied in the [FlatGeobufWriterOptions].
     ///
     /// If no CRS exists in the ArrayMetadata, None will be returned here.
-    fn create_wkt_crs(&self, array_meta: &ArrayMetadata) -> Result<Option<String>> {
+    fn create_wkt_crs(&self, array_meta: &Metadata) -> Result<Option<String>> {
         if let Some(crs_transform) = &self.crs_transform {
             crs_transform.extract_wkt(array_meta)
         } else {
@@ -131,7 +131,7 @@ pub fn write_flatgeobuf_with_options<W: Write, S: Into<RecordBatchReader>>(
 
     let geometry_field = &fields[geom_col_idxs[0]];
     let geo_data_type = NativeType::try_from(geometry_field.as_ref())?;
-    let array_meta = ArrayMetadata::try_from(geometry_field.as_ref())?;
+    let array_meta = Metadata::try_from(geometry_field.as_ref())?;
 
     let wkt_crs_str = options.create_wkt_crs(&array_meta)?;
     let fgb_options = options.create_fgb_options(geo_data_type, wkt_crs_str.as_deref());

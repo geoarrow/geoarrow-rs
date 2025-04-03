@@ -43,7 +43,7 @@ pub struct GeometryStreamBuilder {
 
 impl GeometryStreamBuilder {
     pub fn new() -> Self {
-        Self::new_with_options(Default::default(), Default::default(), true)
+        Self::new_with_options(CoordType::Interleaved, Default::default(), true)
     }
 
     pub fn new_with_options(
@@ -207,7 +207,7 @@ impl GeometryArrayBuilder for GeometryStreamBuilder {
     }
 
     fn new(dim: Dimension) -> Self {
-        Self::with_geom_capacity_and_options(dim, 0, Default::default(), Default::default())
+        Self::with_geom_capacity_and_options(dim, 0, CoordType::Interleaved, Default::default())
     }
 
     fn into_array_ref(self) -> Arc<dyn arrow_array::Array> {

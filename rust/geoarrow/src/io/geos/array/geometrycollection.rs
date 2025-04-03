@@ -1,7 +1,7 @@
 use crate::array::{GeometryCollectionArray, GeometryCollectionBuilder};
-use geoarrow_schema::Dimension;
 use crate::error::GeoArrowError;
 use crate::io::geos::scalar::GEOSGeometryCollection;
+use geoarrow_schema::{CoordType, Dimension};
 
 impl TryFrom<(Vec<geos::Geometry>, Dimension)> for GeometryCollectionBuilder {
     type Error = GeoArrowError;
@@ -13,7 +13,13 @@ impl TryFrom<(Vec<geos::Geometry>, Dimension)> for GeometryCollectionBuilder {
             .into_iter()
             .map(GEOSGeometryCollection::new_unchecked)
             .collect();
-        Self::from_geometry_collections(&geoms, dim, Default::default(), Default::default(), false)
+        Self::from_geometry_collections(
+            &geoms,
+            dim,
+            CoordType::Interleaved,
+            Default::default(),
+            false,
+        )
     }
 }
 

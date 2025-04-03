@@ -2,20 +2,19 @@ use std::sync::Arc;
 
 use arrow_array::{ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
-
-use crate::array::geometrycollection::GeometryCollectionCapacity;
-use crate::array::metadata::ArrayMetadata;
-use crate::array::mixed::builder::DEFAULT_PREFER_MULTI;
-use crate::array::offset_builder::OffsetsBuilder;
-use crate::array::{CoordType, GeometryCollectionArray, MixedGeometryBuilder, WKBArray};
-use geoarrow_schema::Dimension;
-use crate::error::{GeoArrowError, Result};
-use crate::scalar::WKB;
-use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use geo_traits::{
     GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
     MultiPolygonTrait, PointTrait, PolygonTrait,
 };
+use geoarrow_schema::{CoordType, Dimension, Metadata};
+
+use crate::array::geometrycollection::GeometryCollectionCapacity;
+use crate::array::mixed::builder::DEFAULT_PREFER_MULTI;
+use crate::array::offset_builder::OffsetsBuilder;
+use crate::array::{GeometryCollectionArray, MixedGeometryBuilder, WKBArray};
+use crate::error::{GeoArrowError, Result};
+use crate::scalar::WKB;
+use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 
 /// The GeoArrow equivalent to `Vec<Option<GeometryCollection>>`: a mutable collection of
 /// GeometryCollections.
@@ -37,7 +36,7 @@ impl<'a> GeometryCollectionBuilder {
     pub fn new(dim: Dimension) -> Self {
         Self::new_with_options(
             dim,
-            Default::default(),
+            CoordType::Interleaved,
             Default::default(),
             DEFAULT_PREFER_MULTI,
         )
@@ -58,7 +57,7 @@ impl<'a> GeometryCollectionBuilder {
         Self::with_capacity_and_options(
             dim,
             capacity,
-            Default::default(),
+            CoordType::Interleaved,
             Default::default(),
             DEFAULT_PREFER_MULTI,
         )
@@ -126,7 +125,7 @@ impl<'a> GeometryCollectionBuilder {
         Self::with_capacity_and_options_from_iter(
             geoms,
             dim,
-            Default::default(),
+            CoordType::Interleaved,
             Default::default(),
             DEFAULT_PREFER_MULTI,
         )
@@ -476,8 +475,14 @@ impl From<GeometryCollectionBuilder> for GenericListArray<i32> {
 
 impl<G: GeometryCollectionTrait<T = f64>> From<(&[G], Dimension)> for GeometryCollectionBuilder {
     fn from((geoms, dim): (&[G], Dimension)) -> Self {
-        Self::from_geometry_collections(geoms, dim, Default::default(), Default::default(), true)
-            .unwrap()
+        Self::from_geometry_collections(
+            geoms,
+            dim,
+            CoordType::Interleaved,
+            Default::default(),
+            true,
+        )
+        .unwrap()
     }
 }
 
@@ -488,7 +493,7 @@ impl<G: GeometryCollectionTrait<T = f64>> From<(Vec<Option<G>>, Dimension)>
         Self::from_nullable_geometry_collections(
             &geoms,
             dim,
-            Default::default(),
+            CoordType::Interleaved,
             Default::default(),
             true,
         )
@@ -500,8 +505,8 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for GeometryCollectio
     type Error = GeoArrowError;
 
     fn try_from((value, dim): (WKBArray<O>, Dimension)) -> Result<Self> {
-        let metadata = value.metadata.clone();
+        let metadata = value.metadata();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, dim, Default::default(), metadata, true)
+        Self::from_wkb(&wkb_objects, dim, CoordType::Interleaved, metadata, true)
     }
 }

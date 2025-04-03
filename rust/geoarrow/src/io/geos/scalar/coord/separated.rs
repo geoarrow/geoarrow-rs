@@ -16,6 +16,7 @@ impl TryFrom<SeparatedCoordBuffer> for CoordSeq {
                 Some(&value.buffers[2]),
                 None,
             ),
+            _ => todo!("XYM and XYZM not supported yet"),
         }
     }
 }

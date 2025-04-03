@@ -144,7 +144,7 @@ impl NativeArray for RectArray {
 
     fn with_metadata(&self, metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
-        arr.metadata = metadata;
+        arr.data_type = self.data_type.clone().with_metadata(metadata);
         Arc::new(arr)
     }
 
@@ -180,7 +180,11 @@ impl IntoArrow for RectArray {
     type ArrowArray = StructArray;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let fields = rect_fields(self.data_type.dimension().unwrap());
+        let fields = match self.data_type.data_type() {
+            DataType::Struct(fields) => fields,
+            _ => unreachable!(),
+        };
+
         let mut arrays: Vec<ArrayRef> = vec![];
 
         // values_array takes care of the correct number of dimensions
@@ -252,7 +256,8 @@ impl TryFrom<(&dyn Array, &Field)> for RectArray {
             .dimension()
             .ok_or(GeoArrowError::General("Expected dimension".to_string()))?;
         let mut arr: Self = (arr, dim).try_into()?;
-        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        let metadata = Arc::new(Metadata::try_from(field)?);
+        arr.data_type = arr.data_type.clone().with_metadata(metadata);
         Ok(arr)
     }
 }

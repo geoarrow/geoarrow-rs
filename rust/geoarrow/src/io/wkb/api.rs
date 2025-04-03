@@ -264,9 +264,13 @@ pub fn from_wkb<O: OffsetSizeTrait>(
             "Unexpected data type {:?}",
             target_type,
         ))),
-        Geometry(coord_type) => {
-            let builder =
-                GeometryBuilder::from_wkb(&wkb_objects, coord_type, arr.metadata(), prefer_multi)?;
+        Geometry(t) => {
+            let builder = GeometryBuilder::from_wkb(
+                &wkb_objects,
+                t.coord_type(),
+                arr.metadata(),
+                prefer_multi,
+            )?;
             Ok(Arc::new(builder.finish()))
         }
     }

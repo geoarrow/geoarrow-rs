@@ -1,4 +1,4 @@
-use crate::array::metadata::ArrayMetadata;
+use geoarrow_schema::Metadata;
 use crate::array::{RectArray, SeparatedCoordBufferBuilder};
 use geoarrow_schema::Dimension;
 use crate::error::GeoArrowError;

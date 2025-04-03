@@ -7,12 +7,12 @@ use flatgeobuf::{AsyncFeatureIter, HttpFgbReader};
 use futures::future::BoxFuture;
 use futures::task::{Context, Poll};
 use futures::{ready, FutureExt, Stream, TryStreamExt};
+use geoarrow_schema::{Dimension, Metadata};
 use geozero::{FeatureProcessor, FeatureProperties};
 use http_range_client::{AsyncBufferedHttpRangeClient, AsyncHttpRangeClient};
 use object_store::path::Path;
 use object_store::ObjectStore;
 
-use crate::array::metadata::ArrayMetadata;
 use crate::array::*;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
@@ -42,8 +42,8 @@ impl<T: AsyncHttpRangeClient> FlatGeobufStreamBuilder<T> {
 
     /// Read from the FlatGeobuf file
     pub async fn read(self, options: FlatGeobufReaderOptions) -> Result<FlatGeobufStream<T>> {
-        let (data_type, properties_schema, array_metadata) =
-            infer_from_header(self.reader.header())?;
+        let (data_type, properties_schema) = infer_from_header(self.reader.header())?;
+        let metadata = data_type.metadata().clone();
         if let Some((min_x, min_y, max_x, max_y)) = options.bbox {
             let selection = self.reader.select_bbox(min_x, min_y, max_x, max_y).await?;
             let num_rows = selection.features_count();
@@ -53,7 +53,7 @@ impl<T: AsyncHttpRangeClient> FlatGeobufStreamBuilder<T> {
                 options.batch_size.unwrap_or(65_536),
                 properties_schema,
                 num_rows,
-                array_metadata,
+                metadata,
             ))
         } else {
             let selection = self.reader.select_all().await?;
@@ -64,7 +64,7 @@ impl<T: AsyncHttpRangeClient> FlatGeobufStreamBuilder<T> {
                 options.batch_size.unwrap_or(65_536),
                 properties_schema,
                 num_rows,
-                array_metadata,
+                metadata,
             ))
         }
     }
@@ -129,36 +129,42 @@ where
             }};
         }
 
-        match self.data_type {
-            NativeType::Point(_, dim) => {
-                let mut builder = GeoTableBuilder::<PointBuilder>::new_with_options(dim, options);
-                impl_read!(builder)
-            }
-            NativeType::LineString(_, dim) => {
+        match &self.data_type {
+            NativeType::Point(t) => {
                 let mut builder =
-                    GeoTableBuilder::<LineStringBuilder>::new_with_options(dim, options);
+                    GeoTableBuilder::<PointBuilder>::new_with_options(t.dimension(), options);
                 impl_read!(builder)
             }
-            NativeType::Polygon(_, dim) => {
-                let mut builder = GeoTableBuilder::<PolygonBuilder>::new_with_options(dim, options);
-                impl_read!(builder)
-            }
-            NativeType::MultiPoint(_, dim) => {
+            NativeType::LineString(t) => {
                 let mut builder =
-                    GeoTableBuilder::<MultiPointBuilder>::new_with_options(dim, options);
+                    GeoTableBuilder::<LineStringBuilder>::new_with_options(t.dimension(), options);
                 impl_read!(builder)
             }
-            NativeType::MultiLineString(_, dim) => {
+            NativeType::Polygon(t) => {
                 let mut builder =
-                    GeoTableBuilder::<MultiLineStringBuilder>::new_with_options(dim, options);
+                    GeoTableBuilder::<PolygonBuilder>::new_with_options(t.dimension(), options);
                 impl_read!(builder)
             }
-            NativeType::MultiPolygon(_, dim) => {
+            NativeType::MultiPoint(t) => {
                 let mut builder =
-                    GeoTableBuilder::<MultiPolygonBuilder>::new_with_options(dim, options);
+                    GeoTableBuilder::<MultiPointBuilder>::new_with_options(t.dimension(), options);
                 impl_read!(builder)
             }
-            NativeType::Geometry(_) | NativeType::GeometryCollection(_, _) => {
+            NativeType::MultiLineString(t) => {
+                let mut builder = GeoTableBuilder::<MultiLineStringBuilder>::new_with_options(
+                    t.dimension(),
+                    options,
+                );
+                impl_read!(builder)
+            }
+            NativeType::MultiPolygon(t) => {
+                let mut builder = GeoTableBuilder::<MultiPolygonBuilder>::new_with_options(
+                    t.dimension(),
+                    options,
+                );
+                impl_read!(builder)
+            }
+            NativeType::Geometry(_) | NativeType::GeometryCollection(_) => {
                 let mut builder = GeoTableBuilder::<GeometryStreamBuilder>::new_with_options(
                     // TODO: I think this is unused? remove.
                     Dimension::XY,
@@ -189,9 +195,7 @@ pub struct FlatGeobufStream<T: AsyncHttpRangeClient> {
 impl<T: AsyncHttpRangeClient> FlatGeobufStream<T> {
     /// Access the schema of the batches emitted from this stream.
     pub fn schema(&self) -> SchemaRef {
-        let geom_field =
-            self.data_type
-                .to_field_with_metadata("geometry", true, &self.array_metadata);
+        let geom_field = self.data_type.to_field("geometry", true);
         let mut fields = self.properties_schema.fields().to_vec();
         fields.push(Arc::new(geom_field));
         Arc::new(Schema::new_with_metadata(
@@ -225,7 +229,7 @@ impl<T: AsyncHttpRangeClient> FlatGeobufStream<T> {
         array_metadata: Arc<Metadata>,
     ) -> Self {
         Self {
-            data_type,
+            data_type: data_type.clone(),
             batch_size,
             properties_schema,
             num_rows_remaining,

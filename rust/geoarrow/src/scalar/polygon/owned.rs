@@ -1,9 +1,9 @@
 use crate::algorithm::native::eq::polygon_eq;
 use crate::array::{CoordBuffer, PolygonArray};
-use geoarrow_schema::Dimension;
 use crate::scalar::{LineString, Polygon};
 use arrow_buffer::OffsetBuffer;
 use geo_traits::PolygonTrait;
+use geoarrow_schema::Dimension;
 
 #[derive(Clone, Debug)]
 pub struct OwnedPolygon {
@@ -81,6 +81,7 @@ impl PolygonTrait for OwnedPolygon {
         match self.coords.dim() {
             Dimension::XY => geo_traits::Dimensions::Xy,
             Dimension::XYZ => geo_traits::Dimensions::Xyz,
+            _ => todo!("XYM and XYZM not supported yet"),
         }
     }
 

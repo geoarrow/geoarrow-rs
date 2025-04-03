@@ -1,4 +1,5 @@
-use arrow_schema::ArrowError;
+use arrow_schema::extension::EXTENSION_TYPE_METADATA_KEY;
+use arrow_schema::{ArrowError, Field};
 use serde::{Deserialize, Serialize};
 
 use crate::{Crs, Edges};
@@ -35,13 +36,21 @@ impl Metadata {
         }
     }
 
-    pub(crate) fn deserialize(metadata: Option<&str>) -> Result<Self, ArrowError> {
+    pub(crate) fn deserialize<S: AsRef<str>>(metadata: Option<S>) -> Result<Self, ArrowError> {
         if let Some(ext_meta) = metadata {
-            Ok(serde_json::from_str(ext_meta)
+            Ok(serde_json::from_str(ext_meta.as_ref())
                 .map_err(|err| ArrowError::ExternalError(Box::new(err)))?)
         } else {
             Ok(Default::default())
         }
+    }
+}
+
+impl TryFrom<&Field> for Metadata {
+    type Error = ArrowError;
+
+    fn try_from(value: &Field) -> Result<Self, Self::Error> {
+        Self::deserialize(value.metadata().get(EXTENSION_TYPE_METADATA_KEY))
     }
 }
 

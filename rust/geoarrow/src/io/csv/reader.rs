@@ -3,12 +3,11 @@ use arrow_array::RecordBatch;
 use arrow_csv::reader::Format;
 use arrow_csv::ReaderBuilder;
 use arrow_schema::{ArrowError, Schema, SchemaRef};
-use geoarrow_schema::CoordType;
+use geoarrow_schema::{CoordType, GeometryType};
 use std::io::{Read, Seek};
 use std::sync::Arc;
 
 use crate::array::WKTArray;
-use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::io::wkt::read_wkt;
 
@@ -87,7 +86,7 @@ impl CSVReaderOptions {
 impl Default for CSVReaderOptions {
     fn default() -> Self {
         Self {
-            coord_type: Default::default(),
+            coord_type: CoordType::Interleaved,
             batch_size: 65_536,
             geometry_column_name: Default::default(),
             has_header: Default::default(),
@@ -169,9 +168,10 @@ impl<R: Read> CSVReader<R> {
 
         // Transform to output schema
         let mut output_fields = schema.fields().to_vec();
-        output_fields[geometry_column_index] = NativeType::Geometry(options.coord_type)
-            .to_field_with_metadata("geometry", true, &Default::default())
-            .into();
+        output_fields[geometry_column_index] =
+            GeometryType::new(options.coord_type, Default::default())
+                .to_field("geometry", true)
+                .into();
         let output_schema =
             Arc::new(Schema::new(output_fields).with_metadata(schema.metadata().clone()));
         let output_schema2 = output_schema.clone();

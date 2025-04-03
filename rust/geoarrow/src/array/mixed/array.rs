@@ -6,7 +6,7 @@ use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::extension::{EXTENSION_TYPE_METADATA_KEY, EXTENSION_TYPE_NAME_KEY};
 use arrow_schema::{DataType, Field, UnionMode};
 use geo_traits::GeometryTrait;
-use geoarrow_schema::{CoordType, Metadata};
+use geoarrow_schema::{CoordType, Dimension, Metadata};
 
 use crate::algorithm::native::downcast::can_downcast_multi;
 use crate::array::mixed::builder::MixedGeometryBuilder;
@@ -538,7 +538,7 @@ impl NativeArray for MixedGeometryArray {
         self.dim
     }
 
-    fn coord_type(&self) -> crate::array::CoordType {
+    fn coord_type(&self) -> CoordType {
         self.coord_type
     }
 
@@ -566,7 +566,7 @@ impl GeometryArraySelfMethods for MixedGeometryArray {
         todo!();
     }
 
-    fn into_coord_type(self, _coord_type: crate::array::CoordType) -> Self {
+    fn into_coord_type(self, _coord_type: CoordType) -> Self {
         todo!();
     }
 }
@@ -785,7 +785,8 @@ impl TryFrom<(&dyn Array, &Field)> for MixedGeometryArray {
             .dimension()
             .ok_or(GeoArrowError::General("Expected dimension".to_string()))?;
         let mut arr: Self = (arr, dim).try_into()?;
-        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        let metadata = Arc::new(Metadata::try_from(field)?);
+        arr.data_type = arr.data_type.clone().with_metadata(metadata);
         Ok(arr)
     }
 }

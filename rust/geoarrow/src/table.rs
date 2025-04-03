@@ -10,13 +10,13 @@ use arrow_schema::{ArrowError, FieldRef, Schema, SchemaBuilder, SchemaRef};
 use geoarrow_schema::{CoordType, GeometryType};
 
 use crate::algorithm::native::{Cast, Downcast};
-use crate::array::metadata::ArrayMetadata;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedNativeArray, ChunkedNativeArrayDyn};
 use crate::datatypes::{AnyType, NativeType, SerializedType};
 use crate::error::{GeoArrowError, Result};
 use crate::io::wkb::from_wkb;
 use crate::schema::GeoSchemaExt;
+use geoarrow_schema::Metadata;
 use phf::{phf_set, Set};
 
 pub(crate) static GEOARROW_EXTENSION_NAMES: Set<&'static str> = phf_set! {
@@ -194,7 +194,7 @@ impl Table {
         ));
 
         let orig_field = self.schema().field(index);
-        let geoarray_metadata = ArrayMetadata::try_from(orig_field)?;
+        let geoarray_metadata = Metadata::try_from(orig_field)?;
 
         // If the table is empty, don't try to parse WKB column
         // An empty column will crash currently in `from_arrow_chunks` or alternatively
@@ -257,11 +257,10 @@ impl Table {
                     _ => panic!("WKT input not supported yet"),
                 };
 
-                let new_field = new_geometry.data_type().to_field_with_metadata(
-                    orig_field.name(),
-                    orig_field.is_nullable(),
-                    &geoarray_metadata,
-                );
+                let new_field = new_geometry
+                    .data_type()
+                    .with_metadata(geoarray_metadata.into())
+                    .to_field(orig_field.name(), orig_field.is_nullable());
                 let new_arrays = new_geometry.array_refs();
 
                 let mut new_table = self.clone();

@@ -1,7 +1,7 @@
 use crate::array::{MixedGeometryArray, MixedGeometryBuilder};
-use geoarrow_schema::Dimension;
 use crate::error::GeoArrowError;
 use crate::io::geos::scalar::GEOSGeometry;
+use geoarrow_schema::{CoordType, Dimension};
 
 impl TryFrom<(Vec<geos::Geometry>, Dimension)> for MixedGeometryBuilder {
     type Error = GeoArrowError;
@@ -10,7 +10,13 @@ impl TryFrom<(Vec<geos::Geometry>, Dimension)> for MixedGeometryBuilder {
         (value, dim): (Vec<geos::Geometry>, Dimension),
     ) -> std::result::Result<Self, Self::Error> {
         let geoms: Vec<GEOSGeometry> = value.into_iter().map(GEOSGeometry::new).collect();
-        Self::from_geometries(&geoms, dim, Default::default(), Default::default(), false)
+        Self::from_geometries(
+            &geoms,
+            dim,
+            CoordType::Interleaved,
+            Default::default(),
+            false,
+        )
     }
 }
 

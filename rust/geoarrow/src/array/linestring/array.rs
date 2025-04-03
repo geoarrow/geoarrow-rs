@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::algorithm::native::downcast::can_downcast_multi;
@@ -261,16 +260,18 @@ impl NativeArray for LineStringArray {
 
 impl GeometryArraySelfMethods for LineStringArray {
     fn with_coords(self, coords: CoordBuffer) -> Self {
+        let metadata = self.metadata();
         assert_eq!(coords.len(), self.coords.len());
-        Self::new(coords, self.geom_offsets, self.validity, self.metadata())
+        Self::new(coords, self.geom_offsets, self.validity, metadata)
     }
 
     fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.metadata();
         Self::new(
             self.coords.into_coord_type(coord_type),
             self.geom_offsets,
             self.validity,
-            self.metadata(),
+            metadata,
         )
     }
 }
@@ -375,7 +376,8 @@ impl TryFrom<(&dyn Array, &Field)> for LineStringArray {
             .dimension()
             .ok_or(GeoArrowError::General("Expected dimension".to_string()))?;
         let mut arr: Self = (arr, dim).try_into()?;
-        arr.data_type = Arc::new(ArrayMetadata::try_from(field)?);
+        let metadata = Arc::new(Metadata::try_from(field)?);
+        arr.data_type = arr.data_type.clone().with_metadata(metadata);
         Ok(arr)
     }
 }
@@ -398,12 +400,8 @@ impl<G: LineStringTrait<T = f64>> From<(&[G], Dimension)> for LineStringArray {
 /// the semantic type
 impl From<LineStringArray> for MultiPointArray {
     fn from(value: LineStringArray) -> Self {
-        Self::new(
-            value.coords,
-            value.geom_offsets,
-            value.validity,
-            value.metadata,
-        )
+        let metadata = value.metadata();
+        Self::new(value.coords, value.geom_offsets, value.validity, metadata)
     }
 }
 
@@ -449,11 +447,12 @@ impl TryFrom<MultiLineStringArray> for LineStringArray {
             return Err(GeoArrowError::General("Unable to cast".to_string()));
         }
 
+        let metadata = value.metadata();
         Ok(LineStringArray::new(
             value.coords,
             value.ring_offsets,
             value.validity,
-            value.metadata,
+            metadata,
         ))
     }
 }
