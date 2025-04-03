@@ -58,9 +58,9 @@ impl FlatGeobufWriterOptions {
     /// If no CRS exists in the ArrayMetadata, None will be returned here.
     fn create_wkt_crs(&self, array_meta: &Metadata) -> Result<Option<String>> {
         if let Some(crs_transform) = &self.crs_transform {
-            crs_transform.extract_wkt(array_meta)
+            crs_transform.extract_wkt(array_meta.crs())
         } else {
-            DefaultCRSTransform::default().extract_wkt(array_meta)
+            DefaultCRSTransform::default().extract_wkt(array_meta.crs())
         }
     }
 

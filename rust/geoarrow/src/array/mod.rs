@@ -84,7 +84,6 @@ pub(crate) mod dynamic;
 pub(crate) mod geometry;
 pub(crate) mod geometrycollection;
 pub(crate) mod linestring;
-pub mod metadata;
 pub(crate) mod mixed;
 pub(crate) mod multilinestring;
 pub(crate) mod multipoint;

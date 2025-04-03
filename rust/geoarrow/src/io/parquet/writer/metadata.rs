@@ -5,13 +5,12 @@ use arrow_array::ArrayRef;
 use arrow_schema::extension::{EXTENSION_TYPE_METADATA_KEY, EXTENSION_TYPE_NAME_KEY};
 use arrow_schema::{Field, Schema, SchemaRef};
 use geoarrow_schema::{
-    CoordType, Dimension, LineStringType, MultiLineStringType, MultiPointType, MultiPolygonType,
-    PointType, PolygonType, WkbType,
+    CoordType, Dimension, Edges, LineStringType, Metadata, MultiLineStringType, MultiPointType,
+    MultiPolygonType, PointType, PolygonType, WkbType,
 };
 use serde_json::Value;
 
 use crate::algorithm::native::bounding_rect::BoundingRect;
-use crate::array::metadata::{ArrayMetadata, Edges};
 use crate::array::{AsNativeArray, NativeArrayDyn};
 use crate::datatypes::NativeType;
 use crate::error::Result;
@@ -49,18 +48,18 @@ impl ColumnInfo {
         name: String,
         writer_encoding: GeoParquetWriterEncoding,
         data_type: &NativeType,
-        array_meta: ArrayMetadata,
+        array_meta: Metadata,
         crs_transform: Option<&Box<dyn CRSTransform>>,
     ) -> Result<Self> {
         let encoding = GeoParquetColumnEncoding::try_new(writer_encoding, data_type)?;
         let geometry_types = get_geometry_types(data_type);
 
         let crs = if let Some(crs_transform) = crs_transform {
-            crs_transform.extract_projjson(&array_meta)?
+            crs_transform.extract_projjson(array_meta.crs())?
         } else {
-            DefaultCRSTransform::default().extract_projjson(&array_meta)?
+            DefaultCRSTransform::default().extract_projjson(array_meta.crs())?
         };
-        let edges = array_meta.edges;
+        let edges = array_meta.edges();
 
         Ok(Self {
             name,
@@ -179,9 +178,9 @@ impl GeoParquetMetadataBuilder {
 
                 let array_meta =
                     if let Some(ext_meta) = field.metadata().get(EXTENSION_TYPE_METADATA_KEY) {
-                        serde_json::from_str::<()>(ext_meta)?
+                        serde_json::from_str(ext_meta)?
                     } else {
-                        ArrayMetadata::default()
+                        Metadata::default()
                     };
 
                 let geo_data_type = field.as_ref().try_into()?;

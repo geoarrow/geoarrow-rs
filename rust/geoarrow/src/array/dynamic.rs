@@ -6,6 +6,7 @@ use arrow_array::ArrayRef;
 use arrow_buffer::NullBuffer;
 use arrow_schema::Field;
 use arrow_schema::{DataType, FieldRef};
+use geoarrow_schema::{CoordType, Metadata};
 
 use crate::array::wkt::WKTArray;
 use crate::array::*;

@@ -9,7 +9,6 @@ use geoarrow_schema::{
     MultiPolygonType, PointType, PolygonType,
 };
 
-use crate::array::metadata::CRSType;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 

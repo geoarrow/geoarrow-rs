@@ -19,13 +19,21 @@ pub struct Metadata {
     /// If present, instructs consumers that edges follow a spherical path rather than a planar
     /// one. If this value is omitted, edges will be interpreted as planar.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub edges: Option<Edges>,
+    edges: Option<Edges>,
 }
 
 impl Metadata {
     /// Creates a new [`Metadata`] object.
     pub fn new(crs: Crs, edges: Option<Edges>) -> Self {
         Self { crs, edges }
+    }
+
+    pub fn crs(&self) -> &Crs {
+        &self.crs
+    }
+
+    pub fn edges(&self) -> Option<Edges> {
+        self.edges
     }
 
     pub(crate) fn serialize(&self) -> Option<String> {

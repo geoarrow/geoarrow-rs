@@ -67,6 +67,15 @@ impl Crs {
         }
     }
 
+    /// Access the underlying [CrsType].
+    pub fn crs_type(&self) -> Option<CrsType> {
+        self.crs_type
+    }
+
+    pub fn crs_value(&self) -> Option<&Value> {
+        self.crs.as_ref()
+    }
+
     /// Return `true` if we should include a CRS key in the GeoArrow metadata
     pub(crate) fn should_serialize(&self) -> bool {
         self.crs.is_some()
@@ -74,7 +83,7 @@ impl Crs {
 }
 
 /// An optional string disambiguating the value of the `crs` field.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum CrsType {
     /// Indicates that the `"crs"` field was written as
     /// [PROJJSON](https://proj.org/specifications/projjson.html).
