@@ -284,9 +284,9 @@ dependencies = [
 
 [[package]]
 name = "arrow-schema"
-version = "54.1.0"
+version = "54.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "105f01ec0090259e9a33a9263ec18ff223ab91a0ea9fbc18042f7e38005142f6"
+checksum = "39cfaf5e440be44db5413b75b72c2a87c1f8f0627117d110264048f2969b99e9"
 dependencies = [
  "bitflags 2.8.0",
 ]
@@ -1893,6 +1893,16 @@ dependencies = [
  "tokio",
  "wkb",
  "wkt 0.12.0",
+]
+
+[[package]]
+name = "geoarrow-schema"
+version = "0.1.0-dev"
+dependencies = [
+ "arrow-schema",
+ "geo-traits",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

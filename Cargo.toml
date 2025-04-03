@@ -1,6 +1,16 @@
 [workspace]
-members = ["rust/geoarrow", "rust/geodatafusion"]
+members = ["rust/geoarrow", "rust/geoarrow-schema", "rust/geodatafusion"]
 exclude = ["js"]
 resolver = "2"
 
 [workspace.package]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/geoarrow/geoarrow-rs"
+
+[workspace.dependencies]
+arrow-schema = "54.3.1"
+geo-traits = "0.2.0"
+serde = "1"
+serde_json = "1"
+thiserror = "1"

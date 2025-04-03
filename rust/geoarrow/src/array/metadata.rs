@@ -16,7 +16,7 @@ pub enum Edges {
     ///
     /// See [the geoarrow
     /// specification](https://github.com/geoarrow/geoarrow/blob/main/extension-types.md#extension-metadata)
-    /// for more information aobut how `edges` should be used.
+    /// for more information about how `edges` should be used.
     #[serde(rename = "spherical")]
     Spherical,
 }

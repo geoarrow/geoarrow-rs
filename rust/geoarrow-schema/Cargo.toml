@@ -1,0 +1,18 @@
+
+[package]
+name = "geoarrow-schema"
+version = "0.1.0-dev"
+authors = ["Kyle Barron <kylebarron2@gmail.com>"]
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+description = "Rust implementation of GeoArrow"
+categories = ["science::geo"]
+rust-version = "1.82"
+
+
+[dependencies]
+arrow-schema = { workspace = true }
+geo-traits = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
