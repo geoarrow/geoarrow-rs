@@ -452,80 +452,43 @@ fn parse_mixed(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowErro
         DataType::Union(fields, _) => {
             let mut coord_types: HashSet<CoordType> = HashSet::new();
             let mut dimensions: HashSet<Dimension> = HashSet::new();
+
+            // Validate that all fields of the union have the same coordinate type and dimension
             fields.iter().try_for_each(|(type_id, field)| {
+                macro_rules! impl_type_id {
+                    ($expected_dim:path, $parse_fn:ident) => {{
+                        let (ct, dim) = $parse_fn(field.data_type())?;
+                        coord_types.insert(ct);
+                        assert!(matches!(dim, $expected_dim));
+                        dimensions.insert(dim);
+                    }};
+                }
+
                 match type_id {
-                    1 => {
-                        let (ct, dim) = parse_point_data_type(field.data_type())?;
-                        coord_types.insert(ct);
-                        assert!(matches!(dim, Dimension::XY));
-                        dimensions.insert(dim);
-                    }
-                    2 => {
-                        let (ct, dim) = parse_linestring(field.data_type())?;
-                        coord_types.insert(ct);
-                        assert!(matches!(dim, Dimension::XY));
-                        dimensions.insert(dim);
-                    }
-                    3 => {
-                        let (ct, dim) = parse_polygon(field.data_type())?;
-                        coord_types.insert(ct);
-                        assert!(matches!(dim, Dimension::XY));
-                        dimensions.insert(dim);
-                    }
-                    4 => {
-                        let (ct, dim) = parse_multipoint_data_type(field.data_type())?;
-                        coord_types.insert(ct);
-                        assert!(matches!(dim, Dimension::XY));
-                        dimensions.insert(dim);
-                    }
-                    5 => {
-                        let (ct, dim) = parse_multilinestring(field.data_type())?;
-                        coord_types.insert(ct);
-                        assert!(matches!(dim, Dimension::XY));
-                        dimensions.insert(dim);
-                    }
-                    6 => {
-                        let (ct, dim) = parse_multipolygon(field.data_type())?;
-                        coord_types.insert(ct);
-                        assert!(matches!(dim, Dimension::XY));
-                        dimensions.insert(dim);
-                    }
-                    11 => {
-                        let (ct, dim) = parse_point_data_type(field.data_type())?;
-                        coord_types.insert(ct);
-                        assert!(matches!(dim, Dimension::XYZ));
-                        dimensions.insert(dim);
-                    }
-                    12 => {
-                        let (ct, dim) = parse_linestring(field.data_type())?;
-                        coord_types.insert(ct);
-                        assert!(matches!(dim, Dimension::XYZ));
-                        dimensions.insert(dim);
-                    }
-                    13 => {
-                        let (ct, dim) = parse_polygon(field.data_type())?;
-                        coord_types.insert(ct);
-                        assert!(matches!(dim, Dimension::XYZ));
-                        dimensions.insert(dim);
-                    }
-                    14 => {
-                        let (ct, dim) = parse_multipoint_data_type(field.data_type())?;
-                        coord_types.insert(ct);
-                        assert!(matches!(dim, Dimension::XYZ));
-                        dimensions.insert(dim);
-                    }
-                    15 => {
-                        let (ct, dim) = parse_multilinestring(field.data_type())?;
-                        coord_types.insert(ct);
-                        assert!(matches!(dim, Dimension::XYZ));
-                        dimensions.insert(dim);
-                    }
-                    16 => {
-                        let (ct, dim) = parse_multipolygon(field.data_type())?;
-                        coord_types.insert(ct);
-                        assert!(matches!(dim, Dimension::XYZ));
-                        dimensions.insert(dim);
-                    }
+                    1 => impl_type_id!(Dimension::XY, parse_point_data_type),
+                    2 => impl_type_id!(Dimension::XY, parse_linestring),
+                    3 => impl_type_id!(Dimension::XY, parse_polygon),
+                    4 => impl_type_id!(Dimension::XY, parse_multipoint_data_type),
+                    5 => impl_type_id!(Dimension::XY, parse_multilinestring),
+                    6 => impl_type_id!(Dimension::XY, parse_multipolygon),
+                    11 => impl_type_id!(Dimension::XYZ, parse_point_data_type),
+                    12 => impl_type_id!(Dimension::XYZ, parse_linestring),
+                    13 => impl_type_id!(Dimension::XYZ, parse_polygon),
+                    14 => impl_type_id!(Dimension::XYZ, parse_multipoint_data_type),
+                    15 => impl_type_id!(Dimension::XYZ, parse_multilinestring),
+                    16 => impl_type_id!(Dimension::XYZ, parse_multipolygon),
+                    21 => impl_type_id!(Dimension::XYM, parse_point_data_type),
+                    22 => impl_type_id!(Dimension::XYM, parse_linestring),
+                    23 => impl_type_id!(Dimension::XYM, parse_polygon),
+                    24 => impl_type_id!(Dimension::XYM, parse_multipoint_data_type),
+                    25 => impl_type_id!(Dimension::XYM, parse_multilinestring),
+                    26 => impl_type_id!(Dimension::XYM, parse_multipolygon),
+                    31 => impl_type_id!(Dimension::XYZM, parse_point_data_type),
+                    32 => impl_type_id!(Dimension::XYZM, parse_linestring),
+                    33 => impl_type_id!(Dimension::XYZM, parse_polygon),
+                    34 => impl_type_id!(Dimension::XYZM, parse_multipoint_data_type),
+                    35 => impl_type_id!(Dimension::XYZM, parse_multilinestring),
+                    36 => impl_type_id!(Dimension::XYZM, parse_multipolygon),
                     id => panic!("unexpected type id {}", id),
                 };
                 Ok::<_, ArrowError>(())
@@ -604,110 +567,59 @@ impl ExtensionType for GeometryType {
 }
 
 fn parse_geometry(data_type: &DataType) -> Result<CoordType, ArrowError> {
-    if let DataType::Union(fields, _mode) = field.data_type() {
+    if let DataType::Union(fields, _mode) = data_type {
         let mut coord_types: HashSet<CoordType> = HashSet::new();
 
+        // Validate that all fields of the union have the same coordinate type
         fields.iter().try_for_each(|(type_id, field)| {
+            macro_rules! impl_type_id {
+                ($expected_dim:path, $parse_fn:ident) => {{
+                    let (ct, dim) = $parse_fn(field.data_type())?;
+                    coord_types.insert(ct);
+                    assert!(matches!(dim, $expected_dim));
+                }};
+            }
+
             match type_id {
-                1 => match parse_point(field)? {
-                    NativeType::Point(ct, Dimension::XY) => {
-                        coord_types.insert(ct);
-                    }
-                    _ => unreachable!(),
-                },
-                2 => match parse_linestring(field)? {
-                    NativeType::LineString(ct, Dimension::XY) => {
-                        coord_types.insert(ct);
-                    }
-                    _ => unreachable!(),
-                },
-                3 => match parse_polygon(field)? {
-                    NativeType::Polygon(ct, Dimension::XY) => {
-                        coord_types.insert(ct);
-                    }
-                    _ => unreachable!(),
-                },
-                4 => match parse_multi_point(field)? {
-                    NativeType::MultiPoint(ct, Dimension::XY) => {
-                        coord_types.insert(ct);
-                    }
-                    _ => unreachable!(),
-                },
-                5 => match parse_multi_linestring(field)? {
-                    NativeType::MultiLineString(ct, Dimension::XY) => {
-                        coord_types.insert(ct);
-                    }
-                    _ => unreachable!(),
-                },
-                6 => match parse_multi_polygon(field)? {
-                    NativeType::MultiPolygon(ct, Dimension::XY) => {
-                        coord_types.insert(ct);
-                    }
-                    _ => unreachable!(),
-                },
-                7 => match parse_geometry_collection(field)? {
-                    NativeType::GeometryCollection(ct, Dimension::XY) => {
-                        coord_types.insert(ct);
-                    }
-                    _ => unreachable!(),
-                },
-                11 => match parse_point(field)? {
-                    NativeType::Point(ct, Dimension::XYZ) => {
-                        coord_types.insert(ct);
-                    }
-                    _ => unreachable!(),
-                },
-                12 => match parse_linestring(field)? {
-                    NativeType::LineString(ct, Dimension::XYZ) => {
-                        coord_types.insert(ct);
-                    }
-                    _ => unreachable!(),
-                },
-                13 => match parse_polygon(field)? {
-                    NativeType::Polygon(ct, Dimension::XYZ) => {
-                        coord_types.insert(ct);
-                    }
-                    _ => unreachable!(),
-                },
-                14 => match parse_multi_point(field)? {
-                    NativeType::MultiPoint(ct, Dimension::XYZ) => {
-                        coord_types.insert(ct);
-                    }
-                    _ => unreachable!(),
-                },
-                15 => match parse_multi_linestring(field)? {
-                    NativeType::MultiLineString(ct, Dimension::XYZ) => {
-                        coord_types.insert(ct);
-                    }
-                    _ => unreachable!(),
-                },
-                16 => match parse_multi_polygon(field)? {
-                    NativeType::MultiPolygon(ct, Dimension::XYZ) => {
-                        coord_types.insert(ct);
-                    }
-                    _ => unreachable!(),
-                },
-                17 => match parse_geometry_collection(field)? {
-                    NativeType::GeometryCollection(ct, Dimension::XYZ) => {
-                        coord_types.insert(ct);
-                    }
-                    _ => unreachable!(),
-                },
+                1 => impl_type_id!(Dimension::XY, parse_point_data_type),
+                2 => impl_type_id!(Dimension::XY, parse_linestring),
+                3 => impl_type_id!(Dimension::XY, parse_polygon),
+                4 => impl_type_id!(Dimension::XY, parse_multipoint_data_type),
+                5 => impl_type_id!(Dimension::XY, parse_multilinestring),
+                6 => impl_type_id!(Dimension::XY, parse_multipolygon),
+                11 => impl_type_id!(Dimension::XYZ, parse_point_data_type),
+                12 => impl_type_id!(Dimension::XYZ, parse_linestring),
+                13 => impl_type_id!(Dimension::XYZ, parse_polygon),
+                14 => impl_type_id!(Dimension::XYZ, parse_multipoint_data_type),
+                15 => impl_type_id!(Dimension::XYZ, parse_multilinestring),
+                16 => impl_type_id!(Dimension::XYZ, parse_multipolygon),
+                21 => impl_type_id!(Dimension::XYM, parse_point_data_type),
+                22 => impl_type_id!(Dimension::XYM, parse_linestring),
+                23 => impl_type_id!(Dimension::XYM, parse_polygon),
+                24 => impl_type_id!(Dimension::XYM, parse_multipoint_data_type),
+                25 => impl_type_id!(Dimension::XYM, parse_multilinestring),
+                26 => impl_type_id!(Dimension::XYM, parse_multipolygon),
+                31 => impl_type_id!(Dimension::XYZM, parse_point_data_type),
+                32 => impl_type_id!(Dimension::XYZM, parse_linestring),
+                33 => impl_type_id!(Dimension::XYZM, parse_polygon),
+                34 => impl_type_id!(Dimension::XYZM, parse_multipoint_data_type),
+                35 => impl_type_id!(Dimension::XYZM, parse_multilinestring),
+                36 => impl_type_id!(Dimension::XYZM, parse_multipolygon),
                 id => panic!("unexpected type id {}", id),
             };
-            Ok::<_, GeoArrowError>(())
+            Ok::<_, ArrowError>(())
         })?;
 
         if coord_types.len() > 1 {
-            return Err(GeoArrowError::General(
+            return Err(ArrowError::SchemaError(
                 "Multi coord types in union".to_string(),
             ));
         }
 
         let coord_type = coord_types.drain().next().unwrap();
-        Ok(NativeType::Geometry(coord_type))
+        Ok(coord_type)
     } else {
-        Err(GeoArrowError::General("Expected union type".to_string()))
+        Err(ArrowError::SchemaError("Expected union type".to_string()))
     }
 }
 
