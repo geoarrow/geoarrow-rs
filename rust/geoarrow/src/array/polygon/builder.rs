@@ -6,7 +6,7 @@ use geo_traits::{
     CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait,
     RectTrait,
 };
-use geoarrow_schema::Dimension;
+use geoarrow_schema::{CoordType, Dimension, Metadata};
 
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::polygon::PolygonCapacity;

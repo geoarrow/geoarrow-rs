@@ -354,7 +354,7 @@ pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn NativeArray) -> WKBArray<O> {
 
 #[cfg(test)]
 mod test {
-    use geoarrow_schema::PointType;
+    use geoarrow_schema::{GeometryType, PointType};
 
     use super::*;
     use crate::test::point;
@@ -382,8 +382,15 @@ mod test {
     fn point_round_trip() {
         let arr = point::point_array();
         let wkb_arr: WKBArray<i32> = to_wkb(&arr);
-        let roundtrip =
-            from_wkb(&wkb_arr, NativeType::Geometry(CoordType::Interleaved), true).unwrap();
+        let roundtrip = from_wkb(
+            &wkb_arr,
+            NativeType::Geometry(GeometryType::new(
+                CoordType::Interleaved,
+                Default::default(),
+            )),
+            true,
+        )
+        .unwrap();
 
         let rt_ref = roundtrip.as_ref();
         let rt_mixed_arr = rt_ref.as_geometry();
@@ -399,7 +406,10 @@ mod test {
         let wkb_arr: WKBArray<i32> = to_wkb(&arr);
         let roundtrip_mixed = from_wkb(
             &wkb_arr,
-            NativeType::Geometry(CoordType::Interleaved),
+            NativeType::Geometry(GeometryType::new(
+                CoordType::Interleaved,
+                Default::default(),
+            )),
             false,
         )
         .unwrap();

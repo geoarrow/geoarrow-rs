@@ -13,7 +13,7 @@ use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use arrow_array::{ArrayRef, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
-use geoarrow_schema::Dimension;
+use geoarrow_schema::{Dimension, Metadata};
 
 /// The GeoArrow equivalent to `Vec<Option<Point>>`: a mutable collection of Points.
 ///

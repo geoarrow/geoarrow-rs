@@ -5,7 +5,7 @@ use arrow_array::{Array, ArrayRef, OffsetSizeTrait, UnionArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field, UnionMode};
 use geo_traits::GeometryTrait;
-use geoarrow_schema::{Dimension, GeometryType};
+use geoarrow_schema::{Dimension, GeometryType, Metadata};
 
 use crate::array::geometry::GeometryBuilder;
 use crate::array::geometry::GeometryCapacity;
@@ -509,6 +509,7 @@ impl GeometryArray {
 
     /// Change the coordinate type of this array.
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.metadata();
         Self::new(
             self.type_ids,
             self.offsets,
@@ -526,7 +527,7 @@ impl GeometryArray {
             Some(self.mline_string_xyz.into_coord_type(coord_type)),
             Some(self.mpolygon_xyz.into_coord_type(coord_type)),
             Some(self.gc_xyz.into_coord_type(coord_type)),
-            self.metadata,
+            metadata,
         )
     }
 
@@ -611,7 +612,7 @@ impl ArrayBase for GeometryArray {
     }
 
     fn metadata(&self) -> Arc<Metadata> {
-        self.metadata.clone()
+        self.data_type.metadata().clone()
     }
 
     /// Returns the number of geometries in this array

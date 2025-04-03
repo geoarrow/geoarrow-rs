@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use arrow_array::{OffsetSizeTrait, UnionArray};
 use geo_traits::*;
-use geoarrow_schema::Dimension;
+use geoarrow_schema::{CoordType, Dimension, Metadata};
 
 use crate::array::mixed::MixedCapacity;
 use crate::array::{

@@ -57,7 +57,7 @@ impl GeoTableBuilderOptions {
 impl Default for GeoTableBuilderOptions {
     fn default() -> Self {
         Self {
-            coord_type: Default::default(),
+            coord_type: CoordType::Interleaved,
             prefer_multi: true,
             batch_size: 65_536,
             properties_schema: None,

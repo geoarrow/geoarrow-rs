@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use arrow_array::{Array, ArrayRef, FixedSizeListArray, OffsetSizeTrait, StructArray};
 use arrow_buffer::NullBuffer;
+use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
 use geo_traits::PointTrait;
 use geoarrow_schema::{Dimension, Metadata, PointType};
@@ -123,10 +124,11 @@ impl PointArray {
 
     /// Change the coordinate type of this array.
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.metadata();
         Self::new(
             self.coords.into_coord_type(coord_type),
             self.validity,
-            self.metadata,
+            metadata,
         )
     }
 }
@@ -137,17 +139,15 @@ impl ArrayBase for PointArray {
     }
 
     fn storage_type(&self) -> DataType {
-        self.data_type.to_data_type()
+        self.data_type.data_type()
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        self.data_type
-            .to_field_with_metadata("geometry", true, &self.metadata)
-            .into()
+        self.data_type.to_field("geometry", true).into()
     }
 
     fn extension_name(&self) -> &str {
-        self.data_type.extension_name()
+        PointType::NAME
     }
 
     fn into_array_ref(self) -> ArrayRef {
@@ -159,7 +159,7 @@ impl ArrayBase for PointArray {
     }
 
     fn metadata(&self) -> Arc<Metadata> {
-        self.metadata.clone()
+        self.data_type.metadata().clone()
     }
 
     /// Returns the number of geometries in this array

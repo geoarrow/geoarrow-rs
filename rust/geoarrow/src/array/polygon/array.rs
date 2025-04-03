@@ -21,7 +21,7 @@ use geo_traits::PolygonTrait;
 
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
-use geoarrow_schema::PolygonType;
+use geoarrow_schema::{CoordType, Metadata, PolygonType};
 
 use super::PolygonBuilder;
 
@@ -193,12 +193,13 @@ impl PolygonArray {
 
     /// Change the coordinate type of this array.
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.metadata();
         Self::new(
             self.coords.into_coord_type(coord_type),
             self.geom_offsets,
             self.ring_offsets,
             self.validity,
-            self.metadata,
+            metadata,
         )
     }
 }
@@ -213,9 +214,7 @@ impl ArrayBase for PolygonArray {
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        self.data_type
-            .to_field_with_metadata("geometry", true, &self.metadata)
-            .into()
+        self.data_type.to_field("geometry", true).into()
     }
 
     fn extension_name(&self) -> &str {
@@ -231,7 +230,7 @@ impl ArrayBase for PolygonArray {
     }
 
     fn metadata(&self) -> Arc<Metadata> {
-        self.metadata.clone()
+        self.data_type.metadata().clone()
     }
 
     /// Returns the number of geometries in this array

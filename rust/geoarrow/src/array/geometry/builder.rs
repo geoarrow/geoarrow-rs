@@ -7,13 +7,13 @@ use crate::array::{
     CoordType, GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder,
     MultiPointBuilder, MultiPolygonBuilder, PointBuilder, PolygonBuilder, WKBArray,
 };
-use geoarrow_schema::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use crate::{ArrayBase, NativeArray};
 use arrow_array::{OffsetSizeTrait, UnionArray};
 use geo_traits::*;
+use geoarrow_schema::{Dimension, Metadata};
 
 pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 

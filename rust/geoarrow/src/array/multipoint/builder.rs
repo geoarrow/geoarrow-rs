@@ -3,7 +3,7 @@ use std::sync::Arc;
 use arrow_array::{ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
-use geoarrow_schema::{Dimension, Metadata};
+use geoarrow_schema::{CoordType, Dimension, Metadata};
 
 use crate::array::multipoint::MultiPointCapacity;
 // use super::array::check;

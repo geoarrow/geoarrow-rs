@@ -6,7 +6,7 @@ use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
 use geo_traits::MultiPolygonTrait;
-use geoarrow_schema::MultiPolygonType;
+use geoarrow_schema::{Metadata, MultiPolygonType};
 
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::multipolygon::MultiPolygonCapacity;
@@ -242,13 +242,14 @@ impl MultiPolygonArray {
 
     /// Change the coordinate type of this array.
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.metadata();
         Self::new(
             self.coords.into_coord_type(coord_type),
             self.geom_offsets,
             self.polygon_offsets,
             self.ring_offsets,
             self.validity,
-            self.metadata,
+            metadata,
         )
     }
 }
@@ -263,9 +264,7 @@ impl ArrayBase for MultiPolygonArray {
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        self.data_type
-            .to_field_with_metadata("geometry", true, &self.metadata)
-            .into()
+        self.data_type.to_field("geometry", true).into()
     }
 
     fn extension_name(&self) -> &str {

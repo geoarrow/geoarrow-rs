@@ -4,12 +4,16 @@ use std::sync::Arc;
 use arrow_array::ArrayRef;
 use arrow_schema::extension::{EXTENSION_TYPE_METADATA_KEY, EXTENSION_TYPE_NAME_KEY};
 use arrow_schema::{Field, Schema, SchemaRef};
+use geoarrow_schema::{
+    CoordType, Dimension, LineStringType, MultiLineStringType, MultiPointType, MultiPolygonType,
+    PointType, PolygonType, WkbType,
+};
 use serde_json::Value;
 
 use crate::algorithm::native::bounding_rect::BoundingRect;
 use crate::array::metadata::{ArrayMetadata, Edges};
-use crate::array::{AsNativeArray, CoordType, NativeArrayDyn};
-use crate::datatypes::{Dimension, NativeType, SerializedType};
+use crate::array::{AsNativeArray, NativeArrayDyn};
+use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::io::crs::{CRSTransform, DefaultCRSTransform};
 use crate::io::parquet::metadata::{
@@ -238,50 +242,65 @@ pub fn get_geometry_types(data_type: &NativeType) -> HashSet<GeoParquetGeometryT
     let mut geometry_types = HashSet::new();
 
     match data_type {
-        NativeType::Point(_, Dimension::XY) => {
-            geometry_types.insert(Point);
+        NativeType::Point(t) => {
+            match t.dimension() {
+                Dimension::XY => geometry_types.insert(Point),
+                Dimension::XYZ => geometry_types.insert(PointZ),
+                _ => todo!("Support more than XY and XYZ dimensions in Parquet writer"),
+            };
         }
-        NativeType::Point(_, Dimension::XYZ) => {
-            geometry_types.insert(PointZ);
+        NativeType::LineString(t) => {
+            match t.dimension() {
+                Dimension::XY => geometry_types.insert(LineString),
+                Dimension::XYZ => geometry_types.insert(LineStringZ),
+                _ => todo!("Support more than XY and XYZ dimensions in Parquet writer"),
+            };
         }
-        NativeType::LineString(_, Dimension::XY) => {
-            geometry_types.insert(LineString);
+        NativeType::Polygon(t) => {
+            match t.dimension() {
+                Dimension::XY => geometry_types.insert(Polygon),
+                Dimension::XYZ => geometry_types.insert(PolygonZ),
+                _ => todo!("Support more than XY and XYZ dimensions in Parquet writer"),
+            };
         }
-        NativeType::LineString(_, Dimension::XYZ) => {
-            geometry_types.insert(LineStringZ);
+        // Also store rect as polygon
+        NativeType::Rect(t) => {
+            match t.dimension() {
+                Dimension::XY => geometry_types.insert(Polygon),
+                Dimension::XYZ => geometry_types.insert(PolygonZ),
+                _ => todo!("Support more than XY and XYZ dimensions in Parquet writer"),
+            };
         }
-        NativeType::Polygon(_, Dimension::XY) | NativeType::Rect(Dimension::XY) => {
-            geometry_types.insert(Polygon);
+        NativeType::MultiPoint(t) => {
+            match t.dimension() {
+                Dimension::XY => geometry_types.insert(MultiPoint),
+                Dimension::XYZ => geometry_types.insert(MultiPointZ),
+                _ => todo!("Support more than XY and XYZ dimensions in Parquet writer"),
+            };
         }
-        NativeType::Polygon(_, Dimension::XYZ) | NativeType::Rect(Dimension::XYZ) => {
-            geometry_types.insert(PolygonZ);
+        NativeType::MultiLineString(t) => {
+            match t.dimension() {
+                Dimension::XY => geometry_types.insert(MultiLineString),
+                Dimension::XYZ => geometry_types.insert(MultiLineStringZ),
+                _ => todo!("Support more than XY and XYZ dimensions in Parquet writer"),
+            };
         }
-        NativeType::MultiPoint(_, Dimension::XY) => {
-            geometry_types.insert(MultiPoint);
-        }
-        NativeType::MultiPoint(_, Dimension::XYZ) => {
-            geometry_types.insert(MultiPointZ);
-        }
-        NativeType::MultiLineString(_, Dimension::XY) => {
-            geometry_types.insert(MultiLineString);
-        }
-        NativeType::MultiLineString(_, Dimension::XYZ) => {
-            geometry_types.insert(MultiLineStringZ);
-        }
-        NativeType::MultiPolygon(_, Dimension::XY) => {
-            geometry_types.insert(MultiPolygon);
-        }
-        NativeType::MultiPolygon(_, Dimension::XYZ) => {
-            geometry_types.insert(MultiPolygonZ);
+        NativeType::MultiPolygon(t) => {
+            match t.dimension() {
+                Dimension::XY => geometry_types.insert(MultiPolygon),
+                Dimension::XYZ => geometry_types.insert(MultiPolygonZ),
+                _ => todo!("Support more than XY and XYZ dimensions in Parquet writer"),
+            };
         }
         NativeType::Geometry(_) => {
             // We don't have access to the actual data here, so we can't inspect better than this.
         }
-        NativeType::GeometryCollection(_, Dimension::XY) => {
-            geometry_types.insert(GeometryCollection);
-        }
-        NativeType::GeometryCollection(_, Dimension::XYZ) => {
-            geometry_types.insert(GeometryCollectionZ);
+        NativeType::GeometryCollection(t) => {
+            match t.dimension() {
+                Dimension::XY => geometry_types.insert(GeometryCollection),
+                Dimension::XYZ => geometry_types.insert(GeometryCollectionZ),
+                _ => todo!("Support more than XY and XYZ dimensions in Parquet writer"),
+            };
         }
     };
 
@@ -312,52 +331,58 @@ fn create_output_field(column_info: &ColumnInfo, name: String, nullable: bool) -
     use GeoParquetGeometryType::*;
 
     match column_info.encoding {
-        Encoding::WKB => SerializedType::WKB.to_field(name, nullable),
+        Encoding::WKB => WkbType::new(Default::default()).to_field(name, nullable, false),
         Encoding::Point => {
             if column_info.geometry_types.contains(&PointZ) {
-                NativeType::Point(CoordType::Separated, Dimension::XYZ).to_field(name, nullable)
+                PointType::new(CoordType::Separated, Dimension::XYZ, Default::default())
+                    .to_field(name, nullable)
             } else {
-                NativeType::Point(CoordType::Separated, Dimension::XY).to_field(name, nullable)
+                PointType::new(CoordType::Separated, Dimension::XY, Default::default())
+                    .to_field(name, nullable)
             }
         }
         Encoding::LineString => {
             if column_info.geometry_types.contains(&LineStringZ) {
-                NativeType::LineString(CoordType::Separated, Dimension::XYZ)
+                LineStringType::new(CoordType::Separated, Dimension::XYZ, Default::default())
                     .to_field(name, nullable)
             } else {
-                NativeType::LineString(CoordType::Separated, Dimension::XY).to_field(name, nullable)
+                LineStringType::new(CoordType::Separated, Dimension::XY, Default::default())
+                    .to_field(name, nullable)
             }
         }
         Encoding::Polygon => {
             if column_info.geometry_types.contains(&PolygonZ) {
-                NativeType::Polygon(CoordType::Separated, Dimension::XYZ).to_field(name, nullable)
+                PolygonType::new(CoordType::Separated, Dimension::XYZ, Default::default())
+                    .to_field(name, nullable)
             } else {
-                NativeType::Polygon(CoordType::Separated, Dimension::XY).to_field(name, nullable)
+                PolygonType::new(CoordType::Separated, Dimension::XY, Default::default())
+                    .to_field(name, nullable)
             }
         }
         Encoding::MultiPoint => {
             if column_info.geometry_types.contains(&MultiPointZ) {
-                NativeType::MultiPoint(CoordType::Separated, Dimension::XYZ)
+                MultiPointType::new(CoordType::Separated, Dimension::XYZ, Default::default())
                     .to_field(name, nullable)
             } else {
-                NativeType::MultiPoint(CoordType::Separated, Dimension::XY).to_field(name, nullable)
+                MultiPointType::new(CoordType::Separated, Dimension::XY, Default::default())
+                    .to_field(name, nullable)
             }
         }
         Encoding::MultiLineString => {
             if column_info.geometry_types.contains(&MultiLineStringZ) {
-                NativeType::MultiLineString(CoordType::Separated, Dimension::XYZ)
+                MultiLineStringType::new(CoordType::Separated, Dimension::XYZ, Default::default())
                     .to_field(name, nullable)
             } else {
-                NativeType::MultiLineString(CoordType::Separated, Dimension::XY)
+                MultiLineStringType::new(CoordType::Separated, Dimension::XY, Default::default())
                     .to_field(name, nullable)
             }
         }
         Encoding::MultiPolygon => {
             if column_info.geometry_types.contains(&MultiPolygonZ) {
-                NativeType::MultiPolygon(CoordType::Separated, Dimension::XYZ)
+                MultiPolygonType::new(CoordType::Separated, Dimension::XYZ, Default::default())
                     .to_field(name, nullable)
             } else {
-                NativeType::MultiPolygon(CoordType::Separated, Dimension::XY)
+                MultiPolygonType::new(CoordType::Separated, Dimension::XY, Default::default())
                     .to_field(name, nullable)
             }
         }

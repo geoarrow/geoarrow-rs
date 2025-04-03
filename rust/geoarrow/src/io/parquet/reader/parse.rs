@@ -50,7 +50,7 @@ fn infer_target_field(
     column_meta: &GeoParquetColumnMetadata,
     coord_type: CoordType,
 ) -> Result<FieldRef> {
-    let metadata = Arc::new(Metadata::from(column_meta));
+    let metadata = Arc::new(Metadata::from(column_meta.clone()));
 
     let target_geo_data_type: NativeType = match column_meta.encoding {
         GeoParquetColumnEncoding::WKB => {
@@ -187,7 +187,7 @@ fn infer_target_wkb_type(
 ) -> Result<NativeType> {
     Ok(
         infer_geo_data_type(geometry_types, coord_type)?.unwrap_or(NativeType::Geometry(
-            GeometryType::new(coord_type, metadata),
+            GeometryType::new(coord_type, Default::default()),
         )),
     )
 }
@@ -244,8 +244,8 @@ fn parse_array(array: ArrayRef, orig_field: &Field, target_field: &Field) -> Res
             use SerializedType::*;
             let target_geo_data_type: NativeType = target_field.try_into()?;
             match t {
-                WKB | LargeWKB => parse_wkb_column(arr, target_geo_data_type),
-                WKT | LargeWKT => Err(GeoArrowError::General(
+                WKB(_) | LargeWKB(_) => parse_wkb_column(arr, target_geo_data_type),
+                WKT(_) | LargeWKT(_) => Err(GeoArrowError::General(
                     "WKT input not supported in GeoParquet.".to_string(),
                 )),
             }

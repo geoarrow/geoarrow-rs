@@ -59,7 +59,7 @@ mod test {
         wkt_geoms.iter().for_each(|s| builder.append_value(s));
         let arr = WKTArray::new(builder.finish(), Default::default());
 
-        let parsed = read_wkt(&arr, Default::default(), false).unwrap();
+        let parsed = read_wkt(&arr, CoordType::Interleaved, false).unwrap();
         let parsed_ref = parsed.as_ref();
         let geom_arr = parsed_ref.as_geometry();
 

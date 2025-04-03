@@ -201,11 +201,8 @@ impl Table {
         // `chunked_geometry.data_type`.
         if self.is_empty() {
             let mut new_table = self.clone();
-            let new_field = target_geo_data_type.to_field_with_metadata(
-                orig_field.name(),
-                orig_field.is_nullable(),
-                &geoarray_metadata,
-            );
+            let new_field =
+                target_geo_data_type.to_field(orig_field.name(), orig_field.is_nullable());
             let new_arrays = vec![];
             new_table.set_column(index, new_field.into(), new_arrays)?;
             return Ok(new_table);

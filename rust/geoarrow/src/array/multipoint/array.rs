@@ -192,9 +192,7 @@ impl ArrayBase for MultiPointArray {
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        self.data_type
-            .to_field_with_metadata("geometry", true, &self.metadata)
-            .into()
+        self.data_type.to_field("geometry", true).into()
     }
 
     fn extension_name(&self) -> &str {

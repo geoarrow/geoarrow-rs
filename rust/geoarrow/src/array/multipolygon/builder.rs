@@ -5,7 +5,7 @@ use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 use geo_traits::{
     CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait,
 };
-use geoarrow_schema::Dimension;
+use geoarrow_schema::{Dimension, Metadata};
 
 use crate::array::multipolygon::MultiPolygonCapacity;
 // use super::array::check;

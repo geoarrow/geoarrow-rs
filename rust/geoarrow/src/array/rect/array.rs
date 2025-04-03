@@ -4,12 +4,13 @@ use arrow::array::AsArray;
 use arrow::datatypes::Float64Type;
 use arrow_array::{Array, ArrayRef, StructArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
+use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
-use geoarrow_schema::BoxType;
+use geoarrow_schema::{BoxType, CoordType, Dimension, Metadata};
 
 use crate::array::rect::RectBuilder;
-use crate::array::{CoordBuffer, CoordType, SeparatedCoordBuffer};
-use crate::datatypes::{rect_fields, Dimension, NativeType};
+use crate::array::{CoordBuffer, SeparatedCoordBuffer};
+use crate::datatypes::NativeType;
 use crate::error::GeoArrowError;
 use crate::scalar::Rect;
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
@@ -82,7 +83,6 @@ impl RectArray {
             lower: self.lower().slice(offset, length),
             upper: self.upper().slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
-            metadata: self.metadata(),
         }
     }
 }
@@ -93,17 +93,15 @@ impl ArrayBase for RectArray {
     }
 
     fn storage_type(&self) -> DataType {
-        self.data_type.to_data_type()
+        self.data_type.data_type()
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        self.data_type
-            .to_field_with_metadata("geometry", true, &self.metadata)
-            .into()
+        self.data_type.to_field("geometry", true).into()
     }
 
     fn extension_name(&self) -> &str {
-        self.data_type.extension_name()
+        BoxType::NAME
     }
 
     fn into_array_ref(self) -> ArrayRef {
@@ -115,7 +113,7 @@ impl ArrayBase for RectArray {
     }
 
     fn metadata(&self) -> Arc<Metadata> {
-        self.metadata.clone()
+        self.data_type.metadata().clone()
     }
 
     /// Returns the number of geometries in this array
@@ -133,7 +131,7 @@ impl ArrayBase for RectArray {
 
 impl NativeArray for RectArray {
     fn data_type(&self) -> NativeType {
-        self.data_type
+        NativeType::Rect(self.data_type.clone())
     }
 
     fn coord_type(&self) -> CoordType {

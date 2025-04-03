@@ -8,13 +8,13 @@ use crate::array::{
     CoordBufferBuilder, CoordType, InterleavedCoordBufferBuilder, MultiLineStringArray,
     PolygonBuilder, SeparatedCoordBufferBuilder, WKBArray,
 };
-use geoarrow_schema::Dimension;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use arrow_array::{ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
+use geoarrow_schema::{Dimension, Metadata};
 
 /// The GeoArrow equivalent to `Vec<Option<MultiLineString>>`: a mutable collection of
 /// MultiLineStrings.

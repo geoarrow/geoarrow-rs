@@ -104,7 +104,7 @@ impl<O: OffsetSizeTrait> ArrayBase for WKBArray<O> {
 
     fn extension_field(&self) -> Arc<Field> {
         self.data_type
-            .to_field_with_metadata("geometry", true, &self.metadata)
+            .to_field("geometry", true, O::IS_LARGE)
             .into()
     }
 

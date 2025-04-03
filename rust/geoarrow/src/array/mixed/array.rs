@@ -6,7 +6,7 @@ use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::extension::{EXTENSION_TYPE_METADATA_KEY, EXTENSION_TYPE_NAME_KEY};
 use arrow_schema::{DataType, Field, UnionMode};
 use geo_traits::GeometryTrait;
-use geoarrow_schema::CoordType;
+use geoarrow_schema::{CoordType, Metadata};
 
 use crate::algorithm::native::downcast::can_downcast_multi;
 use crate::array::mixed::builder::MixedGeometryBuilder;
@@ -428,6 +428,7 @@ impl MixedGeometryArray {
     }
 
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.metadata();
         Self::new(
             self.type_ids,
             self.offsets,
@@ -437,7 +438,7 @@ impl MixedGeometryArray {
             Some(self.multi_points.into_coord_type(coord_type)),
             Some(self.multi_line_strings.into_coord_type(coord_type)),
             Some(self.multi_polygons.into_coord_type(coord_type)),
-            self.metadata,
+            metadata,
         )
     }
 
