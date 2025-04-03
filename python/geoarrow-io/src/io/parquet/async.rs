@@ -18,6 +18,7 @@ use geoarrow::io::parquet::{
 };
 use geoarrow::table::Table;
 use geoarrow::ArrayBase;
+use geoarrow_schema::CoordType;
 use object_store::{ObjectMeta, ObjectStore};
 use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::ParquetObjectReader;
@@ -125,7 +126,9 @@ impl ParquetFile {
 
     #[getter]
     fn schema_arrow(&self) -> PyGeoArrowResult<Arro3Schema> {
-        let schema = self.geoparquet_meta.resolved_schema(Default::default())?;
+        let schema = self
+            .geoparquet_meta
+            .resolved_schema(CoordType::default_interleaved())?;
         Ok(schema.into())
     }
 
@@ -408,7 +411,9 @@ impl ParquetDataset {
 
     #[getter]
     fn schema_arrow(&self) -> PyGeoArrowResult<Arro3Schema> {
-        let schema = self.meta.resolved_schema(Default::default())?;
+        let schema = self
+            .meta
+            .resolved_schema(CoordType::default_interleaved())?;
         Ok(schema.into())
     }
 
@@ -435,7 +440,9 @@ impl ParquetDataset {
     ) -> PyGeoArrowResult<Bound<'py, PyAny>> {
         let options = create_options(batch_size, limit, offset, bbox, bbox_paths)?;
         let readers = self.to_readers(options)?;
-        let output_schema = self.meta.resolved_schema(Default::default())?;
+        let output_schema = self
+            .meta
+            .resolved_schema(CoordType::default_interleaved())?;
 
         let fut = future_into_py(py, async move {
             Ok(Self::read_inner(readers, output_schema).await?)
@@ -456,7 +463,9 @@ impl ParquetDataset {
         let runtime = get_runtime(py)?;
         let options = create_options(batch_size, limit, offset, bbox, bbox_paths)?;
         let readers = self.to_readers(options)?;
-        let output_schema = self.meta.resolved_schema(Default::default())?;
+        let output_schema = self
+            .meta
+            .resolved_schema(CoordType::default_interleaved())?;
 
         runtime.block_on(Self::read_inner(readers, output_schema))
     }

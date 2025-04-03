@@ -7,7 +7,7 @@ use crate::ffi::to_python::native_array_to_pyobject;
 use crate::interop::shapely::utils::import_shapely;
 use arrow_array::builder::BinaryBuilder;
 use geoarrow::datatypes::NativeType;
-use geoarrow_schema::{Dimension, GeometryCollectionType, Metadata};
+use geoarrow_schema::{CoordType, Dimension, GeometryCollectionType, Metadata};
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
@@ -161,7 +161,7 @@ pub fn from_shapely(
         let geom_arr = geoarrow::io::wkb::from_wkb(
             &wkb_arr,
             NativeType::GeometryCollection(GeometryCollectionType::new(
-                Default::default(),
+                CoordType::default_interleaved(),
                 Dimension::XY,
                 Default::default(),
             )),

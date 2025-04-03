@@ -4,6 +4,7 @@ use crate::util::to_arro3_table;
 
 use geoarrow::io::flatgeobuf::read_flatgeobuf_async as _read_flatgeobuf_async;
 use geoarrow::io::flatgeobuf::FlatGeobufReaderOptions;
+use geoarrow_schema::CoordType;
 use pyo3::prelude::*;
 use pyo3_async_runtimes::tokio::future_into_py;
 use pyo3_geoarrow::PyCoordType;
@@ -23,7 +24,9 @@ pub fn read_flatgeobuf_async<'py>(
         let options = FlatGeobufReaderOptions {
             batch_size: Some(batch_size),
             bbox,
-            coord_type: coord_type.map(|x| x.into()).unwrap_or_default(),
+            coord_type: coord_type
+                .map(|x| x.into())
+                .unwrap_or(CoordType::default_interleaved()),
         };
         let table = _read_flatgeobuf_async(reader.store, reader.path, options)
             .await
