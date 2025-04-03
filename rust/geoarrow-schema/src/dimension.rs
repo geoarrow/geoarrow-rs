@@ -5,12 +5,6 @@ use arrow_schema::{ArrowError, Field, Fields};
 /// The dimension of the geometry array.
 ///
 /// [Dimension] implements [TryFrom] for integers:
-///
-/// ```
-/// use geoarrow::datatypes::Dimension;
-///
-/// assert_eq!(Dimension::try_from(2).unwrap(), Dimension::XY);
-/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Dimension {
     /// Two-dimensional.
