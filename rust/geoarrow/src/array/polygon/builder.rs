@@ -47,7 +47,7 @@ pub struct PolygonBuilder {
 impl PolygonBuilder {
     /// Creates a new empty [`PolygonBuilder`].
     pub fn new(dim: Dimension) -> Self {
-        Self::new_with_options(dim, Default::default(), Default::default())
+        Self::new_with_options(dim, CoordType::Interleaved, Default::default())
     }
 
     /// Creates a new empty [`PolygonBuilder`] with the provided options.
@@ -61,7 +61,7 @@ impl PolygonBuilder {
 
     /// Creates a new [`PolygonBuilder`] with given capacity and no validity.
     pub fn with_capacity(dim: Dimension, capacity: PolygonCapacity) -> Self {
-        Self::with_capacity_and_options(dim, capacity, Default::default(), Default::default())
+        Self::with_capacity_and_options(dim, capacity, CoordType::Interleaved, Default::default())
     }
 
     /// Creates a new empty [`PolygonBuilder`] with the provided capacity and options.
@@ -217,7 +217,7 @@ impl PolygonBuilder {
         Self::with_capacity_and_options_from_iter(
             geoms,
             dim,
-            Default::default(),
+            CoordType::Interleaved,
             Default::default(),
         )
     }
@@ -533,13 +533,13 @@ impl From<PolygonBuilder> for PolygonArray {
 
 impl<G: PolygonTrait<T = f64>> From<(&[G], Dimension)> for PolygonBuilder {
     fn from((geoms, dim): (&[G], Dimension)) -> Self {
-        Self::from_polygons(geoms, dim, Default::default(), Default::default())
+        Self::from_polygons(geoms, dim, CoordType::Interleaved, Default::default())
     }
 }
 
 impl<G: PolygonTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for PolygonBuilder {
     fn from((geoms, dim): (Vec<Option<G>>, Dimension)) -> Self {
-        Self::from_nullable_polygons(&geoms, dim, Default::default(), Default::default())
+        Self::from_nullable_polygons(&geoms, dim, CoordType::Interleaved, Default::default())
     }
 }
 
@@ -547,9 +547,9 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for PolygonBuilder {
     type Error = GeoArrowError;
 
     fn try_from((value, dim): (WKBArray<O>, Dimension)) -> Result<Self> {
-        let metadata = value.metadata.clone();
+        let metadata = value.data_type.metadata().clone();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, dim, Default::default(), metadata)
+        Self::from_wkb(&wkb_objects, dim, CoordType::Interleaved, metadata)
     }
 }
 

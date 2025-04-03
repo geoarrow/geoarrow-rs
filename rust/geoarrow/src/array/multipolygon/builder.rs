@@ -5,7 +5,7 @@ use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 use geo_traits::{
     CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait,
 };
-use geoarrow_schema::{Dimension, Metadata};
+use geoarrow_schema::{CoordType, Dimension, Metadata};
 
 use crate::array::multipolygon::MultiPolygonCapacity;
 // use super::array::check;
@@ -588,7 +588,7 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MultiPolygonBuild
     type Error = GeoArrowError;
 
     fn try_from((value, dim): (WKBArray<O>, Dimension)) -> Result<Self> {
-        let metadata = value.metadata.clone();
+        let metadata = value.data_type.metadata().clone();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
         Self::from_wkb(&wkb_objects, dim, Default::default(), metadata)
     }

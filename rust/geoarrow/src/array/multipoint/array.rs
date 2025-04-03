@@ -6,7 +6,7 @@ use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
 use geo_traits::MultiPointTrait;
-use geoarrow_schema::{Dimension, Metadata, MultiPointType};
+use geoarrow_schema::{CoordType, Dimension, Metadata, MultiPointType};
 
 use super::MultiPointBuilder;
 use crate::algorithm::native::eq::offset_buffer_eq;
@@ -255,7 +255,8 @@ impl NativeArray for MultiPointArray {
 impl GeometryArraySelfMethods for MultiPointArray {
     fn with_coords(self, coords: CoordBuffer) -> Self {
         assert_eq!(coords.len(), self.coords.len());
-        Self::new(coords, self.geom_offsets, self.validity, self.metadata)
+        let metadata = self.metadata();
+        Self::new(coords, self.geom_offsets, self.validity, metadata)
     }
 
     fn into_coord_type(self, coord_type: CoordType) -> Self {
@@ -403,21 +404,18 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MultiPointArray {
 /// the semantic type
 impl From<MultiPointArray> for LineStringArray {
     fn from(value: MultiPointArray) -> Self {
-        Self::new(
-            value.coords,
-            value.geom_offsets,
-            value.validity,
-            value.metadata,
-        )
+        let metadata = value.metadata();
+        Self::new(value.coords, value.geom_offsets, value.validity, metadata)
     }
 }
 
 impl From<PointArray> for MultiPointArray {
     fn from(value: PointArray) -> Self {
+        let metadata = value.metadata();
         let coords = value.coords;
         let geom_offsets = OffsetBuffer::from_lengths(vec![1; coords.len()]);
         let validity = value.validity;
-        Self::new(coords, geom_offsets, validity, value.metadata)
+        Self::new(coords, geom_offsets, validity, metadata)
     }
 }
 

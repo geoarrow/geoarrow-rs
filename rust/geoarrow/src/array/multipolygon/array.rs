@@ -6,7 +6,7 @@ use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
 use geo_traits::MultiPolygonTrait;
-use geoarrow_schema::{Dimension, Metadata, MultiPolygonType};
+use geoarrow_schema::{CoordType, Dimension, Metadata, MultiPolygonType};
 
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::multipolygon::MultiPolygonCapacity;
@@ -280,7 +280,7 @@ impl ArrayBase for MultiPolygonArray {
     }
 
     fn metadata(&self) -> Arc<Metadata> {
-        self.metadata.clone()
+        self.data_type.metadata().clone()
     }
 
     /// Returns the number of geometries in this array
@@ -298,7 +298,7 @@ impl ArrayBase for MultiPolygonArray {
 
 impl NativeArray for MultiPolygonArray {
     fn data_type(&self) -> NativeType {
-        self.data_type
+        NativeType::MultiPolygon(self.data_type.clone())
     }
 
     fn coord_type(&self) -> CoordType {
@@ -311,7 +311,7 @@ impl NativeArray for MultiPolygonArray {
 
     fn with_metadata(&self, metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
-        arr.metadata = metadata;
+        arr.data_type = self.data_type.clone().with_metadata(metadata);
         Arc::new(arr)
     }
 
@@ -327,24 +327,26 @@ impl NativeArray for MultiPolygonArray {
 impl GeometryArraySelfMethods for MultiPolygonArray {
     fn with_coords(self, coords: CoordBuffer) -> Self {
         assert_eq!(coords.len(), self.coords.len());
+        let metadata = self.metadata();
         Self::new(
             coords,
             self.geom_offsets,
             self.polygon_offsets,
             self.ring_offsets,
             self.validity,
-            self.metadata,
+            metadata,
         )
     }
 
     fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.metadata();
         Self::new(
             self.coords.into_coord_type(coord_type),
             self.geom_offsets,
             self.polygon_offsets,
             self.ring_offsets,
             self.validity,
-            self.metadata,
+            metadata,
         )
     }
 }
@@ -536,6 +538,7 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MultiPolygonArray
 
 impl From<PolygonArray> for MultiPolygonArray {
     fn from(value: PolygonArray) -> Self {
+        let metadata = value.metadata();
         let coords = value.coords;
         let geom_offsets = OffsetBuffer::from_lengths(vec![1; coords.len()]);
         let ring_offsets = value.ring_offsets;
@@ -547,7 +550,7 @@ impl From<PolygonArray> for MultiPolygonArray {
             polygon_offsets,
             ring_offsets,
             validity,
-            value.metadata,
+            metadata,
         )
     }
 }

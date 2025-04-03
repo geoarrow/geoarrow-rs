@@ -1,20 +1,20 @@
 use std::sync::Arc;
 
-use geoarrow_schema::Metadata;
-use crate::array::multilinestring::MultiLineStringCapacity;
+use arrow_array::{ArrayRef, GenericListArray, OffsetSizeTrait};
+use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
+use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
+use geoarrow_schema::{CoordType, Dimension, Metadata};
 // use super::array::check;
+
+use crate::array::multilinestring::MultiLineStringCapacity;
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{
-    CoordBufferBuilder, CoordType, InterleavedCoordBufferBuilder, MultiLineStringArray,
-    PolygonBuilder, SeparatedCoordBufferBuilder, WKBArray,
+    CoordBufferBuilder, InterleavedCoordBufferBuilder, MultiLineStringArray, PolygonBuilder,
+    SeparatedCoordBufferBuilder, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
-use arrow_array::{ArrayRef, GenericListArray, OffsetSizeTrait};
-use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
-use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
-use geoarrow_schema::{Dimension, Metadata};
 
 /// The GeoArrow equivalent to `Vec<Option<MultiLineString>>`: a mutable collection of
 /// MultiLineStrings.
@@ -46,7 +46,7 @@ pub type MultiLineStringInner = (
 impl MultiLineStringBuilder {
     /// Creates a new empty [`MultiLineStringBuilder`].
     pub fn new(dim: Dimension) -> Self {
-        Self::new_with_options(dim, Default::default(), Default::default())
+        Self::new_with_options(dim, CoordType::Interleaved, Default::default())
     }
 
     /// Creates a new empty [`MultiLineStringBuilder`] with the provided options.
@@ -60,7 +60,7 @@ impl MultiLineStringBuilder {
 
     /// Creates a new [`MultiLineStringBuilder`] with a capacity.
     pub fn with_capacity(dim: Dimension, capacity: MultiLineStringCapacity) -> Self {
-        Self::with_capacity_and_options(dim, capacity, Default::default(), Default::default())
+        Self::with_capacity_and_options(dim, capacity, CoordType::Interleaved, Default::default())
     }
 
     /// Creates a new empty [`MultiLineStringBuilder`] with the provided capacity and options.
@@ -523,7 +523,7 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MultiLineStringBu
     type Error = GeoArrowError;
 
     fn try_from((value, dim): (WKBArray<O>, Dimension)) -> Result<Self> {
-        let metadata = value.metadata.clone();
+        let metadata = value.data_type.metadata().clone();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
         Self::from_wkb(&wkb_objects, dim, Default::default(), metadata)
     }

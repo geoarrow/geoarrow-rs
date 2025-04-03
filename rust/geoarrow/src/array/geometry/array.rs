@@ -156,7 +156,10 @@ impl GeometryArray {
         }
         assert!(coord_types.len() <= 1);
 
-        let coord_type = coord_types.into_iter().next().unwrap_or_default();
+        let coord_type = coord_types
+            .into_iter()
+            .next()
+            .unwrap_or(CoordType::Interleaved);
 
         use Dimension::*;
         Self {
@@ -641,7 +644,7 @@ impl NativeArray for GeometryArray {
 
     fn with_metadata(&self, metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
-        arr.metadata = metadata;
+        arr.data_type = self.data_type.clone().with_metadata(metadata);
         Arc::new(arr)
     }
 
@@ -659,7 +662,7 @@ impl GeometryArraySelfMethods for GeometryArray {
         todo!();
     }
 
-    fn into_coord_type(self, _coord_type: crate::array::CoordType) -> Self {
+    fn into_coord_type(self, _coord_type: CoordType) -> Self {
         todo!();
     }
 }
@@ -1519,7 +1522,7 @@ mod test {
 
         let arr: GeometryArray = GeometryBuilder::from_geometries(
             geoms.as_slice(),
-            Default::default(),
+            CoordType::Interleaved,
             Default::default(),
             false,
         )
@@ -1540,7 +1543,7 @@ mod test {
         ];
         let arr: GeometryArray = GeometryBuilder::from_geometries(
             geoms.as_slice(),
-            Default::default(),
+            CoordType::Interleaved,
             Default::default(),
             true,
         )
@@ -1574,7 +1577,7 @@ mod test {
 
         let arr: GeometryArray = GeometryBuilder::from_geometries(
             geoms.as_slice(),
-            Default::default(),
+            CoordType::Interleaved,
             Default::default(),
             false,
         )
@@ -1602,7 +1605,7 @@ mod test {
 
         let arr: GeometryArray = GeometryBuilder::from_geometries(
             geoms.as_slice(),
-            Default::default(),
+            CoordType::Interleaved,
             Default::default(),
             false,
         )
@@ -1631,7 +1634,7 @@ mod test {
 
         let arr: GeometryArray = GeometryBuilder::from_geometries(
             geoms.as_slice(),
-            Default::default(),
+            CoordType::Interleaved,
             Default::default(),
             false,
         )
@@ -1656,7 +1659,7 @@ mod test {
 
         let arr: GeometryArray = GeometryBuilder::from_geometries(
             geoms.as_slice(),
-            Default::default(),
+            CoordType::Interleaved,
             Default::default(),
             false,
         )
@@ -1684,7 +1687,7 @@ mod test {
 
         let arr: GeometryArray = GeometryBuilder::from_geometries(
             geoms.as_slice(),
-            Default::default(),
+            CoordType::Interleaved,
             Default::default(),
             false,
         )

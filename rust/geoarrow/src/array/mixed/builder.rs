@@ -272,6 +272,7 @@ impl<'a> MixedGeometryBuilder {
         match self.dim {
             Dimension::XY => self.types.push(1),
             Dimension::XYZ => self.types.push(11),
+            _ => todo!("XYM and XYZM not supported"),
         }
     }
 
@@ -304,6 +305,7 @@ impl<'a> MixedGeometryBuilder {
         match self.dim {
             Dimension::XY => self.types.push(2),
             Dimension::XYZ => self.types.push(12),
+            _ => todo!("XYM and XYZM not supported"),
         }
     }
 
@@ -332,6 +334,7 @@ impl<'a> MixedGeometryBuilder {
         match self.dim {
             Dimension::XY => self.types.push(3),
             Dimension::XYZ => self.types.push(13),
+            _ => todo!("XYM and XYZM not supported"),
         }
     }
 
@@ -356,6 +359,7 @@ impl<'a> MixedGeometryBuilder {
         match self.dim {
             Dimension::XY => self.types.push(4),
             Dimension::XYZ => self.types.push(14),
+            _ => todo!("XYM and XYZM not supported"),
         }
     }
 
@@ -380,6 +384,7 @@ impl<'a> MixedGeometryBuilder {
         match self.dim {
             Dimension::XY => self.types.push(5),
             Dimension::XYZ => self.types.push(15),
+            _ => todo!("XYM and XYZM not supported"),
         }
     }
 
@@ -404,6 +409,7 @@ impl<'a> MixedGeometryBuilder {
         match self.dim {
             Dimension::XY => self.types.push(6),
             Dimension::XYZ => self.types.push(16),
+            _ => todo!("XYM and XYZM not supported"),
         }
     }
 
@@ -567,7 +573,7 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MixedGeometryBuil
             "Parsing a WKBArray with null elements not supported",
         );
 
-        let metadata = value.metadata.clone();
+        let metadata = value.data_type.metadata().clone();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
         Self::from_wkb(&wkb_objects, dim, Default::default(), metadata, true)
     }

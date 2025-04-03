@@ -1,19 +1,19 @@
 use core::f64;
 use std::sync::Arc;
 
-use geoarrow_schema::Metadata;
+use arrow_array::{ArrayRef, OffsetSizeTrait};
+use arrow_buffer::NullBufferBuilder;
+use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
+use geoarrow_schema::{CoordType, Dimension, Metadata};
+
 // use super::array::check;
 use crate::array::{
-    CoordBufferBuilder, CoordType, InterleavedCoordBufferBuilder, PointArray,
-    SeparatedCoordBufferBuilder, WKBArray,
+    CoordBufferBuilder, InterleavedCoordBufferBuilder, PointArray, SeparatedCoordBufferBuilder,
+    WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
-use arrow_array::{ArrayRef, OffsetSizeTrait};
-use arrow_buffer::NullBufferBuilder;
-use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
-use geoarrow_schema::{Dimension, Metadata};
 
 /// The GeoArrow equivalent to `Vec<Option<Point>>`: a mutable collection of Points.
 ///
@@ -386,7 +386,7 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for PointBuilder {
     type Error = GeoArrowError;
 
     fn try_from((value, dim): (WKBArray<O>, Dimension)) -> Result<Self> {
-        let metadata = value.metadata.clone();
+        let metadata = value.data_type.metadata().clone();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
         Self::from_wkb(&wkb_objects, dim, Default::default(), metadata)
     }

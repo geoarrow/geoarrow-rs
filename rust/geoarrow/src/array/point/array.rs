@@ -5,12 +5,12 @@ use arrow_buffer::NullBuffer;
 use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
 use geo_traits::PointTrait;
-use geoarrow_schema::{Dimension, Metadata, PointType};
+use geoarrow_schema::{CoordType, Dimension, Metadata, PointType};
 
 use crate::algorithm::native::downcast::can_downcast_multi;
 use crate::algorithm::native::eq::point_eq;
 use crate::array::{
-    CoordBuffer, CoordType, GeometryCollectionArray, InterleavedCoordBuffer, MixedGeometryArray,
+    CoordBuffer, GeometryCollectionArray, InterleavedCoordBuffer, MixedGeometryArray,
     MultiPointArray, PointBuilder, SeparatedCoordBuffer, WKBArray,
 };
 use crate::datatypes::NativeType;
@@ -190,7 +190,7 @@ impl NativeArray for PointArray {
 
     fn with_metadata(&self, metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
-        arr.metadata = metadata;
+        arr.data_type = self.data_type.clone().with_metadata(metadata);
         Arc::new(arr)
     }
 
@@ -206,7 +206,8 @@ impl NativeArray for PointArray {
 impl GeometryArraySelfMethods for PointArray {
     fn with_coords(self, coords: CoordBuffer) -> Self {
         assert_eq!(coords.len(), self.coords.len());
-        Self::new(coords, self.validity, self.metadata)
+        let metadata = self.metadata();
+        Self::new(coords, self.validity, metadata)
     }
 
     fn into_coord_type(self, coord_type: CoordType) -> Self {
@@ -392,12 +393,9 @@ impl TryFrom<MultiPointArray> for PointArray {
         if !can_downcast_multi(&value.geom_offsets) {
             return Err(GeoArrowError::General("Unable to cast".to_string()));
         }
+        let metadata = value.metadata();
 
-        Ok(PointArray::new(
-            value.coords,
-            value.validity,
-            value.metadata,
-        ))
+        Ok(PointArray::new(value.coords, value.validity, metadata))
     }
 }
 

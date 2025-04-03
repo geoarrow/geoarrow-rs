@@ -274,22 +274,24 @@ impl NativeArray for MultiLineStringArray {
 impl GeometryArraySelfMethods for MultiLineStringArray {
     fn with_coords(self, coords: CoordBuffer) -> Self {
         assert_eq!(coords.len(), self.coords.len());
+        let metadata = self.metadata();
         Self::new(
             coords,
             self.geom_offsets,
             self.ring_offsets,
             self.validity,
-            self.metadata(),
+            metadata,
         )
     }
 
     fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.metadata();
         Self::new(
             self.coords.into_coord_type(coord_type),
             self.geom_offsets,
             self.ring_offsets,
             self.validity,
-            self.metadata(),
+            metadata,
         )
     }
 }
@@ -444,12 +446,13 @@ impl<G: MultiLineStringTrait<T = f64>> From<(&[G], Dimension)> for MultiLineStri
 /// change the semantic type
 impl From<MultiLineStringArray> for PolygonArray {
     fn from(value: MultiLineStringArray) -> Self {
+        let metadata = value.metadata();
         Self::new(
             value.coords,
             value.geom_offsets,
             value.ring_offsets,
             value.validity,
-            value.metadata,
+            metadata,
         )
     }
 }
@@ -465,11 +468,12 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MultiLineStringAr
 
 impl From<LineStringArray> for MultiLineStringArray {
     fn from(value: LineStringArray) -> Self {
+        let metadata = value.metadata();
         let coords = value.coords;
         let geom_offsets = OffsetBuffer::from_lengths(vec![1; coords.len()]);
         let ring_offsets = value.geom_offsets;
         let validity = value.validity;
-        Self::new(coords, geom_offsets, ring_offsets, validity, value.metadata)
+        Self::new(coords, geom_offsets, ring_offsets, validity, metadata)
     }
 }
 

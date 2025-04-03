@@ -261,7 +261,7 @@ impl NativeArray for PolygonArray {
 
     fn with_metadata(&self, metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
-        arr.metadata = metadata;
+        arr.data_type = self.data_type.clone().with_metadata(metadata);
         Arc::new(arr)
     }
 
@@ -277,22 +277,24 @@ impl NativeArray for PolygonArray {
 impl GeometryArraySelfMethods for PolygonArray {
     fn with_coords(self, coords: CoordBuffer) -> Self {
         assert_eq!(coords.len(), self.coords.len());
+        let metadata = self.metadata();
         Self::new(
             coords,
             self.geom_offsets,
             self.ring_offsets,
             self.validity,
-            self.metadata,
+            metadata,
         )
     }
 
     fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.metadata();
         Self::new(
             self.coords.into_coord_type(coord_type),
             self.geom_offsets,
             self.ring_offsets,
             self.validity,
-            self.metadata,
+            metadata,
         )
     }
 }
@@ -454,12 +456,13 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for PolygonArray {
 /// change the semantic type
 impl From<PolygonArray> for MultiLineStringArray {
     fn from(value: PolygonArray) -> Self {
+        let metadata = value.metadata();
         Self::new(
             value.coords,
             value.geom_offsets,
             value.ring_offsets,
             value.validity,
-            value.metadata,
+            metadata,
         )
     }
 }
@@ -527,13 +530,14 @@ impl TryFrom<MultiPolygonArray> for PolygonArray {
         if !can_downcast_multi(&value.geom_offsets) {
             return Err(GeoArrowError::General("Unable to cast".to_string()));
         }
+        let metadata = value.metadata();
 
         Ok(PolygonArray::new(
             value.coords,
             value.polygon_offsets,
             value.ring_offsets,
             value.validity,
-            value.metadata,
+            metadata,
         ))
     }
 }
