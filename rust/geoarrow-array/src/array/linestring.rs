@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use crate::algorithm::native::downcast::can_downcast_multi;
-use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::{
     CoordBuffer, GeometryCollectionArray, MixedGeometryArray, MultiLineStringArray,
     MultiPointArray, WKBArray,
@@ -9,6 +8,7 @@ use crate::array::{
 use crate::builder::LineStringBuilder;
 use crate::capacity::LineStringCapacity;
 use crate::datatypes::NativeType;
+use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, LineString};
 use crate::trait_::{

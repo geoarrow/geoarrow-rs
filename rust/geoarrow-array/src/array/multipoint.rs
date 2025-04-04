@@ -9,7 +9,7 @@ use geo_traits::MultiPointTrait;
 use geoarrow_schema::{CoordType, Dimension, Metadata, MultiPointType};
 
 use super::MultiPointBuilder;
-use crate::algorithm::native::eq::offset_buffer_eq;
+use crate::eq::offset_buffer_eq;
 use crate::array::{
     CoordBuffer, GeometryCollectionArray, LineStringArray, MixedGeometryArray, PointArray, WKBArray,
 };

@@ -57,6 +57,7 @@ pub mod array;
 pub mod builder;
 pub mod capacity;
 pub mod cast;
+mod eq;
 pub mod error;
 pub mod scalar;
 

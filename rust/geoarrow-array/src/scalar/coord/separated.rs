@@ -1,4 +1,4 @@
-use crate::algorithm::native::eq::coord_eq;
+use crate::eq::coord_eq;
 use crate::scalar::InterleavedCoord;
 use arrow_buffer::ScalarBuffer;
 use geo_traits::CoordTrait;

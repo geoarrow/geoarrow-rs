@@ -278,7 +278,7 @@ impl<G: RectTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for RectArray {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::algorithm::native::eq::rect_eq;
+    use crate::eq::rect_eq;
     use crate::RectBuilder;
     use geoarrow_schema::Dimension;
 

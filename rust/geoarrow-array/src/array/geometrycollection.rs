@@ -8,7 +8,6 @@ use arrow_schema::{DataType, Field};
 use geo_traits::GeometryCollectionTrait;
 use geoarrow_schema::{CoordType, Dimension, GeometryCollectionType, Metadata};
 
-use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::{
     CoordBuffer, LineStringArray, MixedGeometryArray, MultiLineStringArray, MultiPointArray,
     MultiPolygonArray, PointArray, PolygonArray, WKBArray,
@@ -16,6 +15,7 @@ use crate::array::{
 use crate::builder::GeometryCollectionBuilder;
 use crate::capacity::GeometryCollectionCapacity;
 use crate::datatypes::NativeType;
+use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, GeometryCollection};
 use crate::trait_::{

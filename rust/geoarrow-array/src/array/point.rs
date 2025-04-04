@@ -8,7 +8,7 @@ use geo_traits::PointTrait;
 use geoarrow_schema::{CoordType, Dimension, Metadata, PointType};
 
 use crate::algorithm::native::downcast::can_downcast_multi;
-use crate::algorithm::native::eq::point_eq;
+use crate::eq::point_eq;
 use crate::array::{
     CoordBuffer, GeometryCollectionArray, InterleavedCoordBuffer, MixedGeometryArray,
     MultiPointArray, SeparatedCoordBuffer, WKBArray,

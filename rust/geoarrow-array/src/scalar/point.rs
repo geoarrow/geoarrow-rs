@@ -1,7 +1,7 @@
 use geo_traits::{CoordTrait, PointTrait};
 
-use crate::algorithm::native::eq::point_eq;
 use crate::array::CoordBuffer;
+use crate::eq::point_eq;
 use crate::scalar::Coord;
 
 /// An Arrow equivalent of a Point

@@ -1,5 +1,5 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_multipoint;
-use crate::algorithm::native::eq::multi_point_eq;
+use crate::eq::multi_point_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::CoordBuffer;
 use crate::scalar::Point;

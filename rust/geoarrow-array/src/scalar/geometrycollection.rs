@@ -1,5 +1,5 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_geometry_collection;
-use crate::algorithm::native::eq::geometry_collection_eq;
+use crate::eq::geometry_collection_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::MixedGeometryArray;
 use crate::io::geo::geometry_collection_to_geo;

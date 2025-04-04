@@ -2,7 +2,7 @@ use rstar::{RTreeObject, AABB};
 
 use geo_traits::RectTrait;
 
-use crate::algorithm::native::eq::rect_eq;
+use crate::eq::rect_eq;
 use crate::array::SeparatedCoordBuffer;
 use crate::scalar::SeparatedCoord;
 

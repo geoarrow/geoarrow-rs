@@ -1,5 +1,5 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_multilinestring;
-use crate::algorithm::native::eq::multi_line_string_eq;
+use crate::eq::multi_line_string_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::CoordBuffer;
 use crate::scalar::LineString;

@@ -8,7 +8,7 @@ use arrow_schema::{DataType, Field};
 use geo_traits::MultiLineStringTrait;
 use geoarrow_schema::{CoordType, Dimension, Metadata, MultiLineStringType};
 
-use crate::algorithm::native::eq::offset_buffer_eq;
+use crate::eq::offset_buffer_eq;
 use crate::array::{
     CoordBuffer, GeometryCollectionArray, LineStringArray, MixedGeometryArray, PolygonArray,
     WKBArray,

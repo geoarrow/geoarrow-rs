@@ -10,7 +10,7 @@ use geo_traits::PolygonTrait;
 use geoarrow_schema::{CoordType, Dimension, Metadata, PolygonType};
 
 use crate::algorithm::native::downcast::can_downcast_multi;
-use crate::algorithm::native::eq::offset_buffer_eq;
+use crate::eq::offset_buffer_eq;
 use crate::array::{
     CoordBuffer, GeometryCollectionArray, MixedGeometryArray, MultiLineStringArray,
     MultiPolygonArray, RectArray, WKBArray,

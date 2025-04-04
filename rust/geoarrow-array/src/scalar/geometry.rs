@@ -5,7 +5,7 @@ use geo_traits::{
 };
 use rstar::{RTreeObject, AABB};
 
-use crate::algorithm::native::eq::geometry_eq;
+use crate::eq::geometry_eq;
 use crate::scalar::*;
 
 /// An Arrow equivalent of a Geometry

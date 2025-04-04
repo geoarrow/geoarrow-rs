@@ -15,8 +15,9 @@ rust-version = "1.82"
 arrow-array = { workspace = true }
 arrow-buffer = { workspace = true }
 arrow-schema = { workspace = true }
-geoarrow-schema = { path = "../geoarrow-schema" }
 geo-traits = { workspace = true }
+geoarrow-schema = { path = "../geoarrow-schema" }
+num-traits = { workspace = true }
 rstar = { workspace = true, optional = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }

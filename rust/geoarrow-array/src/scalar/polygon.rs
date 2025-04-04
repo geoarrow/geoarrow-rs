@@ -1,5 +1,5 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_polygon;
-use crate::algorithm::native::eq::polygon_eq;
+use crate::eq::polygon_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::CoordBuffer;
 use crate::scalar::LineString;

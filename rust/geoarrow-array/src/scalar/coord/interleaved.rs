@@ -1,7 +1,7 @@
 use arrow_buffer::ScalarBuffer;
 use rstar::{RTreeObject, AABB};
 
-use crate::algorithm::native::eq::coord_eq;
+use crate::eq::coord_eq;
 use crate::scalar::SeparatedCoord;
 use geo_traits::CoordTrait;
 use geoarrow_schema::Dimension;
