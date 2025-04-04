@@ -1,0 +1,161 @@
+use core::f64;
+
+use geo_traits::{CoordTrait, PointTrait};
+use geoarrow_schema::Dimension;
+
+use crate::error::{GeoArrowError, Result};
+use crate::InterleavedCoordBuffer;
+
+/// The GeoArrow equivalent to `Vec<Coord>`: a mutable collection of coordinates.
+///
+/// This stores all coordinates in interleaved fashion as `xyxyxy`.
+///
+/// Converting an [`InterleavedCoordBufferBuilder`] into a [`InterleavedCoordBuffer`] is `O(1)`.
+#[derive(Debug, Clone)]
+pub struct InterleavedCoordBufferBuilder {
+    pub(crate) coords: Vec<f64>,
+    dim: Dimension,
+}
+
+impl InterleavedCoordBufferBuilder {
+    /// Create a new empty builder with the given dimension
+    pub fn new(dim: Dimension) -> Self {
+        Self::with_capacity(0, dim)
+    }
+
+    /// Create a new builder with the given capacity and dimension
+    pub fn with_capacity(capacity: usize, dim: Dimension) -> Self {
+        Self {
+            coords: Vec::with_capacity(capacity * dim.size()),
+            dim,
+        }
+    }
+
+    /// Initialize a buffer of a given length with all coordinates set to 0.0
+    pub fn initialize(len: usize, dim: Dimension) -> Self {
+        Self {
+            coords: vec![0.0f64; len * dim.size()],
+            dim,
+        }
+    }
+
+    /// Reserves capacity for at least `additional` more coordinates.
+    ///
+    /// The collection may reserve more space to speculatively avoid frequent reallocations. After
+    /// calling `reserve`, capacity will be greater than or equal to `self.len() + additional`.
+    /// Does nothing if capacity is already sufficient.
+    pub fn reserve(&mut self, additional: usize) {
+        self.coords.reserve(additional * self.dim.size());
+    }
+
+    /// Reserves the minimum capacity for at least `additional` more coordinates.
+    ///
+    /// Unlike [`reserve`], this will not deliberately over-allocate to speculatively avoid
+    /// frequent allocations. After calling `reserve_exact`, capacity will be greater than or equal
+    /// to `self.len() + additional`. Does nothing if the capacity is already sufficient.
+    ///
+    /// Note that the allocator may give the collection more space than it
+    /// requests. Therefore, capacity can not be relied upon to be precisely
+    /// minimal. Prefer [`reserve`] if future insertions are expected.
+    ///
+    /// [`reserve`]: Self::reserve
+    pub fn reserve_exact(&mut self, additional: usize) {
+        self.coords.reserve_exact(additional * self.dim.size());
+    }
+
+    /// Returns the total number of coordinates the vector can hold without reallocating.
+    pub fn capacity(&self) -> usize {
+        self.coords.capacity() / self.dim.size()
+    }
+
+    /// The number of coordinates in this builder
+    pub fn len(&self) -> usize {
+        self.coords.len() / self.dim.size()
+    }
+
+    /// Whether this builder is empty
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    /// Push a new coord onto the end of this coordinate buffer
+    ///
+    /// ## Panics
+    ///
+    /// - If the added coordinate does not have the same dimension as the coordinate buffer.
+    pub fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
+        self.try_push_coord(coord).unwrap()
+    }
+
+    /// Push a new coord onto the end of this coordinate buffer
+    ///
+    /// ## Errors
+    ///
+    /// - If the added coordinate does not have the same dimension as the coordinate buffer.
+    pub fn try_push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+        // TODO: should check xyz/zym
+        if coord.dim().size() != self.dim.size() {
+            return Err(GeoArrowError::General(
+                "coord dimension must match coord buffer dimension.".into(),
+            ));
+        }
+
+        self.coords.push(coord.x());
+        self.coords.push(coord.y());
+        if let Some(z) = coord.nth(2) {
+            self.coords.push(z);
+        };
+        Ok(())
+    }
+
+    /// Push a valid coordinate with NaN values
+    ///
+    /// Used in the case of point and rect arrays, where a `null` array value still needs to have
+    /// space allocated for it.
+    pub fn push_nan_coord(&mut self) {
+        for _ in 0..self.dim.size() {
+            self.coords.push(f64::NAN);
+        }
+    }
+
+    /// Push a new point onto the end of this coordinate buffer
+    ///
+    /// ## Panics
+    ///
+    /// - If the added point does not have the same dimension as the coordinate buffer.
+    pub fn push_point(&mut self, point: &impl PointTrait<T = f64>) {
+        self.try_push_point(point).unwrap()
+    }
+
+    /// Push a new point onto the end of this coordinate buffer
+    ///
+    /// ## Errors
+    ///
+    /// - If the added point does not have the same dimension as the coordinate buffer.
+    pub fn try_push_point(&mut self, point: &impl PointTrait<T = f64>) -> Result<()> {
+        if let Some(coord) = point.coord() {
+            self.try_push_coord(&coord)?;
+        } else {
+            self.push_nan_coord();
+        };
+        Ok(())
+    }
+
+    /// Construct a new builder and pre-fill it with coordinates from the provided iterator
+    pub fn from_coords<'a>(
+        coords: impl ExactSizeIterator<Item = &'a (impl CoordTrait<T = f64> + 'a)>,
+        dim: Dimension,
+    ) -> Result<Self> {
+        let mut buffer = InterleavedCoordBufferBuilder::with_capacity(coords.len(), dim);
+        for coord in coords {
+            buffer.push_coord(coord);
+        }
+        Ok(buffer)
+    }
+}
+
+impl From<InterleavedCoordBufferBuilder> for InterleavedCoordBuffer {
+    fn from(value: InterleavedCoordBufferBuilder) -> Self {
+        InterleavedCoordBuffer::new(value.coords.into(), value.dim)
+    }
+}
