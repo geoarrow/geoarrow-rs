@@ -3,9 +3,7 @@ use crate::algorithm::native::eq::multi_polygon_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::CoordBuffer;
 use crate::scalar::Polygon;
-use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
-use geo_traits::to_geo::ToGeoMultiPolygon;
 use geo_traits::MultiPolygonTrait;
 use geoarrow_schema::Dimension;
 use rstar::{RTreeObject, AABB};
@@ -69,23 +67,6 @@ impl<'a> MultiPolygon<'a> {
     }
 }
 
-impl NativeScalar for MultiPolygon<'_> {
-    type ScalarGeo = geo::MultiPolygon;
-
-    fn to_geo(&self) -> Self::ScalarGeo {
-        self.into()
-    }
-
-    fn to_geo_geometry(&self) -> geo::Geometry {
-        geo::Geometry::MultiPolygon(self.to_geo())
-    }
-
-    #[cfg(feature = "geos")]
-    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
-        self.try_into()
-    }
-}
-
 impl<'a> MultiPolygonTrait for MultiPolygon<'a> {
     type T = f64;
     type PolygonType<'b>
@@ -143,24 +124,6 @@ impl<'a> MultiPolygonTrait for &'a MultiPolygon<'a> {
             self.ring_offsets,
             self.start_offset + i,
         )
-    }
-}
-
-impl From<MultiPolygon<'_>> for geo::MultiPolygon {
-    fn from(value: MultiPolygon<'_>) -> Self {
-        (&value).into()
-    }
-}
-
-impl From<&MultiPolygon<'_>> for geo::MultiPolygon {
-    fn from(value: &MultiPolygon<'_>) -> Self {
-        value.to_multi_polygon()
-    }
-}
-
-impl From<MultiPolygon<'_>> for geo::Geometry {
-    fn from(value: MultiPolygon<'_>) -> Self {
-        geo::Geometry::MultiPolygon(value.into())
     }
 }
 

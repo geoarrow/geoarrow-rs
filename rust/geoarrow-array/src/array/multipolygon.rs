@@ -9,16 +9,17 @@ use geo_traits::MultiPolygonTrait;
 use geoarrow_schema::{CoordType, Dimension, Metadata, MultiPolygonType};
 
 use crate::algorithm::native::eq::offset_buffer_eq;
+use crate::array::{
+    CoordBuffer, GeometryCollectionArray, MixedGeometryArray, PolygonArray, WKBArray,
+};
+use crate::builder::MultiPolygonBuilder;
+use crate::capacity::MultiPolygonCapacity;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
-use crate::multipolygon::MultiPolygonCapacity;
 use crate::scalar::{Geometry, MultiPolygon};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
 use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::{ArrayBase, NativeArray};
-use crate::{CoordBuffer, GeometryCollectionArray, MixedGeometryArray, PolygonArray, WKBArray};
-
-use super::MultiPolygonBuilder;
 
 /// An immutable array of MultiPolygon geometries using GeoArrow's in-memory representation.
 ///

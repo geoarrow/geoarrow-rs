@@ -10,6 +10,9 @@ use geoarrow_schema::{CoordType, Dimension, Metadata, MultiPointType};
 
 use super::MultiPointBuilder;
 use crate::algorithm::native::eq::offset_buffer_eq;
+use crate::array::{
+    CoordBuffer, GeometryCollectionArray, LineStringArray, MixedGeometryArray, PointArray, WKBArray,
+};
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::multipoint::MultiPointCapacity;
@@ -17,9 +20,6 @@ use crate::scalar::{Geometry, MultiPoint};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
 use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::{ArrayBase, NativeArray};
-use crate::{
-    CoordBuffer, GeometryCollectionArray, LineStringArray, MixedGeometryArray, PointArray, WKBArray,
-};
 
 /// An immutable array of MultiPoint geometries using GeoArrow's in-memory representation.
 ///

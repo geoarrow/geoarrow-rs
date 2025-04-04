@@ -5,7 +5,7 @@ use crate::array::MixedGeometryArray;
 use crate::io::geo::geometry_collection_to_geo;
 use crate::scalar::Geometry;
 use crate::trait_::ArrayAccessor;
-use crate::trait_::NativeScalar;
+
 use crate::NativeArray;
 use arrow_buffer::OffsetBuffer;
 use geo_traits::GeometryCollectionTrait;
@@ -45,23 +45,6 @@ impl<'a> GeometryCollection<'a> {
     #[allow(clippy::wrong_self_convention)]
     pub(crate) fn into_inner(&self) -> (&MixedGeometryArray, &OffsetBuffer<i32>, usize) {
         (self.array, self.geom_offsets, self.geom_index)
-    }
-}
-
-impl NativeScalar for GeometryCollection<'_> {
-    type ScalarGeo = geo::GeometryCollection;
-
-    fn to_geo(&self) -> Self::ScalarGeo {
-        self.into()
-    }
-
-    fn to_geo_geometry(&self) -> geo::Geometry {
-        geo::Geometry::GeometryCollection(self.to_geo())
-    }
-
-    #[cfg(feature = "geos")]
-    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
-        self.try_into()
     }
 }
 
@@ -114,69 +97,6 @@ impl<'a> GeometryCollectionTrait for &'a GeometryCollection<'a> {
         self.array.value(self.start_offset + i)
     }
 }
-
-impl From<&GeometryCollection<'_>> for geo::GeometryCollection {
-    fn from(value: &GeometryCollection<'_>) -> Self {
-        geometry_collection_to_geo(value)
-    }
-}
-
-impl From<GeometryCollection<'_>> for geo::GeometryCollection {
-    fn from(value: GeometryCollection<'_>) -> Self {
-        (&value).into()
-    }
-}
-
-// We can't implement both
-// ```
-// impl From<GeometryCollection<'_>> for geo::GeometryCollection
-// ```
-// and
-// ```
-// impl From<GeometryCollection<'_>> for geo::Geometry
-// ```
-// because of this problematic blanket impl
-// (https://github.com/georust/geo/blob/ef55eabe9029b27f753d4c40db9f656e3670202e/geo-types/src/geometry/geometry_collection.rs#L113-L120).
-//
-// Thus we need to choose either one or the other to implement.
-//
-// If we implemented only `for geo::Geometry`, then the default blanket impl for
-// `geo::GeometryCollection` would be **wrong** because it would doubly-nest the
-// `GeometryCollection`:
-//
-// ```rs
-// GeometryCollection(
-//     [
-//         GeometryCollection(
-//             GeometryCollection(
-//                 [
-//                     Point(
-//                         Point(
-//                             Coord {
-//                                 x: 0.0,
-//                                 y: 0.0,
-//                             },
-//                         ),
-//                     ),
-//                 ],
-//             ),
-//         ),
-//     ],
-// )
-// ```
-//
-// Therefore we must implement only `for geo::GeometryCollection`
-// impl From<&GeometryCollection<'_>> for geo::Geometry {
-//     fn from(value: &GeometryCollection<'_>) -> Self {
-//         geo::Geometry::GeometryCollection(geometry_collection_to_geo(value))
-//     }
-// }
-
-// impl From<GeometryCollection<'_>> for geo::Geometry {
-//     fn from(value: GeometryCollection<'_>) -> Self {
-//         geo::Geometry::GeometryCollection(geometry_collection_to_geo(&value))
-//     }
-// }
 
 impl RTreeObject for GeometryCollection<'_> {
     type Envelope = AABB<[f64; 2]>;

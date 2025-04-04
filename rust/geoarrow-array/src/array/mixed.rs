@@ -8,17 +8,21 @@ use geo_traits::GeometryTrait;
 use geoarrow_schema::{CoordType, Dimension, GeometryCollectionType, Metadata};
 
 use crate::algorithm::native::downcast::can_downcast_multi;
+use crate::array::{
+    GeometryCollectionArray, LineStringArray, MultiLineStringArray, MultiPointArray,
+    MultiPolygonArray, PointArray, PolygonArray, WKBArray,
+};
+use crate::builder::{
+    LineStringBuilder, MixedGeometryBuilder, MultiLineStringBuilder, MultiPointBuilder,
+    MultiPolygonBuilder, PointBuilder, PolygonBuilder,
+};
+use crate::capacity::MixedCapacity;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
-use crate::mixed::builder::MixedGeometryBuilder;
-use crate::mixed::MixedCapacity;
 use crate::scalar::Geometry;
-use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
-use crate::{ArrayBase, NativeArray};
-use crate::{
-    GeometryCollectionArray, LineStringArray, LineStringBuilder, MultiLineStringArray,
-    MultiLineStringBuilder, MultiPointArray, MultiPointBuilder, MultiPolygonArray,
-    MultiPolygonBuilder, PointArray, PointBuilder, PolygonArray, PolygonBuilder, WKBArray,
+use crate::trait_::{
+    ArrayAccessor, ArrayBase, GeometryArraySelfMethods, IntoArrow, NativeArray,
+    NativeGeometryAccessor,
 };
 
 /// # Invariants

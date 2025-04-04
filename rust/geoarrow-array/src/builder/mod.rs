@@ -15,6 +15,7 @@ pub use coord::{CoordBufferBuilder, InterleavedCoordBufferBuilder, SeparatedCoor
 pub use geometry::GeometryBuilder;
 pub use geometrycollection::GeometryCollectionBuilder;
 pub use linestring::LineStringBuilder;
+pub(crate) use mixed::MixedGeometryBuilder;
 pub use multilinestring::MultiLineStringBuilder;
 pub use multipoint::MultiPointBuilder;
 pub use multipolygon::MultiPolygonBuilder;

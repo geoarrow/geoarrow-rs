@@ -9,19 +9,18 @@ use geo_traits::MultiLineStringTrait;
 use geoarrow_schema::{CoordType, Dimension, Metadata, MultiLineStringType};
 
 use crate::algorithm::native::eq::offset_buffer_eq;
+use crate::array::{
+    CoordBuffer, GeometryCollectionArray, LineStringArray, MixedGeometryArray, PolygonArray,
+    WKBArray,
+};
+use crate::builder::MultiLineStringBuilder;
+use crate::capacity::MultiLineStringCapacity;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
-use crate::multilinestring::MultiLineStringCapacity;
 use crate::scalar::{Geometry, MultiLineString};
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
 use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::{ArrayBase, NativeArray};
-use crate::{
-    CoordBuffer, GeometryCollectionArray, LineStringArray, MixedGeometryArray, PolygonArray,
-    WKBArray,
-};
-
-use super::MultiLineStringBuilder;
 
 /// An immutable array of MultiLineString geometries using GeoArrow's in-memory representation.
 ///

@@ -9,14 +9,14 @@ use geoarrow_schema::{CoordType, Dimension, Metadata};
 
 use crate::capacity::MultiPolygonCapacity;
 // use super::array::check;
+use crate::array::{MultiPolygonArray, WKBArray};
+use crate::builder::{
+    CoordBufferBuilder, InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder,
+};
 use crate::error::{GeoArrowError, Result};
 use crate::offset_builder::OffsetsBuilder;
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
-use crate::{
-    CoordBufferBuilder, InterleavedCoordBufferBuilder, MultiPolygonArray,
-    SeparatedCoordBufferBuilder, WKBArray,
-};
 
 pub type MutableMultiPolygonParts = (
     CoordBufferBuilder,

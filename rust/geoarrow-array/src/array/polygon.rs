@@ -1,29 +1,30 @@
 use std::sync::Arc;
 
-use crate::algorithm::native::downcast::can_downcast_multi;
-use crate::algorithm::native::eq::offset_buffer_eq;
-use crate::datatypes::NativeType;
-use crate::error::{GeoArrowError, Result};
-use crate::polygon::PolygonCapacity;
-use crate::scalar::{Geometry, Polygon};
-use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
-use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
-use crate::{ArrayBase, NativeArray};
-use crate::{
-    CoordBuffer, GeometryCollectionArray, MixedGeometryArray, MultiLineStringArray,
-    MultiPolygonArray, RectArray, WKBArray,
-};
 use arrow_array::cast::AsArray;
 use arrow_array::{Array, OffsetSizeTrait};
 use arrow_array::{ArrayRef, GenericListArray};
-use arrow_schema::extension::ExtensionType;
-use geo_traits::PolygonTrait;
-
 use arrow_buffer::{NullBuffer, OffsetBuffer};
+use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
+use geo_traits::PolygonTrait;
 use geoarrow_schema::{CoordType, Dimension, Metadata, PolygonType};
 
-use super::PolygonBuilder;
+use crate::algorithm::native::downcast::can_downcast_multi;
+use crate::algorithm::native::eq::offset_buffer_eq;
+use crate::array::{
+    CoordBuffer, GeometryCollectionArray, MixedGeometryArray, MultiLineStringArray,
+    MultiPolygonArray, RectArray, WKBArray,
+};
+use crate::builder::PolygonBuilder;
+use crate::capacity::PolygonCapacity;
+use crate::datatypes::NativeType;
+use crate::error::{GeoArrowError, Result};
+use crate::scalar::{Geometry, Polygon};
+use crate::trait_::{
+    ArrayAccessor, ArrayBase, GeometryArraySelfMethods, IntoArrow, NativeArray,
+    NativeGeometryAccessor,
+};
+use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 
 /// An immutable array of Polygon geometries using GeoArrow's in-memory representation.
 ///

@@ -3,9 +3,7 @@ use crate::algorithm::native::eq::multi_line_string_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::CoordBuffer;
 use crate::scalar::LineString;
-use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
-use geo_traits::to_geo::ToGeoMultiLineString;
 use geo_traits::MultiLineStringTrait;
 use rstar::{RTreeObject, AABB};
 
@@ -56,23 +54,6 @@ impl<'a> MultiLineString<'a> {
     }
 }
 
-impl NativeScalar for MultiLineString<'_> {
-    type ScalarGeo = geo::MultiLineString;
-
-    fn to_geo(&self) -> Self::ScalarGeo {
-        self.into()
-    }
-
-    fn to_geo_geometry(&self) -> geo::Geometry {
-        geo::Geometry::MultiLineString(self.to_geo())
-    }
-
-    #[cfg(feature = "geos")]
-    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
-        self.try_into()
-    }
-}
-
 impl<'a> MultiLineStringTrait for MultiLineString<'a> {
     type T = f64;
     type LineStringType<'b>
@@ -112,24 +93,6 @@ impl<'a> MultiLineStringTrait for &'a MultiLineString<'a> {
 
     unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
         LineString::new(self.coords, self.ring_offsets, self.start_offset + i)
-    }
-}
-
-impl From<MultiLineString<'_>> for geo::MultiLineString {
-    fn from(value: MultiLineString<'_>) -> Self {
-        (&value).into()
-    }
-}
-
-impl From<&MultiLineString<'_>> for geo::MultiLineString {
-    fn from(value: &MultiLineString<'_>) -> Self {
-        value.to_multi_line_string()
-    }
-}
-
-impl From<MultiLineString<'_>> for geo::Geometry {
-    fn from(value: MultiLineString<'_>) -> Self {
-        geo::Geometry::MultiLineString(value.into())
     }
 }
 

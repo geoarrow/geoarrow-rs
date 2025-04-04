@@ -8,6 +8,7 @@ mod multipolygon;
 mod point;
 mod polygon;
 mod rect;
+mod wkb;
 
 pub use coord::{Coord, InterleavedCoord, SeparatedCoord};
 pub use geometry::Geometry;
@@ -19,3 +20,4 @@ pub use multipolygon::MultiPolygon;
 pub use point::Point;
 pub use polygon::Polygon;
 pub use rect::Rect;
+pub use wkb::WKB;

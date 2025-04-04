@@ -7,14 +7,15 @@ use geoarrow_schema::{CoordType, Dimension, Metadata};
 
 use crate::capacity::MultiPointCapacity;
 // use super::array::check;
+use crate::array::{MultiPointArray, WKBArray};
+use crate::builder::{
+    CoordBufferBuilder, InterleavedCoordBufferBuilder, LineStringBuilder,
+    SeparatedCoordBufferBuilder,
+};
 use crate::error::{GeoArrowError, Result};
 use crate::offset_builder::OffsetsBuilder;
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
-use crate::{
-    CoordBufferBuilder, InterleavedCoordBufferBuilder, LineStringBuilder, MultiPointArray,
-    SeparatedCoordBufferBuilder, WKBArray,
-};
 
 /// The GeoArrow equivalent to `Vec<Option<MultiPoint>>`: a mutable collection of MultiPoints.
 ///

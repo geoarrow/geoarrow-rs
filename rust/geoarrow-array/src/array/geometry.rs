@@ -13,8 +13,10 @@ use crate::capacity::GeometryCapacity;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Geometry;
-use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
-use crate::{ArrayBase, NativeArray};
+use crate::trait_::{
+    ArrayAccessor, ArrayBase, GeometryArraySelfMethods, IntoArrow, NativeArray,
+    NativeGeometryAccessor,
+};
 
 /// # Invariants
 ///

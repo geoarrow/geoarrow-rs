@@ -9,14 +9,17 @@ use geoarrow_schema::{CoordType, Dimension, Metadata, PointType};
 
 use crate::algorithm::native::downcast::can_downcast_multi;
 use crate::algorithm::native::eq::point_eq;
+use crate::array::{
+    CoordBuffer, GeometryCollectionArray, InterleavedCoordBuffer, MixedGeometryArray,
+    MultiPointArray, SeparatedCoordBuffer, WKBArray,
+};
+use crate::builder::PointBuilder;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, Point};
-use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
-use crate::{ArrayBase, NativeArray};
-use crate::{
-    CoordBuffer, GeometryCollectionArray, InterleavedCoordBuffer, MixedGeometryArray,
-    MultiPointArray, PointBuilder, SeparatedCoordBuffer, WKBArray,
+use crate::trait_::{
+    ArrayAccessor, ArrayBase, GeometryArraySelfMethods, IntoArrow, NativeArray,
+    NativeGeometryAccessor,
 };
 
 /// An immutable array of Point geometries using GeoArrow's in-memory representation.

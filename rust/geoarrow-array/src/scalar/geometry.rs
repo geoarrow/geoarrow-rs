@@ -1,13 +1,12 @@
-use crate::algorithm::native::eq::geometry_eq;
-use crate::io::geo::geometry_to_geo;
-use crate::scalar::*;
-use crate::trait_::NativeScalar;
 use geo_traits::{
     GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
     MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait, UnimplementedLine,
     UnimplementedTriangle,
 };
 use rstar::{RTreeObject, AABB};
+
+use crate::algorithm::native::eq::geometry_eq;
+use crate::scalar::*;
 
 /// An Arrow equivalent of a Geometry
 ///
@@ -30,32 +29,6 @@ pub enum Geometry<'a> {
     GeometryCollection(crate::scalar::GeometryCollection<'a>),
     /// Rect geometry
     Rect(crate::scalar::Rect<'a>),
-}
-
-impl NativeScalar for Geometry<'_> {
-    type ScalarGeo = geo::Geometry;
-
-    fn to_geo(&self) -> Self::ScalarGeo {
-        match self {
-            Geometry::Point(g) => geo::Geometry::Point(g.into()),
-            Geometry::LineString(g) => geo::Geometry::LineString(g.into()),
-            Geometry::Polygon(g) => geo::Geometry::Polygon(g.into()),
-            Geometry::MultiPoint(g) => geo::Geometry::MultiPoint(g.into()),
-            Geometry::MultiLineString(g) => geo::Geometry::MultiLineString(g.into()),
-            Geometry::MultiPolygon(g) => geo::Geometry::MultiPolygon(g.into()),
-            Geometry::GeometryCollection(g) => geo::Geometry::GeometryCollection(g.into()),
-            Geometry::Rect(g) => geo::Geometry::Rect(g.into()),
-        }
-    }
-
-    fn to_geo_geometry(&self) -> geo::Geometry {
-        self.to_geo()
-    }
-
-    #[cfg(feature = "geos")]
-    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
-        self.try_into()
-    }
 }
 
 impl GeometryTrait for Geometry<'_> {
@@ -240,18 +213,6 @@ impl RTreeObject for Geometry<'_> {
             Geometry::GeometryCollection(geom) => geom.envelope(),
             Geometry::Rect(geom) => geom.envelope(),
         }
-    }
-}
-
-impl From<Geometry<'_>> for geo::Geometry {
-    fn from(value: Geometry<'_>) -> Self {
-        (&value).into()
-    }
-}
-
-impl From<&Geometry<'_>> for geo::Geometry {
-    fn from(value: &Geometry<'_>) -> Self {
-        geometry_to_geo(value)
     }
 }
 

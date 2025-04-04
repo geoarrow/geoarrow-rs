@@ -1,4 +1,3 @@
-use geo_traits::to_geo::ToGeoPoint;
 use geo_traits::{CoordTrait, PointTrait};
 
 use crate::algorithm::native::eq::point_eq;

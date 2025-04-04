@@ -11,9 +11,8 @@ use geoarrow_schema::{Metadata, WktType};
 
 use crate::datatypes::SerializedType;
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::IntoArrow;
+use crate::trait_::{ArrayBase, IntoArrow};
 use crate::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
-use crate::ArrayBase;
 use crate::SerializedArray;
 
 /// An immutable array of WKT geometries using GeoArrow's in-memory representation.

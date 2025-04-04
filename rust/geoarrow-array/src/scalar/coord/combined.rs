@@ -1,8 +1,6 @@
 use rstar::{RTreeObject, AABB};
 
 use crate::scalar::{InterleavedCoord, SeparatedCoord};
-use crate::trait_::NativeScalar;
-use geo_traits::to_geo::ToGeoCoord;
 use geo_traits::CoordTrait;
 
 /// An Arrow equivalent of a Coord
@@ -23,24 +21,6 @@ impl Coord<'_> {
             Coord::Separated(c) => c.is_nan(),
             Coord::Interleaved(c) => c.is_nan(),
         }
-    }
-}
-
-impl NativeScalar for Coord<'_> {
-    type ScalarGeo = geo::Coord;
-
-    fn to_geo(&self) -> Self::ScalarGeo {
-        self.into()
-    }
-
-    fn to_geo_geometry(&self) -> geo::Geometry {
-        todo!()
-    }
-
-    #[cfg(feature = "geos")]
-    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
-        todo!()
-        // self.try_into()
     }
 }
 

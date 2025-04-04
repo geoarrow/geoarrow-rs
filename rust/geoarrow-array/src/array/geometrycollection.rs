@@ -9,17 +9,20 @@ use geo_traits::GeometryCollectionTrait;
 use geoarrow_schema::{CoordType, Dimension, GeometryCollectionType, Metadata};
 
 use crate::algorithm::native::eq::offset_buffer_eq;
-use crate::datatypes::NativeType;
-use crate::error::{GeoArrowError, Result};
-use crate::geometrycollection::{GeometryCollectionBuilder, GeometryCollectionCapacity};
-use crate::scalar::{Geometry, GeometryCollection};
-use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
-use crate::util::offsets_buffer_i64_to_i32;
-use crate::{ArrayBase, NativeArray};
-use crate::{
+use crate::array::{
     CoordBuffer, LineStringArray, MixedGeometryArray, MultiLineStringArray, MultiPointArray,
     MultiPolygonArray, PointArray, PolygonArray, WKBArray,
 };
+use crate::builder::GeometryCollectionBuilder;
+use crate::capacity::GeometryCollectionCapacity;
+use crate::datatypes::NativeType;
+use crate::error::{GeoArrowError, Result};
+use crate::scalar::{Geometry, GeometryCollection};
+use crate::trait_::{
+    ArrayAccessor, ArrayBase, GeometryArraySelfMethods, IntoArrow, NativeArray,
+    NativeGeometryAccessor,
+};
+use crate::util::offsets_buffer_i64_to_i32;
 
 /// An immutable array of GeometryCollection geometries using GeoArrow's in-memory representation.
 ///

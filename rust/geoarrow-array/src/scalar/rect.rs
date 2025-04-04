@@ -1,11 +1,10 @@
 use rstar::{RTreeObject, AABB};
 
+use geo_traits::RectTrait;
+
 use crate::algorithm::native::eq::rect_eq;
 use crate::array::SeparatedCoordBuffer;
 use crate::scalar::SeparatedCoord;
-use crate::trait_::NativeScalar;
-use geo_traits::to_geo::ToGeoRect;
-use geo_traits::RectTrait;
 
 /// An Arrow equivalent of a Rect
 ///
@@ -36,24 +35,6 @@ impl<'a> Rect<'a> {
     }
 }
 
-impl NativeScalar for Rect<'_> {
-    type ScalarGeo = geo::Rect;
-
-    fn to_geo(&self) -> Self::ScalarGeo {
-        self.into()
-    }
-
-    fn to_geo_geometry(&self) -> geo::Geometry {
-        geo::Geometry::Rect(self.to_geo())
-    }
-
-    #[cfg(feature = "geos")]
-    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
-        todo!()
-        // self.try_into()
-    }
-}
-
 // TODO: support 3d rects
 impl<'a> RectTrait for Rect<'a> {
     type T = f64;
@@ -72,24 +53,6 @@ impl<'a> RectTrait for Rect<'a> {
 
     fn max(&self) -> Self::CoordType<'_> {
         self.upper.value(self.geom_index)
-    }
-}
-
-impl From<Rect<'_>> for geo::Rect {
-    fn from(value: Rect<'_>) -> Self {
-        (&value).into()
-    }
-}
-
-impl From<&Rect<'_>> for geo::Rect {
-    fn from(value: &Rect<'_>) -> Self {
-        value.to_rect()
-    }
-}
-
-impl From<Rect<'_>> for geo::Geometry {
-    fn from(value: Rect<'_>) -> Self {
-        geo::Geometry::Rect(value.into())
     }
 }
 

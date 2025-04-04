@@ -3,9 +3,7 @@ use crate::algorithm::native::eq::line_string_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::CoordBuffer;
 use crate::scalar::Coord;
-use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
-use geo_traits::to_geo::ToGeoLineString;
 use geo_traits::LineStringTrait;
 use rstar::{RTreeObject, AABB};
 
@@ -48,23 +46,6 @@ impl<'a> LineString<'a> {
     }
 }
 
-impl NativeScalar for LineString<'_> {
-    type ScalarGeo = geo::LineString;
-
-    fn to_geo(&self) -> Self::ScalarGeo {
-        self.into()
-    }
-
-    fn to_geo_geometry(&self) -> geo::Geometry {
-        geo::Geometry::LineString(self.to_geo())
-    }
-
-    #[cfg(feature = "geos")]
-    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
-        self.try_into()
-    }
-}
-
 impl<'a> LineStringTrait for LineString<'a> {
     type T = f64;
     type CoordType<'b>
@@ -104,24 +85,6 @@ impl<'a> LineStringTrait for &'a LineString<'a> {
 
     unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
         self.coords.value(self.start_offset + i)
-    }
-}
-
-impl From<LineString<'_>> for geo::LineString {
-    fn from(value: LineString<'_>) -> Self {
-        (&value).into()
-    }
-}
-
-impl From<&LineString<'_>> for geo::LineString {
-    fn from(value: &LineString<'_>) -> Self {
-        value.to_line_string()
-    }
-}
-
-impl From<LineString<'_>> for geo::Geometry {
-    fn from(value: LineString<'_>) -> Self {
-        geo::Geometry::LineString(value.into())
     }
 }
 

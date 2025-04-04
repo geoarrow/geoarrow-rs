@@ -1,8 +1,6 @@
 use crate::algorithm::native::eq::coord_eq;
 use crate::scalar::InterleavedCoord;
-use crate::trait_::NativeScalar;
 use arrow_buffer::ScalarBuffer;
-use geo_traits::to_geo::ToGeoCoord;
 use geo_traits::CoordTrait;
 use geoarrow_schema::Dimension;
 use rstar::{RTreeObject, AABB};
@@ -21,48 +19,6 @@ impl SeparatedCoord<'_> {
     /// Return `true` if all values in the coordinate are f64::NAN
     pub(crate) fn is_nan(&self) -> bool {
         (0..self.dim.size()).all(|coord_dim| self.nth_or_panic(coord_dim).is_nan())
-    }
-}
-
-impl NativeScalar for SeparatedCoord<'_> {
-    type ScalarGeo = geo::Coord;
-
-    fn to_geo(&self) -> Self::ScalarGeo {
-        self.into()
-    }
-
-    fn to_geo_geometry(&self) -> geo::Geometry {
-        todo!()
-    }
-
-    #[cfg(feature = "geos")]
-    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
-        todo!()
-        // self.try_into()
-    }
-}
-
-impl From<SeparatedCoord<'_>> for geo::Coord {
-    fn from(value: SeparatedCoord) -> Self {
-        (&value).into()
-    }
-}
-impl From<&SeparatedCoord<'_>> for geo::Coord {
-    fn from(value: &SeparatedCoord) -> Self {
-        value.to_coord()
-    }
-}
-
-impl From<SeparatedCoord<'_>> for geo::Point {
-    fn from(value: SeparatedCoord<'_>) -> Self {
-        (&value).into()
-    }
-}
-
-impl From<&SeparatedCoord<'_>> for geo::Point {
-    fn from(value: &SeparatedCoord<'_>) -> Self {
-        let coord: geo::Coord = value.into();
-        coord.into()
     }
 }
 

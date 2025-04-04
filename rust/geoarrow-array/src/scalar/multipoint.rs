@@ -3,9 +3,7 @@ use crate::algorithm::native::eq::multi_point_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::CoordBuffer;
 use crate::scalar::Point;
-use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
-use geo_traits::to_geo::ToGeoMultiPoint;
 use geo_traits::MultiPointTrait;
 use geoarrow_schema::Dimension;
 use rstar::{RTreeObject, AABB};
@@ -47,23 +45,6 @@ impl<'a> MultiPoint<'a> {
             self.geom_offsets.clone(),
             self.geom_index,
         )
-    }
-}
-
-impl NativeScalar for MultiPoint<'_> {
-    type ScalarGeo = geo::MultiPoint;
-
-    fn to_geo(&self) -> Self::ScalarGeo {
-        self.into()
-    }
-
-    fn to_geo_geometry(&self) -> geo::Geometry {
-        geo::Geometry::MultiPoint(self.to_geo())
-    }
-
-    #[cfg(feature = "geos")]
-    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
-        self.try_into()
     }
 }
 
@@ -114,24 +95,6 @@ impl<'a> MultiPointTrait for &'a MultiPoint<'a> {
 
     unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
         Point::new(self.coords, self.start_offset + i)
-    }
-}
-
-impl From<MultiPoint<'_>> for geo::MultiPoint {
-    fn from(value: MultiPoint<'_>) -> Self {
-        (&value).into()
-    }
-}
-
-impl From<&MultiPoint<'_>> for geo::MultiPoint {
-    fn from(value: &MultiPoint<'_>) -> Self {
-        value.to_multi_point()
-    }
-}
-
-impl From<MultiPoint<'_>> for geo::Geometry {
-    fn from(value: MultiPoint<'_>) -> Self {
-        geo::Geometry::MultiPoint(value.into())
     }
 }
 

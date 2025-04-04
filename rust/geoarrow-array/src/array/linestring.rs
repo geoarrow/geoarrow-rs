@@ -2,17 +2,20 @@ use std::sync::Arc;
 
 use crate::algorithm::native::downcast::can_downcast_multi;
 use crate::algorithm::native::eq::offset_buffer_eq;
-use crate::datatypes::NativeType;
-use crate::error::{GeoArrowError, Result};
-use crate::linestring::LineStringCapacity;
-use crate::scalar::{Geometry, LineString};
-use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
-use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
-use crate::{ArrayBase, NativeArray};
-use crate::{
+use crate::array::{
     CoordBuffer, GeometryCollectionArray, MixedGeometryArray, MultiLineStringArray,
     MultiPointArray, WKBArray,
 };
+use crate::builder::LineStringBuilder;
+use crate::capacity::LineStringCapacity;
+use crate::datatypes::NativeType;
+use crate::error::{GeoArrowError, Result};
+use crate::scalar::{Geometry, LineString};
+use crate::trait_::{
+    ArrayAccessor, ArrayBase, GeometryArraySelfMethods, IntoArrow, NativeArray,
+    NativeGeometryAccessor,
+};
+use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 
 use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
@@ -21,8 +24,6 @@ use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field, FieldRef};
 use geo_traits::LineStringTrait;
 use geoarrow_schema::{CoordType, Dimension, LineStringType, Metadata};
-
-use super::LineStringBuilder;
 
 /// An immutable array of LineString geometries using GeoArrow's in-memory representation.
 ///

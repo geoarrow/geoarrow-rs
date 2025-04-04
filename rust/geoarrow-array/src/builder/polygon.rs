@@ -8,15 +8,16 @@ use geo_traits::{
 };
 use geoarrow_schema::{CoordType, Dimension, Metadata};
 
+use crate::array::{PolygonArray, WKBArray};
+use crate::builder::{
+    CoordBufferBuilder, InterleavedCoordBufferBuilder, MultiLineStringBuilder,
+    SeparatedCoordBufferBuilder,
+};
 use crate::capacity::PolygonCapacity;
 use crate::error::{GeoArrowError, Result};
 use crate::offset_builder::OffsetsBuilder;
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
-use crate::{
-    CoordBufferBuilder, InterleavedCoordBufferBuilder, MultiLineStringBuilder, PolygonArray,
-    SeparatedCoordBufferBuilder, WKBArray,
-};
 
 pub type MutablePolygonParts = (
     CoordBufferBuilder,

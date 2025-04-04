@@ -1,10 +1,10 @@
-use crate::error::Result;
-use crate::io::geo::geometry_to_geo;
-use crate::trait_::NativeScalar;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use geo::BoundingRect;
 use geo_traits::GeometryTrait;
 use rstar::{RTreeObject, AABB};
+
+use crate::error::Result;
+use crate::io::geo::geometry_to_geo;
 
 /// A scalar WKB reference on a WKBArray
 ///
@@ -41,23 +41,6 @@ impl<'a, O: OffsetSizeTrait> WKB<'a, O> {
     /// Parse this WKB buffer to a geometry.
     pub fn parse(&self) -> Result<impl GeometryTrait<T = f64> + use<'_, O>> {
         Ok(wkb::reader::read_wkb(self.as_ref())?)
-    }
-}
-
-impl<O: OffsetSizeTrait> NativeScalar for WKB<'_, O> {
-    type ScalarGeo = geo::Geometry;
-
-    fn to_geo(&self) -> Self::ScalarGeo {
-        self.into()
-    }
-
-    fn to_geo_geometry(&self) -> geo::Geometry {
-        self.to_geo()
-    }
-
-    #[cfg(feature = "geos")]
-    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
-        self.try_into()
     }
 }
 

@@ -7,9 +7,9 @@ use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, Point
 use geoarrow_schema::{CoordType, Dimension, Metadata};
 
 // use super::array::check;
-use crate::{
-    CoordBufferBuilder, InterleavedCoordBufferBuilder, PointArray, SeparatedCoordBufferBuilder,
-    WKBArray,
+use crate::array::{PointArray, WKBArray};
+use crate::builder::{
+    CoordBufferBuilder, InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder,
 };
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;

@@ -3,9 +3,7 @@ use crate::algorithm::native::eq::polygon_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::CoordBuffer;
 use crate::scalar::LineString;
-use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
-use geo_traits::to_geo::ToGeoPolygon;
 use geo_traits::PolygonTrait;
 use geoarrow_schema::Dimension;
 use rstar::{RTreeObject, AABB};
@@ -54,23 +52,6 @@ impl<'a> Polygon<'a> {
             self.ring_offsets.clone(),
             self.geom_index,
         )
-    }
-}
-
-impl NativeScalar for Polygon<'_> {
-    type ScalarGeo = geo::Polygon;
-
-    fn to_geo(&self) -> Self::ScalarGeo {
-        self.into()
-    }
-
-    fn to_geo_geometry(&self) -> geo::Geometry {
-        geo::Geometry::Polygon(self.to_geo())
-    }
-
-    #[cfg(feature = "geos")]
-    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
-        self.try_into()
     }
 }
 
@@ -139,24 +120,6 @@ impl<'a> PolygonTrait for &'a Polygon<'a> {
 
     unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
         LineString::new(self.coords, self.ring_offsets, self.start_offset + 1 + i)
-    }
-}
-
-impl From<Polygon<'_>> for geo::Polygon {
-    fn from(value: Polygon<'_>) -> Self {
-        (&value).into()
-    }
-}
-
-impl From<&Polygon<'_>> for geo::Polygon {
-    fn from(value: &Polygon<'_>) -> Self {
-        value.to_polygon()
-    }
-}
-
-impl From<Polygon<'_>> for geo::Geometry {
-    fn from(value: Polygon<'_>) -> Self {
-        geo::Geometry::Polygon(value.into())
     }
 }
 
