@@ -9,15 +9,15 @@ use geo_traits::MultiPointTrait;
 use geoarrow_schema::{CoordType, Dimension, Metadata, MultiPointType};
 
 use super::MultiPointBuilder;
-use crate::eq::offset_buffer_eq;
 use crate::array::{
     CoordBuffer, GeometryCollectionArray, LineStringArray, MixedGeometryArray, PointArray, WKBArray,
 };
 use crate::datatypes::NativeType;
+use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::multipoint::MultiPointCapacity;
 use crate::scalar::{Geometry, MultiPoint};
-use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
+use crate::trait_::{ArrayAccessor, IntoArrow, NativeGeometryAccessor};
 use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::{ArrayBase, NativeArray};
 
@@ -249,24 +249,6 @@ impl NativeArray for MultiPointArray {
 
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
-    }
-}
-
-impl GeometryArraySelfMethods for MultiPointArray {
-    fn with_coords(self, coords: CoordBuffer) -> Self {
-        assert_eq!(coords.len(), self.coords.len());
-        let metadata = self.metadata();
-        Self::new(coords, self.geom_offsets, self.validity, metadata)
-    }
-
-    fn into_coord_type(self, coord_type: CoordType) -> Self {
-        let metadata = self.metadata();
-        Self::new(
-            self.coords.into_coord_type(coord_type),
-            self.geom_offsets,
-            self.validity,
-            metadata,
-        )
     }
 }
 

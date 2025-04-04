@@ -12,7 +12,7 @@ use crate::datatypes::NativeType;
 use crate::error::GeoArrowError;
 use crate::rect::RectBuilder;
 use crate::scalar::Rect;
-use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{ArrayAccessor, IntoArrow};
 use crate::{ArrayBase, NativeArray};
 use crate::{CoordBuffer, SeparatedCoordBuffer};
 use geo_traits::RectTrait;
@@ -154,16 +154,6 @@ impl NativeArray for RectArray {
 
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
-    }
-}
-
-impl GeometryArraySelfMethods for RectArray {
-    fn with_coords(self, _coords: CoordBuffer) -> Self {
-        unimplemented!()
-    }
-
-    fn into_coord_type(self, _coord_type: CoordType) -> Self {
-        unimplemented!()
     }
 }
 

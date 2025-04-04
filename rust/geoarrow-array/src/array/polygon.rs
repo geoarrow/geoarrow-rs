@@ -10,7 +10,6 @@ use geo_traits::PolygonTrait;
 use geoarrow_schema::{CoordType, Dimension, Metadata, PolygonType};
 
 use crate::algorithm::native::downcast::can_downcast_multi;
-use crate::eq::offset_buffer_eq;
 use crate::array::{
     CoordBuffer, GeometryCollectionArray, MixedGeometryArray, MultiLineStringArray,
     MultiPolygonArray, RectArray, WKBArray,
@@ -18,12 +17,10 @@ use crate::array::{
 use crate::builder::PolygonBuilder;
 use crate::capacity::PolygonCapacity;
 use crate::datatypes::NativeType;
+use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, Polygon};
-use crate::trait_::{
-    ArrayAccessor, ArrayBase, GeometryArraySelfMethods, IntoArrow, NativeArray,
-    NativeGeometryAccessor,
-};
+use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray, NativeGeometryAccessor};
 use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 
 /// An immutable array of Polygon geometries using GeoArrow's in-memory representation.
@@ -272,31 +269,6 @@ impl NativeArray for PolygonArray {
 
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
-    }
-}
-
-impl GeometryArraySelfMethods for PolygonArray {
-    fn with_coords(self, coords: CoordBuffer) -> Self {
-        assert_eq!(coords.len(), self.coords.len());
-        let metadata = self.metadata();
-        Self::new(
-            coords,
-            self.geom_offsets,
-            self.ring_offsets,
-            self.validity,
-            metadata,
-        )
-    }
-
-    fn into_coord_type(self, coord_type: CoordType) -> Self {
-        let metadata = self.metadata();
-        Self::new(
-            self.coords.into_coord_type(coord_type),
-            self.geom_offsets,
-            self.ring_offsets,
-            self.validity,
-            metadata,
-        )
     }
 }
 

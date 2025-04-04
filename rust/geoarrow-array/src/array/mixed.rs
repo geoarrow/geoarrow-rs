@@ -20,10 +20,7 @@ use crate::capacity::MixedCapacity;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Geometry;
-use crate::trait_::{
-    ArrayAccessor, ArrayBase, GeometryArraySelfMethods, IntoArrow, NativeArray,
-    NativeGeometryAccessor,
-};
+use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray, NativeGeometryAccessor};
 
 /// # Invariants
 ///
@@ -549,16 +546,6 @@ impl NativeArray for MixedGeometryArray {
 
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
-    }
-}
-
-impl GeometryArraySelfMethods for MixedGeometryArray {
-    fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
-        todo!();
-    }
-
-    fn into_coord_type(self, _coord_type: CoordType) -> Self {
-        todo!();
     }
 }
 

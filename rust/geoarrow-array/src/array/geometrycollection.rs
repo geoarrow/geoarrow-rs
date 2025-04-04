@@ -18,10 +18,7 @@ use crate::datatypes::NativeType;
 use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, GeometryCollection};
-use crate::trait_::{
-    ArrayAccessor, ArrayBase, GeometryArraySelfMethods, IntoArrow, NativeArray,
-    NativeGeometryAccessor,
-};
+use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray, NativeGeometryAccessor};
 use crate::util::offsets_buffer_i64_to_i32;
 
 /// An immutable array of GeometryCollection geometries using GeoArrow's in-memory representation.
@@ -198,16 +195,6 @@ impl NativeArray for GeometryCollectionArray {
 
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
-    }
-}
-
-impl GeometryArraySelfMethods for GeometryCollectionArray {
-    fn with_coords(self, _coords: CoordBuffer) -> Self {
-        todo!()
-    }
-
-    fn into_coord_type(self, _coord_type: CoordType) -> Self {
-        todo!()
     }
 }
 

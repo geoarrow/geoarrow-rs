@@ -11,10 +11,7 @@ use crate::datatypes::NativeType;
 use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, LineString};
-use crate::trait_::{
-    ArrayAccessor, ArrayBase, GeometryArraySelfMethods, IntoArrow, NativeArray,
-    NativeGeometryAccessor,
-};
+use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray, NativeGeometryAccessor};
 use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 
 use arrow_array::cast::AsArray;
@@ -256,24 +253,6 @@ impl NativeArray for LineStringArray {
 
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
-    }
-}
-
-impl GeometryArraySelfMethods for LineStringArray {
-    fn with_coords(self, coords: CoordBuffer) -> Self {
-        let metadata = self.metadata();
-        assert_eq!(coords.len(), self.coords.len());
-        Self::new(coords, self.geom_offsets, self.validity, metadata)
-    }
-
-    fn into_coord_type(self, coord_type: CoordType) -> Self {
-        let metadata = self.metadata();
-        Self::new(
-            self.coords.into_coord_type(coord_type),
-            self.geom_offsets,
-            self.validity,
-            metadata,
-        )
     }
 }
 
