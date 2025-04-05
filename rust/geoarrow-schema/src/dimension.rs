@@ -99,7 +99,6 @@ mod test {
     use std::iter::zip;
 
     use arrow_schema::DataType;
-    use geo_traits::Dimensions;
 
     use super::*;
 
@@ -176,14 +175,14 @@ mod test {
             Dimension::XYZM,
         ];
         let geotraits_dims = [
-            Dimensions::Xy,
-            Dimensions::Xyz,
-            Dimensions::Xym,
-            Dimensions::Xyzm,
+            geo_traits::Dimensions::Xy,
+            geo_traits::Dimensions::Xyz,
+            geo_traits::Dimensions::Xym,
+            geo_traits::Dimensions::Xyzm,
         ];
 
         for (geoarrow_dim, geotraits_dim) in zip(geoarrow_dims, geotraits_dims) {
-            let into_geotraits_dim: Dimensions = geoarrow_dim.into();
+            let into_geotraits_dim: geo_traits::Dimensions = geoarrow_dim.into();
             assert_eq!(into_geotraits_dim, geotraits_dim);
 
             let into_geoarrow_dim: Dimension = geotraits_dim.try_into().unwrap();
@@ -192,16 +191,16 @@ mod test {
             assert_eq!(geoarrow_dim.size(), geotraits_dim.size());
         }
 
-        let dims2: Dimension = Dimensions::Unknown(2).try_into().unwrap();
+        let dims2: Dimension = geo_traits::Dimensions::Unknown(2).try_into().unwrap();
         assert_eq!(dims2, Dimension::XY);
 
-        let dims3: Dimension = Dimensions::Unknown(3).try_into().unwrap();
+        let dims3: Dimension = geo_traits::Dimensions::Unknown(3).try_into().unwrap();
         assert_eq!(dims3, Dimension::XYZ);
 
-        let dims4: Dimension = Dimensions::Unknown(4).try_into().unwrap();
+        let dims4: Dimension = geo_traits::Dimensions::Unknown(4).try_into().unwrap();
         assert_eq!(dims4, Dimension::XYZM);
 
-        let dims_err: Result<Dimension, ArrowError> = Dimensions::Unknown(0).try_into();
+        let dims_err: Result<Dimension, ArrowError> = geo_traits::Dimensions::Unknown(0).try_into();
         assert_eq!(
             dims_err.unwrap_err().to_string(),
             "Schema error: Unsupported dimension Unknown(0)"
