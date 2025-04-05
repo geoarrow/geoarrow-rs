@@ -6,6 +6,7 @@ mod mixed;
 mod multilinestring;
 mod multipoint;
 mod multipolygon;
+mod offsets;
 mod point;
 mod polygon;
 mod rect;

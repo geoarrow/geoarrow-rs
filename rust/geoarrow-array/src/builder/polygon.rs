@@ -452,12 +452,6 @@ impl PolygonBuilder {
     }
 }
 
-impl Default for PolygonBuilder {
-    fn default() -> Self {
-        Self::new(Dimension::XY)
-    }
-}
-
 impl GeometryArrayBuilder for PolygonBuilder {
     fn new(dim: Dimension) -> Self {
         Self::new(dim)
@@ -503,15 +497,6 @@ impl GeometryArrayBuilder for PolygonBuilder {
 
     fn metadata(&self) -> Arc<Metadata> {
         self.metadata.clone()
-    }
-}
-
-impl IntoArrow for PolygonBuilder {
-    type ArrowArray = GenericListArray<i32>;
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        let polygon_array: PolygonArray = self.into();
-        polygon_array.into_arrow()
     }
 }
 

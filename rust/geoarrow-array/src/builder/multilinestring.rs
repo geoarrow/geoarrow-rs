@@ -473,21 +473,6 @@ impl GeometryArrayBuilder for MultiLineStringBuilder {
     }
 }
 
-impl IntoArrow for MultiLineStringBuilder {
-    type ArrowArray = GenericListArray<i32>;
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        let arr: MultiLineStringArray = self.into();
-        arr.into_arrow()
-    }
-}
-
-impl Default for MultiLineStringBuilder {
-    fn default() -> Self {
-        Self::new(Dimension::XY)
-    }
-}
-
 impl From<MultiLineStringBuilder> for MultiLineStringArray {
     fn from(mut other: MultiLineStringBuilder) -> Self {
         let validity = other.validity.finish();

@@ -342,21 +342,6 @@ impl GeometryArrayBuilder for PointBuilder {
     }
 }
 
-impl Default for PointBuilder {
-    fn default() -> Self {
-        Self::new(Dimension::XY)
-    }
-}
-
-impl IntoArrow for PointBuilder {
-    type ArrowArray = ArrayRef;
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        let point_array: PointArray = self.into();
-        point_array.into_arrow()
-    }
-}
-
 impl From<PointBuilder> for PointArray {
     fn from(mut other: PointBuilder) -> Self {
         let validity = other.validity.finish();

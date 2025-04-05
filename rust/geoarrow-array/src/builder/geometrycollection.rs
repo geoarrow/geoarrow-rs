@@ -440,21 +440,6 @@ impl GeometryArrayBuilder for GeometryCollectionBuilder {
     }
 }
 
-impl IntoArrow for GeometryCollectionBuilder {
-    type ArrowArray = GenericListArray<i32>;
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        let linestring_arr: GeometryCollectionArray = self.into();
-        linestring_arr.into_arrow()
-    }
-}
-
-impl Default for GeometryCollectionBuilder {
-    fn default() -> Self {
-        Self::new(Dimension::XY)
-    }
-}
-
 impl From<GeometryCollectionBuilder> for GeometryCollectionArray {
     fn from(mut other: GeometryCollectionBuilder) -> Self {
         let validity = other.validity.finish();

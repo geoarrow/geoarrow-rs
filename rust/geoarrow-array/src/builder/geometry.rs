@@ -4,16 +4,15 @@ use arrow_array::{OffsetSizeTrait, UnionArray};
 use geo_traits::*;
 use geoarrow_schema::{CoordType, Dimension, Metadata};
 
+use crate::array::{GeometryArray, WKBArray};
+use crate::builder::{
+    GeometryArrayBuilder, GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder,
+    MultiPointBuilder, MultiPolygonBuilder, PointBuilder, PolygonBuilder,
+};
 use crate::capacity::GeometryCapacity;
 use crate::error::{GeoArrowError, Result};
-use crate::geometry::array::GeometryArray;
 use crate::scalar::WKB;
-use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
-use crate::{ArrayBase, NativeArray};
-use crate::{
-    GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder, MultiPointBuilder,
-    MultiPolygonBuilder, PointBuilder, PolygonBuilder, WKBArray,
-};
+use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
 
 pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 
@@ -960,20 +959,6 @@ impl<'a> GeometryBuilder {
             .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.parse()).transpose())
             .collect::<Result<Vec<_>>>()?;
         Self::from_nullable_geometries(&wkb_objects2, coord_type, metadata, prefer_multi)
-    }
-}
-
-impl Default for GeometryBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl IntoArrow for GeometryBuilder {
-    type ArrowArray = UnionArray;
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        todo!()
     }
 }
 

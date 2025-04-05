@@ -208,21 +208,6 @@ impl RectBuilder {
     }
 }
 
-impl Default for RectBuilder {
-    fn default() -> Self {
-        Self::new(Dimension::XY)
-    }
-}
-
-impl IntoArrow for RectBuilder {
-    type ArrowArray = StructArray;
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        let rect_array: RectArray = self.into();
-        rect_array.into_arrow()
-    }
-}
-
 impl From<RectBuilder> for RectArray {
     fn from(mut other: RectBuilder) -> Self {
         RectArray::new(

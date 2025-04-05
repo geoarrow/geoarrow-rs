@@ -388,21 +388,6 @@ impl GeometryArrayBuilder for LineStringBuilder {
     }
 }
 
-impl IntoArrow for LineStringBuilder {
-    type ArrowArray = GenericListArray<i32>;
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        let linestring_arr: LineStringArray = self.into();
-        linestring_arr.into_arrow()
-    }
-}
-
-impl Default for LineStringBuilder {
-    fn default() -> Self {
-        LineStringBuilder::new(Dimension::XY)
-    }
-}
-
 impl From<LineStringBuilder> for LineStringArray {
     fn from(mut other: LineStringBuilder) -> Self {
         let validity = other.validity.finish();

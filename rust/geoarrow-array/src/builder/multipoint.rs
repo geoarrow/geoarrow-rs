@@ -370,12 +370,6 @@ impl MultiPointBuilder {
     }
 }
 
-impl Default for MultiPointBuilder {
-    fn default() -> Self {
-        Self::new(Dimension::XY)
-    }
-}
-
 impl GeometryArrayBuilder for MultiPointBuilder {
     fn new(dim: Dimension) -> Self {
         Self::new(dim)
@@ -421,15 +415,6 @@ impl GeometryArrayBuilder for MultiPointBuilder {
 
     fn metadata(&self) -> Arc<Metadata> {
         self.metadata.clone()
-    }
-}
-
-impl IntoArrow for MultiPointBuilder {
-    type ArrowArray = GenericListArray<i32>;
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        let arr: MultiPointArray = self.into();
-        arr.into_arrow()
     }
 }
 

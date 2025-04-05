@@ -517,20 +517,6 @@ impl<'a> MixedGeometryBuilder {
     }
 }
 
-impl Default for MixedGeometryBuilder {
-    fn default() -> Self {
-        Self::new(Dimension::XY)
-    }
-}
-
-impl IntoArrow for MixedGeometryBuilder {
-    type ArrowArray = UnionArray;
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        todo!()
-    }
-}
-
 impl From<MixedGeometryBuilder> for MixedGeometryArray {
     fn from(other: MixedGeometryBuilder) -> Self {
         Self::new(

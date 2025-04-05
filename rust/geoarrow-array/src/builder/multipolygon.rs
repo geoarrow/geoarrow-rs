@@ -490,12 +490,6 @@ impl MultiPolygonBuilder {
     }
 }
 
-impl Default for MultiPolygonBuilder {
-    fn default() -> Self {
-        Self::new(Dimension::XY)
-    }
-}
-
 impl GeometryArrayBuilder for MultiPolygonBuilder {
     fn new(dim: Dimension) -> Self {
         Self::new(dim)
@@ -546,15 +540,6 @@ impl GeometryArrayBuilder for MultiPolygonBuilder {
 
     fn metadata(&self) -> Arc<Metadata> {
         self.metadata.clone()
-    }
-}
-
-impl IntoArrow for MultiPolygonBuilder {
-    type ArrowArray = GenericListArray<i32>;
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        let arr: MultiPolygonArray = self.into();
-        arr.into_arrow()
     }
 }
 
