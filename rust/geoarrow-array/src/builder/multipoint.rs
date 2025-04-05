@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use arrow_array::{GenericListArray, OffsetSizeTrait};
+use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
 use geoarrow_schema::{CoordType, Dimension, Metadata};
@@ -14,7 +14,7 @@ use crate::builder::{
 };
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
-use crate::trait_::{ArrayAccessor, IntoArrow};
+use crate::trait_::ArrayAccessor;
 
 /// The GeoArrow equivalent to `Vec<Option<MultiPoint>>`: a mutable collection of MultiPoints.
 ///
@@ -383,12 +383,6 @@ impl From<MultiPointBuilder> for MultiPointArray {
             validity,
             other.metadata,
         )
-    }
-}
-
-impl From<MultiPointBuilder> for GenericListArray<i32> {
-    fn from(arr: MultiPointBuilder) -> Self {
-        arr.into_arrow()
     }
 }
 

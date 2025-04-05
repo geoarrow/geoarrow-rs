@@ -3,20 +3,17 @@ use std::sync::Arc;
 use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
-use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
 use geo_traits::MultiPointTrait;
-use geoarrow_schema::{CoordType, Dimension, Metadata, MultiPointType};
+use geoarrow_schema::{Dimension, Metadata, MultiPointType};
 
-use crate::array::{
-    CoordBuffer, GeometryCollectionArray, LineStringArray, MixedGeometryArray, PointArray, WKBArray,
-};
+use crate::array::{CoordBuffer, LineStringArray, PointArray, WKBArray};
 use crate::builder::MultiPointBuilder;
 use crate::capacity::MultiPointCapacity;
 use crate::datatypes::NativeType;
 use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
-use crate::scalar::{Geometry, MultiPoint};
+use crate::scalar::MultiPoint;
 use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
 use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 
@@ -26,7 +23,7 @@ use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 /// bitmap.
 #[derive(Debug, Clone)]
 pub struct MultiPointArray {
-    data_type: MultiPointType,
+    pub(crate) data_type: MultiPointType,
 
     pub(crate) coords: CoordBuffer,
 
@@ -163,22 +160,6 @@ impl MultiPointArray {
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }
     }
-
-    /// Change the coordinate type of this array.
-    pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
-        self.clone().into_coord_type(coord_type)
-    }
-
-    /// Change the coordinate type of this array.
-    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
-        let metadata = self.metadata();
-        Self::new(
-            self.coords.into_coord_type(coord_type),
-            self.geom_offsets,
-            self.validity,
-            metadata,
-        )
-    }
 }
 
 impl ArrayBase for MultiPointArray {
@@ -212,24 +193,6 @@ impl NativeArray for MultiPointArray {
         NativeType::MultiPoint(self.data_type.clone())
     }
 
-    fn coord_type(&self) -> CoordType {
-        self.coords.coord_type()
-    }
-
-    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
-        Arc::new(self.clone().into_coord_type(coord_type))
-    }
-
-    fn with_metadata(&self, metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
-        let mut arr = self.clone();
-        arr.data_type = self.data_type.clone().with_metadata(metadata);
-        Arc::new(arr)
-    }
-
-    fn as_ref(&self) -> &dyn NativeArray {
-        self
-    }
-
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
     }
@@ -250,7 +213,7 @@ impl IntoArrow for MultiPointArray {
     fn into_arrow(self) -> Self::ArrowArray {
         let vertices_field = self.vertices_field();
         let validity = self.validity;
-        let coord_array = self.coords.into_arrow();
+        let coord_array = self.coords.into();
         GenericListArray::new(vertices_field, self.geom_offsets, coord_array, validity)
     }
 
@@ -356,14 +319,14 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MultiPointArray {
 /// the semantic type
 impl From<MultiPointArray> for LineStringArray {
     fn from(value: MultiPointArray) -> Self {
-        let metadata = value.metadata();
+        let metadata = value.data_type.metadata().clone();
         Self::new(value.coords, value.geom_offsets, value.validity, metadata)
     }
 }
 
 impl From<PointArray> for MultiPointArray {
     fn from(value: PointArray) -> Self {
-        let metadata = value.metadata();
+        let metadata = value.data_type.metadata().clone();
         let coords = value.coords;
         let geom_offsets = OffsetBuffer::from_lengths(vec![1; coords.len()]);
         let validity = value.validity;
@@ -386,105 +349,5 @@ impl PartialEq for MultiPointArray {
         }
 
         true
-    }
-}
-
-impl TryFrom<MixedGeometryArray> for MultiPointArray {
-    type Error = GeoArrowError;
-
-    fn try_from(value: MixedGeometryArray) -> Result<Self> {
-        if value.has_line_strings()
-            || value.has_polygons()
-            || value.has_multi_line_strings()
-            || value.has_multi_polygons()
-        {
-            return Err(GeoArrowError::General("Unable to cast".to_string()));
-        }
-
-        let (offset, length) = value.slice_offset_length();
-        if value.has_only_points() {
-            return Ok(value.points.slice(offset, length).into());
-        }
-
-        if value.has_only_multi_points() {
-            return Ok(value.multi_points.slice(offset, length));
-        }
-
-        let mut capacity = value.multi_points.buffer_lengths();
-        // Hack: move to newtype
-        capacity.coord_capacity += value.points.buffer_lengths();
-        capacity.geom_capacity += value.points.buffer_lengths();
-
-        let mut builder = MultiPointBuilder::with_capacity_and_options(
-            value.dimension(),
-            capacity,
-            value.coord_type(),
-            value.metadata(),
-        );
-        value
-            .iter()
-            .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
-        Ok(builder.finish())
-    }
-}
-
-impl TryFrom<GeometryCollectionArray> for MultiPointArray {
-    type Error = GeoArrowError;
-
-    fn try_from(value: GeometryCollectionArray) -> Result<Self> {
-        MixedGeometryArray::try_from(value)?.try_into()
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use crate::test::geoarrow_data::{
-        example_multipoint_interleaved, example_multipoint_separated, example_multipoint_wkb,
-    };
-    use crate::test::multipoint::{mp0, mp1};
-
-    #[test]
-    fn geo_roundtrip_accurate() {
-        let arr: MultiPointArray = (vec![mp0(), mp1()].as_slice(), Dimension::XY).into();
-        assert_eq!(arr.value_as_geo(0), mp0());
-        assert_eq!(arr.value_as_geo(1), mp1());
-    }
-
-    #[test]
-    fn geo_roundtrip_accurate_option_vec() {
-        let arr: MultiPointArray = (vec![Some(mp0()), Some(mp1()), None], Dimension::XY).into();
-        assert_eq!(arr.get_as_geo(0), Some(mp0()));
-        assert_eq!(arr.get_as_geo(1), Some(mp1()));
-        assert_eq!(arr.get_as_geo(2), None);
-    }
-
-    #[test]
-    fn slice() {
-        let arr: MultiPointArray = (vec![mp0(), mp1()].as_slice(), Dimension::XY).into();
-        let sliced = arr.slice(1, 1);
-        assert_eq!(sliced.len(), 1);
-        assert_eq!(sliced.get_as_geo(0), Some(mp1()));
-    }
-
-    #[test]
-    fn parse_wkb_geoarrow_interleaved_example() {
-        let geom_arr = example_multipoint_interleaved();
-
-        let wkb_arr = example_multipoint_wkb();
-        let parsed_geom_arr: MultiPointArray = (wkb_arr, Dimension::XY).try_into().unwrap();
-
-        assert_eq!(geom_arr, parsed_geom_arr);
-    }
-
-    #[test]
-    fn parse_wkb_geoarrow_separated_example() {
-        // TODO: support checking equality of interleaved vs separated coords
-        let geom_arr = example_multipoint_separated().into_coord_type(CoordType::Interleaved);
-
-        let wkb_arr = example_multipoint_wkb();
-        let parsed_geom_arr: MultiPointArray = (wkb_arr, Dimension::XY).try_into().unwrap();
-
-        assert_eq!(geom_arr, parsed_geom_arr);
     }
 }

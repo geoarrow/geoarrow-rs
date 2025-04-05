@@ -57,11 +57,13 @@ pub mod array;
 pub mod builder;
 pub mod capacity;
 pub mod cast;
+mod datatypes;
 mod eq;
 pub mod error;
 pub mod scalar;
 
-pub(crate) mod dynamic;
-pub(crate) mod offset_builder;
 mod trait_;
 pub(crate) mod util;
+
+#[cfg(test)]
+pub(crate) mod test;

@@ -281,43 +281,44 @@ impl PolygonBuilder {
 
     /// Add a new Rect to this builder
     #[inline]
-    pub fn push_rect(&mut self, value: Option<&impl RectTrait<T = f64>>) -> Result<()> {
-        if let Some(rect) = value {
-            // Only one ring
-            self.geom_offsets.try_push_usize(1)?;
-            // ring has 5 coords
-            self.ring_offsets.try_push_usize(5)?;
+    pub fn push_rect(&mut self, _value: Option<&impl RectTrait<T = f64>>) -> Result<()> {
+        todo!("re enable; need to create our own minimal coord type")
+        // if let Some(rect) = value {
+        //     // Only one ring
+        //     self.geom_offsets.try_push_usize(1)?;
+        //     // ring has 5 coords
+        //     self.ring_offsets.try_push_usize(5)?;
 
-            let lower = rect.min();
-            let upper = rect.max();
+        //     let lower = rect.min();
+        //     let upper = rect.max();
 
-            // Ref below because I always forget the ordering
-            // https://github.com/georust/geo/blob/76ad2a358bd079e9d47b1229af89608744d2635b/geo-types/src/geometry/rect.rs#L217-L225
+        //     // Ref below because I always forget the ordering
+        //     // https://github.com/georust/geo/blob/76ad2a358bd079e9d47b1229af89608744d2635b/geo-types/src/geometry/rect.rs#L217-L225
 
-            self.coords.push_coord(&geo::Coord {
-                x: lower.x(),
-                y: lower.y(),
-            });
-            self.coords.push_coord(&geo::Coord {
-                x: lower.x(),
-                y: upper.y(),
-            });
-            self.coords.push_coord(&geo::Coord {
-                x: upper.x(),
-                y: upper.y(),
-            });
-            self.coords.push_coord(&geo::Coord {
-                x: upper.x(),
-                y: lower.y(),
-            });
-            self.coords.push_coord(&geo::Coord {
-                x: lower.x(),
-                y: lower.y(),
-            });
-        } else {
-            self.push_null();
-        }
-        Ok(())
+        //     self.coords.push_coord(&geo::Coord {
+        //         x: lower.x(),
+        //         y: lower.y(),
+        //     });
+        //     self.coords.push_coord(&geo::Coord {
+        //         x: lower.x(),
+        //         y: upper.y(),
+        //     });
+        //     self.coords.push_coord(&geo::Coord {
+        //         x: upper.x(),
+        //         y: upper.y(),
+        //     });
+        //     self.coords.push_coord(&geo::Coord {
+        //         x: upper.x(),
+        //         y: lower.y(),
+        //     });
+        //     self.coords.push_coord(&geo::Coord {
+        //         x: lower.x(),
+        //         y: lower.y(),
+        //     });
+        // } else {
+        //     self.push_null();
+        // }
+        // Ok(())
     }
 
     /// Add a new geometry to this builder

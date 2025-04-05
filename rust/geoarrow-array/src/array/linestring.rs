@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::array::{CoordBuffer, MultiPointArray, WKBArray};
+use crate::array::{CoordBuffer, WKBArray};
 use crate::builder::LineStringBuilder;
 use crate::capacity::LineStringCapacity;
 use crate::datatypes::NativeType;
@@ -13,10 +13,9 @@ use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
-use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
 use geo_traits::LineStringTrait;
-use geoarrow_schema::{CoordType, Dimension, LineStringType, Metadata};
+use geoarrow_schema::{Dimension, LineStringType, Metadata};
 
 /// An immutable array of LineString geometries using GeoArrow's in-memory representation.
 ///
@@ -24,7 +23,7 @@ use geoarrow_schema::{CoordType, Dimension, LineStringType, Metadata};
 /// bitmap.
 #[derive(Debug, Clone)]
 pub struct LineStringArray {
-    data_type: LineStringType,
+    pub(crate) data_type: LineStringType,
 
     pub(crate) coords: CoordBuffer,
 
@@ -158,22 +157,6 @@ impl LineStringArray {
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }
     }
-
-    /// Change the coordinate type of this array.
-    pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
-        self.clone().into_coord_type(coord_type)
-    }
-
-    /// Change the coordinate type of this array.
-    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
-        let metadata = self.metadata();
-        Self::new(
-            self.coords.into_coord_type(coord_type),
-            self.geom_offsets,
-            self.validity,
-            metadata,
-        )
-    }
 }
 
 impl ArrayBase for LineStringArray {
@@ -207,24 +190,6 @@ impl NativeArray for LineStringArray {
         NativeType::LineString(self.data_type.clone())
     }
 
-    fn coord_type(&self) -> CoordType {
-        self.coords.coord_type()
-    }
-
-    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
-        Arc::new(self.clone().into_coord_type(coord_type))
-    }
-
-    fn with_metadata(&self, metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
-        let mut arr = self.clone();
-        arr.data_type = self.data_type.clone().with_metadata(metadata);
-        Arc::new(arr)
-    }
-
-    fn as_ref(&self) -> &dyn NativeArray {
-        self
-    }
-
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
     }
@@ -243,7 +208,7 @@ impl IntoArrow for LineStringArray {
     type ExtensionType = LineStringType;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let vertices_field = match self.data_type {
+        let vertices_field = match self.data_type.data_type() {
             DataType::List(inner_field) => inner_field,
             _ => unreachable!(),
         };
@@ -340,15 +305,6 @@ impl<G: LineStringTrait<T = f64>> From<(&[G], Dimension)> for LineStringArray {
     }
 }
 
-/// LineString and MultiPoint have the same layout, so enable conversions between the two to change
-/// the semantic type
-impl From<LineStringArray> for MultiPointArray {
-    fn from(value: LineStringArray) -> Self {
-        let metadata = value.metadata();
-        Self::new(value.coords, value.geom_offsets, value.validity, metadata)
-    }
-}
-
 impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for LineStringArray {
     type Error = GeoArrowError;
 
@@ -376,68 +332,68 @@ impl PartialEq for LineStringArray {
     }
 }
 
-#[cfg(test)]
-mod test {
-    use crate::test::linestring::{ls0, ls1};
+// #[cfg(test)]
+// mod test {
+//     use crate::test::linestring::{ls0, ls1};
 
-    use super::*;
+//     use super::*;
 
-    #[test]
-    fn geo_roundtrip_accurate() {
-        let arr: LineStringArray = (vec![ls0(), ls1()].as_slice(), Dimension::XY).into();
-        assert_eq!(arr.value_as_geo(0), ls0());
-        assert_eq!(arr.value_as_geo(1), ls1());
-    }
+//     // #[test]
+//     // fn geo_roundtrip_accurate() {
+//     //     let arr: LineStringArray = (vec![ls0(), ls1()].as_slice(), Dimension::XY).into();
+//     //     assert_eq!(arr.value_as_geo(0), ls0());
+//     //     assert_eq!(arr.value_as_geo(1), ls1());
+//     // }
 
-    #[test]
-    fn geo_roundtrip_accurate_option_vec() {
-        let arr: LineStringArray = (vec![Some(ls0()), Some(ls1()), None], Dimension::XY).into();
-        assert_eq!(arr.get_as_geo(0), Some(ls0()));
-        assert_eq!(arr.get_as_geo(1), Some(ls1()));
-        assert_eq!(arr.get_as_geo(2), None);
-    }
+//     // #[test]
+//     // fn geo_roundtrip_accurate_option_vec() {
+//     //     let arr: LineStringArray = (vec![Some(ls0()), Some(ls1()), None], Dimension::XY).into();
+//     //     assert_eq!(arr.get_as_geo(0), Some(ls0()));
+//     //     assert_eq!(arr.get_as_geo(1), Some(ls1()));
+//     //     assert_eq!(arr.get_as_geo(2), None);
+//     // }
 
-    // #[test]
-    // fn rstar_integration() {
-    //     let arr: LineStringArray = (vec![ls0(), ls1()].as_slice(), Dimension::XY).into();
-    //     let tree = arr.rstar_tree();
+//     // #[test]
+//     // fn rstar_integration() {
+//     //     let arr: LineStringArray = (vec![ls0(), ls1()].as_slice(), Dimension::XY).into();
+//     //     let tree = arr.rstar_tree();
 
-    //     let search_box = AABB::from_corners([3.5, 5.5], [4.5, 6.5]);
-    //     let results: Vec<&crate::scalar::LineString> =
-    //         tree.locate_in_envelope_intersecting(&search_box).collect();
+//     //     let search_box = AABB::from_corners([3.5, 5.5], [4.5, 6.5]);
+//     //     let results: Vec<&crate::scalar::LineString> =
+//     //         tree.locate_in_envelope_intersecting(&search_box).collect();
 
-    //     assert_eq!(results.len(), 1);
-    //     assert_eq!(
-    //         results[0].geom_index, 1,
-    //         "The second element in the LineStringArray should be found"
-    //     );
-    // }
+//     //     assert_eq!(results.len(), 1);
+//     //     assert_eq!(
+//     //         results[0].geom_index, 1,
+//     //         "The second element in the LineStringArray should be found"
+//     //     );
+//     // }
 
-    #[test]
-    fn slice() {
-        let arr: LineStringArray = (vec![ls0(), ls1()].as_slice(), Dimension::XY).into();
-        let sliced = arr.slice(1, 1);
-        assert_eq!(sliced.len(), 1);
-        assert_eq!(sliced.get_as_geo(0), Some(ls1()));
-    }
+//     #[test]
+//     fn slice() {
+//         let arr: LineStringArray = (vec![ls0(), ls1()].as_slice(), Dimension::XY).into();
+//         let sliced = arr.slice(1, 1);
+//         assert_eq!(sliced.len(), 1);
+//         assert_eq!(sliced.get_as_geo(0), Some(ls1()));
+//     }
 
-    // #[test]
-    // fn parse_wkb_geoarrow_interleaved_example() {
-    //     let linestring_arr = example_linestring_interleaved();
+//     // #[test]
+//     // fn parse_wkb_geoarrow_interleaved_example() {
+//     //     let linestring_arr = example_linestring_interleaved();
 
-    //     let wkb_arr = example_linestring_wkb();
-    //     let parsed_linestring_arr: LineStringArray = (wkb_arr, Dimension::XY).try_into().unwrap();
+//     //     let wkb_arr = example_linestring_wkb();
+//     //     let parsed_linestring_arr: LineStringArray = (wkb_arr, Dimension::XY).try_into().unwrap();
 
-    //     assert_eq!(linestring_arr, parsed_linestring_arr);
-    // }
+//     //     assert_eq!(linestring_arr, parsed_linestring_arr);
+//     // }
 
-    // #[test]
-    // fn parse_wkb_geoarrow_separated_example() {
-    //     let linestring_arr = example_linestring_separated().into_coord_type(CoordType::Interleaved);
+//     // #[test]
+//     // fn parse_wkb_geoarrow_separated_example() {
+//     //     let linestring_arr = example_linestring_separated().into_coord_type(CoordType::Interleaved);
 
-    //     let wkb_arr = example_linestring_wkb();
-    //     let parsed_linestring_arr: LineStringArray = (wkb_arr, Dimension::XY).try_into().unwrap();
+//     //     let wkb_arr = example_linestring_wkb();
+//     //     let parsed_linestring_arr: LineStringArray = (wkb_arr, Dimension::XY).try_into().unwrap();
 
-    //     assert_eq!(linestring_arr, parsed_linestring_arr);
-    // }
-}
+//     //     assert_eq!(linestring_arr, parsed_linestring_arr);
+//     // }
+// }

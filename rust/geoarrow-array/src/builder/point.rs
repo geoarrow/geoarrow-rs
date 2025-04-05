@@ -1,7 +1,7 @@
 use core::f64;
 use std::sync::Arc;
 
-use arrow_array::{ArrayRef, OffsetSizeTrait};
+use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
 use geoarrow_schema::{CoordType, Dimension, Metadata};
@@ -299,12 +299,6 @@ impl From<PointBuilder> for PointArray {
     fn from(mut other: PointBuilder) -> Self {
         let validity = other.validity.finish();
         Self::new(other.coords.into(), validity, other.metadata)
-    }
-}
-
-impl From<PointBuilder> for ArrayRef {
-    fn from(arr: PointBuilder) -> Self {
-        arr.into_array_ref()
     }
 }
 

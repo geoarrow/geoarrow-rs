@@ -1,22 +1,15 @@
 use std::sync::Arc;
 
-use arrow_array::{Array, ArrayRef, FixedSizeListArray, OffsetSizeTrait, StructArray};
+use arrow_array::{Array, ArrayRef, FixedSizeListArray, StructArray};
 use arrow_buffer::NullBuffer;
-use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
-use geo_traits::PointTrait;
-use geoarrow_schema::{CoordType, Dimension, Metadata, PointType};
+use geoarrow_schema::{Dimension, Metadata, PointType};
 
-use crate::algorithm::native::downcast::can_downcast_multi;
-use crate::array::{
-    CoordBuffer, GeometryCollectionArray, InterleavedCoordBuffer, MixedGeometryArray,
-    MultiPointArray, SeparatedCoordBuffer, WKBArray,
-};
-use crate::builder::PointBuilder;
+use crate::array::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
 use crate::datatypes::NativeType;
 use crate::eq::point_eq;
 use crate::error::{GeoArrowError, Result};
-use crate::scalar::{Geometry, Point};
+use crate::scalar::Point;
 use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
 
 /// An immutable array of Point geometries using GeoArrow's in-memory representation.
@@ -24,7 +17,7 @@ use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
 /// This is semantically equivalent to `Vec<Option<Point>>` due to the internal validity bitmap.
 #[derive(Debug, Clone)]
 pub struct PointArray {
-    data_type: PointType,
+    pub(crate) data_type: PointType,
     pub(crate) coords: CoordBuffer,
     pub(crate) validity: Option<NullBuffer>,
 }
@@ -97,8 +90,9 @@ impl PointArray {
 
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
+        let dimension = self.data_type.dimension();
         let validity_len = self.nulls().map(|v| v.buffer().len()).unwrap_or(0);
-        validity_len + self.buffer_lengths() * self.dimension().size() * 8
+        validity_len + self.buffer_lengths() * dimension.size() * 8
     }
 
     /// Slices this [`PointArray`] in place.
@@ -115,21 +109,6 @@ impl PointArray {
             coords: self.coords.slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }
-    }
-
-    /// Change the coordinate type of this array.
-    pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
-        self.clone().into_coord_type(coord_type)
-    }
-
-    /// Change the coordinate type of this array.
-    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
-        let metadata = self.metadata();
-        Self::new(
-            self.coords.into_coord_type(coord_type),
-            self.validity,
-            metadata,
-        )
     }
 }
 
@@ -162,24 +141,6 @@ impl ArrayBase for PointArray {
 impl NativeArray for PointArray {
     fn data_type(&self) -> NativeType {
         NativeType::Point(self.data_type.clone())
-    }
-
-    fn coord_type(&self) -> CoordType {
-        self.coords.coord_type()
-    }
-
-    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
-        Arc::new(self.to_coord_type(coord_type))
-    }
-
-    fn with_metadata(&self, metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
-        let mut arr = self.clone();
-        arr.data_type = self.data_type.clone().with_metadata(metadata);
-        Arc::new(arr)
-    }
-
-    fn as_ref(&self) -> &dyn NativeArray {
-        self
     }
 
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
@@ -312,70 +273,5 @@ impl PartialEq for PointArray {
         }
 
         true
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use crate::test::geoarrow_data::{
-        example_point_interleaved, example_point_separated, example_point_wkb,
-    };
-    use crate::test::point::{p0, p1, p2};
-
-    use super::*;
-    use geo::Point;
-
-    #[test]
-    fn geo_roundtrip_accurate() {
-        let arr: PointArray = (vec![p0(), p1(), p2()].as_slice(), Dimension::XY).into();
-        assert_eq!(arr.value_as_geo(0), p0());
-        assert_eq!(arr.value_as_geo(1), p1());
-        assert_eq!(arr.value_as_geo(2), p2());
-    }
-
-    #[test]
-    fn geo_roundtrip_accurate_option_vec() {
-        let arr: PointArray = (
-            vec![Some(p0()), Some(p1()), Some(p2()), None],
-            Dimension::XY,
-        )
-            .into();
-        assert_eq!(arr.get_as_geo(0), Some(p0()));
-        assert_eq!(arr.get_as_geo(1), Some(p1()));
-        assert_eq!(arr.get_as_geo(2), Some(p2()));
-        assert_eq!(arr.get_as_geo(3), None);
-    }
-
-    #[test]
-    fn slice() {
-        let points: Vec<Point> = vec![p0(), p1(), p2()];
-        let point_array: PointArray = (points.as_slice(), Dimension::XY).into();
-        let sliced = point_array.slice(1, 1);
-        assert_eq!(sliced.len(), 1);
-        assert_eq!(sliced.get_as_geo(0), Some(p1()));
-    }
-
-    #[ignore = "point file is invalid (https://github.com/geoarrow/geoarrow-data/issues/2)"]
-    #[test]
-    fn parse_wkb_geoarrow_interleaved_example() {
-        let geom_arr = example_point_interleaved();
-
-        let wkb_arr = example_point_wkb();
-        let parsed_geom_arr: PointArray = (wkb_arr, Dimension::XY).try_into().unwrap();
-
-        // Comparisons on the point array directly currently fail because of NaN values in
-        // coordinate 1.
-        assert_eq!(geom_arr.get_as_geo(0), parsed_geom_arr.get_as_geo(0));
-        assert_eq!(geom_arr.get_as_geo(2), parsed_geom_arr.get_as_geo(2));
-    }
-
-    #[test]
-    fn parse_wkb_geoarrow_separated_example() {
-        let geom_arr = example_point_separated();
-
-        let wkb_arr = example_point_wkb();
-        let parsed_geom_arr: PointArray = (wkb_arr, Dimension::XY).try_into().unwrap();
-
-        assert_eq!(geom_arr, parsed_geom_arr);
     }
 }

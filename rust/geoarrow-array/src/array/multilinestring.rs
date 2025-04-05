@@ -3,21 +3,17 @@ use std::sync::Arc;
 use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
-use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
 use geo_traits::MultiLineStringTrait;
-use geoarrow_schema::{CoordType, Dimension, Metadata, MultiLineStringType};
+use geoarrow_schema::{Dimension, Metadata, MultiLineStringType};
 
-use crate::array::{
-    CoordBuffer, GeometryCollectionArray, LineStringArray, MixedGeometryArray, PolygonArray,
-    WKBArray,
-};
+use crate::array::{CoordBuffer, LineStringArray, PolygonArray, WKBArray};
 use crate::builder::MultiLineStringBuilder;
 use crate::capacity::MultiLineStringCapacity;
 use crate::datatypes::NativeType;
 use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
-use crate::scalar::{Geometry, MultiLineString};
+use crate::scalar::MultiLineString;
 use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
 use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 
@@ -27,7 +23,7 @@ use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 /// bitmap.
 #[derive(Debug, Clone)]
 pub struct MultiLineStringArray {
-    data_type: MultiLineStringType,
+    pub(crate) data_type: MultiLineStringType,
 
     pub(crate) coords: CoordBuffer,
 
@@ -180,23 +176,6 @@ impl MultiLineStringArray {
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }
     }
-
-    /// Change the coordinate type of this array.
-    pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
-        self.clone().into_coord_type(coord_type)
-    }
-
-    /// Change the coordinate type of this array.
-    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
-        let metadata = self.metadata();
-        Self::new(
-            self.coords.into_coord_type(coord_type),
-            self.geom_offsets,
-            self.ring_offsets,
-            self.validity,
-            metadata,
-        )
-    }
 }
 
 impl ArrayBase for MultiLineStringArray {
@@ -228,24 +207,6 @@ impl ArrayBase for MultiLineStringArray {
 impl NativeArray for MultiLineStringArray {
     fn data_type(&self) -> NativeType {
         NativeType::MultiLineString(self.data_type.clone())
-    }
-
-    fn coord_type(&self) -> CoordType {
-        self.coords.coord_type()
-    }
-
-    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
-        Arc::new(self.clone().into_coord_type(coord_type))
-    }
-
-    fn with_metadata(&self, metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
-        let mut arr = self.clone();
-        arr.data_type = self.data_type.clone().with_metadata(metadata);
-        Arc::new(arr)
-    }
-
-    fn as_ref(&self) -> &dyn NativeArray {
-        self
     }
 
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
@@ -384,7 +345,7 @@ impl<G: MultiLineStringTrait<T = f64>> From<(&[G], Dimension)> for MultiLineStri
 /// change the semantic type
 impl From<MultiLineStringArray> for PolygonArray {
     fn from(value: MultiLineStringArray) -> Self {
-        let metadata = value.metadata();
+        let metadata = value.data_type.metadata().clone();
         Self::new(
             value.coords,
             value.geom_offsets,
@@ -406,7 +367,7 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MultiLineStringAr
 
 impl From<LineStringArray> for MultiLineStringArray {
     fn from(value: LineStringArray) -> Self {
-        let metadata = value.metadata();
+        let metadata = value.data_type.metadata().clone();
         let coords = value.coords;
         let geom_offsets = OffsetBuffer::from_lengths(vec![1; coords.len()]);
         let ring_offsets = value.geom_offsets;
@@ -434,105 +395,5 @@ impl PartialEq for MultiLineStringArray {
         }
 
         true
-    }
-}
-
-impl TryFrom<MixedGeometryArray> for MultiLineStringArray {
-    type Error = GeoArrowError;
-
-    fn try_from(value: MixedGeometryArray) -> Result<Self> {
-        if value.has_points()
-            || value.has_polygons()
-            || value.has_multi_points()
-            || value.has_multi_polygons()
-        {
-            return Err(GeoArrowError::General("Unable to cast".to_string()));
-        }
-
-        let (offset, length) = value.slice_offset_length();
-        if value.has_only_line_strings() {
-            return Ok(value.line_strings.slice(offset, length).into());
-        }
-
-        if value.has_only_multi_line_strings() {
-            return Ok(value.multi_line_strings.slice(offset, length));
-        }
-
-        let mut capacity = value.multi_line_strings.buffer_lengths();
-        capacity += value.line_strings.buffer_lengths();
-
-        let mut builder = MultiLineStringBuilder::with_capacity_and_options(
-            value.dimension(),
-            capacity,
-            value.coord_type(),
-            value.metadata(),
-        );
-        value
-            .iter()
-            .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
-        Ok(builder.finish())
-    }
-}
-
-impl TryFrom<GeometryCollectionArray> for MultiLineStringArray {
-    type Error = GeoArrowError;
-
-    fn try_from(value: GeometryCollectionArray) -> Result<Self> {
-        MixedGeometryArray::try_from(value)?.try_into()
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use crate::test::geoarrow_data::{
-        example_multilinestring_interleaved, example_multilinestring_separated,
-        example_multilinestring_wkb,
-    };
-    use crate::test::multilinestring::{ml0, ml1};
-
-    use super::*;
-
-    #[test]
-    fn geo_roundtrip_accurate() {
-        let arr: MultiLineStringArray = (vec![ml0(), ml1()].as_slice(), Dimension::XY).into();
-        assert_eq!(arr.value_as_geo(0), ml0());
-        assert_eq!(arr.value_as_geo(1), ml1());
-    }
-
-    #[test]
-    fn geo_roundtrip_accurate_option_vec() {
-        let arr: MultiLineStringArray =
-            (vec![Some(ml0()), Some(ml1()), None], Dimension::XY).into();
-        assert_eq!(arr.get_as_geo(0), Some(ml0()));
-        assert_eq!(arr.get_as_geo(1), Some(ml1()));
-        assert_eq!(arr.get_as_geo(2), None);
-    }
-
-    #[test]
-    fn slice() {
-        let arr: MultiLineStringArray = (vec![ml0(), ml1()].as_slice(), Dimension::XY).into();
-        let sliced = arr.slice(1, 1);
-        assert_eq!(sliced.len(), 1);
-        assert_eq!(sliced.get_as_geo(0), Some(ml1()));
-    }
-
-    #[test]
-    fn parse_wkb_geoarrow_interleaved_example() {
-        let geom_arr = example_multilinestring_interleaved();
-
-        let wkb_arr = example_multilinestring_wkb();
-        let parsed_geom_arr: MultiLineStringArray = (wkb_arr, Dimension::XY).try_into().unwrap();
-
-        assert_eq!(geom_arr, parsed_geom_arr);
-    }
-
-    #[test]
-    fn parse_wkb_geoarrow_separated_example() {
-        let geom_arr = example_multilinestring_separated().into_coord_type(CoordType::Interleaved);
-
-        let wkb_arr = example_multilinestring_wkb();
-        let parsed_geom_arr: MultiLineStringArray = (wkb_arr, Dimension::XY).try_into().unwrap();
-
-        assert_eq!(geom_arr, parsed_geom_arr);
     }
 }

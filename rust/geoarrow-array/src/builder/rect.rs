@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use arrow_array::ArrayRef;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, RectTrait};
 use geoarrow_schema::Dimension;
@@ -10,7 +9,6 @@ use crate::array::RectArray;
 use crate::builder::SeparatedCoordBufferBuilder;
 use crate::error::GeoArrowError;
 use crate::scalar::Rect;
-use crate::trait_::IntoArrow;
 
 /// The GeoArrow equivalent to `Vec<Option<Rect>>`: a mutable collection of Rects.
 ///
@@ -120,11 +118,6 @@ impl RectBuilder {
         (self.lower, self.upper, self.validity)
     }
 
-    /// Convert to an [`ArrayRef`]
-    pub fn into_arrow_ref(self) -> ArrayRef {
-        Arc::new(self.into_arrow())
-    }
-
     /// Consume the builder and convert to an immutable [`RectArray`]
     pub fn finish(self) -> RectArray {
         self.into()
@@ -158,19 +151,20 @@ impl RectBuilder {
     ///
     /// The array should be `[minx, miny, maxx, maxy]`.
     #[inline]
-    pub fn push_box2d(&mut self, value: Option<[f64; 4]>) {
-        if let Some(value) = value {
-            self.lower
-                .push_coord(&geo::coord! { x: value[0], y: value[1] });
-            self.upper
-                .push_coord(&geo::coord! { x: value[2], y: value[3] });
-            self.validity.append_non_null()
-        } else {
-            // Since it's a struct, we still need to push coords when null
-            self.lower.push_nan_coord();
-            self.upper.push_nan_coord();
-            self.validity.append_null();
-        }
+    pub fn push_box2d(&mut self, _value: Option<[f64; 4]>) {
+        todo!("re enable, need our own lightweight coord type");
+        // if let Some(value) = value {
+        //     self.lower
+        //         .push_coord(&geo::coord! { x: value[0], y: value[1] });
+        //     self.upper
+        //         .push_coord(&geo::coord! { x: value[2], y: value[3] });
+        //     self.validity.append_non_null()
+        // } else {
+        //     // Since it's a struct, we still need to push coords when null
+        //     self.lower.push_nan_coord();
+        //     self.upper.push_nan_coord();
+        //     self.validity.append_null();
+        // }
     }
 
     /// Push min and max coordinates of a rect to the builder.

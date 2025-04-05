@@ -3,15 +3,11 @@ use std::sync::Arc;
 use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
-use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
 use geo_traits::GeometryCollectionTrait;
-use geoarrow_schema::{CoordType, Dimension, GeometryCollectionType, Metadata};
+use geoarrow_schema::{Dimension, GeometryCollectionType, Metadata};
 
-use crate::array::{
-    LineStringArray, MixedGeometryArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
-    PointArray, PolygonArray, WKBArray,
-};
+use crate::array::{MixedGeometryArray, WKBArray};
 use crate::builder::GeometryCollectionBuilder;
 use crate::capacity::GeometryCollectionCapacity;
 use crate::datatypes::NativeType;
@@ -19,7 +15,7 @@ use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::GeometryCollection;
 use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
-use crate::util::offsets_buffer_i64_to_i32;
+use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 
 /// An immutable array of GeometryCollection geometries using GeoArrow's in-memory representation.
 ///
@@ -27,7 +23,7 @@ use crate::util::offsets_buffer_i64_to_i32;
 /// validity bitmap.
 #[derive(Debug, Clone)]
 pub struct GeometryCollectionArray {
-    data_type: GeometryCollectionType,
+    pub(crate) data_type: GeometryCollectionType,
 
     pub(crate) array: MixedGeometryArray,
 
@@ -50,9 +46,9 @@ impl GeometryCollectionArray {
         validity: Option<NullBuffer>,
         metadata: Arc<Metadata>,
     ) -> Self {
-        let coord_type = array.coord_type();
+        let coord_type = array.coord_type;
         Self {
-            data_type: GeometryCollectionType::new(coord_type, array.dimension(), metadata),
+            data_type: GeometryCollectionType::new(coord_type, array.dim, metadata),
             array,
             geom_offsets,
             validity,
@@ -67,7 +63,7 @@ impl GeometryCollectionArray {
     pub fn buffer_lengths(&self) -> GeometryCollectionCapacity {
         GeometryCollectionCapacity::new(
             self.array.buffer_lengths(),
-            *self.geom_offsets.last().unwrap() as usize,
+            *self.geom_offsets.last() as usize,
         )
     }
 
@@ -109,22 +105,6 @@ impl GeometryCollectionArray {
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }
     }
-
-    /// Change the coordinate type of this array.
-    pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
-        self.clone().into_coord_type(coord_type)
-    }
-
-    /// Change the coordinate type of this array.
-    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
-        let metadata = self.metadata();
-        Self::new(
-            self.array.into_coord_type(coord_type),
-            self.geom_offsets,
-            self.validity,
-            metadata,
-        )
-    }
 }
 
 impl ArrayBase for GeometryCollectionArray {
@@ -143,8 +123,7 @@ impl ArrayBase for GeometryCollectionArray {
     /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
-        // TODO: double check/make helper for this
-        self.geom_offsets.len() - 1
+        self.geom_offsets.len_proxy()
     }
 
     /// Returns the optional validity.
@@ -157,24 +136,6 @@ impl ArrayBase for GeometryCollectionArray {
 impl NativeArray for GeometryCollectionArray {
     fn data_type(&self) -> NativeType {
         NativeType::GeometryCollection(self.data_type.clone())
-    }
-
-    fn coord_type(&self) -> CoordType {
-        self.array.coord_type()
-    }
-
-    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
-        Arc::new(self.clone().into_coord_type(coord_type))
-    }
-
-    fn with_metadata(&self, metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
-        let mut arr = self.clone();
-        arr.data_type = self.data_type.clone().with_metadata(metadata);
-        Arc::new(arr)
-    }
-
-    fn as_ref(&self) -> &dyn NativeArray {
-        self
     }
 
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
@@ -316,47 +277,5 @@ impl PartialEq for GeometryCollectionArray {
         }
 
         true
-    }
-}
-
-impl From<PointArray> for GeometryCollectionArray {
-    fn from(value: PointArray) -> Self {
-        MixedGeometryArray::from(value).into()
-    }
-}
-
-impl From<LineStringArray> for GeometryCollectionArray {
-    fn from(value: LineStringArray) -> Self {
-        MixedGeometryArray::from(value).into()
-    }
-}
-
-impl From<PolygonArray> for GeometryCollectionArray {
-    fn from(value: PolygonArray) -> Self {
-        MixedGeometryArray::from(value).into()
-    }
-}
-impl From<MultiPointArray> for GeometryCollectionArray {
-    fn from(value: MultiPointArray) -> Self {
-        MixedGeometryArray::from(value).into()
-    }
-}
-impl From<MultiLineStringArray> for GeometryCollectionArray {
-    fn from(value: MultiLineStringArray) -> Self {
-        MixedGeometryArray::from(value).into()
-    }
-}
-impl From<MultiPolygonArray> for GeometryCollectionArray {
-    fn from(value: MultiPolygonArray) -> Self {
-        MixedGeometryArray::from(value).into()
-    }
-}
-
-impl From<MixedGeometryArray> for GeometryCollectionArray {
-    // TODO: We should construct the correct validity buffer from the union's underlying arrays.
-    fn from(value: MixedGeometryArray) -> Self {
-        let metadata = value.metadata.clone();
-        let geom_offsets = OffsetBuffer::from_lengths(vec![1; value.len()]);
-        GeometryCollectionArray::new(value, geom_offsets, None, metadata)
     }
 }

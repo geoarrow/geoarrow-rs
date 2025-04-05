@@ -4,10 +4,9 @@ use arrow_array::cast::AsArray;
 use arrow_array::types::Float64Type;
 use arrow_array::{Array, ArrayRef, StructArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
-use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
 use geo_traits::RectTrait;
-use geoarrow_schema::{BoxType, CoordType, Dimension, Metadata};
+use geoarrow_schema::{BoxType, Dimension, Metadata};
 
 use crate::array::SeparatedCoordBuffer;
 use crate::builder::RectBuilder;
@@ -25,7 +24,7 @@ use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
 /// Internally this is implemented as a FixedSizeList, laid out as minx, miny, maxx, maxy.
 #[derive(Debug, Clone, PartialEq)]
 pub struct RectArray {
-    data_type: BoxType,
+    pub(crate) data_type: BoxType,
 
     /// Separated arrays for each of the "lower" dimensions
     lower: SeparatedCoordBuffer,
@@ -115,24 +114,6 @@ impl ArrayBase for RectArray {
 impl NativeArray for RectArray {
     fn data_type(&self) -> NativeType {
         NativeType::Rect(self.data_type.clone())
-    }
-
-    fn coord_type(&self) -> CoordType {
-        CoordType::Separated
-    }
-
-    fn to_coord_type(&self, _coord_type: CoordType) -> Arc<dyn NativeArray> {
-        Arc::new(self.clone())
-    }
-
-    fn with_metadata(&self, metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
-        let mut arr = self.clone();
-        arr.data_type = self.data_type.clone().with_metadata(metadata);
-        Arc::new(arr)
-    }
-
-    fn as_ref(&self) -> &dyn NativeArray {
-        self
     }
 
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {

@@ -3,14 +3,11 @@ use std::sync::Arc;
 use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
-use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
 use geo_traits::MultiPolygonTrait;
-use geoarrow_schema::{CoordType, Dimension, Metadata, MultiPolygonType};
+use geoarrow_schema::{Dimension, Metadata, MultiPolygonType};
 
-use crate::array::{
-    CoordBuffer, GeometryCollectionArray, MixedGeometryArray, PolygonArray, WKBArray,
-};
+use crate::array::{CoordBuffer, PolygonArray, WKBArray};
 use crate::builder::MultiPolygonBuilder;
 use crate::capacity::MultiPolygonCapacity;
 use crate::datatypes::NativeType;
@@ -26,7 +23,7 @@ use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 /// bitmap.
 #[derive(Debug, Clone)]
 pub struct MultiPolygonArray {
-    data_type: MultiPolygonType,
+    pub(crate) data_type: MultiPolygonType,
 
     pub(crate) coords: CoordBuffer,
 
@@ -232,24 +229,6 @@ impl MultiPolygonArray {
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }
     }
-
-    /// Change the coordinate type of this array.
-    pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
-        self.clone().into_coord_type(coord_type)
-    }
-
-    /// Change the coordinate type of this array.
-    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
-        let metadata = self.metadata();
-        Self::new(
-            self.coords.into_coord_type(coord_type),
-            self.geom_offsets,
-            self.polygon_offsets,
-            self.ring_offsets,
-            self.validity,
-            metadata,
-        )
-    }
 }
 
 impl ArrayBase for MultiPolygonArray {
@@ -283,24 +262,6 @@ impl NativeArray for MultiPolygonArray {
         NativeType::MultiPolygon(self.data_type.clone())
     }
 
-    fn coord_type(&self) -> CoordType {
-        self.coords.coord_type()
-    }
-
-    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
-        Arc::new(self.clone().into_coord_type(coord_type))
-    }
-
-    fn with_metadata(&self, metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
-        let mut arr = self.clone();
-        arr.data_type = self.data_type.clone().with_metadata(metadata);
-        Arc::new(arr)
-    }
-
-    fn as_ref(&self) -> &dyn NativeArray {
-        self
-    }
-
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
     }
@@ -330,7 +291,7 @@ impl IntoArrow for MultiPolygonArray {
         let polygons_field = self.polygons_field();
 
         let validity = self.validity;
-        let coord_array = self.coords.into_arrow();
+        let coord_array = ArrayRef::from(self.coords);
         let ring_array = Arc::new(GenericListArray::new(
             vertices_field,
             self.ring_offsets,
@@ -468,7 +429,7 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MultiPolygonArray
 
 impl From<PolygonArray> for MultiPolygonArray {
     fn from(value: PolygonArray) -> Self {
-        let metadata = value.metadata();
+        let metadata = value.data_type.metadata().clone();
         let coords = value.coords;
         let geom_offsets = OffsetBuffer::from_lengths(vec![1; coords.len()]);
         let ring_offsets = value.ring_offsets;
@@ -509,99 +470,4 @@ impl PartialEq for MultiPolygonArray {
 
         true
     }
-}
-
-impl TryFrom<MixedGeometryArray> for MultiPolygonArray {
-    type Error = GeoArrowError;
-
-    fn try_from(value: MixedGeometryArray) -> Result<Self> {
-        if value.has_points()
-            || value.has_line_strings()
-            || value.has_multi_points()
-            || value.has_multi_line_strings()
-        {
-            return Err(GeoArrowError::General("Unable to cast".to_string()));
-        }
-
-        let (offset, length) = value.slice_offset_length();
-        if value.has_only_polygons() {
-            return Ok(value.polygons.slice(offset, length).into());
-        }
-
-        if value.has_only_multi_polygons() {
-            return Ok(value.multi_polygons.slice(offset, length));
-        }
-
-        let mut capacity = value.multi_polygons.buffer_lengths();
-        capacity += value.polygons.buffer_lengths();
-
-        let mut builder = MultiPolygonBuilder::with_capacity_and_options(
-            value.dimension(),
-            capacity,
-            value.coord_type(),
-            value.metadata(),
-        );
-        value
-            .iter()
-            .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
-        Ok(builder.finish())
-    }
-}
-
-impl TryFrom<GeometryCollectionArray> for MultiPolygonArray {
-    type Error = GeoArrowError;
-
-    fn try_from(value: GeometryCollectionArray) -> Result<Self> {
-        MixedGeometryArray::try_from(value)?.try_into()
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use crate::test::multipolygon::{mp0, mp1};
-
-    #[test]
-    fn geo_roundtrip_accurate() {
-        let arr: MultiPolygonArray = (vec![mp0(), mp1()].as_slice(), Dimension::XY).into();
-        assert_eq!(arr.value_as_geo(0), mp0());
-        assert_eq!(arr.value_as_geo(1), mp1());
-    }
-
-    #[test]
-    fn geo_roundtrip_accurate_option_vec() {
-        let arr: MultiPolygonArray = (vec![Some(mp0()), Some(mp1()), None], Dimension::XY).into();
-        assert_eq!(arr.get_as_geo(0), Some(mp0()));
-        assert_eq!(arr.get_as_geo(1), Some(mp1()));
-        assert_eq!(arr.get_as_geo(2), None);
-    }
-
-    #[test]
-    fn slice() {
-        let arr: MultiPolygonArray = (vec![mp0(), mp1()].as_slice(), Dimension::XY).into();
-        let sliced = arr.slice(1, 1);
-        assert_eq!(sliced.len(), 1);
-        assert_eq!(sliced.get_as_geo(0), Some(mp1()));
-    }
-
-    // #[test]
-    // fn parse_wkb_geoarrow_interleaved_example() {
-    //     let geom_arr = example_multipolygon_interleaved();
-
-    //     let wkb_arr = example_multipolygon_wkb();
-    //     let parsed_geom_arr: MultiPolygonArray = (wkb_arr, Dimension::XY).try_into().unwrap();
-
-    //     assert_eq!(geom_arr, parsed_geom_arr);
-    // }
-
-    // #[test]
-    // fn parse_wkb_geoarrow_separated_example() {
-    //     // TODO: support checking equality of interleaved vs separated coords
-    //     let geom_arr = example_multipolygon_separated().into_coord_type(CoordType::Interleaved);
-
-    //     let wkb_arr = example_multipolygon_wkb();
-    //     let parsed_geom_arr: MultiPolygonArray = (wkb_arr, Dimension::XY).try_into().unwrap();
-
-    //     assert_eq!(geom_arr, parsed_geom_arr);
-    // }
 }

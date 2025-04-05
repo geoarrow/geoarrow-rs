@@ -3,7 +3,6 @@ use std::sync::Arc;
 
 use arrow_array::{Array, ArrayRef, OffsetSizeTrait, UnionArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
-use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field, UnionMode};
 use geo_traits::GeometryTrait;
 use geoarrow_schema::{CoordType, Dimension, GeometryType, Metadata};
@@ -51,7 +50,7 @@ use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
 /// - 37: GeometryCollection ZM
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometryArray {
-    data_type: GeometryType,
+    pub(crate) data_type: GeometryType,
 
     /// Invariant: every item in `type_ids` is `> 0 && < fields.len()` if `type_ids` are not
     /// provided. If `type_ids` exist in the NativeType, then every item in `type_ids` is `> 0 && `
@@ -111,47 +110,47 @@ impl GeometryArray {
     ) -> Self {
         let mut coord_types = HashSet::new();
         if let Some(point_xy) = &point_xy {
-            coord_types.insert(point_xy.coord_type());
+            coord_types.insert(point_xy.data_type.coord_type());
         }
         if let Some(line_string_xy) = &line_string_xy {
-            coord_types.insert(line_string_xy.coord_type());
+            coord_types.insert(line_string_xy.data_type.coord_type());
         }
         if let Some(polygon_xy) = &polygon_xy {
-            coord_types.insert(polygon_xy.coord_type());
+            coord_types.insert(polygon_xy.data_type.coord_type());
         }
         if let Some(mpoint_xy) = &mpoint_xy {
-            coord_types.insert(mpoint_xy.coord_type());
+            coord_types.insert(mpoint_xy.data_type.coord_type());
         }
         if let Some(mline_string_xy) = &mline_string_xy {
-            coord_types.insert(mline_string_xy.coord_type());
+            coord_types.insert(mline_string_xy.data_type.coord_type());
         }
         if let Some(mpolygon_xy) = &mpolygon_xy {
-            coord_types.insert(mpolygon_xy.coord_type());
+            coord_types.insert(mpolygon_xy.data_type.coord_type());
         }
         if let Some(gc_xy) = &gc_xy {
-            coord_types.insert(gc_xy.coord_type());
+            coord_types.insert(gc_xy.data_type.coord_type());
         }
 
         if let Some(point_xyz) = &point_xyz {
-            coord_types.insert(point_xyz.coord_type());
+            coord_types.insert(point_xyz.data_type.coord_type());
         }
         if let Some(line_string_xyz) = &line_string_xyz {
-            coord_types.insert(line_string_xyz.coord_type());
+            coord_types.insert(line_string_xyz.data_type.coord_type());
         }
         if let Some(polygon_xyz) = &polygon_xyz {
-            coord_types.insert(polygon_xyz.coord_type());
+            coord_types.insert(polygon_xyz.data_type.coord_type());
         }
         if let Some(mpoint_xyz) = &mpoint_xyz {
-            coord_types.insert(mpoint_xyz.coord_type());
+            coord_types.insert(mpoint_xyz.data_type.coord_type());
         }
         if let Some(mline_string_xyz) = &mline_string_xyz {
-            coord_types.insert(mline_string_xyz.coord_type());
+            coord_types.insert(mline_string_xyz.data_type.coord_type());
         }
         if let Some(mpolygon_xyz) = &mpolygon_xyz {
-            coord_types.insert(mpolygon_xyz.coord_type());
+            coord_types.insert(mpolygon_xyz.data_type.coord_type());
         }
         if let Some(gc_xyz) = &gc_xyz {
-            coord_types.insert(gc_xyz.coord_type());
+            coord_types.insert(gc_xyz.data_type.coord_type());
         }
         assert!(coord_types.len() <= 1);
 
@@ -504,35 +503,6 @@ impl GeometryArray {
         }
     }
 
-    /// Change the coordinate type of this array.
-    pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
-        self.clone().into_coord_type(coord_type)
-    }
-
-    /// Change the coordinate type of this array.
-    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
-        let metadata = self.metadata();
-        Self::new(
-            self.type_ids,
-            self.offsets,
-            Some(self.point_xy.into_coord_type(coord_type)),
-            Some(self.line_string_xy.into_coord_type(coord_type)),
-            Some(self.polygon_xy.into_coord_type(coord_type)),
-            Some(self.mpoint_xy.into_coord_type(coord_type)),
-            Some(self.mline_string_xy.into_coord_type(coord_type)),
-            Some(self.mpolygon_xy.into_coord_type(coord_type)),
-            Some(self.gc_xy.into_coord_type(coord_type)),
-            Some(self.point_xyz.into_coord_type(coord_type)),
-            Some(self.line_string_xyz.into_coord_type(coord_type)),
-            Some(self.polygon_xyz.into_coord_type(coord_type)),
-            Some(self.mpoint_xyz.into_coord_type(coord_type)),
-            Some(self.mline_string_xyz.into_coord_type(coord_type)),
-            Some(self.mpolygon_xyz.into_coord_type(coord_type)),
-            Some(self.gc_xyz.into_coord_type(coord_type)),
-            metadata,
-        )
-    }
-
     // TODO: recursively expand the types from the geometry collection array
     #[allow(dead_code)]
     pub(crate) fn contained_types(&self) -> HashSet<NativeType> {
@@ -617,24 +587,6 @@ impl NativeArray for GeometryArray {
         NativeType::Geometry(self.data_type.clone())
     }
 
-    fn coord_type(&self) -> CoordType {
-        self.data_type.coord_type()
-    }
-
-    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
-        Arc::new(self.clone().into_coord_type(coord_type))
-    }
-
-    fn with_metadata(&self, metadata: Arc<Metadata>) -> crate::trait_::NativeArrayRef {
-        let mut arr = self.clone();
-        arr.data_type = self.data_type.clone().with_metadata(metadata);
-        Arc::new(arr)
-    }
-
-    fn as_ref(&self) -> &dyn NativeArray {
-        self
-    }
-
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
     }
@@ -664,10 +616,6 @@ impl<'a> ArrayAccessor<'a> for GeometryArray {
             17 => Geometry::GeometryCollection(self.gc_xyz.value(offset)),
             _ => panic!("unknown type_id {}", type_id),
         }
-    }
-
-    unsafe fn value_unchecked_as_geometry(&'a self, index: usize) -> crate::scalar::Geometry<'a> {
-        self.value_unchecked(index)
     }
 }
 
@@ -942,698 +890,195 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryArray {
     }
 }
 
-impl From<PointArray> for GeometryArray {
-    fn from(value: PointArray) -> Self {
-        let dim = value.dimension();
-        let type_ids = match dim {
-            Dimension::XY => vec![1; value.len()],
-            Dimension::XYZ => vec![11; value.len()],
-            _ => panic!("Unsupported dimension"),
-        }
-        .into();
-        let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
-        let metadata = value.metadata().clone();
-        match dim {
-            Dimension::XY => Self::new(
-                type_ids,
-                offsets,
-                Some(value),
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                metadata,
-            ),
-            Dimension::XYZ => Self::new(
-                type_ids,
-                offsets,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                Some(value),
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                metadata,
-            ),
-            _ => panic!("Unsupported dimension"),
-        }
-    }
-}
+// #[cfg(test)]
+// mod test {
+//     use super::*;
+//     use crate::test::{linestring, multilinestring, multipoint, multipolygon, point, polygon};
 
-impl From<LineStringArray> for GeometryArray {
-    fn from(value: LineStringArray) -> Self {
-        let dim = value.dimension();
-        let type_ids = match dim {
-            Dimension::XY => vec![2; value.len()],
-            Dimension::XYZ => vec![12; value.len()],
-            _ => panic!("Unsupported dimension"),
-        }
-        .into();
-        let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
-        let metadata = value.metadata().clone();
-        match dim {
-            Dimension::XY => Self::new(
-                type_ids,
-                offsets,
-                None,
-                Some(value),
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                metadata,
-            ),
-            Dimension::XYZ => Self::new(
-                type_ids,
-                offsets,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                Some(value),
-                None,
-                None,
-                None,
-                None,
-                None,
-                metadata,
-            ),
-            _ => panic!("Unsupported dimension"),
-        }
-    }
-}
+//     #[test]
+//     fn geo_roundtrip_accurate_points() {
+//         let geoms: Vec<geo::Geometry> = vec![
+//             geo::Geometry::Point(point::p0()),
+//             geo::Geometry::Point(point::p1()),
+//             geo::Geometry::Point(point::p2()),
+//         ];
 
-impl From<PolygonArray> for GeometryArray {
-    fn from(value: PolygonArray) -> Self {
-        let dim = value.dimension();
-        let type_ids = match dim {
-            Dimension::XY => vec![3; value.len()],
-            Dimension::XYZ => vec![13; value.len()],
-            _ => panic!("Unsupported dimension"),
-        }
-        .into();
-        let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
-        let metadata = value.metadata().clone();
-        match dim {
-            Dimension::XY => Self::new(
-                type_ids,
-                offsets,
-                None,
-                None,
-                Some(value),
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                metadata,
-            ),
-            Dimension::XYZ => Self::new(
-                type_ids,
-                offsets,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                Some(value),
-                None,
-                None,
-                None,
-                None,
-                metadata,
-            ),
-            _ => panic!("Unsupported dimension"),
-        }
-    }
-}
+//         let arr: GeometryArray = GeometryBuilder::from_geometries(
+//             geoms.as_slice(),
+//             CoordType::Interleaved,
+//             Default::default(),
+//             false,
+//         )
+//         .unwrap()
+//         .finish();
 
-impl From<MultiPointArray> for GeometryArray {
-    fn from(value: MultiPointArray) -> Self {
-        let dim = value.dimension();
-        let type_ids = match dim {
-            Dimension::XY => vec![4; value.len()],
-            Dimension::XYZ => vec![14; value.len()],
-            _ => panic!("Unsupported dimension"),
-        }
-        .into();
-        let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
-        let metadata = value.metadata().clone();
-        match dim {
-            Dimension::XY => Self::new(
-                type_ids,
-                offsets,
-                None,
-                None,
-                None,
-                Some(value),
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                metadata,
-            ),
-            Dimension::XYZ => Self::new(
-                type_ids,
-                offsets,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                Some(value),
-                None,
-                None,
-                None,
-                metadata,
-            ),
-            _ => panic!("Unsupported dimension"),
-        }
-    }
-}
+//         assert_eq!(arr.value_as_geo(0), geo::Geometry::Point(point::p0()));
+//         assert_eq!(arr.value_as_geo(1), geo::Geometry::Point(point::p1()));
+//         assert_eq!(arr.value_as_geo(2), geo::Geometry::Point(point::p2()));
+//     }
 
-impl From<MultiLineStringArray> for GeometryArray {
-    fn from(value: MultiLineStringArray) -> Self {
-        let dim = value.dimension();
-        let type_ids = match dim {
-            Dimension::XY => vec![5; value.len()],
-            Dimension::XYZ => vec![15; value.len()],
-            _ => panic!("Unsupported dimension"),
-        }
-        .into();
-        let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
-        let metadata = value.metadata().clone();
-        match dim {
-            Dimension::XY => Self::new(
-                type_ids,
-                offsets,
-                None,
-                None,
-                None,
-                None,
-                Some(value),
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                metadata,
-            ),
-            Dimension::XYZ => Self::new(
-                type_ids,
-                offsets,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                Some(value),
-                None,
-                None,
-                metadata,
-            ),
-            _ => panic!("Unsupported dimension"),
-        }
-    }
-}
+//     #[test]
+//     fn geo_roundtrip_accurate_multi_points() {
+//         let geoms: Vec<geo::Geometry> = vec![
+//             geo::Geometry::Point(point::p0()),
+//             geo::Geometry::Point(point::p1()),
+//             geo::Geometry::Point(point::p2()),
+//         ];
+//         let arr: GeometryArray = GeometryBuilder::from_geometries(
+//             geoms.as_slice(),
+//             CoordType::Interleaved,
+//             Default::default(),
+//             true,
+//         )
+//         .unwrap()
+//         .finish();
 
-impl From<MultiPolygonArray> for GeometryArray {
-    fn from(value: MultiPolygonArray) -> Self {
-        let dim = value.dimension();
-        let type_ids = match dim {
-            Dimension::XY => vec![6; value.len()],
-            Dimension::XYZ => vec![16; value.len()],
-            _ => panic!("Unsupported dimension"),
-        }
-        .into();
-        let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
-        let metadata = value.metadata().clone();
-        match dim {
-            Dimension::XY => Self::new(
-                type_ids,
-                offsets,
-                None,
-                None,
-                None,
-                None,
-                None,
-                Some(value),
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                metadata,
-            ),
-            Dimension::XYZ => Self::new(
-                type_ids,
-                offsets,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                Some(value),
-                None,
-                metadata,
-            ),
-            _ => panic!("Unsupported dimension"),
-        }
-    }
-}
+//         assert_eq!(
+//             arr.value_as_geo(0),
+//             geo::Geometry::MultiPoint(geo::MultiPoint(vec![point::p0()]))
+//         );
+//         assert_eq!(
+//             arr.value_as_geo(1),
+//             geo::Geometry::MultiPoint(geo::MultiPoint(vec![point::p1()]))
+//         );
+//         assert_eq!(
+//             arr.value_as_geo(2),
+//             geo::Geometry::MultiPoint(geo::MultiPoint(vec![point::p2()]))
+//         );
+//     }
 
-impl From<GeometryCollectionArray> for GeometryArray {
-    fn from(value: GeometryCollectionArray) -> Self {
-        let dim = value.dimension();
-        let type_ids = match dim {
-            Dimension::XY => vec![7; value.len()],
-            Dimension::XYZ => vec![17; value.len()],
-            _ => panic!("Unsupported dimension"),
-        }
-        .into();
-        let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
-        let metadata = value.metadata().clone();
-        match dim {
-            Dimension::XY => Self::new(
-                type_ids,
-                offsets,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                Some(value),
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                metadata,
-            ),
-            Dimension::XYZ => Self::new(
-                type_ids,
-                offsets,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                Some(value),
-                metadata,
-            ),
-            _ => panic!("Unsupported dimension"),
-        }
-    }
-}
+//     #[test]
+//     fn geo_roundtrip_accurate_all() {
+//         let geoms: Vec<geo::Geometry> = vec![
+//             geo::Geometry::Point(point::p0()),
+//             geo::Geometry::LineString(linestring::ls0()),
+//             geo::Geometry::Polygon(polygon::p0()),
+//             geo::Geometry::MultiPoint(multipoint::mp0()),
+//             geo::Geometry::MultiLineString(multilinestring::ml0()),
+//             geo::Geometry::MultiPolygon(multipolygon::mp0()),
+//         ];
 
-impl From<MixedGeometryArray> for GeometryArray {
-    fn from(value: MixedGeometryArray) -> Self {
-        use Dimension::*;
+//         let arr: GeometryArray = GeometryBuilder::from_geometries(
+//             geoms.as_slice(),
+//             CoordType::Interleaved,
+//             Default::default(),
+//             false,
+//         )
+//         .unwrap()
+//         .finish();
 
-        // TODO: include slice offset
-        let mut point_xy: Option<PointArray> = None;
-        let mut line_string_xy: Option<LineStringArray> = None;
-        let mut polygon_xy: Option<PolygonArray> = None;
-        let mut mpoint_xy: Option<MultiPointArray> = None;
-        let mut mline_string_xy: Option<MultiLineStringArray> = None;
-        let mut mpolygon_xy: Option<MultiPolygonArray> = None;
+//         assert_eq!(arr.value_as_geo(0), geoms[0]);
+//         assert_eq!(arr.value_as_geo(1), geoms[1]);
+//         assert_eq!(arr.value_as_geo(2), geoms[2]);
+//         assert_eq!(arr.value_as_geo(3), geoms[3]);
+//         assert_eq!(arr.value_as_geo(4), geoms[4]);
+//         assert_eq!(arr.value_as_geo(5), geoms[5]);
+//     }
 
-        let mut point_xyz: Option<PointArray> = None;
-        let mut line_string_xyz: Option<LineStringArray> = None;
-        let mut polygon_xyz: Option<PolygonArray> = None;
-        let mut mpoint_xyz: Option<MultiPointArray> = None;
-        let mut mline_string_xyz: Option<MultiLineStringArray> = None;
-        let mut mpolygon_xyz: Option<MultiPolygonArray> = None;
+//     #[test]
+//     fn arrow_roundtrip() {
+//         let geoms: Vec<geo::Geometry> = vec![
+//             geo::Geometry::Point(point::p0()),
+//             geo::Geometry::LineString(linestring::ls0()),
+//             geo::Geometry::Polygon(polygon::p0()),
+//             geo::Geometry::MultiPoint(multipoint::mp0()),
+//             geo::Geometry::MultiLineString(multilinestring::ml0()),
+//             geo::Geometry::MultiPolygon(multipolygon::mp0()),
+//         ];
 
-        match value.dimension() {
-            XY => {
-                point_xy = Some(value.points);
-                line_string_xy = Some(value.line_strings);
-                polygon_xy = Some(value.polygons);
-                mpoint_xy = Some(value.multi_points);
-                mline_string_xy = Some(value.multi_line_strings);
-                mpolygon_xy = Some(value.multi_polygons);
-            }
-            XYZ => {
-                point_xyz = Some(value.points);
-                line_string_xyz = Some(value.line_strings);
-                polygon_xyz = Some(value.polygons);
-                mpoint_xyz = Some(value.multi_points);
-                mline_string_xyz = Some(value.multi_line_strings);
-                mpolygon_xyz = Some(value.multi_polygons);
-            }
-            _ => panic!("Unsupported dimension"),
-        }
+//         let arr: GeometryArray = GeometryBuilder::from_geometries(
+//             geoms.as_slice(),
+//             CoordType::Interleaved,
+//             Default::default(),
+//             false,
+//         )
+//         .unwrap()
+//         .finish();
 
-        Self::new(
-            value.type_ids,
-            value.offsets,
-            point_xy,
-            line_string_xy,
-            polygon_xy,
-            mpoint_xy,
-            mline_string_xy,
-            mpolygon_xy,
-            None,
-            point_xyz,
-            line_string_xyz,
-            polygon_xyz,
-            mpoint_xyz,
-            mline_string_xyz,
-            mpolygon_xyz,
-            None,
-            value.metadata,
-        )
-    }
-}
+//         // Round trip to/from arrow-rs
+//         let arrow_array = arr.into_arrow();
+//         let round_trip_arr: GeometryArray = (&arrow_array).try_into().unwrap();
 
-impl TryFrom<GeometryArray> for MixedGeometryArray {
-    type Error = GeoArrowError;
+//         assert_eq!(round_trip_arr.value_as_geo(0), geoms[0]);
+//         assert_eq!(round_trip_arr.value_as_geo(1), geoms[1]);
+//         assert_eq!(round_trip_arr.value_as_geo(2), geoms[2]);
+//         assert_eq!(round_trip_arr.value_as_geo(3), geoms[3]);
+//         assert_eq!(round_trip_arr.value_as_geo(4), geoms[4]);
+//         assert_eq!(round_trip_arr.value_as_geo(5), geoms[5]);
+//     }
 
-    /// Will error if:
-    ///
-    /// - the contained geometries are not all of the same dimension
-    /// - any geometry collection child exists
-    fn try_from(value: GeometryArray) -> std::result::Result<Self, Self::Error> {
-        let metadata = value.metadata();
+//     #[test]
+//     fn arrow_roundtrip_not_all_types() {
+//         let geoms: Vec<geo::Geometry> = vec![
+//             geo::Geometry::MultiPoint(multipoint::mp0()),
+//             geo::Geometry::MultiLineString(multilinestring::ml0()),
+//             geo::Geometry::MultiPolygon(multipolygon::mp0()),
+//         ];
 
-        if value.has_only_dimension(Dimension::XY) {
-            if value.gc_xy.is_empty() {
-                Ok(MixedGeometryArray::new(
-                    value.type_ids,
-                    value.offsets,
-                    Some(value.point_xy),
-                    Some(value.line_string_xy),
-                    Some(value.polygon_xy),
-                    Some(value.mpoint_xy),
-                    Some(value.mline_string_xy),
-                    Some(value.mpolygon_xy),
-                    metadata,
-                ))
-            } else {
-                Err(GeoArrowError::General(
-                    "Cannot cast to MixedGeometryArray with non-empty GeometryCollection child."
-                        .to_string(),
-                ))
-            }
-        } else if value.has_only_dimension(Dimension::XYZ) {
-            if value.gc_xyz.is_empty() {
-                Ok(MixedGeometryArray::new(
-                    value.type_ids,
-                    value.offsets,
-                    Some(value.point_xyz),
-                    Some(value.line_string_xyz),
-                    Some(value.polygon_xyz),
-                    Some(value.mpoint_xyz),
-                    Some(value.mline_string_xyz),
-                    Some(value.mpolygon_xyz),
-                    metadata,
-                ))
-            } else {
-                Err(GeoArrowError::General(
-                    "Cannot cast to MixedGeometryArray with non-empty GeometryCollection child."
-                        .to_string(),
-                ))
-            }
-        } else {
-            Err(GeoArrowError::General(
-                "Cannot cast to MixedGeometryArray when GeometryArray contains multiple dimensions"
-                    .to_string(),
-            ))
-        }
-    }
-}
+//         let arr: GeometryArray = GeometryBuilder::from_geometries(
+//             geoms.as_slice(),
+//             CoordType::Interleaved,
+//             Default::default(),
+//             false,
+//         )
+//         .unwrap()
+//         .finish();
 
-#[cfg(test)]
-mod test {
-    use super::*;
-    use crate::test::{linestring, multilinestring, multipoint, multipolygon, point, polygon};
+//         // Round trip to/from arrow-rs
+//         let arrow_array = arr.into_arrow();
+//         let round_trip_arr: GeometryArray = (&arrow_array).try_into().unwrap();
 
-    #[test]
-    fn geo_roundtrip_accurate_points() {
-        let geoms: Vec<geo::Geometry> = vec![
-            geo::Geometry::Point(point::p0()),
-            geo::Geometry::Point(point::p1()),
-            geo::Geometry::Point(point::p2()),
-        ];
+//         assert_eq!(round_trip_arr.value_as_geo(0), geoms[0]);
+//         assert_eq!(round_trip_arr.value_as_geo(1), geoms[1]);
+//         assert_eq!(round_trip_arr.value_as_geo(2), geoms[2]);
+//     }
 
-        let arr: GeometryArray = GeometryBuilder::from_geometries(
-            geoms.as_slice(),
-            CoordType::Interleaved,
-            Default::default(),
-            false,
-        )
-        .unwrap()
-        .finish();
+//     #[test]
+//     fn arrow_roundtrip_not_all_types2() {
+//         let geoms: Vec<geo::Geometry> = vec![
+//             geo::Geometry::MultiPoint(multipoint::mp0()),
+//             geo::Geometry::MultiPolygon(multipolygon::mp0()),
+//         ];
 
-        assert_eq!(arr.value_as_geo(0), geo::Geometry::Point(point::p0()));
-        assert_eq!(arr.value_as_geo(1), geo::Geometry::Point(point::p1()));
-        assert_eq!(arr.value_as_geo(2), geo::Geometry::Point(point::p2()));
-    }
+//         let arr: GeometryArray = GeometryBuilder::from_geometries(
+//             geoms.as_slice(),
+//             CoordType::Interleaved,
+//             Default::default(),
+//             false,
+//         )
+//         .unwrap()
+//         .finish();
 
-    #[test]
-    fn geo_roundtrip_accurate_multi_points() {
-        let geoms: Vec<geo::Geometry> = vec![
-            geo::Geometry::Point(point::p0()),
-            geo::Geometry::Point(point::p1()),
-            geo::Geometry::Point(point::p2()),
-        ];
-        let arr: GeometryArray = GeometryBuilder::from_geometries(
-            geoms.as_slice(),
-            CoordType::Interleaved,
-            Default::default(),
-            true,
-        )
-        .unwrap()
-        .finish();
+//         // Round trip to/from arrow-rs
+//         let arrow_array = arr.into_arrow();
+//         let round_trip_arr: GeometryArray = (&arrow_array).try_into().unwrap();
 
-        assert_eq!(
-            arr.value_as_geo(0),
-            geo::Geometry::MultiPoint(geo::MultiPoint(vec![point::p0()]))
-        );
-        assert_eq!(
-            arr.value_as_geo(1),
-            geo::Geometry::MultiPoint(geo::MultiPoint(vec![point::p1()]))
-        );
-        assert_eq!(
-            arr.value_as_geo(2),
-            geo::Geometry::MultiPoint(geo::MultiPoint(vec![point::p2()]))
-        );
-    }
+//         assert_eq!(round_trip_arr.value_as_geo(0), geoms[0]);
+//         assert_eq!(round_trip_arr.value_as_geo(1), geoms[1]);
+//     }
 
-    #[test]
-    fn geo_roundtrip_accurate_all() {
-        let geoms: Vec<geo::Geometry> = vec![
-            geo::Geometry::Point(point::p0()),
-            geo::Geometry::LineString(linestring::ls0()),
-            geo::Geometry::Polygon(polygon::p0()),
-            geo::Geometry::MultiPoint(multipoint::mp0()),
-            geo::Geometry::MultiLineString(multilinestring::ml0()),
-            geo::Geometry::MultiPolygon(multipolygon::mp0()),
-        ];
+//     #[test]
+//     fn test_slicing() {
+//         let geoms: Vec<geo::Geometry> = vec![
+//             geo::Geometry::Point(point::p0()),
+//             geo::Geometry::LineString(linestring::ls0()),
+//             geo::Geometry::Polygon(polygon::p0()),
+//             geo::Geometry::MultiPoint(multipoint::mp0()),
+//             geo::Geometry::MultiLineString(multilinestring::ml0()),
+//             geo::Geometry::MultiPolygon(multipolygon::mp0()),
+//         ];
 
-        let arr: GeometryArray = GeometryBuilder::from_geometries(
-            geoms.as_slice(),
-            CoordType::Interleaved,
-            Default::default(),
-            false,
-        )
-        .unwrap()
-        .finish();
+//         let arr: GeometryArray = GeometryBuilder::from_geometries(
+//             geoms.as_slice(),
+//             CoordType::Interleaved,
+//             Default::default(),
+//             false,
+//         )
+//         .unwrap()
+//         .finish();
 
-        assert_eq!(arr.value_as_geo(0), geoms[0]);
-        assert_eq!(arr.value_as_geo(1), geoms[1]);
-        assert_eq!(arr.value_as_geo(2), geoms[2]);
-        assert_eq!(arr.value_as_geo(3), geoms[3]);
-        assert_eq!(arr.value_as_geo(4), geoms[4]);
-        assert_eq!(arr.value_as_geo(5), geoms[5]);
-    }
-
-    #[test]
-    fn arrow_roundtrip() {
-        let geoms: Vec<geo::Geometry> = vec![
-            geo::Geometry::Point(point::p0()),
-            geo::Geometry::LineString(linestring::ls0()),
-            geo::Geometry::Polygon(polygon::p0()),
-            geo::Geometry::MultiPoint(multipoint::mp0()),
-            geo::Geometry::MultiLineString(multilinestring::ml0()),
-            geo::Geometry::MultiPolygon(multipolygon::mp0()),
-        ];
-
-        let arr: GeometryArray = GeometryBuilder::from_geometries(
-            geoms.as_slice(),
-            CoordType::Interleaved,
-            Default::default(),
-            false,
-        )
-        .unwrap()
-        .finish();
-
-        // Round trip to/from arrow-rs
-        let arrow_array = arr.into_arrow();
-        let round_trip_arr: GeometryArray = (&arrow_array).try_into().unwrap();
-
-        assert_eq!(round_trip_arr.value_as_geo(0), geoms[0]);
-        assert_eq!(round_trip_arr.value_as_geo(1), geoms[1]);
-        assert_eq!(round_trip_arr.value_as_geo(2), geoms[2]);
-        assert_eq!(round_trip_arr.value_as_geo(3), geoms[3]);
-        assert_eq!(round_trip_arr.value_as_geo(4), geoms[4]);
-        assert_eq!(round_trip_arr.value_as_geo(5), geoms[5]);
-    }
-
-    #[test]
-    fn arrow_roundtrip_not_all_types() {
-        let geoms: Vec<geo::Geometry> = vec![
-            geo::Geometry::MultiPoint(multipoint::mp0()),
-            geo::Geometry::MultiLineString(multilinestring::ml0()),
-            geo::Geometry::MultiPolygon(multipolygon::mp0()),
-        ];
-
-        let arr: GeometryArray = GeometryBuilder::from_geometries(
-            geoms.as_slice(),
-            CoordType::Interleaved,
-            Default::default(),
-            false,
-        )
-        .unwrap()
-        .finish();
-
-        // Round trip to/from arrow-rs
-        let arrow_array = arr.into_arrow();
-        let round_trip_arr: GeometryArray = (&arrow_array).try_into().unwrap();
-
-        assert_eq!(round_trip_arr.value_as_geo(0), geoms[0]);
-        assert_eq!(round_trip_arr.value_as_geo(1), geoms[1]);
-        assert_eq!(round_trip_arr.value_as_geo(2), geoms[2]);
-    }
-
-    #[test]
-    fn arrow_roundtrip_not_all_types2() {
-        let geoms: Vec<geo::Geometry> = vec![
-            geo::Geometry::MultiPoint(multipoint::mp0()),
-            geo::Geometry::MultiPolygon(multipolygon::mp0()),
-        ];
-
-        let arr: GeometryArray = GeometryBuilder::from_geometries(
-            geoms.as_slice(),
-            CoordType::Interleaved,
-            Default::default(),
-            false,
-        )
-        .unwrap()
-        .finish();
-
-        // Round trip to/from arrow-rs
-        let arrow_array = arr.into_arrow();
-        let round_trip_arr: GeometryArray = (&arrow_array).try_into().unwrap();
-
-        assert_eq!(round_trip_arr.value_as_geo(0), geoms[0]);
-        assert_eq!(round_trip_arr.value_as_geo(1), geoms[1]);
-    }
-
-    #[test]
-    fn test_slicing() {
-        let geoms: Vec<geo::Geometry> = vec![
-            geo::Geometry::Point(point::p0()),
-            geo::Geometry::LineString(linestring::ls0()),
-            geo::Geometry::Polygon(polygon::p0()),
-            geo::Geometry::MultiPoint(multipoint::mp0()),
-            geo::Geometry::MultiLineString(multilinestring::ml0()),
-            geo::Geometry::MultiPolygon(multipolygon::mp0()),
-        ];
-
-        let arr: GeometryArray = GeometryBuilder::from_geometries(
-            geoms.as_slice(),
-            CoordType::Interleaved,
-            Default::default(),
-            false,
-        )
-        .unwrap()
-        .finish();
-
-        assert_eq!(arr.slice(1, 2).value_as_geo(0), geoms[1]);
-        assert_eq!(arr.slice(1, 2).value_as_geo(1), geoms[2]);
-        assert_eq!(arr.slice(3, 3).value_as_geo(2), geoms[5]);
-    }
-}
+//         assert_eq!(arr.slice(1, 2).value_as_geo(0), geoms[1]);
+//         assert_eq!(arr.slice(1, 2).value_as_geo(1), geoms[2]);
+//         assert_eq!(arr.slice(3, 3).value_as_geo(2), geoms[5]);
+//     }
+// }

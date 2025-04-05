@@ -1,7 +1,7 @@
 use std::convert::From;
 use std::sync::Arc;
 
-use arrow_array::{GenericListArray, OffsetSizeTrait};
+use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
 use geoarrow_schema::{CoordType, Dimension, Metadata};
@@ -14,7 +14,7 @@ use crate::builder::{
 use crate::capacity::LineStringCapacity;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
-use crate::trait_::{ArrayAccessor, IntoArrow};
+use crate::trait_::ArrayAccessor;
 
 /// The GeoArrow equivalent to `Vec<Option<LineString>>`: a mutable collection of LineStrings.
 ///
@@ -348,12 +348,6 @@ impl From<LineStringBuilder> for LineStringArray {
             validity,
             other.metadata,
         )
-    }
-}
-
-impl From<LineStringBuilder> for GenericListArray<i32> {
-    fn from(arr: LineStringBuilder) -> Self {
-        arr.into_arrow()
     }
 }
 

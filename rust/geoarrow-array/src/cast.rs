@@ -1,4 +1,5 @@
 use crate::array::*;
+use crate::trait_::{NativeArray, SerializedArray};
 
 /// Helpers for downcasting a [`NativeArray`] to a concrete implementation.
 pub trait AsNativeArray {

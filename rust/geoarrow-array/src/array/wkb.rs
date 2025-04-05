@@ -5,7 +5,6 @@ use arrow_array::{
     Array, ArrayRef, BinaryArray, GenericBinaryArray, LargeBinaryArray, OffsetSizeTrait,
 };
 use arrow_buffer::NullBuffer;
-use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
 use geo_traits::GeometryTrait;
 use geoarrow_schema::{CoordType, Metadata, WkbType};
@@ -128,14 +127,6 @@ impl<O: OffsetSizeTrait> SerializedArray for WKBArray<O> {
             SerializedType::WKB(self.data_type.clone())
         }
     }
-
-    fn with_metadata(&self, metadata: Arc<Metadata>) -> Arc<dyn SerializedArray> {
-        Arc::new(self.with_metadata(metadata))
-    }
-
-    fn as_ref(&self) -> &dyn SerializedArray {
-        self
-    }
 }
 
 impl<'a, O: OffsetSizeTrait> ArrayAccessor<'a> for WKBArray<O> {
@@ -235,13 +226,13 @@ impl TryFrom<(&dyn Array, &Field)> for WKBArray<i64> {
 
 impl From<WKBArray<i32>> for WKBArray<i64> {
     fn from(value: WKBArray<i32>) -> Self {
-        let metadata = value.metadata();
         let binary_array = value.array;
         let (offsets, values, nulls) = binary_array.into_parts();
-        Self::new(
-            LargeBinaryArray::new(offsets_buffer_i32_to_i64(&offsets), values, nulls),
-            metadata,
-        )
+        let array = LargeBinaryArray::new(offsets_buffer_i32_to_i64(&offsets), values, nulls);
+        Self {
+            data_type: value.data_type,
+            array,
+        }
     }
 }
 
@@ -249,13 +240,13 @@ impl TryFrom<WKBArray<i64>> for WKBArray<i32> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<i64>) -> Result<Self> {
-        let metadata = value.metadata();
         let binary_array = value.array;
         let (offsets, values, nulls) = binary_array.into_parts();
-        Ok(Self::new(
-            BinaryArray::new(offsets_buffer_i64_to_i32(&offsets)?, values, nulls),
-            metadata,
-        ))
+        let array = BinaryArray::new(offsets_buffer_i64_to_i32(&offsets)?, values, nulls);
+        Ok(Self {
+            data_type: value.data_type,
+            array,
+        })
     }
 }
 
@@ -274,20 +265,5 @@ impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<Vec<Option<G>>> for 
     fn try_from(geoms: Vec<Option<G>>) -> Result<Self> {
         let mut_arr: WKBBuilder<O> = geoms.try_into()?;
         Ok(mut_arr.into())
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use arrow_array::BinaryArray;
-
-    #[test]
-    fn issue_243() {
-        let binary_arr = BinaryArray::from_opt_vec(vec![None]);
-        let wkb_arr = WKBArray::from(binary_arr);
-
-        // We just need to ensure that the iterator runs
-        wkb_arr.iter_geo().for_each(|_x| ());
     }
 }

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use arrow_array::{GenericListArray, OffsetSizeTrait};
+use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{
     GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
@@ -9,12 +9,12 @@ use geo_traits::{
 use geoarrow_schema::{CoordType, Dimension, Metadata};
 
 use crate::array::{GeometryCollectionArray, WKBArray};
-use crate::builder::{MixedGeometryBuilder, OffsetsBuilder}
 use crate::builder::mixed::DEFAULT_PREFER_MULTI;
+use crate::builder::{MixedGeometryBuilder, OffsetsBuilder};
 use crate::capacity::GeometryCollectionCapacity;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
-use crate::trait_::{ArrayAccessor, IntoArrow};
+use crate::trait_::ArrayAccessor;
 
 /// The GeoArrow equivalent to `Vec<Option<GeometryCollection>>`: a mutable collection of
 /// GeometryCollections.
@@ -401,12 +401,6 @@ impl From<GeometryCollectionBuilder> for GeometryCollectionArray {
             validity,
             other.metadata,
         )
-    }
-}
-
-impl From<GeometryCollectionBuilder> for GenericListArray<i32> {
-    fn from(arr: GeometryCollectionBuilder) -> Self {
-        arr.into_arrow()
     }
 }
 

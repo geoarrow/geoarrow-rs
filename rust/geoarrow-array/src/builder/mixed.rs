@@ -12,7 +12,7 @@ use crate::builder::{
 use crate::capacity::MixedCapacity;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
-use crate::trait_::{ArrayAccessor, ArrayBase, NativeArray};
+use crate::trait_::{ArrayAccessor, ArrayBase};
 
 pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 

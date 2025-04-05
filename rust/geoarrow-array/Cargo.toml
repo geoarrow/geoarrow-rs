@@ -18,9 +18,11 @@ arrow-schema = { workspace = true }
 geo-traits = { workspace = true }
 geoarrow-schema = { path = "../geoarrow-schema" }
 num-traits = { workspace = true }
-rstar = { workspace = true, optional = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 wkb = { workspace = true }
 wkt = { workspace = true }
+
+[dev-dependencies]
+geo = { workspace = true }
