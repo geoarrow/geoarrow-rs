@@ -935,13 +935,6 @@ impl TryFrom<GeometryCollectionArray> for MixedGeometryArray {
     }
 }
 
-/// Default to an empty array
-impl Default for MixedGeometryArray {
-    fn default() -> Self {
-        MixedGeometryBuilder::default().into()
-    }
-}
-
 #[cfg(test)]
 mod test {
     use super::*;

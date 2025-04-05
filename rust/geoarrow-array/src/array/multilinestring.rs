@@ -438,13 +438,6 @@ impl From<LineStringArray> for MultiLineStringArray {
     }
 }
 
-/// Default to an empty array
-impl Default for MultiLineStringArray {
-    fn default() -> Self {
-        MultiLineStringBuilder::default().into()
-    }
-}
-
 impl PartialEq for MultiLineStringArray {
     fn eq(&self, other: &Self) -> bool {
         if self.validity != other.validity {

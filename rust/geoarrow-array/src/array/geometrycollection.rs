@@ -322,13 +322,6 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for GeometryCollectio
     }
 }
 
-/// Default to an empty array
-impl Default for GeometryCollectionArray {
-    fn default() -> Self {
-        GeometryCollectionBuilder::default().into()
-    }
-}
-
 impl PartialEq for GeometryCollectionArray {
     fn eq(&self, other: &Self) -> bool {
         if self.validity != other.validity {

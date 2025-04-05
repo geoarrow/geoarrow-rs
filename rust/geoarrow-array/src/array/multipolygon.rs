@@ -509,13 +509,6 @@ impl From<PolygonArray> for MultiPolygonArray {
     }
 }
 
-/// Default to an empty array
-impl Default for MultiPolygonArray {
-    fn default() -> Self {
-        MultiPolygonBuilder::default().into()
-    }
-}
-
 impl PartialEq for MultiPolygonArray {
     fn eq(&self, other: &Self) -> bool {
         if self.validity != other.validity {

@@ -389,13 +389,6 @@ impl From<PointArray> for MultiPointArray {
     }
 }
 
-/// Default to an empty array
-impl Default for MultiPointArray {
-    fn default() -> Self {
-        MultiPointBuilder::default().into()
-    }
-}
-
 impl PartialEq for MultiPointArray {
     fn eq(&self, other: &Self) -> bool {
         if self.validity != other.validity {

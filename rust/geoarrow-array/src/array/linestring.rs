@@ -382,13 +382,6 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for LineStringArray {
     }
 }
 
-/// Default to an empty array
-impl Default for LineStringArray {
-    fn default() -> Self {
-        LineStringBuilder::default().into()
-    }
-}
-
 impl PartialEq for LineStringArray {
     fn eq(&self, other: &Self) -> bool {
         if self.validity != other.validity {

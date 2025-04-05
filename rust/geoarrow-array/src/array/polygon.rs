@@ -455,13 +455,6 @@ impl From<RectArray> for PolygonArray {
     }
 }
 
-/// Default to an empty array
-impl Default for PolygonArray {
-    fn default() -> Self {
-        PolygonBuilder::default().into()
-    }
-}
-
 impl PartialEq for PolygonArray {
     fn eq(&self, other: &Self) -> bool {
         if self.validity != other.validity {
