@@ -64,9 +64,10 @@ impl TryFrom<&Field> for Metadata {
 
 #[cfg(test)]
 mod test {
-    use std::str::FromStr;
+    use std::{collections::HashMap, str::FromStr};
 
-    use serde_json::Value;
+    use arrow_schema::DataType;
+    use serde_json::{json, Value};
 
     use super::*;
 
@@ -167,6 +168,27 @@ mod test {
         assert_eq!(
             metadata,
             Metadata::deserialize(serialized.as_deref()).unwrap()
+        );
+    }
+
+    #[test]
+    fn from_field() {
+        let field = Field::new("", DataType::Null, false).with_metadata(HashMap::from([(
+            "ARROW:extension:metadata".to_string(),
+            r#"{"crs": {}, "crs_type": "projjson", "edges": "spherical"}"#.to_string(),
+        )]));
+
+        let metadata = Metadata::try_from(&field).unwrap();
+        assert_eq!(metadata.crs(), &Crs::from_projjson(json!({})));
+        assert_eq!(metadata.edges(), Some(Edges::Spherical));
+
+        let bad_field = Field::new("", DataType::Null, false).with_metadata(HashMap::from([(
+            "ARROW:extension:metadata".to_string(),
+            "not valid json".to_string(),
+        )]));
+        assert_eq!(
+            Metadata::try_from(&bad_field).unwrap_err().to_string(),
+            "External error: expected ident at line 1 column 2"
         );
     }
 }
