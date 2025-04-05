@@ -198,4 +198,13 @@ mod test {
             r#"{"crs":"1234","crs_type":"srid"}"#
         );
     }
+
+    #[test]
+    fn crs_unknown() {
+        let crs = Crs::from_unknown_crs_type("1234".to_string());
+        assert!(crs.crs_value().is_some_and(|x| x.is_string()));
+        assert!(crs.crs_type().is_none());
+        assert!(crs.should_serialize());
+        assert_eq!(serde_json::to_string(&crs).unwrap(), r#"{"crs":"1234"}"#);
+    }
 }
