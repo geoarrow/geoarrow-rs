@@ -10,13 +10,13 @@ use arrow_schema::{DataType, Field};
 use geo_traits::GeometryTrait;
 use geoarrow_schema::{CoordType, Metadata, WkbType};
 
+use crate::builder::WKBBuilder;
+use crate::capacity::WKBCapacity;
 use crate::datatypes::{NativeType, SerializedType};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, SerializedArray};
 use crate::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
-
-use super::{WKBBuilder, WKBCapacity};
 
 /// An immutable array of WKB geometries using GeoArrow's in-memory representation.
 ///

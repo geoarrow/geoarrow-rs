@@ -6,16 +6,15 @@ use arrow_array::{Array, ArrayRef, StructArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
+use geo_traits::RectTrait;
 use geoarrow_schema::{BoxType, CoordType, Dimension, Metadata};
 
+use crate::array::SeparatedCoordBuffer;
+use crate::builder::RectBuilder;
 use crate::datatypes::NativeType;
 use crate::error::GeoArrowError;
-use crate::rect::RectBuilder;
 use crate::scalar::Rect;
-use crate::trait_::{ArrayAccessor, IntoArrow};
-use crate::{ArrayBase, NativeArray};
-use crate::{CoordBuffer, SeparatedCoordBuffer};
-use geo_traits::RectTrait;
+use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
 
 /// An immutable array of Rect geometries.
 ///
@@ -268,8 +267,8 @@ impl<G: RectTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for RectArray {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::builder::RectBuilder;
     use crate::eq::rect_eq;
-    use crate::RectBuilder;
     use geoarrow_schema::Dimension;
 
     #[test]

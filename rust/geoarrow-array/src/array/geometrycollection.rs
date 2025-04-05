@@ -9,8 +9,8 @@ use geo_traits::GeometryCollectionTrait;
 use geoarrow_schema::{CoordType, Dimension, GeometryCollectionType, Metadata};
 
 use crate::array::{
-    CoordBuffer, LineStringArray, MixedGeometryArray, MultiLineStringArray, MultiPointArray,
-    MultiPolygonArray, PointArray, PolygonArray, WKBArray,
+    LineStringArray, MixedGeometryArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
+    PointArray, PolygonArray, WKBArray,
 };
 use crate::builder::GeometryCollectionBuilder;
 use crate::capacity::GeometryCollectionCapacity;
@@ -18,7 +18,7 @@ use crate::datatypes::NativeType;
 use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, GeometryCollection};
-use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray, NativeGeometryAccessor};
+use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
 use crate::util::offsets_buffer_i64_to_i32;
 
 /// An immutable array of GeometryCollection geometries using GeoArrow's in-memory representation.
@@ -198,21 +198,15 @@ impl NativeArray for GeometryCollectionArray {
     }
 }
 
-impl NativeGeometryAccessor for GeometryCollectionArray {
-    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry {
-        Geometry::GeometryCollection(GeometryCollection::new(
-            &self.array,
-            &self.geom_offsets,
-            index,
-        ))
-    }
-}
-
 impl<'a> ArrayAccessor<'a> for GeometryCollectionArray {
     type Item = GeometryCollection<'a>;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
         GeometryCollection::new(&self.array, &self.geom_offsets, index)
+    }
+
+    unsafe fn value_unchecked_as_geometry(&'a self, index: usize) -> crate::scalar::Geometry<'a> {
+        Geometry::GeometryCollection(self.value_unchecked(index))
     }
 }
 

@@ -155,19 +155,6 @@ impl InterleavedCoordBuffer {
     }
 }
 
-impl IntoArrow for InterleavedCoordBuffer {
-    type ArrowArray = FixedSizeListArray;
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        FixedSizeListArray::new(
-            Arc::new(self.values_field()),
-            self.dim.size() as i32,
-            Arc::new(self.values_array()),
-            None,
-        )
-    }
-}
-
 impl From<InterleavedCoordBuffer> for FixedSizeListArray {
     fn from(value: InterleavedCoordBuffer) -> Self {
         value.into_arrow()

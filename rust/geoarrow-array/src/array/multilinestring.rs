@@ -18,7 +18,7 @@ use crate::datatypes::NativeType;
 use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, MultiLineString};
-use crate::trait_::{ArrayAccessor, IntoArrow, NativeGeometryAccessor};
+use crate::trait_::{ArrayAccessor, IntoArrow};
 use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::{ArrayBase, NativeArray};
 
@@ -267,17 +267,6 @@ impl NativeArray for MultiLineStringArray {
 
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
-    }
-}
-
-impl NativeGeometryAccessor for MultiLineStringArray {
-    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry {
-        Geometry::MultiLineString(MultiLineString::new(
-            &self.coords,
-            &self.geom_offsets,
-            &self.ring_offsets,
-            index,
-        ))
     }
 }
 

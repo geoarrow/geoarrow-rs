@@ -20,7 +20,7 @@ use crate::capacity::MixedCapacity;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Geometry;
-use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray, NativeGeometryAccessor};
+use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
 
 /// # Invariants
 ///
@@ -546,35 +546,6 @@ impl NativeArray for MixedGeometryArray {
 
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
-    }
-}
-
-impl NativeGeometryAccessor for MixedGeometryArray {
-    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry {
-        let type_id = self.type_ids[index];
-        let offset = self.offsets[index] as usize;
-
-        match type_id {
-            1 => Geometry::Point(self.points.value(offset)),
-            2 => Geometry::LineString(self.line_strings.value(offset)),
-            3 => Geometry::Polygon(self.polygons.value(offset)),
-            4 => Geometry::MultiPoint(self.multi_points.value(offset)),
-            5 => Geometry::MultiLineString(self.multi_line_strings.value(offset)),
-            6 => Geometry::MultiPolygon(self.multi_polygons.value(offset)),
-            7 => {
-                panic!("nested geometry collections not supported")
-            }
-            11 => Geometry::Point(self.points.value(offset)),
-            12 => Geometry::LineString(self.line_strings.value(offset)),
-            13 => Geometry::Polygon(self.polygons.value(offset)),
-            14 => Geometry::MultiPoint(self.multi_points.value(offset)),
-            15 => Geometry::MultiLineString(self.multi_line_strings.value(offset)),
-            16 => Geometry::MultiPolygon(self.multi_polygons.value(offset)),
-            17 => {
-                panic!("nested geometry collections not supported")
-            }
-            _ => panic!("unknown type_id {}", type_id),
-        }
     }
 }
 

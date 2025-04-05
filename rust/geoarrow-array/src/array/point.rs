@@ -17,7 +17,7 @@ use crate::datatypes::NativeType;
 use crate::eq::point_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, Point};
-use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray, NativeGeometryAccessor};
+use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
 
 /// An immutable array of Point geometries using GeoArrow's in-memory representation.
 ///
@@ -200,12 +200,6 @@ impl NativeArray for PointArray {
 
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
-    }
-}
-
-impl NativeGeometryAccessor for PointArray {
-    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry {
-        Geometry::Point(Point::new(&self.coords, index))
     }
 }
 

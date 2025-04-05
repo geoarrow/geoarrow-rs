@@ -17,7 +17,7 @@ use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::multipoint::MultiPointCapacity;
 use crate::scalar::{Geometry, MultiPoint};
-use crate::trait_::{ArrayAccessor, IntoArrow, NativeGeometryAccessor};
+use crate::trait_::{ArrayAccessor, IntoArrow};
 use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::{ArrayBase, NativeArray};
 
@@ -249,12 +249,6 @@ impl NativeArray for MultiPointArray {
 
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
-    }
-}
-
-impl NativeGeometryAccessor for MultiPointArray {
-    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry {
-        Geometry::MultiPoint(MultiPoint::new(&self.coords, &self.geom_offsets, index))
     }
 }
 

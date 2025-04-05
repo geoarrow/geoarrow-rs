@@ -13,7 +13,7 @@ use crate::capacity::GeometryCapacity;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Geometry;
-use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray, NativeGeometryAccessor};
+use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
 
 /// # Invariants
 ///
@@ -655,31 +655,6 @@ impl NativeArray for GeometryArray {
     }
 }
 
-impl NativeGeometryAccessor for GeometryArray {
-    unsafe fn value_as_geometry_unchecked(&self, index: usize) -> crate::scalar::Geometry {
-        let type_id = self.type_ids[index];
-        let offset = self.offsets[index] as usize;
-
-        match type_id {
-            1 => Geometry::Point(self.point_xy.value(offset)),
-            2 => Geometry::LineString(self.line_string_xy.value(offset)),
-            3 => Geometry::Polygon(self.polygon_xy.value(offset)),
-            4 => Geometry::MultiPoint(self.mpoint_xy.value(offset)),
-            5 => Geometry::MultiLineString(self.mline_string_xy.value(offset)),
-            6 => Geometry::MultiPolygon(self.mpolygon_xy.value(offset)),
-            7 => Geometry::GeometryCollection(self.gc_xy.value(offset)),
-            11 => Geometry::Point(self.point_xyz.value(offset)),
-            12 => Geometry::LineString(self.line_string_xyz.value(offset)),
-            13 => Geometry::Polygon(self.polygon_xyz.value(offset)),
-            14 => Geometry::MultiPoint(self.mpoint_xyz.value(offset)),
-            15 => Geometry::MultiLineString(self.mline_string_xyz.value(offset)),
-            16 => Geometry::MultiPolygon(self.mpolygon_xyz.value(offset)),
-            17 => Geometry::GeometryCollection(self.gc_xyz.value(offset)),
-            _ => panic!("unknown type_id {}", type_id),
-        }
-    }
-}
-
 impl<'a> ArrayAccessor<'a> for GeometryArray {
     type Item = Geometry<'a>;
 
@@ -704,6 +679,10 @@ impl<'a> ArrayAccessor<'a> for GeometryArray {
             17 => Geometry::GeometryCollection(self.gc_xyz.value(offset)),
             _ => panic!("unknown type_id {}", type_id),
         }
+    }
+
+    unsafe fn value_unchecked_as_geometry(&'a self, index: usize) -> crate::scalar::Geometry<'a> {
+        self.value_unchecked(index)
     }
 }
 
@@ -1473,13 +1452,6 @@ impl TryFrom<GeometryArray> for MixedGeometryArray {
                     .to_string(),
             ))
         }
-    }
-}
-
-/// Default to an empty array
-impl Default for GeometryArray {
-    fn default() -> Self {
-        GeometryBuilder::default().into()
     }
 }
 
