@@ -10,7 +10,6 @@ use geoarrow_schema::{CoordType, Dimension, PointType};
 use crate::builder::SeparatedCoordBufferBuilder;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::SeparatedCoord;
-use crate::trait_::IntoArrow;
 use geo_traits::CoordTrait;
 
 /// The GeoArrow equivalent to `Vec<Option<Coord>>`: an immutable collection of coordinates.
@@ -238,28 +237,9 @@ impl SeparatedCoordBuffer {
     }
 }
 
-impl IntoArrow for SeparatedCoordBuffer {
-    type ArrowArray = StructArray;
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        StructArray::new(self.values_field().into(), self.values_array(), None)
-    }
-}
-
 impl From<SeparatedCoordBuffer> for StructArray {
     fn from(value: SeparatedCoordBuffer) -> Self {
-        value.into_arrow()
-    }
-}
-
-impl TryFrom<(Vec<f64>, Vec<f64>)> for SeparatedCoordBuffer {
-    type Error = GeoArrowError;
-
-    fn try_from(value: (Vec<f64>, Vec<f64>)) -> std::result::Result<Self, Self::Error> {
-        Self::try_new(
-            [value.0.into(), value.1.into(), vec![].into(), vec![].into()],
-            Dimension::XY,
-        )
+        StructArray::new(value.values_field().into(), value.values_array(), None)
     }
 }
 

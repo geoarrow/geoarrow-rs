@@ -91,28 +91,12 @@ impl ArrayBase for RectArray {
         self
     }
 
-    fn storage_type(&self) -> DataType {
-        self.data_type.data_type()
-    }
-
-    fn extension_field(&self) -> Arc<Field> {
-        self.data_type.to_field("geometry", true).into()
-    }
-
-    fn extension_name(&self) -> &str {
-        BoxType::NAME
-    }
-
     fn into_array_ref(self) -> ArrayRef {
         Arc::new(self.into_arrow())
     }
 
     fn to_array_ref(&self) -> ArrayRef {
         self.clone().into_array_ref()
-    }
-
-    fn metadata(&self) -> Arc<Metadata> {
-        self.data_type.metadata().clone()
     }
 
     /// Returns the number of geometries in this array
@@ -166,6 +150,7 @@ impl<'a> ArrayAccessor<'a> for RectArray {
 
 impl IntoArrow for RectArray {
     type ArrowArray = StructArray;
+    type ExtensionType = BoxType;
 
     fn into_arrow(self) -> Self::ArrowArray {
         let fields = match self.data_type.data_type() {
@@ -181,6 +166,10 @@ impl IntoArrow for RectArray {
 
         let validity = self.validity;
         StructArray::new(fields, arrays, validity)
+    }
+
+    fn ext_type(&self) -> &Self::ExtensionType {
+        &self.data_type
     }
 }
 

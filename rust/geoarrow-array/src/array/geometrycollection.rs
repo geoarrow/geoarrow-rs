@@ -17,7 +17,7 @@ use crate::capacity::GeometryCollectionCapacity;
 use crate::datatypes::NativeType;
 use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
-use crate::scalar::{Geometry, GeometryCollection};
+use crate::scalar::GeometryCollection;
 use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
 use crate::util::offsets_buffer_i64_to_i32;
 
@@ -132,28 +132,12 @@ impl ArrayBase for GeometryCollectionArray {
         self
     }
 
-    fn storage_type(&self) -> DataType {
-        self.data_type.data_type()
-    }
-
-    fn extension_field(&self) -> Arc<Field> {
-        self.data_type.to_field("geometry", true).into()
-    }
-
-    fn extension_name(&self) -> &str {
-        GeometryCollectionType::NAME
-    }
-
     fn into_array_ref(self) -> ArrayRef {
         Arc::new(self.into_arrow())
     }
 
     fn to_array_ref(&self) -> ArrayRef {
         self.clone().into_array_ref()
-    }
-
-    fn metadata(&self) -> Arc<Metadata> {
-        self.data_type.metadata().clone()
     }
 
     /// Returns the number of geometries in this array
@@ -204,20 +188,21 @@ impl<'a> ArrayAccessor<'a> for GeometryCollectionArray {
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
         GeometryCollection::new(&self.array, &self.geom_offsets, index)
     }
-
-    unsafe fn value_unchecked_as_geometry(&'a self, index: usize) -> crate::scalar::Geometry<'a> {
-        Geometry::GeometryCollection(self.value_unchecked(index))
-    }
 }
 
 impl IntoArrow for GeometryCollectionArray {
     type ArrowArray = GenericListArray<i32>;
+    type ExtensionType = GeometryCollectionType;
 
     fn into_arrow(self) -> Self::ArrowArray {
         let geometries_field = self.geometries_field();
         let validity = self.validity;
         let values = self.array.into_array_ref();
         GenericListArray::new(geometries_field, self.geom_offsets, values, validity)
+    }
+
+    fn ext_type(&self) -> &Self::ExtensionType {
+        &self.data_type
     }
 }
 

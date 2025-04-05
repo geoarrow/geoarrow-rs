@@ -1,16 +1,14 @@
-use crate::algorithm::native::bounding_rect::bounding_rect_geometry_collection;
-use crate::eq::geometry_collection_eq;
-use crate::array::util::OffsetBufferUtils;
-use crate::array::MixedGeometryArray;
-use crate::io::geo::geometry_collection_to_geo;
-use crate::scalar::Geometry;
-use crate::trait_::ArrayAccessor;
-
-use crate::NativeArray;
 use arrow_buffer::OffsetBuffer;
 use geo_traits::GeometryCollectionTrait;
 use geoarrow_schema::Dimension;
-use rstar::{RTreeObject, AABB};
+
+use crate::algorithm::native::bounding_rect::bounding_rect_geometry_collection;
+use crate::array::MixedGeometryArray;
+use crate::eq::geometry_collection_eq;
+use crate::scalar::Geometry;
+use crate::trait_::ArrayAccessor;
+use crate::util::OffsetBufferUtils;
+use crate::NativeArray;
 
 /// An Arrow equivalent of a GeometryCollection
 ///
@@ -95,15 +93,6 @@ impl<'a> GeometryCollectionTrait for &'a GeometryCollection<'a> {
 
     unsafe fn geometry_unchecked(&self, i: usize) -> Self::GeometryType<'_> {
         self.array.value(self.start_offset + i)
-    }
-}
-
-impl RTreeObject for GeometryCollection<'_> {
-    type Envelope = AABB<[f64; 2]>;
-
-    fn envelope(&self) -> Self::Envelope {
-        let (lower, upper) = bounding_rect_geometry_collection(self);
-        AABB::from_corners(lower, upper)
     }
 }
 

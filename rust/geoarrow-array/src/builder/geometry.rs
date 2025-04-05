@@ -1,18 +1,18 @@
 use std::sync::Arc;
 
-use arrow_array::{OffsetSizeTrait, UnionArray};
+use arrow_array::OffsetSizeTrait;
 use geo_traits::*;
 use geoarrow_schema::{CoordType, Dimension, Metadata};
 
 use crate::array::{GeometryArray, WKBArray};
 use crate::builder::{
-    GeometryArrayBuilder, GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder,
-    MultiPointBuilder, MultiPolygonBuilder, PointBuilder, PolygonBuilder,
+    GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder, MultiPointBuilder,
+    MultiPolygonBuilder, PointBuilder, PolygonBuilder,
 };
 use crate::capacity::GeometryCapacity;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
-use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
+use crate::trait_::{ArrayAccessor, ArrayBase, NativeArray};
 
 pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 
@@ -1015,59 +1015,5 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryBuilder {
         let metadata = value.metadata();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
         Self::from_wkb(&wkb_objects, CoordType::Interleaved, metadata, true)
-    }
-}
-
-impl GeometryArrayBuilder for GeometryBuilder {
-    fn len(&self) -> usize {
-        self.types.len()
-    }
-
-    fn nulls(&self) -> &arrow_buffer::NullBufferBuilder {
-        // Take this method off trait
-        todo!()
-    }
-
-    fn new(_dim: Dimension) -> Self {
-        Self::new()
-    }
-
-    fn into_array_ref(self) -> Arc<dyn arrow_array::Array> {
-        Arc::new(self.into_arrow())
-    }
-
-    fn with_geom_capacity_and_options(
-        _dim: Dimension,
-        _geom_capacity: usize,
-        coord_type: CoordType,
-        metadata: Arc<Metadata>,
-    ) -> Self {
-        // We don't know where to allocate the capacity
-        Self::with_capacity_and_options(
-            Default::default(),
-            coord_type,
-            metadata,
-            DEFAULT_PREFER_MULTI,
-        )
-    }
-
-    fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
-        self.push_geometry(value)
-    }
-
-    fn finish(self) -> std::sync::Arc<dyn NativeArray> {
-        Arc::new(self.finish())
-    }
-
-    fn coord_type(&self) -> CoordType {
-        self.point_xy.coord_type()
-    }
-
-    fn set_metadata(&mut self, metadata: Arc<Metadata>) {
-        self.metadata = metadata;
-    }
-
-    fn metadata(&self) -> Arc<Metadata> {
-        self.metadata.clone()
     }
 }

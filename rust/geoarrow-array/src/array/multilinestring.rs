@@ -18,9 +18,8 @@ use crate::datatypes::NativeType;
 use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::{Geometry, MultiLineString};
-use crate::trait_::{ArrayAccessor, IntoArrow};
+use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
 use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
-use crate::{ArrayBase, NativeArray};
 
 /// An immutable array of MultiLineString geometries using GeoArrow's in-memory representation.
 ///
@@ -205,28 +204,12 @@ impl ArrayBase for MultiLineStringArray {
         self
     }
 
-    fn storage_type(&self) -> DataType {
-        self.data_type.data_type()
-    }
-
-    fn extension_field(&self) -> Arc<Field> {
-        self.data_type.to_field("geometry", true).into()
-    }
-
-    fn extension_name(&self) -> &str {
-        MultiLineStringType::NAME
-    }
-
     fn into_array_ref(self) -> ArrayRef {
         Arc::new(self.into_arrow())
     }
 
     fn to_array_ref(&self) -> ArrayRef {
         self.clone().into_array_ref()
-    }
-
-    fn metadata(&self) -> Arc<Metadata> {
-        self.data_type.metadata().clone()
     }
 
     /// Returns the number of geometries in this array
@@ -280,6 +263,7 @@ impl<'a> ArrayAccessor<'a> for MultiLineStringArray {
 
 impl IntoArrow for MultiLineStringArray {
     type ArrowArray = GenericListArray<i32>;
+    type ExtensionType = MultiLineStringType;
 
     fn into_arrow(self) -> Self::ArrowArray {
         let vertices_field = self.vertices_field();
@@ -293,6 +277,10 @@ impl IntoArrow for MultiLineStringArray {
             None,
         ));
         GenericListArray::new(linestrings_field, self.geom_offsets, ring_array, validity)
+    }
+
+    fn ext_type(&self) -> &Self::ExtensionType {
+        &self.data_type
     }
 }
 

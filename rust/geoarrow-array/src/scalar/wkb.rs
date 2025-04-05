@@ -1,10 +1,7 @@
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
-use geo::BoundingRect;
 use geo_traits::GeometryTrait;
-use rstar::{RTreeObject, AABB};
 
 use crate::error::Result;
-use crate::io::geo::geometry_to_geo;
 
 /// A scalar WKB reference on a WKBArray
 ///
@@ -47,44 +44,6 @@ impl<'a, O: OffsetSizeTrait> WKB<'a, O> {
 impl<O: OffsetSizeTrait> AsRef<[u8]> for WKB<'_, O> {
     fn as_ref(&self) -> &[u8] {
         self.arr.value(self.geom_index)
-    }
-}
-
-// impl<O: OffsetSizeTrait> TryFrom<&WKB<'_, O>> for geo::Geometry {
-//     type Error = GeoArrowError;
-//     fn try_from(value: &WKB<'_, O>) -> std::result::Result<Self, Self::Error> {
-//         Ok(geometry_to_geo(&value.parse()?))
-//     }
-// }
-
-// impl<O: OffsetSizeTrait> TryFrom<WKB<'_, O>> for geo::Geometry {
-//     type Error = GeoArrowError;
-//     fn try_from(value: WKB<'_, O>) -> std::result::Result<Self, Self::Error> {
-//         (&value).try_into()
-//     }
-// }
-
-impl<O: OffsetSizeTrait> From<&WKB<'_, O>> for geo::Geometry {
-    fn from(value: &WKB<'_, O>) -> Self {
-        geometry_to_geo(&value.parse().unwrap())
-    }
-}
-
-impl<O: OffsetSizeTrait> From<WKB<'_, O>> for geo::Geometry {
-    fn from(value: WKB<'_, O>) -> Self {
-        (&value).into()
-    }
-}
-
-impl<O: OffsetSizeTrait> RTreeObject for WKB<'_, O> {
-    type Envelope = AABB<[f64; 2]>;
-
-    fn envelope(&self) -> Self::Envelope {
-        let geom: geo::Geometry = self.into();
-        let rect = geom.bounding_rect().unwrap();
-        let lower: [f64; 2] = rect.min().into();
-        let upper: [f64; 2] = rect.max().into();
-        AABB::from_corners(lower, upper)
     }
 }
 

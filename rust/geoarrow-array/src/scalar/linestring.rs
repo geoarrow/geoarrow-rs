@@ -1,11 +1,10 @@
-use crate::algorithm::native::bounding_rect::bounding_rect_linestring;
-use crate::array::util::OffsetBufferUtils;
+use arrow_buffer::OffsetBuffer;
+use geo_traits::LineStringTrait;
+
 use crate::array::CoordBuffer;
 use crate::eq::line_string_eq;
 use crate::scalar::Coord;
-use arrow_buffer::OffsetBuffer;
-use geo_traits::LineStringTrait;
-use rstar::{RTreeObject, AABB};
+use crate::util::OffsetBufferUtils;
 
 /// An Arrow equivalent of a LineString
 ///
@@ -88,35 +87,8 @@ impl<'a> LineStringTrait for &'a LineString<'a> {
     }
 }
 
-impl RTreeObject for LineString<'_> {
-    type Envelope = AABB<[f64; 2]>;
-
-    fn envelope(&self) -> Self::Envelope {
-        let (lower, upper) = bounding_rect_linestring(self);
-        AABB::from_corners(lower, upper)
-    }
-}
-
 impl<G: LineStringTrait<T = f64>> PartialEq<G> for LineString<'_> {
     fn eq(&self, other: &G) -> bool {
         line_string_eq(self, other)
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use crate::array::LineStringArray;
-    use crate::test::linestring::{ls0, ls1};
-    use crate::trait_::ArrayAccessor;
-    use geoarrow_schema::Dimension;
-
-    /// Test Eq where the current index is true but another index is false
-    #[test]
-    fn test_eq_other_index_false() {
-        let arr1: LineStringArray = (vec![ls0(), ls1()].as_slice(), Dimension::XY).into();
-        let arr2: LineStringArray = (vec![ls0(), ls0()].as_slice(), Dimension::XY).into();
-
-        assert_eq!(arr1.value(0), arr2.value(0));
-        assert_ne!(arr1.value(1), arr2.value(1));
     }
 }

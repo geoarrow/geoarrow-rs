@@ -138,28 +138,12 @@ impl ArrayBase for PointArray {
         self
     }
 
-    fn storage_type(&self) -> DataType {
-        self.data_type.data_type()
-    }
-
-    fn extension_field(&self) -> Arc<Field> {
-        self.data_type.to_field("geometry", true).into()
-    }
-
-    fn extension_name(&self) -> &str {
-        PointType::NAME
-    }
-
     fn into_array_ref(self) -> ArrayRef {
         self.into_arrow()
     }
 
     fn to_array_ref(&self) -> ArrayRef {
         self.clone().into_array_ref()
-    }
-
-    fn metadata(&self) -> Arc<Metadata> {
-        self.data_type.metadata().clone()
     }
 
     /// Returns the number of geometries in this array
@@ -213,6 +197,7 @@ impl<'a> ArrayAccessor<'a> for PointArray {
 
 impl IntoArrow for PointArray {
     type ArrowArray = ArrayRef;
+    type ExtensionType = PointType;
 
     fn into_arrow(self) -> Self::ArrowArray {
         let validity = self.validity;
@@ -229,6 +214,10 @@ impl IntoArrow for PointArray {
                 Arc::new(StructArray::new(fields.into(), c.values_array(), validity))
             }
         }
+    }
+
+    fn ext_type(&self) -> &Self::ExtensionType {
+        &self.data_type
     }
 }
 
@@ -295,36 +284,6 @@ impl TryFrom<(&dyn Array, &Field)> for PointArray {
     }
 }
 
-impl<G: PointTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for PointArray {
-    fn from(other: (Vec<Option<G>>, Dimension)) -> Self {
-        let mut_arr: PointBuilder = other.into();
-        mut_arr.into()
-    }
-}
-
-impl<G: PointTrait<T = f64>> From<(&[G], Dimension)> for PointArray {
-    fn from(other: (&[G], Dimension)) -> Self {
-        let mut_arr: PointBuilder = other.into();
-        mut_arr.into()
-    }
-}
-
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for PointArray {
-    type Error = GeoArrowError;
-
-    fn try_from(value: (WKBArray<O>, Dimension)) -> Result<Self> {
-        let mut_arr: PointBuilder = value.try_into()?;
-        Ok(mut_arr.into())
-    }
-}
-
-/// Default to an empty array
-impl Default for PointArray {
-    fn default() -> Self {
-        PointBuilder::default().into()
-    }
-}
-
 // Implement a custom PartialEq for PointArray to allow Point(EMPTY) comparisons, which is stored
 // as (NaN, NaN). By default, these resolve to false
 impl PartialEq for PointArray {
@@ -353,61 +312,6 @@ impl PartialEq for PointArray {
         }
 
         true
-    }
-}
-
-impl TryFrom<MultiPointArray> for PointArray {
-    type Error = GeoArrowError;
-
-    fn try_from(value: MultiPointArray) -> Result<Self> {
-        if !can_downcast_multi(&value.geom_offsets) {
-            return Err(GeoArrowError::General("Unable to cast".to_string()));
-        }
-        let metadata = value.metadata();
-
-        Ok(PointArray::new(value.coords, value.validity, metadata))
-    }
-}
-
-impl TryFrom<MixedGeometryArray> for PointArray {
-    type Error = GeoArrowError;
-
-    fn try_from(value: MixedGeometryArray) -> Result<Self> {
-        if value.has_line_strings()
-            || value.has_polygons()
-            || value.has_multi_line_strings()
-            || value.has_multi_polygons()
-        {
-            return Err(GeoArrowError::General("Unable to cast".to_string()));
-        }
-
-        let (offset, length) = value.slice_offset_length();
-        if value.has_only_points() {
-            return Ok(value.points.slice(offset, length));
-        }
-
-        if value.has_only_multi_points() {
-            return value.multi_points.slice(offset, length).try_into();
-        }
-
-        let mut builder = PointBuilder::with_capacity_and_options(
-            value.dimension(),
-            value.len(),
-            value.coord_type(),
-            value.metadata(),
-        );
-        value
-            .iter()
-            .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
-        Ok(builder.finish())
-    }
-}
-
-impl TryFrom<GeometryCollectionArray> for PointArray {
-    type Error = GeoArrowError;
-
-    fn try_from(value: GeometryCollectionArray) -> Result<Self> {
-        MixedGeometryArray::try_from(value)?.try_into()
     }
 }
 

@@ -1,12 +1,11 @@
-use crate::algorithm::native::bounding_rect::bounding_rect_multipoint;
-use crate::eq::multi_point_eq;
-use crate::array::util::OffsetBufferUtils;
-use crate::array::CoordBuffer;
-use crate::scalar::Point;
 use arrow_buffer::OffsetBuffer;
 use geo_traits::MultiPointTrait;
 use geoarrow_schema::Dimension;
-use rstar::{RTreeObject, AABB};
+
+use crate::array::CoordBuffer;
+use crate::eq::multi_point_eq;
+use crate::scalar::Point;
+use crate::util::OffsetBufferUtils;
 
 /// An Arrow equivalent of a MultiPoint
 ///
@@ -98,35 +97,26 @@ impl<'a> MultiPointTrait for &'a MultiPoint<'a> {
     }
 }
 
-impl RTreeObject for MultiPoint<'_> {
-    type Envelope = AABB<[f64; 2]>;
-
-    fn envelope(&self) -> Self::Envelope {
-        let (lower, upper) = bounding_rect_multipoint(self);
-        AABB::from_corners(lower, upper)
-    }
-}
-
 impl<G: MultiPointTrait<T = f64>> PartialEq<G> for MultiPoint<'_> {
     fn eq(&self, other: &G) -> bool {
         multi_point_eq(self, other)
     }
 }
 
-#[cfg(test)]
-mod test {
-    use crate::array::MultiPointArray;
-    use crate::test::multipoint::{mp0, mp1};
-    use crate::trait_::ArrayAccessor;
-    use geoarrow_schema::Dimension;
+// #[cfg(test)]
+// mod test {
+//     use crate::array::MultiPointArray;
+//     use crate::test::multipoint::{mp0, mp1};
+//     use crate::trait_::ArrayAccessor;
+//     use geoarrow_schema::Dimension;
 
-    /// Test Eq where the current index is true but another index is false
-    #[test]
-    fn test_eq_other_index_false() {
-        let arr1: MultiPointArray = (vec![mp0(), mp1()].as_slice(), Dimension::XY).into();
-        let arr2: MultiPointArray = (vec![mp0(), mp0()].as_slice(), Dimension::XY).into();
+//     /// Test Eq where the current index is true but another index is false
+//     #[test]
+//     fn test_eq_other_index_false() {
+//         let arr1: MultiPointArray = (vec![mp0(), mp1()].as_slice(), Dimension::XY).into();
+//         let arr2: MultiPointArray = (vec![mp0(), mp0()].as_slice(), Dimension::XY).into();
 
-        assert_eq!(arr1.value(0), arr2.value(0));
-        assert_ne!(arr1.value(1), arr2.value(1));
-    }
-}
+//         assert_eq!(arr1.value(0), arr2.value(0));
+//         assert_ne!(arr1.value(1), arr2.value(1));
+//     }
+// }

@@ -8,7 +8,6 @@ use crate::array::{InterleavedCoordBuffer, SeparatedCoordBuffer};
 use crate::builder::{InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Coord;
-use crate::trait_::IntoArrow;
 
 /// An Arrow representation of an array of coordinates.
 ///
@@ -143,11 +142,9 @@ impl CoordBuffer {
     }
 }
 
-impl IntoArrow for CoordBuffer {
-    type ArrowArray = ArrayRef;
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        match self {
+impl From<CoordBuffer> for ArrayRef {
+    fn from(value: CoordBuffer) -> Self {
+        match value {
             CoordBuffer::Interleaved(c) => Arc::new(c.into_arrow()),
             CoordBuffer::Separated(c) => Arc::new(c.into_arrow()),
         }

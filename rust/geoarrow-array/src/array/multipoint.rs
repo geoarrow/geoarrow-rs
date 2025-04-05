@@ -8,18 +8,17 @@ use arrow_schema::{DataType, Field};
 use geo_traits::MultiPointTrait;
 use geoarrow_schema::{CoordType, Dimension, Metadata, MultiPointType};
 
-use super::MultiPointBuilder;
 use crate::array::{
     CoordBuffer, GeometryCollectionArray, LineStringArray, MixedGeometryArray, PointArray, WKBArray,
 };
+use crate::builder::MultiPointBuilder;
+use crate::capacity::MultiPointCapacity;
 use crate::datatypes::NativeType;
 use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
-use crate::multipoint::MultiPointCapacity;
 use crate::scalar::{Geometry, MultiPoint};
-use crate::trait_::{ArrayAccessor, IntoArrow};
+use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
 use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
-use crate::{ArrayBase, NativeArray};
 
 /// An immutable array of MultiPoint geometries using GeoArrow's in-memory representation.
 ///
@@ -187,28 +186,12 @@ impl ArrayBase for MultiPointArray {
         self
     }
 
-    fn storage_type(&self) -> DataType {
-        self.data_type.data_type()
-    }
-
-    fn extension_field(&self) -> Arc<Field> {
-        self.data_type.to_field("geometry", true).into()
-    }
-
-    fn extension_name(&self) -> &str {
-        MultiPointType::NAME
-    }
-
     fn into_array_ref(self) -> ArrayRef {
         Arc::new(self.into_arrow())
     }
 
     fn to_array_ref(&self) -> ArrayRef {
         self.clone().into_array_ref()
-    }
-
-    fn metadata(&self) -> Arc<Metadata> {
-        self.data_type.metadata().clone()
     }
 
     /// Returns the number of geometries in this array
@@ -262,12 +245,17 @@ impl<'a> ArrayAccessor<'a> for MultiPointArray {
 
 impl IntoArrow for MultiPointArray {
     type ArrowArray = GenericListArray<i32>;
+    type ExtensionType = MultiPointType;
 
     fn into_arrow(self) -> Self::ArrowArray {
         let vertices_field = self.vertices_field();
         let validity = self.validity;
         let coord_array = self.coords.into_arrow();
         GenericListArray::new(vertices_field, self.geom_offsets, coord_array, validity)
+    }
+
+    fn ext_type(&self) -> &Self::ExtensionType {
+        &self.data_type
     }
 }
 

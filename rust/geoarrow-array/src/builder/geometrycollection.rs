@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use arrow_array::{ArrayRef, GenericListArray, OffsetSizeTrait};
+use arrow_array::{GenericListArray, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{
     GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
@@ -8,13 +8,13 @@ use geo_traits::{
 };
 use geoarrow_schema::{CoordType, Dimension, Metadata};
 
+use crate::array::{GeometryCollectionArray, WKBArray};
+use crate::builder::{MixedGeometryBuilder, OffsetsBuilder}
+use crate::builder::mixed::DEFAULT_PREFER_MULTI;
 use crate::capacity::GeometryCollectionCapacity;
 use crate::error::{GeoArrowError, Result};
-use crate::mixed::builder::DEFAULT_PREFER_MULTI;
-use crate::offset_builder::OffsetsBuilder;
 use crate::scalar::WKB;
-use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
-use crate::{GeometryCollectionArray, MixedGeometryBuilder, WKBArray};
+use crate::trait_::{ArrayAccessor, IntoArrow};
 
 /// The GeoArrow equivalent to `Vec<Option<GeometryCollection>>`: a mutable collection of
 /// GeometryCollections.
@@ -389,54 +389,6 @@ impl<'a> GeometryCollectionBuilder {
             .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.parse()).transpose())
             .collect::<Result<Vec<_>>>()?;
         Self::from_nullable_geometries(&wkb_objects2, dim, coord_type, metadata, prefer_multi)
-    }
-}
-
-impl GeometryArrayBuilder for GeometryCollectionBuilder {
-    fn new(dim: Dimension) -> Self {
-        Self::new(dim)
-    }
-
-    fn with_geom_capacity_and_options(
-        dim: Dimension,
-        geom_capacity: usize,
-        coord_type: CoordType,
-        metadata: Arc<Metadata>,
-    ) -> Self {
-        let capacity = GeometryCollectionCapacity::new(Default::default(), geom_capacity);
-        Self::with_capacity_and_options(dim, capacity, coord_type, metadata, DEFAULT_PREFER_MULTI)
-    }
-
-    fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
-        self.push_geometry(value)
-    }
-
-    fn finish(self) -> Arc<dyn crate::NativeArray> {
-        Arc::new(self.finish())
-    }
-
-    fn len(&self) -> usize {
-        self.geom_offsets.len_proxy()
-    }
-
-    fn nulls(&self) -> &NullBufferBuilder {
-        &self.validity
-    }
-
-    fn into_array_ref(self) -> ArrayRef {
-        Arc::new(self.into_arrow())
-    }
-
-    fn coord_type(&self) -> CoordType {
-        self.geoms.coord_type()
-    }
-
-    fn set_metadata(&mut self, metadata: Arc<Metadata>) {
-        self.metadata = metadata;
-    }
-
-    fn metadata(&self) -> Arc<Metadata> {
-        self.metadata.clone()
     }
 }
 

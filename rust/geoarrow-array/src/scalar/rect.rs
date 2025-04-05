@@ -1,9 +1,7 @@
-use rstar::{RTreeObject, AABB};
-
 use geo_traits::RectTrait;
 
-use crate::eq::rect_eq;
 use crate::array::SeparatedCoordBuffer;
+use crate::eq::rect_eq;
 use crate::scalar::SeparatedCoord;
 
 /// An Arrow equivalent of a Rect
@@ -53,20 +51,6 @@ impl<'a> RectTrait for Rect<'a> {
 
     fn max(&self) -> Self::CoordType<'_> {
         self.upper.value(self.geom_index)
-    }
-}
-
-impl RTreeObject for Rect<'_> {
-    type Envelope = AABB<[f64; 2]>;
-
-    fn envelope(&self) -> Self::Envelope {
-        let lower = self.min();
-        let lower = core::array::from_fn(|i| lower.buffers[i][self.geom_index]);
-
-        let upper = self.max();
-        let upper = core::array::from_fn(|i| upper.buffers[i][self.geom_index]);
-
-        AABB::from_corners(lower, upper)
     }
 }
 

@@ -20,6 +20,7 @@ pub(crate) use mixed::MixedGeometryBuilder;
 pub use multilinestring::MultiLineStringBuilder;
 pub use multipoint::MultiPointBuilder;
 pub use multipolygon::MultiPolygonBuilder;
+pub(crate) use offsets::OffsetsBuilder;
 pub use point::PointBuilder;
 pub use polygon::PolygonBuilder;
 pub use rect::RectBuilder;

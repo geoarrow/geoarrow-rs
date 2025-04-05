@@ -13,7 +13,7 @@ use crate::builder::{
 };
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
-use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
+use crate::trait_::ArrayAccessor;
 
 /// The GeoArrow equivalent to `Vec<Option<Point>>`: a mutable collection of Points.
 ///
@@ -292,53 +292,6 @@ impl PointBuilder {
             .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.parse()).transpose())
             .collect::<Result<Vec<_>>>()?;
         Self::from_nullable_geometries(&wkb_objects2, dim, coord_type, metadata)
-    }
-}
-
-impl GeometryArrayBuilder for PointBuilder {
-    fn new(dim: Dimension) -> Self {
-        Self::new(dim)
-    }
-
-    fn with_geom_capacity_and_options(
-        dim: Dimension,
-        geom_capacity: usize,
-        coord_type: CoordType,
-        metadata: Arc<Metadata>,
-    ) -> Self {
-        Self::with_capacity_and_options(dim, geom_capacity, coord_type, metadata)
-    }
-
-    fn set_metadata(&mut self, metadata: Arc<Metadata>) {
-        self.metadata = metadata;
-    }
-
-    fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
-        self.push_geometry(value)
-    }
-
-    fn finish(self) -> Arc<dyn crate::NativeArray> {
-        Arc::new(self.finish())
-    }
-
-    fn len(&self) -> usize {
-        self.coords.len()
-    }
-
-    fn nulls(&self) -> &NullBufferBuilder {
-        &self.validity
-    }
-
-    fn into_array_ref(self) -> ArrayRef {
-        self.into_arrow()
-    }
-
-    fn coord_type(&self) -> CoordType {
-        self.coords.coord_type()
-    }
-
-    fn metadata(&self) -> Arc<Metadata> {
-        self.metadata.clone()
     }
 }
 

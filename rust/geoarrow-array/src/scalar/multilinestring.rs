@@ -1,11 +1,10 @@
-use crate::algorithm::native::bounding_rect::bounding_rect_multilinestring;
-use crate::eq::multi_line_string_eq;
-use crate::array::util::OffsetBufferUtils;
-use crate::array::CoordBuffer;
-use crate::scalar::LineString;
 use arrow_buffer::OffsetBuffer;
 use geo_traits::MultiLineStringTrait;
-use rstar::{RTreeObject, AABB};
+
+use crate::array::CoordBuffer;
+use crate::eq::multi_line_string_eq;
+use crate::scalar::LineString;
+use crate::util::OffsetBufferUtils;
 
 /// An Arrow equivalent of a MultiLineString
 ///
@@ -93,15 +92,6 @@ impl<'a> MultiLineStringTrait for &'a MultiLineString<'a> {
 
     unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
         LineString::new(self.coords, self.ring_offsets, self.start_offset + i)
-    }
-}
-
-impl RTreeObject for MultiLineString<'_> {
-    type Envelope = AABB<[f64; 2]>;
-
-    fn envelope(&self) -> Self::Envelope {
-        let (lower, upper) = bounding_rect_multilinestring(self);
-        AABB::from_corners(lower, upper)
     }
 }
 

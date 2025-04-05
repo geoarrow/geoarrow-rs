@@ -8,7 +8,8 @@ use arrow_schema::{DataType, Field, UnionMode};
 use geo_traits::GeometryTrait;
 use geoarrow_schema::{CoordType, Dimension, GeometryType, Metadata};
 
-use crate::builder::GeometryBuilder;
+use crate::array::*;
+use crate::builder::*;
 use crate::capacity::GeometryCapacity;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
@@ -589,28 +590,12 @@ impl ArrayBase for GeometryArray {
         self
     }
 
-    fn storage_type(&self) -> DataType {
-        self.data_type.data_type()
-    }
-
-    fn extension_field(&self) -> Arc<Field> {
-        Arc::new(self.data_type.to_field("geometry", true))
-    }
-
-    fn extension_name(&self) -> &str {
-        GeometryType::NAME
-    }
-
     fn into_array_ref(self) -> ArrayRef {
         Arc::new(self.into_arrow())
     }
 
     fn to_array_ref(&self) -> ArrayRef {
         self.clone().into_array_ref()
-    }
-
-    fn metadata(&self) -> Arc<Metadata> {
-        self.data_type.metadata().clone()
     }
 
     /// Returns the number of geometries in this array
@@ -688,6 +673,7 @@ impl<'a> ArrayAccessor<'a> for GeometryArray {
 
 impl IntoArrow for GeometryArray {
     type ArrowArray = UnionArray;
+    type ExtensionType = GeometryType;
 
     fn into_arrow(self) -> Self::ArrowArray {
         let union_fields = match self.data_type.data_type() {
@@ -719,6 +705,10 @@ impl IntoArrow for GeometryArray {
             child_arrays,
         )
         .unwrap()
+    }
+
+    fn ext_type(&self) -> &Self::ExtensionType {
+        &self.data_type
     }
 }
 

@@ -207,28 +207,12 @@ impl ArrayBase for PolygonArray {
         self
     }
 
-    fn storage_type(&self) -> DataType {
-        self.data_type.data_type()
-    }
-
-    fn extension_field(&self) -> Arc<Field> {
-        self.data_type.to_field("geometry", true).into()
-    }
-
-    fn extension_name(&self) -> &str {
-        PolygonType::NAME
-    }
-
     fn into_array_ref(self) -> ArrayRef {
         Arc::new(self.into_arrow())
     }
 
     fn to_array_ref(&self) -> ArrayRef {
         self.clone().into_array_ref()
-    }
-
-    fn metadata(&self) -> Arc<Metadata> {
-        self.data_type.metadata().clone()
     }
 
     /// Returns the number of geometries in this array
@@ -282,6 +266,7 @@ impl<'a> ArrayAccessor<'a> for PolygonArray {
 
 impl IntoArrow for PolygonArray {
     type ArrowArray = GenericListArray<i32>;
+    type ExtensionType = PolygonType;
 
     fn into_arrow(self) -> Self::ArrowArray {
         let vertices_field = self.vertices_field();
@@ -295,6 +280,10 @@ impl IntoArrow for PolygonArray {
             None,
         ));
         GenericListArray::new(rings_field, self.geom_offsets, ring_array, validity)
+    }
+
+    fn ext_type(&self) -> &Self::ExtensionType {
+        &self.data_type
     }
 }
 

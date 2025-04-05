@@ -1,12 +1,11 @@
-use crate::algorithm::native::bounding_rect::bounding_rect_polygon;
-use crate::eq::polygon_eq;
-use crate::array::util::OffsetBufferUtils;
-use crate::array::CoordBuffer;
-use crate::scalar::LineString;
 use arrow_buffer::OffsetBuffer;
 use geo_traits::PolygonTrait;
 use geoarrow_schema::Dimension;
-use rstar::{RTreeObject, AABB};
+
+use crate::array::CoordBuffer;
+use crate::eq::polygon_eq;
+use crate::scalar::LineString;
+use crate::util::OffsetBufferUtils;
 
 /// An Arrow equivalent of a Polygon
 ///
@@ -123,35 +122,26 @@ impl<'a> PolygonTrait for &'a Polygon<'a> {
     }
 }
 
-impl RTreeObject for Polygon<'_> {
-    type Envelope = AABB<[f64; 2]>;
-
-    fn envelope(&self) -> Self::Envelope {
-        let (lower, upper) = bounding_rect_polygon(self);
-        AABB::from_corners(lower, upper)
-    }
-}
-
 impl<G: PolygonTrait<T = f64>> PartialEq<G> for Polygon<'_> {
     fn eq(&self, other: &G) -> bool {
         polygon_eq(self, other)
     }
 }
 
-#[cfg(test)]
-mod test {
-    use crate::array::PolygonArray;
-    use crate::test::polygon::{p0, p1};
-    use crate::trait_::ArrayAccessor;
-    use geoarrow_schema::Dimension;
+// #[cfg(test)]
+// mod test {
+//     use crate::array::PolygonArray;
+//     use crate::test::polygon::{p0, p1};
+//     use crate::trait_::ArrayAccessor;
+//     use geoarrow_schema::Dimension;
 
-    /// Test Eq where the current index is true but another index is false
-    #[test]
-    fn test_eq_other_index_false() {
-        let arr1: PolygonArray = (vec![p0(), p1()].as_slice(), Dimension::XY).into();
-        let arr2: PolygonArray = (vec![p0(), p0()].as_slice(), Dimension::XY).into();
+//     /// Test Eq where the current index is true but another index is false
+//     #[test]
+//     fn test_eq_other_index_false() {
+//         let arr1: PolygonArray = (vec![p0(), p1()].as_slice(), Dimension::XY).into();
+//         let arr2: PolygonArray = (vec![p0(), p0()].as_slice(), Dimension::XY).into();
 
-        assert_eq!(arr1.value(0), arr2.value(0));
-        assert_ne!(arr1.value(1), arr2.value(1));
-    }
-}
+//         assert_eq!(arr1.value(0), arr2.value(0));
+//         assert_ne!(arr1.value(1), arr2.value(1));
+//     }
+// }

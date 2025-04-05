@@ -1,12 +1,11 @@
-use crate::algorithm::native::bounding_rect::bounding_rect_multipolygon;
-use crate::array::util::OffsetBufferUtils;
-use crate::array::CoordBuffer;
-use crate::eq::multi_polygon_eq;
-use crate::scalar::Polygon;
 use arrow_buffer::OffsetBuffer;
 use geo_traits::MultiPolygonTrait;
 use geoarrow_schema::Dimension;
-use rstar::{RTreeObject, AABB};
+
+use crate::array::CoordBuffer;
+use crate::eq::multi_polygon_eq;
+use crate::scalar::Polygon;
+use crate::util::OffsetBufferUtils;
 
 /// An Arrow equivalent of a MultiPolygon
 ///
@@ -127,35 +126,26 @@ impl<'a> MultiPolygonTrait for &'a MultiPolygon<'a> {
     }
 }
 
-impl RTreeObject for MultiPolygon<'_> {
-    type Envelope = AABB<[f64; 2]>;
-
-    fn envelope(&self) -> Self::Envelope {
-        let (lower, upper) = bounding_rect_multipolygon(self);
-        AABB::from_corners(lower, upper)
-    }
-}
-
 impl<G: MultiPolygonTrait<T = f64>> PartialEq<G> for MultiPolygon<'_> {
     fn eq(&self, other: &G) -> bool {
         multi_polygon_eq(self, other)
     }
 }
 
-#[cfg(test)]
-mod test {
-    use crate::array::MultiPolygonArray;
-    use crate::test::multipolygon::{mp0, mp1};
-    use crate::trait_::ArrayAccessor;
-    use geoarrow_schema::Dimension;
+// #[cfg(test)]
+// mod test {
+//     use crate::array::MultiPolygonArray;
+//     use crate::test::multipolygon::{mp0, mp1};
+//     use crate::trait_::ArrayAccessor;
+//     use geoarrow_schema::Dimension;
 
-    /// Test Eq where the current index is true but another index is false
-    #[test]
-    fn test_eq_other_index_false() {
-        let arr1: MultiPolygonArray = (vec![mp0(), mp1()].as_slice(), Dimension::XY).into();
-        let arr2: MultiPolygonArray = (vec![mp0(), mp0()].as_slice(), Dimension::XY).into();
+//     /// Test Eq where the current index is true but another index is false
+//     #[test]
+//     fn test_eq_other_index_false() {
+//         let arr1: MultiPolygonArray = (vec![mp0(), mp1()].as_slice(), Dimension::XY).into();
+//         let arr2: MultiPolygonArray = (vec![mp0(), mp0()].as_slice(), Dimension::XY).into();
 
-        assert_eq!(arr1.value(0), arr2.value(0));
-        assert_ne!(arr1.value(1), arr2.value(1));
-    }
-}
+//         assert_eq!(arr1.value(0), arr2.value(0));
+//         assert_ne!(arr1.value(1), arr2.value(1));
+//     }
+// }

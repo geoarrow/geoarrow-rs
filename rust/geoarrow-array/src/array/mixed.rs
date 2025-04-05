@@ -7,10 +7,9 @@ use arrow_schema::{DataType, Field, UnionMode};
 use geo_traits::GeometryTrait;
 use geoarrow_schema::{CoordType, Dimension, GeometryCollectionType, Metadata};
 
-use crate::algorithm::native::downcast::can_downcast_multi;
 use crate::array::{
-    GeometryCollectionArray, LineStringArray, MultiLineStringArray, MultiPointArray,
-    MultiPolygonArray, PointArray, PolygonArray, WKBArray,
+    LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
+    PolygonArray, WKBArray,
 };
 use crate::builder::{
     LineStringBuilder, MixedGeometryBuilder, MultiLineStringBuilder, MultiPointBuilder,
@@ -465,31 +464,19 @@ impl MixedGeometryArray {
 
         types
     }
-}
 
-impl ArrayBase for MixedGeometryArray {
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
-
-    fn storage_type(&self) -> DataType {
+    pub(crate) fn storage_type(&self) -> DataType {
         match GeometryCollectionType::new(self.coord_type, self.dim, Default::default()).data_type()
         {
             DataType::List(inner_field) => inner_field.data_type().clone(),
             _ => unreachable!(),
         }
     }
+}
 
-    fn extension_field(&self) -> Arc<Field> {
-        let name = "geometry";
-        let nullable = true;
-        let data_type = self.storage_type();
-
-        Arc::new(Field::new(name, data_type, nullable))
-    }
-
-    fn extension_name(&self) -> &str {
-        "geoarrow.geometry"
+impl ArrayBase for MixedGeometryArray {
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
     }
 
     fn into_array_ref(self) -> ArrayRef {
@@ -498,10 +485,6 @@ impl ArrayBase for MixedGeometryArray {
 
     fn to_array_ref(&self) -> ArrayRef {
         self.clone().into_array_ref()
-    }
-
-    fn metadata(&self) -> Arc<Metadata> {
-        self.metadata.clone()
     }
 
     /// Returns the number of geometries in this array
@@ -580,28 +563,26 @@ impl<'a> ArrayAccessor<'a> for MixedGeometryArray {
     }
 }
 
-impl IntoArrow for MixedGeometryArray {
-    type ArrowArray = UnionArray;
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        let union_fields = match self.storage_type() {
+impl From<MixedGeometryArray> for UnionArray {
+    fn from(value: MixedGeometryArray) -> Self {
+        let union_fields = match value.storage_type() {
             DataType::Union(union_fields, _) => union_fields,
             _ => unreachable!(),
         };
 
         let child_arrays = vec![
-            self.points.into_array_ref(),
-            self.line_strings.into_array_ref(),
-            self.polygons.into_array_ref(),
-            self.multi_points.into_array_ref(),
-            self.multi_line_strings.into_array_ref(),
-            self.multi_polygons.into_array_ref(),
+            value.points.into_array_ref(),
+            value.line_strings.into_array_ref(),
+            value.polygons.into_array_ref(),
+            value.multi_points.into_array_ref(),
+            value.multi_line_strings.into_array_ref(),
+            value.multi_polygons.into_array_ref(),
         ];
 
         UnionArray::try_new(
             union_fields,
-            self.type_ids,
-            Some(self.offsets),
+            value.type_ids,
+            Some(value.offsets),
             child_arrays,
         )
         .unwrap()
@@ -885,24 +866,6 @@ impl From<MultiPolygonArray> for MixedGeometryArray {
             Some(value),
             metadata,
         )
-    }
-}
-
-impl TryFrom<GeometryCollectionArray> for MixedGeometryArray {
-    type Error = GeoArrowError;
-
-    fn try_from(value: GeometryCollectionArray) -> std::result::Result<Self, Self::Error> {
-        if !can_downcast_multi(&value.geom_offsets) {
-            return Err(GeoArrowError::General("Unable to cast".to_string()));
-        }
-
-        if value.null_count() > 0 {
-            return Err(GeoArrowError::General(
-                "Unable to cast with nulls".to_string(),
-            ));
-        }
-
-        Ok(value.array)
     }
 }
 

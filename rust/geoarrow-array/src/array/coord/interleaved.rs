@@ -9,7 +9,6 @@ use geoarrow_schema::{CoordType, Dimension, PointType};
 use crate::builder::InterleavedCoordBufferBuilder;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::InterleavedCoord;
-use crate::trait_::IntoArrow;
 
 /// A an array of coordinates stored interleaved in a single buffer.
 #[derive(Debug, Clone, PartialEq)]
@@ -157,7 +156,12 @@ impl InterleavedCoordBuffer {
 
 impl From<InterleavedCoordBuffer> for FixedSizeListArray {
     fn from(value: InterleavedCoordBuffer) -> Self {
-        value.into_arrow()
+        FixedSizeListArray::new(
+            Arc::new(value.values_field()),
+            value.dim.size() as i32,
+            Arc::new(value.values_array()),
+            None,
+        )
     }
 }
 

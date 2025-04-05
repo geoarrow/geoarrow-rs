@@ -99,20 +99,6 @@ impl<O: OffsetSizeTrait> ArrayBase for WKBArray<O> {
         self
     }
 
-    fn storage_type(&self) -> DataType {
-        self.data_type.data_type(O::IS_LARGE)
-    }
-
-    fn extension_field(&self) -> Arc<Field> {
-        self.data_type
-            .to_field("geometry", true, O::IS_LARGE)
-            .into()
-    }
-
-    fn extension_name(&self) -> &str {
-        WkbType::NAME
-    }
-
     fn into_array_ref(self) -> ArrayRef {
         // Recreate a BinaryArray so that we can force it to have geoarrow.wkb extension type
         Arc::new(self.into_arrow())
@@ -120,10 +106,6 @@ impl<O: OffsetSizeTrait> ArrayBase for WKBArray<O> {
 
     fn to_array_ref(&self) -> ArrayRef {
         self.clone().into_array_ref()
-    }
-
-    fn metadata(&self) -> Arc<Metadata> {
-        self.data_type.metadata().clone()
     }
 
     /// Returns the number of geometries in this array
@@ -166,6 +148,7 @@ impl<'a, O: OffsetSizeTrait> ArrayAccessor<'a> for WKBArray<O> {
 
 impl<O: OffsetSizeTrait> IntoArrow for WKBArray<O> {
     type ArrowArray = GenericBinaryArray<O>;
+    type ExtensionType = WkbType;
 
     fn into_arrow(self) -> Self::ArrowArray {
         GenericBinaryArray::new(
@@ -173,6 +156,10 @@ impl<O: OffsetSizeTrait> IntoArrow for WKBArray<O> {
             self.array.values().clone(),
             self.array.nulls().cloned(),
         )
+    }
+
+    fn ext_type(&self) -> &Self::ExtensionType {
+        &self.data_type
     }
 }
 

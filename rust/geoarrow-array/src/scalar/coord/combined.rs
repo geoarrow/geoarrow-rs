@@ -1,7 +1,6 @@
-use rstar::{RTreeObject, AABB};
+use geo_traits::CoordTrait;
 
 use crate::scalar::{InterleavedCoord, SeparatedCoord};
-use geo_traits::CoordTrait;
 
 /// An Arrow equivalent of a Coord
 ///
@@ -20,17 +19,6 @@ impl Coord<'_> {
         match self {
             Coord::Separated(c) => c.is_nan(),
             Coord::Interleaved(c) => c.is_nan(),
-        }
-    }
-}
-
-impl RTreeObject for Coord<'_> {
-    type Envelope = AABB<[f64; 2]>;
-
-    fn envelope(&self) -> Self::Envelope {
-        match self {
-            Coord::Interleaved(c) => c.envelope(),
-            Coord::Separated(c) => c.envelope(),
         }
     }
 }

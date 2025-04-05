@@ -1,9 +1,9 @@
-use crate::eq::coord_eq;
-use crate::scalar::InterleavedCoord;
 use arrow_buffer::ScalarBuffer;
 use geo_traits::CoordTrait;
 use geoarrow_schema::Dimension;
-use rstar::{RTreeObject, AABB};
+
+use crate::eq::coord_eq;
+use crate::scalar::InterleavedCoord;
 
 /// An Arrow equivalent of a Coord
 ///
@@ -19,14 +19,6 @@ impl SeparatedCoord<'_> {
     /// Return `true` if all values in the coordinate are f64::NAN
     pub(crate) fn is_nan(&self) -> bool {
         (0..self.dim.size()).all(|coord_dim| self.nth_or_panic(coord_dim).is_nan())
-    }
-}
-
-impl RTreeObject for SeparatedCoord<'_> {
-    type Envelope = AABB<[f64; 2]>;
-
-    fn envelope(&self) -> Self::Envelope {
-        AABB::from_point([self.x(), self.y()])
     }
 }
 

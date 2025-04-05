@@ -3,7 +3,6 @@ use geo_traits::{
     MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait, UnimplementedLine,
     UnimplementedTriangle,
 };
-use rstar::{RTreeObject, AABB};
 
 use crate::eq::geometry_eq;
 use crate::scalar::*;
@@ -195,23 +194,6 @@ impl<'a> GeometryTrait for &'a Geometry<'a> {
             Geometry::MultiPolygon(p) => GeometryType::MultiPolygon(p),
             Geometry::GeometryCollection(p) => GeometryType::GeometryCollection(p),
             Geometry::Rect(p) => GeometryType::Rect(p),
-        }
-    }
-}
-
-impl RTreeObject for Geometry<'_> {
-    type Envelope = AABB<[f64; 2]>;
-
-    fn envelope(&self) -> Self::Envelope {
-        match self {
-            Geometry::Point(geom) => geom.envelope(),
-            Geometry::LineString(geom) => geom.envelope(),
-            Geometry::Polygon(geom) => geom.envelope(),
-            Geometry::MultiPoint(geom) => geom.envelope(),
-            Geometry::MultiLineString(geom) => geom.envelope(),
-            Geometry::MultiPolygon(geom) => geom.envelope(),
-            Geometry::GeometryCollection(geom) => geom.envelope(),
-            Geometry::Rect(geom) => geom.envelope(),
         }
     }
 }
