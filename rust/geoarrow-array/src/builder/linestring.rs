@@ -14,7 +14,7 @@ use crate::builder::{
 use crate::capacity::LineStringCapacity;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
-use crate::trait_::ArrayAccessor;
+use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
 
 /// The GeoArrow equivalent to `Vec<Option<LineString>>`: a mutable collection of LineStrings.
 ///
@@ -384,5 +384,11 @@ impl From<LineStringBuilder> for MultiPointBuilder {
             value.metadata,
         )
         .unwrap()
+    }
+}
+
+impl GeometryArrayBuilder for LineStringBuilder {
+    fn len(&self) -> usize {
+        self.geom_offsets.len_proxy()
     }
 }

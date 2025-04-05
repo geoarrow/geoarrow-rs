@@ -414,3 +414,43 @@ pub trait SerializedArray: ArrayBase {
 
 /// Type alias for a dynamic reference to something that implements [SerializedArray].
 pub type SerializedArrayRef = Arc<dyn SerializedArray>;
+
+/// A trait describing a mutable geometry array; i.e. an array whose values can be changed.
+///
+/// Mutable arrays cannot be cloned but can be mutated in place,
+/// thereby making them useful to perform numeric operations without allocations.
+/// As in [`NativeArray`], concrete arrays (such as
+/// [`PointBuilder`][crate::array::PointBuilder]) implement how they are mutated.
+pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
+    /// Returns the length of the array.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use geoarrow::{array::PointBuilder, trait_::GeometryArrayBuilder};
+    /// use geoarrow_schema::Dimension;
+    ///
+    /// let mut builder = PointBuilder::new(Dimension::XY);
+    /// assert_eq!(builder.len(), 0);
+    /// builder.push_point(Some(&geo::point!(x: 1., y: 2.)));
+    /// assert_eq!(builder.len(), 1);
+    /// ```
+    fn len(&self) -> usize;
+
+    /// Returns whether the array is empty.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use geoarrow::{array::PointBuilder, trait_::GeometryArrayBuilder};
+    /// use geoarrow_schema::Dimension;
+    ///
+    /// let mut builder = PointBuilder::new(Dimension::XY);
+    /// assert!(builder.is_empty());
+    /// builder.push_point(Some(&geo::point!(x: 1., y: 2.)));
+    /// assert!(!builder.is_empty());
+    /// ```
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}

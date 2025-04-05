@@ -12,7 +12,7 @@ use crate::builder::{
 use crate::capacity::MixedCapacity;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
-use crate::trait_::{ArrayAccessor, ArrayBase};
+use crate::trait_::{ArrayAccessor, ArrayBase, GeometryArrayBuilder};
 
 pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 
@@ -580,5 +580,11 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MixedGeometryBuil
             metadata,
             true,
         )
+    }
+}
+
+impl GeometryArrayBuilder for MixedGeometryBuilder {
+    fn len(&self) -> usize {
+        self.types.len()
     }
 }

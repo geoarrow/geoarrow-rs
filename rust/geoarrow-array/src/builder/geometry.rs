@@ -12,7 +12,7 @@ use crate::builder::{
 use crate::capacity::GeometryCapacity;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
-use crate::trait_::{ArrayAccessor, ArrayBase};
+use crate::trait_::{ArrayAccessor, ArrayBase, GeometryArrayBuilder};
 
 pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 
@@ -1012,8 +1012,20 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryBuilder {
             "Parsing a WKBArray with null elements not supported",
         );
 
-        let metadata = value.metadata();
+        let metadata = value.data_type.metadata().clone();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
         Self::from_wkb(&wkb_objects, CoordType::Interleaved, metadata, true)
+    }
+}
+
+impl Default for GeometryBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl GeometryArrayBuilder for GeometryBuilder {
+    fn len(&self) -> usize {
+        self.types.len()
     }
 }

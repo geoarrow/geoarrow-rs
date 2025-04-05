@@ -13,7 +13,7 @@ use crate::builder::{
 };
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
-use crate::trait_::ArrayAccessor;
+use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
 
 /// The GeoArrow equivalent to `Vec<Option<Point>>`: a mutable collection of Points.
 ///
@@ -336,5 +336,11 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for PointBuilder {
             CoordType::default_interleaved(),
             metadata,
         )
+    }
+}
+
+impl GeometryArrayBuilder for PointBuilder {
+    fn len(&self) -> usize {
+        self.coords.len()
     }
 }

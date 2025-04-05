@@ -14,7 +14,7 @@ use crate::builder::{
 use crate::capacity::MultiLineStringCapacity;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
-use crate::trait_::ArrayAccessor;
+use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
 
 /// The GeoArrow equivalent to `Vec<Option<MultiLineString>>`: a mutable collection of
 /// MultiLineStrings.
@@ -493,5 +493,11 @@ impl From<MultiLineStringBuilder> for PolygonBuilder {
             value.metadata,
         )
         .unwrap()
+    }
+}
+
+impl GeometryArrayBuilder for MultiLineStringBuilder {
+    fn len(&self) -> usize {
+        self.geom_offsets.len_proxy()
     }
 }

@@ -399,6 +399,7 @@ impl GeometryArrayBuilder for MultiPointBuilder {
     }
 
     fn len(&self) -> usize {
+        // NOTE: this is wrong?
         self.coords.len()
     }
 

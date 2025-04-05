@@ -16,7 +16,7 @@ use crate::builder::{
 use crate::capacity::PolygonCapacity;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
-use crate::trait_::ArrayAccessor;
+use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
 
 pub type MutablePolygonParts = (
     CoordBufferBuilder,
@@ -503,5 +503,11 @@ impl From<PolygonBuilder> for MultiLineStringBuilder {
             value.metadata,
         )
         .unwrap()
+    }
+}
+
+impl GeometryArrayBuilder for PolygonBuilder {
+    fn len(&self) -> usize {
+        self.geom_offsets.len_proxy()
     }
 }

@@ -14,7 +14,7 @@ use crate::builder::{MixedGeometryBuilder, OffsetsBuilder};
 use crate::capacity::GeometryCollectionCapacity;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
-use crate::trait_::ArrayAccessor;
+use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
 
 /// The GeoArrow equivalent to `Vec<Option<GeometryCollection>>`: a mutable collection of
 /// GeometryCollections.
@@ -439,5 +439,11 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for GeometryCollectio
         let metadata = value.data_type.metadata().clone();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
         Self::from_wkb(&wkb_objects, dim, CoordType::Interleaved, metadata, true)
+    }
+}
+
+impl GeometryArrayBuilder for GeometryCollectionBuilder {
+    fn len(&self) -> usize {
+        self.geom_offsets.len_proxy()
     }
 }

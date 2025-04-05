@@ -15,7 +15,7 @@ use crate::builder::{
 };
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
-use crate::trait_::ArrayAccessor;
+use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
 
 pub type MutableMultiPolygonParts = (
     CoordBufferBuilder,
@@ -542,5 +542,11 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MultiPolygonBuild
             CoordType::default_interleaved(),
             metadata,
         )
+    }
+}
+
+impl GeometryArrayBuilder for MultiPolygonBuilder {
+    fn len(&self) -> usize {
+        self.geom_offsets.len_proxy()
     }
 }
