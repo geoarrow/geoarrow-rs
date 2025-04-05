@@ -67,6 +67,14 @@ impl Crs {
         }
     }
 
+    /// Construct from an opaque string identifier
+    pub fn from_srid(value: String) -> Self {
+        Self {
+            crs: Some(Value::String(value)),
+            crs_type: Some(CrsType::Srid),
+        }
+    }
+
     /// Access the underlying [CrsType].
     pub fn crs_type(&self) -> Option<CrsType> {
         self.crs_type
@@ -121,4 +129,55 @@ pub enum CrsType {
     /// drivers or readers that have no other option.
     #[serde(rename = "srid")]
     Srid,
+}
+
+#[cfg(test)]
+mod test {
+    use serde_json::json;
+
+    use super::*;
+
+    #[test]
+    fn crs_omitted() {
+        let crs = Crs::default();
+        assert!(crs.crs_value().is_none());
+        assert!(crs.crs_type().is_none());
+        assert!(!crs.should_serialize());
+    }
+
+    #[test]
+    fn crs_projjson() {
+        let crs = Crs::from_projjson(json!({}));
+        assert!(crs.crs_value().is_some_and(|x| x.is_object()));
+        assert!(crs.crs_type().is_some_and(|x| matches!(x, CrsType::Projjson)));
+        assert!(crs.should_serialize());
+        assert_eq!(serde_json::to_string(&crs).unwrap(), r#"{"crs":{},"crs_type":"projjson"}"#);
+    }
+
+    #[test]
+    fn crs_wkt2() {
+        let crs = Crs::from_wkt2_2019("TESTCRS[]".to_string());
+        assert!(crs.crs_value().is_some_and(|x| x.is_string()));
+        assert!(crs.crs_type().is_some_and(|x| matches!(x, CrsType::Wkt2_2019)));
+        assert!(crs.should_serialize());
+        assert_eq!(serde_json::to_string(&crs).unwrap(), r#"{"crs":"TESTCRS[]","crs_type":"wkt2:2019"}"#);
+    }
+
+    #[test]
+    fn crs_authority_code() {
+        let crs = Crs::from_authority_code("GEOARROW:1234".to_string());
+        assert!(crs.crs_value().is_some_and(|x| x.is_string()));
+        assert!(crs.crs_type().is_some_and(|x| matches!(x, CrsType::AuthorityCode)));
+        assert!(crs.should_serialize());
+        assert_eq!(serde_json::to_string(&crs).unwrap(), r#"{"crs":"GEOARROW:1234","crs_type":"authority_code"}"#);
+    }
+
+    #[test]
+    fn crs_srid() {
+        let crs = Crs::from_srid("1234".to_string());
+        assert!(crs.crs_value().is_some_and(|x| x.is_string()));
+        assert!(crs.crs_type().is_some_and(|x| matches!(x, CrsType::Srid)));
+        assert!(crs.should_serialize());
+        assert_eq!(serde_json::to_string(&crs).unwrap(), r#"{"crs":"1234","crs_type":"srid"}"#);
+    }
 }
