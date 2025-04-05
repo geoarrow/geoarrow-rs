@@ -149,27 +149,42 @@ mod test {
     fn crs_projjson() {
         let crs = Crs::from_projjson(json!({}));
         assert!(crs.crs_value().is_some_and(|x| x.is_object()));
-        assert!(crs.crs_type().is_some_and(|x| matches!(x, CrsType::Projjson)));
+        assert!(crs
+            .crs_type()
+            .is_some_and(|x| matches!(x, CrsType::Projjson)));
         assert!(crs.should_serialize());
-        assert_eq!(serde_json::to_string(&crs).unwrap(), r#"{"crs":{},"crs_type":"projjson"}"#);
+        assert_eq!(
+            serde_json::to_string(&crs).unwrap(),
+            r#"{"crs":{},"crs_type":"projjson"}"#
+        );
     }
 
     #[test]
     fn crs_wkt2() {
         let crs = Crs::from_wkt2_2019("TESTCRS[]".to_string());
         assert!(crs.crs_value().is_some_and(|x| x.is_string()));
-        assert!(crs.crs_type().is_some_and(|x| matches!(x, CrsType::Wkt2_2019)));
+        assert!(crs
+            .crs_type()
+            .is_some_and(|x| matches!(x, CrsType::Wkt2_2019)));
         assert!(crs.should_serialize());
-        assert_eq!(serde_json::to_string(&crs).unwrap(), r#"{"crs":"TESTCRS[]","crs_type":"wkt2:2019"}"#);
+        assert_eq!(
+            serde_json::to_string(&crs).unwrap(),
+            r#"{"crs":"TESTCRS[]","crs_type":"wkt2:2019"}"#
+        );
     }
 
     #[test]
     fn crs_authority_code() {
         let crs = Crs::from_authority_code("GEOARROW:1234".to_string());
         assert!(crs.crs_value().is_some_and(|x| x.is_string()));
-        assert!(crs.crs_type().is_some_and(|x| matches!(x, CrsType::AuthorityCode)));
+        assert!(crs
+            .crs_type()
+            .is_some_and(|x| matches!(x, CrsType::AuthorityCode)));
         assert!(crs.should_serialize());
-        assert_eq!(serde_json::to_string(&crs).unwrap(), r#"{"crs":"GEOARROW:1234","crs_type":"authority_code"}"#);
+        assert_eq!(
+            serde_json::to_string(&crs).unwrap(),
+            r#"{"crs":"GEOARROW:1234","crs_type":"authority_code"}"#
+        );
     }
 
     #[test]
@@ -178,6 +193,9 @@ mod test {
         assert!(crs.crs_value().is_some_and(|x| x.is_string()));
         assert!(crs.crs_type().is_some_and(|x| matches!(x, CrsType::Srid)));
         assert!(crs.should_serialize());
-        assert_eq!(serde_json::to_string(&crs).unwrap(), r#"{"crs":"1234","crs_type":"srid"}"#);
+        assert_eq!(
+            serde_json::to_string(&crs).unwrap(),
+            r#"{"crs":"1234","crs_type":"srid"}"#
+        );
     }
 }
