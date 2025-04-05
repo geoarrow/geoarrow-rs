@@ -401,9 +401,6 @@ pub trait NativeArray: ArrayBase {
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray>;
 }
 
-/// Type alias for a dynamic reference to something that implements [NativeArray].
-pub type NativeArrayRef = Arc<dyn NativeArray>;
-
 /// A trait to represent serialized GeoArrow arrays
 ///
 /// This encompasses WKB and WKT GeoArrow types.
@@ -411,9 +408,6 @@ pub trait SerializedArray: ArrayBase {
     /// Returns a the [`SerializedType`] of this array.
     fn data_type(&self) -> SerializedType;
 }
-
-/// Type alias for a dynamic reference to something that implements [SerializedArray].
-pub type SerializedArrayRef = Arc<dyn SerializedArray>;
 
 /// A trait describing a mutable geometry array; i.e. an array whose values can be changed.
 ///

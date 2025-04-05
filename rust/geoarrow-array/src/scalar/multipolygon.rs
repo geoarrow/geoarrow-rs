@@ -46,24 +46,6 @@ impl<'a> MultiPolygon<'a> {
             start_offset,
         }
     }
-
-    pub(crate) fn into_owned_inner(
-        self,
-    ) -> (
-        CoordBuffer,
-        OffsetBuffer<i32>,
-        OffsetBuffer<i32>,
-        OffsetBuffer<i32>,
-        usize,
-    ) {
-        (
-            self.coords.clone(),
-            self.geom_offsets.clone(),
-            self.polygon_offsets.clone(),
-            self.ring_offsets.clone(),
-            self.geom_index,
-        )
-    }
 }
 
 impl<'a> MultiPolygonTrait for MultiPolygon<'a> {

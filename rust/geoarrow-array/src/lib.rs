@@ -61,9 +61,11 @@ mod datatypes;
 mod eq;
 pub mod error;
 pub mod scalar;
-
 mod trait_;
 pub(crate) mod util;
+
+pub use datatypes::{AnyType, NativeType, SerializedType};
+pub use trait_::{ArrayAccessor, IntoArrow};
 
 #[cfg(test)]
 pub(crate) mod test;

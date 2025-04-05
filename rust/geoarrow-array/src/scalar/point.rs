@@ -17,10 +17,6 @@ impl<'a> Point<'a> {
     pub(crate) fn new(coords: &'a CoordBuffer, geom_index: usize) -> Self {
         Point { coords, geom_index }
     }
-
-    pub(crate) fn into_owned_inner(self) -> (CoordBuffer, usize) {
-        (self.coords.clone(), self.geom_index)
-    }
 }
 
 impl<'a> PointTrait for Point<'a> {

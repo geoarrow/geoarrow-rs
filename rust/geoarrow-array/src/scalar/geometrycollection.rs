@@ -37,11 +37,6 @@ impl<'a> GeometryCollection<'a> {
             start_offset,
         }
     }
-
-    #[allow(clippy::wrong_self_convention)]
-    pub(crate) fn into_inner(&self) -> (&MixedGeometryArray, &OffsetBuffer<i32>, usize) {
-        (self.array, self.geom_offsets, self.geom_index)
-    }
 }
 
 impl<'a> GeometryCollectionTrait for GeometryCollection<'a> {

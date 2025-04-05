@@ -29,12 +29,6 @@ impl<'a, O: OffsetSizeTrait> WKB<'a, O> {
         self.as_ref()
     }
 
-    pub(crate) fn into_owned_inner(self) -> (GenericBinaryArray<O>, usize) {
-        // TODO: hard slice?
-        // let owned = self.into_owned();
-        (self.arr.clone(), self.geom_index)
-    }
-
     /// Parse this WKB buffer to a geometry.
     pub fn parse(&self) -> Result<impl GeometryTrait<T = f64> + use<'_, O>> {
         Ok(wkb::reader::read_wkb(self.as_ref())?)

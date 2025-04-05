@@ -210,14 +210,6 @@ impl MixedGeometryArray {
         child_lengths > self.len()
     }
 
-    /// The offset and length by which this array has been sliced.
-    ///
-    /// If this array has not been sliced, the slice offset will be `0`. The length will always be
-    /// equal to `self.len()`.
-    pub(crate) fn slice_offset_length(&self) -> (usize, usize) {
-        (self.slice_offset, self.len())
-    }
-
     pub fn has_points(&self) -> bool {
         if self.points.is_empty() {
             return false;

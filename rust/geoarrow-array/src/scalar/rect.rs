@@ -26,11 +26,6 @@ impl<'a> Rect<'a> {
             geom_index,
         }
     }
-
-    pub(crate) fn into_owned_inner(self) -> (SeparatedCoordBuffer, SeparatedCoordBuffer, usize) {
-        // TODO: make hard slice?
-        (self.lower.clone(), self.upper.clone(), self.geom_index)
-    }
 }
 
 // TODO: support 3d rects
