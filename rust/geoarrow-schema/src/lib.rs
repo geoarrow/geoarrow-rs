@@ -3,6 +3,7 @@ mod crs;
 mod dimension;
 mod edges;
 mod metadata;
+mod trait_;
 mod r#type;
 
 pub use coord_type::CoordType;
