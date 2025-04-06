@@ -22,11 +22,11 @@ macro_rules! define_basic_type {
 
         impl $struct_name {
             /// Construct a new type from parts.
-            pub fn new(coord_type: CoordType, dim: Dimension, metadata: Arc<Metadata>) -> Self {
+            pub fn new(coord_type: CoordType, dim: Dimension) -> Self {
                 Self {
                     coord_type,
                     dim,
-                    metadata,
+                    metadata: Default::default(),
                 }
             }
 
@@ -920,10 +920,10 @@ pub struct GeometryType {
 
 impl GeometryType {
     /// Construct a new type from parts.
-    pub fn new(coord_type: CoordType, metadata: Arc<Metadata>) -> Self {
+    pub fn new(coord_type: CoordType) -> Self {
         Self {
             coord_type,
-            metadata,
+            metadata: Default::default(),
         }
     }
 

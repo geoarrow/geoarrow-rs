@@ -92,7 +92,8 @@ impl LineStringArray {
     ) -> Result<Self> {
         check(&coords, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
         Ok(Self {
-            data_type: LineStringType::new(coords.coord_type(), coords.dim(), metadata),
+            data_type: LineStringType::new(coords.coord_type(), coords.dim())
+                .with_metadata(metadata),
             coords,
             geom_offsets,
             validity,

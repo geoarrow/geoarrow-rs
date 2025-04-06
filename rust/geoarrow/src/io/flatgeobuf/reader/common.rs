@@ -125,39 +125,41 @@ pub(super) fn infer_from_header(header: Header<'_>) -> Result<(NativeType, Schem
     let data_type = match (geometry_type, has_z) {
         (GeometryType::Point, false) => NativeType::Point(PointType::new(coord_type, XY, metadata)),
         (GeometryType::LineString, false) => {
-            NativeType::LineString(LineStringType::new(coord_type, XY, metadata))
+            NativeType::LineString(LineStringType::new(coord_type, XY).with_metadata(metadata))
         }
         (GeometryType::Polygon, false) => {
-            NativeType::Polygon(PolygonType::new(coord_type, XY, metadata))
+            NativeType::Polygon(PolygonType::new(coord_type, XY).with_metadata(metadata))
         }
         (GeometryType::MultiPoint, false) => {
-            NativeType::MultiPoint(MultiPointType::new(coord_type, XY, metadata))
+            NativeType::MultiPoint(MultiPointType::new(coord_type, XY).with_metadata(metadata))
         }
-        (GeometryType::MultiLineString, false) => {
-            NativeType::MultiLineString(MultiLineStringType::new(coord_type, XY, metadata))
-        }
+        (GeometryType::MultiLineString, false) => NativeType::MultiLineString(
+            MultiLineStringType::new(coord_type, XY).with_metadata(metadata),
+        ),
         (GeometryType::MultiPolygon, false) => {
-            NativeType::MultiPolygon(MultiPolygonType::new(coord_type, XY, metadata))
+            NativeType::MultiPolygon(MultiPolygonType::new(coord_type, XY).with_metadata(metadata))
         }
-        (GeometryType::Point, true) => NativeType::Point(PointType::new(coord_type, XYZ, metadata)),
+        (GeometryType::Point, true) => {
+            NativeType::Point(PointType::new(coord_type, XYZ).with_metadata(metadata))
+        }
         (GeometryType::LineString, true) => {
-            NativeType::LineString(LineStringType::new(coord_type, XYZ, metadata))
+            NativeType::LineString(LineStringType::new(coord_type, XYZ).with_metadata(metadata))
         }
         (GeometryType::Polygon, true) => {
-            NativeType::Polygon(PolygonType::new(coord_type, XYZ, metadata))
+            NativeType::Polygon(PolygonType::new(coord_type, XYZ).with_metadata(metadata))
         }
         (GeometryType::MultiPoint, true) => {
-            NativeType::MultiPoint(MultiPointType::new(coord_type, XYZ, metadata))
+            NativeType::MultiPoint(MultiPointType::new(coord_type, XYZ).with_metadata(metadata))
         }
-        (GeometryType::MultiLineString, true) => {
-            NativeType::MultiLineString(MultiLineStringType::new(coord_type, XYZ, metadata))
-        }
+        (GeometryType::MultiLineString, true) => NativeType::MultiLineString(
+            MultiLineStringType::new(coord_type, XYZ).with_metadata(metadata),
+        ),
         (GeometryType::MultiPolygon, true) => {
-            NativeType::MultiPolygon(MultiPolygonType::new(coord_type, XYZ, metadata))
+            NativeType::MultiPolygon(MultiPolygonType::new(coord_type, XYZ).with_metadata(metadata))
         }
-        (GeometryType::Unknown, _) => {
-            NativeType::Geometry(geoarrow_schema::GeometryType::new(coord_type, metadata))
-        }
+        (GeometryType::Unknown, _) => NativeType::Geometry(
+            geoarrow_schema::GeometryType::new(coord_type).with_metadata(metadata),
+        ),
         _ => panic!("Unsupported type"),
     };
     Ok((data_type, properties_schema))

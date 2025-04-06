@@ -401,8 +401,8 @@ impl TryFrom<&Field> for NativeType {
             // GeometryArray
             let data_type = match field.data_type() {
                 DataType::Struct(struct_fields) => match struct_fields.len() {
-                    2 =>  NativeType::Point(PointType::new(CoordType::Separated , Dimension::XY, metadata.into())),
-                    3 => NativeType::Point(PointType::new(CoordType::Separated , Dimension::XYZ, metadata.into())),
+                    2 =>  NativeType::Point(PointType::new(CoordType::Separated , Dimension::XY).with_metadata( metadata.into())),
+                    3 => NativeType::Point(PointType::new(CoordType::Separated , Dimension::XYZ).with_metadata( metadata.into())),
                     l => return Err(GeoArrowError::General(format!("incorrect number of struct fields {l}"))),
                 },
                 DataType::FixedSizeList(_, _list_size) => {

@@ -184,7 +184,7 @@ impl SeparatedCoordBuffer {
     }
 
     pub(crate) fn storage_type(&self) -> DataType {
-        PointType::new(CoordType::Separated, self.dim, Default::default()).data_type()
+        PointType::new(CoordType::Separated, self.dim).data_type()
     }
 
     /// The coordinate type

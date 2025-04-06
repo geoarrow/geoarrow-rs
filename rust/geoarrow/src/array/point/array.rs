@@ -72,7 +72,7 @@ impl PointArray {
     ) -> Result<Self> {
         check(&coords, validity.as_ref().map(|v| v.len()))?;
         Ok(Self {
-            data_type: PointType::new(coords.coord_type(), coords.dim(), metadata),
+            data_type: PointType::new(coords.coord_type(), coords.dim()).with_metadata(metadata),
             coords,
             validity,
         })

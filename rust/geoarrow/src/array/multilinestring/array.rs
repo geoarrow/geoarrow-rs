@@ -117,7 +117,8 @@ impl MultiLineStringArray {
             validity.as_ref().map(|v| v.len()),
         )?;
         Ok(Self {
-            data_type: MultiLineStringType::new(coords.coord_type(), coords.dim(), metadata),
+            data_type: MultiLineStringType::new(coords.coord_type(), coords.dim())
+                .with_metadata(metadata),
             coords,
             geom_offsets,
             ring_offsets,

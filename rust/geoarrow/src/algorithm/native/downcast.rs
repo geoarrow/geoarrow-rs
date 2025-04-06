@@ -361,32 +361,18 @@ fn resolve_types(types: &HashSet<NativeType>) -> NativeType {
         if geometry_type_names.contains("geoarrow.point")
             && geometry_type_names.contains("geoarrow.multipoint")
         {
-            return NativeType::MultiPoint(MultiPointType::new(
-                coord_type,
-                dimension,
-                Default::default(),
-            ));
+            return NativeType::MultiPoint(MultiPointType::new(coord_type, dimension));
         } else if geometry_type_names.contains("geoarrow.linestring")
             && geometry_type_names.contains("geoarrow.multilinestring")
         {
-            return NativeType::MultiLineString(MultiLineStringType::new(
-                coord_type,
-                dimension,
-                Default::default(),
-            ));
+            return NativeType::MultiLineString(MultiLineStringType::new(coord_type, dimension));
         } else if geometry_type_names.contains("geoarrow.polygon")
             && geometry_type_names.contains("geoarrow.multipolygon")
         {
-            return NativeType::MultiPolygon(MultiPolygonType::new(
-                coord_type,
-                dimension,
-                Default::default(),
-            ));
+            return NativeType::MultiPolygon(MultiPolygonType::new(coord_type, dimension));
         } else if geometry_type_names.contains("geoarrow.geometrycollection") {
             return NativeType::GeometryCollection(GeometryCollectionType::new(
-                coord_type,
-                dimension,
-                Default::default(),
+                coord_type, dimension,
             ));
         }
     }
