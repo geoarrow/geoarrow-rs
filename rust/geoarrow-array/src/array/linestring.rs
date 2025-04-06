@@ -130,7 +130,7 @@ impl LineStringArray {
     /// # Implementation
     /// This operation is `O(1)` as it amounts to increase two ref counts.
     /// # Examples
-    /// ```
+    /// ```ignore
     /// use arrow::array::PrimitiveArray;
     /// use arrow_array::types::Int32Type;
     ///

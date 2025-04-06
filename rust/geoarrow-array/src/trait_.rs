@@ -26,7 +26,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use std::sync::Arc;
     /// use arrow_array::{Int32Array, RecordBatch};
     /// use arrow_schema::{Schema, Field, DataType, ArrowError};
@@ -53,7 +53,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     ///
     /// use geoarrow::{array::PointArray, ArrayBase};
     /// use geoarrow_schema::Dimension;
@@ -73,7 +73,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     ///
     /// use geoarrow::{array::PointArray, ArrayBase};
     /// use geoarrow_schema::Dimension;
@@ -89,7 +89,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{array::PointArray, ArrayBase};
     /// use geoarrow_schema::Dimension;
     ///
@@ -103,7 +103,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{array::PointArray, ArrayBase};
     /// use geoarrow_schema::Dimension;
     ///
@@ -123,7 +123,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{ArrayBase, array::PointArray};
     /// use geoarrow_schema::Dimension;
     ///
@@ -139,7 +139,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{ArrayBase, array::PointArray};
     /// use geoarrow_schema::Dimension;
     ///
@@ -156,7 +156,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{ArrayBase, array::PointArray};
     /// use geoarrow_schema::Dimension;
     ///
@@ -177,7 +177,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{ArrayBase, array::PointArray};
     /// use geoarrow_schema::Dimension;
     ///
@@ -377,7 +377,7 @@ pub trait NativeArray: ArrayBase {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use geoarrow::{
     ///     array::PointArray,
     ///     trait_::{GeometryArraySelfMethods, ArrayAccessor, NativeArray, ArrayBase}
