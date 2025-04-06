@@ -4,8 +4,7 @@ use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
-use geo_traits::MultiPointTrait;
-use geoarrow_schema::{Dimension, Metadata, MultiPointType};
+use geoarrow_schema::{Metadata, MultiPointType};
 
 use crate::array::{CoordBuffer, LineStringArray, PointArray, WKBArray};
 use crate::builder::MultiPointBuilder;
@@ -280,26 +279,12 @@ impl TryFrom<(&dyn Array, &Field)> for MultiPointArray {
     }
 }
 
-impl<G: MultiPointTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for MultiPointArray {
-    fn from(other: (Vec<Option<G>>, Dimension)) -> Self {
-        let mut_arr: MultiPointBuilder = other.into();
-        mut_arr.into()
-    }
-}
-
-impl<G: MultiPointTrait<T = f64>> From<(&[G], Dimension)> for MultiPointArray {
-    fn from(other: (&[G], Dimension)) -> Self {
-        let mut_arr: MultiPointBuilder = other.into();
-        mut_arr.into()
-    }
-}
-
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MultiPointArray {
+impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, MultiPointType)> for MultiPointArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WKBArray<O>, Dimension)) -> Result<Self> {
+    fn try_from(value: (WKBArray<O>, MultiPointType)) -> Result<Self> {
         let mut_arr: MultiPointBuilder = value.try_into()?;
-        Ok(mut_arr.into())
+        Ok(mut_arr.finish())
     }
 }
 

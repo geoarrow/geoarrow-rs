@@ -1,11 +1,14 @@
 use std::collections::HashSet;
 use std::sync::Arc;
 
+use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, OffsetSizeTrait, UnionArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field, UnionMode};
-use geo_traits::GeometryTrait;
-use geoarrow_schema::{CoordType, Dimension, GeometryType, Metadata};
+use geoarrow_schema::{
+    CoordType, Dimension, GeometryCollectionType, GeometryType, LineStringType, Metadata,
+    MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType,
+};
 
 use crate::array::*;
 use crate::builder::*;
@@ -660,10 +663,12 @@ impl IntoArrow for GeometryArray {
     }
 }
 
-impl TryFrom<&UnionArray> for GeometryArray {
+impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: &UnionArray) -> std::result::Result<Self, Self::Error> {
+    fn try_from(
+        (value, typ): (&UnionArray, GeometryType),
+    ) -> std::result::Result<Self, Self::Error> {
         let mut point_xy: Option<PointArray> = None;
         let mut line_string_xy: Option<LineStringArray> = None;
         let mut polygon_xy: Option<PolygonArray> = None;
@@ -680,6 +685,8 @@ impl TryFrom<&UnionArray> for GeometryArray {
         let mut mpolygon_xyz: Option<MultiPolygonArray> = None;
         let mut gc_xyz: Option<GeometryCollectionArray> = None;
 
+        let coord_type = typ.coord_type();
+
         match value.data_type() {
             DataType::Union(fields, mode) => {
                 if !matches!(mode, UnionMode::Dense) {
@@ -687,7 +694,7 @@ impl TryFrom<&UnionArray> for GeometryArray {
                 }
 
                 for (type_id, _field) in fields.iter() {
-                    let dimension = if type_id < 10 {
+                    let dim = if type_id < 10 {
                         Dimension::XY
                     } else if type_id < 20 {
                         Dimension::XYZ
@@ -701,98 +708,148 @@ impl TryFrom<&UnionArray> for GeometryArray {
                     match type_id {
                         1 => {
                             point_xy = Some(
-                                (value.child(type_id).as_ref(), dimension)
+                                (
+                                    value.child(type_id).as_ref(),
+                                    PointType::new(coord_type, dim, Default::default()),
+                                )
                                     .try_into()
                                     .unwrap(),
                             );
                         }
                         2 => {
                             line_string_xy = Some(
-                                (value.child(type_id).as_ref(), dimension)
+                                (
+                                    value.child(type_id).as_ref(),
+                                    LineStringType::new(coord_type, dim, Default::default()),
+                                )
                                     .try_into()
                                     .unwrap(),
                             );
                         }
                         3 => {
                             polygon_xy = Some(
-                                (value.child(type_id).as_ref(), dimension)
+                                (
+                                    value.child(type_id).as_ref(),
+                                    PolygonType::new(coord_type, dim, Default::default()),
+                                )
                                     .try_into()
                                     .unwrap(),
                             );
                         }
                         4 => {
                             mpoint_xy = Some(
-                                (value.child(type_id).as_ref(), dimension)
+                                (
+                                    value.child(type_id).as_ref(),
+                                    MultiPointType::new(coord_type, dim, Default::default()),
+                                )
                                     .try_into()
                                     .unwrap(),
                             );
                         }
                         5 => {
                             mline_string_xy = Some(
-                                (value.child(type_id).as_ref(), dimension)
+                                (
+                                    value.child(type_id).as_ref(),
+                                    MultiLineStringType::new(coord_type, dim, Default::default()),
+                                )
                                     .try_into()
                                     .unwrap(),
                             );
                         }
                         6 => {
                             mpolygon_xy = Some(
-                                (value.child(type_id).as_ref(), dimension)
+                                (
+                                    value.child(type_id).as_ref(),
+                                    MultiPolygonType::new(coord_type, dim, Default::default()),
+                                )
                                     .try_into()
                                     .unwrap(),
                             );
                         }
                         7 => {
                             gc_xy = Some(
-                                (value.child(type_id).as_ref(), dimension)
+                                (
+                                    value.child(type_id).as_ref(),
+                                    GeometryCollectionType::new(
+                                        coord_type,
+                                        dim,
+                                        Default::default(),
+                                    ),
+                                )
                                     .try_into()
                                     .unwrap(),
                             );
                         }
                         11 => {
                             point_xyz = Some(
-                                (value.child(type_id).as_ref(), dimension)
+                                (
+                                    value.child(type_id).as_ref(),
+                                    PointType::new(coord_type, dim, Default::default()),
+                                )
                                     .try_into()
                                     .unwrap(),
                             );
                         }
                         12 => {
                             line_string_xyz = Some(
-                                (value.child(type_id).as_ref(), dimension)
+                                (
+                                    value.child(type_id).as_ref(),
+                                    LineStringType::new(coord_type, dim, Default::default()),
+                                )
                                     .try_into()
                                     .unwrap(),
                             );
                         }
                         13 => {
                             polygon_xyz = Some(
-                                (value.child(type_id).as_ref(), dimension)
+                                (
+                                    value.child(type_id).as_ref(),
+                                    PolygonType::new(coord_type, dim, Default::default()),
+                                )
                                     .try_into()
                                     .unwrap(),
                             );
                         }
                         14 => {
                             mpoint_xyz = Some(
-                                (value.child(type_id).as_ref(), dimension)
+                                (
+                                    value.child(type_id).as_ref(),
+                                    MultiPointType::new(coord_type, dim, Default::default()),
+                                )
                                     .try_into()
                                     .unwrap(),
                             );
                         }
                         15 => {
                             mline_string_xyz = Some(
-                                (value.child(type_id).as_ref(), dimension)
+                                (
+                                    value.child(type_id).as_ref(),
+                                    MultiLineStringType::new(coord_type, dim, Default::default()),
+                                )
                                     .try_into()
                                     .unwrap(),
                             );
                         }
                         16 => {
                             mpolygon_xyz = Some(
-                                (value.child(type_id).as_ref(), dimension)
+                                (
+                                    value.child(type_id).as_ref(),
+                                    MultiPolygonType::new(coord_type, dim, Default::default()),
+                                )
                                     .try_into()
                                     .unwrap(),
                             );
                         }
                         17 => {
                             gc_xyz = Some(
-                                (value.child(type_id).as_ref(), dimension)
+                                (
+                                    value.child(type_id).as_ref(),
+                                    GeometryCollectionType::new(
+                                        coord_type,
+                                        dim,
+                                        Default::default(),
+                                    ),
+                                )
                                     .try_into()
                                     .unwrap(),
                             );
@@ -835,15 +892,12 @@ impl TryFrom<&UnionArray> for GeometryArray {
     }
 }
 
-impl TryFrom<&dyn Array> for GeometryArray {
+impl TryFrom<(&dyn Array, GeometryType)> for GeometryArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: &dyn Array) -> Result<Self> {
+    fn try_from((value, typ): (&dyn Array, GeometryType)) -> Result<Self> {
         match value.data_type() {
-            DataType::Union(_, _) => {
-                let downcasted = value.as_any().downcast_ref::<UnionArray>().unwrap();
-                downcasted.try_into()
-            }
+            DataType::Union(_, _) => (value.as_union(), typ).try_into(),
             _ => Err(GeoArrowError::General(format!(
                 "Unexpected type: {:?}",
                 value.data_type()
@@ -856,37 +910,17 @@ impl TryFrom<(&dyn Array, &Field)> for GeometryArray {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
-        let mut arr: Self = arr.try_into()?;
-        let metadata = Arc::new(Metadata::try_from(field)?);
-        arr.data_type = arr.data_type.clone().with_metadata(metadata);
-        Ok(arr)
+        let typ = field.try_extension_type::<GeometryType>()?;
+        (arr, typ).try_into()
     }
 }
 
-impl<G: GeometryTrait<T = f64>> TryFrom<&[G]> for GeometryArray {
+impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, GeometryType)> for GeometryArray {
     type Error = GeoArrowError;
 
-    fn try_from(geoms: &[G]) -> Result<Self> {
-        let mut_arr: GeometryBuilder = geoms.try_into()?;
-        Ok(mut_arr.into())
-    }
-}
-
-impl<G: GeometryTrait<T = f64>> TryFrom<Vec<Option<G>>> for GeometryArray {
-    type Error = GeoArrowError;
-
-    fn try_from(geoms: Vec<Option<G>>) -> Result<Self> {
-        let mut_arr: GeometryBuilder = geoms.try_into()?;
-        Ok(mut_arr.into())
-    }
-}
-
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryArray {
-    type Error = GeoArrowError;
-
-    fn try_from(value: WKBArray<O>) -> Result<Self> {
+    fn try_from(value: (WKBArray<O>, GeometryType)) -> Result<Self> {
         let mut_arr: GeometryBuilder = value.try_into()?;
-        Ok(mut_arr.into())
+        Ok(mut_arr.finish())
     }
 }
 

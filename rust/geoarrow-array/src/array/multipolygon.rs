@@ -4,8 +4,7 @@ use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
-use geo_traits::MultiPolygonTrait;
-use geoarrow_schema::{Dimension, Metadata, MultiPolygonType};
+use geoarrow_schema::{Metadata, MultiPolygonType};
 
 use crate::array::{CoordBuffer, PolygonArray, WKBArray};
 use crate::builder::MultiPolygonBuilder;
@@ -392,26 +391,12 @@ impl TryFrom<(&dyn Array, &Field)> for MultiPolygonArray {
     }
 }
 
-impl<G: MultiPolygonTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for MultiPolygonArray {
-    fn from(other: (Vec<Option<G>>, Dimension)) -> Self {
-        let mut_arr: MultiPolygonBuilder = other.into();
-        mut_arr.into()
-    }
-}
-
-impl<G: MultiPolygonTrait<T = f64>> From<(&[G], Dimension)> for MultiPolygonArray {
-    fn from(other: (&[G], Dimension)) -> Self {
-        let mut_arr: MultiPolygonBuilder = other.into();
-        mut_arr.into()
-    }
-}
-
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MultiPolygonArray {
+impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, MultiPolygonType)> for MultiPolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WKBArray<O>, Dimension)) -> Result<Self> {
+    fn try_from(value: (WKBArray<O>, MultiPolygonType)) -> Result<Self> {
         let mut_arr: MultiPolygonBuilder = value.try_into()?;
-        Ok(mut_arr.into())
+        Ok(mut_arr.finish())
     }
 }
 

@@ -635,29 +635,11 @@ impl TryFrom<(&dyn Array, Dimension)> for MixedGeometryArray {
     }
 }
 
-impl<G: GeometryTrait<T = f64>> TryFrom<(&[G], Dimension)> for MixedGeometryArray {
-    type Error = GeoArrowError;
-
-    fn try_from(geoms: (&[G], Dimension)) -> Result<Self> {
-        let mut_arr: MixedGeometryBuilder = geoms.try_into()?;
-        Ok(mut_arr.into())
-    }
-}
-
-impl<G: GeometryTrait<T = f64>> TryFrom<(Vec<Option<G>>, Dimension)> for MixedGeometryArray {
-    type Error = GeoArrowError;
-
-    fn try_from(geoms: (Vec<Option<G>>, Dimension)) -> Result<Self> {
-        let mut_arr: MixedGeometryBuilder = geoms.try_into()?;
-        Ok(mut_arr.into())
-    }
-}
-
 impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MixedGeometryArray {
     type Error = GeoArrowError;
 
     fn try_from(value: (WKBArray<O>, Dimension)) -> Result<Self> {
         let mut_arr: MixedGeometryBuilder = value.try_into()?;
-        Ok(mut_arr.into())
+        Ok(mut_arr.finish())
     }
 }

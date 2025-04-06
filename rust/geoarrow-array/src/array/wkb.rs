@@ -6,10 +6,8 @@ use arrow_array::{
 };
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
-use geo_traits::GeometryTrait;
 use geoarrow_schema::{CoordType, Metadata, WkbType};
 
-use crate::builder::WKBBuilder;
 use crate::capacity::WKBCapacity;
 use crate::datatypes::{NativeType, SerializedType};
 use crate::error::{GeoArrowError, Result};
@@ -247,23 +245,5 @@ impl TryFrom<WKBArray<i64>> for WKBArray<i32> {
             data_type: value.data_type,
             array,
         })
-    }
-}
-
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for WKBArray<O> {
-    type Error = GeoArrowError;
-
-    fn try_from(geoms: &[G]) -> Result<Self> {
-        let mut_arr: WKBBuilder<O> = geoms.try_into()?;
-        Ok(mut_arr.into())
-    }
-}
-
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<Vec<Option<G>>> for WKBArray<O> {
-    type Error = GeoArrowError;
-
-    fn try_from(geoms: Vec<Option<G>>) -> Result<Self> {
-        let mut_arr: WKBBuilder<O> = geoms.try_into()?;
-        Ok(mut_arr.into())
     }
 }

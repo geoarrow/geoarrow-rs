@@ -5,11 +5,9 @@ use arrow_array::types::Float64Type;
 use arrow_array::{Array, ArrayRef, StructArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field};
-use geo_traits::RectTrait;
-use geoarrow_schema::{BoxType, Dimension, Metadata};
+use geoarrow_schema::{BoxType, Metadata};
 
 use crate::array::SeparatedCoordBuffer;
-use crate::builder::RectBuilder;
 use crate::datatypes::NativeType;
 use crate::error::GeoArrowError;
 use crate::scalar::Rect;
@@ -212,20 +210,6 @@ impl TryFrom<(&dyn Array, &Field)> for RectArray {
     }
 }
 
-impl<G: RectTrait<T = f64>> From<(&[G], Dimension)> for RectArray {
-    fn from(other: (&[G], Dimension)) -> Self {
-        let mut_arr: RectBuilder = other.into();
-        mut_arr.into()
-    }
-}
-
-impl<G: RectTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for RectArray {
-    fn from(other: (Vec<Option<G>>, Dimension)) -> Self {
-        let mut_arr: RectBuilder = other.into();
-        mut_arr.into()
-    }
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -239,8 +223,8 @@ mod test {
             geo::coord! { x: 0.0, y: 5.0 },
             geo::coord! { x: 10.0, y: 15.0 },
         );
-        let mut builder =
-            RectBuilder::with_capacity_and_options(Dimension::XY, 1, Default::default());
+        let typ = BoxType::new(Dimension::XY, Default::default());
+        let mut builder = RectBuilder::with_capacity(typ, 1);
         builder.push_rect(Some(&rect));
         builder.push_min_max(&rect.min(), &rect.max());
         let rect_arr = builder.finish();

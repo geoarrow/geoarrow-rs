@@ -14,8 +14,7 @@ use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
-use geo_traits::LineStringTrait;
-use geoarrow_schema::{Dimension, LineStringType, Metadata};
+use geoarrow_schema::{LineStringType, Metadata};
 
 /// An immutable array of LineString geometries using GeoArrow's in-memory representation.
 ///
@@ -279,26 +278,12 @@ impl TryFrom<(&dyn Array, &Field)> for LineStringArray {
     }
 }
 
-impl<G: LineStringTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for LineStringArray {
-    fn from(other: (Vec<Option<G>>, Dimension)) -> Self {
-        let mut_arr: LineStringBuilder = other.into();
-        mut_arr.into()
-    }
-}
-
-impl<G: LineStringTrait<T = f64>> From<(&[G], Dimension)> for LineStringArray {
-    fn from(other: (&[G], Dimension)) -> Self {
-        let mut_arr: LineStringBuilder = other.into();
-        mut_arr.into()
-    }
-}
-
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for LineStringArray {
+impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, LineStringType)> for LineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WKBArray<O>, Dimension)) -> Result<Self> {
+    fn try_from(value: (WKBArray<O>, LineStringType)) -> Result<Self> {
         let mut_arr: LineStringBuilder = value.try_into()?;
-        Ok(mut_arr.into())
+        Ok(mut_arr.finish())
     }
 }
 

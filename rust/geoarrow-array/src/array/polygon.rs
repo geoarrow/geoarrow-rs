@@ -5,8 +5,7 @@ use arrow_array::{Array, OffsetSizeTrait};
 use arrow_array::{ArrayRef, GenericListArray};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
-use geo_traits::PolygonTrait;
-use geoarrow_schema::{Dimension, Metadata, PolygonType};
+use geoarrow_schema::{CoordType, Metadata, PolygonType};
 
 use crate::array::{CoordBuffer, RectArray, WKBArray};
 use crate::builder::PolygonBuilder;
@@ -316,32 +315,22 @@ impl TryFrom<(&dyn Array, &Field)> for PolygonArray {
     }
 }
 
-impl<G: PolygonTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for PolygonArray {
-    fn from(other: (Vec<Option<G>>, Dimension)) -> Self {
-        let mut_arr: PolygonBuilder = other.into();
-        mut_arr.into()
-    }
-}
-
-impl<G: PolygonTrait<T = f64>> From<(&[G], Dimension)> for PolygonArray {
-    fn from(other: (&[G], Dimension)) -> Self {
-        let mut_arr: PolygonBuilder = other.into();
-        mut_arr.into()
-    }
-}
-
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for PolygonArray {
+impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, PolygonType)> for PolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WKBArray<O>, Dimension)) -> Result<Self> {
+    fn try_from(value: (WKBArray<O>, PolygonType)) -> Result<Self> {
         let mut_arr: PolygonBuilder = value.try_into()?;
-        Ok(mut_arr.into())
+        Ok(mut_arr.finish())
     }
 }
 
 impl From<RectArray> for PolygonArray {
     fn from(value: RectArray) -> Self {
-        let dim = value.data_type.dimension();
+        let polygon_type = PolygonType::new(
+            CoordType::Separated,
+            value.data_type.dimension(),
+            value.data_type.metadata().clone(),
+        );
 
         // The number of output geoms is the same as the input
         let geom_capacity = value.len();
@@ -354,13 +343,13 @@ impl From<RectArray> for PolygonArray {
         let coord_capacity = (value.len() - value.null_count()) * 5;
 
         let capacity = PolygonCapacity::new(coord_capacity, ring_capacity, geom_capacity);
-        let mut output_array = PolygonBuilder::with_capacity(dim, capacity);
+        let mut output_array = PolygonBuilder::with_capacity(polygon_type, capacity);
 
         value
             .iter()
             .for_each(|maybe_g| output_array.push_rect(maybe_g.as_ref()).unwrap());
 
-        output_array.into()
+        output_array.finish()
     }
 }
 
