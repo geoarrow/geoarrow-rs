@@ -1,9 +1,6 @@
-use std::sync::Arc;
-
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, RectTrait};
-use geoarrow_schema::Dimension;
-use geoarrow_schema::Metadata;
+use geoarrow_schema::BoxType;
 
 use crate::array::RectArray;
 use crate::builder::SeparatedCoordBufferBuilder;
@@ -15,7 +12,7 @@ use crate::scalar::Rect;
 /// Converting an [`RectBuilder`] into a [`RectArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct RectBuilder {
-    pub(crate) metadata: Arc<Metadata>,
+    pub(crate) data_type: BoxType,
     pub(crate) lower: SeparatedCoordBufferBuilder,
     pub(crate) upper: SeparatedCoordBufferBuilder,
     pub(crate) validity: NullBufferBuilder,
@@ -23,31 +20,17 @@ pub struct RectBuilder {
 
 impl RectBuilder {
     /// Creates a new empty [`RectBuilder`].
-    pub fn new(dim: Dimension) -> Self {
-        Self::new_with_options(dim, Default::default())
-    }
-
-    /// Creates a new empty [`RectBuilder`] with the provided options.
-    pub fn new_with_options(dim: Dimension, metadata: Arc<Metadata>) -> Self {
-        Self::with_capacity_and_options(dim, 0, metadata)
+    pub fn new(typ: BoxType) -> Self {
+        Self::with_capacity(typ, Default::default())
     }
 
     /// Creates a new [`RectBuilder`] with a capacity.
-    pub fn with_capacity(dim: Dimension, capacity: usize) -> Self {
-        Self::with_capacity_and_options(dim, capacity, Default::default())
-    }
-
-    /// Creates a new [`RectBuilder`] with a capacity and options.
-    pub fn with_capacity_and_options(
-        dim: Dimension,
-        capacity: usize,
-        metadata: Arc<Metadata>,
-    ) -> Self {
+    pub fn with_capacity(typ: BoxType, capacity: usize) -> Self {
         Self {
-            lower: SeparatedCoordBufferBuilder::with_capacity(capacity, dim),
-            upper: SeparatedCoordBufferBuilder::with_capacity(capacity, dim),
+            lower: SeparatedCoordBufferBuilder::with_capacity(capacity, typ.dimension()),
+            upper: SeparatedCoordBufferBuilder::with_capacity(capacity, typ.dimension()),
             validity: NullBufferBuilder::new(capacity),
-            metadata,
+            data_type: typ,
         }
     }
 
@@ -92,7 +75,7 @@ impl RectBuilder {
         lower: SeparatedCoordBufferBuilder,
         upper: SeparatedCoordBufferBuilder,
         validity: NullBufferBuilder,
-        metadata: Arc<Metadata>,
+        data_type: BoxType,
     ) -> Result<Self, GeoArrowError> {
         if lower.len() != upper.len() {
             return Err(GeoArrowError::General(
@@ -103,24 +86,18 @@ impl RectBuilder {
             lower,
             upper,
             validity,
-            metadata,
+            data_type,
         })
     }
 
-    /// Extract the low-level APIs from the [`RectBuilder`].
-    pub fn into_inner(
-        self,
-    ) -> (
-        SeparatedCoordBufferBuilder,
-        SeparatedCoordBufferBuilder,
-        NullBufferBuilder,
-    ) {
-        (self.lower, self.upper, self.validity)
-    }
-
     /// Consume the builder and convert to an immutable [`RectArray`]
-    pub fn finish(self) -> RectArray {
-        self.into()
+    pub fn finish(mut self) -> RectArray {
+        RectArray::new(
+            self.lower.into(),
+            self.upper.into(),
+            self.validity.finish(),
+            self.data_type.metadata().clone(),
+        )
     }
 
     /// Add a new Rect to the end of this builder.
@@ -178,10 +155,9 @@ impl RectBuilder {
     /// Create this builder from a iterator of Rects.
     pub fn from_rects<'a>(
         geoms: impl ExactSizeIterator<Item = &'a (impl RectTrait<T = f64> + 'a)>,
-        dim: Dimension,
-        metadata: Arc<Metadata>,
+        typ: BoxType,
     ) -> Self {
-        let mut mutable_array = Self::with_capacity_and_options(dim, geoms.len(), metadata);
+        let mut mutable_array = Self::with_capacity(typ, geoms.len());
         geoms
             .into_iter()
             .for_each(|rect| mutable_array.push_rect(Some(rect)));
@@ -191,36 +167,12 @@ impl RectBuilder {
     /// Create this builder from a iterator of nullable Rects.
     pub fn from_nullable_rects<'a>(
         geoms: impl ExactSizeIterator<Item = Option<&'a (impl RectTrait<T = f64> + 'a)>>,
-        dim: Dimension,
-        metadata: Arc<Metadata>,
+        typ: BoxType,
     ) -> Self {
-        let mut mutable_array = Self::with_capacity_and_options(dim, geoms.len(), metadata);
+        let mut mutable_array = Self::with_capacity(typ, geoms.len());
         geoms
             .into_iter()
             .for_each(|maybe_rect| mutable_array.push_rect(maybe_rect));
         mutable_array
-    }
-}
-
-impl From<RectBuilder> for RectArray {
-    fn from(mut other: RectBuilder) -> Self {
-        RectArray::new(
-            other.lower.into(),
-            other.upper.into(),
-            other.validity.finish(),
-            other.metadata,
-        )
-    }
-}
-
-impl<G: RectTrait<T = f64>> From<(&[G], Dimension)> for RectBuilder {
-    fn from((geoms, dim): (&[G], Dimension)) -> Self {
-        RectBuilder::from_rects(geoms.iter(), dim, Default::default())
-    }
-}
-
-impl<G: RectTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for RectBuilder {
-    fn from((geoms, dim): (Vec<Option<G>>, Dimension)) -> Self {
-        RectBuilder::from_nullable_rects(geoms.iter().map(|x| x.as_ref()), dim, Default::default())
     }
 }
