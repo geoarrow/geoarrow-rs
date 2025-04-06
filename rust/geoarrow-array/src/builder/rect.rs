@@ -119,8 +119,13 @@ impl RectBuilder {
     }
 
     /// Consume the builder and convert to an immutable [`RectArray`]
-    pub fn finish(self) -> RectArray {
-        self.into()
+    pub fn finish(mut self) -> RectArray {
+        RectArray::new(
+            self.lower.into(),
+            self.upper.into(),
+            self.validity.finish(),
+            self.metadata,
+        )
     }
 
     /// Add a new Rect to the end of this builder.
@@ -199,17 +204,6 @@ impl RectBuilder {
             .into_iter()
             .for_each(|maybe_rect| mutable_array.push_rect(maybe_rect));
         mutable_array
-    }
-}
-
-impl From<RectBuilder> for RectArray {
-    fn from(mut other: RectBuilder) -> Self {
-        RectArray::new(
-            other.lower.into(),
-            other.upper.into(),
-            other.validity.finish(),
-            other.metadata,
-        )
     }
 }
 

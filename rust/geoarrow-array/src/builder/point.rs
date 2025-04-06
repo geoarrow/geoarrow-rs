@@ -126,8 +126,9 @@ impl PointBuilder {
     }
 
     /// Consume the builder and convert to an immutable [`PointArray`]
-    pub fn finish(self) -> PointArray {
-        self.into()
+    pub fn finish(mut self) -> PointArray {
+        let validity = self.validity.finish();
+        PointArray::new(self.coords.into(), validity, self.metadata)
     }
 
     /// Add a new coord to the end of this array, where the coord is a non-empty point
@@ -295,13 +296,6 @@ impl PointBuilder {
     }
 }
 
-impl From<PointBuilder> for PointArray {
-    fn from(mut other: PointBuilder) -> Self {
-        let validity = other.validity.finish();
-        Self::new(other.coords.into(), validity, other.metadata)
-    }
-}
-
 impl<G: PointTrait<T = f64>> From<(&[G], Dimension)> for PointBuilder {
     fn from((value, dim): (&[G], Dimension)) -> Self {
         PointBuilder::from_points(
@@ -320,21 +314,6 @@ impl<G: PointTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for PointBuilder 
             dim,
             CoordType::default_interleaved(),
             Default::default(),
-        )
-    }
-}
-
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for PointBuilder {
-    type Error = GeoArrowError;
-
-    fn try_from((value, dim): (WKBArray<O>, Dimension)) -> Result<Self> {
-        let metadata = value.data_type.metadata().clone();
-        let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(
-            &wkb_objects,
-            dim,
-            CoordType::default_interleaved(),
-            metadata,
         )
     }
 }

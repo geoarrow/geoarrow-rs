@@ -3,7 +3,7 @@ use std::sync::Arc;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
-use geoarrow_schema::{CoordType, Dimension, Metadata};
+use geoarrow_schema::{CoordType, Dimension, Metadata, MultiPointType};
 
 use crate::capacity::MultiPointCapacity;
 // use super::array::check;
@@ -355,6 +355,7 @@ impl MultiPointBuilder {
         array.extend_from_geometry_iter(geoms.iter().map(|x| x.as_ref()))?;
         Ok(array)
     }
+
     pub(crate) fn from_wkb<W: OffsetSizeTrait>(
         wkb_objects: &[Option<WKB<'_, W>>],
         dim: Dimension,
@@ -397,43 +398,14 @@ impl<G: MultiPointTrait<T = f64>> From<(&[G], Dimension)> for MultiPointBuilder 
     }
 }
 
-impl<G: MultiPointTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for MultiPointBuilder {
-    fn from((geoms, dim): (Vec<Option<G>>, Dimension)) -> Self {
+impl<G: MultiPointTrait<T = f64>> From<(Vec<Option<G>>, MultiPointType)> for MultiPointBuilder {
+    fn from((geoms, dim): (Vec<Option<G>>, MultiPointType)) -> Self {
         Self::from_nullable_multi_points(
             &geoms,
             dim,
             CoordType::default_interleaved(),
             Default::default(),
         )
-    }
-}
-
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MultiPointBuilder {
-    type Error = GeoArrowError;
-
-    fn try_from((value, dim): (WKBArray<O>, Dimension)) -> Result<Self> {
-        let metadata = value.data_type.metadata().clone();
-        let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(
-            &wkb_objects,
-            dim,
-            CoordType::default_interleaved(),
-            metadata,
-        )
-    }
-}
-
-/// LineString and MultiPoint have the same layout, so enable conversions between the two to change
-/// the semantic type
-impl From<MultiPointBuilder> for LineStringBuilder {
-    fn from(value: MultiPointBuilder) -> Self {
-        Self::try_new(
-            value.coords,
-            value.geom_offsets,
-            value.validity,
-            value.metadata,
-        )
-        .unwrap()
     }
 }
 

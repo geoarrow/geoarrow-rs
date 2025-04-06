@@ -342,15 +342,6 @@ impl<G: PolygonTrait<T = f64>> From<(&[G], Dimension)> for PolygonArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for PolygonArray {
-    type Error = GeoArrowError;
-
-    fn try_from(value: (WKBArray<O>, Dimension)) -> Result<Self> {
-        let mut_arr: PolygonBuilder = value.try_into()?;
-        Ok(mut_arr.into())
-    }
-}
-
 impl From<RectArray> for PolygonArray {
     fn from(value: RectArray) -> Self {
         let dim = value.data_type.dimension();

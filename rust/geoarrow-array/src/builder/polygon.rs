@@ -10,8 +10,7 @@ use geoarrow_schema::{CoordType, Dimension, Metadata};
 
 use crate::array::{PolygonArray, WKBArray};
 use crate::builder::{
-    CoordBufferBuilder, InterleavedCoordBufferBuilder, MultiLineStringBuilder, OffsetsBuilder,
-    SeparatedCoordBufferBuilder,
+    CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
 };
 use crate::capacity::PolygonCapacity;
 use crate::error::{GeoArrowError, Result};
@@ -205,8 +204,19 @@ impl PolygonBuilder {
     }
 
     /// Consume the builder and convert to an immutable [`PolygonArray`]
-    pub fn finish(self) -> PolygonArray {
-        self.into()
+    pub fn finish(mut self) -> PolygonArray {
+        let validity = self.validity.finish();
+
+        let geom_offsets: OffsetBuffer<i32> = self.geom_offsets.into();
+        let ring_offsets: OffsetBuffer<i32> = self.ring_offsets.into();
+
+        PolygonArray::new(
+            self.coords.into(),
+            geom_offsets,
+            ring_offsets,
+            validity,
+            self.metadata,
+        )
     }
 
     /// Creates a new builder with a capacity inferred by the provided iterator.
@@ -452,23 +462,6 @@ impl PolygonBuilder {
     }
 }
 
-impl From<PolygonBuilder> for PolygonArray {
-    fn from(mut other: PolygonBuilder) -> Self {
-        let validity = other.validity.finish();
-
-        let geom_offsets: OffsetBuffer<i32> = other.geom_offsets.into();
-        let ring_offsets: OffsetBuffer<i32> = other.ring_offsets.into();
-
-        Self::new(
-            other.coords.into(),
-            geom_offsets,
-            ring_offsets,
-            validity,
-            other.metadata,
-        )
-    }
-}
-
 impl<G: PolygonTrait<T = f64>> From<(&[G], Dimension)> for PolygonBuilder {
     fn from((geoms, dim): (&[G], Dimension)) -> Self {
         Self::from_polygons(geoms, dim, CoordType::Interleaved, Default::default())
@@ -478,31 +471,6 @@ impl<G: PolygonTrait<T = f64>> From<(&[G], Dimension)> for PolygonBuilder {
 impl<G: PolygonTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for PolygonBuilder {
     fn from((geoms, dim): (Vec<Option<G>>, Dimension)) -> Self {
         Self::from_nullable_polygons(&geoms, dim, CoordType::Interleaved, Default::default())
-    }
-}
-
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for PolygonBuilder {
-    type Error = GeoArrowError;
-
-    fn try_from((value, dim): (WKBArray<O>, Dimension)) -> Result<Self> {
-        let metadata = value.data_type.metadata().clone();
-        let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, dim, CoordType::Interleaved, metadata)
-    }
-}
-
-/// Polygon and MultiLineString have the same layout, so enable conversions between the two to
-/// change the semantic type
-impl From<PolygonBuilder> for MultiLineStringBuilder {
-    fn from(value: PolygonBuilder) -> Self {
-        Self::try_new(
-            value.coords,
-            value.geom_offsets,
-            value.ring_offsets,
-            value.validity,
-            value.metadata,
-        )
-        .unwrap()
     }
 }
 

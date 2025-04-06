@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
 use arrow_array::cast::AsArray;
-use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
+use arrow_array::{Array, ArrayRef, GenericListArray};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 use geo_traits::MultiLineStringTrait;
 use geoarrow_schema::{Dimension, Metadata, MultiLineStringType};
 
-use crate::array::{CoordBuffer, LineStringArray, PolygonArray, WKBArray};
+use crate::array::{CoordBuffer, LineStringArray};
 use crate::builder::MultiLineStringBuilder;
 use crate::capacity::MultiLineStringCapacity;
 use crate::datatypes::NativeType;
@@ -338,30 +338,6 @@ impl<G: MultiLineStringTrait<T = f64>> From<(&[G], Dimension)> for MultiLineStri
     fn from(other: (&[G], Dimension)) -> Self {
         let mut_arr: MultiLineStringBuilder = other.into();
         mut_arr.into()
-    }
-}
-
-/// Polygon and MultiLineString have the same layout, so enable conversions between the two to
-/// change the semantic type
-impl From<MultiLineStringArray> for PolygonArray {
-    fn from(value: MultiLineStringArray) -> Self {
-        let metadata = value.data_type.metadata().clone();
-        Self::new(
-            value.coords,
-            value.geom_offsets,
-            value.ring_offsets,
-            value.validity,
-            metadata,
-        )
-    }
-}
-
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MultiLineStringArray {
-    type Error = GeoArrowError;
-
-    fn try_from(value: (WKBArray<O>, Dimension)) -> Result<Self> {
-        let mut_arr: MultiLineStringBuilder = value.try_into()?;
-        Ok(mut_arr.into())
     }
 }
 

@@ -35,9 +35,9 @@ pub struct WKBArray<O: OffsetSizeTrait> {
 // Implement geometry accessors
 impl<O: OffsetSizeTrait> WKBArray<O> {
     /// Create a new WKBArray from a BinaryArray
-    pub fn new(array: GenericBinaryArray<O>, metadata: Arc<Metadata>) -> Self {
+    pub fn new(array: GenericBinaryArray<O>, typ: WkbType) -> Self {
         Self {
-            data_type: WkbType::new(metadata),
+            data_type: typ,
             array,
         }
     }

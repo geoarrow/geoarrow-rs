@@ -213,51 +213,6 @@ impl GeometryCapacity {
         self.gc_xyz
     }
 
-    // pub fn point_compatible(&self) -> bool {
-    //     self.line_string.is_empty()
-    //         && self.polygon.is_empty()
-    //         && self.multi_point.is_empty()
-    //         && self.multi_line_string.is_empty()
-    //         && self.multi_polygon.is_empty()
-    // }
-
-    // pub fn line_string_compatible(&self) -> bool {
-    //     self.point == 0
-    //         && self.polygon.is_empty()
-    //         && self.multi_point.is_empty()
-    //         && self.multi_line_string.is_empty()
-    //         && self.multi_polygon.is_empty()
-    // }
-
-    // pub fn polygon_compatible(&self) -> bool {
-    //     self.point == 0
-    //         && self.line_string.is_empty()
-    //         && self.multi_point.is_empty()
-    //         && self.multi_line_string.is_empty()
-    //         && self.multi_polygon.is_empty()
-    // }
-
-    // pub fn multi_point_compatible(&self) -> bool {
-    //     self.line_string.is_empty()
-    //         && self.polygon.is_empty()
-    //         && self.multi_line_string.is_empty()
-    //         && self.multi_polygon.is_empty()
-    // }
-
-    // pub fn multi_line_string_compatible(&self) -> bool {
-    //     self.point == 0
-    //         && self.polygon.is_empty()
-    //         && self.multi_point.is_empty()
-    //         && self.multi_polygon.is_empty()
-    // }
-
-    // pub fn multi_polygon_compatible(&self) -> bool {
-    //     self.point == 0
-    //         && self.line_string.is_empty()
-    //         && self.multi_point.is_empty()
-    //         && self.multi_line_string.is_empty()
-    // }
-
     /// Add the capacity of the given Point
     #[inline]
     pub fn add_point(&mut self, point: Option<&impl PointTrait>) {

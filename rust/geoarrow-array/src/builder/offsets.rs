@@ -12,7 +12,7 @@ use crate::error::GeoArrowError as Error;
 /// * every element is `>= 0`
 /// * element at position `i` is >= than element at position `i-1`.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct OffsetsBuilder<O: OffsetSizeTrait>(Vec<O>);
+pub(crate) struct OffsetsBuilder<O: OffsetSizeTrait>(Vec<O>);
 
 impl<O: OffsetSizeTrait> Default for OffsetsBuilder<O> {
     #[inline]
@@ -24,13 +24,13 @@ impl<O: OffsetSizeTrait> Default for OffsetsBuilder<O> {
 impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
     /// Returns an empty [`Offsets`] (i.e. with a single element, the zero)
     #[inline]
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self(vec![O::zero()])
     }
 
     /// Returns an [`Offsets`] whose all lengths are zero.
     #[inline]
-    pub fn new_zeroed(length: usize) -> Self {
+    pub(crate) fn new_zeroed(length: usize) -> Self {
         Self(vec![O::zero(); length + 1])
     }
 
@@ -39,7 +39,7 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
     /// This is useful for casting from a PointArray to a MultiPointArray where you need to
     /// create a `geom_offsets` buffer where every element has length 1.
     #[inline]
-    pub fn new_ones(length: usize) -> Result<Self, Error> {
+    pub(crate) fn new_ones(length: usize) -> Result<Self, Error> {
         // Overflow check
         O::from_usize(length + 1).ok_or(Error::Overflow)?;
 
@@ -48,7 +48,7 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
 
     /// Creates a new [`Offsets`] from an iterator of lengths
     #[inline]
-    pub fn try_from_iter<I: IntoIterator<Item = usize>>(iter: I) -> Result<Self, Error> {
+    pub(crate) fn try_from_iter<I: IntoIterator<Item = usize>>(iter: I) -> Result<Self, Error> {
         let iterator = iter.into_iter();
         let (lower, _) = iterator.size_hint();
         let mut offsets = Self::with_capacity(lower);
@@ -59,29 +59,29 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
     }
 
     /// Returns a new [`Offsets`] with a capacity, allocating at least `capacity + 1` entries.
-    pub fn with_capacity(capacity: usize) -> Self {
+    pub(crate) fn with_capacity(capacity: usize) -> Self {
         let mut offsets = Vec::with_capacity(capacity + 1);
         offsets.push(O::zero());
         Self(offsets)
     }
 
     /// Returns the capacity of [`Offsets`].
-    pub fn capacity(&self) -> usize {
+    pub(crate) fn capacity(&self) -> usize {
         self.0.capacity() - 1
     }
 
     /// Reserves `additional` entries.
-    pub fn reserve(&mut self, additional: usize) {
+    pub(crate) fn reserve(&mut self, additional: usize) {
         self.0.reserve(additional);
     }
 
     /// Reserves exactly `additional` entries.
-    pub fn reserve_exact(&mut self, additional: usize) {
+    pub(crate) fn reserve_exact(&mut self, additional: usize) {
         self.0.reserve_exact(additional);
     }
 
     /// Shrinks the capacity of self to fit.
-    pub fn shrink_to_fit(&mut self) {
+    pub(crate) fn shrink_to_fit(&mut self) {
         self.0.shrink_to_fit();
     }
 
@@ -91,7 +91,7 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
     /// # Panic
     /// This function asserts that `length >= 0`.
     #[inline]
-    pub fn try_push(&mut self, length: O) -> Result<(), Error> {
+    pub(crate) fn try_push(&mut self, length: O) -> Result<(), Error> {
         let old_length = self.last();
         assert!(length >= O::zero());
         // let new_length = old_length.checked_add(&length).ok_or(Error::Overflow)?;
@@ -107,7 +107,7 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
     /// This function:
     /// * checks that this length does not overflow
     #[inline]
-    pub fn try_push_usize(&mut self, length: usize) -> Result<(), Error> {
+    pub(crate) fn try_push_usize(&mut self, length: usize) -> Result<(), Error> {
         let length = O::usize_as(length);
 
         let old_length = self.last();
@@ -121,13 +121,13 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
     /// # Safety
     /// This is safe iff the invariants of this struct are guaranteed in `offsets`.
     #[inline]
-    pub unsafe fn new_unchecked(offsets: Vec<O>) -> Self {
+    pub(crate) unsafe fn new_unchecked(offsets: Vec<O>) -> Self {
         Self(offsets)
     }
 
     /// Returns the last offset of this container.
     #[inline]
-    pub fn last(&self) -> &O {
+    pub(crate) fn last(&self) -> &O {
         match self.0.last() {
             Some(element) => element,
             None => unsafe { unreachable_unchecked() },
@@ -138,7 +138,7 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
     /// # Panic
     /// This function panics iff `index >= len_proxy()`
     #[inline]
-    pub fn start_end(&self, index: usize) -> (usize, usize) {
+    pub(crate) fn start_end(&self, index: usize) -> (usize, usize) {
         // soundness: the invariant of the function
         assert!(index < self.len_proxy());
         unsafe { self.start_end_unchecked(index) }
@@ -148,7 +148,7 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
     /// # Safety
     /// `index` must be `< self.len()`
     #[inline]
-    pub unsafe fn start_end_unchecked(&self, index: usize) -> (usize, usize) {
+    pub(crate) unsafe fn start_end_unchecked(&self, index: usize) -> (usize, usize) {
         // soundness: the invariant of the function
         let start = self.0.get_unchecked(index).to_usize().unwrap();
         let end = self.0.get_unchecked(index + 1).to_usize().unwrap();
@@ -157,30 +157,30 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
 
     /// Returns the length an array with these offsets would be.
     #[inline]
-    pub fn len_proxy(&self) -> usize {
+    pub(crate) fn len_proxy(&self) -> usize {
         self.0.len() - 1
     }
 
     #[inline]
     /// Returns the number of offsets in this container.
-    pub fn len(&self) -> usize {
+    pub(crate) fn len(&self) -> usize {
         self.0.len()
     }
 
     #[inline]
-    pub fn is_empty(&self) -> bool {
+    pub(crate) fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
     /// Returns the byte slice stored in this buffer
     #[inline]
-    pub fn as_slice(&self) -> &[O] {
+    pub(crate) fn as_slice(&self) -> &[O] {
         self.0.as_slice()
     }
 
     /// Pops the last element
     #[inline]
-    pub fn pop(&mut self) -> Option<O> {
+    pub(crate) fn pop(&mut self) -> Option<O> {
         if self.len_proxy() == 0 {
             None
         } else {
@@ -191,7 +191,7 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
     /// Extends itself with `additional` elements equal to the last offset.
     /// This is useful to extend offsets with empty values, e.g. for null slots.
     #[inline]
-    pub fn extend_constant(&mut self, additional: usize) {
+    pub(crate) fn extend_constant(&mut self, additional: usize) {
         let offset = *self.last();
         if additional == 1 {
             self.0.push(offset)
@@ -204,7 +204,7 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
     /// # Errors
     /// This function errors iff this operation overflows for the maximum value of `O`.
     #[inline]
-    pub fn try_from_lengths<I: Iterator<Item = usize>>(lengths: I) -> Result<Self, Error> {
+    pub(crate) fn try_from_lengths<I: Iterator<Item = usize>>(lengths: I) -> Result<Self, Error> {
         let mut self_ = Self::with_capacity(lengths.size_hint().0);
         self_.try_extend_from_lengths(lengths)?;
         Ok(self_)
@@ -214,7 +214,7 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
     /// # Errors
     /// This function errors iff this operation overflows for the maximum value of `O`.
     #[inline]
-    pub fn try_extend_from_lengths<I: Iterator<Item = usize>>(
+    pub(crate) fn try_extend_from_lengths<I: Iterator<Item = usize>>(
         &mut self,
         lengths: I,
     ) -> Result<(), Error> {
@@ -243,7 +243,7 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
     /// Extends itself from another [`Offsets`]
     /// # Errors
     /// This function errors iff this operation overflows for the maximum value of `O`.
-    pub fn try_extend_from_self(&mut self, other: &Self) -> Result<(), Error> {
+    pub(crate) fn try_extend_from_self(&mut self, other: &Self) -> Result<(), Error> {
         let mut length = *self.last();
         let other_length = *other.last();
         // check if the operation would overflow
@@ -261,11 +261,11 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
 
     /// Returns the inner [`Vec`].
     #[inline]
-    pub fn into_inner(self) -> Vec<O> {
+    pub(crate) fn into_inner(self) -> Vec<O> {
         self.0
     }
 
-    pub fn finish(self) -> OffsetBuffer<O> {
+    pub(crate) fn finish(self) -> OffsetBuffer<O> {
         self.into()
     }
 }

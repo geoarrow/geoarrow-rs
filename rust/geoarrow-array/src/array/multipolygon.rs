@@ -418,15 +418,6 @@ impl<G: MultiPolygonTrait<T = f64>> From<(&[G], Dimension)> for MultiPolygonArra
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MultiPolygonArray {
-    type Error = GeoArrowError;
-
-    fn try_from(value: (WKBArray<O>, Dimension)) -> Result<Self> {
-        let mut_arr: MultiPolygonBuilder = value.try_into()?;
-        Ok(mut_arr.into())
-    }
-}
-
 impl From<PolygonArray> for MultiPolygonArray {
     fn from(value: PolygonArray) -> Self {
         let metadata = value.data_type.metadata().clone();

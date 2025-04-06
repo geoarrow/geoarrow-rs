@@ -432,16 +432,6 @@ impl<G: GeometryCollectionTrait<T = f64>> From<(Vec<Option<G>>, Dimension)>
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for GeometryCollectionBuilder {
-    type Error = GeoArrowError;
-
-    fn try_from((value, dim): (WKBArray<O>, Dimension)) -> Result<Self> {
-        let metadata = value.data_type.metadata().clone();
-        let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, dim, CoordType::Interleaved, metadata, true)
-    }
-}
-
 impl GeometryArrayBuilder for GeometryCollectionBuilder {
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()

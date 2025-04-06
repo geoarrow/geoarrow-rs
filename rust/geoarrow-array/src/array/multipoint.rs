@@ -306,15 +306,6 @@ impl<G: MultiPointTrait<T = f64>> From<(&[G], Dimension)> for MultiPointArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MultiPointArray {
-    type Error = GeoArrowError;
-
-    fn try_from(value: (WKBArray<O>, Dimension)) -> Result<Self> {
-        let mut_arr: MultiPointBuilder = value.try_into()?;
-        Ok(mut_arr.into())
-    }
-}
-
 /// LineString and MultiPoint have the same layout, so enable conversions between the two to change
 /// the semantic type
 impl From<MultiPointArray> for LineStringArray {

@@ -305,15 +305,6 @@ impl<G: LineStringTrait<T = f64>> From<(&[G], Dimension)> for LineStringArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for LineStringArray {
-    type Error = GeoArrowError;
-
-    fn try_from(value: (WKBArray<O>, Dimension)) -> Result<Self> {
-        let mut_arr: LineStringBuilder = value.try_into()?;
-        Ok(mut_arr.into())
-    }
-}
-
 impl PartialEq for LineStringArray {
     fn eq(&self, other: &Self) -> bool {
         if self.validity != other.validity {

@@ -561,28 +561,6 @@ impl<G: GeometryTrait<T = f64>> TryFrom<(Vec<Option<G>>, Dimension)> for MixedGe
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MixedGeometryBuilder {
-    type Error = GeoArrowError;
-
-    fn try_from((value, dim): (WKBArray<O>, Dimension)) -> std::result::Result<Self, Self::Error> {
-        assert_eq!(
-            value.nulls().map_or(0, |validity| validity.null_count()),
-            0,
-            "Parsing a WKBArray with null elements not supported",
-        );
-
-        let metadata = value.data_type.metadata().clone();
-        let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(
-            &wkb_objects,
-            dim,
-            CoordType::default_interleaved(),
-            metadata,
-            true,
-        )
-    }
-}
-
 impl GeometryArrayBuilder for MixedGeometryBuilder {
     fn len(&self) -> usize {
         self.types.len()

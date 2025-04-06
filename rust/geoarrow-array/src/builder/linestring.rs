@@ -363,16 +363,6 @@ impl<G: LineStringTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for LineStri
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for LineStringBuilder {
-    type Error = GeoArrowError;
-
-    fn try_from((value, dim): (WKBArray<O>, Dimension)) -> Result<Self> {
-        let metadata = value.data_type.metadata().clone();
-        let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, dim, CoordType::Interleaved, metadata)
-    }
-}
-
 /// LineString and MultiPoint have the same layout, so enable conversions between the two to change
 /// the semantic type
 impl From<LineStringBuilder> for MultiPointBuilder {

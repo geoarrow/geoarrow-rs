@@ -253,15 +253,6 @@ impl<G: GeometryCollectionTrait<T = f64>> From<(Vec<Option<G>>, Dimension)>
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for GeometryCollectionArray {
-    type Error = GeoArrowError;
-
-    fn try_from(value: (WKBArray<O>, Dimension)) -> Result<Self> {
-        let mut_arr: GeometryCollectionBuilder = value.try_into()?;
-        Ok(mut_arr.into())
-    }
-}
-
 impl PartialEq for GeometryCollectionArray {
     fn eq(&self, other: &Self) -> bool {
         if self.validity != other.validity {

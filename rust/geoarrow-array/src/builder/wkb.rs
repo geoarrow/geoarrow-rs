@@ -1,12 +1,10 @@
-use std::sync::Arc;
-
 use arrow_array::builder::GenericBinaryBuilder;
 use arrow_array::OffsetSizeTrait;
 use geo_traits::{
     GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
     MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait,
 };
-use geoarrow_schema::Metadata;
+use geoarrow_schema::WkbType;
 use wkb::writer::{
     write_geometry_collection, write_line_string, write_multi_line_string, write_multi_point,
     write_multi_polygon, write_point, write_polygon,
@@ -21,7 +19,7 @@ use crate::error::{GeoArrowError, Result};
 ///
 /// Converting a [`WKBBuilder`] into a [`WKBArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct WKBBuilder<O: OffsetSizeTrait>(GenericBinaryBuilder<O>, Arc<Metadata>);
+pub struct WKBBuilder<O: OffsetSizeTrait>(GenericBinaryBuilder<O>, WkbType);
 
 impl<O: OffsetSizeTrait> Default for WKBBuilder<O> {
     fn default() -> Self {
@@ -36,8 +34,8 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     }
 
     /// Creates a new empty [`WKBBuilder`] with the provided options.
-    pub fn new_with_options(metadata: Arc<Metadata>) -> Self {
-        Self::with_capacity_and_options(Default::default(), metadata)
+    pub fn new_with_options(typ: WkbType) -> Self {
+        Self::with_capacity_and_options(Default::default(), typ)
     }
 
     /// Initializes a new [`WKBBuilder`] with a pre-allocated capacity of slots and values.
@@ -46,13 +44,13 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     }
 
     /// Creates a new empty [`WKBBuilder`] with the provided capacity and options.
-    pub fn with_capacity_and_options(capacity: WKBCapacity, metadata: Arc<Metadata>) -> Self {
+    pub fn with_capacity_and_options(capacity: WKBCapacity, typ: WkbType) -> Self {
         Self(
             GenericBinaryBuilder::with_capacity(
                 capacity.offsets_capacity,
                 capacity.buffer_capacity,
             ),
-            metadata,
+            typ,
         )
     }
 
@@ -68,10 +66,10 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     /// provided geometry iterator.
     pub fn with_capacity_and_options_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
-        metadata: Arc<Metadata>,
+        typ: WkbType,
     ) -> Self {
         let counter = WKBCapacity::from_geometries(geoms);
-        Self::with_capacity_and_options(counter, metadata)
+        Self::with_capacity_and_options(counter, typ)
     }
 
     // Upstream APIs don't exist for this yet. To implement this without upstream changes, we could
@@ -212,8 +210,8 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     /// Consume this builder and convert to a [WKBArray].
     ///
     /// This is `O(1)`.
-    pub fn finish(self) -> WKBArray<O> {
-        self.into()
+    pub fn finish(mut self) -> WKBArray<O> {
+        WKBArray::new(self.0.finish(), self.1)
     }
 }
 
@@ -230,11 +228,5 @@ impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<Vec<Option<G>>> for 
 
     fn try_from(geoms: Vec<Option<G>>) -> Result<Self> {
         Ok(Self::from_nullable_geometries(&geoms))
-    }
-}
-
-impl<O: OffsetSizeTrait> From<WKBBuilder<O>> for WKBArray<O> {
-    fn from(mut other: WKBBuilder<O>) -> Self {
-        Self::new(other.0.finish(), other.1)
     }
 }
