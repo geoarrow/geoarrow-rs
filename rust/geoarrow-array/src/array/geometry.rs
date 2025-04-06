@@ -168,57 +168,71 @@ impl GeometryArray {
             type_ids,
             offsets,
             point_xy: point_xy.unwrap_or(
-                PointBuilder::new_with_options(XY, coord_type, Default::default()).finish(),
+                PointBuilder::new(PointType::new(coord_type, XY, Default::default())).finish(),
             ),
             line_string_xy: line_string_xy.unwrap_or(
-                LineStringBuilder::new_with_options(XY, coord_type, Default::default()).finish(),
-            ),
-            polygon_xy: polygon_xy.unwrap_or(
-                PolygonBuilder::new_with_options(XY, coord_type, Default::default()).finish(),
-            ),
-            mpoint_xy: mpoint_xy.unwrap_or(
-                MultiPointBuilder::new_with_options(XY, coord_type, Default::default()).finish(),
-            ),
-            mline_string_xy: mline_string_xy.unwrap_or(
-                MultiLineStringBuilder::new_with_options(XY, coord_type, Default::default())
+                LineStringBuilder::new(LineStringType::new(coord_type, XY, Default::default()))
                     .finish(),
             ),
+            polygon_xy: polygon_xy.unwrap_or(
+                PolygonBuilder::new(PolygonType::new(coord_type, XY, Default::default())).finish(),
+            ),
+            mpoint_xy: mpoint_xy.unwrap_or(
+                MultiPointBuilder::new(MultiPointType::new(coord_type, XY, Default::default()))
+                    .finish(),
+            ),
+            mline_string_xy: mline_string_xy.unwrap_or(
+                MultiLineStringBuilder::new(MultiLineStringType::new(
+                    coord_type,
+                    XY,
+                    Default::default(),
+                ))
+                .finish(),
+            ),
             mpolygon_xy: mpolygon_xy.unwrap_or(
-                MultiPolygonBuilder::new_with_options(XY, coord_type, Default::default()).finish(),
+                MultiPolygonBuilder::new(MultiPolygonType::new(coord_type, XY, Default::default()))
+                    .finish(),
             ),
             gc_xy: gc_xy.unwrap_or(
-                GeometryCollectionBuilder::new_with_options(
-                    XY,
-                    coord_type,
-                    Default::default(),
+                GeometryCollectionBuilder::new(
+                    GeometryCollectionType::new(coord_type, XY, Default::default()),
                     false,
                 )
                 .finish(),
             ),
             point_xyz: point_xyz.unwrap_or(
-                PointBuilder::new_with_options(XYZ, coord_type, Default::default()).finish(),
+                PointBuilder::new(PointType::new(coord_type, XYZ, Default::default())).finish(),
             ),
             line_string_xyz: line_string_xyz.unwrap_or(
-                LineStringBuilder::new_with_options(XYZ, coord_type, Default::default()).finish(),
-            ),
-            polygon_xyz: polygon_xyz.unwrap_or(
-                PolygonBuilder::new_with_options(XYZ, coord_type, Default::default()).finish(),
-            ),
-            mpoint_xyz: mpoint_xyz.unwrap_or(
-                MultiPointBuilder::new_with_options(XYZ, coord_type, Default::default()).finish(),
-            ),
-            mline_string_xyz: mline_string_xyz.unwrap_or(
-                MultiLineStringBuilder::new_with_options(XYZ, coord_type, Default::default())
+                LineStringBuilder::new(LineStringType::new(coord_type, XYZ, Default::default()))
                     .finish(),
             ),
+            polygon_xyz: polygon_xyz.unwrap_or(
+                PolygonBuilder::new(PolygonType::new(coord_type, XYZ, Default::default())).finish(),
+            ),
+            mpoint_xyz: mpoint_xyz.unwrap_or(
+                MultiPointBuilder::new(MultiPointType::new(coord_type, XYZ, Default::default()))
+                    .finish(),
+            ),
+            mline_string_xyz: mline_string_xyz.unwrap_or(
+                MultiLineStringBuilder::new(MultiLineStringType::new(
+                    coord_type,
+                    XYZ,
+                    Default::default(),
+                ))
+                .finish(),
+            ),
             mpolygon_xyz: mpolygon_xyz.unwrap_or(
-                MultiPolygonBuilder::new_with_options(XYZ, coord_type, Default::default()).finish(),
+                MultiPolygonBuilder::new(MultiPolygonType::new(
+                    coord_type,
+                    XYZ,
+                    Default::default(),
+                ))
+                .finish(),
             ),
             gc_xyz: gc_xyz.unwrap_or(
-                GeometryCollectionBuilder::new_with_options(
-                    XYZ,
-                    coord_type,
-                    Default::default(),
+                GeometryCollectionBuilder::new(
+                    GeometryCollectionType::new(coord_type, XYZ, Default::default()),
                     false,
                 )
                 .finish(),

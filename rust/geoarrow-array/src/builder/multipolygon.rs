@@ -15,14 +15,6 @@ use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
 
-pub type MutableMultiPolygonParts = (
-    CoordBufferBuilder,
-    OffsetsBuilder<i32>,
-    OffsetsBuilder<i32>,
-    OffsetsBuilder<i32>,
-    NullBufferBuilder,
-);
-
 /// The GeoArrow equivalent to `Vec<Option<MultiPolygon>>`: a mutable collection of MultiPolygons.
 ///
 /// Converting an [`MultiPolygonBuilder`] into a [`MultiPolygonArray`] is `O(1)`.

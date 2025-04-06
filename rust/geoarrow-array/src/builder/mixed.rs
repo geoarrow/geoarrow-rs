@@ -1,3 +1,6 @@
+// TODO: remove unused methods
+#![allow(dead_code)]
+
 use std::sync::Arc;
 
 use arrow_array::OffsetSizeTrait;

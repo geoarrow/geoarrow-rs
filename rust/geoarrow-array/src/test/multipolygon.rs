@@ -1,7 +1,8 @@
 use geo::{polygon, MultiPolygon};
 
 use crate::array::MultiPolygonArray;
-use geoarrow_schema::Dimension;
+use crate::builder::MultiPolygonBuilder;
+use geoarrow_schema::{CoordType, Dimension, MultiPolygonType};
 
 pub(crate) fn mp0() -> MultiPolygon {
     MultiPolygon::new(vec![
@@ -48,5 +49,7 @@ pub(crate) fn mp1() -> MultiPolygon {
 }
 
 pub(crate) fn mp_array() -> MultiPolygonArray {
-    (vec![mp0(), mp1()].as_slice(), Dimension::XY).into()
+    let geoms = vec![mp0(), mp1()];
+    let typ = MultiPolygonType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+    MultiPolygonBuilder::from_multi_polygons(&geoms, typ).finish()
 }

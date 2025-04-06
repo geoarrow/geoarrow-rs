@@ -170,7 +170,8 @@ impl TryFrom<(&GenericListArray<i32>, GeometryCollectionType)> for GeometryColle
     type Error = GeoArrowError;
 
     fn try_from((value, typ): (&GenericListArray<i32>, GeometryCollectionType)) -> Result<Self> {
-        let geoms: MixedGeometryArray = (value.values().as_ref(), typ.dimension()).try_into()?;
+        let geoms: MixedGeometryArray =
+            (value.values().as_ref(), typ.dimension(), typ.coord_type()).try_into()?;
         let geom_offsets = value.offsets();
         let validity = value.nulls();
 
@@ -187,7 +188,8 @@ impl TryFrom<(&GenericListArray<i64>, GeometryCollectionType)> for GeometryColle
     type Error = GeoArrowError;
 
     fn try_from((value, typ): (&GenericListArray<i64>, GeometryCollectionType)) -> Result<Self> {
-        let geoms: MixedGeometryArray = (value.values().as_ref(), typ.dimension()).try_into()?;
+        let geoms: MixedGeometryArray =
+            (value.values().as_ref(), typ.dimension(), typ.coord_type()).try_into()?;
         let geom_offsets = offsets_buffer_i64_to_i32(value.offsets())?;
         let validity = value.nulls();
 

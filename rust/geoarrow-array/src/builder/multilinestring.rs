@@ -33,13 +33,6 @@ pub struct MultiLineStringBuilder {
     pub(crate) validity: NullBufferBuilder,
 }
 
-pub type MultiLineStringInner = (
-    CoordBufferBuilder,
-    OffsetsBuilder<i32>,
-    OffsetsBuilder<i32>,
-    NullBufferBuilder,
-);
-
 impl MultiLineStringBuilder {
     /// Creates a new empty [`MultiLineStringBuilder`].
     pub fn new(typ: MultiLineStringType) -> Self {
