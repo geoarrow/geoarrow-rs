@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use arrow_schema::extension::ExtensionType;
+use arrow_schema::extension::{ExtensionType, EXTENSION_TYPE_METADATA_KEY};
 use arrow_schema::{ArrowError, DataType, Field, UnionFields, UnionMode};
 
 use crate::metadata::Metadata;
@@ -63,6 +63,15 @@ macro_rules! define_basic_type {
             /// Convert this type to a [`Field`], retaining extension metadata.
             pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool) -> Field {
                 Field::new(name, self.data_type(), nullable).with_extension_type(self.clone())
+            }
+        }
+
+        impl TryFrom<&Field> for $struct_name {
+            type Error = ArrowError;
+
+            fn try_from(field: &Field) -> Result<Self, Self::Error> {
+                let metadata = Metadata::deserialize(field.metadata().get(EXTENSION_TYPE_METADATA_KEY))?;
+                Self::try_new(field.data_type(), metadata)
             }
         }
     };

@@ -245,10 +245,10 @@ impl IntoArrow for MultiLineStringArray {
     }
 }
 
-impl TryFrom<(&GenericListArray<i32>, Dimension)> for MultiLineStringArray {
+impl TryFrom<(&GenericListArray<i32>, MultiLineStringType)> for MultiLineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from((geom_array, dim): (&GenericListArray<i32>, Dimension)) -> Result<Self> {
+    fn try_from((geom_array, typ): (&GenericListArray<i32>, MultiLineStringType)) -> Result<Self> {
         let geom_offsets = geom_array.offsets();
         let validity = geom_array.nulls();
 
@@ -256,22 +256,22 @@ impl TryFrom<(&GenericListArray<i32>, Dimension)> for MultiLineStringArray {
         let rings_array = rings_dyn_array.as_list::<i32>();
 
         let ring_offsets = rings_array.offsets();
-        let coords = CoordBuffer::from_arrow(rings_array.values().as_ref(), dim)?;
+        let coords = CoordBuffer::from_arrow(rings_array.values().as_ref(), typ.dimension())?;
 
         Ok(Self::new(
             coords,
             geom_offsets.clone(),
             ring_offsets.clone(),
             validity.cloned(),
-            Default::default(),
+            typ.metadata().clone(),
         ))
     }
 }
 
-impl TryFrom<(&GenericListArray<i64>, Dimension)> for MultiLineStringArray {
+impl TryFrom<(&GenericListArray<i64>, MultiLineStringType)> for MultiLineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from((geom_array, dim): (&GenericListArray<i64>, Dimension)) -> Result<Self> {
+    fn try_from((geom_array, dim): (&GenericListArray<i64>, MultiLineStringType)) -> Result<Self> {
         let geom_offsets = offsets_buffer_i64_to_i32(geom_array.offsets())?;
         let validity = geom_array.nulls();
 
@@ -291,18 +291,18 @@ impl TryFrom<(&GenericListArray<i64>, Dimension)> for MultiLineStringArray {
     }
 }
 
-impl TryFrom<(&dyn Array, Dimension)> for MultiLineStringArray {
+impl TryFrom<(&dyn Array, MultiLineStringType)> for MultiLineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, dim): (&dyn Array, Dimension)) -> Result<Self> {
+    fn try_from((value, typ): (&dyn Array, MultiLineStringType)) -> Result<Self> {
         match value.data_type() {
             DataType::List(_) => {
                 let downcasted = value.as_list::<i32>();
-                (downcasted, dim).try_into()
+                (downcasted, typ).try_into()
             }
             DataType::LargeList(_) => {
                 let downcasted = value.as_list::<i64>();
-                (downcasted, dim).try_into()
+                (downcasted, typ).try_into()
             }
             _ => Err(GeoArrowError::General(format!(
                 "Unexpected type: {:?}",
