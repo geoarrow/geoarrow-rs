@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 use std::sync::Arc;
 
+use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, OffsetSizeTrait, UnionArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field, UnionMode};
@@ -613,6 +614,8 @@ impl TryFrom<(&UnionArray, Dimension)> for MixedGeometryArray {
             multi_points,
             multi_line_strings,
             multi_polygons,
+            // Mixed array is only used inside of GeometryCollectionArray, and this array does not
+            // hold its own metadata
             Default::default(),
         ))
     }
@@ -623,32 +626,12 @@ impl TryFrom<(&dyn Array, Dimension)> for MixedGeometryArray {
 
     fn try_from((value, dim): (&dyn Array, Dimension)) -> Result<Self> {
         match value.data_type() {
-            DataType::Union(_, _) => {
-                let downcasted = value.as_any().downcast_ref::<UnionArray>().unwrap();
-                (downcasted, dim).try_into()
-            }
+            DataType::Union(_, _) => (value.as_union(), dim).try_into(),
             _ => Err(GeoArrowError::General(format!(
                 "Unexpected type: {:?}",
                 value.data_type()
             ))),
         }
-    }
-}
-
-// TODO:, thinking all geoarrow.geometry will go through primary dimensionless geometry array
-impl TryFrom<(&dyn Array, &Field)> for MixedGeometryArray {
-    type Error = GeoArrowError;
-
-    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
-        let geom_type = NativeType::try_from(field)?;
-        let dim = geom_type
-            .dimension()
-            .ok_or(GeoArrowError::General("Expected dimension".to_string()))?;
-        let arr: Self = (arr, dim).try_into()?;
-        // Mixed array doesn't have geoarrow metadata
-        // let metadata = Arc::new(Metadata::try_from(field)?);
-        // arr.data_type = arr.data_type.clone().with_metadata(metadata);
-        Ok(arr)
     }
 }
 

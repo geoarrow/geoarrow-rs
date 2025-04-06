@@ -154,10 +154,11 @@ impl IntoArrow for RectArray {
     }
 }
 
-impl TryFrom<(&StructArray, Dimension)> for RectArray {
+impl TryFrom<(&StructArray, BoxType)> for RectArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, dim): (&StructArray, Dimension)) -> Result<Self, Self::Error> {
+    fn try_from((value, typ): (&StructArray, BoxType)) -> Result<Self, Self::Error> {
+        let dim = typ.dimension();
         let validity = value.nulls();
         let columns = value.columns();
         assert_eq!(columns.len(), dim.size() * 2);
@@ -184,20 +185,17 @@ impl TryFrom<(&StructArray, Dimension)> for RectArray {
             SeparatedCoordBuffer::new(lower, dim),
             SeparatedCoordBuffer::new(upper, dim),
             validity.cloned(),
-            Default::default(),
+            typ.metadata().clone(),
         ))
     }
 }
 
-impl TryFrom<(&dyn Array, Dimension)> for RectArray {
+impl TryFrom<(&dyn Array, BoxType)> for RectArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, dim): (&dyn Array, Dimension)) -> Result<Self, Self::Error> {
+    fn try_from((value, dim): (&dyn Array, BoxType)) -> Result<Self, Self::Error> {
         match value.data_type() {
-            DataType::Struct(_) => {
-                let arr = value.as_any().downcast_ref::<StructArray>().unwrap();
-                (arr, dim).try_into()
-            }
+            DataType::Struct(_) => (value.as_struct(), dim).try_into(),
             _ => Err(GeoArrowError::General(
                 "Invalid data type for RectArray".to_string(),
             )),
@@ -209,14 +207,8 @@ impl TryFrom<(&dyn Array, &Field)> for RectArray {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self, Self::Error> {
-        let geom_type = NativeType::try_from(field)?;
-        let dim = geom_type
-            .dimension()
-            .ok_or(GeoArrowError::General("Expected dimension".to_string()))?;
-        let mut arr: Self = (arr, dim).try_into()?;
-        let metadata = Arc::new(Metadata::try_from(field)?);
-        arr.data_type = arr.data_type.clone().with_metadata(metadata);
-        Ok(arr)
+        let typ = field.try_extension_type::<BoxType>()?;
+        (arr, typ).try_into()
     }
 }
 
@@ -254,7 +246,12 @@ mod test {
         let rect_arr = builder.finish();
 
         let arrow_arr = rect_arr.into_array_ref();
-        let rect_arr_again = RectArray::try_from((arrow_arr.as_ref(), Dimension::XY)).unwrap();
+
+        let rect_arr_again = RectArray::try_from((
+            arrow_arr.as_ref(),
+            BoxType::new(Dimension::XY, Default::default()),
+        ))
+        .unwrap();
         let rect_again = rect_arr_again.value(0);
         assert!(rect_eq(&rect, &rect_again));
     }
