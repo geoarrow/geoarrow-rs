@@ -5,11 +5,9 @@ use arrow_array::types::Float64Type;
 use arrow_array::{Array, ArrayRef, StructArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field};
-use geo_traits::RectTrait;
-use geoarrow_schema::{BoxType, Dimension, Metadata};
+use geoarrow_schema::{BoxType, Metadata};
 
 use crate::array::SeparatedCoordBuffer;
-use crate::builder::RectBuilder;
 use crate::datatypes::NativeType;
 use crate::error::GeoArrowError;
 use crate::scalar::Rect;
@@ -154,10 +152,11 @@ impl IntoArrow for RectArray {
     }
 }
 
-impl TryFrom<(&StructArray, Dimension)> for RectArray {
+impl TryFrom<(&StructArray, BoxType)> for RectArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, dim): (&StructArray, Dimension)) -> Result<Self, Self::Error> {
+    fn try_from((value, typ): (&StructArray, BoxType)) -> Result<Self, Self::Error> {
+        let dim = typ.dimension();
         let validity = value.nulls();
         let columns = value.columns();
         assert_eq!(columns.len(), dim.size() * 2);
@@ -184,20 +183,17 @@ impl TryFrom<(&StructArray, Dimension)> for RectArray {
             SeparatedCoordBuffer::new(lower, dim),
             SeparatedCoordBuffer::new(upper, dim),
             validity.cloned(),
-            Default::default(),
+            typ.metadata().clone(),
         ))
     }
 }
 
-impl TryFrom<(&dyn Array, Dimension)> for RectArray {
+impl TryFrom<(&dyn Array, BoxType)> for RectArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, dim): (&dyn Array, Dimension)) -> Result<Self, Self::Error> {
+    fn try_from((value, dim): (&dyn Array, BoxType)) -> Result<Self, Self::Error> {
         match value.data_type() {
-            DataType::Struct(_) => {
-                let arr = value.as_any().downcast_ref::<StructArray>().unwrap();
-                (arr, dim).try_into()
-            }
+            DataType::Struct(_) => (value.as_struct(), dim).try_into(),
             _ => Err(GeoArrowError::General(
                 "Invalid data type for RectArray".to_string(),
             )),
@@ -209,28 +205,8 @@ impl TryFrom<(&dyn Array, &Field)> for RectArray {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self, Self::Error> {
-        let geom_type = NativeType::try_from(field)?;
-        let dim = geom_type
-            .dimension()
-            .ok_or(GeoArrowError::General("Expected dimension".to_string()))?;
-        let mut arr: Self = (arr, dim).try_into()?;
-        let metadata = Arc::new(Metadata::try_from(field)?);
-        arr.data_type = arr.data_type.clone().with_metadata(metadata);
-        Ok(arr)
-    }
-}
-
-impl<G: RectTrait<T = f64>> From<(&[G], Dimension)> for RectArray {
-    fn from(other: (&[G], Dimension)) -> Self {
-        let mut_arr: RectBuilder = other.into();
-        mut_arr.into()
-    }
-}
-
-impl<G: RectTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for RectArray {
-    fn from(other: (Vec<Option<G>>, Dimension)) -> Self {
-        let mut_arr: RectBuilder = other.into();
-        mut_arr.into()
+        let typ = field.try_extension_type::<BoxType>()?;
+        (arr, typ).try_into()
     }
 }
 
@@ -247,14 +223,19 @@ mod test {
             geo::coord! { x: 0.0, y: 5.0 },
             geo::coord! { x: 10.0, y: 15.0 },
         );
-        let mut builder =
-            RectBuilder::with_capacity_and_options(Dimension::XY, 1, Default::default());
+        let typ = BoxType::new(Dimension::XY, Default::default());
+        let mut builder = RectBuilder::with_capacity(typ, 1);
         builder.push_rect(Some(&rect));
         builder.push_min_max(&rect.min(), &rect.max());
         let rect_arr = builder.finish();
 
         let arrow_arr = rect_arr.into_array_ref();
-        let rect_arr_again = RectArray::try_from((arrow_arr.as_ref(), Dimension::XY)).unwrap();
+
+        let rect_arr_again = RectArray::try_from((
+            arrow_arr.as_ref(),
+            BoxType::new(Dimension::XY, Default::default()),
+        ))
+        .unwrap();
         let rect_again = rect_arr_again.value(0);
         assert!(rect_eq(&rect, &rect_again));
     }

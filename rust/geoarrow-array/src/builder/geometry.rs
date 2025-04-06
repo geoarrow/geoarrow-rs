@@ -2,7 +2,10 @@ use std::sync::Arc;
 
 use arrow_array::OffsetSizeTrait;
 use geo_traits::*;
-use geoarrow_schema::{CoordType, Dimension, Metadata};
+use geoarrow_schema::{
+    Dimension, GeometryCollectionType, GeometryType, LineStringType, Metadata, MultiLineStringType,
+    MultiPointType, MultiPolygonType, PointType, PolygonType,
+};
 
 use crate::array::{GeometryArray, WKBArray};
 use crate::builder::{
@@ -84,130 +87,81 @@ pub struct GeometryBuilder {
 
 impl<'a> GeometryBuilder {
     /// Creates a new empty [`GeometryBuilder`].
-    pub fn new() -> Self {
-        Self::new_with_options(
-            CoordType::Interleaved,
-            Default::default(),
-            DEFAULT_PREFER_MULTI,
-        )
-    }
-
-    /// Creates a new empty [`GeometryBuilder`] with the given options.
-    pub fn new_with_options(
-        coord_type: CoordType,
-        metadata: Arc<Metadata>,
-        prefer_multi: bool,
-    ) -> Self {
-        Self::with_capacity_and_options(Default::default(), coord_type, metadata, prefer_multi)
+    pub fn new(typ: GeometryType, prefer_multi: bool) -> Self {
+        Self::with_capacity(typ, Default::default(), prefer_multi)
     }
 
     /// Creates a new [`GeometryBuilder`] with given capacity and no validity.
-    pub fn with_capacity(capacity: GeometryCapacity) -> Self {
-        Self::with_capacity_and_options(
-            capacity,
-            CoordType::Interleaved,
-            Default::default(),
-            DEFAULT_PREFER_MULTI,
-        )
-    }
-
-    /// Creates a new empty [`GeometryBuilder`] with the given capacity and options.
-    pub fn with_capacity_and_options(
+    pub fn with_capacity(
+        typ: GeometryType,
         capacity: GeometryCapacity,
-        coord_type: CoordType,
-        metadata: Arc<Metadata>,
         prefer_multi: bool,
     ) -> Self {
         use Dimension::*;
 
+        let metadata = typ.metadata();
+        let coord_type = typ.coord_type();
+
         // Don't store array metadata on child arrays
         Self {
-            metadata,
+            metadata: metadata.clone(),
             types: vec![],
-            point_xy: PointBuilder::with_capacity_and_options(
-                XY,
+            point_xy: PointBuilder::with_capacity(
+                PointType::new(coord_type, XY, metadata.clone()),
                 capacity.point_xy(),
-                coord_type,
-                Default::default(),
             ),
-            line_string_xy: LineStringBuilder::with_capacity_and_options(
-                XY,
+            line_string_xy: LineStringBuilder::with_capacity(
+                LineStringType::new(coord_type, XY, metadata.clone()),
                 capacity.line_string_xy(),
-                coord_type,
-                Default::default(),
             ),
-            polygon_xy: PolygonBuilder::with_capacity_and_options(
-                XY,
+            polygon_xy: PolygonBuilder::with_capacity(
+                PolygonType::new(coord_type, XY, metadata.clone()),
                 capacity.polygon_xy(),
-                coord_type,
-                Default::default(),
             ),
-            mpoint_xy: MultiPointBuilder::with_capacity_and_options(
-                XY,
+            mpoint_xy: MultiPointBuilder::with_capacity(
+                MultiPointType::new(coord_type, XY, metadata.clone()),
                 capacity.mpoint_xy(),
-                coord_type,
-                Default::default(),
             ),
-            mline_string_xy: MultiLineStringBuilder::with_capacity_and_options(
-                XY,
+            mline_string_xy: MultiLineStringBuilder::with_capacity(
+                MultiLineStringType::new(coord_type, XY, metadata.clone()),
                 capacity.mline_string_xy(),
-                coord_type,
-                Default::default(),
             ),
-            mpolygon_xy: MultiPolygonBuilder::with_capacity_and_options(
-                XY,
+            mpolygon_xy: MultiPolygonBuilder::with_capacity(
+                MultiPolygonType::new(coord_type, XY, metadata.clone()),
                 capacity.mpolygon_xy(),
-                coord_type,
-                Default::default(),
             ),
-            gc_xy: GeometryCollectionBuilder::with_capacity_and_options(
-                XY,
+            gc_xy: GeometryCollectionBuilder::with_capacity(
+                GeometryCollectionType::new(coord_type, XY, metadata.clone()),
                 capacity.gc_xy(),
-                coord_type,
-                Default::default(),
                 prefer_multi,
             ),
-            point_xyz: PointBuilder::with_capacity_and_options(
-                XYZ,
+            point_xyz: PointBuilder::with_capacity(
+                PointType::new(coord_type, XYZ, metadata.clone()),
                 capacity.point_xyz(),
-                coord_type,
-                Default::default(),
             ),
-            line_string_xyz: LineStringBuilder::with_capacity_and_options(
-                XYZ,
+            line_string_xyz: LineStringBuilder::with_capacity(
+                LineStringType::new(coord_type, XYZ, metadata.clone()),
                 capacity.line_string_xyz(),
-                coord_type,
-                Default::default(),
             ),
-            polygon_xyz: PolygonBuilder::with_capacity_and_options(
-                XYZ,
+            polygon_xyz: PolygonBuilder::with_capacity(
+                PolygonType::new(coord_type, XYZ, metadata.clone()),
                 capacity.polygon_xyz(),
-                coord_type,
-                Default::default(),
             ),
-            mpoint_xyz: MultiPointBuilder::with_capacity_and_options(
-                XYZ,
+            mpoint_xyz: MultiPointBuilder::with_capacity(
+                MultiPointType::new(coord_type, XYZ, metadata.clone()),
                 capacity.mpoint_xyz(),
-                coord_type,
-                Default::default(),
             ),
-            mline_string_xyz: MultiLineStringBuilder::with_capacity_and_options(
-                XYZ,
+            mline_string_xyz: MultiLineStringBuilder::with_capacity(
+                MultiLineStringType::new(coord_type, XYZ, metadata.clone()),
                 capacity.mline_string_xyz(),
-                coord_type,
-                Default::default(),
             ),
-            mpolygon_xyz: MultiPolygonBuilder::with_capacity_and_options(
-                XYZ,
+            mpolygon_xyz: MultiPolygonBuilder::with_capacity(
+                MultiPolygonType::new(coord_type, XYZ, metadata.clone()),
                 capacity.mpolygon_xyz(),
-                coord_type,
-                Default::default(),
             ),
-            gc_xyz: GeometryCollectionBuilder::with_capacity_and_options(
-                XYZ,
+            gc_xyz: GeometryCollectionBuilder::with_capacity(
+                GeometryCollectionType::new(coord_type, XYZ, metadata.clone()),
                 capacity.gc_xyz(),
-                coord_type,
-                Default::default(),
                 prefer_multi,
             ),
             offsets: vec![],
@@ -311,36 +265,35 @@ impl<'a> GeometryBuilder {
 
     /// Consume the builder and convert to an immutable [`GeometryArray`]
     pub fn finish(self) -> GeometryArray {
-        self.into()
+        GeometryArray::new(
+            self.types.into(),
+            self.offsets.into(),
+            Some(self.point_xy.finish()),
+            Some(self.line_string_xy.finish()),
+            Some(self.polygon_xy.finish()),
+            Some(self.mpoint_xy.finish()),
+            Some(self.mline_string_xy.finish()),
+            Some(self.mpolygon_xy.finish()),
+            Some(self.gc_xy.finish()),
+            Some(self.point_xyz.finish()),
+            Some(self.line_string_xyz.finish()),
+            Some(self.polygon_xyz.finish()),
+            Some(self.mpoint_xyz.finish()),
+            Some(self.mline_string_xyz.finish()),
+            Some(self.mpolygon_xyz.finish()),
+            Some(self.gc_xyz.finish()),
+            self.metadata,
+        )
     }
 
     /// Creates a new builder with a capacity inferred by the provided iterator.
     pub fn with_capacity_from_iter(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
-    ) -> Result<Self> {
-        Self::with_capacity_and_options_from_iter(
-            geoms,
-            CoordType::Interleaved,
-            Default::default(),
-            DEFAULT_PREFER_MULTI,
-        )
-    }
-
-    /// Creates a new builder with the provided options and a capacity inferred by the provided
-    /// iterator.
-    pub fn with_capacity_and_options_from_iter(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
-        coord_type: CoordType,
-        metadata: Arc<Metadata>,
+        typ: GeometryType,
         prefer_multi: bool,
     ) -> Result<Self> {
         let counter = GeometryCapacity::from_geometries(geoms, prefer_multi)?;
-        Ok(Self::with_capacity_and_options(
-            counter,
-            coord_type,
-            metadata,
-            prefer_multi,
-        ))
+        Ok(Self::with_capacity(typ, counter, prefer_multi))
     }
 
     /// Reserve more space in the underlying buffers with the capacity inferred from the provided
@@ -917,16 +870,10 @@ impl<'a> GeometryBuilder {
     /// Create this builder from a slice of Geometries.
     pub fn from_geometries(
         geoms: &[impl GeometryTrait<T = f64>],
-        coord_type: CoordType,
-        metadata: Arc<Metadata>,
+        typ: GeometryType,
         prefer_multi: bool,
     ) -> Result<Self> {
-        let mut array = Self::with_capacity_and_options_from_iter(
-            geoms.iter().map(Some),
-            coord_type,
-            metadata,
-            prefer_multi,
-        )?;
+        let mut array = Self::with_capacity_from_iter(geoms.iter().map(Some), typ, prefer_multi)?;
         array.extend_from_iter(geoms.iter().map(Some));
         Ok(array)
     }
@@ -934,93 +881,42 @@ impl<'a> GeometryBuilder {
     /// Create this builder from a slice of nullable Geometries.
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
-        coord_type: CoordType,
-        metadata: Arc<Metadata>,
+        typ: GeometryType,
         prefer_multi: bool,
     ) -> Result<Self> {
-        let mut array = Self::with_capacity_and_options_from_iter(
-            geoms.iter().map(|x| x.as_ref()),
-            coord_type,
-            metadata,
-            prefer_multi,
-        )?;
+        let mut array =
+            Self::with_capacity_from_iter(geoms.iter().map(|x| x.as_ref()), typ, prefer_multi)?;
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         Ok(array)
     }
 
     pub(crate) fn from_wkb<W: OffsetSizeTrait>(
         wkb_objects: &[Option<WKB<'_, W>>],
-        coord_type: CoordType,
-        metadata: Arc<Metadata>,
+        typ: GeometryType,
         prefer_multi: bool,
     ) -> Result<Self> {
         let wkb_objects2 = wkb_objects
             .iter()
             .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.parse()).transpose())
             .collect::<Result<Vec<_>>>()?;
-        Self::from_nullable_geometries(&wkb_objects2, coord_type, metadata, prefer_multi)
+        Self::from_nullable_geometries(&wkb_objects2, typ, prefer_multi)
     }
 }
 
-impl From<GeometryBuilder> for GeometryArray {
-    fn from(other: GeometryBuilder) -> Self {
-        Self::new(
-            other.types.into(),
-            other.offsets.into(),
-            Some(other.point_xy.into()),
-            Some(other.line_string_xy.into()),
-            Some(other.polygon_xy.into()),
-            Some(other.mpoint_xy.into()),
-            Some(other.mline_string_xy.into()),
-            Some(other.mpolygon_xy.into()),
-            Some(other.gc_xy.into()),
-            Some(other.point_xyz.into()),
-            Some(other.line_string_xyz.into()),
-            Some(other.polygon_xyz.into()),
-            Some(other.mpoint_xyz.into()),
-            Some(other.mline_string_xyz.into()),
-            Some(other.mpolygon_xyz.into()),
-            Some(other.gc_xyz.into()),
-            other.metadata,
-        )
-    }
-}
-
-impl<G: GeometryTrait<T = f64>> TryFrom<&[G]> for GeometryBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, GeometryType)> for GeometryBuilder {
     type Error = GeoArrowError;
 
-    fn try_from(geoms: &[G]) -> Result<Self> {
-        Self::from_geometries(geoms, CoordType::Interleaved, Default::default(), true)
-    }
-}
-
-impl<G: GeometryTrait<T = f64>> TryFrom<Vec<Option<G>>> for GeometryBuilder {
-    type Error = GeoArrowError;
-
-    fn try_from(geoms: Vec<Option<G>>) -> Result<Self> {
-        Self::from_nullable_geometries(&geoms, CoordType::Interleaved, Default::default(), true)
-    }
-}
-
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryBuilder {
-    type Error = GeoArrowError;
-
-    fn try_from(value: WKBArray<O>) -> std::result::Result<Self, Self::Error> {
+    fn try_from(
+        (value, typ): (WKBArray<O>, GeometryType),
+    ) -> std::result::Result<Self, Self::Error> {
         assert_eq!(
             value.nulls().map_or(0, |validity| validity.null_count()),
             0,
             "Parsing a WKBArray with null elements not supported",
         );
 
-        let metadata = value.data_type.metadata().clone();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, CoordType::Interleaved, metadata, true)
-    }
-}
-
-impl Default for GeometryBuilder {
-    fn default() -> Self {
-        Self::new()
+        Self::from_wkb(&wkb_objects, typ, DEFAULT_PREFER_MULTI)
     }
 }
 

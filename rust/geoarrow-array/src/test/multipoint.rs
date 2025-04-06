@@ -2,7 +2,7 @@ use geo::{point, MultiPoint};
 
 use crate::array::MultiPointArray;
 use crate::builder::MultiPointBuilder;
-use geoarrow_schema::{CoordType, Dimension};
+use geoarrow_schema::{CoordType, Dimension, MultiPointType};
 
 pub(crate) fn mp0() -> MultiPoint {
     MultiPoint::new(vec![
@@ -28,11 +28,6 @@ pub(crate) fn mp1() -> MultiPoint {
 
 pub(crate) fn mp_array() -> MultiPointArray {
     let geoms = vec![mp0(), mp1()];
-    MultiPointBuilder::from_multi_points(
-        &geoms,
-        Dimension::XY,
-        CoordType::Interleaved,
-        Default::default(),
-    )
-    .finish()
+    let typ = MultiPointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+    MultiPointBuilder::from_multi_points(&geoms, typ).finish()
 }

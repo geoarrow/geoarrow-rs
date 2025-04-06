@@ -1,5 +1,5 @@
 use geo::{line_string, MultiLineString};
-use geoarrow_schema::{CoordType, Dimension};
+use geoarrow_schema::{CoordType, Dimension, MultiLineStringType};
 
 use crate::array::MultiLineStringArray;
 use crate::builder::MultiLineStringBuilder;
@@ -32,11 +32,6 @@ pub(crate) fn ml1() -> MultiLineString {
 
 pub(crate) fn ml_array() -> MultiLineStringArray {
     let geoms = vec![ml0(), ml1()];
-    MultiLineStringBuilder::from_multi_line_strings(
-        &geoms,
-        Dimension::XY,
-        CoordType::default_interleaved(),
-        Default::default(),
-    )
-    .finish()
+    let typ = MultiLineStringType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+    MultiLineStringBuilder::from_multi_line_strings(&geoms, typ).finish()
 }

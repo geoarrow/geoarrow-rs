@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
+use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, FixedSizeListArray, StructArray};
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
-use geoarrow_schema::{Dimension, Metadata, PointType};
+use geoarrow_schema::{Metadata, PointType};
 
 use crate::array::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
 use crate::datatypes::NativeType;
@@ -182,47 +183,41 @@ impl IntoArrow for PointArray {
     }
 }
 
-impl TryFrom<(&FixedSizeListArray, Dimension)> for PointArray {
+impl TryFrom<(&FixedSizeListArray, PointType)> for PointArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, dim): (&FixedSizeListArray, Dimension)) -> Result<Self> {
-        let interleaved_coords = InterleavedCoordBuffer::from_arrow(value, dim)?;
+    fn try_from((value, typ): (&FixedSizeListArray, PointType)) -> Result<Self> {
+        let interleaved_coords = InterleavedCoordBuffer::from_arrow(value, typ.dimension())?;
 
         Ok(Self::new(
             CoordBuffer::Interleaved(interleaved_coords),
             value.nulls().cloned(),
-            Default::default(),
+            typ.metadata().clone(),
         ))
     }
 }
 
-impl TryFrom<(&StructArray, Dimension)> for PointArray {
+impl TryFrom<(&StructArray, PointType)> for PointArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, dim): (&StructArray, Dimension)) -> Result<Self> {
+    fn try_from((value, typ): (&StructArray, PointType)) -> Result<Self> {
         let validity = value.nulls();
-        let separated_coords = SeparatedCoordBuffer::from_arrow(value, dim)?;
+        let separated_coords = SeparatedCoordBuffer::from_arrow(value, typ.dimension())?;
         Ok(Self::new(
             CoordBuffer::Separated(separated_coords),
             validity.cloned(),
-            Default::default(),
+            typ.metadata().clone(),
         ))
     }
 }
 
-impl TryFrom<(&dyn Array, Dimension)> for PointArray {
+impl TryFrom<(&dyn Array, PointType)> for PointArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, dim): (&dyn Array, Dimension)) -> Result<Self> {
+    fn try_from((value, typ): (&dyn Array, PointType)) -> Result<Self> {
         match value.data_type() {
-            DataType::FixedSizeList(_, _) => {
-                let arr = value.as_any().downcast_ref::<FixedSizeListArray>().unwrap();
-                (arr, dim).try_into()
-            }
-            DataType::Struct(_) => {
-                let arr = value.as_any().downcast_ref::<StructArray>().unwrap();
-                (arr, dim).try_into()
-            }
+            DataType::FixedSizeList(_, _) => (value.as_fixed_size_list(), typ).try_into(),
+            DataType::Struct(_) => (value.as_struct(), typ).try_into(),
             _ => Err(GeoArrowError::General(
                 "Invalid data type for PointArray".to_string(),
             )),
@@ -234,14 +229,8 @@ impl TryFrom<(&dyn Array, &Field)> for PointArray {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
-        let geom_type = NativeType::try_from(field)?;
-        let dim = geom_type
-            .dimension()
-            .ok_or(GeoArrowError::General("Expected dimension".to_string()))?;
-        let mut arr: Self = (arr, dim).try_into()?;
-        let metadata = Arc::new(Metadata::try_from(field)?);
-        arr.data_type = arr.data_type.clone().with_metadata(metadata);
-        Ok(arr)
+        let typ = field.try_extension_type::<PointType>()?;
+        (arr, typ).try_into()
     }
 }
 

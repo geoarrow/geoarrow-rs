@@ -1,5 +1,5 @@
 use geo::{polygon, Polygon};
-use geoarrow_schema::{CoordType, Dimension};
+use geoarrow_schema::{CoordType, Dimension, PolygonType};
 
 use crate::array::PolygonArray;
 use crate::builder::PolygonBuilder;
@@ -34,11 +34,6 @@ pub(crate) fn p1() -> Polygon {
 
 pub(crate) fn p_array() -> PolygonArray {
     let geoms = vec![p0(), p1()];
-    PolygonBuilder::from_polygons(
-        &geoms,
-        Dimension::XY,
-        CoordType::Interleaved,
-        Default::default(),
-    )
-    .finish()
+    let typ = PolygonType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+    PolygonBuilder::from_polygons(&geoms, typ).finish()
 }

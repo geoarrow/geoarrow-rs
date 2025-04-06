@@ -4,8 +4,7 @@ use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
-use geo_traits::MultiPolygonTrait;
-use geoarrow_schema::{Dimension, Metadata, MultiPolygonType};
+use geoarrow_schema::{Metadata, MultiPolygonType};
 
 use crate::array::{CoordBuffer, PolygonArray, WKBArray};
 use crate::builder::MultiPolygonBuilder;
@@ -312,10 +311,10 @@ impl IntoArrow for MultiPolygonArray {
     }
 }
 
-impl TryFrom<(&GenericListArray<i32>, Dimension)> for MultiPolygonArray {
+impl TryFrom<(&GenericListArray<i32>, MultiPolygonType)> for MultiPolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from((geom_array, dim): (&GenericListArray<i32>, Dimension)) -> Result<Self> {
+    fn try_from((geom_array, typ): (&GenericListArray<i32>, MultiPolygonType)) -> Result<Self> {
         let geom_offsets = geom_array.offsets();
         let validity = geom_array.nulls();
 
@@ -327,7 +326,7 @@ impl TryFrom<(&GenericListArray<i32>, Dimension)> for MultiPolygonArray {
         let rings_array = rings_dyn_array.as_list::<i32>();
 
         let ring_offsets = rings_array.offsets();
-        let coords = CoordBuffer::from_arrow(rings_array.values().as_ref(), dim)?;
+        let coords = CoordBuffer::from_arrow(rings_array.values().as_ref(), typ.dimension())?;
 
         Ok(Self::new(
             coords,
@@ -335,15 +334,15 @@ impl TryFrom<(&GenericListArray<i32>, Dimension)> for MultiPolygonArray {
             polygon_offsets.clone(),
             ring_offsets.clone(),
             validity.cloned(),
-            Default::default(),
+            typ.metadata().clone(),
         ))
     }
 }
 
-impl TryFrom<(&GenericListArray<i64>, Dimension)> for MultiPolygonArray {
+impl TryFrom<(&GenericListArray<i64>, MultiPolygonType)> for MultiPolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from((geom_array, dim): (&GenericListArray<i64>, Dimension)) -> Result<Self> {
+    fn try_from((geom_array, typ): (&GenericListArray<i64>, MultiPolygonType)) -> Result<Self> {
         let geom_offsets = offsets_buffer_i64_to_i32(geom_array.offsets())?;
         let validity = geom_array.nulls();
 
@@ -355,7 +354,7 @@ impl TryFrom<(&GenericListArray<i64>, Dimension)> for MultiPolygonArray {
         let rings_array = rings_dyn_array.as_list::<i64>();
 
         let ring_offsets = offsets_buffer_i64_to_i32(rings_array.offsets())?;
-        let coords = CoordBuffer::from_arrow(rings_array.values().as_ref(), dim)?;
+        let coords = CoordBuffer::from_arrow(rings_array.values().as_ref(), typ.dimension())?;
 
         Ok(Self::new(
             coords,
@@ -363,24 +362,18 @@ impl TryFrom<(&GenericListArray<i64>, Dimension)> for MultiPolygonArray {
             polygon_offsets,
             ring_offsets,
             validity.cloned(),
-            Default::default(),
+            typ.metadata().clone(),
         ))
     }
 }
 
-impl TryFrom<(&dyn Array, Dimension)> for MultiPolygonArray {
+impl TryFrom<(&dyn Array, MultiPolygonType)> for MultiPolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, dim): (&dyn Array, Dimension)) -> Result<Self> {
+    fn try_from((value, typ): (&dyn Array, MultiPolygonType)) -> Result<Self> {
         match value.data_type() {
-            DataType::List(_) => {
-                let downcasted = value.as_list::<i32>();
-                (downcasted, dim).try_into()
-            }
-            DataType::LargeList(_) => {
-                let downcasted = value.as_list::<i64>();
-                (downcasted, dim).try_into()
-            }
+            DataType::List(_) => (value.as_list::<i32>(), typ).try_into(),
+            DataType::LargeList(_) => (value.as_list::<i64>(), typ).try_into(),
             _ => Err(GeoArrowError::General(format!(
                 "Unexpected type: {:?}",
                 value.data_type()
@@ -393,37 +386,17 @@ impl TryFrom<(&dyn Array, &Field)> for MultiPolygonArray {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
-        let geom_type = NativeType::try_from(field)?;
-        let dim = geom_type
-            .dimension()
-            .ok_or(GeoArrowError::General("Expected dimension".to_string()))?;
-        let mut arr: Self = (arr, dim).try_into()?;
-        let metadata = Arc::new(Metadata::try_from(field)?);
-        arr.data_type = arr.data_type.clone().with_metadata(metadata);
-        Ok(arr)
+        let typ = field.try_extension_type::<MultiPolygonType>()?;
+        (arr, typ).try_into()
     }
 }
 
-impl<G: MultiPolygonTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for MultiPolygonArray {
-    fn from(other: (Vec<Option<G>>, Dimension)) -> Self {
-        let mut_arr: MultiPolygonBuilder = other.into();
-        mut_arr.into()
-    }
-}
-
-impl<G: MultiPolygonTrait<T = f64>> From<(&[G], Dimension)> for MultiPolygonArray {
-    fn from(other: (&[G], Dimension)) -> Self {
-        let mut_arr: MultiPolygonBuilder = other.into();
-        mut_arr.into()
-    }
-}
-
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MultiPolygonArray {
+impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, MultiPolygonType)> for MultiPolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WKBArray<O>, Dimension)) -> Result<Self> {
+    fn try_from(value: (WKBArray<O>, MultiPolygonType)) -> Result<Self> {
         let mut_arr: MultiPolygonBuilder = value.try_into()?;
-        Ok(mut_arr.into())
+        Ok(mut_arr.finish())
     }
 }
 

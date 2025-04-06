@@ -1,11 +1,14 @@
 use std::collections::HashSet;
 use std::sync::Arc;
 
+use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, OffsetSizeTrait, UnionArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
-use arrow_schema::{DataType, Field, UnionMode};
-use geo_traits::GeometryTrait;
-use geoarrow_schema::{CoordType, Dimension, GeometryCollectionType, Metadata};
+use arrow_schema::{DataType, UnionMode};
+use geoarrow_schema::{
+    CoordType, Dimension, GeometryCollectionType, LineStringType, Metadata, MultiLineStringType,
+    MultiPointType, MultiPolygonType, PointType, PolygonType,
+};
 
 use crate::array::{
     LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
@@ -158,23 +161,34 @@ impl MixedGeometryArray {
             type_ids,
             offsets,
             points: points.unwrap_or(
-                PointBuilder::new_with_options(dim, coord_type, Default::default()).finish(),
+                PointBuilder::new(PointType::new(coord_type, dim, Default::default())).finish(),
             ),
             line_strings: line_strings.unwrap_or(
-                LineStringBuilder::new_with_options(dim, coord_type, Default::default()).finish(),
-            ),
-            polygons: polygons.unwrap_or(
-                PolygonBuilder::new_with_options(dim, coord_type, Default::default()).finish(),
-            ),
-            multi_points: multi_points.unwrap_or(
-                MultiPointBuilder::new_with_options(dim, coord_type, Default::default()).finish(),
-            ),
-            multi_line_strings: multi_line_strings.unwrap_or(
-                MultiLineStringBuilder::new_with_options(dim, coord_type, Default::default())
+                LineStringBuilder::new(LineStringType::new(coord_type, dim, Default::default()))
                     .finish(),
             ),
+            polygons: polygons.unwrap_or(
+                PolygonBuilder::new(PolygonType::new(coord_type, dim, Default::default())).finish(),
+            ),
+            multi_points: multi_points.unwrap_or(
+                MultiPointBuilder::new(MultiPointType::new(coord_type, dim, Default::default()))
+                    .finish(),
+            ),
+            multi_line_strings: multi_line_strings.unwrap_or(
+                MultiLineStringBuilder::new(MultiLineStringType::new(
+                    coord_type,
+                    dim,
+                    Default::default(),
+                ))
+                .finish(),
+            ),
             multi_polygons: multi_polygons.unwrap_or(
-                MultiPolygonBuilder::new_with_options(dim, coord_type, Default::default()).finish(),
+                MultiPolygonBuilder::new(MultiPolygonType::new(
+                    coord_type,
+                    dim,
+                    Default::default(),
+                ))
+                .finish(),
             ),
             metadata,
             slice_offset: 0,
@@ -531,10 +545,12 @@ impl From<MixedGeometryArray> for UnionArray {
     }
 }
 
-impl TryFrom<(&UnionArray, Dimension)> for MixedGeometryArray {
+impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, dim): (&UnionArray, Dimension)) -> std::result::Result<Self, Self::Error> {
+    fn try_from(
+        (value, dim, coord_type): (&UnionArray, Dimension, CoordType),
+    ) -> std::result::Result<Self, Self::Error> {
         let mut points: Option<PointArray> = None;
         let mut line_strings: Option<LineStringArray> = None;
         let mut polygons: Option<PolygonArray> = None;
@@ -566,27 +582,64 @@ impl TryFrom<(&UnionArray, Dimension)> for MixedGeometryArray {
 
                     match type_id {
                         1 | 11 => {
-                            points = Some((value.child(type_id).as_ref(), dim).try_into().unwrap());
+                            points = Some(
+                                (
+                                    value.child(type_id).as_ref(),
+                                    PointType::new(coord_type, dim, Default::default()),
+                                )
+                                    .try_into()
+                                    .unwrap(),
+                            );
                         }
                         2 | 12 => {
-                            line_strings =
-                                Some((value.child(type_id).as_ref(), dim).try_into().unwrap());
+                            line_strings = Some(
+                                (
+                                    value.child(type_id).as_ref(),
+                                    LineStringType::new(coord_type, dim, Default::default()),
+                                )
+                                    .try_into()
+                                    .unwrap(),
+                            );
                         }
                         3 | 13 => {
-                            polygons =
-                                Some((value.child(type_id).as_ref(), dim).try_into().unwrap());
+                            polygons = Some(
+                                (
+                                    value.child(type_id).as_ref(),
+                                    PolygonType::new(coord_type, dim, Default::default()),
+                                )
+                                    .try_into()
+                                    .unwrap(),
+                            );
                         }
                         4 | 14 => {
-                            multi_points =
-                                Some((value.child(type_id).as_ref(), dim).try_into().unwrap());
+                            multi_points = Some(
+                                (
+                                    value.child(type_id).as_ref(),
+                                    MultiPointType::new(coord_type, dim, Default::default()),
+                                )
+                                    .try_into()
+                                    .unwrap(),
+                            );
                         }
                         5 | 15 => {
-                            multi_line_strings =
-                                Some((value.child(type_id).as_ref(), dim).try_into().unwrap());
+                            multi_line_strings = Some(
+                                (
+                                    value.child(type_id).as_ref(),
+                                    MultiLineStringType::new(coord_type, dim, Default::default()),
+                                )
+                                    .try_into()
+                                    .unwrap(),
+                            );
                         }
                         6 | 16 => {
-                            multi_polygons =
-                                Some((value.child(type_id).as_ref(), dim).try_into().unwrap());
+                            multi_polygons = Some(
+                                (
+                                    value.child(type_id).as_ref(),
+                                    MultiPolygonType::new(coord_type, dim, Default::default()),
+                                )
+                                    .try_into()
+                                    .unwrap(),
+                            );
                         }
                         _ => {
                             return Err(GeoArrowError::General(format!(
@@ -613,20 +666,19 @@ impl TryFrom<(&UnionArray, Dimension)> for MixedGeometryArray {
             multi_points,
             multi_line_strings,
             multi_polygons,
+            // Mixed array is only used inside of GeometryCollectionArray, and this array does not
+            // hold its own metadata
             Default::default(),
         ))
     }
 }
 
-impl TryFrom<(&dyn Array, Dimension)> for MixedGeometryArray {
+impl TryFrom<(&dyn Array, Dimension, CoordType)> for MixedGeometryArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, dim): (&dyn Array, Dimension)) -> Result<Self> {
+    fn try_from((value, dim, coord_type): (&dyn Array, Dimension, CoordType)) -> Result<Self> {
         match value.data_type() {
-            DataType::Union(_, _) => {
-                let downcasted = value.as_any().downcast_ref::<UnionArray>().unwrap();
-                (downcasted, dim).try_into()
-            }
+            DataType::Union(_, _) => (value.as_union(), dim, coord_type).try_into(),
             _ => Err(GeoArrowError::General(format!(
                 "Unexpected type: {:?}",
                 value.data_type()
@@ -635,46 +687,11 @@ impl TryFrom<(&dyn Array, Dimension)> for MixedGeometryArray {
     }
 }
 
-// TODO:, thinking all geoarrow.geometry will go through primary dimensionless geometry array
-impl TryFrom<(&dyn Array, &Field)> for MixedGeometryArray {
-    type Error = GeoArrowError;
-
-    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
-        let geom_type = NativeType::try_from(field)?;
-        let dim = geom_type
-            .dimension()
-            .ok_or(GeoArrowError::General("Expected dimension".to_string()))?;
-        let arr: Self = (arr, dim).try_into()?;
-        // Mixed array doesn't have geoarrow metadata
-        // let metadata = Arc::new(Metadata::try_from(field)?);
-        // arr.data_type = arr.data_type.clone().with_metadata(metadata);
-        Ok(arr)
-    }
-}
-
-impl<G: GeometryTrait<T = f64>> TryFrom<(&[G], Dimension)> for MixedGeometryArray {
-    type Error = GeoArrowError;
-
-    fn try_from(geoms: (&[G], Dimension)) -> Result<Self> {
-        let mut_arr: MixedGeometryBuilder = geoms.try_into()?;
-        Ok(mut_arr.into())
-    }
-}
-
-impl<G: GeometryTrait<T = f64>> TryFrom<(Vec<Option<G>>, Dimension)> for MixedGeometryArray {
-    type Error = GeoArrowError;
-
-    fn try_from(geoms: (Vec<Option<G>>, Dimension)) -> Result<Self> {
-        let mut_arr: MixedGeometryBuilder = geoms.try_into()?;
-        Ok(mut_arr.into())
-    }
-}
-
 impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MixedGeometryArray {
     type Error = GeoArrowError;
 
     fn try_from(value: (WKBArray<O>, Dimension)) -> Result<Self> {
         let mut_arr: MixedGeometryBuilder = value.try_into()?;
-        Ok(mut_arr.into())
+        Ok(mut_arr.finish())
     }
 }

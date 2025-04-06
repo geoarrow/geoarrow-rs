@@ -4,10 +4,9 @@ use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
-use geo_traits::MultiLineStringTrait;
-use geoarrow_schema::{Dimension, Metadata, MultiLineStringType};
+use geoarrow_schema::{Metadata, MultiLineStringType};
 
-use crate::array::{CoordBuffer, LineStringArray, PolygonArray, WKBArray};
+use crate::array::{CoordBuffer, LineStringArray, WKBArray};
 use crate::builder::MultiLineStringBuilder;
 use crate::capacity::MultiLineStringCapacity;
 use crate::datatypes::NativeType;
@@ -245,10 +244,10 @@ impl IntoArrow for MultiLineStringArray {
     }
 }
 
-impl TryFrom<(&GenericListArray<i32>, Dimension)> for MultiLineStringArray {
+impl TryFrom<(&GenericListArray<i32>, MultiLineStringType)> for MultiLineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from((geom_array, dim): (&GenericListArray<i32>, Dimension)) -> Result<Self> {
+    fn try_from((geom_array, typ): (&GenericListArray<i32>, MultiLineStringType)) -> Result<Self> {
         let geom_offsets = geom_array.offsets();
         let validity = geom_array.nulls();
 
@@ -256,22 +255,22 @@ impl TryFrom<(&GenericListArray<i32>, Dimension)> for MultiLineStringArray {
         let rings_array = rings_dyn_array.as_list::<i32>();
 
         let ring_offsets = rings_array.offsets();
-        let coords = CoordBuffer::from_arrow(rings_array.values().as_ref(), dim)?;
+        let coords = CoordBuffer::from_arrow(rings_array.values().as_ref(), typ.dimension())?;
 
         Ok(Self::new(
             coords,
             geom_offsets.clone(),
             ring_offsets.clone(),
             validity.cloned(),
-            Default::default(),
+            typ.metadata().clone(),
         ))
     }
 }
 
-impl TryFrom<(&GenericListArray<i64>, Dimension)> for MultiLineStringArray {
+impl TryFrom<(&GenericListArray<i64>, MultiLineStringType)> for MultiLineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from((geom_array, dim): (&GenericListArray<i64>, Dimension)) -> Result<Self> {
+    fn try_from((geom_array, typ): (&GenericListArray<i64>, MultiLineStringType)) -> Result<Self> {
         let geom_offsets = offsets_buffer_i64_to_i32(geom_array.offsets())?;
         let validity = geom_array.nulls();
 
@@ -279,31 +278,25 @@ impl TryFrom<(&GenericListArray<i64>, Dimension)> for MultiLineStringArray {
         let rings_array = rings_dyn_array.as_list::<i64>();
 
         let ring_offsets = offsets_buffer_i64_to_i32(rings_array.offsets())?;
-        let coords = CoordBuffer::from_arrow(rings_array.values().as_ref(), dim)?;
+        let coords = CoordBuffer::from_arrow(rings_array.values().as_ref(), typ.dimension())?;
 
         Ok(Self::new(
             coords,
             geom_offsets.clone(),
             ring_offsets.clone(),
             validity.cloned(),
-            Default::default(),
+            typ.metadata().clone(),
         ))
     }
 }
 
-impl TryFrom<(&dyn Array, Dimension)> for MultiLineStringArray {
+impl TryFrom<(&dyn Array, MultiLineStringType)> for MultiLineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, dim): (&dyn Array, Dimension)) -> Result<Self> {
+    fn try_from((value, typ): (&dyn Array, MultiLineStringType)) -> Result<Self> {
         match value.data_type() {
-            DataType::List(_) => {
-                let downcasted = value.as_list::<i32>();
-                (downcasted, dim).try_into()
-            }
-            DataType::LargeList(_) => {
-                let downcasted = value.as_list::<i64>();
-                (downcasted, dim).try_into()
-            }
+            DataType::List(_) => (value.as_list::<i32>(), typ).try_into(),
+            DataType::LargeList(_) => (value.as_list::<i64>(), typ).try_into(),
             _ => Err(GeoArrowError::General(format!(
                 "Unexpected type: {:?}",
                 value.data_type()
@@ -316,52 +309,17 @@ impl TryFrom<(&dyn Array, &Field)> for MultiLineStringArray {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
-        let geom_type = NativeType::try_from(field)?;
-        let dim = geom_type
-            .dimension()
-            .ok_or(GeoArrowError::General("Expected dimension".to_string()))?;
-        let mut arr: Self = (arr, dim).try_into()?;
-        let metadata = Arc::new(Metadata::try_from(field)?);
-        arr.data_type = arr.data_type.clone().with_metadata(metadata);
-        Ok(arr)
+        let typ = field.try_extension_type::<MultiLineStringType>()?;
+        (arr, typ).try_into()
     }
 }
 
-impl<G: MultiLineStringTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for MultiLineStringArray {
-    fn from(other: (Vec<Option<G>>, Dimension)) -> Self {
-        let mut_arr: MultiLineStringBuilder = other.into();
-        mut_arr.into()
-    }
-}
-
-impl<G: MultiLineStringTrait<T = f64>> From<(&[G], Dimension)> for MultiLineStringArray {
-    fn from(other: (&[G], Dimension)) -> Self {
-        let mut_arr: MultiLineStringBuilder = other.into();
-        mut_arr.into()
-    }
-}
-
-/// Polygon and MultiLineString have the same layout, so enable conversions between the two to
-/// change the semantic type
-impl From<MultiLineStringArray> for PolygonArray {
-    fn from(value: MultiLineStringArray) -> Self {
-        let metadata = value.data_type.metadata().clone();
-        Self::new(
-            value.coords,
-            value.geom_offsets,
-            value.ring_offsets,
-            value.validity,
-            metadata,
-        )
-    }
-}
-
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MultiLineStringArray {
+impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, MultiLineStringType)> for MultiLineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WKBArray<O>, Dimension)) -> Result<Self> {
+    fn try_from(value: (WKBArray<O>, MultiLineStringType)) -> Result<Self> {
         let mut_arr: MultiLineStringBuilder = value.try_into()?;
-        Ok(mut_arr.into())
+        Ok(mut_arr.finish())
     }
 }
 

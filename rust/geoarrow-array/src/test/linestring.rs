@@ -1,5 +1,5 @@
 use geo::{line_string, LineString};
-use geoarrow_schema::{CoordType, Dimension};
+use geoarrow_schema::{CoordType, Dimension, LineStringType};
 
 use crate::array::LineStringArray;
 use crate::builder::LineStringBuilder;
@@ -21,11 +21,6 @@ pub(crate) fn ls1() -> LineString {
 #[allow(dead_code)]
 pub(crate) fn ls_array() -> LineStringArray {
     let geoms = vec![ls0(), ls1()];
-    LineStringBuilder::from_line_strings(
-        &geoms,
-        Dimension::XY,
-        CoordType::Interleaved,
-        Default::default(),
-    )
-    .finish()
+    let typ = LineStringType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+    LineStringBuilder::from_line_strings(&geoms, typ).finish()
 }

@@ -3,7 +3,7 @@ use geo::{point, Point};
 use crate::array::PointArray;
 use crate::builder::PointBuilder;
 use geo_traits::CoordTrait;
-use geoarrow_schema::{CoordType, Dimension};
+use geoarrow_schema::{CoordType, Dimension, PointType};
 
 pub(crate) fn p0() -> Point {
     point!(
@@ -25,13 +25,8 @@ pub(crate) fn p2() -> Point {
 
 pub(crate) fn point_array() -> PointArray {
     let geoms = [p0(), p1(), p2()];
-    PointBuilder::from_points(
-        geoms.iter(),
-        Dimension::XY,
-        CoordType::default_interleaved(),
-        Default::default(),
-    )
-    .finish()
+    let typ = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+    PointBuilder::from_points(geoms.iter(), typ).finish()
 }
 
 struct CoordZ {
@@ -66,7 +61,8 @@ impl CoordTrait for CoordZ {
 }
 
 pub(crate) fn point_z_array() -> PointArray {
-    let mut builder = PointBuilder::with_capacity(Dimension::XYZ, 3);
+    let typ = PointType::new(CoordType::Interleaved, Dimension::XYZ, Default::default());
+    let mut builder = PointBuilder::with_capacity(typ, 3);
     let coords = vec![
         CoordZ {
             x: 0.,

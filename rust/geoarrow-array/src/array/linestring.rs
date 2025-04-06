@@ -14,8 +14,7 @@ use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
-use geo_traits::LineStringTrait;
-use geoarrow_schema::{Dimension, LineStringType, Metadata};
+use geoarrow_schema::{LineStringType, Metadata};
 
 /// An immutable array of LineString geometries using GeoArrow's in-memory representation.
 ///
@@ -222,11 +221,11 @@ impl IntoArrow for LineStringArray {
     }
 }
 
-impl TryFrom<(&GenericListArray<i32>, Dimension)> for LineStringArray {
+impl TryFrom<(&GenericListArray<i32>, LineStringType)> for LineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, dim): (&GenericListArray<i32>, Dimension)) -> Result<Self> {
-        let coords = CoordBuffer::from_arrow(value.values().as_ref(), dim)?;
+    fn try_from((value, typ): (&GenericListArray<i32>, LineStringType)) -> Result<Self> {
+        let coords = CoordBuffer::from_arrow(value.values().as_ref(), typ.dimension())?;
         let geom_offsets = value.offsets();
         let validity = value.nulls();
 
@@ -234,16 +233,16 @@ impl TryFrom<(&GenericListArray<i32>, Dimension)> for LineStringArray {
             coords,
             geom_offsets.clone(),
             validity.cloned(),
-            Default::default(),
+            typ.metadata().clone(),
         ))
     }
 }
 
-impl TryFrom<(&GenericListArray<i64>, Dimension)> for LineStringArray {
+impl TryFrom<(&GenericListArray<i64>, LineStringType)> for LineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, dim): (&GenericListArray<i64>, Dimension)) -> Result<Self> {
-        let coords = CoordBuffer::from_arrow(value.values().as_ref(), dim)?;
+    fn try_from((value, typ): (&GenericListArray<i64>, LineStringType)) -> Result<Self> {
+        let coords = CoordBuffer::from_arrow(value.values().as_ref(), typ.dimension())?;
         let geom_offsets = offsets_buffer_i64_to_i32(value.offsets())?;
         let validity = value.nulls();
 
@@ -251,23 +250,17 @@ impl TryFrom<(&GenericListArray<i64>, Dimension)> for LineStringArray {
             coords,
             geom_offsets,
             validity.cloned(),
-            Default::default(),
+            typ.metadata().clone(),
         ))
     }
 }
-impl TryFrom<(&dyn Array, Dimension)> for LineStringArray {
+impl TryFrom<(&dyn Array, LineStringType)> for LineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, dim): (&dyn Array, Dimension)) -> Result<Self> {
+    fn try_from((value, typ): (&dyn Array, LineStringType)) -> Result<Self> {
         match value.data_type() {
-            DataType::List(_) => {
-                let downcasted = value.as_list::<i32>();
-                (downcasted, dim).try_into()
-            }
-            DataType::LargeList(_) => {
-                let downcasted = value.as_list::<i64>();
-                (downcasted, dim).try_into()
-            }
+            DataType::List(_) => (value.as_list::<i32>(), typ).try_into(),
+            DataType::LargeList(_) => (value.as_list::<i64>(), typ).try_into(),
             _ => Err(GeoArrowError::General(format!(
                 "Unexpected type: {:?}",
                 value.data_type()
@@ -280,37 +273,17 @@ impl TryFrom<(&dyn Array, &Field)> for LineStringArray {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
-        let geom_type = NativeType::try_from(field)?;
-        let dim = geom_type
-            .dimension()
-            .ok_or(GeoArrowError::General("Expected dimension".to_string()))?;
-        let mut arr: Self = (arr, dim).try_into()?;
-        let metadata = Arc::new(Metadata::try_from(field)?);
-        arr.data_type = arr.data_type.clone().with_metadata(metadata);
-        Ok(arr)
+        let typ = field.try_extension_type::<LineStringType>()?;
+        (arr, typ).try_into()
     }
 }
 
-impl<G: LineStringTrait<T = f64>> From<(Vec<Option<G>>, Dimension)> for LineStringArray {
-    fn from(other: (Vec<Option<G>>, Dimension)) -> Self {
-        let mut_arr: LineStringBuilder = other.into();
-        mut_arr.into()
-    }
-}
-
-impl<G: LineStringTrait<T = f64>> From<(&[G], Dimension)> for LineStringArray {
-    fn from(other: (&[G], Dimension)) -> Self {
-        let mut_arr: LineStringBuilder = other.into();
-        mut_arr.into()
-    }
-}
-
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for LineStringArray {
+impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, LineStringType)> for LineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WKBArray<O>, Dimension)) -> Result<Self> {
+    fn try_from(value: (WKBArray<O>, LineStringType)) -> Result<Self> {
         let mut_arr: LineStringBuilder = value.try_into()?;
-        Ok(mut_arr.into())
+        Ok(mut_arr.finish())
     }
 }
 
