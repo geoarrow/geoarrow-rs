@@ -1,20 +1,20 @@
 use std::sync::Arc;
 
-use arrow_array::{ArrayRef, GenericListArray, OffsetSizeTrait};
+use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
 use geoarrow_schema::{CoordType, Dimension, Metadata};
 
-use crate::array::multipoint::MultiPointCapacity;
+use crate::capacity::MultiPointCapacity;
 // use super::array::check;
-use crate::array::offset_builder::OffsetsBuilder;
-use crate::array::{
-    CoordBufferBuilder, InterleavedCoordBufferBuilder, LineStringBuilder, MultiPointArray,
-    SeparatedCoordBufferBuilder, WKBArray,
+use crate::array::{MultiPointArray, WKBArray};
+use crate::builder::{
+    CoordBufferBuilder, InterleavedCoordBufferBuilder, LineStringBuilder, OffsetsBuilder,
+    SeparatedCoordBufferBuilder,
 };
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
-use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
+use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
 
 /// The GeoArrow equivalent to `Vec<Option<MultiPoint>>`: a mutable collection of MultiPoints.
 ///
@@ -369,70 +369,6 @@ impl MultiPointBuilder {
     }
 }
 
-impl Default for MultiPointBuilder {
-    fn default() -> Self {
-        Self::new(Dimension::XY)
-    }
-}
-
-impl GeometryArrayBuilder for MultiPointBuilder {
-    fn new(dim: Dimension) -> Self {
-        Self::new(dim)
-    }
-
-    fn with_geom_capacity_and_options(
-        dim: Dimension,
-        geom_capacity: usize,
-        coord_type: CoordType,
-        metadata: Arc<Metadata>,
-    ) -> Self {
-        let capacity = MultiPointCapacity::new(0, geom_capacity);
-        Self::with_capacity_and_options(dim, capacity, coord_type, metadata)
-    }
-
-    fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
-        self.push_geometry(value)
-    }
-
-    fn finish(self) -> Arc<dyn crate::NativeArray> {
-        Arc::new(self.finish())
-    }
-
-    fn len(&self) -> usize {
-        // NOTE: this is wrong?
-        self.coords.len()
-    }
-
-    fn nulls(&self) -> &NullBufferBuilder {
-        &self.validity
-    }
-
-    fn into_array_ref(self) -> ArrayRef {
-        Arc::new(self.into_arrow())
-    }
-
-    fn coord_type(&self) -> CoordType {
-        self.coords.coord_type()
-    }
-
-    fn set_metadata(&mut self, metadata: Arc<Metadata>) {
-        self.metadata = metadata;
-    }
-
-    fn metadata(&self) -> Arc<Metadata> {
-        self.metadata.clone()
-    }
-}
-
-impl IntoArrow for MultiPointBuilder {
-    type ArrowArray = GenericListArray<i32>;
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        let arr: MultiPointArray = self.into();
-        arr.into_arrow()
-    }
-}
-
 impl From<MultiPointBuilder> for MultiPointArray {
     fn from(mut other: MultiPointBuilder) -> Self {
         let validity = other.validity.finish();
@@ -447,12 +383,6 @@ impl From<MultiPointBuilder> for MultiPointArray {
             validity,
             other.metadata,
         )
-    }
-}
-
-impl From<MultiPointBuilder> for GenericListArray<i32> {
-    fn from(arr: MultiPointBuilder) -> Self {
-        arr.into_arrow()
     }
 }
 
@@ -504,5 +434,11 @@ impl From<MultiPointBuilder> for LineStringBuilder {
             value.metadata,
         )
         .unwrap()
+    }
+}
+
+impl GeometryArrayBuilder for MultiPointBuilder {
+    fn len(&self) -> usize {
+        self.geom_offsets.len_proxy()
     }
 }

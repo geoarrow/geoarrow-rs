@@ -1,5 +1,10 @@
 [workspace]
-members = ["rust/geoarrow", "rust/geoarrow-schema", "rust/geodatafusion"]
+members = [
+    "rust/geoarrow",
+    "rust/geoarrow-array",
+    "rust/geoarrow-schema",
+    "rust/geodatafusion",
+]
 exclude = ["js"]
 resolver = "2"
 
@@ -9,8 +14,15 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/geoarrow/geoarrow-rs"
 
 [workspace.dependencies]
+arrow-array = "54.3.1"
+arrow-buffer = "54.3.1"
 arrow-schema = "54.3.1"
+geo = "0.30.0"
 geo-traits = "0.2.0"
+num-traits = "0.2.19"
+rstar = "0.12.2"
 serde = "1"
 serde_json = "1"
 thiserror = "1"
+wkb = "0.8"
+wkt = "0.12"

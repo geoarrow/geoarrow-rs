@@ -1,0 +1,28 @@
+
+[package]
+name = "geoarrow-array"
+version = "0.1.0-dev"
+authors = ["Kyle Barron <kylebarron2@gmail.com>"]
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+description = "Rust implementation of GeoArrow"
+categories = ["science::geo"]
+rust-version = "1.82"
+
+
+[dependencies]
+arrow-array = { workspace = true }
+arrow-buffer = { workspace = true }
+arrow-schema = { workspace = true }
+geo-traits = { workspace = true }
+geoarrow-schema = { path = "../geoarrow-schema" }
+num-traits = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+wkb = { workspace = true }
+wkt = { workspace = true }
+
+[dev-dependencies]
+geo = { workspace = true }

@@ -763,7 +763,7 @@ pub trait GeometryArraySelfMethods {
     fn into_coord_type(self, coord_type: CoordType) -> Self;
 }
 
-/// Convert GeoArrow arrays into their underlying arrow arrays.
+/// Convert GeoArrow arrays into their respective arrow arrays.
 pub trait IntoArrow {
     /// The type of arrow array that this geoarrow array can be converted into.
     type ArrowArray;
