@@ -2,6 +2,7 @@
 members = [
     "rust/geoarrow",
     "rust/geoarrow-array",
+    "rust/geoarrow-geoparquet",
     "rust/geoarrow-schema",
     "rust/geodatafusion",
 ]
@@ -14,12 +15,22 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/geoarrow/geoarrow-rs"
 
 [workspace.dependencies]
+arrow-arith = "54.3.1"
 arrow-array = "54.3.1"
 arrow-buffer = "54.3.1"
+arrow-ord = "54.3.1"
 arrow-schema = "54.3.1"
+async-stream = "0.3"
+bytes = "1.10.0"
+futures = "0.3"
 geo = "0.30.0"
+geo-types = "0.7"
 geo-traits = "0.2.0"
+geoarrow-array = { path = "rust/geoarrow-array" }
+geoarrow-geoparquet = { path = "rust/geoarrow-geoparquet" }
+geoarrow-schema = { path = "rust/geoarrow-schema" }
 num-traits = "0.2.19"
+parquet = { version = "54.1", default-features = false }
 rstar = "0.12.2"
 serde = "1"
 serde_json = "1"
