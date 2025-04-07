@@ -610,27 +610,28 @@ impl GeoArrowArray for GeometryArray {
 impl<'a> ArrayAccessor<'a> for GeometryArray {
     type Item = Geometry<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
         let type_id = self.type_ids[index];
         let offset = self.offsets[index] as usize;
 
-        match type_id {
-            1 => Geometry::Point(self.point_xy.value(offset)),
-            2 => Geometry::LineString(self.line_string_xy.value(offset)),
-            3 => Geometry::Polygon(self.polygon_xy.value(offset)),
-            4 => Geometry::MultiPoint(self.mpoint_xy.value(offset)),
-            5 => Geometry::MultiLineString(self.mline_string_xy.value(offset)),
-            6 => Geometry::MultiPolygon(self.mpolygon_xy.value(offset)),
-            7 => Geometry::GeometryCollection(self.gc_xy.value(offset)),
-            11 => Geometry::Point(self.point_xyz.value(offset)),
-            12 => Geometry::LineString(self.line_string_xyz.value(offset)),
-            13 => Geometry::Polygon(self.polygon_xyz.value(offset)),
-            14 => Geometry::MultiPoint(self.mpoint_xyz.value(offset)),
-            15 => Geometry::MultiLineString(self.mline_string_xyz.value(offset)),
-            16 => Geometry::MultiPolygon(self.mpolygon_xyz.value(offset)),
-            17 => Geometry::GeometryCollection(self.gc_xyz.value(offset)),
+        let result = match type_id {
+            1 => Geometry::Point(self.point_xy.value(offset)?),
+            2 => Geometry::LineString(self.line_string_xy.value(offset)?),
+            3 => Geometry::Polygon(self.polygon_xy.value(offset)?),
+            4 => Geometry::MultiPoint(self.mpoint_xy.value(offset)?),
+            5 => Geometry::MultiLineString(self.mline_string_xy.value(offset)?),
+            6 => Geometry::MultiPolygon(self.mpolygon_xy.value(offset)?),
+            7 => Geometry::GeometryCollection(self.gc_xy.value(offset)?),
+            11 => Geometry::Point(self.point_xyz.value(offset)?),
+            12 => Geometry::LineString(self.line_string_xyz.value(offset)?),
+            13 => Geometry::Polygon(self.polygon_xyz.value(offset)?),
+            14 => Geometry::MultiPoint(self.mpoint_xyz.value(offset)?),
+            15 => Geometry::MultiLineString(self.mline_string_xyz.value(offset)?),
+            16 => Geometry::MultiPolygon(self.mpolygon_xyz.value(offset)?),
+            17 => Geometry::GeometryCollection(self.gc_xyz.value(offset)?),
             _ => panic!("unknown type_id {}", type_id),
-        }
+        };
+        Ok(result)
     }
 }
 

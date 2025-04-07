@@ -267,14 +267,14 @@ impl GeoArrowArray for MultiPolygonArray {
 impl<'a> ArrayAccessor<'a> for MultiPolygonArray {
     type Item = MultiPolygon<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        MultiPolygon::new(
+    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
+        Ok(MultiPolygon::new(
             &self.coords,
             &self.geom_offsets,
             &self.polygon_offsets,
             &self.ring_offsets,
             index,
-        )
+        ))
     }
 }
 

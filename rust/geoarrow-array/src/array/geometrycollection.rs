@@ -143,8 +143,12 @@ impl GeoArrowArray for GeometryCollectionArray {
 impl<'a> ArrayAccessor<'a> for GeometryCollectionArray {
     type Item = GeometryCollection<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        GeometryCollection::new(&self.array, &self.geom_offsets, index)
+    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
+        Ok(GeometryCollection::new(
+            &self.array,
+            &self.geom_offsets,
+            index,
+        ))
     }
 }
 

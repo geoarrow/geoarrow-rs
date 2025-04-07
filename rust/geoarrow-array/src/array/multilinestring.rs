@@ -214,8 +214,13 @@ impl GeoArrowArray for MultiLineStringArray {
 impl<'a> ArrayAccessor<'a> for MultiLineStringArray {
     type Item = MultiLineString<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        MultiLineString::new(&self.coords, &self.geom_offsets, &self.ring_offsets, index)
+    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
+        Ok(MultiLineString::new(
+            &self.coords,
+            &self.geom_offsets,
+            &self.ring_offsets,
+            index,
+        ))
     }
 }
 

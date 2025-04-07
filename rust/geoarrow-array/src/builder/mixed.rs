@@ -9,7 +9,6 @@ use geoarrow_schema::{
     CoordType, Dimension, LineStringType, Metadata, MultiLineStringType, MultiPointType,
     MultiPolygonType, PointType, PolygonType,
 };
-use wkb::reader::Wkb;
 
 use crate::array::{MixedGeometryArray, WKBArray};
 use crate::builder::{
@@ -524,7 +523,10 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MixedGeometryBuil
         );
 
         let metadata = value.data_type.metadata().clone();
-        let wkb_objects: Vec<Option<Wkb>> = value.iter().collect();
+        let wkb_objects = value
+            .iter()
+            .map(|x| x.transpose())
+            .collect::<Result<Vec<_>>>()?;
         Self::from_nullable_geometries(
             &wkb_objects,
             dim,

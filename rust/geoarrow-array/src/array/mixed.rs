@@ -478,22 +478,27 @@ impl MixedGeometryArray {
         let type_id = self.type_ids[index];
         let offset = self.offsets[index] as usize;
 
+        let expect_msg = "native geometry value access should never error";
         match type_id {
-            1 => Geometry::Point(self.points.value(offset)),
-            2 => Geometry::LineString(self.line_strings.value(offset)),
-            3 => Geometry::Polygon(self.polygons.value(offset)),
-            4 => Geometry::MultiPoint(self.multi_points.value(offset)),
-            5 => Geometry::MultiLineString(self.multi_line_strings.value(offset)),
-            6 => Geometry::MultiPolygon(self.multi_polygons.value(offset)),
+            1 => Geometry::Point(self.points.value(offset).expect(expect_msg)),
+            2 => Geometry::LineString(self.line_strings.value(offset).expect(expect_msg)),
+            3 => Geometry::Polygon(self.polygons.value(offset).expect(expect_msg)),
+            4 => Geometry::MultiPoint(self.multi_points.value(offset).expect(expect_msg)),
+            5 => {
+                Geometry::MultiLineString(self.multi_line_strings.value(offset).expect(expect_msg))
+            }
+            6 => Geometry::MultiPolygon(self.multi_polygons.value(offset).expect(expect_msg)),
             7 => {
                 panic!("nested geometry collections not supported")
             }
-            11 => Geometry::Point(self.points.value(offset)),
-            12 => Geometry::LineString(self.line_strings.value(offset)),
-            13 => Geometry::Polygon(self.polygons.value(offset)),
-            14 => Geometry::MultiPoint(self.multi_points.value(offset)),
-            15 => Geometry::MultiLineString(self.multi_line_strings.value(offset)),
-            16 => Geometry::MultiPolygon(self.multi_polygons.value(offset)),
+            11 => Geometry::Point(self.points.value(offset).expect(expect_msg)),
+            12 => Geometry::LineString(self.line_strings.value(offset).expect(expect_msg)),
+            13 => Geometry::Polygon(self.polygons.value(offset).expect(expect_msg)),
+            14 => Geometry::MultiPoint(self.multi_points.value(offset).expect(expect_msg)),
+            15 => {
+                Geometry::MultiLineString(self.multi_line_strings.value(offset).expect(expect_msg))
+            }
+            16 => Geometry::MultiPolygon(self.multi_polygons.value(offset).expect(expect_msg)),
             17 => {
                 panic!("nested geometry collections not supported")
             }

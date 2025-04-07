@@ -2,7 +2,6 @@ use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
 use geoarrow_schema::{CoordType, MultiPointType};
-use wkb::reader::Wkb;
 
 use crate::capacity::MultiPointCapacity;
 // use super::array::check;
@@ -280,7 +279,10 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, MultiPointType)> for MultiPointBu
     type Error = GeoArrowError;
 
     fn try_from((value, typ): (WKBArray<O>, MultiPointType)) -> Result<Self> {
-        let wkb_objects: Vec<Option<Wkb>> = value.iter().collect();
+        let wkb_objects = value
+            .iter()
+            .map(|x| x.transpose())
+            .collect::<Result<Vec<_>>>()?;
         Self::from_nullable_geometries(&wkb_objects, typ)
     }
 }

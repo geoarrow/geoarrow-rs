@@ -5,7 +5,6 @@ use geo_traits::{
     MultiPolygonTrait, PointTrait, PolygonTrait,
 };
 use geoarrow_schema::GeometryCollectionType;
-use wkb::reader::Wkb;
 
 use crate::array::{GeometryCollectionArray, WKBArray};
 use crate::builder::mixed::DEFAULT_PREFER_MULTI;
@@ -316,7 +315,10 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, GeometryCollectionType)>
     type Error = GeoArrowError;
 
     fn try_from((value, typ): (WKBArray<O>, GeometryCollectionType)) -> Result<Self> {
-        let wkb_objects: Vec<Option<Wkb>> = value.iter().collect();
+        let wkb_objects = value
+            .iter()
+            .map(|x| x.transpose())
+            .collect::<Result<Vec<_>>>()?;
         Self::from_nullable_geometries(&wkb_objects, typ, DEFAULT_PREFER_MULTI)
     }
 }

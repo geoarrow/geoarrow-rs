@@ -4,7 +4,6 @@ use geo_traits::{
     CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait,
 };
 use geoarrow_schema::{CoordType, MultiPolygonType};
-use wkb::reader::Wkb;
 
 use crate::capacity::MultiPolygonCapacity;
 // use super::array::check;
@@ -384,7 +383,10 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, MultiPolygonType)> for MultiPolyg
     type Error = GeoArrowError;
 
     fn try_from((value, typ): (WKBArray<O>, MultiPolygonType)) -> Result<Self> {
-        let wkb_objects: Vec<Option<Wkb>> = value.iter().collect();
+        let wkb_objects = value
+            .iter()
+            .map(|x| x.transpose())
+            .collect::<Result<Vec<_>>>()?;
         Self::from_nullable_geometries(&wkb_objects, typ)
     }
 }

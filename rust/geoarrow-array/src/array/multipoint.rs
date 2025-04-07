@@ -198,8 +198,8 @@ impl GeoArrowArray for MultiPointArray {
 impl<'a> ArrayAccessor<'a> for MultiPointArray {
     type Item = MultiPoint<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        MultiPoint::new(&self.coords, &self.geom_offsets, index)
+    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
+        Ok(MultiPoint::new(&self.coords, &self.geom_offsets, index))
     }
 }
 

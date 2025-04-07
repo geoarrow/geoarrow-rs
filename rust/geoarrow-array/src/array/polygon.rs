@@ -216,8 +216,13 @@ impl GeoArrowArray for PolygonArray {
 impl<'a> ArrayAccessor<'a> for PolygonArray {
     type Item = Polygon<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        Polygon::new(&self.coords, &self.geom_offsets, &self.ring_offsets, index)
+    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
+        Ok(Polygon::new(
+            &self.coords,
+            &self.geom_offsets,
+            &self.ring_offsets,
+            index,
+        ))
     }
 }
 
@@ -343,9 +348,11 @@ impl From<RectArray> for PolygonArray {
         let capacity = PolygonCapacity::new(coord_capacity, ring_capacity, geom_capacity);
         let mut output_array = PolygonBuilder::with_capacity(polygon_type, capacity);
 
-        value
-            .iter()
-            .for_each(|maybe_g| output_array.push_rect(maybe_g.as_ref()).unwrap());
+        value.iter().for_each(|maybe_g| {
+            output_array
+                .push_rect(maybe_g.transpose().unwrap().as_ref())
+                .unwrap()
+        });
 
         output_array.finish()
     }

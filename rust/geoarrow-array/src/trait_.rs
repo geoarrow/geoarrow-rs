@@ -8,6 +8,7 @@ use arrow_schema::extension::ExtensionType;
 use geo_traits::GeometryTrait;
 
 use crate::datatypes::GeoArrowType;
+use crate::error::Result;
 
 /// Convert GeoArrow arrays into their respective [arrow] arrays.
 pub trait IntoArrow {
@@ -262,10 +263,14 @@ pub trait ArrayAccessor<'a>: GeoArrowArray {
     /// assert_eq!(value.coord().unwrap().y(), 2.);
     /// ```
     ///
+    /// # Errors
+    ///
+    /// Errors for invalid WKT and WKB geometries. Will never error for native arrays.
+    ///
     /// # Panics
     ///
     /// Panics if the value is outside the bounds of the array.
-    fn value(&'a self, index: usize) -> Self::Item {
+    fn value(&'a self, index: usize) -> Result<Self::Item> {
         assert!(index <= self.len());
         unsafe { self.value_unchecked(index) }
     }
@@ -285,10 +290,14 @@ pub trait ArrayAccessor<'a>: GeoArrowArray {
     /// }
     /// ```
     ///
+    /// # Errors
+    ///
+    /// Errors for invalid WKT and WKB geometries. Will never error for native arrays.
+    ///
     /// # Safety
     ///
     /// Caller is responsible for ensuring that the index is within the bounds of the array
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item;
+    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item>;
 
     /// Returns the value at slot `i` as an Arrow scalar, considering validity.
     ///
@@ -302,7 +311,11 @@ pub trait ArrayAccessor<'a>: GeoArrowArray {
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// assert!(array.get(0).is_some());
     /// ```
-    fn get(&'a self, index: usize) -> Option<Self::Item> {
+    ///
+    /// # Errors
+    ///
+    /// Errors for invalid WKT and WKB geometries. Will never error for native arrays.
+    fn get(&'a self, index: usize) -> Option<Result<Self::Item>> {
         if self.is_null(index) {
             return None;
         }
@@ -325,10 +338,14 @@ pub trait ArrayAccessor<'a>: GeoArrowArray {
     /// }
     /// ```
     ///
+    /// # Errors
+    ///
+    /// Errors for invalid WKT and WKB geometries. Will never error for native arrays.
+    ///
     /// # Safety
     ///
     /// Caller is responsible for ensuring that the index is within the bounds of the array
-    unsafe fn get_unchecked(&'a self, index: usize) -> Option<Self::Item> {
+    unsafe fn get_unchecked(&'a self, index: usize) -> Option<Result<Self::Item>> {
         if self.is_null(index) {
             return None;
         }
@@ -348,7 +365,11 @@ pub trait ArrayAccessor<'a>: GeoArrowArray {
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// let maybe_points: Vec<Option<_>> = array.iter().collect();
     /// ```
-    fn iter(&'a self) -> impl ExactSizeIterator<Item = Option<Self::Item>> + 'a {
+    ///
+    /// # Errors
+    ///
+    /// Errors for invalid WKT and WKB geometries. Will never error for native arrays.
+    fn iter(&'a self) -> impl ExactSizeIterator<Item = Option<Result<Self::Item>>> + 'a {
         (0..self.len()).map(|i| unsafe { self.get_unchecked(i) })
     }
 
@@ -364,7 +385,11 @@ pub trait ArrayAccessor<'a>: GeoArrowArray {
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// let points: Vec<_> = array.iter_values().collect();
     /// ```
-    fn iter_values(&'a self) -> impl ExactSizeIterator<Item = Self::Item> + 'a {
+    ///
+    /// # Errors
+    ///
+    /// Errors for invalid WKT and WKB geometries. Will never error for native arrays.
+    fn iter_values(&'a self) -> impl ExactSizeIterator<Item = Result<Self::Item>> + 'a {
         (0..self.len()).map(|i| unsafe { self.value_unchecked(i) })
     }
 }

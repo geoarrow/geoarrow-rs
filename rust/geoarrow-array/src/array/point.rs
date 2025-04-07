@@ -150,8 +150,8 @@ impl GeoArrowArray for PointArray {
 impl<'a> ArrayAccessor<'a> for PointArray {
     type Item = Point<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        Point::new(&self.coords, index)
+    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
+        Ok(Point::new(&self.coords, index))
     }
 }
 
@@ -252,8 +252,8 @@ impl PartialEq for PointArray {
 
         // TODO: this should check for point equal.
         for point_idx in 0..self.len() {
-            let c1 = self.value(point_idx);
-            let c2 = other.value(point_idx);
+            let c1 = self.value(point_idx).unwrap();
+            let c2 = other.value(point_idx).unwrap();
             if !point_eq(&c1, &c2) {
                 return false;
             }

@@ -114,10 +114,9 @@ impl<O: OffsetSizeTrait> GeoArrowArray for WKTArray<O> {
 impl<'a, O: OffsetSizeTrait> ArrayAccessor<'a> for WKTArray<O> {
     type Item = Wkt<f64>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
         let s = unsafe { self.array.value_unchecked(index) };
-        // TODO: make trait fallible
-        Wkt::from_str(s).unwrap()
+        Wkt::from_str(s).map_err(GeoArrowError::WktStrError)
     }
 }
 

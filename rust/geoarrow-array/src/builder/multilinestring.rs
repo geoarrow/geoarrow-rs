@@ -2,7 +2,6 @@ use arrow_array::OffsetSizeTrait;
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
 use geoarrow_schema::{CoordType, MultiLineStringType};
-use wkb::reader::Wkb;
 // use super::array::check;
 
 use crate::array::{MultiLineStringArray, WKBArray};
@@ -362,7 +361,10 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, MultiLineStringType)> for MultiLi
     type Error = GeoArrowError;
 
     fn try_from((value, typ): (WKBArray<O>, MultiLineStringType)) -> Result<Self> {
-        let wkb_objects: Vec<Option<Wkb>> = value.iter().collect();
+        let wkb_objects = value
+            .iter()
+            .map(|x| x.transpose())
+            .collect::<Result<Vec<_>>>()?;
         Self::from_nullable_geometries(&wkb_objects, typ)
     }
 }

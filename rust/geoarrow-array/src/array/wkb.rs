@@ -132,10 +132,9 @@ impl<O: OffsetSizeTrait> GeoArrowArray for WKBArray<O> {
 impl<'a, O: OffsetSizeTrait> ArrayAccessor<'a> for WKBArray<O> {
     type Item = Wkb<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
         let buf = self.array.value(index);
-        // TODO: make trait fallible
-        Wkb::try_new(buf).unwrap()
+        Ok(Wkb::try_new(buf)?)
     }
 }
 

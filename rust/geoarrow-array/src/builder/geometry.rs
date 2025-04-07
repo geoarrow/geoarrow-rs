@@ -6,7 +6,6 @@ use geoarrow_schema::{
     Dimension, GeometryCollectionType, GeometryType, LineStringType, Metadata, MultiLineStringType,
     MultiPointType, MultiPolygonType, PointType, PolygonType,
 };
-use wkb::reader::Wkb;
 
 use crate::array::{GeometryArray, WKBArray};
 use crate::builder::{
@@ -903,7 +902,10 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, GeometryType)> for GeometryBuilde
             "Parsing a WKBArray with null elements not supported",
         );
 
-        let wkb_objects: Vec<Option<Wkb<'_>>> = value.iter().collect();
+        let wkb_objects = value
+            .iter()
+            .map(|x| x.transpose())
+            .collect::<Result<Vec<_>>>()?;
         Self::from_nullable_geometries(&wkb_objects, typ, DEFAULT_PREFER_MULTI)
     }
 }
