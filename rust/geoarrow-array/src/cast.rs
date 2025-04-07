@@ -1,8 +1,8 @@
 use crate::array::*;
-use crate::trait_::{NativeArray, SerializedArray};
+use crate::trait_::GeoArrowArray;
 
-/// Helpers for downcasting a [`NativeArray`] to a concrete implementation.
-pub trait AsNativeArray {
+/// Helpers for downcasting a [`GeoArrowArray`] to a concrete implementation.
+pub trait AsGeoArrowArray {
     /// Downcast this to a [`PointArray`] returning `None` if not possible
     fn as_point_opt(&self) -> Option<&PointArray>;
 
@@ -86,9 +86,27 @@ pub trait AsNativeArray {
     fn as_geometry(&self) -> &GeometryArray {
         self.as_geometry_opt().unwrap()
     }
+
+    /// Downcast this to a [`WKBArray`] with `i32` offsets returning `None` if not possible
+    fn as_wkb_opt(&self) -> Option<&WKBArray<i32>>;
+
+    /// Downcast this to a [`WKBArray`] with `i32` offsets panicking if not possible
+    #[inline]
+    fn as_wkb(&self) -> &WKBArray<i32> {
+        self.as_wkb_opt().unwrap()
+    }
+
+    /// Downcast this to a [`WKBArray`] with `i64` offsets returning `None` if not possible
+    fn as_large_wkb_opt(&self) -> Option<&WKBArray<i64>>;
+
+    /// Downcast this to a [`WKBArray`] with `i64` offsets panicking if not possible
+    #[inline]
+    fn as_large_wkb(&self) -> &WKBArray<i64> {
+        self.as_large_wkb_opt().unwrap()
+    }
 }
 
-impl AsNativeArray for &dyn NativeArray {
+impl AsGeoArrowArray for &dyn GeoArrowArray {
     #[inline]
     fn as_point_opt(&self) -> Option<&PointArray> {
         self.as_any().downcast_ref::<PointArray>()
@@ -133,30 +151,7 @@ impl AsNativeArray for &dyn NativeArray {
     fn as_geometry_opt(&self) -> Option<&GeometryArray> {
         self.as_any().downcast_ref::<GeometryArray>()
     }
-}
 
-/// Trait to downcast an Arrow array to a serialized array
-pub trait AsSerializedArray {
-    /// Downcast this to a [`WKBArray`] with `i32` offsets returning `None` if not possible
-    fn as_wkb_opt(&self) -> Option<&WKBArray<i32>>;
-
-    /// Downcast this to a [`WKBArray`] with `i32` offsets panicking if not possible
-    #[inline]
-    fn as_wkb(&self) -> &WKBArray<i32> {
-        self.as_wkb_opt().unwrap()
-    }
-
-    /// Downcast this to a [`WKBArray`] with `i64` offsets returning `None` if not possible
-    fn as_large_wkb_opt(&self) -> Option<&WKBArray<i64>>;
-
-    /// Downcast this to a [`WKBArray`] with `i64` offsets panicking if not possible
-    #[inline]
-    fn as_large_wkb(&self) -> &WKBArray<i64> {
-        self.as_large_wkb_opt().unwrap()
-    }
-}
-
-impl AsSerializedArray for &dyn SerializedArray {
     #[inline]
     fn as_wkb_opt(&self) -> Option<&WKBArray<i32>> {
         self.as_any().downcast_ref::<WKBArray<i32>>()

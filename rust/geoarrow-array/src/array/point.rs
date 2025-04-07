@@ -7,11 +7,11 @@ use arrow_schema::{DataType, Field};
 use geoarrow_schema::{Metadata, PointType};
 
 use crate::array::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
-use crate::datatypes::NativeType;
 use crate::eq::point_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Point;
-use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
+use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
+use crate::GeoArrowType;
 
 /// An immutable array of Point geometries using GeoArrow's in-memory representation.
 ///
@@ -113,7 +113,7 @@ impl PointArray {
     }
 }
 
-impl ArrayBase for PointArray {
+impl GeoArrowArray for PointArray {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -137,14 +137,12 @@ impl ArrayBase for PointArray {
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
     }
-}
 
-impl NativeArray for PointArray {
-    fn data_type(&self) -> NativeType {
-        NativeType::Point(self.data_type.clone())
+    fn data_type(&self) -> GeoArrowType {
+        GeoArrowType::Point(self.data_type.clone())
     }
 
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.slice(offset, length))
     }
 }

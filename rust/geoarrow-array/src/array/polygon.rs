@@ -10,11 +10,11 @@ use geoarrow_schema::{CoordType, Metadata, PolygonType};
 use crate::array::{CoordBuffer, RectArray, WKBArray};
 use crate::builder::PolygonBuilder;
 use crate::capacity::PolygonCapacity;
-use crate::datatypes::NativeType;
+use crate::datatypes::GeoArrowType;
 use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Polygon;
-use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
+use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 
 /// An immutable array of Polygon geometries using GeoArrow's in-memory representation.
@@ -179,7 +179,7 @@ impl PolygonArray {
     }
 }
 
-impl ArrayBase for PolygonArray {
+impl GeoArrowArray for PolygonArray {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -203,14 +203,12 @@ impl ArrayBase for PolygonArray {
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
     }
-}
 
-impl NativeArray for PolygonArray {
-    fn data_type(&self) -> NativeType {
-        NativeType::Polygon(self.data_type.clone())
+    fn data_type(&self) -> GeoArrowType {
+        GeoArrowType::Polygon(self.data_type.clone())
     }
 
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.slice(offset, length))
     }
 }

@@ -9,11 +9,11 @@ use geoarrow_schema::{Metadata, MultiPointType};
 use crate::array::{CoordBuffer, LineStringArray, PointArray, WKBArray};
 use crate::builder::MultiPointBuilder;
 use crate::capacity::MultiPointCapacity;
-use crate::datatypes::NativeType;
+use crate::datatypes::GeoArrowType;
 use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::MultiPoint;
-use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
+use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 
 /// An immutable array of MultiPoint geometries using GeoArrow's in-memory representation.
@@ -161,7 +161,7 @@ impl MultiPointArray {
     }
 }
 
-impl ArrayBase for MultiPointArray {
+impl GeoArrowArray for MultiPointArray {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -185,14 +185,12 @@ impl ArrayBase for MultiPointArray {
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
     }
-}
 
-impl NativeArray for MultiPointArray {
-    fn data_type(&self) -> NativeType {
-        NativeType::MultiPoint(self.data_type.clone())
+    fn data_type(&self) -> GeoArrowType {
+        GeoArrowType::MultiPoint(self.data_type.clone())
     }
 
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.slice(offset, length))
     }
 }

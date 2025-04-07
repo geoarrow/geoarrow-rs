@@ -13,10 +13,10 @@ use geoarrow_schema::{
 use crate::array::*;
 use crate::builder::*;
 use crate::capacity::GeometryCapacity;
-use crate::datatypes::NativeType;
+use crate::datatypes::GeoArrowType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Geometry;
-use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
+use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 
 /// # Invariants
 ///
@@ -522,7 +522,7 @@ impl GeometryArray {
 
     // TODO: recursively expand the types from the geometry collection array
     #[allow(dead_code)]
-    pub(crate) fn contained_types(&self) -> HashSet<NativeType> {
+    pub(crate) fn contained_types(&self) -> HashSet<GeoArrowType> {
         let mut types = HashSet::new();
         if self.has_points(Dimension::XY) {
             types.insert(self.point_xy.data_type());
@@ -572,7 +572,7 @@ impl GeometryArray {
     }
 }
 
-impl ArrayBase for GeometryArray {
+impl GeoArrowArray for GeometryArray {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -597,14 +597,12 @@ impl ArrayBase for GeometryArray {
     fn nulls(&self) -> Option<&NullBuffer> {
         None
     }
-}
 
-impl NativeArray for GeometryArray {
-    fn data_type(&self) -> NativeType {
-        NativeType::Geometry(self.data_type.clone())
+    fn data_type(&self) -> GeoArrowType {
+        GeoArrowType::Geometry(self.data_type.clone())
     }
 
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.slice(offset, length))
     }
 }

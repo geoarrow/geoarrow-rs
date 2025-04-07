@@ -9,11 +9,11 @@ use geoarrow_schema::{Metadata, MultiPolygonType};
 use crate::array::{CoordBuffer, PolygonArray, WKBArray};
 use crate::builder::MultiPolygonBuilder;
 use crate::capacity::MultiPolygonCapacity;
-use crate::datatypes::NativeType;
+use crate::datatypes::GeoArrowType;
 use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::MultiPolygon;
-use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
+use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 
 /// An immutable array of MultiPolygon geometries using GeoArrow's in-memory representation.
@@ -230,7 +230,7 @@ impl MultiPolygonArray {
     }
 }
 
-impl ArrayBase for MultiPolygonArray {
+impl GeoArrowArray for MultiPolygonArray {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -254,14 +254,12 @@ impl ArrayBase for MultiPolygonArray {
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
     }
-}
 
-impl NativeArray for MultiPolygonArray {
-    fn data_type(&self) -> NativeType {
-        NativeType::MultiPolygon(self.data_type.clone())
+    fn data_type(&self) -> GeoArrowType {
+        GeoArrowType::MultiPolygon(self.data_type.clone())
     }
 
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.slice(offset, length))
     }
 }

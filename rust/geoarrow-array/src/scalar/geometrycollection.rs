@@ -5,7 +5,6 @@ use geoarrow_schema::Dimension;
 use crate::array::MixedGeometryArray;
 use crate::eq::geometry_collection_eq;
 use crate::scalar::Geometry;
-use crate::trait_::ArrayAccessor;
 use crate::util::OffsetBufferUtils;
 
 /// An Arrow equivalent of a GeometryCollection

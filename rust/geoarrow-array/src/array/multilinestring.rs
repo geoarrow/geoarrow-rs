@@ -9,11 +9,11 @@ use geoarrow_schema::{Metadata, MultiLineStringType};
 use crate::array::{CoordBuffer, LineStringArray, WKBArray};
 use crate::builder::MultiLineStringBuilder;
 use crate::capacity::MultiLineStringCapacity;
-use crate::datatypes::NativeType;
+use crate::datatypes::GeoArrowType;
 use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::MultiLineString;
-use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
+use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 
 /// An immutable array of MultiLineString geometries using GeoArrow's in-memory representation.
@@ -177,7 +177,7 @@ impl MultiLineStringArray {
     }
 }
 
-impl ArrayBase for MultiLineStringArray {
+impl GeoArrowArray for MultiLineStringArray {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -201,14 +201,12 @@ impl ArrayBase for MultiLineStringArray {
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
     }
-}
 
-impl NativeArray for MultiLineStringArray {
-    fn data_type(&self) -> NativeType {
-        NativeType::MultiLineString(self.data_type.clone())
+    fn data_type(&self) -> GeoArrowType {
+        GeoArrowType::MultiLineString(self.data_type.clone())
     }
 
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.slice(offset, length))
     }
 }

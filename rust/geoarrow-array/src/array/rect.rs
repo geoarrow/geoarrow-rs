@@ -8,10 +8,10 @@ use arrow_schema::{DataType, Field};
 use geoarrow_schema::{BoxType, Metadata};
 
 use crate::array::SeparatedCoordBuffer;
-use crate::datatypes::NativeType;
+use crate::datatypes::GeoArrowType;
 use crate::error::GeoArrowError;
 use crate::scalar::Rect;
-use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
+use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 
 /// An immutable array of Rect geometries.
 ///
@@ -83,7 +83,7 @@ impl RectArray {
     }
 }
 
-impl ArrayBase for RectArray {
+impl GeoArrowArray for RectArray {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -107,14 +107,12 @@ impl ArrayBase for RectArray {
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
     }
-}
 
-impl NativeArray for RectArray {
-    fn data_type(&self) -> NativeType {
-        NativeType::Rect(self.data_type.clone())
+    fn data_type(&self) -> GeoArrowType {
+        GeoArrowType::Rect(self.data_type.clone())
     }
 
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.slice(offset, length))
     }
 }

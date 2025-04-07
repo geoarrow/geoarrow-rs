@@ -18,7 +18,7 @@ use crate::builder::{
 };
 use crate::capacity::MixedCapacity;
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::{ArrayAccessor, ArrayBase, GeometryArrayBuilder};
+use crate::trait_::{ArrayAccessor, GeoArrowArray, GeometryArrayBuilder};
 
 pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 
