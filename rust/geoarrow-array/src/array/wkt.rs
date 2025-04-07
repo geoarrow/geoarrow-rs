@@ -1,3 +1,4 @@
+use std::str::FromStr;
 use std::sync::Arc;
 
 use arrow_array::cast::AsArray;
@@ -7,11 +8,13 @@ use arrow_array::{
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{Metadata, WktType};
+use wkt::Wkt;
 
 use crate::datatypes::SerializedType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::{ArrayBase, IntoArrow, SerializedArray};
 use crate::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
+use crate::ArrayAccessor;
 
 /// An immutable array of WKT geometries using GeoArrow's in-memory representation.
 ///
@@ -93,6 +96,16 @@ impl<O: OffsetSizeTrait> ArrayBase for WKTArray<O> {
     /// Returns the optional validity.
     fn nulls(&self) -> Option<&NullBuffer> {
         self.array.nulls()
+    }
+}
+
+impl<'a, O: OffsetSizeTrait> ArrayAccessor<'a> for WKTArray<O> {
+    type Item = Wkt<f64>;
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        let s = unsafe { self.array.value_unchecked(index) };
+        // TODO: make trait fallible
+        Wkt::from_str(s).unwrap()
     }
 }
 
