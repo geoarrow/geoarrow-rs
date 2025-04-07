@@ -193,26 +193,6 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     fn is_valid(&self, i: usize) -> bool {
         !self.is_null(i)
     }
-
-    // /// Returns the element at index `i`, not considering validity.
-    // ///
-    // /// # Examples
-    // ///
-    // /// ```ignore
-    // /// use geoarrow::{trait_::ArrayAccessor, array::PointArray};
-    // /// use geoarrow_schema::Dimension;
-    // ///
-    // /// let point = geo::point!(x: 1., y: 2.);
-    // /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
-    // /// unsafe {
-    // ///     let value = array.value_unchecked(0); // geoarrow::scalar::Point
-    // /// }
-    // /// ```
-    // ///
-    // /// # Safety
-    // ///
-    // /// Caller is responsible for ensuring that the index is within the bounds of the array
-    // unsafe fn value_unchecked_as_geometry(&self, index: usize) -> impl GeometryTrait<T = f64>;
 }
 
 /// A trait for accessing the values of a [`NativeArray`].
@@ -226,7 +206,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
 /// value such as [`Default::default`] being returned, however, it must not be undefined.
 pub trait ArrayAccessor<'a>: ArrayBase {
     /// The [geoarrow scalar object][crate::scalar] for this geometry array type.
-    type Item: Send + Sync;
+    type Item: Send + Sync + GeometryTrait<T = f64>;
 
     /// Returns the element at index `i`, not considering validity.
     ///
