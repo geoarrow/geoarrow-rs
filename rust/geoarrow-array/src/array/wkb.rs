@@ -7,11 +7,11 @@ use arrow_array::{
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{CoordType, Metadata, WkbType};
+use wkb::reader::Wkb;
 
 use crate::capacity::WKBCapacity;
 use crate::datatypes::{NativeType, SerializedType};
 use crate::error::{GeoArrowError, Result};
-use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, SerializedArray};
 use crate::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 
@@ -128,10 +128,12 @@ impl<O: OffsetSizeTrait> SerializedArray for WKBArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> ArrayAccessor<'a> for WKBArray<O> {
-    type Item = WKB<'a, O>;
+    type Item = Wkb<'a>;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        WKB::new(&self.array, index)
+        let buf = self.array.value(index);
+        // TODO: make trait fallible
+        Wkb::try_new(buf).unwrap()
     }
 }
 

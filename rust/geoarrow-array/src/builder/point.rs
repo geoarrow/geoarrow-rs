@@ -2,6 +2,7 @@ use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
 use geoarrow_schema::{CoordType, PointType};
+use wkb::reader::Wkb;
 
 // use super::array::check;
 use crate::array::{PointArray, WKBArray};
@@ -9,7 +10,6 @@ use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
 
 /// The GeoArrow equivalent to `Vec<Option<Point>>`: a mutable collection of Points.
@@ -221,25 +221,14 @@ impl PointBuilder {
         array.extend_from_geometry_iter(geoms.iter().map(|x| x.as_ref()))?;
         Ok(array)
     }
-
-    pub(crate) fn from_wkb<O: OffsetSizeTrait>(
-        wkb_objects: &[Option<WKB<'_, O>>],
-        typ: PointType,
-    ) -> Result<Self> {
-        let wkb_objects2 = wkb_objects
-            .iter()
-            .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.parse()).transpose())
-            .collect::<Result<Vec<_>>>()?;
-        Self::from_nullable_geometries(&wkb_objects2, typ)
-    }
 }
 
 impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, PointType)> for PointBuilder {
     type Error = GeoArrowError;
 
     fn try_from((value, typ): (WKBArray<O>, PointType)) -> Result<Self> {
-        let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, typ)
+        let wkb_objects: Vec<Option<Wkb>> = value.iter().collect();
+        Self::from_nullable_geometries(&wkb_objects, typ)
     }
 }
 
