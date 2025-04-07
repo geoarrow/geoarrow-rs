@@ -11,7 +11,6 @@ use crate::builder::mixed::DEFAULT_PREFER_MULTI;
 use crate::builder::{MixedGeometryBuilder, OffsetsBuilder};
 use crate::capacity::GeometryCollectionCapacity;
 use crate::error::{GeoArrowError, Result};
-use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
 
 /// The GeoArrow equivalent to `Vec<Option<GeometryCollection>>`: a mutable collection of
@@ -308,18 +307,6 @@ impl<'a> GeometryCollectionBuilder {
         }
         Ok(array)
     }
-
-    pub(crate) fn from_wkb<W: OffsetSizeTrait>(
-        wkb_objects: &[Option<WKB<'_, W>>],
-        typ: GeometryCollectionType,
-        prefer_multi: bool,
-    ) -> Result<Self> {
-        let wkb_objects2 = wkb_objects
-            .iter()
-            .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.parse()).transpose())
-            .collect::<Result<Vec<_>>>()?;
-        Self::from_nullable_geometries(&wkb_objects2, typ, prefer_multi)
-    }
 }
 
 impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, GeometryCollectionType)>
@@ -328,8 +315,11 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, GeometryCollectionType)>
     type Error = GeoArrowError;
 
     fn try_from((value, typ): (WKBArray<O>, GeometryCollectionType)) -> Result<Self> {
-        let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, typ, DEFAULT_PREFER_MULTI)
+        let wkb_objects = value
+            .iter()
+            .map(|x| x.transpose())
+            .collect::<Result<Vec<_>>>()?;
+        Self::from_nullable_geometries(&wkb_objects, typ, DEFAULT_PREFER_MULTI)
     }
 }
 

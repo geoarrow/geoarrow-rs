@@ -24,5 +24,6 @@ rstar = "0.12.2"
 serde = "1"
 serde_json = "1"
 thiserror = "1"
-wkb = "0.8"
+# to include https://github.com/georust/wkb/pull/53
+wkb = { git = "https://github.com/georust/wkb", rev = "5a2027995997017bcd531e6be7e5cf126db1d4c1" }
 wkt = "0.12"

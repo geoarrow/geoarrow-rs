@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, OffsetSizeTrait, UnionArray};
-use arrow_buffer::{NullBuffer, ScalarBuffer};
+use arrow_buffer::ScalarBuffer;
 use arrow_schema::{DataType, UnionMode};
 use geoarrow_schema::{
     CoordType, Dimension, GeometryCollectionType, LineStringType, Metadata, MultiLineStringType,
@@ -19,10 +19,11 @@ use crate::builder::{
     MultiPolygonBuilder, PointBuilder, PolygonBuilder,
 };
 use crate::capacity::MixedCapacity;
-use crate::datatypes::NativeType;
+use crate::datatypes::GeoArrowType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Geometry;
-use crate::trait_::{ArrayAccessor, ArrayBase, NativeArray};
+use crate::trait_::GeoArrowArray;
+use crate::ArrayAccessor;
 
 /// # Invariants
 ///
@@ -428,7 +429,7 @@ impl MixedGeometryArray {
         }
     }
 
-    pub fn contained_types(&self) -> HashSet<NativeType> {
+    pub fn contained_types(&self) -> HashSet<GeoArrowType> {
         let mut types = HashSet::new();
         if self.has_points() {
             types.insert(self.points.data_type());
@@ -459,19 +460,9 @@ impl MixedGeometryArray {
             _ => unreachable!(),
         }
     }
-}
 
-impl ArrayBase for MixedGeometryArray {
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
-
-    fn into_array_ref(self) -> ArrayRef {
+    pub(crate) fn into_array_ref(self) -> ArrayRef {
         Arc::new(UnionArray::from(self))
-    }
-
-    fn to_array_ref(&self) -> ArrayRef {
-        self.clone().into_array_ref()
     }
 
     /// Returns the number of geometries in this array
@@ -481,41 +472,45 @@ impl ArrayBase for MixedGeometryArray {
         self.type_ids.len()
     }
 
-    /// Returns the optional validity.
-    #[inline]
-    fn nulls(&self) -> Option<&NullBuffer> {
-        None
-    }
-}
-
-impl<'a> ArrayAccessor<'a> for MixedGeometryArray {
-    type Item = Geometry<'a>;
-
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+    // Note: this is copied from ArrayAccessor because MixedGeometryArray doesn't implement
+    // GeoArrowArray
+    pub(crate) unsafe fn value_unchecked(&self, index: usize) -> Geometry {
         let type_id = self.type_ids[index];
         let offset = self.offsets[index] as usize;
 
+        let expect_msg = "native geometry value access should never error";
         match type_id {
-            1 => Geometry::Point(self.points.value(offset)),
-            2 => Geometry::LineString(self.line_strings.value(offset)),
-            3 => Geometry::Polygon(self.polygons.value(offset)),
-            4 => Geometry::MultiPoint(self.multi_points.value(offset)),
-            5 => Geometry::MultiLineString(self.multi_line_strings.value(offset)),
-            6 => Geometry::MultiPolygon(self.multi_polygons.value(offset)),
+            1 => Geometry::Point(self.points.value(offset).expect(expect_msg)),
+            2 => Geometry::LineString(self.line_strings.value(offset).expect(expect_msg)),
+            3 => Geometry::Polygon(self.polygons.value(offset).expect(expect_msg)),
+            4 => Geometry::MultiPoint(self.multi_points.value(offset).expect(expect_msg)),
+            5 => {
+                Geometry::MultiLineString(self.multi_line_strings.value(offset).expect(expect_msg))
+            }
+            6 => Geometry::MultiPolygon(self.multi_polygons.value(offset).expect(expect_msg)),
             7 => {
                 panic!("nested geometry collections not supported")
             }
-            11 => Geometry::Point(self.points.value(offset)),
-            12 => Geometry::LineString(self.line_strings.value(offset)),
-            13 => Geometry::Polygon(self.polygons.value(offset)),
-            14 => Geometry::MultiPoint(self.multi_points.value(offset)),
-            15 => Geometry::MultiLineString(self.multi_line_strings.value(offset)),
-            16 => Geometry::MultiPolygon(self.multi_polygons.value(offset)),
+            11 => Geometry::Point(self.points.value(offset).expect(expect_msg)),
+            12 => Geometry::LineString(self.line_strings.value(offset).expect(expect_msg)),
+            13 => Geometry::Polygon(self.polygons.value(offset).expect(expect_msg)),
+            14 => Geometry::MultiPoint(self.multi_points.value(offset).expect(expect_msg)),
+            15 => {
+                Geometry::MultiLineString(self.multi_line_strings.value(offset).expect(expect_msg))
+            }
+            16 => Geometry::MultiPolygon(self.multi_polygons.value(offset).expect(expect_msg)),
             17 => {
                 panic!("nested geometry collections not supported")
             }
             _ => panic!("unknown type_id {}", type_id),
         }
+    }
+
+    // Note: this is copied from ArrayAccessor because MixedGeometryArray doesn't implement
+    // GeoArrowArray
+    pub(crate) fn value(&self, index: usize) -> Geometry<'_> {
+        assert!(index <= self.len());
+        unsafe { self.value_unchecked(index) }
     }
 }
 

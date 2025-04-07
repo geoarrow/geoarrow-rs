@@ -3,11 +3,11 @@ use std::sync::Arc;
 use crate::array::{CoordBuffer, WKBArray};
 use crate::builder::LineStringBuilder;
 use crate::capacity::LineStringCapacity;
-use crate::datatypes::NativeType;
+use crate::datatypes::GeoArrowType;
 use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::LineString;
-use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
+use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 
 use arrow_array::cast::AsArray;
@@ -158,7 +158,7 @@ impl LineStringArray {
     }
 }
 
-impl ArrayBase for LineStringArray {
+impl GeoArrowArray for LineStringArray {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -182,14 +182,12 @@ impl ArrayBase for LineStringArray {
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
     }
-}
 
-impl NativeArray for LineStringArray {
-    fn data_type(&self) -> NativeType {
-        NativeType::LineString(self.data_type.clone())
+    fn data_type(&self) -> GeoArrowType {
+        GeoArrowType::LineString(self.data_type.clone())
     }
 
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.slice(offset, length))
     }
 }
@@ -197,8 +195,8 @@ impl NativeArray for LineStringArray {
 impl<'a> ArrayAccessor<'a> for LineStringArray {
     type Item = LineString<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        LineString::new(&self.coords, &self.geom_offsets, index)
+    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
+        Ok(LineString::new(&self.coords, &self.geom_offsets, index))
     }
 }
 

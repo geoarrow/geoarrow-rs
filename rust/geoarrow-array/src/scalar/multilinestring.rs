@@ -112,7 +112,7 @@ mod test {
             MultiLineStringBuilder::from_multi_line_strings(vec![ml0(), ml0()].as_slice(), typ)
                 .finish();
 
-        assert_eq!(arr1.value(0), arr2.value(0));
-        assert_ne!(arr1.value(1), arr2.value(1));
+        assert_eq!(arr1.value(0).unwrap(), arr2.value(0).unwrap());
+        assert_ne!(arr1.value(1).unwrap(), arr2.value(1).unwrap());
     }
 }

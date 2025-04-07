@@ -1,8 +1,37 @@
-use crate::array::*;
-use crate::trait_::{NativeArray, SerializedArray};
+use std::sync::Arc;
 
-/// Helpers for downcasting a [`NativeArray`] to a concrete implementation.
-pub trait AsNativeArray {
+use crate::array::*;
+use crate::trait_::GeoArrowArray;
+
+/// Helpers for downcasting a [`GeoArrowArray`] to a concrete implementation.
+///
+/// ```
+/// use std::sync::Arc;
+/// use arrow_array::{Int32Array, RecordBatch};
+/// use arrow_schema::{Schema, Field, DataType, ArrowError};
+/// use geo::point;
+///
+/// use geoarrow_array::array::PointArray;
+/// use geoarrow_array::builder::PointBuilder;
+/// use geoarrow_array::cast::AsGeoArrowArray;
+/// use geoarrow_array::GeoArrowArray;
+/// use geo_traits::CoordTrait;
+/// use geoarrow_schema::{CoordType, Dimension, PointType};
+///
+/// let point1 = point!(x: 1., y: 2.);
+/// let point2 = point!(x: 3., y: 4.);
+/// let point3 = point!(x: 5., y: 6.);
+/// let geoms = [point1, point2, point3];
+///
+/// let geom_type = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+/// let point_array = PointBuilder::from_points(geoms.iter(), geom_type).finish();
+///
+/// let generic_array: Arc<dyn GeoArrowArray> = Arc::new(point_array.clone());
+///
+/// let point_array2 = generic_array.as_point();
+/// assert_eq!(&point_array, point_array2);
+/// ```
+pub trait AsGeoArrowArray {
     /// Downcast this to a [`PointArray`] returning `None` if not possible
     fn as_point_opt(&self) -> Option<&PointArray>;
 
@@ -86,9 +115,28 @@ pub trait AsNativeArray {
     fn as_geometry(&self) -> &GeometryArray {
         self.as_geometry_opt().unwrap()
     }
+
+    /// Downcast this to a [`WKBArray`] with `i32` offsets returning `None` if not possible
+    fn as_wkb_opt(&self) -> Option<&WKBArray<i32>>;
+
+    /// Downcast this to a [`WKBArray`] with `i32` offsets panicking if not possible
+    #[inline]
+    fn as_wkb(&self) -> &WKBArray<i32> {
+        self.as_wkb_opt().unwrap()
+    }
+
+    /// Downcast this to a [`WKBArray`] with `i64` offsets returning `None` if not possible
+    fn as_large_wkb_opt(&self) -> Option<&WKBArray<i64>>;
+
+    /// Downcast this to a [`WKBArray`] with `i64` offsets panicking if not possible
+    #[inline]
+    fn as_large_wkb(&self) -> &WKBArray<i64> {
+        self.as_large_wkb_opt().unwrap()
+    }
 }
 
-impl AsNativeArray for &dyn NativeArray {
+// `dyn GeoArrowArray + '_` is the same as upstream Arrow
+impl AsGeoArrowArray for dyn GeoArrowArray + '_ {
     #[inline]
     fn as_point_opt(&self) -> Option<&PointArray> {
         self.as_any().downcast_ref::<PointArray>()
@@ -133,30 +181,64 @@ impl AsNativeArray for &dyn NativeArray {
     fn as_geometry_opt(&self) -> Option<&GeometryArray> {
         self.as_any().downcast_ref::<GeometryArray>()
     }
-}
 
-/// Trait to downcast an Arrow array to a serialized array
-pub trait AsSerializedArray {
-    /// Downcast this to a [`WKBArray`] with `i32` offsets returning `None` if not possible
-    fn as_wkb_opt(&self) -> Option<&WKBArray<i32>>;
-
-    /// Downcast this to a [`WKBArray`] with `i32` offsets panicking if not possible
     #[inline]
-    fn as_wkb(&self) -> &WKBArray<i32> {
-        self.as_wkb_opt().unwrap()
+    fn as_wkb_opt(&self) -> Option<&WKBArray<i32>> {
+        self.as_any().downcast_ref::<WKBArray<i32>>()
     }
 
-    /// Downcast this to a [`WKBArray`] with `i64` offsets returning `None` if not possible
-    fn as_large_wkb_opt(&self) -> Option<&WKBArray<i64>>;
-
-    /// Downcast this to a [`WKBArray`] with `i64` offsets panicking if not possible
     #[inline]
-    fn as_large_wkb(&self) -> &WKBArray<i64> {
-        self.as_large_wkb_opt().unwrap()
+    fn as_large_wkb_opt(&self) -> Option<&WKBArray<i64>> {
+        self.as_any().downcast_ref::<WKBArray<i64>>()
     }
 }
 
-impl AsSerializedArray for &dyn SerializedArray {
+impl AsGeoArrowArray for Arc<dyn GeoArrowArray> {
+    #[inline]
+    fn as_point_opt(&self) -> Option<&PointArray> {
+        self.as_any().downcast_ref::<PointArray>()
+    }
+
+    #[inline]
+    fn as_line_string_opt(&self) -> Option<&LineStringArray> {
+        self.as_any().downcast_ref::<LineStringArray>()
+    }
+
+    #[inline]
+    fn as_polygon_opt(&self) -> Option<&PolygonArray> {
+        self.as_any().downcast_ref::<PolygonArray>()
+    }
+
+    #[inline]
+    fn as_multi_point_opt(&self) -> Option<&MultiPointArray> {
+        self.as_any().downcast_ref::<MultiPointArray>()
+    }
+
+    #[inline]
+    fn as_multi_line_string_opt(&self) -> Option<&MultiLineStringArray> {
+        self.as_any().downcast_ref::<MultiLineStringArray>()
+    }
+
+    #[inline]
+    fn as_multi_polygon_opt(&self) -> Option<&MultiPolygonArray> {
+        self.as_any().downcast_ref::<MultiPolygonArray>()
+    }
+
+    #[inline]
+    fn as_geometry_collection_opt(&self) -> Option<&GeometryCollectionArray> {
+        self.as_any().downcast_ref::<GeometryCollectionArray>()
+    }
+
+    #[inline]
+    fn as_rect_opt(&self) -> Option<&RectArray> {
+        self.as_any().downcast_ref::<RectArray>()
+    }
+
+    #[inline]
+    fn as_geometry_opt(&self) -> Option<&GeometryArray> {
+        self.as_any().downcast_ref::<GeometryArray>()
+    }
+
     #[inline]
     fn as_wkb_opt(&self) -> Option<&WKBArray<i32>> {
         self.as_any().downcast_ref::<WKBArray<i32>>()

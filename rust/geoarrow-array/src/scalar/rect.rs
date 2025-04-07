@@ -28,8 +28,27 @@ impl<'a> Rect<'a> {
     }
 }
 
-// TODO: support 3d rects
 impl<'a> RectTrait for Rect<'a> {
+    type T = f64;
+    type CoordType<'b>
+        = SeparatedCoord<'a>
+    where
+        Self: 'b;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        self.lower.dim.into()
+    }
+
+    fn min(&self) -> Self::CoordType<'_> {
+        self.lower.value(self.geom_index)
+    }
+
+    fn max(&self) -> Self::CoordType<'_> {
+        self.upper.value(self.geom_index)
+    }
+}
+
+impl<'a> RectTrait for &Rect<'a> {
     type T = f64;
     type CoordType<'b>
         = SeparatedCoord<'a>

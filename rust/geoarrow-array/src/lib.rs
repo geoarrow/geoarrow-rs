@@ -64,8 +64,8 @@ pub mod scalar;
 mod trait_;
 pub(crate) mod util;
 
-pub use datatypes::{AnyType, NativeType, SerializedType};
-pub use trait_::{ArrayAccessor, IntoArrow};
+pub use datatypes::GeoArrowType;
+pub use trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 
 #[cfg(test)]
 pub(crate) mod test;

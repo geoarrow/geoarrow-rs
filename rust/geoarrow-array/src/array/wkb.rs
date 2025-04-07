@@ -7,12 +7,12 @@ use arrow_array::{
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{CoordType, Metadata, WkbType};
+use wkb::reader::Wkb;
 
 use crate::capacity::WKBCapacity;
-use crate::datatypes::{NativeType, SerializedType};
+use crate::datatypes::GeoArrowType;
 use crate::error::{GeoArrowError, Result};
-use crate::scalar::WKB;
-use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, SerializedArray};
+use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 use crate::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 
 /// An immutable array of WKB geometries using GeoArrow's in-memory representation.
@@ -48,7 +48,7 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
     /// Infer the minimal NativeType that this WKBArray can be casted to.
     #[allow(dead_code)]
     // TODO: is this obsolete with new from_wkb approach that uses downcasting?
-    pub(crate) fn infer_geo_data_type(&self, _coord_type: CoordType) -> Result<NativeType> {
+    pub(crate) fn infer_geo_data_type(&self, _coord_type: CoordType) -> Result<GeoArrowType> {
         todo!()
         // use crate::io::wkb::reader::r#type::infer_geometry_type;
         // infer_geometry_type(self.iter().flatten(), coord_type)
@@ -91,7 +91,7 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> ArrayBase for WKBArray<O> {
+impl<O: OffsetSizeTrait> GeoArrowArray for WKBArray<O> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -115,23 +115,26 @@ impl<O: OffsetSizeTrait> ArrayBase for WKBArray<O> {
     fn nulls(&self) -> Option<&NullBuffer> {
         self.array.nulls()
     }
-}
 
-impl<O: OffsetSizeTrait> SerializedArray for WKBArray<O> {
-    fn data_type(&self) -> SerializedType {
+    fn data_type(&self) -> GeoArrowType {
         if O::IS_LARGE {
-            SerializedType::LargeWKB(self.data_type.clone())
+            GeoArrowType::LargeWKB(self.data_type.clone())
         } else {
-            SerializedType::WKB(self.data_type.clone())
+            GeoArrowType::WKB(self.data_type.clone())
         }
+    }
+
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.slice(offset, length))
     }
 }
 
 impl<'a, O: OffsetSizeTrait> ArrayAccessor<'a> for WKBArray<O> {
-    type Item = WKB<'a, O>;
+    type Item = Wkb<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        WKB::new(&self.array, index)
+    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
+        let buf = self.array.value(index);
+        Ok(Wkb::try_new(buf)?)
     }
 }
 

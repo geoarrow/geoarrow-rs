@@ -13,10 +13,10 @@ use geoarrow_schema::{
 use crate::array::*;
 use crate::builder::*;
 use crate::capacity::GeometryCapacity;
-use crate::datatypes::NativeType;
+use crate::datatypes::GeoArrowType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Geometry;
-use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
+use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 
 /// # Invariants
 ///
@@ -522,7 +522,7 @@ impl GeometryArray {
 
     // TODO: recursively expand the types from the geometry collection array
     #[allow(dead_code)]
-    pub(crate) fn contained_types(&self) -> HashSet<NativeType> {
+    pub(crate) fn contained_types(&self) -> HashSet<GeoArrowType> {
         let mut types = HashSet::new();
         if self.has_points(Dimension::XY) {
             types.insert(self.point_xy.data_type());
@@ -572,7 +572,7 @@ impl GeometryArray {
     }
 }
 
-impl ArrayBase for GeometryArray {
+impl GeoArrowArray for GeometryArray {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -597,14 +597,12 @@ impl ArrayBase for GeometryArray {
     fn nulls(&self) -> Option<&NullBuffer> {
         None
     }
-}
 
-impl NativeArray for GeometryArray {
-    fn data_type(&self) -> NativeType {
-        NativeType::Geometry(self.data_type.clone())
+    fn data_type(&self) -> GeoArrowType {
+        GeoArrowType::Geometry(self.data_type.clone())
     }
 
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.slice(offset, length))
     }
 }
@@ -612,27 +610,28 @@ impl NativeArray for GeometryArray {
 impl<'a> ArrayAccessor<'a> for GeometryArray {
     type Item = Geometry<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
         let type_id = self.type_ids[index];
         let offset = self.offsets[index] as usize;
 
-        match type_id {
-            1 => Geometry::Point(self.point_xy.value(offset)),
-            2 => Geometry::LineString(self.line_string_xy.value(offset)),
-            3 => Geometry::Polygon(self.polygon_xy.value(offset)),
-            4 => Geometry::MultiPoint(self.mpoint_xy.value(offset)),
-            5 => Geometry::MultiLineString(self.mline_string_xy.value(offset)),
-            6 => Geometry::MultiPolygon(self.mpolygon_xy.value(offset)),
-            7 => Geometry::GeometryCollection(self.gc_xy.value(offset)),
-            11 => Geometry::Point(self.point_xyz.value(offset)),
-            12 => Geometry::LineString(self.line_string_xyz.value(offset)),
-            13 => Geometry::Polygon(self.polygon_xyz.value(offset)),
-            14 => Geometry::MultiPoint(self.mpoint_xyz.value(offset)),
-            15 => Geometry::MultiLineString(self.mline_string_xyz.value(offset)),
-            16 => Geometry::MultiPolygon(self.mpolygon_xyz.value(offset)),
-            17 => Geometry::GeometryCollection(self.gc_xyz.value(offset)),
+        let result = match type_id {
+            1 => Geometry::Point(self.point_xy.value(offset)?),
+            2 => Geometry::LineString(self.line_string_xy.value(offset)?),
+            3 => Geometry::Polygon(self.polygon_xy.value(offset)?),
+            4 => Geometry::MultiPoint(self.mpoint_xy.value(offset)?),
+            5 => Geometry::MultiLineString(self.mline_string_xy.value(offset)?),
+            6 => Geometry::MultiPolygon(self.mpolygon_xy.value(offset)?),
+            7 => Geometry::GeometryCollection(self.gc_xy.value(offset)?),
+            11 => Geometry::Point(self.point_xyz.value(offset)?),
+            12 => Geometry::LineString(self.line_string_xyz.value(offset)?),
+            13 => Geometry::Polygon(self.polygon_xyz.value(offset)?),
+            14 => Geometry::MultiPoint(self.mpoint_xyz.value(offset)?),
+            15 => Geometry::MultiLineString(self.mline_string_xyz.value(offset)?),
+            16 => Geometry::MultiPolygon(self.mpolygon_xyz.value(offset)?),
+            17 => Geometry::GeometryCollection(self.gc_xyz.value(offset)?),
             _ => panic!("unknown type_id {}", type_id),
-        }
+        };
+        Ok(result)
     }
 }
 

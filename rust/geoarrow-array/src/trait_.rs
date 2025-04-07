@@ -1,49 +1,48 @@
 use std::any::Any;
+use std::fmt::Debug;
 use std::sync::Arc;
 
 use arrow_array::{Array, ArrayRef};
 use arrow_buffer::NullBuffer;
 use arrow_schema::extension::ExtensionType;
+use geo_traits::GeometryTrait;
 
-use crate::datatypes::{NativeType, SerializedType};
+use crate::datatypes::GeoArrowType;
+use crate::error::Result;
 
-/// Convert GeoArrow arrays into their respective arrow arrays.
+/// Convert GeoArrow arrays into their respective [arrow] arrays.
 pub trait IntoArrow {
     /// The type of arrow array that this geoarrow array can be converted into.
     type ArrowArray: Array;
     type ExtensionType: ExtensionType;
 
     /// Converts this geoarrow array into an arrow array.
+    // Return Arc<Self::ArrowArray>? Could that replace `into_array_ref` on the trait?
     fn into_arrow(self) -> Self::ArrowArray;
 
     fn ext_type(&self) -> &Self::ExtensionType;
 }
 
 /// A base trait that both [NativeArray] and [SerializedArray] implement
-pub trait ArrayBase: std::fmt::Debug + Send + Sync {
-    /// Returns the array as [`Any`] so that it can be
-    /// downcasted to a specific implementation.
+pub trait GeoArrowArray: Debug + Send + Sync {
+    /// Returns the array as [`Any`] so that it can be downcasted to a specific implementation.
+    ///
+    /// Prefer using [`AsGeoArrowArray`] instead of calling this method and manually downcasting.
+    fn as_any(&self) -> &dyn Any;
+
+    /// Returns the [`NativeType`] of this array.
     ///
     /// # Examples
     ///
     /// ```ignore
-    /// use std::sync::Arc;
-    /// use arrow_array::{Int32Array, RecordBatch};
-    /// use arrow_schema::{Schema, Field, DataType, ArrowError};
+    /// use geoarrow::{array::PointArray, datatypes::NativeType, NativeArray};
+    /// use geoarrow_schema::Dimension;
     ///
-    /// let id = Int32Array::from(vec![1, 2, 3, 4, 5]);
-    /// let batch = RecordBatch::try_new(
-    ///     Arc::new(Schema::new(vec![Field::new("id", DataType::Int32, false)])),
-    ///     vec![Arc::new(id)]
-    /// ).unwrap();
-    ///
-    /// let int32array = batch
-    ///     .column(0)
-    ///     .as_any()
-    ///     .downcast_ref::<Int32Array>()
-    ///     .expect("Failed to downcast");
+    /// let point = geo::point!(x: 1., y: 2.);
+    /// let point_array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
+    /// assert!(matches!(point_array.data_type(), NativeType::Point(_, _)));
     /// ```
-    fn as_any(&self) -> &dyn Any;
+    fn data_type(&self) -> GeoArrowType;
 
     /// Converts this array into an arced [`arrow`] array, consuming the original array.
     ///
@@ -55,7 +54,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// ```ignore
     ///
-    /// use geoarrow::{array::PointArray, ArrayBase};
+    /// use geoarrow::{array::PointArray, GeoArrowArray};
     /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
@@ -75,7 +74,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// ```ignore
     ///
-    /// use geoarrow::{array::PointArray, ArrayBase};
+    /// use geoarrow::{array::PointArray, GeoArrowArray};
     /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
@@ -90,7 +89,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```ignore
-    /// use geoarrow::{array::PointArray, ArrayBase};
+    /// use geoarrow::{array::PointArray, GeoArrowArray};
     /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
@@ -104,7 +103,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```ignore
-    /// use geoarrow::{array::PointArray, ArrayBase};
+    /// use geoarrow::{array::PointArray, GeoArrowArray};
     /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
@@ -124,7 +123,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```ignore
-    /// use geoarrow::{ArrayBase, array::PointArray};
+    /// use geoarrow::{GeoArrowArray, array::PointArray};
     /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
@@ -140,7 +139,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```ignore
-    /// use geoarrow::{ArrayBase, array::PointArray};
+    /// use geoarrow::{GeoArrowArray, array::PointArray};
     /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
@@ -157,7 +156,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```ignore
-    /// use geoarrow::{ArrayBase, array::PointArray};
+    /// use geoarrow::{GeoArrowArray, array::PointArray};
     /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
@@ -178,7 +177,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```ignore
-    /// use geoarrow::{ArrayBase, array::PointArray};
+    /// use geoarrow::{GeoArrowArray, array::PointArray};
     /// use geoarrow_schema::Dimension;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
@@ -194,28 +193,48 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
         !self.is_null(i)
     }
 
-    // /// Returns the element at index `i`, not considering validity.
-    // ///
-    // /// # Examples
-    // ///
-    // /// ```ignore
-    // /// use geoarrow::{trait_::ArrayAccessor, array::PointArray};
-    // /// use geoarrow_schema::Dimension;
-    // ///
-    // /// let point = geo::point!(x: 1., y: 2.);
-    // /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
-    // /// unsafe {
-    // ///     let value = array.value_unchecked(0); // geoarrow::scalar::Point
-    // /// }
-    // /// ```
-    // ///
-    // /// # Safety
-    // ///
-    // /// Caller is responsible for ensuring that the index is within the bounds of the array
-    // unsafe fn value_unchecked_as_geometry(&self, index: usize) -> impl GeometryTrait<T = f64>;
+    /// Returns a zero-copy slice of this array with the indicated offset and length.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use geoarrow::{
+    ///     array::PointArray,
+    ///     trait_::{GeometryArraySelfMethods, ArrayAccessor, NativeArray, GeoArrowArray}
+    /// };
+    /// use geoarrow_schema::Dimension;
+    ///
+    /// let point_0 = geo::point!(x: 1., y: 2.);
+    /// let point_1 = geo::point!(x: 3., y: 4.);
+    /// let array: PointArray = (vec![point_0, point_1].as_slice(), Dimension::XY).into();
+    /// let smaller_array = array.slice(1, 1);
+    /// assert_eq!(smaller_array.len(), 1);
+    /// let value = smaller_array.value_as_geo(0);
+    /// assert_eq!(value.x(), 3.);
+    /// assert_eq!(value.y(), 4.);
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// This function panics iff `offset + length > self.len()`.
+    #[must_use]
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray>;
 }
 
 /// A trait for accessing the values of a [`NativeArray`].
+///
+/// # Performance
+///
+/// Accessing a geometry from a "native" array, such as `PointArray`, `MultiPolygonArray` or
+/// `GeometryArray` will always be constant-time and zero-copy.
+///
+/// Accessing a geometry from a "serialized" array such as `WKBArray` or `WKTArray` will trigger
+/// some amount of parsing. In the case of `WKBArray`, accessing an item will read the WKB header
+/// and scan the buffer if needed to find internal geometry offsets, but will not copy any internal
+/// coordinates. This allows for later access to be constant-time (though not necessarily
+/// zero-copy, since WKB is not byte-aligned). In the case of `WKTArray`, accessing a geometry will
+/// fully parse the WKT string and copy coordinates to a separate representation. This means that
+/// calling `.iter()` on a `WKTArray` will transparently fully parse every row.
 ///
 /// # Validity
 ///
@@ -224,9 +243,9 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
 ///
 /// The value at null indexes is unspecified, and implementations must not rely on a specific
 /// value such as [`Default::default`] being returned, however, it must not be undefined.
-pub trait ArrayAccessor<'a>: ArrayBase {
+pub trait ArrayAccessor<'a>: GeoArrowArray {
     /// The [geoarrow scalar object][crate::scalar] for this geometry array type.
-    type Item: Send + Sync;
+    type Item: Send + Sync + GeometryTrait<T = f64>;
 
     /// Returns the element at index `i`, not considering validity.
     ///
@@ -244,10 +263,14 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     /// assert_eq!(value.coord().unwrap().y(), 2.);
     /// ```
     ///
+    /// # Errors
+    ///
+    /// Errors for invalid WKT and WKB geometries. Will never error for native arrays.
+    ///
     /// # Panics
     ///
     /// Panics if the value is outside the bounds of the array.
-    fn value(&'a self, index: usize) -> Self::Item {
+    fn value(&'a self, index: usize) -> Result<Self::Item> {
         assert!(index <= self.len());
         unsafe { self.value_unchecked(index) }
     }
@@ -267,10 +290,14 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     /// }
     /// ```
     ///
+    /// # Errors
+    ///
+    /// Errors for invalid WKT and WKB geometries. Will never error for native arrays.
+    ///
     /// # Safety
     ///
     /// Caller is responsible for ensuring that the index is within the bounds of the array
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item;
+    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item>;
 
     /// Returns the value at slot `i` as an Arrow scalar, considering validity.
     ///
@@ -284,7 +311,11 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// assert!(array.get(0).is_some());
     /// ```
-    fn get(&'a self, index: usize) -> Option<Self::Item> {
+    ///
+    /// # Errors
+    ///
+    /// Errors for invalid WKT and WKB geometries. Will never error for native arrays.
+    fn get(&'a self, index: usize) -> Option<Result<Self::Item>> {
         if self.is_null(index) {
             return None;
         }
@@ -307,10 +338,14 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     /// }
     /// ```
     ///
+    /// # Errors
+    ///
+    /// Errors for invalid WKT and WKB geometries. Will never error for native arrays.
+    ///
     /// # Safety
     ///
     /// Caller is responsible for ensuring that the index is within the bounds of the array
-    unsafe fn get_unchecked(&'a self, index: usize) -> Option<Self::Item> {
+    unsafe fn get_unchecked(&'a self, index: usize) -> Option<Result<Self::Item>> {
         if self.is_null(index) {
             return None;
         }
@@ -330,7 +365,11 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// let maybe_points: Vec<Option<_>> = array.iter().collect();
     /// ```
-    fn iter(&'a self) -> impl ExactSizeIterator<Item = Option<Self::Item>> + 'a {
+    ///
+    /// # Errors
+    ///
+    /// Errors for invalid WKT and WKB geometries. Will never error for native arrays.
+    fn iter(&'a self) -> impl ExactSizeIterator<Item = Option<Result<Self::Item>>> + 'a {
         (0..self.len()).map(|i| unsafe { self.get_unchecked(i) })
     }
 
@@ -346,67 +385,13 @@ pub trait ArrayAccessor<'a>: ArrayBase {
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// let points: Vec<_> = array.iter_values().collect();
     /// ```
-    fn iter_values(&'a self) -> impl ExactSizeIterator<Item = Self::Item> + 'a {
+    ///
+    /// # Errors
+    ///
+    /// Errors for invalid WKT and WKB geometries. Will never error for native arrays.
+    fn iter_values(&'a self) -> impl ExactSizeIterator<Item = Result<Self::Item>> + 'a {
         (0..self.len()).map(|i| unsafe { self.value_unchecked(i) })
     }
-}
-
-/// A trait to represent native-encoded GeoArrow arrays
-///
-/// This encompasses the core GeoArrow [native encoding](https://github.com/geoarrow/geoarrow/blob/main/format.md#native-encoding) types.
-///
-/// This trait is often used for downcasting. If you have a dynamically-typed `Arc<dyn
-/// NativeArray>`, to downcast into a strongly-typed chunked array use `as_any` with the
-/// `data_type` method to discern which chunked array type to pass to `downcast_ref`.
-pub trait NativeArray: ArrayBase {
-    /// Returns the [`NativeType`] of this array.
-    ///
-    /// # Examples
-    ///
-    /// ```ignore
-    /// use geoarrow::{array::PointArray, datatypes::NativeType, NativeArray};
-    /// use geoarrow_schema::Dimension;
-    ///
-    /// let point = geo::point!(x: 1., y: 2.);
-    /// let point_array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
-    /// assert!(matches!(point_array.data_type(), NativeType::Point(_, _)));
-    /// ```
-    fn data_type(&self) -> NativeType;
-
-    /// Returns a zero-copy slice of this array with the indicated offset and length.
-    ///
-    /// # Examples
-    ///
-    /// ```ignore
-    /// use geoarrow::{
-    ///     array::PointArray,
-    ///     trait_::{GeometryArraySelfMethods, ArrayAccessor, NativeArray, ArrayBase}
-    /// };
-    /// use geoarrow_schema::Dimension;
-    ///
-    /// let point_0 = geo::point!(x: 1., y: 2.);
-    /// let point_1 = geo::point!(x: 3., y: 4.);
-    /// let array: PointArray = (vec![point_0, point_1].as_slice(), Dimension::XY).into();
-    /// let smaller_array = array.slice(1, 1);
-    /// assert_eq!(smaller_array.len(), 1);
-    /// let value = smaller_array.value_as_geo(0);
-    /// assert_eq!(value.x(), 3.);
-    /// assert_eq!(value.y(), 4.);
-    /// ```
-    ///
-    /// # Panics
-    ///
-    /// This function panics iff `offset + length > self.len()`.
-    #[must_use]
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray>;
-}
-
-/// A trait to represent serialized GeoArrow arrays
-///
-/// This encompasses WKB and WKT GeoArrow types.
-pub trait SerializedArray: ArrayBase {
-    /// Returns a the [`SerializedType`] of this array.
-    fn data_type(&self) -> SerializedType;
 }
 
 /// A trait describing a mutable geometry array; i.e. an array whose values can be changed.
@@ -415,7 +400,7 @@ pub trait SerializedArray: ArrayBase {
 /// thereby making them useful to perform numeric operations without allocations.
 /// As in [`NativeArray`], concrete arrays (such as
 /// [`PointBuilder`][crate::array::PointBuilder]) implement how they are mutated.
-pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
+pub trait GeometryArrayBuilder: Debug + Send + Sync + Sized {
     /// Returns the length of the array.
     ///
     /// # Examples

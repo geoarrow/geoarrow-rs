@@ -8,10 +8,10 @@ use arrow_schema::{DataType, Field};
 use geoarrow_schema::{BoxType, Metadata};
 
 use crate::array::SeparatedCoordBuffer;
-use crate::datatypes::NativeType;
-use crate::error::GeoArrowError;
+use crate::datatypes::GeoArrowType;
+use crate::error::{GeoArrowError, Result};
 use crate::scalar::Rect;
-use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
+use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 
 /// An immutable array of Rect geometries.
 ///
@@ -83,7 +83,7 @@ impl RectArray {
     }
 }
 
-impl ArrayBase for RectArray {
+impl GeoArrowArray for RectArray {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -107,14 +107,12 @@ impl ArrayBase for RectArray {
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
     }
-}
 
-impl NativeArray for RectArray {
-    fn data_type(&self) -> NativeType {
-        NativeType::Rect(self.data_type.clone())
+    fn data_type(&self) -> GeoArrowType {
+        GeoArrowType::Rect(self.data_type.clone())
     }
 
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.slice(offset, length))
     }
 }
@@ -122,8 +120,8 @@ impl NativeArray for RectArray {
 impl<'a> ArrayAccessor<'a> for RectArray {
     type Item = Rect<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        Rect::new(&self.lower, &self.upper, index)
+    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
+        Ok(Rect::new(&self.lower, &self.upper, index))
     }
 }
 
@@ -155,7 +153,7 @@ impl IntoArrow for RectArray {
 impl TryFrom<(&StructArray, BoxType)> for RectArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (&StructArray, BoxType)) -> Result<Self, Self::Error> {
+    fn try_from((value, typ): (&StructArray, BoxType)) -> Result<Self> {
         let dim = typ.dimension();
         let validity = value.nulls();
         let columns = value.columns();
@@ -191,7 +189,7 @@ impl TryFrom<(&StructArray, BoxType)> for RectArray {
 impl TryFrom<(&dyn Array, BoxType)> for RectArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, dim): (&dyn Array, BoxType)) -> Result<Self, Self::Error> {
+    fn try_from((value, dim): (&dyn Array, BoxType)) -> Result<Self> {
         match value.data_type() {
             DataType::Struct(_) => (value.as_struct(), dim).try_into(),
             _ => Err(GeoArrowError::General(
@@ -204,7 +202,7 @@ impl TryFrom<(&dyn Array, BoxType)> for RectArray {
 impl TryFrom<(&dyn Array, &Field)> for RectArray {
     type Error = GeoArrowError;
 
-    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self, Self::Error> {
+    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
         let typ = field.try_extension_type::<BoxType>()?;
         (arr, typ).try_into()
     }
@@ -236,7 +234,7 @@ mod test {
             BoxType::new(Dimension::XY, Default::default()),
         ))
         .unwrap();
-        let rect_again = rect_arr_again.value(0);
+        let rect_again = rect_arr_again.value(0).unwrap();
         assert!(rect_eq(&rect, &rect_again));
     }
 }

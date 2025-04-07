@@ -14,8 +14,7 @@ use crate::builder::{
 };
 use crate::capacity::GeometryCapacity;
 use crate::error::{GeoArrowError, Result};
-use crate::scalar::WKB;
-use crate::trait_::{ArrayAccessor, ArrayBase, GeometryArrayBuilder};
+use crate::trait_::{ArrayAccessor, GeoArrowArray, GeometryArrayBuilder};
 
 pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 
@@ -889,18 +888,6 @@ impl<'a> GeometryBuilder {
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         Ok(array)
     }
-
-    pub(crate) fn from_wkb<W: OffsetSizeTrait>(
-        wkb_objects: &[Option<WKB<'_, W>>],
-        typ: GeometryType,
-        prefer_multi: bool,
-    ) -> Result<Self> {
-        let wkb_objects2 = wkb_objects
-            .iter()
-            .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.parse()).transpose())
-            .collect::<Result<Vec<_>>>()?;
-        Self::from_nullable_geometries(&wkb_objects2, typ, prefer_multi)
-    }
 }
 
 impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, GeometryType)> for GeometryBuilder {
@@ -915,8 +902,11 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, GeometryType)> for GeometryBuilde
             "Parsing a WKBArray with null elements not supported",
         );
 
-        let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, typ, DEFAULT_PREFER_MULTI)
+        let wkb_objects = value
+            .iter()
+            .map(|x| x.transpose())
+            .collect::<Result<Vec<_>>>()?;
+        Self::from_nullable_geometries(&wkb_objects, typ, DEFAULT_PREFER_MULTI)
     }
 }
 

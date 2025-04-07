@@ -9,11 +9,11 @@ use geoarrow_schema::{GeometryCollectionType, Metadata};
 use crate::array::{MixedGeometryArray, WKBArray};
 use crate::builder::GeometryCollectionBuilder;
 use crate::capacity::GeometryCollectionCapacity;
-use crate::datatypes::NativeType;
+use crate::datatypes::GeoArrowType;
 use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::GeometryCollection;
-use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, NativeArray};
+use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 
 /// An immutable array of GeometryCollection geometries using GeoArrow's in-memory representation.
@@ -106,7 +106,7 @@ impl GeometryCollectionArray {
     }
 }
 
-impl ArrayBase for GeometryCollectionArray {
+impl GeoArrowArray for GeometryCollectionArray {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -130,14 +130,12 @@ impl ArrayBase for GeometryCollectionArray {
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
     }
-}
 
-impl NativeArray for GeometryCollectionArray {
-    fn data_type(&self) -> NativeType {
-        NativeType::GeometryCollection(self.data_type.clone())
+    fn data_type(&self) -> GeoArrowType {
+        GeoArrowType::GeometryCollection(self.data_type.clone())
     }
 
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.slice(offset, length))
     }
 }
@@ -145,8 +143,12 @@ impl NativeArray for GeometryCollectionArray {
 impl<'a> ArrayAccessor<'a> for GeometryCollectionArray {
     type Item = GeometryCollection<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        GeometryCollection::new(&self.array, &self.geom_offsets, index)
+    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
+        Ok(GeometryCollection::new(
+            &self.array,
+            &self.geom_offsets,
+            index,
+        ))
     }
 }
 
