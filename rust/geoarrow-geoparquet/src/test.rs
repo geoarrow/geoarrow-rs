@@ -44,7 +44,7 @@ fn round_trip_nybb() -> Result<()> {
 fn mixed_geometry_roundtrip() {
     let mut builder = GeometryBuilder::new();
     builder
-        .push_point(Some(&geo::point!(x: -105., y: 40.)))
+        .push_point(Some(&geo_types::point!(x: -105., y: 40.)))
         .unwrap();
     let geometry = ChunkedNativeArrayDyn::from_geoarrow_chunks(&[&builder.finish()])
         .unwrap()
