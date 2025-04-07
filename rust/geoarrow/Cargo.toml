@@ -92,7 +92,7 @@ sqlx = { version = "0.7", optional = true, default-features = false, features = 
 ] }
 thiserror = "1"
 wkt = "0.12"
-wkb = "0.8"
+wkb = { workspace = true }
 
 
 [dev-dependencies]
