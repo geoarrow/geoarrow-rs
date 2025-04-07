@@ -4,6 +4,7 @@ use std::sync::Arc;
 use arrow_array::{Array, ArrayRef};
 use arrow_buffer::NullBuffer;
 use arrow_schema::extension::ExtensionType;
+use geo_traits::GeometryTrait;
 
 use crate::datatypes::{NativeType, SerializedType};
 

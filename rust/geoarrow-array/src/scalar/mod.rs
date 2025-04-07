@@ -8,7 +8,7 @@ mod multipolygon;
 mod point;
 mod polygon;
 mod rect;
-mod wkb;
+mod specialization;
 
 pub use coord::{Coord, InterleavedCoord, SeparatedCoord};
 pub use geometry::Geometry;

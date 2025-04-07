@@ -75,14 +75,14 @@ impl GeometryTrait for Geometry<'_> {
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self {
-            Geometry::Point(p) => p.dim(),
-            Geometry::LineString(p) => p.dim(),
-            Geometry::Polygon(p) => p.dim(),
-            Geometry::MultiPoint(p) => p.dim(),
-            Geometry::MultiLineString(p) => p.dim(),
-            Geometry::MultiPolygon(p) => p.dim(),
-            Geometry::GeometryCollection(p) => p.dim(),
-            Geometry::Rect(p) => p.dim(),
+            Geometry::Point(p) => PointTrait::dim(p),
+            Geometry::LineString(p) => LineStringTrait::dim(p),
+            Geometry::Polygon(p) => PolygonTrait::dim(p),
+            Geometry::MultiPoint(p) => MultiPointTrait::dim(p),
+            Geometry::MultiLineString(p) => MultiLineStringTrait::dim(p),
+            Geometry::MultiPolygon(p) => MultiPolygonTrait::dim(p),
+            Geometry::GeometryCollection(p) => GeometryCollectionTrait::dim(p),
+            Geometry::Rect(p) => RectTrait::dim(p),
         }
     }
 
@@ -159,14 +159,14 @@ impl<'a> GeometryTrait for &'a Geometry<'a> {
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self {
-            Geometry::Point(p) => p.dim(),
-            Geometry::LineString(p) => p.dim(),
-            Geometry::Polygon(p) => p.dim(),
-            Geometry::MultiPoint(p) => p.dim(),
-            Geometry::MultiLineString(p) => p.dim(),
-            Geometry::MultiPolygon(p) => p.dim(),
-            Geometry::GeometryCollection(p) => p.dim(),
-            Geometry::Rect(p) => p.dim(),
+            Geometry::Point(p) => PointTrait::dim(p),
+            Geometry::LineString(p) => LineStringTrait::dim(p),
+            Geometry::Polygon(p) => PolygonTrait::dim(p),
+            Geometry::MultiPoint(p) => MultiPointTrait::dim(p),
+            Geometry::MultiLineString(p) => MultiLineStringTrait::dim(p),
+            Geometry::MultiPolygon(p) => MultiPolygonTrait::dim(p),
+            Geometry::GeometryCollection(p) => GeometryCollectionTrait::dim(p),
+            Geometry::Rect(p) => RectTrait::dim(p),
         }
     }
 
