@@ -5218,7 +5218,7 @@ dependencies = [
 [[package]]
 name = "wkb"
 version = "0.8.0"
-source = "git+https://github.com/georust/wkb?rev=82c664754cbedb2e2143646677976c7b246c43f5#82c664754cbedb2e2143646677976c7b246c43f5"
+source = "git+https://github.com/georust/wkb?rev=5a2027995997017bcd531e6be7e5cf126db1d4c1#5a2027995997017bcd531e6be7e5cf126db1d4c1"
 dependencies = [
  "byteorder",
  "geo-traits",
