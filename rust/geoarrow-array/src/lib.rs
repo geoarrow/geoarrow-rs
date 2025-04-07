@@ -65,7 +65,7 @@ mod trait_;
 pub(crate) mod util;
 
 pub use datatypes::GeoArrowType;
-pub use trait_::{ArrayAccessor, IntoArrow};
+pub use trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 
 #[cfg(test)]
 pub(crate) mod test;

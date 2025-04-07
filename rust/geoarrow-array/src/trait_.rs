@@ -1,4 +1,5 @@
 use std::any::Any;
+use std::fmt::Debug;
 use std::sync::Arc;
 
 use arrow_array::{Array, ArrayRef};
@@ -8,42 +9,24 @@ use geo_traits::GeometryTrait;
 
 use crate::datatypes::GeoArrowType;
 
-/// Convert GeoArrow arrays into their respective arrow arrays.
+/// Convert GeoArrow arrays into their respective [arrow] arrays.
 pub trait IntoArrow {
     /// The type of arrow array that this geoarrow array can be converted into.
     type ArrowArray: Array;
     type ExtensionType: ExtensionType;
 
     /// Converts this geoarrow array into an arrow array.
+    // Return Arc<Self::ArrowArray>? Could that replace `into_array_ref` on the trait?
     fn into_arrow(self) -> Self::ArrowArray;
 
     fn ext_type(&self) -> &Self::ExtensionType;
 }
 
 /// A base trait that both [NativeArray] and [SerializedArray] implement
-pub trait GeoArrowArray: std::fmt::Debug + Send + Sync {
-    /// Returns the array as [`Any`] so that it can be
-    /// downcasted to a specific implementation.
+pub trait GeoArrowArray: Debug + Send + Sync {
+    /// Returns the array as [`Any`] so that it can be downcasted to a specific implementation.
     ///
-    /// # Examples
-    ///
-    /// ```ignore
-    /// use std::sync::Arc;
-    /// use arrow_array::{Int32Array, RecordBatch};
-    /// use arrow_schema::{Schema, Field, DataType, ArrowError};
-    ///
-    /// let id = Int32Array::from(vec![1, 2, 3, 4, 5]);
-    /// let batch = RecordBatch::try_new(
-    ///     Arc::new(Schema::new(vec![Field::new("id", DataType::Int32, false)])),
-    ///     vec![Arc::new(id)]
-    /// ).unwrap();
-    ///
-    /// let int32array = batch
-    ///     .column(0)
-    ///     .as_any()
-    ///     .downcast_ref::<Int32Array>()
-    ///     .expect("Failed to downcast");
-    /// ```
+    /// Prefer using [`AsGeoArrowArray`] instead of calling this method and manually downcasting.
     fn as_any(&self) -> &dyn Any;
 
     /// Returns the [`NativeType`] of this array.
@@ -392,7 +375,7 @@ pub trait ArrayAccessor<'a>: GeoArrowArray {
 /// thereby making them useful to perform numeric operations without allocations.
 /// As in [`NativeArray`], concrete arrays (such as
 /// [`PointBuilder`][crate::array::PointBuilder]) implement how they are mutated.
-pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
+pub trait GeometryArrayBuilder: Debug + Send + Sync + Sized {
     /// Returns the length of the array.
     ///
     /// # Examples
