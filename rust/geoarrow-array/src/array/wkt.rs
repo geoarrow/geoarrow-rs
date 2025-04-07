@@ -137,24 +137,20 @@ impl<O: OffsetSizeTrait> IntoArrow for WKTArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<GenericStringArray<O>> for WKTArray<O> {
-    fn from(value: GenericStringArray<O>) -> Self {
-        Self::new(value, Default::default())
+impl<O: OffsetSizeTrait> From<(GenericStringArray<O>, WktType)> for WKTArray<O> {
+    fn from((value, typ): (GenericStringArray<O>, WktType)) -> Self {
+        Self::new(value, typ.metadata().clone())
     }
 }
 
-impl TryFrom<&dyn Array> for WKTArray<i32> {
+impl TryFrom<(&dyn Array, WktType)> for WKTArray<i32> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &dyn Array) -> Result<Self> {
+    fn try_from((value, typ): (&dyn Array, WktType)) -> Result<Self> {
         match value.data_type() {
-            DataType::Utf8 => {
-                let downcasted = value.as_any().downcast_ref::<StringArray>().unwrap();
-                Ok(downcasted.clone().into())
-            }
+            DataType::Utf8 => Ok((value.as_string::<i32>().clone(), typ).into()),
             DataType::LargeUtf8 => {
-                let downcasted = value.as_any().downcast_ref::<LargeStringArray>().unwrap();
-                let geom_array: WKTArray<i64> = downcasted.clone().into();
+                let geom_array: WKTArray<i64> = (value.as_string::<i64>().clone(), typ).into();
                 geom_array.try_into()
             }
             _ => Err(GeoArrowError::General(format!(
@@ -165,20 +161,16 @@ impl TryFrom<&dyn Array> for WKTArray<i32> {
     }
 }
 
-impl TryFrom<&dyn Array> for WKTArray<i64> {
+impl TryFrom<(&dyn Array, WktType)> for WKTArray<i64> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &dyn Array) -> Result<Self> {
+    fn try_from((value, typ): (&dyn Array, WktType)) -> Result<Self> {
         match value.data_type() {
             DataType::Utf8 => {
-                let downcasted = value.as_string::<i32>();
-                let geom_array: WKTArray<i32> = downcasted.clone().into();
+                let geom_array: WKTArray<i32> = (value.as_string::<i32>().clone(), typ).into();
                 Ok(geom_array.into())
             }
-            DataType::LargeUtf8 => {
-                let downcasted = value.as_any().downcast_ref::<LargeStringArray>().unwrap();
-                Ok(downcasted.clone().into())
-            }
+            DataType::LargeUtf8 => Ok((value.as_string::<i64>().clone(), typ).into()),
             _ => Err(GeoArrowError::General(format!(
                 "Unexpected type: {:?}",
                 value.data_type()
@@ -191,10 +183,8 @@ impl TryFrom<(&dyn Array, &Field)> for WKTArray<i32> {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
-        let mut arr: Self = arr.try_into()?;
-        let metadata = Arc::new(Metadata::try_from(field)?);
-        arr.data_type = arr.data_type.clone().with_metadata(metadata);
-        Ok(arr)
+        let typ = field.try_extension_type::<WktType>()?;
+        (arr, typ).try_into()
     }
 }
 
@@ -202,10 +192,8 @@ impl TryFrom<(&dyn Array, &Field)> for WKTArray<i64> {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
-        let mut arr: Self = arr.try_into()?;
-        let metadata = Arc::new(Metadata::try_from(field)?);
-        arr.data_type = arr.data_type.clone().with_metadata(metadata);
-        Ok(arr)
+        let typ = field.try_extension_type::<WktType>()?;
+        (arr, typ).try_into()
     }
 }
 
@@ -230,5 +218,68 @@ impl TryFrom<WKTArray<i64>> for WKTArray<i32> {
             data_type: value.data_type,
             array: StringArray::new(offsets_buffer_i64_to_i32(&offsets)?, values, nulls),
         })
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use arrow_array::builder::GenericStringBuilder;
+
+    use crate::test::point;
+    use crate::GeoArrowArray;
+
+    use super::*;
+
+    fn wkt_data<O: OffsetSizeTrait>() -> WKTArray<O> {
+        let mut builder = GenericStringBuilder::new();
+
+        wkt::to_wkt::write_geometry(&mut builder, &point::p0()).unwrap();
+        builder.append_value("");
+
+        wkt::to_wkt::write_geometry(&mut builder, &point::p1()).unwrap();
+        builder.append_value("");
+
+        wkt::to_wkt::write_geometry(&mut builder, &point::p2()).unwrap();
+        builder.append_value("");
+
+        WKTArray::new(builder.finish(), Default::default())
+    }
+
+    #[test]
+    fn parse_dyn_array_i32() {
+        let wkb_array = wkt_data::<i32>();
+        let array = wkb_array.to_array_ref();
+        let field = wkb_array.data_type.to_field("geometry", true, false);
+        let wkb_array_retour: WKTArray<i32> = (array.as_ref(), &field).try_into().unwrap();
+
+        assert_eq!(wkb_array, wkb_array_retour);
+    }
+
+    #[test]
+    fn parse_dyn_array_i64() {
+        let wkb_array = wkt_data::<i64>();
+        let array = wkb_array.to_array_ref();
+        let field = wkb_array.data_type.to_field("geometry", true, false);
+        let wkb_array_retour: WKTArray<i64> = (array.as_ref(), &field).try_into().unwrap();
+
+        assert_eq!(wkb_array, wkb_array_retour);
+    }
+
+    #[test]
+    fn convert_i32_to_i64() {
+        let wkb_array = wkt_data::<i32>();
+        let wkb_array_i64: WKTArray<i64> = wkb_array.clone().into();
+        let wkb_array_i32: WKTArray<i32> = wkb_array_i64.clone().try_into().unwrap();
+
+        assert_eq!(wkb_array, wkb_array_i32);
+    }
+
+    #[test]
+    fn convert_i64_to_i32_to_i64() {
+        let wkb_array = wkt_data::<i64>();
+        let wkb_array_i32: WKTArray<i32> = wkb_array.clone().try_into().unwrap();
+        let wkb_array_i64: WKTArray<i64> = wkb_array_i32.clone().into();
+
+        assert_eq!(wkb_array, wkb_array_i64);
     }
 }
