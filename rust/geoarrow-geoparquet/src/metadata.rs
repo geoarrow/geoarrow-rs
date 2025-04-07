@@ -668,84 +668,82 @@ impl From<GeoParquetColumnMetadata> for Metadata {
 pub(crate) fn infer_geo_data_type(
     geometry_types: &HashSet<GeoParquetGeometryType>,
     coord_type: CoordType,
-) -> Result<Option<NativeType>> {
+) -> Result<Option<GeoArrowType>> {
     use GeoParquetGeometryType::*;
 
     match geometry_types.len() {
         // TODO: for unknown geometry type, should we leave it as WKB?
         0 => Ok(None),
-        1 => Ok(Some(match *geometry_types.iter().next().unwrap() {
-            Point => NativeType::Point(PointType::new(
-                coord_type,
-                Dimension::XY,
-                Default::default(),
-            )),
-            LineString => NativeType::LineString(LineStringType::new(
-                coord_type,
-                Dimension::XY,
-                Default::default(),
-            )),
-            Polygon => NativeType::Polygon(PolygonType::new(
-                coord_type,
-                Dimension::XY,
-                Default::default(),
-            )),
-            MultiPoint => NativeType::MultiPoint(MultiPointType::new(
-                coord_type,
-                Dimension::XY,
-                Default::default(),
-            )),
-            MultiLineString => NativeType::MultiLineString(MultiLineStringType::new(
-                coord_type,
-                Dimension::XY,
-                Default::default(),
-            )),
-            MultiPolygon => NativeType::MultiPolygon(MultiPolygonType::new(
-                coord_type,
-                Dimension::XY,
-                Default::default(),
-            )),
-            GeometryCollection => NativeType::GeometryCollection(GeometryCollectionType::new(
-                coord_type,
-                Dimension::XY,
-                Default::default(),
-            )),
-            PointZ => NativeType::Point(PointType::new(
-                coord_type,
-                Dimension::XYZ,
-                Default::default(),
-            )),
-            LineStringZ => NativeType::LineString(LineStringType::new(
-                coord_type,
-                Dimension::XYZ,
-                Default::default(),
-            )),
-            PolygonZ => NativeType::Polygon(PolygonType::new(
-                coord_type,
-                Dimension::XYZ,
-                Default::default(),
-            )),
-            MultiPointZ => NativeType::MultiPoint(MultiPointType::new(
-                coord_type,
-                Dimension::XYZ,
-                Default::default(),
-            )),
-            MultiLineStringZ => NativeType::MultiLineString(MultiLineStringType::new(
-                coord_type,
-                Dimension::XYZ,
-                Default::default(),
-            )),
-            MultiPolygonZ => NativeType::MultiPolygon(MultiPolygonType::new(
-                coord_type,
-                Dimension::XYZ,
-                Default::default(),
-            )),
-            GeometryCollectionZ => NativeType::GeometryCollection(GeometryCollectionType::new(
-                coord_type,
-                Dimension::XYZ,
-                Default::default(),
-            )),
-        })),
+        1 => {
+            Ok(Some(match *geometry_types.iter().next().unwrap() {
+                Point => GeoArrowType::Point(PointType::new(
+                    coord_type,
+                    Dimension::XY,
+                    Default::default(),
+                )),
+                LineString => GeoArrowType::LineString(LineStringType::new(
+                    coord_type,
+                    Dimension::XY,
+                    Default::default(),
+                )),
+                Polygon => GeoArrowType::Polygon(PolygonType::new(
+                    coord_type,
+                    Dimension::XY,
+                    Default::default(),
+                )),
+                MultiPoint => GeoArrowType::MultiPoint(MultiPointType::new(
+                    coord_type,
+                    Dimension::XY,
+                    Default::default(),
+                )),
+                MultiLineString => GeoArrowType::MultiLineString(MultiLineStringType::new(
+                    coord_type,
+                    Dimension::XY,
+                    Default::default(),
+                )),
+                MultiPolygon => GeoArrowType::MultiPolygon(MultiPolygonType::new(
+                    coord_type,
+                    Dimension::XY,
+                    Default::default(),
+                )),
+                GeometryCollection => GeoArrowType::GeometryCollection(
+                    GeometryCollectionType::new(coord_type, Dimension::XY, Default::default()),
+                ),
+                PointZ => GeoArrowType::Point(PointType::new(
+                    coord_type,
+                    Dimension::XYZ,
+                    Default::default(),
+                )),
+                LineStringZ => GeoArrowType::LineString(LineStringType::new(
+                    coord_type,
+                    Dimension::XYZ,
+                    Default::default(),
+                )),
+                PolygonZ => GeoArrowType::Polygon(PolygonType::new(
+                    coord_type,
+                    Dimension::XYZ,
+                    Default::default(),
+                )),
+                MultiPointZ => GeoArrowType::MultiPoint(MultiPointType::new(
+                    coord_type,
+                    Dimension::XYZ,
+                    Default::default(),
+                )),
+                MultiLineStringZ => GeoArrowType::MultiLineString(MultiLineStringType::new(
+                    coord_type,
+                    Dimension::XYZ,
+                    Default::default(),
+                )),
+                MultiPolygonZ => GeoArrowType::MultiPolygon(MultiPolygonType::new(
+                    coord_type,
+                    Dimension::XYZ,
+                    Default::default(),
+                )),
+                GeometryCollectionZ => GeoArrowType::GeometryCollection(
+                    GeometryCollectionType::new(coord_type, Dimension::XYZ, Default::default()),
+                ),
+            }))
+        }
         _ => {
             // Check if we can cast to MultiPoint
             let mut point_count = 0;
@@ -757,7 +755,7 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == point_count {
-                return Ok(Some(NativeType::MultiPoint(MultiPointType::new(
+                return Ok(Some(GeoArrowType::MultiPoint(MultiPointType::new(
                     coord_type,
                     Dimension::XY,
                     Default::default(),
@@ -773,7 +771,7 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == point_count {
-                return Ok(Some(NativeType::MultiPoint(MultiPointType::new(
+                return Ok(Some(GeoArrowType::MultiPoint(MultiPointType::new(
                     coord_type,
                     Dimension::XYZ,
                     Default::default(),
@@ -790,11 +788,9 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == linestring_count {
-                return Ok(Some(NativeType::MultiLineString(MultiLineStringType::new(
-                    coord_type,
-                    Dimension::XY,
-                    Default::default(),
-                ))));
+                return Ok(Some(GeoArrowType::MultiLineString(
+                    MultiLineStringType::new(coord_type, Dimension::XY, Default::default()),
+                )));
             }
 
             // Check if we can cast to MultiLineStringZ
@@ -806,11 +802,9 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == linestring_count {
-                return Ok(Some(NativeType::MultiLineString(MultiLineStringType::new(
-                    coord_type,
-                    Dimension::XYZ,
-                    Default::default(),
-                ))));
+                return Ok(Some(GeoArrowType::MultiLineString(
+                    MultiLineStringType::new(coord_type, Dimension::XYZ, Default::default()),
+                )));
             }
 
             // Check if we can cast to MultiPolygon
@@ -823,7 +817,7 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == polygon_count {
-                return Ok(Some(NativeType::MultiPolygon(MultiPolygonType::new(
+                return Ok(Some(GeoArrowType::MultiPolygon(MultiPolygonType::new(
                     coord_type,
                     Dimension::XY,
                     Default::default(),
@@ -839,14 +833,14 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == polygon_count {
-                return Ok(Some(NativeType::MultiPolygon(MultiPolygonType::new(
+                return Ok(Some(GeoArrowType::MultiPolygon(MultiPolygonType::new(
                     coord_type,
                     Dimension::XYZ,
                     Default::default(),
                 ))));
             }
 
-            Ok(Some(NativeType::Geometry(GeometryType::new(
+            Ok(Some(GeoArrowType::Geometry(GeometryType::new(
                 coord_type,
                 Default::default(),
             ))))
@@ -859,7 +853,7 @@ pub(crate) fn find_geoparquet_geom_columns(
     metadata: &FileMetaData,
     schema: &Schema,
     coord_type: CoordType,
-) -> Result<Vec<(usize, Option<NativeType>)>> {
+) -> Result<Vec<(usize, Option<GeoArrowType>)>> {
     let meta = GeoParquetMetadata::from_parquet_meta(metadata)?;
 
     meta.columns
