@@ -2,8 +2,8 @@ use crate::array::*;
 use crate::scalar::*;
 use crate::trait_::ArrayAccessor;
 use crate::trait_::NativeScalar;
-use arrow_array::builder::Float64Builder;
 use arrow_array::Float64Array;
+use arrow_array::builder::Float64Builder;
 use geo::{Distance, Euclidean};
 
 pub trait EuclideanDistance<Rhs> {

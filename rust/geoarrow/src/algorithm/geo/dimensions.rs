@@ -1,11 +1,11 @@
+use crate::NativeArray;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
 use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
-use arrow_array::builder::BooleanBuilder;
 use arrow_array::BooleanArray;
+use arrow_array::builder::BooleanBuilder;
 use geo::dimensions::HasDimensions as GeoHasDimensions;
 
 /// Operate on the dimensionality of geometries.

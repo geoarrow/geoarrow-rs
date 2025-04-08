@@ -1,6 +1,7 @@
 use arrow_array::Float64Array;
 use geo::VincentyLength as _VincentyLength;
 
+use crate::NativeArray;
 use crate::algorithm::geo::utils::zeroes;
 use crate::algorithm::native::Unary;
 use crate::array::*;
@@ -8,7 +9,6 @@ use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArra
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeScalar;
-use crate::NativeArray;
 
 /// Determine the length of a geometry using [Vincenty’s formulae].
 ///

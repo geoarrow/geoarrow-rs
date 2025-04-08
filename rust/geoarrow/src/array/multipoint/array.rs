@@ -11,7 +11,7 @@ use geoarrow_schema::{CoordType, Dimension, Metadata, MultiPointType};
 use super::MultiPointBuilder;
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::multipoint::MultiPointCapacity;
-use crate::array::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
+use crate::array::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
 use crate::array::{
     CoordBuffer, GeometryCollectionArray, LineStringArray, MixedGeometryArray, PointArray, WKBArray,
 };

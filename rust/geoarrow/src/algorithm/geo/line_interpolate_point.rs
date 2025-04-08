@@ -2,6 +2,7 @@ use arrow_array::Float64Array;
 use geo::{Euclidean, InterpolateLine};
 use geoarrow_schema::Dimension;
 
+use crate::NativeArray;
 use crate::algorithm::native::MapChunks;
 use crate::array::LineStringArray;
 use crate::array::*;
@@ -9,7 +10,6 @@ use crate::chunked_array::{ChunkedLineStringArray, ChunkedNativeArray, ChunkedPo
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
 
 /// Returns an option of the point that lies a given fraction along the line.
 ///

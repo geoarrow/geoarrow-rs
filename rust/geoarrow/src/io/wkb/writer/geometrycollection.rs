@@ -1,12 +1,12 @@
+use crate::ArrayBase;
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{GeometryCollectionArray, WKBArray};
 use crate::trait_::ArrayAccessor;
-use crate::ArrayBase;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use arrow_buffer::Buffer;
 use std::io::Cursor;
-use wkb::writer::{geometry_collection_wkb_size, write_geometry_collection};
 use wkb::Endianness;
+use wkb::writer::{geometry_collection_wkb_size, write_geometry_collection};
 
 impl<O: OffsetSizeTrait> From<&GeometryCollectionArray> for WKBArray<O> {
     fn from(value: &GeometryCollectionArray) -> Self {

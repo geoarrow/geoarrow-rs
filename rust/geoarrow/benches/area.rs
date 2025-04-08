@@ -1,4 +1,4 @@
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use geoarrow::algorithm::geo::Area;
 use geoarrow::array::{AsChunkedNativeArray, MultiPolygonArray};
 use geoarrow::io::flatgeobuf::FlatGeobufReaderBuilder;

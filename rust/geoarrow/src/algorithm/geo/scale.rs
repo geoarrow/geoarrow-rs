@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
+use crate::NativeArray;
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::LineStringArray;
 use crate::array::*;
 use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
 use arrow_array::types::Float64Type;
 use geo::Scale as _Scale;
 use geoarrow_schema::Dimension;
@@ -305,9 +305,7 @@ impl Scale for &dyn NativeArray {
         y_factor: &BroadcastablePrimitive<Float64Type>,
     ) -> Self::Output {
         macro_rules! impl_method {
-            ($method:ident) => {{
-                Arc::new(self.$method().scale_xy(x_factor, y_factor))
-            }};
+            ($method:ident) => {{ Arc::new(self.$method().scale_xy(x_factor, y_factor)) }};
         }
 
         use NativeType::*;

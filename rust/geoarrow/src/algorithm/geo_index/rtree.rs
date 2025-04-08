@@ -1,3 +1,4 @@
+use crate::NativeArray;
 use crate::algorithm::native::bounding_rect::{
     bounding_rect_geometry, bounding_rect_geometry_collection, bounding_rect_linestring,
     bounding_rect_multilinestring, bounding_rect_multipoint, bounding_rect_multipolygon,
@@ -8,7 +9,6 @@ use crate::chunked_array::*;
 use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
 use geo_index::rtree::sort::HilbertSort;
 use geo_index::rtree::{RTree as OwnedRTree, RTreeBuilder};
 

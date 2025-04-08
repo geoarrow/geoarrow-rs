@@ -117,9 +117,7 @@ impl GeometryScalar {
     /// Convert to a [geo::Geometry].
     pub fn to_geo(&self) -> geo::Geometry {
         macro_rules! impl_to_geo {
-            ($cast_func:ident) => {{
-                self.0.as_ref().$cast_func().value(0).to_geo_geometry()
-            }};
+            ($cast_func:ident) => {{ self.0.as_ref().$cast_func().value(0).to_geo_geometry() }};
         }
 
         use NativeType::*;

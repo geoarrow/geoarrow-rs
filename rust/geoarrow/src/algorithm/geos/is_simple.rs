@@ -1,10 +1,10 @@
+use crate::NativeArray;
 use crate::algorithm::native::Unary;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
 use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::NativeScalar;
-use crate::NativeArray;
 use arrow_array::BooleanArray;
 use geos::Geom;
 

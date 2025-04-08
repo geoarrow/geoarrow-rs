@@ -4,7 +4,7 @@
 use std::sync::Arc;
 
 use arrow_schema::extension::{
-    ExtensionType, EXTENSION_TYPE_METADATA_KEY, EXTENSION_TYPE_NAME_KEY,
+    EXTENSION_TYPE_METADATA_KEY, EXTENSION_TYPE_NAME_KEY, ExtensionType,
 };
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{
@@ -302,24 +302,32 @@ impl TryFrom<&Field> for GeoArrowType {
         if let Some(extension_name) = field.metadata().get(EXTENSION_TYPE_NAME_KEY) {
             let data_type = match extension_name.as_str() {
                 PointType::NAME => Point(PointType::try_new(field.data_type(), metadata)?),
-                LineStringType::NAME => LineString(LineStringType::try_new(field.data_type(), metadata)?),
-                PolygonType::NAME => Polygon(PolygonType::try_new(field.data_type(), metadata) ?) ,
-                MultiPointType::NAME => MultiPoint(MultiPointType::try_new(field.data_type(), metadata) ?),
-                MultiLineStringType::NAME => MultiLineString(MultiLineStringType::try_new(field.data_type(), metadata) ?),
-                MultiPolygonType::NAME => MultiPolygon(MultiPolygonType::try_new(field.data_type(), metadata) ?),
-                GeometryCollectionType::NAME => GeometryCollection(GeometryCollectionType::try_new(field.data_type(), metadata) ?),
-                BoxType::NAME => Rect(BoxType::try_new(field.data_type(), metadata) ?),
-                GeometryType::NAME => Geometry(GeometryType::try_new(field.data_type(), metadata) ?),
+                LineStringType::NAME => {
+                    LineString(LineStringType::try_new(field.data_type(), metadata)?)
+                }
+                PolygonType::NAME => Polygon(PolygonType::try_new(field.data_type(), metadata)?),
+                MultiPointType::NAME => {
+                    MultiPoint(MultiPointType::try_new(field.data_type(), metadata)?)
+                }
+                MultiLineStringType::NAME => {
+                    MultiLineString(MultiLineStringType::try_new(field.data_type(), metadata)?)
+                }
+                MultiPolygonType::NAME => {
+                    MultiPolygon(MultiPolygonType::try_new(field.data_type(), metadata)?)
+                }
+                GeometryCollectionType::NAME => GeometryCollection(
+                    GeometryCollectionType::try_new(field.data_type(), metadata)?,
+                ),
+                BoxType::NAME => Rect(BoxType::try_new(field.data_type(), metadata)?),
+                GeometryType::NAME => Geometry(GeometryType::try_new(field.data_type(), metadata)?),
                 WkbType::NAME | "ogc.wkb" => match field.data_type() {
                     DataType::Binary => WKB(WkbType::new(metadata.into())),
-                    DataType::LargeBinary => {
-                        LargeWKB(WkbType::new(metadata.into()))
-                    }
+                    DataType::LargeBinary => LargeWKB(WkbType::new(metadata.into())),
                     _ => {
                         return Err(GeoArrowError::General(format!(
                             "Expected binary type for geoarrow.wkb, got '{}'",
                             field.data_type()
-                        )))
+                        )));
                     }
                 },
                 WktType::NAME => match field.data_type() {
@@ -329,13 +337,18 @@ impl TryFrom<&Field> for GeoArrowType {
                         return Err(GeoArrowError::General(format!(
                             "Expected string type for geoarrow.wkt, got '{}'",
                             field.data_type()
-                        )))
+                        )));
                     }
                 },
 
                 // We always parse geoarrow.geometry to a GeometryArray
                 // "geoarrow.geometry" => parse_mixed(field)?,
-                name => return Err(GeoArrowError::General(format!("Expected GeoArrow native type, got '{}'.\nIf you're passing a serialized GeoArrow type like 'geoarrow.wkb' or 'geoarrow.wkt', you need to parse to a native representation.", name))),
+                name => {
+                    return Err(GeoArrowError::General(format!(
+                        "Expected GeoArrow native type, got '{}'.\nIf you're passing a serialized GeoArrow type like 'geoarrow.wkb' or 'geoarrow.wkt', you need to parse to a native representation.",
+                        name
+                    )));
+                }
             };
             Ok(data_type)
         } else {

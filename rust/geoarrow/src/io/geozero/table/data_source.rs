@@ -3,18 +3,18 @@
 use std::str::FromStr;
 use std::sync::Arc;
 
-use crate::array::{from_arrow_array, AsNativeArray};
+use crate::NativeArray;
+use crate::array::{AsNativeArray, from_arrow_array};
 use crate::datatypes::NativeType;
 use crate::io::geozero::scalar::{
     process_geometry, process_geometry_collection, process_line_string, process_multi_line_string,
     process_multi_point, process_multi_polygon, process_point, process_polygon,
 };
-use crate::io::geozero::table::json_encoder::{make_encoder, EncoderOptions};
+use crate::io::geozero::table::json_encoder::{EncoderOptions, make_encoder};
 use crate::io::stream::RecordBatchReader;
 use crate::schema::GeoSchemaExt;
 use crate::table::Table;
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
 use arrow::array::AsArray;
 use arrow::datatypes::*;
 use arrow_array::timezone::Tz;

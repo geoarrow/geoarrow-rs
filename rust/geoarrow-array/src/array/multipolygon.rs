@@ -14,7 +14,7 @@ use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::MultiPolygon;
 use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
-use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
+use crate::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
 
 /// An immutable array of MultiPolygon geometries.
 ///

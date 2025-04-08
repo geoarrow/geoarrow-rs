@@ -1,12 +1,12 @@
+use crate::NativeArray;
 use crate::algorithm::geo::utils::zeroes;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
-use arrow_array::builder::Float64Builder;
 use arrow_array::Float64Array;
+use arrow_array::builder::Float64Builder;
 use geo::prelude::GeodesicArea as _GeodesicArea;
 
 /// Determine the perimeter and area of a geometry on an ellipsoidal model of the earth.

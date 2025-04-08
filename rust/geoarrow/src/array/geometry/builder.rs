@@ -395,7 +395,7 @@ impl<'a> GeometryBuilder {
                     dim => {
                         return Err(GeoArrowError::General(format!(
                             "Unsupported dimension {dim:?}"
-                        )))
+                        )));
                     }
                 }
             } else {
@@ -418,7 +418,7 @@ impl<'a> GeometryBuilder {
                     dim => {
                         return Err(GeoArrowError::General(format!(
                             "Unsupported dimension {dim:?}"
-                        )))
+                        )));
                     }
                 }
             }
@@ -478,7 +478,7 @@ impl<'a> GeometryBuilder {
                     dim => {
                         return Err(GeoArrowError::General(format!(
                             "Unsupported dimension {dim:?}"
-                        )))
+                        )));
                     }
                 }
             } else {
@@ -501,7 +501,7 @@ impl<'a> GeometryBuilder {
                     dim => {
                         return Err(GeoArrowError::General(format!(
                             "Unsupported dimension {dim:?}"
-                        )))
+                        )));
                     }
                 }
             }
@@ -560,7 +560,7 @@ impl<'a> GeometryBuilder {
                     dim => {
                         return Err(GeoArrowError::General(format!(
                             "Unsupported dimension {dim:?}"
-                        )))
+                        )));
                     }
                 }
             } else {
@@ -583,7 +583,7 @@ impl<'a> GeometryBuilder {
                     dim => {
                         return Err(GeoArrowError::General(format!(
                             "Unsupported dimension {dim:?}"
-                        )))
+                        )));
                     }
                 }
             }
@@ -640,7 +640,7 @@ impl<'a> GeometryBuilder {
                 dim => {
                     return Err(GeoArrowError::General(format!(
                         "Unsupported dimension {dim:?}"
-                    )))
+                    )));
                 }
             }
         } else {
@@ -697,7 +697,7 @@ impl<'a> GeometryBuilder {
                 dim => {
                     return Err(GeoArrowError::General(format!(
                         "Unsupported dimension {dim:?}"
-                    )))
+                    )));
                 }
             }
         } else {
@@ -754,7 +754,7 @@ impl<'a> GeometryBuilder {
                 dim => {
                     return Err(GeoArrowError::General(format!(
                         "Unsupported dimension {dim:?}"
-                    )))
+                    )));
                 }
             }
         } else {
@@ -845,7 +845,7 @@ impl<'a> GeometryBuilder {
                 dim => {
                     return Err(GeoArrowError::General(format!(
                         "Unsupported dimension {dim:?}"
-                    )))
+                    )));
                 }
             }
         } else {

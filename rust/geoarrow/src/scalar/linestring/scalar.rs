@@ -1,13 +1,13 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_linestring;
 use crate::algorithm::native::eq::line_string_eq;
-use crate::array::util::OffsetBufferUtils;
 use crate::array::CoordBuffer;
+use crate::array::util::OffsetBufferUtils;
 use crate::scalar::Coord;
 use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
-use geo_traits::to_geo::ToGeoLineString;
 use geo_traits::LineStringTrait;
-use rstar::{RTreeObject, AABB};
+use geo_traits::to_geo::ToGeoLineString;
+use rstar::{AABB, RTreeObject};
 
 /// An Arrow equivalent of a LineString
 ///

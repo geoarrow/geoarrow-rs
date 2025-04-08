@@ -1,7 +1,7 @@
 use arrow::array::AsArray;
 use arrow_array::RecordBatch;
-use arrow_csv::reader::Format;
 use arrow_csv::ReaderBuilder;
+use arrow_csv::reader::Format;
 use arrow_schema::{ArrowError, Schema, SchemaRef};
 use geoarrow_schema::{CoordType, GeometryType};
 use std::io::{Read, Seek};

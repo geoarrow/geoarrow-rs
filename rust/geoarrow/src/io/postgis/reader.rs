@@ -108,7 +108,7 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
                         return Err(GeoArrowError::General(format!(
                             "unknown non-standard type: {}",
                             other
-                        )))
+                        )));
                     }
                 }
             };
@@ -153,7 +153,7 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
                         return Err(GeoArrowError::General(format!(
                             "unknown non-standard type in initialization: {}",
                             other
-                        )))
+                        )));
                     }
                 }
             };

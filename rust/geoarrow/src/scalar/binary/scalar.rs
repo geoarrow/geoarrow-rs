@@ -4,7 +4,7 @@ use crate::trait_::NativeScalar;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use geo::BoundingRect;
 use geo_traits::GeometryTrait;
-use rstar::{RTreeObject, AABB};
+use rstar::{AABB, RTreeObject};
 
 /// A scalar WKB reference on a WKBArray
 ///

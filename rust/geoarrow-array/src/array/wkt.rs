@@ -10,11 +10,11 @@ use arrow_schema::{DataType, Field};
 use geoarrow_schema::{Metadata, WktType};
 use wkt::Wkt;
 
+use crate::ArrayAccessor;
 use crate::datatypes::GeoArrowType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::{GeoArrowArray, IntoArrow};
 use crate::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
-use crate::ArrayAccessor;
 
 /// An immutable array of WKT geometries using GeoArrow's in-memory representation.
 ///
@@ -225,8 +225,8 @@ impl TryFrom<WKTArray<i64>> for WKTArray<i32> {
 mod test {
     use arrow_array::builder::GenericStringBuilder;
 
-    use crate::test::point;
     use crate::GeoArrowArray;
+    use crate::test::point;
 
     use super::*;
 

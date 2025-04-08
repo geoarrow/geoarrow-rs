@@ -149,9 +149,10 @@ mod test {
     fn crs_projjson() {
         let crs = Crs::from_projjson(json!({}));
         assert!(crs.crs_value().is_some_and(|x| x.is_object()));
-        assert!(crs
-            .crs_type()
-            .is_some_and(|x| matches!(x, CrsType::Projjson)));
+        assert!(
+            crs.crs_type()
+                .is_some_and(|x| matches!(x, CrsType::Projjson))
+        );
         assert!(crs.should_serialize());
         assert_eq!(
             serde_json::to_string(&crs).unwrap(),

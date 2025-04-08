@@ -10,6 +10,7 @@ use geoarrow_schema::{
     MultiPointType, MultiPolygonType,
 };
 
+use crate::NativeArray;
 use crate::algorithm::native::cast::Cast;
 use crate::array::*;
 use crate::chunked_array::*;
@@ -17,7 +18,6 @@ use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::schema::GeoSchemaExt;
 use crate::table::Table;
-use crate::NativeArray;
 
 /// Downcast will change between geometry types but will not affect the dimension of the data.
 ///

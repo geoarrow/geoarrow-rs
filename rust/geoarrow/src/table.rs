@@ -8,7 +8,7 @@ use std::sync::Arc;
 use arrow_array::{ArrayRef, RecordBatch, RecordBatchIterator, RecordBatchReader};
 use arrow_schema::{ArrowError, FieldRef, Schema, SchemaBuilder, SchemaRef};
 use geoarrow_schema::{CoordType, GeometryType, Metadata};
-use phf::{phf_set, Set};
+use phf::{Set, phf_set};
 
 use crate::algorithm::native::{Cast, Downcast};
 use crate::array::*;
@@ -72,7 +72,13 @@ impl Table {
             // TODO: I have some issues in the Parquet reader where the batches are missing the
             // schema metadata.
             if batch.schema().fields() != schema.fields() {
-                return Err(GeoArrowError::General(format!("Schema is not consistent across batches. Expected {}, got {}. With expected metadata: {:?}, got {:?}", schema, batch.schema(), schema.metadata(), batch.schema().metadata())));
+                return Err(GeoArrowError::General(format!(
+                    "Schema is not consistent across batches. Expected {}, got {}. With expected metadata: {:?}, got {:?}",
+                    schema,
+                    batch.schema(),
+                    schema.metadata(),
+                    batch.schema().metadata()
+                )));
             }
         }
 

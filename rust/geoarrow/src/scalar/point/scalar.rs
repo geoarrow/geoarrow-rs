@@ -4,7 +4,7 @@ use crate::scalar::Coord;
 use crate::trait_::NativeScalar;
 use geo_traits::to_geo::ToGeoPoint;
 use geo_traits::{CoordTrait, PointTrait};
-use rstar::{RTreeObject, AABB};
+use rstar::{AABB, RTreeObject};
 
 /// An Arrow equivalent of a Point
 ///
@@ -55,11 +55,7 @@ impl<'a> PointTrait for Point<'a> {
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
         let coord = self.coords.value(self.geom_index);
-        if coord.is_nan() {
-            None
-        } else {
-            Some(coord)
-        }
+        if coord.is_nan() { None } else { Some(coord) }
     }
 }
 
@@ -76,11 +72,7 @@ impl<'a> PointTrait for &Point<'a> {
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
         let coord = self.coords.value(self.geom_index);
-        if coord.is_nan() {
-            None
-        } else {
-            Some(coord)
-        }
+        if coord.is_nan() { None } else { Some(coord) }
     }
 }
 

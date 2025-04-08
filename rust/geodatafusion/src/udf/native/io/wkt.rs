@@ -7,12 +7,12 @@ use datafusion::logical_expr::scalar_doc_sections::DOC_SECTION_OTHER;
 use datafusion::logical_expr::{
     ColumnarValue, Documentation, ScalarUDFImpl, Signature, Volatility,
 };
-use geoarrow::array::WKTArray;
-use geoarrow::io::wkt::{read_wkt, ToWKT};
 use geoarrow::ArrayBase;
+use geoarrow::array::WKTArray;
+use geoarrow::io::wkt::{ToWKT, read_wkt};
 use geoarrow_schema::CoordType;
 
-use crate::data_types::{any_single_geometry_type_input, parse_to_native_array, GEOMETRY_TYPE};
+use crate::data_types::{GEOMETRY_TYPE, any_single_geometry_type_input, parse_to_native_array};
 use crate::error::GeoDataFusionResult;
 
 #[derive(Debug)]

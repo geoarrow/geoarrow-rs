@@ -1,17 +1,17 @@
 use std::sync::Arc;
 
-use arrow_array::builder::GenericBinaryBuilder;
 use arrow_array::OffsetSizeTrait;
+use arrow_array::builder::GenericBinaryBuilder;
 use geo_traits::{
     GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
     MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait,
 };
 use geoarrow_schema::Metadata;
+use wkb::Endianness;
 use wkb::writer::{
     write_geometry_collection, write_line_string, write_multi_line_string, write_multi_point,
     write_multi_polygon, write_point, write_polygon,
 };
-use wkb::Endianness;
 
 use crate::array::binary::WKBCapacity;
 use crate::error::{GeoArrowError, Result};

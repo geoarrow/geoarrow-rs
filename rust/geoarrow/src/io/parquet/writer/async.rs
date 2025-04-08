@@ -4,8 +4,8 @@ use crate::io::parquet::writer::metadata::GeoParquetMetadataBuilder;
 use crate::io::parquet::writer::options::GeoParquetWriterOptions;
 use arrow_array::{RecordBatch, RecordBatchReader};
 use arrow_schema::Schema;
-use parquet::arrow::async_writer::AsyncFileWriter;
 use parquet::arrow::AsyncArrowWriter;
+use parquet::arrow::async_writer::AsyncFileWriter;
 use parquet::file::metadata::KeyValue;
 
 /// Write a [RecordBatchReader] to GeoParquet.

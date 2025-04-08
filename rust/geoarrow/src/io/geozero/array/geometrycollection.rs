@@ -1,7 +1,7 @@
+use crate::ArrayBase;
 use crate::array::GeometryCollectionArray;
 use crate::io::geozero::scalar::process_geometry_collection;
 use crate::trait_::ArrayAccessor;
-use crate::ArrayBase;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 impl GeozeroGeometry for GeometryCollectionArray {

@@ -1,9 +1,9 @@
 #[cfg(feature = "rayon")]
 use rayon::prelude::*;
 
+use crate::NativeArray;
 use crate::chunked_array::*;
 use crate::error::Result;
-use crate::NativeArray;
 
 pub trait MapChunks {
     type Chunk;

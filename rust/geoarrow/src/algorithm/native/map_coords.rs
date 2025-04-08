@@ -6,6 +6,7 @@ use geo_traits::{
 };
 use geoarrow_schema::Dimension;
 
+use crate::NativeArray;
 use crate::array::mixed::builder::DEFAULT_PREFER_MULTI;
 use crate::array::*;
 use crate::chunked_array::*;
@@ -13,7 +14,6 @@ use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::*;
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
 
 /// Note: this will currently always create a _two-dimensional_ output array because it returns a [`geo::Coord`].
 pub trait MapCoords {

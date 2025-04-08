@@ -1,9 +1,9 @@
-use rstar::{RTreeObject, AABB};
+use rstar::{AABB, RTreeObject};
 
 use crate::scalar::{InterleavedCoord, SeparatedCoord};
 use crate::trait_::NativeScalar;
-use geo_traits::to_geo::ToGeoCoord;
 use geo_traits::CoordTrait;
+use geo_traits::to_geo::ToGeoCoord;
 
 /// An Arrow equivalent of a Coord
 ///

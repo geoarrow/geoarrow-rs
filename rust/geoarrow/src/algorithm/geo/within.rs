@@ -2,8 +2,8 @@ use crate::array::*;
 use crate::scalar::*;
 use crate::trait_::ArrayAccessor;
 use crate::trait_::NativeScalar;
-use arrow_array::builder::BooleanBuilder;
 use arrow_array::BooleanArray;
+use arrow_array::builder::BooleanBuilder;
 use geo::Within as _Within;
 
 /// Tests if a geometry is completely within another geometry.

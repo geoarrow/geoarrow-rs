@@ -1,12 +1,12 @@
+use crate::NativeArray;
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::*;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
 use arrow::datatypes::Float64Type;
-use geo::algorithm::ConcaveHull as _;
 use geo::Polygon;
+use geo::algorithm::ConcaveHull as _;
 use geoarrow_schema::Dimension;
 
 /// Returns a polygon which covers a geometry. Unlike convex hulls, which also cover
@@ -80,7 +80,7 @@ impl ConcaveHull for GeometryArray {
                         _ => {
                             return Err(GeoArrowError::IncorrectType(
                                 "incorrect type in concave_hull".into(),
-                            ))
+                            ));
                         }
                     };
                     Ok(Some(out))

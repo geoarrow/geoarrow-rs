@@ -1,13 +1,13 @@
 use std::ops::Range;
 use std::sync::Arc;
 
+use crate::NativeArray;
 use crate::array::mixed::builder::DEFAULT_PREFER_MULTI;
 use crate::array::*;
 use crate::chunked_array::ChunkedGeometryArray;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
 use arrow_array::UInt32Array;
 use arrow_buffer::ArrowNativeType;
 

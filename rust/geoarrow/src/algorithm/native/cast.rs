@@ -7,11 +7,11 @@
 
 use std::sync::Arc;
 
+use crate::NativeArray;
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
-use crate::NativeArray;
 
 /// CastOptions provides a way to override the default cast behaviors
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

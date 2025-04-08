@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
+use crate::NativeArray;
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::*;
 use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
 use arrow_array::types::Float64Type;
 use geo::Translate as _Translate;
 use geoarrow_schema::Dimension;
@@ -131,9 +131,7 @@ impl Translate for &dyn NativeArray {
         y_offset: &BroadcastablePrimitive<Float64Type>,
     ) -> Self::Output {
         macro_rules! impl_method {
-            ($method:ident) => {{
-                Arc::new(self.$method().translate(x_offset, y_offset))
-            }};
+            ($method:ident) => {{ Arc::new(self.$method().translate(x_offset, y_offset)) }};
         }
 
         use NativeType::*;
