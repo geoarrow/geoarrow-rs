@@ -698,7 +698,7 @@ impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for GeometryArray {
         &'a self,
         index: usize,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
-        let geom = NativeGeometryAccessor::value_as_geometry_unchecked(self, index);
+        let geom = unsafe { NativeGeometryAccessor::value_as_geometry_unchecked(self, index) };
         (&geom).try_into()
     }
 }
@@ -908,7 +908,7 @@ impl TryFrom<&UnionArray> for GeometryArray {
                             return Err(GeoArrowError::General(format!(
                                 "Unexpected type_id {}",
                                 type_id
-                            )))
+                            )));
                         }
                     }
                 }

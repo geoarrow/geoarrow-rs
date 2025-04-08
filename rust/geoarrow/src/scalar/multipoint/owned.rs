@@ -71,7 +71,7 @@ impl MultiPointTrait for OwnedMultiPoint {
     }
 
     unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
-        MultiPoint::from(self).point_unchecked(i)
+        unsafe { MultiPoint::from(self).point_unchecked(i) }
     }
 }
 

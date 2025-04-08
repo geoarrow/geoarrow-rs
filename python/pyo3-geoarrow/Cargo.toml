@@ -9,7 +9,7 @@ repository = "https://github.com/geoarrow/geoarrow-rs"
 license = "MIT OR Apache-2.0"
 keywords = ["python", "arrow"]
 categories = []
-rust-version = "1.82"
+rust-version = "1.85"
 
 [dependencies]
 arrow = { workspace = true, features = ["ffi", "chrono-tz"] }

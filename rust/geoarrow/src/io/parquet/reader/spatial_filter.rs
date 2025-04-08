@@ -7,11 +7,11 @@ use arrow::datatypes::{Float32Type, Float64Type};
 use arrow_array::{Array, Float32Array, Float64Array, Scalar};
 use arrow_buffer::ScalarBuffer;
 use arrow_schema::ArrowError;
-use geo::{coord, CoordNum, Rect};
+use geo::{CoordNum, Rect, coord};
+use parquet::arrow::ProjectionMask;
 use parquet::arrow::arrow_reader::{
     ArrowPredicate, ArrowPredicateFn, ArrowReaderBuilder, RowFilter,
 };
-use parquet::arrow::ProjectionMask;
 use parquet::file::metadata::{ColumnChunkMetaData, RowGroupMetaData};
 use parquet::file::statistics::Statistics;
 use parquet::schema::types::{ColumnPath, SchemaDescriptor};
@@ -405,11 +405,11 @@ fn parse_statistics_f64(column_meta: &ColumnChunkMetaData) -> Result<(f64, f64)>
             column_meta.column_path()
         )))?;
     match stats {
-        Statistics::Double(ref typed_stats) => Ok((
+        Statistics::Double(typed_stats) => Ok((
             *typed_stats.min_opt().unwrap(),
             *typed_stats.max_opt().unwrap(),
         )),
-        Statistics::Float(ref typed_stats) => Ok((
+        Statistics::Float(typed_stats) => Ok((
             *typed_stats.min_opt().unwrap() as f64,
             *typed_stats.max_opt().unwrap() as f64,
         )),
