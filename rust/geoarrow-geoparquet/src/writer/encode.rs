@@ -10,6 +10,7 @@ use crate::algorithm::native::bounding_rect::BoundingRect;
 use crate::array::NativeArrayDyn;
 use crate::io::wkb::ToWKB;
 use crate::metadata::GeoParquetColumnEncoding;
+use crate::total_bounds::total_bounds;
 use crate::writer::metadata::{ColumnInfo, GeoParquetMetadataBuilder};
 
 pub(super) fn encode_record_batch(
@@ -40,7 +41,7 @@ fn encode_column(
     column_info: &mut ColumnInfo,
 ) -> Result<(ArrayRef, BoundingRect)> {
     let geo_arr = from_arrow_array(array, field)?;
-    let array_bounds = geo_arr.as_ref().total_bounds();
+    let array_bounds = total_bounds(geo_arr.as_ref())?;
     let encoded_array = match column_info.encoding {
         GeoParquetColumnEncoding::WKB => encode_wkb_column(geo_arr.as_ref())?,
         _ => encode_native_column(geo_arr.as_ref())?,

@@ -267,3 +267,40 @@ fn impl_array_accessor<'a>(arr: &'a impl ArrayAccessor<'a>) -> Result<RectArray>
         }
     }
 }
+
+/// Get the total bounds (i.e. minx, miny, maxx, maxy) of the entire geoarrow array.
+pub(crate) fn total_bounds(arr: &dyn GeoArrowArray) -> Result<BoundingRect> {
+    use GeoArrowType::*;
+    match arr.data_type() {
+        Point(_) => impl_total_bounds(arr.as_point()),
+        LineString(_) => impl_total_bounds(arr.as_line_string()),
+        Polygon(_) => impl_total_bounds(arr.as_polygon()),
+        MultiPoint(_) => impl_total_bounds(arr.as_multi_point()),
+        MultiLineString(_) => impl_total_bounds(arr.as_multi_line_string()),
+        MultiPolygon(_) => impl_total_bounds(arr.as_multi_polygon()),
+        Geometry(_) => impl_total_bounds(arr.as_geometry()),
+        GeometryCollection(_) => impl_total_bounds(arr.as_geometry_collection()),
+        Rect(_) => impl_total_bounds(arr.as_rect()),
+        WKB(_) => impl_total_bounds(arr.as_wkb()),
+        LargeWKB(_) => impl_total_bounds(arr.as_large_wkb()),
+        WKT(_) => todo!(),      // impl_total_bounds(arr.as_wkt()),
+        LargeWKT(_) => todo!(), // impl_total_bounds(arr.as_wkt()),
+    }
+}
+
+/// The actual implementation of computing the total bounds
+fn impl_total_bounds<'a>(arr: &'a impl ArrayAccessor<'a>) -> Result<BoundingRect> {
+    let mut rect = BoundingRect::new();
+
+    match arr.data_type() {
+        _ => {
+            for item in arr.iter() {
+                if let Some(item) = item {
+                    rect.add_geometry(&item?);
+                }
+            }
+        }
+    }
+
+    Ok(rect)
+}
