@@ -11,13 +11,13 @@ In order to minimize overhead of dynamic downcasting, the array types in this cr
 Use [builders][builder] to construct GeoArrow arrays. These builders offer a push-based interface to construct arrays from a series of objects that implement [`geo-traits`][geo_traits].
 
 ```rust
-use geo_traits::{CoordTrait, PointTrait};
-use geoarrow_array::array::PointArray;
-use geoarrow_array::builder::PointBuilder;
-use geoarrow_array::scalar::Point;
-use geoarrow_array::ArrayAccessor;
-use geoarrow_schema::{CoordType, Dimension, PointType};
-
+# use geo_traits::{CoordTrait, PointTrait};
+# use geoarrow_array::array::PointArray;
+# use geoarrow_array::builder::PointBuilder;
+# use geoarrow_array::scalar::Point;
+# use geoarrow_array::ArrayAccessor;
+# use geoarrow_schema::{CoordType, Dimension, PointType};
+#
 let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
 let mut builder = PointBuilder::new(point_type);
 
@@ -38,6 +38,50 @@ Converting a builder to an array via `finish()` is always `O(1)`.
 The `geoarrow` crates depend on and are designed to be used in combination with the upstream [Arrow][arrow_array] crates. As such, we have easy integration to convert between representations of each crate.
 
 Note that an [`Array`] or [`ArrayRef`] only maintains information about the physical [`DataType`] and will lose any extension type information. Because of this, it's **imperative to store an [`Array`] and [`Field`] together** since the [`Field`] persists the Arrow [extension metadata]. A [`RecordBatch`] holds an [`Array`] and [`Field`] together for each column, so a [`RecordBatch`] will persist extension metadata.
+
+### Converting to GeoArrow Arrays
+
+If you have an [`Array`] and [`Field`] but don't know the geometry type of the array, you can use [`from_arrow_array`][array::from_arrow_array]:
+
+```rust
+# use std::sync::Arc;
+#
+# use arrow_array::Array;
+# use arrow_schema::Field;
+# use geoarrow_array::array::{from_arrow_array, PointArray};
+# use geoarrow_array::cast::AsGeoArrowArray;
+# use geoarrow_array::{GeoArrowArray, GeoArrowType};
+#
+fn use_from_arrow_array(array: &dyn Array, field: &Field) {
+    let geoarrow_array: Arc<dyn GeoArrowArray> = from_arrow_array(array, field).unwrap();
+    match geoarrow_array.data_type() {
+        GeoArrowType::Point(_) => {
+            let array: &PointArray = geoarrow_array.as_point();
+        }
+        _ => todo!("handle other geometry types"),
+    }
+}
+```
+
+If you know the geometry type of your array, you can use one of its `TryFrom` implementations to convert directly to that type. This means you don't have to downcast on the GeoArrow side from an `Arc<dyn GeoArrowArray>`.
+
+```rust
+# use arrow_array::Array;
+# use arrow_schema::Field;
+# use geoarrow_array::array::PointArray;
+#
+fn convert_to_point_array(array: &dyn Array, field: &Field) {
+    let point_array = PointArray::try_from((array, field)).unwrap();
+}
+```
+
+### Converting to [arrow][arrow_array] Arrays
+
+You can use the [`to_array_ref`][GeoArrowArray::to_array_ref] or [`into_array_ref`][GeoArrowArray::into_array_ref] methods on [`GeoArrowArray`] to convert to an [`ArrayRef`].
+
+Alternatively, if you have a concrete GeoArrow array type, you can use [`IntoArray`] to convert to a concrete arrow array type.
+
+The easiest way today to access an arrow [`Field`] is to use [`IntoArray::ext_type`] and then call `to_field` on the result. We like to make this process simpler in the future.
 
 ## Downcasting a GeoArrow array
 

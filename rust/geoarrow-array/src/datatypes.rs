@@ -18,11 +18,10 @@ use crate::error::{GeoArrowError, Result};
 /// A type enum representing all possible GeoArrow geometry types, including both "native" and
 /// "serialized" encodings.
 ///
-/// This is designed to aid in downcasting from dynamically-typed geometry arrays.
+/// This is designed to aid in downcasting from dynamically-typed geometry arrays in combination
+/// with the [`AsGeoArrowArray`][crate::AsGeoArrowArray] trait.
 ///
 /// This type uniquely identifies the physical buffer layout of each geometry array type.
-/// It must always be possible to accurately downcast from a `dyn &NativeArray` or `dyn
-/// &ChunkedNativeArray` to a unique concrete array type using this enum.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum GeoArrowType {
     /// Represents a [PointArray][crate::array::PointArray] or

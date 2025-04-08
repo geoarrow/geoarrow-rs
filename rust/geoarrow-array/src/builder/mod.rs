@@ -1,3 +1,5 @@
+//! Push-based APIs for constructing arrays.
+
 mod coord;
 mod geometry;
 mod geometrycollection;
