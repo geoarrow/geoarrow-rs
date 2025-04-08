@@ -19,6 +19,8 @@ use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 
 /// An immutable array of Polygon geometries using GeoArrow's in-memory representation.
 ///
+/// All polygons must have the same dimension.
+///
 /// This is semantically equivalent to `Vec<Option<Polygon>>` due to the internal validity bitmap.
 #[derive(Debug, Clone)]
 // #[derive(Debug, Clone, PartialEq)]

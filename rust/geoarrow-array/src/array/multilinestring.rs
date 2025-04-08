@@ -16,7 +16,7 @@ use crate::scalar::MultiLineString;
 use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 
-/// An immutable array of MultiLineString geometries using GeoArrow's in-memory representation.
+/// An immutable array of MultiLineString geometries.
 ///
 /// This is semantically equivalent to `Vec<Option<MultiLineString>>` due to the internal validity
 /// bitmap.

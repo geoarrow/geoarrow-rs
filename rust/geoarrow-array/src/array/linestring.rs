@@ -16,7 +16,7 @@ use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{LineStringType, Metadata};
 
-/// An immutable array of LineString geometries using GeoArrow's in-memory representation.
+/// An immutable array of LineString geometries.
 ///
 /// This is semantically equivalent to `Vec<Option<LineString>>` due to the internal validity
 /// bitmap.

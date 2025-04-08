@@ -10,7 +10,10 @@ use crate::builder::InterleavedCoordBufferBuilder;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::InterleavedCoord;
 
-/// A an array of coordinates stored interleaved in a single buffer.
+/// An array of coordinates stored interleaved in a single buffer.
+///
+/// This stores all coordinates in interleaved fashion in a single underlying buffer: e.g. `xyxyxy`
+/// for 2D coordinates.
 #[derive(Debug, Clone, PartialEq)]
 pub struct InterleavedCoordBuffer {
     pub(crate) coords: ScalarBuffer<f64>,
