@@ -1,11 +1,11 @@
-use geoarrow_array::error::Result;
 use crate::writer::encode::encode_record_batch;
 use crate::writer::metadata::GeoParquetMetadataBuilder;
 use crate::writer::options::GeoParquetWriterOptions;
 use arrow_array::{RecordBatch, RecordBatchReader};
 use arrow_schema::Schema;
-use parquet::arrow::async_writer::AsyncFileWriter;
+use geoarrow_array::error::{GeoArrowError, Result};
 use parquet::arrow::AsyncArrowWriter;
+use parquet::arrow::async_writer::AsyncFileWriter;
 use parquet::file::metadata::KeyValue;
 
 /// Write a [RecordBatchReader] to GeoParquet.
@@ -50,7 +50,10 @@ impl<W: AsyncFileWriter> GeoParquetWriterAsync<W> {
     /// Write a batch to an output file
     pub async fn write_batch(&mut self, batch: &RecordBatch) -> Result<()> {
         let encoded_batch = encode_record_batch(batch, &mut self.metadata_builder)?;
-        self.writer.write(&encoded_batch).await?;
+        self.writer
+            .write(&encoded_batch)
+            .await
+            .map_err(|err| GeoArrowError::External(Box::new(err)))?;
         Ok(())
     }
 
@@ -70,7 +73,10 @@ impl<W: AsyncFileWriter> GeoParquetWriterAsync<W> {
             self.writer.append_key_value_metadata(kv_metadata);
         }
 
-        self.writer.close().await?;
+        self.writer
+            .close()
+            .await
+            .map_err(|err| GeoArrowError::External(Box::new(err)))?;
         Ok(())
     }
 }

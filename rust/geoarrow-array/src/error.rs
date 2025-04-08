@@ -2,6 +2,7 @@
 
 use arrow_schema::ArrowError;
 use std::borrow::Cow;
+use std::error::Error;
 use std::fmt::Debug;
 use thiserror::Error;
 
@@ -9,6 +10,10 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 #[non_exhaustive]
 pub enum GeoArrowError {
+    /// Wraps an external error.
+    #[error("External error: {0}")]
+    External(#[from] Box<dyn Error + Send + Sync>),
+
     /// Incorrect type was passed to an operation.
     #[error("Incorrect type passed to operation: {0}")]
     IncorrectType(Cow<'static, str>),
