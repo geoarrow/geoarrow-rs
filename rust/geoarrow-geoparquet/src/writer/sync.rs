@@ -1,11 +1,11 @@
 use std::io::Write;
 
-use geoarrow_array::error::Result;
 use crate::writer::encode::encode_record_batch;
 use crate::writer::metadata::GeoParquetMetadataBuilder;
 use crate::writer::options::GeoParquetWriterOptions;
 use arrow_array::{RecordBatch, RecordBatchReader};
 use arrow_schema::Schema;
+use geoarrow_array::error::{GeoArrowError, Result};
 use parquet::arrow::ArrowWriter;
 use parquet::file::metadata::KeyValue;
 
@@ -40,7 +40,8 @@ impl<W: Write + Send> GeoParquetWriter<W> {
             writer,
             metadata_builder.output_schema.clone(),
             options.writer_properties.clone(),
-        )?;
+        )
+        .map_err(|err| GeoArrowError::External(Box::new(err)))?;
 
         Ok(Self {
             writer,
@@ -51,7 +52,9 @@ impl<W: Write + Send> GeoParquetWriter<W> {
     /// Write a batch to an output file
     pub fn write_batch(&mut self, batch: &RecordBatch) -> Result<()> {
         let encoded_batch = encode_record_batch(batch, &mut self.metadata_builder)?;
-        self.writer.write(&encoded_batch)?;
+        self.writer
+            .write(&encoded_batch)
+            .map_err(|err| GeoArrowError::External(Box::new(err)))?;
         Ok(())
     }
 
@@ -71,7 +74,9 @@ impl<W: Write + Send> GeoParquetWriter<W> {
             self.writer.append_key_value_metadata(kv_metadata);
         }
 
-        self.writer.close()?;
+        self.writer
+            .close()
+            .map_err(|err| GeoArrowError::External(Box::new(err)))?;
         Ok(())
     }
 }

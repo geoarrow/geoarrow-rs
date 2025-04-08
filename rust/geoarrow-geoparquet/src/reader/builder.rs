@@ -1,6 +1,6 @@
 use arrow_array::{RecordBatch, RecordBatchReader};
 use arrow_schema::{ArrowError, SchemaRef};
-use geoarrow_array::error::Result;
+use geoarrow_array::error::{GeoArrowError, Result};
 use parquet::arrow::arrow_reader::{
     ArrowReaderMetadata, ArrowReaderOptions, ParquetRecordBatchReader,
     ParquetRecordBatchReaderBuilder,
@@ -48,7 +48,8 @@ impl<T: ChunkReader + 'static> GeoParquetRecordBatchReaderBuilder<T> {
         arrow_options: ArrowReaderOptions,
         geo_options: GeoParquetReaderOptions,
     ) -> Result<Self> {
-        let metadata = ArrowReaderMetadata::load(&reader, arrow_options)?;
+        let metadata = ArrowReaderMetadata::load(&reader, arrow_options)
+            .map_err(|err| GeoArrowError::External(Box::new(err)))?;
         Ok(Self::new_with_metadata_and_options(
             reader,
             metadata,
@@ -81,7 +82,9 @@ impl<T: ChunkReader + 'static> GeoParquetRecordBatchReaderBuilder<T> {
         let builder = self
             .options
             .apply_to_builder(self.builder, self.geo_meta.as_ref())?;
-        let reader = builder.build()?;
+        let reader = builder
+            .build()
+            .map_err(|err| GeoArrowError::External(Box::new(err)))?;
         Ok(GeoParquetRecordBatchReader {
             reader,
             output_schema,
@@ -174,7 +177,9 @@ mod test {
             .unwrap()
             .build()
             .unwrap();
-        let _table = reader.read_table().unwrap();
+        let _batches = reader
+            .collect::<std::result::Result<Vec<_>, ArrowError>>()
+            .unwrap();
     }
 
     #[test]
@@ -184,7 +189,9 @@ mod test {
             .unwrap()
             .build()
             .unwrap();
-        let _table = reader.read_table().unwrap();
+        let _batches = reader
+            .collect::<std::result::Result<Vec<_>, ArrowError>>()
+            .unwrap();
     }
 
     #[test]
@@ -210,8 +217,9 @@ mod test {
         .build()
         .unwrap();
 
-        let table = reader.read_table().unwrap();
-        let (batches, _schema) = table.into_inner();
+        let batches = reader
+            .collect::<std::result::Result<Vec<_>, ArrowError>>()
+            .unwrap();
         let value = batches[0]
             .column_by_name("BoroName")
             .unwrap()
@@ -227,8 +235,10 @@ mod test {
             .unwrap()
             .build()
             .unwrap();
-        let table = reader.read_table().unwrap();
-        assert_eq!(table.len(), 100);
+        let batches = reader
+            .collect::<std::result::Result<Vec<_>, ArrowError>>()
+            .unwrap();
+        assert_eq!(batches.iter().fold(0, |acc, x| acc + x.num_rows()), 100);
     }
 
     #[test]
@@ -254,8 +264,10 @@ mod test {
         .unwrap()
         .build()
         .unwrap();
-        let table = reader.read_table().unwrap();
-        assert_eq!(table.len(), 0);
+        let batches = reader
+            .collect::<std::result::Result<Vec<_>, ArrowError>>()
+            .unwrap();
+        assert_eq!(batches.iter().fold(0, |acc, x| acc + x.num_rows()), 0);
     }
 
     #[test]
@@ -281,8 +293,10 @@ mod test {
         .unwrap()
         .build()
         .unwrap();
-        let table = reader.read_table().unwrap();
-        assert_eq!(table.len(), 100);
+        let batches = reader
+            .collect::<std::result::Result<Vec<_>, ArrowError>>()
+            .unwrap();
+        assert_eq!(batches.iter().fold(0, |acc, x| acc + x.num_rows()), 100);
     }
 
     #[test]
@@ -308,7 +322,9 @@ mod test {
         .unwrap()
         .build()
         .unwrap();
-        let table = reader.read_table().unwrap();
-        assert_eq!(table.len(), 53);
+        let batches = reader
+            .collect::<std::result::Result<Vec<_>, ArrowError>>()
+            .unwrap();
+        assert_eq!(batches.iter().fold(0, |acc, x| acc + x.num_rows()), 53);
     }
 }

@@ -13,7 +13,7 @@ use geoarrow_array::ArrayAccessor;
 use geoarrow_array::array::{RectArray, from_arrow_array};
 use geoarrow_array::builder::RectBuilder;
 use geoarrow_array::error::{GeoArrowError, Result};
-use geoarrow_schema::Dimension;
+use geoarrow_schema::{BoxType, Dimension};
 use parquet::arrow::ProjectionMask;
 use parquet::arrow::arrow_reader::{
     ArrowPredicate, ArrowPredicateFn, ArrowReaderBuilder, RowFilter,
@@ -150,7 +150,10 @@ impl<'a> ParquetBboxStatistics<'a> {
 
     /// Extract the bounding boxes for a sequence of row groups
     pub fn get_bboxes(&self, row_groups: &[RowGroupMetaData]) -> Result<RectArray> {
-        let mut builder = RectBuilder::with_capacity(Dimension::XY, row_groups.len());
+        let mut builder = RectBuilder::with_capacity(
+            BoxType::new(Dimension::XY, Default::default()),
+            row_groups.len(),
+        );
         for rg_meta in row_groups.iter() {
             builder.push_rect(Some(&self.get_bbox(rg_meta)?));
         }
@@ -167,7 +170,7 @@ pub(crate) fn apply_bbox_row_groups<T>(
     let row_groups_bounds = bbox_cols.get_bboxes(row_groups)?;
     let mut intersects_row_groups_idxs = vec![];
     for (row_group_idx, row_group_bounds) in row_groups_bounds.iter_values().enumerate() {
-        if rect_intersects(&row_group_bounds, &bbox_query) {
+        if rect_intersects(&row_group_bounds?, &bbox_query) {
             intersects_row_groups_idxs.push(row_group_idx);
         }
     }
@@ -405,11 +408,11 @@ fn parse_statistics_f64(column_meta: &ColumnChunkMetaData) -> Result<(f64, f64)>
             column_meta.column_path()
         )))?;
     match stats {
-        Statistics::Double(ref typed_stats) => Ok((
+        Statistics::Double(typed_stats) => Ok((
             *typed_stats.min_opt().unwrap(),
             *typed_stats.max_opt().unwrap(),
         )),
-        Statistics::Float(ref typed_stats) => Ok((
+        Statistics::Float(typed_stats) => Ok((
             *typed_stats.min_opt().unwrap() as f64,
             *typed_stats.max_opt().unwrap() as f64,
         )),

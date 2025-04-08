@@ -39,7 +39,8 @@ impl<W: AsyncFileWriter> GeoParquetWriterAsync<W> {
             writer,
             metadata_builder.output_schema.clone(),
             options.writer_properties.clone(),
-        )?;
+        )
+        .map_err(|err| GeoArrowError::External(Box::new(err)))?;
 
         Ok(Self {
             writer,
