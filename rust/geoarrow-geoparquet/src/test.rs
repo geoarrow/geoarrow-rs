@@ -2,38 +2,28 @@ use std::fs::File;
 use std::io::Cursor;
 use std::sync::Arc;
 
-use arrow_array::{BooleanArray, RecordBatch};
-use arrow_schema::{Field, Schema};
+use arrow_array::{BooleanArray, RecordBatch, RecordBatchReader};
+use arrow_schema::{ArrowError, Field, Schema};
 use bytes::Bytes;
 
 use crate::array::GeometryBuilder;
 use crate::chunked_array::ChunkedNativeArrayDyn;
 use crate::table::Table;
-use crate::{write_geoparquet, GeoParquetRecordBatchReaderBuilder};
+use crate::{GeoParquetRecordBatchReaderBuilder, write_geoparquet};
 use geoarrow_array::error::Result;
 
 #[ignore = "fails!"]
 #[test]
 fn round_trip_nybb() -> Result<()> {
     let file = File::open("fixtures/geoparquet/nybb.parquet").unwrap();
-    let table = GeoParquetRecordBatchReaderBuilder::try_new(file)?
-        .build()?
-        .read_table()?;
-
-    let schema = table.schema().clone();
+    let reader = GeoParquetRecordBatchReaderBuilder::try_new(file)?.build()?;
+    let schema = reader.schema();
 
     let mut buf = vec![];
-    write_geoparquet(
-        table.into_record_batch_reader(),
-        Cursor::new(&mut buf),
-        &Default::default(),
-    )
-    .unwrap();
-    let again = GeoParquetRecordBatchReaderBuilder::try_new(Bytes::from(buf))?
-        .build()?
-        .read_table()?;
+    write_geoparquet(Box::new(reader), Cursor::new(&mut buf), &Default::default()).unwrap();
+    let again_reader = GeoParquetRecordBatchReaderBuilder::try_new(Bytes::from(buf))?.build()?;
 
-    assert_eq!(&schema, again.schema());
+    assert_eq!(schema.as_ref(), again_reader.schema().as_ref());
     Ok(())
     // assert_eq!(table.geometry().unwrap().ch, again.geometry().unwrap());
 }

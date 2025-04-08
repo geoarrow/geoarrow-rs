@@ -13,11 +13,11 @@ use geoarrow_schema::{
 };
 use serde_json::Value;
 
-use crate::algorithm::native::bounding_rect::BoundingRect;
 use crate::crs::{CRSTransform, DefaultCRSTransform};
 use crate::metadata::{
     GeoParquetColumnEncoding, GeoParquetColumnMetadata, GeoParquetGeometryType, GeoParquetMetadata,
 };
+use crate::total_bounds::BoundingRect;
 use crate::writer::options::{GeoParquetWriterEncoding, GeoParquetWriterOptions};
 
 /// Information for one geometry column being written to Parquet

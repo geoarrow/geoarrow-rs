@@ -15,7 +15,6 @@ use geoarrow_schema::{
     MultiPointType, MultiPolygonType, PointType, PolygonType,
 };
 
-use crate::io::wkb::from_wkb;
 use crate::metadata::{
     GeoParquetColumnEncoding, GeoParquetColumnMetadata, GeoParquetGeometryType, GeoParquetMetadata,
     infer_geo_data_type,

@@ -6,7 +6,6 @@ use arrow_array::types::{Float32Type, Float64Type};
 use arrow_array::{Array, Float32Array, Float64Array, Scalar};
 use arrow_buffer::ScalarBuffer;
 use arrow_ord::cmp::{gt_eq, lt_eq};
-use arrow_schema::ArrowError;
 use geo_traits::{CoordTrait, RectTrait};
 use geo_types::{CoordNum, Rect, coord};
 use geoarrow_array::ArrayAccessor;
@@ -227,10 +226,10 @@ fn construct_native_predicate(
         let geo_arr = from_arrow_array(array, field)?;
         let rect_arr = bounding_rect(geo_arr.as_ref())?;
 
-        let xmin_col = Float64Array::new(rect_arr.lower().buffers[0].clone(), nulls.cloned());
-        let ymin_col = Float64Array::new(rect_arr.lower().buffers[1].clone(), nulls.cloned());
-        let xmax_col = Float64Array::new(rect_arr.upper().buffers[0].clone(), nulls.cloned());
-        let ymax_col = Float64Array::new(rect_arr.upper().buffers[1].clone(), nulls.cloned());
+        let xmin_col = Float64Array::new(rect_arr.lower().raw_buffers()[0].clone(), nulls.cloned());
+        let ymin_col = Float64Array::new(rect_arr.lower().raw_buffers()[1].clone(), nulls.cloned());
+        let xmax_col = Float64Array::new(rect_arr.upper().raw_buffers()[0].clone(), nulls.cloned());
+        let ymax_col = Float64Array::new(rect_arr.upper().raw_buffers()[1].clone(), nulls.cloned());
 
         // Construct the bounding box from user input
         let minx_scalar = Scalar::new(Float64Array::from(vec![bbox_query.min().x()]));
