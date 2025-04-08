@@ -14,12 +14,16 @@ use crate::error::Result;
 pub trait IntoArrow {
     /// The type of arrow array that this geoarrow array can be converted into.
     type ArrowArray: Array;
+
+    /// The extension type representing this array. It will always be a type defined by
+    /// [geoarrow_schema].
     type ExtensionType: ExtensionType;
 
     /// Converts this geoarrow array into an arrow array.
     // Return Arc<Self::ArrowArray>? Could that replace `into_array_ref` on the trait?
     fn into_arrow(self) -> Self::ArrowArray;
 
+    /// Return the Arrow extension type representing this array.
     fn ext_type(&self) -> &Self::ExtensionType;
 }
 
