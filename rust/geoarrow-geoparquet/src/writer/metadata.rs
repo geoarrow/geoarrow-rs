@@ -6,7 +6,6 @@ use arrow_schema::extension::{EXTENSION_TYPE_METADATA_KEY, EXTENSION_TYPE_NAME_K
 use arrow_schema::{Field, Schema, SchemaRef};
 use geoarrow_array::GeoArrowType;
 use geoarrow_array::array::from_arrow_array;
-use geoarrow_array::cast::AsGeoArrowArray;
 use geoarrow_array::error::Result;
 use geoarrow_schema::{
     CoordType, Dimension, Edges, LineStringType, Metadata, MultiLineStringType, MultiPointType,
@@ -94,31 +93,36 @@ impl ColumnInfo {
 
         // We only have to do this for geometry arrays because other arrays are statically known
         if let GeoArrowType::Geometry(_) = array_ref.data_type() {
-            let arr = array_ref.as_geometry();
-            if arr.has_points(Dimension::XY) || arr.has_points(Dimension::XYZ) {
-                self.geometry_types.insert(GeoParquetGeometryType::Point);
-            }
-            if arr.has_line_strings(Dimension::XY) || arr.has_line_strings(Dimension::XYZ) {
-                self.geometry_types
-                    .insert(GeoParquetGeometryType::LineString);
-            }
-            if arr.has_polygons(Dimension::XY) || arr.has_polygons(Dimension::XYZ) {
-                self.geometry_types.insert(GeoParquetGeometryType::Polygon);
-            }
-            if arr.has_multi_points(Dimension::XY) || arr.has_multi_points(Dimension::XYZ) {
-                self.geometry_types
-                    .insert(GeoParquetGeometryType::MultiPoint);
-            }
-            if arr.has_multi_line_strings(Dimension::XY)
-                || arr.has_multi_line_strings(Dimension::XYZ)
-            {
-                self.geometry_types
-                    .insert(GeoParquetGeometryType::MultiLineString);
-            }
-            if arr.has_multi_polygons(Dimension::XY) || arr.has_multi_polygons(Dimension::XYZ) {
-                self.geometry_types
-                    .insert(GeoParquetGeometryType::MultiPolygon);
-            }
+            // TODO: restore writing `geometry_types`.
+            // The spec says "The geometry types of all geometries, or an empty array if they are
+            // not known.". So it's valid for us to write an empty array, but in the future we
+            // should restore writing known types.
+
+            // let arr = array_ref.as_geometry();
+            // if arr.has_points(Dimension::XY) || arr.has_points(Dimension::XYZ) {
+            //     self.geometry_types.insert(GeoParquetGeometryType::Point);
+            // }
+            // if arr.has_line_strings(Dimension::XY) || arr.has_line_strings(Dimension::XYZ) {
+            //     self.geometry_types
+            //         .insert(GeoParquetGeometryType::LineString);
+            // }
+            // if arr.has_polygons(Dimension::XY) || arr.has_polygons(Dimension::XYZ) {
+            //     self.geometry_types.insert(GeoParquetGeometryType::Polygon);
+            // }
+            // if arr.has_multi_points(Dimension::XY) || arr.has_multi_points(Dimension::XYZ) {
+            //     self.geometry_types
+            //         .insert(GeoParquetGeometryType::MultiPoint);
+            // }
+            // if arr.has_multi_line_strings(Dimension::XY)
+            //     || arr.has_multi_line_strings(Dimension::XYZ)
+            // {
+            //     self.geometry_types
+            //         .insert(GeoParquetGeometryType::MultiLineString);
+            // }
+            // if arr.has_multi_polygons(Dimension::XY) || arr.has_multi_polygons(Dimension::XYZ) {
+            //     self.geometry_types
+            //         .insert(GeoParquetGeometryType::MultiPolygon);
+            // }
         }
 
         Ok(())
