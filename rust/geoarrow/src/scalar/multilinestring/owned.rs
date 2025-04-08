@@ -90,7 +90,7 @@ impl MultiLineStringTrait for OwnedMultiLineString {
     }
 
     unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
-        MultiLineString::from(self).line_string_unchecked(i)
+        unsafe { MultiLineString::from(self).line_string_unchecked(i) }
     }
 }
 

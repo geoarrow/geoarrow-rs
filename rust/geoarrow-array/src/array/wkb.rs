@@ -15,7 +15,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 use crate::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 
-/// An immutable array of WKB geometries using GeoArrow's in-memory representation.
+/// An immutable array of WKB geometries.
 ///
 /// This is semantically equivalent to `Vec<Option<WKB>>` due to the internal validity bitmap.
 ///
@@ -241,9 +241,9 @@ impl TryFrom<WKBArray<i64>> for WKBArray<i32> {
 
 #[cfg(test)]
 mod test {
+    use crate::GeoArrowArray;
     use crate::builder::WKBBuilder;
     use crate::test::point;
-    use crate::GeoArrowArray;
 
     use super::*;
 

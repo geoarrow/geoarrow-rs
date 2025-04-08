@@ -1,3 +1,5 @@
+//! Helper functions for downcasting [`dyn GeoArrowArray`][GeoArrowArray] to concrete types.
+
 use std::sync::Arc;
 
 use crate::array::*;

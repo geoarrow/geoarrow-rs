@@ -1,14 +1,14 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_multipolygon;
 use crate::algorithm::native::eq::multi_polygon_eq;
-use crate::array::util::OffsetBufferUtils;
 use crate::array::CoordBuffer;
+use crate::array::util::OffsetBufferUtils;
 use crate::scalar::Polygon;
 use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
-use geo_traits::to_geo::ToGeoMultiPolygon;
 use geo_traits::MultiPolygonTrait;
+use geo_traits::to_geo::ToGeoMultiPolygon;
 use geoarrow_schema::Dimension;
-use rstar::{RTreeObject, AABB};
+use rstar::{AABB, RTreeObject};
 
 /// An Arrow equivalent of a MultiPolygon
 ///

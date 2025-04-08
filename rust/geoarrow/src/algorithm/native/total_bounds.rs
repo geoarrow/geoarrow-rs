@@ -1,9 +1,9 @@
+use crate::NativeArray;
 use crate::algorithm::native::bounding_rect::BoundingRect;
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::datatypes::NativeType;
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
 
 /// Computes the total bounds (extent) of the input.
 pub trait TotalBounds {

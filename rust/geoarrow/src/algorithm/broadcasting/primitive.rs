@@ -1,6 +1,6 @@
+use arrow_array::PrimitiveArray;
 use arrow_array::iterator::ArrayIter;
 use arrow_array::types::ArrowPrimitiveType;
-use arrow_array::PrimitiveArray;
 use arrow_buffer::ArrowNativeType;
 
 /// An enum over primitive types defined by [`ArrowPrimitiveType`]. These include u8, i32,

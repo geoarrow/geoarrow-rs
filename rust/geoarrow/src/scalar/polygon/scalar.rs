@@ -1,14 +1,14 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_polygon;
 use crate::algorithm::native::eq::polygon_eq;
-use crate::array::util::OffsetBufferUtils;
 use crate::array::CoordBuffer;
+use crate::array::util::OffsetBufferUtils;
 use crate::scalar::LineString;
 use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
-use geo_traits::to_geo::ToGeoPolygon;
 use geo_traits::PolygonTrait;
+use geo_traits::to_geo::ToGeoPolygon;
 use geoarrow_schema::Dimension;
-use rstar::{RTreeObject, AABB};
+use rstar::{AABB, RTreeObject};
 
 /// An Arrow equivalent of a Polygon
 ///

@@ -1,12 +1,12 @@
+use crate::ArrayBase;
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{MultiPolygonArray, WKBArray};
 use crate::trait_::ArrayAccessor;
-use crate::ArrayBase;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use arrow_buffer::Buffer;
 use std::io::Cursor;
-use wkb::writer::{multi_polygon_wkb_size, write_multi_polygon};
 use wkb::Endianness;
+use wkb::writer::{multi_polygon_wkb_size, write_multi_polygon};
 
 impl<O: OffsetSizeTrait> From<&MultiPolygonArray> for WKBArray<O> {
     fn from(value: &MultiPolygonArray) -> Self {

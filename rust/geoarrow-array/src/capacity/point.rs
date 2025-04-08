@@ -28,11 +28,13 @@ impl PointCapacity {
         self.geom_capacity == 0
     }
 
+    /// Add the capacity of the given Point
     #[inline]
     pub fn add_point(&mut self, _point: Option<&impl PointTrait>) {
         self.geom_capacity += 1;
     }
 
+    /// Add the capacity of the given Geometry
     #[inline]
     pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait>) -> Result<()> {
         if let Some(g) = value {

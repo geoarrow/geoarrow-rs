@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
+use crate::NativeArray;
 use crate::algorithm::geo_index::RTree;
 use crate::array::*;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
-use arrow_array::builder::BooleanBuilder;
 use arrow_array::BooleanArray;
+use arrow_array::builder::BooleanBuilder;
 use arrow_buffer::{BooleanBufferBuilder, NullBuffer};
 use geo_index::rtree::{RTree as OwnedRTree, RTreeIndex, RTreeMetadata};
 use geo_traits::{CoordTrait, RectTrait};

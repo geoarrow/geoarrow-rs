@@ -13,11 +13,11 @@ use serde_json::Value;
 
 use crate::array::{RectArray, RectBuilder};
 use crate::error::{GeoArrowError, Result};
+#[cfg(feature = "parquet_async")]
+use crate::io::parquet::GeoParquetRecordBatchStreamBuilder;
 use crate::io::parquet::metadata::{GeoParquetBboxCovering, GeoParquetMetadata};
 use crate::io::parquet::reader::parse::infer_target_schema;
 use crate::io::parquet::reader::spatial_filter::ParquetBboxStatistics;
-#[cfg(feature = "parquet_async")]
-use crate::io::parquet::GeoParquetRecordBatchStreamBuilder;
 use crate::io::parquet::{GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder};
 
 /// An extension trait

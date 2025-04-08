@@ -13,7 +13,12 @@ use crate::error::{GeoArrowError, Result};
 use crate::scalar::Rect;
 use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 
-/// An immutable array of Rect geometries.
+/// An immutable array of Rect or Box geometries.
+///
+/// A rect is an axis-aligned bounded rectangle whose area is defined by minimum and maximum
+/// coordinates.
+///
+/// All rects must have the same dimension.
 ///
 /// This is **not** an array type defined by the GeoArrow specification (as of spec version 0.1)
 /// but is included here for parity with georust/geo, and to save memory for the output of

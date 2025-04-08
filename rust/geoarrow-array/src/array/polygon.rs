@@ -15,9 +15,11 @@ use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Polygon;
 use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
-use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
+use crate::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
 
 /// An immutable array of Polygon geometries using GeoArrow's in-memory representation.
+///
+/// All polygons must have the same dimension.
 ///
 /// This is semantically equivalent to `Vec<Option<Polygon>>` due to the internal validity bitmap.
 #[derive(Debug, Clone)]

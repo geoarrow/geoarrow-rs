@@ -3,9 +3,9 @@ use std::sync::Arc;
 use arrow_array::ArrayRef;
 use datafusion::error::DataFusionError;
 use datafusion::logical_expr::{Signature, Volatility};
+use geoarrow::NativeArray;
 use geoarrow::array::{GeometryArray, PointArray, RectArray};
 use geoarrow::datatypes::NativeType;
-use geoarrow::NativeArray;
 use geoarrow_schema::{BoxType, CoordType, Dimension, GeometryType, PointType};
 
 use crate::error::GeoDataFusionResult;

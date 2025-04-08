@@ -1,13 +1,13 @@
-use geo::algorithm::bounding_rect::BoundingRect as GeoBoundingRect;
 use geo::Rect;
+use geo::algorithm::bounding_rect::BoundingRect as GeoBoundingRect;
 use geoarrow_schema::Dimension;
 
+use crate::NativeArray;
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray};
 use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
 
 /// Calculation of the bounding rectangle of a geometry.
 pub trait BoundingRect {
@@ -151,8 +151,8 @@ mod test {
 
     use geo::point;
 
-    use crate::array::{GeometryCollectionArray, PointArray};
     use crate::ArrayBase;
+    use crate::array::{GeometryCollectionArray, PointArray};
 
     #[test]
     fn stack_overflow_repro_issue_979() {

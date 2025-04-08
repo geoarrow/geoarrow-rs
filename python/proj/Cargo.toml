@@ -9,7 +9,7 @@ repository = "https://github.com/geoarrow/geoarrow-rs"
 license = "MIT OR Apache-2.0"
 keywords = ["python", "arrow", "geospatial"]
 categories = ["wasm", "science::geo"]
-rust-version = "1.75"
+rust-version = "1.85"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]

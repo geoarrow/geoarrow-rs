@@ -5,7 +5,7 @@ use geos::Geom;
 use crate::algorithm::native::{Binary, Unary};
 use crate::array::GeometryArray;
 use crate::error::{GeoArrowError, Result};
-use crate::io::geos::scalar::{to_geos_geometry, GEOSGeometry};
+use crate::io::geos::scalar::{GEOSGeometry, to_geos_geometry};
 use crate::trait_::NativeScalar;
 
 pub trait BooleanOps<Rhs> {

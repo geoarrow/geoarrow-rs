@@ -8,12 +8,12 @@ use datafusion::logical_expr::scalar_doc_sections::DOC_SECTION_OTHER;
 use datafusion::logical_expr::{
     ColumnarValue, Documentation, ScalarUDFImpl, Signature, Volatility,
 };
+use geoarrow::ArrayBase;
 use geoarrow::algorithm::broadcasting::BroadcastablePrimitive;
 use geoarrow::algorithm::geo::ConcaveHull as _;
 use geoarrow::array::GeometryArray;
-use geoarrow::ArrayBase;
 
-use crate::data_types::{parse_to_native_array, GEOMETRY_TYPE, POINT2D_TYPE};
+use crate::data_types::{GEOMETRY_TYPE, POINT2D_TYPE, parse_to_native_array};
 use crate::error::GeoDataFusionResult;
 
 #[derive(Debug)]

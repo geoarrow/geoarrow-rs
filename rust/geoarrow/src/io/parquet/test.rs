@@ -9,7 +9,7 @@ use bytes::Bytes;
 use crate::array::GeometryBuilder;
 use crate::chunked_array::ChunkedNativeArrayDyn;
 use crate::error::Result;
-use crate::io::parquet::{write_geoparquet, GeoParquetRecordBatchReaderBuilder};
+use crate::io::parquet::{GeoParquetRecordBatchReaderBuilder, write_geoparquet};
 use crate::table::Table;
 
 #[ignore = "fails!"]

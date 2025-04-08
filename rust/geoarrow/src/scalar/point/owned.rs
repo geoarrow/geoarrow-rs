@@ -1,8 +1,8 @@
 use crate::algorithm::native::eq::point_eq;
 use crate::array::{CoordBuffer, PointArray};
 use crate::scalar::{Coord, Point};
-use geo_traits::to_geo::ToGeoPoint;
 use geo_traits::PointTrait;
+use geo_traits::to_geo::ToGeoPoint;
 
 #[derive(Clone, Debug)]
 pub struct OwnedPoint {
@@ -49,11 +49,7 @@ impl PointTrait for OwnedPoint {
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
         let coord = self.coords.value(self.geom_index);
-        if coord.is_nan() {
-            None
-        } else {
-            Some(coord)
-        }
+        if coord.is_nan() { None } else { Some(coord) }
     }
 }
 

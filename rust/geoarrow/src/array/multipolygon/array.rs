@@ -10,7 +10,7 @@ use geoarrow_schema::{CoordType, Dimension, Metadata, MultiPolygonType};
 
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::multipolygon::MultiPolygonCapacity;
-use crate::array::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
+use crate::array::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
 use crate::array::{
     CoordBuffer, GeometryCollectionArray, MixedGeometryArray, PolygonArray, WKBArray,
 };

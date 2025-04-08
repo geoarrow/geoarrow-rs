@@ -1,12 +1,12 @@
+use crate::ArrayBase;
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{RectArray, WKBArray};
 use crate::trait_::ArrayAccessor;
-use crate::ArrayBase;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use arrow_buffer::Buffer;
 use std::io::Cursor;
-use wkb::writer::{rect_wkb_size, write_rect};
 use wkb::Endianness;
+use wkb::writer::{rect_wkb_size, write_rect};
 
 impl<O: OffsetSizeTrait> From<&RectArray> for WKBArray<O> {
     fn from(value: &RectArray) -> Self {

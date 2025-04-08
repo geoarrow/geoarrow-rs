@@ -10,6 +10,7 @@ use geoarrow_schema::{
     MultiPointType, MultiPolygonType, PointType, PolygonType,
 };
 
+use crate::ArrayAccessor;
 use crate::array::{
     LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
     PolygonArray, WKBArray,
@@ -23,7 +24,6 @@ use crate::datatypes::GeoArrowType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Geometry;
 use crate::trait_::GeoArrowArray;
-use crate::ArrayAccessor;
 
 /// # Invariants
 ///
@@ -572,7 +572,10 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                     };
 
                     if dim != found_dimension {
-                        return Err(  GeoArrowError::General(format!("expected dimension: {:?}, found child array with dimension {:?} and type_id: {}", dim, found_dimension, type_id )));
+                        return Err(GeoArrowError::General(format!(
+                            "expected dimension: {:?}, found child array with dimension {:?} and type_id: {}",
+                            dim, found_dimension, type_id
+                        )));
                     }
 
                     match type_id {
@@ -640,7 +643,7 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                             return Err(GeoArrowError::General(format!(
                                 "Unexpected type_id {}",
                                 type_id
-                            )))
+                            )));
                         }
                     }
                 }

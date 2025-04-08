@@ -1,16 +1,16 @@
+use crate::NativeArray;
 use crate::algorithm::native::{Binary, MapChunks, Unary};
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedLineStringArray, ChunkedNativeArray};
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeScalar;
-use crate::NativeArray;
 use arrow_array::Float64Array;
-use geo::line_measures::FrechetDistance as _FrechetDistance;
 use geo::Euclidean;
+use geo::line_measures::FrechetDistance as _FrechetDistance;
 // use geo::FrechetDistance as _FrechetDistance;
-use geo_traits::to_geo::ToGeoLineString;
 use geo_traits::LineStringTrait;
+use geo_traits::to_geo::ToGeoLineString;
 
 // ┌────────────────────────────────┐
 // │ Implementations for RHS arrays │

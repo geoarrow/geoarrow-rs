@@ -65,7 +65,7 @@ impl GeoParquetColumnEncoding {
                     return Err(GeoArrowError::General(format!(
                         "unsupported data type for native encoding: {:?}",
                         dt
-                    )))
+                    )));
                 }
             },
         };
@@ -150,7 +150,7 @@ impl FromStr for GeoParquetGeometryType {
             other => {
                 return Err(GeoArrowError::General(format!(
                     "Unknown value for geometry_type: {other}"
-                )))
+                )));
             }
         };
         Ok(out)

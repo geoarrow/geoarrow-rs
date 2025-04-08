@@ -1,10 +1,10 @@
 use geozero::{GeomProcessor, GeozeroGeometry};
 
+use crate::ArrayBase;
 use crate::array::multipolygon::MultiPolygonCapacity;
 use crate::array::{MultiPolygonArray, MultiPolygonBuilder};
 use crate::io::geozero::scalar::process_multi_polygon;
 use crate::trait_::ArrayAccessor;
-use crate::ArrayBase;
 use geoarrow_schema::Dimension;
 
 impl GeozeroGeometry for MultiPolygonArray {
@@ -140,8 +140,8 @@ mod test {
     use crate::test::multipolygon::{mp0, mp1};
     use crate::trait_::ArrayAccessor;
     use geo::Geometry;
-    use geozero::error::Result;
     use geozero::ToWkt;
+    use geozero::error::Result;
 
     #[test]
     fn geozero_process_geom() -> geozero::error::Result<()> {

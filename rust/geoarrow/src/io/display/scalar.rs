@@ -83,11 +83,11 @@ impl<O: OffsetSizeTrait> fmt::Display for WKB<'_, O> {
 
 #[cfg(test)]
 mod test {
+    use crate::NativeArray;
     use crate::array::PointArray;
     use crate::io::wkb::ToWKB;
     use crate::test::{multipolygon, point};
     use crate::trait_::ArrayAccessor;
-    use crate::NativeArray;
     use geoarrow_schema::Dimension;
 
     #[test]

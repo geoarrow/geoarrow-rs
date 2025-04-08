@@ -1,6 +1,6 @@
 use crate::error::{GeoArrowError, Result};
-use crate::io::geos::scalar::linestring::to_geos_line_string;
 use crate::io::geos::scalar::GEOSConstLineString;
+use crate::io::geos::scalar::linestring::to_geos_line_string;
 use crate::scalar::MultiLineString;
 use geo_traits::MultiLineStringTrait;
 use geos::{Geom, GeometryTypes};

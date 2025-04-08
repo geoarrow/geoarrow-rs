@@ -6,14 +6,16 @@ use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{Metadata, PointType};
 
+use crate::GeoArrowType;
 use crate::array::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
 use crate::eq::point_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Point;
 use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
-use crate::GeoArrowType;
 
-/// An immutable array of Point geometries using GeoArrow's in-memory representation.
+/// An immutable array of Point geometries.
+///
+/// All points must have the same dimension.
 ///
 /// This is semantically equivalent to `Vec<Option<Point>>` due to the internal validity bitmap.
 #[derive(Debug, Clone)]

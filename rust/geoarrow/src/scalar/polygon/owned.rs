@@ -94,7 +94,7 @@ impl PolygonTrait for OwnedPolygon {
     }
 
     unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
-        Polygon::from(self).interior_unchecked(i)
+        unsafe { Polygon::from(self).interior_unchecked(i) }
     }
 }
 

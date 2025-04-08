@@ -2,6 +2,7 @@ use polylabel::polylabel;
 
 use geoarrow_schema::Dimension;
 
+use crate::NativeArray;
 use crate::algorithm::native::UnaryPoint;
 use crate::array::{AsChunkedNativeArray, AsNativeArray, PointArray, PolygonArray};
 use crate::chunked_array::{
@@ -10,7 +11,6 @@ use crate::chunked_array::{
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeScalar;
-use crate::NativeArray;
 
 /// Calculate a Polygon's ideal label position by calculating its _pole of inaccessibility_.
 ///

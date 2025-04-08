@@ -1,6 +1,6 @@
 use geoarrow_schema::{CoordType, Dimension};
-use geozero::geojson::GeoJsonReader;
 use geozero::GeozeroDatasource;
+use geozero::geojson::GeoJsonReader;
 use std::io::Read;
 
 use crate::error::Result;

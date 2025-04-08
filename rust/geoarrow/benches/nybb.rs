@@ -1,7 +1,7 @@
 use std::fs::File;
 
 use arrow_ipc::reader::FileReader;
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use geoarrow::algorithm::geo::EuclideanDistance;
 use geoarrow::array::{MultiPolygonArray, PointArray};
 use geoarrow::trait_::ArrayAccessor;

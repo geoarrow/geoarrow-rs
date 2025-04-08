@@ -5,7 +5,7 @@ mod metadata;
 mod options;
 mod sync;
 
-pub use options::{GeoParquetWriterEncoding, GeoParquetWriterOptions};
 #[cfg(feature = "parquet_async")]
-pub use r#async::{write_geoparquet_async, GeoParquetWriterAsync};
-pub use sync::{write_geoparquet, GeoParquetWriter};
+pub use r#async::{GeoParquetWriterAsync, write_geoparquet_async};
+pub use options::{GeoParquetWriterEncoding, GeoParquetWriterOptions};
+pub use sync::{GeoParquetWriter, write_geoparquet};

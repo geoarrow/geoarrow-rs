@@ -1,6 +1,6 @@
 use crate::error::{GeoArrowError, Result};
-use crate::io::geos::scalar::polygon::to_geos_polygon;
 use crate::io::geos::scalar::GEOSConstPolygon;
+use crate::io::geos::scalar::polygon::to_geos_polygon;
 use crate::scalar::MultiPolygon;
 use geo_traits::MultiPolygonTrait;
 use geos::{Geom, GeometryTypes};

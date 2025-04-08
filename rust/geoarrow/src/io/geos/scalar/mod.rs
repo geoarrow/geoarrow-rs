@@ -10,8 +10,8 @@ mod multipolygon;
 mod point;
 mod polygon;
 
-pub(crate) use geometry::to_geos_geometry;
 pub use geometry::GEOSGeometry;
+pub(crate) use geometry::to_geos_geometry;
 pub use geometrycollection::GEOSGeometryCollection;
 pub use linearring::GEOSConstLinearRing;
 pub use linestring::{GEOSConstLineString, GEOSLineString};

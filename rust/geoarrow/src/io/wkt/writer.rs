@@ -1,12 +1,12 @@
 use arrow::array::GenericStringBuilder;
 use arrow_array::OffsetSizeTrait;
 
+use crate::NativeArray;
 use crate::array::{AsChunkedNativeArray, AsNativeArray, WKTArray};
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray};
 use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
 use wkt::to_wkt::{
     write_geometry, write_geometry_collection, write_linestring, write_multi_linestring,
     write_multi_point, write_multi_polygon, write_point, write_polygon, write_rect,

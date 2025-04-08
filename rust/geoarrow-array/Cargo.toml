@@ -8,7 +8,7 @@ license = { workspace = true }
 repository = { workspace = true }
 description = "Rust implementation of GeoArrow"
 categories = ["science::geo"]
-rust-version = "1.82"
+rust-version = { workspace = true }
 
 
 [dependencies]
@@ -25,4 +25,5 @@ wkb = { workspace = true }
 wkt = { workspace = true }
 
 [dev-dependencies]
+geo-types = { workspace = true }
 geo = { workspace = true }

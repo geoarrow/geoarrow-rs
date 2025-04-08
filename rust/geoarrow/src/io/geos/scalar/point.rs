@@ -1,5 +1,5 @@
 use crate::error::{GeoArrowError, Result};
-use crate::io::geos::scalar::coord::{coord_to_geos, GEOSConstCoord};
+use crate::io::geos::scalar::coord::{GEOSConstCoord, coord_to_geos};
 use crate::scalar::Point;
 use geo_traits::PointTrait;
 use geos::{Geom, GeometryTypes};

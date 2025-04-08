@@ -9,12 +9,12 @@ use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{Metadata, WktType};
 
-use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
+use crate::ArrayBase;
 use crate::array::SerializedArray;
+use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 use crate::datatypes::SerializedType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::IntoArrow;
-use crate::ArrayBase;
 
 /// An immutable array of WKT geometries using GeoArrow's in-memory representation.
 ///

@@ -1,7 +1,7 @@
 use std::fmt;
 
 use crate::chunked_array::*;
-use crate::io::display::array::{write_indented_ellipsis, WriteArray};
+use crate::io::display::array::{WriteArray, write_indented_ellipsis};
 
 impl fmt::Display for ChunkedPointArray {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

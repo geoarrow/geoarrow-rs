@@ -5,7 +5,7 @@ mod common;
 mod object_store_reader;
 mod sync;
 
-pub use common::FlatGeobufReaderOptions;
 #[cfg(feature = "flatgeobuf_async")]
-pub use r#async::{read_flatgeobuf_async, FlatGeobufStream, FlatGeobufStreamBuilder};
+pub use r#async::{FlatGeobufStream, FlatGeobufStreamBuilder, read_flatgeobuf_async};
+pub use common::FlatGeobufReaderOptions;
 pub use sync::{FlatGeobufReader, FlatGeobufReaderBuilder};

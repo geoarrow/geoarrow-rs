@@ -18,6 +18,8 @@ use crate::error::{GeoArrowError, Result};
 use crate::scalar::Geometry;
 use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 
+/// An immutable array of geometries of unknown geometry type and dimension.
+///
 /// # Invariants
 ///
 /// - All arrays must have the same dimension
@@ -871,7 +873,7 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
                             return Err(GeoArrowError::General(format!(
                                 "Unexpected type_id {}",
                                 type_id
-                            )))
+                            )));
                         }
                     }
                 }

@@ -4,12 +4,12 @@ use geo::AffineOps as _AffineOps;
 use geo::AffineTransform;
 use geoarrow_schema::Dimension;
 
+use crate::NativeArray;
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
 
 /// Apply an [`AffineTransform`] like [`scale`](AffineTransform::scale),
 /// [`skew`](AffineTransform::skew), or [`rotate`](AffineTransform::rotate) to geometries.

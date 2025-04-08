@@ -32,11 +32,7 @@ impl<'a> PointTrait for Point<'a> {
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
         let coord = self.coords.value(self.geom_index);
-        if coord.is_nan() {
-            None
-        } else {
-            Some(coord)
-        }
+        if coord.is_nan() { None } else { Some(coord) }
     }
 }
 
@@ -53,11 +49,7 @@ impl<'a> PointTrait for &Point<'a> {
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
         let coord = self.coords.value(self.geom_index);
-        if coord.is_nan() {
-            None
-        } else {
-            Some(coord)
-        }
+        if coord.is_nan() { None } else { Some(coord) }
     }
 }
 

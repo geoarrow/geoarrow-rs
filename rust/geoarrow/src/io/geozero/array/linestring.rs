@@ -1,10 +1,10 @@
 use geozero::{GeomProcessor, GeozeroGeometry};
 
+use crate::ArrayBase;
 use crate::array::linestring::LineStringCapacity;
 use crate::array::{LineStringArray, LineStringBuilder};
 use crate::io::geozero::scalar::process_line_string;
 use crate::trait_::ArrayAccessor;
-use crate::ArrayBase;
 use geoarrow_schema::Dimension;
 
 impl GeozeroGeometry for LineStringArray {
@@ -89,8 +89,8 @@ mod test {
     use crate::test::linestring::{ls0, ls1};
     use crate::trait_::ArrayAccessor;
     use geo::Geometry;
-    use geozero::error::Result;
     use geozero::ToWkt;
+    use geozero::error::Result;
 
     #[test]
     fn geozero_process_geom() -> geozero::error::Result<()> {

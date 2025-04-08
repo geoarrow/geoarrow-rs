@@ -10,9 +10,10 @@ exclude = ["js"]
 resolver = "2"
 
 [workspace.package]
-edition = "2021"
+edition = "2024"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/geoarrow/geoarrow-rs"
+rust-version = "1.85"
 
 [workspace.dependencies]
 arrow-arith = "54.3.1"
@@ -24,8 +25,8 @@ async-stream = "0.3"
 bytes = "1.10.0"
 futures = "0.3"
 geo = "0.30.0"
-geo-types = "0.7"
 geo-traits = "0.2.0"
+geo-types = "0.7"
 geoarrow-array = { path = "rust/geoarrow-array" }
 geoarrow-geoparquet = { path = "rust/geoarrow-geoparquet" }
 geoarrow-schema = { path = "rust/geoarrow-schema" }

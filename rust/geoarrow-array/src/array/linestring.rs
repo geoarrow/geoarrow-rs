@@ -8,7 +8,7 @@ use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::LineString;
 use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
-use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
+use crate::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
 
 use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
@@ -16,7 +16,7 @@ use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{LineStringType, Metadata};
 
-/// An immutable array of LineString geometries using GeoArrow's in-memory representation.
+/// An immutable array of LineString geometries.
 ///
 /// This is semantically equivalent to `Vec<Option<LineString>>` due to the internal validity
 /// bitmap.

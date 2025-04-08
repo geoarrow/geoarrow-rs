@@ -1,5 +1,5 @@
-use crate::io::geos::scalar::geometry::to_geos_geometry;
 use crate::io::geos::scalar::GEOSGeometry;
+use crate::io::geos::scalar::geometry::to_geos_geometry;
 use crate::scalar::GeometryCollection;
 use geo_traits::GeometryCollectionTrait;
 use geos::Geom;

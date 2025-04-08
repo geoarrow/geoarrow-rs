@@ -1,6 +1,6 @@
 use crate::array::util::OffsetBufferUtils;
 use crate::error::{GeoArrowError, Result};
-use crate::io::geos::scalar::coord::{coords_to_geos, dims_to_geos, GEOSConstCoord};
+use crate::io::geos::scalar::coord::{GEOSConstCoord, coords_to_geos, dims_to_geos};
 use crate::scalar::LineString;
 use geo_traits::LineStringTrait;
 use geos::{Geom, GeometryTypes};

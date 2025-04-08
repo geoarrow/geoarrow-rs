@@ -9,10 +9,10 @@ use datafusion::logical_expr::{
     ColumnarValue, Documentation, ScalarUDFImpl, Signature, TypeSignature, Volatility,
 };
 use geo_traits::{CoordTrait, RectTrait};
+use geoarrow::ArrayBase;
 use geoarrow::array::{RectArray, RectBuilder};
 use geoarrow::error::GeoArrowError;
 use geoarrow::trait_::ArrayAccessor;
-use geoarrow::ArrayBase;
 use geoarrow_schema::Dimension;
 
 use crate::data_types::BOX2D_TYPE;
@@ -163,11 +163,13 @@ mod test {
         assert_eq!(batches.len(), 1);
         let batch = batches.into_iter().next().unwrap();
         assert_eq!(batch.columns().len(), 1);
-        assert!(batch
-            .schema()
-            .field(0)
-            .data_type()
-            .equals_datatype(&BOX2D_TYPE().into()));
+        assert!(
+            batch
+                .schema()
+                .field(0)
+                .data_type()
+                .equals_datatype(&BOX2D_TYPE().into())
+        );
 
         let rect_array = RectArray::try_from((batch.columns()[0].as_ref(), Dimension::XY)).unwrap();
         let rect = rect_array.value(0);

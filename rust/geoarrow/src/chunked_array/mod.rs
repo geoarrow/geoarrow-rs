@@ -16,17 +16,17 @@ use std::any::Any;
 use std::sync::Arc;
 
 use arrow::array::OffsetSizeTrait;
-use arrow_array::{make_array, Array, ArrayRef};
+use arrow_array::{Array, ArrayRef, make_array};
 use arrow_schema::{DataType, Field};
 
 #[cfg(feature = "rayon")]
 use rayon::prelude::*;
 
+use crate::NativeArray;
 use crate::array::*;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::{ArrayAccessor, NativeArrayRef};
-use crate::NativeArray;
 
 /// A collection of Arrow arrays of the same type.
 ///

@@ -72,7 +72,7 @@ pub use reader::{
 #[cfg(feature = "parquet_async")]
 pub use reader::{GeoParquetRecordBatchStream, GeoParquetRecordBatchStreamBuilder};
 pub use writer::{
-    write_geoparquet, GeoParquetWriter, GeoParquetWriterEncoding, GeoParquetWriterOptions,
+    GeoParquetWriter, GeoParquetWriterEncoding, GeoParquetWriterOptions, write_geoparquet,
 };
 #[cfg(feature = "parquet_async")]
-pub use writer::{write_geoparquet_async, GeoParquetWriterAsync};
+pub use writer::{GeoParquetWriterAsync, write_geoparquet_async};

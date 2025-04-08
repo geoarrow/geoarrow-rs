@@ -1,6 +1,6 @@
 use geo::polygon;
 
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use geoarrow::algorithm::geo::Translate;
 use geoarrow::array::PolygonArray;
 use geoarrow_schema::Dimension;

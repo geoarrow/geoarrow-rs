@@ -5,6 +5,7 @@ use arrow_array::{Int32Array, RecordBatch};
 use arrow_buffer::OffsetBuffer;
 use arrow_schema::SchemaBuilder;
 
+use crate::NativeArray;
 use crate::array::*;
 use crate::chunked_array::{
     ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray, ChunkedNativeArrayDyn,
@@ -12,7 +13,6 @@ use crate::chunked_array::{
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::table::Table;
-use crate::NativeArray;
 
 pub trait Explode {
     type Output;
