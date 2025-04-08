@@ -1,57 +1,6 @@
-//! Implementations of immutable GeoArrow arrays plus builders to more easily create arrays.
+//! The concrete array definitions.
 //!
-//! There are three primary types of structs in this module: arrays, builders, and capacity
-//! counters.
-//!
-//! ## Arrays
-//!
-//! Arrays
-//!
-//! These arrays implement the binary layout defined in the [GeoArrow specification](https://github.com/geoarrow/geoarrow).
-//!
-//!
-//!
-//! These include:
-//!
-//! - [`PointArray`]
-//! - [`LineStringArray`]
-//! - [`PolygonArray`]
-//! - [`MultiPointArray`]
-//! - [`MultiLineStringArray`]
-//! - [`MultiPolygonArray`]
-//! - [`GeometryArray`]
-//! - [`GeometryCollectionArray`]
-//! - [`RectArray`]
-//!
-//! ## Builders
-//!
-//! Builders are designed to make it easier
-//!
-//! There's a builder for each of the above array types:
-//!
-//!
-//! - [`PointBuilder`]
-//! - [`LineStringBuilder`]
-//! - [`PolygonBuilder`]
-//! - [`MultiPointBuilder`]
-//! - [`MultiLineStringBuilder`]
-//! - [`MultiPolygonBuilder`]
-//! - [`GeometryBuilder`]
-//! - [`GeometryCollectionBuilder`]
-//! - [`RectBuilder`]
-//!
-//! Once you've finished adding geometries to a builder, it's `O(1)` to convert a builder to an
-//! array, by calling `finish()`.
-//!
-//! ## Capacity Counters
-//!
-//! Underlying the builders are growable `Vec`s. E.g. you can think of a `PointBuilder` as a buffer of `x` coordinates and a buffer of `y` coordinates.
-//!
-//! The fastest and most memory-efficient way to construct an array from a set of known geometries
-//! is to make a first pass over these geometries to count exactly how big each part of the Arrow
-//! array must be, allocate _once_ for exactly what you need, and then fill those buffers in a
-//! second pass.
-//!
+//! All arrays implement the core [GeoArrowArray][crate::GeoArrowArray] trait.
 
 mod coord;
 mod geometry;
@@ -80,3 +29,33 @@ pub use polygon::PolygonArray;
 pub use rect::RectArray;
 pub use wkb::WKBArray;
 pub use wkt::WKTArray;
+
+use std::sync::Arc;
+
+use arrow_array::Array;
+use arrow_schema::Field;
+
+use crate::error::Result;
+use crate::{GeoArrowArray, GeoArrowType};
+
+/// Construct a new [GeoArrowArray] from an Arrow [Array] and [Field].
+pub fn from_arrow_array(array: &dyn Array, field: &Field) -> Result<Arc<dyn GeoArrowArray>> {
+    use GeoArrowType::*;
+
+    let result: Arc<dyn GeoArrowArray> = match GeoArrowType::try_from(field)? {
+        Point(_) => Arc::new(PointArray::try_from((array, field))?),
+        LineString(_) => Arc::new(LineStringArray::try_from((array, field))?),
+        Polygon(_) => Arc::new(PolygonArray::try_from((array, field))?),
+        MultiPoint(_) => Arc::new(MultiPointArray::try_from((array, field))?),
+        MultiLineString(_) => Arc::new(MultiLineStringArray::try_from((array, field))?),
+        MultiPolygon(_) => Arc::new(MultiPolygonArray::try_from((array, field))?),
+        GeometryCollection(_) => Arc::new(GeometryCollectionArray::try_from((array, field))?),
+        Rect(_) => Arc::new(RectArray::try_from((array, field))?),
+        Geometry(_) => Arc::new(GeometryArray::try_from((array, field))?),
+        WKB(_) => Arc::new(WKBArray::<i32>::try_from((array, field))?),
+        LargeWKB(_) => Arc::new(WKBArray::<i64>::try_from((array, field))?),
+        WKT(_) => Arc::new(WKTArray::<i32>::try_from((array, field))?),
+        LargeWKT(_) => Arc::new(WKTArray::<i64>::try_from((array, field))?),
+    };
+    Ok(result)
+}

@@ -16,7 +16,7 @@ use crate::scalar::MultiPolygon;
 use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 
-/// An immutable array of MultiPolygon geometries using GeoArrow's in-memory representation.
+/// An immutable array of MultiPolygon geometries.
 ///
 /// This is semantically equivalent to `Vec<Option<MultiPolygon>>` due to the internal validity
 /// bitmap.

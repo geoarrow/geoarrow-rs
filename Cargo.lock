@@ -1907,6 +1907,7 @@ dependencies = [
  "arrow-schema",
  "geo 0.30.0",
  "geo-traits",
+ "geo-types",
  "geoarrow-schema",
  "num-traits",
  "serde",

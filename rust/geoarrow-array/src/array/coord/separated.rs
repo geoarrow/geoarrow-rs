@@ -12,10 +12,10 @@ use crate::error::{GeoArrowError, Result};
 use crate::scalar::SeparatedCoord;
 use geo_traits::CoordTrait;
 
-/// The GeoArrow equivalent to `Vec<Option<Coord>>`: an immutable collection of coordinates.
+/// An array of coordinates stored in separate buffers of the same length.
 ///
-/// This stores all coordinates in separated fashion as multiple underlying buffers: `xxx` and
-/// `yyy`.
+/// This stores all coordinates in separated fashion as multiple underlying buffers: e.g. `xxx` and
+/// `yyy` for 2D coordinates.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SeparatedCoordBuffer {
     /// We always store a buffer for all 4 dimensions. The buffers for dimension 3 and 4 may be

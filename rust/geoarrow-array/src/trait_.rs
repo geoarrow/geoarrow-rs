@@ -10,20 +10,26 @@ use geo_traits::GeometryTrait;
 use crate::datatypes::GeoArrowType;
 use crate::error::Result;
 
-/// Convert GeoArrow arrays into their respective [arrow] arrays.
+/// Convert GeoArrow arrays into their respective [arrow][arrow_array] arrays.
 pub trait IntoArrow {
     /// The type of arrow array that this geoarrow array can be converted into.
     type ArrowArray: Array;
+
+    /// The extension type representing this array. It will always be a type defined by
+    /// [geoarrow_schema].
     type ExtensionType: ExtensionType;
 
     /// Converts this geoarrow array into an arrow array.
     // Return Arc<Self::ArrowArray>? Could that replace `into_array_ref` on the trait?
     fn into_arrow(self) -> Self::ArrowArray;
 
+    /// Return the Arrow extension type representing this array.
     fn ext_type(&self) -> &Self::ExtensionType;
 }
 
-/// A base trait that both [NativeArray] and [SerializedArray] implement
+/// A base trait for all GeoArrow arrays.
+///
+/// This is a geospatial corollary to the upstream [`Array`][arrow_array::Array] trait.
 pub trait GeoArrowArray: Debug + Send + Sync {
     /// Returns the array as [`Any`] so that it can be downcasted to a specific implementation.
     ///
@@ -221,7 +227,7 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray>;
 }
 
-/// A trait for accessing the values of a [`NativeArray`].
+/// A trait for accessing the values of a [`GeoArrowArray`].
 ///
 /// # Performance
 ///
