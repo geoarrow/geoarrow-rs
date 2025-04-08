@@ -1,11 +1,12 @@
 use arrow_array::{Array, ArrayRef, RecordBatch};
 use arrow_schema::Field;
-use geoarrow_array::error::Result;
 use geoarrow_array::GeoArrowArray;
+use geoarrow_array::array::from_arrow_array;
+use geoarrow_array::error::Result;
 use geoarrow_schema::CoordType;
 
-use crate::algorithm::native::bounding_rect::BoundingRect;
 use crate::algorithm::native::TotalBounds;
+use crate::algorithm::native::bounding_rect::BoundingRect;
 use crate::array::NativeArrayDyn;
 use crate::io::wkb::ToWKB;
 use crate::metadata::GeoParquetColumnEncoding;
@@ -38,7 +39,7 @@ fn encode_column(
     field: &Field,
     column_info: &mut ColumnInfo,
 ) -> Result<(ArrayRef, BoundingRect)> {
-    let geo_arr = NativeArrayDyn::from_arrow_array(array, field)?.into_inner();
+    let geo_arr = from_arrow_array(array, field)?;
     let array_bounds = geo_arr.as_ref().total_bounds();
     let encoded_array = match column_info.encoding {
         GeoParquetColumnEncoding::WKB => encode_wkb_column(geo_arr.as_ref())?,

@@ -8,16 +8,16 @@ use arrow_buffer::ScalarBuffer;
 use arrow_ord::cmp::{gt_eq, lt_eq};
 use arrow_schema::ArrowError;
 use geo_traits::{CoordTrait, RectTrait};
-use geo_types::{coord, CoordNum, Rect};
-use geoarrow_array::array::RectArray;
+use geo_types::{CoordNum, Rect, coord};
+use geoarrow_array::ArrayAccessor;
+use geoarrow_array::array::{RectArray, from_arrow_array};
 use geoarrow_array::builder::RectBuilder;
 use geoarrow_array::error::{GeoArrowError, Result};
-use geoarrow_array::ArrayAccessor;
 use geoarrow_schema::Dimension;
+use parquet::arrow::ProjectionMask;
 use parquet::arrow::arrow_reader::{
     ArrowPredicate, ArrowPredicateFn, ArrowReaderBuilder, RowFilter,
 };
-use parquet::arrow::ProjectionMask;
 use parquet::file::metadata::{ColumnChunkMetaData, RowGroupMetaData};
 use parquet::file::statistics::Statistics;
 use parquet::schema::types::{ColumnPath, SchemaDescriptor};
@@ -221,9 +221,8 @@ fn construct_native_predicate(
         let array = batch.column(0);
         let field = batch.schema_ref().field(0);
         let nulls = array.nulls();
-        let geo_arr = NativeArrayDyn::from_arrow_array(array, field)
-            .map_err(|err| ArrowError::ExternalError(Box::new(err)))?
-            .into_inner();
+        let geo_arr = from_arrow_array(array, field)
+            .map_err(|err| ArrowError::ExternalError(Box::new(err)))?;
         let rect_arr = geo_arr
             .as_ref()
             .bounding_rect()

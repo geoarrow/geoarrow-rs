@@ -4,9 +4,10 @@ use std::sync::Arc;
 use arrow_array::ArrayRef;
 use arrow_schema::extension::{EXTENSION_TYPE_METADATA_KEY, EXTENSION_TYPE_NAME_KEY};
 use arrow_schema::{Field, Schema, SchemaRef};
+use geoarrow_array::GeoArrowType;
+use geoarrow_array::array::from_arrow_array;
 use geoarrow_array::cast::AsGeoArrowArray;
 use geoarrow_array::error::Result;
-use geoarrow_array::GeoArrowType;
 use geoarrow_schema::{
     CoordType, Dimension, Edges, LineStringType, Metadata, MultiLineStringType, MultiPointType,
     MultiPolygonType, PointType, PolygonType, WkbType,
@@ -88,7 +89,7 @@ impl ColumnInfo {
     // shouldn't compute that for every array if we see in the first that the data is both multi
     // and single polygons.
     pub fn update_geometry_types(&mut self, array: &ArrayRef, field: &Field) -> Result<()> {
-        let array = NativeArrayDyn::from_arrow_array(array, field)?.into_inner();
+        let array = from_arrow_array(array, field)?;
         let array_ref = array.as_ref();
 
         // We only have to do this for geometry arrays because other arrays are statically known
