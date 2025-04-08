@@ -64,6 +64,7 @@ pub mod metadata;
 mod reader;
 #[cfg(test)]
 mod test;
+mod total_bounds;
 mod writer;
 
 pub use reader::{
@@ -73,7 +74,7 @@ pub use reader::{
 #[cfg(feature = "async")]
 pub use reader::{GeoParquetRecordBatchStream, GeoParquetRecordBatchStreamBuilder};
 pub use writer::{
-    write_geoparquet, GeoParquetWriter, GeoParquetWriterEncoding, GeoParquetWriterOptions,
+    GeoParquetWriter, GeoParquetWriterEncoding, GeoParquetWriterOptions, write_geoparquet,
 };
 #[cfg(feature = "async")]
-pub use writer::{write_geoparquet_async, GeoParquetWriterAsync};
+pub use writer::{GeoParquetWriterAsync, write_geoparquet_async};

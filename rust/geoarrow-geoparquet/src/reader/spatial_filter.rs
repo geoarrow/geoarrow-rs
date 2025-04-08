@@ -22,8 +22,8 @@ use parquet::file::metadata::{ColumnChunkMetaData, RowGroupMetaData};
 use parquet::file::statistics::Statistics;
 use parquet::schema::types::{ColumnPath, SchemaDescriptor};
 
-use crate::algorithm::geo::BoundingRect;
 use crate::metadata::GeoParquetBboxCovering;
+use crate::total_bounds::bounding_rect;
 
 /// A helper for interpreting bounding box row group statistics from GeoParquet files
 ///
@@ -224,12 +224,8 @@ fn construct_native_predicate(
         let array = batch.column(0);
         let field = batch.schema_ref().field(0);
         let nulls = array.nulls();
-        let geo_arr = from_arrow_array(array, field)
-            .map_err(|err| ArrowError::ExternalError(Box::new(err)))?;
-        let rect_arr = geo_arr
-            .as_ref()
-            .bounding_rect()
-            .map_err(|err| ArrowError::ExternalError(Box::new(err)))?;
+        let geo_arr = from_arrow_array(array, field)?;
+        let rect_arr = bounding_rect(geo_arr.as_ref())?;
 
         let xmin_col = Float64Array::new(rect_arr.lower().buffers[0].clone(), nulls.cloned());
         let ymin_col = Float64Array::new(rect_arr.lower().buffers[1].clone(), nulls.cloned());

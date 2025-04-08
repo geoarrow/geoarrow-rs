@@ -59,3 +59,9 @@ pub enum GeoArrowError {
 
 /// Crate-specific result type.
 pub type Result<T> = std::result::Result<T, GeoArrowError>;
+
+impl From<GeoArrowError> for ArrowError {
+    fn from(value: GeoArrowError) -> Self {
+        Self::ExternalError(Box::new(value))
+    }
+}
