@@ -3,12 +3,12 @@ use std::sync::Arc;
 
 use arrow_array::RecordBatch;
 use arrow_schema::{DataType, Field, Schema};
-use geo::{point, Point};
+use geo::{Point, point};
 
+use crate::ArrayBase;
 use crate::array::{PointArray, PointBuilder};
 use crate::table::Table;
 use crate::test::properties;
-use crate::ArrayBase;
 use geo_traits::CoordTrait;
 use geoarrow_schema::{CoordType, Dimension};
 

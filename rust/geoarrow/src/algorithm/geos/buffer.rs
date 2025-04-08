@@ -1,7 +1,7 @@
+use crate::NativeArray;
 use crate::algorithm::geos::util::{try_unary_geometry, try_unary_polygon};
 use crate::array::{GeometryArray, PointArray, PolygonArray};
 use crate::error::Result;
-use crate::NativeArray;
 use geos::{BufferParams, Geom};
 
 pub trait Buffer {

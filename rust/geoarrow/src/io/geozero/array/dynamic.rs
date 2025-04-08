@@ -1,7 +1,7 @@
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-use crate::array::dynamic::NativeArrayDyn;
 use crate::array::AsNativeArray;
+use crate::array::dynamic::NativeArrayDyn;
 use crate::datatypes::NativeType;
 
 impl GeozeroGeometry for NativeArrayDyn {
@@ -45,9 +45,9 @@ mod test {
     use geozero::ToGeo;
 
     use super::*;
+    use crate::ArrayBase;
     use crate::array::PointArray;
     use crate::test::point;
-    use crate::ArrayBase;
 
     #[test]
     fn test() {

@@ -1,6 +1,6 @@
 use crate::error::{GeoArrowError, Result};
-use crate::io::geos::scalar::point::to_geos_point;
 use crate::io::geos::scalar::GEOSConstPoint;
+use crate::io::geos::scalar::point::to_geos_point;
 use crate::scalar::MultiPoint;
 use geo_traits::MultiPointTrait;
 use geos::{Geom, GeometryTypes};

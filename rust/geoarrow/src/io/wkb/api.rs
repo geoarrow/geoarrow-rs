@@ -3,6 +3,7 @@ use std::sync::Arc;
 use arrow_array::OffsetSizeTrait;
 use geoarrow_schema::{CoordType, Dimension};
 
+use crate::NativeArray;
 use crate::algorithm::native::Downcast;
 use crate::array::*;
 use crate::chunked_array::*;
@@ -10,7 +11,6 @@ use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
 
 /// An optimized implementation of converting from WKB-encoded geometries.
 ///

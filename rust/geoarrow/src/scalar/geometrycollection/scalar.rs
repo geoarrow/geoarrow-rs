@@ -1,16 +1,16 @@
+use crate::NativeArray;
 use crate::algorithm::native::bounding_rect::bounding_rect_geometry_collection;
 use crate::algorithm::native::eq::geometry_collection_eq;
-use crate::array::util::OffsetBufferUtils;
 use crate::array::MixedGeometryArray;
+use crate::array::util::OffsetBufferUtils;
 use crate::io::geo::geometry_collection_to_geo;
 use crate::scalar::Geometry;
 use crate::trait_::ArrayAccessor;
 use crate::trait_::NativeScalar;
-use crate::NativeArray;
 use arrow_buffer::OffsetBuffer;
 use geo_traits::GeometryCollectionTrait;
 use geoarrow_schema::Dimension;
-use rstar::{RTreeObject, AABB};
+use rstar::{AABB, RTreeObject};
 
 /// An Arrow equivalent of a GeometryCollection
 ///

@@ -3,10 +3,10 @@ use std::sync::Arc;
 #[cfg(feature = "rayon")]
 use rayon::prelude::*;
 
+use crate::NativeArray;
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::indexed::array::IndexedGeometryArray;
-use crate::NativeArray;
 
 pub struct IndexedChunkedGeometryArray<G: NativeArray> {
     pub(crate) chunks: Vec<IndexedGeometryArray<G>>,

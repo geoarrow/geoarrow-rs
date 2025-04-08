@@ -1,4 +1,4 @@
-use geo::{polygon, Polygon};
+use geo::{Polygon, polygon};
 use geoarrow_schema::{CoordType, Dimension, PolygonType};
 
 use crate::array::PolygonArray;

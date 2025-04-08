@@ -10,6 +10,7 @@ use geoarrow_schema::{
     MultiPointType, MultiPolygonType, PointType, PolygonType,
 };
 
+use crate::ArrayBase;
 use crate::array::{
     LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
     PolygonArray, WKBArray,
@@ -17,11 +18,10 @@ use crate::array::{
 use crate::datatypes::{AnyType, NativeType, SerializedType};
 use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::metadata::{
-    infer_geo_data_type, GeoParquetColumnEncoding, GeoParquetColumnMetadata,
-    GeoParquetGeometryType, GeoParquetMetadata,
+    GeoParquetColumnEncoding, GeoParquetColumnMetadata, GeoParquetGeometryType, GeoParquetMetadata,
+    infer_geo_data_type,
 };
 use crate::io::wkb::from_wkb;
-use crate::ArrayBase;
 
 pub fn infer_target_schema(
     existing_schema: &Schema,

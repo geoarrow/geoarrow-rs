@@ -1,13 +1,13 @@
 use geo::MinimumRotatedRect as _MinimumRotatedRect;
 use geoarrow_schema::Dimension;
 
+use crate::NativeArray;
 use crate::array::polygon::PolygonCapacity;
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray, ChunkedPolygonArray};
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
 
 /// Return the minimum bounding rectangle(MBR) of geometry
 /// reference: <https://en.wikipedia.org/wiki/Minimum_bounding_box>

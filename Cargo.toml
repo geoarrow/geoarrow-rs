@@ -9,9 +9,10 @@ exclude = ["js"]
 resolver = "2"
 
 [workspace.package]
-edition = "2021"
+edition = "2024"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/geoarrow/geoarrow-rs"
+rust-version = "1.85"
 
 [workspace.dependencies]
 arrow-array = "54.3.1"

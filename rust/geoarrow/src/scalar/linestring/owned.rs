@@ -66,7 +66,7 @@ impl LineStringTrait for OwnedLineString {
     }
 
     unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
-        LineString::from(self).coord_unchecked(i)
+        unsafe { LineString::from(self).coord_unchecked(i) }
     }
 }
 

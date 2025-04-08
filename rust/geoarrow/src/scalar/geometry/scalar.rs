@@ -7,7 +7,7 @@ use geo_traits::{
     MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait, UnimplementedLine,
     UnimplementedTriangle,
 };
-use rstar::{RTreeObject, AABB};
+use rstar::{AABB, RTreeObject};
 
 /// An Arrow equivalent of a Geometry
 ///

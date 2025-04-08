@@ -1,11 +1,11 @@
 use std::fs::File;
 
 use arrow::compute::concat;
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use geoarrow::array::{MultiPolygonArray, WKBArray};
 use geoarrow::trait_::ArrayAccessor;
-use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
 use parquet::arrow::ProjectionMask;
+use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
 
 fn load_parquet() -> WKBArray<i32> {
     let file = File::open("fixtures/geoparquet/nz-building-outlines.parquet").expect("You need to download nz-building-outlines.parquet before running this benchmark, see fixtures/README.md for more info");

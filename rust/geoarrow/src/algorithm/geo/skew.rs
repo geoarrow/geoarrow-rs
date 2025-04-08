@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
+use crate::NativeArray;
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::LineStringArray;
 use crate::array::*;
 use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
 use arrow_array::types::Float64Type;
 use geo::Skew as _Skew;
 use geoarrow_schema::Dimension;
@@ -257,9 +257,7 @@ impl Skew for &dyn NativeArray {
         degrees_y: &BroadcastablePrimitive<Float64Type>,
     ) -> Self::Output {
         macro_rules! impl_method {
-            ($method:ident) => {{
-                Arc::new(self.$method().skew_xy(degrees_x, degrees_y))
-            }};
+            ($method:ident) => {{ Arc::new(self.$method().skew_xy(degrees_x, degrees_y)) }};
         }
 
         use NativeType::*;

@@ -241,9 +241,9 @@ impl TryFrom<WKBArray<i64>> for WKBArray<i32> {
 
 #[cfg(test)]
 mod test {
+    use crate::GeoArrowArray;
     use crate::builder::WKBBuilder;
     use crate::test::point;
-    use crate::GeoArrowArray;
 
     use super::*;
 

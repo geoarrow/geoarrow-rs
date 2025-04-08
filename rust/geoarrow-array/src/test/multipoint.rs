@@ -1,4 +1,4 @@
-use geo::{point, MultiPoint};
+use geo::{MultiPoint, point};
 
 use crate::array::MultiPointArray;
 use crate::builder::MultiPointBuilder;

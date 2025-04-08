@@ -873,7 +873,7 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
                             return Err(GeoArrowError::General(format!(
                                 "Unexpected type_id {}",
                                 type_id
-                            )))
+                            )));
                         }
                     }
                 }

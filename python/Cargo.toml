@@ -11,7 +11,7 @@ repository = "https://github.com/geoarrow/geoarrow-rs"
 license = "MIT OR Apache-2.0"
 keywords = ["python", "arrow", "geospatial"]
 categories = ["wasm", "science::geo"]
-rust-version = "1.82"
+rust-version = "1.85"
 
 [workspace.dependencies]
 arrow = "54"

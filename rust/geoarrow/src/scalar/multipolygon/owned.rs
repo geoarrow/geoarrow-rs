@@ -103,7 +103,7 @@ impl MultiPolygonTrait for OwnedMultiPolygon {
     }
 
     unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
-        MultiPolygon::from(self).polygon_unchecked(i)
+        unsafe { MultiPolygon::from(self).polygon_unchecked(i) }
     }
 }
 

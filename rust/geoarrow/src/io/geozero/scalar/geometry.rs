@@ -1,3 +1,5 @@
+use crate::ArrayBase;
+use crate::io::geozero::ToGeometryArray;
 use crate::io::geozero::scalar::geometry_collection::process_geometry_collection;
 use crate::io::geozero::scalar::linestring::process_line_string;
 use crate::io::geozero::scalar::multilinestring::process_multi_line_string;
@@ -5,10 +7,8 @@ use crate::io::geozero::scalar::multipoint::process_multi_point;
 use crate::io::geozero::scalar::multipolygon::process_multi_polygon;
 use crate::io::geozero::scalar::point::process_point;
 use crate::io::geozero::scalar::polygon::process_polygon;
-use crate::io::geozero::ToGeometryArray;
 use crate::scalar::{Geometry, OwnedGeometry};
 use crate::trait_::ArrayAccessor;
-use crate::ArrayBase;
 use arrow_array::OffsetSizeTrait;
 use geo_traits::{GeometryTrait, GeometryType};
 use geozero::{GeomProcessor, GeozeroGeometry};

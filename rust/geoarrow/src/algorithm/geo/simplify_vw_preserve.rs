@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
+use crate::NativeArray;
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray};
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
 use arrow::datatypes::Float64Type;
 use geo::SimplifyVwPreserve as _SimplifyVwPreserve;
 use geoarrow_schema::Dimension;

@@ -3,12 +3,12 @@
 name = "geodatafusion"
 version = "0.1.0-dev"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
-edition = "2021"
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/geoarrow/geoarrow-rs"
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
 description = "Rust implementation of GeoArrow"
 categories = ["science::geo"]
-rust-version = "1.82"
+rust-version = { workspace = true }
 
 
 [dependencies]

@@ -6,4 +6,4 @@
 mod api;
 pub(crate) mod writer;
 
-pub use api::{from_wkb, to_wkb, FromWKB, ToWKB};
+pub use api::{FromWKB, ToWKB, from_wkb, to_wkb};

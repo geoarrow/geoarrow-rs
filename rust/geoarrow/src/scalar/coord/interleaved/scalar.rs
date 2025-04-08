@@ -1,11 +1,11 @@
 use arrow_buffer::ScalarBuffer;
-use rstar::{RTreeObject, AABB};
+use rstar::{AABB, RTreeObject};
 
 use crate::algorithm::native::eq::coord_eq;
 use crate::scalar::SeparatedCoord;
 use crate::trait_::NativeScalar;
-use geo_traits::to_geo::ToGeoCoord;
 use geo_traits::CoordTrait;
+use geo_traits::to_geo::ToGeoCoord;
 use geoarrow_schema::Dimension;
 
 /// An Arrow equivalent of a Coord

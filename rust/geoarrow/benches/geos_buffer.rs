@@ -1,4 +1,4 @@
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use geoarrow::algorithm::geos::Buffer;
 use geoarrow::array::{CoordBuffer, InterleavedCoordBuffer, PointArray, PolygonArray};
 use geoarrow_schema::Dimension;

@@ -67,7 +67,7 @@ mod test {
     use std::{collections::HashMap, str::FromStr};
 
     use arrow_schema::DataType;
-    use serde_json::{json, Value};
+    use serde_json::{Value, json};
 
     use super::*;
 

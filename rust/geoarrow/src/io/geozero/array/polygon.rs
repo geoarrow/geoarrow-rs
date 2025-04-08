@@ -1,8 +1,8 @@
+use crate::ArrayBase;
 use crate::array::polygon::PolygonCapacity;
 use crate::array::{PolygonArray, PolygonBuilder};
 use crate::io::geozero::scalar::process_polygon;
 use crate::trait_::ArrayAccessor;
-use crate::ArrayBase;
 use geoarrow_schema::Dimension;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
@@ -108,8 +108,8 @@ mod test {
     use crate::test::polygon::{p0, p1};
     use crate::trait_::ArrayAccessor;
     use geo::Geometry;
-    use geozero::error::Result;
     use geozero::ToWkt;
+    use geozero::error::Result;
 
     #[test]
     fn geozero_process_geom() -> geozero::error::Result<()> {

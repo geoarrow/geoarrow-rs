@@ -9,9 +9,9 @@ use arrow_schema::{DataType, Field};
 use geo_traits::GeometryTrait;
 use geoarrow_schema::{CoordType, Metadata, WkbType};
 
+use crate::array::WKBBuilder;
 use crate::array::binary::WKBCapacity;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
-use crate::array::WKBBuilder;
 use crate::datatypes::{NativeType, SerializedType};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;

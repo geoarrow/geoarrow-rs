@@ -7,13 +7,13 @@ use datafusion::logical_expr::scalar_doc_sections::DOC_SECTION_OTHER;
 use datafusion::logical_expr::{
     ColumnarValue, Documentation, ScalarUDFImpl, Signature, Volatility,
 };
+use geoarrow::ArrayBase;
 use geoarrow::array::WKBArray;
 use geoarrow::datatypes::NativeType;
 use geoarrow::io::wkb::{from_wkb, to_wkb};
-use geoarrow::ArrayBase;
 use geoarrow_schema::{CoordType, GeometryType};
 
-use crate::data_types::{any_single_geometry_type_input, parse_to_native_array, GEOMETRY_TYPE};
+use crate::data_types::{GEOMETRY_TYPE, any_single_geometry_type_input, parse_to_native_array};
 use crate::error::GeoDataFusionResult;
 
 #[derive(Debug)]

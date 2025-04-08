@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::algorithm::native::downcast::can_downcast_multi;
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::linestring::LineStringCapacity;
-use crate::array::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
+use crate::array::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
 use crate::array::{
     CoordBuffer, GeometryCollectionArray, MixedGeometryArray, MultiLineStringArray,
     MultiPointArray, WKBArray,

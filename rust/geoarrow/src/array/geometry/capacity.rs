@@ -1,11 +1,11 @@
 use std::ops::AddAssign;
 
+use crate::array::GeometryCollectionCapacity;
 use crate::array::linestring::LineStringCapacity;
 use crate::array::multilinestring::MultiLineStringCapacity;
 use crate::array::multipoint::MultiPointCapacity;
 use crate::array::multipolygon::MultiPolygonCapacity;
 use crate::array::polygon::PolygonCapacity;
-use crate::array::GeometryCollectionCapacity;
 use crate::error::Result;
 use geo_traits::*;
 

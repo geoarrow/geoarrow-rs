@@ -3,8 +3,8 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use bytes::Bytes;
 use http_range_client::{AsyncHttpRangeClient, Result as HTTPRangeClientResult};
-use object_store::path::Path;
 use object_store::ObjectStore;
+use object_store::path::Path;
 
 pub struct ObjectStoreWrapper {
     pub location: Path,

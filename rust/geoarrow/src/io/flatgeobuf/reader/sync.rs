@@ -31,7 +31,7 @@ use std::sync::Arc;
 use crate::array::*;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
-use crate::io::flatgeobuf::reader::common::{infer_from_header, FlatGeobufReaderOptions};
+use crate::io::flatgeobuf::reader::common::{FlatGeobufReaderOptions, infer_from_header};
 use crate::io::geozero::array::GeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
 

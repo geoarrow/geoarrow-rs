@@ -872,7 +872,7 @@ fn parse_mixed(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowErro
                     id => {
                         return Err(ArrowError::SchemaError(format!(
                             "Unexpected type id parsing mixed: {id}"
-                        )))
+                        )));
                     }
                 };
                 Ok::<_, ArrowError>(())
@@ -1111,7 +1111,7 @@ fn parse_geometry(data_type: &DataType) -> Result<CoordType, ArrowError> {
                 id => {
                     return Err(ArrowError::SchemaError(format!(
                         "Unexpected type id parsing geometry: {id}"
-                    )))
+                    )));
                 }
             };
             Ok::<_, ArrowError>(())
@@ -1288,7 +1288,10 @@ fn parse_box(data_type: &DataType) -> Result<Dimension, ArrowError> {
                 } else if names.contains("zmin") && names.contains("zmax") {
                     Ok(Dimension::XYZ)
                 } else {
-                    Err(ArrowError::SchemaError(format!("unexpected either mmin and mmax or zmin and zmax for struct with 6 fields. Got names: {:?}", names)))
+                    Err(ArrowError::SchemaError(format!(
+                        "unexpected either mmin and mmax or zmin and zmax for struct with 6 fields. Got names: {:?}",
+                        names
+                    )))
                 }
             }
             8 => Ok(Dimension::XYZM),

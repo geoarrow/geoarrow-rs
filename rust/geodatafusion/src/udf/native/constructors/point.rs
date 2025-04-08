@@ -11,8 +11,8 @@ use datafusion::logical_expr::{
     ColumnarValue, Documentation, ScalarUDFImpl, Signature, TypeSignature, Volatility,
 };
 use geo_traits::CoordTrait;
-use geoarrow::array::{GeometryArray, PointBuilder};
 use geoarrow::ArrayBase;
+use geoarrow::array::{GeometryArray, PointBuilder};
 use geoarrow_schema::{CoordType, Dimension};
 
 use crate::data_types::{POINT2D_TYPE, POINT3D_TYPE};

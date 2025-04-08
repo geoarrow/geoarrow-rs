@@ -1,11 +1,11 @@
+use crate::NativeArray;
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray, ChunkedPolygonArray};
 use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
-use geo::algorithm::convex_hull::ConvexHull as GeoConvexHull;
 use geo::Polygon;
+use geo::algorithm::convex_hull::ConvexHull as GeoConvexHull;
 use geoarrow_schema::Dimension;
 
 /// Returns the convex hull of a Polygon. The hull is always oriented counter-clockwise.
@@ -141,7 +141,7 @@ mod tests {
     use crate::array::polygon::PolygonArray;
     use crate::array::{LineStringArray, MultiPointArray};
     use crate::trait_::ArrayAccessor;
-    use geo::{line_string, polygon, MultiPoint, Point};
+    use geo::{MultiPoint, Point, line_string, polygon};
     use geoarrow_schema::Dimension;
 
     #[test]

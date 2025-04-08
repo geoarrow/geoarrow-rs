@@ -8,8 +8,8 @@ use geo_traits::GeometryTrait;
 use geoarrow_schema::{CoordType, Dimension, GeometryCollectionType, Metadata};
 
 use crate::algorithm::native::downcast::can_downcast_multi;
-use crate::array::mixed::builder::MixedGeometryBuilder;
 use crate::array::mixed::MixedCapacity;
+use crate::array::mixed::builder::MixedGeometryBuilder;
 use crate::array::{
     GeometryCollectionArray, LineStringArray, LineStringBuilder, MultiLineStringArray,
     MultiLineStringBuilder, MultiPointArray, MultiPointBuilder, MultiPolygonArray,
@@ -593,7 +593,7 @@ impl<'a> crate::trait_::NativeGEOSGeometryAccessor<'a> for MixedGeometryArray {
         &'a self,
         index: usize,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
-        let geom = NativeGeometryAccessor::value_as_geometry_unchecked(self, index);
+        let geom = unsafe { NativeGeometryAccessor::value_as_geometry_unchecked(self, index) };
         (&geom).try_into()
     }
 }
@@ -688,7 +688,10 @@ impl TryFrom<(&UnionArray, Dimension)> for MixedGeometryArray {
                     };
 
                     if dim != found_dimension {
-                        return Err(  GeoArrowError::General(format!("expected dimension: {:?}, found child array with dimension {:?} and type_id: {}", dim, found_dimension, type_id )));
+                        return Err(GeoArrowError::General(format!(
+                            "expected dimension: {:?}, found child array with dimension {:?} and type_id: {}",
+                            dim, found_dimension, type_id
+                        )));
                     }
 
                     match type_id {
@@ -719,7 +722,7 @@ impl TryFrom<(&UnionArray, Dimension)> for MixedGeometryArray {
                             return Err(GeoArrowError::General(format!(
                                 "Unexpected type_id {}",
                                 type_id
-                            )))
+                            )));
                         }
                     }
                 }

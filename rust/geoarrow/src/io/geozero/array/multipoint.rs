@@ -1,8 +1,8 @@
+use crate::ArrayBase;
 use crate::array::multipoint::MultiPointCapacity;
 use crate::array::{MultiPointArray, MultiPointBuilder};
 use crate::io::geozero::scalar::process_multi_point;
 use crate::trait_::ArrayAccessor;
-use crate::ArrayBase;
 use geoarrow_schema::Dimension;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
@@ -89,8 +89,8 @@ mod test {
     use crate::test::multipoint::{mp0, mp1};
     use crate::trait_::ArrayAccessor;
     use geo::Geometry;
-    use geozero::error::Result;
     use geozero::ToWkt;
+    use geozero::error::Result;
 
     #[test]
     fn geozero_process_geom() -> Result<()> {

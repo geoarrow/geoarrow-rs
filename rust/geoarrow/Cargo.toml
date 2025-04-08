@@ -3,12 +3,12 @@
 name = "geoarrow"
 version = "0.4.0-beta.4"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
-edition = "2021"
+edition = { workspace = true }
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/geoarrow/geoarrow-rs"
 description = "Rust implementation of GeoArrow"
 categories = ["science::geo"]
-rust-version = "1.82"
+rust-version = { workspace = true }
 
 [features]
 csv = ["dep:arrow-csv", "geozero/with-csv"]

@@ -4,11 +4,11 @@ use std::sync::OnceLock;
 use arrow_schema::DataType;
 use datafusion::logical_expr::scalar_doc_sections::DOC_SECTION_OTHER;
 use datafusion::logical_expr::{ColumnarValue, Documentation, ScalarUDFImpl, Signature};
-use geoarrow::algorithm::geo::Centroid as _Centroid;
 use geoarrow::ArrayBase;
+use geoarrow::algorithm::geo::Centroid as _Centroid;
 use geoarrow_schema::CoordType;
 
-use crate::data_types::{any_single_geometry_type_input, parse_to_native_array, POINT2D_TYPE};
+use crate::data_types::{POINT2D_TYPE, any_single_geometry_type_input, parse_to_native_array};
 use crate::error::GeoDataFusionResult;
 
 #[derive(Debug)]

@@ -1,10 +1,10 @@
+use crate::NativeArray;
 use crate::algorithm::native::{Binary, Unary};
 use crate::array::*;
 use crate::datatypes::NativeType;
 use crate::error::GeoArrowError;
 use crate::io::geo::geometry_to_geo;
 use crate::trait_::NativeScalar;
-use crate::NativeArray;
 use arrow_array::BooleanArray;
 use geo::Contains as _Contains;
 use geo_traits::GeometryTrait;
