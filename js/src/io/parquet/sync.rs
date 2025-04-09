@@ -3,8 +3,8 @@ use arrow_wasm::Table;
 // use parquet_wasm::utils::assert_parquet_file_not_empty;
 use bytes::Bytes;
 use geoarrow::io::parquet::{
-    write_geoparquet as _write_geoparquet, GeoParquetReaderOptions,
-    GeoParquetRecordBatchReaderBuilder,
+    GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder,
+    write_geoparquet as _write_geoparquet,
 };
 use wasm_bindgen::prelude::*;
 

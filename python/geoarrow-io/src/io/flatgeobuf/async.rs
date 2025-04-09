@@ -2,8 +2,8 @@ use crate::error::PyGeoArrowError;
 use crate::io::input::construct_async_reader;
 use crate::util::to_arro3_table;
 
-use geoarrow::io::flatgeobuf::read_flatgeobuf_async as _read_flatgeobuf_async;
 use geoarrow::io::flatgeobuf::FlatGeobufReaderOptions;
+use geoarrow::io::flatgeobuf::read_flatgeobuf_async as _read_flatgeobuf_async;
 use geoarrow_schema::CoordType;
 use pyo3::prelude::*;
 use pyo3_async_runtimes::tokio::future_into_py;

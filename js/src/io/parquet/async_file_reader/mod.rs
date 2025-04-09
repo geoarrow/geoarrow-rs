@@ -17,7 +17,7 @@ use fetch::{range_from_end, range_from_start_and_length};
 use arrow_wasm::{RecordBatch, Table};
 use bytes::Bytes;
 use futures::TryStreamExt;
-use futures::{stream, FutureExt};
+use futures::{FutureExt, stream};
 use parquet::arrow::arrow_reader::ArrowReaderMetadata;
 use parquet::arrow::async_reader::{AsyncFileReader, ParquetRecordBatchStreamBuilder};
 

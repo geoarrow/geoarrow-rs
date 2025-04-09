@@ -5,5 +5,5 @@ mod sync;
 pub mod options;
 
 #[cfg(feature = "async")]
-pub use r#async::{read_parquet_async, ParquetDataset, ParquetFile};
-pub use sync::{read_parquet, write_parquet, ParquetWriter};
+pub use r#async::{ParquetDataset, ParquetFile, read_parquet_async};
+pub use sync::{ParquetWriter, read_parquet, write_parquet};

@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
+use geoarrow::NativeArray;
 use geoarrow::array::NativeArrayDyn;
 use geoarrow::chunked_array::ChunkedNativeArray;
-use geoarrow::NativeArray;
 use pyo3::prelude::*;
 use pyo3_geoarrow::{PyChunkedNativeArray, PyNativeArray};
 

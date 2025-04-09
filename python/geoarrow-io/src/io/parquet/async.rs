@@ -2,14 +2,15 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
-use crate::io::input::{construct_reader, AnyFileReader, AsyncFileReader};
-use crate::io::parquet::options::{create_options, PyGeoParquetBboxCovering};
+use crate::io::input::{AnyFileReader, AsyncFileReader, construct_reader};
+use crate::io::parquet::options::{PyGeoParquetBboxCovering, create_options};
 #[cfg(feature = "async")]
 use crate::runtime::get_runtime;
 use crate::util::to_arro3_table;
 
 use arrow::datatypes::SchemaRef;
 use geo_traits::CoordTrait;
+use geoarrow::ArrayBase;
 use geoarrow::error::GeoArrowError;
 use geoarrow::io::parquet::metadata::GeoParquetBboxCovering;
 use geoarrow::io::parquet::{
@@ -17,15 +18,14 @@ use geoarrow::io::parquet::{
     GeoParquetRecordBatchStream, GeoParquetRecordBatchStreamBuilder,
 };
 use geoarrow::table::Table;
-use geoarrow::ArrayBase;
 use geoarrow_schema::CoordType;
 use object_store::{ObjectMeta, ObjectStore};
 use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::ParquetObjectReader;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3_arrow::export::{Arro3Schema, Arro3Table};
 use pyo3_arrow::PyArray;
+use pyo3_arrow::export::{Arro3Schema, Arro3Table};
 use pyo3_async_runtimes::tokio::future_into_py;
 use pyo3_geoarrow::PyCrs;
 use pyo3_object_store::AnyObjectStore;
