@@ -3,21 +3,21 @@ use std::sync::Arc;
 use crate::interop::numpy::to_numpy::wkb_array_to_numpy;
 use crate::interop::shapely::utils::import_shapely;
 use arrow_buffer::NullBuffer;
+use geoarrow::NativeArray;
 use geoarrow::array::{
     AsNativeArray, AsSerializedArray, CoordBuffer, NativeArrayDyn, SerializedArrayDyn,
 };
 use geoarrow::datatypes::{AnyType, NativeType, SerializedType};
 use geoarrow::io::wkb::to_wkb;
-use geoarrow::NativeArray;
 use numpy::PyArrayMethods;
 use numpy::ToPyArray;
+use pyo3::PyAny;
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::PyTuple;
-use pyo3::PyAny;
-use pyo3_arrow::input::AnyArray;
 use pyo3_arrow::PyArray;
+use pyo3_arrow::input::AnyArray;
 use pyo3_geoarrow::PyGeoArrowResult;
 
 const NULL_VALUES_ERR_MSG: &str = "Cannot convert GeoArrow array with null values to Shapely";

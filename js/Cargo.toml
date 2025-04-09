@@ -2,7 +2,7 @@
 name = "geoarrow-wasm"
 version = "0.2.0-beta.5"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
-edition = "2021"
+edition = "2024"
 description = "Efficient, vectorized geospatial operations in WebAssembly."
 readme = "README.md"
 repository = "https://github.com/geoarrow/geoarrow-rs"

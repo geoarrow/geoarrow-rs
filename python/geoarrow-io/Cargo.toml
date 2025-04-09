@@ -41,7 +41,7 @@ object_store = { workspace = true, features = [
     "azure",
     "gcp",
     "http",
-], optional = true, default-features = false }
+], optional = true }
 parquet = { workspace = true }
 pyo3 = { workspace = true }
 pyo3-arrow = { workspace = true }

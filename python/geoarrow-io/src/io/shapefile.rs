@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use crate::error::PyGeoArrowResult;
 use crate::util::to_arro3_table;
-use geoarrow::io::shapefile::{read_shapefile as _read_shapefile, ShapefileReaderOptions};
+use geoarrow::io::shapefile::{ShapefileReaderOptions, read_shapefile as _read_shapefile};
 use pyo3::prelude::*;
 use pyo3_arrow::export::Arro3Table;
 use pyo3_geoarrow::PyCoordType;

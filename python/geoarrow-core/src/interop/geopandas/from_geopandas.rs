@@ -1,11 +1,11 @@
 use crate::interop::util::{import_geopandas, pytable_to_table, table_to_pytable};
+use pyo3::PyAny;
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyTuple};
-use pyo3::PyAny;
-use pyo3_arrow::export::Arro3Table;
 use pyo3_arrow::PyTable;
+use pyo3_arrow::export::Arro3Table;
 use pyo3_geoarrow::PyGeoArrowResult;
 
 #[pyfunction]

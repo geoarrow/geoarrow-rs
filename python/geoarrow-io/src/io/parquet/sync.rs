@@ -2,20 +2,20 @@ use std::sync::Mutex;
 
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::io::input::sync::FileWriter;
-use crate::io::input::{construct_reader, AnyFileReader};
+use crate::io::input::{AnyFileReader, construct_reader};
 use crate::util::to_arro3_table;
 
 use geoarrow::io::parquet::{GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder};
 use parquet::arrow::arrow_reader::ArrowReaderOptions;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3_arrow::export::Arro3Table;
 use pyo3_arrow::PyRecordBatch;
 use pyo3_arrow::PySchema;
+use pyo3_arrow::export::Arro3Table;
 
 use geoarrow::io::parquet::{
-    write_geoparquet as _write_geoparquet, GeoParquetWriter as _GeoParquetWriter,
-    GeoParquetWriterOptions,
+    GeoParquetWriter as _GeoParquetWriter, GeoParquetWriterOptions,
+    write_geoparquet as _write_geoparquet,
 };
 use pyo3_arrow::input::AnyRecordBatch;
 use pyo3_geoarrow::PyprojCRSTransform;
