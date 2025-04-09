@@ -298,6 +298,27 @@ pub mod __private {
 /// iterate over the input values to compute that.
 ///
 /// ```
+/// # use arrow_array::Float64Array;
+/// # use arrow_array::builder::Float64Builder;
+/// # use geo::Area;
+/// # use geo_traits::to_geo::ToGeoGeometry;
+/// # use geoarrow_array::error::Result;
+/// # use geoarrow_array::{ArrayAccessor, GeoArrowType};
+/// #
+/// # fn impl_unsigned_area<'a>(array: &'a impl ArrayAccessor<'a>) -> Result<Float64Array> {
+/// #     let mut builder = Float64Builder::with_capacity(array.len());
+/// #
+/// #     for item in array.iter() {
+/// #         if let Some(geom) = item {
+/// #             builder.append_value(geom?.to_geometry().unsigned_area());
+/// #         } else {
+/// #             builder.append_null();
+/// #         }
+/// #     }
+/// #
+/// #     Ok(builder.finish())
+/// # }
+/// #
 /// fn impl_unsigned_area_specialized<'a>(array: &'a impl ArrayAccessor<'a>) -> Result<Float64Array> {
 ///     use GeoArrowType::*;
 ///     match array.data_type() {
