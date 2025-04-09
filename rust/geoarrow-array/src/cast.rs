@@ -2,6 +2,8 @@
 
 use std::sync::Arc;
 
+use arrow_array::OffsetSizeTrait;
+
 use crate::array::*;
 use crate::trait_::GeoArrowArray;
 
@@ -118,22 +120,22 @@ pub trait AsGeoArrowArray {
         self.as_geometry_opt().unwrap()
     }
 
-    /// Downcast this to a [`WKBArray`] with `i32` offsets returning `None` if not possible
-    fn as_wkb_opt(&self) -> Option<&WKBArray<i32>>;
+    /// Downcast this to a [`WKBArray`] with `O` offsets returning `None` if not possible
+    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&WKBArray<O>>;
 
-    /// Downcast this to a [`WKBArray`] with `i32` offsets panicking if not possible
+    /// Downcast this to a [`WKBArray`] with `O` offsets panicking if not possible
     #[inline]
-    fn as_wkb(&self) -> &WKBArray<i32> {
-        self.as_wkb_opt().unwrap()
+    fn as_wkb<O: OffsetSizeTrait>(&self) -> &WKBArray<O> {
+        self.as_wkb_opt::<O>().unwrap()
     }
 
-    /// Downcast this to a [`WKBArray`] with `i64` offsets returning `None` if not possible
-    fn as_large_wkb_opt(&self) -> Option<&WKBArray<i64>>;
+    /// Downcast this to a [`WKTArray`] with `O` offsets returning `None` if not possible
+    fn as_wkt_opt<O: OffsetSizeTrait>(&self) -> Option<&WKTArray<O>>;
 
-    /// Downcast this to a [`WKBArray`] with `i64` offsets panicking if not possible
+    /// Downcast this to a [`WKTArray`] with `O` offsets panicking if not possible
     #[inline]
-    fn as_large_wkb(&self) -> &WKBArray<i64> {
-        self.as_large_wkb_opt().unwrap()
+    fn as_wkt<O: OffsetSizeTrait>(&self) -> &WKTArray<O> {
+        self.as_wkt_opt::<O>().unwrap()
     }
 }
 
@@ -185,13 +187,13 @@ impl AsGeoArrowArray for dyn GeoArrowArray + '_ {
     }
 
     #[inline]
-    fn as_wkb_opt(&self) -> Option<&WKBArray<i32>> {
-        self.as_any().downcast_ref::<WKBArray<i32>>()
+    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&WKBArray<O>> {
+        self.as_any().downcast_ref::<WKBArray<O>>()
     }
 
     #[inline]
-    fn as_large_wkb_opt(&self) -> Option<&WKBArray<i64>> {
-        self.as_any().downcast_ref::<WKBArray<i64>>()
+    fn as_wkt_opt<O: OffsetSizeTrait>(&self) -> Option<&WKTArray<O>> {
+        self.as_any().downcast_ref::<WKTArray<O>>()
     }
 }
 
@@ -242,12 +244,12 @@ impl AsGeoArrowArray for Arc<dyn GeoArrowArray> {
     }
 
     #[inline]
-    fn as_wkb_opt(&self) -> Option<&WKBArray<i32>> {
-        self.as_any().downcast_ref::<WKBArray<i32>>()
+    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&WKBArray<O>> {
+        self.as_any().downcast_ref::<WKBArray<O>>()
     }
 
     #[inline]
-    fn as_large_wkb_opt(&self) -> Option<&WKBArray<i64>> {
-        self.as_any().downcast_ref::<WKBArray<i64>>()
+    fn as_wkt_opt<O: OffsetSizeTrait>(&self) -> Option<&WKTArray<O>> {
+        self.as_any().downcast_ref::<WKTArray<O>>()
     }
 }
