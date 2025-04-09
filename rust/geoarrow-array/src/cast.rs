@@ -253,3 +253,140 @@ impl AsGeoArrowArray for Arc<dyn GeoArrowArray> {
         self.as_any().downcast_ref::<WKTArray<O>>()
     }
 }
+
+/// Re-export symbols needed for downcast macros
+///
+/// Name follows `serde` convention
+#[doc(hidden)]
+pub mod __private {
+    pub use crate::GeoArrowType;
+}
+
+/// Downcast a [GeoArrowArray] to a concrete-typed array based on its [`GeoArrowType`].
+///
+/// For example: computing unsigned area:
+///
+/// ```
+/// use arrow_array::Float64Array;
+/// use arrow_array::builder::Float64Builder;
+/// use geo::Area;
+/// use geo_traits::to_geo::ToGeoGeometry;
+/// use geoarrow_array::error::Result;
+/// use geoarrow_array::{ArrayAccessor, GeoArrowArray, downcast_geoarrow_array};
+///
+/// pub fn unsigned_area(array: &dyn GeoArrowArray) -> Result<Float64Array> {
+///     downcast_geoarrow_array!(array, impl_unsigned_area)
+/// }
+///
+/// fn impl_unsigned_area<'a>(array: &'a impl ArrayAccessor<'a>) -> Result<Float64Array> {
+///     let mut builder = Float64Builder::with_capacity(array.len());
+///
+///     for item in array.iter() {
+///         if let Some(geom) = item {
+///             builder.append_value(geom?.to_geometry().unsigned_area());
+///         } else {
+///             builder.append_null();
+///         }
+///     }
+///
+///     Ok(builder.finish())
+/// }
+/// ```
+///
+/// You can also override the behavior of specific data types to specialize or provide a fast path.
+/// For example, we know that points and lines will always have an area of 0, and don't need to
+/// iterate over the input values to compute that.
+///
+/// ```
+/// fn impl_unsigned_area_specialized<'a>(array: &'a impl ArrayAccessor<'a>) -> Result<Float64Array> {
+///     use GeoArrowType::*;
+///     match array.data_type() {
+///         Point(_) | LineString(_) | MultiPoint(_) | MultiLineString(_) => {
+///             let values = vec![0.0f64; array.len()];
+///             Ok(Float64Array::new(values.into(), array.nulls().cloned()))
+///         }
+///         _ => impl_unsigned_area(array),
+///     }
+/// }
+/// ```
+///
+/// This is a simplified version of the upstream
+/// [downcast_primitive_array][arrow_array::downcast_primitive_array].
+///
+/// If you would like to help in updating this `downcast_geoarrow_array` to support the full range
+/// of functionality of the upstream `downcast_primitive_array`, please create an issue or submit a
+/// PR.
+#[macro_export]
+macro_rules! downcast_geoarrow_array {
+    ($array:ident, $fn:expr) => {
+        match $array.data_type() {
+            $crate::cast::__private::GeoArrowType::Point(_) => {
+                $fn($crate::cast::AsGeoArrowArray::as_point($array))
+            }
+            $crate::cast::__private::GeoArrowType::LineString(_) => {
+                $fn($crate::cast::AsGeoArrowArray::as_line_string($array))
+            }
+            $crate::cast::__private::GeoArrowType::Polygon(_) => {
+                $fn($crate::cast::AsGeoArrowArray::as_polygon($array))
+            }
+            $crate::cast::__private::GeoArrowType::MultiPoint(_) => {
+                $fn($crate::cast::AsGeoArrowArray::as_multi_point($array))
+            }
+            $crate::cast::__private::GeoArrowType::MultiLineString(_) => {
+                $fn($crate::cast::AsGeoArrowArray::as_multi_line_string($array))
+            }
+            $crate::cast::__private::GeoArrowType::MultiPolygon(_) => {
+                $fn($crate::cast::AsGeoArrowArray::as_multi_polygon($array))
+            }
+            $crate::cast::__private::GeoArrowType::Geometry(_) => {
+                $fn($crate::cast::AsGeoArrowArray::as_geometry($array))
+            }
+            $crate::cast::__private::GeoArrowType::GeometryCollection(_) => $fn(
+                $crate::cast::AsGeoArrowArray::as_geometry_collection($array),
+            ),
+            $crate::cast::__private::GeoArrowType::Rect(_) => {
+                $fn($crate::cast::AsGeoArrowArray::as_rect($array))
+            }
+            $crate::cast::__private::GeoArrowType::WKB(_) => {
+                $fn($crate::cast::AsGeoArrowArray::as_wkb::<i32>($array))
+            }
+            $crate::cast::__private::GeoArrowType::LargeWKB(_) => {
+                $fn($crate::cast::AsGeoArrowArray::as_wkb::<i64>($array))
+            }
+            $crate::cast::__private::GeoArrowType::WKT(_) => {
+                $fn($crate::cast::AsGeoArrowArray::as_wkt::<i32>($array))
+            }
+            $crate::cast::__private::GeoArrowType::LargeWKT(_) => {
+                $fn($crate::cast::AsGeoArrowArray::as_wkt::<i64>($array))
+            }
+        }
+    };
+}
+
+#[cfg(test)]
+mod test {
+    use geoarrow_schema::WkbType;
+
+    use crate::array::WKBArray;
+    use crate::builder::WKBBuilder;
+    use crate::error::Result;
+    use crate::{ArrayAccessor, GeoArrowArray};
+
+    // Verify that this compiles with the macro
+    #[allow(dead_code)]
+    fn to_wkb(arr: &dyn GeoArrowArray) -> Result<WKBArray<i32>> {
+        downcast_geoarrow_array!(arr, impl_to_wkb)
+    }
+
+    fn impl_to_wkb<'a>(geo_arr: &'a impl ArrayAccessor<'a>) -> Result<WKBArray<i32>> {
+        // let metadata = geo_arr.metadata().clone();
+
+        let geoms = geo_arr
+            .iter()
+            .map(|x| x.transpose())
+            .collect::<std::result::Result<Vec<_>, _>>()
+            .unwrap();
+        let wkb_type = WkbType::new(Default::default());
+        Ok(WKBBuilder::from_nullable_geometries(geoms.as_slice(), wkb_type).finish())
+    }
+}
