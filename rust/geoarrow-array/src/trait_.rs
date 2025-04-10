@@ -36,7 +36,7 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// Prefer using [`AsGeoArrowArray`] instead of calling this method and manually downcasting.
     fn as_any(&self) -> &dyn Any;
 
-    /// Returns the [`NativeType`] of this array.
+    /// Returns the [`GeoArrowType`] of this array.
     ///
     /// # Examples
     ///
