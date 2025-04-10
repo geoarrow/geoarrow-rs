@@ -220,9 +220,9 @@ mod test {
 
     #[test]
     fn rect_array_round_trip() {
-        let rect = geo::Rect::new(
-            geo::coord! { x: 0.0, y: 5.0 },
-            geo::coord! { x: 10.0, y: 15.0 },
+        let rect = geo_types::Rect::new(
+            geo_types::coord! { x: 0.0, y: 5.0 },
+            geo_types::coord! { x: 10.0, y: 15.0 },
         );
         let typ = BoxType::new(Dimension::XY, Default::default());
         let mut builder = RectBuilder::with_capacity(typ, 1);
