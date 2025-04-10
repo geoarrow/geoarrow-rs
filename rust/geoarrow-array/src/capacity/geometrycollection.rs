@@ -36,6 +36,11 @@ impl GeometryCollectionCapacity {
         self.mixed_capacity.is_empty() && self.geom_capacity == 0
     }
 
+    /// The geometry offset buffer capacity
+    pub fn geom_capacity(&self) -> usize {
+        self.geom_capacity
+    }
+
     #[inline]
     fn add_valid_point(&mut self, _geom: &impl PointTrait) {
         self.mixed_capacity.add_point();
