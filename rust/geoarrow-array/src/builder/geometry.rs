@@ -88,8 +88,6 @@ impl<'a> GeometryBuilder {
         capacity: GeometryCapacity,
         prefer_multi: bool,
     ) -> Self {
-        use Dimension::*;
-
         let metadata = typ.metadata().clone();
         let coord_type = typ.coord_type();
 
@@ -131,7 +129,11 @@ impl<'a> GeometryBuilder {
         });
         let gcs = core::array::from_fn(|i| {
             GeometryCollectionBuilder::with_capacity(
-                GeometryCollectionType::new(coord_type, XY, Default::default()),
+                GeometryCollectionType::new(
+                    coord_type,
+                    Dimension::from_order(i),
+                    Default::default(),
+                ),
                 capacity.gcs()[i],
                 prefer_multi,
             )

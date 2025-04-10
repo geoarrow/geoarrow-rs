@@ -476,34 +476,34 @@ impl IntoArrow for GeometryArray {
         };
 
         // https://stackoverflow.com/a/34406459/7319250
-        let mut child_arrays = Vec::with_capacity(28);
+        let mut child_arrays: Vec<Option<ArrayRef>> = vec![None; 28];
         for (i, arr) in self.points.into_iter().enumerate() {
-            child_arrays[i * 7] = arr.into_array_ref();
+            child_arrays[i * 7] = Some(arr.into_array_ref());
         }
         for (i, arr) in self.line_strings.into_iter().enumerate() {
-            child_arrays[i * 7 + 1] = arr.into_array_ref();
+            child_arrays[i * 7 + 1] = Some(arr.into_array_ref());
         }
         for (i, arr) in self.polygons.into_iter().enumerate() {
-            child_arrays[i * 7 + 2] = arr.into_array_ref();
+            child_arrays[i * 7 + 2] = Some(arr.into_array_ref());
         }
         for (i, arr) in self.mpoints.into_iter().enumerate() {
-            child_arrays[i * 7 + 3] = arr.into_array_ref();
+            child_arrays[i * 7 + 3] = Some(arr.into_array_ref());
         }
         for (i, arr) in self.mline_strings.into_iter().enumerate() {
-            child_arrays[i * 7 + 4] = arr.into_array_ref();
+            child_arrays[i * 7 + 4] = Some(arr.into_array_ref());
         }
         for (i, arr) in self.mpolygons.into_iter().enumerate() {
-            child_arrays[i * 7 + 5] = arr.into_array_ref();
+            child_arrays[i * 7 + 5] = Some(arr.into_array_ref());
         }
         for (i, arr) in self.gcs.into_iter().enumerate() {
-            child_arrays[i * 7 + 6] = arr.into_array_ref();
+            child_arrays[i * 7 + 6] = Some(arr.into_array_ref());
         }
 
         UnionArray::try_new(
             union_fields,
             self.type_ids,
             Some(self.offsets),
-            child_arrays,
+            child_arrays.into_iter().map(|x| x.unwrap()).collect(),
         )
         .unwrap()
     }
@@ -819,6 +819,64 @@ impl DimensionIndex for geo_traits::Dimensions {
             3 => Self::Xyzm,
             _ => panic!("unsupported index in from_order"),
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use geo_traits::to_geo::ToGeoGeometry;
+
+    use super::*;
+    use crate::test::{linestring, multilinestring, multipoint, multipolygon, point, polygon};
+
+    fn geoms() -> Vec<geo_types::Geometry> {
+        vec![
+            point::p0().into(),
+            point::p1().into(),
+            point::p2().into(),
+            linestring::ls0().into(),
+            linestring::ls1().into(),
+            polygon::p0().into(),
+            polygon::p1().into(),
+            multipoint::mp0().into(),
+            multipoint::mp1().into(),
+            multilinestring::ml0().into(),
+            multilinestring::ml1().into(),
+            multipolygon::mp0().into(),
+            multipolygon::mp1().into(),
+        ]
+    }
+
+    #[test]
+    fn test_2d() {
+        let geoms = geoms();
+        let typ = GeometryType::new(CoordType::Interleaved, Default::default());
+        let geometry_array = GeometryBuilder::from_geometries(&geoms, typ, false)
+            .unwrap()
+            .finish();
+        let geoms_again = geometry_array
+            .iter_values()
+            .map(|g| g.unwrap().to_geometry())
+            .collect::<Vec<_>>();
+        assert_eq!(geoms, geoms_again);
+    }
+
+    #[test]
+    fn test_2d_roundtrip_arrow() {
+        let geoms = geoms();
+        let typ = GeometryType::new(CoordType::Interleaved, Default::default());
+        let geometry_array = GeometryBuilder::from_geometries(&geoms, typ, false)
+            .unwrap()
+            .finish();
+        let field = geometry_array.data_type.to_field("geometry", true);
+        let union_array = geometry_array.into_arrow();
+
+        let geometry_array_again = GeometryArray::try_from((&union_array as _, &field)).unwrap();
+        let geoms_again = geometry_array_again
+            .iter_values()
+            .map(|g| g.unwrap().to_geometry())
+            .collect::<Vec<_>>();
+        assert_eq!(geoms, geoms_again);
     }
 }
 

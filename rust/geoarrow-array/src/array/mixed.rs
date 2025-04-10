@@ -12,8 +12,8 @@ use geoarrow_schema::{
 
 use crate::ArrayAccessor;
 use crate::array::{
-    LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
-    PolygonArray, WkbArray,
+    DimensionIndex, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
+    PointArray, PolygonArray, WkbArray,
 };
 use crate::builder::{
     LineStringBuilder, MixedGeometryBuilder, MultiLineStringBuilder, MultiPointBuilder,
@@ -559,16 +559,7 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                 }
 
                 for (type_id, _field) in fields.iter() {
-                    let found_dimension = if type_id < 10 {
-                        Dimension::XY
-                    } else if type_id < 20 {
-                        Dimension::XYZ
-                    } else {
-                        return Err(GeoArrowError::General(format!(
-                            "Unsupported type_id: {}",
-                            type_id
-                        )));
-                    };
+                    let found_dimension = Dimension::from_order((type_id / 10) as _);
 
                     if dim != found_dimension {
                         return Err(GeoArrowError::General(format!(
@@ -577,8 +568,8 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                         )));
                     }
 
-                    match type_id {
-                        1 | 11 => {
+                    match type_id % 10 {
+                        1 => {
                             points = Some(
                                 (
                                     value.child(type_id).as_ref(),
@@ -588,7 +579,7 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                                     .unwrap(),
                             );
                         }
-                        2 | 12 => {
+                        2 => {
                             line_strings = Some(
                                 (
                                     value.child(type_id).as_ref(),
@@ -598,7 +589,7 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                                     .unwrap(),
                             );
                         }
-                        3 | 13 => {
+                        3 => {
                             polygons = Some(
                                 (
                                     value.child(type_id).as_ref(),
@@ -608,7 +599,7 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                                     .unwrap(),
                             );
                         }
-                        4 | 14 => {
+                        4 => {
                             multi_points = Some(
                                 (
                                     value.child(type_id).as_ref(),
@@ -618,7 +609,7 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                                     .unwrap(),
                             );
                         }
-                        5 | 15 => {
+                        5 => {
                             multi_line_strings = Some(
                                 (
                                     value.child(type_id).as_ref(),
@@ -628,7 +619,7 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                                     .unwrap(),
                             );
                         }
-                        6 | 16 => {
+                        6 => {
                             multi_polygons = Some(
                                 (
                                     value.child(type_id).as_ref(),
