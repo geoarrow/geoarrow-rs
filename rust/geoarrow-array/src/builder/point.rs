@@ -4,7 +4,7 @@ use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, Point
 use geoarrow_schema::{CoordType, PointType};
 
 // use super::array::check;
-use crate::array::{PointArray, WKBArray};
+use crate::array::{PointArray, WkbArray};
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder,
 };
@@ -222,10 +222,10 @@ impl PointBuilder {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, PointType)> for PointBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, PointType)> for PointBuilder {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (WKBArray<O>, PointType)) -> Result<Self> {
+    fn try_from((value, typ): (WkbArray<O>, PointType)) -> Result<Self> {
         let wkb_objects = value
             .iter()
             .map(|x| x.transpose())

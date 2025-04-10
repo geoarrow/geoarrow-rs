@@ -13,7 +13,7 @@ use geoarrow_schema::{
 use crate::ArrayAccessor;
 use crate::array::{
     LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
-    PolygonArray, WKBArray,
+    PolygonArray, WkbArray,
 };
 use crate::builder::{
     LineStringBuilder, MixedGeometryBuilder, MultiLineStringBuilder, MultiPointBuilder,
@@ -685,10 +685,10 @@ impl TryFrom<(&dyn Array, Dimension, CoordType)> for MixedGeometryArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MixedGeometryArray {
+impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, Dimension)> for MixedGeometryArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WKBArray<O>, Dimension)) -> Result<Self> {
+    fn try_from(value: (WkbArray<O>, Dimension)) -> Result<Self> {
         let mut_arr: MixedGeometryBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }

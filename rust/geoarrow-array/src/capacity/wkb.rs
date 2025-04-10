@@ -11,7 +11,7 @@ use wkb::writer::{
     multi_point_wkb_size, multi_polygon_wkb_size, point_wkb_size, polygon_wkb_size,
 };
 
-/// A counter for the buffer sizes of a [`WKBArray`][crate::array::WKBArray].
+/// A counter for the buffer sizes of a [`WkbArray`][crate::array::WkbArray].
 ///
 /// This can be used to reduce allocations by allocating once for exactly the array size you need.
 #[derive(Debug, Clone, Copy)]

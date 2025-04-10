@@ -6,7 +6,7 @@ use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{Metadata, MultiLineStringType};
 
-use crate::array::{CoordBuffer, LineStringArray, WKBArray};
+use crate::array::{CoordBuffer, LineStringArray, WkbArray};
 use crate::builder::MultiLineStringBuilder;
 use crate::capacity::MultiLineStringCapacity;
 use crate::datatypes::GeoArrowType;
@@ -317,10 +317,10 @@ impl TryFrom<(&dyn Array, &Field)> for MultiLineStringArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, MultiLineStringType)> for MultiLineStringArray {
+impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiLineStringType)> for MultiLineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WKBArray<O>, MultiLineStringType)) -> Result<Self> {
+    fn try_from(value: (WkbArray<O>, MultiLineStringType)) -> Result<Self> {
         let mut_arr: MultiLineStringBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }

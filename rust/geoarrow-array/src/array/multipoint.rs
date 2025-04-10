@@ -6,7 +6,7 @@ use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{Metadata, MultiPointType};
 
-use crate::array::{CoordBuffer, LineStringArray, PointArray, WKBArray};
+use crate::array::{CoordBuffer, LineStringArray, PointArray, WkbArray};
 use crate::builder::MultiPointBuilder;
 use crate::capacity::MultiPointCapacity;
 use crate::datatypes::GeoArrowType;
@@ -277,10 +277,10 @@ impl TryFrom<(&dyn Array, &Field)> for MultiPointArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, MultiPointType)> for MultiPointArray {
+impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiPointType)> for MultiPointArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WKBArray<O>, MultiPointType)) -> Result<Self> {
+    fn try_from(value: (WkbArray<O>, MultiPointType)) -> Result<Self> {
         let mut_arr: MultiPointBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }

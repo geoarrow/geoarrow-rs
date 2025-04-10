@@ -120,21 +120,21 @@ pub trait AsGeoArrowArray {
         self.as_geometry_opt().unwrap()
     }
 
-    /// Downcast this to a [`WKBArray`] with `O` offsets returning `None` if not possible
-    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&WKBArray<O>>;
+    /// Downcast this to a [`WkbArray`] with `O` offsets returning `None` if not possible
+    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&WkbArray<O>>;
 
-    /// Downcast this to a [`WKBArray`] with `O` offsets panicking if not possible
+    /// Downcast this to a [`WkbArray`] with `O` offsets panicking if not possible
     #[inline]
-    fn as_wkb<O: OffsetSizeTrait>(&self) -> &WKBArray<O> {
+    fn as_wkb<O: OffsetSizeTrait>(&self) -> &WkbArray<O> {
         self.as_wkb_opt::<O>().unwrap()
     }
 
-    /// Downcast this to a [`WKTArray`] with `O` offsets returning `None` if not possible
-    fn as_wkt_opt<O: OffsetSizeTrait>(&self) -> Option<&WKTArray<O>>;
+    /// Downcast this to a [`WktArray`] with `O` offsets returning `None` if not possible
+    fn as_wkt_opt<O: OffsetSizeTrait>(&self) -> Option<&WktArray<O>>;
 
-    /// Downcast this to a [`WKTArray`] with `O` offsets panicking if not possible
+    /// Downcast this to a [`WktArray`] with `O` offsets panicking if not possible
     #[inline]
-    fn as_wkt<O: OffsetSizeTrait>(&self) -> &WKTArray<O> {
+    fn as_wkt<O: OffsetSizeTrait>(&self) -> &WktArray<O> {
         self.as_wkt_opt::<O>().unwrap()
     }
 }
@@ -187,13 +187,13 @@ impl AsGeoArrowArray for dyn GeoArrowArray + '_ {
     }
 
     #[inline]
-    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&WKBArray<O>> {
-        self.as_any().downcast_ref::<WKBArray<O>>()
+    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&WkbArray<O>> {
+        self.as_any().downcast_ref::<WkbArray<O>>()
     }
 
     #[inline]
-    fn as_wkt_opt<O: OffsetSizeTrait>(&self) -> Option<&WKTArray<O>> {
-        self.as_any().downcast_ref::<WKTArray<O>>()
+    fn as_wkt_opt<O: OffsetSizeTrait>(&self) -> Option<&WktArray<O>> {
+        self.as_any().downcast_ref::<WktArray<O>>()
     }
 }
 
@@ -244,13 +244,13 @@ impl AsGeoArrowArray for Arc<dyn GeoArrowArray> {
     }
 
     #[inline]
-    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&WKBArray<O>> {
-        self.as_any().downcast_ref::<WKBArray<O>>()
+    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&WkbArray<O>> {
+        self.as_any().downcast_ref::<WkbArray<O>>()
     }
 
     #[inline]
-    fn as_wkt_opt<O: OffsetSizeTrait>(&self) -> Option<&WKTArray<O>> {
-        self.as_any().downcast_ref::<WKTArray<O>>()
+    fn as_wkt_opt<O: OffsetSizeTrait>(&self) -> Option<&WktArray<O>> {
+        self.as_any().downcast_ref::<WktArray<O>>()
     }
 }
 
@@ -368,16 +368,16 @@ macro_rules! downcast_geoarrow_array {
             $crate::cast::__private::GeoArrowType::Rect(_) => {
                 $fn($crate::cast::AsGeoArrowArray::as_rect($array))
             }
-            $crate::cast::__private::GeoArrowType::WKB(_) => {
+            $crate::cast::__private::GeoArrowType::Wkb(_) => {
                 $fn($crate::cast::AsGeoArrowArray::as_wkb::<i32>($array))
             }
-            $crate::cast::__private::GeoArrowType::LargeWKB(_) => {
+            $crate::cast::__private::GeoArrowType::LargeWkb(_) => {
                 $fn($crate::cast::AsGeoArrowArray::as_wkb::<i64>($array))
             }
-            $crate::cast::__private::GeoArrowType::WKT(_) => {
+            $crate::cast::__private::GeoArrowType::Wkt(_) => {
                 $fn($crate::cast::AsGeoArrowArray::as_wkt::<i32>($array))
             }
-            $crate::cast::__private::GeoArrowType::LargeWKT(_) => {
+            $crate::cast::__private::GeoArrowType::LargeWkt(_) => {
                 $fn($crate::cast::AsGeoArrowArray::as_wkt::<i64>($array))
             }
         }
@@ -388,18 +388,18 @@ macro_rules! downcast_geoarrow_array {
 mod test {
     use geoarrow_schema::WkbType;
 
-    use crate::array::WKBArray;
+    use crate::array::WkbArray;
     use crate::builder::WKBBuilder;
     use crate::error::Result;
     use crate::{ArrayAccessor, GeoArrowArray};
 
     // Verify that this compiles with the macro
     #[allow(dead_code)]
-    fn to_wkb(arr: &dyn GeoArrowArray) -> Result<WKBArray<i32>> {
+    fn to_wkb(arr: &dyn GeoArrowArray) -> Result<WkbArray<i32>> {
         downcast_geoarrow_array!(arr, impl_to_wkb)
     }
 
-    fn impl_to_wkb<'a>(geo_arr: &'a impl ArrayAccessor<'a>) -> Result<WKBArray<i32>> {
+    fn impl_to_wkb<'a>(geo_arr: &'a impl ArrayAccessor<'a>) -> Result<WkbArray<i32>> {
         // let metadata = geo_arr.metadata().clone();
 
         let geoms = geo_arr
