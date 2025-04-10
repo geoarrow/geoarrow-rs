@@ -535,20 +535,7 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
                 }
 
                 for (type_id, _field) in fields.iter() {
-                    let dim = if type_id < 10 {
-                        Dimension::XY
-                    } else if type_id < 20 {
-                        Dimension::XYZ
-                    } else if type_id < 30 {
-                        Dimension::XYM
-                    } else if type_id < 40 {
-                        Dimension::XYZM
-                    } else {
-                        return Err(GeoArrowError::General(format!(
-                            "Unsupported type_id: {}",
-                            type_id
-                        )));
-                    };
+                    let dim = Dimension::from_order((type_id / 10) as _);
                     let index = dim.order();
 
                     match type_id % 10 {
@@ -635,18 +622,118 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
         // This is after checking for dense union
         let offsets = value.offsets().unwrap().clone();
 
-        // points.map(|arr| arr.unwrap_or_else(||PointBuilder::new(PointType::new(coord_type, XY, Default::default())).finish() )),
+        // We need to convert the array [Option<PointArray>; 4] into `[PointArray; 4]`.
+        // But we also need to ensure the underlying PointArray has the correct `Dimension` for the
+        // given array index.
+        // In order to do this, we need the index of the array, which `map` doesn't give us. And
+        // using `core::array::from_fn` doesn't let us move out of the existing array.
+        // So we mutate the existing array of `[Option<PointArray>; 4]` to ensure all values are
+        // `Some`, and then later we call `unwrap` on all array values in a `map`.
+        points.iter_mut().enumerate().for_each(|(i, arr)| {
+            let new_val = if let Some(arr) = arr.take() {
+                arr
+            } else {
+                PointBuilder::new(PointType::new(
+                    coord_type,
+                    Dimension::from_order(i),
+                    Default::default(),
+                ))
+                .finish()
+            };
+            arr.replace(new_val);
+        });
+        line_strings.iter_mut().enumerate().for_each(|(i, arr)| {
+            let new_val = if let Some(arr) = arr.take() {
+                arr
+            } else {
+                LineStringBuilder::new(LineStringType::new(
+                    coord_type,
+                    Dimension::from_order(i),
+                    Default::default(),
+                ))
+                .finish()
+            };
+            arr.replace(new_val);
+        });
+        polygons.iter_mut().enumerate().for_each(|(i, arr)| {
+            let new_val = if let Some(arr) = arr.take() {
+                arr
+            } else {
+                PolygonBuilder::new(PolygonType::new(
+                    coord_type,
+                    Dimension::from_order(i),
+                    Default::default(),
+                ))
+                .finish()
+            };
+            arr.replace(new_val);
+        });
+        mpoints.iter_mut().enumerate().for_each(|(i, arr)| {
+            let new_val = if let Some(arr) = arr.take() {
+                arr
+            } else {
+                MultiPointBuilder::new(MultiPointType::new(
+                    coord_type,
+                    Dimension::from_order(i),
+                    Default::default(),
+                ))
+                .finish()
+            };
+            arr.replace(new_val);
+        });
+        mline_strings.iter_mut().enumerate().for_each(|(i, arr)| {
+            let new_val = if let Some(arr) = arr.take() {
+                arr
+            } else {
+                MultiLineStringBuilder::new(MultiLineStringType::new(
+                    coord_type,
+                    Dimension::from_order(i),
+                    Default::default(),
+                ))
+                .finish()
+            };
+            arr.replace(new_val);
+        });
+        mpolygons.iter_mut().enumerate().for_each(|(i, arr)| {
+            let new_val = if let Some(arr) = arr.take() {
+                arr
+            } else {
+                MultiPolygonBuilder::new(MultiPolygonType::new(
+                    coord_type,
+                    Dimension::from_order(i),
+                    Default::default(),
+                ))
+                .finish()
+            };
+            arr.replace(new_val);
+        });
+        gcs.iter_mut().enumerate().for_each(|(i, arr)| {
+            let new_val = if let Some(arr) = arr.take() {
+                arr
+            } else {
+                GeometryCollectionBuilder::new(
+                    GeometryCollectionType::new(
+                        coord_type,
+                        Dimension::from_order(i),
+                        Default::default(),
+                    ),
+                    false,
+                )
+                .finish()
+            };
+            arr.replace(new_val);
+        });
 
         Ok(Self::new(
             type_ids,
             offsets,
-            points,
-            line_strings,
-            polygons,
-            mpoints,
-            mline_strings,
-            mpolygons,
-            gcs,
+            points.map(|x| x.unwrap()),
+            line_strings.map(|x| x.unwrap()),
+            polygons.map(|x| x.unwrap()),
+            mpoints.map(|x| x.unwrap()),
+            mline_strings.map(|x| x.unwrap()),
+            mpolygons.map(|x| x.unwrap()),
+            gcs.map(|x| x.unwrap()),
             Default::default(),
         ))
     }
