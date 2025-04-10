@@ -7,7 +7,7 @@ use geoarrow_schema::{
     MultiPointType, MultiPolygonType, PointType, PolygonType,
 };
 
-use crate::array::{GeometryArray, WKBArray};
+use crate::array::{GeometryArray, WkbArray};
 use crate::builder::{
     GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder, MultiPointBuilder,
     MultiPolygonBuilder, PointBuilder, PolygonBuilder,
@@ -890,16 +890,16 @@ impl<'a> GeometryBuilder {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, GeometryType)> for GeometryBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, GeometryType)> for GeometryBuilder {
     type Error = GeoArrowError;
 
     fn try_from(
-        (value, typ): (WKBArray<O>, GeometryType),
+        (value, typ): (WkbArray<O>, GeometryType),
     ) -> std::result::Result<Self, Self::Error> {
         assert_eq!(
             value.nulls().map_or(0, |validity| validity.null_count()),
             0,
-            "Parsing a WKBArray with null elements not supported",
+            "Parsing a WkbArray with null elements not supported",
         );
 
         let wkb_objects = value

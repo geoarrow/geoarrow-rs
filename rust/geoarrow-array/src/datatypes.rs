@@ -62,19 +62,19 @@ pub enum GeoArrowType {
     /// Represents a mixed geometry array of unknown types or dimensions
     Geometry(GeometryType),
 
-    /// Represents a [WKBArray][crate::array::WKBArray] or
+    /// Represents a [WkbArray][crate::array::WkbArray] or
     /// [ChunkedWKBArray][crate::chunked_array::ChunkedWKBArray] with `i32` offsets.
     WKB(WkbType),
 
-    /// Represents a [WKBArray][crate::array::WKBArray] or
+    /// Represents a [WkbArray][crate::array::WkbArray] or
     /// [ChunkedWKBArray][crate::chunked_array::ChunkedWKBArray] with `i64` offsets.
     LargeWKB(WkbType),
 
-    /// Represents a [WKTArray][crate::array::WKTArray] or
+    /// Represents a [WktArray][crate::array::WktArray] or
     /// [ChunkedWKTArray][crate::chunked_array::ChunkedWKTArray] with `i32` offsets.
     WKT(WktType),
 
-    /// Represents a [WKTArray][crate::array::WKTArray] or
+    /// Represents a [WktArray][crate::array::WktArray] or
     /// [ChunkedWKTArray][crate::chunked_array::ChunkedWKTArray] with `i64` offsets.
     LargeWKT(WktType),
 }

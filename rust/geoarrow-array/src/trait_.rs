@@ -234,13 +234,13 @@ pub trait GeoArrowArray: Debug + Send + Sync {
 /// Accessing a geometry from a "native" array, such as `PointArray`, `MultiPolygonArray` or
 /// `GeometryArray` will always be constant-time and zero-copy.
 ///
-/// Accessing a geometry from a "serialized" array such as `WKBArray` or `WKTArray` will trigger
-/// some amount of parsing. In the case of `WKBArray`, accessing an item will read the WKB header
+/// Accessing a geometry from a "serialized" array such as `WkbArray` or `WktArray` will trigger
+/// some amount of parsing. In the case of `WkbArray`, accessing an item will read the WKB header
 /// and scan the buffer if needed to find internal geometry offsets, but will not copy any internal
 /// coordinates. This allows for later access to be constant-time (though not necessarily
-/// zero-copy, since WKB is not byte-aligned). In the case of `WKTArray`, accessing a geometry will
+/// zero-copy, since WKB is not byte-aligned). In the case of `WktArray`, accessing a geometry will
 /// fully parse the WKT string and copy coordinates to a separate representation. This means that
-/// calling `.iter()` on a `WKTArray` will transparently fully parse every row.
+/// calling `.iter()` on a `WktArray` will transparently fully parse every row.
 ///
 /// # Validity
 ///

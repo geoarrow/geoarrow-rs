@@ -10,7 +10,7 @@ use geoarrow_schema::{
     MultiPolygonType, PointType, PolygonType,
 };
 
-use crate::array::{MixedGeometryArray, WKBArray};
+use crate::array::{MixedGeometryArray, WkbArray};
 use crate::builder::{
     LineStringBuilder, MultiLineStringBuilder, MultiPointBuilder, MultiPolygonBuilder,
     PointBuilder, PolygonBuilder,
@@ -512,14 +512,14 @@ impl<'a> MixedGeometryBuilder {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MixedGeometryBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, Dimension)> for MixedGeometryBuilder {
     type Error = GeoArrowError;
 
-    fn try_from((value, dim): (WKBArray<O>, Dimension)) -> std::result::Result<Self, Self::Error> {
+    fn try_from((value, dim): (WkbArray<O>, Dimension)) -> std::result::Result<Self, Self::Error> {
         assert_eq!(
             value.nulls().map_or(0, |validity| validity.null_count()),
             0,
-            "Parsing a WKBArray with null elements not supported",
+            "Parsing a WkbArray with null elements not supported",
         );
 
         let metadata = value.data_type.metadata().clone();
