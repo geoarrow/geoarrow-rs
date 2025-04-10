@@ -13,7 +13,7 @@ use crate::trait_::GeoArrowArray;
 /// use std::sync::Arc;
 /// use arrow_array::{Int32Array, RecordBatch};
 /// use arrow_schema::{Schema, Field, DataType, ArrowError};
-/// use geo::point;
+/// use geo_types::point;
 ///
 /// use geoarrow_array::array::PointArray;
 /// use geoarrow_array::builder::PointBuilder;

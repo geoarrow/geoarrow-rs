@@ -1905,6 +1905,7 @@ dependencies = [
  "arrow-array",
  "arrow-buffer",
  "arrow-schema",
+ "geo 0.30.0",
  "geo-traits",
  "geo-types",
  "geoarrow-schema",

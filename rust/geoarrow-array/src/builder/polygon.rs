@@ -240,23 +240,23 @@ impl PolygonBuilder {
         //     // Ref below because I always forget the ordering
         //     // https://github.com/georust/geo/blob/76ad2a358bd079e9d47b1229af89608744d2635b/geo-types/src/geometry/rect.rs#L217-L225
 
-        //     self.coords.push_coord(&geo::Coord {
+        //     self.coords.push_coord(&geo_types::Coord {
         //         x: lower.x(),
         //         y: lower.y(),
         //     });
-        //     self.coords.push_coord(&geo::Coord {
+        //     self.coords.push_coord(&geo_types::Coord {
         //         x: lower.x(),
         //         y: upper.y(),
         //     });
-        //     self.coords.push_coord(&geo::Coord {
+        //     self.coords.push_coord(&geo_types::Coord {
         //         x: upper.x(),
         //         y: upper.y(),
         //     });
-        //     self.coords.push_coord(&geo::Coord {
+        //     self.coords.push_coord(&geo_types::Coord {
         //         x: upper.x(),
         //         y: lower.y(),
         //     });
-        //     self.coords.push_coord(&geo::Coord {
+        //     self.coords.push_coord(&geo_types::Coord {
         //         x: lower.x(),
         //         y: lower.y(),
         //     });
