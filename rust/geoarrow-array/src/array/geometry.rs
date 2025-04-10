@@ -179,6 +179,7 @@ impl GeometryArray {
         !self.mpolygons[dim.order()].is_empty()
     }
 
+    #[allow(dead_code)]
     pub(crate) fn has_geometry_collections(&self, dim: Dimension) -> bool {
         !self.gcs[dim.order()].is_empty()
     }

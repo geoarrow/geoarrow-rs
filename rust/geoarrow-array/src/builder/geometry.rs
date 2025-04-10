@@ -345,22 +345,21 @@ impl<'a> GeometryBuilder {
     #[inline]
     pub fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) -> Result<()> {
         if let Some(point) = value {
-            let dim = point.dim().try_into().unwrap();
+            let dim: Dimension = point.dim().try_into().unwrap();
+            let array_idx = dim.order();
+
             if self.prefer_multi {
                 self.add_multi_point_type(dim);
-                // Flush deferred nulls
-                (0..self.deferred_nulls).for_each(|_| self.mpoints[dim.order()].push_null());
-                self.deferred_nulls = 0;
 
-                self.mpoints[dim.order()].push_point(Some(point))?;
+                let child = &mut self.mpoints[array_idx];
+                Self::flush_deferred_nulls(&mut self.deferred_nulls, child);
+                child.push_point(Some(point))?;
             } else {
                 self.add_point_type(dim);
 
-                // Flush deferred nulls
-                (0..self.deferred_nulls).for_each(|_| self.points[dim.order()].push_null());
-                self.deferred_nulls = 0;
-
-                self.points[dim.order()].push_point(Some(point));
+                let child = &mut self.points[array_idx];
+                Self::flush_deferred_nulls(&mut self.deferred_nulls, child);
+                child.push_point(Some(point));
             }
         } else {
             self.push_null();
@@ -392,52 +391,21 @@ impl<'a> GeometryBuilder {
         value: Option<&impl LineStringTrait<T = f64>>,
     ) -> Result<()> {
         if let Some(line_string) = value {
+            let dim: Dimension = line_string.dim().try_into().unwrap();
+            let array_idx = dim.order();
+
             if self.prefer_multi {
-                self.add_multi_line_string_type(line_string.dim().try_into().unwrap());
-                match line_string.dim() {
-                    Dimensions::Xy | Dimensions::Unknown(2) => {
-                        // Flush deferred nulls
-                        (0..self.deferred_nulls).for_each(|_| self.mline_string_xy.push_null());
-                        self.deferred_nulls = 0;
+                self.add_multi_line_string_type(dim);
 
-                        self.mline_string_xy.push_line_string(Some(line_string))?;
-                    }
-                    Dimensions::Xyz | Dimensions::Unknown(3) => {
-                        // Flush deferred nulls
-                        (0..self.deferred_nulls).for_each(|_| self.mline_string_xyz.push_null());
-                        self.deferred_nulls = 0;
-
-                        self.mline_string_xyz.push_line_string(Some(line_string))?;
-                    }
-                    dim => {
-                        return Err(GeoArrowError::General(format!(
-                            "Unsupported dimension {dim:?}"
-                        )));
-                    }
-                }
+                let child = &mut self.mline_strings[array_idx];
+                Self::flush_deferred_nulls(&mut self.deferred_nulls, child);
+                child.push_line_string(Some(line_string))?;
             } else {
-                self.add_line_string_type(line_string.dim().try_into().unwrap());
-                match line_string.dim() {
-                    Dimensions::Xy | Dimensions::Unknown(2) => {
-                        // Flush deferred nulls
-                        (0..self.deferred_nulls).for_each(|_| self.line_string_xy.push_null());
-                        self.deferred_nulls = 0;
+                self.add_line_string_type(dim);
 
-                        self.line_string_xy.push_line_string(Some(line_string))?;
-                    }
-                    Dimensions::Xyz | Dimensions::Unknown(3) => {
-                        // Flush deferred nulls
-                        (0..self.deferred_nulls).for_each(|_| self.line_string_xyz.push_null());
-                        self.deferred_nulls = 0;
-
-                        self.line_string_xyz.push_line_string(Some(line_string))?;
-                    }
-                    dim => {
-                        return Err(GeoArrowError::General(format!(
-                            "Unsupported dimension {dim:?}"
-                        )));
-                    }
-                }
+                let child = &mut self.line_strings[array_idx];
+                Self::flush_deferred_nulls(&mut self.deferred_nulls, child);
+                child.push_line_string(Some(line_string))?;
             }
         } else {
             self.push_null();
@@ -466,52 +434,21 @@ impl<'a> GeometryBuilder {
     #[inline]
     pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> Result<()> {
         if let Some(polygon) = value {
+            let dim: Dimension = polygon.dim().try_into().unwrap();
+            let array_idx = dim.order();
+
             if self.prefer_multi {
-                self.add_multi_polygon_type(polygon.dim().try_into().unwrap());
-                match polygon.dim() {
-                    Dimensions::Xy | Dimensions::Unknown(2) => {
-                        // Flush deferred nulls
-                        (0..self.deferred_nulls).for_each(|_| self.mpolygon_xy.push_null());
-                        self.deferred_nulls = 0;
+                self.add_multi_polygon_type(dim);
 
-                        self.mpolygon_xy.push_polygon(Some(polygon))?;
-                    }
-                    Dimensions::Xyz | Dimensions::Unknown(3) => {
-                        // Flush deferred nulls
-                        (0..self.deferred_nulls).for_each(|_| self.mpolygon_xyz.push_null());
-                        self.deferred_nulls = 0;
-
-                        self.mpolygon_xyz.push_polygon(Some(polygon))?;
-                    }
-                    dim => {
-                        return Err(GeoArrowError::General(format!(
-                            "Unsupported dimension {dim:?}"
-                        )));
-                    }
-                }
+                let child = &mut self.mpolygons[array_idx];
+                Self::flush_deferred_nulls(&mut self.deferred_nulls, child);
+                child.push_polygon(Some(polygon))?;
             } else {
-                self.add_polygon_type(polygon.dim().try_into().unwrap());
-                match polygon.dim() {
-                    Dimensions::Xy | Dimensions::Unknown(2) => {
-                        // Flush deferred nulls
-                        (0..self.deferred_nulls).for_each(|_| self.polygon_xy.push_null());
-                        self.deferred_nulls = 0;
+                self.add_polygon_type(dim);
 
-                        self.polygon_xy.push_polygon(Some(polygon))?;
-                    }
-                    Dimensions::Xyz | Dimensions::Unknown(3) => {
-                        // Flush deferred nulls
-                        (0..self.deferred_nulls).for_each(|_| self.polygon_xyz.push_null());
-                        self.deferred_nulls = 0;
-
-                        self.polygon_xyz.push_polygon(Some(polygon))?;
-                    }
-                    dim => {
-                        return Err(GeoArrowError::General(format!(
-                            "Unsupported dimension {dim:?}"
-                        )));
-                    }
-                }
+                let child = &mut self.polygons[array_idx];
+                Self::flush_deferred_nulls(&mut self.deferred_nulls, child);
+                child.push_polygon(Some(polygon))?;
             }
         } else {
             self.push_null();
@@ -540,28 +477,14 @@ impl<'a> GeometryBuilder {
         value: Option<&impl MultiPointTrait<T = f64>>,
     ) -> Result<()> {
         if let Some(multi_point) = value {
-            self.add_multi_point_type(multi_point.dim().try_into().unwrap());
-            match multi_point.dim() {
-                Dimensions::Xy | Dimensions::Unknown(2) => {
-                    // Flush deferred nulls
-                    (0..self.deferred_nulls).for_each(|_| self.mpoint_xy.push_null());
-                    self.deferred_nulls = 0;
+            let dim: Dimension = multi_point.dim().try_into().unwrap();
+            let array_idx = dim.order();
 
-                    self.mpoint_xy.push_multi_point(Some(multi_point))?;
-                }
-                Dimensions::Xyz | Dimensions::Unknown(3) => {
-                    // Flush deferred nulls
-                    (0..self.deferred_nulls).for_each(|_| self.mpoint_xyz.push_null());
-                    self.deferred_nulls = 0;
+            self.add_multi_point_type(dim);
 
-                    self.mpoint_xyz.push_multi_point(Some(multi_point))?;
-                }
-                dim => {
-                    return Err(GeoArrowError::General(format!(
-                        "Unsupported dimension {dim:?}"
-                    )));
-                }
-            }
+            let child = &mut self.mpoints[array_idx];
+            Self::flush_deferred_nulls(&mut self.deferred_nulls, child);
+            child.push_multi_point(Some(multi_point))?;
         } else {
             self.push_null();
         };
@@ -589,30 +512,14 @@ impl<'a> GeometryBuilder {
         value: Option<&impl MultiLineStringTrait<T = f64>>,
     ) -> Result<()> {
         if let Some(multi_line_string) = value {
-            self.add_multi_line_string_type(multi_line_string.dim().try_into().unwrap());
-            match multi_line_string.dim() {
-                Dimensions::Xy | Dimensions::Unknown(2) => {
-                    // Flush deferred nulls
-                    (0..self.deferred_nulls).for_each(|_| self.mline_string_xy.push_null());
-                    self.deferred_nulls = 0;
+            let dim: Dimension = multi_line_string.dim().try_into().unwrap();
+            let array_idx = dim.order();
 
-                    self.mline_string_xy
-                        .push_multi_line_string(Some(multi_line_string))?;
-                }
-                Dimensions::Xyz | Dimensions::Unknown(3) => {
-                    // Flush deferred nulls
-                    (0..self.deferred_nulls).for_each(|_| self.mline_string_xyz.push_null());
-                    self.deferred_nulls = 0;
+            self.add_multi_line_string_type(dim);
 
-                    self.mline_string_xyz
-                        .push_multi_line_string(Some(multi_line_string))?;
-                }
-                dim => {
-                    return Err(GeoArrowError::General(format!(
-                        "Unsupported dimension {dim:?}"
-                    )));
-                }
-            }
+            let child = &mut self.mline_strings[array_idx];
+            Self::flush_deferred_nulls(&mut self.deferred_nulls, child);
+            child.push_multi_line_string(Some(multi_line_string))?;
         } else {
             self.push_null();
         };
@@ -640,28 +547,14 @@ impl<'a> GeometryBuilder {
         value: Option<&impl MultiPolygonTrait<T = f64>>,
     ) -> Result<()> {
         if let Some(multi_polygon) = value {
-            self.add_multi_polygon_type(multi_polygon.dim().try_into().unwrap());
-            match multi_polygon.dim() {
-                Dimensions::Xy | Dimensions::Unknown(2) => {
-                    // Flush deferred nulls
-                    (0..self.deferred_nulls).for_each(|_| self.mpolygon_xy.push_null());
-                    self.deferred_nulls = 0;
+            let dim: Dimension = multi_polygon.dim().try_into().unwrap();
+            let array_idx = dim.order();
 
-                    self.mpolygon_xy.push_multi_polygon(Some(multi_polygon))?;
-                }
-                Dimensions::Xyz | Dimensions::Unknown(3) => {
-                    // Flush deferred nulls
-                    (0..self.deferred_nulls).for_each(|_| self.mpolygon_xyz.push_null());
-                    self.deferred_nulls = 0;
+            self.add_multi_polygon_type(dim);
 
-                    self.mpolygon_xyz.push_multi_polygon(Some(multi_polygon))?;
-                }
-                dim => {
-                    return Err(GeoArrowError::General(format!(
-                        "Unsupported dimension {dim:?}"
-                    )));
-                }
-            }
+            let child = &mut self.mpolygons[array_idx];
+            Self::flush_deferred_nulls(&mut self.deferred_nulls, child);
+            child.push_multi_polygon(Some(multi_polygon))?;
         } else {
             self.push_null();
         };
@@ -723,29 +616,14 @@ impl<'a> GeometryBuilder {
         value: Option<&impl GeometryCollectionTrait<T = f64>>,
     ) -> Result<()> {
         if let Some(gc) = value {
-            self.add_geometry_collection_type(gc.dim().try_into().unwrap());
+            let dim: Dimension = gc.dim().try_into().unwrap();
+            let array_idx = dim.order();
 
-            match gc.dim() {
-                Dimensions::Xy | Dimensions::Unknown(2) => {
-                    // Flush deferred nulls
-                    (0..self.deferred_nulls).for_each(|_| self.gc_xy.push_null());
-                    self.deferred_nulls = 0;
+            self.add_geometry_collection_type(dim);
 
-                    self.gc_xy.push_geometry_collection(Some(gc))?;
-                }
-                Dimensions::Xyz | Dimensions::Unknown(3) => {
-                    // Flush deferred nulls
-                    (0..self.deferred_nulls).for_each(|_| self.gc_xyz.push_null());
-                    self.deferred_nulls = 0;
-
-                    self.gc_xyz.push_geometry_collection(Some(gc))?;
-                }
-                dim => {
-                    return Err(GeoArrowError::General(format!(
-                        "Unsupported dimension {dim:?}"
-                    )));
-                }
-            }
+            let child = &mut self.gcs[array_idx];
+            Self::flush_deferred_nulls(&mut self.deferred_nulls, child);
+            child.push_geometry_collection(Some(gc))?;
         } else {
             self.push_null();
         };
@@ -822,6 +700,14 @@ impl<'a> GeometryBuilder {
         self.deferred_nulls += 1;
     }
 
+    /// Flush any deferred nulls to the desired array builder.
+    fn flush_deferred_nulls(deferred_nulls: &mut usize, array: &mut dyn GeometryArrayBuilder) {
+        if *deferred_nulls > 0 {
+            (0..*deferred_nulls).for_each(|_| array.push_null());
+            *deferred_nulls = 0;
+        }
+    }
+
     /// Extend this builder with the given geometries
     pub fn extend_from_iter(
         &mut self,
@@ -880,5 +766,9 @@ impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, GeometryType)> for GeometryBuilde
 impl GeometryArrayBuilder for GeometryBuilder {
     fn len(&self) -> usize {
         self.types.len()
+    }
+
+    fn push_null(&mut self) {
+        self.push_null();
     }
 }
