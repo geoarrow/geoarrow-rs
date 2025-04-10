@@ -243,13 +243,11 @@ impl GeoArrowArray for MultiPolygonArray {
         self.clone().into_array_ref()
     }
 
-    /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
     }
 
-    /// Returns the optional validity.
     #[inline]
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()

@@ -97,7 +97,6 @@ impl<O: OffsetSizeTrait> GeoArrowArray for WkbArray<O> {
     }
 
     fn into_array_ref(self) -> ArrayRef {
-        // Recreate a BinaryArray so that we can force it to have geoarrow.wkb extension type
         Arc::new(self.into_arrow())
     }
 
@@ -105,13 +104,11 @@ impl<O: OffsetSizeTrait> GeoArrowArray for WkbArray<O> {
         self.clone().into_array_ref()
     }
 
-    /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
         self.array.len()
     }
 
-    /// Returns the optional validity.
     fn nulls(&self) -> Option<&NullBuffer> {
         self.array.nulls()
     }

@@ -465,7 +465,6 @@ impl MixedGeometryArray {
         Arc::new(UnionArray::from(self))
     }
 
-    /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
         // Note that `type_ids` is sliced as usual, and thus always has the correct length.
