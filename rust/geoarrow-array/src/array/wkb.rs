@@ -118,9 +118,9 @@ impl<O: OffsetSizeTrait> GeoArrowArray for WkbArray<O> {
 
     fn data_type(&self) -> GeoArrowType {
         if O::IS_LARGE {
-            GeoArrowType::LargeWKB(self.data_type.clone())
+            GeoArrowType::LargeWkb(self.data_type.clone())
         } else {
-            GeoArrowType::WKB(self.data_type.clone())
+            GeoArrowType::Wkb(self.data_type.clone())
         }
     }
 

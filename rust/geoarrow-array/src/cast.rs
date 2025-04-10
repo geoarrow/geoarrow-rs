@@ -368,16 +368,16 @@ macro_rules! downcast_geoarrow_array {
             $crate::cast::__private::GeoArrowType::Rect(_) => {
                 $fn($crate::cast::AsGeoArrowArray::as_rect($array))
             }
-            $crate::cast::__private::GeoArrowType::WKB(_) => {
+            $crate::cast::__private::GeoArrowType::Wkb(_) => {
                 $fn($crate::cast::AsGeoArrowArray::as_wkb::<i32>($array))
             }
-            $crate::cast::__private::GeoArrowType::LargeWKB(_) => {
+            $crate::cast::__private::GeoArrowType::LargeWkb(_) => {
                 $fn($crate::cast::AsGeoArrowArray::as_wkb::<i64>($array))
             }
-            $crate::cast::__private::GeoArrowType::WKT(_) => {
+            $crate::cast::__private::GeoArrowType::Wkt(_) => {
                 $fn($crate::cast::AsGeoArrowArray::as_wkt::<i32>($array))
             }
-            $crate::cast::__private::GeoArrowType::LargeWKT(_) => {
+            $crate::cast::__private::GeoArrowType::LargeWkt(_) => {
                 $fn($crate::cast::AsGeoArrowArray::as_wkt::<i64>($array))
             }
         }

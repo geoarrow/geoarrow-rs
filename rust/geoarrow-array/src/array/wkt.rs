@@ -100,9 +100,9 @@ impl<O: OffsetSizeTrait> GeoArrowArray for WktArray<O> {
 
     fn data_type(&self) -> GeoArrowType {
         if O::IS_LARGE {
-            GeoArrowType::LargeWKT(self.data_type.clone())
+            GeoArrowType::LargeWkt(self.data_type.clone())
         } else {
-            GeoArrowType::WKT(self.data_type.clone())
+            GeoArrowType::Wkt(self.data_type.clone())
         }
     }
 
