@@ -371,19 +371,11 @@ impl<'a> GeometryBuilder {
 
     #[inline]
     fn add_point_type(&mut self, dim: Dimension) {
-        // let child =
-        self.offsets.push(self.point_xy.len().try_into().unwrap());
-        match dim {
-            Dimension::XY => {
-                self.offsets.push(self.point_xy.len().try_into().unwrap());
-                self.types.push(1)
-            }
-            Dimension::XYZ => {
-                self.offsets.push(self.point_xyz.len().try_into().unwrap());
-                self.types.push(11)
-            }
-            _ => todo!("Handle M and ZM dimensions"),
-        }
+        let child = &self.points[dim.order()];
+        self.offsets.push(child.len().try_into().unwrap());
+
+        let type_id = (dim.order() as i8 * 10) + 1;
+        self.types.push(type_id);
     }
 
     /// Add a new LineString to the end of this array.
@@ -456,19 +448,11 @@ impl<'a> GeometryBuilder {
 
     #[inline]
     fn add_line_string_type(&mut self, dim: Dimension) {
-        match dim {
-            Dimension::XY => {
-                self.offsets
-                    .push(self.line_string_xy.len().try_into().unwrap());
-                self.types.push(2)
-            }
-            Dimension::XYZ => {
-                self.offsets
-                    .push(self.line_string_xyz.len().try_into().unwrap());
-                self.types.push(12)
-            }
-            _ => todo!("Handle M and ZM dimensions"),
-        }
+        let child = &self.line_strings[dim.order()];
+        self.offsets.push(child.len().try_into().unwrap());
+
+        let type_id = (dim.order() as i8 * 10) + 2;
+        self.types.push(type_id);
     }
 
     /// Add a new Polygon to the end of this array.
@@ -538,18 +522,11 @@ impl<'a> GeometryBuilder {
 
     #[inline]
     fn add_polygon_type(&mut self, dim: Dimension) {
-        match dim {
-            Dimension::XY => {
-                self.offsets.push(self.polygon_xy.len().try_into().unwrap());
-                self.types.push(3)
-            }
-            Dimension::XYZ => {
-                self.offsets
-                    .push(self.polygon_xyz.len().try_into().unwrap());
-                self.types.push(13)
-            }
-            _ => todo!("Handle M and ZM dimensions"),
-        }
+        let child = &self.polygons[dim.order()];
+        self.offsets.push(child.len().try_into().unwrap());
+
+        let type_id = (dim.order() as i8 * 10) + 3;
+        self.types.push(type_id);
     }
 
     /// Add a new MultiPoint to the end of this array.
@@ -594,17 +571,11 @@ impl<'a> GeometryBuilder {
 
     #[inline]
     fn add_multi_point_type(&mut self, dim: Dimension) {
-        match dim {
-            Dimension::XY => {
-                self.offsets.push(self.mpoint_xy.len().try_into().unwrap());
-                self.types.push(4)
-            }
-            Dimension::XYZ => {
-                self.offsets.push(self.mpoint_xyz.len().try_into().unwrap());
-                self.types.push(14)
-            }
-            _ => todo!("Handle M and ZM dimensions"),
-        }
+        let child = &self.mpoints[dim.order()];
+        self.offsets.push(child.len().try_into().unwrap());
+
+        let type_id = (dim.order() as i8 * 10) + 4;
+        self.types.push(type_id);
     }
 
     /// Add a new MultiLineString to the end of this array.
@@ -651,19 +622,11 @@ impl<'a> GeometryBuilder {
 
     #[inline]
     fn add_multi_line_string_type(&mut self, dim: Dimension) {
-        match dim {
-            Dimension::XY => {
-                self.offsets
-                    .push(self.mline_string_xy.len().try_into().unwrap());
-                self.types.push(5)
-            }
-            Dimension::XYZ => {
-                self.offsets
-                    .push(self.mline_string_xyz.len().try_into().unwrap());
-                self.types.push(15)
-            }
-            _ => todo!("Handle M and ZM dimensions"),
-        }
+        let child = &self.mline_strings[dim.order()];
+        self.offsets.push(child.len().try_into().unwrap());
+
+        let type_id = (dim.order() as i8 * 10) + 5;
+        self.types.push(type_id);
     }
 
     /// Add a new MultiPolygon to the end of this array.
@@ -708,19 +671,11 @@ impl<'a> GeometryBuilder {
 
     #[inline]
     fn add_multi_polygon_type(&mut self, dim: Dimension) {
-        match dim {
-            Dimension::XY => {
-                self.offsets
-                    .push(self.mpolygon_xy.len().try_into().unwrap());
-                self.types.push(6)
-            }
-            Dimension::XYZ => {
-                self.offsets
-                    .push(self.mpolygon_xyz.len().try_into().unwrap());
-                self.types.push(16)
-            }
-            _ => todo!("Handle M and ZM dimensions"),
-        }
+        let child = &self.mpolygons[dim.order()];
+        self.offsets.push(child.len().try_into().unwrap());
+
+        let type_id = (dim.order() as i8 * 10) + 6;
+        self.types.push(type_id);
     }
 
     /// Add a new geometry to this builder
@@ -800,17 +755,11 @@ impl<'a> GeometryBuilder {
 
     #[inline]
     fn add_geometry_collection_type(&mut self, dim: Dimension) {
-        match dim {
-            Dimension::XY => {
-                self.offsets.push(self.gc_xy.len().try_into().unwrap());
-                self.types.push(7)
-            }
-            Dimension::XYZ => {
-                self.offsets.push(self.gc_xyz.len().try_into().unwrap());
-                self.types.push(17)
-            }
-            _ => todo!("Handle M and ZM dimensions"),
-        }
+        let child = &self.gcs[dim.order()];
+        self.offsets.push(child.len().try_into().unwrap());
+
+        let type_id = (dim.order() as i8 * 10) + 7;
+        self.types.push(type_id);
     }
 
     /// Push a null to this builder.
