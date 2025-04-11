@@ -262,3 +262,67 @@ impl PartialEq for PointArray {
         true
     }
 }
+
+#[cfg(test)]
+mod test {
+    use geo_traits::to_geo::ToGeoPoint;
+    use geoarrow_schema::{CoordType, Dimension};
+
+    use crate::builder::PointBuilder;
+    use crate::test::point;
+
+    use super::*;
+
+    #[test]
+    fn geo_round_trip() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            let geoms = [
+                Some(point::p0()),
+                Some(point::p1()),
+                None,
+                Some(point::p2()),
+            ];
+            let typ = PointType::new(coord_type, Dimension::XY, Default::default());
+            let geo_arr =
+                PointBuilder::from_nullable_points(geoms.iter().map(|x| x.as_ref()), typ).finish();
+
+            for (i, g) in geo_arr.iter().enumerate() {
+                assert_eq!(geoms[i], g.transpose().unwrap().map(|g| g.to_point()));
+            }
+
+            // Test sliced
+            for (i, g) in geo_arr.slice(2, 2).iter().enumerate() {
+                assert_eq!(geoms[i + 2], g.transpose().unwrap().map(|g| g.to_point()));
+            }
+        }
+    }
+
+    #[test]
+    fn try_from_arrow() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            let geo_arr = point::point_array(coord_type);
+
+            let point_type = geo_arr.ext_type().clone();
+            let field = point_type.to_field("geometry", true);
+
+            let arrow_arr = geo_arr.to_array_ref();
+
+            let geo_arr2: PointArray = (arrow_arr.as_ref(), point_type).try_into().unwrap();
+            let geo_arr3: PointArray = (arrow_arr.as_ref(), &field).try_into().unwrap();
+
+            assert_eq!(geo_arr, geo_arr2);
+            assert_eq!(geo_arr, geo_arr3);
+        }
+    }
+
+    #[test]
+    fn partial_eq() {
+        let arr1 = point::point_array(CoordType::Interleaved);
+        let arr2 = point::point_array(CoordType::Separated);
+        assert_eq!(arr1, arr1);
+        assert_eq!(arr2, arr2);
+        assert_eq!(arr1, arr2);
+
+        assert_ne!(arr1, arr2.slice(0, 2));
+    }
+}

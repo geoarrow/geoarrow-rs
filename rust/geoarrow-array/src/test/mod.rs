@@ -7,3 +7,4 @@ pub mod multipolygon;
 pub mod point;
 pub mod polygon;
 pub mod properties;
+pub mod rect;

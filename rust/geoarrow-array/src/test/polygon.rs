@@ -32,8 +32,8 @@ pub(crate) fn p1() -> Polygon {
     )
 }
 
-pub(crate) fn p_array() -> PolygonArray {
-    let geoms = vec![p0(), p1()];
-    let typ = PolygonType::new(CoordType::Interleaved, Dimension::XY, Default::default());
-    PolygonBuilder::from_polygons(&geoms, typ).finish()
+pub(crate) fn p_array(coord_type: CoordType) -> PolygonArray {
+    let geoms = vec![Some(p0()), None, Some(p1()), None];
+    let typ = PolygonType::new(coord_type, Dimension::XY, Default::default());
+    PolygonBuilder::from_nullable_polygons(&geoms, typ).finish()
 }

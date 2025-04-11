@@ -18,9 +18,8 @@ pub(crate) fn ls1() -> LineString {
     ]
 }
 
-#[allow(dead_code)]
-pub(crate) fn ls_array() -> LineStringArray {
-    let geoms = vec![ls0(), ls1()];
-    let typ = LineStringType::new(CoordType::Interleaved, Dimension::XY, Default::default());
-    LineStringBuilder::from_line_strings(&geoms, typ).finish()
+pub(crate) fn ls_array(coord_type: CoordType) -> LineStringArray {
+    let geoms = vec![Some(ls0()), None, Some(ls1()), None];
+    let typ = LineStringType::new(coord_type, Dimension::XY, Default::default());
+    LineStringBuilder::from_nullable_line_strings(&geoms, typ).finish()
 }

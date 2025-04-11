@@ -1,4 +1,4 @@
-// Specialized implementations on each WKT concrete type.
+// Specialized implementations of GeometryTrait on each scalar type.
 
 use geo_traits::{
     GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,

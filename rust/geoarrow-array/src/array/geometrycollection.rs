@@ -239,18 +239,8 @@ impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, GeometryCollectionType)>
 
 impl PartialEq for GeometryCollectionArray {
     fn eq(&self, other: &Self) -> bool {
-        if self.validity != other.validity {
-            return false;
-        }
-
-        if !offset_buffer_eq(&self.geom_offsets, &other.geom_offsets) {
-            return false;
-        }
-
-        if self.array != other.array {
-            return false;
-        }
-
-        true
+        self.validity == other.validity
+            && offset_buffer_eq(&self.geom_offsets, &other.geom_offsets)
+            && self.array != other.array
     }
 }

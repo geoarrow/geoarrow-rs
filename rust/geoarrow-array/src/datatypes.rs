@@ -384,12 +384,12 @@ mod test {
 
     #[test]
     fn native_type_round_trip() {
-        let point_array = crate::test::point::point_array();
+        let point_array = crate::test::point::point_array(CoordType::Interleaved);
         let field = point_array.data_type.to_field("geometry", true);
         let data_type: GeoArrowType = (&field).try_into().unwrap();
         assert_eq!(point_array.data_type(), data_type);
 
-        let ml_array = crate::test::multilinestring::ml_array();
+        let ml_array = crate::test::multilinestring::ml_array(CoordType::Interleaved);
         let field = ml_array.data_type.to_field("geometry", true);
         let data_type: GeoArrowType = (&field).try_into().unwrap();
         assert_eq!(ml_array.data_type(), data_type);

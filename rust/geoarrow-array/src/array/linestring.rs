@@ -285,84 +285,68 @@ impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, LineStringType)> for LineStringAr
 
 impl PartialEq for LineStringArray {
     fn eq(&self, other: &Self) -> bool {
-        if self.validity != other.validity {
-            return false;
-        }
-
-        if !offset_buffer_eq(&self.geom_offsets, &other.geom_offsets) {
-            return false;
-        }
-
-        if self.coords != other.coords {
-            return false;
-        }
-
-        true
+        self.validity == other.validity
+            && offset_buffer_eq(&self.geom_offsets, &other.geom_offsets)
+            && self.coords != other.coords
     }
 }
 
-// #[cfg(test)]
-// mod test {
-//     use crate::test::linestring::{ls0, ls1};
+#[cfg(test)]
+mod test {
+    use geo_traits::to_geo::ToGeoLineString;
+    use geoarrow_schema::{CoordType, Dimension};
 
-//     use super::*;
+    use crate::test::linestring;
 
-//     // #[test]
-//     // fn geo_roundtrip_accurate() {
-//     //     let arr: LineStringArray = (vec![ls0(), ls1()].as_slice(), Dimension::XY).into();
-//     //     assert_eq!(arr.value_as_geo(0), ls0());
-//     //     assert_eq!(arr.value_as_geo(1), ls1());
-//     // }
+    use super::*;
 
-//     // #[test]
-//     // fn geo_roundtrip_accurate_option_vec() {
-//     //     let arr: LineStringArray = (vec![Some(ls0()), Some(ls1()), None], Dimension::XY).into();
-//     //     assert_eq!(arr.get_as_geo(0), Some(ls0()));
-//     //     assert_eq!(arr.get_as_geo(1), Some(ls1()));
-//     //     assert_eq!(arr.get_as_geo(2), None);
-//     // }
+    #[test]
+    fn geo_round_trip() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            let geoms = [Some(linestring::ls0()), None, Some(linestring::ls1()), None];
+            let typ = LineStringType::new(coord_type, Dimension::XY, Default::default());
+            let geo_arr = LineStringBuilder::from_nullable_line_strings(&geoms, typ).finish();
 
-//     // #[test]
-//     // fn rstar_integration() {
-//     //     let arr: LineStringArray = (vec![ls0(), ls1()].as_slice(), Dimension::XY).into();
-//     //     let tree = arr.rstar_tree();
+            for (i, g) in geo_arr.iter().enumerate() {
+                assert_eq!(geoms[i], g.transpose().unwrap().map(|g| g.to_line_string()));
+            }
 
-//     //     let search_box = AABB::from_corners([3.5, 5.5], [4.5, 6.5]);
-//     //     let results: Vec<&crate::scalar::LineString> =
-//     //         tree.locate_in_envelope_intersecting(&search_box).collect();
+            // Test sliced
+            for (i, g) in geo_arr.slice(2, 2).iter().enumerate() {
+                assert_eq!(
+                    geoms[i + 2],
+                    g.transpose().unwrap().map(|g| g.to_line_string())
+                );
+            }
+        }
+    }
 
-//     //     assert_eq!(results.len(), 1);
-//     //     assert_eq!(
-//     //         results[0].geom_index, 1,
-//     //         "The second element in the LineStringArray should be found"
-//     //     );
-//     // }
+    #[test]
+    fn try_from_arrow() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            let geo_arr = linestring::ls_array(coord_type);
 
-//     #[test]
-//     fn slice() {
-//         let arr: LineStringArray = (vec![ls0(), ls1()].as_slice(), Dimension::XY).into();
-//         let sliced = arr.slice(1, 1);
-//         assert_eq!(sliced.len(), 1);
-//         assert_eq!(sliced.get_as_geo(0), Some(ls1()));
-//     }
+            let ext_type = geo_arr.ext_type().clone();
+            let field = ext_type.to_field("geometry", true);
 
-//     // #[test]
-//     // fn parse_wkb_geoarrow_interleaved_example() {
-//     //     let linestring_arr = example_linestring_interleaved();
+            let arrow_arr = geo_arr.to_array_ref();
 
-//     //     let wkb_arr = example_linestring_wkb();
-//     //     let parsed_linestring_arr: LineStringArray = (wkb_arr, Dimension::XY).try_into().unwrap();
+            let geo_arr2: LineStringArray = (arrow_arr.as_ref(), ext_type).try_into().unwrap();
+            let geo_arr3: LineStringArray = (arrow_arr.as_ref(), &field).try_into().unwrap();
 
-//     //     assert_eq!(linestring_arr, parsed_linestring_arr);
-//     // }
+            assert_eq!(geo_arr, geo_arr2);
+            assert_eq!(geo_arr, geo_arr3);
+        }
+    }
 
-//     // #[test]
-//     // fn parse_wkb_geoarrow_separated_example() {
-//     //     let linestring_arr = example_linestring_separated().into_coord_type(CoordType::Interleaved);
+    #[test]
+    fn partial_eq() {
+        let arr1 = linestring::ls_array(CoordType::Interleaved);
+        let arr2 = linestring::ls_array(CoordType::Separated);
+        assert_eq!(arr1, arr1);
+        assert_eq!(arr2, arr2);
+        assert_eq!(arr1, arr2);
 
-//     //     let wkb_arr = example_linestring_wkb();
-//     //     let parsed_linestring_arr: LineStringArray = (wkb_arr, Dimension::XY).try_into().unwrap();
-
-//     //     assert_eq!(linestring_arr, parsed_linestring_arr);
-//     // }
-// }
+        assert_ne!(arr1, arr2.slice(0, 2));
+    }
+}
