@@ -241,6 +241,6 @@ impl PartialEq for GeometryCollectionArray {
     fn eq(&self, other: &Self) -> bool {
         self.validity == other.validity
             && offset_buffer_eq(&self.geom_offsets, &other.geom_offsets)
-            && self.array != other.array
+            && self.array == other.array
     }
 }
