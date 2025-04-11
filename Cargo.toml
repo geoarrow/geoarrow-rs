@@ -21,6 +21,9 @@ arrow-schema = "54.3.1"
 geo = "0.30.0"
 geo-traits = "0.2.0"
 geo-types = "0.7.16"
+geoarrow-array = { path = "rust/geoarrow-array" }
+geoarrow-schema = { path = "rust/geoarrow-schema" }
+geozero = "0.14"
 num-traits = "0.2.19"
 rstar = "0.12.2"
 serde = "1"
