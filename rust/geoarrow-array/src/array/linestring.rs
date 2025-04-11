@@ -287,7 +287,7 @@ impl PartialEq for LineStringArray {
     fn eq(&self, other: &Self) -> bool {
         self.validity == other.validity
             && offset_buffer_eq(&self.geom_offsets, &other.geom_offsets)
-            && self.coords != other.coords
+            && self.coords == other.coords
     }
 }
 
