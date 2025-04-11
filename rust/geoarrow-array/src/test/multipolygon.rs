@@ -48,8 +48,8 @@ pub(crate) fn mp1() -> MultiPolygon {
     ])
 }
 
-pub(crate) fn mp_array() -> MultiPolygonArray {
-    let geoms = vec![mp0(), mp1()];
-    let typ = MultiPolygonType::new(CoordType::Interleaved, Dimension::XY, Default::default());
-    MultiPolygonBuilder::from_multi_polygons(&geoms, typ).finish()
+pub(crate) fn mp_array(coord_type: CoordType) -> MultiPolygonArray {
+    let geoms = vec![Some(mp0()), None, Some(mp1()), None];
+    let typ = MultiPolygonType::new(coord_type, Dimension::XY, Default::default());
+    MultiPolygonBuilder::from_nullable_multi_polygons(&geoms, typ).finish()
 }

@@ -26,8 +26,8 @@ pub(crate) fn mp1() -> MultiPoint {
     ])
 }
 
-pub(crate) fn mp_array() -> MultiPointArray {
-    let geoms = vec![mp0(), mp1()];
-    let typ = MultiPointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
-    MultiPointBuilder::from_multi_points(&geoms, typ).finish()
+pub(crate) fn mp_array(coord_type: CoordType) -> MultiPointArray {
+    let geoms = vec![Some(mp0()), None, Some(mp1()), None];
+    let typ = MultiPointType::new(coord_type, Dimension::XY, Default::default());
+    MultiPointBuilder::from_nullable_multi_points(&geoms, typ).finish()
 }

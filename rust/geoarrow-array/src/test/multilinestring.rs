@@ -30,8 +30,8 @@ pub(crate) fn ml1() -> MultiLineString {
     ])
 }
 
-pub(crate) fn ml_array() -> MultiLineStringArray {
-    let geoms = vec![ml0(), ml1()];
-    let typ = MultiLineStringType::new(CoordType::Interleaved, Dimension::XY, Default::default());
-    MultiLineStringBuilder::from_multi_line_strings(&geoms, typ).finish()
+pub(crate) fn ml_array(coord_type: CoordType) -> MultiLineStringArray {
+    let geoms = vec![Some(ml0()), None, Some(ml1()), None];
+    let typ = MultiLineStringType::new(coord_type, Dimension::XY, Default::default());
+    MultiLineStringBuilder::from_nullable_multi_line_strings(&geoms, typ).finish()
 }

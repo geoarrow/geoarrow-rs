@@ -305,18 +305,68 @@ impl From<PointArray> for MultiPointArray {
 
 impl PartialEq for MultiPointArray {
     fn eq(&self, other: &Self) -> bool {
-        if self.validity != other.validity {
-            return false;
-        }
+        self.validity == other.validity
+            && offset_buffer_eq(&self.geom_offsets, &other.geom_offsets)
+            && self.coords == other.coords
+    }
+}
 
-        if !offset_buffer_eq(&self.geom_offsets, &other.geom_offsets) {
-            return false;
-        }
+#[cfg(test)]
+mod test {
+    use geo_traits::to_geo::ToGeoMultiPoint;
+    use geoarrow_schema::{CoordType, Dimension};
 
-        if self.coords != other.coords {
-            return false;
-        }
+    use crate::test::multipoint;
 
-        true
+    use super::*;
+
+    #[test]
+    fn geo_round_trip() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            let geoms = [Some(multipoint::mp0()), None, Some(multipoint::mp1()), None];
+            let typ = MultiPointType::new(coord_type, Dimension::XY, Default::default());
+            let geo_arr = MultiPointBuilder::from_nullable_multi_points(&geoms, typ).finish();
+
+            for (i, g) in geo_arr.iter().enumerate() {
+                assert_eq!(geoms[i], g.transpose().unwrap().map(|g| g.to_multi_point()));
+            }
+
+            // Test sliced
+            for (i, g) in geo_arr.slice(2, 2).iter().enumerate() {
+                assert_eq!(
+                    geoms[i + 2],
+                    g.transpose().unwrap().map(|g| g.to_multi_point())
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn try_from_arrow() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            let geo_arr = multipoint::mp_array(coord_type);
+
+            let ext_type = geo_arr.ext_type().clone();
+            let field = ext_type.to_field("geometry", true);
+
+            let arrow_arr = geo_arr.to_array_ref();
+
+            let geo_arr2: MultiPointArray = (arrow_arr.as_ref(), ext_type).try_into().unwrap();
+            let geo_arr3: MultiPointArray = (arrow_arr.as_ref(), &field).try_into().unwrap();
+
+            assert_eq!(geo_arr, geo_arr2);
+            assert_eq!(geo_arr, geo_arr3);
+        }
+    }
+
+    #[test]
+    fn partial_eq() {
+        let arr1 = multipoint::mp_array(CoordType::Interleaved);
+        let arr2 = multipoint::mp_array(CoordType::Separated);
+        assert_eq!(arr1, arr1);
+        assert_eq!(arr2, arr2);
+        assert_eq!(arr1, arr2);
+
+        assert_ne!(arr1, arr2.slice(0, 2));
     }
 }

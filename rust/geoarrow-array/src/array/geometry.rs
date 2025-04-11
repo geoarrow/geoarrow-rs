@@ -53,7 +53,7 @@ use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 // - 35: MultiLineString ZM
 // - 36: MultiPolygon ZM
 // - 37: GeometryCollection ZM
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct GeometryArray {
     pub(crate) data_type: GeometryType,
 
@@ -822,6 +822,20 @@ impl DimensionIndex for geo_traits::Dimensions {
     }
 }
 
+impl PartialEq for GeometryArray {
+    fn eq(&self, other: &Self) -> bool {
+        self.type_ids == other.type_ids
+            && self.offsets == other.offsets
+            && self.points == other.points
+            && self.line_strings == other.line_strings
+            && self.polygons == other.polygons
+            && self.mpoints == other.mpoints
+            && self.mline_strings == other.mline_strings
+            && self.mpolygons == other.mpolygons
+            && self.gcs == other.gcs
+    }
+}
+
 #[cfg(test)]
 mod test {
     use geo_traits::to_geo::ToGeoGeometry;
@@ -847,36 +861,55 @@ mod test {
         ]
     }
 
+    fn geom_array(coord_type: CoordType) -> GeometryArray {
+        let geoms = geoms();
+        let typ = GeometryType::new(coord_type, Default::default());
+        GeometryBuilder::from_geometries(&geoms, typ, false)
+            .unwrap()
+            .finish()
+    }
+
     #[test]
     fn test_2d() {
-        let geoms = geoms();
-        let typ = GeometryType::new(CoordType::Interleaved, Default::default());
-        let geometry_array = GeometryBuilder::from_geometries(&geoms, typ, false)
-            .unwrap()
-            .finish();
-        let geoms_again = geometry_array
-            .iter_values()
-            .map(|g| g.unwrap().to_geometry())
-            .collect::<Vec<_>>();
-        assert_eq!(geoms, geoms_again);
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            let geoms = geoms();
+            let geometry_array = geom_array(coord_type);
+            let geoms_again = geometry_array
+                .iter_values()
+                .map(|g| g.unwrap().to_geometry())
+                .collect::<Vec<_>>();
+            assert_eq!(geoms, geoms_again);
+        }
     }
 
     #[test]
     fn test_2d_roundtrip_arrow() {
-        let geoms = geoms();
-        let typ = GeometryType::new(CoordType::Interleaved, Default::default());
-        let geometry_array = GeometryBuilder::from_geometries(&geoms, typ, false)
-            .unwrap()
-            .finish();
-        let field = geometry_array.data_type.to_field("geometry", true);
-        let union_array = geometry_array.into_arrow();
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            let geoms = geoms();
+            let geometry_array = geom_array(coord_type);
+            let field = geometry_array.data_type.to_field("geometry", true);
+            let union_array = geometry_array.into_arrow();
 
-        let geometry_array_again = GeometryArray::try_from((&union_array as _, &field)).unwrap();
-        let geoms_again = geometry_array_again
-            .iter_values()
-            .map(|g| g.unwrap().to_geometry())
-            .collect::<Vec<_>>();
-        assert_eq!(geoms, geoms_again);
+            let geometry_array_again =
+                GeometryArray::try_from((&union_array as _, &field)).unwrap();
+            let geoms_again = geometry_array_again
+                .iter_values()
+                .map(|g| g.unwrap().to_geometry())
+                .collect::<Vec<_>>();
+            assert_eq!(geoms, geoms_again);
+        }
+    }
+
+    #[test]
+    fn partial_eq() {
+        let arr1 = geom_array(CoordType::Interleaved);
+        let arr2 = geom_array(CoordType::Separated);
+
+        assert_eq!(arr1, arr1);
+        assert_eq!(arr2, arr2);
+        assert_eq!(arr1, arr2);
+
+        assert_ne!(arr1, arr2.slice(0, 2));
     }
 }
 

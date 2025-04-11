@@ -58,7 +58,7 @@ use crate::trait_::GeoArrowArray;
 /// - 35: MultiLineString ZM
 /// - 36: MultiPolygon ZM
 /// - 37: GeometryCollection ZM
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct MixedGeometryArray {
     // We store the coord type and dimension separately because there's no NativeType::Mixed
     // variant
@@ -681,5 +681,21 @@ impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, Dimension)> for MixedGeometryArra
     fn try_from(value: (WkbArray<O>, Dimension)) -> Result<Self> {
         let mut_arr: MixedGeometryBuilder = value.try_into()?;
         Ok(mut_arr.finish())
+    }
+}
+
+impl PartialEq for MixedGeometryArray {
+    fn eq(&self, other: &Self) -> bool {
+        self.dim == other.dim
+            && self.metadata == other.metadata
+            && self.type_ids == other.type_ids
+            && self.offsets == other.offsets
+            && self.points == other.points
+            && self.line_strings == other.line_strings
+            && self.polygons == other.polygons
+            && self.multi_points == other.multi_points
+            && self.multi_line_strings == other.multi_line_strings
+            && self.multi_polygons == other.multi_polygons
+            && self.slice_offset == other.slice_offset
     }
 }
