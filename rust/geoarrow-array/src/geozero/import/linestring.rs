@@ -9,7 +9,9 @@ use crate::geozero::import::util::{from_xy, from_xyzm};
 /// GeoZero trait to convert to GeoArrow LineStringArray.
 pub trait ToLineStringArray {
     /// Convert to GeoArrow LineStringArray
-    fn to_line_string_array(&self, typ: LineStringType) -> geozero::error::Result<LineStringArray>;
+    fn to_line_string_array(&self, typ: LineStringType) -> geozero::error::Result<LineStringArray> {
+        Ok(self.to_line_string_builder(typ)?.finish())
+    }
 
     /// Convert to a GeoArrow LineStringBuilder
     fn to_line_string_builder(
@@ -19,10 +21,6 @@ pub trait ToLineStringArray {
 }
 
 impl<T: GeozeroGeometry> ToLineStringArray for T {
-    fn to_line_string_array(&self, typ: LineStringType) -> geozero::error::Result<LineStringArray> {
-        Ok(self.to_line_string_builder(typ)?.finish())
-    }
-
     fn to_line_string_builder(
         &self,
         typ: LineStringType,

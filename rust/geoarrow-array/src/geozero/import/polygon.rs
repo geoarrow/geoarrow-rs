@@ -9,17 +9,15 @@ use crate::geozero::import::util::{from_xy, from_xyzm};
 /// GeoZero trait to convert to GeoArrow PolygonArray.
 pub trait ToPolygonArray {
     /// Convert to GeoArrow PolygonArray
-    fn to_polygon_array(&self, typ: PolygonType) -> geozero::error::Result<PolygonArray>;
+    fn to_polygon_array(&self, typ: PolygonType) -> geozero::error::Result<PolygonArray> {
+        Ok(self.to_polygon_builder(typ)?.finish())
+    }
 
     /// Convert to a GeoArrow PolygonBuilder
     fn to_polygon_builder(&self, typ: PolygonType) -> geozero::error::Result<PolygonBuilder>;
 }
 
 impl<T: GeozeroGeometry> ToPolygonArray for T {
-    fn to_polygon_array(&self, typ: PolygonType) -> geozero::error::Result<PolygonArray> {
-        Ok(self.to_polygon_builder(typ)?.finish())
-    }
-
     fn to_polygon_builder(&self, typ: PolygonType) -> geozero::error::Result<PolygonBuilder> {
         let mut mutable_array = PolygonBuilder::new(typ);
         self.process_geom(&mut mutable_array)?;

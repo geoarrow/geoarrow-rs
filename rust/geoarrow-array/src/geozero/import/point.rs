@@ -8,17 +8,15 @@ use crate::geozero::import::util::{from_xy, from_xyzm};
 /// GeoZero trait to convert to GeoArrow PointArray.
 pub trait ToPointArray {
     /// Convert to GeoArrow PointArray
-    fn to_point_array(&self, typ: PointType) -> geozero::error::Result<PointArray>;
+    fn to_point_array(&self, typ: PointType) -> geozero::error::Result<PointArray> {
+        Ok(self.to_point_builder(typ)?.finish())
+    }
 
     /// Convert to a GeoArrow PointBuilder
     fn to_point_builder(&self, typ: PointType) -> geozero::error::Result<PointBuilder>;
 }
 
 impl<T: GeozeroGeometry> ToPointArray for T {
-    fn to_point_array(&self, typ: PointType) -> geozero::error::Result<PointArray> {
-        Ok(self.to_point_builder(typ)?.finish())
-    }
-
     fn to_point_builder(&self, typ: PointType) -> geozero::error::Result<PointBuilder> {
         let mut mutable_point_array = PointBuilder::new(typ);
         self.process_geom(&mut mutable_point_array)?;
