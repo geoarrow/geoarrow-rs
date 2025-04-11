@@ -395,4 +395,8 @@ impl GeometryArrayBuilder for MultiPolygonBuilder {
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
     }
+
+    fn push_null(&mut self) {
+        self.push_null();
+    }
 }

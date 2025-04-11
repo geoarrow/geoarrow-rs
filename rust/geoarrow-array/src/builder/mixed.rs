@@ -541,4 +541,8 @@ impl GeometryArrayBuilder for MixedGeometryBuilder {
     fn len(&self) -> usize {
         self.types.len()
     }
+
+    fn push_null(&mut self) {
+        self.push_null();
+    }
 }

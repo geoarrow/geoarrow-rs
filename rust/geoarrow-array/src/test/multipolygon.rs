@@ -1,4 +1,4 @@
-use geo::{MultiPolygon, polygon};
+use geo_types::{MultiPolygon, polygon};
 
 use crate::array::MultiPolygonArray;
 use crate::builder::MultiPolygonBuilder;

@@ -238,4 +238,8 @@ impl GeometryArrayBuilder for PointBuilder {
     fn len(&self) -> usize {
         self.coords.len()
     }
+
+    fn push_null(&mut self) {
+        self.push_null();
+    }
 }

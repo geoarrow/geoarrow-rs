@@ -1,4 +1,4 @@
-use geo::{LineString, line_string};
+use geo_types::{LineString, line_string};
 use geoarrow_schema::{CoordType, Dimension, LineStringType};
 
 use crate::array::LineStringArray;

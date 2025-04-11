@@ -17,6 +17,7 @@ mod wkb;
 mod wkt;
 
 pub use coord::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
+pub(crate) use geometry::DimensionIndex;
 pub use geometry::GeometryArray;
 pub use geometrycollection::GeometryCollectionArray;
 pub use linestring::LineStringArray;
