@@ -40,14 +40,14 @@ rayon = ["dep:rayon"]
 
 
 [dependencies]
-arrow = { version = "54.3.1", features = ["ffi"] }
-arrow-array = { version = "54.3.1", features = ["chrono-tz"] }
-arrow-buffer = "54.3.1"
-arrow-cast = { version = "54.3.1" }
-arrow-csv = { version = "54.3.1", optional = true }
-arrow-data = "54.3.1"
-arrow-ipc = "54.3.1"
-arrow-schema = "54.3.1"
+arrow = { version = "55", features = ["ffi"] }
+arrow-array = { version = "55", features = ["chrono-tz"] }
+arrow-buffer = "55"
+arrow-cast = { version = "55" }
+arrow-csv = { version = "55", optional = true }
+arrow-data = "55"
+arrow-ipc = "55"
+arrow-schema = "55"
 async-stream = { version = "0.3", optional = true }
 async-trait = { version = "0.1", optional = true }
 bytes = { version = "1.5.0", optional = true }
@@ -69,7 +69,7 @@ indexmap = { version = "2" }
 lexical-core = { version = "0.8.5" }
 num-traits = "0.2.19"
 object_store = { version = "0.11", optional = true }
-parquet = { version = "54.1", optional = true, default-features = false, features = [
+parquet = { version = "55", optional = true, default-features = false, features = [
   "arrow",
 ] }
 phf = { version = "0.11", features = ["macros"] }
