@@ -19,7 +19,7 @@ use geoarrow::io::parquet::{
 };
 use geoarrow::table::Table;
 use geoarrow_schema::CoordType;
-use object_store::{ObjectMeta, ObjectStore};
+use object_store::ObjectStore;
 use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::ParquetObjectReader;
 use pyo3::exceptions::PyValueError;
@@ -56,8 +56,7 @@ async fn read_parquet_async_inner(
     async_reader: AsyncFileReader,
     batch_size: Option<usize>,
 ) -> PyGeoArrowResult<Arro3Table> {
-    let object_meta = async_reader.store.head(&async_reader.path).await?;
-    let reader = ParquetObjectReader::new(async_reader.store, object_meta);
+    let reader = ParquetObjectReader::new(async_reader.store, async_reader.path);
 
     let mut geo_options = GeoParquetReaderOptions::default();
 
@@ -81,7 +80,7 @@ async fn read_parquet_async_inner(
 /// Reader interface for a single Parquet file.
 #[pyclass(module = "geoarrow.rust.io", frozen)]
 pub struct ParquetFile {
-    object_meta: object_store::ObjectMeta,
+    path: object_store::path::Path,
     geoparquet_meta: GeoParquetReaderMetadata,
     store: Arc<dyn ObjectStore>,
 }
@@ -94,21 +93,17 @@ impl ParquetFile {
         let runtime = get_runtime(py)?;
         let store = store.into_dyn();
         let cloned_store = store.clone();
-        let store_ref = store.as_ref();
-        let (object_meta, geoparquet_meta) = runtime.block_on(async move {
-            let object_meta = store_ref
-                .head(&path.into())
-                .await
-                .map_err(GeoArrowError::ObjectStoreError)?;
-            let mut reader = ParquetObjectReader::new(cloned_store.clone(), object_meta.clone());
+        let (path, geoparquet_meta) = runtime.block_on(async move {
+            let path: object_store::path::Path = path.into();
+            let mut reader = ParquetObjectReader::new(cloned_store.clone(), path.clone());
             let arrow_meta = ArrowReaderMetadata::load_async(&mut reader, Default::default())
                 .await
                 .map_err(GeoArrowError::ParquetError)?;
             let geoparquet_meta = GeoParquetReaderMetadata::new(arrow_meta);
-            Ok::<_, PyGeoArrowError>((object_meta, geoparquet_meta))
+            Ok::<_, PyGeoArrowError>((path, geoparquet_meta))
         })?;
         Ok(Self {
-            object_meta,
+            path,
             geoparquet_meta,
             store,
         })
@@ -196,7 +191,7 @@ impl ParquetFile {
         bbox: Option<[f64; 4]>,
         bbox_paths: Option<PyGeoParquetBboxCovering>,
     ) -> PyGeoArrowResult<PyObject> {
-        let reader = ParquetObjectReader::new(self.store.clone(), self.object_meta.clone());
+        let reader = ParquetObjectReader::new(self.store.clone(), self.path.clone());
         let options = create_options(batch_size, limit, offset, bbox, bbox_paths)?;
         let stream = GeoParquetRecordBatchStreamBuilder::new_with_metadata_and_options(
             reader,
@@ -225,7 +220,7 @@ impl ParquetFile {
         bbox_paths: Option<PyGeoParquetBboxCovering>,
     ) -> PyGeoArrowResult<Arro3Table> {
         let runtime = get_runtime(py)?;
-        let reader = ParquetObjectReader::new(self.store.clone(), self.object_meta.clone());
+        let reader = ParquetObjectReader::new(self.store.clone(), self.path.clone());
         let options = create_options(batch_size, limit, offset, bbox, bbox_paths)?;
         let stream = GeoParquetRecordBatchStreamBuilder::new_with_metadata_and_options(
             reader,
@@ -296,15 +291,9 @@ async fn fetch_arrow_metadata_objects(
     store: Arc<dyn ObjectStore>,
 ) -> Result<HashMap<String, ArrowReaderMetadata>, GeoArrowError> {
     let paths: Vec<object_store::path::Path> = paths.into_iter().map(|path| path.into()).collect();
-    let object_meta_futures = paths.iter().map(|path| store.head(path));
-    let object_metas = futures::future::join_all(object_meta_futures)
-        .await
-        .into_iter()
-        .collect::<Result<Vec<_>, object_store::Error>>()
-        .map_err(GeoArrowError::ObjectStoreError)?;
-    let mut readers = object_metas
-        .into_iter()
-        .map(|meta| ParquetObjectReader::new(store.clone(), meta))
+    let mut readers = paths
+        .iter()
+        .map(|path| ParquetObjectReader::new(store.clone(), path.clone()))
         .collect::<Vec<_>>();
     let parquet_meta_futures = readers
         .iter_mut()
@@ -339,18 +328,7 @@ impl ParquetDataset {
     ) -> Result<Vec<GeoParquetRecordBatchStream<ParquetObjectReader>>, GeoArrowError> {
         self.meta
             .to_stream_builders(
-                |path| {
-                    let object_meta = ObjectMeta {
-                        location: path.into(),
-                        last_modified: Default::default(),
-                        // NOTE: Usually we'd need to know the file size of each object, but since
-                        // we already have the Parquet metadata, this should be ok
-                        size: 0,
-                        e_tag: None,
-                        version: None,
-                    };
-                    ParquetObjectReader::new(self.store.clone(), object_meta)
-                },
+                |path| ParquetObjectReader::new(self.store.clone(), path.into()),
                 geo_options,
             )
             .into_iter()
