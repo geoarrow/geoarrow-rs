@@ -131,10 +131,8 @@ impl AnyBuilder {
         use AnyBuilder::*;
 
         // Short circuit check for JSON type
-        if let Some(ext_val) = field.metadata().get(EXTENSION_TYPE_NAME_KEY) {
-            if ext_val.as_str() == "arrow.json" {
-                return Json(StringBuilder::with_capacity(capacity, 0));
-            }
+        if let Ok(_ext) = field.try_extension_type::<arrow_schema::extension::Json>() {
+            return Json(StringBuilder::with_capacity(capacity, 0));
         }
 
         match field.data_type() {
