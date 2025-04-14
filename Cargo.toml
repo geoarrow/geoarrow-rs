@@ -2,6 +2,7 @@
 members = [
     "rust/geoarrow",
     "rust/geoarrow-array",
+    "rust/geoarrow-geojson",
     "rust/geoarrow-schema",
     # Comment out until datafusion 47 release so that the workspace can upgrade
     # to arrow 55
@@ -23,11 +24,13 @@ arrow-cast = "55"
 arrow-csv = "55"
 arrow-data = "55"
 arrow-ipc = "55"
+arrow-json = "55"
 arrow-schema = "55"
 geo = "0.30.0"
 geo-traits = "0.2.0"
 geo-types = "0.7.16"
 geoarrow-array = { path = "rust/geoarrow-array" }
+geoarrow-geojson = { path = "rust/geoarrow-geojson" }
 geoarrow-schema = { path = "rust/geoarrow-schema" }
 geozero = "0.14"
 num-traits = "0.2.19"
