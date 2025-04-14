@@ -3,9 +3,7 @@
 
 use std::sync::Arc;
 
-use arrow_schema::extension::{
-    EXTENSION_TYPE_METADATA_KEY, EXTENSION_TYPE_NAME_KEY, ExtensionType,
-};
+use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{
     BoxType, CoordType, Dimension, GeometryCollectionType, GeometryType, LineStringType, Metadata,
@@ -291,16 +289,15 @@ impl TryFrom<&Field> for GeoArrowType {
 
     fn try_from(field: &Field) -> Result<Self> {
         // TODO: should we make Metadata::deserialize public?
-        let metadata: Metadata =
-            if let Some(ext_meta) = field.metadata().get(EXTENSION_TYPE_METADATA_KEY) {
-                serde_json::from_str(ext_meta)?
-            } else {
-                Default::default()
-            };
+        let metadata: Metadata = if let Some(ext_meta) = field.extension_type_metadata() {
+            serde_json::from_str(ext_meta)?
+        } else {
+            Default::default()
+        };
 
         use GeoArrowType::*;
-        if let Some(extension_name) = field.metadata().get(EXTENSION_TYPE_NAME_KEY) {
-            let data_type = match extension_name.as_str() {
+        if let Some(extension_name) = field.extension_type_name() {
+            let data_type = match extension_name {
                 PointType::NAME => Point(PointType::try_new(field.data_type(), metadata)?),
                 LineStringType::NAME => {
                     LineString(LineStringType::try_new(field.data_type(), metadata)?)

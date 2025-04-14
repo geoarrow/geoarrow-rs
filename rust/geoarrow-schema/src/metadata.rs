@@ -1,4 +1,3 @@
-use arrow_schema::extension::EXTENSION_TYPE_METADATA_KEY;
 use arrow_schema::{ArrowError, Field};
 use serde::{Deserialize, Serialize};
 
@@ -66,7 +65,7 @@ impl TryFrom<&Field> for Metadata {
     type Error = ArrowError;
 
     fn try_from(value: &Field) -> Result<Self, Self::Error> {
-        Self::deserialize(value.metadata().get(EXTENSION_TYPE_METADATA_KEY))
+        Self::deserialize(value.extension_type_metadata())
     }
 }
 
