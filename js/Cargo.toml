@@ -80,9 +80,9 @@ wasm-bindgen-futures = "0.4.42"
 # logging them with `console.error`. This is great for development, but requires
 # all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
 # code size when deploying.
-arrow-array = "54.1"
-arrow-buffer = "54.1"
-arrow-wasm = { git = "https://github.com/kylebarron/arrow-wasm", rev = "517f3085cbb1747d741884a9ad9f0d20bcc7d5ff" }
+arrow-array = "55"
+arrow-buffer = "55"
+arrow-wasm = { git = "https://github.com/kylebarron/arrow-wasm", rev = "6b615b654098a89fba09bf24f51e78d6a1c2b89c" }
 async-stream = { version = "0.3.5", optional = true }
 async-trait = { version = "0.1.77", optional = true }
 bytes = { version = "1", optional = true }
@@ -93,12 +93,12 @@ geo-traits = "0.2"
 geoarrow = { path = "../rust/geoarrow" }
 geoarrow-schema = { path = "../rust/geoarrow-schema" }
 geodesy = { version = "0.12", optional = true, features = ["js"] }
-object_store = { version = "0.11", optional = true }
-# Use released version when it supports object-store 0.11
-object-store-wasm = { git = "https://github.com/H-Plus-Time/object-store-wasm", rev = "b296d680fc67f3213a3f8de445b8fc5f590dc7e1", optional = true, default-features = false, features = [
+object_store = { version = "0.12", optional = true }
+# Use released version when it supports object-store 0.12
+object-store-wasm = { git = "https://github.com/kylebarron/object-store-wasm", rev = "1b1c29c9915e1d099bdc19617ca59e9d80844478", optional = true, default-features = false, features = [
     "http",
 ] }
-parquet = { version = "54.1", optional = true, features = ["arrow", "base64"] }
+parquet = { version = "55", optional = true, features = ["arrow", "base64"] }
 range-reader = { version = "0.2", optional = true }
 reqwest = { version = "*", optional = true }
 thiserror = "1"

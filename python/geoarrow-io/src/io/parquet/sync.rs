@@ -34,18 +34,12 @@ pub fn read_parquet(
         AnyFileReader::Async(async_reader) => {
             use crate::runtime::get_runtime;
             use geoarrow::io::parquet::GeoParquetRecordBatchStreamBuilder;
-            use object_store::ObjectStore;
             use parquet::arrow::async_reader::ParquetObjectReader;
 
             let runtime = get_runtime(py)?;
 
             let table = runtime.block_on(async move {
-                let object_meta = async_reader
-                    .store
-                    .head(&async_reader.path)
-                    .await
-                    .map_err(PyGeoArrowError::ObjectStoreError)?;
-                let reader = ParquetObjectReader::new(async_reader.store, object_meta);
+                let reader = ParquetObjectReader::new(async_reader.store, async_reader.path);
 
                 let mut geo_options = GeoParquetReaderOptions::default();
 

@@ -3,7 +3,9 @@ members = [
     "rust/geoarrow",
     "rust/geoarrow-array",
     "rust/geoarrow-schema",
-    "rust/geodatafusion",
+    # Comment out until datafusion 47 release so that the workspace can upgrade
+    # to arrow 55
+    # "rust/geodatafusion",
 ]
 exclude = ["js"]
 resolver = "2"
@@ -15,9 +17,13 @@ repository = "https://github.com/geoarrow/geoarrow-rs"
 rust-version = "1.85"
 
 [workspace.dependencies]
-arrow-array = "54.3.1"
-arrow-buffer = "54.3.1"
-arrow-schema = "54.3.1"
+arrow-array = "55"
+arrow-buffer = "55"
+arrow-cast = "55"
+arrow-csv = "55"
+arrow-data = "55"
+arrow-ipc = "55"
+arrow-schema = "55"
 geo = "0.30.0"
 geo-traits = "0.2.0"
 geo-types = "0.7.16"
@@ -25,6 +31,8 @@ geoarrow-array = { path = "rust/geoarrow-array" }
 geoarrow-schema = { path = "rust/geoarrow-schema" }
 geozero = "0.14"
 num-traits = "0.2.19"
+object_store = "0.12"
+parquet = { version = "55", default-features = false }
 rstar = "0.12.2"
 serde = "1"
 serde_json = "1"

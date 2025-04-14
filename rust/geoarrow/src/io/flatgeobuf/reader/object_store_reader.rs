@@ -9,7 +9,7 @@ use object_store::path::Path;
 pub struct ObjectStoreWrapper {
     pub location: Path,
     pub reader: Arc<dyn ObjectStore>,
-    pub size: usize,
+    pub size: u64,
 }
 
 #[async_trait]
@@ -19,10 +19,10 @@ impl AsyncHttpRangeClient for ObjectStoreWrapper {
         assert!(range.starts_with("bytes="));
 
         let split_range = range[6..].split('-').collect::<Vec<_>>();
-        let start_range = split_range[0].parse::<usize>().unwrap();
+        let start_range = split_range[0].parse::<u64>().unwrap();
 
         // Add one to the range because HTTP range strings are end-inclusive (I think)
-        let end_range = split_range[1].parse::<usize>().unwrap() + 1;
+        let end_range = split_range[1].parse::<u64>().unwrap() + 1;
 
         // Flatgeobuf will sometimes overfetch, but not all object store backends support
         // overfetches (e.g. this errors on a LocalFileSystem)
