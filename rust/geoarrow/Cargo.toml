@@ -41,13 +41,13 @@ rayon = ["dep:rayon"]
 
 [dependencies]
 arrow = { version = "55", features = ["ffi"] }
-arrow-array = { version = "55", features = ["chrono-tz"] }
-arrow-buffer = "55"
-arrow-cast = { version = "55" }
-arrow-csv = { version = "55", optional = true }
-arrow-data = "55"
-arrow-ipc = "55"
-arrow-schema = "55"
+arrow-array = { workspace = true, features = ["chrono-tz"] }
+arrow-buffer = { workspace = true }
+arrow-cast = { workspace = true }
+arrow-csv = { workspace = true, optional = true }
+arrow-data = { workspace = true }
+arrow-ipc = { workspace = true }
+arrow-schema = { workspace = true }
 async-stream = { version = "0.3", optional = true }
 async-trait = { version = "0.1", optional = true }
 bytes = { version = "1.5.0", optional = true }
@@ -68,8 +68,8 @@ http-range-client = { version = "0.9", optional = true, default-features = false
 indexmap = { version = "2" }
 lexical-core = { version = "0.8.5" }
 num-traits = "0.2.19"
-object_store = { version = "0.11", optional = true }
-parquet = { version = "55", optional = true, default-features = false, features = [
+object_store = { workspace = true, optional = true }
+parquet = { workspace = true, optional = true, default-features = false, features = [
   "arrow",
 ] }
 phf = { version = "0.11", features = ["macros"] }
@@ -104,8 +104,8 @@ geos = { version = "10", features = ["static"] }
 geozero = { version = "0.14", features = ["with-wkb"] }
 sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
 tokio = { version = "1.9", features = ["macros", "fs", "rt-multi-thread"] }
-object_store = { version = "0.11", features = ["http", "aws"] }
-parquet = { version = "54.1", default-features = false, features = [
+object_store = { workspace = true, features = ["http", "aws"] }
+parquet = { workspace = true, default-features = false, features = [
   "arrow",
   "object_store",
 ] }
