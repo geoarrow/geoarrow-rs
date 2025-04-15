@@ -111,7 +111,7 @@ impl From<GeoParquetEncoding> for geoarrow::io::parquet::GeoParquetWriterEncodin
     }
 }
 
-pub(crate) struct PyWriterVersion(WriterVersion);
+pub struct PyWriterVersion(WriterVersion);
 
 impl<'py> FromPyObject<'py> for PyWriterVersion {
     fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
@@ -122,7 +122,7 @@ impl<'py> FromPyObject<'py> for PyWriterVersion {
     }
 }
 
-pub(crate) struct PyCompression(Compression);
+pub struct PyCompression(Compression);
 
 impl<'py> FromPyObject<'py> for PyCompression {
     fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
