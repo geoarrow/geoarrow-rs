@@ -17,7 +17,7 @@ use crate::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 
 /// An immutable array of WKB geometries.
 ///
-/// This is semantically equivalent to `Vec<Option<WKB>>` due to the internal validity bitmap.
+/// This is semantically equivalent to `Vec<Option<Wkb>>` due to the internal validity bitmap.
 ///
 /// This array implements [`SerializedArray`], not [`NativeArray`]. This means that you'll need to
 /// parse the `WkbArray` into a native-typed GeoArrow array (such as

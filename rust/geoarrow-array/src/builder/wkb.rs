@@ -14,7 +14,7 @@ use wkb::writer::{
 use crate::array::WkbArray;
 use crate::capacity::WkbCapacity;
 
-/// The GeoArrow equivalent to `Vec<Option<WKB>>`: a mutable collection of WKB buffers.
+/// The GeoArrow equivalent to `Vec<Option<Wkb>>`: a mutable collection of Wkb buffers.
 ///
 /// Converting a [`WkbBuilder`] into a [`WkbArray`] is `O(1)`.
 #[derive(Debug)]
