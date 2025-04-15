@@ -12,22 +12,22 @@ use wkb::writer::{
 };
 
 use crate::array::WkbArray;
-use crate::capacity::WKBCapacity;
+use crate::capacity::WkbCapacity;
 
-/// The GeoArrow equivalent to `Vec<Option<WKB>>`: a mutable collection of WKB buffers.
+/// The GeoArrow equivalent to `Vec<Option<Wkb>>`: a mutable collection of Wkb buffers.
 ///
-/// Converting a [`WKBBuilder`] into a [`WkbArray`] is `O(1)`.
+/// Converting a [`WkbBuilder`] into a [`WkbArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct WKBBuilder<O: OffsetSizeTrait>(GenericBinaryBuilder<O>, WkbType);
+pub struct WkbBuilder<O: OffsetSizeTrait>(GenericBinaryBuilder<O>, WkbType);
 
-impl<O: OffsetSizeTrait> WKBBuilder<O> {
-    /// Creates a new empty [`WKBBuilder`].
+impl<O: OffsetSizeTrait> WkbBuilder<O> {
+    /// Creates a new empty [`WkbBuilder`].
     pub fn new(typ: WkbType) -> Self {
         Self::with_capacity(typ, Default::default())
     }
 
-    /// Initializes a new [`WKBBuilder`] with a pre-allocated capacity of slots and values.
-    pub fn with_capacity(typ: WkbType, capacity: WKBCapacity) -> Self {
+    /// Initializes a new [`WkbBuilder`] with a pre-allocated capacity of slots and values.
+    pub fn with_capacity(typ: WkbType, capacity: WkbCapacity) -> Self {
         Self(
             GenericBinaryBuilder::with_capacity(
                 capacity.offsets_capacity,
@@ -37,19 +37,19 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         )
     }
 
-    /// Creates a new empty [`WKBBuilder`] with a capacity inferred by the provided geometry
+    /// Creates a new empty [`WkbBuilder`] with a capacity inferred by the provided geometry
     /// iterator.
     pub fn with_capacity_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
         typ: WkbType,
     ) -> Self {
-        let counter = WKBCapacity::from_geometries(geoms);
+        let counter = WkbCapacity::from_geometries(geoms);
         Self::with_capacity(typ, counter)
     }
 
     // Upstream APIs don't exist for this yet. To implement this without upstream changes, we could
     // change to using manual `Vec`'s ourselves
-    // pub fn reserve(&mut self, capacity: WKBCapacity) {
+    // pub fn reserve(&mut self, capacity: WkbCapacity) {
     // }
 
     /// Push a Point onto the end of this builder

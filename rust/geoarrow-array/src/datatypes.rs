@@ -22,58 +22,43 @@ use crate::error::{GeoArrowError, Result};
 /// This type uniquely identifies the physical buffer layout of each geometry array type.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum GeoArrowType {
-    /// Represents a [PointArray][crate::array::PointArray] or
-    /// [ChunkedPointArray][crate::chunked_array::ChunkedPointArray].
+    /// Represents a [PointArray][crate::array::PointArray].
     Point(PointType),
 
-    /// Represents a [LineStringArray][crate::array::LineStringArray] or
-    /// [ChunkedLineStringArray][crate::chunked_array::ChunkedLineStringArray] with `i32` offsets.
+    /// Represents a [LineStringArray][crate::array::LineStringArray].
     LineString(LineStringType),
 
-    /// Represents a [PolygonArray][crate::array::PolygonArray] or
-    /// [ChunkedPolygonArray][crate::chunked_array::ChunkedPolygonArray] with `i32` offsets.
+    /// Represents a [PolygonArray][crate::array::PolygonArray].
     Polygon(PolygonType),
 
-    /// Represents a [MultiPointArray][crate::array::MultiPointArray] or
-    /// [ChunkedMultiPointArray][crate::chunked_array::ChunkedMultiPointArray] with `i32` offsets.
+    /// Represents a [MultiPointArray][crate::array::MultiPointArray].
     MultiPoint(MultiPointType),
 
-    /// Represents a [MultiLineStringArray][crate::array::MultiLineStringArray] or
-    /// [ChunkedMultiLineStringArray][crate::chunked_array::ChunkedMultiLineStringArray] with `i32`
-    /// offsets.
+    /// Represents a [MultiLineStringArray][crate::array::MultiLineStringArray].
     MultiLineString(MultiLineStringType),
 
-    /// Represents a [MultiPolygonArray][crate::array::MultiPolygonArray] or
-    /// [ChunkedMultiPolygonArray][crate::chunked_array::ChunkedMultiPolygonArray] with `i32`
-    /// offsets.
+    /// Represents a [MultiPolygonArray][crate::array::MultiPolygonArray].
     MultiPolygon(MultiPolygonType),
 
-    /// Represents a [GeometryCollectionArray][crate::array::GeometryCollectionArray] or
-    /// [ChunkedGeometryCollectionArray][crate::chunked_array::ChunkedGeometryCollectionArray] with
-    /// `i32` offsets.
+    /// Represents a [GeometryCollectionArray][crate::array::GeometryCollectionArray].
     GeometryCollection(GeometryCollectionType),
 
-    /// Represents a [RectArray][crate::array::RectArray] or
-    /// [ChunkedRectArray][crate::chunked_array::ChunkedRectArray].
+    /// Represents a [RectArray][crate::array::RectArray].
     Rect(BoxType),
 
     /// Represents a mixed geometry array of unknown types or dimensions
     Geometry(GeometryType),
 
-    /// Represents a [WkbArray][crate::array::WkbArray] or
-    /// [ChunkedWKBArray][crate::chunked_array::ChunkedWKBArray] with `i32` offsets.
+    /// Represents a [WkbArray][crate::array::WkbArray] with `i32` offsets.
     Wkb(WkbType),
 
-    /// Represents a [WkbArray][crate::array::WkbArray] or
-    /// [ChunkedWKBArray][crate::chunked_array::ChunkedWKBArray] with `i64` offsets.
+    /// Represents a [WkbArray][crate::array::WkbArray] with `i64` offsets.
     LargeWkb(WkbType),
 
-    /// Represents a [WktArray][crate::array::WktArray] or
-    /// [ChunkedWKTArray][crate::chunked_array::ChunkedWKTArray] with `i32` offsets.
+    /// Represents a [WktArray][crate::array::WktArray] with `i32` offsets.
     Wkt(WktType),
 
-    /// Represents a [WktArray][crate::array::WktArray] or
-    /// [ChunkedWKTArray][crate::chunked_array::ChunkedWKTArray] with `i64` offsets.
+    /// Represents a [WktArray][crate::array::WktArray] with `i64` offsets.
     LargeWkt(WktType),
 }
 

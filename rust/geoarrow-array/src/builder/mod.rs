@@ -26,4 +26,4 @@ pub(crate) use offsets::OffsetsBuilder;
 pub use point::PointBuilder;
 pub use polygon::PolygonBuilder;
 pub use rect::RectBuilder;
-pub use wkb::WKBBuilder;
+pub use wkb::WkbBuilder;

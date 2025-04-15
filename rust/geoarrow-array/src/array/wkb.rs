@@ -9,7 +9,7 @@ use arrow_schema::{DataType, Field};
 use geoarrow_schema::{Metadata, WkbType};
 use wkb::reader::Wkb;
 
-use crate::capacity::WKBCapacity;
+use crate::capacity::WkbCapacity;
 use crate::datatypes::GeoArrowType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
@@ -17,7 +17,7 @@ use crate::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 
 /// An immutable array of WKB geometries.
 ///
-/// This is semantically equivalent to `Vec<Option<WKB>>` due to the internal validity bitmap.
+/// This is semantically equivalent to `Vec<Option<Wkb>>` due to the internal validity bitmap.
 ///
 /// This array implements [`SerializedArray`], not [`NativeArray`]. This means that you'll need to
 /// parse the `WkbArray` into a native-typed GeoArrow array (such as
@@ -46,8 +46,8 @@ impl<O: OffsetSizeTrait> WkbArray<O> {
     }
 
     /// The lengths of each buffer contained in this array.
-    pub fn buffer_lengths(&self) -> WKBCapacity {
-        WKBCapacity::new(
+    pub fn buffer_lengths(&self) -> WkbCapacity {
+        WkbCapacity::new(
             self.array.offsets().last().unwrap().to_usize().unwrap(),
             self.len(),
         )
@@ -230,13 +230,13 @@ impl TryFrom<WkbArray<i64>> for WkbArray<i32> {
 #[cfg(test)]
 mod test {
     use crate::GeoArrowArray;
-    use crate::builder::WKBBuilder;
+    use crate::builder::WkbBuilder;
     use crate::test::point;
 
     use super::*;
 
     fn wkb_data<O: OffsetSizeTrait>() -> WkbArray<O> {
-        let mut builder = WKBBuilder::new(WkbType::new(Default::default()));
+        let mut builder = WkbBuilder::new(WkbType::new(Default::default()));
         builder.push_point(Some(&point::p0()));
         builder.push_point(Some(&point::p1()));
         builder.push_point(Some(&point::p2()));

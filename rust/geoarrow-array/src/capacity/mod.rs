@@ -31,4 +31,4 @@ pub use multipoint::MultiPointCapacity;
 pub use multipolygon::MultiPolygonCapacity;
 pub use point::PointCapacity;
 pub use polygon::PolygonCapacity;
-pub use wkb::WKBCapacity;
+pub use wkb::WkbCapacity;

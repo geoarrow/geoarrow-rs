@@ -389,7 +389,7 @@ mod test {
     use geoarrow_schema::WkbType;
 
     use crate::array::WkbArray;
-    use crate::builder::WKBBuilder;
+    use crate::builder::WkbBuilder;
     use crate::error::Result;
     use crate::{ArrayAccessor, GeoArrowArray};
 
@@ -408,6 +408,6 @@ mod test {
             .collect::<std::result::Result<Vec<_>, _>>()
             .unwrap();
         let wkb_type = WkbType::new(Default::default());
-        Ok(WKBBuilder::from_nullable_geometries(geoms.as_slice(), wkb_type).finish())
+        Ok(WkbBuilder::from_nullable_geometries(geoms.as_slice(), wkb_type).finish())
     }
 }
