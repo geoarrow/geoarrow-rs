@@ -1,0 +1,23 @@
+[package]
+name = "geoarrow-geojson"
+version = "0.1.0-dev"
+authors = ["Kyle Barron <kylebarron2@gmail.com>"]
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+description = "Rust implementation of GeoArrow"
+categories = ["science::geo"]
+rust-version = { workspace = true }
+
+
+[dependencies]
+arrow-array = { workspace = true }
+arrow-json = { workspace = true }
+arrow-schema = { workspace = true }
+geo-traits = { workspace = true }
+geoarrow-array = { workspace = true }
+geoarrow-schema = { workspace = true }
+
+[dev-dependencies]
+geo-types = { workspace = true }
+geo = { workspace = true }
