@@ -16,7 +16,7 @@
 //! use arrow_array::RecordBatchReader;
 //!
 //! use geoarrow_schema::CoordType;
-//! use geoarrow::io::csv::{CSVReader, CSVReaderOptions};
+//! use geoarrow::io::csv::{CsvReader, CsvReaderOptions};
 //! use geoarrow::table::Table;
 //!
 //! let s = r#"
@@ -24,13 +24,13 @@
 //! 904 7th Av,Car Fire,05/22/2019 12:55:00 PM,POINT (-122.329051 47.6069),F190051945
 //! 9610 53rd Av S,Aid Response,05/22/2019 12:55:00 PM,POINT (-122.266529 47.515984),F190051946"#;
 //!
-//! let options = CSVReaderOptions {
+//! let options = CsvReaderOptions {
 //!     coord_type: CoordType::Separated,
 //!     geometry_column_name: Some("report location".to_string()),
 //!     has_header: Some(true),
 //!     ..Default::default()
 //! };
-//! let reader = CSVReader::try_new(Cursor::new(s), options).unwrap();
+//! let reader = CsvReader::try_new(Cursor::new(s), options).unwrap();
 //!
 //! // Now `reader` implements `arrow_array::RecordBatchReader`, so we can use TryFrom to convert
 //! // it to a geoarrow Table
@@ -39,7 +39,7 @@
 
 #![cfg_attr(not(test), deny(unused_crate_dependencies))]
 
-pub use reader::{CSVReader, CSVReaderOptions};
+pub use reader::{CsvReader, CsvReaderOptions};
 // pub use writer::write_csv;
 
 mod reader;

@@ -13,7 +13,7 @@ use geoarrow_schema::{CoordType, GeometryType};
 
 /// Options for the CSV reader.
 #[derive(Debug, Clone)]
-pub struct CSVReaderOptions {
+pub struct CsvReaderOptions {
     /// The GeoArrow coordinate type to use in the geometry arrays.
     pub coord_type: CoordType,
 
@@ -55,7 +55,7 @@ pub struct CSVReaderOptions {
     pub comment: Option<char>,
 }
 
-impl CSVReaderOptions {
+impl CsvReaderOptions {
     fn to_format(&self) -> Format {
         // Default to having a header
         let mut format = Format::default().with_header(true);
@@ -83,7 +83,7 @@ impl CSVReaderOptions {
     }
 }
 
-impl Default for CSVReaderOptions {
+impl Default for CsvReaderOptions {
     fn default() -> Self {
         Self {
             coord_type: CoordType::Interleaved,
@@ -105,7 +105,7 @@ impl Default for CSVReaderOptions {
 /// Note that the geometry column in the Schema is still left as a String.
 fn infer_csv_schema(
     reader: impl Read,
-    options: &CSVReaderOptions,
+    options: &CsvReaderOptions,
 ) -> Result<(SchemaRef, usize, String)> {
     let format = options.to_format();
     let (schema, records_read) = format.infer_schema(reader, options.max_records)?;
@@ -116,27 +116,27 @@ fn infer_csv_schema(
 }
 
 /// A CSV reader that parses a WKT-encoded geometry column
-pub struct CSVReader<R> {
+pub struct CsvReader<R> {
     reader: arrow_csv::Reader<R>,
     output_schema: SchemaRef,
     geometry_column_index: usize,
     coord_type: CoordType,
 }
 
-impl<R> CSVReader<R> {
+impl<R> CsvReader<R> {
     /// Access the schema of this reader
     pub fn schema(&self) -> SchemaRef {
         self.output_schema.clone()
     }
 }
 
-impl<R: Read + Seek> CSVReader<R> {
+impl<R: Read + Seek> CsvReader<R> {
     /// Create a new CSV reader, automatically inferring a CSV file's schema.
     ///
     /// By default, the reader will **scan the entire CSV file** to infer the data's
     /// schema. If your data is large, you can limit the number of records scanned
-    /// with the [CSVReaderOptions].
-    pub fn try_new(mut reader: R, options: CSVReaderOptions) -> Result<Self> {
+    /// with the [CsvReaderOptions].
+    pub fn try_new(mut reader: R, options: CsvReaderOptions) -> Result<Self> {
         let (schema, _read_records, _geometry_column_name) =
             infer_csv_schema(&mut reader, &options)?;
         reader.rewind()?;
@@ -145,7 +145,7 @@ impl<R: Read + Seek> CSVReader<R> {
     }
 }
 
-impl<R: Read> CSVReader<R> {
+impl<R: Read> CsvReader<R> {
     /// Read a CSV file to a [RecordBatchReader].
     ///
     /// This expects a geometry to be encoded as WKT within one column.
@@ -160,7 +160,7 @@ impl<R: Read> CSVReader<R> {
     pub fn try_new_with_schema(
         reader: R,
         schema: SchemaRef,
-        options: CSVReaderOptions,
+        options: CsvReaderOptions,
     ) -> Result<Self> {
         let geometry_column_name =
             find_geometry_column(schema.as_ref(), options.geometry_column_name.as_deref())?;
@@ -191,7 +191,7 @@ impl<R: Read> CSVReader<R> {
     }
 }
 
-impl<R: Read> Iterator for CSVReader<R> {
+impl<R: Read> Iterator for CsvReader<R> {
     type Item = std::result::Result<RecordBatch, ArrowError>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -207,7 +207,7 @@ impl<R: Read> Iterator for CSVReader<R> {
     }
 }
 
-impl<R: Read> arrow_array::RecordBatchReader for CSVReader<R> {
+impl<R: Read> arrow_array::RecordBatchReader for CsvReader<R> {
     fn schema(&self) -> SchemaRef {
         self.schema()
     }
