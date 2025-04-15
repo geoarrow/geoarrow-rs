@@ -4,7 +4,7 @@ use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
-use geoarrow_schema::{Metadata, MultiLineStringType};
+use geoarrow_schema::{CoordType, Metadata, MultiLineStringType};
 
 use crate::array::{CoordBuffer, LineStringArray, WkbArray};
 use crate::builder::MultiLineStringBuilder;
@@ -174,6 +174,18 @@ impl MultiLineStringArray {
             ring_offsets: self.ring_offsets.clone(),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }
+    }
+
+    /// Change the [`CoordType`] of this array.
+    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.data_type.metadata().clone();
+        Self::new(
+            self.coords.into_coord_type(coord_type),
+            self.geom_offsets,
+            self.ring_offsets,
+            self.validity,
+            metadata,
+        )
     }
 }
 

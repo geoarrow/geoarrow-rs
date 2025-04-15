@@ -365,6 +365,25 @@ impl GeometryArray {
         }
     }
 
+    /// Change the [`CoordType`] of this array.
+    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.data_type.metadata().clone();
+
+        Self::new(
+            self.type_ids,
+            self.offsets,
+            self.points.map(|arr| arr.into_coord_type(coord_type)),
+            self.line_strings.map(|arr| arr.into_coord_type(coord_type)),
+            self.polygons.map(|arr| arr.into_coord_type(coord_type)),
+            self.mpoints.map(|arr| arr.into_coord_type(coord_type)),
+            self.mline_strings
+                .map(|arr| arr.into_coord_type(coord_type)),
+            self.mpolygons.map(|arr| arr.into_coord_type(coord_type)),
+            self.gcs.map(|arr| arr.into_coord_type(coord_type)),
+            metadata,
+        )
+    }
+
     // TODO: recursively expand the types from the geometry collection array
     #[allow(dead_code)]
     pub(crate) fn contained_types(&self) -> HashSet<GeoArrowType> {
@@ -917,6 +936,19 @@ mod test {
                 assert_eq!(geo_arr, geo_arr2);
                 assert_eq!(geo_arr, geo_arr3);
             }
+        }
+    }
+
+    #[test]
+    fn into_coord_type() {
+        for prefer_multi in [true, false] {
+            let geo_arr = crate::test::geometry::array(CoordType::Interleaved, prefer_multi);
+            let geo_arr2 = geo_arr
+                .clone()
+                .into_coord_type(CoordType::Separated)
+                .into_coord_type(CoordType::Interleaved);
+
+            assert_eq!(geo_arr, geo_arr2);
         }
     }
 
