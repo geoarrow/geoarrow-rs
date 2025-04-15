@@ -1,17 +1,18 @@
 [package]
-name = "geoarrow-schema"
+name = "geoarrow-csv"
 version = { workspace = true }
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
 repository = { workspace = true }
-description = "Rust implementation of GeoArrow"
+description = "CSV reader and writer for GeoArrow"
 categories = { workspace = true }
 rust-version = { workspace = true }
 
 
 [dependencies]
+arrow-array = { workspace = true }
+arrow-csv = { workspace = true }
 arrow-schema = { workspace = true }
-geo-traits = { workspace = true }
-serde = { workspace = true, features = ["derive"] }
-serde_json = { workspace = true }
+geoarrow-schema = { workspace = true }
+geoarrow-array = { workspace = true }

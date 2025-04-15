@@ -1358,6 +1358,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "geoarrow-csv"
+version = "0.1.0-dev"
+dependencies = [
+ "arrow-array",
+ "arrow-csv",
+ "arrow-schema",
+ "geoarrow-array",
+ "geoarrow-schema",
+]
+
+[[package]]
 name = "geoarrow-geoparquet"
 version = "0.1.0-dev"
 dependencies = [
