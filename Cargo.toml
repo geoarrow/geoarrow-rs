@@ -13,10 +13,13 @@ exclude = ["js"]
 resolver = "2"
 
 [workspace.package]
+version = "0.1.0-dev"
+authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/geoarrow/geoarrow-rs"
 rust-version = "1.85"
+categories = ["science::geo"]
 
 [workspace.dependencies]
 arrow-arith = "55"
