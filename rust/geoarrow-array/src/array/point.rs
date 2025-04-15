@@ -324,12 +324,19 @@ mod test {
 
     #[test]
     fn partial_eq() {
-        let arr1 = point::point_array(CoordType::Interleaved);
-        let arr2 = point::point_array(CoordType::Separated);
-        assert_eq!(arr1, arr1);
-        assert_eq!(arr2, arr2);
-        assert_eq!(arr1, arr2);
+        for dim in [
+            Dimension::XY,
+            Dimension::XYZ,
+            Dimension::XYM,
+            Dimension::XYZM,
+        ] {
+            let arr1 = point::array(CoordType::Interleaved, dim);
+            let arr2 = point::array(CoordType::Separated, dim);
+            assert_eq!(arr1, arr1);
+            assert_eq!(arr2, arr2);
+            assert_eq!(arr1, arr2);
 
-        assert_ne!(arr1, arr2.slice(0, 2));
+            assert_ne!(arr1, arr2.slice(0, 2));
+        }
     }
 }
