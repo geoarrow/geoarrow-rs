@@ -1,12 +1,12 @@
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::io::input::sync::FileWriter;
-use crate::io::input::{construct_reader, AnyFileReader};
+use crate::io::input::{AnyFileReader, construct_reader};
 use crate::util::to_arro3_table;
 
 use arrow::array::RecordBatchReader;
 use geoarrow::io::flatgeobuf::{
-    write_flatgeobuf_with_options as _write_flatgeobuf, FlatGeobufReaderBuilder,
-    FlatGeobufReaderOptions, FlatGeobufWriterOptions,
+    FlatGeobufReaderBuilder, FlatGeobufReaderOptions, FlatGeobufWriterOptions,
+    write_flatgeobuf_with_options as _write_flatgeobuf,
 };
 use geoarrow::table::Table;
 use pyo3::prelude::*;

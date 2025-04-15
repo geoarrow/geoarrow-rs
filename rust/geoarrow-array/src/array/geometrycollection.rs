@@ -4,9 +4,9 @@ use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
-use geoarrow_schema::{GeometryCollectionType, Metadata};
+use geoarrow_schema::{CoordType, GeometryCollectionType, Metadata};
 
-use crate::array::{MixedGeometryArray, WKBArray};
+use crate::array::{MixedGeometryArray, WkbArray};
 use crate::builder::GeometryCollectionBuilder;
 use crate::capacity::GeometryCollectionCapacity;
 use crate::datatypes::GeoArrowType;
@@ -75,19 +75,9 @@ impl GeometryCollectionArray {
     /// Slices this [`GeometryCollectionArray`] in place.
     ///
     /// # Implementation
-    /// This operation is `O(1)` as it amounts to increase two ref counts.
-    /// # Examples
-    /// ```ignore
-    /// use arrow::array::PrimitiveArray;
-    /// use arrow_array::types::Int32Type;
     ///
-    /// let array: PrimitiveArray<Int32Type> = PrimitiveArray::from(vec![1, 2, 3]);
-    /// assert_eq!(format!("{:?}", array), "PrimitiveArray<Int32>\n[\n  1,\n  2,\n  3,\n]");
-    /// let sliced = array.slice(1, 1);
-    /// assert_eq!(format!("{:?}", sliced), "PrimitiveArray<Int32>\n[\n  2,\n]");
+    /// This operation is `O(1)` as it amounts to increasing a few ref counts.
     ///
-    /// // note: `sliced` and `array` share the same memory region.
-    /// ```ignore
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
@@ -104,6 +94,17 @@ impl GeometryCollectionArray {
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }
     }
+
+    /// Change the [`CoordType`] of this array.
+    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.data_type.metadata().clone();
+        Self::new(
+            self.array.into_coord_type(coord_type),
+            self.geom_offsets,
+            self.validity,
+            metadata,
+        )
+    }
 }
 
 impl GeoArrowArray for GeometryCollectionArray {
@@ -119,13 +120,11 @@ impl GeoArrowArray for GeometryCollectionArray {
         self.clone().into_array_ref()
     }
 
-    /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
     }
 
-    /// Returns the optional validity.
     #[inline]
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
@@ -228,12 +227,12 @@ impl TryFrom<(&dyn Array, &Field)> for GeometryCollectionArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, GeometryCollectionType)>
+impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, GeometryCollectionType)>
     for GeometryCollectionArray
 {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WKBArray<O>, GeometryCollectionType)) -> Result<Self> {
+    fn try_from(value: (WkbArray<O>, GeometryCollectionType)) -> Result<Self> {
         let mut_arr: GeometryCollectionBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }
@@ -241,18 +240,46 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, GeometryCollectionType)>
 
 impl PartialEq for GeometryCollectionArray {
     fn eq(&self, other: &Self) -> bool {
-        if self.validity != other.validity {
-            return false;
-        }
+        self.validity == other.validity
+            && offset_buffer_eq(&self.geom_offsets, &other.geom_offsets)
+            && self.array == other.array
+    }
+}
 
-        if !offset_buffer_eq(&self.geom_offsets, &other.geom_offsets) {
-            return false;
-        }
+#[cfg(test)]
+mod test {
+    use geoarrow_schema::{CoordType, Dimension};
 
-        if self.array != other.array {
-            return false;
-        }
+    use crate::test::geometrycollection;
 
-        true
+    use super::*;
+
+    #[test]
+    fn try_from_arrow() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                for prefer_multi in [true, false] {
+                    let geo_arr = geometrycollection::array(coord_type, dim, prefer_multi);
+
+                    let point_type = geo_arr.ext_type().clone();
+                    let field = point_type.to_field("geometry", true);
+
+                    let arrow_arr = geo_arr.to_array_ref();
+
+                    let geo_arr2: GeometryCollectionArray =
+                        (arrow_arr.as_ref(), point_type).try_into().unwrap();
+                    let geo_arr3: GeometryCollectionArray =
+                        (arrow_arr.as_ref(), &field).try_into().unwrap();
+
+                    assert_eq!(geo_arr, geo_arr2);
+                    assert_eq!(geo_arr, geo_arr3);
+                }
+            }
+        }
     }
 }

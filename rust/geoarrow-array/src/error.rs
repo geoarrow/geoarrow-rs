@@ -61,7 +61,12 @@ pub enum GeoArrowError {
 pub type Result<T> = std::result::Result<T, GeoArrowError>;
 
 impl From<GeoArrowError> for ArrowError {
-    fn from(value: GeoArrowError) -> Self {
-        Self::ExternalError(Box::new(value))
+    /// Many APIs where we pass in a callback into the Arrow crate require the returned error type
+    /// to be ArrowError, so implementing this `From` makes the conversion less verbose there.
+    fn from(err: GeoArrowError) -> Self {
+        match err {
+            GeoArrowError::Arrow(err) => err,
+            _ => ArrowError::ExternalError(Box::new(err)),
+        }
     }
 }

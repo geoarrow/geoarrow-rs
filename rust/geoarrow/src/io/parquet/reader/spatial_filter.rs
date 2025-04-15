@@ -6,7 +6,6 @@ use arrow::compute::kernels::cmp::{gt_eq, lt_eq};
 use arrow::datatypes::{Float32Type, Float64Type};
 use arrow_array::{Array, Float32Array, Float64Array, Scalar};
 use arrow_buffer::ScalarBuffer;
-use arrow_schema::ArrowError;
 use geo::{CoordNum, Rect, coord};
 use parquet::arrow::ProjectionMask;
 use parquet::arrow::arrow_reader::{
@@ -220,13 +219,8 @@ fn construct_native_predicate(
         let array = batch.column(0);
         let field = batch.schema_ref().field(0);
         let nulls = array.nulls();
-        let geo_arr = NativeArrayDyn::from_arrow_array(array, field)
-            .map_err(|err| ArrowError::ExternalError(Box::new(err)))?
-            .into_inner();
-        let rect_arr = geo_arr
-            .as_ref()
-            .bounding_rect()
-            .map_err(|err| ArrowError::ExternalError(Box::new(err)))?;
+        let geo_arr = NativeArrayDyn::from_arrow_array(array, field)?.into_inner();
+        let rect_arr = geo_arr.as_ref().bounding_rect()?;
 
         let xmin_col = Float64Array::new(rect_arr.lower().buffers[0].clone(), nulls.cloned());
         let ymin_col = Float64Array::new(rect_arr.lower().buffers[1].clone(), nulls.cloned());

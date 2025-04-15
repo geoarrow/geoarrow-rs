@@ -20,40 +20,40 @@ use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 
 /// An immutable array of geometries of unknown geometry type and dimension.
 ///
-/// # Invariants
-///
-/// - All arrays must have the same dimension
-/// - All arrays must have the same coordinate layout (interleaved or separated)
-///
-/// - 1: Point
-/// - 2: LineString
-/// - 3: Polygon
-/// - 4: MultiPoint
-/// - 5: MultiLineString
-/// - 6: MultiPolygon
-/// - 7: GeometryCollection
-/// - 11: Point Z
-/// - 12: LineString Z
-/// - 13: Polygon Z
-/// - 14: MultiPoint Z
-/// - 15: MultiLineString Z
-/// - 16: MultiPolygon Z
-/// - 17: GeometryCollection Z
-/// - 21: Point M
-/// - 22: LineString M
-/// - 23: Polygon M
-/// - 24: MultiPoint M
-/// - 25: MultiLineString M
-/// - 26: MultiPolygon M
-/// - 27: GeometryCollection M
-/// - 31: Point ZM
-/// - 32: LineString ZM
-/// - 33: Polygon ZM
-/// - 34: MultiPoint ZM
-/// - 35: MultiLineString ZM
-/// - 36: MultiPolygon ZM
-/// - 37: GeometryCollection ZM
-#[derive(Debug, Clone, PartialEq)]
+// # Invariants
+//
+// - All arrays must have the same dimension
+// - All arrays must have the same coordinate layout (interleaved or separated)
+//
+// - 1: Point
+// - 2: LineString
+// - 3: Polygon
+// - 4: MultiPoint
+// - 5: MultiLineString
+// - 6: MultiPolygon
+// - 7: GeometryCollection
+// - 11: Point Z
+// - 12: LineString Z
+// - 13: Polygon Z
+// - 14: MultiPoint Z
+// - 15: MultiLineString Z
+// - 16: MultiPolygon Z
+// - 17: GeometryCollection Z
+// - 21: Point M
+// - 22: LineString M
+// - 23: Polygon M
+// - 24: MultiPoint M
+// - 25: MultiLineString M
+// - 26: MultiPolygon M
+// - 27: GeometryCollection M
+// - 31: Point ZM
+// - 32: LineString ZM
+// - 33: Polygon ZM
+// - 34: MultiPoint ZM
+// - 35: MultiLineString ZM
+// - 36: MultiPolygon ZM
+// - 37: GeometryCollection ZM
+#[derive(Debug, Clone)]
 pub struct GeometryArray {
     pub(crate) data_type: GeometryType,
 
@@ -64,26 +64,18 @@ pub struct GeometryArray {
     /// Invariant: `offsets.len() == type_ids.len()`
     pub(crate) offsets: ScalarBuffer<i32>,
 
-    // In the future we'll additionally have xym, xyzm array variants.
-    pub(crate) point_xy: PointArray,
-    pub(crate) line_string_xy: LineStringArray,
-    pub(crate) polygon_xy: PolygonArray,
-    pub(crate) mpoint_xy: MultiPointArray,
-    pub(crate) mline_string_xy: MultiLineStringArray,
-    pub(crate) mpolygon_xy: MultiPolygonArray,
-    pub(crate) gc_xy: GeometryCollectionArray,
-
-    pub(crate) point_xyz: PointArray,
-    pub(crate) line_string_xyz: LineStringArray,
-    pub(crate) polygon_xyz: PolygonArray,
-    pub(crate) mpoint_xyz: MultiPointArray,
-    pub(crate) mline_string_xyz: MultiLineStringArray,
-    pub(crate) mpolygon_xyz: MultiPolygonArray,
-    pub(crate) gc_xyz: GeometryCollectionArray,
+    /// An array of PointArray, ordered XY, XYZ, XYM, XYZM
+    pub(crate) points: [PointArray; 4],
+    pub(crate) line_strings: [LineStringArray; 4],
+    pub(crate) polygons: [PolygonArray; 4],
+    pub(crate) mpoints: [MultiPointArray; 4],
+    pub(crate) mline_strings: [MultiLineStringArray; 4],
+    pub(crate) mpolygons: [MultiPolygonArray; 4],
+    pub(crate) gcs: [GeometryCollectionArray; 4],
 }
 
 impl GeometryArray {
-    /// Create a new MixedGeometryArray from parts
+    /// Create a new GeometryArray from parts
     ///
     /// # Implementation
     ///
@@ -97,66 +89,35 @@ impl GeometryArray {
     pub fn new(
         type_ids: ScalarBuffer<i8>,
         offsets: ScalarBuffer<i32>,
-        point_xy: Option<PointArray>,
-        line_string_xy: Option<LineStringArray>,
-        polygon_xy: Option<PolygonArray>,
-        mpoint_xy: Option<MultiPointArray>,
-        mline_string_xy: Option<MultiLineStringArray>,
-        mpolygon_xy: Option<MultiPolygonArray>,
-        gc_xy: Option<GeometryCollectionArray>,
-        point_xyz: Option<PointArray>,
-        line_string_xyz: Option<LineStringArray>,
-        polygon_xyz: Option<PolygonArray>,
-        mpoint_xyz: Option<MultiPointArray>,
-        mline_string_xyz: Option<MultiLineStringArray>,
-        mpolygon_xyz: Option<MultiPolygonArray>,
-        gc_xyz: Option<GeometryCollectionArray>,
+        points: [PointArray; 4],
+        line_strings: [LineStringArray; 4],
+        polygons: [PolygonArray; 4],
+        mpoints: [MultiPointArray; 4],
+        mline_strings: [MultiLineStringArray; 4],
+        mpolygons: [MultiPolygonArray; 4],
+        gcs: [GeometryCollectionArray; 4],
         metadata: Arc<Metadata>,
     ) -> Self {
+        // Validate that all arrays have the same coord type.
         let mut coord_types = HashSet::new();
-        if let Some(point_xy) = &point_xy {
-            coord_types.insert(point_xy.data_type.coord_type());
-        }
-        if let Some(line_string_xy) = &line_string_xy {
-            coord_types.insert(line_string_xy.data_type.coord_type());
-        }
-        if let Some(polygon_xy) = &polygon_xy {
-            coord_types.insert(polygon_xy.data_type.coord_type());
-        }
-        if let Some(mpoint_xy) = &mpoint_xy {
-            coord_types.insert(mpoint_xy.data_type.coord_type());
-        }
-        if let Some(mline_string_xy) = &mline_string_xy {
-            coord_types.insert(mline_string_xy.data_type.coord_type());
-        }
-        if let Some(mpolygon_xy) = &mpolygon_xy {
-            coord_types.insert(mpolygon_xy.data_type.coord_type());
-        }
-        if let Some(gc_xy) = &gc_xy {
-            coord_types.insert(gc_xy.data_type.coord_type());
-        }
-
-        if let Some(point_xyz) = &point_xyz {
-            coord_types.insert(point_xyz.data_type.coord_type());
-        }
-        if let Some(line_string_xyz) = &line_string_xyz {
-            coord_types.insert(line_string_xyz.data_type.coord_type());
-        }
-        if let Some(polygon_xyz) = &polygon_xyz {
-            coord_types.insert(polygon_xyz.data_type.coord_type());
-        }
-        if let Some(mpoint_xyz) = &mpoint_xyz {
-            coord_types.insert(mpoint_xyz.data_type.coord_type());
-        }
-        if let Some(mline_string_xyz) = &mline_string_xyz {
-            coord_types.insert(mline_string_xyz.data_type.coord_type());
-        }
-        if let Some(mpolygon_xyz) = &mpolygon_xyz {
-            coord_types.insert(mpolygon_xyz.data_type.coord_type());
-        }
-        if let Some(gc_xyz) = &gc_xyz {
-            coord_types.insert(gc_xyz.data_type.coord_type());
-        }
+        points.iter().for_each(|arr| {
+            coord_types.insert(arr.data_type.coord_type());
+        });
+        line_strings.iter().for_each(|arr| {
+            coord_types.insert(arr.data_type.coord_type());
+        });
+        polygons.iter().for_each(|arr| {
+            coord_types.insert(arr.data_type.coord_type());
+        });
+        mpoints.iter().for_each(|arr| {
+            coord_types.insert(arr.data_type.coord_type());
+        });
+        mline_strings.iter().for_each(|arr| {
+            coord_types.insert(arr.data_type.coord_type());
+        });
+        mpolygons.iter().for_each(|arr| {
+            coord_types.insert(arr.data_type.coord_type());
+        });
         assert!(coord_types.len() <= 1);
 
         let coord_type = coord_types
@@ -164,81 +125,17 @@ impl GeometryArray {
             .next()
             .unwrap_or(CoordType::Interleaved);
 
-        use Dimension::*;
         Self {
             data_type: GeometryType::new(coord_type, metadata),
             type_ids,
             offsets,
-            point_xy: point_xy.unwrap_or(
-                PointBuilder::new(PointType::new(coord_type, XY, Default::default())).finish(),
-            ),
-            line_string_xy: line_string_xy.unwrap_or(
-                LineStringBuilder::new(LineStringType::new(coord_type, XY, Default::default()))
-                    .finish(),
-            ),
-            polygon_xy: polygon_xy.unwrap_or(
-                PolygonBuilder::new(PolygonType::new(coord_type, XY, Default::default())).finish(),
-            ),
-            mpoint_xy: mpoint_xy.unwrap_or(
-                MultiPointBuilder::new(MultiPointType::new(coord_type, XY, Default::default()))
-                    .finish(),
-            ),
-            mline_string_xy: mline_string_xy.unwrap_or(
-                MultiLineStringBuilder::new(MultiLineStringType::new(
-                    coord_type,
-                    XY,
-                    Default::default(),
-                ))
-                .finish(),
-            ),
-            mpolygon_xy: mpolygon_xy.unwrap_or(
-                MultiPolygonBuilder::new(MultiPolygonType::new(coord_type, XY, Default::default()))
-                    .finish(),
-            ),
-            gc_xy: gc_xy.unwrap_or(
-                GeometryCollectionBuilder::new(
-                    GeometryCollectionType::new(coord_type, XY, Default::default()),
-                    false,
-                )
-                .finish(),
-            ),
-            point_xyz: point_xyz.unwrap_or(
-                PointBuilder::new(PointType::new(coord_type, XYZ, Default::default())).finish(),
-            ),
-            line_string_xyz: line_string_xyz.unwrap_or(
-                LineStringBuilder::new(LineStringType::new(coord_type, XYZ, Default::default()))
-                    .finish(),
-            ),
-            polygon_xyz: polygon_xyz.unwrap_or(
-                PolygonBuilder::new(PolygonType::new(coord_type, XYZ, Default::default())).finish(),
-            ),
-            mpoint_xyz: mpoint_xyz.unwrap_or(
-                MultiPointBuilder::new(MultiPointType::new(coord_type, XYZ, Default::default()))
-                    .finish(),
-            ),
-            mline_string_xyz: mline_string_xyz.unwrap_or(
-                MultiLineStringBuilder::new(MultiLineStringType::new(
-                    coord_type,
-                    XYZ,
-                    Default::default(),
-                ))
-                .finish(),
-            ),
-            mpolygon_xyz: mpolygon_xyz.unwrap_or(
-                MultiPolygonBuilder::new(MultiPolygonType::new(
-                    coord_type,
-                    XYZ,
-                    Default::default(),
-                ))
-                .finish(),
-            ),
-            gc_xyz: gc_xyz.unwrap_or(
-                GeometryCollectionBuilder::new(
-                    GeometryCollectionType::new(coord_type, XYZ, Default::default()),
-                    false,
-                )
-                .finish(),
-            ),
+            points,
+            line_strings,
+            polygons,
+            mpoints,
+            mline_strings,
+            mpolygons,
+            gcs,
         }
     }
 
@@ -246,114 +143,68 @@ impl GeometryArray {
     pub fn buffer_lengths(&self) -> GeometryCapacity {
         GeometryCapacity::new(
             0,
-            self.point_xy.buffer_lengths(),
-            self.line_string_xy.buffer_lengths(),
-            self.polygon_xy.buffer_lengths(),
-            self.mpoint_xy.buffer_lengths(),
-            self.mline_string_xy.buffer_lengths(),
-            self.mpolygon_xy.buffer_lengths(),
-            self.gc_xy.buffer_lengths(),
-            self.point_xyz.buffer_lengths(),
-            self.line_string_xyz.buffer_lengths(),
-            self.polygon_xyz.buffer_lengths(),
-            self.mpoint_xyz.buffer_lengths(),
-            self.mline_string_xyz.buffer_lengths(),
-            self.mpolygon_xyz.buffer_lengths(),
-            self.gc_xyz.buffer_lengths(),
+            core::array::from_fn(|i| self.points[i].buffer_lengths()),
+            core::array::from_fn(|i| self.line_strings[i].buffer_lengths()),
+            core::array::from_fn(|i| self.polygons[i].buffer_lengths()),
+            core::array::from_fn(|i| self.mpoints[i].buffer_lengths()),
+            core::array::from_fn(|i| self.mline_strings[i].buffer_lengths()),
+            core::array::from_fn(|i| self.mpolygons[i].buffer_lengths()),
+            core::array::from_fn(|i| self.gcs[i].buffer_lengths()),
             false,
         )
     }
 
     // TODO: handle slicing
     pub(crate) fn has_points(&self, dim: Dimension) -> bool {
-        match dim {
-            Dimension::XY => !self.point_xy.is_empty(),
-            Dimension::XYZ => !self.point_xyz.is_empty(),
-            _ => panic!("Unsupported dimension"),
-        }
+        !self.points[dim.order()].is_empty()
     }
 
     pub(crate) fn has_line_strings(&self, dim: Dimension) -> bool {
-        match dim {
-            Dimension::XY => !self.line_string_xy.is_empty(),
-            Dimension::XYZ => !self.line_string_xyz.is_empty(),
-            _ => panic!("Unsupported dimension"),
-        }
+        !self.line_strings[dim.order()].is_empty()
     }
 
     pub(crate) fn has_polygons(&self, dim: Dimension) -> bool {
-        match dim {
-            Dimension::XY => !self.polygon_xy.is_empty(),
-            Dimension::XYZ => !self.polygon_xyz.is_empty(),
-            _ => panic!("Unsupported dimension"),
-        }
+        !self.polygons[dim.order()].is_empty()
     }
 
     pub(crate) fn has_multi_points(&self, dim: Dimension) -> bool {
-        match dim {
-            Dimension::XY => !self.mpoint_xy.is_empty(),
-            Dimension::XYZ => !self.mpoint_xyz.is_empty(),
-            _ => panic!("Unsupported dimension"),
-        }
+        !self.mpoints[dim.order()].is_empty()
     }
 
     pub(crate) fn has_multi_line_strings(&self, dim: Dimension) -> bool {
-        match dim {
-            Dimension::XY => !self.mline_string_xy.is_empty(),
-            Dimension::XYZ => !self.mline_string_xyz.is_empty(),
-            _ => panic!("Unsupported dimension"),
-        }
+        !self.mline_strings[dim.order()].is_empty()
     }
 
     pub(crate) fn has_multi_polygons(&self, dim: Dimension) -> bool {
-        match dim {
-            Dimension::XY => !self.mpolygon_xy.is_empty(),
-            Dimension::XYZ => !self.mpolygon_xyz.is_empty(),
-            _ => panic!("Unsupported dimension"),
-        }
+        !self.mpolygons[dim.order()].is_empty()
     }
 
+    #[allow(dead_code)]
     pub(crate) fn has_geometry_collections(&self, dim: Dimension) -> bool {
-        match dim {
-            Dimension::XY => !self.gc_xy.is_empty(),
-            Dimension::XYZ => !self.gc_xyz.is_empty(),
-            _ => panic!("Unsupported dimension"),
-        }
+        !self.gcs[dim.order()].is_empty()
     }
 
-    /// Return `true` if this array holds at least one geometry array of the given dimension
+    /// Return `true` if this array holds at least one non-empty array of the given dimension
     pub fn has_dimension(&self, dim: Dimension) -> bool {
-        use Dimension::*;
-        match dim {
-            XY => {
-                self.has_points(XY)
-                    || self.has_line_strings(XY)
-                    || self.has_polygons(XY)
-                    || self.has_multi_points(XY)
-                    || self.has_multi_line_strings(XY)
-                    || self.has_multi_polygons(XY)
-            }
-            XYZ => {
-                self.has_points(XYZ)
-                    || self.has_line_strings(XYZ)
-                    || self.has_polygons(XYZ)
-                    || self.has_multi_points(XYZ)
-                    || self.has_multi_line_strings(XYZ)
-                    || self.has_multi_polygons(XYZ)
-            }
-            _ => panic!("Unsupported dimension"),
-        }
+        self.has_points(dim)
+            || self.has_line_strings(dim)
+            || self.has_polygons(dim)
+            || self.has_multi_points(dim)
+            || self.has_multi_line_strings(dim)
+            || self.has_multi_polygons(dim)
     }
 
     /// Return `true` if this array holds at least one geometry array of the given dimension and no
     /// arrays of any other dimension.
     pub fn has_only_dimension(&self, dim: Dimension) -> bool {
         use Dimension::*;
-        match dim {
-            XY => self.has_dimension(XY) && !self.has_dimension(XYZ),
-            XYZ => self.has_dimension(XYZ) && !self.has_dimension(XY),
-            _ => todo!("support xym and xyzm"),
-        }
+        let existant_dims = [
+            self.has_dimension(XY),
+            self.has_dimension(XYZ),
+            self.has_dimension(XYM),
+            self.has_dimension(XYZM),
+        ];
+        existant_dims.iter().map(|b| *b as u8).sum::<u8>() == 1 && existant_dims[dim.order()]
     }
 
     // Handle sliced data before downcasting.
@@ -504,71 +355,74 @@ impl GeometryArray {
             type_ids: self.type_ids.slice(offset, length),
             offsets: self.offsets.slice(offset, length),
 
-            point_xy: self.point_xy.clone(),
-            line_string_xy: self.line_string_xy.clone(),
-            polygon_xy: self.polygon_xy.clone(),
-            mpoint_xy: self.mpoint_xy.clone(),
-            mline_string_xy: self.mline_string_xy.clone(),
-            mpolygon_xy: self.mpolygon_xy.clone(),
-            gc_xy: self.gc_xy.clone(),
-
-            point_xyz: self.point_xyz.clone(),
-            line_string_xyz: self.line_string_xyz.clone(),
-            polygon_xyz: self.polygon_xyz.clone(),
-            mpoint_xyz: self.mpoint_xyz.clone(),
-            mline_string_xyz: self.mline_string_xyz.clone(),
-            mpolygon_xyz: self.mpolygon_xyz.clone(),
-            gc_xyz: self.gc_xyz.clone(),
+            points: self.points.clone(),
+            line_strings: self.line_strings.clone(),
+            polygons: self.polygons.clone(),
+            mpoints: self.mpoints.clone(),
+            mline_strings: self.mline_strings.clone(),
+            mpolygons: self.mpolygons.clone(),
+            gcs: self.gcs.clone(),
         }
+    }
+
+    /// Change the [`CoordType`] of this array.
+    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.data_type.metadata().clone();
+
+        Self::new(
+            self.type_ids,
+            self.offsets,
+            self.points.map(|arr| arr.into_coord_type(coord_type)),
+            self.line_strings.map(|arr| arr.into_coord_type(coord_type)),
+            self.polygons.map(|arr| arr.into_coord_type(coord_type)),
+            self.mpoints.map(|arr| arr.into_coord_type(coord_type)),
+            self.mline_strings
+                .map(|arr| arr.into_coord_type(coord_type)),
+            self.mpolygons.map(|arr| arr.into_coord_type(coord_type)),
+            self.gcs.map(|arr| arr.into_coord_type(coord_type)),
+            metadata,
+        )
     }
 
     // TODO: recursively expand the types from the geometry collection array
     #[allow(dead_code)]
     pub(crate) fn contained_types(&self) -> HashSet<GeoArrowType> {
         let mut types = HashSet::new();
-        if self.has_points(Dimension::XY) {
-            types.insert(self.point_xy.data_type());
-        }
-        if self.has_line_strings(Dimension::XY) {
-            types.insert(self.line_string_xy.data_type());
-        }
-        if self.has_polygons(Dimension::XY) {
-            types.insert(self.polygon_xy.data_type());
-        }
-        if self.has_multi_points(Dimension::XY) {
-            types.insert(self.mpoint_xy.data_type());
-        }
-        if self.has_multi_line_strings(Dimension::XY) {
-            types.insert(self.mline_string_xy.data_type());
-        }
-        if self.has_multi_polygons(Dimension::XY) {
-            types.insert(self.mpolygon_xy.data_type());
-        }
-        if self.has_geometry_collections(Dimension::XY) {
-            types.insert(self.gc_xy.data_type());
-        }
-
-        if self.has_points(Dimension::XYZ) {
-            types.insert(self.point_xyz.data_type());
-        }
-        if self.has_line_strings(Dimension::XYZ) {
-            types.insert(self.line_string_xyz.data_type());
-        }
-        if self.has_polygons(Dimension::XYZ) {
-            types.insert(self.polygon_xyz.data_type());
-        }
-        if self.has_multi_points(Dimension::XYZ) {
-            types.insert(self.mpoint_xyz.data_type());
-        }
-        if self.has_multi_line_strings(Dimension::XYZ) {
-            types.insert(self.mline_string_xyz.data_type());
-        }
-        if self.has_multi_polygons(Dimension::XYZ) {
-            types.insert(self.mpolygon_xyz.data_type());
-        }
-        if self.has_geometry_collections(Dimension::XYZ) {
-            types.insert(self.gc_xyz.data_type());
-        }
+        self.points.iter().for_each(|arr| {
+            if !arr.is_empty() {
+                types.insert(arr.data_type());
+            }
+        });
+        self.line_strings.iter().for_each(|arr| {
+            if !arr.is_empty() {
+                types.insert(arr.data_type());
+            }
+        });
+        self.polygons.iter().for_each(|arr| {
+            if !arr.is_empty() {
+                types.insert(arr.data_type());
+            }
+        });
+        self.mpoints.iter().for_each(|arr| {
+            if !arr.is_empty() {
+                types.insert(arr.data_type());
+            }
+        });
+        self.mline_strings.iter().for_each(|arr| {
+            if !arr.is_empty() {
+                types.insert(arr.data_type());
+            }
+        });
+        self.mpolygons.iter().for_each(|arr| {
+            if !arr.is_empty() {
+                types.insert(arr.data_type());
+            }
+        });
+        self.gcs.iter().for_each(|arr| {
+            if !arr.is_empty() {
+                types.insert(arr.data_type());
+            }
+        });
 
         types
     }
@@ -587,14 +441,12 @@ impl GeoArrowArray for GeometryArray {
         self.clone().into_array_ref()
     }
 
-    /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
         // Note that `type_ids` is sliced as usual, and thus always has the correct length.
         self.type_ids.len()
     }
 
-    /// Returns the optional validity.
     #[inline]
     fn nulls(&self) -> Option<&NullBuffer> {
         None
@@ -616,21 +468,16 @@ impl<'a> ArrayAccessor<'a> for GeometryArray {
         let type_id = self.type_ids[index];
         let offset = self.offsets[index] as usize;
 
-        let result = match type_id {
-            1 => Geometry::Point(self.point_xy.value(offset)?),
-            2 => Geometry::LineString(self.line_string_xy.value(offset)?),
-            3 => Geometry::Polygon(self.polygon_xy.value(offset)?),
-            4 => Geometry::MultiPoint(self.mpoint_xy.value(offset)?),
-            5 => Geometry::MultiLineString(self.mline_string_xy.value(offset)?),
-            6 => Geometry::MultiPolygon(self.mpolygon_xy.value(offset)?),
-            7 => Geometry::GeometryCollection(self.gc_xy.value(offset)?),
-            11 => Geometry::Point(self.point_xyz.value(offset)?),
-            12 => Geometry::LineString(self.line_string_xyz.value(offset)?),
-            13 => Geometry::Polygon(self.polygon_xyz.value(offset)?),
-            14 => Geometry::MultiPoint(self.mpoint_xyz.value(offset)?),
-            15 => Geometry::MultiLineString(self.mline_string_xyz.value(offset)?),
-            16 => Geometry::MultiPolygon(self.mpolygon_xyz.value(offset)?),
-            17 => Geometry::GeometryCollection(self.gc_xyz.value(offset)?),
+        let dim = (type_id / 10) as usize;
+
+        let result = match type_id % 10 {
+            1 => Geometry::Point(self.points[dim].value(offset)?),
+            2 => Geometry::LineString(self.line_strings[dim].value(offset)?),
+            3 => Geometry::Polygon(self.polygons[dim].value(offset)?),
+            4 => Geometry::MultiPoint(self.mpoints[dim].value(offset)?),
+            5 => Geometry::MultiLineString(self.mline_strings[dim].value(offset)?),
+            6 => Geometry::MultiPolygon(self.mpolygons[dim].value(offset)?),
+            7 => Geometry::GeometryCollection(self.gcs[dim].value(offset)?),
             _ => panic!("unknown type_id {}", type_id),
         };
         Ok(result)
@@ -647,28 +494,35 @@ impl IntoArrow for GeometryArray {
             _ => unreachable!(),
         };
 
-        let child_arrays = vec![
-            self.point_xy.into_array_ref(),
-            self.line_string_xy.into_array_ref(),
-            self.polygon_xy.into_array_ref(),
-            self.mpoint_xy.into_array_ref(),
-            self.mline_string_xy.into_array_ref(),
-            self.mpolygon_xy.into_array_ref(),
-            self.gc_xy.into_array_ref(),
-            self.point_xyz.into_array_ref(),
-            self.line_string_xyz.into_array_ref(),
-            self.polygon_xyz.into_array_ref(),
-            self.mpoint_xyz.into_array_ref(),
-            self.mline_string_xyz.into_array_ref(),
-            self.mpolygon_xyz.into_array_ref(),
-            self.gc_xyz.into_array_ref(),
-        ];
+        // https://stackoverflow.com/a/34406459/7319250
+        let mut child_arrays: Vec<Option<ArrayRef>> = vec![None; 28];
+        for (i, arr) in self.points.into_iter().enumerate() {
+            child_arrays[i * 7] = Some(arr.into_array_ref());
+        }
+        for (i, arr) in self.line_strings.into_iter().enumerate() {
+            child_arrays[i * 7 + 1] = Some(arr.into_array_ref());
+        }
+        for (i, arr) in self.polygons.into_iter().enumerate() {
+            child_arrays[i * 7 + 2] = Some(arr.into_array_ref());
+        }
+        for (i, arr) in self.mpoints.into_iter().enumerate() {
+            child_arrays[i * 7 + 3] = Some(arr.into_array_ref());
+        }
+        for (i, arr) in self.mline_strings.into_iter().enumerate() {
+            child_arrays[i * 7 + 4] = Some(arr.into_array_ref());
+        }
+        for (i, arr) in self.mpolygons.into_iter().enumerate() {
+            child_arrays[i * 7 + 5] = Some(arr.into_array_ref());
+        }
+        for (i, arr) in self.gcs.into_iter().enumerate() {
+            child_arrays[i * 7 + 6] = Some(arr.into_array_ref());
+        }
 
         UnionArray::try_new(
             union_fields,
             self.type_ids,
             Some(self.offsets),
-            child_arrays,
+            child_arrays.into_iter().map(|x| x.unwrap()).collect(),
         )
         .unwrap()
     }
@@ -684,21 +538,13 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
     fn try_from(
         (value, typ): (&UnionArray, GeometryType),
     ) -> std::result::Result<Self, Self::Error> {
-        let mut point_xy: Option<PointArray> = None;
-        let mut line_string_xy: Option<LineStringArray> = None;
-        let mut polygon_xy: Option<PolygonArray> = None;
-        let mut mpoint_xy: Option<MultiPointArray> = None;
-        let mut mline_string_xy: Option<MultiLineStringArray> = None;
-        let mut mpolygon_xy: Option<MultiPolygonArray> = None;
-        let mut gc_xy: Option<GeometryCollectionArray> = None;
-
-        let mut point_xyz: Option<PointArray> = None;
-        let mut line_string_xyz: Option<LineStringArray> = None;
-        let mut polygon_xyz: Option<PolygonArray> = None;
-        let mut mpoint_xyz: Option<MultiPointArray> = None;
-        let mut mline_string_xyz: Option<MultiLineStringArray> = None;
-        let mut mpolygon_xyz: Option<MultiPolygonArray> = None;
-        let mut gc_xyz: Option<GeometryCollectionArray> = None;
+        let mut points: [Option<PointArray>; 4] = Default::default();
+        let mut line_strings: [Option<LineStringArray>; 4] = Default::default();
+        let mut polygons: [Option<PolygonArray>; 4] = Default::default();
+        let mut mpoints: [Option<MultiPointArray>; 4] = Default::default();
+        let mut mline_strings: [Option<MultiLineStringArray>; 4] = Default::default();
+        let mut mpolygons: [Option<MultiPolygonArray>; 4] = Default::default();
+        let mut gcs: [Option<GeometryCollectionArray>; 4] = Default::default();
 
         let coord_type = typ.coord_type();
 
@@ -709,80 +555,66 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
                 }
 
                 for (type_id, _field) in fields.iter() {
-                    let dim = if type_id < 10 {
-                        Dimension::XY
-                    } else if type_id < 20 {
-                        Dimension::XYZ
-                    } else {
-                        return Err(GeoArrowError::General(format!(
-                            "Unsupported type_id: {}",
-                            type_id
-                        )));
-                    };
+                    let dim = Dimension::from_order((type_id / 10) as _);
+                    let index = dim.order();
 
-                    match type_id {
+                    match type_id % 10 {
                         1 => {
-                            point_xy = Some(
+                            points[index] = Some(
                                 (
                                     value.child(type_id).as_ref(),
                                     PointType::new(coord_type, dim, Default::default()),
                                 )
-                                    .try_into()
-                                    .unwrap(),
+                                    .try_into()?,
                             );
                         }
                         2 => {
-                            line_string_xy = Some(
+                            line_strings[index] = Some(
                                 (
                                     value.child(type_id).as_ref(),
                                     LineStringType::new(coord_type, dim, Default::default()),
                                 )
-                                    .try_into()
-                                    .unwrap(),
+                                    .try_into()?,
                             );
                         }
                         3 => {
-                            polygon_xy = Some(
+                            polygons[index] = Some(
                                 (
                                     value.child(type_id).as_ref(),
                                     PolygonType::new(coord_type, dim, Default::default()),
                                 )
-                                    .try_into()
-                                    .unwrap(),
+                                    .try_into()?,
                             );
                         }
                         4 => {
-                            mpoint_xy = Some(
+                            mpoints[index] = Some(
                                 (
                                     value.child(type_id).as_ref(),
                                     MultiPointType::new(coord_type, dim, Default::default()),
                                 )
-                                    .try_into()
-                                    .unwrap(),
+                                    .try_into()?,
                             );
                         }
                         5 => {
-                            mline_string_xy = Some(
+                            mline_strings[index] = Some(
                                 (
                                     value.child(type_id).as_ref(),
                                     MultiLineStringType::new(coord_type, dim, Default::default()),
                                 )
-                                    .try_into()
-                                    .unwrap(),
+                                    .try_into()?,
                             );
                         }
                         6 => {
-                            mpolygon_xy = Some(
+                            mpolygons[index] = Some(
                                 (
                                     value.child(type_id).as_ref(),
                                     MultiPolygonType::new(coord_type, dim, Default::default()),
                                 )
-                                    .try_into()
-                                    .unwrap(),
+                                    .try_into()?,
                             );
                         }
                         7 => {
-                            gc_xy = Some(
+                            gcs[index] = Some(
                                 (
                                     value.child(type_id).as_ref(),
                                     GeometryCollectionType::new(
@@ -791,82 +623,7 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
                                         Default::default(),
                                     ),
                                 )
-                                    .try_into()
-                                    .unwrap(),
-                            );
-                        }
-                        11 => {
-                            point_xyz = Some(
-                                (
-                                    value.child(type_id).as_ref(),
-                                    PointType::new(coord_type, dim, Default::default()),
-                                )
-                                    .try_into()
-                                    .unwrap(),
-                            );
-                        }
-                        12 => {
-                            line_string_xyz = Some(
-                                (
-                                    value.child(type_id).as_ref(),
-                                    LineStringType::new(coord_type, dim, Default::default()),
-                                )
-                                    .try_into()
-                                    .unwrap(),
-                            );
-                        }
-                        13 => {
-                            polygon_xyz = Some(
-                                (
-                                    value.child(type_id).as_ref(),
-                                    PolygonType::new(coord_type, dim, Default::default()),
-                                )
-                                    .try_into()
-                                    .unwrap(),
-                            );
-                        }
-                        14 => {
-                            mpoint_xyz = Some(
-                                (
-                                    value.child(type_id).as_ref(),
-                                    MultiPointType::new(coord_type, dim, Default::default()),
-                                )
-                                    .try_into()
-                                    .unwrap(),
-                            );
-                        }
-                        15 => {
-                            mline_string_xyz = Some(
-                                (
-                                    value.child(type_id).as_ref(),
-                                    MultiLineStringType::new(coord_type, dim, Default::default()),
-                                )
-                                    .try_into()
-                                    .unwrap(),
-                            );
-                        }
-                        16 => {
-                            mpolygon_xyz = Some(
-                                (
-                                    value.child(type_id).as_ref(),
-                                    MultiPolygonType::new(coord_type, dim, Default::default()),
-                                )
-                                    .try_into()
-                                    .unwrap(),
-                            );
-                        }
-                        17 => {
-                            gc_xyz = Some(
-                                (
-                                    value.child(type_id).as_ref(),
-                                    GeometryCollectionType::new(
-                                        coord_type,
-                                        dim,
-                                        Default::default(),
-                                    ),
-                                )
-                                    .try_into()
-                                    .unwrap(),
+                                    .try_into()?,
                             );
                         }
                         _ => {
@@ -885,23 +642,118 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
         // This is after checking for dense union
         let offsets = value.offsets().unwrap().clone();
 
+        // We need to convert the array [Option<PointArray>; 4] into `[PointArray; 4]`.
+        // But we also need to ensure the underlying PointArray has the correct `Dimension` for the
+        // given array index.
+        // In order to do this, we need the index of the array, which `map` doesn't give us. And
+        // using `core::array::from_fn` doesn't let us move out of the existing array.
+        // So we mutate the existing array of `[Option<PointArray>; 4]` to ensure all values are
+        // `Some`, and then later we call `unwrap` on all array values in a `map`.
+        points.iter_mut().enumerate().for_each(|(i, arr)| {
+            let new_val = if let Some(arr) = arr.take() {
+                arr
+            } else {
+                PointBuilder::new(PointType::new(
+                    coord_type,
+                    Dimension::from_order(i),
+                    Default::default(),
+                ))
+                .finish()
+            };
+            arr.replace(new_val);
+        });
+        line_strings.iter_mut().enumerate().for_each(|(i, arr)| {
+            let new_val = if let Some(arr) = arr.take() {
+                arr
+            } else {
+                LineStringBuilder::new(LineStringType::new(
+                    coord_type,
+                    Dimension::from_order(i),
+                    Default::default(),
+                ))
+                .finish()
+            };
+            arr.replace(new_val);
+        });
+        polygons.iter_mut().enumerate().for_each(|(i, arr)| {
+            let new_val = if let Some(arr) = arr.take() {
+                arr
+            } else {
+                PolygonBuilder::new(PolygonType::new(
+                    coord_type,
+                    Dimension::from_order(i),
+                    Default::default(),
+                ))
+                .finish()
+            };
+            arr.replace(new_val);
+        });
+        mpoints.iter_mut().enumerate().for_each(|(i, arr)| {
+            let new_val = if let Some(arr) = arr.take() {
+                arr
+            } else {
+                MultiPointBuilder::new(MultiPointType::new(
+                    coord_type,
+                    Dimension::from_order(i),
+                    Default::default(),
+                ))
+                .finish()
+            };
+            arr.replace(new_val);
+        });
+        mline_strings.iter_mut().enumerate().for_each(|(i, arr)| {
+            let new_val = if let Some(arr) = arr.take() {
+                arr
+            } else {
+                MultiLineStringBuilder::new(MultiLineStringType::new(
+                    coord_type,
+                    Dimension::from_order(i),
+                    Default::default(),
+                ))
+                .finish()
+            };
+            arr.replace(new_val);
+        });
+        mpolygons.iter_mut().enumerate().for_each(|(i, arr)| {
+            let new_val = if let Some(arr) = arr.take() {
+                arr
+            } else {
+                MultiPolygonBuilder::new(MultiPolygonType::new(
+                    coord_type,
+                    Dimension::from_order(i),
+                    Default::default(),
+                ))
+                .finish()
+            };
+            arr.replace(new_val);
+        });
+        gcs.iter_mut().enumerate().for_each(|(i, arr)| {
+            let new_val = if let Some(arr) = arr.take() {
+                arr
+            } else {
+                GeometryCollectionBuilder::new(
+                    GeometryCollectionType::new(
+                        coord_type,
+                        Dimension::from_order(i),
+                        Default::default(),
+                    ),
+                    false,
+                )
+                .finish()
+            };
+            arr.replace(new_val);
+        });
+
         Ok(Self::new(
             type_ids,
             offsets,
-            point_xy,
-            line_string_xy,
-            polygon_xy,
-            mpoint_xy,
-            mline_string_xy,
-            mpolygon_xy,
-            gc_xy,
-            point_xyz,
-            line_string_xyz,
-            polygon_xyz,
-            mpoint_xyz,
-            mline_string_xyz,
-            mpolygon_xyz,
-            gc_xyz,
+            points.map(|x| x.unwrap()),
+            line_strings.map(|x| x.unwrap()),
+            polygons.map(|x| x.unwrap()),
+            mpoints.map(|x| x.unwrap()),
+            mline_strings.map(|x| x.unwrap()),
+            mpolygons.map(|x| x.unwrap()),
+            gcs.map(|x| x.unwrap()),
             Default::default(),
         ))
     }
@@ -930,12 +782,188 @@ impl TryFrom<(&dyn Array, &Field)> for GeometryArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, GeometryType)> for GeometryArray {
+impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, GeometryType)> for GeometryArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WKBArray<O>, GeometryType)) -> Result<Self> {
+    fn try_from(value: (WkbArray<O>, GeometryType)) -> Result<Self> {
         let mut_arr: GeometryBuilder = value.try_into()?;
         Ok(mut_arr.finish())
+    }
+}
+
+pub(crate) trait DimensionIndex {
+    /// Get the positional index of the internal array for the given dimension.
+    fn order(&self) -> usize;
+
+    fn from_order(index: usize) -> Self;
+}
+
+impl DimensionIndex for Dimension {
+    fn order(&self) -> usize {
+        match self {
+            Self::XY => 0,
+            Self::XYZ => 1,
+            Self::XYM => 2,
+            Self::XYZM => 3,
+        }
+    }
+
+    fn from_order(index: usize) -> Self {
+        match index {
+            0 => Self::XY,
+            1 => Self::XYZ,
+            2 => Self::XYM,
+            3 => Self::XYZM,
+            _ => panic!("unsupported index in from_order"),
+        }
+    }
+}
+
+impl DimensionIndex for geo_traits::Dimensions {
+    fn order(&self) -> usize {
+        match self {
+            Self::Xy => 0,
+            Self::Xyz => 1,
+            Self::Xym => 2,
+            Self::Xyzm => 3,
+            Self::Unknown(_) => panic!("Unsupported DimensionIndex with unknown dimension"),
+        }
+    }
+
+    fn from_order(index: usize) -> Self {
+        match index {
+            0 => Self::Xy,
+            1 => Self::Xyz,
+            2 => Self::Xym,
+            3 => Self::Xyzm,
+            _ => panic!("unsupported index in from_order"),
+        }
+    }
+}
+
+impl PartialEq for GeometryArray {
+    fn eq(&self, other: &Self) -> bool {
+        self.type_ids == other.type_ids
+            && self.offsets == other.offsets
+            && self.points == other.points
+            && self.line_strings == other.line_strings
+            && self.polygons == other.polygons
+            && self.mpoints == other.mpoints
+            && self.mline_strings == other.mline_strings
+            && self.mpolygons == other.mpolygons
+            && self.gcs == other.gcs
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use geo_traits::to_geo::ToGeoGeometry;
+
+    use super::*;
+    use crate::test::{linestring, multilinestring, multipoint, multipolygon, point, polygon};
+
+    fn geoms() -> Vec<geo_types::Geometry> {
+        vec![
+            point::p0().into(),
+            point::p1().into(),
+            point::p2().into(),
+            linestring::ls0().into(),
+            linestring::ls1().into(),
+            polygon::p0().into(),
+            polygon::p1().into(),
+            multipoint::mp0().into(),
+            multipoint::mp1().into(),
+            multilinestring::ml0().into(),
+            multilinestring::ml1().into(),
+            multipolygon::mp0().into(),
+            multipolygon::mp1().into(),
+        ]
+    }
+
+    fn geom_array(coord_type: CoordType) -> GeometryArray {
+        let geoms = geoms();
+        let typ = GeometryType::new(coord_type, Default::default());
+        GeometryBuilder::from_geometries(&geoms, typ, false)
+            .unwrap()
+            .finish()
+    }
+
+    #[test]
+    fn test_2d() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            let geoms = geoms();
+            let geometry_array = geom_array(coord_type);
+            let geoms_again = geometry_array
+                .iter_values()
+                .map(|g| g.unwrap().to_geometry())
+                .collect::<Vec<_>>();
+            assert_eq!(geoms, geoms_again);
+        }
+    }
+
+    #[test]
+    fn test_2d_roundtrip_arrow() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            let geoms = geoms();
+            let geometry_array = geom_array(coord_type);
+            let field = geometry_array.data_type.to_field("geometry", true);
+            let union_array = geometry_array.into_arrow();
+
+            let geometry_array_again =
+                GeometryArray::try_from((&union_array as _, &field)).unwrap();
+            let geoms_again = geometry_array_again
+                .iter_values()
+                .map(|g| g.unwrap().to_geometry())
+                .collect::<Vec<_>>();
+            assert_eq!(geoms, geoms_again);
+        }
+    }
+
+    #[test]
+    fn try_from_arrow() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for prefer_multi in [true, false] {
+                let geo_arr = crate::test::geometry::array(coord_type, prefer_multi);
+
+                let point_type = geo_arr.ext_type().clone();
+                let field = point_type.to_field("geometry", true);
+
+                let arrow_arr = geo_arr.to_array_ref();
+
+                let geo_arr2: GeometryArray = (arrow_arr.as_ref(), point_type).try_into().unwrap();
+                let geo_arr3: GeometryArray = (arrow_arr.as_ref(), &field).try_into().unwrap();
+
+                assert_eq!(geo_arr, geo_arr2);
+                assert_eq!(geo_arr, geo_arr3);
+            }
+        }
+    }
+
+    #[test]
+    fn into_coord_type() {
+        for prefer_multi in [true, false] {
+            let geo_arr = crate::test::geometry::array(CoordType::Interleaved, prefer_multi);
+            let geo_arr2 = geo_arr
+                .clone()
+                .into_coord_type(CoordType::Separated)
+                .into_coord_type(CoordType::Interleaved);
+
+            assert_eq!(geo_arr, geo_arr2);
+        }
+    }
+
+    #[test]
+    fn partial_eq() {
+        for prefer_multi in [true, false] {
+            let arr1 = crate::test::geometry::array(CoordType::Interleaved, prefer_multi);
+            let arr2 = crate::test::geometry::array(CoordType::Separated, prefer_multi);
+
+            assert_eq!(arr1, arr1);
+            assert_eq!(arr2, arr2);
+            assert_eq!(arr1, arr2);
+
+            assert_ne!(arr1, arr2.slice(0, 2));
+        }
     }
 }
 

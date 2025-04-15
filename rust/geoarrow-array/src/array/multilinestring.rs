@@ -4,9 +4,9 @@ use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
-use geoarrow_schema::{Metadata, MultiLineStringType};
+use geoarrow_schema::{CoordType, Metadata, MultiLineStringType};
 
-use crate::array::{CoordBuffer, LineStringArray, WKBArray};
+use crate::array::{CoordBuffer, LineStringArray, WkbArray};
 use crate::builder::MultiLineStringBuilder;
 use crate::capacity::MultiLineStringCapacity;
 use crate::datatypes::GeoArrowType;
@@ -175,6 +175,18 @@ impl MultiLineStringArray {
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }
     }
+
+    /// Change the [`CoordType`] of this array.
+    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.data_type.metadata().clone();
+        Self::new(
+            self.coords.into_coord_type(coord_type),
+            self.geom_offsets,
+            self.ring_offsets,
+            self.validity,
+            metadata,
+        )
+    }
 }
 
 impl GeoArrowArray for MultiLineStringArray {
@@ -190,13 +202,11 @@ impl GeoArrowArray for MultiLineStringArray {
         self.clone().into_array_ref()
     }
 
-    /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
     }
 
-    /// Returns the optional validity.
     #[inline]
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
@@ -317,10 +327,10 @@ impl TryFrom<(&dyn Array, &Field)> for MultiLineStringArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, MultiLineStringType)> for MultiLineStringArray {
+impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiLineStringType)> for MultiLineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WKBArray<O>, MultiLineStringType)) -> Result<Self> {
+    fn try_from(value: (WkbArray<O>, MultiLineStringType)) -> Result<Self> {
         let mut_arr: MultiLineStringBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }
@@ -339,22 +349,94 @@ impl From<LineStringArray> for MultiLineStringArray {
 
 impl PartialEq for MultiLineStringArray {
     fn eq(&self, other: &Self) -> bool {
-        if self.validity != other.validity {
-            return false;
-        }
+        self.validity == other.validity
+            && offset_buffer_eq(&self.geom_offsets, &other.geom_offsets)
+            && offset_buffer_eq(&self.ring_offsets, &other.ring_offsets)
+            && self.coords == other.coords
+    }
+}
 
-        if !offset_buffer_eq(&self.geom_offsets, &other.geom_offsets) {
-            return false;
-        }
+#[cfg(test)]
+mod test {
+    use geo_traits::to_geo::ToGeoMultiLineString;
+    use geoarrow_schema::{CoordType, Dimension};
 
-        if !offset_buffer_eq(&self.ring_offsets, &other.ring_offsets) {
-            return false;
-        }
+    use crate::test::multilinestring;
 
-        if self.coords != other.coords {
-            return false;
-        }
+    use super::*;
 
-        true
+    #[test]
+    fn geo_round_trip() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            let geoms = [
+                Some(multilinestring::ml0()),
+                None,
+                Some(multilinestring::ml1()),
+                None,
+            ];
+            let typ = MultiLineStringType::new(coord_type, Dimension::XY, Default::default());
+            let geo_arr =
+                MultiLineStringBuilder::from_nullable_multi_line_strings(&geoms, typ).finish();
+
+            for (i, g) in geo_arr.iter().enumerate() {
+                assert_eq!(
+                    geoms[i],
+                    g.transpose().unwrap().map(|g| g.to_multi_line_string())
+                );
+            }
+
+            // Test sliced
+            for (i, g) in geo_arr.slice(2, 2).iter().enumerate() {
+                assert_eq!(
+                    geoms[i + 2],
+                    g.transpose().unwrap().map(|g| g.to_multi_line_string())
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn try_from_arrow() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let geo_arr = multilinestring::array(coord_type, dim);
+
+                let ext_type = geo_arr.ext_type().clone();
+                let field = ext_type.to_field("geometry", true);
+
+                let arrow_arr = geo_arr.to_array_ref();
+
+                let geo_arr2: MultiLineStringArray =
+                    (arrow_arr.as_ref(), ext_type).try_into().unwrap();
+                let geo_arr3: MultiLineStringArray =
+                    (arrow_arr.as_ref(), &field).try_into().unwrap();
+
+                assert_eq!(geo_arr, geo_arr2);
+                assert_eq!(geo_arr, geo_arr3);
+            }
+        }
+    }
+
+    #[test]
+    fn partial_eq() {
+        for dim in [
+            Dimension::XY,
+            Dimension::XYZ,
+            Dimension::XYM,
+            Dimension::XYZM,
+        ] {
+            let arr1 = multilinestring::array(CoordType::Interleaved, dim);
+            let arr2 = multilinestring::array(CoordType::Separated, dim);
+            assert_eq!(arr1, arr1);
+            assert_eq!(arr2, arr2);
+            assert_eq!(arr1, arr2);
+
+            assert_ne!(arr1, arr2.slice(0, 2));
+        }
     }
 }

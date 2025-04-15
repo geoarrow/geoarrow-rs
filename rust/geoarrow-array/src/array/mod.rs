@@ -17,6 +17,7 @@ mod wkb;
 mod wkt;
 
 pub use coord::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
+pub(crate) use geometry::DimensionIndex;
 pub use geometry::GeometryArray;
 pub use geometrycollection::GeometryCollectionArray;
 pub use linestring::LineStringArray;
@@ -27,8 +28,8 @@ pub use multipolygon::MultiPolygonArray;
 pub use point::PointArray;
 pub use polygon::PolygonArray;
 pub use rect::RectArray;
-pub use wkb::WKBArray;
-pub use wkt::WKTArray;
+pub use wkb::WkbArray;
+pub use wkt::WktArray;
 
 use std::sync::Arc;
 
@@ -52,10 +53,10 @@ pub fn from_arrow_array(array: &dyn Array, field: &Field) -> Result<Arc<dyn GeoA
         GeometryCollection(_) => Arc::new(GeometryCollectionArray::try_from((array, field))?),
         Rect(_) => Arc::new(RectArray::try_from((array, field))?),
         Geometry(_) => Arc::new(GeometryArray::try_from((array, field))?),
-        WKB(_) => Arc::new(WKBArray::<i32>::try_from((array, field))?),
-        LargeWKB(_) => Arc::new(WKBArray::<i64>::try_from((array, field))?),
-        WKT(_) => Arc::new(WKTArray::<i32>::try_from((array, field))?),
-        LargeWKT(_) => Arc::new(WKTArray::<i64>::try_from((array, field))?),
+        Wkb(_) => Arc::new(WkbArray::<i32>::try_from((array, field))?),
+        LargeWkb(_) => Arc::new(WkbArray::<i64>::try_from((array, field))?),
+        Wkt(_) => Arc::new(WktArray::<i32>::try_from((array, field))?),
+        LargeWkt(_) => Arc::new(WktArray::<i64>::try_from((array, field))?),
     };
     Ok(result)
 }

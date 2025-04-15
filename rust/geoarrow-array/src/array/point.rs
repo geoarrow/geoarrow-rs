@@ -4,7 +4,7 @@ use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, FixedSizeListArray, StructArray};
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
-use geoarrow_schema::{Metadata, PointType};
+use geoarrow_schema::{CoordType, Metadata, PointType};
 
 use crate::GeoArrowType;
 use crate::array::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
@@ -113,6 +113,16 @@ impl PointArray {
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }
     }
+
+    /// Change the [`CoordType`] of this array.
+    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.data_type.metadata().clone();
+        Self::new(
+            self.coords.into_coord_type(coord_type),
+            self.validity,
+            metadata,
+        )
+    }
 }
 
 impl GeoArrowArray for PointArray {
@@ -128,13 +138,11 @@ impl GeoArrowArray for PointArray {
         self.clone().into_array_ref()
     }
 
-    /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
         self.coords.len()
     }
 
-    /// Returns the optional validity.
     #[inline]
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
@@ -262,5 +270,101 @@ impl PartialEq for PointArray {
         }
 
         true
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use geo_traits::to_geo::ToGeoPoint;
+    use geoarrow_schema::{CoordType, Dimension};
+
+    use crate::builder::PointBuilder;
+    use crate::test::point;
+
+    use super::*;
+
+    #[test]
+    fn geo_round_trip() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            let geoms = [
+                Some(point::p0()),
+                Some(point::p1()),
+                None,
+                Some(point::p2()),
+            ];
+            let typ = PointType::new(coord_type, Dimension::XY, Default::default());
+            let geo_arr =
+                PointBuilder::from_nullable_points(geoms.iter().map(|x| x.as_ref()), typ).finish();
+
+            for (i, g) in geo_arr.iter().enumerate() {
+                assert_eq!(geoms[i], g.transpose().unwrap().map(|g| g.to_point()));
+            }
+
+            // Test sliced
+            for (i, g) in geo_arr.slice(2, 2).iter().enumerate() {
+                assert_eq!(geoms[i + 2], g.transpose().unwrap().map(|g| g.to_point()));
+            }
+        }
+    }
+
+    #[test]
+    fn try_from_arrow() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let geo_arr = point::array(coord_type, dim);
+
+                let point_type = geo_arr.ext_type().clone();
+                let field = point_type.to_field("geometry", true);
+
+                let arrow_arr = geo_arr.to_array_ref();
+
+                let geo_arr2: PointArray = (arrow_arr.as_ref(), point_type).try_into().unwrap();
+                let geo_arr3: PointArray = (arrow_arr.as_ref(), &field).try_into().unwrap();
+
+                assert_eq!(geo_arr, geo_arr2);
+                assert_eq!(geo_arr, geo_arr3);
+            }
+        }
+    }
+
+    #[test]
+    fn into_coord_type() {
+        for dim in [
+            Dimension::XY,
+            Dimension::XYZ,
+            Dimension::XYM,
+            Dimension::XYZM,
+        ] {
+            let geo_arr = point::array(CoordType::Interleaved, dim);
+            let geo_arr2 = geo_arr
+                .clone()
+                .into_coord_type(CoordType::Separated)
+                .into_coord_type(CoordType::Interleaved);
+
+            assert_eq!(geo_arr, geo_arr2);
+        }
+    }
+
+    #[test]
+    fn partial_eq() {
+        for dim in [
+            Dimension::XY,
+            Dimension::XYZ,
+            Dimension::XYM,
+            Dimension::XYZM,
+        ] {
+            let arr1 = point::array(CoordType::Interleaved, dim);
+            let arr2 = point::array(CoordType::Separated, dim);
+            assert_eq!(arr1, arr1);
+            assert_eq!(arr2, arr2);
+            assert_eq!(arr1, arr2);
+
+            assert_ne!(arr1, arr2.slice(0, 2));
+        }
     }
 }

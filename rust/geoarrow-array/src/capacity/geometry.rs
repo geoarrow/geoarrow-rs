@@ -2,6 +2,7 @@ use std::ops::AddAssign;
 
 use geo_traits::*;
 
+use crate::array::DimensionIndex;
 use crate::capacity::{
     GeometryCollectionCapacity, LineStringCapacity, MultiLineStringCapacity, MultiPointCapacity,
     MultiPolygonCapacity, PolygonCapacity,
@@ -18,21 +19,14 @@ pub struct GeometryCapacity {
     nulls: usize,
 
     /// Simple: just the total number of points, nulls included
-    point_xy: usize,
-    line_string_xy: LineStringCapacity,
-    polygon_xy: PolygonCapacity,
-    mpoint_xy: MultiPointCapacity,
-    mline_string_xy: MultiLineStringCapacity,
-    mpolygon_xy: MultiPolygonCapacity,
-    gc_xy: GeometryCollectionCapacity,
-
-    point_xyz: usize,
-    line_string_xyz: LineStringCapacity,
-    polygon_xyz: PolygonCapacity,
-    mpoint_xyz: MultiPointCapacity,
-    mline_string_xyz: MultiLineStringCapacity,
-    mpolygon_xyz: MultiPolygonCapacity,
-    gc_xyz: GeometryCollectionCapacity,
+    points: [usize; 4],
+    /// An array of [LineStringCapacity], ordered XY, XYZ, XYM, XYZM
+    line_strings: [LineStringCapacity; 4],
+    polygons: [PolygonCapacity; 4],
+    mpoints: [MultiPointCapacity; 4],
+    mline_strings: [MultiLineStringCapacity; 4],
+    mpolygons: [MultiPolygonCapacity; 4],
+    gcs: [GeometryCollectionCapacity; 4],
 
     /// Whether to prefer multi or single arrays for new geometries.
     prefer_multi: bool,
@@ -43,39 +37,24 @@ impl GeometryCapacity {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         nulls: usize,
-        point_xy: usize,
-        line_string_xy: LineStringCapacity,
-        polygon_xy: PolygonCapacity,
-        mpoint_xy: MultiPointCapacity,
-        mline_string_xy: MultiLineStringCapacity,
-        mpolygon_xy: MultiPolygonCapacity,
-        gc_xy: GeometryCollectionCapacity,
-
-        point_xyz: usize,
-        line_string_xyz: LineStringCapacity,
-        polygon_xyz: PolygonCapacity,
-        mpoint_xyz: MultiPointCapacity,
-        mline_string_xyz: MultiLineStringCapacity,
-        mpolygon_xyz: MultiPolygonCapacity,
-        gc_xyz: GeometryCollectionCapacity,
+        points: [usize; 4],
+        line_strings: [LineStringCapacity; 4],
+        polygons: [PolygonCapacity; 4],
+        mpoints: [MultiPointCapacity; 4],
+        mline_strings: [MultiLineStringCapacity; 4],
+        mpolygons: [MultiPolygonCapacity; 4],
+        gcs: [GeometryCollectionCapacity; 4],
         prefer_multi: bool,
     ) -> Self {
         Self {
             nulls,
-            point_xy,
-            line_string_xy,
-            polygon_xy,
-            mpoint_xy,
-            mline_string_xy,
-            mpolygon_xy,
-            gc_xy,
-            point_xyz,
-            line_string_xyz,
-            polygon_xyz,
-            mpoint_xyz,
-            mline_string_xyz,
-            mpolygon_xyz,
-            gc_xyz,
+            points,
+            line_strings,
+            polygons,
+            mpoints,
+            mline_strings,
+            mpolygons,
+            gcs,
             prefer_multi,
         }
     }
@@ -83,22 +62,8 @@ impl GeometryCapacity {
     /// Create a new empty capacity.
     pub fn new_empty(prefer_multi: bool) -> Self {
         Self {
-            nulls: 0,
-            point_xy: 0,
-            line_string_xy: LineStringCapacity::new_empty(),
-            polygon_xy: PolygonCapacity::new_empty(),
-            mpoint_xy: MultiPointCapacity::new_empty(),
-            mline_string_xy: MultiLineStringCapacity::new_empty(),
-            mpolygon_xy: MultiPolygonCapacity::new_empty(),
-            gc_xy: GeometryCollectionCapacity::new_empty(),
-            point_xyz: 0,
-            line_string_xyz: LineStringCapacity::new_empty(),
-            polygon_xyz: PolygonCapacity::new_empty(),
-            mpoint_xyz: MultiPointCapacity::new_empty(),
-            mline_string_xyz: MultiLineStringCapacity::new_empty(),
-            mpolygon_xyz: MultiPolygonCapacity::new_empty(),
-            gc_xyz: GeometryCollectionCapacity::new_empty(),
             prefer_multi,
+            ..Default::default()
         }
     }
 
@@ -111,106 +76,113 @@ impl GeometryCapacity {
 
     /// Return `true` if the capacity is empty.
     pub fn is_empty(&self) -> bool {
-        self.point_xy == 0
-            && self.line_string_xy.is_empty()
-            && self.polygon_xy.is_empty()
-            && self.mpoint_xy.is_empty()
-            && self.mline_string_xy.is_empty()
-            && self.mpolygon_xy.is_empty()
-            && self.point_xyz == 0
-            && self.line_string_xyz.is_empty()
-            && self.polygon_xyz.is_empty()
-            && self.mpoint_xyz.is_empty()
-            && self.mline_string_xyz.is_empty()
-            && self.mpolygon_xyz.is_empty()
+        if self.points.iter().any(|c| *c > 0) {
+            return false;
+        }
+
+        if self.line_strings.iter().any(|c| !c.is_empty()) {
+            return false;
+        }
+
+        if self.polygons.iter().any(|c| !c.is_empty()) {
+            return false;
+        }
+
+        if self.mpoints.iter().any(|c| !c.is_empty()) {
+            return false;
+        }
+
+        if self.mline_strings.iter().any(|c| !c.is_empty()) {
+            return false;
+        }
+
+        if self.mpolygons.iter().any(|c| !c.is_empty()) {
+            return false;
+        }
+
+        if self.gcs.iter().any(|c| !c.is_empty()) {
+            return false;
+        }
+
+        true
     }
 
     /// The total number of geometries across all geometry types.
     pub fn total_num_geoms(&self) -> usize {
         let mut total = 0;
-        total += self.point_xy;
-        total += self.line_string_xy.geom_capacity();
-        total += self.polygon_xy.geom_capacity();
-        total += self.mpoint_xy.geom_capacity();
-        total += self.mline_string_xy.geom_capacity();
-        total += self.mpolygon_xy.geom_capacity();
-        total += self.point_xyz;
-        total += self.line_string_xyz.geom_capacity();
-        total += self.polygon_xyz.geom_capacity();
-        total += self.mpoint_xyz.geom_capacity();
-        total += self.mline_string_xyz.geom_capacity();
-        total += self.mpolygon_xyz.geom_capacity();
+
+        self.points.iter().for_each(|c| {
+            total += c;
+        });
+        self.line_strings.iter().for_each(|c| {
+            total += c.geom_capacity();
+        });
+        self.polygons.iter().for_each(|c| {
+            total += c.geom_capacity();
+        });
+        self.mpoints.iter().for_each(|c| {
+            total += c.geom_capacity();
+        });
+        self.mline_strings.iter().for_each(|c| {
+            total += c.geom_capacity();
+        });
+        self.mpolygons.iter().for_each(|c| {
+            total += c.geom_capacity();
+        });
+        self.gcs.iter().for_each(|c| {
+            total += c.geom_capacity();
+        });
+
         total
     }
 
-    /// The number of point_xy geometries
-    pub fn point_xy(&self) -> usize {
-        self.point_xy
+    /// Access point capacities
+    ///
+    /// Values are represent dimensions in the order: XY, XYZ, XYM, XYZM.
+    pub fn points(&self) -> [usize; 4] {
+        self.points
     }
 
-    /// The number of line_string_xy geometries
-    pub fn line_string_xy(&self) -> LineStringCapacity {
-        self.line_string_xy
+    /// Access LineString capacities
+    ///
+    /// Values are represent dimensions in the order: XY, XYZ, XYM, XYZM.
+    pub fn line_strings(&self) -> [LineStringCapacity; 4] {
+        self.line_strings
     }
 
-    /// The number of polygon_xy geometries
-    pub fn polygon_xy(&self) -> PolygonCapacity {
-        self.polygon_xy
+    /// Access Polygon capacities
+    ///
+    /// Values are represent dimensions in the order: XY, XYZ, XYM, XYZM.
+    pub fn polygons(&self) -> [PolygonCapacity; 4] {
+        self.polygons
     }
 
-    /// The number of multi point_xy geometries
-    pub fn mpoint_xy(&self) -> MultiPointCapacity {
-        self.mpoint_xy
+    /// Access MultiPoint capacities
+    ///
+    /// Values are represent dimensions in the order: XY, XYZ, XYM, XYZM.
+    pub fn multi_points(&self) -> [MultiPointCapacity; 4] {
+        self.mpoints
     }
 
-    /// The number of multi line_string_xy geometries
-    pub fn mline_string_xy(&self) -> MultiLineStringCapacity {
-        self.mline_string_xy
+    /// Access point capacities
+    ///
+    /// Values are represent dimensions in the order: XY, XYZ, XYM, XYZM.
+    pub fn multi_line_strings(&self) -> [MultiLineStringCapacity; 4] {
+        self.mline_strings
     }
 
-    /// The number of multi polygon_xy geometries
-    pub fn mpolygon_xy(&self) -> MultiPolygonCapacity {
-        self.mpolygon_xy
+    /// Access point capacities
+    ///
+    /// Values are represent dimensions in the order: XY, XYZ, XYM, XYZM.
+    pub fn multi_polygons(&self) -> [MultiPolygonCapacity; 4] {
+        self.mpolygons
     }
 
-    /// The number of gc_xy geometries
-    pub fn gc_xy(&self) -> GeometryCollectionCapacity {
-        self.gc_xy
-    }
-
-    /// The number of point_xyz geometries
-    pub fn point_xyz(&self) -> usize {
-        self.point_xyz
-    }
-
-    /// The number of line_string_xyz geometries
-    pub fn line_string_xyz(&self) -> LineStringCapacity {
-        self.line_string_xyz
-    }
-
-    /// The number of polygon_xyz geometries
-    pub fn polygon_xyz(&self) -> PolygonCapacity {
-        self.polygon_xyz
-    }
-
-    /// The number of multi point_xyz geometries
-    pub fn mpoint_xyz(&self) -> MultiPointCapacity {
-        self.mpoint_xyz
-    }
-
-    /// The number of multi line_string_xyz geometries
-    pub fn mline_string_xyz(&self) -> MultiLineStringCapacity {
-        self.mline_string_xyz
-    }
-
-    /// The number of multi polygon_xyz geometries
-    pub fn mpolygon_xyz(&self) -> MultiPolygonCapacity {
-        self.mpolygon_xyz
-    }
-
-    /// The number of gc_xyz geometries
-    pub fn gc_xyz(&self) -> GeometryCollectionCapacity {
-        self.gc_xyz
+    /// Access GeometryCollection capacities
+    ///
+    /// Values are represent dimensions in the order: XY, XYZ, XYM, XYZM.
+    pub fn gcs(&self) -> [GeometryCollectionCapacity; 4] {
+        self.gcs
     }
 
     // pub fn point_compatible(&self) -> bool {
@@ -262,22 +234,10 @@ impl GeometryCapacity {
     #[inline]
     pub fn add_point(&mut self, point: Option<&impl PointTrait>) {
         if let Some(point) = point {
-            match point.dim() {
-                Dimensions::Xy | Dimensions::Unknown(2) => {
-                    if self.prefer_multi {
-                        self.mpoint_xy.add_point_capacity(1);
-                    } else {
-                        self.point_xy += 1;
-                    }
-                }
-                Dimensions::Xyz | Dimensions::Unknown(3) => {
-                    if self.prefer_multi {
-                        self.mpoint_xyz.add_point_capacity(1);
-                    } else {
-                        self.point_xyz += 1;
-                    }
-                }
-                _ => todo!(),
+            if self.prefer_multi {
+                self.mpoints[point.dim().order()].add_point(Some(point));
+            } else {
+                self.points[point.dim().order()] += 1;
             }
         } else {
             self.nulls += 1;
@@ -288,22 +248,10 @@ impl GeometryCapacity {
     #[inline]
     pub fn add_line_string(&mut self, line_string: Option<&impl LineStringTrait>) {
         if let Some(line_string) = line_string {
-            match line_string.dim() {
-                Dimensions::Xy | Dimensions::Unknown(2) => {
-                    if self.prefer_multi {
-                        self.mline_string_xy.add_line_string(Some(line_string));
-                    } else {
-                        self.line_string_xy.add_line_string(Some(line_string));
-                    }
-                }
-                Dimensions::Xyz | Dimensions::Unknown(3) => {
-                    if self.prefer_multi {
-                        self.mline_string_xyz.add_line_string(Some(line_string));
-                    } else {
-                        self.line_string_xyz.add_line_string(Some(line_string));
-                    }
-                }
-                _ => todo!(),
+            if self.prefer_multi {
+                self.mline_strings[line_string.dim().order()].add_line_string(Some(line_string));
+            } else {
+                self.line_strings[line_string.dim().order()].add_line_string(Some(line_string));
             }
         } else {
             self.nulls += 1;
@@ -314,22 +262,10 @@ impl GeometryCapacity {
     #[inline]
     pub fn add_polygon(&mut self, polygon: Option<&impl PolygonTrait>) {
         if let Some(polygon) = polygon {
-            match polygon.dim() {
-                Dimensions::Xy | Dimensions::Unknown(2) => {
-                    if self.prefer_multi {
-                        self.mpolygon_xy.add_polygon(Some(polygon));
-                    } else {
-                        self.polygon_xy.add_polygon(Some(polygon));
-                    }
-                }
-                Dimensions::Xyz | Dimensions::Unknown(3) => {
-                    if self.prefer_multi {
-                        self.mpolygon_xyz.add_polygon(Some(polygon));
-                    } else {
-                        self.polygon_xyz.add_polygon(Some(polygon));
-                    }
-                }
-                _ => todo!(),
+            if self.prefer_multi {
+                self.mpolygons[polygon.dim().order()].add_polygon(Some(polygon));
+            } else {
+                self.polygons[polygon.dim().order()].add_polygon(Some(polygon));
             }
         } else {
             self.nulls += 1;
@@ -340,15 +276,7 @@ impl GeometryCapacity {
     #[inline]
     pub fn add_multi_point(&mut self, multi_point: Option<&impl MultiPointTrait>) {
         if let Some(multi_point) = multi_point {
-            match multi_point.dim() {
-                Dimensions::Xy | Dimensions::Unknown(2) => {
-                    self.mpoint_xy.add_multi_point(Some(multi_point));
-                }
-                Dimensions::Xyz | Dimensions::Unknown(3) => {
-                    self.mpoint_xyz.add_multi_point(Some(multi_point));
-                }
-                _ => todo!(),
-            }
+            self.multi_points()[multi_point.dim().order()].add_multi_point(Some(multi_point));
         } else {
             self.nulls += 1;
         }
@@ -358,17 +286,8 @@ impl GeometryCapacity {
     #[inline]
     pub fn add_multi_line_string(&mut self, multi_line_string: Option<&impl MultiLineStringTrait>) {
         if let Some(multi_line_string) = multi_line_string {
-            match multi_line_string.dim() {
-                Dimensions::Xy | Dimensions::Unknown(2) => {
-                    self.mline_string_xy
-                        .add_multi_line_string(Some(multi_line_string));
-                }
-                Dimensions::Xyz | Dimensions::Unknown(3) => {
-                    self.mline_string_xyz
-                        .add_multi_line_string(Some(multi_line_string));
-                }
-                _ => todo!(),
-            }
+            self.multi_line_strings()[multi_line_string.dim().order()]
+                .add_multi_line_string(Some(multi_line_string));
         } else {
             self.nulls += 1;
         }
@@ -378,15 +297,8 @@ impl GeometryCapacity {
     #[inline]
     pub fn add_multi_polygon(&mut self, multi_polygon: Option<&impl MultiPolygonTrait>) {
         if let Some(multi_polygon) = multi_polygon {
-            match multi_polygon.dim() {
-                Dimensions::Xy | Dimensions::Unknown(2) => {
-                    self.mpolygon_xy.add_multi_polygon(Some(multi_polygon));
-                }
-                Dimensions::Xyz | Dimensions::Unknown(3) => {
-                    self.mpolygon_xyz.add_multi_polygon(Some(multi_polygon));
-                }
-                _ => todo!(),
-            }
+            self.multi_polygons()[multi_polygon.dim().order()]
+                .add_multi_polygon(Some(multi_polygon));
         } else {
             self.nulls += 1;
         }
@@ -421,15 +333,7 @@ impl GeometryCapacity {
         gc: Option<&impl GeometryCollectionTrait>,
     ) -> Result<()> {
         if let Some(gc) = gc {
-            match gc.dim() {
-                Dimensions::Xy | Dimensions::Unknown(2) => {
-                    self.gc_xy.add_geometry_collection(Some(gc))?;
-                }
-                Dimensions::Xyz | Dimensions::Unknown(3) => {
-                    self.gc_xyz.add_geometry_collection(Some(gc))?;
-                }
-                _ => todo!(),
-            }
+            self.gcs[gc.dim().order()].add_geometry_collection(Some(gc))?;
         } else {
             self.nulls += 1;
         };
@@ -464,21 +368,17 @@ impl GeometryCapacity {
     pub fn num_bytes(&self) -> usize {
         let mut count = 0;
 
-        count += self.point_xy * 2 * 8;
-        count += self.line_string_xy.num_bytes();
-        count += self.polygon_xy.num_bytes();
-        count += self.mpoint_xy.num_bytes();
-        count += self.mline_string_xy.num_bytes();
-        count += self.mpolygon_xy.num_bytes();
-        count += self.gc_xy.num_bytes();
-
-        count += self.point_xyz * 3 * 8;
-        count += self.line_string_xyz.num_bytes();
-        count += self.polygon_xyz.num_bytes();
-        count += self.mpoint_xyz.num_bytes();
-        count += self.mline_string_xyz.num_bytes();
-        count += self.mpolygon_xyz.num_bytes();
-        count += self.gc_xyz.num_bytes();
+        self.points.iter().for_each(|c| count += c * 2 * 8);
+        self.line_strings
+            .iter()
+            .for_each(|c| count += c.num_bytes());
+        self.polygons.iter().for_each(|c| count += c.num_bytes());
+        self.mpoints.iter().for_each(|c| count += c.num_bytes());
+        self.mline_strings
+            .iter()
+            .for_each(|c| count += c.num_bytes());
+        self.mpolygons.iter().for_each(|c| count += c.num_bytes());
+        self.gcs.iter().for_each(|c| count += c.num_bytes());
 
         count
     }
@@ -488,21 +388,12 @@ impl AddAssign for GeometryCapacity {
     fn add_assign(&mut self, rhs: Self) {
         self.nulls += rhs.nulls;
 
-        // TODO: implement AddAssign on all of these and switch to using add assign
-        self.point_xy = self.point_xy + rhs.point_xy;
-        self.line_string_xy = self.line_string_xy + rhs.line_string_xy;
-        self.polygon_xy = self.polygon_xy + rhs.polygon_xy;
-        self.mpoint_xy = self.mpoint_xy + rhs.mpoint_xy;
-        self.mline_string_xy = self.mline_string_xy + rhs.mline_string_xy;
-        self.mpolygon_xy = self.mpolygon_xy + rhs.mpolygon_xy;
-        self.gc_xy = self.gc_xy + rhs.gc_xy;
-
-        self.point_xyz = self.point_xyz + rhs.point_xyz;
-        self.line_string_xyz = self.line_string_xyz + rhs.line_string_xyz;
-        self.polygon_xyz = self.polygon_xyz + rhs.polygon_xyz;
-        self.mpoint_xyz = self.mpoint_xyz + rhs.mpoint_xyz;
-        self.mline_string_xyz = self.mline_string_xyz + rhs.mline_string_xyz;
-        self.mpolygon_xyz = self.mpolygon_xyz + rhs.mpolygon_xyz;
-        self.gc_xyz = self.gc_xyz + rhs.gc_xyz;
+        self.points = core::array::from_fn(|i| self.points[i] + rhs.points[i]);
+        self.line_strings = core::array::from_fn(|i| self.line_strings[i] + rhs.line_strings[i]);
+        self.polygons = core::array::from_fn(|i| self.polygons[i] + rhs.polygons[i]);
+        self.mpoints = core::array::from_fn(|i| self.mpoints[i] + rhs.mpoints[i]);
+        self.mline_strings = core::array::from_fn(|i| self.mline_strings[i] + rhs.mline_strings[i]);
+        self.mpolygons = core::array::from_fn(|i| self.mpolygons[i] + rhs.mpolygons[i]);
+        self.gcs = core::array::from_fn(|i| self.gcs[i] + rhs.gcs[i]);
     }
 }

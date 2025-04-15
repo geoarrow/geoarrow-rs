@@ -6,7 +6,7 @@ use arrow_array::{
 };
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
-use geoarrow_schema::{CoordType, Metadata, WkbType};
+use geoarrow_schema::{Metadata, WkbType};
 use wkb::reader::Wkb;
 
 use crate::capacity::WKBCapacity;
@@ -20,19 +20,19 @@ use crate::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 /// This is semantically equivalent to `Vec<Option<WKB>>` due to the internal validity bitmap.
 ///
 /// This array implements [`SerializedArray`], not [`NativeArray`]. This means that you'll need to
-/// parse the `WKBArray` into a native-typed GeoArrow array (such as
+/// parse the `WkbArray` into a native-typed GeoArrow array (such as
 /// [`GeometryArray`][crate::array::GeometryArray]) before using it for computations.
 ///
 /// Refer to [`crate::io::wkb`] for encoding and decoding this array to the native array types.
 #[derive(Debug, Clone, PartialEq)]
-pub struct WKBArray<O: OffsetSizeTrait> {
+pub struct WkbArray<O: OffsetSizeTrait> {
     pub(crate) data_type: WkbType,
     pub(crate) array: GenericBinaryArray<O>,
 }
 
 // Implement geometry accessors
-impl<O: OffsetSizeTrait> WKBArray<O> {
-    /// Create a new WKBArray from a BinaryArray
+impl<O: OffsetSizeTrait> WkbArray<O> {
+    /// Create a new WkbArray from a BinaryArray
     pub fn new(array: GenericBinaryArray<O>, metadata: Arc<Metadata>) -> Self {
         Self {
             data_type: WkbType::new(metadata),
@@ -43,15 +43,6 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
     /// Returns true if the array is empty
     pub fn is_empty(&self) -> bool {
         self.len() == 0
-    }
-
-    /// Infer the minimal NativeType that this WKBArray can be casted to.
-    #[allow(dead_code)]
-    // TODO: is this obsolete with new from_wkb approach that uses downcasting?
-    pub(crate) fn infer_geo_data_type(&self, _coord_type: CoordType) -> Result<GeoArrowType> {
-        todo!()
-        // use crate::io::wkb::reader::r#type::infer_geometry_type;
-        // infer_geometry_type(self.iter().flatten(), coord_type)
     }
 
     /// The lengths of each buffer contained in this array.
@@ -68,7 +59,7 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         validity_len + self.buffer_lengths().num_bytes::<O>()
     }
 
-    /// Slices this [`WKBArray`] in place.
+    /// Slices this [`WkbArray`] in place.
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
@@ -91,13 +82,12 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> GeoArrowArray for WKBArray<O> {
+impl<O: OffsetSizeTrait> GeoArrowArray for WkbArray<O> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
 
     fn into_array_ref(self) -> ArrayRef {
-        // Recreate a BinaryArray so that we can force it to have geoarrow.wkb extension type
         Arc::new(self.into_arrow())
     }
 
@@ -105,22 +95,20 @@ impl<O: OffsetSizeTrait> GeoArrowArray for WKBArray<O> {
         self.clone().into_array_ref()
     }
 
-    /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
         self.array.len()
     }
 
-    /// Returns the optional validity.
     fn nulls(&self) -> Option<&NullBuffer> {
         self.array.nulls()
     }
 
     fn data_type(&self) -> GeoArrowType {
         if O::IS_LARGE {
-            GeoArrowType::LargeWKB(self.data_type.clone())
+            GeoArrowType::LargeWkb(self.data_type.clone())
         } else {
-            GeoArrowType::WKB(self.data_type.clone())
+            GeoArrowType::Wkb(self.data_type.clone())
         }
     }
 
@@ -129,7 +117,7 @@ impl<O: OffsetSizeTrait> GeoArrowArray for WKBArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> ArrayAccessor<'a> for WKBArray<O> {
+impl<'a, O: OffsetSizeTrait> ArrayAccessor<'a> for WkbArray<O> {
     type Item = Wkb<'a>;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
@@ -138,7 +126,7 @@ impl<'a, O: OffsetSizeTrait> ArrayAccessor<'a> for WKBArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> IntoArrow for WKBArray<O> {
+impl<O: OffsetSizeTrait> IntoArrow for WkbArray<O> {
     type ArrowArray = GenericBinaryArray<O>;
     type ExtensionType = WkbType;
 
@@ -155,19 +143,19 @@ impl<O: OffsetSizeTrait> IntoArrow for WKBArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<(GenericBinaryArray<O>, WkbType)> for WKBArray<O> {
+impl<O: OffsetSizeTrait> From<(GenericBinaryArray<O>, WkbType)> for WkbArray<O> {
     fn from((value, typ): (GenericBinaryArray<O>, WkbType)) -> Self {
         Self::new(value, typ.metadata().clone())
     }
 }
 
-impl TryFrom<(&dyn Array, WkbType)> for WKBArray<i32> {
+impl TryFrom<(&dyn Array, WkbType)> for WkbArray<i32> {
     type Error = GeoArrowError;
     fn try_from((value, typ): (&dyn Array, WkbType)) -> Result<Self> {
         match value.data_type() {
             DataType::Binary => Ok((value.as_binary::<i32>().clone(), typ).into()),
             DataType::LargeBinary => {
-                let geom_array: WKBArray<i64> = (value.as_binary::<i64>().clone(), typ).into();
+                let geom_array: WkbArray<i64> = (value.as_binary::<i64>().clone(), typ).into();
                 geom_array.try_into()
             }
             _ => Err(GeoArrowError::General(format!(
@@ -178,12 +166,12 @@ impl TryFrom<(&dyn Array, WkbType)> for WKBArray<i32> {
     }
 }
 
-impl TryFrom<(&dyn Array, WkbType)> for WKBArray<i64> {
+impl TryFrom<(&dyn Array, WkbType)> for WkbArray<i64> {
     type Error = GeoArrowError;
     fn try_from((value, typ): (&dyn Array, WkbType)) -> Result<Self> {
         match value.data_type() {
             DataType::Binary => {
-                let geom_array: WKBArray<i32> = (value.as_binary::<i32>().clone(), typ).into();
+                let geom_array: WkbArray<i32> = (value.as_binary::<i32>().clone(), typ).into();
                 Ok(geom_array.into())
             }
             DataType::LargeBinary => Ok((value.as_binary::<i64>().clone(), typ).into()),
@@ -195,7 +183,7 @@ impl TryFrom<(&dyn Array, WkbType)> for WKBArray<i64> {
     }
 }
 
-impl TryFrom<(&dyn Array, &Field)> for WKBArray<i32> {
+impl TryFrom<(&dyn Array, &Field)> for WkbArray<i32> {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
@@ -204,7 +192,7 @@ impl TryFrom<(&dyn Array, &Field)> for WKBArray<i32> {
     }
 }
 
-impl TryFrom<(&dyn Array, &Field)> for WKBArray<i64> {
+impl TryFrom<(&dyn Array, &Field)> for WkbArray<i64> {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
@@ -213,8 +201,8 @@ impl TryFrom<(&dyn Array, &Field)> for WKBArray<i64> {
     }
 }
 
-impl From<WKBArray<i32>> for WKBArray<i64> {
-    fn from(value: WKBArray<i32>) -> Self {
+impl From<WkbArray<i32>> for WkbArray<i64> {
+    fn from(value: WkbArray<i32>) -> Self {
         let binary_array = value.array;
         let (offsets, values, nulls) = binary_array.into_parts();
         let array = LargeBinaryArray::new(offsets_buffer_i32_to_i64(&offsets), values, nulls);
@@ -225,10 +213,10 @@ impl From<WKBArray<i32>> for WKBArray<i64> {
     }
 }
 
-impl TryFrom<WKBArray<i64>> for WKBArray<i32> {
+impl TryFrom<WkbArray<i64>> for WkbArray<i32> {
     type Error = GeoArrowError;
 
-    fn try_from(value: WKBArray<i64>) -> Result<Self> {
+    fn try_from(value: WkbArray<i64>) -> Result<Self> {
         let binary_array = value.array;
         let (offsets, values, nulls) = binary_array.into_parts();
         let array = BinaryArray::new(offsets_buffer_i64_to_i32(&offsets)?, values, nulls);
@@ -247,7 +235,7 @@ mod test {
 
     use super::*;
 
-    fn wkb_data<O: OffsetSizeTrait>() -> WKBArray<O> {
+    fn wkb_data<O: OffsetSizeTrait>() -> WkbArray<O> {
         let mut builder = WKBBuilder::new(WkbType::new(Default::default()));
         builder.push_point(Some(&point::p0()));
         builder.push_point(Some(&point::p1()));
@@ -260,7 +248,7 @@ mod test {
         let wkb_array = wkb_data::<i32>();
         let array = wkb_array.to_array_ref();
         let field = wkb_array.data_type.to_field("geometry", true, false);
-        let wkb_array_retour: WKBArray<i32> = (array.as_ref(), &field).try_into().unwrap();
+        let wkb_array_retour: WkbArray<i32> = (array.as_ref(), &field).try_into().unwrap();
 
         assert_eq!(wkb_array, wkb_array_retour);
     }
@@ -270,7 +258,7 @@ mod test {
         let wkb_array = wkb_data::<i64>();
         let array = wkb_array.to_array_ref();
         let field = wkb_array.data_type.to_field("geometry", true, false);
-        let wkb_array_retour: WKBArray<i64> = (array.as_ref(), &field).try_into().unwrap();
+        let wkb_array_retour: WkbArray<i64> = (array.as_ref(), &field).try_into().unwrap();
 
         assert_eq!(wkb_array, wkb_array_retour);
     }
@@ -278,8 +266,8 @@ mod test {
     #[test]
     fn convert_i32_to_i64() {
         let wkb_array = wkb_data::<i32>();
-        let wkb_array_i64: WKBArray<i64> = wkb_array.clone().into();
-        let wkb_array_i32: WKBArray<i32> = wkb_array_i64.clone().try_into().unwrap();
+        let wkb_array_i64: WkbArray<i64> = wkb_array.clone().into();
+        let wkb_array_i32: WkbArray<i32> = wkb_array_i64.clone().try_into().unwrap();
 
         assert_eq!(wkb_array, wkb_array_i32);
     }
@@ -287,8 +275,8 @@ mod test {
     #[test]
     fn convert_i64_to_i32_to_i64() {
         let wkb_array = wkb_data::<i64>();
-        let wkb_array_i32: WKBArray<i32> = wkb_array.clone().try_into().unwrap();
-        let wkb_array_i64: WKBArray<i64> = wkb_array_i32.clone().into();
+        let wkb_array_i32: WkbArray<i32> = wkb_array.clone().try_into().unwrap();
+        let wkb_array_i64: WkbArray<i64> = wkb_array_i32.clone().into();
 
         assert_eq!(wkb_array, wkb_array_i64);
     }

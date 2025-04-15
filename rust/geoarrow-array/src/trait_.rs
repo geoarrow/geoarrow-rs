@@ -36,7 +36,7 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// Prefer using [`AsGeoArrowArray`] instead of calling this method and manually downcasting.
     fn as_any(&self) -> &dyn Any;
 
-    /// Returns the [`NativeType`] of this array.
+    /// Returns the [`GeoArrowType`] of this array.
     ///
     /// # Examples
     ///
@@ -44,7 +44,7 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// use geoarrow::{array::PointArray, datatypes::NativeType, NativeArray};
     /// use geoarrow_schema::Dimension;
     ///
-    /// let point = geo::point!(x: 1., y: 2.);
+    /// let point = geo_types::point!(x: 1., y: 2.);
     /// let point_array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// assert!(matches!(point_array.data_type(), NativeType::Point(_, _)));
     /// ```
@@ -63,7 +63,7 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// use geoarrow::{array::PointArray, GeoArrowArray};
     /// use geoarrow_schema::Dimension;
     ///
-    /// let point = geo::point!(x: 1., y: 2.);
+    /// let point = geo_types::point!(x: 1., y: 2.);
     /// let point_array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// let array_ref = point_array.into_array_ref();
     /// ```
@@ -83,7 +83,7 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// use geoarrow::{array::PointArray, GeoArrowArray};
     /// use geoarrow_schema::Dimension;
     ///
-    /// let point = geo::point!(x: 1., y: 2.);
+    /// let point = geo_types::point!(x: 1., y: 2.);
     /// let point_array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// let array_ref = point_array.to_array_ref();
     /// ```
@@ -98,7 +98,7 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// use geoarrow::{array::PointArray, GeoArrowArray};
     /// use geoarrow_schema::Dimension;
     ///
-    /// let point = geo::point!(x: 1., y: 2.);
+    /// let point = geo_types::point!(x: 1., y: 2.);
     /// let point_array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// assert_eq!(point_array.len(), 1);
     /// ```
@@ -112,7 +112,7 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// use geoarrow::{array::PointArray, GeoArrowArray};
     /// use geoarrow_schema::Dimension;
     ///
-    /// let point = geo::point!(x: 1., y: 2.);
+    /// let point = geo_types::point!(x: 1., y: 2.);
     /// let point_array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// assert!(!point_array.is_empty());
     /// ```
@@ -132,7 +132,7 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// use geoarrow::{GeoArrowArray, array::PointArray};
     /// use geoarrow_schema::Dimension;
     ///
-    /// let point = geo::point!(x: 1., y: 2.);
+    /// let point = geo_types::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// assert!(array.nulls().is_none());
     /// ```
@@ -148,7 +148,7 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// use geoarrow::{GeoArrowArray, array::PointArray};
     /// use geoarrow_schema::Dimension;
     ///
-    /// let point = geo::point!(x: 1., y: 2.);
+    /// let point = geo_types::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// assert_eq!(array.null_count(), 0);
     /// ```
@@ -165,7 +165,7 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// use geoarrow::{GeoArrowArray, array::PointArray};
     /// use geoarrow_schema::Dimension;
     ///
-    /// let point = geo::point!(x: 1., y: 2.);
+    /// let point = geo_types::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// assert!(!array.is_null(0));
     /// ```
@@ -186,7 +186,7 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// use geoarrow::{GeoArrowArray, array::PointArray};
     /// use geoarrow_schema::Dimension;
     ///
-    /// let point = geo::point!(x: 1., y: 2.);
+    /// let point = geo_types::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// assert!(array.is_valid(0));
     /// ```
@@ -210,8 +210,8 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// };
     /// use geoarrow_schema::Dimension;
     ///
-    /// let point_0 = geo::point!(x: 1., y: 2.);
-    /// let point_1 = geo::point!(x: 3., y: 4.);
+    /// let point_0 = geo_types::point!(x: 1., y: 2.);
+    /// let point_1 = geo_types::point!(x: 3., y: 4.);
     /// let array: PointArray = (vec![point_0, point_1].as_slice(), Dimension::XY).into();
     /// let smaller_array = array.slice(1, 1);
     /// assert_eq!(smaller_array.len(), 1);
@@ -234,13 +234,13 @@ pub trait GeoArrowArray: Debug + Send + Sync {
 /// Accessing a geometry from a "native" array, such as `PointArray`, `MultiPolygonArray` or
 /// `GeometryArray` will always be constant-time and zero-copy.
 ///
-/// Accessing a geometry from a "serialized" array such as `WKBArray` or `WKTArray` will trigger
-/// some amount of parsing. In the case of `WKBArray`, accessing an item will read the WKB header
+/// Accessing a geometry from a "serialized" array such as `WkbArray` or `WktArray` will trigger
+/// some amount of parsing. In the case of `WkbArray`, accessing an item will read the WKB header
 /// and scan the buffer if needed to find internal geometry offsets, but will not copy any internal
 /// coordinates. This allows for later access to be constant-time (though not necessarily
-/// zero-copy, since WKB is not byte-aligned). In the case of `WKTArray`, accessing a geometry will
+/// zero-copy, since WKB is not byte-aligned). In the case of `WktArray`, accessing a geometry will
 /// fully parse the WKT string and copy coordinates to a separate representation. This means that
-/// calling `.iter()` on a `WKTArray` will transparently fully parse every row.
+/// calling `.iter()` on a `WktArray` will transparently fully parse every row.
 ///
 /// # Validity
 ///
@@ -262,7 +262,7 @@ pub trait ArrayAccessor<'a>: GeoArrowArray {
     /// use geo_traits::{PointTrait, CoordTrait};
     /// use geoarrow_schema::Dimension;
     ///
-    /// let point = geo::point!(x: 1., y: 2.);
+    /// let point = geo_types::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// let value = array.value(0); // geoarrow::scalar::Point
     /// assert_eq!(value.coord().unwrap().x(), 1.);
@@ -289,7 +289,7 @@ pub trait ArrayAccessor<'a>: GeoArrowArray {
     /// use geoarrow::{trait_::ArrayAccessor, array::PointArray};
     /// use geoarrow_schema::Dimension;
     ///
-    /// let point = geo::point!(x: 1., y: 2.);
+    /// let point = geo_types::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// unsafe {
     ///     let value = array.value_unchecked(0); // geoarrow::scalar::Point
@@ -313,7 +313,7 @@ pub trait ArrayAccessor<'a>: GeoArrowArray {
     /// use geoarrow::{trait_::ArrayAccessor, array::PointArray};
     /// use geoarrow_schema::Dimension;
     ///
-    /// let point = geo::point!(x: 1., y: 2.);
+    /// let point = geo_types::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// assert!(array.get(0).is_some());
     /// ```
@@ -337,7 +337,7 @@ pub trait ArrayAccessor<'a>: GeoArrowArray {
     /// use geoarrow::{trait_::ArrayAccessor, array::PointArray};
     /// use geoarrow_schema::Dimension;
     ///
-    /// let point = geo::point!(x: 1., y: 2.);
+    /// let point = geo_types::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// unsafe {
     ///     assert!(array.get_unchecked(0).is_some());
@@ -367,7 +367,7 @@ pub trait ArrayAccessor<'a>: GeoArrowArray {
     /// use geoarrow::{trait_::ArrayAccessor, array::PointArray};
     /// use geoarrow_schema::Dimension;
     ///
-    /// let point = geo::point!(x: 1., y: 2.);
+    /// let point = geo_types::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// let maybe_points: Vec<Option<_>> = array.iter().collect();
     /// ```
@@ -387,7 +387,7 @@ pub trait ArrayAccessor<'a>: GeoArrowArray {
     /// use geoarrow::{trait_::ArrayAccessor, array::PointArray};
     /// use geoarrow_schema::Dimension;
     ///
-    /// let point = geo::point!(x: 1., y: 2.);
+    /// let point = geo_types::point!(x: 1., y: 2.);
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// let points: Vec<_> = array.iter_values().collect();
     /// ```
@@ -406,7 +406,7 @@ pub trait ArrayAccessor<'a>: GeoArrowArray {
 /// thereby making them useful to perform numeric operations without allocations.
 /// As in [`NativeArray`], concrete arrays (such as
 /// [`PointBuilder`][crate::array::PointBuilder]) implement how they are mutated.
-pub trait GeometryArrayBuilder: Debug + Send + Sync + Sized {
+pub trait GeometryArrayBuilder: Debug + Send + Sync {
     /// Returns the length of the array.
     ///
     /// # Examples
@@ -417,7 +417,7 @@ pub trait GeometryArrayBuilder: Debug + Send + Sync + Sized {
     ///
     /// let mut builder = PointBuilder::new(Dimension::XY);
     /// assert_eq!(builder.len(), 0);
-    /// builder.push_point(Some(&geo::point!(x: 1., y: 2.)));
+    /// builder.push_point(Some(&geo_types::point!(x: 1., y: 2.)));
     /// assert_eq!(builder.len(), 1);
     /// ```
     fn len(&self) -> usize;
@@ -432,10 +432,13 @@ pub trait GeometryArrayBuilder: Debug + Send + Sync + Sized {
     ///
     /// let mut builder = PointBuilder::new(Dimension::XY);
     /// assert!(builder.is_empty());
-    /// builder.push_point(Some(&geo::point!(x: 1., y: 2.)));
+    /// builder.push_point(Some(&geo_types::point!(x: 1., y: 2.)));
     /// assert!(!builder.is_empty());
     /// ```
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
+
+    /// Push a null value to this builder.
+    fn push_null(&mut self);
 }

@@ -59,7 +59,8 @@ impl<'a> MultiPolygonTrait for MultiPolygon<'a> {
         match self.coords.dim() {
             Dimension::XY => geo_traits::Dimensions::Xy,
             Dimension::XYZ => geo_traits::Dimensions::Xyz,
-            _ => todo!("XYM and XYZM not supported yet"),
+            Dimension::XYM => geo_traits::Dimensions::Xym,
+            Dimension::XYZM => geo_traits::Dimensions::Xyzm,
         }
     }
 
@@ -89,7 +90,8 @@ impl<'a> MultiPolygonTrait for &'a MultiPolygon<'a> {
         match self.coords.dim() {
             Dimension::XY => geo_traits::Dimensions::Xy,
             Dimension::XYZ => geo_traits::Dimensions::Xyz,
-            _ => todo!("XYM and XYZM not supported yet"),
+            Dimension::XYM => geo_traits::Dimensions::Xym,
+            Dimension::XYZM => geo_traits::Dimensions::Xyzm,
         }
     }
 

@@ -32,6 +32,9 @@ fn check(coords: &ScalarBuffer<f64>, dim: Dimension) -> Result<()> {
 }
 
 impl InterleavedCoordBuffer {
+    /// The underlying coordinate type
+    pub const COORD_TYPE: CoordType = CoordType::Interleaved;
+
     /// Construct a new InterleavedCoordBuffer
     ///
     /// # Panics
@@ -102,15 +105,7 @@ impl InterleavedCoordBuffer {
     }
 
     pub(crate) fn storage_type(&self) -> DataType {
-        PointType::new(CoordType::Interleaved, self.dim, Default::default()).data_type()
-    }
-
-    // todo switch to:
-    // pub const coord_type: CoordType = CoordType::Interleaved;
-
-    /// The coordinate type
-    pub fn coord_type(&self) -> CoordType {
-        CoordType::Interleaved
+        PointType::new(Self::COORD_TYPE, self.dim, Default::default()).data_type()
     }
 
     /// The number of coordinates

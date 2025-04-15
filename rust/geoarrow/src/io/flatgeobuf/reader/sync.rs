@@ -312,9 +312,7 @@ impl<R: Read> Iterator for FlatGeobufReader<R, NotSeekable> {
     type Item = std::result::Result<RecordBatch, ArrowError>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.process_batch()
-            .map_err(|err| ArrowError::ExternalError(Box::new(err)))
-            .transpose()
+        self.process_batch().map_err(|err| err.into()).transpose()
     }
 }
 
@@ -334,9 +332,7 @@ impl<R: Read + Seek> Iterator for FlatGeobufReader<R, Seekable> {
     type Item = std::result::Result<RecordBatch, ArrowError>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.process_batch()
-            .map_err(|err| ArrowError::ExternalError(Box::new(err)))
-            .transpose()
+        self.process_batch().map_err(|err| err.into()).transpose()
     }
 }
 

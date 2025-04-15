@@ -12,8 +12,8 @@ use geoarrow_schema::{
 
 use crate::ArrayAccessor;
 use crate::array::{
-    LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
-    PolygonArray, WKBArray,
+    DimensionIndex, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
+    PointArray, PolygonArray, WkbArray,
 };
 use crate::builder::{
     LineStringBuilder, MixedGeometryBuilder, MultiLineStringBuilder, MultiPointBuilder,
@@ -58,7 +58,7 @@ use crate::trait_::GeoArrowArray;
 /// - 35: MultiLineString ZM
 /// - 36: MultiPolygon ZM
 /// - 37: GeometryCollection ZM
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct MixedGeometryArray {
     // We store the coord type and dimension separately because there's no NativeType::Mixed
     // variant
@@ -429,6 +429,21 @@ impl MixedGeometryArray {
         }
     }
 
+    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.metadata;
+        Self::new(
+            self.type_ids,
+            self.offsets,
+            Some(self.points.into_coord_type(coord_type)),
+            Some(self.line_strings.into_coord_type(coord_type)),
+            Some(self.polygons.into_coord_type(coord_type)),
+            Some(self.multi_points.into_coord_type(coord_type)),
+            Some(self.multi_line_strings.into_coord_type(coord_type)),
+            Some(self.multi_polygons.into_coord_type(coord_type)),
+            metadata,
+        )
+    }
+
     pub fn contained_types(&self) -> HashSet<GeoArrowType> {
         let mut types = HashSet::new();
         if self.has_points() {
@@ -465,7 +480,6 @@ impl MixedGeometryArray {
         Arc::new(UnionArray::from(self))
     }
 
-    /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
         // Note that `type_ids` is sliced as usual, and thus always has the correct length.
@@ -560,16 +574,7 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                 }
 
                 for (type_id, _field) in fields.iter() {
-                    let found_dimension = if type_id < 10 {
-                        Dimension::XY
-                    } else if type_id < 20 {
-                        Dimension::XYZ
-                    } else {
-                        return Err(GeoArrowError::General(format!(
-                            "Unsupported type_id: {}",
-                            type_id
-                        )));
-                    };
+                    let found_dimension = Dimension::from_order((type_id / 10) as _);
 
                     if dim != found_dimension {
                         return Err(GeoArrowError::General(format!(
@@ -578,8 +583,8 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                         )));
                     }
 
-                    match type_id {
-                        1 | 11 => {
+                    match type_id % 10 {
+                        1 => {
                             points = Some(
                                 (
                                     value.child(type_id).as_ref(),
@@ -589,7 +594,7 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                                     .unwrap(),
                             );
                         }
-                        2 | 12 => {
+                        2 => {
                             line_strings = Some(
                                 (
                                     value.child(type_id).as_ref(),
@@ -599,7 +604,7 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                                     .unwrap(),
                             );
                         }
-                        3 | 13 => {
+                        3 => {
                             polygons = Some(
                                 (
                                     value.child(type_id).as_ref(),
@@ -609,7 +614,7 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                                     .unwrap(),
                             );
                         }
-                        4 | 14 => {
+                        4 => {
                             multi_points = Some(
                                 (
                                     value.child(type_id).as_ref(),
@@ -619,7 +624,7 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                                     .unwrap(),
                             );
                         }
-                        5 | 15 => {
+                        5 => {
                             multi_line_strings = Some(
                                 (
                                     value.child(type_id).as_ref(),
@@ -629,7 +634,7 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                                     .unwrap(),
                             );
                         }
-                        6 | 16 => {
+                        6 => {
                             multi_polygons = Some(
                                 (
                                     value.child(type_id).as_ref(),
@@ -685,11 +690,27 @@ impl TryFrom<(&dyn Array, Dimension, CoordType)> for MixedGeometryArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, Dimension)> for MixedGeometryArray {
+impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, Dimension)> for MixedGeometryArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WKBArray<O>, Dimension)) -> Result<Self> {
+    fn try_from(value: (WkbArray<O>, Dimension)) -> Result<Self> {
         let mut_arr: MixedGeometryBuilder = value.try_into()?;
         Ok(mut_arr.finish())
+    }
+}
+
+impl PartialEq for MixedGeometryArray {
+    fn eq(&self, other: &Self) -> bool {
+        self.dim == other.dim
+            && self.metadata == other.metadata
+            && self.type_ids == other.type_ids
+            && self.offsets == other.offsets
+            && self.points == other.points
+            && self.line_strings == other.line_strings
+            && self.polygons == other.polygons
+            && self.multi_points == other.multi_points
+            && self.multi_line_strings == other.multi_line_strings
+            && self.multi_polygons == other.multi_polygons
+            && self.slice_offset == other.slice_offset
     }
 }

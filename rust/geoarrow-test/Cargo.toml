@@ -1,0 +1,16 @@
+[package]
+name = "geoarrow-test"
+version = "0.1.0-dev"
+authors = ["Kyle Barron <kylebarron2@gmail.com>"]
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+description = "Rust implementation of GeoArrow"
+categories = ["science::geo"]
+rust-version = { workspace = true }
+
+[dependencies]
+geo = { workspace = true }
+geo-traits = { workspace = true }
+geo-types = { workspace = true }
+wkt = { workspace = true }

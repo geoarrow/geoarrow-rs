@@ -1,7 +1,7 @@
 use geoarrow::algorithm::native::ExplodeTable;
 use pyo3::prelude::*;
-use pyo3_arrow::export::Arro3Table;
 use pyo3_arrow::PyTable;
+use pyo3_arrow::export::Arro3Table;
 use pyo3_geoarrow::PyGeoArrowResult;
 
 use crate::util::{pytable_to_table, table_to_pytable};

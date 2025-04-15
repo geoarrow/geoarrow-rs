@@ -10,7 +10,7 @@ use geoarrow::io::parquet::{
     GeoParquetRecordBatchStream, GeoParquetRecordBatchStreamBuilder,
 };
 use geoarrow_schema::CoordType;
-use object_store::{ObjectMeta, ObjectStore};
+use object_store::ObjectStore;
 use object_store_wasm::http::HttpStore;
 use parquet::arrow::arrow_reader::ArrowReaderMetadata;
 use parquet::arrow::async_reader::ParquetObjectReader;
@@ -21,7 +21,7 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct ParquetFile {
-    object_meta: object_store::ObjectMeta,
+    path: object_store::path::Path,
     geoparquet_meta: GeoParquetReaderMetadata,
     store: Arc<dyn ObjectStore>,
 }
@@ -33,13 +33,12 @@ impl ParquetFile {
         let parsed_url = Url::parse(&url)?;
         let base_url = Url::parse(&parsed_url.origin().unicode_serialization())?;
         let store = Arc::new(HttpStore::new(base_url));
-        let location = object_store::path::Path::parse(parsed_url.path())?;
-        let object_meta = store.head(&location).await?;
-        let mut reader = ParquetObjectReader::new(store.clone(), object_meta.clone());
+        let path = object_store::path::Path::parse(parsed_url.path())?;
+        let mut reader = ParquetObjectReader::new(store.clone(), path.clone());
         let arrow_meta = ArrowReaderMetadata::load_async(&mut reader, Default::default()).await?;
         let geoparquet_meta = GeoParquetReaderMetadata::new(arrow_meta);
         Ok(Self {
-            object_meta,
+            path,
             geoparquet_meta,
             store,
         })
@@ -108,7 +107,7 @@ impl ParquetFile {
 
     #[wasm_bindgen]
     pub async fn read(&self, options: JsValue) -> WasmResult<Table> {
-        let reader = ParquetObjectReader::new(self.store.clone(), self.object_meta.clone());
+        let reader = ParquetObjectReader::new(self.store.clone(), self.path.clone());
         let options: Option<JsParquetReaderOptions> = serde_wasm_bindgen::from_value(options)?;
         let stream = GeoParquetRecordBatchStreamBuilder::new_with_metadata_and_options(
             reader,
@@ -125,7 +124,7 @@ impl ParquetFile {
         &self,
         options: JsValue,
     ) -> WasmResult<wasm_streams::readable::sys::ReadableStream> {
-        let reader = ParquetObjectReader::new(self.store.clone(), self.object_meta.clone());
+        let reader = ParquetObjectReader::new(self.store.clone(), self.path.clone());
         let options: Option<JsParquetReaderOptions> = serde_wasm_bindgen::from_value(options)?;
         let stream = GeoParquetRecordBatchStreamBuilder::new_with_metadata_and_options(
             reader,
@@ -157,14 +156,9 @@ async fn fetch_arrow_metadata_objects(
     store: Arc<dyn ObjectStore>,
 ) -> Result<HashMap<String, ArrowReaderMetadata>, GeoArrowWasmError> {
     let paths: Vec<object_store::path::Path> = paths.into_iter().map(|path| path.into()).collect();
-    let object_meta_futures = paths.iter().map(|path| store.head(path));
-    let object_metas = futures::future::join_all(object_meta_futures)
-        .await
-        .into_iter()
-        .collect::<Result<Vec<_>, object_store::Error>>()?;
-    let mut readers = object_metas
-        .into_iter()
-        .map(|meta| ParquetObjectReader::new(store.clone(), meta))
+    let mut readers = paths
+        .iter()
+        .map(|path| ParquetObjectReader::new(store.clone(), path.clone()))
         .collect::<Vec<_>>();
     let parquet_meta_futures = readers
         .iter_mut()
@@ -190,18 +184,7 @@ impl ParquetDataset {
     {
         self.meta
             .to_stream_builders(
-                |path| {
-                    let object_meta = ObjectMeta {
-                        location: path.into(),
-                        last_modified: Default::default(),
-                        // NOTE: Usually we'd need to know the file size of each object, but since we
-                        // already have the Parquet metadata, this should be ok
-                        size: 0,
-                        e_tag: None,
-                        version: None,
-                    };
-                    ParquetObjectReader::new(self.store.clone(), object_meta)
-                },
+                |path| ParquetObjectReader::new(self.store.clone(), path.into()),
                 geo_options,
             )
             .into_iter()

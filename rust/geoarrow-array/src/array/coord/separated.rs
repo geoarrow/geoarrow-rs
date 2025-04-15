@@ -47,6 +47,9 @@ fn check(buffers: &[ScalarBuffer<f64>; 4], dim: Dimension) -> Result<()> {
 }
 
 impl SeparatedCoordBuffer {
+    /// The underlying coordinate type
+    pub const COORD_TYPE: CoordType = CoordType::Separated;
+
     /// Construct a new SeparatedCoordBuffer
     ///
     /// # Panics
@@ -184,12 +187,7 @@ impl SeparatedCoordBuffer {
     }
 
     pub(crate) fn storage_type(&self) -> DataType {
-        PointType::new(CoordType::Separated, self.dim, Default::default()).data_type()
-    }
-
-    /// The coordinate type
-    pub fn coord_type(&self) -> CoordType {
-        CoordType::Separated
+        PointType::new(Self::COORD_TYPE, self.dim, Default::default()).data_type()
     }
 
     /// The number of coordinates

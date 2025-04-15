@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use crate::ffi::from_python::input::AnyPrimitiveBroadcastInput;
 use crate::ffi::from_python::AnyNativeInput;
+use crate::ffi::from_python::input::AnyPrimitiveBroadcastInput;
 use crate::util::{return_chunked_geometry_array, return_geometry_array};
 use arrow::datatypes::Float64Type;
 use geoarrow::algorithm::geo::LineInterpolatePoint;

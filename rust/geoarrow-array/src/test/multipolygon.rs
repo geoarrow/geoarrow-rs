@@ -1,8 +1,9 @@
-use geo::{MultiPolygon, polygon};
+use geo_types::{MultiPolygon, polygon};
+use geoarrow_schema::{CoordType, Dimension, MultiPolygonType};
+use geoarrow_test::raw;
 
 use crate::array::MultiPolygonArray;
 use crate::builder::MultiPolygonBuilder;
-use geoarrow_schema::{CoordType, Dimension, MultiPolygonType};
 
 pub(crate) fn mp0() -> MultiPolygon {
     MultiPolygon::new(vec![
@@ -48,8 +49,19 @@ pub(crate) fn mp1() -> MultiPolygon {
     ])
 }
 
-pub(crate) fn mp_array() -> MultiPolygonArray {
-    let geoms = vec![mp0(), mp1()];
-    let typ = MultiPolygonType::new(CoordType::Interleaved, Dimension::XY, Default::default());
-    MultiPolygonBuilder::from_multi_polygons(&geoms, typ).finish()
+pub(crate) fn mp_array(coord_type: CoordType) -> MultiPolygonArray {
+    let geoms = vec![Some(mp0()), None, Some(mp1()), None];
+    let typ = MultiPolygonType::new(coord_type, Dimension::XY, Default::default());
+    MultiPolygonBuilder::from_nullable_multi_polygons(&geoms, typ).finish()
+}
+
+pub fn array(coord_type: CoordType, dim: Dimension) -> MultiPolygonArray {
+    let typ = MultiPolygonType::new(coord_type, dim, Default::default());
+    let geoms = match dim {
+        Dimension::XY => raw::multipolygon::xy::geoms(),
+        Dimension::XYZ => raw::multipolygon::xyz::geoms(),
+        Dimension::XYM => raw::multipolygon::xym::geoms(),
+        Dimension::XYZM => raw::multipolygon::xyzm::geoms(),
+    };
+    MultiPolygonBuilder::from_nullable_multi_polygons(&geoms, typ).finish()
 }

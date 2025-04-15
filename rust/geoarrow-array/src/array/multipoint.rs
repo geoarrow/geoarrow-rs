@@ -4,9 +4,9 @@ use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
-use geoarrow_schema::{Metadata, MultiPointType};
+use geoarrow_schema::{CoordType, Metadata, MultiPointType};
 
-use crate::array::{CoordBuffer, LineStringArray, PointArray, WKBArray};
+use crate::array::{CoordBuffer, LineStringArray, PointArray, WkbArray};
 use crate::builder::MultiPointBuilder;
 use crate::capacity::MultiPointCapacity;
 use crate::datatypes::GeoArrowType;
@@ -129,20 +129,13 @@ impl MultiPointArray {
     }
 
     /// Slices this [`MultiPointArray`] in place.
-    /// # Implementation
-    /// This operation is `O(1)` as it amounts to increase two ref counts.
-    /// # Examples
-    /// ```ignore
-    /// use arrow::array::PrimitiveArray;
-    /// use arrow_array::types::Int32Type;
     ///
-    /// let array: PrimitiveArray<Int32Type> = PrimitiveArray::from(vec![1, 2, 3]);
-    /// assert_eq!(format!("{:?}", array), "PrimitiveArray<Int32>\n[\n  1,\n  2,\n  3,\n]");
-    /// let sliced = array.slice(1, 1);
-    /// assert_eq!(format!("{:?}", sliced), "PrimitiveArray<Int32>\n[\n  2,\n]");
-    /// // note: `sliced` and `array` share the same memory region.
-    /// ```
+    /// # Implementation
+    ///
+    /// This operation is `O(1)` as it amounts to increasing a few ref counts.
+    ///
     /// # Panic
+    ///
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
     pub fn slice(&self, offset: usize, length: usize) -> Self {
@@ -159,6 +152,17 @@ impl MultiPointArray {
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }
     }
+
+    /// Change the [`CoordType`] of this array.
+    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.data_type.metadata().clone();
+        Self::new(
+            self.coords.into_coord_type(coord_type),
+            self.geom_offsets,
+            self.validity,
+            metadata,
+        )
+    }
 }
 
 impl GeoArrowArray for MultiPointArray {
@@ -174,13 +178,11 @@ impl GeoArrowArray for MultiPointArray {
         self.clone().into_array_ref()
     }
 
-    /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
     }
 
-    /// Returns the optional validity.
     #[inline]
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
@@ -277,10 +279,10 @@ impl TryFrom<(&dyn Array, &Field)> for MultiPointArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, MultiPointType)> for MultiPointArray {
+impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiPointType)> for MultiPointArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WKBArray<O>, MultiPointType)) -> Result<Self> {
+    fn try_from(value: (WkbArray<O>, MultiPointType)) -> Result<Self> {
         let mut_arr: MultiPointBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }
@@ -307,18 +309,82 @@ impl From<PointArray> for MultiPointArray {
 
 impl PartialEq for MultiPointArray {
     fn eq(&self, other: &Self) -> bool {
-        if self.validity != other.validity {
-            return false;
-        }
+        self.validity == other.validity
+            && offset_buffer_eq(&self.geom_offsets, &other.geom_offsets)
+            && self.coords == other.coords
+    }
+}
 
-        if !offset_buffer_eq(&self.geom_offsets, &other.geom_offsets) {
-            return false;
-        }
+#[cfg(test)]
+mod test {
+    use geo_traits::to_geo::ToGeoMultiPoint;
+    use geoarrow_schema::{CoordType, Dimension};
 
-        if self.coords != other.coords {
-            return false;
-        }
+    use crate::test::multipoint;
 
-        true
+    use super::*;
+
+    #[test]
+    fn geo_round_trip() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            let geoms = [Some(multipoint::mp0()), None, Some(multipoint::mp1()), None];
+            let typ = MultiPointType::new(coord_type, Dimension::XY, Default::default());
+            let geo_arr = MultiPointBuilder::from_nullable_multi_points(&geoms, typ).finish();
+
+            for (i, g) in geo_arr.iter().enumerate() {
+                assert_eq!(geoms[i], g.transpose().unwrap().map(|g| g.to_multi_point()));
+            }
+
+            // Test sliced
+            for (i, g) in geo_arr.slice(2, 2).iter().enumerate() {
+                assert_eq!(
+                    geoms[i + 2],
+                    g.transpose().unwrap().map(|g| g.to_multi_point())
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn try_from_arrow() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let geo_arr = multipoint::array(coord_type, dim);
+
+                let ext_type = geo_arr.ext_type().clone();
+                let field = ext_type.to_field("geometry", true);
+
+                let arrow_arr = geo_arr.to_array_ref();
+
+                let geo_arr2: MultiPointArray = (arrow_arr.as_ref(), ext_type).try_into().unwrap();
+                let geo_arr3: MultiPointArray = (arrow_arr.as_ref(), &field).try_into().unwrap();
+
+                assert_eq!(geo_arr, geo_arr2);
+                assert_eq!(geo_arr, geo_arr3);
+            }
+        }
+    }
+
+    #[test]
+    fn partial_eq() {
+        for dim in [
+            Dimension::XY,
+            Dimension::XYZ,
+            Dimension::XYM,
+            Dimension::XYZM,
+        ] {
+            let arr1 = multipoint::array(CoordType::Interleaved, dim);
+            let arr2 = multipoint::array(CoordType::Separated, dim);
+            assert_eq!(arr1, arr1);
+            assert_eq!(arr2, arr2);
+            assert_eq!(arr1, arr2);
+
+            assert_ne!(arr1, arr2.slice(0, 2));
+        }
     }
 }

@@ -1,5 +1,6 @@
 use geo_traits::CoordTrait;
 
+use crate::eq::coord_eq;
 use crate::scalar::{InterleavedCoord, SeparatedCoord};
 
 /// An Arrow equivalent of a Coord
@@ -25,19 +26,19 @@ impl Coord<'_> {
 
 impl PartialEq for Coord<'_> {
     fn eq(&self, other: &Self) -> bool {
-        self.x_y() == other.x_y()
+        coord_eq(self, other)
     }
 }
 
 impl PartialEq<InterleavedCoord<'_>> for Coord<'_> {
     fn eq(&self, other: &InterleavedCoord<'_>) -> bool {
-        self.x_y() == other.x_y()
+        coord_eq(self, other)
     }
 }
 
 impl PartialEq<SeparatedCoord<'_>> for Coord<'_> {
     fn eq(&self, other: &SeparatedCoord<'_>) -> bool {
-        self.x_y() == other.x_y()
+        coord_eq(self, other)
     }
 }
 

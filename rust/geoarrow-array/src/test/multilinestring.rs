@@ -1,5 +1,6 @@
-use geo::{MultiLineString, line_string};
+use geo_types::{MultiLineString, line_string};
 use geoarrow_schema::{CoordType, Dimension, MultiLineStringType};
+use geoarrow_test::raw;
 
 use crate::array::MultiLineStringArray;
 use crate::builder::MultiLineStringBuilder;
@@ -30,8 +31,19 @@ pub(crate) fn ml1() -> MultiLineString {
     ])
 }
 
-pub(crate) fn ml_array() -> MultiLineStringArray {
-    let geoms = vec![ml0(), ml1()];
-    let typ = MultiLineStringType::new(CoordType::Interleaved, Dimension::XY, Default::default());
-    MultiLineStringBuilder::from_multi_line_strings(&geoms, typ).finish()
+pub(crate) fn ml_array(coord_type: CoordType) -> MultiLineStringArray {
+    let geoms = vec![Some(ml0()), None, Some(ml1()), None];
+    let typ = MultiLineStringType::new(coord_type, Dimension::XY, Default::default());
+    MultiLineStringBuilder::from_nullable_multi_line_strings(&geoms, typ).finish()
+}
+
+pub fn array(coord_type: CoordType, dim: Dimension) -> MultiLineStringArray {
+    let typ = MultiLineStringType::new(coord_type, dim, Default::default());
+    let geoms = match dim {
+        Dimension::XY => raw::multilinestring::xy::geoms(),
+        Dimension::XYZ => raw::multilinestring::xyz::geoms(),
+        Dimension::XYM => raw::multilinestring::xym::geoms(),
+        Dimension::XYZM => raw::multilinestring::xyzm::geoms(),
+    };
+    MultiLineStringBuilder::from_nullable_multi_line_strings(&geoms, typ).finish()
 }

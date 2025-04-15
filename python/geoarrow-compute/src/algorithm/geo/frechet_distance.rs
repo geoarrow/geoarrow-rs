@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use crate::ffi::from_python::input::AnyNativeBroadcastInput;
 use crate::ffi::from_python::AnyNativeInput;
+use crate::ffi::from_python::input::AnyNativeBroadcastInput;
 use crate::util::{return_array, return_chunked_array};
 use geoarrow::algorithm::geo::{FrechetDistance, FrechetDistanceLineString};
 use pyo3::exceptions::PyValueError;

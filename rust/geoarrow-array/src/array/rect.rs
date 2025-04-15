@@ -25,7 +25,7 @@ use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 /// `bounds()`.
 ///
 /// Internally this is implemented as a FixedSizeList, laid out as minx, miny, maxx, maxy.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct RectArray {
     pub(crate) data_type: BoxType,
 
@@ -101,13 +101,11 @@ impl GeoArrowArray for RectArray {
         self.clone().into_array_ref()
     }
 
-    /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
         self.lower.len()
     }
 
-    /// Returns the optional validity.
     #[inline]
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
@@ -213,33 +211,62 @@ impl TryFrom<(&dyn Array, &Field)> for RectArray {
     }
 }
 
+impl PartialEq for RectArray {
+    fn eq(&self, other: &Self) -> bool {
+        // A naive implementation of PartialEq would check for buffer equality. This won't always
+        // work for null elements where the actual value can be undefined and doesn't have to be
+        // equal. As such, it's simplest to reuse the upstream PartialEq impl, especially since
+        // RectArray only has one coordinate type.
+        self.clone().into_arrow() == other.clone().into_arrow()
+    }
+}
+
 #[cfg(test)]
 mod test {
-    use super::*;
-    use crate::builder::RectBuilder;
-    use crate::eq::rect_eq;
+    use geo_traits::to_geo::ToGeoRect;
     use geoarrow_schema::Dimension;
 
+    use crate::builder::RectBuilder;
+    use crate::test::rect;
+
+    use super::*;
+
     #[test]
-    fn rect_array_round_trip() {
-        let rect = geo::Rect::new(
-            geo::coord! { x: 0.0, y: 5.0 },
-            geo::coord! { x: 10.0, y: 15.0 },
-        );
+    fn geo_round_trip() {
+        let geoms = [Some(rect::r0()), None, Some(rect::r1()), None];
         let typ = BoxType::new(Dimension::XY, Default::default());
-        let mut builder = RectBuilder::with_capacity(typ, 1);
-        builder.push_rect(Some(&rect));
-        builder.push_min_max(&rect.min(), &rect.max());
-        let rect_arr = builder.finish();
+        let geo_arr =
+            RectBuilder::from_nullable_rects(geoms.iter().map(|x| x.as_ref()), typ).finish();
 
-        let arrow_arr = rect_arr.into_array_ref();
+        for (i, g) in geo_arr.iter().enumerate() {
+            assert_eq!(geoms[i], g.transpose().unwrap().map(|g| g.to_rect()));
+        }
 
-        let rect_arr_again = RectArray::try_from((
-            arrow_arr.as_ref(),
-            BoxType::new(Dimension::XY, Default::default()),
-        ))
-        .unwrap();
-        let rect_again = rect_arr_again.value(0).unwrap();
-        assert!(rect_eq(&rect, &rect_again));
+        // Test sliced
+        for (i, g) in geo_arr.slice(2, 2).iter().enumerate() {
+            assert_eq!(geoms[i + 2], g.transpose().unwrap().map(|g| g.to_rect()));
+        }
+    }
+
+    #[test]
+    fn try_from_arrow() {
+        let geo_arr = rect::r_array();
+
+        let ext_type = geo_arr.ext_type().clone();
+        let field = ext_type.to_field("geometry", true);
+
+        let arrow_arr = geo_arr.to_array_ref();
+
+        let geo_arr2: RectArray = (arrow_arr.as_ref(), ext_type).try_into().unwrap();
+        let geo_arr3: RectArray = (arrow_arr.as_ref(), &field).try_into().unwrap();
+
+        assert_eq!(geo_arr, geo_arr2);
+        assert_eq!(geo_arr, geo_arr3);
+    }
+
+    #[test]
+    fn partial_eq() {
+        let arr1 = rect::r_array();
+        assert_eq!(arr1, arr1);
     }
 }

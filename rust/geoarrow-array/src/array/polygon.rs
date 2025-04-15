@@ -7,7 +7,7 @@ use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{CoordType, Metadata, PolygonType};
 
-use crate::array::{CoordBuffer, RectArray, WKBArray};
+use crate::array::{CoordBuffer, RectArray, WkbArray};
 use crate::builder::PolygonBuilder;
 use crate::capacity::PolygonCapacity;
 use crate::datatypes::GeoArrowType;
@@ -179,6 +179,18 @@ impl PolygonArray {
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }
     }
+
+    /// Change the [`CoordType`] of this array.
+    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.data_type.metadata().clone();
+        Self::new(
+            self.coords.into_coord_type(coord_type),
+            self.geom_offsets,
+            self.ring_offsets,
+            self.validity,
+            metadata,
+        )
+    }
 }
 
 impl GeoArrowArray for PolygonArray {
@@ -194,13 +206,11 @@ impl GeoArrowArray for PolygonArray {
         self.clone().into_array_ref()
     }
 
-    /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
     }
 
-    /// Returns the optional validity.
     #[inline]
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
@@ -320,10 +330,10 @@ impl TryFrom<(&dyn Array, &Field)> for PolygonArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, PolygonType)> for PolygonArray {
+impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, PolygonType)> for PolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WKBArray<O>, PolygonType)) -> Result<Self> {
+    fn try_from(value: (WkbArray<O>, PolygonType)) -> Result<Self> {
         let mut_arr: PolygonBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }
@@ -362,22 +372,73 @@ impl From<RectArray> for PolygonArray {
 
 impl PartialEq for PolygonArray {
     fn eq(&self, other: &Self) -> bool {
-        if self.validity != other.validity {
-            return false;
-        }
+        self.validity == other.validity
+            && offset_buffer_eq(&self.geom_offsets, &other.geom_offsets)
+            && offset_buffer_eq(&self.ring_offsets, &other.ring_offsets)
+            && self.coords == other.coords
+    }
+}
 
-        if !offset_buffer_eq(&self.geom_offsets, &other.geom_offsets) {
-            return false;
-        }
+#[cfg(test)]
+mod test {
+    use geo_traits::to_geo::ToGeoPolygon;
+    use geoarrow_schema::{CoordType, Dimension};
 
-        if !offset_buffer_eq(&self.ring_offsets, &other.ring_offsets) {
-            return false;
-        }
+    use crate::test::polygon;
 
-        if self.coords != other.coords {
-            return false;
-        }
+    use super::*;
 
-        true
+    #[test]
+    fn geo_round_trip() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            let geoms = [Some(polygon::p0()), None, Some(polygon::p1()), None];
+            let typ = PolygonType::new(coord_type, Dimension::XY, Default::default());
+            let geo_arr = PolygonBuilder::from_nullable_polygons(&geoms, typ).finish();
+
+            for (i, g) in geo_arr.iter().enumerate() {
+                assert_eq!(geoms[i], g.transpose().unwrap().map(|g| g.to_polygon()));
+            }
+
+            // Test sliced
+            for (i, g) in geo_arr.slice(2, 2).iter().enumerate() {
+                assert_eq!(geoms[i + 2], g.transpose().unwrap().map(|g| g.to_polygon()));
+            }
+        }
+    }
+
+    #[test]
+    fn try_from_arrow() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let geo_arr = polygon::array(coord_type, dim);
+
+                let ext_type = geo_arr.ext_type().clone();
+                let field = ext_type.to_field("geometry", true);
+
+                let arrow_arr = geo_arr.to_array_ref();
+
+                let geo_arr2: PolygonArray = (arrow_arr.as_ref(), ext_type).try_into().unwrap();
+                let geo_arr3: PolygonArray = (arrow_arr.as_ref(), &field).try_into().unwrap();
+
+                assert_eq!(geo_arr, geo_arr2);
+                assert_eq!(geo_arr, geo_arr3);
+            }
+        }
+    }
+
+    #[test]
+    fn partial_eq() {
+        let arr1 = polygon::p_array(CoordType::Interleaved);
+        let arr2 = polygon::p_array(CoordType::Separated);
+        assert_eq!(arr1, arr1);
+        assert_eq!(arr2, arr2);
+        assert_eq!(arr1, arr2);
+
+        assert_ne!(arr1, arr2.slice(0, 2));
     }
 }

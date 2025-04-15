@@ -6,7 +6,7 @@ use geo_traits::{
 };
 use geoarrow_schema::{CoordType, PolygonType};
 
-use crate::array::{PolygonArray, WKBArray};
+use crate::array::{PolygonArray, WkbArray};
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
 };
@@ -240,23 +240,23 @@ impl PolygonBuilder {
         //     // Ref below because I always forget the ordering
         //     // https://github.com/georust/geo/blob/76ad2a358bd079e9d47b1229af89608744d2635b/geo-types/src/geometry/rect.rs#L217-L225
 
-        //     self.coords.push_coord(&geo::Coord {
+        //     self.coords.push_coord(&geo_types::Coord {
         //         x: lower.x(),
         //         y: lower.y(),
         //     });
-        //     self.coords.push_coord(&geo::Coord {
+        //     self.coords.push_coord(&geo_types::Coord {
         //         x: lower.x(),
         //         y: upper.y(),
         //     });
-        //     self.coords.push_coord(&geo::Coord {
+        //     self.coords.push_coord(&geo_types::Coord {
         //         x: upper.x(),
         //         y: upper.y(),
         //     });
-        //     self.coords.push_coord(&geo::Coord {
+        //     self.coords.push_coord(&geo_types::Coord {
         //         x: upper.x(),
         //         y: lower.y(),
         //     });
-        //     self.coords.push_coord(&geo::Coord {
+        //     self.coords.push_coord(&geo_types::Coord {
         //         x: lower.x(),
         //         y: lower.y(),
         //     });
@@ -365,10 +365,10 @@ impl PolygonBuilder {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, PolygonType)> for PolygonBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, PolygonType)> for PolygonBuilder {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (WKBArray<O>, PolygonType)) -> Result<Self> {
+    fn try_from((value, typ): (WkbArray<O>, PolygonType)) -> Result<Self> {
         let wkb_objects = value
             .iter()
             .map(|x| x.transpose())
@@ -380,5 +380,9 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, PolygonType)> for PolygonBuilder 
 impl GeometryArrayBuilder for PolygonBuilder {
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
+    }
+
+    fn push_null(&mut self) {
+        self.push_null();
     }
 }
