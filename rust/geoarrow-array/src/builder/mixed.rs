@@ -275,7 +275,8 @@ impl<'a> MixedGeometryBuilder {
         match self.dim {
             Dimension::XY => self.types.push(1),
             Dimension::XYZ => self.types.push(11),
-            _ => todo!("XYM and XYZM not supported"),
+            Dimension::XYM => self.types.push(21),
+            Dimension::XYZM => self.types.push(31),
         }
     }
 
@@ -308,7 +309,8 @@ impl<'a> MixedGeometryBuilder {
         match self.dim {
             Dimension::XY => self.types.push(2),
             Dimension::XYZ => self.types.push(12),
-            _ => todo!("XYM and XYZM not supported"),
+            Dimension::XYM => self.types.push(22),
+            Dimension::XYZM => self.types.push(32),
         }
     }
 
@@ -340,7 +342,8 @@ impl<'a> MixedGeometryBuilder {
         match self.dim {
             Dimension::XY => self.types.push(3),
             Dimension::XYZ => self.types.push(13),
-            _ => todo!("XYM and XYZM not supported"),
+            Dimension::XYM => self.types.push(23),
+            Dimension::XYZM => self.types.push(33),
         }
     }
 
@@ -365,7 +368,8 @@ impl<'a> MixedGeometryBuilder {
         match self.dim {
             Dimension::XY => self.types.push(4),
             Dimension::XYZ => self.types.push(14),
-            _ => todo!("XYM and XYZM not supported"),
+            Dimension::XYM => self.types.push(24),
+            Dimension::XYZM => self.types.push(34),
         }
     }
 
@@ -390,7 +394,8 @@ impl<'a> MixedGeometryBuilder {
         match self.dim {
             Dimension::XY => self.types.push(5),
             Dimension::XYZ => self.types.push(15),
-            _ => todo!("XYM and XYZM not supported"),
+            Dimension::XYM => self.types.push(25),
+            Dimension::XYZM => self.types.push(35),
         }
     }
 
@@ -415,7 +420,8 @@ impl<'a> MixedGeometryBuilder {
         match self.dim {
             Dimension::XY => self.types.push(6),
             Dimension::XYZ => self.types.push(16),
-            _ => todo!("XYM and XYZM not supported"),
+            Dimension::XYM => self.types.push(26),
+            Dimension::XYZM => self.types.push(36),
         }
     }
 
