@@ -15,12 +15,12 @@ use wkb::writer::{
 ///
 /// This can be used to reduce allocations by allocating once for exactly the array size you need.
 #[derive(Debug, Clone, Copy)]
-pub struct WKBCapacity {
+pub struct WkbCapacity {
     pub(crate) buffer_capacity: usize,
     pub(crate) offsets_capacity: usize,
 }
 
-impl WKBCapacity {
+impl WkbCapacity {
     /// Create a new capacity with known sizes.
     pub fn new(buffer_capacity: usize, offsets_capacity: usize) -> Self {
         Self {
@@ -244,13 +244,13 @@ impl WKBCapacity {
     }
 }
 
-impl Default for WKBCapacity {
+impl Default for WkbCapacity {
     fn default() -> Self {
         Self::new_empty()
     }
 }
 
-impl Add for WKBCapacity {
+impl Add for WkbCapacity {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {

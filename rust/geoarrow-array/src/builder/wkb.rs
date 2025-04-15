@@ -12,7 +12,7 @@ use wkb::writer::{
 };
 
 use crate::array::WkbArray;
-use crate::capacity::WKBCapacity;
+use crate::capacity::WkbCapacity;
 
 /// The GeoArrow equivalent to `Vec<Option<WKB>>`: a mutable collection of WKB buffers.
 ///
@@ -27,7 +27,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     }
 
     /// Initializes a new [`WKBBuilder`] with a pre-allocated capacity of slots and values.
-    pub fn with_capacity(typ: WkbType, capacity: WKBCapacity) -> Self {
+    pub fn with_capacity(typ: WkbType, capacity: WkbCapacity) -> Self {
         Self(
             GenericBinaryBuilder::with_capacity(
                 capacity.offsets_capacity,
@@ -43,13 +43,13 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
         typ: WkbType,
     ) -> Self {
-        let counter = WKBCapacity::from_geometries(geoms);
+        let counter = WkbCapacity::from_geometries(geoms);
         Self::with_capacity(typ, counter)
     }
 
     // Upstream APIs don't exist for this yet. To implement this without upstream changes, we could
     // change to using manual `Vec`'s ourselves
-    // pub fn reserve(&mut self, capacity: WKBCapacity) {
+    // pub fn reserve(&mut self, capacity: WkbCapacity) {
     // }
 
     /// Push a Point onto the end of this builder

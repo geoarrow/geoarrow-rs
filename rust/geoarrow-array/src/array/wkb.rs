@@ -9,7 +9,7 @@ use arrow_schema::{DataType, Field};
 use geoarrow_schema::{Metadata, WkbType};
 use wkb::reader::Wkb;
 
-use crate::capacity::WKBCapacity;
+use crate::capacity::WkbCapacity;
 use crate::datatypes::GeoArrowType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
@@ -46,8 +46,8 @@ impl<O: OffsetSizeTrait> WkbArray<O> {
     }
 
     /// The lengths of each buffer contained in this array.
-    pub fn buffer_lengths(&self) -> WKBCapacity {
-        WKBCapacity::new(
+    pub fn buffer_lengths(&self) -> WkbCapacity {
+        WkbCapacity::new(
             self.array.offsets().last().unwrap().to_usize().unwrap(),
             self.len(),
         )
