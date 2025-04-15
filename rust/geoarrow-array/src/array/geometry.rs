@@ -922,14 +922,16 @@ mod test {
 
     #[test]
     fn partial_eq() {
-        let arr1 = geom_array(CoordType::Interleaved);
-        let arr2 = geom_array(CoordType::Separated);
+        for prefer_multi in [true, false] {
+            let arr1 = crate::test::geometry::array(CoordType::Interleaved, prefer_multi);
+            let arr2 = crate::test::geometry::array(CoordType::Separated, prefer_multi);
 
-        assert_eq!(arr1, arr1);
-        assert_eq!(arr2, arr2);
-        assert_eq!(arr1, arr2);
+            assert_eq!(arr1, arr1);
+            assert_eq!(arr2, arr2);
+            assert_eq!(arr1, arr2);
 
-        assert_ne!(arr1, arr2.slice(0, 2));
+            assert_ne!(arr1, arr2.slice(0, 2));
+        }
     }
 }
 
