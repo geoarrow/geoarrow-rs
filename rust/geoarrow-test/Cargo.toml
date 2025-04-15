@@ -13,6 +13,4 @@ rust-version = { workspace = true }
 geo = { workspace = true }
 geo-traits = { workspace = true }
 geo-types = { workspace = true }
-geoarrow-array = { workspace = true }
-geoarrow-schema = { workspace = true }
 wkt = { workspace = true }

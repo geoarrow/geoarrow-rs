@@ -1,5 +1,6 @@
 use geo_types::{Polygon, polygon};
 use geoarrow_schema::{CoordType, Dimension, PolygonType};
+use geoarrow_test::raw;
 
 use crate::array::PolygonArray;
 use crate::builder::PolygonBuilder;
@@ -37,3 +38,22 @@ pub(crate) fn p_array(coord_type: CoordType) -> PolygonArray {
     let typ = PolygonType::new(coord_type, Dimension::XY, Default::default());
     PolygonBuilder::from_nullable_polygons(&geoms, typ).finish()
 }
+
+macro_rules! impl_mod {
+    ($mod_name:ident, $dim:expr) => {
+        pub mod $mod_name {
+            use super::*;
+
+            pub fn array(coord_type: CoordType) -> PolygonArray {
+                let typ = PolygonType::new(coord_type, $dim, Default::default());
+                PolygonBuilder::from_nullable_polygons(&raw::polygon::$mod_name::geoms(), typ)
+                    .finish()
+            }
+        }
+    };
+}
+
+impl_mod!(xy, Dimension::XY);
+impl_mod!(xyz, Dimension::XYZ);
+impl_mod!(xym, Dimension::XYM);
+impl_mod!(xyzm, Dimension::XYZM);

@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+pub mod geometry;
+pub mod geometrycollection;
 pub mod linestring;
 pub mod multilinestring;
 pub mod multipoint;
