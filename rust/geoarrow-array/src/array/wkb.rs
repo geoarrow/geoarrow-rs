@@ -230,13 +230,13 @@ impl TryFrom<WkbArray<i64>> for WkbArray<i32> {
 #[cfg(test)]
 mod test {
     use crate::GeoArrowArray;
-    use crate::builder::WKBBuilder;
+    use crate::builder::WkbBuilder;
     use crate::test::point;
 
     use super::*;
 
     fn wkb_data<O: OffsetSizeTrait>() -> WkbArray<O> {
-        let mut builder = WKBBuilder::new(WkbType::new(Default::default()));
+        let mut builder = WkbBuilder::new(WkbType::new(Default::default()));
         builder.push_point(Some(&point::p0()));
         builder.push_point(Some(&point::p1()));
         builder.push_point(Some(&point::p2()));

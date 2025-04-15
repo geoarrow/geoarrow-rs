@@ -16,17 +16,17 @@ use crate::capacity::WkbCapacity;
 
 /// The GeoArrow equivalent to `Vec<Option<WKB>>`: a mutable collection of WKB buffers.
 ///
-/// Converting a [`WKBBuilder`] into a [`WkbArray`] is `O(1)`.
+/// Converting a [`WkbBuilder`] into a [`WkbArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct WKBBuilder<O: OffsetSizeTrait>(GenericBinaryBuilder<O>, WkbType);
+pub struct WkbBuilder<O: OffsetSizeTrait>(GenericBinaryBuilder<O>, WkbType);
 
-impl<O: OffsetSizeTrait> WKBBuilder<O> {
-    /// Creates a new empty [`WKBBuilder`].
+impl<O: OffsetSizeTrait> WkbBuilder<O> {
+    /// Creates a new empty [`WkbBuilder`].
     pub fn new(typ: WkbType) -> Self {
         Self::with_capacity(typ, Default::default())
     }
 
-    /// Initializes a new [`WKBBuilder`] with a pre-allocated capacity of slots and values.
+    /// Initializes a new [`WkbBuilder`] with a pre-allocated capacity of slots and values.
     pub fn with_capacity(typ: WkbType, capacity: WkbCapacity) -> Self {
         Self(
             GenericBinaryBuilder::with_capacity(
@@ -37,7 +37,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         )
     }
 
-    /// Creates a new empty [`WKBBuilder`] with a capacity inferred by the provided geometry
+    /// Creates a new empty [`WkbBuilder`] with a capacity inferred by the provided geometry
     /// iterator.
     pub fn with_capacity_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
