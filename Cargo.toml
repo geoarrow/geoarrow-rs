@@ -3,6 +3,7 @@ members = [
     "rust/geoarrow",
     "rust/geoarrow-array",
     "rust/geoarrow-schema",
+    "rust/geoarrow-test",
     # Comment out until datafusion 47 release so that the workspace can upgrade
     # to arrow 55
     # "rust/geodatafusion",
@@ -29,6 +30,7 @@ geo-traits = "0.2.0"
 geo-types = "0.7.16"
 geoarrow-array = { path = "rust/geoarrow-array" }
 geoarrow-schema = { path = "rust/geoarrow-schema" }
+geoarrow-test = { path = "rust/geoarrow-test" }
 geozero = "0.14"
 num-traits = "0.2.19"
 object_store = "0.12"
@@ -39,4 +41,5 @@ serde_json = "1"
 thiserror = "1"
 # to include https://github.com/georust/wkb/pull/53
 wkb = { git = "https://github.com/georust/wkb", rev = "5a2027995997017bcd531e6be7e5cf126db1d4c1" }
-wkt = "0.12"
+# https://github.com/georust/wkt/pull/137
+wkt = { git = "https://github.com/georust/wkt", rev = "270ffe0eaf5ba5255c364dbade39c451562a9e9b" }
