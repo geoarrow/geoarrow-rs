@@ -429,6 +429,21 @@ impl MixedGeometryArray {
         }
     }
 
+    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.metadata;
+        Self::new(
+            self.type_ids,
+            self.offsets,
+            Some(self.points.into_coord_type(coord_type)),
+            Some(self.line_strings.into_coord_type(coord_type)),
+            Some(self.polygons.into_coord_type(coord_type)),
+            Some(self.multi_points.into_coord_type(coord_type)),
+            Some(self.multi_line_strings.into_coord_type(coord_type)),
+            Some(self.multi_polygons.into_coord_type(coord_type)),
+            metadata,
+        )
+    }
+
     pub fn contained_types(&self) -> HashSet<GeoArrowType> {
         let mut types = HashSet::new();
         if self.has_points() {

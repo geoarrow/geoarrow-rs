@@ -4,7 +4,7 @@ use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, FixedSizeListArray, StructArray};
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
-use geoarrow_schema::{Metadata, PointType};
+use geoarrow_schema::{CoordType, Metadata, PointType};
 
 use crate::GeoArrowType;
 use crate::array::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
@@ -112,6 +112,16 @@ impl PointArray {
             coords: self.coords.slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }
+    }
+
+    /// Change the [`CoordType`] of this array.
+    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.data_type.metadata().clone();
+        Self::new(
+            self.coords.into_coord_type(coord_type),
+            self.validity,
+            metadata,
+        )
     }
 }
 
@@ -319,6 +329,24 @@ mod test {
                 assert_eq!(geo_arr, geo_arr2);
                 assert_eq!(geo_arr, geo_arr3);
             }
+        }
+    }
+
+    #[test]
+    fn into_coord_type() {
+        for dim in [
+            Dimension::XY,
+            Dimension::XYZ,
+            Dimension::XYM,
+            Dimension::XYZM,
+        ] {
+            let geo_arr = point::array(CoordType::Interleaved, dim);
+            let geo_arr2 = geo_arr
+                .clone()
+                .into_coord_type(CoordType::Separated)
+                .into_coord_type(CoordType::Interleaved);
+
+            assert_eq!(geo_arr, geo_arr2);
         }
     }
 

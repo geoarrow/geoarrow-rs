@@ -14,7 +14,7 @@ use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
-use geoarrow_schema::{LineStringType, Metadata};
+use geoarrow_schema::{CoordType, LineStringType, Metadata};
 
 /// An immutable array of LineString geometries.
 ///
@@ -127,19 +127,11 @@ impl LineStringArray {
     /// Slices this [`LineStringArray`] in place.
     ///
     /// # Implementation
-    /// This operation is `O(1)` as it amounts to increase two ref counts.
-    /// # Examples
-    /// ```ignore
-    /// use arrow::array::PrimitiveArray;
-    /// use arrow_array::types::Int32Type;
     ///
-    /// let array: PrimitiveArray<Int32Type> = PrimitiveArray::from(vec![1, 2, 3]);
-    /// assert_eq!(format!("{:?}", array), "PrimitiveArray<Int32>\n[\n  1,\n  2,\n  3,\n]");
-    /// let sliced = array.slice(1, 1);
-    /// assert_eq!(format!("{:?}", sliced), "PrimitiveArray<Int32>\n[\n  2,\n]");
-    /// // note: `sliced` and `array` share the same memory region.
-    /// ```
+    /// This operation is `O(1)` as it amounts to increasing a few ref counts.
+    ///
     /// # Panic
+    ///
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
     pub fn slice(&self, offset: usize, length: usize) -> Self {
@@ -155,6 +147,17 @@ impl LineStringArray {
             geom_offsets: self.geom_offsets.slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }
+    }
+
+    /// Change the [`CoordType`] of this array.
+    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.data_type.metadata().clone();
+        Self::new(
+            self.coords.into_coord_type(coord_type),
+            self.geom_offsets,
+            self.validity,
+            metadata,
+        )
     }
 }
 
