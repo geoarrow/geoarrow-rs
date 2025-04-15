@@ -1,7 +1,7 @@
 use arrow_array::{Array, ArrayRef, RecordBatch};
 use arrow_schema::Field;
 use geoarrow_array::array::{WkbArray, from_arrow_array};
-use geoarrow_array::builder::WKBBuilder;
+use geoarrow_array::builder::WkbBuilder;
 use geoarrow_array::cast::AsGeoArrowArray;
 use geoarrow_array::error::Result;
 use geoarrow_array::{ArrayAccessor, GeoArrowArray, GeoArrowType};
@@ -42,7 +42,7 @@ fn encode_column(
     let array_bounds = total_bounds(geo_arr.as_ref())?;
     let encoded_array = match column_info.encoding {
         GeoParquetColumnEncoding::WKB => encode_wkb_column(geo_arr.as_ref())?,
-        _ => encode_native_column(geo_arr.as_ref())?,
+        _ => encode_native_column(geo_arr.as_ref()),
     };
     Ok((encoded_array, array_bounds))
 }
@@ -55,8 +55,27 @@ fn encode_wkb_column(geo_arr: &dyn GeoArrowArray) -> Result<ArrayRef> {
 /// Encode column as GeoArrow.
 ///
 /// Note that the GeoParquet specification requires separated coord type!
-fn encode_native_column(geo_arr: &dyn GeoArrowArray) -> Result<ArrayRef> {
-    Ok(geo_arr.to_coord_type(CoordType::Separated).to_array_ref())
+fn encode_native_column(geo_arr: &dyn GeoArrowArray) -> ArrayRef {
+    macro_rules! impl_into_coord_type {
+        ($cast_func:ident) => {
+            geo_arr
+                .$cast_func()
+                .clone()
+                .into_coord_type(CoordType::Separated)
+                .to_array_ref()
+        };
+    }
+    match geo_arr.data_type() {
+        GeoArrowType::Point(_) => impl_into_coord_type!(as_point),
+        GeoArrowType::LineString(_) => impl_into_coord_type!(as_line_string),
+        GeoArrowType::Polygon(_) => impl_into_coord_type!(as_polygon),
+        GeoArrowType::MultiPoint(_) => impl_into_coord_type!(as_multi_point),
+        GeoArrowType::MultiLineString(_) => impl_into_coord_type!(as_multi_line_string),
+        GeoArrowType::MultiPolygon(_) => impl_into_coord_type!(as_multi_polygon),
+        GeoArrowType::Geometry(_) => impl_into_coord_type!(as_geometry),
+        GeoArrowType::GeometryCollection(_) => impl_into_coord_type!(as_geometry_collection),
+        _ => geo_arr.to_array_ref(),
+    }
 }
 
 /// Convert to WKB
@@ -87,5 +106,5 @@ fn impl_to_wkb<'a>(geo_arr: &'a impl ArrayAccessor<'a>) -> Result<WkbArray<i32>>
         .map(|x| x.transpose())
         .collect::<Result<Vec<_>>>()?;
     let wkb_type = WkbType::new(Default::default());
-    Ok(WKBBuilder::from_nullable_geometries(geoms.as_slice(), wkb_type).finish())
+    Ok(WkbBuilder::from_nullable_geometries(geoms.as_slice(), wkb_type).finish())
 }
