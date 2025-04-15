@@ -170,10 +170,12 @@ mod test {
     use tokio::fs::File;
 
     use crate::metadata::GeoParquetBboxCovering;
+    use crate::writer::test::fixture_dir;
 
     #[tokio::test]
     async fn nybb() -> Result<()> {
-        let file = File::open("fixtures/geoparquet/nybb.parquet")
+        let fixtures = fixture_dir();
+        let file = File::open(fixtures.join("geoparquet/nybb.parquet"))
             .await
             .unwrap();
         let stream = GeoParquetRecordBatchStreamBuilder::try_new(file)
@@ -185,7 +187,8 @@ mod test {
 
     #[tokio::test]
     async fn overture_buildings() {
-        let file = File::open("fixtures/geoparquet/overture_buildings.parquet")
+        let fixtures = fixture_dir();
+        let file = File::open(fixtures.join("geoparquet/overture_buildings.parquet"))
             .await
             .unwrap();
         let reader = GeoParquetRecordBatchStreamBuilder::try_new(file)
@@ -199,7 +202,8 @@ mod test {
 
     #[tokio::test]
     async fn overture_buildings_bbox_filter_empty_bbox() {
-        let file = File::open("fixtures/geoparquet/overture_buildings.parquet")
+        let fixtures = fixture_dir();
+        let file = File::open(fixtures.join("geoparquet/overture_buildings.parquet"))
             .await
             .unwrap();
         let bbox = geo_types::Rect::new(
@@ -229,7 +233,8 @@ mod test {
 
     #[tokio::test]
     async fn overture_buildings_bbox_filter_full_bbox() {
-        let file = File::open("fixtures/geoparquet/overture_buildings.parquet")
+        let fixtures = fixture_dir();
+        let file = File::open(fixtures.join("geoparquet/overture_buildings.parquet"))
             .await
             .unwrap();
         let bbox = geo_types::Rect::new(
@@ -259,7 +264,8 @@ mod test {
 
     #[tokio::test]
     async fn overture_buildings_bbox_filter_partial_bbox() {
-        let file = File::open("fixtures/geoparquet/overture_buildings.parquet")
+        let fixtures = fixture_dir();
+        let file = File::open(fixtures.join("geoparquet/overture_buildings.parquet"))
             .await
             .unwrap();
         let bbox = geo_types::Rect::new(

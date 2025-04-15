@@ -169,10 +169,13 @@ mod test {
     use std::fs::File;
 
     use crate::metadata::GeoParquetBboxCovering;
+    use crate::writer::test::fixture_dir;
 
     #[test]
     fn nybb() {
-        let file = File::open("fixtures/geoparquet/nybb.parquet").unwrap();
+        let fixtures = fixture_dir();
+
+        let file = File::open(fixtures.join("geoparquet/nybb.parquet")).unwrap();
         let reader = GeoParquetRecordBatchReaderBuilder::try_new(file)
             .unwrap()
             .build()
@@ -184,7 +187,8 @@ mod test {
 
     #[test]
     fn nybb_geoarrow() {
-        let file = File::open("fixtures/geoparquet/nybb_geoarrow.parquet").unwrap();
+        let fixtures = fixture_dir();
+        let file = File::open(fixtures.join("geoparquet/nybb_geoarrow.parquet")).unwrap();
         let reader = GeoParquetRecordBatchReaderBuilder::try_new(file)
             .unwrap()
             .build()
@@ -196,7 +200,8 @@ mod test {
 
     #[test]
     fn nybb_geoarrow_bbox_filter() {
-        let file = File::open("fixtures/geoparquet/nybb_geoarrow.parquet").unwrap();
+        let fixtures = fixture_dir();
+        let file = File::open(fixtures.join("geoparquet/nybb_geoarrow.parquet")).unwrap();
         // projected bounds of a part of Staten Island
         let bbox = [
             930504.8649454953,
@@ -230,7 +235,8 @@ mod test {
 
     #[test]
     fn overture_buildings() {
-        let file = File::open("fixtures/geoparquet/overture_buildings.parquet").unwrap();
+        let fixtures = fixture_dir();
+        let file = File::open(fixtures.join("geoparquet/overture_buildings.parquet")).unwrap();
         let reader = GeoParquetRecordBatchReaderBuilder::try_new(file)
             .unwrap()
             .build()
@@ -243,7 +249,8 @@ mod test {
 
     #[test]
     fn overture_buildings_bbox_filter_empty_bbox() {
-        let file = File::open("fixtures/geoparquet/overture_buildings.parquet").unwrap();
+        let fixtures = fixture_dir();
+        let file = File::open(fixtures.join("geoparquet/overture_buildings.parquet")).unwrap();
         let bbox = geo_types::Rect::new(
             geo_types::coord! { x: -179., y: -55. },
             geo_types::coord! { x: -178., y: -54. },
@@ -272,7 +279,8 @@ mod test {
 
     #[test]
     fn overture_buildings_bbox_filter_full_bbox() {
-        let file = File::open("fixtures/geoparquet/overture_buildings.parquet").unwrap();
+        let fixtures = fixture_dir();
+        let file = File::open(fixtures.join("geoparquet/overture_buildings.parquet")).unwrap();
         let bbox = geo_types::Rect::new(
             geo_types::coord! { x: 7.393789291381836, y: 50.34489440917969 },
             geo_types::coord! { x: 7.398535251617432, y: 50.34762954711914 },
@@ -301,7 +309,8 @@ mod test {
 
     #[test]
     fn overture_buildings_bbox_filter_partial_bbox() {
-        let file = File::open("fixtures/geoparquet/overture_buildings.parquet").unwrap();
+        let fixtures = fixture_dir();
+        let file = File::open(fixtures.join("geoparquet/overture_buildings.parquet")).unwrap();
         let bbox = geo_types::Rect::new(
             geo_types::coord! { x: 7.394, y: 50.345 },
             geo_types::coord! { x: 7.398, y: 50.347 },
