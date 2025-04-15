@@ -13,11 +13,11 @@ use parquet::file::reader::ChunkReader;
 use parquet::schema::types::SchemaDescriptor;
 use serde_json::Value;
 
+#[cfg(feature = "async")]
+use crate::GeoParquetRecordBatchStreamBuilder;
 use crate::metadata::{GeoParquetBboxCovering, GeoParquetMetadata};
 use crate::reader::parse::infer_target_schema;
 use crate::reader::spatial_filter::ParquetBboxStatistics;
-#[cfg(feature = "async")]
-use crate::GeoParquetRecordBatchStreamBuilder;
 use crate::{GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder};
 use geoarrow_array::error::{GeoArrowError, Result};
 

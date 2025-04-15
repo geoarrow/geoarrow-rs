@@ -1,12 +1,12 @@
 use geo_types::Rect;
 use geoarrow_array::error::{GeoArrowError, Result};
 use geoarrow_schema::CoordType;
-use parquet::arrow::arrow_reader::ArrowReaderBuilder;
 use parquet::arrow::ProjectionMask;
+use parquet::arrow::arrow_reader::ArrowReaderBuilder;
 
 use crate::metadata::{GeoParquetBboxCovering, GeoParquetMetadata};
 use crate::reader::spatial_filter::{
-    apply_bbox_row_filter, apply_bbox_row_groups, ParquetBboxStatistics,
+    ParquetBboxStatistics, apply_bbox_row_filter, apply_bbox_row_groups,
 };
 
 /// Options for reading (Geo)Parquet
