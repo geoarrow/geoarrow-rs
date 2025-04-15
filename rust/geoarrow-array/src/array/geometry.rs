@@ -901,6 +901,26 @@ mod test {
     }
 
     #[test]
+    fn try_from_arrow() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for prefer_multi in [true, false] {
+                let geo_arr = crate::test::geometry::array(coord_type, prefer_multi);
+
+                let point_type = geo_arr.ext_type().clone();
+                let field = point_type.to_field("geometry", true);
+
+                let arrow_arr = geo_arr.to_array_ref();
+
+                let geo_arr2: GeometryArray = (arrow_arr.as_ref(), point_type).try_into().unwrap();
+                let geo_arr3: GeometryArray = (arrow_arr.as_ref(), &field).try_into().unwrap();
+
+                assert_eq!(geo_arr, geo_arr2);
+                assert_eq!(geo_arr, geo_arr3);
+            }
+        }
+    }
+
+    #[test]
     fn partial_eq() {
         let arr1 = geom_array(CoordType::Interleaved);
         let arr2 = geom_array(CoordType::Separated);
