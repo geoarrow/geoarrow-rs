@@ -1370,6 +1370,7 @@ dependencies = [
 name = "geoarrow-test"
 version = "0.1.0-dev"
 dependencies = [
+ "geo 0.30.0",
  "geo-traits",
  "geo-types",
  "geoarrow-array",
