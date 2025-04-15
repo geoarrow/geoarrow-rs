@@ -238,10 +238,10 @@ pub(crate) fn bounding_rect(arr: &dyn GeoArrowArray) -> Result<RectArray> {
         Geometry(_) => impl_array_accessor(arr.as_geometry()),
         GeometryCollection(_) => impl_array_accessor(arr.as_geometry_collection()),
         Rect(_) => Ok(arr.as_rect().clone()),
-        WKB(_) => impl_array_accessor(arr.as_wkb()),
-        LargeWKB(_) => impl_array_accessor(arr.as_large_wkb()),
-        WKT(_) => todo!(),      // impl_array_accessor(arr.as_wkt()),
-        LargeWKT(_) => todo!(), // impl_array_accessor(arr.as_wkt()),
+        Wkb(_) => impl_array_accessor(arr.as_wkb::<i32>()),
+        LargeWkb(_) => impl_array_accessor(arr.as_wkb::<i64>()),
+        Wkt(_) => todo!(),      // impl_array_accessor(arr.as_wkt()),
+        LargeWkt(_) => todo!(), // impl_array_accessor(arr.as_wkt()),
     }
 }
 
@@ -281,10 +281,10 @@ pub(crate) fn total_bounds(arr: &dyn GeoArrowArray) -> Result<BoundingRect> {
         Geometry(_) => impl_total_bounds(arr.as_geometry()),
         GeometryCollection(_) => impl_total_bounds(arr.as_geometry_collection()),
         Rect(_) => impl_total_bounds(arr.as_rect()),
-        WKB(_) => impl_total_bounds(arr.as_wkb()),
-        LargeWKB(_) => impl_total_bounds(arr.as_large_wkb()),
-        WKT(_) => todo!(),      // impl_total_bounds(arr.as_wkt()),
-        LargeWKT(_) => todo!(), // impl_total_bounds(arr.as_wkt()),
+        Wkb(_) => impl_total_bounds(arr.as_wkb::<i32>()),
+        LargeWkb(_) => impl_total_bounds(arr.as_wkb::<i64>()),
+        Wkt(_) => todo!(),      // impl_total_bounds(arr.as_wkt()),
+        LargeWkt(_) => todo!(), // impl_total_bounds(arr.as_wkt()),
     }
 }
 

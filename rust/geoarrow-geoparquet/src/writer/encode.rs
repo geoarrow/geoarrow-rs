@@ -1,6 +1,6 @@
 use arrow_array::{Array, ArrayRef, RecordBatch};
 use arrow_schema::Field;
-use geoarrow_array::array::{WKBArray, from_arrow_array};
+use geoarrow_array::array::{WkbArray, from_arrow_array};
 use geoarrow_array::builder::WKBBuilder;
 use geoarrow_array::cast::AsGeoArrowArray;
 use geoarrow_array::error::Result;
@@ -60,7 +60,7 @@ fn encode_native_column(geo_arr: &dyn GeoArrowArray) -> Result<ArrayRef> {
 }
 
 /// Convert to WKB
-fn to_wkb(arr: &dyn GeoArrowArray) -> Result<WKBArray<i32>> {
+fn to_wkb(arr: &dyn GeoArrowArray) -> Result<WkbArray<i32>> {
     use GeoArrowType::*;
     match arr.data_type() {
         Point(_) => impl_to_wkb(arr.as_point()),
@@ -72,14 +72,14 @@ fn to_wkb(arr: &dyn GeoArrowArray) -> Result<WKBArray<i32>> {
         Geometry(_) => impl_to_wkb(arr.as_geometry()),
         GeometryCollection(_) => impl_to_wkb(arr.as_geometry_collection()),
         Rect(_) => impl_to_wkb(arr.as_rect()),
-        WKB(_) => impl_to_wkb(arr.as_wkb()),
-        LargeWKB(_) => impl_to_wkb(arr.as_large_wkb()),
-        WKT(_) => todo!(),      // impl_to_wkb(arr.as_wkt()),
-        LargeWKT(_) => todo!(), // impl_to_wkb(arr.as_wkt()),
+        Wkb(_) => impl_to_wkb(arr.as_wkb::<i32>()),
+        LargeWkb(_) => impl_to_wkb(arr.as_wkb::<i64>()),
+        Wkt(_) => todo!(),      // impl_to_wkb(arr.as_wkt()),
+        LargeWkt(_) => todo!(), // impl_to_wkb(arr.as_wkt()),
     }
 }
 
-fn impl_to_wkb<'a>(geo_arr: &'a impl ArrayAccessor<'a>) -> Result<WKBArray<i32>> {
+fn impl_to_wkb<'a>(geo_arr: &'a impl ArrayAccessor<'a>) -> Result<WkbArray<i32>> {
     // let metadata = geo_arr.metadata().clone();
 
     let geoms = geo_arr

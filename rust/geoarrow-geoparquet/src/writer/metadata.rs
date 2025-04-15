@@ -130,8 +130,9 @@ impl ColumnInfo {
 
     /// Returns (column_name, column_metadata)
     pub fn finish(self) -> (String, GeoParquetColumnMetadata) {
-        let edges = self.edges.map(|edges| match edges {
-            Edges::Spherical => "spherical".to_string(),
+        let edges = self.edges.and_then(|edges| match edges {
+            Edges::Spherical => Some("spherical".to_string()),
+            _ => None,
         });
         let bbox = if let Some(bbox) = self.bbox {
             if let (Some(minz), Some(maxz)) = (bbox.minz(), bbox.maxz()) {

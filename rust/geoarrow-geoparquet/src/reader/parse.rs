@@ -7,7 +7,7 @@ use arrow_array::{Array, ArrayRef, RecordBatch};
 use arrow_schema::{DataType, Field, FieldRef, Schema, SchemaRef};
 use geoarrow_array::array::{
     LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
-    PolygonArray, WKBArray,
+    PolygonArray, WkbArray,
 };
 use geoarrow_array::{GeoArrowArray, GeoArrowType};
 use geoarrow_schema::{
@@ -230,10 +230,10 @@ fn parse_array(array: ArrayRef, orig_field: &Field, target_field: &Field) -> Res
         GeoArrowType::MultiPoint(typ) => parse_multi_point_column(arr, typ),
         GeoArrowType::MultiLineString(typ) => parse_multi_line_string_column(arr, typ),
         GeoArrowType::MultiPolygon(typ) => parse_multi_polygon_column(arr, typ),
-        GeoArrowType::WKB(_) | GeoArrowType::LargeWKB(_) => {
+        GeoArrowType::Wkb(_) | GeoArrowType::LargeWkb(_) => {
             parse_wkb_column(arr, target_field.try_into()?)
         }
-        GeoArrowType::WKT(_) | GeoArrowType::LargeWKT(_) => Err(GeoArrowError::General(
+        GeoArrowType::Wkt(_) | GeoArrowType::LargeWkt(_) => Err(GeoArrowError::General(
             "WKT input not supported in GeoParquet.".to_string(),
         )),
         other => Err(GeoArrowError::General(format!(
@@ -246,12 +246,12 @@ fn parse_array(array: ArrayRef, orig_field: &Field, target_field: &Field) -> Res
 fn parse_wkb_column(arr: &dyn Array, target_geo_data_type: GeoArrowType) -> Result<ArrayRef> {
     match arr.data_type() {
         DataType::Binary => {
-            let wkb_arr = WKBArray::<i32>::try_from(arr)?;
+            let wkb_arr = WkbArray::<i32>::try_from(arr)?;
             let geom_arr = from_wkb(&wkb_arr, target_geo_data_type, true)?;
             Ok(geom_arr.to_array_ref())
         }
         DataType::LargeBinary => {
-            let wkb_arr = WKBArray::<i64>::try_from(arr)?;
+            let wkb_arr = WkbArray::<i64>::try_from(arr)?;
             let geom_arr = from_wkb(&wkb_arr, target_geo_data_type, true)?;
             Ok(geom_arr.to_array_ref())
         }
