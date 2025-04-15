@@ -5,8 +5,8 @@ use std::fmt::Display;
 use std::str::FromStr;
 
 use arrow_schema::Schema;
-use geoarrow_array::error::{GeoArrowError, Result};
 use geoarrow_array::GeoArrowType;
+use geoarrow_array::error::{GeoArrowError, Result};
 use geoarrow_schema::{
     CoordType, Crs, Dimension, Edges, GeometryCollectionType, GeometryType, LineStringType,
     Metadata, MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType,
@@ -65,7 +65,7 @@ impl GeoParquetColumnEncoding {
                     return Err(GeoArrowError::General(format!(
                         "unsupported data type for native encoding: {:?}",
                         dt
-                    )))
+                    )));
                 }
             },
         };
@@ -150,7 +150,7 @@ impl FromStr for GeoParquetGeometryType {
             other => {
                 return Err(GeoArrowError::General(format!(
                     "Unknown value for geometry_type: {other}"
-                )))
+                )));
             }
         };
         Ok(out)
@@ -849,6 +849,7 @@ pub(crate) fn infer_geo_data_type(
 }
 
 /// Find all geometry columns in the Arrow schema, constructing their NativeTypes
+#[allow(dead_code)]
 pub(crate) fn find_geoparquet_geom_columns(
     metadata: &FileMetaData,
     schema: &Schema,

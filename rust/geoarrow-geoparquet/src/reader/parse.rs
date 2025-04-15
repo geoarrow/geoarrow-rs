@@ -3,16 +3,20 @@
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use arrow_array::{Array, ArrayRef, RecordBatch};
+use arrow_array::{Array, ArrayRef, OffsetSizeTrait, RecordBatch};
 use arrow_schema::{DataType, Field, FieldRef, Schema, SchemaRef};
 use geoarrow_array::array::{
     LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
     PolygonArray, WkbArray,
 };
-use geoarrow_array::{GeoArrowArray, GeoArrowType};
+use geoarrow_array::builder::{
+    GeometryBuilder, GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder,
+    MultiPointBuilder, MultiPolygonBuilder, PointBuilder, PolygonBuilder,
+};
+use geoarrow_array::{ArrayAccessor, GeoArrowArray, GeoArrowType};
 use geoarrow_schema::{
     CoordType, Dimension, GeometryType, LineStringType, Metadata, MultiLineStringType,
-    MultiPointType, MultiPolygonType, PointType, PolygonType,
+    MultiPointType, MultiPolygonType, PointType, PolygonType, WkbType,
 };
 
 use crate::metadata::{
@@ -246,12 +250,12 @@ fn parse_array(array: ArrayRef, orig_field: &Field, target_field: &Field) -> Res
 fn parse_wkb_column(arr: &dyn Array, target_geo_data_type: GeoArrowType) -> Result<ArrayRef> {
     match arr.data_type() {
         DataType::Binary => {
-            let wkb_arr = WkbArray::<i32>::try_from(arr)?;
+            let wkb_arr = WkbArray::<i32>::try_from((arr, WkbType::new(Default::default())))?;
             let geom_arr = from_wkb(&wkb_arr, target_geo_data_type, true)?;
             Ok(geom_arr.to_array_ref())
         }
         DataType::LargeBinary => {
-            let wkb_arr = WkbArray::<i64>::try_from(arr)?;
+            let wkb_arr = WkbArray::<i64>::try_from((arr, WkbType::new(Default::default())))?;
             let geom_arr = from_wkb(&wkb_arr, target_geo_data_type, true)?;
             Ok(geom_arr.to_array_ref())
         }
@@ -297,3 +301,64 @@ impl_parse_fn!(
     MultiPolygonArray,
     MultiPolygonType
 );
+
+/// Parse a [WKBArray] to a GeometryArray with GeoArrow native encoding.
+///
+/// This supports either ISO or EWKB-flavored data.
+///
+/// The returned array is guaranteed to have exactly the type of `target_type`.
+///
+/// `GeoArrowType::Rect` is currently not allowed.
+fn from_wkb<O: OffsetSizeTrait>(
+    arr: &WkbArray<O>,
+    target_type: GeoArrowType,
+    prefer_multi: bool,
+) -> Result<Arc<dyn GeoArrowArray>> {
+    use GeoArrowType::*;
+
+    let geoms = arr
+        .iter()
+        .map(|x| x.transpose())
+        .collect::<Result<Vec<Option<_>>>>()?;
+
+    match target_type {
+        Point(typ) => {
+            let builder = PointBuilder::from_nullable_geometries(&geoms, typ)?;
+            Ok(Arc::new(builder.finish()))
+        }
+        LineString(typ) => {
+            let builder = LineStringBuilder::from_nullable_geometries(&geoms, typ)?;
+            Ok(Arc::new(builder.finish()))
+        }
+        Polygon(typ) => {
+            let builder = PolygonBuilder::from_nullable_geometries(&geoms, typ)?;
+            Ok(Arc::new(builder.finish()))
+        }
+        MultiPoint(typ) => {
+            let builder = MultiPointBuilder::from_nullable_geometries(&geoms, typ)?;
+            Ok(Arc::new(builder.finish()))
+        }
+        MultiLineString(typ) => {
+            let builder = MultiLineStringBuilder::from_nullable_geometries(&geoms, typ)?;
+            Ok(Arc::new(builder.finish()))
+        }
+        MultiPolygon(typ) => {
+            let builder = MultiPolygonBuilder::from_nullable_geometries(&geoms, typ)?;
+            Ok(Arc::new(builder.finish()))
+        }
+        GeometryCollection(typ) => {
+            let builder =
+                GeometryCollectionBuilder::from_nullable_geometries(&geoms, typ, prefer_multi)?;
+            Ok(Arc::new(builder.finish()))
+        }
+        Rect(_) => Err(GeoArrowError::General(format!(
+            "Unexpected data type {:?}",
+            target_type,
+        ))),
+        Geometry(typ) => {
+            let builder = GeometryBuilder::from_nullable_geometries(&geoms, typ, prefer_multi)?;
+            Ok(Arc::new(builder.finish()))
+        }
+        _ => todo!("Handle target WKB/WKT in `from_wkb`"),
+    }
+}

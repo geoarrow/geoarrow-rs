@@ -240,8 +240,8 @@ pub(crate) fn bounding_rect(arr: &dyn GeoArrowArray) -> Result<RectArray> {
         Rect(_) => Ok(arr.as_rect().clone()),
         Wkb(_) => impl_array_accessor(arr.as_wkb::<i32>()),
         LargeWkb(_) => impl_array_accessor(arr.as_wkb::<i64>()),
-        Wkt(_) => todo!(),      // impl_array_accessor(arr.as_wkt()),
-        LargeWkt(_) => todo!(), // impl_array_accessor(arr.as_wkt()),
+        Wkt(_) => impl_array_accessor(arr.as_wkt::<i32>()),
+        LargeWkt(_) => impl_array_accessor(arr.as_wkt::<i64>()),
     }
 }
 
@@ -283,8 +283,8 @@ pub(crate) fn total_bounds(arr: &dyn GeoArrowArray) -> Result<BoundingRect> {
         Rect(_) => impl_total_bounds(arr.as_rect()),
         Wkb(_) => impl_total_bounds(arr.as_wkb::<i32>()),
         LargeWkb(_) => impl_total_bounds(arr.as_wkb::<i64>()),
-        Wkt(_) => todo!(),      // impl_total_bounds(arr.as_wkt()),
-        LargeWkt(_) => todo!(), // impl_total_bounds(arr.as_wkt()),
+        Wkt(_) => impl_total_bounds(arr.as_wkt::<i32>()),
+        LargeWkt(_) => impl_total_bounds(arr.as_wkt::<i64>()),
     }
 }
 
@@ -292,14 +292,8 @@ pub(crate) fn total_bounds(arr: &dyn GeoArrowArray) -> Result<BoundingRect> {
 fn impl_total_bounds<'a>(arr: &'a impl ArrayAccessor<'a>) -> Result<BoundingRect> {
     let mut rect = BoundingRect::new();
 
-    match arr.data_type() {
-        _ => {
-            for item in arr.iter() {
-                if let Some(item) = item {
-                    rect.add_geometry(&item?);
-                }
-            }
-        }
+    for item in arr.iter().flatten() {
+        rect.add_geometry(&item?);
     }
 
     Ok(rect)
