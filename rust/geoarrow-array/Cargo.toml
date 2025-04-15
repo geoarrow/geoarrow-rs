@@ -17,7 +17,7 @@ arrow-buffer = { workspace = true }
 arrow-schema = { workspace = true }
 geo-traits = { workspace = true }
 geozero = { workspace = true, optional = true }
-geoarrow-schema = { path = "../geoarrow-schema" }
+geoarrow-schema = { workspace = true }
 num-traits = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
@@ -25,5 +25,6 @@ wkb = { workspace = true }
 wkt = { workspace = true }
 
 [dev-dependencies]
-geo-types = { workspace = true }
 geo = { workspace = true }
+geo-types = { workspace = true }
+geoarrow-test = { workspace = true }

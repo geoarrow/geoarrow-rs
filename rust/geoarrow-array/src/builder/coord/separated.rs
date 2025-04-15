@@ -142,6 +142,9 @@ impl SeparatedCoordBufferBuilder {
         if let Some(z) = coord.nth(2) {
             self.buffers[2].push(z);
         };
+        if let Some(m) = coord.nth(3) {
+            self.buffers[3].push(m);
+        };
         Ok(())
     }
 

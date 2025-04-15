@@ -386,29 +386,45 @@ mod test {
     #[test]
     fn try_from_arrow() {
         for coord_type in [CoordType::Interleaved, CoordType::Separated] {
-            let geo_arr = multilinestring::ml_array(coord_type);
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let geo_arr = multilinestring::array(coord_type, dim);
 
-            let ext_type = geo_arr.ext_type().clone();
-            let field = ext_type.to_field("geometry", true);
+                let ext_type = geo_arr.ext_type().clone();
+                let field = ext_type.to_field("geometry", true);
 
-            let arrow_arr = geo_arr.to_array_ref();
+                let arrow_arr = geo_arr.to_array_ref();
 
-            let geo_arr2: MultiLineStringArray = (arrow_arr.as_ref(), ext_type).try_into().unwrap();
-            let geo_arr3: MultiLineStringArray = (arrow_arr.as_ref(), &field).try_into().unwrap();
+                let geo_arr2: MultiLineStringArray =
+                    (arrow_arr.as_ref(), ext_type).try_into().unwrap();
+                let geo_arr3: MultiLineStringArray =
+                    (arrow_arr.as_ref(), &field).try_into().unwrap();
 
-            assert_eq!(geo_arr, geo_arr2);
-            assert_eq!(geo_arr, geo_arr3);
+                assert_eq!(geo_arr, geo_arr2);
+                assert_eq!(geo_arr, geo_arr3);
+            }
         }
     }
 
     #[test]
     fn partial_eq() {
-        let arr1 = multilinestring::ml_array(CoordType::Interleaved);
-        let arr2 = multilinestring::ml_array(CoordType::Separated);
-        assert_eq!(arr1, arr1);
-        assert_eq!(arr2, arr2);
-        assert_eq!(arr1, arr2);
+        for dim in [
+            Dimension::XY,
+            Dimension::XYZ,
+            Dimension::XYM,
+            Dimension::XYZM,
+        ] {
+            let arr1 = multilinestring::array(CoordType::Interleaved, dim);
+            let arr2 = multilinestring::array(CoordType::Separated, dim);
+            assert_eq!(arr1, arr1);
+            assert_eq!(arr2, arr2);
+            assert_eq!(arr1, arr2);
 
-        assert_ne!(arr1, arr2.slice(0, 2));
+            assert_ne!(arr1, arr2.slice(0, 2));
+        }
     }
 }

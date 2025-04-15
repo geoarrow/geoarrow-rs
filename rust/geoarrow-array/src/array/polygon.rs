@@ -397,18 +397,25 @@ mod test {
     #[test]
     fn try_from_arrow() {
         for coord_type in [CoordType::Interleaved, CoordType::Separated] {
-            let geo_arr = polygon::p_array(coord_type);
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let geo_arr = polygon::array(coord_type, dim);
 
-            let ext_type = geo_arr.ext_type().clone();
-            let field = ext_type.to_field("geometry", true);
+                let ext_type = geo_arr.ext_type().clone();
+                let field = ext_type.to_field("geometry", true);
 
-            let arrow_arr = geo_arr.to_array_ref();
+                let arrow_arr = geo_arr.to_array_ref();
 
-            let geo_arr2: PolygonArray = (arrow_arr.as_ref(), ext_type).try_into().unwrap();
-            let geo_arr3: PolygonArray = (arrow_arr.as_ref(), &field).try_into().unwrap();
+                let geo_arr2: PolygonArray = (arrow_arr.as_ref(), ext_type).try_into().unwrap();
+                let geo_arr3: PolygonArray = (arrow_arr.as_ref(), &field).try_into().unwrap();
 
-            assert_eq!(geo_arr, geo_arr2);
-            assert_eq!(geo_arr, geo_arr3);
+                assert_eq!(geo_arr, geo_arr2);
+                assert_eq!(geo_arr, geo_arr3);
+            }
         }
     }
 

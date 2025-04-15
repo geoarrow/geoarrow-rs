@@ -6,7 +6,7 @@ use arrow_array::{
 };
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
-use geoarrow_schema::{CoordType, Metadata, WkbType};
+use geoarrow_schema::{Metadata, WkbType};
 use wkb::reader::Wkb;
 
 use crate::capacity::WKBCapacity;
@@ -43,15 +43,6 @@ impl<O: OffsetSizeTrait> WkbArray<O> {
     /// Returns true if the array is empty
     pub fn is_empty(&self) -> bool {
         self.len() == 0
-    }
-
-    /// Infer the minimal NativeType that this WkbArray can be casted to.
-    #[allow(dead_code)]
-    // TODO: is this obsolete with new from_wkb approach that uses downcasting?
-    pub(crate) fn infer_geo_data_type(&self, _coord_type: CoordType) -> Result<GeoArrowType> {
-        todo!()
-        // use crate::io::wkb::reader::r#type::infer_geometry_type;
-        // infer_geometry_type(self.iter().flatten(), coord_type)
     }
 
     /// The lengths of each buffer contained in this array.

@@ -244,3 +244,41 @@ impl PartialEq for GeometryCollectionArray {
             && self.array == other.array
     }
 }
+
+#[cfg(test)]
+mod test {
+    use geoarrow_schema::{CoordType, Dimension};
+
+    use crate::test::geometrycollection;
+
+    use super::*;
+
+    #[test]
+    fn try_from_arrow() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                for prefer_multi in [true, false] {
+                    let geo_arr = geometrycollection::array(coord_type, dim, prefer_multi);
+
+                    let point_type = geo_arr.ext_type().clone();
+                    let field = point_type.to_field("geometry", true);
+
+                    let arrow_arr = geo_arr.to_array_ref();
+
+                    let geo_arr2: GeometryCollectionArray =
+                        (arrow_arr.as_ref(), point_type).try_into().unwrap();
+                    let geo_arr3: GeometryCollectionArray =
+                        (arrow_arr.as_ref(), &field).try_into().unwrap();
+
+                    assert_eq!(geo_arr, geo_arr2);
+                    assert_eq!(geo_arr, geo_arr3);
+                }
+            }
+        }
+    }
+}

@@ -105,6 +105,9 @@ impl InterleavedCoordBufferBuilder {
         if let Some(z) = coord.nth(2) {
             self.coords.push(z);
         };
+        if let Some(m) = coord.nth(3) {
+            self.coords.push(m);
+        };
         Ok(())
     }
 
