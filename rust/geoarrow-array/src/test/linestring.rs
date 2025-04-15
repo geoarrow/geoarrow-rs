@@ -25,24 +25,13 @@ pub(crate) fn ls_array(coord_type: CoordType) -> LineStringArray {
     LineStringBuilder::from_nullable_line_strings(&geoms, typ).finish()
 }
 
-macro_rules! impl_mod {
-    ($mod_name:ident, $dim:expr) => {
-        pub mod $mod_name {
-            use super::*;
-
-            pub fn array(coord_type: CoordType) -> LineStringArray {
-                let typ = LineStringType::new(coord_type, $dim, Default::default());
-                LineStringBuilder::from_nullable_line_strings(
-                    &raw::linestring::$mod_name::geoms(),
-                    typ,
-                )
-                .finish()
-            }
-        }
+pub fn array(coord_type: CoordType, dim: Dimension) -> LineStringArray {
+    let typ = LineStringType::new(coord_type, dim, Default::default());
+    let geoms = match dim {
+        Dimension::XY => raw::linestring::xy::geoms(),
+        Dimension::XYZ => raw::linestring::xyz::geoms(),
+        Dimension::XYM => raw::linestring::xym::geoms(),
+        Dimension::XYZM => raw::linestring::xyzm::geoms(),
     };
+    LineStringBuilder::from_nullable_line_strings(&geoms, typ).finish()
 }
-
-impl_mod!(xy, Dimension::XY);
-impl_mod!(xyz, Dimension::XYZ);
-impl_mod!(xym, Dimension::XYM);
-impl_mod!(xyzm, Dimension::XYZM);

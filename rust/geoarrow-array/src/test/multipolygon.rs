@@ -55,24 +55,13 @@ pub(crate) fn mp_array(coord_type: CoordType) -> MultiPolygonArray {
     MultiPolygonBuilder::from_nullable_multi_polygons(&geoms, typ).finish()
 }
 
-macro_rules! impl_mod {
-    ($mod_name:ident, $dim:expr) => {
-        pub mod $mod_name {
-            use super::*;
-
-            pub fn array(coord_type: CoordType) -> MultiPolygonArray {
-                let typ = MultiPolygonType::new(coord_type, $dim, Default::default());
-                MultiPolygonBuilder::from_nullable_multi_polygons(
-                    &raw::multipolygon::$mod_name::geoms(),
-                    typ,
-                )
-                .finish()
-            }
-        }
+pub fn array(coord_type: CoordType, dim: Dimension) -> MultiPolygonArray {
+    let typ = MultiPolygonType::new(coord_type, dim, Default::default());
+    let geoms = match dim {
+        Dimension::XY => raw::multipolygon::xy::geoms(),
+        Dimension::XYZ => raw::multipolygon::xyz::geoms(),
+        Dimension::XYM => raw::multipolygon::xym::geoms(),
+        Dimension::XYZM => raw::multipolygon::xyzm::geoms(),
     };
+    MultiPolygonBuilder::from_nullable_multi_polygons(&geoms, typ).finish()
 }
-
-impl_mod!(xy, Dimension::XY);
-impl_mod!(xyz, Dimension::XYZ);
-impl_mod!(xym, Dimension::XYM);
-impl_mod!(xyzm, Dimension::XYZM);

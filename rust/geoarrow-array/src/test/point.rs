@@ -37,24 +37,13 @@ pub(crate) fn point_array(coord_type: CoordType) -> PointArray {
     PointBuilder::from_nullable_points(geoms.iter().map(|x| x.as_ref()), typ).finish()
 }
 
-macro_rules! impl_mod {
-    ($mod_name:ident, $dim:expr) => {
-        pub mod $mod_name {
-            use super::*;
-
-            pub fn array(coord_type: CoordType) -> PointArray {
-                let typ = PointType::new(coord_type, $dim, Default::default());
-                PointBuilder::from_nullable_points(
-                    raw::point::$mod_name::geoms().iter().map(|x| x.as_ref()),
-                    typ,
-                )
-                .finish()
-            }
-        }
+pub fn array(coord_type: CoordType, dim: Dimension) -> PointArray {
+    let typ = PointType::new(coord_type, dim, Default::default());
+    let geoms = match dim {
+        Dimension::XY => raw::point::xy::geoms(),
+        Dimension::XYZ => raw::point::xyz::geoms(),
+        Dimension::XYM => raw::point::xym::geoms(),
+        Dimension::XYZM => raw::point::xyzm::geoms(),
     };
+    PointBuilder::from_nullable_points(geoms.iter().map(|x| x.as_ref()), typ).finish()
 }
-
-impl_mod!(xy, Dimension::XY);
-impl_mod!(xyz, Dimension::XYZ);
-impl_mod!(xym, Dimension::XYM);
-impl_mod!(xyzm, Dimension::XYZM);

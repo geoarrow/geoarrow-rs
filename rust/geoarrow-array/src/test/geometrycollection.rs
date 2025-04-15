@@ -4,26 +4,16 @@ use geoarrow_test::raw;
 use crate::array::GeometryCollectionArray;
 use crate::builder::GeometryCollectionBuilder;
 
-macro_rules! impl_mod {
-    ($mod_name:ident, $dim:expr) => {
-        pub mod $mod_name {
-            use super::*;
-
-            pub fn array(coord_type: CoordType, prefer_multi: bool) -> GeometryCollectionArray {
-                let typ = GeometryCollectionType::new(coord_type, $dim, Default::default());
-                GeometryCollectionBuilder::from_nullable_geometry_collections(
-                    &raw::geometrycollection::$mod_name::geoms(),
-                    typ,
-                    prefer_multi,
-                )
-                .unwrap()
-                .finish()
-            }
-        }
+pub fn array(coord_type: CoordType, dim: Dimension, prefer_multi: bool) -> GeometryCollectionArray {
+    let typ = GeometryCollectionType::new(coord_type, dim, Default::default());
+    let geoms = match dim {
+        Dimension::XY => raw::geometrycollection::xy::geoms(),
+        Dimension::XYZ => raw::geometrycollection::xyz::geoms(),
+        Dimension::XYM => raw::geometrycollection::xym::geoms(),
+        Dimension::XYZM => raw::geometrycollection::xyzm::geoms(),
     };
-}
 
-impl_mod!(xy, Dimension::XY);
-impl_mod!(xyz, Dimension::XYZ);
-impl_mod!(xym, Dimension::XYM);
-impl_mod!(xyzm, Dimension::XYZM);
+    GeometryCollectionBuilder::from_nullable_geometry_collections(&geoms, typ, prefer_multi)
+        .unwrap()
+        .finish()
+}

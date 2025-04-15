@@ -33,24 +33,13 @@ pub(crate) fn mp_array(coord_type: CoordType) -> MultiPointArray {
     MultiPointBuilder::from_nullable_multi_points(&geoms, typ).finish()
 }
 
-macro_rules! impl_mod {
-    ($mod_name:ident, $dim:expr) => {
-        pub mod $mod_name {
-            use super::*;
-
-            pub fn array(coord_type: CoordType) -> MultiPointArray {
-                let typ = MultiPointType::new(coord_type, $dim, Default::default());
-                MultiPointBuilder::from_nullable_multi_points(
-                    &raw::multipoint::$mod_name::geoms(),
-                    typ,
-                )
-                .finish()
-            }
-        }
+pub fn array(coord_type: CoordType, dim: Dimension) -> MultiPointArray {
+    let typ = MultiPointType::new(coord_type, dim, Default::default());
+    let geoms = match dim {
+        Dimension::XY => raw::multipoint::xy::geoms(),
+        Dimension::XYZ => raw::multipoint::xyz::geoms(),
+        Dimension::XYM => raw::multipoint::xym::geoms(),
+        Dimension::XYZM => raw::multipoint::xyzm::geoms(),
     };
+    MultiPointBuilder::from_nullable_multi_points(&geoms, typ).finish()
 }
-
-impl_mod!(xy, Dimension::XY);
-impl_mod!(xyz, Dimension::XYZ);
-impl_mod!(xym, Dimension::XYM);
-impl_mod!(xyzm, Dimension::XYZM);

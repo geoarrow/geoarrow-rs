@@ -39,21 +39,13 @@ pub(crate) fn p_array(coord_type: CoordType) -> PolygonArray {
     PolygonBuilder::from_nullable_polygons(&geoms, typ).finish()
 }
 
-macro_rules! impl_mod {
-    ($mod_name:ident, $dim:expr) => {
-        pub mod $mod_name {
-            use super::*;
-
-            pub fn array(coord_type: CoordType) -> PolygonArray {
-                let typ = PolygonType::new(coord_type, $dim, Default::default());
-                PolygonBuilder::from_nullable_polygons(&raw::polygon::$mod_name::geoms(), typ)
-                    .finish()
-            }
-        }
+pub fn array(coord_type: CoordType, dim: Dimension) -> PolygonArray {
+    let typ = PolygonType::new(coord_type, dim, Default::default());
+    let geoms = match dim {
+        Dimension::XY => raw::polygon::xy::geoms(),
+        Dimension::XYZ => raw::polygon::xyz::geoms(),
+        Dimension::XYM => raw::polygon::xym::geoms(),
+        Dimension::XYZM => raw::polygon::xyzm::geoms(),
     };
+    PolygonBuilder::from_nullable_polygons(&geoms, typ).finish()
 }
-
-impl_mod!(xy, Dimension::XY);
-impl_mod!(xyz, Dimension::XYZ);
-impl_mod!(xym, Dimension::XYM);
-impl_mod!(xyzm, Dimension::XYZM);
