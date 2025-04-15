@@ -1358,6 +1358,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "geoarrow-geoparquet"
+version = "0.1.0-dev"
+dependencies = [
+ "arrow-arith",
+ "arrow-array",
+ "arrow-buffer",
+ "arrow-ord",
+ "arrow-schema",
+ "async-stream",
+ "bytes",
+ "futures",
+ "geo-traits",
+ "geo-types",
+ "geoarrow-array",
+ "geoarrow-schema",
+ "parquet",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "geoarrow-schema"
 version = "0.1.0-dev"
 dependencies = [

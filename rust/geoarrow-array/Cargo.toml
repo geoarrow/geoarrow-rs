@@ -1,13 +1,13 @@
 
 [package]
 name = "geoarrow-array"
-version = "0.1.0-dev"
-authors = ["Kyle Barron <kylebarron2@gmail.com>"]
+version = { workspace = true }
+authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
 repository = { workspace = true }
 description = "Rust implementation of GeoArrow"
-categories = ["science::geo"]
+categories = { workspace = true }
 rust-version = { workspace = true }
 
 
