@@ -3,6 +3,7 @@ use geoarrow_array::array::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordB
 use geoarrow_schema::Dimension;
 use geos::{CoordDimensions, CoordSeq};
 
+#[allow(dead_code)]
 fn coord_buffer_to_geos(coords: &CoordBuffer) -> Result<geos::CoordSeq, geos::Error> {
     match coords {
         CoordBuffer::Separated(cb) => separated_coords_to_geos(cb),
