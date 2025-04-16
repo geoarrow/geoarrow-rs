@@ -1,5 +1,4 @@
 use arrow_array::RecordBatchReader;
-use arrow_schema::SchemaRef;
 
 /// A newtype wrapper around an [`arrow_array::RecordBatchReader`] so that we can implement the
 /// [`geozero::GeozeroDatasource`] trait on it.
@@ -12,11 +11,6 @@ impl GeozeroRecordBatchReader {
     /// Create a new GeozeroRecordBatchReader from a [`RecordBatchReader`].
     pub fn new(reader: Box<dyn RecordBatchReader>) -> Self {
         Self(reader)
-    }
-
-    /// Access the schema of this reader.
-    pub fn schema(&self) -> SchemaRef {
-        self.0.schema()
     }
 
     /// Access the underlying [`RecordBatchReader`].
