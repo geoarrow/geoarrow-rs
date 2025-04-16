@@ -42,7 +42,7 @@ jobs:
       - name: Test
         run: cargo test --all-features
 
-  check-features:
+  check-features-with-external-dependencies:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -59,21 +59,6 @@ jobs:
           - "-F polylabel"
           - "-F postgis"
           - "-F rayon"
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: "recursive"
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - name: Test
-        run: cargo check ${{ matrix.args }}
-
-  check-features-with-external-dependencies:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        args:
           - "-F gdal -F gdal/bindgen"
           - "-F geos"
           - "-F proj"

@@ -1,5 +1,4 @@
-use geo::coord;
-use geo_types::Rect;
+use geo_types::{Rect, coord};
 
 use crate::array::RectArray;
 use crate::builder::RectBuilder;

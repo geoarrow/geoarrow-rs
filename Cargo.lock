@@ -1381,6 +1381,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "geoarrow-geos"
+version = "0.1.0-dev"
+dependencies = [
+ "arrow-array",
+ "arrow-schema",
+ "geo-traits",
+ "geoarrow-array",
+ "geoarrow-schema",
+ "geos",
+]
+
+[[package]]
 name = "geoarrow-schema"
 version = "0.1.0-dev"
 dependencies = [

@@ -1,4 +1,3 @@
-use geo::wkt;
 use geo_types::{Point, point};
 
 use geoarrow_schema::{CoordType, Dimension, PointType};
@@ -23,12 +22,6 @@ pub(crate) fn p2() -> Point {
     point!(
         x: 2., y: 3.
     )
-}
-
-pub(crate) fn p3() -> Point {
-    wkt! {
-        POINT (30.0 10.0)
-    }
 }
 
 pub(crate) fn point_array(coord_type: CoordType) -> PointArray {
