@@ -35,20 +35,24 @@ impl FromGEOS for PointArray {
     }
 }
 
-// #[cfg(test)]
-// mod test {
-//     use super::*;
-//     use crate::test::point::point_array;
-//     use crate::trait_::{ArrayAccessor, NativeScalar};
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::export::to_geos_geometry;
 
-//     #[test]
-//     fn geos_round_trip() {
-//         let arr = point_array();
-//         let geos_geoms: Vec<Option<geos::Geometry>> = arr
-//             .iter()
-//             .map(|opt_x| opt_x.map(|x| x.to_geos().unwrap()))
-//             .collect();
-//         let round_trip = PointArray::from_geos(geos_geoms, Dimension::XY).unwrap();
-//         assert_eq!(arr, round_trip);
-//     }
-// }
+    use geoarrow_array::test::point::array;
+    use geoarrow_array::{ArrayAccessor, IntoArrow};
+    use geoarrow_schema::{CoordType, Dimension};
+
+    #[test]
+    fn geos_round_trip() {
+        let arr = array(CoordType::Interleaved, Dimension::XY);
+
+        let geos_geoms = arr
+            .iter()
+            .map(|opt_x| opt_x.map(|x| to_geos_geometry(&x.unwrap()).unwrap()))
+            .collect::<Vec<_>>();
+        let round_trip = PointArray::from_geos(geos_geoms, arr.ext_type().clone()).unwrap();
+        assert_eq!(arr, round_trip);
+    }
+}

@@ -20,4 +20,5 @@ pub use datatypes::GeoArrowType;
 pub use trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 
 #[cfg(any(test, feature = "test-data"))]
-pub(crate) mod test;
+#[allow(missing_docs)]
+pub mod test;

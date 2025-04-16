@@ -44,7 +44,7 @@ geoarrow-array = { path = "rust/geoarrow-array" }
 geoarrow-geoparquet = { path = "rust/geoarrow-geoparquet" }
 geoarrow-schema = { path = "rust/geoarrow-schema" }
 geoarrow-test = { path = "rust/geoarrow-test" }
-geos = "10"
+geos = { version = "10", features = ["v3_10_0"] }
 geozero = "0.14"
 indexmap = "2.5.0"
 num-traits = "0.2.19"
