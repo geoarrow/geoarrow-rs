@@ -10,10 +10,13 @@ description = "Rust implementation of GeoArrow"
 categories = { workspace = true }
 rust-version = { workspace = true }
 
+[features]
+geozero = ["dep:geozero", "dep:arrow-json"]
 
 [dependencies]
 arrow-array = { workspace = true }
 arrow-buffer = { workspace = true }
+arrow-json = { workspace = true, optional = true }
 arrow-schema = { workspace = true }
 geo-traits = { workspace = true }
 geozero = { workspace = true, optional = true }
