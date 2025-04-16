@@ -1,3 +1,4 @@
+use std::str::FromStr;
 use std::sync::Mutex;
 
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
@@ -7,6 +8,8 @@ use crate::util::to_arro3_table;
 
 use geoarrow::io::parquet::{GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder};
 use parquet::arrow::arrow_reader::ArrowReaderOptions;
+use parquet::basic::Compression;
+use parquet::file::properties::{WriterProperties, WriterVersion};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3_arrow::PyRecordBatch;
@@ -108,20 +111,61 @@ impl From<GeoParquetEncoding> for geoarrow::io::parquet::GeoParquetWriterEncodin
     }
 }
 
+pub struct PyWriterVersion(WriterVersion);
+
+impl<'py> FromPyObject<'py> for PyWriterVersion {
+    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
+        let s: String = ob.extract()?;
+        Ok(Self(
+            WriterVersion::from_str(&s).map_err(|err| PyValueError::new_err(err.to_string()))?,
+        ))
+    }
+}
+
+pub struct PyCompression(Compression);
+
+impl<'py> FromPyObject<'py> for PyCompression {
+    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
+        let s: String = ob.extract()?;
+        Ok(Self(
+            Compression::from_str(&s).map_err(|err| PyValueError::new_err(err.to_string()))?,
+        ))
+    }
+}
+
 #[pyfunction]
 #[pyo3(
-    signature = (table, file, *, encoding = GeoParquetEncoding::WKB),
-    text_signature = "(table, file, *, encoding = 'WKB')")
+    signature = (
+        table,
+        file,
+        *,
+        encoding = GeoParquetEncoding::WKB,
+        compression = None,
+        writer_version = None
+    ),
+    text_signature = "(table, file, *, encoding = 'WKB', compression = None, writer_version = None)")
 ]
 pub fn write_parquet(
     table: AnyRecordBatch,
     file: FileWriter,
     encoding: GeoParquetEncoding,
+    compression: Option<PyCompression>,
+    writer_version: Option<PyWriterVersion>,
 ) -> PyGeoArrowResult<()> {
+    let mut props = WriterProperties::builder();
+
+    if let Some(writer_version) = writer_version {
+        props = props.set_writer_version(writer_version.0);
+    }
+
+    if let Some(compression) = compression {
+        props = props.set_compression(compression.0);
+    }
+
     let options = GeoParquetWriterOptions {
         encoding: encoding.into(),
         crs_transform: Some(Box::new(PyprojCRSTransform::new())),
-        ..Default::default()
+        writer_properties: Some(props.build()),
     };
     _write_geoparquet(table.into_reader()?, file, &options)?;
     Ok(())
