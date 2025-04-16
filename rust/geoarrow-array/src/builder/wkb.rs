@@ -1,14 +1,14 @@
 use arrow_array::OffsetSizeTrait;
 use arrow_array::builder::GenericBinaryBuilder;
 use geo_traits::{
-    GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
-    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait,
+    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
+    MultiPolygonTrait, PointTrait, PolygonTrait,
 };
 use geoarrow_schema::WkbType;
 use wkb::Endianness;
 use wkb::writer::{
-    write_geometry_collection, write_line_string, write_multi_line_string, write_multi_point,
-    write_multi_polygon, write_point, write_polygon,
+    write_geometry, write_geometry_collection, write_line_string, write_multi_line_string,
+    write_multi_point, write_multi_polygon, write_point, write_polygon,
 };
 
 use crate::array::WkbArray;
@@ -121,24 +121,9 @@ impl<O: OffsetSizeTrait> WkbBuilder<O> {
     /// Push a Geometry onto the end of this builder
     #[inline]
     pub fn push_geometry(&mut self, geom: Option<&impl GeometryTrait<T = f64>>) {
-        use GeometryType::*;
-
-        // TODO: call wkb::write_geometry directly
         if let Some(geom) = geom {
-            match geom.as_type() {
-                Point(point) => self.push_point(Some(point)),
-                LineString(line_string) => self.push_line_string(Some(line_string)),
-                Polygon(polygon) => self.push_polygon(Some(polygon)),
-                MultiPoint(multi_point) => self.push_multi_point(Some(multi_point)),
-                MultiLineString(multi_line_string) => {
-                    self.push_multi_line_string(Some(multi_line_string))
-                }
-                MultiPolygon(multi_polygon) => self.push_multi_polygon(Some(multi_polygon)),
-                GeometryCollection(geometry_collection) => {
-                    self.push_geometry_collection(Some(geometry_collection))
-                }
-                Rect(_) | Line(_) | Triangle(_) => todo!(),
-            }
+            write_geometry(&mut self.0, geom, Endianness::LittleEndian).unwrap();
+            self.0.append_value("")
         } else {
             self.0.append_null()
         }
