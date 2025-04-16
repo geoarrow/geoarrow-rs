@@ -35,13 +35,9 @@ fn _rust(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     check_debug_build(py)?;
     m.add_wrapped(wrap_pyfunction!(___version))?;
 
-    m.add_class::<pyo3_geoarrow::PyGeometry>()?;
-    m.add_class::<pyo3_geoarrow::PyNativeArray>()?;
-    m.add_class::<pyo3_geoarrow::PyChunkedNativeArray>()?;
-    m.add_class::<pyo3_geoarrow::PyNativeType>()?;
-
-    m.add_class::<pyo3_geoarrow::PySerializedArray>()?;
-    m.add_class::<pyo3_geoarrow::PySerializedType>()?;
+    m.add_class::<pyo3_geoarrow::PyGeoArrowArray>()?;
+    m.add_class::<pyo3_geoarrow::PyChunkedGeoArrowArray>()?;
+    m.add_class::<pyo3_geoarrow::PyGeoArrowType>()?;
 
     // Constructors
 

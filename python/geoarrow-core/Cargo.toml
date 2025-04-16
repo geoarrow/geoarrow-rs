@@ -18,19 +18,15 @@ name = "_rust"
 crate-type = ["cdylib"]
 
 [features]
-default = ["libc", "rayon"]
-libc = ["geoarrow/polylabel"]
-rayon = ["geoarrow/rayon"]
 
 [dependencies]
-arrow = { workspace = true }
 arrow-array = { workspace = true }
 arrow-buffer = { workspace = true }
 pyo3 = { workspace = true }
 pyo3-arrow = { workspace = true }
-pyo3-geoarrow = { path = "../pyo3-geoarrow" }
+pyo3-geoarrow = { path = "../../rust/pyo3-geoarrow" }
 geo = "0.30"
-geoarrow = { workspace = true }
+geoarrow-array = { workspace = true }
 geoarrow-schema = { workspace = true }
 geozero = { version = "0.14", features = ["with-svg"] }
 numpy = { workspace = true }
