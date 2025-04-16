@@ -1,5 +1,6 @@
 use geo_traits::GeometryCollectionTrait;
-use geos::Geom;
+use geoarrow_array::error::{GeoArrowError, Result};
+use geos::{Geom, GeometryTypes};
 
 use crate::import::scalar::geometry::GEOSGeometry;
 
@@ -8,6 +9,16 @@ pub struct GEOSGeometryCollection(geos::Geometry);
 impl GEOSGeometryCollection {
     pub fn new_unchecked(geom: geos::Geometry) -> Self {
         Self(geom)
+    }
+
+    pub fn try_new(geom: geos::Geometry) -> Result<Self> {
+        if matches!(geom.geometry_type(), GeometryTypes::GeometryCollection) {
+            Ok(Self(geom))
+        } else {
+            Err(GeoArrowError::General(
+                "Geometry type must be geometry collection".to_string(),
+            ))
+        }
     }
 }
 
