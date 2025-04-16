@@ -251,24 +251,15 @@ fn process_properties<P: PropertyProcessor>(
             | DataType::List(_)
             | DataType::LargeList(_)
             | DataType::Map(_, _) => {
-                todo!();
-                // if array.is_valid(within_batch_row_idx) {
-                //     let enc = make_encoder(field, array, options).unwrap();
-                //     enc.encode(idx, out);
-
-                //     let mut encoder = make_encoder(
-                //         array,
-                //         &EncoderOptions {
-                //             explicit_nulls: false,
-                //         },
-                //     )
-                //     .map_err(|err| GeozeroError::Property(err.to_string()))?;
-                //     let mut buf = vec![];
-                //     encoder.encode(within_batch_row_idx, &mut buf);
-                //     let json_string = String::from_utf8(buf)
-                //         .map_err(|err| GeozeroError::Property(err.to_string()))?;
-                //     processor.property(property_idx, name, &ColumnValue::Json(&json_string))?;
-                // }
+                // TODO(Perf): refactor so that we don't make a new encoder on every row
+                let options = Default::default();
+                let mut enc = make_encoder(field, array, &options)
+                    .map_err(|err| GeozeroError::Property(err.to_string()))?;
+                let mut out = vec![];
+                enc.encode(within_batch_row_idx, &mut out);
+                let json_string = String::from_utf8(out)
+                    .map_err(|err| GeozeroError::Property(err.to_string()))?;
+                processor.property(property_idx, name, &ColumnValue::Json(&json_string))?;
             }
             DataType::Date32 => {
                 let arr = array.as_primitive::<Date32Type>();
