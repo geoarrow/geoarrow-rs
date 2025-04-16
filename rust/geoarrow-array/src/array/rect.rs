@@ -3,7 +3,7 @@ use std::sync::Arc;
 use arrow_array::cast::AsArray;
 use arrow_array::types::Float64Type;
 use arrow_array::{Array, ArrayRef, StructArray};
-use arrow_buffer::{NullBuffer, ScalarBuffer};
+use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{BoxType, Metadata};
 
@@ -160,29 +160,29 @@ impl TryFrom<(&StructArray, BoxType)> for RectArray {
         let dim = typ.dimension();
         let validity = value.nulls();
         let columns = value.columns();
-        assert_eq!(columns.len(), dim.size() * 2);
+        if columns.len() != dim.size() * 2 {
+            return Err(GeoArrowError::General(format!(
+                "Invalid number of columns for RectArray: expected {} but got {}",
+                dim.size() * 2,
+                columns.len()
+            )));
+        }
 
-        let dim_size = dim.size();
-        let lower = core::array::from_fn(|i| {
-            if i < dim_size {
-                columns[i].as_primitive::<Float64Type>().values().clone()
-            } else {
-                ScalarBuffer::from(vec![])
-            }
-        });
-        let upper = core::array::from_fn(|i| {
-            if i < dim_size {
-                columns[dim_size + i]
-                    .as_primitive::<Float64Type>()
-                    .values()
-                    .clone()
-            } else {
-                ScalarBuffer::from(vec![])
-            }
-        });
+        let lower = columns[0..dim.size()]
+            .iter()
+            .map(|c| c.as_primitive::<Float64Type>().values().clone())
+            .collect::<Vec<_>>();
+        let lower = SeparatedCoordBuffer::from_vec(lower, dim)?;
+
+        let upper = columns[dim.size()..]
+            .iter()
+            .map(|c| c.as_primitive::<Float64Type>().values().clone())
+            .collect::<Vec<_>>();
+        let upper = SeparatedCoordBuffer::from_vec(upper, dim)?;
+
         Ok(Self::new(
-            SeparatedCoordBuffer::new(lower, dim),
-            SeparatedCoordBuffer::new(upper, dim),
+            lower,
+            upper,
             validity.cloned(),
             typ.metadata().clone(),
         ))

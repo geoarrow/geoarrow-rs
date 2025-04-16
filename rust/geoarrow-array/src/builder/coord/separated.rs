@@ -1,5 +1,3 @@
-use core::f64;
-
 use geo_traits::{CoordTrait, PointTrait};
 use geoarrow_schema::Dimension;
 
@@ -22,27 +20,6 @@ impl SeparatedCoordBufferBuilder {
     pub fn new(dim: Dimension) -> Self {
         Self::with_capacity(0, dim)
     }
-
-    // TODO: need to figure out how to take variable-length input but take ownership from the
-    // input.
-    // pub fn from_vecs(buffers: &[Vec<f64>], dim: Dimension) -> Result<Self> {
-    //     if buffers.len() != dim.size() {
-    //         return Err(GeoArrowError::General(
-    //             "Buffers must match dimension length ".into(),
-    //         ));
-    //     }
-
-    //     // Fill buffers with empty buffers past needed dimensions
-    //     let buffers = core::array::from_fn(|i| {
-    //         if i < buffers.len() {
-    //             buffers[0]
-    //         } else {
-    //             Vec::new()
-    //         }
-    //     });
-
-    //     Self { buffers }
-    // }
 
     /// Create a new builder with the given capacity and dimension
     pub fn with_capacity(capacity: usize, dim: Dimension) -> Self {
@@ -230,7 +207,7 @@ impl From<SeparatedCoordBufferBuilder> for SeparatedCoordBuffer {
         for (i, buffer) in value.buffers.into_iter().enumerate() {
             buffers[i] = buffer.into();
         }
-        SeparatedCoordBuffer::new(buffers, value.dim)
+        SeparatedCoordBuffer::from_array(buffers, value.dim).unwrap()
     }
 }
 

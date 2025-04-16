@@ -50,23 +50,39 @@ impl SeparatedCoordBuffer {
     /// The underlying coordinate type
     pub const COORD_TYPE: CoordType = CoordType::Separated;
 
-    /// Construct a new SeparatedCoordBuffer
+    /// Construct a new SeparatedCoordBuffer from an array of existing buffers.
     ///
-    /// # Panics
-    ///
-    /// - if the x and y buffers have different lengths
-    pub fn new(buffers: [ScalarBuffer<f64>; 4], dim: Dimension) -> Self {
-        Self::try_new(buffers, dim).unwrap()
-    }
-
-    /// Construct a new SeparatedCoordBuffer
-    ///
-    /// # Errors
-    ///
-    /// - if the x and y buffers have different lengths
-    pub fn try_new(buffers: [ScalarBuffer<f64>; 4], dim: Dimension) -> Result<Self> {
+    /// The number of _valid_ buffers in the array must match the dimension size. E.g. if the `dim`
+    /// is `Dimension::XY`, then only the first two buffers must have non-zero length, and the last
+    /// two buffers in the array can have length zero.
+    pub fn from_array(buffers: [ScalarBuffer<f64>; 4], dim: Dimension) -> Result<Self> {
         check(&buffers, dim)?;
         Ok(Self { buffers, dim })
+    }
+
+    /// Construct a new SeparatedCoordBuffer from a `Vec` of existing buffers.
+    ///
+    /// All buffers within `buffers` must have the same length, and the length of `buffers` must
+    /// equal the dimension size.
+    pub fn from_vec(buffers: Vec<ScalarBuffer<f64>>, dim: Dimension) -> Result<Self> {
+        if buffers.len() != dim.size() {
+            return Err(GeoArrowError::General(
+                "Buffers must match dimension length ".into(),
+            ));
+        }
+
+        let mut buffers = buffers.into_iter().map(Some).collect::<Vec<_>>();
+
+        // Fill buffers with empty buffers past needed dimensions
+        let buffers = core::array::from_fn(|i| {
+            if i < buffers.len() {
+                buffers[i].take().unwrap()
+            } else {
+                Vec::new().into()
+            }
+        });
+
+        Self::from_array(buffers, dim)
     }
 
     /// Access the underlying coordinate buffers.
@@ -214,16 +230,12 @@ impl SeparatedCoordBuffer {
     }
 
     pub(crate) fn from_arrow(array: &StructArray, dim: Dimension) -> Result<Self> {
-        let arrays = array.columns();
-        assert_eq!(arrays.len(), dim.size());
-
-        // Initialize buffers with empty array, then mutate into it
-        let mut buffers = core::array::from_fn(|_| vec![].into());
-        for i in 0..arrays.len() {
-            buffers[i] = arrays[i].as_primitive::<Float64Type>().values().clone();
-        }
-
-        Self::try_new(buffers, dim)
+        let buffers = array
+            .columns()
+            .iter()
+            .map(|c| c.as_primitive::<Float64Type>().values().clone())
+            .collect();
+        Self::from_vec(buffers, dim)
     }
 
     /// Construct from an iterator of coordinates
@@ -250,20 +262,16 @@ mod test {
         let x1 = vec![0., 1., 2.];
         let y1 = vec![3., 4., 5.];
 
-        let buf1 = SeparatedCoordBuffer::new(
-            [x1.into(), y1.into(), vec![].into(), vec![].into()],
-            Dimension::XY,
-        )
-        .slice(1, 1);
+        let buf1 = SeparatedCoordBuffer::from_vec(vec![x1.into(), y1.into()], Dimension::XY)
+            .unwrap()
+            .slice(1, 1);
         dbg!(&buf1.buffers[0]);
         dbg!(&buf1.buffers[1]);
 
         let x2 = vec![1.];
         let y2 = vec![4.];
-        let buf2 = SeparatedCoordBuffer::new(
-            [x2.into(), y2.into(), vec![].into(), vec![].into()],
-            Dimension::XY,
-        );
+        let buf2 =
+            SeparatedCoordBuffer::from_vec(vec![x2.into(), y2.into()], Dimension::XY).unwrap();
 
         assert_eq!(buf1, buf2);
     }

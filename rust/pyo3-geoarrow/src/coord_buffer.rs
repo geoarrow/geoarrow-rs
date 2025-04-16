@@ -1,7 +1,6 @@
 use arrow_array::Array;
 use arrow_array::cast::AsArray;
 use arrow_array::types::Float64Type;
-use arrow_buffer::ScalarBuffer;
 use arrow_schema::DataType;
 use geoarrow_array::array::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
 use geoarrow_schema::Dimension;
@@ -9,6 +8,8 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyList, PyTuple};
 use pyo3_arrow::PyArray;
+
+use crate::PyGeoArrowError;
 
 pub struct PyCoordBuffer(CoordBuffer);
 
@@ -87,24 +88,18 @@ impl<'py> FromPyObject<'py> for PyCoordBuffer {
                 let z = z.values();
 
                 Ok(Self(
-                    SeparatedCoordBuffer::new(
-                        [x.clone(), y.clone(), z.clone(), ScalarBuffer::from(vec![])],
+                    SeparatedCoordBuffer::from_vec(
+                        vec![x.clone(), y.clone(), z.clone()],
                         Dimension::XYZ,
                     )
+                    .map_err(PyGeoArrowError::from)?
                     .into(),
                 ))
             } else {
                 Ok(Self(
-                    SeparatedCoordBuffer::new(
-                        [
-                            x.clone(),
-                            y.clone(),
-                            ScalarBuffer::from(vec![]),
-                            ScalarBuffer::from(vec![]),
-                        ],
-                        Dimension::XY,
-                    )
-                    .into(),
+                    SeparatedCoordBuffer::from_vec(vec![x.clone(), y.clone()], Dimension::XY)
+                        .map_err(PyGeoArrowError::from)?
+                        .into(),
                 ))
             }
         } else {
