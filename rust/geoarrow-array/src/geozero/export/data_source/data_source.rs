@@ -20,7 +20,6 @@ use crate::geozero::export::scalar::{
     process_geometry, process_geometry_collection, process_line_string, process_multi_line_string,
     process_multi_point, process_multi_polygon, process_point, process_polygon, process_rect,
 };
-// use crate::io::geozero::table::json_encoder::{EncoderOptions, make_encoder};
 use crate::trait_::ArrayAccessor;
 
 use super::record_batch_reader::GeozeroRecordBatchReader;
@@ -29,7 +28,7 @@ impl GeozeroDatasource for GeozeroRecordBatchReader {
     fn process<P: FeatureProcessor>(&mut self, processor: &mut P) -> Result<(), GeozeroError> {
         let reader = self.as_mut();
         let schema = reader.schema();
-        let geom_indices = schema.as_ref().geometry_columns();
+        let geom_indices = geometry_columns(&schema);
         let geometry_column_index = if geom_indices.len() != 1 {
             Err(GeozeroError::Dataset(
                 "Writing through geozero not supported with multiple geometries".to_string(),
@@ -390,4 +389,19 @@ fn process_geometry_n<P: GeomProcessor>(
     }
 
     Ok(())
+}
+
+fn geometry_columns(schema: &Schema) -> Vec<usize> {
+    let mut geom_indices = vec![];
+    for (field_idx, field) in schema.fields().iter().enumerate() {
+        // We first check that an extension type name is set and then check that we can coerce to a
+        // GeoArrowType so that we don't accept columns that are _compatible_ with geoarrow storage
+        // but aren't set as geoarrow extension types.
+        if let Some(_ext_name) = field.extension_type_name() {
+            if let Ok(_geoarrow_type) = GeoArrowType::try_from(field.as_ref()) {
+                geom_indices.push(field_idx);
+            }
+        }
+    }
+    geom_indices
 }
