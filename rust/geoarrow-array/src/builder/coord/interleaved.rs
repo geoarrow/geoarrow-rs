@@ -93,11 +93,40 @@ impl InterleavedCoordBufferBuilder {
     ///
     /// - If the added coordinate does not have the same dimension as the coordinate buffer.
     pub fn try_push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
-        // TODO: should check xyz/zym
-        if coord.dim().size() != self.dim.size() {
-            return Err(GeoArrowError::General(
-                "coord dimension must match coord buffer dimension.".into(),
-            ));
+        // Note duplicated across buffer types; consider refactoring
+        match self.dim {
+            Dimension::XY => match coord.dim() {
+                geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => {}
+                d => {
+                    return Err(GeoArrowError::General(format!(
+                        "coord dimension must be XY for this buffer; got {d:?}."
+                    )));
+                }
+            },
+            Dimension::XYZ => match coord.dim() {
+                geo_traits::Dimensions::Xyz | geo_traits::Dimensions::Unknown(3) => {}
+                d => {
+                    return Err(GeoArrowError::General(format!(
+                        "coord dimension must be XYZ for this buffer; got {d:?}."
+                    )));
+                }
+            },
+            Dimension::XYM => match coord.dim() {
+                geo_traits::Dimensions::Xym | geo_traits::Dimensions::Unknown(3) => {}
+                d => {
+                    return Err(GeoArrowError::General(format!(
+                        "coord dimension must be XYM for this buffer; got {d:?}."
+                    )));
+                }
+            },
+            Dimension::XYZM => match coord.dim() {
+                geo_traits::Dimensions::Xyzm | geo_traits::Dimensions::Unknown(4) => {}
+                d => {
+                    return Err(GeoArrowError::General(format!(
+                        "coord dimension must be XYZM for this buffer; got {d:?}."
+                    )));
+                }
+            },
         }
 
         self.coords.push(coord.x());
@@ -160,5 +189,43 @@ impl InterleavedCoordBufferBuilder {
 impl From<InterleavedCoordBufferBuilder> for InterleavedCoordBuffer {
     fn from(value: InterleavedCoordBufferBuilder) -> Self {
         InterleavedCoordBuffer::new(value.coords.into(), value.dim)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use wkt::types::Coord;
+
+    use super::*;
+
+    #[test]
+    fn errors_when_pushing_incompatible_coord() {
+        let mut builder = InterleavedCoordBufferBuilder::new(Dimension::XY);
+        builder
+            .try_push_coord(&Coord {
+                x: 0.0,
+                y: 0.0,
+                z: Some(0.0),
+                m: None,
+            })
+            .expect_err("Should err pushing XYZ to XY buffer");
+
+        let mut builder = InterleavedCoordBufferBuilder::new(Dimension::XYZ);
+        builder
+            .try_push_coord(&Coord {
+                x: 0.0,
+                y: 0.0,
+                z: None,
+                m: None,
+            })
+            .expect_err("Should err pushing XY to XYZ buffer");
+        builder
+            .try_push_coord(&Coord {
+                x: 0.0,
+                y: 0.0,
+                z: Some(0.0),
+                m: None,
+            })
+            .unwrap();
     }
 }

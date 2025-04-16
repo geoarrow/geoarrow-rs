@@ -7,8 +7,9 @@ use geo_traits::{
     MultiPolygonTrait, PointTrait, PolygonTrait,
 };
 use wkb::writer::{
-    geometry_collection_wkb_size, line_string_wkb_size, multi_line_string_wkb_size,
-    multi_point_wkb_size, multi_polygon_wkb_size, point_wkb_size, polygon_wkb_size,
+    geometry_collection_wkb_size, geometry_wkb_size, line_string_wkb_size,
+    multi_line_string_wkb_size, multi_point_wkb_size, multi_polygon_wkb_size, point_wkb_size,
+    polygon_wkb_size,
 };
 
 /// A counter for the buffer sizes of a [`WkbArray`][crate::array::WkbArray].
@@ -118,22 +119,10 @@ impl WkbCapacity {
     /// Add a Geometry to this capacity counter.
     #[inline]
     pub fn add_geometry<'a>(&mut self, geom: Option<&'a (impl GeometryTrait<T = f64> + 'a)>) {
-        use geo_traits::GeometryType::*;
-
         if let Some(geom) = geom {
-            match geom.as_type() {
-                Point(g) => self.add_point(Some(g)),
-                LineString(g) => self.add_line_string(Some(g)),
-                Polygon(g) => self.add_polygon(Some(g)),
-                MultiPoint(p) => self.add_multi_point(Some(p)),
-                MultiLineString(p) => self.add_multi_line_string(Some(p)),
-                MultiPolygon(p) => self.add_multi_polygon(Some(p)),
-                GeometryCollection(p) => self.add_geometry_collection(Some(p)),
-                Rect(_) | Line(_) | Triangle(_) => todo!(),
-            }
-        } else {
-            self.offsets_capacity += 1;
+            self.buffer_capacity += geometry_wkb_size(geom);
         }
+        self.offsets_capacity += 1;
     }
 
     /// Add a GeometryCollection to this capacity counter.

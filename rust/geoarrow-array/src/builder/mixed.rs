@@ -1,6 +1,3 @@
-// TODO: remove unused methods
-#![allow(dead_code)]
-
 use std::sync::Arc;
 
 use arrow_array::OffsetSizeTrait;
@@ -34,7 +31,7 @@ pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 /// - All arrays must have the same dimension
 /// - All arrays must have the same coordinate layout (interleaved or separated)
 #[derive(Debug)]
-pub struct MixedGeometryBuilder {
+pub(crate) struct MixedGeometryBuilder {
     metadata: Arc<Metadata>,
 
     /// The dimension of this builder.
@@ -66,36 +63,6 @@ pub struct MixedGeometryBuilder {
 }
 
 impl<'a> MixedGeometryBuilder {
-    /// Creates a new empty [`MixedGeometryBuilder`].
-    pub(crate) fn new(dim: Dimension) -> Self {
-        Self::new_with_options(
-            dim,
-            CoordType::default_interleaved(),
-            Default::default(),
-            DEFAULT_PREFER_MULTI,
-        )
-    }
-
-    pub(crate) fn new_with_options(
-        dim: Dimension,
-        coord_type: CoordType,
-        metadata: Arc<Metadata>,
-        prefer_multi: bool,
-    ) -> Self {
-        Self::with_capacity_and_options(dim, Default::default(), coord_type, metadata, prefer_multi)
-    }
-
-    /// Creates a new [`MixedGeometryBuilder`] with given capacity and no validity.
-    pub(crate) fn with_capacity(dim: Dimension, capacity: MixedCapacity) -> Self {
-        Self::with_capacity_and_options(
-            dim,
-            capacity,
-            CoordType::default_interleaved(),
-            Default::default(),
-            DEFAULT_PREFER_MULTI,
-        )
-    }
-
     pub(crate) fn with_capacity_and_options(
         dim: Dimension,
         capacity: MixedCapacity,
@@ -205,19 +172,6 @@ impl<'a> MixedGeometryBuilder {
         )
     }
 
-    pub(crate) fn with_capacity_from_iter(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
-        dim: Dimension,
-    ) -> Result<Self> {
-        Self::with_capacity_and_options_from_iter(
-            geoms,
-            dim,
-            CoordType::default_interleaved(),
-            Default::default(),
-            DEFAULT_PREFER_MULTI,
-        )
-    }
-
     pub(crate) fn with_capacity_and_options_from_iter(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
         dim: Dimension,
@@ -235,6 +189,7 @@ impl<'a> MixedGeometryBuilder {
         ))
     }
 
+    #[allow(dead_code)]
     pub(crate) fn reserve_from_iter(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
@@ -244,6 +199,7 @@ impl<'a> MixedGeometryBuilder {
         Ok(())
     }
 
+    #[allow(dead_code)]
     pub(crate) fn reserve_exact_from_iter(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
@@ -477,25 +433,6 @@ impl<'a> MixedGeometryBuilder {
             .into_iter()
             .try_for_each(|maybe_geom| self.push_geometry(maybe_geom))
             .unwrap();
-    }
-
-    /// Create this builder from a slice of Geometries.
-    pub(crate) fn from_geometries(
-        geoms: &[impl GeometryTrait<T = f64>],
-        dim: Dimension,
-        coord_type: CoordType,
-        metadata: Arc<Metadata>,
-        prefer_multi: bool,
-    ) -> Result<Self> {
-        let mut array = Self::with_capacity_and_options_from_iter(
-            geoms.iter().map(Some),
-            dim,
-            coord_type,
-            metadata,
-            prefer_multi,
-        )?;
-        array.extend_from_iter(geoms.iter().map(Some));
-        Ok(array)
     }
 
     /// Create this builder from a slice of nullable Geometries.

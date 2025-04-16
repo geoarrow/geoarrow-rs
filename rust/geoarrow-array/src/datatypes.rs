@@ -334,24 +334,37 @@ impl TryFrom<&Field> for GeoArrowType {
             };
             Ok(data_type)
         } else {
-            // TODO: better error here, and document that arrays without geoarrow extension
-            // metadata should use TryFrom for a specific geometry type directly, instead of using
-            // GeometryArray
+            let metadata = Arc::new(metadata);
             let data_type = match field.data_type() {
-                DataType::Struct(struct_fields) => match struct_fields.len() {
-                    2 =>  GeoArrowType::Point(PointType::new(CoordType::Separated , Dimension::XY, metadata.into())),
-                    3 => GeoArrowType::Point(PointType::new(CoordType::Separated , Dimension::XYZ, metadata.into())),
-                    l => return Err(GeoArrowError::General(format!("incorrect number of struct fields {l}"))),
+                DataType::Struct(struct_fields) => {
+                    if !struct_fields.iter().all(|f| matches!(f.data_type(), DataType::Float64) ) {
+                        return Err(GeoArrowError::General("all struct fields must be Float64 when inferring point type.".to_string()));
+                    }
+
+                    match struct_fields.len() {
+                        2 =>  GeoArrowType::Point(PointType::new(CoordType::Separated , Dimension::XY, metadata)),
+                        3 => GeoArrowType::Point(PointType::new(CoordType::Separated , Dimension::XYZ, metadata)),
+                        4 => GeoArrowType::Point(PointType::new(CoordType::Separated , Dimension::XYZM, metadata)),
+                        l => return Err(GeoArrowError::General(format!("invalid number of struct fields: {l}"))),
+                    }
                 },
-                DataType::FixedSizeList(_, _list_size) => {
-                    todo!("Restore parsing of FixedSizeList to PointType");
-                    // GeoArrowType::Point(PointType::new(CoordType::Interleaved , (*list_size as usize).try_into()?, metadata) )
+                DataType::FixedSizeList(inner_field, list_size) => {
+                    if !matches!(inner_field.data_type(), DataType::Float64 )  {
+                        return Err(GeoArrowError::General(format!("invalid inner field type of fixed size list: {}", inner_field.data_type())));
+                    }
+
+                    match list_size {
+                        2 => GeoArrowType::Point(PointType::new(CoordType::Interleaved , Dimension::XY, metadata)),
+                        3 => GeoArrowType::Point(PointType::new(CoordType::Interleaved , Dimension::XYZ, metadata)),
+                        4 => GeoArrowType::Point(PointType::new(CoordType::Interleaved , Dimension::XYZM, metadata)),
+                        _ => return Err(GeoArrowError::General(format!("invalid list_size: {list_size}"))),
+                    }
                 },
-                DataType::Binary => Wkb(WkbType::new(metadata.into())),
-                DataType::LargeBinary => LargeWkb(WkbType::new(metadata.into())),
-                DataType::Utf8 => Wkt(WktType::new(metadata.into())),
-                DataType::LargeUtf8 => LargeWkt(WktType::new(metadata.into())),
-                _ => return Err(GeoArrowError::General("Only FixedSizeList, Struct, Binary, LargeBinary, String, and LargeString arrays are unambigously typed for a GeoArrow type and can be used without extension metadata.".to_string())),
+                DataType::Binary => Wkb(WkbType::new(metadata)),
+                DataType::LargeBinary => LargeWkb(WkbType::new(metadata)),
+                DataType::Utf8 => Wkt(WktType::new(metadata)),
+                DataType::LargeUtf8 => LargeWkt(WktType::new(metadata)),
+                _ => return Err(GeoArrowError::General("Only FixedSizeList, Struct, Binary, LargeBinary, String, and LargeString arrays are unambigously typed for a GeoArrow type and can be used without extension metadata.\nEnsure your array input has GeoArrow metadata.".to_string())),
             };
             Ok(data_type)
         }
@@ -360,9 +373,94 @@ impl TryFrom<&Field> for GeoArrowType {
 
 #[cfg(test)]
 mod test {
+    use std::sync::Arc;
+
+    use arrow_array::Array;
+    use arrow_array::builder::{ArrayBuilder, FixedSizeListBuilder, Float64Builder, StructBuilder};
+
     use super::*;
     use crate::builder::GeometryBuilder;
     use crate::trait_::GeoArrowArray;
+
+    #[test]
+    fn infer_type_interleaved_point() {
+        let test_cases = [
+            (2, Dimension::XY),
+            (3, Dimension::XYZ),
+            (4, Dimension::XYZM),
+        ];
+        for (list_size, dim) in test_cases.into_iter() {
+            let array = FixedSizeListBuilder::new(Float64Builder::new(), list_size).finish();
+            let t =
+                GeoArrowType::try_from(&Field::new("", array.data_type().clone(), true)).unwrap();
+            assert_eq!(
+                t,
+                GeoArrowType::Point(PointType::new(
+                    CoordType::Interleaved,
+                    dim,
+                    Default::default()
+                ))
+            );
+        }
+    }
+
+    #[test]
+    fn infer_type_separated_point() {
+        let test_cases = [
+            (
+                vec![
+                    Arc::new(Field::new("x", DataType::Float64, true)),
+                    Arc::new(Field::new("y", DataType::Float64, true)),
+                ],
+                vec![
+                    Box::new(Float64Builder::new()) as Box<dyn ArrayBuilder>,
+                    Box::new(Float64Builder::new()),
+                ],
+                Dimension::XY,
+            ),
+            (
+                vec![
+                    Arc::new(Field::new("x", DataType::Float64, true)),
+                    Arc::new(Field::new("y", DataType::Float64, true)),
+                    Arc::new(Field::new("z", DataType::Float64, true)),
+                ],
+                vec![
+                    Box::new(Float64Builder::new()) as Box<dyn ArrayBuilder>,
+                    Box::new(Float64Builder::new()),
+                    Box::new(Float64Builder::new()),
+                ],
+                Dimension::XYZ,
+            ),
+            (
+                vec![
+                    Arc::new(Field::new("x", DataType::Float64, true)),
+                    Arc::new(Field::new("y", DataType::Float64, true)),
+                    Arc::new(Field::new("z", DataType::Float64, true)),
+                    Arc::new(Field::new("m", DataType::Float64, true)),
+                ],
+                vec![
+                    Box::new(Float64Builder::new()) as Box<dyn ArrayBuilder>,
+                    Box::new(Float64Builder::new()),
+                    Box::new(Float64Builder::new()),
+                    Box::new(Float64Builder::new()),
+                ],
+                Dimension::XYZM,
+            ),
+        ];
+        for (fields, builders, dim) in test_cases.into_iter() {
+            let array = StructBuilder::new(fields, builders).finish();
+            let t =
+                GeoArrowType::try_from(&Field::new("", array.data_type().clone(), true)).unwrap();
+            assert_eq!(
+                t,
+                GeoArrowType::Point(PointType::new(
+                    CoordType::Separated,
+                    dim,
+                    Default::default()
+                ))
+            );
+        }
+    }
 
     #[test]
     fn native_type_round_trip() {
