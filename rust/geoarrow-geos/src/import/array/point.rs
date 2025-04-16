@@ -46,13 +46,17 @@ mod test {
 
     #[test]
     fn geos_round_trip() {
-        let arr = array(CoordType::Interleaved, Dimension::XY);
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [Dimension::XY, Dimension::XYZ] {
+                let arr = array(coord_type, dim);
 
-        let geos_geoms = arr
-            .iter()
-            .map(|opt_x| opt_x.map(|x| to_geos_geometry(&x.unwrap()).unwrap()))
-            .collect::<Vec<_>>();
-        let round_trip = PointArray::from_geos(geos_geoms, arr.ext_type().clone()).unwrap();
-        assert_eq!(arr, round_trip);
+                let geos_geoms = arr
+                    .iter()
+                    .map(|opt_x| opt_x.map(|x| to_geos_geometry(&x.unwrap()).unwrap()))
+                    .collect::<Vec<_>>();
+                let round_trip = PointArray::from_geos(geos_geoms, arr.ext_type().clone()).unwrap();
+                assert_eq!(arr, round_trip);
+            }
+        }
     }
 }

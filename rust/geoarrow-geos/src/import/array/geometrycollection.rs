@@ -33,3 +33,31 @@ impl FromGEOS for GeometryCollectionArray {
         Ok(GeometryCollectionBuilder::from_geos(geoms, typ)?.finish())
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::export::to_geos_geometry;
+
+    use geoarrow_array::test::geometrycollection::array;
+    use geoarrow_array::{ArrayAccessor, IntoArrow};
+    use geoarrow_schema::{CoordType, Dimension};
+
+    #[ignore = "geometry collection import from GEOS not yet implemented"]
+    #[test]
+    fn geos_round_trip() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [Dimension::XY, Dimension::XYZ] {
+                let arr = array(coord_type, dim, false);
+
+                let geos_geoms = arr
+                    .iter()
+                    .map(|opt_x| opt_x.map(|x| to_geos_geometry(&x.unwrap()).unwrap()))
+                    .collect::<Vec<_>>();
+                let round_trip =
+                    GeometryCollectionArray::from_geos(geos_geoms, arr.ext_type().clone()).unwrap();
+                assert_eq!(arr, round_trip);
+            }
+        }
+    }
+}

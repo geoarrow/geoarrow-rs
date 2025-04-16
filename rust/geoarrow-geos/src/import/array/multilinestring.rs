@@ -32,21 +32,29 @@ impl FromGEOS for MultiLineStringArray {
     }
 }
 
-// #[allow(unused_imports)]
-// #[cfg(test)]
-// mod test {
-//     use super::*;
-//     use crate::test::multilinestring::ml_array;
-//     use crate::trait_::{ArrayAccessor, NativeScalar};
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::export::to_geos_geometry;
 
-//     #[test]
-//     fn geos_round_trip() {
-//         let arr = ml_array();
-//         let geos_geoms: Vec<Option<geos::Geometry>> = arr
-//             .iter()
-//             .map(|opt_x| opt_x.map(|x| x.to_geos().unwrap()))
-//             .collect();
-//         let round_trip = MultiLineStringArray::from_geos(geos_geoms, Dimension::XY).unwrap();
-//         assert_eq!(arr, round_trip);
-//     }
-// }
+    use geoarrow_array::test::multilinestring::array;
+    use geoarrow_array::{ArrayAccessor, IntoArrow};
+    use geoarrow_schema::{CoordType, Dimension};
+
+    #[test]
+    fn geos_round_trip() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [Dimension::XY, Dimension::XYZ] {
+                let arr = array(coord_type, dim);
+
+                let geos_geoms = arr
+                    .iter()
+                    .map(|opt_x| opt_x.map(|x| to_geos_geometry(&x.unwrap()).unwrap()))
+                    .collect::<Vec<_>>();
+                let round_trip =
+                    MultiLineStringArray::from_geos(geos_geoms, arr.ext_type().clone()).unwrap();
+                assert_eq!(arr, round_trip);
+            }
+        }
+    }
+}

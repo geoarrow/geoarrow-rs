@@ -40,6 +40,6 @@ impl GeometryCollectionTrait for GEOSGeometryCollection {
 
     unsafe fn geometry_unchecked(&self, _i: usize) -> Self::GeometryType<'_> {
         // self.0.get_geometry_n(n)
-        todo!()
+        todo!("need to have ConstGeometry wrappers too")
     }
 }
