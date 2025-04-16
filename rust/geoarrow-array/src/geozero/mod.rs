@@ -11,5 +11,5 @@
 // };
 // pub use scalar::ToGeometry;
 
-mod export;
+pub mod export;
 pub mod import;

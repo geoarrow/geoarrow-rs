@@ -272,19 +272,15 @@ fn process_properties<P: PropertyProcessor>(
             }
             DataType::Date32 => {
                 let arr = array.as_primitive::<Date32Type>();
-                if arr.is_valid(within_batch_row_idx) {
-                    let datetime = arr.value_as_datetime(within_batch_row_idx).unwrap();
-                    let dt_str = datetime.and_utc().to_rfc3339();
-                    processor.property(property_idx, name, &ColumnValue::DateTime(&dt_str))?;
-                }
+                let datetime = arr.value_as_datetime(within_batch_row_idx).unwrap();
+                let dt_str = datetime.and_utc().to_rfc3339();
+                processor.property(property_idx, name, &ColumnValue::DateTime(&dt_str))?;
             }
             DataType::Date64 => {
                 let arr = array.as_primitive::<Date64Type>();
-                if arr.is_valid(within_batch_row_idx) {
-                    let datetime = arr.value_as_datetime(within_batch_row_idx).unwrap();
-                    let dt_str = datetime.and_utc().to_rfc3339();
-                    processor.property(property_idx, name, &ColumnValue::DateTime(&dt_str))?;
-                }
+                let datetime = arr.value_as_datetime(within_batch_row_idx).unwrap();
+                let dt_str = datetime.and_utc().to_rfc3339();
+                processor.property(property_idx, name, &ColumnValue::DateTime(&dt_str))?;
             }
             DataType::Timestamp(unit, tz) => {
                 let arrow_tz = if let Some(tz) = tz {
@@ -310,13 +306,11 @@ fn process_properties<P: PropertyProcessor>(
                     }};
                 }
 
-                if array.is_valid(within_batch_row_idx) {
-                    match unit {
-                        TimeUnit::Microsecond => impl_timestamp!(TimestampMicrosecondType),
-                        TimeUnit::Millisecond => impl_timestamp!(TimestampMillisecondType),
-                        TimeUnit::Nanosecond => impl_timestamp!(TimestampNanosecondType),
-                        TimeUnit::Second => impl_timestamp!(TimestampSecondType),
-                    }
+                match unit {
+                    TimeUnit::Microsecond => impl_timestamp!(TimestampMicrosecondType),
+                    TimeUnit::Millisecond => impl_timestamp!(TimestampMillisecondType),
+                    TimeUnit::Nanosecond => impl_timestamp!(TimestampNanosecondType),
+                    TimeUnit::Second => impl_timestamp!(TimestampSecondType),
                 }
             }
             dt => todo!("unsupported type: {:?}", dt),
