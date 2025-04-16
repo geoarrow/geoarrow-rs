@@ -32,8 +32,8 @@ fn interleaved_coords_to_geos(
     coords: &InterleavedCoordBuffer,
 ) -> Result<geos::CoordSeq, geos::Error> {
     match coords.dim() {
-        Dimension::XY => CoordSeq::new_from_buffer(&coords.coords(), coords.len(), false, false),
-        Dimension::XYZ => CoordSeq::new_from_buffer(&coords.coords(), coords.len(), true, false),
+        Dimension::XY => CoordSeq::new_from_buffer(coords.coords(), coords.len(), false, false),
+        Dimension::XYZ => CoordSeq::new_from_buffer(coords.coords(), coords.len(), true, false),
         _ => todo!("XYM and XYZM not supported yet"),
     }
 }

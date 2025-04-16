@@ -8,7 +8,7 @@ use crate::export::scalar::multipolygon::to_geos_multi_polygon;
 use crate::export::scalar::point::to_geos_point;
 use crate::export::scalar::polygon::to_geos_polygon;
 
-pub(crate) fn to_geos_geometry(
+pub fn to_geos_geometry(
     geometry: &impl GeometryTrait<T = f64>,
 ) -> std::result::Result<geos::Geometry, geos::Error> {
     use geo_traits::GeometryType::*;

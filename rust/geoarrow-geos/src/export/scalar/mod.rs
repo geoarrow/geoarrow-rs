@@ -8,8 +8,4 @@ mod multipolygon;
 mod point;
 mod polygon;
 
-pub(crate) use geometry::to_geos_geometry;
-
-pub trait ToGEOSGeometry {
-    fn to_geos_geometry(&self) -> std::result::Result<geos::Geometry, geos::Error>;
-}
+pub use geometry::to_geos_geometry;
