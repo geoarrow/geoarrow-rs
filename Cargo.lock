@@ -1341,7 +1341,6 @@ dependencies = [
  "arrow-data",
  "arrow-ipc",
  "arrow-schema",
- "async-stream",
  "async-trait",
  "bytes",
  "chrono",
