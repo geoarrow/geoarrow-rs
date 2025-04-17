@@ -15,13 +15,13 @@ use geoarrow_array::builder::{
 };
 use geoarrow_array::{ArrayAccessor, GeoArrowArray, GeoArrowType};
 use geoarrow_schema::{
-    CoordType, Dimension, GeometryType, LineStringType, Metadata, MultiLineStringType,
-    MultiPointType, MultiPolygonType, PointType, PolygonType, WkbType,
+    CoordType, GeometryType, LineStringType, Metadata, MultiLineStringType, MultiPointType,
+    MultiPolygonType, PointType, PolygonType, WkbType,
 };
 
 use crate::metadata::{
-    GeoParquetColumnEncoding, GeoParquetColumnMetadata, GeoParquetGeometryType, GeoParquetMetadata,
-    infer_geo_data_type,
+    GeoParquetColumnEncoding, GeoParquetColumnMetadata, GeoParquetGeometryTypeAndDimension,
+    GeoParquetMetadata, infer_geo_data_type,
 };
 use geoarrow_array::error::{GeoArrowError, Result};
 
@@ -56,124 +56,13 @@ fn infer_target_field(
 
     let target_geo_data_type: GeoArrowType = match column_meta.encoding {
         GeoParquetColumnEncoding::WKB => {
-            infer_target_wkb_type(&column_meta.geometry_types, coord_type)?
+            infer_target_wkb_type(&column_meta.geometry_types, coord_type, metadata)?
         }
-        GeoParquetColumnEncoding::Point => {
-            if column_meta
-                .geometry_types
-                .contains(&GeoParquetGeometryType::PointZ)
-            {
-                GeoArrowType::Point(PointType::new(
-                    CoordType::Separated,
-                    Dimension::XYZ,
-                    metadata,
-                ))
-            } else {
-                GeoArrowType::Point(PointType::new(
-                    CoordType::Separated,
-                    Dimension::XY,
-                    metadata,
-                ))
-            }
-        }
-        GeoParquetColumnEncoding::LineString => {
-            if column_meta
-                .geometry_types
-                .contains(&GeoParquetGeometryType::LineStringZ)
-            {
-                GeoArrowType::LineString(LineStringType::new(
-                    CoordType::Separated,
-                    Dimension::XYZ,
-                    metadata,
-                ))
-            } else {
-                GeoArrowType::LineString(LineStringType::new(
-                    CoordType::Separated,
-                    Dimension::XY,
-                    metadata,
-                ))
-            }
-        }
-        GeoParquetColumnEncoding::Polygon => {
-            if column_meta
-                .geometry_types
-                .contains(&GeoParquetGeometryType::LineStringZ)
-            {
-                GeoArrowType::Polygon(PolygonType::new(
-                    CoordType::Separated,
-                    Dimension::XYZ,
-                    metadata,
-                ))
-            } else {
-                GeoArrowType::Polygon(PolygonType::new(
-                    CoordType::Separated,
-                    Dimension::XY,
-                    metadata,
-                ))
-            }
-        }
-        GeoParquetColumnEncoding::MultiPoint => {
-            if column_meta
-                .geometry_types
-                .contains(&GeoParquetGeometryType::PointZ)
-                || column_meta
-                    .geometry_types
-                    .contains(&GeoParquetGeometryType::MultiPointZ)
-            {
-                GeoArrowType::MultiPoint(MultiPointType::new(
-                    CoordType::Separated,
-                    Dimension::XYZ,
-                    metadata,
-                ))
-            } else {
-                GeoArrowType::MultiPoint(MultiPointType::new(
-                    CoordType::Separated,
-                    Dimension::XY,
-                    metadata,
-                ))
-            }
-        }
-        GeoParquetColumnEncoding::MultiLineString => {
-            if column_meta
-                .geometry_types
-                .contains(&GeoParquetGeometryType::LineStringZ)
-                || column_meta
-                    .geometry_types
-                    .contains(&GeoParquetGeometryType::MultiLineStringZ)
-            {
-                GeoArrowType::MultiLineString(MultiLineStringType::new(
-                    CoordType::Separated,
-                    Dimension::XYZ,
-                    metadata,
-                ))
-            } else {
-                GeoArrowType::MultiLineString(MultiLineStringType::new(
-                    CoordType::Separated,
-                    Dimension::XY,
-                    metadata,
-                ))
-            }
-        }
-        GeoParquetColumnEncoding::MultiPolygon => {
-            if column_meta
-                .geometry_types
-                .contains(&GeoParquetGeometryType::PolygonZ)
-                || column_meta
-                    .geometry_types
-                    .contains(&GeoParquetGeometryType::MultiPolygonZ)
-            {
-                GeoArrowType::MultiPolygon(MultiPolygonType::new(
-                    CoordType::Separated,
-                    Dimension::XYZ,
-                    metadata,
-                ))
-            } else {
-                GeoArrowType::MultiPolygon(MultiPolygonType::new(
-                    CoordType::Separated,
-                    Dimension::XY,
-                    metadata,
-                ))
-            }
+        // For native encodings there should only be one geometry type
+        _ => {
+            assert_eq!(column_meta.geometry_types.len(), 1);
+            let gpq_type = column_meta.geometry_types.iter().next().unwrap();
+            gpq_type.to_data_type(coord_type, metadata)
         }
     };
 
@@ -184,13 +73,14 @@ fn infer_target_field(
 }
 
 fn infer_target_wkb_type(
-    geometry_types: &HashSet<GeoParquetGeometryType>,
+    geometry_types: &HashSet<GeoParquetGeometryTypeAndDimension>,
     coord_type: CoordType,
+    metadata: Arc<Metadata>,
 ) -> Result<GeoArrowType> {
     Ok(
-        infer_geo_data_type(geometry_types, coord_type)?.unwrap_or(GeoArrowType::Geometry(
-            GeometryType::new(coord_type, Default::default()),
-        )),
+        infer_geo_data_type(geometry_types, coord_type, metadata.clone())?.unwrap_or(
+            GeoArrowType::Geometry(GeometryType::new(coord_type, metadata)),
+        ),
     )
 }
 
