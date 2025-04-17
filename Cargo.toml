@@ -48,6 +48,7 @@ geoarrow-schema = { path = "rust/geoarrow-schema" }
 geoarrow-test = { path = "rust/geoarrow-test" }
 geos = { version = "10", features = ["v3_10_0"] }
 geozero = "0.14"
+http-range-client = { version = "0.9", default-features = false }
 indexmap = "2.5.0"
 num-traits = "0.2.19"
 numpy = "0.24"

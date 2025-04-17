@@ -9,11 +9,16 @@ description = "Reader and writer for FlatGeobuf files to GeoArrow memory."
 categories = { workspace = true }
 rust-version = { workspace = true }
 
+[features]
+async = ["dep:futures", "dep:http-range-client"]
 
 [dependencies]
 # geo-traits = { workspace = true }
+arrow-array = { workspace = true }
 arrow-schema = { workspace = true }
 flatgeobuf = { workspace = true }
+futures = { workspace = true, optional = true }
 geoarrow-array = { workspace = true, features = ["geozero"] }
 geoarrow-schema = { workspace = true }
 geozero = { workspace = true }
+http-range-client = { workspace = true, optional = true, default-features = false }
