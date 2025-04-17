@@ -1,12 +1,13 @@
+use std::sync::Arc;
+
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
-use crate::{PyCoordType, PyDimension};
+use crate::{PyCoordType, PyCrs, PyDimension, PyEdges};
 
 use geoarrow_array::GeoArrowType;
 use geoarrow_schema::{
-    BoxType, GeometryCollectionType, GeometryType, LineStringType, MultiLineStringType,
+    BoxType, GeometryCollectionType, GeometryType, LineStringType, Metadata, MultiLineStringType,
     MultiPointType, MultiPolygonType, PointType, PolygonType, WkbType, WktType,
 };
-use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyType};
 use pyo3_arrow::PyField;
@@ -33,67 +34,6 @@ impl PyGeoArrowType {
 #[allow(non_snake_case)]
 #[pymethods]
 impl PyGeoArrowType {
-    #[new]
-    #[pyo3(signature = (r#type, dimension=None, coord_type=None))]
-    fn py_new(
-        r#type: &str,
-        dimension: Option<PyDimension>,
-        coord_type: Option<PyCoordType>,
-    ) -> PyResult<Self> {
-        match r#type.to_lowercase().as_str() {
-            "point" => Ok(Self(GeoArrowType::Point(PointType::new(
-                coord_type.unwrap().into(),
-                dimension.unwrap().into(),
-                Default::default(),
-            )))),
-            "linestring" => Ok(Self(GeoArrowType::LineString(LineStringType::new(
-                coord_type.unwrap().into(),
-                dimension.unwrap().into(),
-                Default::default(),
-            )))),
-            "polygon" => Ok(Self(GeoArrowType::Polygon(PolygonType::new(
-                coord_type.unwrap().into(),
-                dimension.unwrap().into(),
-                Default::default(),
-            )))),
-            "multipoint" => Ok(Self(GeoArrowType::MultiPoint(MultiPointType::new(
-                coord_type.unwrap().into(),
-                dimension.unwrap().into(),
-                Default::default(),
-            )))),
-            "multilinestring" => Ok(Self(GeoArrowType::MultiLineString(
-                MultiLineStringType::new(
-                    coord_type.unwrap().into(),
-                    dimension.unwrap().into(),
-                    Default::default(),
-                ),
-            ))),
-            "multipolygon" => Ok(Self(GeoArrowType::MultiPolygon(MultiPolygonType::new(
-                coord_type.unwrap().into(),
-                dimension.unwrap().into(),
-                Default::default(),
-            )))),
-            "geometry" => Ok(Self(GeoArrowType::Geometry(GeometryType::new(
-                coord_type.unwrap().into(),
-                Default::default(),
-            )))),
-            "geometrycollection" => Ok(Self(GeoArrowType::GeometryCollection(
-                GeometryCollectionType::new(
-                    coord_type.unwrap().into(),
-                    dimension.unwrap().into(),
-                    Default::default(),
-                ),
-            ))),
-            "box" | "rect" => Ok(Self(GeoArrowType::Rect(BoxType::new(
-                dimension.unwrap().into(),
-                Default::default(),
-            )))),
-            "wkb" => Ok(Self(GeoArrowType::Wkb(WkbType::new(Default::default())))),
-            "wkt" => Ok(Self(GeoArrowType::Wkt(WktType::new(Default::default())))),
-            _ => Err(PyValueError::new_err("Unknown geometry type input")),
-        }
-    }
-
     #[allow(unused_variables)]
     fn __arrow_c_schema__<'py>(
         &'py self,
@@ -104,8 +44,13 @@ impl PyGeoArrowType {
     }
 
     /// Check for equality with other object.
-    fn __eq__(&self, other: &PyGeoArrowType) -> bool {
-        self.0 == other.0
+    fn __eq__(&self, other: &Bound<PyAny>) -> bool {
+        // Do extraction within body because `__eq__` should never raise an exception.
+        if let Ok(other) = other.extract::<Self>() {
+            self.0 == other.0
+        } else {
+            false
+        }
     }
 
     fn __repr__(&self) -> String {
@@ -136,6 +81,16 @@ impl PyGeoArrowType {
     fn dimension(&self) -> Option<PyDimension> {
         self.0.dimension().map(|d| d.into())
     }
+
+    #[getter]
+    fn crs(&self) -> PyCrs {
+        self.0.metadata().crs().clone().into()
+    }
+
+    #[getter]
+    fn edges(&self) -> Option<PyEdges> {
+        self.0.metadata().edges().map(|e| e.into())
+    }
 }
 
 impl From<GeoArrowType> for PyGeoArrowType {
@@ -152,7 +107,7 @@ impl From<PyGeoArrowType> for GeoArrowType {
 
 impl<'a> FromPyObject<'a> for PyGeoArrowType {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
-        ob.extract::<PyField>()?.try_into().map_err(PyErr::from)
+        Ok(ob.extract::<PyField>()?.try_into()?)
     }
 }
 
@@ -162,4 +117,87 @@ impl TryFrom<PyField> for PyGeoArrowType {
     fn try_from(value: PyField) -> Result<Self, Self::Error> {
         Ok(Self(value.into_inner().as_ref().try_into()?))
     }
+}
+
+macro_rules! impl_from_geoarrow_type {
+    ($geoarrow_type:ty, $variant:ident) => {
+        impl From<$geoarrow_type> for PyGeoArrowType {
+            fn from(value: $geoarrow_type) -> Self {
+                Self(GeoArrowType::$variant(value))
+            }
+        }
+    };
+}
+
+impl_from_geoarrow_type!(PointType, Point);
+impl_from_geoarrow_type!(LineStringType, LineString);
+impl_from_geoarrow_type!(PolygonType, Polygon);
+impl_from_geoarrow_type!(MultiPointType, MultiPoint);
+impl_from_geoarrow_type!(MultiLineStringType, MultiLineString);
+impl_from_geoarrow_type!(MultiPolygonType, MultiPolygon);
+impl_from_geoarrow_type!(GeometryType, Geometry);
+impl_from_geoarrow_type!(GeometryCollectionType, GeometryCollection);
+impl_from_geoarrow_type!(BoxType, Rect);
+impl_from_geoarrow_type!(WkbType, Wkb);
+impl_from_geoarrow_type!(WktType, Wkt);
+
+macro_rules! impl_native_type_constructor {
+    ($fn_name:ident, $geoarrow_type:ty) => {
+        #[pyfunction]
+        #[pyo3(signature = (dimension, coord_type, *, crs=None, edges=None))]
+        pub fn $fn_name(
+            dimension: PyDimension,
+            coord_type: PyCoordType,
+            crs: Option<PyCrs>,
+            edges: Option<PyEdges>,
+        ) -> PyGeoArrowType {
+            let edges = edges.map(|e| e.into());
+            let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
+            <$geoarrow_type>::new(coord_type.into(), dimension.into(), metadata).into()
+        }
+    };
+}
+
+impl_native_type_constructor!(point, PointType);
+impl_native_type_constructor!(linestring, LineStringType);
+impl_native_type_constructor!(polygon, PolygonType);
+impl_native_type_constructor!(multipoint, MultiPointType);
+impl_native_type_constructor!(multilinestring, MultiLineStringType);
+impl_native_type_constructor!(multipolygon, MultiPolygonType);
+impl_native_type_constructor!(geometrycollection, GeometryCollectionType);
+
+#[pyfunction]
+#[pyo3(signature = (dimension, *, crs=None, edges=None))]
+pub fn r#box(dimension: PyDimension, crs: Option<PyCrs>, edges: Option<PyEdges>) -> PyGeoArrowType {
+    let edges = edges.map(|e| e.into());
+    let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
+    BoxType::new(dimension.into(), metadata).into()
+}
+
+#[pyfunction]
+#[pyo3(signature = (coord_type, *, crs=None, edges=None))]
+pub fn geometry(
+    coord_type: PyCoordType,
+    crs: Option<PyCrs>,
+    edges: Option<PyEdges>,
+) -> PyGeoArrowType {
+    let edges = edges.map(|e| e.into());
+    let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
+    GeometryType::new(coord_type.into(), metadata).into()
+}
+
+#[pyfunction]
+#[pyo3(signature = (*, crs=None, edges=None))]
+pub fn wkb(crs: Option<PyCrs>, edges: Option<PyEdges>) -> PyGeoArrowType {
+    let edges = edges.map(|e| e.into());
+    let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
+    WkbType::new(metadata).into()
+}
+
+#[pyfunction]
+#[pyo3(signature = (*, crs=None, edges=None))]
+pub fn wkt(crs: Option<PyCrs>, edges: Option<PyEdges>) -> PyGeoArrowType {
+    let edges = edges.map(|e| e.into());
+    let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
+    WktType::new(metadata).into()
 }

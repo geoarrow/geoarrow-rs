@@ -1159,7 +1159,23 @@ dependencies = [
  "sqlx",
  "thiserror 1.0.69",
  "wkb",
- "wkt 0.12.0",
+ "wkt 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "geoarrow-array"
+version = "0.1.0-dev"
+dependencies = [
+ "arrow-array",
+ "arrow-buffer",
+ "arrow-schema",
+ "geo-traits",
+ "geoarrow-schema",
+ "num-traits",
+ "serde_json",
+ "thiserror 1.0.69",
+ "wkb",
+ "wkt 0.12.0 (git+https://github.com/georust/wkt?rev=270ffe0eaf5ba5255c364dbade39c451562a9e9b)",
 ]
 
 [[package]]
@@ -1175,7 +1191,7 @@ dependencies = [
  "numpy",
  "pyo3",
  "pyo3-arrow",
- "pyo3-geoarrow",
+ "pyo3-geoarrow 0.1.0-beta.1",
  "serde_json",
  "thiserror 1.0.69",
  "url",
@@ -1185,20 +1201,10 @@ dependencies = [
 name = "geoarrow-rust-core"
 version = "0.4.0-beta.4"
 dependencies = [
- "arrow",
- "arrow-array",
- "arrow-buffer",
- "geo 0.30.0",
- "geoarrow",
+ "geoarrow-array",
  "geoarrow-schema",
- "geozero",
- "numpy",
  "pyo3",
- "pyo3-arrow",
- "pyo3-geoarrow",
- "serde_json",
- "thiserror 1.0.69",
- "url",
+ "pyo3-geoarrow 0.1.0-dev",
 ]
 
 [[package]]
@@ -1219,7 +1225,7 @@ dependencies = [
  "pyo3-arrow",
  "pyo3-async-runtimes",
  "pyo3-file",
- "pyo3-geoarrow",
+ "pyo3-geoarrow 0.1.0-beta.1",
  "pyo3-object_store",
  "serde_json",
  "sqlx",
@@ -2679,6 +2685,25 @@ dependencies = [
  "geoarrow",
  "geoarrow-schema",
  "geozero",
+ "indexmap",
+ "pyo3",
+ "pyo3-arrow",
+ "serde_json",
+ "thiserror 1.0.69",
+ "url",
+]
+
+[[package]]
+name = "pyo3-geoarrow"
+version = "0.1.0-dev"
+dependencies = [
+ "arrow-array",
+ "arrow-buffer",
+ "arrow-cast",
+ "arrow-schema",
+ "geo 0.30.0",
+ "geoarrow-array",
+ "geoarrow-schema",
  "indexmap",
  "pyo3",
  "pyo3-arrow",
@@ -4472,6 +4497,18 @@ name = "wkt"
 version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e1c591649bd1c9d4e28459758bbb5fb5c0edc7a67060b52422f4761c94ffe961"
+dependencies = [
+ "geo-traits",
+ "geo-types",
+ "log",
+ "num-traits",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "wkt"
+version = "0.12.0"
+source = "git+https://github.com/georust/wkt?rev=270ffe0eaf5ba5255c364dbade39c451562a9e9b#270ffe0eaf5ba5255c364dbade39c451562a9e9b"
 dependencies = [
  "geo-traits",
  "geo-types",

@@ -47,8 +47,8 @@ impl<'py> IntoPyObject<'py> for PyCoordType {
         let enums_mod = py.import(intern!(py, "geoarrow.rust.core.enums"))?;
         let enum_cls = enums_mod.getattr(intern!(py, "CoordType"))?;
         match self {
-            Self::Interleaved => enum_cls.getattr(intern!(py, "Interleaved")),
-            Self::Separated => enum_cls.getattr(intern!(py, "Separated")),
+            Self::Interleaved => enum_cls.getattr(intern!(py, "INTERLEAVED")),
+            Self::Separated => enum_cls.getattr(intern!(py, "SEPARATED")),
         }
     }
 }

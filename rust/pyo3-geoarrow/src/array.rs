@@ -141,6 +141,11 @@ impl PyGeoArrowArray {
     }
 
     #[getter]
+    fn null_count(&self) -> usize {
+        self.0.null_count()
+    }
+
+    #[getter]
     fn r#type(&self) -> PyGeoArrowType {
         self.0.data_type().into()
     }

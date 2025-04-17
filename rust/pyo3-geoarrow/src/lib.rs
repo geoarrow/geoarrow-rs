@@ -5,6 +5,7 @@ mod coord_type;
 mod crs;
 mod data_type;
 mod dimension;
+mod edges;
 mod error;
 mod ffi;
 mod offset_buffer;
@@ -15,8 +16,12 @@ pub use chunked_array::PyChunkedGeoArrowArray;
 pub use coord_buffer::PyCoordBuffer;
 pub use coord_type::PyCoordType;
 pub use crs::{PyCrs, PyprojCRSTransform};
-pub use data_type::PyGeoArrowType;
+pub use data_type::{
+    PyGeoArrowType, r#box, geometry, geometrycollection, linestring, multilinestring, multipoint,
+    multipolygon, point, polygon, wkb, wkt,
+};
 pub use dimension::PyDimension;
+pub use edges::PyEdges;
 pub use error::{PyGeoArrowError, PyGeoArrowResult};
 pub use offset_buffer::PyOffsetBuffer;
 // pub use scalar::PyGeometry;

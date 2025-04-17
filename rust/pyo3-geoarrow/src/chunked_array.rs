@@ -118,6 +118,12 @@ impl PyChunkedGeoArrowArray {
         Self::from_arrow_pycapsule(capsule)
     }
 
+    #[getter]
+    fn null_count(&self) -> usize {
+        self.chunks.iter().map(|chunk| chunk.null_count()).sum()
+    }
+
+    #[getter]
     fn num_chunks(&self) -> usize {
         self.chunks.len()
     }

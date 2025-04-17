@@ -5,7 +5,7 @@ from arro3.core import DataType
 from geoarrow.rust.core import geometry_col
 from geoarrow.rust.io import read_csv, read_flatgeobuf, write_csv
 
-from tests.utils import FIXTURES_DIR
+from tests_old.utils import FIXTURES_DIR
 
 
 @pytest.mark.skip
