@@ -16,3 +16,7 @@ flatgeobuf = { workspace = true }
 geoarrow-array = { workspace = true, features = ["geozero"] }
 geoarrow-schema = { workspace = true }
 geozero = { workspace = true }
+
+[dev-dependencies]
+arrow-array = { workspace = true }
+wkt = { workspace = true }

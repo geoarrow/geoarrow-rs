@@ -189,78 +189,129 @@ fn geometry_columns(schema: &Schema) -> Vec<usize> {
     geom_indices
 }
 
-// #[cfg(test)]
-// mod test {
-//     use super::*;
-//     use crate::io::flatgeobuf::FlatGeobufReaderBuilder;
-//     use crate::table::Table;
-//     use crate::test::point;
-//     use std::io::{BufWriter, Cursor};
+#[cfg(test)]
+mod test {
+    use std::io::BufWriter;
+    use std::sync::Arc;
 
-//     #[test]
-//     fn test_write() {
-//         let table = point::table();
+    use arrow_array::{RecordBatch, RecordBatchIterator, create_array};
+    use arrow_schema::{DataType, Field};
+    use geoarrow_array::GeoArrowArray;
+    use geoarrow_array::array::PointArray;
+    use geoarrow_array::builder::PointBuilder;
+    use geoarrow_schema::{CoordType, PointType};
+    use wkt::wkt;
 
-//         let mut output_buffer = Vec::new();
-//         let writer = BufWriter::new(&mut output_buffer);
-//         write_flatgeobuf(&table, writer, "name").unwrap();
+    use super::*;
 
-//         let reader = Cursor::new(output_buffer);
-//         let reader_builder = FlatGeobufReaderBuilder::open(reader).unwrap();
-//         let record_batch_reader = reader_builder.read(Default::default()).unwrap();
-//         let new_table = Table::try_from(
-//             Box::new(record_batch_reader) as Box<dyn arrow_array::RecordBatchReader>
-//         )
-//         .unwrap();
+    // FlatGeobuf, or at least the FlatGeobuf rust library, doesn't support writing null or empty
+    // points.
+    fn non_empty_point_array() -> PointArray {
+        let geoms = vec![
+            Some(wkt! { POINT (30. 10.) }),
+            Some(wkt! { POINT (40. 20.) }),
+            Some(wkt! { POINT (1. 2.) }),
+            Some(wkt! { POINT (1. 2.) }),
+        ];
+        let typ = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        PointBuilder::from_nullable_points(geoms.iter().map(|x| x.as_ref()), typ).finish()
+    }
 
-//         // Note: backwards row order is due to the reordering during the spatial index
-//         let batch = &new_table.batches()[0];
-//         let arr = batch.column(0);
-//         dbg!(arr);
-//         dbg!(new_table);
-//         // dbg!(output_buffer);
-//     }
+    fn table() -> (Vec<RecordBatch>, Arc<Schema>) {
+        let point_array = non_empty_point_array();
+        let u8_array = create_array!(UInt8, [1, 2, 3, 4]);
+        let string_array = create_array!(Utf8, ["1", "2", "3", "4"]);
 
-//     #[test]
-//     fn test_write_no_index() {
-//         let table = point::table();
+        let fields = vec![
+            Arc::new(Field::new("u8", DataType::UInt8, true)),
+            Arc::new(Field::new("string", DataType::Utf8, true)),
+            Arc::new(point_array.data_type().to_field("geometry", true)),
+        ];
+        let schema = Arc::new(Schema::new(fields));
 
-//         let mut output_buffer = Vec::new();
-//         let writer = BufWriter::new(&mut output_buffer);
-//         let options = FlatGeobufWriterOptions {
-//             write_index: false,
-//             ..Default::default()
-//         };
-//         write_flatgeobuf_with_options(&table, writer, "name", options).unwrap();
+        let batch = RecordBatch::try_new(
+            schema.clone(),
+            vec![u8_array, string_array, point_array.into_array_ref()],
+        )
+        .unwrap();
 
-//         let reader = Cursor::new(output_buffer);
-//         let reader_builder = FlatGeobufReaderBuilder::open(reader).unwrap();
-//         let record_batch_reader = reader_builder.read(Default::default()).unwrap();
-//         let new_table = Table::try_from(
-//             Box::new(record_batch_reader) as Box<dyn arrow_array::RecordBatchReader>
-//         )
-//         .unwrap();
-//         assert_eq!(table, new_table);
-//     }
+        (vec![batch], schema)
+    }
 
-//     #[test]
-//     fn test_write_z() {
-//         let table = point::table_z();
+    #[test]
+    fn test_write() {
+        let (batches, schema) = table();
+        let reader = Box::new(RecordBatchIterator::new(
+            batches.into_iter().map(Ok),
+            schema,
+        ));
+        let geozero_reader = GeozeroRecordBatchReader::new(Box::new(reader));
 
-//         let mut output_buffer = Vec::new();
-//         let writer = BufWriter::new(&mut output_buffer);
-//         write_flatgeobuf(&table, writer, "name").unwrap();
+        let mut output_buffer = Vec::new();
+        let writer = BufWriter::new(&mut output_buffer);
+        write_flatgeobuf(geozero_reader, writer, "name").unwrap();
 
-//         let reader = Cursor::new(output_buffer);
-//         let reader_builder = FlatGeobufReaderBuilder::open(reader).unwrap();
-//         let record_batch_reader = reader_builder.read(Default::default()).unwrap();
-//         let new_table = Table::try_from(
-//             Box::new(record_batch_reader) as Box<dyn arrow_array::RecordBatchReader>
-//         )
-//         .unwrap();
+        // let reader = Cursor::new(output_buffer);
+        // let reader_builder = FlatGeobufReaderBuilder::open(reader).unwrap();
+        // let record_batch_reader = reader_builder.read(Default::default()).unwrap();
+        // let new_table = Table::try_from(
+        //     Box::new(record_batch_reader) as Box<dyn arrow_array::RecordBatchReader>
+        // )
+        // .unwrap();
 
-//         // Note: backwards row order is due to the reordering during the spatial index
-//         let batch = &new_table.batches()[0];
-//         let _arr = batch.column(0);
-//     }
-// }
+        // // Note: backwards row order is due to the reordering during the spatial index
+        // let batch = &new_table.batches()[0];
+        // let arr = batch.column(0);
+        // dbg!(arr);
+        // dbg!(new_table);
+        // dbg!(output_buffer);
+    }
+
+    #[test]
+    fn test_write_no_index() {
+        let (batches, schema) = table();
+        let reader = Box::new(RecordBatchIterator::new(
+            batches.into_iter().map(Ok),
+            schema,
+        ));
+        let geozero_reader = GeozeroRecordBatchReader::new(Box::new(reader));
+
+        let mut output_buffer = Vec::new();
+        let writer = BufWriter::new(&mut output_buffer);
+        let options = FlatGeobufWriterOptions {
+            write_index: false,
+            ..Default::default()
+        };
+        write_flatgeobuf_with_options(geozero_reader, writer, "name", options).unwrap();
+
+        // let reader = Cursor::new(output_buffer);
+        // let reader_builder = FlatGeobufReaderBuilder::open(reader).unwrap();
+        // let record_batch_reader = reader_builder.read(Default::default()).unwrap();
+        // let new_table = Table::try_from(
+        //     Box::new(record_batch_reader) as Box<dyn arrow_array::RecordBatchReader>
+        // )
+        // .unwrap();
+        // assert_eq!(table, new_table);
+    }
+
+    // #[test]
+    // fn test_write_z() {
+    //     let table = point::table_z();
+
+    //     let mut output_buffer = Vec::new();
+    //     let writer = BufWriter::new(&mut output_buffer);
+    //     write_flatgeobuf(&table, writer, "name").unwrap();
+
+    //     let reader = Cursor::new(output_buffer);
+    //     let reader_builder = FlatGeobufReaderBuilder::open(reader).unwrap();
+    //     let record_batch_reader = reader_builder.read(Default::default()).unwrap();
+    //     let new_table = Table::try_from(
+    //         Box::new(record_batch_reader) as Box<dyn arrow_array::RecordBatchReader>
+    //     )
+    //     .unwrap();
+
+    //     // Note: backwards row order is due to the reordering during the spatial index
+    //     let batch = &new_table.batches()[0];
+    //     let _arr = batch.column(0);
+    // }
+}
