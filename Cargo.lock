@@ -236,7 +236,7 @@ dependencies = [
  "arrow-schema",
  "chrono",
  "half",
- "indexmap 2.7.1",
+ "indexmap 2.9.0",
  "lexical-core 1.0.5",
  "memchr",
  "num",
@@ -870,7 +870,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "strsim",
- "syn 2.0.98",
+ "syn 2.0.100",
 ]
 
 [[package]]
@@ -881,7 +881,7 @@ checksum = "fc34b93ccb385b40dc71c6fceac4b2ad23662c7eeb248cf10d529b7e055b6ead"
 dependencies = [
  "darling_core",
  "quote",
- "syn 2.0.98",
+ "syn 2.0.100",
 ]
 
 [[package]]
@@ -1359,7 +1359,7 @@ dependencies = [
  "geozero",
  "half",
  "http-range-client",
- "indexmap 2.7.1",
+ "indexmap 2.9.0",
  "lexical-core 0.8.5",
  "num-traits",
  "object_store",
@@ -1590,7 +1590,7 @@ dependencies = [
  "futures-core",
  "futures-sink",
  "http",
- "indexmap 2.7.1",
+ "indexmap 2.9.0",
  "slab",
  "tokio",
  "tokio-util",
@@ -2046,6 +2046,17 @@ checksum = "daca1df1c957320b2cf139ac61e7bd64fed304c5040df000a745aa1de3b4ef71"
 dependencies = [
  "icu_normalizer",
  "icu_properties",
+]
+
+[[package]]
+name = "indexmap"
+version = "1.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bd070e393353796e801d209ad339e89596eb4c8d430d18ede6a1cced8fafbd99"
+dependencies = [
+ "autocfg",
+ "hashbrown 0.12.3",
+ "serde",
 ]
 
 [[package]]
@@ -3012,7 +3023,7 @@ dependencies = [
  "cfg-if",
  "chrono",
  "chrono-tz",
- "indexmap 2.7.1",
+ "indexmap 2.9.0",
  "indoc",
  "libc",
  "memoffset",
@@ -3037,7 +3048,7 @@ dependencies = [
  "arrow-schema",
  "arrow-select",
  "half",
- "indexmap 2.7.1",
+ "indexmap 2.9.0",
  "numpy",
  "pyo3",
  "thiserror 1.0.69",
@@ -3074,7 +3085,7 @@ dependencies = [
  "geo 0.30.0",
  "geoarrow-array",
  "geoarrow-schema",
- "indexmap 2.7.1",
+ "indexmap 2.9.0",
  "pyo3",
  "pyo3-arrow",
  "serde_json",
@@ -3694,7 +3705,7 @@ dependencies = [
  "chrono",
  "hex",
  "indexmap 1.9.3",
- "indexmap 2.7.1",
+ "indexmap 2.9.0",
  "serde",
  "serde_derive",
  "serde_json",
@@ -3711,7 +3722,7 @@ dependencies = [
  "darling",
  "proc-macro2",
  "quote",
- "syn 2.0.98",
+ "syn 2.0.100",
 ]
 
 [[package]]
@@ -3881,7 +3892,7 @@ dependencies = [
  "futures-util",
  "hashlink",
  "hex",
- "indexmap 2.7.1",
+ "indexmap 2.9.0",
  "log",
  "memchr",
  "once_cell",
@@ -4228,9 +4239,9 @@ checksum = "c9e9a38711f559d9e3ce1cdb06dd7c5b8ea546bc90052da6d06bb76da74bb07c"
 
 [[package]]
 name = "time-macros"
-version = "0.2.19"
+version = "0.2.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2834e6017e3e5e4b9834939793b282bc03b37a3336245fa820e35e233e2a85de"
+checksum = "3526739392ec93fd8b359c8e98514cb3e8e021beb4e5f597b00a0221f8ed8a49"
 dependencies = [
  "num-conv",
  "time-core",
@@ -4353,7 +4364,7 @@ version = "0.22.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "17b4795ff5edd201c7cd6dca065ae59972ce77d1b80fa0a84d94950ece7d1474"
 dependencies = [
- "indexmap 2.7.1",
+ "indexmap 2.9.0",
  "toml_datetime",
  "winnow",
 ]
