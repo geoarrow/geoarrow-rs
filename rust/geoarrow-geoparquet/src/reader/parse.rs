@@ -115,33 +115,23 @@ pub fn parse_record_batch(batch: RecordBatch, target_schema: SchemaRef) -> Resul
 
 /// Parse a single column based on provided GeoParquet metadata and target field
 fn parse_array(array: ArrayRef, orig_field: &Field, target_field: &Field) -> Result<ArrayRef> {
-    let orig_type = GeoArrowType::try_from(orig_field)?;
-    let arr = array.as_ref();
-    match orig_type {
-        GeoArrowType::Point(_) => parse_point_column(arr, target_field.try_extension_type()?),
-        GeoArrowType::LineString(_) => {
-            parse_line_string_column(arr, target_field.try_extension_type()?)
+    let target_type = GeoArrowType::try_from(target_field)?;
+    match orig_field.data_type() {
+        DataType::Binary | DataType::LargeBinary | DataType::BinaryView => {
+            parse_wkb_column(array.as_ref(), target_field.try_into()?)
         }
-        GeoArrowType::Polygon(_) => parse_polygon_column(arr, target_field.try_extension_type()?),
-        GeoArrowType::MultiPoint(_) => {
-            parse_multi_point_column(arr, target_field.try_extension_type()?)
-        }
-        GeoArrowType::MultiLineString(_) => {
-            parse_multi_line_string_column(arr, target_field.try_extension_type()?)
-        }
-        GeoArrowType::MultiPolygon(_) => {
-            parse_multi_polygon_column(arr, target_field.try_extension_type()?)
-        }
-        GeoArrowType::Wkb(_) | GeoArrowType::LargeWkb(_) => {
-            parse_wkb_column(arr, target_field.try_into()?)
-        }
-        GeoArrowType::Wkt(_) | GeoArrowType::LargeWkt(_) => Err(GeoArrowError::General(
+        DataType::Utf8 | DataType::LargeUtf8 | DataType::Utf8View => Err(GeoArrowError::General(
             "WKT input not supported in GeoParquet.".to_string(),
         )),
-        other => Err(GeoArrowError::General(format!(
-            "Unexpected geometry encoding: {:?}",
-            other
-        ))),
+        _ => match target_type {
+            GeoArrowType::Point(typ) => parse_point_column(&array, typ),
+            GeoArrowType::LineString(typ) => parse_line_string_column(&array, typ),
+            GeoArrowType::Polygon(typ) => parse_polygon_column(&array, typ),
+            GeoArrowType::MultiPoint(typ) => parse_multi_point_column(&array, typ),
+            GeoArrowType::MultiLineString(typ) => parse_multi_line_string_column(&array, typ),
+            GeoArrowType::MultiPolygon(typ) => parse_multi_polygon_column(&array, typ),
+            _ => unreachable!(),
+        },
     }
 }
 

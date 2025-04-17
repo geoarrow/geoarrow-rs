@@ -108,21 +108,23 @@ fn point() {
         Dimension::XYM,
         Dimension::XYZM,
     ] {
-        let expected_typ = PointType::new(CoordType::Separated, dim, Default::default());
-        let path = geoparquet_wkb_filepath(expected_typ.clone().into(), "geo");
-        let (wkt_arr, geo_arr) = read_gpq_file(path);
+        for file_type in ["geo", "native"] {
+            let expected_typ = PointType::new(CoordType::Separated, dim, Default::default());
+            let path = geoparquet_wkb_filepath(expected_typ.clone().into(), file_type);
+            let (wkt_arr, geo_arr) = read_gpq_file(path);
 
-        assert_eq!(geo_arr.data_type(), expected_typ.clone().into());
+            assert_eq!(geo_arr.data_type(), expected_typ.clone().into());
 
-        let wkt_geoms = wkt_arr
-            .iter()
-            .map(|x| x.transpose().unwrap())
-            .collect::<Vec<_>>();
-        let from_wkt = PointBuilder::from_nullable_geometries(&wkt_geoms, expected_typ)
-            .unwrap()
-            .finish();
+            let wkt_geoms = wkt_arr
+                .iter()
+                .map(|x| x.transpose().unwrap())
+                .collect::<Vec<_>>();
+            let from_wkt = PointBuilder::from_nullable_geometries(&wkt_geoms, expected_typ)
+                .unwrap()
+                .finish();
 
-        assert_eq!(geo_arr.as_point(), &from_wkt);
+            assert_eq!(geo_arr.as_point(), &from_wkt);
+        }
     }
 }
 
@@ -134,21 +136,23 @@ fn linestring() {
         Dimension::XYM,
         Dimension::XYZM,
     ] {
-        let expected_typ = LineStringType::new(CoordType::Separated, dim, Default::default());
-        let path = geoparquet_wkb_filepath(expected_typ.clone().into(), "geo");
-        let (wkt_arr, geo_arr) = read_gpq_file(path);
+        for file_type in ["geo", "native"] {
+            let expected_typ = LineStringType::new(CoordType::Separated, dim, Default::default());
+            let path = geoparquet_wkb_filepath(expected_typ.clone().into(), file_type);
+            let (wkt_arr, geo_arr) = read_gpq_file(path);
 
-        assert_eq!(geo_arr.data_type(), expected_typ.clone().into());
+            assert_eq!(geo_arr.data_type(), expected_typ.clone().into());
 
-        let wkt_geoms = wkt_arr
-            .iter()
-            .map(|x| x.transpose().unwrap())
-            .collect::<Vec<_>>();
-        let from_wkt = LineStringBuilder::from_nullable_geometries(&wkt_geoms, expected_typ)
-            .unwrap()
-            .finish();
+            let wkt_geoms = wkt_arr
+                .iter()
+                .map(|x| x.transpose().unwrap())
+                .collect::<Vec<_>>();
+            let from_wkt = LineStringBuilder::from_nullable_geometries(&wkt_geoms, expected_typ)
+                .unwrap()
+                .finish();
 
-        assert_eq!(geo_arr.as_line_string(), &from_wkt);
+            assert_eq!(geo_arr.as_line_string(), &from_wkt);
+        }
     }
 }
 
@@ -160,21 +164,23 @@ fn polygon() {
         Dimension::XYM,
         Dimension::XYZM,
     ] {
-        let expected_typ = PolygonType::new(CoordType::Separated, dim, Default::default());
-        let path = geoparquet_wkb_filepath(expected_typ.clone().into(), "geo");
-        let (wkt_arr, geo_arr) = read_gpq_file(path);
+        for file_type in ["geo", "native"] {
+            let expected_typ = PolygonType::new(CoordType::Separated, dim, Default::default());
+            let path = geoparquet_wkb_filepath(expected_typ.clone().into(), file_type);
+            let (wkt_arr, geo_arr) = read_gpq_file(path);
 
-        assert_eq!(geo_arr.data_type(), expected_typ.clone().into());
+            assert_eq!(geo_arr.data_type(), expected_typ.clone().into());
 
-        let wkt_geoms = wkt_arr
-            .iter()
-            .map(|x| x.transpose().unwrap())
-            .collect::<Vec<_>>();
-        let from_wkt = PolygonBuilder::from_nullable_geometries(&wkt_geoms, expected_typ)
-            .unwrap()
-            .finish();
+            let wkt_geoms = wkt_arr
+                .iter()
+                .map(|x| x.transpose().unwrap())
+                .collect::<Vec<_>>();
+            let from_wkt = PolygonBuilder::from_nullable_geometries(&wkt_geoms, expected_typ)
+                .unwrap()
+                .finish();
 
-        assert_eq!(geo_arr.as_polygon(), &from_wkt);
+            assert_eq!(geo_arr.as_polygon(), &from_wkt);
+        }
     }
 }
 
@@ -186,21 +192,23 @@ fn multipoint() {
         Dimension::XYM,
         Dimension::XYZM,
     ] {
-        let expected_typ = MultiPointType::new(CoordType::Separated, dim, Default::default());
-        let path = geoparquet_wkb_filepath(expected_typ.clone().into(), "geo");
-        let (wkt_arr, geo_arr) = read_gpq_file(path);
+        for file_type in ["geo", "native"] {
+            let expected_typ = MultiPointType::new(CoordType::Separated, dim, Default::default());
+            let path = geoparquet_wkb_filepath(expected_typ.clone().into(), file_type);
+            let (wkt_arr, geo_arr) = read_gpq_file(path);
 
-        assert_eq!(geo_arr.data_type(), expected_typ.clone().into());
+            assert_eq!(geo_arr.data_type(), expected_typ.clone().into());
 
-        let wkt_geoms = wkt_arr
-            .iter()
-            .map(|x| x.transpose().unwrap())
-            .collect::<Vec<_>>();
-        let from_wkt = MultiPointBuilder::from_nullable_geometries(&wkt_geoms, expected_typ)
-            .unwrap()
-            .finish();
+            let wkt_geoms = wkt_arr
+                .iter()
+                .map(|x| x.transpose().unwrap())
+                .collect::<Vec<_>>();
+            let from_wkt = MultiPointBuilder::from_nullable_geometries(&wkt_geoms, expected_typ)
+                .unwrap()
+                .finish();
 
-        assert_eq!(geo_arr.as_multi_point(), &from_wkt);
+            assert_eq!(geo_arr.as_multi_point(), &from_wkt);
+        }
     }
 }
 
@@ -212,21 +220,25 @@ fn multilinestring() {
         Dimension::XYM,
         Dimension::XYZM,
     ] {
-        let expected_typ = MultiLineStringType::new(CoordType::Separated, dim, Default::default());
-        let path = geoparquet_wkb_filepath(expected_typ.clone().into(), "geo");
-        let (wkt_arr, geo_arr) = read_gpq_file(path);
+        for file_type in ["geo", "native"] {
+            let expected_typ =
+                MultiLineStringType::new(CoordType::Separated, dim, Default::default());
+            let path = geoparquet_wkb_filepath(expected_typ.clone().into(), file_type);
+            let (wkt_arr, geo_arr) = read_gpq_file(path);
 
-        assert_eq!(geo_arr.data_type(), expected_typ.clone().into());
+            assert_eq!(geo_arr.data_type(), expected_typ.clone().into());
 
-        let wkt_geoms = wkt_arr
-            .iter()
-            .map(|x| x.transpose().unwrap())
-            .collect::<Vec<_>>();
-        let from_wkt = MultiLineStringBuilder::from_nullable_geometries(&wkt_geoms, expected_typ)
-            .unwrap()
-            .finish();
+            let wkt_geoms = wkt_arr
+                .iter()
+                .map(|x| x.transpose().unwrap())
+                .collect::<Vec<_>>();
+            let from_wkt =
+                MultiLineStringBuilder::from_nullable_geometries(&wkt_geoms, expected_typ)
+                    .unwrap()
+                    .finish();
 
-        assert_eq!(geo_arr.as_multi_line_string(), &from_wkt);
+            assert_eq!(geo_arr.as_multi_line_string(), &from_wkt);
+        }
     }
 }
 
@@ -238,26 +250,29 @@ fn multipolygon() {
         Dimension::XYM,
         Dimension::XYZM,
     ] {
-        let expected_typ = MultiPolygonType::new(CoordType::Separated, dim, Default::default());
-        let path = geoparquet_wkb_filepath(expected_typ.clone().into(), "geo");
-        let (wkt_arr, geo_arr) = read_gpq_file(path);
+        for file_type in ["geo", "native"] {
+            let expected_typ = MultiPolygonType::new(CoordType::Separated, dim, Default::default());
+            let path = geoparquet_wkb_filepath(expected_typ.clone().into(), file_type);
+            let (wkt_arr, geo_arr) = read_gpq_file(path);
 
-        assert_eq!(geo_arr.data_type(), expected_typ.clone().into());
+            assert_eq!(geo_arr.data_type(), expected_typ.clone().into());
 
-        let wkt_geoms = wkt_arr
-            .iter()
-            .map(|x| x.transpose().unwrap())
-            .collect::<Vec<_>>();
-        let from_wkt = MultiPolygonBuilder::from_nullable_geometries(&wkt_geoms, expected_typ)
-            .unwrap()
-            .finish();
+            let wkt_geoms = wkt_arr
+                .iter()
+                .map(|x| x.transpose().unwrap())
+                .collect::<Vec<_>>();
+            let from_wkt = MultiPolygonBuilder::from_nullable_geometries(&wkt_geoms, expected_typ)
+                .unwrap()
+                .finish();
 
-        assert_eq!(geo_arr.as_multi_polygon(), &from_wkt);
+            assert_eq!(geo_arr.as_multi_polygon(), &from_wkt);
+        }
     }
 }
 
 #[test]
 fn geometrycollection() {
+    // Note: there is no native encoding for geometry collection; just WKB
     for dim in [
         Dimension::XY,
         Dimension::XYZ,
@@ -283,31 +298,5 @@ fn geometrycollection() {
                 .finish();
 
         assert_eq!(geo_arr.as_geometry_collection(), &from_wkt);
-    }
-}
-
-#[test]
-fn point_native() {
-    for dim in [
-        Dimension::XY,
-        Dimension::XYZ,
-        Dimension::XYM,
-        Dimension::XYZM,
-    ] {
-        let expected_typ = PointType::new(CoordType::Separated, dim, Default::default());
-        let path = geoparquet_wkb_filepath(expected_typ.clone().into(), "native");
-        let (wkt_arr, geo_arr) = read_gpq_file(path);
-
-        assert_eq!(geo_arr.data_type(), expected_typ.clone().into());
-
-        let wkt_geoms = wkt_arr
-            .iter()
-            .map(|x| x.transpose().unwrap())
-            .collect::<Vec<_>>();
-        let from_wkt = PointBuilder::from_nullable_geometries(&wkt_geoms, expected_typ)
-            .unwrap()
-            .finish();
-
-        assert_eq!(geo_arr.as_point(), &from_wkt);
     }
 }
