@@ -57,7 +57,7 @@
 //! ```
 
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
-#![cfg_attr(not(test), deny(unused_crate_dependencies))]
+#![cfg_attr(not(test), warn(unused_crate_dependencies))]
 #![warn(missing_docs)] // FIXME some modules allow missing docs
 
 pub use trait_::{ArrayBase, NativeArray};

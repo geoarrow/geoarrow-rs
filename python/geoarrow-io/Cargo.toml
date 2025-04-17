@@ -26,7 +26,6 @@ async = [
     "parquet/object_store",
     "dep:pyo3-async-runtimes",
     "geoarrow/flatgeobuf_async",
-    "geoarrow/parquet_async",
     "geoarrow-geoparquet/async",
     "geoarrow/postgis",
     "dep:sqlx",
@@ -60,8 +59,6 @@ geoarrow = { workspace = true, features = [
     "csv",
     "flatgeobuf",
     "ipc_compression",
-    "parquet_compression",
-    "parquet",
 ] }
 geoarrow-array = { workspace = true }
 geoarrow-geoparquet = { workspace = true, features = ["compression"] }

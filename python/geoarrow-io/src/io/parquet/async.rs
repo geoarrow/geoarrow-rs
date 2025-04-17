@@ -98,7 +98,8 @@ impl ParquetFile {
             let mut reader = ParquetObjectReader::new(cloned_store.clone(), path.clone());
             let arrow_meta = ArrowReaderMetadata::load_async(&mut reader, Default::default())
                 .await
-                .map_err(GeoArrowError::ParquetError)?;
+                .unwrap();
+            // .map_err(|err| GeoArrowError::ParquetError)?;
             let geoparquet_meta = GeoParquetReaderMetadata::new(arrow_meta);
             Ok::<_, PyGeoArrowError>((path, geoparquet_meta))
         })?;
@@ -307,7 +308,8 @@ async fn fetch_arrow_metadata_objects(
         .await
         .into_iter()
         .collect::<Result<Vec<_>, parquet::errors::ParquetError>>()
-        .map_err(GeoArrowError::ParquetError)?;
+        .unwrap();
+    // .map_err(GeoArrowError::ParquetError)?;
 
     let mut hashmap: HashMap<String, ArrowReaderMetadata> = HashMap::new();
     for (path, arrow_meta) in paths.iter().zip(parquet_metas) {
