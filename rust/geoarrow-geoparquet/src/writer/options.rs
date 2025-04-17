@@ -1,6 +1,5 @@
+use geoarrow_array::crs::CRSTransform;
 use parquet::file::properties::WriterProperties;
-
-use crate::crs::CRSTransform;
 
 /// Allowed encodings when writing to GeoParquet
 #[derive(Copy, Clone, Default)]

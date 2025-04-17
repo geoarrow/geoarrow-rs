@@ -1192,6 +1192,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "geoarrow-geoparquet"
+version = "0.1.0-dev"
+dependencies = [
+ "arrow-arith",
+ "arrow-array",
+ "arrow-buffer",
+ "arrow-ord",
+ "arrow-schema",
+ "async-stream",
+ "bytes",
+ "futures",
+ "geo-traits",
+ "geo-types",
+ "geoarrow-array",
+ "geoarrow-schema",
+ "parquet",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "geoarrow-rust-compute"
 version = "0.4.0-beta.4"
 dependencies = [
@@ -1233,6 +1254,7 @@ dependencies = [
  "geoarrow",
  "geoarrow-array",
  "geoarrow-flatgeobuf",
+ "geoarrow-geoparquet",
  "geoarrow-schema",
  "object_store",
  "parquet",
@@ -1244,7 +1266,6 @@ dependencies = [
  "pyo3-object_store",
  "serde_json",
  "sqlx",
- "thiserror 1.0.69",
  "tokio",
  "url",
 ]
@@ -2698,6 +2719,7 @@ dependencies = [
  "arrow-schema",
  "geo 0.30.0",
  "geoarrow",
+ "geoarrow-array",
  "geoarrow-schema",
  "geozero",
  "indexmap",
