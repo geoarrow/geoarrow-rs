@@ -1,16 +1,16 @@
 use std::any::Any;
 use std::sync::OnceLock;
 
-use arrow::array::AsArray;
+use arrow_array::cast::AsArray;
 use arrow_schema::DataType;
 use datafusion::logical_expr::scalar_doc_sections::DOC_SECTION_OTHER;
 use datafusion::logical_expr::{
     ColumnarValue, Documentation, ScalarUDFImpl, Signature, Volatility,
 };
 use geoarrow::ArrayBase;
-use geoarrow::array::WKBArray;
-use geoarrow::datatypes::NativeType;
 use geoarrow::io::wkb::{from_wkb, to_wkb};
+use geoarrow_array::GeoArrowType;
+use geoarrow_array::array::WkbArray;
 use geoarrow_schema::{CoordType, GeometryType};
 
 use crate::data_types::{GEOMETRY_TYPE, any_single_geometry_type_input, parse_to_native_array};
@@ -126,10 +126,10 @@ fn geom_from_wkb_impl(args: &[ColumnarValue]) -> GeoDataFusionResult<ColumnarVal
         .into_iter()
         .next()
         .unwrap();
-    let wkb_arr = WKBArray::new(array.as_binary::<i32>().clone(), Default::default());
+    let wkb_arr = WkbArray::new(array.as_binary::<i32>().clone(), Default::default());
     let native_arr = from_wkb(
         &wkb_arr,
-        NativeType::Geometry(GeometryType::new(CoordType::Separated, Default::default())),
+        GeoArrowType::Geometry(GeometryType::new(CoordType::Separated, Default::default())),
         false,
     )?;
     Ok(native_arr.to_array_ref().into())
