@@ -41,11 +41,11 @@ impl<'py> IntoPyObject<'py> for PyEdges {
         let enums_mod = py.import(intern!(py, "geoarrow.rust.core.enums"))?;
         let enum_cls = enums_mod.getattr(intern!(py, "Edges"))?;
         match self.0 {
-            Edges::Andoyer => enum_cls.getattr(intern!(py, "andoyer")),
-            Edges::Karney => enum_cls.getattr(intern!(py, "karney")),
-            Edges::Spherical => enum_cls.getattr(intern!(py, "spherical")),
-            Edges::Thomas => enum_cls.getattr(intern!(py, "thomas")),
-            Edges::Vincenty => enum_cls.getattr(intern!(py, "vincenty")),
+            Edges::Andoyer => enum_cls.getattr(intern!(py, "ANDOYER")),
+            Edges::Karney => enum_cls.getattr(intern!(py, "KARNEY")),
+            Edges::Spherical => enum_cls.getattr(intern!(py, "SPHERICAL")),
+            Edges::Thomas => enum_cls.getattr(intern!(py, "THOMAS")),
+            Edges::Vincenty => enum_cls.getattr(intern!(py, "VINCENTY")),
         }
     }
 }

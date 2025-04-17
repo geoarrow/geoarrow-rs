@@ -1,5 +1,11 @@
 from arro3.core.types import ArrowSchemaExportable
 from geoarrow.rust.core.enums import CoordType, Dimension, Edges
+from geoarrow.rust.core.types import (
+    CRSInput,
+    CoordTypeInput,
+    DimensionInput,
+    EdgesInput,
+)
 from pyproj.crs.crs import CRS
 
 __all__ = [
@@ -45,75 +51,75 @@ class GeoArrowType:
         """The edge interpretation of this type."""
 
 def point(
-    dimension: Dimension,
-    coord_type: CoordType,
+    dimension: DimensionInput,
+    coord_type: CoordTypeInput,
     *,
-    crs: CRS | None = None,
-    edges: Edges | None = None,
+    crs: CRSInput | None = None,
+    edges: EdgesInput | None = None,
 ) -> GeoArrowType:
     """Create a new Arrow type for a GeoArrow Point array."""
 
 def linestring(
-    dimension: Dimension,
-    coord_type: CoordType,
+    dimension: DimensionInput,
+    coord_type: CoordTypeInput,
     *,
-    crs: CRS | None = None,
-    edges: Edges | None = None,
+    crs: CRSInput | None = None,
+    edges: EdgesInput | None = None,
 ) -> GeoArrowType: ...
 def polygon(
-    dimension: Dimension,
-    coord_type: CoordType,
+    dimension: DimensionInput,
+    coord_type: CoordTypeInput,
     *,
-    crs: CRS | None = None,
-    edges: Edges | None = None,
+    crs: CRSInput | None = None,
+    edges: EdgesInput | None = None,
 ) -> GeoArrowType: ...
 def multipoint(
-    dimension: Dimension,
-    coord_type: CoordType,
+    dimension: DimensionInput,
+    coord_type: CoordTypeInput,
     *,
-    crs: CRS | None = None,
-    edges: Edges | None = None,
+    crs: CRSInput | None = None,
+    edges: EdgesInput | None = None,
 ) -> GeoArrowType: ...
 def multilinestring(
-    dimension: Dimension,
-    coord_type: CoordType,
+    dimension: DimensionInput,
+    coord_type: CoordTypeInput,
     *,
-    crs: CRS | None = None,
-    edges: Edges | None = None,
+    crs: CRSInput | None = None,
+    edges: EdgesInput | None = None,
 ) -> GeoArrowType: ...
 def multipolygon(
-    dimension: Dimension,
-    coord_type: CoordType,
+    dimension: DimensionInput,
+    coord_type: CoordTypeInput,
     *,
-    crs: CRS | None = None,
-    edges: Edges | None = None,
+    crs: CRSInput | None = None,
+    edges: EdgesInput | None = None,
 ) -> GeoArrowType: ...
 def geometrycollection(
-    dimension: Dimension,
-    coord_type: CoordType,
+    dimension: DimensionInput,
+    coord_type: CoordTypeInput,
     *,
-    crs: CRS | None = None,
-    edges: Edges | None = None,
+    crs: CRSInput | None = None,
+    edges: EdgesInput | None = None,
 ) -> GeoArrowType: ...
 def geometry(
     coord_type: CoordType,
     *,
-    crs: CRS | None = None,
-    edges: Edges | None = None,
+    crs: CRSInput | None = None,
+    edges: EdgesInput | None = None,
 ) -> GeoArrowType: ...
 def box(
-    dimension: Dimension,
-    *,
-    crs: CRS | None = None,
-    edges: Edges | None = None,
+    dimension: DimensionInput,
+    *ICoordTypeInput,
+    crs: CRSInput | None = None,
+    edges: EdgesInput | None = None,
 ) -> GeoArrowType: ...
 def wkb(
     *,
-    crs: CRS | None = None,
-    edges: Edges | None = None,
+    crs: CRSInput | None = None,
+    edges: EdgesInput | None = None,
 ) -> GeoArrowType: ...
 def wkt(
     *,
-    crs: CRS | None = None,
-    edges: Edges | None = None,
+    crs: CRSInput | None = None,
+    edges: EdgesInput | None = None,
 ) -> GeoArrowType: ...
