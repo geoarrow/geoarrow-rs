@@ -269,6 +269,26 @@ impl GeoArrowType {
     }
 }
 
+macro_rules! impl_into_geoarrowtype {
+    ($source_type:ident, $variant:expr) => {
+        impl From<$source_type> for GeoArrowType {
+            fn from(value: $source_type) -> Self {
+                $variant(value)
+            }
+        }
+    };
+}
+
+impl_into_geoarrowtype!(PointType, GeoArrowType::Point);
+impl_into_geoarrowtype!(LineStringType, GeoArrowType::LineString);
+impl_into_geoarrowtype!(PolygonType, GeoArrowType::Polygon);
+impl_into_geoarrowtype!(MultiPointType, GeoArrowType::MultiPoint);
+impl_into_geoarrowtype!(MultiLineStringType, GeoArrowType::MultiLineString);
+impl_into_geoarrowtype!(MultiPolygonType, GeoArrowType::MultiPolygon);
+impl_into_geoarrowtype!(GeometryCollectionType, GeoArrowType::GeometryCollection);
+impl_into_geoarrowtype!(BoxType, GeoArrowType::Rect);
+impl_into_geoarrowtype!(GeometryType, GeoArrowType::Geometry);
+
 impl TryFrom<&Field> for GeoArrowType {
     type Error = GeoArrowError;
 
