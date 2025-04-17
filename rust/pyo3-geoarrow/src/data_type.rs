@@ -44,8 +44,13 @@ impl PyGeoArrowType {
     }
 
     /// Check for equality with other object.
-    fn __eq__(&self, other: &PyGeoArrowType) -> bool {
-        self.0 == other.0
+    fn __eq__(&self, other: &Bound<PyAny>) -> bool {
+        // Do extraction within body because `__eq__` should never raise an exception.
+        if let Ok(other) = other.extract::<Self>() {
+            self.0 == other.0
+        } else {
+            false
+        }
     }
 
     fn __repr__(&self) -> String {

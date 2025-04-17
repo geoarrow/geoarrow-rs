@@ -42,6 +42,20 @@ class Dimension(StrEnum):
     """
 
 
+class Edges(StrEnum):
+    """Edges."""
+
+    Andoyer = "andoyer"
+
+    Karney = "karney"
+
+    Spherical = "spherical"
+
+    Thomas = "thomas"
+
+    Vincenty = "vincenty"
+
+
 class GeometryType(IntEnum):
     GEOMETRY = 0
     """Unknown geometry type."""
