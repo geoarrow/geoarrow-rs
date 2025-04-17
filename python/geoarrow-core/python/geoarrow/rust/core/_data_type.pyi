@@ -50,7 +50,9 @@ def point(
     *,
     crs: CRS | None = None,
     edges: Edges | None = None,
-) -> GeoArrowType: ...
+) -> GeoArrowType:
+    """Create a new Arrow type for a GeoArrow Point array."""
+
 def linestring(
     dimension: Dimension,
     coord_type: CoordType,
