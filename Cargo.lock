@@ -1362,11 +1362,14 @@ dependencies = [
 name = "geoarrow-flatgeobuf"
 version = "0.1.0-dev"
 dependencies = [
+ "arrow-array",
  "arrow-schema",
  "flatgeobuf",
+ "futures",
  "geoarrow-array",
  "geoarrow-schema",
  "geozero",
+ "http-range-client",
 ]
 
 [[package]]
