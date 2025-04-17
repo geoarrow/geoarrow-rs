@@ -11,7 +11,6 @@ rust-version = { workspace = true }
 
 
 [dependencies]
-# geo-traits = { workspace = true }
 arrow-schema = { workspace = true }
 flatgeobuf = { workspace = true }
 geoarrow-array = { workspace = true, features = ["geozero"] }
