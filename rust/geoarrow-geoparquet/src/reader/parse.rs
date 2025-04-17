@@ -118,12 +118,20 @@ fn parse_array(array: ArrayRef, orig_field: &Field, target_field: &Field) -> Res
     let orig_type = GeoArrowType::try_from(orig_field)?;
     let arr = array.as_ref();
     match orig_type {
-        GeoArrowType::Point(typ) => parse_point_column(arr, typ),
-        GeoArrowType::LineString(typ) => parse_line_string_column(arr, typ),
-        GeoArrowType::Polygon(typ) => parse_polygon_column(arr, typ),
-        GeoArrowType::MultiPoint(typ) => parse_multi_point_column(arr, typ),
-        GeoArrowType::MultiLineString(typ) => parse_multi_line_string_column(arr, typ),
-        GeoArrowType::MultiPolygon(typ) => parse_multi_polygon_column(arr, typ),
+        GeoArrowType::Point(_) => parse_point_column(arr, target_field.try_extension_type()?),
+        GeoArrowType::LineString(_) => {
+            parse_line_string_column(arr, target_field.try_extension_type()?)
+        }
+        GeoArrowType::Polygon(_) => parse_polygon_column(arr, target_field.try_extension_type()?),
+        GeoArrowType::MultiPoint(_) => {
+            parse_multi_point_column(arr, target_field.try_extension_type()?)
+        }
+        GeoArrowType::MultiLineString(_) => {
+            parse_multi_line_string_column(arr, target_field.try_extension_type()?)
+        }
+        GeoArrowType::MultiPolygon(_) => {
+            parse_multi_polygon_column(arr, target_field.try_extension_type()?)
+        }
         GeoArrowType::Wkb(_) | GeoArrowType::LargeWkb(_) => {
             parse_wkb_column(arr, target_field.try_into()?)
         }
@@ -164,16 +172,8 @@ fn parse_point_column(array: &dyn Array, typ: PointType) -> Result<ArrayRef> {
 macro_rules! impl_parse_fn {
     ($fn_name:ident, $geoarrow_type:ty, $geom_type:ty) => {
         fn $fn_name(array: &dyn Array, typ: $geom_type) -> Result<ArrayRef> {
-            match array.data_type() {
-                DataType::List(_) | DataType::LargeList(_) => {
-                    let geom_arr: $geoarrow_type = (array, typ).try_into()?;
-                    Ok(geom_arr.into_array_ref())
-                }
-                dt => Err(GeoArrowError::General(format!(
-                    "Unexpected Arrow data type: {}",
-                    dt
-                ))),
-            }
+            let geom_arr: $geoarrow_type = (array, typ).try_into()?;
+            Ok(geom_arr.into_array_ref())
         }
     };
 }
