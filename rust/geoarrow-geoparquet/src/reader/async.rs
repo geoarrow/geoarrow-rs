@@ -170,7 +170,7 @@ mod test {
     use tokio::fs::File;
 
     use crate::metadata::GeoParquetBboxCovering;
-    use crate::writer::test::fixture_dir;
+    use crate::test::fixture_dir;
 
     #[tokio::test]
     async fn nybb() -> Result<()> {

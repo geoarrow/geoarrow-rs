@@ -169,7 +169,7 @@ mod test {
     use std::fs::File;
 
     use crate::metadata::GeoParquetBboxCovering;
-    use crate::writer::test::fixture_dir;
+    use crate::test::fixture_dir;
 
     #[test]
     fn nybb() {

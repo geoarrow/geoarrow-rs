@@ -72,8 +72,8 @@
 
 pub mod metadata;
 mod reader;
-// #[cfg(test)]
-// mod test;
+#[cfg(test)]
+mod test;
 mod total_bounds;
 mod writer;
 
