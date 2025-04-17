@@ -39,6 +39,21 @@ fn _rust(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<pyo3_geoarrow::PyChunkedGeoArrowArray>()?;
     m.add_class::<pyo3_geoarrow::PyGeoArrowType>()?;
 
+    // Type constructors
+
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::point, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::geometry, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::geometrycollection, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::linestring, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::multilinestring, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::multipoint, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::multipolygon, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::point, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::polygon, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::wkb, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::wkt, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::r#box, m)?)?;
+
     // Constructors
 
     m.add_function(wrap_pyfunction!(crate::constructors::points, m)?)?;
