@@ -6,6 +6,7 @@ use arrow_schema::extension::{EXTENSION_TYPE_METADATA_KEY, EXTENSION_TYPE_NAME_K
 use arrow_schema::{Field, Schema, SchemaRef};
 use geoarrow_array::GeoArrowType;
 use geoarrow_array::array::from_arrow_array;
+use geoarrow_array::crs::{CRSTransform, DefaultCRSTransform};
 use geoarrow_array::error::Result;
 use geoarrow_schema::{
     CoordType, Dimension, Edges, LineStringType, Metadata, MultiLineStringType, MultiPointType,
@@ -13,7 +14,6 @@ use geoarrow_schema::{
 };
 use serde_json::Value;
 
-use crate::crs::{CRSTransform, DefaultCRSTransform};
 use crate::metadata::{
     GeoParquetColumnEncoding, GeoParquetColumnMetadata, GeoParquetGeometryType, GeoParquetMetadata,
 };

@@ -1,6 +1,6 @@
 use geo::coord;
-use geoarrow::io::parquet::GeoParquetReaderOptions;
-use geoarrow::io::parquet::metadata::GeoParquetBboxCovering;
+use geoarrow_geoparquet::GeoParquetReaderOptions;
+use geoarrow_geoparquet::metadata::GeoParquetBboxCovering;
 use geoarrow_schema::CoordType;
 use pyo3::prelude::*;
 

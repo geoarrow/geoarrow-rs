@@ -70,7 +70,6 @@
 
 #![deny(missing_docs)]
 
-mod crs;
 pub mod metadata;
 mod reader;
 // #[cfg(test)]

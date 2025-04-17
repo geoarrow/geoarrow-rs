@@ -1,3 +1,5 @@
+#![cfg_attr(not(test), warn(unused_crate_dependencies))]
+
 use pyo3::exceptions::PyRuntimeWarning;
 use pyo3::intern;
 use pyo3::prelude::*;
