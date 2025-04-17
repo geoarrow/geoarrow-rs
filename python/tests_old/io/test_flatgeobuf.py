@@ -8,7 +8,7 @@ from geoarrow.rust.core import from_geopandas, geometry_col, to_geopandas, get_c
 from geoarrow.rust.io import read_flatgeobuf, write_flatgeobuf
 from geopandas.testing import assert_geodataframe_equal
 
-from tests.utils import FIXTURES_DIR
+from tests_old.utils import FIXTURES_DIR
 
 
 def test_read_flatgeobuf():
