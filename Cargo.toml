@@ -64,4 +64,4 @@ url = "2.5"
 # to include https://github.com/georust/wkb/pull/53
 wkb = { git = "https://github.com/georust/wkb", rev = "5a2027995997017bcd531e6be7e5cf126db1d4c1" }
 # https://github.com/georust/wkt/pull/137
-wkt = { git = "https://github.com/georust/wkt", rev = "c622f69644f7c19b0e844d36b1f67ab86f22037f" }
+wkt = { git = "https://github.com/georust/wkt", rev = "140b62d43302e17e102027e743d58a2d58375ff2" }

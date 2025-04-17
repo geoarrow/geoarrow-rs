@@ -1355,7 +1355,7 @@ dependencies = [
  "serde_json",
  "thiserror 1.0.69",
  "wkb",
- "wkt 0.12.0 (git+https://github.com/georust/wkt?rev=c622f69644f7c19b0e844d36b1f67ab86f22037f)",
+ "wkt 0.12.0 (git+https://github.com/georust/wkt?rev=140b62d43302e17e102027e743d58a2d58375ff2)",
 ]
 
 [[package]]
@@ -1368,7 +1368,7 @@ dependencies = [
  "geoarrow-array",
  "geoarrow-schema",
  "geozero",
- "wkt 0.12.0 (git+https://github.com/georust/wkt?rev=c622f69644f7c19b0e844d36b1f67ab86f22037f)",
+ "wkt 0.12.0 (git+https://github.com/georust/wkt?rev=140b62d43302e17e102027e743d58a2d58375ff2)",
 ]
 
 [[package]]
@@ -1422,7 +1422,7 @@ dependencies = [
  "geo 0.30.0",
  "geo-traits",
  "geo-types",
- "wkt 0.12.0 (git+https://github.com/georust/wkt?rev=c622f69644f7c19b0e844d36b1f67ab86f22037f)",
+ "wkt 0.12.0 (git+https://github.com/georust/wkt?rev=140b62d43302e17e102027e743d58a2d58375ff2)",
 ]
 
 [[package]]
@@ -4800,7 +4800,7 @@ dependencies = [
 [[package]]
 name = "wkt"
 version = "0.12.0"
-source = "git+https://github.com/georust/wkt?rev=c622f69644f7c19b0e844d36b1f67ab86f22037f#c622f69644f7c19b0e844d36b1f67ab86f22037f"
+source = "git+https://github.com/georust/wkt?rev=140b62d43302e17e102027e743d58a2d58375ff2#140b62d43302e17e102027e743d58a2d58375ff2"
 dependencies = [
  "geo-traits",
  "geo-types",
