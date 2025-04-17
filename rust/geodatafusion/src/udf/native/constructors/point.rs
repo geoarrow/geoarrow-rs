@@ -3,17 +3,18 @@
 use std::any::Any;
 use std::sync::OnceLock;
 
-use arrow::array::AsArray;
-use arrow::datatypes::Float64Type;
+use arrow_array::cast::AsArray;
+use arrow_array::types::Float64Type;
 use arrow_schema::DataType;
 use datafusion::logical_expr::scalar_doc_sections::DOC_SECTION_OTHER;
 use datafusion::logical_expr::{
-    ColumnarValue, Documentation, ScalarUDFImpl, Signature, TypeSignature, Volatility,
+    ColumnarValue, Documentation, ScalarFunctionArgs, ScalarUDFImpl, Signature, TypeSignature,
+    Volatility,
 };
 use geo_traits::CoordTrait;
-use geoarrow::ArrayBase;
-use geoarrow::array::{GeometryArray, PointBuilder};
-use geoarrow_schema::{CoordType, Dimension};
+use geoarrow_array::GeoArrowArray;
+use geoarrow_array::builder::PointBuilder;
+use geoarrow_schema::{CoordType, Dimension, PointType};
 
 use crate::data_types::{POINT2D_TYPE, POINT3D_TYPE};
 
@@ -52,20 +53,19 @@ impl ScalarUDFImpl for Point {
         Ok(POINT2D_TYPE().into())
     }
 
-    fn invoke(&self, args: &[ColumnarValue]) -> datafusion::error::Result<ColumnarValue> {
-        let mut args = ColumnarValue::values_to_arrays(args)?.into_iter();
+    fn invoke_with_args(
+        &self,
+        args: ScalarFunctionArgs,
+    ) -> datafusion::error::Result<ColumnarValue> {
+        let mut args = ColumnarValue::values_to_arrays(&args.args)?.into_iter();
         let x = args.next().unwrap();
         let y = args.next().unwrap();
 
         let x = x.as_primitive::<Float64Type>();
         let y = y.as_primitive::<Float64Type>();
 
-        let mut builder = PointBuilder::with_capacity_and_options(
-            Dimension::XY,
-            x.len(),
-            CoordType::Separated,
-            Default::default(),
-        );
+        let typ = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+        let mut builder = PointBuilder::with_capacity(typ, x.len());
         for (x, y) in x.iter().zip(y.iter()) {
             if let (Some(x), Some(y)) = (x, y) {
                 builder.push_coord(Some(&geo::coord! { x: x, y: y}));
@@ -170,8 +170,11 @@ impl ScalarUDFImpl for MakePoint {
         }
     }
 
-    fn invoke(&self, args: &[ColumnarValue]) -> datafusion::error::Result<ColumnarValue> {
-        let mut args = ColumnarValue::values_to_arrays(args)?.into_iter();
+    fn invoke_with_args(
+        &self,
+        args: ScalarFunctionArgs,
+    ) -> datafusion::error::Result<ColumnarValue> {
+        let mut args = ColumnarValue::values_to_arrays(&args.args)?.into_iter();
         let x = args.next().unwrap();
         let y = args.next().unwrap();
         let z = args.next();
@@ -184,12 +187,8 @@ impl ScalarUDFImpl for MakePoint {
         } else {
             Dimension::XY
         };
-        let mut builder = PointBuilder::with_capacity_and_options(
-            dim,
-            x.len(),
-            CoordType::Separated,
-            Default::default(),
-        );
+        let typ = PointType::new(CoordType::Separated, dim, Default::default());
+        let mut builder = PointBuilder::with_capacity(typ, x.len());
 
         if let Some(z) = z {
             let z = z.as_primitive::<Float64Type>();
@@ -211,9 +210,7 @@ impl ScalarUDFImpl for MakePoint {
             }
         }
 
-        Ok(GeometryArray::from(builder.finish())
-            .into_array_ref()
-            .into())
+        Ok(builder.finish().into_array_ref().into())
     }
 
     fn documentation(&self) -> Option<&Documentation> {

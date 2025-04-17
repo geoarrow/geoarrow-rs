@@ -25,6 +25,7 @@ rust-version = "1.85"
 categories = ["science::geo"]
 
 [workspace.dependencies]
+approx = "0.5.1"
 arrow-arith = "55"
 arrow-array = "55"
 arrow-buffer = "55"
@@ -36,7 +37,10 @@ arrow-json = "55"
 arrow-ord = "55"
 arrow-schema = "55"
 async-stream = "0.3"
+async-trait = "0.1"
 bytes = "1.10.0"
+# 47 rc https://lists.apache.org/thread/zrq9x9gf51r8b6m9qokf2q75kh251rm6
+datafusion = { git = "https://github.com/apache/datafusion", rev = "e4433049b04ca2c1e2031eb05d1a0990210f11d6" }
 flatgeobuf = { version = "4.6", default-features = false }
 futures = "0.3"
 geo = "0.30.0"
@@ -46,6 +50,7 @@ geoarrow-array = { path = "rust/geoarrow-array" }
 geoarrow-geoparquet = { path = "rust/geoarrow-geoparquet" }
 geoarrow-schema = { path = "rust/geoarrow-schema" }
 geoarrow-test = { path = "rust/geoarrow-test" }
+geohash = "0.13.1"
 geos = { version = "10", features = ["v3_10_0"] }
 geozero = "0.14"
 indexmap = "2.5.0"
@@ -60,6 +65,7 @@ rstar = "0.12.2"
 serde = "1"
 serde_json = "1"
 thiserror = "1"
+tokio = { version = "1.9", default-features = false }
 url = "2.5"
 # to include https://github.com/georust/wkb/pull/53
 wkb = { git = "https://github.com/georust/wkb", rev = "5a2027995997017bcd531e6be7e5cf126db1d4c1" }

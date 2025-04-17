@@ -1,7 +1,7 @@
 use std::any::Any;
 use std::sync::{Arc, OnceLock};
 
-use arrow::array::UInt8Builder;
+use arrow_array::builder::UInt8Builder;
 use arrow_schema::DataType;
 use datafusion::logical_expr::scalar_doc_sections::DOC_SECTION_OTHER;
 use datafusion::logical_expr::{ColumnarValue, Documentation, ScalarUDFImpl, Signature};

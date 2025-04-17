@@ -1,7 +1,7 @@
 use std::any::Any;
 use std::sync::OnceLock;
 
-use arrow::array::AsArray;
+use arrow_array::cast::AsArray;
 use arrow_schema::DataType;
 use datafusion::logical_expr::scalar_doc_sections::DOC_SECTION_OTHER;
 use datafusion::logical_expr::{
