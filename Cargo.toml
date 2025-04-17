@@ -64,6 +64,7 @@ pyo3-geoarrow = { path = "rust/pyo3-geoarrow" }
 rstar = "0.12.2"
 serde = "1"
 serde_json = "1"
+serde_with = "3"
 thiserror = "1"
 tokio = { version = "1.9", default-features = false }
 url = "2.5"

@@ -8,14 +8,12 @@ use geoarrow_array::GeoArrowType;
 use geoarrow_array::array::from_arrow_array;
 use geoarrow_array::crs::{CRSTransform, DefaultCRSTransform};
 use geoarrow_array::error::Result;
-use geoarrow_schema::{
-    CoordType, Dimension, Edges, LineStringType, Metadata, MultiLineStringType, MultiPointType,
-    MultiPolygonType, PointType, PolygonType, WkbType,
-};
+use geoarrow_schema::{CoordType, Edges, Metadata, WkbType};
 use serde_json::Value;
 
 use crate::metadata::{
-    GeoParquetColumnEncoding, GeoParquetColumnMetadata, GeoParquetGeometryType, GeoParquetMetadata,
+    GeoParquetColumnEncoding, GeoParquetColumnMetadata, GeoParquetGeometryType,
+    GeoParquetGeometryTypeAndDimension, GeoParquetMetadata,
 };
 use crate::total_bounds::BoundingRect;
 use crate::writer::options::{GeoParquetWriterEncoding, GeoParquetWriterOptions};
@@ -29,7 +27,7 @@ pub struct ColumnInfo {
     pub encoding: GeoParquetColumnEncoding,
 
     /// The set of string geometry types for this geometry column
-    pub geometry_types: HashSet<GeoParquetGeometryType>,
+    pub geometry_types: HashSet<GeoParquetGeometryTypeAndDimension>,
 
     /// The bounding box of this column.
     pub bbox: Option<BoundingRect>,
@@ -242,72 +240,52 @@ impl GeoParquetMetadataBuilder {
     }
 }
 
-pub fn get_geometry_types(data_type: &GeoArrowType) -> HashSet<GeoParquetGeometryType> {
+pub fn get_geometry_types(data_type: &GeoArrowType) -> HashSet<GeoParquetGeometryTypeAndDimension> {
     use GeoParquetGeometryType::*;
     let mut geometry_types = HashSet::new();
 
     match data_type {
         GeoArrowType::Point(t) => {
-            match t.dimension() {
-                Dimension::XY => geometry_types.insert(Point),
-                Dimension::XYZ => geometry_types.insert(PointZ),
-                _ => todo!("Support more than XY and XYZ dimensions in Parquet writer"),
-            };
+            let gpq_typ = GeoParquetGeometryTypeAndDimension::new(Point, t.dimension());
+            geometry_types.insert(gpq_typ);
         }
         GeoArrowType::LineString(t) => {
-            match t.dimension() {
-                Dimension::XY => geometry_types.insert(LineString),
-                Dimension::XYZ => geometry_types.insert(LineStringZ),
-                _ => todo!("Support more than XY and XYZ dimensions in Parquet writer"),
-            };
+            let gpq_typ = GeoParquetGeometryTypeAndDimension::new(LineString, t.dimension());
+            geometry_types.insert(gpq_typ);
         }
         GeoArrowType::Polygon(t) => {
-            match t.dimension() {
-                Dimension::XY => geometry_types.insert(Polygon),
-                Dimension::XYZ => geometry_types.insert(PolygonZ),
-                _ => todo!("Support more than XY and XYZ dimensions in Parquet writer"),
-            };
+            let gpq_typ = GeoParquetGeometryTypeAndDimension::new(Polygon, t.dimension());
+            geometry_types.insert(gpq_typ);
         }
         // Also store rect as polygon
         GeoArrowType::Rect(t) => {
-            match t.dimension() {
-                Dimension::XY => geometry_types.insert(Polygon),
-                Dimension::XYZ => geometry_types.insert(PolygonZ),
-                _ => todo!("Support more than XY and XYZ dimensions in Parquet writer"),
-            };
+            let gpq_typ = GeoParquetGeometryTypeAndDimension::new(Polygon, t.dimension());
+            geometry_types.insert(gpq_typ);
         }
         GeoArrowType::MultiPoint(t) => {
-            match t.dimension() {
-                Dimension::XY => geometry_types.insert(MultiPoint),
-                Dimension::XYZ => geometry_types.insert(MultiPointZ),
-                _ => todo!("Support more than XY and XYZ dimensions in Parquet writer"),
-            };
+            let gpq_typ = GeoParquetGeometryTypeAndDimension::new(MultiPoint, t.dimension());
+            geometry_types.insert(gpq_typ);
         }
         GeoArrowType::MultiLineString(t) => {
-            match t.dimension() {
-                Dimension::XY => geometry_types.insert(MultiLineString),
-                Dimension::XYZ => geometry_types.insert(MultiLineStringZ),
-                _ => todo!("Support more than XY and XYZ dimensions in Parquet writer"),
-            };
+            let gpq_typ = GeoParquetGeometryTypeAndDimension::new(MultiLineString, t.dimension());
+            geometry_types.insert(gpq_typ);
         }
         GeoArrowType::MultiPolygon(t) => {
-            match t.dimension() {
-                Dimension::XY => geometry_types.insert(MultiPolygon),
-                Dimension::XYZ => geometry_types.insert(MultiPolygonZ),
-                _ => todo!("Support more than XY and XYZ dimensions in Parquet writer"),
-            };
-        }
-        GeoArrowType::Geometry(_) => {
-            // We don't have access to the actual data here, so we can't inspect better than this.
+            let gpq_typ = GeoParquetGeometryTypeAndDimension::new(MultiPolygon, t.dimension());
+            geometry_types.insert(gpq_typ);
         }
         GeoArrowType::GeometryCollection(t) => {
-            match t.dimension() {
-                Dimension::XY => geometry_types.insert(GeometryCollection),
-                Dimension::XYZ => geometry_types.insert(GeometryCollectionZ),
-                _ => todo!("Support more than XY and XYZ dimensions in Parquet writer"),
-            };
+            let gpq_typ =
+                GeoParquetGeometryTypeAndDimension::new(GeometryCollection, t.dimension());
+            geometry_types.insert(gpq_typ);
         }
-        _ => todo!("are serialized types supposed to be processed via this code path?"),
+        GeoArrowType::Geometry(_)
+        | GeoArrowType::Wkb(_)
+        | GeoArrowType::LargeWkb(_)
+        | GeoArrowType::Wkt(_)
+        | GeoArrowType::LargeWkt(_) => {
+            // We don't have access to the actual data here, so we can't inspect better than this.
+        }
     };
 
     geometry_types
@@ -334,63 +312,15 @@ fn create_output_schema(input_schema: &Schema, columns: &HashMap<usize, ColumnIn
 
 fn create_output_field(column_info: &ColumnInfo, name: String, nullable: bool) -> Field {
     use GeoParquetColumnEncoding as Encoding;
-    use GeoParquetGeometryType::*;
 
     match column_info.encoding {
         Encoding::WKB => WkbType::new(Default::default()).to_field(name, nullable, false),
-        Encoding::Point => {
-            if column_info.geometry_types.contains(&PointZ) {
-                PointType::new(CoordType::Separated, Dimension::XYZ, Default::default())
-                    .to_field(name, nullable)
-            } else {
-                PointType::new(CoordType::Separated, Dimension::XY, Default::default())
-                    .to_field(name, nullable)
-            }
-        }
-        Encoding::LineString => {
-            if column_info.geometry_types.contains(&LineStringZ) {
-                LineStringType::new(CoordType::Separated, Dimension::XYZ, Default::default())
-                    .to_field(name, nullable)
-            } else {
-                LineStringType::new(CoordType::Separated, Dimension::XY, Default::default())
-                    .to_field(name, nullable)
-            }
-        }
-        Encoding::Polygon => {
-            if column_info.geometry_types.contains(&PolygonZ) {
-                PolygonType::new(CoordType::Separated, Dimension::XYZ, Default::default())
-                    .to_field(name, nullable)
-            } else {
-                PolygonType::new(CoordType::Separated, Dimension::XY, Default::default())
-                    .to_field(name, nullable)
-            }
-        }
-        Encoding::MultiPoint => {
-            if column_info.geometry_types.contains(&MultiPointZ) {
-                MultiPointType::new(CoordType::Separated, Dimension::XYZ, Default::default())
-                    .to_field(name, nullable)
-            } else {
-                MultiPointType::new(CoordType::Separated, Dimension::XY, Default::default())
-                    .to_field(name, nullable)
-            }
-        }
-        Encoding::MultiLineString => {
-            if column_info.geometry_types.contains(&MultiLineStringZ) {
-                MultiLineStringType::new(CoordType::Separated, Dimension::XYZ, Default::default())
-                    .to_field(name, nullable)
-            } else {
-                MultiLineStringType::new(CoordType::Separated, Dimension::XY, Default::default())
-                    .to_field(name, nullable)
-            }
-        }
-        Encoding::MultiPolygon => {
-            if column_info.geometry_types.contains(&MultiPolygonZ) {
-                MultiPolygonType::new(CoordType::Separated, Dimension::XYZ, Default::default())
-                    .to_field(name, nullable)
-            } else {
-                MultiPolygonType::new(CoordType::Separated, Dimension::XY, Default::default())
-                    .to_field(name, nullable)
-            }
+        // A native encoding
+        _ => {
+            assert_eq!(column_info.geometry_types.len(), 1);
+            let gpq_type = column_info.geometry_types.iter().next().unwrap();
+            let ga_type = gpq_type.to_data_type(CoordType::Separated, Default::default());
+            ga_type.to_field(name, nullable)
         }
     }
 }
