@@ -3,6 +3,7 @@ use geoarrow::algorithm::broadcasting::BroadcastableVec;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
+#[allow(dead_code)]
 pub struct BroadcastableAffine(pub(crate) BroadcastableVec<AffineTransform>);
 
 #[wasm_bindgen]
