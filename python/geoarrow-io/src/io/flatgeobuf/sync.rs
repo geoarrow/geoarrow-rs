@@ -4,15 +4,15 @@ use crate::io::input::{AnyFileReader, construct_reader};
 use crate::util::to_arro3_table;
 
 use arrow::array::RecordBatchReader;
-use geoarrow::io::flatgeobuf::{
-    FlatGeobufReaderBuilder, FlatGeobufReaderOptions, FlatGeobufWriterOptions,
-    write_flatgeobuf_with_options as _write_flatgeobuf,
-};
+use geoarrow::io::flatgeobuf::{FlatGeobufReaderBuilder, FlatGeobufReaderOptions};
 use geoarrow::table::Table;
+use geoarrow_flatgeobuf::writer::{
+    FlatGeobufWriterOptions, write_flatgeobuf_with_options as _write_flatgeobuf,
+};
+use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 use pyo3_arrow::export::Arro3Table;
 use pyo3_arrow::input::AnyRecordBatch;
-use pyo3_geoarrow::PyprojCRSTransform;
 
 #[pyfunction]
 #[pyo3(signature = (file, *, store=None, batch_size=65536, bbox=None))]
@@ -81,7 +81,8 @@ pub fn write_flatgeobuf(
     description: Option<String>,
     metadata: Option<String>,
     name: Option<String>,
-) -> PyGeoArrowResult<()> {
+    // NOTE: restore PyGeoArrowResult
+) -> PyResult<()> {
     let name = name.unwrap_or_else(|| file.file_stem(py).unwrap_or("".to_string()));
 
     let options = FlatGeobufWriterOptions {
@@ -90,10 +91,14 @@ pub fn write_flatgeobuf(
         description,
         metadata,
         // Use pyproj for converting CRS to WKT
-        crs_transform: Some(Box::new(PyprojCRSTransform::new())),
+        // TODO: during the refactor of FlatGeobuf to use the new geoarrow-flatgeobuf crate, we
+        // took out this CRS transform functionality because of conflicting trait definitions in
+        // multiple crates.
+        // crs_transform: Some(Box::new(PyprojCRSTransform::new())),
         ..Default::default()
     };
 
-    _write_flatgeobuf(table.into_reader()?, file, &name, options)?;
+    _write_flatgeobuf(table.into_reader()?, file, &name, options)
+        .map_err(|err| PyRuntimeError::new_err(err.to_string()))?;
     Ok(())
 }

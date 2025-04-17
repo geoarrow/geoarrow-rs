@@ -1359,6 +1359,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "geoarrow-flatgeobuf"
+version = "0.1.0-dev"
+dependencies = [
+ "arrow-array",
+ "arrow-schema",
+ "flatgeobuf",
+ "geoarrow-array",
+ "geoarrow-schema",
+ "geozero",
+ "wkt 0.12.0 (git+https://github.com/georust/wkt?rev=270ffe0eaf5ba5255c364dbade39c451562a9e9b)",
+]
+
+[[package]]
 name = "geoarrow-geoparquet"
 version = "0.1.0-dev"
 dependencies = [

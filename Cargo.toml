@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "rust/geoarrow-array",
+    "rust/geoarrow-flatgeobuf",
     "rust/geoarrow-geoparquet",
     "rust/geoarrow-geos",
     "rust/geoarrow-schema",
@@ -36,6 +37,7 @@ arrow-ord = "55"
 arrow-schema = "55"
 async-stream = "0.3"
 bytes = "1.10.0"
+flatgeobuf = { version = "4.6", default-features = false }
 futures = "0.3"
 geo = "0.30.0"
 geo-traits = "0.2.0"

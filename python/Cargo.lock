@@ -1168,14 +1168,27 @@ version = "0.1.0-dev"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
+ "arrow-json",
  "arrow-schema",
  "geo-traits",
  "geoarrow-schema",
+ "geozero",
  "num-traits",
  "serde_json",
  "thiserror 1.0.69",
  "wkb",
  "wkt 0.12.0 (git+https://github.com/georust/wkt?rev=270ffe0eaf5ba5255c364dbade39c451562a9e9b)",
+]
+
+[[package]]
+name = "geoarrow-flatgeobuf"
+version = "0.1.0-dev"
+dependencies = [
+ "arrow-schema",
+ "flatgeobuf",
+ "geoarrow-array",
+ "geoarrow-schema",
+ "geozero",
 ]
 
 [[package]]
@@ -1218,6 +1231,8 @@ dependencies = [
  "geo 0.30.0",
  "geo-traits",
  "geoarrow",
+ "geoarrow-array",
+ "geoarrow-flatgeobuf",
  "geoarrow-schema",
  "object_store",
  "parquet",

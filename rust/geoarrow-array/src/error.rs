@@ -55,6 +55,11 @@ pub enum GeoArrowError {
     /// [wkt::error::Error]
     #[error(transparent)]
     WktError(#[from] wkt::error::Error),
+
+    /// [geozero::error::GeozeroError]
+    #[cfg(feature = "geozero")]
+    #[error(transparent)]
+    GeozeroError(#[from] geozero::error::GeozeroError),
 }
 
 /// Crate-specific result type.
