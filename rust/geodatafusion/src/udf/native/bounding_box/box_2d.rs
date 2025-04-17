@@ -4,8 +4,8 @@ use std::sync::OnceLock;
 use arrow_schema::DataType;
 use datafusion::logical_expr::scalar_doc_sections::DOC_SECTION_OTHER;
 use datafusion::logical_expr::{ColumnarValue, Documentation, ScalarUDFImpl, Signature};
-use geoarrow::ArrayBase;
 use geoarrow::algorithm::native::BoundingRectArray;
+use geoarrow_array::GeoArrowArray;
 
 use crate::data_types::{BOX2D_TYPE, any_single_geometry_type_input, parse_to_native_array};
 use crate::error::GeoDataFusionResult;

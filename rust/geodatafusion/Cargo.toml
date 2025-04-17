@@ -1,4 +1,3 @@
-
 [package]
 name = "geodatafusion"
 version = "0.1.0-dev"
@@ -7,29 +6,28 @@ edition = { workspace = true }
 license = { workspace = true }
 repository = { workspace = true }
 description = "Rust implementation of GeoArrow"
-categories = ["science::geo"]
+categories = { workspace = true }
 rust-version = { workspace = true }
 
 
 [dependencies]
-datafusion = "45"
-arrow = { version = "54.1", features = ["ffi"] }
-arrow-array = { version = "54.1", features = ["chrono-tz"] }
-arrow-buffer = "54.1"
-arrow-cast = { version = "54.1" }
-arrow-csv = { version = "54.1", optional = true }
-arrow-data = "54.1"
-arrow-ipc = "54.1"
-arrow-schema = "54.1"
-async-stream = { version = "0.3", optional = true }
-async-trait = { version = "0.1", optional = true }
-geo = "0.30"
-geohash = "0.13.1"
-geo-traits = "0.2"
-geoarrow = { path = "../geoarrow", features = ["flatgeobuf"] }
-geoarrow-schema = { path = "../geoarrow-schema" }
-thiserror = "1"
+datafusion = { workspace = true }
+arrow-array = { workspace = true, features = ["chrono-tz"] }
+arrow-buffer = { workspace = true }
+arrow-cast = { workspace = true }
+arrow-csv = { workspace = true, optional = true }
+arrow-data = { workspace = true }
+arrow-ipc = { workspace = true }
+arrow-schema = { workspace = true }
+async-stream = { workspace = true, optional = true }
+async-trait = { workspace = true, optional = true }
+geo = { workspace = true }
+geohash = { workspace = true }
+geo-traits = { workspace = true }
+geoarrow-array = { workspace = true }
+geoarrow-schema = { workspace = true }
+thiserror = { workspace = true }
 
 [dev-dependencies]
-approx = "0.5.1"
-tokio = { version = "1.9", features = ["macros", "fs", "rt-multi-thread"] }
+approx = { workspace = true }
+tokio = { workspace = true, features = ["macros", "fs", "rt-multi-thread"] }
