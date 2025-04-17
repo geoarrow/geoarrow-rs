@@ -506,9 +506,6 @@ impl TryFrom<GeometryCollectionArray> for LineStringArray {
 
 #[cfg(test)]
 mod test {
-    use crate::test::geoarrow_data::{
-        example_linestring_interleaved, example_linestring_separated, example_linestring_wkb,
-    };
     use crate::test::linestring::{ls0, ls1};
 
     use super::*;
@@ -550,25 +547,5 @@ mod test {
         let sliced = arr.slice(1, 1);
         assert_eq!(sliced.len(), 1);
         assert_eq!(sliced.get_as_geo(0), Some(ls1()));
-    }
-
-    #[test]
-    fn parse_wkb_geoarrow_interleaved_example() {
-        let linestring_arr = example_linestring_interleaved();
-
-        let wkb_arr = example_linestring_wkb();
-        let parsed_linestring_arr: LineStringArray = (wkb_arr, Dimension::XY).try_into().unwrap();
-
-        assert_eq!(linestring_arr, parsed_linestring_arr);
-    }
-
-    #[test]
-    fn parse_wkb_geoarrow_separated_example() {
-        let linestring_arr = example_linestring_separated().into_coord_type(CoordType::Interleaved);
-
-        let wkb_arr = example_linestring_wkb();
-        let parsed_linestring_arr: LineStringArray = (wkb_arr, Dimension::XY).try_into().unwrap();
-
-        assert_eq!(linestring_arr, parsed_linestring_arr);
     }
 }

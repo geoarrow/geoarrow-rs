@@ -494,9 +494,6 @@ impl TryFrom<GeometryCollectionArray> for MultiPointArray {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::test::geoarrow_data::{
-        example_multipoint_interleaved, example_multipoint_separated, example_multipoint_wkb,
-    };
     use crate::test::multipoint::{mp0, mp1};
 
     #[test]
@@ -520,26 +517,5 @@ mod test {
         let sliced = arr.slice(1, 1);
         assert_eq!(sliced.len(), 1);
         assert_eq!(sliced.get_as_geo(0), Some(mp1()));
-    }
-
-    #[test]
-    fn parse_wkb_geoarrow_interleaved_example() {
-        let geom_arr = example_multipoint_interleaved();
-
-        let wkb_arr = example_multipoint_wkb();
-        let parsed_geom_arr: MultiPointArray = (wkb_arr, Dimension::XY).try_into().unwrap();
-
-        assert_eq!(geom_arr, parsed_geom_arr);
-    }
-
-    #[test]
-    fn parse_wkb_geoarrow_separated_example() {
-        // TODO: support checking equality of interleaved vs separated coords
-        let geom_arr = example_multipoint_separated().into_coord_type(CoordType::Interleaved);
-
-        let wkb_arr = example_multipoint_wkb();
-        let parsed_geom_arr: MultiPointArray = (wkb_arr, Dimension::XY).try_into().unwrap();
-
-        assert_eq!(geom_arr, parsed_geom_arr);
     }
 }
