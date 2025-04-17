@@ -7,3 +7,7 @@ pub(crate) fn fixture_dir() -> PathBuf {
     assert!(p.exists());
     p
 }
+
+pub(crate) fn geoarrow_data_example_files() -> PathBuf {
+    fixture_dir().join("geoarrow-data/example/files")
+}
