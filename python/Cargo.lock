@@ -1201,19 +1201,10 @@ dependencies = [
 name = "geoarrow-rust-core"
 version = "0.4.0-beta.4"
 dependencies = [
- "arrow-array",
- "arrow-buffer",
- "geo 0.30.0",
  "geoarrow-array",
  "geoarrow-schema",
- "geozero",
- "numpy",
  "pyo3",
- "pyo3-arrow",
  "pyo3-geoarrow 0.1.0-dev",
- "serde_json",
- "thiserror 1.0.69",
- "url",
 ]
 
 [[package]]

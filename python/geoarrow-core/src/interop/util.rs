@@ -1,8 +1,6 @@
-use geoarrow::error::GeoArrowError;
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
-use pyo3_arrow::PyTable;
 use pyo3_geoarrow::PyGeoArrowResult;
 
 /// Import geopandas and assert version 1.0.0 or higher
@@ -47,14 +45,4 @@ pub(crate) fn import_pyogrio(py: Python) -> PyGeoArrowResult<Bound<PyModule>> {
     } else {
         Ok(pyogrio_mod)
     }
-}
-
-pub(crate) fn table_to_pytable(table: geoarrow::table::Table) -> PyTable {
-    let (batches, schema) = table.into_inner();
-    PyTable::try_new(batches, schema).unwrap()
-}
-
-pub(crate) fn pytable_to_table(table: PyTable) -> Result<geoarrow::table::Table, GeoArrowError> {
-    let (batches, schema) = table.into_inner();
-    geoarrow::table::Table::try_new(batches, schema)
 }

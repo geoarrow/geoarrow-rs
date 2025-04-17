@@ -4,20 +4,24 @@ use geoarrow_array::array::{
     LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
     PolygonArray,
 };
-use geoarrow_schema::{Edges, Metadata};
+use geoarrow_schema::Metadata;
 use pyo3::prelude::*;
-use pyo3_geoarrow::{PyCoordBuffer, PyCrs, PyGeoArrowArray, PyGeoArrowResult, PyOffsetBuffer};
+use pyo3_geoarrow::{
+    PyCoordBuffer, PyCrs, PyEdges, PyGeoArrowArray, PyGeoArrowResult, PyOffsetBuffer,
+};
 
-fn create_array_metadata(crs: Option<PyCrs>, edges: Option<Edges>) -> Arc<Metadata> {
-    Arc::new(crs.map(|inner| inner.into_inner()).unwrap_or_default())
+fn create_array_metadata(crs: Option<PyCrs>, edges: Option<PyEdges>) -> Arc<Metadata> {
+    let edges = edges.map(|e| e.into());
+    Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges))
 }
 
+// TODO: convert these constructors to take in `type` as an argument?
 #[pyfunction]
 #[pyo3(signature = (coords, *, crs = None, edges = None))]
 pub fn points(
     coords: PyCoordBuffer,
     crs: Option<PyCrs>,
-    edges: Option<Edges>,
+    edges: Option<PyEdges>,
 ) -> PyGeoArrowResult<PyGeoArrowArray> {
     let metadata = create_array_metadata(crs, edges);
     let array = PointArray::new(coords.into_inner(), None, metadata);
@@ -30,7 +34,7 @@ pub fn linestrings(
     coords: PyCoordBuffer,
     geom_offsets: PyOffsetBuffer,
     crs: Option<PyCrs>,
-    edges: Option<Edges>,
+    edges: Option<PyEdges>,
 ) -> PyGeoArrowResult<PyGeoArrowArray> {
     let metadata = create_array_metadata(crs, edges);
     let array = LineStringArray::new(
@@ -49,7 +53,7 @@ pub fn polygons(
     geom_offsets: PyOffsetBuffer,
     ring_offsets: PyOffsetBuffer,
     crs: Option<PyCrs>,
-    edges: Option<Edges>,
+    edges: Option<PyEdges>,
 ) -> PyGeoArrowResult<PyGeoArrowArray> {
     let metadata = create_array_metadata(crs, edges);
     let array = PolygonArray::new(
@@ -68,7 +72,7 @@ pub fn multipoints(
     coords: PyCoordBuffer,
     geom_offsets: PyOffsetBuffer,
     crs: Option<PyCrs>,
-    edges: Option<Edges>,
+    edges: Option<PyEdges>,
 ) -> PyGeoArrowResult<PyGeoArrowArray> {
     let metadata = create_array_metadata(crs, edges);
     let array = MultiPointArray::new(
@@ -87,7 +91,7 @@ pub fn multilinestrings(
     geom_offsets: PyOffsetBuffer,
     ring_offsets: PyOffsetBuffer,
     crs: Option<PyCrs>,
-    edges: Option<Edges>,
+    edges: Option<PyEdges>,
 ) -> PyGeoArrowResult<PyGeoArrowArray> {
     let metadata = create_array_metadata(crs, edges);
     let array = MultiLineStringArray::new(
@@ -108,7 +112,7 @@ pub fn multipolygons(
     polygon_offsets: PyOffsetBuffer,
     ring_offsets: PyOffsetBuffer,
     crs: Option<PyCrs>,
-    edges: Option<Edges>,
+    edges: Option<PyEdges>,
 ) -> PyGeoArrowResult<PyGeoArrowArray> {
     let metadata = create_array_metadata(crs, edges);
     let array = MultiPolygonArray::new(

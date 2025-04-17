@@ -1,11 +1,13 @@
+#![cfg_attr(not(test), deny(unused_crate_dependencies))]
+
 use pyo3::exceptions::PyRuntimeWarning;
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::PyTuple;
 mod constructors;
-pub mod ffi;
-pub mod interop;
-pub mod table;
+// pub mod ffi;
+// pub mod interop;
+// pub mod table;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -65,35 +67,35 @@ fn _rust(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
 
     // Top-level table functions
 
-    m.add_function(wrap_pyfunction!(crate::table::geometry_col, m)?)?;
+    // m.add_function(wrap_pyfunction!(crate::table::geometry_col, m)?)?;
 
     // Interop
 
-    m.add_function(wrap_pyfunction!(
-        crate::interop::pyogrio::from_pyogrio::read_pyogrio,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(
-        crate::interop::geopandas::from_geopandas::from_geopandas,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(
-        crate::interop::geopandas::to_geopandas::to_geopandas,
-        m
-    )?)?;
+    // m.add_function(wrap_pyfunction!(
+    //     crate::interop::pyogrio::from_pyogrio::read_pyogrio,
+    //     m
+    // )?)?;
+    // m.add_function(wrap_pyfunction!(
+    //     crate::interop::geopandas::from_geopandas::from_geopandas,
+    //     m
+    // )?)?;
+    // m.add_function(wrap_pyfunction!(
+    //     crate::interop::geopandas::to_geopandas::to_geopandas,
+    //     m
+    // )?)?;
 
-    m.add_function(wrap_pyfunction!(
-        crate::interop::shapely::from_shapely::from_shapely,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(
-        crate::interop::shapely::to_shapely::to_shapely,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(crate::interop::wkb::from_wkb, m)?)?;
-    m.add_function(wrap_pyfunction!(crate::interop::wkb::to_wkb, m)?)?;
-    m.add_function(wrap_pyfunction!(crate::interop::wkt::from_wkt, m)?)?;
-    m.add_function(wrap_pyfunction!(crate::interop::wkt::to_wkt, m)?)?;
+    // m.add_function(wrap_pyfunction!(
+    //     crate::interop::shapely::from_shapely::from_shapely,
+    //     m
+    // )?)?;
+    // m.add_function(wrap_pyfunction!(
+    //     crate::interop::shapely::to_shapely::to_shapely,
+    //     m
+    // )?)?;
+    // m.add_function(wrap_pyfunction!(crate::interop::wkb::from_wkb, m)?)?;
+    // m.add_function(wrap_pyfunction!(crate::interop::wkb::to_wkb, m)?)?;
+    // m.add_function(wrap_pyfunction!(crate::interop::wkt::from_wkt, m)?)?;
+    // m.add_function(wrap_pyfunction!(crate::interop::wkt::to_wkt, m)?)?;
 
     // Exceptions
     // create_exception!(m, GeoArrowException, pyo3::exceptions::PyException);
