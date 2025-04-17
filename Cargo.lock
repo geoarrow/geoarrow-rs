@@ -1359,6 +1359,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "geoarrow-flatgeobuf"
+version = "0.1.0-dev"
+dependencies = [
+ "arrow-schema",
+ "flatgeobuf",
+ "geoarrow-array",
+ "geoarrow-schema",
+ "geozero",
+]
+
+[[package]]
 name = "geoarrow-geoparquet"
 version = "0.1.0-dev"
 dependencies = [
