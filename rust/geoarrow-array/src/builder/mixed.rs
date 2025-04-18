@@ -61,7 +61,7 @@ pub(crate) struct MixedGeometryBuilder {
     pub(crate) prefer_multi: bool,
 }
 
-impl<'a> MixedGeometryBuilder {
+impl MixedGeometryBuilder {
     pub(crate) fn with_capacity_and_options(
         dim: Dimension,
         capacity: MixedCapacity,
@@ -169,43 +169,6 @@ impl<'a> MixedGeometryBuilder {
             Some(self.multi_polygons.finish()),
             self.metadata,
         )
-    }
-
-    pub(crate) fn with_capacity_and_options_from_iter(
-        geoms: impl Iterator<Item = &'a (impl GeometryTrait + 'a)>,
-        dim: Dimension,
-        coord_type: CoordType,
-        metadata: Arc<Metadata>,
-        prefer_multi: bool,
-    ) -> Result<Self> {
-        let counter = MixedCapacity::from_geometries(geoms)?;
-        Ok(Self::with_capacity_and_options(
-            dim,
-            counter,
-            coord_type,
-            metadata,
-            prefer_multi,
-        ))
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn reserve_from_iter(
-        &mut self,
-        geoms: impl Iterator<Item = &'a (impl GeometryTrait + 'a)>,
-    ) -> Result<()> {
-        let counter = MixedCapacity::from_geometries(geoms)?;
-        self.reserve(counter);
-        Ok(())
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn reserve_exact_from_iter(
-        &mut self,
-        geoms: impl Iterator<Item = &'a (impl GeometryTrait + 'a)>,
-    ) -> Result<()> {
-        let counter = MixedCapacity::from_geometries(geoms)?;
-        self.reserve_exact(counter);
-        Ok(())
     }
 
     /// Add a new Point to the end of this array.
@@ -372,7 +335,7 @@ impl<'a> MixedGeometryBuilder {
     }
 
     #[inline]
-    pub(crate) fn push_geometry(&mut self, geom: &'a impl GeometryTrait<T = f64>) -> Result<()> {
+    pub(crate) fn push_geometry(&mut self, geom: &'_ impl GeometryTrait<T = f64>) -> Result<()> {
         use geo_traits::GeometryType::*;
 
         match geom.as_type() {
@@ -400,50 +363,5 @@ impl<'a> MixedGeometryBuilder {
             Rect(_) | Triangle(_) | Line(_) => todo!(),
         };
         Ok(())
-    }
-
-    #[inline]
-    pub(crate) fn push_null(&mut self) {
-        todo!("push null geometry")
-    }
-
-    /// Extend this builder with the given geometries
-    pub(crate) fn extend_from_iter(
-        &mut self,
-        geoms: impl Iterator<Item = &'a (impl GeometryTrait<T = f64> + 'a)>,
-    ) {
-        geoms
-            .into_iter()
-            .try_for_each(|maybe_geom| self.push_geometry(maybe_geom))
-            .unwrap();
-    }
-
-    /// Create this builder from a slice of nullable Geometries.
-    pub(crate) fn from_nullable_geometries(
-        geoms: &[impl GeometryTrait<T = f64>],
-        dim: Dimension,
-        coord_type: CoordType,
-        metadata: Arc<Metadata>,
-        prefer_multi: bool,
-    ) -> Result<Self> {
-        let mut array = Self::with_capacity_and_options_from_iter(
-            geoms.iter(),
-            dim,
-            coord_type,
-            metadata,
-            prefer_multi,
-        )?;
-        array.extend_from_iter(geoms.iter());
-        Ok(array)
-    }
-}
-
-impl GeometryArrayBuilder for MixedGeometryBuilder {
-    fn len(&self) -> usize {
-        self.types.len()
-    }
-
-    fn push_null(&mut self) {
-        self.push_null();
     }
 }
