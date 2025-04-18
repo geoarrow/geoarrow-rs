@@ -968,4 +968,25 @@ mod test {
             2
         );
     }
+
+    // Test pushing nulls that are added after a valid geometry has been pushed.
+    #[test]
+    fn nulls_no_deferred() {
+        let coord_type = CoordType::Interleaved;
+        let typ = GeometryType::new(coord_type, Default::default());
+
+        let mut builder = GeometryBuilder::new(typ, false);
+        let point = wkt! { POINT Z (30. 10. 40.) };
+        builder.push_point(Some(&point)).unwrap();
+        builder.push_null();
+        builder.push_null();
+
+        let geom_arr = builder.finish();
+        assert_eq!(geom_arr.logical_null_count(), 2);
+        // All nulls should be in point XYZ child.
+        assert_eq!(
+            geom_arr.points[Dimension::XYZ.order()].logical_null_count(),
+            2
+        );
+    }
 }
