@@ -656,45 +656,51 @@ impl<'a> GeometryBuilder {
     // added any valid geometries.
     #[inline]
     pub fn push_null(&mut self) {
-        for arr in &mut self.points {
-            if !arr.is_empty() {
-                arr.push_null();
+        // Iterate through each dimension, then iterate through each child type. If a child exists,
+        // push a null to it.
+        //
+        // Note that we must **also** call `add_*_type` so that the offsets are correct to point
+        // the union array to the child.
+        for dim in [
+            Dimension::XY,
+            Dimension::XYZ,
+            Dimension::XYM,
+            Dimension::XYZM,
+        ] {
+            let dim_idx = dim.order();
+            if !self.points[dim_idx].is_empty() {
+                self.add_point_type(dim);
+                self.points[dim_idx].push_null();
                 return;
             }
-        }
-        for arr in &mut self.line_strings {
-            if !arr.is_empty() {
-                arr.push_null();
+            if !self.line_strings[dim_idx].is_empty() {
+                self.add_line_string_type(dim);
+                self.line_strings[dim_idx].push_null();
                 return;
             }
-        }
-        for arr in &mut self.polygons {
-            if !arr.is_empty() {
-                arr.push_null();
+            if !self.polygons[dim_idx].is_empty() {
+                self.add_polygon_type(dim);
+                self.polygons[dim_idx].push_null();
                 return;
             }
-        }
-        for arr in &mut self.mpoints {
-            if !arr.is_empty() {
-                arr.push_null();
+            if !self.mpoints[dim_idx].is_empty() {
+                self.add_multi_point_type(dim);
+                self.mpoints[dim_idx].push_null();
                 return;
             }
-        }
-        for arr in &mut self.mline_strings {
-            if !arr.is_empty() {
-                arr.push_null();
+            if !self.mline_strings[dim_idx].is_empty() {
+                self.add_multi_line_string_type(dim);
+                self.mline_strings[dim_idx].push_null();
                 return;
             }
-        }
-        for arr in &mut self.mpolygons {
-            if !arr.is_empty() {
-                arr.push_null();
+            if !self.mpolygons[dim_idx].is_empty() {
+                self.add_multi_polygon_type(dim);
+                self.mpolygons[dim_idx].push_null();
                 return;
             }
-        }
-        for arr in &mut self.gcs {
-            if !arr.is_empty() {
-                arr.push_null();
+            if !self.gcs[dim_idx].is_empty() {
+                self.add_geometry_collection_type(dim);
+                self.gcs[dim_idx].push_null();
                 return;
             }
         }
