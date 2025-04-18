@@ -262,6 +262,7 @@ impl PartialEq for GeometryCollectionArray {
 #[cfg(test)]
 mod test {
     use geoarrow_schema::{CoordType, Dimension};
+    use geoarrow_test::raw;
 
     use crate::test::geometrycollection;
 
@@ -294,5 +295,41 @@ mod test {
                 }
             }
         }
+    }
+
+    #[test]
+    fn test_nullability() {
+        let geoms = raw::geometrycollection::xy::geoms();
+        let null_idxs = geoms
+            .iter()
+            .enumerate()
+            .filter_map(|(i, geom)| if geom.is_none() { Some(i) } else { None })
+            .collect::<Vec<_>>();
+
+        let typ =
+            GeometryCollectionType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let geo_arr =
+            GeometryCollectionBuilder::from_nullable_geometry_collections(&geoms, typ, false)
+                .unwrap()
+                .finish();
+
+        for null_idx in &null_idxs {
+            assert!(geo_arr.is_null(*null_idx));
+        }
+    }
+
+    #[test]
+    fn test_logical_nulls() {
+        let geoms = raw::geometrycollection::xy::geoms();
+        let expected_nulls = NullBuffer::from_iter(geoms.iter().map(|g| g.is_some()));
+
+        let typ =
+            GeometryCollectionType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let geo_arr =
+            GeometryCollectionBuilder::from_nullable_geometry_collections(&geoms, typ, false)
+                .unwrap()
+                .finish();
+
+        assert_eq!(geo_arr.logical_nulls().unwrap(), expected_nulls);
     }
 }

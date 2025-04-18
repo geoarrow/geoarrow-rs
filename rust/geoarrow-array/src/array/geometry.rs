@@ -474,22 +474,6 @@ impl GeoArrowArray for GeometryArray {
         }
     }
 
-    fn is_null(&self, i: usize) -> bool {
-        let type_id = self.type_ids[i];
-        let offset = self.offsets[i] as usize;
-        let dim = (type_id / 10) as usize;
-        match type_id % 10 {
-            1 => self.points[dim].is_null(offset),
-            2 => self.line_strings[dim].is_null(offset),
-            3 => self.polygons[dim].is_null(offset),
-            4 => self.mpoints[dim].is_null(offset),
-            5 => self.mline_strings[dim].is_null(offset),
-            6 => self.mpolygons[dim].is_null(offset),
-            7 => self.gcs[dim].is_null(offset),
-            _ => panic!("unknown type_id {}", type_id),
-        }
-    }
-
     fn data_type(&self) -> GeoArrowType {
         GeoArrowType::Geometry(self.data_type.clone())
     }
@@ -991,12 +975,23 @@ mod test {
         let geo_arr = GeometryBuilder::from_nullable_geometries(&geoms, typ, false)
             .unwrap()
             .finish();
-        // let arrow_arr = geo_arr.to_array_ref();
 
         for null_idx in &null_idxs {
             assert!(geo_arr.is_null(*null_idx));
-            // assert!(arrow_arr.is_null(*null_idx));
         }
+    }
+
+    #[test]
+    fn test_logical_nulls() {
+        let geoms = raw::geometry::geoms();
+        let expected_nulls = NullBuffer::from_iter(geoms.iter().map(|g| g.is_some()));
+
+        let typ = GeometryType::new(CoordType::Interleaved, Default::default());
+        let geo_arr = GeometryBuilder::from_nullable_geometries(&geoms, typ, false)
+            .unwrap()
+            .finish();
+
+        assert_eq!(geo_arr.logical_nulls().unwrap(), expected_nulls);
     }
 
     #[test]
