@@ -8,8 +8,11 @@ use arrow_array::cast::AsArray;
 use geoarrow_schema::WkbType;
 
 use crate::array::*;
-use crate::builder::WkbBuilder;
-use crate::error::Result;
+use crate::builder::{
+    GeometryBuilder, GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder,
+    MultiPointBuilder, MultiPolygonBuilder, PointBuilder, PolygonBuilder, WkbBuilder,
+};
+use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeoArrowArray;
 use crate::{ArrayAccessor, GeoArrowType};
 
@@ -274,7 +277,9 @@ pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<WkbArray<O>
         GeometryCollection(_) => impl_to_wkb(arr.as_geometry_collection()),
         Rect(_) => impl_to_wkb(arr.as_rect()),
         Wkb(typ) => {
+            // Note that here O is the _target_ offset type
             if O::IS_LARGE {
+                // We need to convert from i32 to i64
                 let large_arr: WkbArray<i64> = arr.as_wkb::<i32>().clone().into();
                 let array = large_arr.to_array_ref().as_binary::<O>().clone();
                 Ok(WkbArray::new(array, typ.metadata().clone()))
@@ -294,6 +299,7 @@ pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<WkbArray<O>
                 let array = array.as_binary::<O>().clone();
                 Ok(WkbArray::new(array, typ.metadata().clone()))
             } else {
+                // We need to convert from i64 to i32
                 let small_arr: WkbArray<i32> = arr.as_wkb::<i64>().clone().try_into()?;
                 let array = small_arr.to_array_ref().as_binary::<O>().clone();
                 Ok(WkbArray::new(array, typ.metadata().clone()))
@@ -311,6 +317,86 @@ fn impl_to_wkb<'a, O: OffsetSizeTrait>(geo_arr: &'a impl ArrayAccessor<'a>) -> R
         .collect::<Result<Vec<_>>>()?;
     let wkb_type = WkbType::new(geo_arr.data_type().metadata().clone());
     Ok(WkbBuilder::from_nullable_geometries(geoms.as_slice(), wkb_type).finish())
+}
+
+/// Parse a [WkbArray] to a [GeoArrowArray] with the designated [GeoArrowType].
+///
+/// Note that the GeoArrow metadata on the new array is taken from `to_type` **not** the original
+/// array. Ensure you construct the [GeoArrowType] with the correct metadata.
+pub fn from_wkb<O: OffsetSizeTrait>(
+    arr: &WkbArray<O>,
+    to_type: GeoArrowType,
+    prefer_multi: bool,
+) -> Result<Arc<dyn GeoArrowArray>> {
+    let geoms = arr
+        .iter()
+        .map(|g| g.transpose())
+        .collect::<Result<Vec<_>>>()?;
+
+    use GeoArrowType::*;
+    let result: Arc<dyn GeoArrowArray> = match to_type {
+        Point(typ) => Arc::new(PointBuilder::from_nullable_geometries(&geoms, typ)?.finish()),
+        LineString(typ) => {
+            Arc::new(LineStringBuilder::from_nullable_geometries(&geoms, typ)?.finish())
+        }
+        Polygon(typ) => Arc::new(PolygonBuilder::from_nullable_geometries(&geoms, typ)?.finish()),
+        MultiPoint(typ) => {
+            Arc::new(MultiPointBuilder::from_nullable_geometries(&geoms, typ)?.finish())
+        }
+        MultiLineString(typ) => {
+            Arc::new(MultiLineStringBuilder::from_nullable_geometries(&geoms, typ)?.finish())
+        }
+        MultiPolygon(typ) => {
+            Arc::new(MultiPolygonBuilder::from_nullable_geometries(&geoms, typ)?.finish())
+        }
+        GeometryCollection(typ) => Arc::new(
+            GeometryCollectionBuilder::from_nullable_geometries(&geoms, typ, prefer_multi)?
+                .finish(),
+        ),
+        Rect(_) => {
+            return Err(GeoArrowError::General(format!(
+                "Invalid data type in from_wkb {:?}",
+                to_type,
+            )));
+        }
+        Geometry(typ) => {
+            Arc::new(GeometryBuilder::from_nullable_geometries(&geoms, typ, prefer_multi)?.finish())
+        }
+        Wkb(typ) => {
+            // Note that here O is the _source_ offset type
+            if O::IS_LARGE {
+                // We need to convert from i64 to i32
+                let wkb_arr = WkbArray::<i64>::try_from((arr.to_array_ref().as_ref(), typ))?;
+                let small_arr: WkbArray<i32> = wkb_arr.try_into()?;
+                Arc::new(small_arr)
+            } else {
+                // No conversion needed
+                Arc::new(arr.clone())
+            }
+        }
+        LargeWkb(typ) => {
+            if O::IS_LARGE {
+                // No conversion needed
+                Arc::new(arr.clone())
+            } else {
+                // We need to convert from i32 to i64
+                let wkb_arr = WkbArray::<i32>::try_from((arr.to_array_ref().as_ref(), typ))?;
+                let large_arr: WkbArray<i64> = wkb_arr.into();
+                Arc::new(large_arr)
+            }
+        }
+        Wkt(typ) => {
+            let mut wkt_arr = to_wkt::<i32>(arr)?;
+            wkt_arr.data_type = typ;
+            Arc::new(wkt_arr)
+        }
+        LargeWkt(typ) => {
+            let mut wkt_arr = to_wkt::<i64>(arr)?;
+            wkt_arr.data_type = typ;
+            Arc::new(wkt_arr)
+        }
+    };
+    Ok(result)
 }
 
 /// Convert a [GeoArrowArray] to a [WktArray].
@@ -371,6 +457,86 @@ fn impl_to_wkt<'a, O: OffsetSizeTrait>(geo_arr: &'a impl ArrayAccessor<'a>) -> R
     }
 
     Ok(WktArray::new(builder.finish(), metadata))
+}
+
+/// Parse a [WkbArray] to a [GeoArrowArray] with the designated [GeoArrowType].
+///
+/// Note that the GeoArrow metadata on the new array is taken from `to_type` **not** the original
+/// array. Ensure you construct the [GeoArrowType] with the correct metadata.
+pub fn from_wkt<O: OffsetSizeTrait>(
+    arr: &WktArray<O>,
+    to_type: GeoArrowType,
+    prefer_multi: bool,
+) -> Result<Arc<dyn GeoArrowArray>> {
+    let geoms = arr
+        .iter()
+        .map(|g| g.transpose())
+        .collect::<Result<Vec<_>>>()?;
+
+    use GeoArrowType::*;
+    let result: Arc<dyn GeoArrowArray> = match to_type {
+        Point(typ) => Arc::new(PointBuilder::from_nullable_geometries(&geoms, typ)?.finish()),
+        LineString(typ) => {
+            Arc::new(LineStringBuilder::from_nullable_geometries(&geoms, typ)?.finish())
+        }
+        Polygon(typ) => Arc::new(PolygonBuilder::from_nullable_geometries(&geoms, typ)?.finish()),
+        MultiPoint(typ) => {
+            Arc::new(MultiPointBuilder::from_nullable_geometries(&geoms, typ)?.finish())
+        }
+        MultiLineString(typ) => {
+            Arc::new(MultiLineStringBuilder::from_nullable_geometries(&geoms, typ)?.finish())
+        }
+        MultiPolygon(typ) => {
+            Arc::new(MultiPolygonBuilder::from_nullable_geometries(&geoms, typ)?.finish())
+        }
+        GeometryCollection(typ) => Arc::new(
+            GeometryCollectionBuilder::from_nullable_geometries(&geoms, typ, prefer_multi)?
+                .finish(),
+        ),
+        Rect(_) => {
+            return Err(GeoArrowError::General(format!(
+                "Invalid data type in from_wkt {:?}",
+                to_type,
+            )));
+        }
+        Geometry(typ) => {
+            Arc::new(GeometryBuilder::from_nullable_geometries(&geoms, typ, prefer_multi)?.finish())
+        }
+        Wkb(typ) => {
+            let mut wkt_arr = to_wkb::<i32>(arr)?;
+            wkt_arr.data_type = typ;
+            Arc::new(wkt_arr)
+        }
+        LargeWkb(typ) => {
+            let mut wkt_arr = to_wkb::<i64>(arr)?;
+            wkt_arr.data_type = typ;
+            Arc::new(wkt_arr)
+        }
+        Wkt(typ) => {
+            // Note that here O is the _source_ offset type
+            if O::IS_LARGE {
+                // We need to convert from i64 to i32
+                let wkb_arr = WktArray::<i64>::try_from((arr.to_array_ref().as_ref(), typ))?;
+                let small_arr: WktArray<i32> = wkb_arr.try_into()?;
+                Arc::new(small_arr)
+            } else {
+                // No conversion needed
+                Arc::new(arr.clone())
+            }
+        }
+        LargeWkt(typ) => {
+            if O::IS_LARGE {
+                // No conversion needed
+                Arc::new(arr.clone())
+            } else {
+                // We need to convert from i32 to i64
+                let wkb_arr = WktArray::<i32>::try_from((arr.to_array_ref().as_ref(), typ))?;
+                let large_arr: WktArray<i64> = wkb_arr.into();
+                Arc::new(large_arr)
+            }
+        }
+    };
+    Ok(result)
 }
 
 /// Re-export symbols needed for downcast macros
@@ -531,9 +697,355 @@ mod test {
         let wkt_arr5: WktArray<i32> = to_wkt(&wkt_arr4).unwrap();
         assert_eq!(wkt_arr, wkt_arr5);
     }
+
+    // Start WKB round trip tests
+    #[test]
+    fn test_round_trip_wkb_point() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let arr = test::point::array(coord_type, dim);
+
+                let wkb_arr = to_wkb::<i32>(&arr).unwrap();
+                let arr2 = from_wkb(&wkb_arr, arr.data_type().clone(), false).unwrap();
+                assert_eq!(&arr, arr2.as_point());
+
+                let wkb_arr2 = to_wkb::<i64>(&arr).unwrap();
+                let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone(), false).unwrap();
+                assert_eq!(&arr, arr3.as_point());
+            }
+        }
+    }
+
+    #[test]
+    fn test_round_trip_wkb_linestring() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let arr = test::linestring::array(coord_type, dim);
+
+                let wkb_arr = to_wkb::<i32>(&arr).unwrap();
+                let arr2 = from_wkb(&wkb_arr, arr.data_type().clone(), false).unwrap();
+                assert_eq!(&arr, arr2.as_line_string());
+
+                let wkb_arr2 = to_wkb::<i64>(&arr).unwrap();
+                let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone(), false).unwrap();
+                assert_eq!(&arr, arr3.as_line_string());
+            }
+        }
+    }
+
+    #[test]
+    fn test_round_trip_wkb_polygon() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let arr = test::polygon::array(coord_type, dim);
+
+                let wkb_arr = to_wkb::<i32>(&arr).unwrap();
+                let arr2 = from_wkb(&wkb_arr, arr.data_type().clone(), false).unwrap();
+                assert_eq!(&arr, arr2.as_polygon());
+
+                let wkb_arr2 = to_wkb::<i64>(&arr).unwrap();
+                let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone(), false).unwrap();
+                assert_eq!(&arr, arr3.as_polygon());
+            }
+        }
+    }
+
+    #[test]
+    fn test_round_trip_wkb_multipoint() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let arr = test::multipoint::array(coord_type, dim);
+
+                let wkb_arr = to_wkb::<i32>(&arr).unwrap();
+                let arr2 = from_wkb(&wkb_arr, arr.data_type().clone(), false).unwrap();
+                assert_eq!(&arr, arr2.as_multi_point());
+
+                let wkb_arr2 = to_wkb::<i64>(&arr).unwrap();
+                let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone(), false).unwrap();
+                assert_eq!(&arr, arr3.as_multi_point());
+            }
+        }
+    }
+
+    #[test]
+    fn test_round_trip_wkb_multilinestring() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let arr = test::multilinestring::array(coord_type, dim);
+
+                let wkb_arr = to_wkb::<i32>(&arr).unwrap();
+                let arr2 = from_wkb(&wkb_arr, arr.data_type().clone(), false).unwrap();
+                assert_eq!(&arr, arr2.as_multi_line_string());
+
+                let wkb_arr2 = to_wkb::<i64>(&arr).unwrap();
+                let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone(), false).unwrap();
+                assert_eq!(&arr, arr3.as_multi_line_string());
+            }
+        }
+    }
+
+    #[test]
+    fn test_round_trip_wkb_multipolygon() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let arr = test::multipolygon::array(coord_type, dim);
+
+                let wkb_arr = to_wkb::<i32>(&arr).unwrap();
+                let arr2 = from_wkb(&wkb_arr, arr.data_type().clone(), false).unwrap();
+                assert_eq!(&arr, arr2.as_multi_polygon());
+
+                let wkb_arr2 = to_wkb::<i64>(&arr).unwrap();
+                let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone(), false).unwrap();
+                assert_eq!(&arr, arr3.as_multi_polygon());
+            }
+        }
+    }
+
+    #[test]
+    fn test_round_trip_wkb_geometrycollection() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                for prefer_multi in [false, true] {
+                    let arr = test::geometrycollection::array(coord_type, dim, prefer_multi);
+
+                    let wkb_arr = to_wkb::<i32>(&arr).unwrap();
+                    let arr2 = from_wkb(&wkb_arr, arr.data_type().clone(), prefer_multi).unwrap();
+                    assert_eq!(&arr, arr2.as_geometry_collection());
+
+                    let wkb_arr2 = to_wkb::<i64>(&arr).unwrap();
+                    let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone(), prefer_multi).unwrap();
+                    assert_eq!(&arr, arr3.as_geometry_collection());
+                }
+            }
+        }
+    }
+
+    #[ignore = "nullability issues with geometry array?"]
+    #[test]
+    fn test_round_trip_wkb_geometry() {
+        // let arr = test::geometry::array(CoordType::Interleaved, true);
+        // for i in 0..arr.len() {
+        //     dbg!(arr.is_null(i));
+        // }
+        // // arr.is_null(i)
+        // dbg!(&arr.mpoints[0].validity);
+        // for coord_type in [
+        //     CoordType::Interleaved,
+        //     // CoordType::Separated
+        // ] {
+        //     for prefer_multi in [
+        //         false,
+        //         //  true
+        //     ] {
+        //         let arr = test::geometry::array(coord_type, prefer_multi);
+        //         dbg!(&arr.mpoints[0].validity);
+
+        //         // let wkb_arr = to_wkb::<i32>(&arr).unwrap();
+        //         // let arr2 = from_wkb(&wkb_arr, arr.data_type().clone(), prefer_multi).unwrap();
+        //         // assert_eq!(&arr, arr2.as_geometry());
+
+        //         // let wkb_arr2 = to_wkb::<i64>(&arr).unwrap();
+        //         // let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone(), prefer_multi).unwrap();
+        //         // assert_eq!(&arr, arr3.as_geometry());
+        //     }
+        // }
+    }
+
+    // Start WKT round trip tests
+    #[test]
+    fn test_round_trip_wkt_point() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let arr = test::point::array(coord_type, dim);
+
+                let wkt_arr = to_wkt::<i32>(&arr).unwrap();
+                let arr2 = from_wkt(&wkt_arr, arr.data_type().clone(), false).unwrap();
+                assert_eq!(&arr, arr2.as_point());
+
+                let wkt_arr2 = to_wkt::<i64>(&arr).unwrap();
+                let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone(), false).unwrap();
+                assert_eq!(&arr, arr3.as_point());
+            }
+        }
+    }
+
+    #[test]
+    fn test_round_trip_wkt_linestring() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let arr = test::linestring::array(coord_type, dim);
+
+                let wkt_arr = to_wkt::<i32>(&arr).unwrap();
+                let arr2 = from_wkt(&wkt_arr, arr.data_type().clone(), false).unwrap();
+                assert_eq!(&arr, arr2.as_line_string());
+
+                let wkt_arr2 = to_wkt::<i64>(&arr).unwrap();
+                let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone(), false).unwrap();
+                assert_eq!(&arr, arr3.as_line_string());
+            }
+        }
+    }
+
+    #[test]
+    fn test_round_trip_wkt_polygon() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let arr = test::polygon::array(coord_type, dim);
+
+                let wkt_arr = to_wkt::<i32>(&arr).unwrap();
+                let arr2 = from_wkt(&wkt_arr, arr.data_type().clone(), false).unwrap();
+                assert_eq!(&arr, arr2.as_polygon());
+
+                let wkt_arr2 = to_wkt::<i64>(&arr).unwrap();
+                let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone(), false).unwrap();
+                assert_eq!(&arr, arr3.as_polygon());
+            }
+        }
+    }
+
+    #[test]
+    fn test_round_trip_wkt_multipoint() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let arr = test::multipoint::array(coord_type, dim);
+
+                let wkt_arr = to_wkt::<i32>(&arr).unwrap();
+                let arr2 = from_wkt(&wkt_arr, arr.data_type().clone(), false).unwrap();
+                assert_eq!(&arr, arr2.as_multi_point());
+
+                let wkt_arr2 = to_wkt::<i64>(&arr).unwrap();
+                let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone(), false).unwrap();
+                assert_eq!(&arr, arr3.as_multi_point());
+            }
+        }
+    }
+
+    #[test]
+    fn test_round_trip_wkt_multilinestring() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let arr = test::multilinestring::array(coord_type, dim);
+
+                let wkt_arr = to_wkt::<i32>(&arr).unwrap();
+                let arr2 = from_wkt(&wkt_arr, arr.data_type().clone(), false).unwrap();
+                assert_eq!(&arr, arr2.as_multi_line_string());
+
+                let wkt_arr2 = to_wkt::<i64>(&arr).unwrap();
+                let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone(), false).unwrap();
+                assert_eq!(&arr, arr3.as_multi_line_string());
+            }
+        }
+    }
+
+    #[test]
+    fn test_round_trip_wkt_multipolygon() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let arr = test::multipolygon::array(coord_type, dim);
+
+                let wkt_arr = to_wkt::<i32>(&arr).unwrap();
+                let arr2 = from_wkt(&wkt_arr, arr.data_type().clone(), false).unwrap();
+                assert_eq!(&arr, arr2.as_multi_polygon());
+
+                let wkt_arr2 = to_wkt::<i64>(&arr).unwrap();
+                let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone(), false).unwrap();
+                assert_eq!(&arr, arr3.as_multi_polygon());
+            }
+        }
+    }
+
+    #[test]
+    fn test_round_trip_wkt_geometrycollection() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                for prefer_multi in [false, true] {
+                    let arr = test::geometrycollection::array(coord_type, dim, prefer_multi);
+
+                    let wkt_arr = to_wkt::<i32>(&arr).unwrap();
+                    let arr2 = from_wkt(&wkt_arr, arr.data_type().clone(), prefer_multi).unwrap();
+                    assert_eq!(&arr, arr2.as_geometry_collection());
+
+                    let wkt_arr2 = to_wkt::<i64>(&arr).unwrap();
+                    let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone(), prefer_multi).unwrap();
+                    assert_eq!(&arr, arr3.as_geometry_collection());
+                }
+            }
+        }
+    }
+
     // Verify that this compiles with the macro
     #[allow(dead_code)]
-    fn _to_wkb(arr: &dyn GeoArrowArray) -> Result<WkbArray<i32>> {
+    fn _to_wkb_test_downcast_macro(arr: &dyn GeoArrowArray) -> Result<WkbArray<i32>> {
         downcast_geoarrow_array!(arr, impl_to_wkb)
     }
 
