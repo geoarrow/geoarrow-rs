@@ -30,7 +30,7 @@ pub struct LineStringArray {
     pub(crate) geom_offsets: OffsetBuffer<i32>,
 
     /// Validity bitmap
-    pub(crate) validity: Option<NullBuffer>,
+    pub(crate) nulls: Option<NullBuffer>,
 }
 
 pub(super) fn check(
@@ -40,7 +40,7 @@ pub(super) fn check(
 ) -> Result<()> {
     if validity_len.is_some_and(|len| len != geom_offsets.len_proxy()) {
         return Err(GeoArrowError::General(
-            "validity mask length must match the number of values".to_string(),
+            "nulls mask length must match the number of values".to_string(),
         ));
     }
 
@@ -62,15 +62,15 @@ impl LineStringArray {
     ///
     /// # Panics
     ///
-    /// - if the validity is not `None` and its length is different from the number of geometries
+    /// - if the nulls is not `None` and its length is different from the number of geometries
     /// - if the largest geometry offset does not match the number of coordinates
     pub fn new(
         coords: CoordBuffer,
         geom_offsets: OffsetBuffer<i32>,
-        validity: Option<NullBuffer>,
+        nulls: Option<NullBuffer>,
         metadata: Arc<Metadata>,
     ) -> Self {
-        Self::try_new(coords, geom_offsets, validity, metadata).unwrap()
+        Self::try_new(coords, geom_offsets, nulls, metadata).unwrap()
     }
 
     /// Create a new LineStringArray from parts
@@ -81,20 +81,20 @@ impl LineStringArray {
     ///
     /// # Errors
     ///
-    /// - if the validity buffer does not have the same length as the number of geometries
+    /// - if the nulls buffer does not have the same length as the number of geometries
     /// - if the geometry offsets do not match the number of coordinates
     pub fn try_new(
         coords: CoordBuffer,
         geom_offsets: OffsetBuffer<i32>,
-        validity: Option<NullBuffer>,
+        nulls: Option<NullBuffer>,
         metadata: Arc<Metadata>,
     ) -> Result<Self> {
-        check(&coords, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
+        check(&coords, nulls.as_ref().map(|v| v.len()), &geom_offsets)?;
         Ok(Self {
             data_type: LineStringType::new(coords.coord_type(), coords.dim(), metadata),
             coords,
             geom_offsets,
-            validity,
+            nulls,
         })
     }
 
@@ -105,7 +105,7 @@ impl LineStringArray {
 
     #[allow(dead_code)]
     pub(crate) fn into_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, Option<NullBuffer>) {
-        (self.coords, self.geom_offsets, self.validity)
+        (self.coords, self.geom_offsets, self.nulls)
     }
 
     /// Access the underlying geometry offsets buffer
@@ -120,7 +120,7 @@ impl LineStringArray {
 
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
-        let validity_len = self.nulls().map(|v| v.buffer().len()).unwrap_or(0);
+        let validity_len = self.nulls.as_ref().map(|v| v.buffer().len()).unwrap_or(0);
         validity_len + self.buffer_lengths().num_bytes()
     }
 
@@ -145,7 +145,7 @@ impl LineStringArray {
             data_type: self.data_type.clone(),
             coords: self.coords.clone(),
             geom_offsets: self.geom_offsets.slice(offset, length),
-            validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
+            nulls: self.nulls.as_ref().map(|v| v.slice(offset, length)),
         }
     }
 
@@ -155,7 +155,7 @@ impl LineStringArray {
         Self::new(
             self.coords.into_coord_type(coord_type),
             self.geom_offsets,
-            self.validity,
+            self.nulls,
             metadata,
         )
     }
@@ -222,9 +222,9 @@ impl IntoArrow for LineStringArray {
             DataType::List(inner_field) => inner_field,
             _ => unreachable!(),
         };
-        let validity = self.validity;
+        let nulls = self.nulls;
         let coord_array = self.coords.into_array_ref();
-        GenericListArray::new(vertices_field, self.geom_offsets, coord_array, validity)
+        GenericListArray::new(vertices_field, self.geom_offsets, coord_array, nulls)
     }
 
     fn ext_type(&self) -> &Self::ExtensionType {
@@ -238,12 +238,12 @@ impl TryFrom<(&GenericListArray<i32>, LineStringType)> for LineStringArray {
     fn try_from((value, typ): (&GenericListArray<i32>, LineStringType)) -> Result<Self> {
         let coords = CoordBuffer::from_arrow(value.values().as_ref(), typ.dimension())?;
         let geom_offsets = value.offsets();
-        let validity = value.nulls();
+        let nulls = value.nulls();
 
         Ok(Self::new(
             coords,
             geom_offsets.clone(),
-            validity.cloned(),
+            nulls.cloned(),
             typ.metadata().clone(),
         ))
     }
@@ -255,12 +255,12 @@ impl TryFrom<(&GenericListArray<i64>, LineStringType)> for LineStringArray {
     fn try_from((value, typ): (&GenericListArray<i64>, LineStringType)) -> Result<Self> {
         let coords = CoordBuffer::from_arrow(value.values().as_ref(), typ.dimension())?;
         let geom_offsets = offsets_buffer_i64_to_i32(value.offsets())?;
-        let validity = value.nulls();
+        let nulls = value.nulls();
 
         Ok(Self::new(
             coords,
             geom_offsets,
-            validity.cloned(),
+            nulls.cloned(),
             typ.metadata().clone(),
         ))
     }
@@ -300,7 +300,7 @@ impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, LineStringType)> for LineStringAr
 
 impl PartialEq for LineStringArray {
     fn eq(&self, other: &Self) -> bool {
-        self.validity == other.validity
+        self.nulls == other.nulls
             && offset_buffer_eq(&self.geom_offsets, &other.geom_offsets)
             && self.coords == other.coords
     }

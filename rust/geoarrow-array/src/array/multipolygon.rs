@@ -36,7 +36,7 @@ pub struct MultiPolygonArray {
     pub(crate) ring_offsets: OffsetBuffer<i32>,
 
     /// Validity bitmap
-    pub(crate) validity: Option<NullBuffer>,
+    pub(crate) nulls: Option<NullBuffer>,
 }
 
 pub(super) fn check(
@@ -48,7 +48,7 @@ pub(super) fn check(
 ) -> Result<()> {
     if validity_len.is_some_and(|len| len != geom_offsets.len_proxy()) {
         return Err(GeoArrowError::General(
-            "validity mask length must match the number of values".to_string(),
+            "nulls mask length must match the number of values".to_string(),
         ));
     }
     if *ring_offsets.last() as usize != coords.len() {
@@ -81,7 +81,7 @@ impl MultiPolygonArray {
     ///
     /// # Panics
     ///
-    /// - if the validity is not `None` and its length is different from the number of geometries
+    /// - if the nulls is not `None` and its length is different from the number of geometries
     /// - if the largest ring offset does not match the number of coordinates
     /// - if the largest polygon offset does not match the size of ring offsets
     /// - if the largest geometry offset does not match the size of polygon offsets
@@ -90,7 +90,7 @@ impl MultiPolygonArray {
         geom_offsets: OffsetBuffer<i32>,
         polygon_offsets: OffsetBuffer<i32>,
         ring_offsets: OffsetBuffer<i32>,
-        validity: Option<NullBuffer>,
+        nulls: Option<NullBuffer>,
         metadata: Arc<Metadata>,
     ) -> Self {
         Self::try_new(
@@ -98,7 +98,7 @@ impl MultiPolygonArray {
             geom_offsets,
             polygon_offsets,
             ring_offsets,
-            validity,
+            nulls,
             metadata,
         )
         .unwrap()
@@ -112,7 +112,7 @@ impl MultiPolygonArray {
     ///
     /// # Errors
     ///
-    /// - if the validity is not `None` and its length is different from the number of geometries
+    /// - if the nulls is not `None` and its length is different from the number of geometries
     /// - if the largest ring offset does not match the number of coordinates
     /// - if the largest polygon offset does not match the size of ring offsets
     /// - if the largest geometry offset does not match the size of polygon offsets
@@ -121,7 +121,7 @@ impl MultiPolygonArray {
         geom_offsets: OffsetBuffer<i32>,
         polygon_offsets: OffsetBuffer<i32>,
         ring_offsets: OffsetBuffer<i32>,
-        validity: Option<NullBuffer>,
+        nulls: Option<NullBuffer>,
         metadata: Arc<Metadata>,
     ) -> Result<Self> {
         check(
@@ -129,7 +129,7 @@ impl MultiPolygonArray {
             &geom_offsets,
             &polygon_offsets,
             &ring_offsets,
-            validity.as_ref().map(|v| v.len()),
+            nulls.as_ref().map(|v| v.len()),
         )?;
         Ok(Self {
             data_type: MultiPolygonType::new(coords.coord_type(), coords.dim(), metadata),
@@ -137,7 +137,7 @@ impl MultiPolygonArray {
             geom_offsets,
             polygon_offsets,
             ring_offsets,
-            validity,
+            nulls,
         })
     }
 
@@ -204,7 +204,7 @@ impl MultiPolygonArray {
 
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
-        let validity_len = self.nulls().map(|v| v.buffer().len()).unwrap_or(0);
+        let validity_len = self.nulls.as_ref().map(|v| v.buffer().len()).unwrap_or(0);
         validity_len + self.buffer_lengths().num_bytes()
     }
 
@@ -225,7 +225,7 @@ impl MultiPolygonArray {
             geom_offsets: self.geom_offsets.slice(offset, length),
             polygon_offsets: self.polygon_offsets.clone(),
             ring_offsets: self.ring_offsets.clone(),
-            validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
+            nulls: self.nulls.as_ref().map(|v| v.slice(offset, length)),
         }
     }
 
@@ -237,7 +237,7 @@ impl MultiPolygonArray {
             self.geom_offsets,
             self.polygon_offsets,
             self.ring_offsets,
-            self.validity,
+            self.nulls,
             metadata,
         )
     }
@@ -311,7 +311,7 @@ impl IntoArrow for MultiPolygonArray {
         let rings_field = self.rings_field();
         let polygons_field = self.polygons_field();
 
-        let validity = self.validity;
+        let nulls = self.nulls;
         let coord_array = ArrayRef::from(self.coords);
         let ring_array = Arc::new(GenericListArray::new(
             vertices_field,
@@ -325,7 +325,7 @@ impl IntoArrow for MultiPolygonArray {
             ring_array,
             None,
         ));
-        GenericListArray::new(polygons_field, self.geom_offsets, polygons_array, validity)
+        GenericListArray::new(polygons_field, self.geom_offsets, polygons_array, nulls)
     }
 
     fn ext_type(&self) -> &Self::ExtensionType {
@@ -338,7 +338,7 @@ impl TryFrom<(&GenericListArray<i32>, MultiPolygonType)> for MultiPolygonArray {
 
     fn try_from((geom_array, typ): (&GenericListArray<i32>, MultiPolygonType)) -> Result<Self> {
         let geom_offsets = geom_array.offsets();
-        let validity = geom_array.nulls();
+        let nulls = geom_array.nulls();
 
         let polygons_dyn_array = geom_array.values();
         let polygons_array = polygons_dyn_array.as_list::<i32>();
@@ -355,7 +355,7 @@ impl TryFrom<(&GenericListArray<i32>, MultiPolygonType)> for MultiPolygonArray {
             geom_offsets.clone(),
             polygon_offsets.clone(),
             ring_offsets.clone(),
-            validity.cloned(),
+            nulls.cloned(),
             typ.metadata().clone(),
         ))
     }
@@ -366,7 +366,7 @@ impl TryFrom<(&GenericListArray<i64>, MultiPolygonType)> for MultiPolygonArray {
 
     fn try_from((geom_array, typ): (&GenericListArray<i64>, MultiPolygonType)) -> Result<Self> {
         let geom_offsets = offsets_buffer_i64_to_i32(geom_array.offsets())?;
-        let validity = geom_array.nulls();
+        let nulls = geom_array.nulls();
 
         let polygons_dyn_array = geom_array.values();
         let polygons_array = polygons_dyn_array.as_list::<i64>();
@@ -383,7 +383,7 @@ impl TryFrom<(&GenericListArray<i64>, MultiPolygonType)> for MultiPolygonArray {
             geom_offsets,
             polygon_offsets,
             ring_offsets,
-            validity.cloned(),
+            nulls.cloned(),
             typ.metadata().clone(),
         ))
     }
@@ -429,13 +429,13 @@ impl From<PolygonArray> for MultiPolygonArray {
         let geom_offsets = OffsetBuffer::from_lengths(vec![1; coords.len()]);
         let ring_offsets = value.ring_offsets;
         let polygon_offsets = value.geom_offsets;
-        let validity = value.validity;
+        let nulls = value.nulls;
         Self::new(
             coords,
             geom_offsets,
             polygon_offsets,
             ring_offsets,
-            validity,
+            nulls,
             metadata,
         )
     }
@@ -443,7 +443,7 @@ impl From<PolygonArray> for MultiPolygonArray {
 
 impl PartialEq for MultiPolygonArray {
     fn eq(&self, other: &Self) -> bool {
-        self.validity == other.validity
+        self.nulls == other.nulls
             && offset_buffer_eq(&self.geom_offsets, &other.geom_offsets)
             && offset_buffer_eq(&self.polygon_offsets, &other.polygon_offsets)
             && offset_buffer_eq(&self.ring_offsets, &other.ring_offsets)
