@@ -11,6 +11,7 @@ use geoarrow::ArrayBase;
 use geoarrow::array::WKTArray;
 use geoarrow::io::wkt::{ToWKT, read_wkt};
 use geoarrow_schema::CoordType;
+use geoarrow_array::cast::to_wkt;
 
 use crate::data_types::{GEOMETRY_TYPE, any_single_geometry_type_input, parse_to_native_array};
 use crate::error::GeoDataFusionResult;
@@ -71,7 +72,7 @@ fn as_text_impl(args: &[ColumnarValue]) -> GeoDataFusionResult<ColumnarValue> {
         .next()
         .unwrap();
     let native_array = parse_to_native_array(array)?;
-    let wkt_arr = native_array.as_ref().to_wkt::<i32>()?;
+    let wkt_arr = to_wkt::<i32>(&native_array)?;
     Ok(wkt_arr.into_array_ref().into())
 }
 

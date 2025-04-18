@@ -3,6 +3,7 @@
 use std::sync::Arc;
 
 use arrow_array::OffsetSizeTrait;
+use arrow_array::builder::GenericStringBuilder;
 use arrow_array::cast::AsArray;
 use geoarrow_schema::WkbType;
 
@@ -312,6 +313,66 @@ fn impl_to_wkb<'a, O: OffsetSizeTrait>(geo_arr: &'a impl ArrayAccessor<'a>) -> R
     Ok(WkbBuilder::from_nullable_geometries(geoms.as_slice(), wkb_type).finish())
 }
 
+/// Convert a [GeoArrowArray] to a [WktArray].
+pub fn to_wkt<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<WktArray<O>> {
+    use GeoArrowType::*;
+    match arr.data_type() {
+        Point(_) => impl_to_wkt(arr.as_point()),
+        LineString(_) => impl_to_wkt(arr.as_line_string()),
+        Polygon(_) => impl_to_wkt(arr.as_polygon()),
+        MultiPoint(_) => impl_to_wkt(arr.as_multi_point()),
+        MultiLineString(_) => impl_to_wkt(arr.as_multi_line_string()),
+        MultiPolygon(_) => impl_to_wkt(arr.as_multi_polygon()),
+        Geometry(_) => impl_to_wkt(arr.as_geometry()),
+        GeometryCollection(_) => impl_to_wkt(arr.as_geometry_collection()),
+        Rect(_) => impl_to_wkt(arr.as_rect()),
+        Wkb(_) => impl_to_wkt(arr.as_wkb::<i32>()),
+        LargeWkb(_) => impl_to_wkt(arr.as_wkb::<i64>()),
+        Wkt(typ) => {
+            if O::IS_LARGE {
+                let large_arr: WktArray<i64> = arr.as_wkt::<i32>().clone().into();
+                let array = large_arr.to_array_ref().as_string::<O>().clone();
+                Ok(WktArray::new(array, typ.metadata().clone()))
+            } else {
+                // Since O is already i32, we can just go via ArrayRef, and use .as_string to cast
+                // to O
+                let array = arr.as_wkt::<i32>().to_array_ref();
+                let array = array.as_string::<O>().clone();
+                Ok(WktArray::new(array, typ.metadata().clone()))
+            }
+        }
+        LargeWkt(typ) => {
+            if O::IS_LARGE {
+                // Since O is already i64, we can just go via ArrayRef, and use .as_string to cast
+                // to O
+                let array = arr.as_wkt::<i64>().to_array_ref();
+                let array = array.as_string::<O>().clone();
+                Ok(WktArray::new(array, typ.metadata().clone()))
+            } else {
+                let small_arr: WktArray<i32> = arr.as_wkt::<i64>().clone().try_into()?;
+                let array = small_arr.to_array_ref().as_string::<O>().clone();
+                Ok(WktArray::new(array, typ.metadata().clone()))
+            }
+        }
+    }
+}
+
+fn impl_to_wkt<'a, O: OffsetSizeTrait>(geo_arr: &'a impl ArrayAccessor<'a>) -> Result<WktArray<O>> {
+    let metadata = geo_arr.data_type().metadata().clone();
+    let mut builder = GenericStringBuilder::new();
+
+    for maybe_geom in geo_arr.iter() {
+        if let Some(geom) = maybe_geom {
+            wkt::to_wkt::write_geometry(&mut builder, &geom?)?;
+            builder.append_value("");
+        } else {
+            builder.append_null();
+        }
+    }
+
+    Ok(WktArray::new(builder.finish(), metadata))
+}
+
 /// Re-export symbols needed for downcast macros
 ///
 /// Name follows `serde` convention
@@ -460,6 +521,16 @@ mod test {
         assert_eq!(wkb_arr, wkb_arr5);
     }
 
+    #[test]
+    fn test_cast_wkt_in_to_wkt() {
+        let wkt_arr: WktArray<i32> =
+            to_wkt(&test::point::array(CoordType::Separated, Dimension::XY)).unwrap();
+        let wkt_arr2: WktArray<i32> = to_wkt(&wkt_arr).unwrap();
+        let wkt_arr3: WktArray<i64> = to_wkt(&wkt_arr2).unwrap();
+        let wkt_arr4: WktArray<i64> = to_wkt(&wkt_arr3).unwrap();
+        let wkt_arr5: WktArray<i32> = to_wkt(&wkt_arr4).unwrap();
+        assert_eq!(wkt_arr, wkt_arr5);
+    }
     // Verify that this compiles with the macro
     #[allow(dead_code)]
     fn _to_wkb(arr: &dyn GeoArrowArray) -> Result<WkbArray<i32>> {

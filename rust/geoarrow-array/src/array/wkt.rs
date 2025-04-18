@@ -220,26 +220,16 @@ impl TryFrom<WktArray<i64>> for WktArray<i32> {
 
 #[cfg(test)]
 mod test {
-    use arrow_array::builder::GenericStringBuilder;
+    use geoarrow_schema::{CoordType, Dimension};
 
     use crate::GeoArrowArray;
+    use crate::cast::to_wkt;
     use crate::test::point;
 
     use super::*;
 
     fn wkt_data<O: OffsetSizeTrait>() -> WktArray<O> {
-        let mut builder = GenericStringBuilder::new();
-
-        wkt::to_wkt::write_geometry(&mut builder, &point::p0()).unwrap();
-        builder.append_value("");
-
-        wkt::to_wkt::write_geometry(&mut builder, &point::p1()).unwrap();
-        builder.append_value("");
-
-        wkt::to_wkt::write_geometry(&mut builder, &point::p2()).unwrap();
-        builder.append_value("");
-
-        WktArray::new(builder.finish(), Default::default())
+        to_wkt(&point::array(CoordType::Interleaved, Dimension::XY)).unwrap()
     }
 
     #[test]
