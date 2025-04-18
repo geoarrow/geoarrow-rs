@@ -1,3 +1,7 @@
+//! GeoArrow geometry type and metadata definitions.
+
+#![warn(missing_docs)]
+
 mod coord_type;
 mod crs;
 mod dimension;

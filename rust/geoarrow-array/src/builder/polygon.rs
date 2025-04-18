@@ -6,7 +6,7 @@ use geo_traits::{
 };
 use geoarrow_schema::{CoordType, PolygonType};
 
-use crate::array::{PolygonArray, WKBArray};
+use crate::array::{PolygonArray, WkbArray};
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
 };
@@ -226,44 +226,62 @@ impl PolygonBuilder {
 
     /// Add a new Rect to this builder
     #[inline]
-    pub fn push_rect(&mut self, _value: Option<&impl RectTrait<T = f64>>) -> Result<()> {
-        todo!("re enable; need to create our own minimal coord type")
-        // if let Some(rect) = value {
-        //     // Only one ring
-        //     self.geom_offsets.try_push_usize(1)?;
-        //     // ring has 5 coords
-        //     self.ring_offsets.try_push_usize(5)?;
+    pub fn push_rect(&mut self, value: Option<&impl RectTrait<T = f64>>) -> Result<()> {
+        if let Some(rect) = value {
+            match rect.dim() {
+                geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => {}
+                _ => {
+                    return Err(GeoArrowError::General(
+                        "Only 2d rect supported when pushing to polygon.".to_string(),
+                    ));
+                }
+            };
 
-        //     let lower = rect.min();
-        //     let upper = rect.max();
+            // Only one ring
+            self.geom_offsets.try_push_usize(1)?;
+            // ring has 5 coords
+            self.ring_offsets.try_push_usize(5)?;
 
-        //     // Ref below because I always forget the ordering
-        //     // https://github.com/georust/geo/blob/76ad2a358bd079e9d47b1229af89608744d2635b/geo-types/src/geometry/rect.rs#L217-L225
+            let lower = rect.min();
+            let upper = rect.max();
 
-        //     self.coords.push_coord(&geo::Coord {
-        //         x: lower.x(),
-        //         y: lower.y(),
-        //     });
-        //     self.coords.push_coord(&geo::Coord {
-        //         x: lower.x(),
-        //         y: upper.y(),
-        //     });
-        //     self.coords.push_coord(&geo::Coord {
-        //         x: upper.x(),
-        //         y: upper.y(),
-        //     });
-        //     self.coords.push_coord(&geo::Coord {
-        //         x: upper.x(),
-        //         y: lower.y(),
-        //     });
-        //     self.coords.push_coord(&geo::Coord {
-        //         x: lower.x(),
-        //         y: lower.y(),
-        //     });
-        // } else {
-        //     self.push_null();
-        // }
-        // Ok(())
+            // Ref below because I always forget the ordering
+            // https://github.com/georust/geo/blob/76ad2a358bd079e9d47b1229af89608744d2635b/geo-types/src/geometry/rect.rs#L217-L225
+
+            self.coords.push_coord(&wkt::types::Coord {
+                x: lower.x(),
+                y: lower.y(),
+                z: None,
+                m: None,
+            });
+            self.coords.push_coord(&wkt::types::Coord {
+                x: lower.x(),
+                y: upper.y(),
+                z: None,
+                m: None,
+            });
+            self.coords.push_coord(&wkt::types::Coord {
+                x: upper.x(),
+                y: upper.y(),
+                z: None,
+                m: None,
+            });
+            self.coords.push_coord(&wkt::types::Coord {
+                x: upper.x(),
+                y: lower.y(),
+                z: None,
+                m: None,
+            });
+            self.coords.push_coord(&wkt::types::Coord {
+                x: lower.x(),
+                y: lower.y(),
+                z: None,
+                m: None,
+            });
+        } else {
+            self.push_null();
+        }
+        Ok(())
     }
 
     /// Add a new geometry to this builder
@@ -365,10 +383,10 @@ impl PolygonBuilder {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, PolygonType)> for PolygonBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, PolygonType)> for PolygonBuilder {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (WKBArray<O>, PolygonType)) -> Result<Self> {
+    fn try_from((value, typ): (WkbArray<O>, PolygonType)) -> Result<Self> {
         let wkb_objects = value
             .iter()
             .map(|x| x.transpose())
@@ -380,5 +398,37 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, PolygonType)> for PolygonBuilder 
 impl GeometryArrayBuilder for PolygonBuilder {
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
+    }
+
+    fn push_null(&mut self) {
+        self.push_null();
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use geo::BoundingRect;
+    use geo_traits::to_geo::ToGeoPolygon;
+    use geo_types::{Rect, coord};
+    use geoarrow_schema::{CoordType, Dimension, PolygonType};
+
+    use crate::ArrayAccessor;
+    use crate::builder::PolygonBuilder;
+
+    #[test]
+    fn test_push_rect() {
+        let mut builder = PolygonBuilder::new(PolygonType::new(
+            CoordType::Separated,
+            Dimension::XY,
+            Default::default(),
+        ));
+
+        let rect = Rect::new(coord! { x: 10., y: 20. }, coord! { x: 30., y: 10. });
+        builder.push_rect(Some(&rect)).unwrap();
+        let array = builder.finish();
+
+        let polygon = array.value(0).unwrap().to_polygon();
+        let bounding_rect = polygon.bounding_rect().unwrap();
+        assert_eq!(rect, bounding_rect);
     }
 }

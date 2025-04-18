@@ -6,7 +6,7 @@ use geo_traits::{
 };
 use geoarrow_schema::GeometryCollectionType;
 
-use crate::array::{GeometryCollectionArray, WKBArray};
+use crate::array::{GeometryCollectionArray, WkbArray};
 use crate::builder::mixed::DEFAULT_PREFER_MULTI;
 use crate::builder::{MixedGeometryBuilder, OffsetsBuilder};
 use crate::capacity::GeometryCollectionCapacity;
@@ -309,12 +309,12 @@ impl<'a> GeometryCollectionBuilder {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, GeometryCollectionType)>
+impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, GeometryCollectionType)>
     for GeometryCollectionBuilder
 {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (WKBArray<O>, GeometryCollectionType)) -> Result<Self> {
+    fn try_from((value, typ): (WkbArray<O>, GeometryCollectionType)) -> Result<Self> {
         let wkb_objects = value
             .iter()
             .map(|x| x.transpose())
@@ -326,5 +326,9 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, GeometryCollectionType)>
 impl GeometryArrayBuilder for GeometryCollectionBuilder {
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
+    }
+
+    fn push_null(&mut self) {
+        self.push_null();
     }
 }

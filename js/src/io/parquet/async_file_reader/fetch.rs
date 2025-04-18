@@ -35,7 +35,7 @@ pub fn range_from_start(start: u64) -> String {
     format!("bytes={}-", start)
 }
 
-pub fn range_from_end(length: u64) -> String {
+pub fn range_from_end(length: usize) -> String {
     format!("bytes=-{}", length)
 }
 

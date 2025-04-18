@@ -54,11 +54,6 @@ pub enum GeoArrowError {
     #[error(transparent)]
     ObjectStoreError(#[from] object_store::Error),
 
-    /// [parquet::errors::ParquetError]
-    #[cfg(feature = "parquet")]
-    #[error(transparent)]
-    ParquetError(#[from] parquet::errors::ParquetError),
-
     /// [polylabel::errors::PolylabelError]
     #[cfg(feature = "polylabel")]
     #[error(transparent)]
@@ -102,3 +97,12 @@ pub enum GeoArrowError {
 
 /// Crate-specific result type.
 pub type Result<T> = std::result::Result<T, GeoArrowError>;
+
+impl From<GeoArrowError> for ArrowError {
+    fn from(err: GeoArrowError) -> Self {
+        match err {
+            GeoArrowError::Arrow(err) => err,
+            _ => ArrowError::ExternalError(Box::new(err)),
+        }
+    }
+}

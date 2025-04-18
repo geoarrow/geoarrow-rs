@@ -1,12 +1,12 @@
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use arrow_buffer::Buffer;
-use wkb::writer::{geometry_wkb_size, write_geometry};
 use wkb::Endianness;
+use wkb::writer::{geometry_wkb_size, write_geometry};
 
+use crate::ArrayBase;
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{GeometryArray, MixedGeometryArray, WKBArray};
 use crate::trait_::ArrayAccessor;
-use crate::ArrayBase;
 use std::io::Cursor;
 
 impl<O: OffsetSizeTrait> From<&MixedGeometryArray> for WKBArray<O> {

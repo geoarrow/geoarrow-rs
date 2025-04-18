@@ -3,7 +3,7 @@ use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
 use geoarrow_schema::{CoordType, LineStringType};
 
-use crate::array::{LineStringArray, WKBArray};
+use crate::array::{LineStringArray, WkbArray};
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
 };
@@ -243,10 +243,10 @@ impl LineStringBuilder {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, LineStringType)> for LineStringBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, LineStringType)> for LineStringBuilder {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (WKBArray<O>, LineStringType)) -> Result<Self> {
+    fn try_from((value, typ): (WkbArray<O>, LineStringType)) -> Result<Self> {
         let wkb_objects = value
             .iter()
             .map(|x| x.transpose())
@@ -258,5 +258,9 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, LineStringType)> for LineStringBu
 impl GeometryArrayBuilder for LineStringBuilder {
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
+    }
+
+    fn push_null(&mut self) {
+        self.push_null();
     }
 }

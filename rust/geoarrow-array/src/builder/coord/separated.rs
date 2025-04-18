@@ -1,5 +1,3 @@
-use core::f64;
-
 use geo_traits::{CoordTrait, PointTrait};
 use geoarrow_schema::Dimension;
 
@@ -22,27 +20,6 @@ impl SeparatedCoordBufferBuilder {
     pub fn new(dim: Dimension) -> Self {
         Self::with_capacity(0, dim)
     }
-
-    // TODO: need to figure out how to take variable-length input but take ownership from the
-    // input.
-    // pub fn from_vecs(buffers: &[Vec<f64>], dim: Dimension) -> Result<Self> {
-    //     if buffers.len() != dim.size() {
-    //         return Err(GeoArrowError::General(
-    //             "Buffers must match dimension length ".into(),
-    //         ));
-    //     }
-
-    //     // Fill buffers with empty buffers past needed dimensions
-    //     let buffers = core::array::from_fn(|i| {
-    //         if i < buffers.len() {
-    //             buffers[0]
-    //         } else {
-    //             Vec::new()
-    //         }
-    //     });
-
-    //     Self { buffers }
-    // }
 
     /// Create a new builder with the given capacity and dimension
     pub fn with_capacity(capacity: usize, dim: Dimension) -> Self {
@@ -130,17 +107,49 @@ impl SeparatedCoordBufferBuilder {
     ///
     /// - If the added coordinate does not have the same dimension as the coordinate buffer.
     pub fn try_push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
-        // TODO: should check xyz/zym
-        if coord.dim().size() != self.dim.size() {
-            return Err(GeoArrowError::General(
-                "coord dimension must match coord buffer dimension.".into(),
-            ));
+        // Note duplicated across buffer types; consider refactoring
+        match self.dim {
+            Dimension::XY => match coord.dim() {
+                geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => {}
+                d => {
+                    return Err(GeoArrowError::General(format!(
+                        "coord dimension must be XY for this buffer; got {d:?}."
+                    )));
+                }
+            },
+            Dimension::XYZ => match coord.dim() {
+                geo_traits::Dimensions::Xyz | geo_traits::Dimensions::Unknown(3) => {}
+                d => {
+                    return Err(GeoArrowError::General(format!(
+                        "coord dimension must be XYZ for this buffer; got {d:?}."
+                    )));
+                }
+            },
+            Dimension::XYM => match coord.dim() {
+                geo_traits::Dimensions::Xym | geo_traits::Dimensions::Unknown(3) => {}
+                d => {
+                    return Err(GeoArrowError::General(format!(
+                        "coord dimension must be XYM for this buffer; got {d:?}."
+                    )));
+                }
+            },
+            Dimension::XYZM => match coord.dim() {
+                geo_traits::Dimensions::Xyzm | geo_traits::Dimensions::Unknown(4) => {}
+                d => {
+                    return Err(GeoArrowError::General(format!(
+                        "coord dimension must be XYZM for this buffer; got {d:?}."
+                    )));
+                }
+            },
         }
 
         self.buffers[0].push(coord.x());
         self.buffers[1].push(coord.y());
         if let Some(z) = coord.nth(2) {
             self.buffers[2].push(z);
+        };
+        if let Some(m) = coord.nth(3) {
+            self.buffers[3].push(m);
         };
         Ok(())
     }
@@ -198,6 +207,44 @@ impl From<SeparatedCoordBufferBuilder> for SeparatedCoordBuffer {
         for (i, buffer) in value.buffers.into_iter().enumerate() {
             buffers[i] = buffer.into();
         }
-        SeparatedCoordBuffer::new(buffers, value.dim)
+        SeparatedCoordBuffer::from_array(buffers, value.dim).unwrap()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use wkt::types::Coord;
+
+    use super::*;
+
+    #[test]
+    fn errors_when_pushing_incompatible_coord() {
+        let mut builder = SeparatedCoordBufferBuilder::new(Dimension::XY);
+        builder
+            .try_push_coord(&Coord {
+                x: 0.0,
+                y: 0.0,
+                z: Some(0.0),
+                m: None,
+            })
+            .expect_err("Should err pushing XYZ to XY buffer");
+
+        let mut builder = SeparatedCoordBufferBuilder::new(Dimension::XYZ);
+        builder
+            .try_push_coord(&Coord {
+                x: 0.0,
+                y: 0.0,
+                z: None,
+                m: None,
+            })
+            .expect_err("Should err pushing XY to XYZ buffer");
+        builder
+            .try_push_coord(&Coord {
+                x: 0.0,
+                y: 0.0,
+                z: Some(0.0),
+                m: None,
+            })
+            .unwrap();
     }
 }

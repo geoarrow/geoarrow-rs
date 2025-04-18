@@ -1,6 +1,26 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+/// Coordinate Reference System information.
+///
+/// As of GeoArrow version 0.2, GeoArrow supports various CRS representations:
+///
+/// - A JSON object describing the coordinate reference system (CRS)
+///   using [PROJJSON](https://proj.org/specifications/projjson.html).
+/// - A string containing a serialized CRS representation. This option
+///   is intended as a fallback for producers (e.g., database drivers or
+///   file readers) that are provided a CRS in some form but do not have the
+///   means to convert it to PROJJSON.
+/// - Omitted, indicating that the producer does not have any information about
+///   the CRS.
+///
+/// For maximum compatibility, producers should write PROJJSON.
+///
+/// Note that regardless of the axis order specified by the CRS, axis order will be interpreted
+/// according to the wording in the [GeoPackage WKB binary
+/// encoding](https://www.geopackage.org/spec130/index.html#gpb_format): axis order is always
+/// (longitude, latitude) and (easting, northing) regardless of the the axis order encoded in the
+/// CRS specification.
 #[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct Crs {
     /// One of:
@@ -149,9 +169,10 @@ mod test {
     fn crs_projjson() {
         let crs = Crs::from_projjson(json!({}));
         assert!(crs.crs_value().is_some_and(|x| x.is_object()));
-        assert!(crs
-            .crs_type()
-            .is_some_and(|x| matches!(x, CrsType::Projjson)));
+        assert!(
+            crs.crs_type()
+                .is_some_and(|x| matches!(x, CrsType::Projjson))
+        );
         assert!(crs.should_serialize());
         assert_eq!(
             serde_json::to_string(&crs).unwrap(),

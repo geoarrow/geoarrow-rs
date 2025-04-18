@@ -3,6 +3,7 @@ use geoarrow::algorithm::broadcasting::BroadcastablePrimitive;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
+#[allow(dead_code)]
 pub struct BroadcastableFloat(pub(crate) BroadcastablePrimitive<Float64Type>);
 
 #[wasm_bindgen]

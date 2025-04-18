@@ -6,9 +6,9 @@ use geozero::error::GeozeroError;
 use geozero::geo_types::GeoWriter;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
+use crate::NativeArray;
 use crate::array::{GeometryArray, GeometryBuilder};
 use crate::trait_::GeometryArrayBuilder;
-use crate::NativeArray;
 
 /// GeoZero trait to convert to GeoArrow [`GeometryArray`].
 pub trait ToGeometryArray {

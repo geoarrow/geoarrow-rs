@@ -42,6 +42,7 @@ impl SeparatedCoordBuffer {
 /// An immutable buffer of coordinates in WebAssembly memory, that can be either interleaved or
 /// separated.
 #[wasm_bindgen]
+#[allow(dead_code)]
 pub struct CoordBuffer(pub(crate) geoarrow::array::CoordBuffer);
 
 #[wasm_bindgen]

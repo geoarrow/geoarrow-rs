@@ -3,7 +3,7 @@ use std::sync::Arc;
 use arrow_array::cast::AsArray;
 use arrow_array::types::Float64Type;
 use arrow_array::{Array, ArrayRef, StructArray};
-use arrow_buffer::{NullBuffer, ScalarBuffer};
+use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{BoxType, Metadata};
 
@@ -13,14 +13,19 @@ use crate::error::{GeoArrowError, Result};
 use crate::scalar::Rect;
 use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 
-/// An immutable array of Rect geometries.
+/// An immutable array of Rect or Box geometries.
+///
+/// A rect is an axis-aligned bounded rectangle whose area is defined by minimum and maximum
+/// coordinates.
+///
+/// All rects must have the same dimension.
 ///
 /// This is **not** an array type defined by the GeoArrow specification (as of spec version 0.1)
 /// but is included here for parity with georust/geo, and to save memory for the output of
 /// `bounds()`.
 ///
 /// Internally this is implemented as a FixedSizeList, laid out as minx, miny, maxx, maxy.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct RectArray {
     pub(crate) data_type: BoxType,
 
@@ -96,13 +101,11 @@ impl GeoArrowArray for RectArray {
         self.clone().into_array_ref()
     }
 
-    /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
         self.lower.len()
     }
 
-    /// Returns the optional validity.
     #[inline]
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
@@ -157,29 +160,29 @@ impl TryFrom<(&StructArray, BoxType)> for RectArray {
         let dim = typ.dimension();
         let validity = value.nulls();
         let columns = value.columns();
-        assert_eq!(columns.len(), dim.size() * 2);
+        if columns.len() != dim.size() * 2 {
+            return Err(GeoArrowError::General(format!(
+                "Invalid number of columns for RectArray: expected {} but got {}",
+                dim.size() * 2,
+                columns.len()
+            )));
+        }
 
-        let dim_size = dim.size();
-        let lower = core::array::from_fn(|i| {
-            if i < dim_size {
-                columns[i].as_primitive::<Float64Type>().values().clone()
-            } else {
-                ScalarBuffer::from(vec![])
-            }
-        });
-        let upper = core::array::from_fn(|i| {
-            if i < dim_size {
-                columns[dim_size + i]
-                    .as_primitive::<Float64Type>()
-                    .values()
-                    .clone()
-            } else {
-                ScalarBuffer::from(vec![])
-            }
-        });
+        let lower = columns[0..dim.size()]
+            .iter()
+            .map(|c| c.as_primitive::<Float64Type>().values().clone())
+            .collect::<Vec<_>>();
+        let lower = SeparatedCoordBuffer::from_vec(lower, dim)?;
+
+        let upper = columns[dim.size()..]
+            .iter()
+            .map(|c| c.as_primitive::<Float64Type>().values().clone())
+            .collect::<Vec<_>>();
+        let upper = SeparatedCoordBuffer::from_vec(upper, dim)?;
+
         Ok(Self::new(
-            SeparatedCoordBuffer::new(lower, dim),
-            SeparatedCoordBuffer::new(upper, dim),
+            lower,
+            upper,
             validity.cloned(),
             typ.metadata().clone(),
         ))
@@ -208,33 +211,62 @@ impl TryFrom<(&dyn Array, &Field)> for RectArray {
     }
 }
 
+impl PartialEq for RectArray {
+    fn eq(&self, other: &Self) -> bool {
+        // A naive implementation of PartialEq would check for buffer equality. This won't always
+        // work for null elements where the actual value can be undefined and doesn't have to be
+        // equal. As such, it's simplest to reuse the upstream PartialEq impl, especially since
+        // RectArray only has one coordinate type.
+        self.clone().into_arrow() == other.clone().into_arrow()
+    }
+}
+
 #[cfg(test)]
 mod test {
-    use super::*;
-    use crate::builder::RectBuilder;
-    use crate::eq::rect_eq;
+    use geo_traits::to_geo::ToGeoRect;
     use geoarrow_schema::Dimension;
 
+    use crate::builder::RectBuilder;
+    use crate::test::rect;
+
+    use super::*;
+
     #[test]
-    fn rect_array_round_trip() {
-        let rect = geo::Rect::new(
-            geo::coord! { x: 0.0, y: 5.0 },
-            geo::coord! { x: 10.0, y: 15.0 },
-        );
+    fn geo_round_trip() {
+        let geoms = [Some(rect::r0()), None, Some(rect::r1()), None];
         let typ = BoxType::new(Dimension::XY, Default::default());
-        let mut builder = RectBuilder::with_capacity(typ, 1);
-        builder.push_rect(Some(&rect));
-        builder.push_min_max(&rect.min(), &rect.max());
-        let rect_arr = builder.finish();
+        let geo_arr =
+            RectBuilder::from_nullable_rects(geoms.iter().map(|x| x.as_ref()), typ).finish();
 
-        let arrow_arr = rect_arr.into_array_ref();
+        for (i, g) in geo_arr.iter().enumerate() {
+            assert_eq!(geoms[i], g.transpose().unwrap().map(|g| g.to_rect()));
+        }
 
-        let rect_arr_again = RectArray::try_from((
-            arrow_arr.as_ref(),
-            BoxType::new(Dimension::XY, Default::default()),
-        ))
-        .unwrap();
-        let rect_again = rect_arr_again.value(0).unwrap();
-        assert!(rect_eq(&rect, &rect_again));
+        // Test sliced
+        for (i, g) in geo_arr.slice(2, 2).iter().enumerate() {
+            assert_eq!(geoms[i + 2], g.transpose().unwrap().map(|g| g.to_rect()));
+        }
+    }
+
+    #[test]
+    fn try_from_arrow() {
+        let geo_arr = rect::r_array();
+
+        let ext_type = geo_arr.ext_type().clone();
+        let field = ext_type.to_field("geometry", true);
+
+        let arrow_arr = geo_arr.to_array_ref();
+
+        let geo_arr2: RectArray = (arrow_arr.as_ref(), ext_type).try_into().unwrap();
+        let geo_arr3: RectArray = (arrow_arr.as_ref(), &field).try_into().unwrap();
+
+        assert_eq!(geo_arr, geo_arr2);
+        assert_eq!(geo_arr, geo_arr3);
+    }
+
+    #[test]
+    fn partial_eq() {
+        let arr1 = rect::r_array();
+        assert_eq!(arr1, arr1);
     }
 }

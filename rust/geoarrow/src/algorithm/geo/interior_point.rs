@@ -1,8 +1,8 @@
+use crate::NativeArray;
 use crate::array::*;
 use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
 
 use geo::algorithm::interior_point::InteriorPoint as _;
 use geoarrow_schema::Dimension;

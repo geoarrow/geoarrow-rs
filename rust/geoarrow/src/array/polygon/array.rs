@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::algorithm::native::downcast::can_downcast_multi;
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::polygon::PolygonCapacity;
-use crate::array::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
+use crate::array::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
 use crate::array::{
     CoordBuffer, GeometryCollectionArray, MixedGeometryArray, MultiLineStringArray,
     MultiPolygonArray, RectArray, WKBArray,
@@ -594,9 +594,6 @@ impl TryFrom<GeometryCollectionArray> for PolygonArray {
 
 #[cfg(test)]
 mod test {
-    use crate::test::geoarrow_data::{
-        example_polygon_interleaved, example_polygon_separated, example_polygon_wkb,
-    };
     use crate::test::polygon::{p0, p1};
 
     use super::*;
@@ -626,26 +623,5 @@ mod test {
 
         // // Offset is 1 because it's sliced on another backing buffer
         // assert_eq!(*arr.geom_offsets.first(), 1);
-    }
-
-    #[test]
-    fn parse_wkb_geoarrow_interleaved_example() {
-        let geom_arr = example_polygon_interleaved();
-
-        let wkb_arr = example_polygon_wkb();
-        let parsed_geom_arr: PolygonArray = (wkb_arr, Dimension::XY).try_into().unwrap();
-
-        assert_eq!(geom_arr, parsed_geom_arr);
-    }
-
-    #[test]
-    fn parse_wkb_geoarrow_separated_example() {
-        // TODO: support checking equality of interleaved vs separated coords
-        let geom_arr = example_polygon_separated().into_coord_type(CoordType::Interleaved);
-
-        let wkb_arr = example_polygon_wkb();
-        let parsed_geom_arr: PolygonArray = (wkb_arr, Dimension::XY).try_into().unwrap();
-
-        assert_eq!(geom_arr, parsed_geom_arr);
     }
 }

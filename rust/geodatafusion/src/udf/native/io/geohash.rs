@@ -1,16 +1,17 @@
 use std::any::Any;
 use std::sync::{Arc, OnceLock};
 
-use arrow::array::{AsArray, StringBuilder};
+use arrow_array::builder::StringBuilder;
+use arrow_array::cast::AsArray;
 use arrow_schema::DataType;
 use datafusion::logical_expr::scalar_doc_sections::DOC_SECTION_OTHER;
 use datafusion::logical_expr::{
-    ColumnarValue, Documentation, ScalarUDFImpl, Signature, Volatility,
+    ColumnarValue, Documentation, ScalarFunctionArgs, ScalarUDFImpl, Signature, Volatility,
 };
 use geo_traits::PointTrait;
+use geoarrow::ArrayBase;
 use geoarrow::array::{PointArray, PointBuilder, RectBuilder};
 use geoarrow::trait_::{ArrayAccessor, NativeScalar};
-use geoarrow::ArrayBase;
 use geoarrow_schema::{CoordType, Dimension};
 
 use crate::data_types::{BOX2D_TYPE, POINT2D_TYPE};
@@ -48,7 +49,10 @@ impl ScalarUDFImpl for Box2DFromGeoHash {
         Ok(BOX2D_TYPE().into())
     }
 
-    fn invoke(&self, args: &[ColumnarValue]) -> datafusion::error::Result<ColumnarValue> {
+    fn invoke_with_args(
+        &self,
+        args: ScalarFunctionArgs,
+    ) -> datafusion::error::Result<ColumnarValue> {
         Ok(box_from_geohash_impl(args)?)
     }
 
@@ -65,7 +69,7 @@ impl ScalarUDFImpl for Box2DFromGeoHash {
     }
 }
 
-fn box_from_geohash_impl(args: &[ColumnarValue]) -> GeoDataFusionResult<ColumnarValue> {
+fn box_from_geohash_impl(args: ScalarFunctionArgs) -> GeoDataFusionResult<ColumnarValue> {
     let array = ColumnarValue::values_to_arrays(args)?
         .into_iter()
         .next()
@@ -234,7 +238,7 @@ fn geohash_impl(args: &[ColumnarValue]) -> GeoDataFusionResult<ColumnarValue> {
 #[cfg(test)]
 mod test {
     use approx::relative_eq;
-    use arrow::array::AsArray;
+    use arrow_array::cast::AsArray;
     use datafusion::prelude::*;
     use geo_traits::{CoordTrait, PointTrait, RectTrait};
     use geoarrow::array::{PointArray, RectArray};
@@ -261,11 +265,13 @@ mod test {
         let batch = batches.into_iter().next().unwrap();
         assert_eq!(batch.columns().len(), 1);
 
-        assert!(batch
-            .schema()
-            .field(0)
-            .data_type()
-            .equals_datatype(&BOX2D_TYPE().into()));
+        assert!(
+            batch
+                .schema()
+                .field(0)
+                .data_type()
+                .equals_datatype(&BOX2D_TYPE().into())
+        );
 
         let rect_array = RectArray::try_from((batch.columns()[0].as_ref(), Dimension::XY)).unwrap();
         let rect = rect_array.value(0);
@@ -292,11 +298,13 @@ mod test {
         let batch = batches.into_iter().next().unwrap();
         assert_eq!(batch.columns().len(), 1);
 
-        assert!(batch
-            .schema()
-            .field(0)
-            .data_type()
-            .equals_datatype(&POINT2D_TYPE().into()));
+        assert!(
+            batch
+                .schema()
+                .field(0)
+                .data_type()
+                .equals_datatype(&POINT2D_TYPE().into())
+        );
 
         let point_array =
             PointArray::try_from((batch.columns()[0].as_ref(), Dimension::XY)).unwrap();

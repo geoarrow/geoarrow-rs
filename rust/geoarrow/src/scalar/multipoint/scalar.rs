@@ -1,14 +1,14 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_multipoint;
 use crate::algorithm::native::eq::multi_point_eq;
-use crate::array::util::OffsetBufferUtils;
 use crate::array::CoordBuffer;
+use crate::array::util::OffsetBufferUtils;
 use crate::scalar::Point;
 use crate::trait_::NativeScalar;
 use arrow_buffer::OffsetBuffer;
-use geo_traits::to_geo::ToGeoMultiPoint;
 use geo_traits::MultiPointTrait;
+use geo_traits::to_geo::ToGeoMultiPoint;
 use geoarrow_schema::Dimension;
-use rstar::{RTreeObject, AABB};
+use rstar::{AABB, RTreeObject};
 
 /// An Arrow equivalent of a MultiPoint
 ///

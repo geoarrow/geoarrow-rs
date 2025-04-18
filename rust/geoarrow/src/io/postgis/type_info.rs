@@ -7,8 +7,8 @@ use std::borrow::Cow;
 use std::fmt::{self, Display, Formatter};
 use std::ops::Deref;
 
-use sqlx::postgres::types::Oid;
 use sqlx::TypeInfo;
+use sqlx::postgres::types::Oid;
 
 /// Type information for a PostgreSQL type.
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]

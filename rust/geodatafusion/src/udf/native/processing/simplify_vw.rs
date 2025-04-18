@@ -1,7 +1,7 @@
 use std::any::Any;
 use std::sync::OnceLock;
 
-use arrow::array::AsArray;
+use arrow_array::cast::AsArray;
 use arrow::datatypes::Float64Type;
 use arrow_schema::DataType;
 use datafusion::logical_expr::scalar_doc_sections::DOC_SECTION_OTHER;
@@ -11,7 +11,7 @@ use datafusion::logical_expr::{
 use geoarrow::algorithm::broadcasting::BroadcastablePrimitive;
 use geoarrow::algorithm::geo::SimplifyVw as _;
 
-use crate::data_types::{parse_to_native_array, GEOMETRY_TYPE};
+use crate::data_types::{GEOMETRY_TYPE, parse_to_native_array};
 use crate::error::GeoDataFusionResult;
 
 #[derive(Debug)]

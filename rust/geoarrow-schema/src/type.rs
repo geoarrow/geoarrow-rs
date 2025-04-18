@@ -69,31 +69,45 @@ macro_rules! define_basic_type {
 }
 
 define_basic_type!(
-    /// A type representing a Point geometry, implementing the [`ExtensionType`] trait.
+    /// A type representing a Point geometry.
+    ///
+    /// This implements the [`ExtensionType`] trait.
     PointType
 );
 define_basic_type!(
-    /// A type representing a LineString geometry, implementing the [`ExtensionType`] trait.
+    /// A type representing a LineString geometry.
+    ///
+    /// This implements the [`ExtensionType`] trait.
     LineStringType
 );
 define_basic_type!(
-    /// A type representing a Polygon geometry, implementing the [`ExtensionType`] trait.
+    /// A type representing a Polygon geometry.
+    ///
+    /// This implements the [`ExtensionType`] trait.
     PolygonType
 );
 define_basic_type!(
-    /// A type representing a MultiPoint geometry, implementing the [`ExtensionType`] trait.
+    /// A type representing a MultiPoint geometry.
+    ///
+    /// This implements the [`ExtensionType`] trait.
     MultiPointType
 );
 define_basic_type!(
-    /// A type representing a MultiLineString geometry, implementing the [`ExtensionType`] trait.
+    /// A type representing a MultiLineString geometry.
+    ///
+    /// This implements the [`ExtensionType`] trait.
     MultiLineStringType
 );
 define_basic_type!(
-    /// A type representing a MultiPolygon geometry, implementing the [`ExtensionType`] trait.
+    /// A type representing a MultiPolygon geometry.
+    ///
+    /// This implements the [`ExtensionType`] trait.
     MultiPolygonType
 );
 define_basic_type!(
-    /// A type representing a GeometryCollection geometry, implementing the [`ExtensionType`] trait.
+    /// A type representing a GeometryCollection geometry.
+    ///
+    /// This implements the [`ExtensionType`] trait.
     GeometryCollectionType
 );
 
@@ -872,7 +886,7 @@ fn parse_mixed(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowErro
                     id => {
                         return Err(ArrowError::SchemaError(format!(
                             "Unexpected type id parsing mixed: {id}"
-                        )))
+                        )));
                     }
                 };
                 Ok::<_, ArrowError>(())
@@ -912,6 +926,9 @@ fn parse_geometry_collection(data_type: &DataType) -> Result<(CoordType, Dimensi
     }
 }
 
+/// A type representing a geoarrow array of unknown geometry type and dimension.
+///
+/// This implements the [`ExtensionType`] trait.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct GeometryType {
     coord_type: CoordType,
@@ -1111,7 +1128,7 @@ fn parse_geometry(data_type: &DataType) -> Result<CoordType, ArrowError> {
                 id => {
                     return Err(ArrowError::SchemaError(format!(
                         "Unexpected type id parsing geometry: {id}"
-                    )))
+                    )));
                 }
             };
             Ok::<_, ArrowError>(())
@@ -1130,6 +1147,9 @@ fn parse_geometry(data_type: &DataType) -> Result<CoordType, ArrowError> {
     }
 }
 
+/// A type representing a geoarrow "box" or "rect" array.
+///
+/// This implements the [`ExtensionType`] trait.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct BoxType {
     dim: Dimension,
@@ -1288,7 +1308,10 @@ fn parse_box(data_type: &DataType) -> Result<Dimension, ArrowError> {
                 } else if names.contains("zmin") && names.contains("zmax") {
                     Ok(Dimension::XYZ)
                 } else {
-                    Err(ArrowError::SchemaError(format!("unexpected either mmin and mmax or zmin and zmax for struct with 6 fields. Got names: {:?}", names)))
+                    Err(ArrowError::SchemaError(format!(
+                        "unexpected either mmin and mmax or zmin and zmax for struct with 6 fields. Got names: {:?}",
+                        names
+                    )))
                 }
             }
             8 => Ok(Dimension::XYZM),
@@ -1304,6 +1327,9 @@ fn parse_box(data_type: &DataType) -> Result<Dimension, ArrowError> {
     }
 }
 
+/// A type representing a geoarrow WKB array.
+///
+/// This implements the [`ExtensionType`] trait.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct WkbType {
     metadata: Arc<Metadata>,
@@ -1386,6 +1412,9 @@ impl ExtensionType for WkbType {
     }
 }
 
+/// A type representing a geoarrow WKT array.
+///
+/// This implements the [`ExtensionType`] trait.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct WktType {
     metadata: Arc<Metadata>,

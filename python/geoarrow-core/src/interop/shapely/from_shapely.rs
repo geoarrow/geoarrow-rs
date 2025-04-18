@@ -8,12 +8,12 @@ use crate::interop::shapely::utils::import_shapely;
 use arrow_array::builder::BinaryBuilder;
 use geoarrow::datatypes::NativeType;
 use geoarrow_schema::{CoordType, Dimension, GeometryCollectionType, Metadata};
+use pyo3::PyAny;
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::pybacked::PyBackedBytes;
 use pyo3::types::{PyDict, PyString, PyTuple};
-use pyo3::PyAny;
 use pyo3_geoarrow::{PyCrs, PyGeoArrowResult};
 
 /// Check that the value of the GeometryType enum returned from shapely.to_ragged_array matches the

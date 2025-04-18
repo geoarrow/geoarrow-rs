@@ -3,9 +3,7 @@
 
 use std::sync::Arc;
 
-use arrow_schema::extension::{
-    ExtensionType, EXTENSION_TYPE_METADATA_KEY, EXTENSION_TYPE_NAME_KEY,
-};
+use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{
     BoxType, CoordType, Dimension, GeometryCollectionType, GeometryType, LineStringType, Metadata,
@@ -18,66 +16,50 @@ use crate::error::{GeoArrowError, Result};
 /// A type enum representing all possible GeoArrow geometry types, including both "native" and
 /// "serialized" encodings.
 ///
-/// This is designed to aid in downcasting from dynamically-typed geometry arrays.
+/// This is designed to aid in downcasting from dynamically-typed geometry arrays in combination
+/// with the [`AsGeoArrowArray`][crate::AsGeoArrowArray] trait.
 ///
 /// This type uniquely identifies the physical buffer layout of each geometry array type.
-/// It must always be possible to accurately downcast from a `dyn &NativeArray` or `dyn
-/// &ChunkedNativeArray` to a unique concrete array type using this enum.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum GeoArrowType {
-    /// Represents a [PointArray][crate::array::PointArray] or
-    /// [ChunkedPointArray][crate::chunked_array::ChunkedPointArray].
+    /// Represents a [PointArray][crate::array::PointArray].
     Point(PointType),
 
-    /// Represents a [LineStringArray][crate::array::LineStringArray] or
-    /// [ChunkedLineStringArray][crate::chunked_array::ChunkedLineStringArray] with `i32` offsets.
+    /// Represents a [LineStringArray][crate::array::LineStringArray].
     LineString(LineStringType),
 
-    /// Represents a [PolygonArray][crate::array::PolygonArray] or
-    /// [ChunkedPolygonArray][crate::chunked_array::ChunkedPolygonArray] with `i32` offsets.
+    /// Represents a [PolygonArray][crate::array::PolygonArray].
     Polygon(PolygonType),
 
-    /// Represents a [MultiPointArray][crate::array::MultiPointArray] or
-    /// [ChunkedMultiPointArray][crate::chunked_array::ChunkedMultiPointArray] with `i32` offsets.
+    /// Represents a [MultiPointArray][crate::array::MultiPointArray].
     MultiPoint(MultiPointType),
 
-    /// Represents a [MultiLineStringArray][crate::array::MultiLineStringArray] or
-    /// [ChunkedMultiLineStringArray][crate::chunked_array::ChunkedMultiLineStringArray] with `i32`
-    /// offsets.
+    /// Represents a [MultiLineStringArray][crate::array::MultiLineStringArray].
     MultiLineString(MultiLineStringType),
 
-    /// Represents a [MultiPolygonArray][crate::array::MultiPolygonArray] or
-    /// [ChunkedMultiPolygonArray][crate::chunked_array::ChunkedMultiPolygonArray] with `i32`
-    /// offsets.
+    /// Represents a [MultiPolygonArray][crate::array::MultiPolygonArray].
     MultiPolygon(MultiPolygonType),
 
-    /// Represents a [GeometryCollectionArray][crate::array::GeometryCollectionArray] or
-    /// [ChunkedGeometryCollectionArray][crate::chunked_array::ChunkedGeometryCollectionArray] with
-    /// `i32` offsets.
+    /// Represents a [GeometryCollectionArray][crate::array::GeometryCollectionArray].
     GeometryCollection(GeometryCollectionType),
 
-    /// Represents a [RectArray][crate::array::RectArray] or
-    /// [ChunkedRectArray][crate::chunked_array::ChunkedRectArray].
+    /// Represents a [RectArray][crate::array::RectArray].
     Rect(BoxType),
 
     /// Represents a mixed geometry array of unknown types or dimensions
     Geometry(GeometryType),
 
-    /// Represents a [WKBArray][crate::array::WKBArray] or
-    /// [ChunkedWKBArray][crate::chunked_array::ChunkedWKBArray] with `i32` offsets.
-    WKB(WkbType),
+    /// Represents a [WkbArray][crate::array::WkbArray] with `i32` offsets.
+    Wkb(WkbType),
 
-    /// Represents a [WKBArray][crate::array::WKBArray] or
-    /// [ChunkedWKBArray][crate::chunked_array::ChunkedWKBArray] with `i64` offsets.
-    LargeWKB(WkbType),
+    /// Represents a [WkbArray][crate::array::WkbArray] with `i64` offsets.
+    LargeWkb(WkbType),
 
-    /// Represents a [WKTArray][crate::array::WKTArray] or
-    /// [ChunkedWKTArray][crate::chunked_array::ChunkedWKTArray] with `i32` offsets.
-    WKT(WktType),
+    /// Represents a [WktArray][crate::array::WktArray] with `i32` offsets.
+    Wkt(WktType),
 
-    /// Represents a [WKTArray][crate::array::WKTArray] or
-    /// [ChunkedWKTArray][crate::chunked_array::ChunkedWKTArray] with `i64` offsets.
-    LargeWKT(WktType),
+    /// Represents a [WktArray][crate::array::WktArray] with `i64` offsets.
+    LargeWkt(WktType),
 }
 
 impl From<GeoArrowType> for DataType {
@@ -102,7 +84,7 @@ impl GeoArrowType {
             GeometryCollection(t) => Some(t.coord_type()),
             Rect(_) => Some(CoordType::Separated),
             Geometry(t) => Some(t.coord_type()),
-            WKB(_) | LargeWKB(_) | WKT(_) | LargeWKT(_) => None,
+            Wkb(_) | LargeWkb(_) | Wkt(_) | LargeWkt(_) => None,
         }
     }
 
@@ -123,7 +105,7 @@ impl GeoArrowType {
             GeometryCollection(t) => Some(t.dimension()),
             Rect(t) => Some(t.dimension()),
             Geometry(_) => None,
-            WKB(_) | LargeWKB(_) | WKT(_) | LargeWKT(_) => None,
+            Wkb(_) | LargeWkb(_) | Wkt(_) | LargeWkt(_) => None,
         }
     }
 
@@ -140,8 +122,8 @@ impl GeoArrowType {
             GeometryCollection(t) => t.metadata(),
             Rect(t) => t.metadata(),
             Geometry(t) => t.metadata(),
-            WKB(t) | LargeWKB(t) => t.metadata(),
-            WKT(t) | LargeWKT(t) => t.metadata(),
+            Wkb(t) | LargeWkb(t) => t.metadata(),
+            Wkt(t) | LargeWkt(t) => t.metadata(),
         }
     }
     /// Converts a [`GeoArrowType`] into the relevant arrow [`DataType`].
@@ -170,10 +152,10 @@ impl GeoArrowType {
             GeometryCollection(t) => t.data_type(),
             Rect(t) => t.data_type(),
             Geometry(t) => t.data_type(),
-            WKB(t) => t.data_type(false),
-            LargeWKB(t) => t.data_type(true),
-            WKT(t) => t.data_type(false),
-            LargeWKT(t) => t.data_type(true),
+            Wkb(t) => t.data_type(false),
+            LargeWkb(t) => t.data_type(true),
+            Wkt(t) => t.data_type(false),
+            LargeWkt(t) => t.data_type(true),
         }
     }
 
@@ -203,10 +185,10 @@ impl GeoArrowType {
             GeometryCollection(t) => t.to_field(name, nullable),
             Rect(t) => t.to_field(name, nullable),
             Geometry(t) => t.to_field(name, nullable),
-            WKB(t) => t.to_field(name, nullable, false),
-            LargeWKB(t) => t.to_field(name, nullable, true),
-            WKT(t) => t.to_field(name, nullable, false),
-            LargeWKT(t) => t.to_field(name, nullable, true),
+            Wkb(t) => t.to_field(name, nullable, false),
+            LargeWkb(t) => t.to_field(name, nullable, true),
+            Wkt(t) => t.to_field(name, nullable, false),
+            LargeWkt(t) => t.to_field(name, nullable, true),
         }
     }
 
@@ -279,85 +261,127 @@ impl GeoArrowType {
             GeometryCollection(t) => GeometryCollection(t.with_metadata(meta)),
             Rect(t) => Rect(t.with_metadata(meta)),
             Geometry(t) => Geometry(t.with_metadata(meta)),
-            WKB(t) => WKB(t.with_metadata(meta)),
-            LargeWKB(t) => LargeWKB(t.with_metadata(meta)),
-            WKT(t) => WKT(t.with_metadata(meta)),
-            LargeWKT(t) => LargeWKT(t.with_metadata(meta)),
+            Wkb(t) => Wkb(t.with_metadata(meta)),
+            LargeWkb(t) => LargeWkb(t.with_metadata(meta)),
+            Wkt(t) => Wkt(t.with_metadata(meta)),
+            LargeWkt(t) => LargeWkt(t.with_metadata(meta)),
         }
     }
 }
+
+macro_rules! impl_into_geoarrowtype {
+    ($source_type:ident, $variant:expr) => {
+        impl From<$source_type> for GeoArrowType {
+            fn from(value: $source_type) -> Self {
+                $variant(value)
+            }
+        }
+    };
+}
+
+impl_into_geoarrowtype!(PointType, GeoArrowType::Point);
+impl_into_geoarrowtype!(LineStringType, GeoArrowType::LineString);
+impl_into_geoarrowtype!(PolygonType, GeoArrowType::Polygon);
+impl_into_geoarrowtype!(MultiPointType, GeoArrowType::MultiPoint);
+impl_into_geoarrowtype!(MultiLineStringType, GeoArrowType::MultiLineString);
+impl_into_geoarrowtype!(MultiPolygonType, GeoArrowType::MultiPolygon);
+impl_into_geoarrowtype!(GeometryCollectionType, GeoArrowType::GeometryCollection);
+impl_into_geoarrowtype!(BoxType, GeoArrowType::Rect);
+impl_into_geoarrowtype!(GeometryType, GeoArrowType::Geometry);
 
 impl TryFrom<&Field> for GeoArrowType {
     type Error = GeoArrowError;
 
     fn try_from(field: &Field) -> Result<Self> {
         // TODO: should we make Metadata::deserialize public?
-        let metadata: Metadata =
-            if let Some(ext_meta) = field.metadata().get(EXTENSION_TYPE_METADATA_KEY) {
-                serde_json::from_str(ext_meta)?
-            } else {
-                Default::default()
-            };
+        let metadata: Metadata = if let Some(ext_meta) = field.extension_type_metadata() {
+            serde_json::from_str(ext_meta)?
+        } else {
+            Default::default()
+        };
 
         use GeoArrowType::*;
-        if let Some(extension_name) = field.metadata().get(EXTENSION_TYPE_NAME_KEY) {
-            let data_type = match extension_name.as_str() {
+        if let Some(extension_name) = field.extension_type_name() {
+            let data_type = match extension_name {
                 PointType::NAME => Point(PointType::try_new(field.data_type(), metadata)?),
-                LineStringType::NAME => LineString(LineStringType::try_new(field.data_type(), metadata)?),
-                PolygonType::NAME => Polygon(PolygonType::try_new(field.data_type(), metadata) ?) ,
-                MultiPointType::NAME => MultiPoint(MultiPointType::try_new(field.data_type(), metadata) ?),
-                MultiLineStringType::NAME => MultiLineString(MultiLineStringType::try_new(field.data_type(), metadata) ?),
-                MultiPolygonType::NAME => MultiPolygon(MultiPolygonType::try_new(field.data_type(), metadata) ?),
-                GeometryCollectionType::NAME => GeometryCollection(GeometryCollectionType::try_new(field.data_type(), metadata) ?),
-                BoxType::NAME => Rect(BoxType::try_new(field.data_type(), metadata) ?),
-                GeometryType::NAME => Geometry(GeometryType::try_new(field.data_type(), metadata) ?),
+                LineStringType::NAME => {
+                    LineString(LineStringType::try_new(field.data_type(), metadata)?)
+                }
+                PolygonType::NAME => Polygon(PolygonType::try_new(field.data_type(), metadata)?),
+                MultiPointType::NAME => {
+                    MultiPoint(MultiPointType::try_new(field.data_type(), metadata)?)
+                }
+                MultiLineStringType::NAME => {
+                    MultiLineString(MultiLineStringType::try_new(field.data_type(), metadata)?)
+                }
+                MultiPolygonType::NAME => {
+                    MultiPolygon(MultiPolygonType::try_new(field.data_type(), metadata)?)
+                }
+                GeometryCollectionType::NAME => GeometryCollection(
+                    GeometryCollectionType::try_new(field.data_type(), metadata)?,
+                ),
+                BoxType::NAME => Rect(BoxType::try_new(field.data_type(), metadata)?),
+                GeometryType::NAME => Geometry(GeometryType::try_new(field.data_type(), metadata)?),
                 WkbType::NAME | "ogc.wkb" => match field.data_type() {
-                    DataType::Binary => WKB(WkbType::new(metadata.into())),
-                    DataType::LargeBinary => {
-                        LargeWKB(WkbType::new(metadata.into()))
-                    }
+                    DataType::Binary => Wkb(WkbType::new(metadata.into())),
+                    DataType::LargeBinary => LargeWkb(WkbType::new(metadata.into())),
                     _ => {
                         return Err(GeoArrowError::General(format!(
                             "Expected binary type for geoarrow.wkb, got '{}'",
                             field.data_type()
-                        )))
+                        )));
                     }
                 },
                 WktType::NAME => match field.data_type() {
-                    DataType::Utf8 => WKT(WktType::new(metadata.into())),
-                    DataType::LargeUtf8 => LargeWKT(WktType::new(metadata.into())),
+                    DataType::Utf8 => Wkt(WktType::new(metadata.into())),
+                    DataType::LargeUtf8 => LargeWkt(WktType::new(metadata.into())),
                     _ => {
                         return Err(GeoArrowError::General(format!(
                             "Expected string type for geoarrow.wkt, got '{}'",
                             field.data_type()
-                        )))
+                        )));
                     }
                 },
-
-                // We always parse geoarrow.geometry to a GeometryArray
-                // "geoarrow.geometry" => parse_mixed(field)?,
-                name => return Err(GeoArrowError::General(format!("Expected GeoArrow native type, got '{}'.\nIf you're passing a serialized GeoArrow type like 'geoarrow.wkb' or 'geoarrow.wkt', you need to parse to a native representation.", name))),
+                name => {
+                    return Err(GeoArrowError::General(format!(
+                        "Expected GeoArrow native type, got '{}'.\nIf you're passing a serialized GeoArrow type like 'geoarrow.wkb' or 'geoarrow.wkt', you need to parse to a native representation.",
+                        name
+                    )));
+                }
             };
             Ok(data_type)
         } else {
-            // TODO: better error here, and document that arrays without geoarrow extension
-            // metadata should use TryFrom for a specific geometry type directly, instead of using
-            // GeometryArray
+            let metadata = Arc::new(metadata);
             let data_type = match field.data_type() {
-                DataType::Struct(struct_fields) => match struct_fields.len() {
-                    2 =>  GeoArrowType::Point(PointType::new(CoordType::Separated , Dimension::XY, metadata.into())),
-                    3 => GeoArrowType::Point(PointType::new(CoordType::Separated , Dimension::XYZ, metadata.into())),
-                    l => return Err(GeoArrowError::General(format!("incorrect number of struct fields {l}"))),
+                DataType::Struct(struct_fields) => {
+                    if !struct_fields.iter().all(|f| matches!(f.data_type(), DataType::Float64) ) {
+                        return Err(GeoArrowError::General("all struct fields must be Float64 when inferring point type.".to_string()));
+                    }
+
+                    match struct_fields.len() {
+                        2 =>  GeoArrowType::Point(PointType::new(CoordType::Separated , Dimension::XY, metadata)),
+                        3 => GeoArrowType::Point(PointType::new(CoordType::Separated , Dimension::XYZ, metadata)),
+                        4 => GeoArrowType::Point(PointType::new(CoordType::Separated , Dimension::XYZM, metadata)),
+                        l => return Err(GeoArrowError::General(format!("invalid number of struct fields: {l}"))),
+                    }
                 },
-                DataType::FixedSizeList(_, _list_size) => {
-                    todo!("Restore parsing of FixedSizeList to PointType");
-                    // GeoArrowType::Point(PointType::new(CoordType::Interleaved , (*list_size as usize).try_into()?, metadata) )
+                DataType::FixedSizeList(inner_field, list_size) => {
+                    if !matches!(inner_field.data_type(), DataType::Float64 )  {
+                        return Err(GeoArrowError::General(format!("invalid inner field type of fixed size list: {}", inner_field.data_type())));
+                    }
+
+                    match list_size {
+                        2 => GeoArrowType::Point(PointType::new(CoordType::Interleaved , Dimension::XY, metadata)),
+                        3 => GeoArrowType::Point(PointType::new(CoordType::Interleaved , Dimension::XYZ, metadata)),
+                        4 => GeoArrowType::Point(PointType::new(CoordType::Interleaved , Dimension::XYZM, metadata)),
+                        _ => return Err(GeoArrowError::General(format!("invalid list_size: {list_size}"))),
+                    }
                 },
-                DataType::Binary => WKB(WkbType::new(metadata.into())),
-                DataType::LargeBinary => LargeWKB(WkbType::new(metadata.into())),
-                DataType::Utf8 => WKT(WktType::new(metadata.into())),
-                DataType::LargeUtf8 => LargeWKT(WktType::new(metadata.into())),
-                _ => return Err(GeoArrowError::General("Only FixedSizeList, Struct, Binary, LargeBinary, String, and LargeString arrays are unambigously typed for a GeoArrow type and can be used without extension metadata.".to_string())),
+                DataType::Binary => Wkb(WkbType::new(metadata)),
+                DataType::LargeBinary => LargeWkb(WkbType::new(metadata)),
+                DataType::Utf8 => Wkt(WktType::new(metadata)),
+                DataType::LargeUtf8 => LargeWkt(WktType::new(metadata)),
+                _ => return Err(GeoArrowError::General("Only FixedSizeList, Struct, Binary, LargeBinary, String, and LargeString arrays are unambigously typed for a GeoArrow type and can be used without extension metadata.\nEnsure your array input has GeoArrow metadata.".to_string())),
             };
             Ok(data_type)
         }
@@ -366,18 +390,103 @@ impl TryFrom<&Field> for GeoArrowType {
 
 #[cfg(test)]
 mod test {
+    use std::sync::Arc;
+
+    use arrow_array::Array;
+    use arrow_array::builder::{ArrayBuilder, FixedSizeListBuilder, Float64Builder, StructBuilder};
+
     use super::*;
     use crate::builder::GeometryBuilder;
     use crate::trait_::GeoArrowArray;
 
     #[test]
+    fn infer_type_interleaved_point() {
+        let test_cases = [
+            (2, Dimension::XY),
+            (3, Dimension::XYZ),
+            (4, Dimension::XYZM),
+        ];
+        for (list_size, dim) in test_cases.into_iter() {
+            let array = FixedSizeListBuilder::new(Float64Builder::new(), list_size).finish();
+            let t =
+                GeoArrowType::try_from(&Field::new("", array.data_type().clone(), true)).unwrap();
+            assert_eq!(
+                t,
+                GeoArrowType::Point(PointType::new(
+                    CoordType::Interleaved,
+                    dim,
+                    Default::default()
+                ))
+            );
+        }
+    }
+
+    #[test]
+    fn infer_type_separated_point() {
+        let test_cases = [
+            (
+                vec![
+                    Arc::new(Field::new("x", DataType::Float64, true)),
+                    Arc::new(Field::new("y", DataType::Float64, true)),
+                ],
+                vec![
+                    Box::new(Float64Builder::new()) as Box<dyn ArrayBuilder>,
+                    Box::new(Float64Builder::new()),
+                ],
+                Dimension::XY,
+            ),
+            (
+                vec![
+                    Arc::new(Field::new("x", DataType::Float64, true)),
+                    Arc::new(Field::new("y", DataType::Float64, true)),
+                    Arc::new(Field::new("z", DataType::Float64, true)),
+                ],
+                vec![
+                    Box::new(Float64Builder::new()) as Box<dyn ArrayBuilder>,
+                    Box::new(Float64Builder::new()),
+                    Box::new(Float64Builder::new()),
+                ],
+                Dimension::XYZ,
+            ),
+            (
+                vec![
+                    Arc::new(Field::new("x", DataType::Float64, true)),
+                    Arc::new(Field::new("y", DataType::Float64, true)),
+                    Arc::new(Field::new("z", DataType::Float64, true)),
+                    Arc::new(Field::new("m", DataType::Float64, true)),
+                ],
+                vec![
+                    Box::new(Float64Builder::new()) as Box<dyn ArrayBuilder>,
+                    Box::new(Float64Builder::new()),
+                    Box::new(Float64Builder::new()),
+                    Box::new(Float64Builder::new()),
+                ],
+                Dimension::XYZM,
+            ),
+        ];
+        for (fields, builders, dim) in test_cases.into_iter() {
+            let array = StructBuilder::new(fields, builders).finish();
+            let t =
+                GeoArrowType::try_from(&Field::new("", array.data_type().clone(), true)).unwrap();
+            assert_eq!(
+                t,
+                GeoArrowType::Point(PointType::new(
+                    CoordType::Separated,
+                    dim,
+                    Default::default()
+                ))
+            );
+        }
+    }
+
+    #[test]
     fn native_type_round_trip() {
-        let point_array = crate::test::point::point_array();
+        let point_array = crate::test::point::point_array(CoordType::Interleaved);
         let field = point_array.data_type.to_field("geometry", true);
         let data_type: GeoArrowType = (&field).try_into().unwrap();
         assert_eq!(point_array.data_type(), data_type);
 
-        let ml_array = crate::test::multilinestring::ml_array();
+        let ml_array = crate::test::multilinestring::ml_array(CoordType::Interleaved);
         let field = ml_array.data_type.to_field("geometry", true);
         let data_type: GeoArrowType = (&field).try_into().unwrap();
         assert_eq!(ml_array.data_type(), data_type);

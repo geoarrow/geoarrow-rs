@@ -2,14 +2,14 @@
 name = "geoarrow-rust-proj"
 version = "0.1.0"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
-edition = "2021"
+edition = "2024"
 description = "GeoArrow bindings to PROJ."
 readme = "README.md"
 repository = "https://github.com/geoarrow/geoarrow-rs"
 license = "MIT OR Apache-2.0"
 keywords = ["python", "arrow", "geospatial"]
 categories = ["wasm", "science::geo"]
-rust-version = "1.75"
+rust-version = "1.85"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]

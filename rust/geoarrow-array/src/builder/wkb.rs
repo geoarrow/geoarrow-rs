@@ -1,33 +1,33 @@
-use arrow_array::builder::GenericBinaryBuilder;
 use arrow_array::OffsetSizeTrait;
+use arrow_array::builder::GenericBinaryBuilder;
 use geo_traits::{
-    GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
-    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait,
+    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
+    MultiPolygonTrait, PointTrait, PolygonTrait,
 };
 use geoarrow_schema::WkbType;
-use wkb::writer::{
-    write_geometry_collection, write_line_string, write_multi_line_string, write_multi_point,
-    write_multi_polygon, write_point, write_polygon,
-};
 use wkb::Endianness;
+use wkb::writer::{
+    write_geometry, write_geometry_collection, write_line_string, write_multi_line_string,
+    write_multi_point, write_multi_polygon, write_point, write_polygon,
+};
 
-use crate::array::WKBArray;
-use crate::capacity::WKBCapacity;
+use crate::array::WkbArray;
+use crate::capacity::WkbCapacity;
 
-/// The GeoArrow equivalent to `Vec<Option<WKB>>`: a mutable collection of WKB buffers.
+/// The GeoArrow equivalent to `Vec<Option<Wkb>>`: a mutable collection of Wkb buffers.
 ///
-/// Converting a [`WKBBuilder`] into a [`WKBArray`] is `O(1)`.
+/// Converting a [`WkbBuilder`] into a [`WkbArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct WKBBuilder<O: OffsetSizeTrait>(GenericBinaryBuilder<O>, WkbType);
+pub struct WkbBuilder<O: OffsetSizeTrait>(GenericBinaryBuilder<O>, WkbType);
 
-impl<O: OffsetSizeTrait> WKBBuilder<O> {
-    /// Creates a new empty [`WKBBuilder`].
+impl<O: OffsetSizeTrait> WkbBuilder<O> {
+    /// Creates a new empty [`WkbBuilder`].
     pub fn new(typ: WkbType) -> Self {
         Self::with_capacity(typ, Default::default())
     }
 
-    /// Initializes a new [`WKBBuilder`] with a pre-allocated capacity of slots and values.
-    pub fn with_capacity(typ: WkbType, capacity: WKBCapacity) -> Self {
+    /// Initializes a new [`WkbBuilder`] with a pre-allocated capacity of slots and values.
+    pub fn with_capacity(typ: WkbType, capacity: WkbCapacity) -> Self {
         Self(
             GenericBinaryBuilder::with_capacity(
                 capacity.offsets_capacity,
@@ -37,19 +37,19 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         )
     }
 
-    /// Creates a new empty [`WKBBuilder`] with a capacity inferred by the provided geometry
+    /// Creates a new empty [`WkbBuilder`] with a capacity inferred by the provided geometry
     /// iterator.
     pub fn with_capacity_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
         typ: WkbType,
     ) -> Self {
-        let counter = WKBCapacity::from_geometries(geoms);
+        let counter = WkbCapacity::from_geometries(geoms);
         Self::with_capacity(typ, counter)
     }
 
     // Upstream APIs don't exist for this yet. To implement this without upstream changes, we could
     // change to using manual `Vec`'s ourselves
-    // pub fn reserve(&mut self, capacity: WKBCapacity) {
+    // pub fn reserve(&mut self, capacity: WkbCapacity) {
     // }
 
     /// Push a Point onto the end of this builder
@@ -121,24 +121,9 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     /// Push a Geometry onto the end of this builder
     #[inline]
     pub fn push_geometry(&mut self, geom: Option<&impl GeometryTrait<T = f64>>) {
-        use GeometryType::*;
-
-        // TODO: call wkb::write_geometry directly
         if let Some(geom) = geom {
-            match geom.as_type() {
-                Point(point) => self.push_point(Some(point)),
-                LineString(line_string) => self.push_line_string(Some(line_string)),
-                Polygon(polygon) => self.push_polygon(Some(polygon)),
-                MultiPoint(multi_point) => self.push_multi_point(Some(multi_point)),
-                MultiLineString(multi_line_string) => {
-                    self.push_multi_line_string(Some(multi_line_string))
-                }
-                MultiPolygon(multi_polygon) => self.push_multi_polygon(Some(multi_polygon)),
-                GeometryCollection(geometry_collection) => {
-                    self.push_geometry_collection(Some(geometry_collection))
-                }
-                Rect(_) | Line(_) | Triangle(_) => todo!(),
-            }
+            write_geometry(&mut self.0, geom, Endianness::LittleEndian).unwrap();
+            self.0.append_value("")
         } else {
             self.0.append_null()
         }
@@ -185,10 +170,10 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         array
     }
 
-    /// Consume this builder and convert to a [WKBArray].
+    /// Consume this builder and convert to a [WkbArray].
     ///
     /// This is `O(1)`.
-    pub fn finish(mut self) -> WKBArray<O> {
-        WKBArray::new(self.0.finish(), self.1.metadata().clone())
+    pub fn finish(mut self) -> WkbArray<O> {
+        WkbArray::new(self.0.finish(), self.1.metadata().clone())
     }
 }

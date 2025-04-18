@@ -56,6 +56,8 @@ pub(super) fn infer_schema(header: Header<'_>) -> SchemaRef {
             ColumnType::Double => Field::new(col.name(), DataType::Float64, col.nullable()),
             ColumnType::String => Field::new(col.name(), DataType::Utf8, col.nullable()),
             ColumnType::Json => {
+                // TODO: switch to using the `Json` canonical extension from the `arrow_schema`
+                // crate
                 let mut metadata = HashMap::with_capacity(1);
                 metadata.insert(
                     EXTENSION_TYPE_NAME_KEY.to_string(),

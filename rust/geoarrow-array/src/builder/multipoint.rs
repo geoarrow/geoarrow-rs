@@ -5,7 +5,7 @@ use geoarrow_schema::{CoordType, MultiPointType};
 
 use crate::capacity::MultiPointCapacity;
 // use super::array::check;
-use crate::array::{MultiPointArray, WKBArray};
+use crate::array::{MultiPointArray, WkbArray};
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
 };
@@ -275,10 +275,10 @@ impl MultiPointBuilder {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, MultiPointType)> for MultiPointBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiPointType)> for MultiPointBuilder {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (WKBArray<O>, MultiPointType)) -> Result<Self> {
+    fn try_from((value, typ): (WkbArray<O>, MultiPointType)) -> Result<Self> {
         let wkb_objects = value
             .iter()
             .map(|x| x.transpose())
@@ -290,5 +290,9 @@ impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, MultiPointType)> for MultiPointBu
 impl GeometryArrayBuilder for MultiPointBuilder {
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
+    }
+
+    fn push_null(&mut self) {
+        self.push_null();
     }
 }

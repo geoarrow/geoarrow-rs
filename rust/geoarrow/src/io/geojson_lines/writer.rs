@@ -1,5 +1,5 @@
-use geozero::geojson::GeoJsonLineWriter;
 use geozero::GeozeroDatasource;
+use geozero::geojson::GeoJsonLineWriter;
 use std::io::Write;
 
 use crate::error::Result;

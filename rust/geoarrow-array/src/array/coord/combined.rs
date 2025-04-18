@@ -41,8 +41,8 @@ impl CoordBuffer {
     /// The underlying coordinate type
     pub fn coord_type(&self) -> CoordType {
         match self {
-            CoordBuffer::Interleaved(cb) => cb.coord_type(),
-            CoordBuffer::Separated(cb) => cb.coord_type(),
+            CoordBuffer::Interleaved(_) => CoordType::Interleaved,
+            CoordBuffer::Separated(_) => CoordType::Separated,
         }
     }
 

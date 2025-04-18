@@ -1,8 +1,8 @@
+use geoarrow::ArrayBase;
 use geoarrow::array::WKBArray;
 use geoarrow::chunked_array::{ChunkedArrayBase, ChunkedWKBArray};
 use geoarrow::datatypes::SerializedType;
-use geoarrow::io::wkb::{to_wkb as _to_wkb, FromWKB, ToWKB};
-use geoarrow::ArrayBase;
+use geoarrow::io::wkb::{FromWKB, ToWKB, to_wkb as _to_wkb};
 use geoarrow_schema::Dimension;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;

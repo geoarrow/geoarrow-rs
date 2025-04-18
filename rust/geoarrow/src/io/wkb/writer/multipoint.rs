@@ -1,12 +1,12 @@
+use crate::ArrayBase;
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{MultiPointArray, WKBArray};
 use crate::trait_::ArrayAccessor;
-use crate::ArrayBase;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use arrow_buffer::Buffer;
 use std::io::Cursor;
-use wkb::writer::{multi_point_wkb_size, write_multi_point};
 use wkb::Endianness;
+use wkb::writer::{multi_point_wkb_size, write_multi_point};
 
 impl<O: OffsetSizeTrait> From<&MultiPointArray> for WKBArray<O> {
     fn from(value: &MultiPointArray) -> Self {

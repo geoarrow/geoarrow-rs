@@ -3,9 +3,7 @@
 
 use std::sync::Arc;
 
-use arrow_schema::extension::{
-    ExtensionType, EXTENSION_TYPE_METADATA_KEY, EXTENSION_TYPE_NAME_KEY,
-};
+use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{
     BoxType, CoordType, Dimension, GeometryCollectionType, GeometryType, LineStringType, Metadata,
@@ -371,28 +369,44 @@ impl TryFrom<&Field> for NativeType {
 
     fn try_from(field: &Field) -> Result<Self> {
         // TODO: should we make Metadata::deserialize public?
-        let metadata: Metadata =
-            if let Some(ext_meta) = field.metadata().get(EXTENSION_TYPE_METADATA_KEY) {
-                serde_json::from_str(ext_meta)?
-            } else {
-                Default::default()
-            };
+        let metadata: Metadata = if let Some(ext_meta) = field.extension_type_metadata() {
+            serde_json::from_str(ext_meta)?
+        } else {
+            Default::default()
+        };
 
         use NativeType::*;
-        if let Some(extension_name) = field.metadata().get(EXTENSION_TYPE_NAME_KEY) {
-            let data_type = match extension_name.as_str() {
+        if let Some(extension_name) = field.extension_type_name() {
+            let data_type = match extension_name {
                 "geoarrow.point" => Point(PointType::try_new(field.data_type(), metadata)?),
-                "geoarrow.linestring" => LineString(LineStringType::try_new(field.data_type(), metadata)?),
-                "geoarrow.polygon" => Polygon(PolygonType::try_new(field.data_type(), metadata) ?) ,
-                "geoarrow.multipoint" => MultiPoint(MultiPointType::try_new(field.data_type(), metadata) ?),
-                "geoarrow.multilinestring" => MultiLineString(MultiLineStringType::try_new(field.data_type(), metadata) ?),
-                "geoarrow.multipolygon" => MultiPolygon(MultiPolygonType::try_new(field.data_type(), metadata) ?),
-                "geoarrow.geometrycollection" => GeometryCollection(GeometryCollectionType::try_new(field.data_type(), metadata) ?),
-                "geoarrow.box" => Rect(BoxType::try_new(field.data_type(), metadata) ?),
-                "geoarrow.geometry" => Geometry(GeometryType::try_new(field.data_type(), metadata) ?),
+                "geoarrow.linestring" => {
+                    LineString(LineStringType::try_new(field.data_type(), metadata)?)
+                }
+                "geoarrow.polygon" => Polygon(PolygonType::try_new(field.data_type(), metadata)?),
+                "geoarrow.multipoint" => {
+                    MultiPoint(MultiPointType::try_new(field.data_type(), metadata)?)
+                }
+                "geoarrow.multilinestring" => {
+                    MultiLineString(MultiLineStringType::try_new(field.data_type(), metadata)?)
+                }
+                "geoarrow.multipolygon" => {
+                    MultiPolygon(MultiPolygonType::try_new(field.data_type(), metadata)?)
+                }
+                "geoarrow.geometrycollection" => GeometryCollection(
+                    GeometryCollectionType::try_new(field.data_type(), metadata)?,
+                ),
+                "geoarrow.box" => Rect(BoxType::try_new(field.data_type(), metadata)?),
+                "geoarrow.geometry" => {
+                    Geometry(GeometryType::try_new(field.data_type(), metadata)?)
+                }
                 // We always parse geoarrow.geometry to a GeometryArray
                 // "geoarrow.geometry" => parse_mixed(field)?,
-                name => return Err(GeoArrowError::General(format!("Expected GeoArrow native type, got '{}'.\nIf you're passing a serialized GeoArrow type like 'geoarrow.wkb' or 'geoarrow.wkt', you need to parse to a native representation.", name))),
+                name => {
+                    return Err(GeoArrowError::General(format!(
+                        "Expected GeoArrow native type, got '{}'.\nIf you're passing a serialized GeoArrow type like 'geoarrow.wkb' or 'geoarrow.wkt', you need to parse to a native representation.",
+                        name
+                    )));
+                }
             };
             Ok(data_type)
         } else {
@@ -421,15 +435,14 @@ impl TryFrom<&Field> for SerializedType {
 
     fn try_from(field: &Field) -> Result<Self> {
         // TODO: should we make Metadata::deserialize public?
-        let metadata: Metadata =
-            if let Some(ext_meta) = field.metadata().get(EXTENSION_TYPE_METADATA_KEY) {
-                serde_json::from_str(ext_meta)?
-            } else {
-                Default::default()
-            };
+        let metadata: Metadata = if let Some(ext_meta) = field.extension_type_metadata() {
+            serde_json::from_str(ext_meta)?
+        } else {
+            Default::default()
+        };
 
-        if let Some(extension_name) = field.metadata().get(EXTENSION_TYPE_NAME_KEY) {
-            let data_type = match extension_name.as_str() {
+        if let Some(extension_name) = field.extension_type_name() {
+            let data_type = match extension_name {
                 "geoarrow.wkb" | "ogc.wkb" => match field.data_type() {
                     DataType::Binary => SerializedType::WKB(WkbType::new(metadata.into())),
                     DataType::LargeBinary => {
@@ -439,7 +452,7 @@ impl TryFrom<&Field> for SerializedType {
                         return Err(GeoArrowError::General(format!(
                             "Expected binary type for geoarrow.wkb, got '{}'",
                             field.data_type()
-                        )))
+                        )));
                     }
                 },
                 "geoarrow.wkt" => match field.data_type() {
@@ -449,14 +462,14 @@ impl TryFrom<&Field> for SerializedType {
                         return Err(GeoArrowError::General(format!(
                             "Expected string type for geoarrow.wkt, got '{}'",
                             field.data_type()
-                        )))
+                        )));
                     }
                 },
                 name => {
                     return Err(GeoArrowError::General(format!(
                         "Expected GeoArrow serialized type, got '{}'",
                         name
-                    )))
+                    )));
                 }
             };
             Ok(data_type)

@@ -6,12 +6,12 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use arrow_array::ArrayRef;
 use arrow_array::builder::{
     ArrayBuilder, BinaryBuilder, BooleanBuilder, Date32Builder, Float32Builder, Float64Builder,
-    Int16Builder, Int32Builder, Int64Builder, Int8Builder, StringBuilder,
-    TimestampMicrosecondBuilder, UInt16Builder, UInt32Builder, UInt64Builder, UInt8Builder,
+    Int8Builder, Int16Builder, Int32Builder, Int64Builder, StringBuilder,
+    TimestampMicrosecondBuilder, UInt8Builder, UInt16Builder, UInt32Builder, UInt64Builder,
 };
-use arrow_array::ArrayRef;
 use arrow_cast::parse::string_to_datetime;
 use arrow_schema::extension::EXTENSION_TYPE_NAME_KEY;
 use arrow_schema::{DataType, Field, TimeUnit};
@@ -131,10 +131,8 @@ impl AnyBuilder {
         use AnyBuilder::*;
 
         // Short circuit check for JSON type
-        if let Some(ext_val) = field.metadata().get(EXTENSION_TYPE_NAME_KEY) {
-            if ext_val.as_str() == "arrow.json" {
-                return Json(StringBuilder::with_capacity(capacity, 0));
-            }
+        if let Ok(_ext) = field.try_extension_type::<arrow_schema::extension::Json>() {
+            return Json(StringBuilder::with_capacity(capacity, 0));
         }
 
         match field.data_type() {
@@ -170,7 +168,7 @@ impl AnyBuilder {
                 return Err(GeoArrowError::General(format!(
                     "Unexpected type in add_timestamp_value, {:?}",
                     builder_type
-                )))
+                )));
             }
         }
         Ok(())

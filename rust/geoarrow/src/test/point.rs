@@ -3,12 +3,12 @@ use std::sync::Arc;
 
 use arrow_array::RecordBatch;
 use arrow_schema::{DataType, Field, Schema};
-use geo::{point, Point};
+use geo::{Point, point};
 
+use crate::ArrayBase;
 use crate::array::{PointArray, PointBuilder};
 use crate::table::Table;
 use crate::test::properties;
-use crate::ArrayBase;
 use geo_traits::CoordTrait;
 use geoarrow_schema::{CoordType, Dimension};
 
@@ -99,31 +99,6 @@ pub(crate) fn point_z_array() -> PointArray {
 
 pub(crate) fn table() -> Table {
     let point_array = point_array();
-    let u8_array = properties::u8_array();
-    let string_array = properties::string_array();
-
-    let fields = vec![
-        Arc::new(Field::new("u8", DataType::UInt8, true)),
-        Arc::new(Field::new("string", DataType::Utf8, true)),
-        point_array.extension_field(),
-    ];
-    let schema = Arc::new(Schema::new(fields));
-
-    let batch = RecordBatch::try_new(
-        schema.clone(),
-        vec![
-            Arc::new(u8_array),
-            Arc::new(string_array),
-            point_array.into_array_ref(),
-        ],
-    )
-    .unwrap();
-
-    Table::try_new(vec![batch], schema).unwrap()
-}
-
-pub(crate) fn table_z() -> Table {
-    let point_array = point_z_array();
     let u8_array = properties::u8_array();
     let string_array = properties::string_array();
 

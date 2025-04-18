@@ -150,8 +150,10 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
     #[inline]
     pub unsafe fn start_end_unchecked(&self, index: usize) -> (usize, usize) {
         // soundness: the invariant of the function
-        let start = self.0.get_unchecked(index).to_usize().unwrap();
-        let end = self.0.get_unchecked(index + 1).to_usize().unwrap();
+        let start = unsafe { self.0.get_unchecked(index) }.to_usize().unwrap();
+        let end = unsafe { self.0.get_unchecked(index + 1) }
+            .to_usize()
+            .unwrap();
         (start, end)
     }
 

@@ -5,8 +5,8 @@ use crate::util::to_arro3_table;
 use geoarrow::io::geojson::read_geojson as _read_geojson;
 use geoarrow::io::geojson::write_geojson as _write_geojson;
 use pyo3::prelude::*;
-use pyo3_arrow::export::Arro3Table;
 use pyo3_arrow::PyRecordBatchReader;
+use pyo3_arrow::export::Arro3Table;
 
 #[pyfunction]
 #[pyo3(signature = (file, *, batch_size=65536))]

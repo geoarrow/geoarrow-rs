@@ -1,14 +1,15 @@
-use arrow_schema::extension::EXTENSION_TYPE_METADATA_KEY;
 use arrow_schema::{ArrowError, Field};
 use serde::{Deserialize, Serialize};
 
 use crate::{Crs, Edges};
 
-/// A GeoArrow metadata object following the extension metadata [defined by the GeoArrow
+/// GeoArrow extension metadata.
+///
+/// This follows the extension metadata [defined by the GeoArrow
 /// specification](https://geoarrow.org/extension-types).
 ///
-/// This is serialized to JSON when a [`geoarrow`](self) array is exported to an [`arrow`] array and
-/// deserialized when imported from an [`arrow`] array.
+/// This is serialized to JSON when a [`geoarrow`](self) array is exported to an [`arrow`] array
+/// and deserialized when imported from an [`arrow`] array.
 #[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct Metadata {
     // Raise the underlying crs fields to this level.
@@ -28,14 +29,19 @@ impl Metadata {
         Self { crs, edges }
     }
 
+    /// Expose the underlying Coordinate Reference System information.
     pub fn crs(&self) -> &Crs {
         &self.crs
     }
 
+    /// Expose the underlying edge interpolation
     pub fn edges(&self) -> Option<Edges> {
         self.edges
     }
 
+    /// Serialize this metadata to a string.
+    ///
+    /// If `None`, no extension metadata should be written.
     pub(crate) fn serialize(&self) -> Option<String> {
         if self.crs.should_serialize() || self.edges.is_some() {
             Some(serde_json::to_string(&self).unwrap())
@@ -44,6 +50,7 @@ impl Metadata {
         }
     }
 
+    /// Deserialize metadata from a string.
     pub(crate) fn deserialize<S: AsRef<str>>(metadata: Option<S>) -> Result<Self, ArrowError> {
         if let Some(ext_meta) = metadata {
             Ok(serde_json::from_str(ext_meta.as_ref())
@@ -58,7 +65,7 @@ impl TryFrom<&Field> for Metadata {
     type Error = ArrowError;
 
     fn try_from(value: &Field) -> Result<Self, Self::Error> {
-        Self::deserialize(value.metadata().get(EXTENSION_TYPE_METADATA_KEY))
+        Self::deserialize(value.extension_type_metadata())
     }
 }
 
@@ -67,7 +74,7 @@ mod test {
     use std::{collections::HashMap, str::FromStr};
 
     use arrow_schema::DataType;
-    use serde_json::{json, Value};
+    use serde_json::{Value, json};
 
     use super::*;
 

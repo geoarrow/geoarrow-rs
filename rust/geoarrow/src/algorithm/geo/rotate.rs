@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
+use crate::NativeArray;
 use crate::algorithm::geo::{AffineOps, Center, Centroid};
 use crate::array::MultiPointArray;
 use crate::array::*;
 use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
 use arrow_array::Float64Array;
 use geo::AffineTransform;
 
@@ -217,9 +217,7 @@ impl Rotate<f64> for &dyn NativeArray {
 
     fn rotate_around_centroid(&self, degrees: &f64) -> Self::Output {
         macro_rules! impl_method {
-            ($method:ident) => {{
-                Arc::new(self.$method().rotate_around_centroid(degrees))
-            }};
+            ($method:ident) => {{ Arc::new(self.$method().rotate_around_centroid(degrees)) }};
         }
 
         use NativeType::*;
@@ -242,9 +240,7 @@ impl Rotate<f64> for &dyn NativeArray {
 
     fn rotate_around_center(&self, degrees: &f64) -> Self::Output {
         macro_rules! impl_method {
-            ($method:ident) => {{
-                Arc::new(self.$method().rotate_around_center(degrees))
-            }};
+            ($method:ident) => {{ Arc::new(self.$method().rotate_around_center(degrees)) }};
         }
 
         use NativeType::*;
@@ -267,9 +263,7 @@ impl Rotate<f64> for &dyn NativeArray {
 
     fn rotate_around_point(&self, degrees: &f64, point: geo::Point) -> Self::Output {
         macro_rules! impl_method {
-            ($method:ident) => {{
-                Arc::new(self.$method().rotate_around_point(degrees, point))
-            }};
+            ($method:ident) => {{ Arc::new(self.$method().rotate_around_point(degrees, point)) }};
         }
 
         use NativeType::*;
@@ -296,9 +290,7 @@ impl Rotate<Float64Array> for &dyn NativeArray {
 
     fn rotate_around_centroid(&self, degrees: &Float64Array) -> Self::Output {
         macro_rules! impl_method {
-            ($method:ident) => {{
-                Arc::new(self.$method().rotate_around_centroid(degrees))
-            }};
+            ($method:ident) => {{ Arc::new(self.$method().rotate_around_centroid(degrees)) }};
         }
 
         use NativeType::*;
@@ -321,9 +313,7 @@ impl Rotate<Float64Array> for &dyn NativeArray {
 
     fn rotate_around_center(&self, degrees: &Float64Array) -> Self::Output {
         macro_rules! impl_method {
-            ($method:ident) => {{
-                Arc::new(self.$method().rotate_around_center(degrees))
-            }};
+            ($method:ident) => {{ Arc::new(self.$method().rotate_around_center(degrees)) }};
         }
 
         use NativeType::*;
@@ -346,9 +336,7 @@ impl Rotate<Float64Array> for &dyn NativeArray {
 
     fn rotate_around_point(&self, degrees: &Float64Array, point: geo::Point) -> Self::Output {
         macro_rules! impl_method {
-            ($method:ident) => {{
-                Arc::new(self.$method().rotate_around_point(degrees, point))
-            }};
+            ($method:ident) => {{ Arc::new(self.$method().rotate_around_point(degrees, point)) }};
         }
 
         use NativeType::*;

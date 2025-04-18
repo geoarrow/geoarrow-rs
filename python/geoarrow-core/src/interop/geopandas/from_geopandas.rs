@@ -1,11 +1,11 @@
-use crate::interop::util::{import_geopandas, pytable_to_table, table_to_pytable};
+use crate::interop::util::import_geopandas;
+use pyo3::PyAny;
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyTuple};
-use pyo3::PyAny;
-use pyo3_arrow::export::Arro3Table;
 use pyo3_arrow::PyTable;
+use pyo3_arrow::export::Arro3Table;
 use pyo3_geoarrow::PyGeoArrowResult;
 
 #[pyfunction]
@@ -28,7 +28,5 @@ pub fn from_geopandas(py: Python, input: &Bound<PyAny>) -> PyGeoArrowResult<Arro
         )?
         .extract::<PyTable>()?;
 
-    let table = pytable_to_table(table)?;
-    let table = table.parse_serialized_geometry(table.default_geometry_column_idx()?, None)?;
-    Ok(table_to_pytable(table).into())
+    Ok(table.into())
 }

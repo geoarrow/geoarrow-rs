@@ -10,7 +10,7 @@ use geoarrow_schema::{CoordType, Dimension, Metadata, MultiPolygonType};
 
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::multipolygon::MultiPolygonCapacity;
-use crate::array::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
+use crate::array::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
 use crate::array::{
     CoordBuffer, GeometryCollectionArray, MixedGeometryArray, PolygonArray, WKBArray,
 };
@@ -636,9 +636,6 @@ impl TryFrom<GeometryCollectionArray> for MultiPolygonArray {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::test::geoarrow_data::{
-        example_multipolygon_interleaved, example_multipolygon_separated, example_multipolygon_wkb,
-    };
     use crate::test::multipolygon::{mp0, mp1};
 
     #[test]
@@ -662,26 +659,5 @@ mod test {
         let sliced = arr.slice(1, 1);
         assert_eq!(sliced.len(), 1);
         assert_eq!(sliced.get_as_geo(0), Some(mp1()));
-    }
-
-    #[test]
-    fn parse_wkb_geoarrow_interleaved_example() {
-        let geom_arr = example_multipolygon_interleaved();
-
-        let wkb_arr = example_multipolygon_wkb();
-        let parsed_geom_arr: MultiPolygonArray = (wkb_arr, Dimension::XY).try_into().unwrap();
-
-        assert_eq!(geom_arr, parsed_geom_arr);
-    }
-
-    #[test]
-    fn parse_wkb_geoarrow_separated_example() {
-        // TODO: support checking equality of interleaved vs separated coords
-        let geom_arr = example_multipolygon_separated().into_coord_type(CoordType::Interleaved);
-
-        let wkb_arr = example_multipolygon_wkb();
-        let parsed_geom_arr: MultiPolygonArray = (wkb_arr, Dimension::XY).try_into().unwrap();
-
-        assert_eq!(geom_arr, parsed_geom_arr);
     }
 }

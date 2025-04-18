@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
+use crate::NativeArray;
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
 use geo::ChaikinSmoothing as _ChaikinSmoothing;
 use geoarrow_schema::Dimension;
 

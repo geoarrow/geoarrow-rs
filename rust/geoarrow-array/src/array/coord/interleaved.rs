@@ -10,7 +10,10 @@ use crate::builder::InterleavedCoordBufferBuilder;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::InterleavedCoord;
 
-/// A an array of coordinates stored interleaved in a single buffer.
+/// An array of coordinates stored interleaved in a single buffer.
+///
+/// This stores all coordinates in interleaved fashion in a single underlying buffer: e.g. `xyxyxy`
+/// for 2D coordinates.
 #[derive(Debug, Clone, PartialEq)]
 pub struct InterleavedCoordBuffer {
     pub(crate) coords: ScalarBuffer<f64>,
@@ -29,6 +32,9 @@ fn check(coords: &ScalarBuffer<f64>, dim: Dimension) -> Result<()> {
 }
 
 impl InterleavedCoordBuffer {
+    /// The underlying coordinate type
+    pub const COORD_TYPE: CoordType = CoordType::Interleaved;
+
     /// Construct a new InterleavedCoordBuffer
     ///
     /// # Panics
@@ -99,15 +105,7 @@ impl InterleavedCoordBuffer {
     }
 
     pub(crate) fn storage_type(&self) -> DataType {
-        PointType::new(CoordType::Interleaved, self.dim, Default::default()).data_type()
-    }
-
-    // todo switch to:
-    // pub const coord_type: CoordType = CoordType::Interleaved;
-
-    /// The coordinate type
-    pub fn coord_type(&self) -> CoordType {
-        CoordType::Interleaved
+        PointType::new(Self::COORD_TYPE, self.dim, Default::default()).data_type()
     }
 
     /// The number of coordinates
@@ -135,10 +133,11 @@ impl InterleavedCoordBuffer {
 
     pub(crate) fn from_arrow(array: &FixedSizeListArray, dim: Dimension) -> Result<Self> {
         if array.value_length() != dim.size() as i32 {
-            return Err(GeoArrowError::General(
-                format!( "Expected the FixedSizeListArray to match the dimension. Array length is {}, dimension is: {:?} have size 2", array.value_length(), dim)
-
-            ));
+            return Err(GeoArrowError::General(format!(
+                "Expected the FixedSizeListArray to match the dimension. Array length is {}, dimension is: {:?} have size 2",
+                array.value_length(),
+                dim
+            )));
         }
 
         let coord_array_values = array

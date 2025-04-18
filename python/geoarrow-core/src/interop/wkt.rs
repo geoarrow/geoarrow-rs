@@ -1,8 +1,8 @@
 use arrow::datatypes::DataType;
+use geoarrow::ArrayBase;
 use geoarrow::array::WKTArray;
 use geoarrow::chunked_array::{ChunkedNativeArrayDyn, ChunkedWKTArray};
-use geoarrow::io::wkt::{read_wkt, ToWKT};
-use geoarrow::ArrayBase;
+use geoarrow::io::wkt::{ToWKT, read_wkt};
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 use pyo3_arrow::input::AnyArray;
@@ -38,7 +38,7 @@ pub fn from_wkt(
                 other => {
                     return Err(
                         PyTypeError::new_err(format!("Unexpected array type {:?}", other)).into(),
-                    )
+                    );
                 }
             };
             native_array_to_pyobject(py, geo_array)
@@ -70,7 +70,7 @@ pub fn from_wkt(
                 other => {
                     return Err(
                         PyTypeError::new_err(format!("Unexpected array type {:?}", other)).into(),
-                    )
+                    );
                 }
             };
             chunked_native_array_to_pyobject(py, geo_array.into_inner())

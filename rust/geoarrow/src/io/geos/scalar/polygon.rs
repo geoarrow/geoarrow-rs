@@ -1,6 +1,6 @@
 use crate::error::{GeoArrowError, Result};
-use crate::io::geos::scalar::linestring::to_geos_linear_ring;
 use crate::io::geos::scalar::GEOSConstLinearRing;
+use crate::io::geos::scalar::linestring::to_geos_linear_ring;
 use crate::scalar::Polygon;
 use geo_traits::PolygonTrait;
 use geos::{Geom, GeometryTypes};

@@ -4,9 +4,9 @@ use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
-use geoarrow_schema::{Metadata, MultiPolygonType};
+use geoarrow_schema::{CoordType, Metadata, MultiPolygonType};
 
-use crate::array::{CoordBuffer, PolygonArray, WKBArray};
+use crate::array::{CoordBuffer, PolygonArray, WkbArray};
 use crate::builder::MultiPolygonBuilder;
 use crate::capacity::MultiPolygonCapacity;
 use crate::datatypes::GeoArrowType;
@@ -14,9 +14,9 @@ use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::MultiPolygon;
 use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
-use crate::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
+use crate::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
 
-/// An immutable array of MultiPolygon geometries using GeoArrow's in-memory representation.
+/// An immutable array of MultiPolygon geometries.
 ///
 /// This is semantically equivalent to `Vec<Option<MultiPolygon>>` due to the internal validity
 /// bitmap.
@@ -228,6 +228,19 @@ impl MultiPolygonArray {
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }
     }
+
+    /// Change the [`CoordType`] of this array.
+    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        let metadata = self.data_type.metadata().clone();
+        Self::new(
+            self.coords.into_coord_type(coord_type),
+            self.geom_offsets,
+            self.polygon_offsets,
+            self.ring_offsets,
+            self.validity,
+            metadata,
+        )
+    }
 }
 
 impl GeoArrowArray for MultiPolygonArray {
@@ -243,13 +256,11 @@ impl GeoArrowArray for MultiPolygonArray {
         self.clone().into_array_ref()
     }
 
-    /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
     }
 
-    /// Returns the optional validity.
     #[inline]
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
@@ -389,10 +400,10 @@ impl TryFrom<(&dyn Array, &Field)> for MultiPolygonArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WKBArray<O>, MultiPolygonType)> for MultiPolygonArray {
+impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiPolygonType)> for MultiPolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WKBArray<O>, MultiPolygonType)) -> Result<Self> {
+    fn try_from(value: (WkbArray<O>, MultiPolygonType)) -> Result<Self> {
         let mut_arr: MultiPolygonBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }
@@ -419,26 +430,93 @@ impl From<PolygonArray> for MultiPolygonArray {
 
 impl PartialEq for MultiPolygonArray {
     fn eq(&self, other: &Self) -> bool {
-        if self.validity != other.validity {
-            return false;
-        }
+        self.validity == other.validity
+            && offset_buffer_eq(&self.geom_offsets, &other.geom_offsets)
+            && offset_buffer_eq(&self.polygon_offsets, &other.polygon_offsets)
+            && offset_buffer_eq(&self.ring_offsets, &other.ring_offsets)
+            && self.coords == other.coords
+    }
+}
 
-        if !offset_buffer_eq(&self.geom_offsets, &other.geom_offsets) {
-            return false;
-        }
+#[cfg(test)]
+mod test {
+    use geo_traits::to_geo::ToGeoMultiPolygon;
+    use geoarrow_schema::{CoordType, Dimension};
 
-        if !offset_buffer_eq(&self.polygon_offsets, &other.polygon_offsets) {
-            return false;
-        }
+    use crate::test::multipolygon;
 
-        if !offset_buffer_eq(&self.ring_offsets, &other.ring_offsets) {
-            return false;
-        }
+    use super::*;
 
-        if self.coords != other.coords {
-            return false;
-        }
+    #[test]
+    fn geo_round_trip() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            let geoms = [
+                Some(multipolygon::mp0()),
+                None,
+                Some(multipolygon::mp1()),
+                None,
+            ];
+            let typ = MultiPolygonType::new(coord_type, Dimension::XY, Default::default());
+            let geo_arr = MultiPolygonBuilder::from_nullable_multi_polygons(&geoms, typ).finish();
 
-        true
+            for (i, g) in geo_arr.iter().enumerate() {
+                assert_eq!(
+                    geoms[i],
+                    g.transpose().unwrap().map(|g| g.to_multi_polygon())
+                );
+            }
+
+            // Test sliced
+            for (i, g) in geo_arr.slice(2, 2).iter().enumerate() {
+                assert_eq!(
+                    geoms[i + 2],
+                    g.transpose().unwrap().map(|g| g.to_multi_polygon())
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn try_from_arrow() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let geo_arr = multipolygon::array(coord_type, dim);
+
+                let ext_type = geo_arr.ext_type().clone();
+                let field = ext_type.to_field("geometry", true);
+
+                let arrow_arr = geo_arr.to_array_ref();
+
+                let geo_arr2: MultiPolygonArray =
+                    (arrow_arr.as_ref(), ext_type).try_into().unwrap();
+                let geo_arr3: MultiPolygonArray = (arrow_arr.as_ref(), &field).try_into().unwrap();
+
+                assert_eq!(geo_arr, geo_arr2);
+                assert_eq!(geo_arr, geo_arr3);
+            }
+        }
+    }
+
+    #[test]
+    fn partial_eq() {
+        for dim in [
+            Dimension::XY,
+            Dimension::XYZ,
+            Dimension::XYM,
+            Dimension::XYZM,
+        ] {
+            let arr1 = multipolygon::array(CoordType::Interleaved, dim);
+            let arr2 = multipolygon::array(CoordType::Separated, dim);
+            assert_eq!(arr1, arr1);
+            assert_eq!(arr2, arr2);
+            assert_eq!(arr1, arr2);
+
+            assert_ne!(arr1, arr2.slice(0, 2));
+        }
     }
 }

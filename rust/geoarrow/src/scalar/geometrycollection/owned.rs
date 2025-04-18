@@ -1,7 +1,7 @@
+use crate::NativeArray;
 use crate::algorithm::native::eq::geometry_collection_eq;
 use crate::array::{GeometryCollectionArray, MixedGeometryArray};
 use crate::scalar::{Geometry, GeometryCollection};
-use crate::NativeArray;
 use arrow_buffer::OffsetBuffer;
 use geo_traits::GeometryCollectionTrait;
 use geoarrow_schema::Dimension;
@@ -76,7 +76,7 @@ impl GeometryCollectionTrait for OwnedGeometryCollection {
     }
 
     unsafe fn geometry_unchecked(&self, i: usize) -> Self::GeometryType<'_> {
-        GeometryCollection::from(self).geometry_unchecked(i)
+        unsafe { GeometryCollection::from(self).geometry_unchecked(i) }
     }
 }
 

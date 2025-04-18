@@ -10,7 +10,7 @@ use geoarrow_schema::{CoordType, Dimension, Metadata, MultiLineStringType};
 
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::multilinestring::MultiLineStringCapacity;
-use crate::array::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
+use crate::array::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
 use crate::array::{
     CoordBuffer, GeometryCollectionArray, LineStringArray, MixedGeometryArray, PolygonArray,
     WKBArray,
@@ -553,10 +553,6 @@ impl TryFrom<GeometryCollectionArray> for MultiLineStringArray {
 
 #[cfg(test)]
 mod test {
-    use crate::test::geoarrow_data::{
-        example_multilinestring_interleaved, example_multilinestring_separated,
-        example_multilinestring_wkb,
-    };
     use crate::test::multilinestring::{ml0, ml1};
 
     use super::*;
@@ -583,25 +579,5 @@ mod test {
         let sliced = arr.slice(1, 1);
         assert_eq!(sliced.len(), 1);
         assert_eq!(sliced.get_as_geo(0), Some(ml1()));
-    }
-
-    #[test]
-    fn parse_wkb_geoarrow_interleaved_example() {
-        let geom_arr = example_multilinestring_interleaved();
-
-        let wkb_arr = example_multilinestring_wkb();
-        let parsed_geom_arr: MultiLineStringArray = (wkb_arr, Dimension::XY).try_into().unwrap();
-
-        assert_eq!(geom_arr, parsed_geom_arr);
-    }
-
-    #[test]
-    fn parse_wkb_geoarrow_separated_example() {
-        let geom_arr = example_multilinestring_separated().into_coord_type(CoordType::Interleaved);
-
-        let wkb_arr = example_multilinestring_wkb();
-        let parsed_geom_arr: MultiLineStringArray = (wkb_arr, Dimension::XY).try_into().unwrap();
-
-        assert_eq!(geom_arr, parsed_geom_arr);
     }
 }

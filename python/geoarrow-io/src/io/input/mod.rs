@@ -5,7 +5,7 @@ use std::sync::Arc;
 use crate::error::PyGeoArrowResult;
 #[cfg(feature = "async")]
 use object_store::{
-    http::HttpBuilder, local::LocalFileSystem, path::Path, ClientOptions, ObjectStore,
+    ClientOptions, ObjectStore, http::HttpBuilder, local::LocalFileSystem, path::Path,
 };
 use pyo3::pybacked::PyBackedStr;
 #[cfg(feature = "async")]

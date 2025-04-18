@@ -1,11 +1,11 @@
-use rstar::{RTreeObject, AABB};
+use rstar::{AABB, RTreeObject};
 
 use crate::algorithm::native::eq::rect_eq;
 use crate::array::SeparatedCoordBuffer;
 use crate::scalar::SeparatedCoord;
 use crate::trait_::NativeScalar;
-use geo_traits::to_geo::ToGeoRect;
 use geo_traits::RectTrait;
+use geo_traits::to_geo::ToGeoRect;
 
 /// An Arrow equivalent of a Rect
 ///

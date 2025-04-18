@@ -1,7 +1,7 @@
 use crate::error::Result;
 use crate::io::stream::RecordBatchReader;
-use geozero::geojson::GeoJsonWriter;
 use geozero::GeozeroDatasource;
+use geozero::geojson::GeoJsonWriter;
 use std::io::Write;
 
 /// Write a Table to GeoJSON

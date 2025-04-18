@@ -1,12 +1,12 @@
+use crate::NativeArray;
 use crate::algorithm::geo::utils::zeroes;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
 use crate::datatypes::NativeType;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
-use arrow_array::builder::Float64Builder;
 use arrow_array::Float64Array;
+use arrow_array::builder::Float64Builder;
 use geo::prelude::ChamberlainDuquetteArea as GeoChamberlainDuquetteArea;
 
 /// Calculate the signed approximate geodesic area of a `Geometry`.
