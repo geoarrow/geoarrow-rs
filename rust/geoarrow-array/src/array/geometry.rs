@@ -448,10 +448,16 @@ impl GeoArrowArray for GeometryArray {
     }
 
     #[inline]
-    fn nulls(&self) -> Option<&NullBuffer> {
-        None
+    fn logical_nulls(&self) -> Option<NullBuffer> {
+        self.to_array_ref().logical_nulls()
     }
 
+    #[inline]
+    fn null_count(&self) -> usize {
+        self.to_array_ref().null_count()
+    }
+
+    #[inline]
     fn is_null(&self, i: usize) -> bool {
         let type_id = self.type_ids[i];
         let offset = self.offsets[i] as usize;

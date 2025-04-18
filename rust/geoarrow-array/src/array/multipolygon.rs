@@ -262,8 +262,21 @@ impl GeoArrowArray for MultiPolygonArray {
     }
 
     #[inline]
-    fn nulls(&self) -> Option<&NullBuffer> {
-        self.validity.as_ref()
+    fn logical_nulls(&self) -> Option<NullBuffer> {
+        self.nulls.clone()
+    }
+
+    #[inline]
+    fn null_count(&self) -> usize {
+        self.nulls.as_ref().map(|v| v.null_count()).unwrap_or(0)
+    }
+
+    #[inline]
+    fn is_null(&self, i: usize) -> bool {
+        self.nulls
+            .as_ref()
+            .map(|n| n.is_null(i))
+            .unwrap_or_default()
     }
 
     fn data_type(&self) -> GeoArrowType {

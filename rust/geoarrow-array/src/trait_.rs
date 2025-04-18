@@ -120,23 +120,18 @@ pub trait GeoArrowArray: Debug + Send + Sync {
         self.len() == 0
     }
 
-    /// Returns an optional reference to the array's nulls buffer.
+    /// Returns a potentially computed [`NullBuffer``] that represents the logical null values of
+    /// this array, if any.
     ///
-    /// Every array has an optional [`NullBuffer`] that, when available
-    /// specifies whether the array slot is valid or not (null). When the
-    /// validity is [`None`], all slots are valid.
+    /// Logical nulls represent the values that are null in the array, regardless of the underlying
+    /// physical arrow representation.
     ///
-    /// # Examples
-    ///
-    /// ```ignore
-    /// use geoarrow::{GeoArrowArray, array::PointArray};
-    /// use geoarrow_schema::Dimension;
-    ///
-    /// let point = geo_types::point!(x: 1., y: 2.);
-    /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
-    /// assert!(array.nulls().is_none());
+    /// For most array types, this is equivalent to the "physical" nulls returned by
+    /// [`Array::nulls`]. However it is different for union arrays, including our [`GeometryArray`]
+    /// and [`GeometryCollectionArray`] types, because the unions aren't encoded in a single null
+    /// buffer.
     /// ```
-    fn nulls(&self) -> Option<&NullBuffer>;
+    fn logical_nulls(&self) -> Option<NullBuffer>;
 
     /// Returns the number of null slots in this array.
     ///
@@ -152,10 +147,7 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// assert_eq!(array.null_count(), 0);
     /// ```
-    #[inline]
-    fn null_count(&self) -> usize {
-        self.nulls().map(|x| x.null_count()).unwrap_or(0)
-    }
+    fn null_count(&self) -> usize;
 
     /// Returns whether slot `i` is null.
     ///
@@ -173,10 +165,7 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// # Panics
     ///
     /// Panics iff `i >= self.len()`.
-    #[inline]
-    fn is_null(&self, i: usize) -> bool {
-        self.nulls().map(|x| x.is_null(i)).unwrap_or(false)
-    }
+    fn is_null(&self, i: usize) -> bool;
 
     /// Returns whether slot `i` is valid.
     ///
