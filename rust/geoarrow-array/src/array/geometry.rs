@@ -452,6 +452,22 @@ impl GeoArrowArray for GeometryArray {
         None
     }
 
+    fn is_null(&self, i: usize) -> bool {
+        let type_id = self.type_ids[i];
+        let offset = self.offsets[i] as usize;
+        let dim = (type_id / 10) as usize;
+        match type_id % 10 {
+            1 => self.points[dim].is_null(offset),
+            2 => self.line_strings[dim].is_null(offset),
+            3 => self.polygons[dim].is_null(offset),
+            4 => self.mpoints[dim].is_null(offset),
+            5 => self.mline_strings[dim].is_null(offset),
+            6 => self.mpolygons[dim].is_null(offset),
+            7 => self.gcs[dim].is_null(offset),
+            _ => panic!("unknown type_id {}", type_id),
+        }
+    }
+
     fn data_type(&self) -> GeoArrowType {
         GeoArrowType::Geometry(self.data_type.clone())
     }
@@ -858,6 +874,7 @@ impl PartialEq for GeometryArray {
 #[cfg(test)]
 mod test {
     use geo_traits::to_geo::ToGeoGeometry;
+    use geoarrow_test::raw;
 
     use super::*;
     use crate::test::{linestring, multilinestring, multipoint, multipolygon, point, polygon};
@@ -936,6 +953,27 @@ mod test {
                 assert_eq!(geo_arr, geo_arr2);
                 assert_eq!(geo_arr, geo_arr3);
             }
+        }
+    }
+
+    #[test]
+    fn test_nullability() {
+        let geoms = raw::geometry::geoms();
+        let null_idxs = geoms
+            .iter()
+            .enumerate()
+            .filter_map(|(i, geom)| if geom.is_none() { Some(i) } else { None })
+            .collect::<Vec<_>>();
+
+        let typ = GeometryType::new(CoordType::Interleaved, Default::default());
+        let geo_arr = GeometryBuilder::from_nullable_geometries(&geoms, typ, false)
+            .unwrap()
+            .finish();
+        // let arrow_arr = geo_arr.to_array_ref();
+
+        for null_idx in &null_idxs {
+            assert!(geo_arr.is_null(*null_idx));
+            // assert!(arrow_arr.is_null(*null_idx));
         }
     }
 
