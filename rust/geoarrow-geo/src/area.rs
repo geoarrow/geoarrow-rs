@@ -4,26 +4,14 @@ use arrow_buffer::NullBuffer;
 use geo::Area;
 use geo_traits::to_geo::ToGeoGeometry;
 use geoarrow_array::error::Result;
-use geoarrow_array::{ArrayAccessor, GeoArrowType};
+use geoarrow_array::{ArrayAccessor, GeoArrowArray, GeoArrowType, downcast_geoarrow_array};
 
-pub fn unsigned_area<'a>(array: &'a impl ArrayAccessor<'a>) -> Result<Float64Array> {
-    use GeoArrowType::*;
-    match array.data_type() {
-        Point(_) | LineString(_) | MultiPoint(_) | MultiLineString(_) => {
-            Ok(_zeros(array.len(), array.nulls().cloned()))
-        }
-        _ => _unsigned_area_impl(array, Area::unsigned_area),
-    }
+pub fn unsigned_area(array: &dyn GeoArrowArray) -> Result<Float64Array> {
+    downcast_geoarrow_array!(array, _unsigned_area_impl)
 }
 
-pub fn signed_area<'a>(array: &'a impl ArrayAccessor<'a>) -> Result<Float64Array> {
-    use GeoArrowType::*;
-    match array.data_type() {
-        Point(_) | LineString(_) | MultiPoint(_) | MultiLineString(_) => {
-            Ok(_zeros(array.len(), array.nulls().cloned()))
-        }
-        _ => _unsigned_area_impl(array, Area::signed_area),
-    }
+pub fn signed_area(array: &dyn GeoArrowArray) -> Result<Float64Array> {
+    downcast_geoarrow_array!(array, _signed_area_impl)
 }
 
 fn _zeros(len: usize, nulls: Option<NullBuffer>) -> Float64Array {
@@ -31,7 +19,27 @@ fn _zeros(len: usize, nulls: Option<NullBuffer>) -> Float64Array {
     Float64Array::new(values.into(), nulls)
 }
 
-fn _unsigned_area_impl<'a, F: Fn(&geo::Geometry) -> f64>(
+fn _unsigned_area_impl<'a>(array: &'a impl ArrayAccessor<'a>) -> Result<Float64Array> {
+    use GeoArrowType::*;
+    match array.data_type() {
+        Point(_) | LineString(_) | MultiPoint(_) | MultiLineString(_) => {
+            Ok(_zeros(array.len(), array.nulls().cloned()))
+        }
+        _ => _area_impl(array, Area::unsigned_area),
+    }
+}
+
+fn _signed_area_impl<'a>(array: &'a impl ArrayAccessor<'a>) -> Result<Float64Array> {
+    use GeoArrowType::*;
+    match array.data_type() {
+        Point(_) | LineString(_) | MultiPoint(_) | MultiLineString(_) => {
+            Ok(_zeros(array.len(), array.nulls().cloned()))
+        }
+        _ => _area_impl(array, Area::signed_area),
+    }
+}
+
+fn _area_impl<'a, F: Fn(&geo::Geometry) -> f64>(
     array: &'a impl ArrayAccessor<'a>,
     area_fn: F,
 ) -> Result<Float64Array> {
