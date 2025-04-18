@@ -855,35 +855,21 @@ mod test {
         }
     }
 
-    #[ignore = "nullability issues with geometry array?"]
     #[test]
     fn test_round_trip_wkb_geometry() {
-        // let arr = test::geometry::array(CoordType::Interleaved, true);
-        // for i in 0..arr.len() {
-        //     dbg!(arr.is_null(i));
-        // }
-        // // arr.is_null(i)
-        // dbg!(&arr.mpoints[0].validity);
-        // for coord_type in [
-        //     CoordType::Interleaved,
-        //     // CoordType::Separated
-        // ] {
-        //     for prefer_multi in [
-        //         false,
-        //         //  true
-        //     ] {
-        //         let arr = test::geometry::array(coord_type, prefer_multi);
-        //         dbg!(&arr.mpoints[0].validity);
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for prefer_multi in [false, true] {
+                let arr = test::geometry::array(coord_type, prefer_multi);
 
-        //         // let wkb_arr = to_wkb::<i32>(&arr).unwrap();
-        //         // let arr2 = from_wkb(&wkb_arr, arr.data_type().clone(), prefer_multi).unwrap();
-        //         // assert_eq!(&arr, arr2.as_geometry());
+                let wkb_arr = to_wkb::<i32>(&arr).unwrap();
+                let arr2 = from_wkb(&wkb_arr, arr.data_type().clone(), prefer_multi).unwrap();
+                assert_eq!(&arr, arr2.as_geometry());
 
-        //         // let wkb_arr2 = to_wkb::<i64>(&arr).unwrap();
-        //         // let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone(), prefer_multi).unwrap();
-        //         // assert_eq!(&arr, arr3.as_geometry());
-        //     }
-        // }
+                let wkb_arr2 = to_wkb::<i64>(&arr).unwrap();
+                let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone(), prefer_multi).unwrap();
+                assert_eq!(&arr, arr3.as_geometry());
+            }
+        }
     }
 
     // Start WKT round trip tests
@@ -1039,6 +1025,23 @@ mod test {
                     let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone(), prefer_multi).unwrap();
                     assert_eq!(&arr, arr3.as_geometry_collection());
                 }
+            }
+        }
+    }
+
+    #[test]
+    fn test_round_trip_wkt_geometry() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for prefer_multi in [false, true] {
+                let arr = test::geometry::array(coord_type, prefer_multi);
+
+                let wkt_arr = to_wkt::<i32>(&arr).unwrap();
+                let arr2 = from_wkt(&wkt_arr, arr.data_type().clone(), prefer_multi).unwrap();
+                assert_eq!(&arr, arr2.as_geometry());
+
+                let wkt_arr2 = to_wkt::<i64>(&arr).unwrap();
+                let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone(), prefer_multi).unwrap();
+                assert_eq!(&arr, arr3.as_geometry());
             }
         }
     }
