@@ -1,3 +1,5 @@
+#![cfg_attr(not(test), warn(unused_crate_dependencies))]
+
 mod array;
 mod chunked_array;
 mod coord_buffer;

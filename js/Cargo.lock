@@ -1200,7 +1200,6 @@ dependencies = [
  "arrow-ord",
  "arrow-schema",
  "async-stream",
- "bytes",
  "futures",
  "geo-traits",
  "geo-types",

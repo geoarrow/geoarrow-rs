@@ -28,7 +28,6 @@ arrow-buffer = { workspace = true }
 arrow-ord = { workspace = true }
 arrow-schema = { workspace = true }
 async-stream = { workspace = true, optional = true }
-bytes = { workspace = true }
 futures = { workspace = true, optional = true }
 geo-traits = { workspace = true }
 geo-types = { workspace = true }
