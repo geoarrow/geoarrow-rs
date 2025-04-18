@@ -1413,6 +1413,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "geoarrow-geo"
+version = "0.1.0-dev"
+dependencies = [
+ "arrow-array",
+ "arrow-buffer",
+ "geo 0.30.0",
+ "geo-traits",
+ "geoarrow-array",
+ "geoarrow-schema",
+]
+
+[[package]]
 name = "geoarrow-geoparquet"
 version = "0.1.0-dev"
 dependencies = [
@@ -1445,17 +1457,6 @@ dependencies = [
  "geoarrow-array",
  "geoarrow-schema",
  "geos",
-]
-
-[[package]]
-name = "geoarrow-geo"
-version = "0.1.0-dev"
-dependencies = [
- "arrow-array",
- "geo 0.30.0",
- "geo-traits",
- "geoarrow-array",
- "geoarrow-schema",
 ]
 
 [[package]]

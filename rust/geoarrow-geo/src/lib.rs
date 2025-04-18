@@ -3,4 +3,4 @@
 mod area;
 mod simplify;
 
-pub use area::unsigned_area;
+pub use area::{signed_area, unsigned_area};

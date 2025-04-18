@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use arrow_array::builder::Float64Builder;
 use arrow_array::Float64Array;
+use arrow_array::builder::Float64Builder;
 use geo::{Area, Simplify};
 use geo_traits::to_geo::{ToGeoGeometry, ToGeoLineString};
 use geoarrow_array::builder::{GeometryBuilder, LineStringBuilder};
@@ -42,7 +42,7 @@ pub fn simplify2<'a>(
             }
             Ok(Arc::new(builder.finish()))
         }
-        GeoArrowType::WKB(typ) => {
+        GeoArrowType::Wkb(typ) => {
             let geom_typ =
                 GeometryType::new(CoordType::default_interleaved(), typ.metadata().clone());
             let mut builder = GeometryBuilder::new(geom_typ, true);
