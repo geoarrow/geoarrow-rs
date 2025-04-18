@@ -325,6 +325,21 @@ mod test {
     }
 
     #[test]
+    fn geo_round_trip2() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            let geo_arr = linestring::array(coord_type, Dimension::XY);
+            let geo_geoms = geo_arr
+                .iter()
+                .map(|x| x.transpose().unwrap().map(|g| g.to_line_string()))
+                .collect::<Vec<_>>();
+
+            let typ = LineStringType::new(coord_type, Dimension::XY, Default::default());
+            let geo_arr2 = LineStringBuilder::from_nullable_line_strings(&geo_geoms, typ).finish();
+            assert_eq!(geo_arr, geo_arr2);
+        }
+    }
+
+    #[test]
     fn try_from_arrow() {
         for coord_type in [CoordType::Interleaved, CoordType::Separated] {
             for dim in [
