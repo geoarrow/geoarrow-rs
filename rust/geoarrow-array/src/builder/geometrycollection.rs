@@ -127,9 +127,13 @@ impl<'a> GeometryCollectionBuilder {
     /// Push a Point onto the end of this builder
     #[inline]
     pub fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) -> Result<()> {
-        self.geoms.push_point(value)?;
-        self.geom_offsets.try_push_usize(1)?;
-        self.validity.append(value.is_some());
+        if let Some(geom) = value {
+            self.geoms.push_point(geom)?;
+            self.geom_offsets.try_push_usize(1)?;
+            self.validity.append(value.is_some());
+        } else {
+            self.push_null();
+        }
         Ok(())
     }
 
@@ -139,18 +143,26 @@ impl<'a> GeometryCollectionBuilder {
         &mut self,
         value: Option<&impl LineStringTrait<T = f64>>,
     ) -> Result<()> {
-        self.geoms.push_line_string(value)?;
-        self.geom_offsets.try_push_usize(1)?;
-        self.validity.append(value.is_some());
+        if let Some(geom) = value {
+            self.geoms.push_line_string(geom)?;
+            self.geom_offsets.try_push_usize(1)?;
+            self.validity.append(value.is_some());
+        } else {
+            self.push_null();
+        }
         Ok(())
     }
 
     /// Push a Polygon onto the end of this builder
     #[inline]
     pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> Result<()> {
-        self.geoms.push_polygon(value)?;
-        self.geom_offsets.try_push_usize(1)?;
-        self.validity.append(value.is_some());
+        if let Some(geom) = value {
+            self.geoms.push_polygon(geom)?;
+            self.geom_offsets.try_push_usize(1)?;
+            self.validity.append(value.is_some());
+        } else {
+            self.push_null();
+        }
         Ok(())
     }
 
@@ -160,9 +172,13 @@ impl<'a> GeometryCollectionBuilder {
         &mut self,
         value: Option<&impl MultiPointTrait<T = f64>>,
     ) -> Result<()> {
-        self.geoms.push_multi_point(value)?;
-        self.geom_offsets.try_push_usize(1)?;
-        self.validity.append(value.is_some());
+        if let Some(geom) = value {
+            self.geoms.push_multi_point(geom)?;
+            self.geom_offsets.try_push_usize(1)?;
+            self.validity.append(value.is_some());
+        } else {
+            self.push_null();
+        }
         Ok(())
     }
 
@@ -172,9 +188,13 @@ impl<'a> GeometryCollectionBuilder {
         &mut self,
         value: Option<&impl MultiLineStringTrait<T = f64>>,
     ) -> Result<()> {
-        self.geoms.push_multi_line_string(value)?;
-        self.geom_offsets.try_push_usize(1)?;
-        self.validity.append(value.is_some());
+        if let Some(geom) = value {
+            self.geoms.push_multi_line_string(geom)?;
+            self.geom_offsets.try_push_usize(1)?;
+            self.validity.append(value.is_some());
+        } else {
+            self.push_null();
+        }
         Ok(())
     }
 
@@ -184,9 +204,13 @@ impl<'a> GeometryCollectionBuilder {
         &mut self,
         value: Option<&impl MultiPolygonTrait<T = f64>>,
     ) -> Result<()> {
-        self.geoms.push_multi_polygon(value)?;
-        self.geom_offsets.try_push_usize(1)?;
-        self.validity.append(value.is_some());
+        if let Some(geom) = value {
+            self.geoms.push_multi_polygon(geom)?;
+            self.geom_offsets.try_push_usize(1)?;
+            self.validity.append(value.is_some());
+        } else {
+            self.push_null();
+        }
         Ok(())
     }
 
@@ -223,7 +247,7 @@ impl<'a> GeometryCollectionBuilder {
         if let Some(gc) = value {
             let num_geoms = gc.num_geometries();
             for g in gc.geometries() {
-                self.geoms.push_geometry(Some(&g))?;
+                self.geoms.push_geometry(&g)?;
             }
             self.try_push_length(num_geoms)?;
         } else {
