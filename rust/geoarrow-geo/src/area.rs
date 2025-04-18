@@ -1,7 +1,7 @@
 use arrow_array::Float64Array;
 use arrow_array::builder::Float64Builder;
 use arrow_buffer::NullBuffer;
-use geo::{Area, Orient};
+use geo::Area;
 use geo_traits::to_geo::ToGeoGeometry;
 use geoarrow_array::error::Result;
 use geoarrow_array::{ArrayAccessor, GeoArrowType};
@@ -52,53 +52,9 @@ fn _unsigned_area_impl<'a, F: Fn(&geo::Geometry) -> f64>(
 #[cfg(test)]
 mod test {
     use arrow_array::create_array;
-    use geo::{Polygon, polygon};
-    use geoarrow_array::array::PolygonArray;
-    use geoarrow_array::builder::PolygonBuilder;
-    use geoarrow_schema::{CoordType, Dimension, PolygonType};
+    use geoarrow_schema::{CoordType, Dimension};
 
     use super::*;
-
-    fn p0() -> Polygon {
-        polygon![
-            (x: -111., y: 45.),
-            (x: -111., y: 41.),
-            (x: -104., y: 41.),
-            (x: -104., y: 45.),
-        ]
-    }
-
-    fn p1() -> Polygon {
-        polygon!(
-            exterior: [
-                (x: -111., y: 45.),
-                (x: -111., y: 41.),
-                (x: -104., y: 41.),
-                (x: -104., y: 45.),
-            ],
-            interiors: [
-                [
-                    (x: -110., y: 44.),
-                    (x: -110., y: 42.),
-                    (x: -105., y: 42.),
-                    (x: -105., y: 44.),
-                ],
-            ],
-        )
-    }
-
-    fn p_array() -> PolygonArray {
-        let geoms = vec![p0(), p1()];
-        let typ = PolygonType::new(CoordType::Interleaved, Dimension::XY, Default::default());
-        PolygonBuilder::from_polygons(&geoms, typ).finish()
-    }
-
-    #[test]
-    fn test_signed_area() {
-        let g = geo::wkt! {  POLYGON ((35. 10., 45. 45., 15. 40., 10. 20., 35. 10.), (20. 30., 35. 35., 30. 20., 20. 30.)) };
-        let out = g.signed_area();
-        dbg!(out);
-    }
 
     #[test]
     fn area_zero() {
@@ -114,19 +70,11 @@ mod test {
     #[test]
     fn area_polygon() {
         let geo_arr = geoarrow_array::test::polygon::array(CoordType::Separated, Dimension::XY);
-        let p = geo_arr.value(1).unwrap();
-        // p.num
-        // let signed = signed_area(&geo_arr).unwrap();
-        // let unsigned = unsigned_area(&geo_arr).unwrap();
+        let signed = signed_area(&geo_arr).unwrap();
+        let unsigned = unsigned_area(&geo_arr).unwrap();
 
-        // dbg!(&signed);
-        // dbg!(&unsigned);
-    }
-
-    #[test]
-    fn area_specialized() {
-        let arr = p_array();
-        let area = unsigned_area(&arr).unwrap();
-        assert_eq!(area, Float64Array::new(vec![28., 18.].into(), None));
+        let expected = create_array!(Float64, [Some(550.0), Some(675.0), None, Some(0.0)]);
+        assert_eq!(&signed, expected.as_ref());
+        assert_eq!(&unsigned, expected.as_ref());
     }
 }
