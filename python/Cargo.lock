@@ -1235,7 +1235,6 @@ dependencies = [
  "arrow-ord",
  "arrow-schema",
  "async-stream",
- "bytes",
  "futures",
  "geo-traits",
  "geo-types",
@@ -1256,14 +1255,10 @@ dependencies = [
  "arrow-buffer",
  "geo 0.30.0",
  "geoarrow",
- "geozero",
  "numpy",
  "pyo3",
  "pyo3-arrow",
  "pyo3-geoarrow 0.1.0-beta.1",
- "serde_json",
- "thiserror 1.0.69",
- "url",
 ]
 
 [[package]]
@@ -2797,14 +2792,11 @@ dependencies = [
  "arrow-buffer",
  "arrow-cast",
  "arrow-schema",
- "geo 0.30.0",
  "geoarrow-array",
  "geoarrow-schema",
- "indexmap 2.7.1",
  "pyo3",
  "pyo3-arrow",
  "serde_json",
- "thiserror 1.0.69",
  "url",
 ]
 
