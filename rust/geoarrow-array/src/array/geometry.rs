@@ -874,6 +874,7 @@ impl PartialEq for GeometryArray {
 #[cfg(test)]
 mod test {
     use geo_traits::to_geo::ToGeoGeometry;
+    use geoarrow_test::raw;
 
     use super::*;
     use crate::test::{linestring, multilinestring, multipoint, multipolygon, point, polygon};
