@@ -459,7 +459,7 @@ fn impl_to_wkt<'a, O: OffsetSizeTrait>(geo_arr: &'a impl ArrayAccessor<'a>) -> R
     Ok(WktArray::new(builder.finish(), metadata))
 }
 
-/// Parse a [WkbArray] to a [GeoArrowArray] with the designated [GeoArrowType].
+/// Parse a [WktArray] to a [GeoArrowArray] with the designated [GeoArrowType].
 ///
 /// Note that the GeoArrow metadata on the new array is taken from `to_type` **not** the original
 /// array. Ensure you construct the [GeoArrowType] with the correct metadata.
