@@ -261,37 +261,23 @@ impl<'a> GeometryBuilder {
         });
     }
 
-    // /// The canonical method to create a [`MixedGeometryBuilder`] out of its internal
-    // /// components.
-    // ///
-    // /// # Implementation
-    // ///
-    // /// This function is `O(1)`.
-    // ///
-    // /// # Errors
-    // ///
-    // pub fn try_new(
-    //     coords: CoordBufferBuilder,
-    //     geom_offsets: BufferBuilder<O>,
-    //     ring_offsets: BufferBuilder<O>,
-    //     validity: Option<MutableBitmap>,
-    // ) -> Result<Self> {
-    //     check(
-    //         &coords.clone().into(),
-    //         &geom_offsets.clone().into(),
-    //         &ring_offsets.clone().into(),
-    //         validity.as_ref().map(|x| x.len()),
-    //     )?;
-    //     Ok(Self {
-    //         coords,
-    //         geom_offsets,
-    //         ring_offsets,
-    //         validity,
-    //     })
-    // }
-
     /// Consume the builder and convert to an immutable [`GeometryArray`]
-    pub fn finish(self) -> GeometryArray {
+    pub fn finish(mut self) -> GeometryArray {
+        // If there are still deferred nulls to be written, then there aren't any valid geometries
+        // in this array, and just choose a child to write them to.
+        if self.deferred_nulls > 0 {
+            let dim = Dimension::XY;
+            let child = &mut self.points[dim.order()];
+            let type_id = child.type_id(dim);
+            Self::flush_deferred_nulls(
+                &mut self.deferred_nulls,
+                child,
+                &mut self.offsets,
+                &mut self.types,
+                type_id,
+            );
+        }
+
         GeometryArray::new(
             self.types.into(),
             self.offsets.into(),
@@ -351,16 +337,30 @@ impl<'a> GeometryBuilder {
             let array_idx = dim.order();
 
             if self.prefer_multi {
-                self.add_multi_point_type(dim);
-
                 let child = &mut self.mpoints[array_idx];
-                Self::flush_deferred_nulls(&mut self.deferred_nulls, child);
+                let type_id = child.type_id(dim);
+
+                Self::flush_deferred_nulls(
+                    &mut self.deferred_nulls,
+                    child,
+                    &mut self.offsets,
+                    &mut self.types,
+                    type_id,
+                );
+                Self::add_type(child, &mut self.offsets, &mut self.types, type_id);
                 child.push_point(Some(point))?;
             } else {
-                self.add_point_type(dim);
-
                 let child = &mut self.points[array_idx];
-                Self::flush_deferred_nulls(&mut self.deferred_nulls, child);
+                let type_id = child.type_id(dim);
+
+                Self::flush_deferred_nulls(
+                    &mut self.deferred_nulls,
+                    child,
+                    &mut self.offsets,
+                    &mut self.types,
+                    type_id,
+                );
+                Self::add_type(child, &mut self.offsets, &mut self.types, type_id);
                 child.push_point(Some(point));
             }
         } else {
@@ -371,12 +371,21 @@ impl<'a> GeometryBuilder {
     }
 
     #[inline]
+    fn add_type(
+        child: &mut dyn GeometryArrayBuilder,
+        offsets: &mut Vec<i32>,
+        types: &mut Vec<i8>,
+        type_id: i8,
+    ) {
+        offsets.push(child.len().try_into().unwrap());
+        types.push(type_id);
+    }
+
+    #[inline]
     fn add_point_type(&mut self, dim: Dimension) {
         let child = &self.points[dim.order()];
         self.offsets.push(child.len().try_into().unwrap());
-
-        let type_id = (dim.order() as i8 * 10) + 1;
-        self.types.push(type_id);
+        self.types.push(child.type_id(dim));
     }
 
     /// Add a new LineString to the end of this array.
@@ -397,16 +406,30 @@ impl<'a> GeometryBuilder {
             let array_idx = dim.order();
 
             if self.prefer_multi {
-                self.add_multi_line_string_type(dim);
-
                 let child = &mut self.mline_strings[array_idx];
-                Self::flush_deferred_nulls(&mut self.deferred_nulls, child);
+                let type_id = child.type_id(dim);
+
+                Self::flush_deferred_nulls(
+                    &mut self.deferred_nulls,
+                    child,
+                    &mut self.offsets,
+                    &mut self.types,
+                    type_id,
+                );
+                Self::add_type(child, &mut self.offsets, &mut self.types, type_id);
                 child.push_line_string(Some(line_string))?;
             } else {
-                self.add_line_string_type(dim);
-
                 let child = &mut self.line_strings[array_idx];
-                Self::flush_deferred_nulls(&mut self.deferred_nulls, child);
+                let type_id = child.type_id(dim);
+
+                Self::flush_deferred_nulls(
+                    &mut self.deferred_nulls,
+                    child,
+                    &mut self.offsets,
+                    &mut self.types,
+                    type_id,
+                );
+                Self::add_type(child, &mut self.offsets, &mut self.types, type_id);
                 child.push_line_string(Some(line_string))?;
             }
         } else {
@@ -420,9 +443,7 @@ impl<'a> GeometryBuilder {
     fn add_line_string_type(&mut self, dim: Dimension) {
         let child = &self.line_strings[dim.order()];
         self.offsets.push(child.len().try_into().unwrap());
-
-        let type_id = (dim.order() as i8 * 10) + 2;
-        self.types.push(type_id);
+        self.types.push(child.type_id(dim));
     }
 
     /// Add a new Polygon to the end of this array.
@@ -440,16 +461,30 @@ impl<'a> GeometryBuilder {
             let array_idx = dim.order();
 
             if self.prefer_multi {
-                self.add_multi_polygon_type(dim);
-
                 let child = &mut self.mpolygons[array_idx];
-                Self::flush_deferred_nulls(&mut self.deferred_nulls, child);
+                let type_id = child.type_id(dim);
+
+                Self::flush_deferred_nulls(
+                    &mut self.deferred_nulls,
+                    child,
+                    &mut self.offsets,
+                    &mut self.types,
+                    type_id,
+                );
+                Self::add_type(child, &mut self.offsets, &mut self.types, type_id);
                 child.push_polygon(Some(polygon))?;
             } else {
-                self.add_polygon_type(dim);
-
                 let child = &mut self.polygons[array_idx];
-                Self::flush_deferred_nulls(&mut self.deferred_nulls, child);
+                let type_id = child.type_id(dim);
+
+                Self::flush_deferred_nulls(
+                    &mut self.deferred_nulls,
+                    child,
+                    &mut self.offsets,
+                    &mut self.types,
+                    type_id,
+                );
+                Self::add_type(child, &mut self.offsets, &mut self.types, type_id);
                 child.push_polygon(Some(polygon))?;
             }
         } else {
@@ -463,9 +498,7 @@ impl<'a> GeometryBuilder {
     fn add_polygon_type(&mut self, dim: Dimension) {
         let child = &self.polygons[dim.order()];
         self.offsets.push(child.len().try_into().unwrap());
-
-        let type_id = (dim.order() as i8 * 10) + 3;
-        self.types.push(type_id);
+        self.types.push(child.type_id(dim));
     }
 
     /// Add a new MultiPoint to the end of this array.
@@ -482,10 +515,17 @@ impl<'a> GeometryBuilder {
             let dim: Dimension = multi_point.dim().try_into().unwrap();
             let array_idx = dim.order();
 
-            self.add_multi_point_type(dim);
-
             let child = &mut self.mpoints[array_idx];
-            Self::flush_deferred_nulls(&mut self.deferred_nulls, child);
+            let type_id = child.type_id(dim);
+
+            Self::flush_deferred_nulls(
+                &mut self.deferred_nulls,
+                child,
+                &mut self.offsets,
+                &mut self.types,
+                type_id,
+            );
+            Self::add_type(child, &mut self.offsets, &mut self.types, type_id);
             child.push_multi_point(Some(multi_point))?;
         } else {
             self.push_null();
@@ -498,9 +538,7 @@ impl<'a> GeometryBuilder {
     fn add_multi_point_type(&mut self, dim: Dimension) {
         let child = &self.mpoints[dim.order()];
         self.offsets.push(child.len().try_into().unwrap());
-
-        let type_id = (dim.order() as i8 * 10) + 4;
-        self.types.push(type_id);
+        self.types.push(child.type_id(dim));
     }
 
     /// Add a new MultiLineString to the end of this array.
@@ -517,10 +555,17 @@ impl<'a> GeometryBuilder {
             let dim: Dimension = multi_line_string.dim().try_into().unwrap();
             let array_idx = dim.order();
 
-            self.add_multi_line_string_type(dim);
-
             let child = &mut self.mline_strings[array_idx];
-            Self::flush_deferred_nulls(&mut self.deferred_nulls, child);
+            let type_id = child.type_id(dim);
+
+            Self::flush_deferred_nulls(
+                &mut self.deferred_nulls,
+                child,
+                &mut self.offsets,
+                &mut self.types,
+                type_id,
+            );
+            Self::add_type(child, &mut self.offsets, &mut self.types, type_id);
             child.push_multi_line_string(Some(multi_line_string))?;
         } else {
             self.push_null();
@@ -533,9 +578,7 @@ impl<'a> GeometryBuilder {
     fn add_multi_line_string_type(&mut self, dim: Dimension) {
         let child = &self.mline_strings[dim.order()];
         self.offsets.push(child.len().try_into().unwrap());
-
-        let type_id = (dim.order() as i8 * 10) + 5;
-        self.types.push(type_id);
+        self.types.push(child.type_id(dim));
     }
 
     /// Add a new MultiPolygon to the end of this array.
@@ -552,10 +595,17 @@ impl<'a> GeometryBuilder {
             let dim: Dimension = multi_polygon.dim().try_into().unwrap();
             let array_idx = dim.order();
 
-            self.add_multi_polygon_type(dim);
-
             let child = &mut self.mpolygons[array_idx];
-            Self::flush_deferred_nulls(&mut self.deferred_nulls, child);
+            let type_id = child.type_id(dim);
+
+            Self::flush_deferred_nulls(
+                &mut self.deferred_nulls,
+                child,
+                &mut self.offsets,
+                &mut self.types,
+                type_id,
+            );
+            Self::add_type(child, &mut self.offsets, &mut self.types, type_id);
             child.push_multi_polygon(Some(multi_polygon))?;
         } else {
             self.push_null();
@@ -568,9 +618,7 @@ impl<'a> GeometryBuilder {
     fn add_multi_polygon_type(&mut self, dim: Dimension) {
         let child = &self.mpolygons[dim.order()];
         self.offsets.push(child.len().try_into().unwrap());
-
-        let type_id = (dim.order() as i8 * 10) + 6;
-        self.types.push(type_id);
+        self.types.push(child.type_id(dim));
     }
 
     /// Add a new geometry to this builder
@@ -621,10 +669,17 @@ impl<'a> GeometryBuilder {
             let dim: Dimension = gc.dim().try_into().unwrap();
             let array_idx = dim.order();
 
-            self.add_geometry_collection_type(dim);
-
             let child = &mut self.gcs[array_idx];
-            Self::flush_deferred_nulls(&mut self.deferred_nulls, child);
+            let type_id = child.type_id(dim);
+
+            Self::flush_deferred_nulls(
+                &mut self.deferred_nulls,
+                child,
+                &mut self.offsets,
+                &mut self.types,
+                type_id,
+            );
+            Self::add_type(child, &mut self.offsets, &mut self.types, type_id);
             child.push_geometry_collection(Some(gc))?;
         } else {
             self.push_null();
@@ -637,9 +692,7 @@ impl<'a> GeometryBuilder {
     fn add_geometry_collection_type(&mut self, dim: Dimension) {
         let child = &self.gcs[dim.order()];
         self.offsets.push(child.len().try_into().unwrap());
-
-        let type_id = (dim.order() as i8 * 10) + 7;
-        self.types.push(type_id);
+        self.types.push(child.type_id(dim));
     }
 
     /// Push a null to this builder.
@@ -709,11 +762,22 @@ impl<'a> GeometryBuilder {
     }
 
     /// Flush any deferred nulls to the desired array builder.
-    fn flush_deferred_nulls(deferred_nulls: &mut usize, array: &mut dyn GeometryArrayBuilder) {
-        if *deferred_nulls > 0 {
-            (0..*deferred_nulls).for_each(|_| array.push_null());
-            *deferred_nulls = 0;
+    fn flush_deferred_nulls(
+        deferred_nulls: &mut usize,
+        child: &mut dyn GeometryArrayBuilder,
+        offsets: &mut Vec<i32>,
+        types: &mut Vec<i8>,
+        type_id: i8,
+    ) {
+        let offset = child.len().try_into().unwrap();
+        // For each null we also have to update the offsets and types
+        for _ in 0..*deferred_nulls {
+            offsets.push(offset);
+            types.push(type_id);
+            child.push_null();
         }
+
+        *deferred_nulls = 0;
     }
 
     /// Extend this builder with the given geometries
@@ -772,5 +836,96 @@ impl GeometryArrayBuilder for GeometryBuilder {
 
     fn push_null(&mut self) {
         self.push_null();
+    }
+}
+
+/// Access the type id for an array-dimension combo
+trait TypeId {
+    const ARRAY_TYPE_OFFSET: i8;
+
+    fn type_id(&self, dim: Dimension) -> i8 {
+        (dim.order() as i8 * 10) + Self::ARRAY_TYPE_OFFSET
+    }
+}
+
+impl TypeId for PointBuilder {
+    const ARRAY_TYPE_OFFSET: i8 = 1;
+}
+
+impl TypeId for LineStringBuilder {
+    const ARRAY_TYPE_OFFSET: i8 = 2;
+}
+
+impl TypeId for PolygonBuilder {
+    const ARRAY_TYPE_OFFSET: i8 = 3;
+}
+impl TypeId for MultiPointBuilder {
+    const ARRAY_TYPE_OFFSET: i8 = 4;
+}
+impl TypeId for MultiLineStringBuilder {
+    const ARRAY_TYPE_OFFSET: i8 = 5;
+}
+impl TypeId for MultiPolygonBuilder {
+    const ARRAY_TYPE_OFFSET: i8 = 6;
+}
+impl TypeId for GeometryCollectionBuilder {
+    const ARRAY_TYPE_OFFSET: i8 = 7;
+}
+
+#[cfg(test)]
+mod test {
+    use geoarrow_schema::CoordType;
+
+    use crate::GeoArrowArray;
+
+    use super::*;
+
+    #[test]
+    fn all_items_null() {
+        // Testing the behavior of deferred nulls when there are no valid geometries.
+        let typ = GeometryType::new(CoordType::Interleaved, Default::default());
+        let mut builder = GeometryBuilder::new(typ, false);
+
+        builder.push_null();
+        builder.push_null();
+        builder.push_null();
+
+        let array = builder.finish();
+        assert_eq!(array.null_count(), 3);
+
+        // We expect the nulls to be placed in (canonically) the first child
+        assert_eq!(array.points[0].null_count(), 3);
+    }
+
+    #[test]
+    fn deferred_nulls() {
+        let coord_type = CoordType::Interleaved;
+        let typ = GeometryType::new(coord_type, Default::default());
+
+        let mut builder = GeometryBuilder::new(typ, false);
+        builder.push_null();
+        builder.push_null();
+
+        let linestring_arr = crate::test::linestring::array(coord_type, Dimension::XYZ);
+        let linestring_arr_null_count = linestring_arr.null_count();
+
+        // Push the geometries from the linestring arr onto the geometry builder
+        for geom in linestring_arr.iter() {
+            builder
+                .push_geometry(geom.transpose().unwrap().as_ref())
+                .unwrap();
+        }
+
+        let geom_arr = builder.finish();
+
+        // Since there are 2 nulls pushed manually and a third from the LineString arr
+        let total_expected_null_count = 2 + linestring_arr_null_count;
+        assert_eq!(geom_arr.null_count(), total_expected_null_count);
+
+        // All nulls should be in the XYZ linestring child
+        assert_eq!(
+            geom_arr.line_strings[Dimension::XYZ.order()].null_count(),
+            total_expected_null_count
+        );
     }
 }
