@@ -147,7 +147,7 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// let array: PointArray = (vec![point].as_slice(), Dimension::XY).into();
     /// assert_eq!(array.null_count(), 0);
     /// ```
-    fn null_count(&self) -> usize;
+    fn logical_null_count(&self) -> usize;
 
     /// Returns whether slot `i` is null.
     ///

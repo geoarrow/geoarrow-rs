@@ -453,8 +453,8 @@ impl GeoArrowArray for GeometryArray {
     }
 
     #[inline]
-    fn null_count(&self) -> usize {
-        self.to_array_ref().null_count()
+    fn logical_null_count(&self) -> usize {
+        self.to_array_ref().logical_null_count()
     }
 
     #[inline]

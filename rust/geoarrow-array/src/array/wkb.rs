@@ -111,8 +111,8 @@ impl<O: OffsetSizeTrait> GeoArrowArray for WkbArray<O> {
     }
 
     #[inline]
-    fn null_count(&self) -> usize {
-        self.array.null_count()
+    fn logical_null_count(&self) -> usize {
+        self.array.logical_null_count()
     }
 
     #[inline]

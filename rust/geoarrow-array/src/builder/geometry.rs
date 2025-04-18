@@ -892,10 +892,10 @@ mod test {
         builder.push_null();
 
         let array = builder.finish();
-        assert_eq!(array.null_count(), 3);
+        assert_eq!(array.logical_null_count(), 3);
 
         // We expect the nulls to be placed in (canonically) the first child
-        assert_eq!(array.points[0].null_count(), 3);
+        assert_eq!(array.points[0].logical_null_count(), 3);
     }
 
     #[test]
@@ -908,7 +908,7 @@ mod test {
         builder.push_null();
 
         let linestring_arr = crate::test::linestring::array(coord_type, Dimension::XYZ);
-        let linestring_arr_null_count = linestring_arr.null_count();
+        let linestring_arr_null_count = linestring_arr.logical_null_count();
 
         // Push the geometries from the linestring arr onto the geometry builder
         for geom in linestring_arr.iter() {
@@ -921,11 +921,11 @@ mod test {
 
         // Since there are 2 nulls pushed manually and a third from the LineString arr
         let total_expected_null_count = 2 + linestring_arr_null_count;
-        assert_eq!(geom_arr.null_count(), total_expected_null_count);
+        assert_eq!(geom_arr.logical_null_count(), total_expected_null_count);
 
         // All nulls should be in the XYZ linestring child
         assert_eq!(
-            geom_arr.line_strings[Dimension::XYZ.order()].null_count(),
+            geom_arr.line_strings[Dimension::XYZ.order()].logical_null_count(),
             total_expected_null_count
         );
     }
@@ -950,16 +950,22 @@ mod test {
 
         let geom_arr = builder.finish();
 
-        assert_eq!(geom_arr.null_count(), 4);
+        assert_eq!(geom_arr.logical_null_count(), 4);
 
         // The first two nulls get added to the point z child because those are deferred and the
         // point z is the first non-null geometry added.
-        assert_eq!(geom_arr.points[Dimension::XYZ.order()].null_count(), 2);
+        assert_eq!(
+            geom_arr.points[Dimension::XYZ.order()].logical_null_count(),
+            2
+        );
 
         // The last two nulls get added to the linestring XY child because the current
         // implementation looks through all XY arrays then all XYZ then etc looking for the first
         // non-empty array. Since the linestring XY child is non-empty, the last nulls get pushed
         // here.
-        assert_eq!(geom_arr.line_strings[Dimension::XY.order()].null_count(), 2);
+        assert_eq!(
+            geom_arr.line_strings[Dimension::XY.order()].logical_null_count(),
+            2
+        );
     }
 }
