@@ -150,54 +150,50 @@ impl MixedCapacity {
     }
 
     #[inline]
-    pub fn add_line_string(&mut self, line_string: Option<&impl LineStringTrait>) {
-        self.line_string.add_line_string(line_string);
+    pub fn add_line_string(&mut self, line_string: &impl LineStringTrait) {
+        self.line_string.add_line_string(Some(line_string));
     }
 
     #[inline]
-    pub fn add_polygon(&mut self, polygon: Option<&impl PolygonTrait>) {
-        self.polygon.add_polygon(polygon);
+    pub fn add_polygon(&mut self, polygon: &impl PolygonTrait) {
+        self.polygon.add_polygon(Some(polygon));
     }
 
     #[inline]
-    pub fn add_multi_point(&mut self, multi_point: Option<&impl MultiPointTrait>) {
-        self.multi_point.add_multi_point(multi_point);
+    pub fn add_multi_point(&mut self, multi_point: &impl MultiPointTrait) {
+        self.multi_point.add_multi_point(Some(multi_point));
     }
 
     #[inline]
-    pub fn add_multi_line_string(&mut self, multi_line_string: Option<&impl MultiLineStringTrait>) {
+    pub fn add_multi_line_string(&mut self, multi_line_string: &impl MultiLineStringTrait) {
         self.multi_line_string
-            .add_multi_line_string(multi_line_string);
+            .add_multi_line_string(Some(multi_line_string));
     }
 
     #[inline]
-    pub fn add_multi_polygon(&mut self, multi_polygon: Option<&impl MultiPolygonTrait>) {
-        self.multi_polygon.add_multi_polygon(multi_polygon);
+    pub fn add_multi_polygon(&mut self, multi_polygon: &impl MultiPolygonTrait) {
+        self.multi_polygon.add_multi_polygon(Some(multi_polygon));
     }
 
     #[inline]
-    pub fn add_geometry(&mut self, geom: Option<&impl GeometryTrait>) -> Result<()> {
-        // TODO: what to do about null geometries? We don't know which type they have
-        assert!(geom.is_some());
-        if let Some(geom) = geom {
-            match geom.as_type() {
-                geo_traits::GeometryType::Point(_) => self.add_point(),
-                geo_traits::GeometryType::LineString(g) => self.add_line_string(Some(g)),
-                geo_traits::GeometryType::Polygon(g) => self.add_polygon(Some(g)),
-                geo_traits::GeometryType::MultiPoint(p) => self.add_multi_point(Some(p)),
-                geo_traits::GeometryType::MultiLineString(p) => self.add_multi_line_string(Some(p)),
-                geo_traits::GeometryType::MultiPolygon(p) => self.add_multi_polygon(Some(p)),
-                geo_traits::GeometryType::GeometryCollection(_) => {
-                    panic!("nested geometry collections not supported")
-                }
-                _ => todo!(), // geo_traits::GeometryType::Rect(_) => todo!(),
-            };
+    pub fn add_geometry(&mut self, geom: &impl GeometryTrait) -> Result<()> {
+        match geom.as_type() {
+            geo_traits::GeometryType::Point(_) => self.add_point(),
+            geo_traits::GeometryType::LineString(g) => self.add_line_string(g),
+            geo_traits::GeometryType::Polygon(g) => self.add_polygon(g),
+            geo_traits::GeometryType::MultiPoint(p) => self.add_multi_point(p),
+            geo_traits::GeometryType::MultiLineString(p) => self.add_multi_line_string(p),
+            geo_traits::GeometryType::MultiPolygon(p) => self.add_multi_polygon(p),
+            geo_traits::GeometryType::GeometryCollection(_) => {
+                panic!("nested geometry collections not supported")
+            }
+            _ => todo!(), // geo_traits::GeometryType::Rect(_) => todo!(),
         };
         Ok(())
     }
 
     pub fn from_geometries<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+        geoms: impl Iterator<Item = &'a (impl GeometryTrait + 'a)>,
     ) -> Result<Self> {
         let mut counter = Self::new_empty();
         for maybe_geom in geoms.into_iter() {
@@ -207,11 +203,11 @@ impl MixedCapacity {
     }
 
     pub fn from_owned_geometries<'a>(
-        geoms: impl Iterator<Item = Option<(impl GeometryTrait + 'a)>>,
+        geoms: impl Iterator<Item = (impl GeometryTrait + 'a)>,
     ) -> Result<Self> {
         let mut counter = Self::new_empty();
         for maybe_geom in geoms.into_iter() {
-            counter.add_geometry(maybe_geom.as_ref())?;
+            counter.add_geometry(&maybe_geom)?;
         }
         Ok(counter)
     }
