@@ -474,6 +474,22 @@ impl GeoArrowArray for GeometryArray {
         }
     }
 
+    fn is_null(&self, i: usize) -> bool {
+        let type_id = self.type_ids[i];
+        let offset = self.offsets[i] as usize;
+        let dim = (type_id / 10) as usize;
+        match type_id % 10 {
+            1 => self.points[dim].is_null(offset),
+            2 => self.line_strings[dim].is_null(offset),
+            3 => self.polygons[dim].is_null(offset),
+            4 => self.mpoints[dim].is_null(offset),
+            5 => self.mline_strings[dim].is_null(offset),
+            6 => self.mpolygons[dim].is_null(offset),
+            7 => self.gcs[dim].is_null(offset),
+            _ => panic!("unknown type_id {}", type_id),
+        }
+    }
+
     fn data_type(&self) -> GeoArrowType {
         GeoArrowType::Geometry(self.data_type.clone())
     }
