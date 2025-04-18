@@ -48,33 +48,33 @@ impl GeometryCollectionCapacity {
 
     #[inline]
     fn add_valid_line_string(&mut self, geom: &impl LineStringTrait) {
-        self.mixed_capacity.add_line_string(Some(geom));
+        self.mixed_capacity.add_line_string(geom);
     }
 
     #[inline]
     fn add_valid_polygon(&mut self, geom: &impl PolygonTrait) {
-        self.mixed_capacity.add_polygon(Some(geom));
+        self.mixed_capacity.add_polygon(geom);
     }
 
     #[inline]
     fn add_valid_multi_point(&mut self, geom: &impl MultiPointTrait) {
-        self.mixed_capacity.add_multi_point(Some(geom));
+        self.mixed_capacity.add_multi_point(geom);
     }
 
     #[inline]
     fn add_valid_multi_line_string(&mut self, geom: &impl MultiLineStringTrait) {
-        self.mixed_capacity.add_multi_line_string(Some(geom));
+        self.mixed_capacity.add_multi_line_string(geom);
     }
 
     #[inline]
     fn add_valid_multi_polygon(&mut self, geom: &impl MultiPolygonTrait) {
-        self.mixed_capacity.add_multi_polygon(Some(geom));
+        self.mixed_capacity.add_multi_polygon(geom);
     }
 
     #[inline]
     fn add_valid_geometry_collection(&mut self, geom: &impl GeometryCollectionTrait) -> Result<()> {
         for g in geom.geometries() {
-            self.mixed_capacity.add_geometry(Some(&g))?
+            self.mixed_capacity.add_geometry(&g)?
         }
         Ok(())
     }

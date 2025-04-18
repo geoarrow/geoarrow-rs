@@ -324,7 +324,7 @@ pub mod __private {
 ///     match array.data_type() {
 ///         Point(_) | LineString(_) | MultiPoint(_) | MultiLineString(_) => {
 ///             let values = vec![0.0f64; array.len()];
-///             Ok(Float64Array::new(values.into(), array.nulls().cloned()))
+///             Ok(Float64Array::new(values.into(), array.logical_nulls()))
 ///         }
 ///         _ => impl_unsigned_area(array),
 ///     }

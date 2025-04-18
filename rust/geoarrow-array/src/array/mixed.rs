@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::sync::Arc;
 
 use arrow_array::cast::AsArray;
-use arrow_array::{Array, ArrayRef, OffsetSizeTrait, UnionArray};
+use arrow_array::{Array, ArrayRef, UnionArray};
 use arrow_buffer::ScalarBuffer;
 use arrow_schema::{DataType, UnionMode};
 use geoarrow_schema::{
@@ -13,11 +13,11 @@ use geoarrow_schema::{
 use crate::ArrayAccessor;
 use crate::array::{
     DimensionIndex, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
-    PointArray, PolygonArray, WkbArray,
+    PointArray, PolygonArray,
 };
 use crate::builder::{
-    LineStringBuilder, MixedGeometryBuilder, MultiLineStringBuilder, MultiPointBuilder,
-    MultiPolygonBuilder, PointBuilder, PolygonBuilder,
+    LineStringBuilder, MultiLineStringBuilder, MultiPointBuilder, MultiPolygonBuilder,
+    PointBuilder, PolygonBuilder,
 };
 use crate::capacity::MixedCapacity;
 use crate::datatypes::GeoArrowType;
@@ -687,15 +687,6 @@ impl TryFrom<(&dyn Array, Dimension, CoordType)> for MixedGeometryArray {
                 value.data_type()
             ))),
         }
-    }
-}
-
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, Dimension)> for MixedGeometryArray {
-    type Error = GeoArrowError;
-
-    fn try_from(value: (WkbArray<O>, Dimension)) -> Result<Self> {
-        let mut_arr: MixedGeometryBuilder = value.try_into()?;
-        Ok(mut_arr.finish())
     }
 }
 

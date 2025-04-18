@@ -55,7 +55,12 @@ impl<O: OffsetSizeTrait> WkbArray<O> {
 
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
-        let validity_len = self.nulls().map(|v| v.buffer().len()).unwrap_or(0);
+        let validity_len = self
+            .array
+            .nulls()
+            .as_ref()
+            .map(|v| v.buffer().len())
+            .unwrap_or(0);
         validity_len + self.buffer_lengths().num_bytes::<O>()
     }
 
@@ -100,8 +105,19 @@ impl<O: OffsetSizeTrait> GeoArrowArray for WkbArray<O> {
         self.array.len()
     }
 
-    fn nulls(&self) -> Option<&NullBuffer> {
-        self.array.nulls()
+    #[inline]
+    fn logical_nulls(&self) -> Option<NullBuffer> {
+        self.array.logical_nulls()
+    }
+
+    #[inline]
+    fn null_count(&self) -> usize {
+        self.array.null_count()
+    }
+
+    #[inline]
+    fn is_null(&self, i: usize) -> bool {
+        self.array.is_null(i)
     }
 
     fn data_type(&self) -> GeoArrowType {

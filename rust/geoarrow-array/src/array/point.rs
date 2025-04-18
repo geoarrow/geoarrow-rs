@@ -22,7 +22,7 @@ use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 pub struct PointArray {
     pub(crate) data_type: PointType,
     pub(crate) coords: CoordBuffer,
-    pub(crate) validity: Option<NullBuffer>,
+    pub(crate) nulls: Option<NullBuffer>,
 }
 
 /// Perform checks:
@@ -60,17 +60,17 @@ impl PointArray {
     ///
     /// # Errors
     ///
-    /// - if the validity is not `None` and its length is different from the number of geometries
+    /// - if the nulls is not `None` and its length is different from the number of geometries
     pub fn try_new(
         coords: CoordBuffer,
-        validity: Option<NullBuffer>,
+        nulls: Option<NullBuffer>,
         metadata: Arc<Metadata>,
     ) -> Result<Self> {
-        check(&coords, validity.as_ref().map(|v| v.len()))?;
+        check(&coords, nulls.as_ref().map(|v| v.len()))?;
         Ok(Self {
             data_type: PointType::new(coords.coord_type(), coords.dim(), metadata),
             coords,
-            validity,
+            nulls,
         })
     }
 
@@ -83,7 +83,7 @@ impl PointArray {
 
     /// Access the
     pub fn into_inner(self) -> (CoordBuffer, Option<NullBuffer>) {
-        (self.coords, self.validity)
+        (self.coords, self.nulls)
     }
 
     /// The lengths of each buffer contained in this array.
@@ -94,7 +94,7 @@ impl PointArray {
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
         let dimension = self.data_type.dimension();
-        let validity_len = self.nulls().map(|v| v.buffer().len()).unwrap_or(0);
+        let validity_len = self.nulls.as_ref().map(|v| v.buffer().len()).unwrap_or(0);
         validity_len + self.buffer_lengths() * dimension.size() * 8
     }
 
@@ -110,7 +110,7 @@ impl PointArray {
         Self {
             data_type: self.data_type.clone(),
             coords: self.coords.slice(offset, length),
-            validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
+            nulls: self.nulls.as_ref().map(|v| v.slice(offset, length)),
         }
     }
 
@@ -119,7 +119,7 @@ impl PointArray {
         let metadata = self.data_type.metadata().clone();
         Self::new(
             self.coords.into_coord_type(coord_type),
-            self.validity,
+            self.nulls,
             metadata,
         )
     }
@@ -144,8 +144,21 @@ impl GeoArrowArray for PointArray {
     }
 
     #[inline]
-    fn nulls(&self) -> Option<&NullBuffer> {
-        self.validity.as_ref()
+    fn logical_nulls(&self) -> Option<NullBuffer> {
+        self.nulls.clone()
+    }
+
+    #[inline]
+    fn null_count(&self) -> usize {
+        self.nulls.as_ref().map(|v| v.null_count()).unwrap_or(0)
+    }
+
+    #[inline]
+    fn is_null(&self, i: usize) -> bool {
+        self.nulls
+            .as_ref()
+            .map(|n| n.is_null(i))
+            .unwrap_or_default()
     }
 
     fn data_type(&self) -> GeoArrowType {
@@ -170,7 +183,7 @@ impl IntoArrow for PointArray {
     type ExtensionType = PointType;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let validity = self.validity;
+        let validity = self.nulls;
         let dim = self.coords.dim();
         match self.coords {
             CoordBuffer::Interleaved(c) => Arc::new(FixedSizeListArray::new(
@@ -246,7 +259,7 @@ impl TryFrom<(&dyn Array, &Field)> for PointArray {
 // as (NaN, NaN). By default, these resolve to false
 impl PartialEq for PointArray {
     fn eq(&self, other: &Self) -> bool {
-        if self.validity != other.validity {
+        if self.nulls != other.nulls {
             return false;
         }
 

@@ -91,8 +91,19 @@ impl<O: OffsetSizeTrait> GeoArrowArray for WktArray<O> {
         self.array.len()
     }
 
-    fn nulls(&self) -> Option<&NullBuffer> {
-        self.array.nulls()
+    #[inline]
+    fn logical_nulls(&self) -> Option<NullBuffer> {
+        self.array.logical_nulls()
+    }
+
+    #[inline]
+    fn null_count(&self) -> usize {
+        self.array.null_count()
+    }
+
+    #[inline]
+    fn is_null(&self, i: usize) -> bool {
+        self.array.is_null(i)
     }
 
     fn data_type(&self) -> GeoArrowType {

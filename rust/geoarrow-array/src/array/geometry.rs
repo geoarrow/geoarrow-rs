@@ -448,10 +448,16 @@ impl GeoArrowArray for GeometryArray {
     }
 
     #[inline]
-    fn nulls(&self) -> Option<&NullBuffer> {
-        None
+    fn logical_nulls(&self) -> Option<NullBuffer> {
+        self.to_array_ref().logical_nulls()
     }
 
+    #[inline]
+    fn null_count(&self) -> usize {
+        self.to_array_ref().null_count()
+    }
+
+    #[inline]
     fn is_null(&self, i: usize) -> bool {
         let type_id = self.type_ids[i];
         let offset = self.offsets[i] as usize;
@@ -969,12 +975,23 @@ mod test {
         let geo_arr = GeometryBuilder::from_nullable_geometries(&geoms, typ, false)
             .unwrap()
             .finish();
-        // let arrow_arr = geo_arr.to_array_ref();
 
         for null_idx in &null_idxs {
             assert!(geo_arr.is_null(*null_idx));
-            // assert!(arrow_arr.is_null(*null_idx));
         }
+    }
+
+    #[test]
+    fn test_logical_nulls() {
+        let geoms = raw::geometry::geoms();
+        let expected_nulls = NullBuffer::from_iter(geoms.iter().map(|g| g.is_some()));
+
+        let typ = GeometryType::new(CoordType::Interleaved, Default::default());
+        let geo_arr = GeometryBuilder::from_nullable_geometries(&geoms, typ, false)
+            .unwrap()
+            .finish();
+
+        assert_eq!(geo_arr.logical_nulls().unwrap(), expected_nulls);
     }
 
     #[test]

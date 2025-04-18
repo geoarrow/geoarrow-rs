@@ -35,7 +35,7 @@ pub struct RectArray {
     /// Separated arrays for each of the "upper" dimensions
     upper: SeparatedCoordBuffer,
 
-    validity: Option<NullBuffer>,
+    nulls: Option<NullBuffer>,
 }
 
 impl RectArray {
@@ -43,7 +43,7 @@ impl RectArray {
     pub fn new(
         lower: SeparatedCoordBuffer,
         upper: SeparatedCoordBuffer,
-        validity: Option<NullBuffer>,
+        nulls: Option<NullBuffer>,
         metadata: Arc<Metadata>,
     ) -> Self {
         assert_eq!(lower.dim(), upper.dim());
@@ -51,7 +51,7 @@ impl RectArray {
             data_type: BoxType::new(lower.dim(), metadata),
             lower,
             upper,
-            validity,
+            nulls,
         }
     }
 
@@ -83,7 +83,7 @@ impl RectArray {
             data_type: self.data_type.clone(),
             lower: self.lower().slice(offset, length),
             upper: self.upper().slice(offset, length),
-            validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
+            nulls: self.nulls.as_ref().map(|v| v.slice(offset, length)),
         }
     }
 }
@@ -107,8 +107,21 @@ impl GeoArrowArray for RectArray {
     }
 
     #[inline]
-    fn nulls(&self) -> Option<&NullBuffer> {
-        self.validity.as_ref()
+    fn logical_nulls(&self) -> Option<NullBuffer> {
+        self.nulls.clone()
+    }
+
+    #[inline]
+    fn null_count(&self) -> usize {
+        self.nulls.as_ref().map(|v| v.null_count()).unwrap_or(0)
+    }
+
+    #[inline]
+    fn is_null(&self, i: usize) -> bool {
+        self.nulls
+            .as_ref()
+            .map(|n| n.is_null(i))
+            .unwrap_or_default()
     }
 
     fn data_type(&self) -> GeoArrowType {
@@ -144,8 +157,8 @@ impl IntoArrow for RectArray {
         arrays.extend_from_slice(self.lower.values_array().as_slice());
         arrays.extend_from_slice(self.upper.values_array().as_slice());
 
-        let validity = self.validity;
-        StructArray::new(fields, arrays, validity)
+        let nulls = self.nulls;
+        StructArray::new(fields, arrays, nulls)
     }
 
     fn ext_type(&self) -> &Self::ExtensionType {
@@ -158,7 +171,7 @@ impl TryFrom<(&StructArray, BoxType)> for RectArray {
 
     fn try_from((value, typ): (&StructArray, BoxType)) -> Result<Self> {
         let dim = typ.dimension();
-        let validity = value.nulls();
+        let nulls = value.nulls();
         let columns = value.columns();
         if columns.len() != dim.size() * 2 {
             return Err(GeoArrowError::General(format!(
@@ -183,7 +196,7 @@ impl TryFrom<(&StructArray, BoxType)> for RectArray {
         Ok(Self::new(
             lower,
             upper,
-            validity.cloned(),
+            nulls.cloned(),
             typ.metadata().clone(),
         ))
     }

@@ -30,7 +30,7 @@ pub struct GeometryCollectionArray {
     pub(crate) geom_offsets: OffsetBuffer<i32>,
 
     /// Validity bitmap
-    pub(crate) validity: Option<NullBuffer>,
+    pub(crate) nulls: Option<NullBuffer>,
 }
 
 impl GeometryCollectionArray {
@@ -42,7 +42,7 @@ impl GeometryCollectionArray {
     pub fn new(
         array: MixedGeometryArray,
         geom_offsets: OffsetBuffer<i32>,
-        validity: Option<NullBuffer>,
+        nulls: Option<NullBuffer>,
         metadata: Arc<Metadata>,
     ) -> Self {
         let coord_type = array.coord_type;
@@ -50,7 +50,7 @@ impl GeometryCollectionArray {
             data_type: GeometryCollectionType::new(coord_type, array.dim, metadata),
             array,
             geom_offsets,
-            validity,
+            nulls,
         }
     }
 
@@ -68,7 +68,7 @@ impl GeometryCollectionArray {
 
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
-        let validity_len = self.nulls().map(|v| v.buffer().len()).unwrap_or(0);
+        let validity_len = self.nulls.as_ref().map(|v| v.buffer().len()).unwrap_or(0);
         validity_len + self.buffer_lengths().num_bytes()
     }
 
@@ -91,7 +91,7 @@ impl GeometryCollectionArray {
             data_type: self.data_type.clone(),
             array: self.array.clone(),
             geom_offsets: self.geom_offsets.slice(offset, length),
-            validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
+            nulls: self.nulls.as_ref().map(|v| v.slice(offset, length)),
         }
     }
 
@@ -101,7 +101,7 @@ impl GeometryCollectionArray {
         Self::new(
             self.array.into_coord_type(coord_type),
             self.geom_offsets,
-            self.validity,
+            self.nulls,
             metadata,
         )
     }
@@ -126,8 +126,21 @@ impl GeoArrowArray for GeometryCollectionArray {
     }
 
     #[inline]
-    fn nulls(&self) -> Option<&NullBuffer> {
-        self.validity.as_ref()
+    fn logical_nulls(&self) -> Option<NullBuffer> {
+        self.nulls.clone()
+    }
+
+    #[inline]
+    fn null_count(&self) -> usize {
+        self.nulls.as_ref().map(|v| v.null_count()).unwrap_or(0)
+    }
+
+    #[inline]
+    fn is_null(&self, i: usize) -> bool {
+        self.nulls
+            .as_ref()
+            .map(|n| n.is_null(i))
+            .unwrap_or_default()
     }
 
     fn data_type(&self) -> GeoArrowType {
@@ -157,9 +170,9 @@ impl IntoArrow for GeometryCollectionArray {
 
     fn into_arrow(self) -> Self::ArrowArray {
         let geometries_field = self.geometries_field();
-        let validity = self.validity;
+        let nulls = self.nulls;
         let values = self.array.into_array_ref();
-        GenericListArray::new(geometries_field, self.geom_offsets, values, validity)
+        GenericListArray::new(geometries_field, self.geom_offsets, values, nulls)
     }
 
     fn ext_type(&self) -> &Self::ExtensionType {
@@ -174,12 +187,12 @@ impl TryFrom<(&GenericListArray<i32>, GeometryCollectionType)> for GeometryColle
         let geoms: MixedGeometryArray =
             (value.values().as_ref(), typ.dimension(), typ.coord_type()).try_into()?;
         let geom_offsets = value.offsets();
-        let validity = value.nulls();
+        let nulls = value.nulls();
 
         Ok(Self::new(
             geoms,
             geom_offsets.clone(),
-            validity.cloned(),
+            nulls.cloned(),
             typ.metadata().clone(),
         ))
     }
@@ -192,12 +205,12 @@ impl TryFrom<(&GenericListArray<i64>, GeometryCollectionType)> for GeometryColle
         let geoms: MixedGeometryArray =
             (value.values().as_ref(), typ.dimension(), typ.coord_type()).try_into()?;
         let geom_offsets = offsets_buffer_i64_to_i32(value.offsets())?;
-        let validity = value.nulls();
+        let nulls = value.nulls();
 
         Ok(Self::new(
             geoms,
             geom_offsets,
-            validity.cloned(),
+            nulls.cloned(),
             typ.metadata().clone(),
         ))
     }
@@ -240,7 +253,7 @@ impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, GeometryCollectionType)>
 
 impl PartialEq for GeometryCollectionArray {
     fn eq(&self, other: &Self) -> bool {
-        self.validity == other.validity
+        self.nulls == other.nulls
             && offset_buffer_eq(&self.geom_offsets, &other.geom_offsets)
             && self.array == other.array
     }
@@ -249,6 +262,7 @@ impl PartialEq for GeometryCollectionArray {
 #[cfg(test)]
 mod test {
     use geoarrow_schema::{CoordType, Dimension};
+    use geoarrow_test::raw;
 
     use crate::test::geometrycollection;
 
@@ -281,5 +295,41 @@ mod test {
                 }
             }
         }
+    }
+
+    #[test]
+    fn test_nullability() {
+        let geoms = raw::geometrycollection::xy::geoms();
+        let null_idxs = geoms
+            .iter()
+            .enumerate()
+            .filter_map(|(i, geom)| if geom.is_none() { Some(i) } else { None })
+            .collect::<Vec<_>>();
+
+        let typ =
+            GeometryCollectionType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let geo_arr =
+            GeometryCollectionBuilder::from_nullable_geometry_collections(&geoms, typ, false)
+                .unwrap()
+                .finish();
+
+        for null_idx in &null_idxs {
+            assert!(geo_arr.is_null(*null_idx));
+        }
+    }
+
+    #[test]
+    fn test_logical_nulls() {
+        let geoms = raw::geometrycollection::xy::geoms();
+        let expected_nulls = NullBuffer::from_iter(geoms.iter().map(|g| g.is_some()));
+
+        let typ =
+            GeometryCollectionType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let geo_arr =
+            GeometryCollectionBuilder::from_nullable_geometry_collections(&geoms, typ, false)
+                .unwrap()
+                .finish();
+
+        assert_eq!(geo_arr.logical_nulls().unwrap(), expected_nulls);
     }
 }

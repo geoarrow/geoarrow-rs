@@ -36,7 +36,7 @@ pub struct PolygonArray {
     pub(crate) ring_offsets: OffsetBuffer<i32>,
 
     /// Validity bitmap
-    pub(crate) validity: Option<NullBuffer>,
+    pub(crate) nulls: Option<NullBuffer>,
 }
 
 pub(super) fn check(
@@ -47,7 +47,7 @@ pub(super) fn check(
 ) -> Result<()> {
     if validity_len.is_some_and(|len| len != geom_offsets.len_proxy()) {
         return Err(GeoArrowError::General(
-            "validity mask length must match the number of values".to_string(),
+            "nulls mask length must match the number of values".to_string(),
         ));
     }
 
@@ -75,17 +75,17 @@ impl PolygonArray {
     ///
     /// # Panics
     ///
-    /// - if the validity is not `None` and its length is different from the number of geometries
+    /// - if the nulls is not `None` and its length is different from the number of geometries
     /// - if the largest ring offset does not match the number of coordinates
     /// - if the largest geometry offset does not match the size of ring offsets
     pub fn new(
         coords: CoordBuffer,
         geom_offsets: OffsetBuffer<i32>,
         ring_offsets: OffsetBuffer<i32>,
-        validity: Option<NullBuffer>,
+        nulls: Option<NullBuffer>,
         metadata: Arc<Metadata>,
     ) -> Self {
-        Self::try_new(coords, geom_offsets, ring_offsets, validity, metadata).unwrap()
+        Self::try_new(coords, geom_offsets, ring_offsets, nulls, metadata).unwrap()
     }
 
     /// Create a new PolygonArray from parts
@@ -96,28 +96,28 @@ impl PolygonArray {
     ///
     /// # Errors
     ///
-    /// - if the validity is not `None` and its length is different from the number of geometries
+    /// - if the nulls is not `None` and its length is different from the number of geometries
     /// - if the largest ring offset does not match the number of coordinates
     /// - if the largest geometry offset does not match the size of ring offsets
     pub fn try_new(
         coords: CoordBuffer,
         geom_offsets: OffsetBuffer<i32>,
         ring_offsets: OffsetBuffer<i32>,
-        validity: Option<NullBuffer>,
+        nulls: Option<NullBuffer>,
         metadata: Arc<Metadata>,
     ) -> Result<Self> {
         check(
             &coords,
             &geom_offsets,
             &ring_offsets,
-            validity.as_ref().map(|v| v.len()),
+            nulls.as_ref().map(|v| v.len()),
         )?;
         Ok(Self {
             data_type: PolygonType::new(coords.coord_type(), coords.dim(), metadata),
             coords,
             geom_offsets,
             ring_offsets,
-            validity,
+            nulls,
         })
     }
 
@@ -156,7 +156,7 @@ impl PolygonArray {
 
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
-        let validity_len = self.nulls().map(|v| v.buffer().len()).unwrap_or(0);
+        let validity_len = self.nulls.as_ref().map(|v| v.buffer().len()).unwrap_or(0);
         validity_len + self.buffer_lengths().num_bytes()
     }
 
@@ -176,7 +176,7 @@ impl PolygonArray {
             coords: self.coords.clone(),
             geom_offsets: self.geom_offsets.slice(offset, length),
             ring_offsets: self.ring_offsets.clone(),
-            validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
+            nulls: self.nulls.as_ref().map(|v| v.slice(offset, length)),
         }
     }
 
@@ -187,7 +187,7 @@ impl PolygonArray {
             self.coords.into_coord_type(coord_type),
             self.geom_offsets,
             self.ring_offsets,
-            self.validity,
+            self.nulls,
             metadata,
         )
     }
@@ -212,8 +212,21 @@ impl GeoArrowArray for PolygonArray {
     }
 
     #[inline]
-    fn nulls(&self) -> Option<&NullBuffer> {
-        self.validity.as_ref()
+    fn logical_nulls(&self) -> Option<NullBuffer> {
+        self.nulls.clone()
+    }
+
+    #[inline]
+    fn null_count(&self) -> usize {
+        self.nulls.as_ref().map(|v| v.null_count()).unwrap_or(0)
+    }
+
+    #[inline]
+    fn is_null(&self, i: usize) -> bool {
+        self.nulls
+            .as_ref()
+            .map(|n| n.is_null(i))
+            .unwrap_or_default()
     }
 
     fn data_type(&self) -> GeoArrowType {
@@ -245,7 +258,7 @@ impl IntoArrow for PolygonArray {
     fn into_arrow(self) -> Self::ArrowArray {
         let vertices_field = self.vertices_field();
         let rings_field = self.rings_field();
-        let validity = self.validity;
+        let nulls = self.nulls;
         let coord_array = self.coords.into();
         let ring_array = Arc::new(GenericListArray::new(
             vertices_field,
@@ -253,7 +266,7 @@ impl IntoArrow for PolygonArray {
             coord_array,
             None,
         ));
-        GenericListArray::new(rings_field, self.geom_offsets, ring_array, validity)
+        GenericListArray::new(rings_field, self.geom_offsets, ring_array, nulls)
     }
 
     fn ext_type(&self) -> &Self::ExtensionType {
@@ -266,7 +279,7 @@ impl TryFrom<(&GenericListArray<i32>, PolygonType)> for PolygonArray {
 
     fn try_from((geom_array, typ): (&GenericListArray<i32>, PolygonType)) -> Result<Self> {
         let geom_offsets = geom_array.offsets();
-        let validity = geom_array.nulls();
+        let nulls = geom_array.nulls();
 
         let rings_dyn_array = geom_array.values();
         let rings_array = rings_dyn_array.as_list::<i32>();
@@ -278,7 +291,7 @@ impl TryFrom<(&GenericListArray<i32>, PolygonType)> for PolygonArray {
             coords,
             geom_offsets.clone(),
             ring_offsets.clone(),
-            validity.cloned(),
+            nulls.cloned(),
             typ.metadata().clone(),
         ))
     }
@@ -289,7 +302,7 @@ impl TryFrom<(&GenericListArray<i64>, PolygonType)> for PolygonArray {
 
     fn try_from((geom_array, typ): (&GenericListArray<i64>, PolygonType)) -> Result<Self> {
         let geom_offsets = offsets_buffer_i64_to_i32(geom_array.offsets())?;
-        let validity = geom_array.nulls();
+        let nulls = geom_array.nulls();
 
         let rings_dyn_array = geom_array.values();
         let rings_array = rings_dyn_array.as_list::<i64>();
@@ -301,7 +314,7 @@ impl TryFrom<(&GenericListArray<i64>, PolygonType)> for PolygonArray {
             coords,
             geom_offsets,
             ring_offsets,
-            validity.cloned(),
+            nulls.cloned(),
             typ.metadata().clone(),
         ))
     }
@@ -372,7 +385,7 @@ impl From<RectArray> for PolygonArray {
 
 impl PartialEq for PolygonArray {
     fn eq(&self, other: &Self) -> bool {
-        self.validity == other.validity
+        self.nulls == other.nulls
             && offset_buffer_eq(&self.geom_offsets, &other.geom_offsets)
             && offset_buffer_eq(&self.ring_offsets, &other.ring_offsets)
             && self.coords == other.coords

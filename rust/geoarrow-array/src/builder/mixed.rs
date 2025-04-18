@@ -1,20 +1,19 @@
 use std::sync::Arc;
 
-use arrow_array::OffsetSizeTrait;
 use geo_traits::*;
 use geoarrow_schema::{
     CoordType, Dimension, LineStringType, Metadata, MultiLineStringType, MultiPointType,
     MultiPolygonType, PointType, PolygonType,
 };
 
-use crate::array::{MixedGeometryArray, WkbArray};
+use crate::array::MixedGeometryArray;
 use crate::builder::{
     LineStringBuilder, MultiLineStringBuilder, MultiPointBuilder, MultiPolygonBuilder,
     PointBuilder, PolygonBuilder,
 };
 use crate::capacity::MixedCapacity;
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::{ArrayAccessor, GeoArrowArray, GeometryArrayBuilder};
+use crate::trait_::GeometryArrayBuilder;
 
 pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 
@@ -62,7 +61,7 @@ pub(crate) struct MixedGeometryBuilder {
     pub(crate) prefer_multi: bool,
 }
 
-impl<'a> MixedGeometryBuilder {
+impl MixedGeometryBuilder {
     pub(crate) fn with_capacity_and_options(
         dim: Dimension,
         capacity: MixedCapacity,
@@ -172,55 +171,18 @@ impl<'a> MixedGeometryBuilder {
         )
     }
 
-    pub(crate) fn with_capacity_and_options_from_iter(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
-        dim: Dimension,
-        coord_type: CoordType,
-        metadata: Arc<Metadata>,
-        prefer_multi: bool,
-    ) -> Result<Self> {
-        let counter = MixedCapacity::from_geometries(geoms)?;
-        Ok(Self::with_capacity_and_options(
-            dim,
-            counter,
-            coord_type,
-            metadata,
-            prefer_multi,
-        ))
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn reserve_from_iter(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
-    ) -> Result<()> {
-        let counter = MixedCapacity::from_geometries(geoms)?;
-        self.reserve(counter);
-        Ok(())
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn reserve_exact_from_iter(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
-    ) -> Result<()> {
-        let counter = MixedCapacity::from_geometries(geoms)?;
-        self.reserve_exact(counter);
-        Ok(())
-    }
-
     /// Add a new Point to the end of this array.
     ///
     /// If `self.prefer_multi` is `true`, it will be stored in the `MultiPointBuilder` child
     /// array. Otherwise, it will be stored in the `PointBuilder` child array.
     #[inline]
-    pub(crate) fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) -> Result<()> {
+    pub(crate) fn push_point(&mut self, value: &impl PointTrait<T = f64>) -> Result<()> {
         if self.prefer_multi {
             self.add_multi_point_type();
-            self.multi_points.push_point(value)
+            self.multi_points.push_point(Some(value))
         } else {
             self.add_point_type();
-            self.points.push_point(value);
+            self.points.push_point(Some(value));
             Ok(())
         }
     }
@@ -245,16 +207,13 @@ impl<'a> MixedGeometryBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub(crate) fn push_line_string(
-        &mut self,
-        value: Option<&impl LineStringTrait<T = f64>>,
-    ) -> Result<()> {
+    pub(crate) fn push_line_string(&mut self, value: &impl LineStringTrait<T = f64>) -> Result<()> {
         if self.prefer_multi {
             self.add_multi_line_string_type();
-            self.multi_line_strings.push_line_string(value)
+            self.multi_line_strings.push_line_string(Some(value))
         } else {
             self.add_line_string_type();
-            self.line_strings.push_line_string(value)
+            self.line_strings.push_line_string(Some(value))
         }
     }
 
@@ -279,16 +238,13 @@ impl<'a> MixedGeometryBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub(crate) fn push_polygon(
-        &mut self,
-        value: Option<&impl PolygonTrait<T = f64>>,
-    ) -> Result<()> {
+    pub(crate) fn push_polygon(&mut self, value: &impl PolygonTrait<T = f64>) -> Result<()> {
         if self.prefer_multi {
             self.add_multi_polygon_type();
-            self.multi_polygons.push_polygon(value)
+            self.multi_polygons.push_polygon(Some(value))
         } else {
             self.add_polygon_type();
-            self.polygons.push_polygon(value)
+            self.polygons.push_polygon(Some(value))
         }
     }
 
@@ -309,12 +265,9 @@ impl<'a> MixedGeometryBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub(crate) fn push_multi_point(
-        &mut self,
-        value: Option<&impl MultiPointTrait<T = f64>>,
-    ) -> Result<()> {
+    pub(crate) fn push_multi_point(&mut self, value: &impl MultiPointTrait<T = f64>) -> Result<()> {
         self.add_multi_point_type();
-        self.multi_points.push_multi_point(value)
+        self.multi_points.push_multi_point(Some(value))
     }
 
     #[inline]
@@ -337,10 +290,10 @@ impl<'a> MixedGeometryBuilder {
     #[inline]
     pub(crate) fn push_multi_line_string(
         &mut self,
-        value: Option<&impl MultiLineStringTrait<T = f64>>,
+        value: &impl MultiLineStringTrait<T = f64>,
     ) -> Result<()> {
         self.add_multi_line_string_type();
-        self.multi_line_strings.push_multi_line_string(value)
+        self.multi_line_strings.push_multi_line_string(Some(value))
     }
 
     #[inline]
@@ -363,10 +316,10 @@ impl<'a> MixedGeometryBuilder {
     #[inline]
     pub(crate) fn push_multi_polygon(
         &mut self,
-        value: Option<&impl MultiPolygonTrait<T = f64>>,
+        value: &impl MultiPolygonTrait<T = f64>,
     ) -> Result<()> {
         self.add_multi_polygon_type();
-        self.multi_polygons.push_multi_polygon(value)
+        self.multi_polygons.push_multi_polygon(Some(value))
     }
 
     #[inline]
@@ -382,110 +335,33 @@ impl<'a> MixedGeometryBuilder {
     }
 
     #[inline]
-    pub(crate) fn push_geometry(
-        &mut self,
-        value: Option<&'a impl GeometryTrait<T = f64>>,
-    ) -> Result<()> {
+    pub(crate) fn push_geometry(&mut self, geom: &'_ impl GeometryTrait<T = f64>) -> Result<()> {
         use geo_traits::GeometryType::*;
 
-        if let Some(geom) = value {
-            match geom.as_type() {
-                Point(g) => {
-                    self.push_point(Some(g))?;
+        match geom.as_type() {
+            Point(g) => {
+                self.push_point(g)?;
+            }
+            LineString(g) => {
+                self.push_line_string(g)?;
+            }
+            Polygon(g) => {
+                self.push_polygon(g)?;
+            }
+            MultiPoint(p) => self.push_multi_point(p)?,
+            MultiLineString(p) => self.push_multi_line_string(p)?,
+            MultiPolygon(p) => self.push_multi_polygon(p)?,
+            GeometryCollection(gc) => {
+                if gc.num_geometries() == 1 {
+                    self.push_geometry(&gc.geometry(0).unwrap())?
+                } else {
+                    return Err(GeoArrowError::General(
+                        "nested geometry collections not supported".to_string(),
+                    ));
                 }
-                LineString(g) => {
-                    self.push_line_string(Some(g))?;
-                }
-                Polygon(g) => {
-                    self.push_polygon(Some(g))?;
-                }
-                MultiPoint(p) => self.push_multi_point(Some(p))?,
-                MultiLineString(p) => self.push_multi_line_string(Some(p))?,
-                MultiPolygon(p) => self.push_multi_polygon(Some(p))?,
-                GeometryCollection(gc) => {
-                    if gc.num_geometries() == 1 {
-                        self.push_geometry(Some(&gc.geometry(0).unwrap()))?
-                    } else {
-                        return Err(GeoArrowError::General(
-                            "nested geometry collections not supported".to_string(),
-                        ));
-                    }
-                }
-                Rect(_) | Triangle(_) | Line(_) => todo!(),
-            };
-        } else {
-            self.push_null();
-        }
+            }
+            Rect(_) | Triangle(_) | Line(_) => todo!(),
+        };
         Ok(())
-    }
-
-    #[inline]
-    pub(crate) fn push_null(&mut self) {
-        todo!("push null geometry")
-    }
-
-    /// Extend this builder with the given geometries
-    pub(crate) fn extend_from_iter(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
-    ) {
-        geoms
-            .into_iter()
-            .try_for_each(|maybe_geom| self.push_geometry(maybe_geom))
-            .unwrap();
-    }
-
-    /// Create this builder from a slice of nullable Geometries.
-    pub(crate) fn from_nullable_geometries(
-        geoms: &[Option<impl GeometryTrait<T = f64>>],
-        dim: Dimension,
-        coord_type: CoordType,
-        metadata: Arc<Metadata>,
-        prefer_multi: bool,
-    ) -> Result<Self> {
-        let mut array = Self::with_capacity_and_options_from_iter(
-            geoms.iter().map(|x| x.as_ref()),
-            dim,
-            coord_type,
-            metadata,
-            prefer_multi,
-        )?;
-        array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
-        Ok(array)
-    }
-}
-
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, Dimension)> for MixedGeometryBuilder {
-    type Error = GeoArrowError;
-
-    fn try_from((value, dim): (WkbArray<O>, Dimension)) -> std::result::Result<Self, Self::Error> {
-        assert_eq!(
-            value.nulls().map_or(0, |validity| validity.null_count()),
-            0,
-            "Parsing a WkbArray with null elements not supported",
-        );
-
-        let metadata = value.data_type.metadata().clone();
-        let wkb_objects = value
-            .iter()
-            .map(|x| x.transpose())
-            .collect::<Result<Vec<_>>>()?;
-        Self::from_nullable_geometries(
-            &wkb_objects,
-            dim,
-            CoordType::default_interleaved(),
-            metadata,
-            true,
-        )
-    }
-}
-
-impl GeometryArrayBuilder for MixedGeometryBuilder {
-    fn len(&self) -> usize {
-        self.types.len()
-    }
-
-    fn push_null(&mut self) {
-        self.push_null();
     }
 }

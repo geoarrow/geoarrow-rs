@@ -14,7 +14,7 @@ use crate::builder::{
 };
 use crate::capacity::GeometryCapacity;
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::{ArrayAccessor, GeoArrowArray, GeometryArrayBuilder};
+use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
 
 pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 
@@ -757,12 +757,6 @@ impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, GeometryType)> for GeometryBuilde
     fn try_from(
         (value, typ): (WkbArray<O>, GeometryType),
     ) -> std::result::Result<Self, Self::Error> {
-        assert_eq!(
-            value.nulls().map_or(0, |validity| validity.null_count()),
-            0,
-            "Parsing a WkbArray with null elements not supported",
-        );
-
         let wkb_objects = value
             .iter()
             .map(|x| x.transpose())
