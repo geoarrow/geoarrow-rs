@@ -1422,7 +1422,6 @@ dependencies = [
  "arrow-ord",
  "arrow-schema",
  "async-stream",
- "bytes",
  "futures",
  "geo-traits",
  "geo-types",
@@ -1461,9 +1460,6 @@ dependencies = [
 name = "geoarrow-test"
 version = "0.1.0-dev"
 dependencies = [
- "geo 0.30.0",
- "geo-traits",
- "geo-types",
  "wkt 0.12.0 (git+https://github.com/georust/wkt?rev=270ffe0eaf5ba5255c364dbade39c451562a9e9b)",
 ]
 
@@ -3081,14 +3077,11 @@ dependencies = [
  "arrow-buffer",
  "arrow-cast",
  "arrow-schema",
- "geo 0.30.0",
  "geoarrow-array",
  "geoarrow-schema",
- "indexmap 2.9.0",
  "pyo3",
  "pyo3-arrow",
  "serde_json",
- "thiserror 1.0.69",
  "url",
 ]
 

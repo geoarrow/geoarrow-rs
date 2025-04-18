@@ -1,5 +1,6 @@
 //! GeoArrow geometry type and metadata definitions.
 
+#![cfg_attr(not(test), warn(unused_crate_dependencies))]
 #![warn(missing_docs)]
 
 mod coord_type;

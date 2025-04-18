@@ -10,7 +10,4 @@ categories = ["science::geo"]
 rust-version = { workspace = true }
 
 [dependencies]
-geo = { workspace = true }
-geo-traits = { workspace = true }
-geo-types = { workspace = true }
 wkt = { workspace = true }
