@@ -875,6 +875,7 @@ impl TypeId for GeometryCollectionBuilder {
 #[cfg(test)]
 mod test {
     use geoarrow_schema::CoordType;
+    use wkt::wkt;
 
     use crate::GeoArrowArray;
 
@@ -927,5 +928,38 @@ mod test {
             geom_arr.line_strings[Dimension::XYZ.order()].null_count(),
             total_expected_null_count
         );
+    }
+
+    #[test]
+    fn later_nulls_after_deferred_nulls_pushed_directly() {
+        let coord_type = CoordType::Interleaved;
+        let typ = GeometryType::new(coord_type, Default::default());
+
+        let mut builder = GeometryBuilder::new(typ, false);
+        builder.push_null();
+        builder.push_null();
+
+        let point = wkt! { POINT Z (30. 10. 40.) };
+        builder.push_point(Some(&point)).unwrap();
+
+        let ls = wkt! { LINESTRING (30. 10., 10. 30., 40. 40.) };
+        builder.push_line_string(Some(&ls)).unwrap();
+
+        builder.push_null();
+        builder.push_null();
+
+        let geom_arr = builder.finish();
+
+        assert_eq!(geom_arr.null_count(), 4);
+
+        // The first two nulls get added to the point z child because those are deferred and the
+        // point z is the first non-null geometry added.
+        assert_eq!(geom_arr.points[Dimension::XYZ.order()].null_count(), 2);
+
+        // The last two nulls get added to the linestring XY child because the current
+        // implementation looks through all XY arrays then all XYZ then etc looking for the first
+        // non-empty array. Since the linestring XY child is non-empty, the last nulls get pushed
+        // here.
+        assert_eq!(geom_arr.line_strings[Dimension::XY.order()].null_count(), 2);
     }
 }
