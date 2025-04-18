@@ -217,7 +217,7 @@ impl GeoArrowArray for PolygonArray {
     }
 
     #[inline]
-    fn null_count(&self) -> usize {
+    fn logical_null_count(&self) -> usize {
         self.nulls.as_ref().map(|v| v.null_count()).unwrap_or(0)
     }
 
@@ -368,7 +368,7 @@ impl From<RectArray> for PolygonArray {
 
         // Each output polygon has exactly 5 coordinates
         // Don't reserve capacity for null entries
-        let coord_capacity = (value.len() - value.null_count()) * 5;
+        let coord_capacity = (value.len() - value.logical_null_count()) * 5;
 
         let capacity = PolygonCapacity::new(coord_capacity, ring_capacity, geom_capacity);
         let mut output_array = PolygonBuilder::with_capacity(polygon_type, capacity);

@@ -213,7 +213,7 @@ impl GeoArrowArray for MultiLineStringArray {
     }
 
     #[inline]
-    fn null_count(&self) -> usize {
+    fn logical_null_count(&self) -> usize {
         self.nulls.as_ref().map(|v| v.null_count()).unwrap_or(0)
     }
 

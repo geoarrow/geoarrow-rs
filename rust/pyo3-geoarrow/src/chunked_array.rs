@@ -120,7 +120,10 @@ impl PyChunkedGeoArrowArray {
 
     #[getter]
     fn null_count(&self) -> usize {
-        self.chunks.iter().map(|chunk| chunk.null_count()).sum()
+        self.chunks
+            .iter()
+            .map(|chunk| chunk.logical_null_count())
+            .sum()
     }
 
     #[getter]

@@ -142,7 +142,7 @@ impl PyGeoArrowArray {
 
     #[getter]
     fn null_count(&self) -> usize {
-        self.0.null_count()
+        self.0.logical_null_count()
     }
 
     #[getter]
