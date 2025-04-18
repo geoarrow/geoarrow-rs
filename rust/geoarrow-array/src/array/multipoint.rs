@@ -346,6 +346,21 @@ mod test {
     }
 
     #[test]
+    fn geo_round_trip2() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            let geo_arr = multipoint::array(coord_type, Dimension::XY);
+            let geo_geoms = geo_arr
+                .iter()
+                .map(|x| x.transpose().unwrap().map(|g| g.to_multi_point()))
+                .collect::<Vec<_>>();
+
+            let typ = MultiPointType::new(coord_type, Dimension::XY, Default::default());
+            let geo_arr2 = MultiPointBuilder::from_nullable_multi_points(&geo_geoms, typ).finish();
+            assert_eq!(geo_arr, geo_arr2);
+        }
+    }
+
+    #[test]
     fn try_from_arrow() {
         for coord_type in [CoordType::Interleaved, CoordType::Separated] {
             for dim in [
