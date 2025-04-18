@@ -70,7 +70,8 @@ impl<'a> PolygonTrait for Polygon<'a> {
 
     fn num_interiors(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
-        end - start - 1
+        // Note: we need to use saturating_sub in the case of an empty polygon, where start == end
+        (end - start).saturating_sub(1)
     }
 
     unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
@@ -105,7 +106,8 @@ impl<'a> PolygonTrait for &'a Polygon<'a> {
 
     fn num_interiors(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
-        end - start - 1
+        // Note: we need to use saturating_sub in the case of an empty polygon, where start == end
+        (end - start).saturating_sub(1)
     }
 
     unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
@@ -119,20 +121,24 @@ impl<G: PolygonTrait<T = f64>> PartialEq<G> for Polygon<'_> {
     }
 }
 
-// #[cfg(test)]
-// mod test {
-//     use crate::array::PolygonArray;
-//     use crate::test::polygon::{p0, p1};
-//     use crate::trait_::ArrayAccessor;
-//     use geoarrow_schema::Dimension;
+#[cfg(test)]
+mod test {
+    use geo::HasDimensions;
+    use geo_traits::to_geo::ToGeoPolygon;
+    use geoarrow_schema::{CoordType, Dimension, PolygonType};
+    use wkt::wkt;
 
-//     /// Test Eq where the current index is true but another index is false
-//     #[test]
-//     fn test_eq_other_index_false() {
-//         let arr1: PolygonArray = (vec![p0(), p1()].as_slice(), Dimension::XY).into();
-//         let arr2: PolygonArray = (vec![p0(), p0()].as_slice(), Dimension::XY).into();
+    use crate::ArrayAccessor;
+    use crate::builder::PolygonBuilder;
 
-//         assert_eq!(arr1.value(0), arr2.value(0));
-//         assert_ne!(arr1.value(1), arr2.value(1));
-//     }
-// }
+    /// Test Eq where the current index is true but another index is false
+    #[test]
+    fn test_access_empty_polygon() {
+        let empty_polygon: wkt::types::Polygon<f64> = wkt! { POLYGON EMPTY };
+        let typ = PolygonType::new(CoordType::Separated, Dimension::XY, Default::default());
+        let polygon_array = PolygonBuilder::from_polygons(&[empty_polygon], typ).finish();
+
+        let geo_polygon = polygon_array.value(0).unwrap().to_polygon();
+        assert!(geo_polygon.is_empty());
+    }
+}
