@@ -3,9 +3,14 @@
 use std::sync::Arc;
 
 use arrow_array::OffsetSizeTrait;
+use arrow_array::cast::AsArray;
+use geoarrow_schema::WkbType;
 
 use crate::array::*;
+use crate::builder::WkbBuilder;
+use crate::error::Result;
 use crate::trait_::GeoArrowArray;
+use crate::{ArrayAccessor, GeoArrowType};
 
 /// Helpers for downcasting a [`GeoArrowArray`] to a concrete implementation.
 ///
@@ -254,6 +259,59 @@ impl AsGeoArrowArray for Arc<dyn GeoArrowArray> {
     }
 }
 
+/// Convert a [GeoArrowArray] to a [WkbArray].
+pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<WkbArray<O>> {
+    use GeoArrowType::*;
+    match arr.data_type() {
+        Point(_) => impl_to_wkb(arr.as_point()),
+        LineString(_) => impl_to_wkb(arr.as_line_string()),
+        Polygon(_) => impl_to_wkb(arr.as_polygon()),
+        MultiPoint(_) => impl_to_wkb(arr.as_multi_point()),
+        MultiLineString(_) => impl_to_wkb(arr.as_multi_line_string()),
+        MultiPolygon(_) => impl_to_wkb(arr.as_multi_polygon()),
+        Geometry(_) => impl_to_wkb(arr.as_geometry()),
+        GeometryCollection(_) => impl_to_wkb(arr.as_geometry_collection()),
+        Rect(_) => impl_to_wkb(arr.as_rect()),
+        Wkb(typ) => {
+            if O::IS_LARGE {
+                let large_arr: WkbArray<i64> = arr.as_wkb::<i32>().clone().into();
+                let array = large_arr.to_array_ref().as_binary::<O>().clone();
+                Ok(WkbArray::new(array, typ.metadata().clone()))
+            } else {
+                // Since O is already i32, we can just go via ArrayRef, and use .as_binary to cast
+                // to O
+                let array = arr.as_wkb::<i32>().to_array_ref();
+                let array = array.as_binary::<O>().clone();
+                Ok(WkbArray::new(array, typ.metadata().clone()))
+            }
+        }
+        LargeWkb(typ) => {
+            if O::IS_LARGE {
+                // Since O is already i64, we can just go via ArrayRef, and use .as_binary to cast
+                // to O
+                let array = arr.as_wkb::<i64>().to_array_ref();
+                let array = array.as_binary::<O>().clone();
+                Ok(WkbArray::new(array, typ.metadata().clone()))
+            } else {
+                let small_arr: WkbArray<i32> = arr.as_wkb::<i64>().clone().try_into()?;
+                let array = small_arr.to_array_ref().as_binary::<O>().clone();
+                Ok(WkbArray::new(array, typ.metadata().clone()))
+            }
+        }
+        Wkt(_) => impl_to_wkb(arr.as_wkt::<i32>()),
+        LargeWkt(_) => impl_to_wkb(arr.as_wkt::<i64>()),
+    }
+}
+
+fn impl_to_wkb<'a, O: OffsetSizeTrait>(geo_arr: &'a impl ArrayAccessor<'a>) -> Result<WkbArray<O>> {
+    let geoms = geo_arr
+        .iter()
+        .map(|x| x.transpose())
+        .collect::<Result<Vec<_>>>()?;
+    let wkb_type = WkbType::new(geo_arr.data_type().metadata().clone());
+    Ok(WkbBuilder::from_nullable_geometries(geoms.as_slice(), wkb_type).finish())
+}
+
 /// Re-export symbols needed for downcast macros
 ///
 /// Name follows `serde` convention
@@ -386,22 +444,29 @@ macro_rules! downcast_geoarrow_array {
 
 #[cfg(test)]
 mod test {
-    use geoarrow_schema::WkbType;
+    use geoarrow_schema::{CoordType, Dimension, WkbType};
 
-    use crate::array::WkbArray;
-    use crate::builder::WkbBuilder;
-    use crate::error::Result;
-    use crate::{ArrayAccessor, GeoArrowArray};
+    use super::*;
+    use crate::test;
+
+    #[test]
+    fn test_cast_wkb_in_to_wkb() {
+        let wkb_arr: WkbArray<i32> =
+            to_wkb(&test::point::array(CoordType::Separated, Dimension::XY)).unwrap();
+        let wkb_arr2: WkbArray<i32> = to_wkb(&wkb_arr).unwrap();
+        let wkb_arr3: WkbArray<i64> = to_wkb(&wkb_arr2).unwrap();
+        let wkb_arr4: WkbArray<i64> = to_wkb(&wkb_arr3).unwrap();
+        let wkb_arr5: WkbArray<i32> = to_wkb(&wkb_arr4).unwrap();
+        assert_eq!(wkb_arr, wkb_arr5);
+    }
 
     // Verify that this compiles with the macro
     #[allow(dead_code)]
-    fn to_wkb(arr: &dyn GeoArrowArray) -> Result<WkbArray<i32>> {
+    fn _to_wkb(arr: &dyn GeoArrowArray) -> Result<WkbArray<i32>> {
         downcast_geoarrow_array!(arr, impl_to_wkb)
     }
 
     fn impl_to_wkb<'a>(geo_arr: &'a impl ArrayAccessor<'a>) -> Result<WkbArray<i32>> {
-        // let metadata = geo_arr.metadata().clone();
-
         let geoms = geo_arr
             .iter()
             .map(|x| x.transpose())
