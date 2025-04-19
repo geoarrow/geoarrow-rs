@@ -104,8 +104,7 @@ impl GeoArrowType {
             MultiPolygon(t) => Some(t.dimension()),
             GeometryCollection(t) => Some(t.dimension()),
             Rect(t) => Some(t.dimension()),
-            Geometry(_) => None,
-            Wkb(_) | LargeWkb(_) | Wkt(_) | LargeWkt(_) => None,
+            Geometry(_) | Wkb(_) | LargeWkb(_) | Wkt(_) | LargeWkt(_) => None,
         }
     }
 
