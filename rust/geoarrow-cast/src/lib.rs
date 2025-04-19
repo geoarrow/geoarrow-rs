@@ -1,2 +1,3 @@
 mod cast;
-mod downcast;
+
+pub use cast::cast;
