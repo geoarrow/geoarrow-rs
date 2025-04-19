@@ -143,3 +143,61 @@ pub fn cast(array: &dyn GeoArrowArray, to_type: &GeoArrowType) -> Result<Arc<dyn
     };
     Ok(out)
 }
+
+#[cfg(test)]
+mod test {
+    use geoarrow_array::{IntoArrow, test};
+    use geoarrow_schema::{CoordType, Dimension, GeometryType, MultiPointType, PointType, WkbType};
+
+    use super::*;
+
+    #[test]
+    fn test_point() {
+        let array = test::point::array(CoordType::Interleaved, Dimension::XY);
+
+        // Cast to the same type
+        let array2 = cast(&array, &array.data_type()).unwrap();
+        assert_eq!(&array, array2.as_point());
+
+        // Cast to other coord type
+        let p_type = PointType::new(
+            CoordType::Separated,
+            Dimension::XY,
+            array.data_type().metadata().clone(),
+        );
+        let array3 = cast(&array, &p_type.into()).unwrap();
+        assert_eq!(
+            array3.as_point().ext_type().coord_type(),
+            CoordType::Separated
+        );
+
+        // Cast to multi point
+        let mp_type = MultiPointType::new(
+            CoordType::Interleaved,
+            Dimension::XY,
+            array.data_type().metadata().clone(),
+        );
+        let mp_array = cast(&array, &mp_type.into()).unwrap();
+        assert!(mp_array.as_multi_point_opt().is_some());
+
+        // Cast to geometry
+        let mp_type =
+            GeometryType::new(CoordType::Interleaved, array.data_type().metadata().clone());
+        let mp_array = cast(&array, &mp_type.into()).unwrap();
+        assert!(mp_array.as_geometry_opt().is_some());
+    }
+
+    #[test]
+    fn cast_to_wkb() {
+        let array = test::point::array(CoordType::Interleaved, Dimension::XY);
+
+        let wkb_type = GeoArrowType::Wkb(WkbType::new(array.data_type().metadata().clone()));
+        let wkb_array = cast(&array, &wkb_type).unwrap();
+        assert!(wkb_array.as_wkb_opt::<i32>().is_some());
+
+        let large_wkb_type =
+            GeoArrowType::LargeWkb(WkbType::new(array.data_type().metadata().clone()));
+        let wkb_array = cast(&array, &large_wkb_type).unwrap();
+        assert!(wkb_array.as_wkb_opt::<i64>().is_some());
+    }
+}

@@ -1404,6 +1404,7 @@ name = "geoarrow-cast"
 version = "0.1.0-dev"
 dependencies = [
  "geoarrow-array",
+ "geoarrow-schema",
 ]
 
 [[package]]
