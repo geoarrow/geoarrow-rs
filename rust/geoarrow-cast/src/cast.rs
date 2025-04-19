@@ -3,7 +3,7 @@ use std::sync::Arc;
 use geoarrow_array::array::{
     GeometryArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
 };
-use geoarrow_array::cast::AsGeoArrowArray;
+use geoarrow_array::cast::{AsGeoArrowArray, from_wkb, from_wkt, to_wkb, to_wkt};
 use geoarrow_array::error::{GeoArrowError, Result};
 use geoarrow_array::{GeoArrowArray, GeoArrowType};
 
@@ -125,30 +125,14 @@ pub fn cast(array: &dyn GeoArrowArray, to_type: &GeoArrowType) -> Result<Arc<dyn
             let geom_array = GeometryArray::from(array.as_geometry_collection().clone());
             Arc::new(geom_array.into_coord_type(to_type.coord_type()))
         }
-        (_, Wkb(_)) => {
-            todo!("use to_wkb once merged");
-        }
-        (_, LargeWkb(_)) => {
-            todo!("use to_wkb once merged");
-        }
-        (_, Wkt(_)) => {
-            todo!("use to_wkt once merged");
-        }
-        (_, LargeWkt(_)) => {
-            todo!("use to_wkt once merged");
-        }
-        (Wkb(_), _) => {
-            todo!("use from_wkb once merged");
-        }
-        (LargeWkb(_), _) => {
-            todo!("use from_wkb once merged");
-        }
-        (Wkt(_), _) => {
-            todo!("use from_wkt once merged");
-        }
-        (LargeWkt(_), _) => {
-            todo!("use from_wkt once merged");
-        }
+        (_, Wkb(_)) => Arc::new(to_wkb::<i32>(array)?),
+        (_, LargeWkb(_)) => Arc::new(to_wkb::<i64>(array)?),
+        (_, Wkt(_)) => Arc::new(to_wkt::<i32>(array)?),
+        (_, LargeWkt(_)) => Arc::new(to_wkt::<i64>(array)?),
+        (Wkb(_), _) => from_wkb(array.as_wkb::<i32>(), to_type.clone(), false)?,
+        (LargeWkb(_), _) => from_wkb(array.as_wkb::<i64>(), to_type.clone(), false)?,
+        (Wkt(_), _) => from_wkt(array.as_wkt::<i32>(), to_type.clone(), false)?,
+        (LargeWkt(_), _) => from_wkt(array.as_wkt::<i64>(), to_type.clone(), false)?,
         (_, _) => {
             return Err(GeoArrowError::General(format!(
                 "Unsupported cast from {:?} to {:?}",
