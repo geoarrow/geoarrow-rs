@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use std::fmt::Display;
 
 use arrow_schema::{ArrowError, Field, Fields};
 
@@ -90,6 +91,17 @@ impl TryFrom<geo_traits::Dimensions> for Dimension {
                 "Unsupported dimension {:?}",
                 value
             ))),
+        }
+    }
+}
+
+impl Display for Dimension {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Dimension::XY => write!(f, "XY"),
+            Dimension::XYZ => write!(f, "XYZ"),
+            Dimension::XYM => write!(f, "XYM"),
+            Dimension::XYZM => write!(f, "XYZM"),
         }
     }
 }
