@@ -118,12 +118,9 @@ impl GeometryArray {
         mpolygons.iter().for_each(|arr| {
             coord_types.insert(arr.data_type.coord_type());
         });
-        assert!(coord_types.len() <= 1);
 
-        let coord_type = coord_types
-            .into_iter()
-            .next()
-            .unwrap_or(CoordType::Interleaved);
+        assert!(coord_types.len() == 1);
+        let coord_type = coord_types.into_iter().next().unwrap();
 
         Self {
             data_type: GeometryType::new(coord_type, metadata),
