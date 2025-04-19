@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "rust/geoarrow-array",
+    "rust/geoarrow-geo",
     "rust/geoarrow-flatgeobuf",
     "rust/geoarrow-geoparquet",
     "rust/geoarrow-geos",
