@@ -116,12 +116,11 @@ impl PointArray {
 
     /// Change the [`CoordType`] of this array.
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
-        let metadata = self.data_type.metadata().clone();
-        Self::new(
-            self.coords.into_coord_type(coord_type),
-            self.nulls,
-            metadata,
-        )
+        Self {
+            data_type: self.data_type.with_coord_type(coord_type),
+            coords: self.coords.into_coord_type(coord_type),
+            nulls: self.nulls,
+        }
     }
 }
 

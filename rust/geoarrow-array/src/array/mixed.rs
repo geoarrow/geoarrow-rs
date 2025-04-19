@@ -430,18 +430,20 @@ impl MixedGeometryArray {
     }
 
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
-        let metadata = self.metadata;
-        Self::new(
-            self.type_ids,
-            self.offsets,
-            Some(self.points.into_coord_type(coord_type)),
-            Some(self.line_strings.into_coord_type(coord_type)),
-            Some(self.polygons.into_coord_type(coord_type)),
-            Some(self.multi_points.into_coord_type(coord_type)),
-            Some(self.multi_line_strings.into_coord_type(coord_type)),
-            Some(self.multi_polygons.into_coord_type(coord_type)),
-            metadata,
-        )
+        Self {
+            coord_type,
+            dim: self.dim,
+            metadata: self.metadata,
+            type_ids: self.type_ids,
+            offsets: self.offsets,
+            points: self.points.into_coord_type(coord_type),
+            line_strings: self.line_strings.into_coord_type(coord_type),
+            polygons: self.polygons.into_coord_type(coord_type),
+            multi_points: self.multi_points.into_coord_type(coord_type),
+            multi_line_strings: self.multi_line_strings.into_coord_type(coord_type),
+            multi_polygons: self.multi_polygons.into_coord_type(coord_type),
+            slice_offset: self.slice_offset,
+        }
     }
 
     pub fn contained_types(&self) -> HashSet<GeoArrowType> {

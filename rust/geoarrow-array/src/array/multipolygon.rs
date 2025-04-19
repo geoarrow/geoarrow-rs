@@ -231,15 +231,14 @@ impl MultiPolygonArray {
 
     /// Change the [`CoordType`] of this array.
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
-        let metadata = self.data_type.metadata().clone();
-        Self::new(
-            self.coords.into_coord_type(coord_type),
-            self.geom_offsets,
-            self.polygon_offsets,
-            self.ring_offsets,
-            self.nulls,
-            metadata,
-        )
+        Self {
+            data_type: self.data_type.with_coord_type(coord_type),
+            coords: self.coords.into_coord_type(coord_type),
+            geom_offsets: self.geom_offsets,
+            polygon_offsets: self.polygon_offsets,
+            ring_offsets: self.ring_offsets,
+            nulls: self.nulls,
+        }
     }
 }
 

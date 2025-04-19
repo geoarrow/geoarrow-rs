@@ -367,21 +367,20 @@ impl GeometryArray {
 
     /// Change the [`CoordType`] of this array.
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
-        let metadata = self.data_type.metadata().clone();
-
-        Self::new(
-            self.type_ids,
-            self.offsets,
-            self.points.map(|arr| arr.into_coord_type(coord_type)),
-            self.line_strings.map(|arr| arr.into_coord_type(coord_type)),
-            self.polygons.map(|arr| arr.into_coord_type(coord_type)),
-            self.mpoints.map(|arr| arr.into_coord_type(coord_type)),
-            self.mline_strings
+        Self {
+            data_type: self.data_type.with_coord_type(coord_type),
+            type_ids: self.type_ids,
+            offsets: self.offsets,
+            points: self.points.map(|arr| arr.into_coord_type(coord_type)),
+            line_strings: self.line_strings.map(|arr| arr.into_coord_type(coord_type)),
+            polygons: self.polygons.map(|arr| arr.into_coord_type(coord_type)),
+            mpoints: self.mpoints.map(|arr| arr.into_coord_type(coord_type)),
+            mline_strings: self
+                .mline_strings
                 .map(|arr| arr.into_coord_type(coord_type)),
-            self.mpolygons.map(|arr| arr.into_coord_type(coord_type)),
-            self.gcs.map(|arr| arr.into_coord_type(coord_type)),
-            metadata,
-        )
+            mpolygons: self.mpolygons.map(|arr| arr.into_coord_type(coord_type)),
+            gcs: self.gcs.map(|arr| arr.into_coord_type(coord_type)),
+        }
     }
 
     // TODO: recursively expand the types from the geometry collection array
