@@ -1,0 +1,18 @@
+[package]
+name = "geoarrow-cast"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+description = "Rust implementation of GeoArrow"
+categories = { workspace = true }
+rust-version = { workspace = true }
+
+
+[dependencies]
+geoarrow-array = { workspace = true }
+
+[dev-dependencies]
+geoarrow-array = { workspace = true, features = ["test-data"] }
+geoarrow-schema = { workspace = true }

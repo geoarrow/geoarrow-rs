@@ -1400,6 +1400,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "geoarrow-cast"
+version = "0.1.0-dev"
+dependencies = [
+ "geoarrow-array",
+ "geoarrow-schema",
+]
+
+[[package]]
 name = "geoarrow-flatgeobuf"
 version = "0.1.0-dev"
 dependencies = [

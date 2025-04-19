@@ -6,7 +6,7 @@ use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{CoordType, Metadata, MultiPointType};
 
-use crate::array::{CoordBuffer, LineStringArray, PointArray, WkbArray};
+use crate::array::{CoordBuffer, PointArray, WkbArray};
 use crate::builder::MultiPointBuilder;
 use crate::capacity::MultiPointCapacity;
 use crate::datatypes::GeoArrowType;
@@ -155,13 +155,12 @@ impl MultiPointArray {
 
     /// Change the [`CoordType`] of this array.
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
-        let metadata = self.data_type.metadata().clone();
-        Self::new(
-            self.coords.into_coord_type(coord_type),
-            self.geom_offsets,
-            self.nulls,
-            metadata,
-        )
+        Self {
+            data_type: self.data_type.with_coord_type(coord_type),
+            coords: self.coords.into_coord_type(coord_type),
+            geom_offsets: self.geom_offsets,
+            nulls: self.nulls,
+        }
     }
 }
 
@@ -301,22 +300,20 @@ impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiPointType)> for MultiPointAr
     }
 }
 
-/// LineString and MultiPoint have the same layout, so enable conversions between the two to change
-/// the semantic type
-impl From<MultiPointArray> for LineStringArray {
-    fn from(value: MultiPointArray) -> Self {
-        let metadata = value.data_type.metadata().clone();
-        Self::new(value.coords, value.geom_offsets, value.nulls, metadata)
-    }
-}
-
 impl From<PointArray> for MultiPointArray {
     fn from(value: PointArray) -> Self {
-        let metadata = value.data_type.metadata().clone();
+        let (coord_type, dimension, metadata) = value.data_type.into_inner();
+        let new_type = MultiPointType::new(coord_type, dimension, metadata);
+
         let coords = value.coords;
         let geom_offsets = OffsetBuffer::from_lengths(vec![1; coords.len()]);
         let nulls = value.nulls;
-        Self::new(coords, geom_offsets, nulls, metadata)
+        Self {
+            data_type: new_type,
+            coords,
+            geom_offsets,
+            nulls,
+        }
     }
 }
 

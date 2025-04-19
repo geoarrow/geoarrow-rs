@@ -64,6 +64,11 @@ macro_rules! define_basic_type {
             pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool) -> Field {
                 Field::new(name, self.data_type(), nullable).with_extension_type(self.clone())
             }
+
+            /// Extract into components
+            pub fn into_inner(self) -> (CoordType, Dimension, Arc<Metadata>) {
+                (self.coord_type, self.dim, self.metadata)
+            }
         }
     };
 }

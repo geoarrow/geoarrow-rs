@@ -840,7 +840,7 @@ impl GeometryArrayBuilder for GeometryBuilder {
 }
 
 /// Access the type id for an array-dimension combo
-trait TypeId {
+pub(crate) trait TypeId {
     const ARRAY_TYPE_OFFSET: i8;
 
     fn type_id(&self, dim: Dimension) -> i8 {

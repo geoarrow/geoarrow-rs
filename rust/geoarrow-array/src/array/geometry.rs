@@ -118,12 +118,9 @@ impl GeometryArray {
         mpolygons.iter().for_each(|arr| {
             coord_types.insert(arr.data_type.coord_type());
         });
-        assert!(coord_types.len() <= 1);
 
-        let coord_type = coord_types
-            .into_iter()
-            .next()
-            .unwrap_or(CoordType::Interleaved);
+        assert!(coord_types.len() == 1);
+        let coord_type = coord_types.into_iter().next().unwrap();
 
         Self {
             data_type: GeometryType::new(coord_type, metadata),
@@ -367,21 +364,20 @@ impl GeometryArray {
 
     /// Change the [`CoordType`] of this array.
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
-        let metadata = self.data_type.metadata().clone();
-
-        Self::new(
-            self.type_ids,
-            self.offsets,
-            self.points.map(|arr| arr.into_coord_type(coord_type)),
-            self.line_strings.map(|arr| arr.into_coord_type(coord_type)),
-            self.polygons.map(|arr| arr.into_coord_type(coord_type)),
-            self.mpoints.map(|arr| arr.into_coord_type(coord_type)),
-            self.mline_strings
+        Self {
+            data_type: self.data_type.with_coord_type(coord_type),
+            type_ids: self.type_ids,
+            offsets: self.offsets,
+            points: self.points.map(|arr| arr.into_coord_type(coord_type)),
+            line_strings: self.line_strings.map(|arr| arr.into_coord_type(coord_type)),
+            polygons: self.polygons.map(|arr| arr.into_coord_type(coord_type)),
+            mpoints: self.mpoints.map(|arr| arr.into_coord_type(coord_type)),
+            mline_strings: self
+                .mline_strings
                 .map(|arr| arr.into_coord_type(coord_type)),
-            self.mpolygons.map(|arr| arr.into_coord_type(coord_type)),
-            self.gcs.map(|arr| arr.into_coord_type(coord_type)),
-            metadata,
-        )
+            mpolygons: self.mpolygons.map(|arr| arr.into_coord_type(coord_type)),
+            gcs: self.gcs.map(|arr| arr.into_coord_type(coord_type)),
+        }
     }
 
     // TODO: recursively expand the types from the geometry collection array
@@ -876,6 +872,145 @@ impl PartialEq for GeometryArray {
             && self.gcs == other.gcs
     }
 }
+
+impl TypeId for PointArray {
+    const ARRAY_TYPE_OFFSET: i8 = 1;
+}
+impl TypeId for LineStringArray {
+    const ARRAY_TYPE_OFFSET: i8 = 2;
+}
+impl TypeId for PolygonArray {
+    const ARRAY_TYPE_OFFSET: i8 = 3;
+}
+impl TypeId for MultiPointArray {
+    const ARRAY_TYPE_OFFSET: i8 = 4;
+}
+impl TypeId for MultiLineStringArray {
+    const ARRAY_TYPE_OFFSET: i8 = 5;
+}
+impl TypeId for MultiPolygonArray {
+    const ARRAY_TYPE_OFFSET: i8 = 6;
+}
+impl TypeId for GeometryCollectionArray {
+    const ARRAY_TYPE_OFFSET: i8 = 7;
+}
+
+type ChildrenArrays = (
+    [PointArray; 4],
+    [LineStringArray; 4],
+    [PolygonArray; 4],
+    [MultiPointArray; 4],
+    [MultiLineStringArray; 4],
+    [MultiPolygonArray; 4],
+    [GeometryCollectionArray; 4],
+);
+
+/// Initialize empty children with the given coord type.
+///
+/// This is used in the impls like `From<PointArray> for GeometryArray`. This lets us initialize
+/// all empty children and then just swap in the one array that's valid.
+fn empty_children(coord_type: CoordType) -> ChildrenArrays {
+    (
+        core::array::from_fn(|i| {
+            PointBuilder::new(PointType::new(
+                coord_type,
+                Dimension::from_order(i),
+                Default::default(),
+            ))
+            .finish()
+        }),
+        core::array::from_fn(|i| {
+            LineStringBuilder::new(LineStringType::new(
+                coord_type,
+                Dimension::from_order(i),
+                Default::default(),
+            ))
+            .finish()
+        }),
+        core::array::from_fn(|i| {
+            PolygonBuilder::new(PolygonType::new(
+                coord_type,
+                Dimension::from_order(i),
+                Default::default(),
+            ))
+            .finish()
+        }),
+        core::array::from_fn(|i| {
+            MultiPointBuilder::new(MultiPointType::new(
+                coord_type,
+                Dimension::from_order(i),
+                Default::default(),
+            ))
+            .finish()
+        }),
+        core::array::from_fn(|i| {
+            MultiLineStringBuilder::new(MultiLineStringType::new(
+                coord_type,
+                Dimension::from_order(i),
+                Default::default(),
+            ))
+            .finish()
+        }),
+        core::array::from_fn(|i| {
+            MultiPolygonBuilder::new(MultiPolygonType::new(
+                coord_type,
+                Dimension::from_order(i),
+                Default::default(),
+            ))
+            .finish()
+        }),
+        core::array::from_fn(|i| {
+            GeometryCollectionBuilder::new(
+                GeometryCollectionType::new(
+                    coord_type,
+                    Dimension::from_order(i),
+                    Default::default(),
+                ),
+                false,
+            )
+            .finish()
+        }),
+    )
+}
+
+macro_rules! impl_primitive_cast {
+    ($source_array:ty, $value_edit:tt) => {
+        impl From<$source_array> for GeometryArray {
+            fn from(value: $source_array) -> Self {
+                let coord_type = value.data_type.coord_type();
+                let dim = value.data_type.dimension();
+                let metadata = value.data_type.metadata().clone();
+
+                let type_ids = vec![value.type_id(dim); value.len()].into();
+                let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
+                let data_type = GeometryType::new(coord_type, metadata);
+                let mut children = empty_children(coord_type);
+
+                children.$value_edit[dim.order()] = value;
+                Self {
+                    data_type,
+                    type_ids,
+                    offsets,
+                    points: children.0,
+                    line_strings: children.1,
+                    polygons: children.2,
+                    mpoints: children.3,
+                    mline_strings: children.4,
+                    mpolygons: children.5,
+                    gcs: children.6,
+                }
+            }
+        }
+    };
+}
+
+impl_primitive_cast!(PointArray, 0);
+impl_primitive_cast!(LineStringArray, 1);
+impl_primitive_cast!(PolygonArray, 2);
+impl_primitive_cast!(MultiPointArray, 3);
+impl_primitive_cast!(MultiLineStringArray, 4);
+impl_primitive_cast!(MultiPolygonArray, 5);
+impl_primitive_cast!(GeometryCollectionArray, 6);
 
 #[cfg(test)]
 mod test {
