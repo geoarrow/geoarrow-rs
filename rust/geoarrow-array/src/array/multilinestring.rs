@@ -350,12 +350,20 @@ impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiLineStringType)> for MultiLi
 
 impl From<LineStringArray> for MultiLineStringArray {
     fn from(value: LineStringArray) -> Self {
-        let metadata = value.data_type.metadata().clone();
+        let (coord_type, dimension, metadata) = value.data_type.into_inner();
+        let new_type = MultiLineStringType::new(coord_type, dimension, metadata);
+
         let coords = value.coords;
         let geom_offsets = OffsetBuffer::from_lengths(vec![1; coords.len()]);
         let ring_offsets = value.geom_offsets;
         let nulls = value.nulls;
-        Self::new(coords, geom_offsets, ring_offsets, nulls, metadata)
+        Self {
+            data_type: new_type,
+            coords,
+            geom_offsets,
+            ring_offsets,
+            nulls,
+        }
     }
 }
 

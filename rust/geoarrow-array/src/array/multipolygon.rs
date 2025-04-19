@@ -423,20 +423,22 @@ impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiPolygonType)> for MultiPolyg
 
 impl From<PolygonArray> for MultiPolygonArray {
     fn from(value: PolygonArray) -> Self {
-        let metadata = value.data_type.metadata().clone();
+        let (coord_type, dimension, metadata) = value.data_type.into_inner();
+        let new_type = MultiPolygonType::new(coord_type, dimension, metadata);
+
         let coords = value.coords;
         let geom_offsets = OffsetBuffer::from_lengths(vec![1; coords.len()]);
         let ring_offsets = value.ring_offsets;
         let polygon_offsets = value.geom_offsets;
         let nulls = value.nulls;
-        Self::new(
+        Self {
+            data_type: new_type,
             coords,
             geom_offsets,
             polygon_offsets,
             ring_offsets,
             nulls,
-            metadata,
-        )
+        }
     }
 }
 
