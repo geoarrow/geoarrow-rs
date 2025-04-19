@@ -973,201 +973,44 @@ fn empty_children(coord_type: CoordType) -> ChildrenArrays {
     )
 }
 
-impl From<PointArray> for GeometryArray {
-    fn from(value: PointArray) -> Self {
-        let coord_type = value.data_type.coord_type();
-        let dim = value.data_type.dimension();
-        let metadata = value.data_type.metadata().clone();
+macro_rules! impl_primitive_cast {
+    ($source_array:ty, $value_edit:tt) => {
+        impl From<$source_array> for GeometryArray {
+            fn from(value: $source_array) -> Self {
+                let coord_type = value.data_type.coord_type();
+                let dim = value.data_type.dimension();
+                let metadata = value.data_type.metadata().clone();
 
-        let type_ids = vec![value.type_id(dim); value.len()].into();
-        let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
-        let data_type = GeometryType::new(coord_type, metadata);
-        let (mut points, line_strings, polygons, mpoints, mline_strings, mpolygons, gcs) =
-            empty_children(coord_type);
+                let type_ids = vec![value.type_id(dim); value.len()].into();
+                let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
+                let data_type = GeometryType::new(coord_type, metadata);
+                let mut children = empty_children(coord_type);
 
-        points[dim.order()] = value;
-        Self {
-            data_type,
-            type_ids,
-            offsets,
-            points,
-            line_strings,
-            polygons,
-            mpoints,
-            mline_strings,
-            mpolygons,
-            gcs,
+                children.$value_edit[dim.order()] = value;
+                Self {
+                    data_type,
+                    type_ids,
+                    offsets,
+                    points: children.0,
+                    line_strings: children.1,
+                    polygons: children.2,
+                    mpoints: children.3,
+                    mline_strings: children.4,
+                    mpolygons: children.5,
+                    gcs: children.6,
+                }
+            }
         }
-    }
+    };
 }
 
-impl From<LineStringArray> for GeometryArray {
-    fn from(value: LineStringArray) -> Self {
-        let coord_type = value.data_type.coord_type();
-        let dim = value.data_type.dimension();
-        let metadata = value.data_type.metadata().clone();
-
-        let type_ids = vec![value.type_id(dim); value.len()].into();
-        let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
-        let data_type = GeometryType::new(coord_type, metadata);
-        let (points, mut line_strings, polygons, mpoints, mline_strings, mpolygons, gcs) =
-            empty_children(coord_type);
-
-        line_strings[dim.order()] = value;
-        Self {
-            data_type,
-            type_ids,
-            offsets,
-            points,
-            line_strings,
-            polygons,
-            mpoints,
-            mline_strings,
-            mpolygons,
-            gcs,
-        }
-    }
-}
-
-impl From<PolygonArray> for GeometryArray {
-    fn from(value: PolygonArray) -> Self {
-        let coord_type = value.data_type.coord_type();
-        let dim = value.data_type.dimension();
-        let metadata = value.data_type.metadata().clone();
-
-        let type_ids = vec![value.type_id(dim); value.len()].into();
-        let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
-        let data_type = GeometryType::new(coord_type, metadata);
-        let (points, line_strings, mut polygons, mpoints, mline_strings, mpolygons, gcs) =
-            empty_children(coord_type);
-
-        polygons[dim.order()] = value;
-        Self {
-            data_type,
-            type_ids,
-            offsets,
-            points,
-            line_strings,
-            polygons,
-            mpoints,
-            mline_strings,
-            mpolygons,
-            gcs,
-        }
-    }
-}
-
-impl From<MultiPointArray> for GeometryArray {
-    fn from(value: MultiPointArray) -> Self {
-        let coord_type = value.data_type.coord_type();
-        let dim = value.data_type.dimension();
-        let metadata = value.data_type.metadata().clone();
-
-        let type_ids = vec![value.type_id(dim); value.len()].into();
-        let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
-        let data_type = GeometryType::new(coord_type, metadata);
-        let (points, line_strings, polygons, mut mpoints, mline_strings, mpolygons, gcs) =
-            empty_children(coord_type);
-
-        mpoints[dim.order()] = value;
-        Self {
-            data_type,
-            type_ids,
-            offsets,
-            points,
-            line_strings,
-            polygons,
-            mpoints,
-            mline_strings,
-            mpolygons,
-            gcs,
-        }
-    }
-}
-
-impl From<MultiLineStringArray> for GeometryArray {
-    fn from(value: MultiLineStringArray) -> Self {
-        let coord_type = value.data_type.coord_type();
-        let dim = value.data_type.dimension();
-        let metadata = value.data_type.metadata().clone();
-
-        let type_ids = vec![value.type_id(dim); value.len()].into();
-        let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
-        let data_type = GeometryType::new(coord_type, metadata);
-        let (points, line_strings, polygons, mpoints, mut mline_strings, mpolygons, gcs) =
-            empty_children(coord_type);
-
-        mline_strings[dim.order()] = value;
-        Self {
-            data_type,
-            type_ids,
-            offsets,
-            points,
-            line_strings,
-            polygons,
-            mpoints,
-            mline_strings,
-            mpolygons,
-            gcs,
-        }
-    }
-}
-
-impl From<MultiPolygonArray> for GeometryArray {
-    fn from(value: MultiPolygonArray) -> Self {
-        let coord_type = value.data_type.coord_type();
-        let dim = value.data_type.dimension();
-        let metadata = value.data_type.metadata().clone();
-
-        let type_ids = vec![value.type_id(dim); value.len()].into();
-        let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
-        let data_type = GeometryType::new(coord_type, metadata);
-        let (points, line_strings, polygons, mpoints, mline_strings, mut mpolygons, gcs) =
-            empty_children(coord_type);
-
-        mpolygons[dim.order()] = value;
-        Self {
-            data_type,
-            type_ids,
-            offsets,
-            points,
-            line_strings,
-            polygons,
-            mpoints,
-            mline_strings,
-            mpolygons,
-            gcs,
-        }
-    }
-}
-
-impl From<GeometryCollectionArray> for GeometryArray {
-    fn from(value: GeometryCollectionArray) -> Self {
-        let coord_type = value.data_type.coord_type();
-        let dim = value.data_type.dimension();
-        let metadata = value.data_type.metadata().clone();
-
-        let type_ids = vec![value.type_id(dim); value.len()].into();
-        let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
-        let data_type = GeometryType::new(coord_type, metadata);
-        let (points, line_strings, polygons, mpoints, mline_strings, mpolygons, mut gcs) =
-            empty_children(coord_type);
-
-        gcs[dim.order()] = value;
-        Self {
-            data_type,
-            type_ids,
-            offsets,
-            points,
-            line_strings,
-            polygons,
-            mpoints,
-            mline_strings,
-            mpolygons,
-            gcs,
-        }
-    }
-}
+impl_primitive_cast!(PointArray, 0);
+impl_primitive_cast!(LineStringArray, 1);
+impl_primitive_cast!(PolygonArray, 2);
+impl_primitive_cast!(MultiPointArray, 3);
+impl_primitive_cast!(MultiLineStringArray, 4);
+impl_primitive_cast!(MultiPolygonArray, 5);
+impl_primitive_cast!(GeometryCollectionArray, 6);
 
 #[cfg(test)]
 mod test {
