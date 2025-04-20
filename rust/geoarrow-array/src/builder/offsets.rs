@@ -1,10 +1,10 @@
-//! Contains the declaration of [`Offset`]
+//! This was originally copied from arrow2.
+
 use std::hint::unreachable_unchecked;
 
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
-// use crate::buffer::Buffer;
 use crate::error::GeoArrowError as Error;
 
 /// A wrapper type of [`Vec<O>`] representing the invariants of Arrow's offsets.
@@ -110,36 +110,6 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
         OffsetBuffer::new(self.0.into())
     }
 }
-
-// /// Checks that `offsets` is monotonically increasing.
-// fn try_check_offsets<O: OffsetSizeTrait>(offsets: &[O]) -> Result<(), Error> {
-//     // this code is carefully constructed to auto-vectorize, don't change naively!
-//     match offsets.first() {
-//         None => Err(Error::oos("offsets must have at least one element")),
-//         Some(first) => {
-//             if *first < O::zero() {
-//                 return Err(Error::oos("offsets must be larger than 0"));
-//             }
-//             let mut previous = *first;
-//             let mut any_invalid = false;
-
-//             // This loop will auto-vectorize because there is not any break,
-//             // an invalid value will be returned once the whole offsets buffer is processed.
-//             for offset in offsets {
-//                 if previous > *offset {
-//                     any_invalid = true
-//                 }
-//                 previous = *offset;
-//             }
-
-//             if any_invalid {
-//                 Err(Error::oos("offsets must be monotonically increasing"))
-//             } else {
-//                 Ok(())
-//             }
-//         }
-//     }
-// }
 
 impl From<OffsetsBuilder<i32>> for OffsetsBuilder<i64> {
     fn from(offsets: OffsetsBuilder<i32>) -> Self {
