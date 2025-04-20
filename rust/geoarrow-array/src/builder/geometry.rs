@@ -6,8 +6,10 @@ use geoarrow_schema::{
     Dimension, GeometryCollectionType, GeometryType, LineStringType, Metadata, MultiLineStringType,
     MultiPointType, MultiPolygonType, PointType, PolygonType,
 };
+use wkt::WktNum;
 
 use crate::array::{DimensionIndex, GeometryArray, WkbArray};
+use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
 use crate::builder::{
     GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder, MultiPointBuilder,
     MultiPolygonBuilder, PointBuilder, PolygonBuilder,
@@ -301,8 +303,8 @@ impl<'a> GeometryBuilder {
     }
 
     /// Creates a new builder with a capacity inferred by the provided iterator.
-    pub fn with_capacity_from_iter(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+    pub fn with_capacity_from_iter<T: WktNum>(
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = T> + 'a)>>,
         typ: GeometryType,
         prefer_multi: bool,
     ) -> Result<Self> {
@@ -312,9 +314,9 @@ impl<'a> GeometryBuilder {
 
     /// Reserve more space in the underlying buffers with the capacity inferred from the provided
     /// geometries.
-    pub fn reserve_from_iter(
+    pub fn reserve_from_iter<T: WktNum>(
         &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = T> + 'a)>>,
         prefer_multi: bool,
     ) -> Result<()> {
         let counter = GeometryCapacity::from_geometries(geoms, prefer_multi)?;
@@ -324,9 +326,9 @@ impl<'a> GeometryBuilder {
 
     /// Reserve more space in the underlying buffers with the capacity inferred from the provided
     /// geometries.
-    pub fn reserve_exact_from_iter(
+    pub fn reserve_exact_from_iter<T: WktNum>(
         &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = T> + 'a)>>,
         prefer_multi: bool,
     ) -> Result<()> {
         let counter = GeometryCapacity::from_geometries(geoms, prefer_multi)?;
@@ -655,7 +657,9 @@ impl<'a> GeometryBuilder {
                         self.push_geometry_collection(Some(gc))?
                     }
                 }
-                Rect(_) | Triangle(_) | Line(_) => todo!(),
+                Rect(r) => self.push_polygon(Some(&RectWrapper::try_new(r)?))?,
+                Triangle(tri) => self.push_polygon(Some(&TriangleWrapper(tri)))?,
+                Line(l) => self.push_line_string(Some(&LineWrapper(l)))?,
             };
         } else {
             self.push_null();

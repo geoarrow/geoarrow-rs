@@ -73,7 +73,7 @@ impl PolygonCapacity {
     #[inline]
     pub fn add_rect<'a>(&mut self, rect: Option<&'a (impl RectTrait + 'a)>) {
         self.geom_capacity += 1;
-        if let Some(_rect) = rect {
+        if rect.is_some() {
             // A rect is a simple polygon with only one ring
             self.ring_capacity += 1;
             // A rect is a closed polygon with 5 coordinates
