@@ -3,13 +3,16 @@ use std::sync::Arc;
 use geoarrow_array::array::{
     GeometryArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
 };
+use geoarrow_array::builder::{LineStringBuilder, PointBuilder, PolygonBuilder};
+use geoarrow_array::capacity::{LineStringCapacity, PolygonCapacity};
 use geoarrow_array::cast::{AsGeoArrowArray, from_wkb, from_wkt, to_wkb, to_wkt};
 use geoarrow_array::error::{GeoArrowError, Result};
-use geoarrow_array::{GeoArrowArray, GeoArrowType};
+use geoarrow_array::{ArrayAccessor, GeoArrowArray, GeoArrowType};
 
 /// Cast a `GeoArrowArray` to another `GeoArrowType`.
 ///
-/// Criteria:
+/// ### Criteria:
+///
 /// - Dimension must be compatible:
 ///     - If the source array and destination type are both dimension-aware, then their dimensions
 ///       must match.
@@ -20,6 +23,25 @@ use geoarrow_array::{GeoArrowArray, GeoArrowType};
 ///   `MultiLineString`, etc. But not `MultiPoint` to `Point`, etc. Those need to be aware of
 ///   potentially multiple batches of arrays. Whereas this `cast` can be applied in isolation to
 ///   multiple batches of a chunked array.
+///
+/// ### Infallible casts:
+///
+/// As long as the above criteria are met, these casts will always succeed without erroring.
+///
+/// - The same type with different coord types.
+/// - Any source array type to `Geometry`, `Wkb`, `LargeWkb`, `Wkt`, or `LargeWkt`.
+/// - `Point` to `MultiPoint`
+/// - `LineString` to `MultiLineString`
+/// - `Polygon` to `MultiPolygon`
+///
+/// ### Fallible casts:
+///
+/// - `Geometry` to any other native type.
+/// - Parsing `WKB` or `WKT` to any native type other than `Geometry`.
+/// - `MultiPoint` to `Point`
+/// - `MultiLineString` to `LineString`
+/// - `MultiPolygon` to `Polygon`
+///
 pub fn cast(array: &dyn GeoArrowArray, to_type: &GeoArrowType) -> Result<Arc<dyn GeoArrowArray>> {
     // We want to error if the dimensions aren't compatible, but allow conversions to
     // `GeometryArray`, `WKB`, etc where the target array isn't parameterized by a specific
@@ -89,6 +111,13 @@ pub fn cast(array: &dyn GeoArrowArray, to_type: &GeoArrowType) -> Result<Arc<dyn
             let geom_array = GeometryArray::from(array.as_polygon().clone());
             Arc::new(geom_array.into_coord_type(to_type.coord_type()))
         }
+        (MultiPoint(_), Point(to_type)) => {
+            let mut builder = PointBuilder::with_capacity(to_type.clone(), array.len());
+            for geom in array.as_multi_point().iter() {
+                builder.push_geometry(geom.transpose()?.as_ref())?;
+            }
+            Arc::new(builder.finish())
+        }
         (MultiPoint(_), MultiPoint(to_type)) => {
             let array = array.as_multi_point();
             Arc::new(array.clone().into_coord_type(to_type.coord_type()))
@@ -97,6 +126,17 @@ pub fn cast(array: &dyn GeoArrowArray, to_type: &GeoArrowType) -> Result<Arc<dyn
             let geom_array = GeometryArray::from(array.as_multi_point().clone());
             Arc::new(geom_array.into_coord_type(to_type.coord_type()))
         }
+        (MultiLineString(_), LineString(to_type)) => {
+            let ml_array = array.as_multi_line_string();
+            let ml_capacity = ml_array.buffer_lengths();
+            let ls_capacity =
+                LineStringCapacity::new(ml_capacity.coord_capacity(), ml_capacity.geom_capacity());
+            let mut builder = LineStringBuilder::with_capacity(to_type.clone(), ls_capacity);
+            for geom in array.as_multi_line_string().iter() {
+                builder.push_geometry(geom.transpose()?.as_ref())?;
+            }
+            Arc::new(builder.finish())
+        }
         (MultiLineString(_), MultiLineString(to_type)) => {
             let array = array.as_multi_line_string();
             Arc::new(array.clone().into_coord_type(to_type.coord_type()))
@@ -104,6 +144,20 @@ pub fn cast(array: &dyn GeoArrowArray, to_type: &GeoArrowType) -> Result<Arc<dyn
         (MultiLineString(_), Geometry(to_type)) => {
             let geom_array = GeometryArray::from(array.as_multi_line_string().clone());
             Arc::new(geom_array.into_coord_type(to_type.coord_type()))
+        }
+        (MultiPolygon(_), Polygon(to_type)) => {
+            let mp_array = array.as_multi_polygon();
+            let mp_capacity = mp_array.buffer_lengths();
+            let p_capacity = PolygonCapacity::new(
+                mp_capacity.coord_capacity(),
+                mp_capacity.ring_capacity(),
+                mp_capacity.geom_capacity(),
+            );
+            let mut builder = PolygonBuilder::with_capacity(to_type.clone(), p_capacity);
+            for geom in mp_array.iter() {
+                builder.push_geometry(geom.transpose()?.as_ref())?;
+            }
+            Arc::new(builder.finish())
         }
         (MultiPolygon(_), MultiPolygon(to_type)) => {
             let array = array.as_multi_polygon();
@@ -146,8 +200,10 @@ pub fn cast(array: &dyn GeoArrowArray, to_type: &GeoArrowType) -> Result<Arc<dyn
 
 #[cfg(test)]
 mod test {
+    use geoarrow_array::builder::MultiPointBuilder;
     use geoarrow_array::{IntoArrow, test};
     use geoarrow_schema::{CoordType, Dimension, GeometryType, MultiPointType, PointType, WkbType};
+    use wkt::wkt;
 
     use super::*;
 
@@ -199,5 +255,19 @@ mod test {
             GeoArrowType::LargeWkb(WkbType::new(array.data_type().metadata().clone()));
         let wkb_array = cast(&array, &large_wkb_type).unwrap();
         assert!(wkb_array.as_wkb_opt::<i64>().is_some());
+    }
+
+    #[test]
+    fn downcast_single_multi_points() {
+        let mp1 = wkt! { MULTIPOINT(0.0 0.0) };
+        let mp2 = wkt! { MULTIPOINT(1.0 2.0) };
+        let mp3 = wkt! { MULTIPOINT(3.0 4.0) };
+
+        let typ = MultiPointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let mp_arr = MultiPointBuilder::from_multi_points(&[mp1, mp2, mp3], typ).finish();
+        let (coord_type, dim, metadata) = mp_arr.ext_type().clone().into_inner();
+        let p_type = PointType::new(coord_type, dim, metadata);
+        let p_arr = cast(&mp_arr, &p_type.into()).unwrap();
+        assert!(p_arr.as_point_opt().is_some());
     }
 }
