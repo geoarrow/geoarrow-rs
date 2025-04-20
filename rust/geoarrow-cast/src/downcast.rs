@@ -305,6 +305,12 @@ impl NativeTypeAndDimension {
     }
 }
 
+impl From<(NativeType, Dimension)> for NativeTypeAndDimension {
+    fn from(value: (NativeType, Dimension)) -> Self {
+        Self::new(value.0, value.1)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use geoarrow_array::cast::{to_wkb, to_wkt};
@@ -484,5 +490,91 @@ mod test {
         assert_eq!(get_type_ids(&large_wkb_array).unwrap(), expected_types);
         assert_eq!(get_type_ids(&wkt_array).unwrap(), expected_types);
         assert_eq!(get_type_ids(&large_wkt_array).unwrap(), expected_types);
+    }
+
+    #[test]
+    fn infer_from_one_type() {
+        let input_type = NativeTypeAndDimension::new(NativeType::Point, Dimension::XY);
+        let type_ids = [input_type].into_iter().collect::<HashSet<_>>();
+        let resolved_type = infer_from_native_type_and_dimension(type_ids)
+            .unwrap()
+            .unwrap();
+        assert_eq!(input_type, resolved_type.into());
+    }
+
+    #[test]
+    fn cant_infer_from_two_dims() {
+        let input_types = [
+            NativeTypeAndDimension::new(NativeType::Point, Dimension::XY),
+            NativeTypeAndDimension::new(NativeType::Point, Dimension::XYZ),
+        ];
+        let type_ids = input_types.into_iter().collect::<HashSet<_>>();
+        assert!(
+            infer_from_native_type_and_dimension(type_ids)
+                .unwrap()
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn infer_point_multi_point() {
+        let input_types = [
+            NativeTypeAndDimension::new(NativeType::Point, Dimension::XYZ),
+            NativeTypeAndDimension::new(NativeType::MultiPoint, Dimension::XYZ),
+        ];
+        let type_ids = input_types.into_iter().collect::<HashSet<_>>();
+        let resolved_type = infer_from_native_type_and_dimension(type_ids)
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            NativeTypeAndDimension::new(NativeType::MultiPoint, Dimension::XYZ),
+            resolved_type.into()
+        );
+    }
+
+    #[test]
+    fn infer_linestring_multilinestring() {
+        let input_types = [
+            NativeTypeAndDimension::new(NativeType::LineString, Dimension::XYM),
+            NativeTypeAndDimension::new(NativeType::MultiLineString, Dimension::XYM),
+        ];
+        let type_ids = input_types.into_iter().collect::<HashSet<_>>();
+        let resolved_type = infer_from_native_type_and_dimension(type_ids)
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            NativeTypeAndDimension::new(NativeType::MultiLineString, Dimension::XYM),
+            resolved_type.into()
+        );
+    }
+
+    #[test]
+    fn infer_polygon_multipolygon() {
+        let input_types = [
+            NativeTypeAndDimension::new(NativeType::Polygon, Dimension::XYZM),
+            NativeTypeAndDimension::new(NativeType::MultiPolygon, Dimension::XYZM),
+        ];
+        let type_ids = input_types.into_iter().collect::<HashSet<_>>();
+        let resolved_type = infer_from_native_type_and_dimension(type_ids)
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            NativeTypeAndDimension::new(NativeType::MultiPolygon, Dimension::XYZM),
+            resolved_type.into()
+        );
+    }
+
+    #[test]
+    fn unable_to_infer() {
+        let input_types = [
+            NativeTypeAndDimension::new(NativeType::Point, Dimension::XY),
+            NativeTypeAndDimension::new(NativeType::LineString, Dimension::XY),
+        ];
+        let type_ids = input_types.into_iter().collect::<HashSet<_>>();
+        assert!(
+            infer_from_native_type_and_dimension(type_ids)
+                .unwrap()
+                .is_none()
+        );
     }
 }
