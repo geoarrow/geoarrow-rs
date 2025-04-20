@@ -93,8 +93,8 @@ impl RectBuilder {
     /// Consume the builder and convert to an immutable [`RectArray`]
     pub fn finish(mut self) -> RectArray {
         RectArray::new(
-            self.lower.into(),
-            self.upper.into(),
+            self.lower.finish(),
+            self.upper.finish(),
             self.validity.finish(),
             self.data_type.metadata().clone(),
         )
@@ -112,8 +112,8 @@ impl RectBuilder {
             self.validity.append_non_null()
         } else {
             // Since it's a struct, we still need to push coords when null
-            self.lower.push_nan_coord();
-            self.upper.push_nan_coord();
+            self.lower.push_constant(f64::NAN);
+            self.upper.push_constant(f64::NAN);
             self.validity.append_null();
         }
     }

@@ -52,7 +52,8 @@ impl GeomProcessor for MultiLineStringBuilder {
         // # Safety:
         // This upholds invariants because we call try_push_length in multipoint_begin to ensure
         // offset arrays are correct.
-        unsafe { self.push_coord(&from_xy(x, y).expect("valid coord")) }.unwrap();
+        self.push_coord(&from_xy(x, y).expect("valid coord"))
+            .unwrap();
         Ok(())
     }
 
@@ -69,7 +70,8 @@ impl GeomProcessor for MultiLineStringBuilder {
         // # Safety:
         // This upholds invariants because we call try_push_length in multipoint_begin to ensure
         // offset arrays are correct.
-        unsafe { self.push_coord(&from_xyzm(x, y, z, m).expect("valid coord")) }.unwrap();
+        self.push_coord(&from_xyzm(x, y, z, m).expect("valid coord"))
+            .unwrap();
         Ok(())
     }
 
@@ -82,7 +84,7 @@ impl GeomProcessor for MultiLineStringBuilder {
         // # Safety:
         // This upholds invariants because we separately update the ring offsets in
         // linestring_begin
-        unsafe { self.try_push_geom_offset(size).unwrap() }
+        self.try_push_geom_offset(size).unwrap();
         Ok(())
     }
 
@@ -102,7 +104,7 @@ impl GeomProcessor for MultiLineStringBuilder {
             // # Safety:
             // This upholds invariants because we separately update the ring offsets in
             // linestring_begin
-            unsafe { self.try_push_geom_offset(1).unwrap() }
+            self.try_push_geom_offset(1).unwrap();
         }
 
         // reserve `size` coordinates
@@ -112,7 +114,7 @@ impl GeomProcessor for MultiLineStringBuilder {
         // # Safety:
         // This upholds invariants because we separately update the geometry offsets in
         // polygon_begin
-        unsafe { self.try_push_ring_offset(size).unwrap() }
+        self.try_push_ring_offset(size).unwrap();
         Ok(())
     }
 }

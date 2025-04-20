@@ -85,7 +85,7 @@ impl<'a> GeometryCollectionBuilder {
         let validity = self.validity.finish();
         GeometryCollectionArray::new(
             self.geoms.finish(),
-            self.geom_offsets.into(),
+            self.geom_offsets.finish(),
             validity,
             self.data_type.metadata().clone(),
         )

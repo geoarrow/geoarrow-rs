@@ -1,5 +1,5 @@
 use arrow_array::OffsetSizeTrait;
-use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
+use arrow_buffer::NullBufferBuilder;
 use geo_traits::{
     CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait,
 };
@@ -104,15 +104,11 @@ impl MultiPolygonBuilder {
     pub fn finish(mut self) -> MultiPolygonArray {
         let validity = self.validity.finish();
 
-        let geom_offsets: OffsetBuffer<i32> = self.geom_offsets.into();
-        let polygon_offsets: OffsetBuffer<i32> = self.polygon_offsets.into();
-        let ring_offsets: OffsetBuffer<i32> = self.ring_offsets.into();
-
         MultiPolygonArray::new(
-            self.coords.into(),
-            geom_offsets,
-            polygon_offsets,
-            ring_offsets,
+            self.coords.finish(),
+            self.geom_offsets.finish(),
+            self.polygon_offsets.finish(),
+            self.ring_offsets.finish(),
             validity,
             self.data_type.metadata().clone(),
         )
@@ -208,7 +204,7 @@ impl MultiPolygonBuilder {
         if let Some(multi_polygon) = value {
             // Total number of polygons in this MultiPolygon
             let num_polygons = multi_polygon.num_polygons();
-            unsafe { self.try_push_geom_offset(num_polygons)? }
+            self.try_push_geom_offset(num_polygons)?;
 
             // Iterate over polygons
             for polygon in multi_polygon.polygons() {
@@ -285,12 +281,12 @@ impl MultiPolygonBuilder {
 
     /// Push a raw offset to the underlying geometry offsets buffer.
     ///
-    /// # Safety
+    /// # Invariants
     ///
-    /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
+    /// Care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
     #[inline]
-    pub unsafe fn try_push_geom_offset(&mut self, offsets_length: usize) -> Result<()> {
+    pub(crate) fn try_push_geom_offset(&mut self, offsets_length: usize) -> Result<()> {
         self.geom_offsets.try_push_usize(offsets_length)?;
         self.validity.append(true);
         Ok(())
@@ -298,24 +294,24 @@ impl MultiPolygonBuilder {
 
     /// Push a raw offset to the underlying polygon offsets buffer.
     ///
-    /// # Safety
+    /// # Invariants
     ///
-    /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
+    /// Care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
     #[inline]
-    pub unsafe fn try_push_polygon_offset(&mut self, offsets_length: usize) -> Result<()> {
+    pub(crate) fn try_push_polygon_offset(&mut self, offsets_length: usize) -> Result<()> {
         self.polygon_offsets.try_push_usize(offsets_length)?;
         Ok(())
     }
 
     /// Push a raw offset to the underlying ring offsets buffer.
     ///
-    /// # Safety
+    /// # Invariants
     ///
-    /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
+    /// Care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
     #[inline]
-    pub unsafe fn try_push_ring_offset(&mut self, offsets_length: usize) -> Result<()> {
+    pub(crate) fn try_push_ring_offset(&mut self, offsets_length: usize) -> Result<()> {
         self.ring_offsets.try_push_usize(offsets_length)?;
         Ok(())
     }

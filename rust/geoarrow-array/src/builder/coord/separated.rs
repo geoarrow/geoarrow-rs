@@ -35,12 +35,12 @@ impl SeparatedCoordBufferBuilder {
         Self { buffers, dim }
     }
 
-    /// Initialize a buffer of a given length with all coordinates set to 0.0
-    pub fn initialize(len: usize, dim: Dimension) -> Self {
+    /// Initialize a buffer of a given length with all coordinates set to the given value
+    pub fn initialize(len: usize, dim: Dimension, value: f64) -> Self {
         // Only allocate buffers for existant dimensions
         let buffers = core::array::from_fn(|i| {
             if i < dim.size() {
-                vec![0.0f64; len]
+                vec![value; len]
             } else {
                 Vec::new()
             }
@@ -154,13 +154,13 @@ impl SeparatedCoordBufferBuilder {
         Ok(())
     }
 
-    /// Push a valid coordinate with NaN values
+    /// Push a valid coordinate with the given constant value
     ///
     /// Used in the case of point and rect arrays, where a `null` array value still needs to have
     /// space allocated for it.
-    pub fn push_nan_coord(&mut self) {
+    pub(crate) fn push_constant(&mut self, value: f64) {
         for i in 0..self.dim.size() {
-            self.buffers[i].push(f64::NAN);
+            self.buffers[i].push(value);
         }
     }
 
@@ -169,7 +169,7 @@ impl SeparatedCoordBufferBuilder {
     /// ## Panics
     ///
     /// - If the added point does not have the same dimension as the coordinate buffer.
-    pub fn push_point(&mut self, point: &impl PointTrait<T = f64>) {
+    pub(crate) fn push_point(&mut self, point: &impl PointTrait<T = f64>) {
         self.try_push_point(point).unwrap()
     }
 
@@ -178,11 +178,11 @@ impl SeparatedCoordBufferBuilder {
     /// ## Errors
     ///
     /// - If the added point does not have the same dimension as the coordinate buffer.
-    pub fn try_push_point(&mut self, point: &impl PointTrait<T = f64>) -> Result<()> {
+    pub(crate) fn try_push_point(&mut self, point: &impl PointTrait<T = f64>) -> Result<()> {
         if let Some(coord) = point.coord() {
             self.try_push_coord(&coord)?;
         } else {
-            self.push_nan_coord();
+            self.push_constant(f64::NAN);
         };
         Ok(())
     }
@@ -198,16 +198,15 @@ impl SeparatedCoordBufferBuilder {
         }
         Ok(buffer)
     }
-}
 
-impl From<SeparatedCoordBufferBuilder> for SeparatedCoordBuffer {
-    fn from(value: SeparatedCoordBufferBuilder) -> Self {
+    /// Consume the builder and convert to an immutable [`SeparatedCoordBuffer`]
+    pub fn finish(self) -> SeparatedCoordBuffer {
         // Initialize buffers with empty array, then mutate into it
         let mut buffers = core::array::from_fn(|_| vec![].into());
-        for (i, buffer) in value.buffers.into_iter().enumerate() {
+        for (i, buffer) in self.buffers.into_iter().enumerate() {
             buffers[i] = buffer.into();
         }
-        SeparatedCoordBuffer::from_array(buffers, value.dim).unwrap()
+        SeparatedCoordBuffer::from_array(buffers, self.dim).unwrap()
     }
 }
 

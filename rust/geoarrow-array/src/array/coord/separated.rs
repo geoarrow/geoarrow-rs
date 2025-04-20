@@ -243,7 +243,7 @@ impl SeparatedCoordBuffer {
         coords: impl ExactSizeIterator<Item = &'a (impl CoordTrait<T = f64> + 'a)>,
         dim: Dimension,
     ) -> Result<Self> {
-        Ok(SeparatedCoordBufferBuilder::from_coords(coords, dim)?.into())
+        Ok(SeparatedCoordBufferBuilder::from_coords(coords, dim)?.finish())
     }
 }
 

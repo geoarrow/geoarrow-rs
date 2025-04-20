@@ -86,7 +86,7 @@ impl GeomProcessor for MultiPolygonBuilder {
         // # Safety:
         // This upholds invariants because we separately update the ring offsets in
         // linestring_begin
-        unsafe { self.try_push_geom_offset(size).unwrap() }
+        self.try_push_geom_offset(size).unwrap();
         Ok(())
     }
 
@@ -105,7 +105,7 @@ impl GeomProcessor for MultiPolygonBuilder {
             // # Safety:
             // This upholds invariants because we separately update the ring offsets in
             // linestring_begin
-            unsafe { self.try_push_geom_offset(1).unwrap() }
+            self.try_push_geom_offset(1).unwrap();
         }
 
         // reserve `size` rings
@@ -115,7 +115,7 @@ impl GeomProcessor for MultiPolygonBuilder {
         // # Safety:
         // This upholds invariants because we separately update the geometry offsets in
         // polygon_begin
-        unsafe { self.try_push_polygon_offset(size).unwrap() }
+        self.try_push_polygon_offset(size).unwrap();
         Ok(())
     }
 
@@ -134,7 +134,7 @@ impl GeomProcessor for MultiPolygonBuilder {
         // # Safety:
         // This upholds invariants because we separately update the ring offsets in
         // linestring_begin
-        unsafe { self.try_push_ring_offset(size).unwrap() }
+        self.try_push_ring_offset(size).unwrap();
         Ok(())
     }
 }
