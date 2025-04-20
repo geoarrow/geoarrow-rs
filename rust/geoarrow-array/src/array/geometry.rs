@@ -151,6 +151,16 @@ impl GeometryArray {
         )
     }
 
+    /// Returns the `type_ids` buffer for this array
+    pub fn type_ids(&self) -> &ScalarBuffer<i8> {
+        &self.type_ids
+    }
+
+    /// Returns the `offsets` buffer for this array
+    pub fn offsets(&self) -> &ScalarBuffer<i32> {
+        &self.offsets
+    }
+
     // TODO: handle slicing
     pub(crate) fn has_points(&self, dim: Dimension) -> bool {
         !self.points[dim.order()].is_empty()

@@ -95,6 +95,30 @@ impl TryFrom<geo_traits::Dimensions> for Dimension {
     }
 }
 
+#[cfg(feature = "wkt")]
+impl From<wkt::types::Dimension> for Dimension {
+    fn from(value: wkt::types::Dimension) -> Self {
+        match value {
+            wkt::types::Dimension::XY => Dimension::XY,
+            wkt::types::Dimension::XYZ => Dimension::XYZ,
+            wkt::types::Dimension::XYM => Dimension::XYM,
+            wkt::types::Dimension::XYZM => Dimension::XYZM,
+        }
+    }
+}
+
+#[cfg(feature = "wkt")]
+impl From<Dimension> for wkt::types::Dimension {
+    fn from(value: Dimension) -> Self {
+        match value {
+            Dimension::XY => wkt::types::Dimension::XY,
+            Dimension::XYZ => wkt::types::Dimension::XYZ,
+            Dimension::XYM => wkt::types::Dimension::XYM,
+            Dimension::XYZM => wkt::types::Dimension::XYZM,
+        }
+    }
+}
+
 impl Display for Dimension {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {

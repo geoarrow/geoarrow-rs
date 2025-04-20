@@ -45,6 +45,11 @@ impl<O: OffsetSizeTrait> WktArray<O> {
         self.len() == 0
     }
 
+    /// Access the underlying string array.
+    pub fn inner(&self) -> &GenericStringArray<O> {
+        &self.array
+    }
+
     /// Consume self and access the underlying data.
     pub fn into_inner(self) -> GenericStringArray<O> {
         self.array
