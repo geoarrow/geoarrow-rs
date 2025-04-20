@@ -3,7 +3,10 @@ use std::sync::Arc;
 use geoarrow_array::array::{
     GeometryArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
 };
-use geoarrow_array::builder::{LineStringBuilder, PointBuilder, PolygonBuilder};
+use geoarrow_array::builder::{
+    GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder, MultiPointBuilder,
+    MultiPolygonBuilder, PointBuilder, PolygonBuilder,
+};
 use geoarrow_array::capacity::{LineStringCapacity, PolygonCapacity};
 use geoarrow_array::cast::{AsGeoArrowArray, from_wkb, from_wkt, to_wkb, to_wkt};
 use geoarrow_array::error::{GeoArrowError, Result};
@@ -166,6 +169,74 @@ pub fn cast(array: &dyn GeoArrowArray, to_type: &GeoArrowType) -> Result<Arc<dyn
         (MultiPolygon(_), Geometry(to_type)) => {
             let geom_array = GeometryArray::from(array.as_multi_polygon().clone());
             Arc::new(geom_array.into_coord_type(to_type.coord_type()))
+        }
+        (Geometry(_), Point(to_type)) => {
+            let mut builder = PointBuilder::with_capacity(to_type.clone(), array.len());
+            for geom in array.as_geometry().iter() {
+                builder.push_geometry(geom.transpose()?.as_ref())?;
+            }
+            Arc::new(builder.finish())
+        }
+        (Geometry(_), LineString(to_type)) => {
+            let g_array = array.as_geometry();
+            let g_capacity = g_array.buffer_lengths();
+            let ls_capacity = g_capacity.line_string(to_type.dimension());
+            let mut builder = LineStringBuilder::with_capacity(to_type.clone(), ls_capacity);
+            for geom in array.as_geometry().iter() {
+                builder.push_geometry(geom.transpose()?.as_ref())?;
+            }
+            Arc::new(builder.finish())
+        }
+        (Geometry(_), Polygon(to_type)) => {
+            let g_array = array.as_geometry();
+            let g_capacity = g_array.buffer_lengths();
+            let p_capacity = g_capacity.polygon(to_type.dimension());
+            let mut builder = PolygonBuilder::with_capacity(to_type.clone(), p_capacity);
+            for geom in array.as_geometry().iter() {
+                builder.push_geometry(geom.transpose()?.as_ref())?;
+            }
+            Arc::new(builder.finish())
+        }
+        (Geometry(_), MultiPoint(to_type)) => {
+            let g_array = array.as_geometry();
+            let g_capacity = g_array.buffer_lengths();
+            let mp_capacity = g_capacity.multi_point(to_type.dimension());
+            let mut builder = MultiPointBuilder::with_capacity(to_type.clone(), mp_capacity);
+            for geom in array.as_geometry().iter() {
+                builder.push_geometry(geom.transpose()?.as_ref())?;
+            }
+            Arc::new(builder.finish())
+        }
+        (Geometry(_), MultiLineString(to_type)) => {
+            let g_array = array.as_geometry();
+            let g_capacity = g_array.buffer_lengths();
+            let ml_capacity = g_capacity.multi_line_string(to_type.dimension());
+            let mut builder = MultiLineStringBuilder::with_capacity(to_type.clone(), ml_capacity);
+            for geom in array.as_geometry().iter() {
+                builder.push_geometry(geom.transpose()?.as_ref())?;
+            }
+            Arc::new(builder.finish())
+        }
+        (Geometry(_), MultiPolygon(to_type)) => {
+            let g_array = array.as_geometry();
+            let g_capacity = g_array.buffer_lengths();
+            let mp_capacity = g_capacity.multi_polygon(to_type.dimension());
+            let mut builder = MultiPolygonBuilder::with_capacity(to_type.clone(), mp_capacity);
+            for geom in array.as_geometry().iter() {
+                builder.push_geometry(geom.transpose()?.as_ref())?;
+            }
+            Arc::new(builder.finish())
+        }
+        (Geometry(_), GeometryCollection(to_type)) => {
+            let g_array = array.as_geometry();
+            let g_capacity = g_array.buffer_lengths();
+            let gc_capacity = g_capacity.geometry_collection(to_type.dimension());
+            let mut builder =
+                GeometryCollectionBuilder::with_capacity(to_type.clone(), gc_capacity, false);
+            for geom in array.as_geometry().iter() {
+                builder.push_geometry(geom.transpose()?.as_ref())?;
+            }
+            Arc::new(builder.finish())
         }
         (Geometry(_), Geometry(to_type)) => {
             let array = array.as_geometry();
