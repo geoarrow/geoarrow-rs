@@ -1,10 +1,11 @@
 //! Helper functions for downcasting [`dyn GeoArrowArray`][GeoArrowArray] to concrete types.
 
+use std::str::FromStr;
 use std::sync::Arc;
 
 use arrow_array::builder::GenericStringBuilder;
 use arrow_array::cast::AsArray;
-use arrow_array::{BinaryArrayType, OffsetSizeTrait};
+use arrow_array::{BinaryArrayType, OffsetSizeTrait, StringArrayType};
 use geoarrow_schema::WkbType;
 use wkb::reader::read_wkb;
 
@@ -464,15 +465,16 @@ fn impl_to_wkt<'a, O: OffsetSizeTrait>(geo_arr: &'a impl ArrayAccessor<'a>) -> R
 ///
 /// Note that the GeoArrow metadata on the new array is taken from `to_type` **not** the original
 /// array. Ensure you construct the [GeoArrowType] with the correct metadata.
-pub fn from_wkt<O: OffsetSizeTrait>(
-    arr: &WktArray<O>,
+pub fn from_wkt<'a, O: OffsetSizeTrait>(
+    arr: &impl StringArrayType<'a>,
     to_type: GeoArrowType,
     prefer_multi: bool,
 ) -> Result<Arc<dyn GeoArrowArray>> {
     let geoms = arr
         .iter()
-        .map(|g| g.transpose())
-        .collect::<Result<Vec<_>>>()?;
+        .map(|maybe_s| maybe_s.map(|s| wkt::Wkt::from_str(s)).transpose())
+        .collect::<std::result::Result<Vec<_>, _>>()
+        .map_err(|err| GeoArrowError::General(format!("Failed to parse WKT: {}", err)))?;
 
     use GeoArrowType::*;
     let result: Arc<dyn GeoArrowArray> = match to_type {
