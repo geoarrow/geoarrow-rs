@@ -324,14 +324,19 @@ fn impl_to_wkb<'a, O: OffsetSizeTrait>(geo_arr: &'a impl ArrayAccessor<'a>) -> R
 /// Note that the GeoArrow metadata on the new array is taken from `to_type` **not** the original
 /// array. Ensure you construct the [GeoArrowType] with the correct metadata.
 pub fn from_wkb<O: OffsetSizeTrait>(
-    arr: &WkbArray<O>,
+    arr: &impl arrow_array::ArrayAccessor<Item = [u8]>,
     to_type: GeoArrowType,
     prefer_multi: bool,
 ) -> Result<Arc<dyn GeoArrowArray>> {
-    let geoms = arr
-        .iter()
-        .map(|g| g.transpose())
-        .collect::<Result<Vec<_>>>()?;
+    let geoms = Vec::with_capacity(arr.len());
+    for i in 0..arr.len() {
+        if arr.is_null(i) {
+            geoms.push(None);
+        } else {
+            let wkb = wkb::reader::read_wkb(&arr.value(i))?;
+            geoms.push(Some(wkb));
+        }
+    }
 
     use GeoArrowType::*;
     let result: Arc<dyn GeoArrowArray> = match to_type {
