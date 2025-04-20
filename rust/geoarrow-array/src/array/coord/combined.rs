@@ -106,7 +106,7 @@ impl CoordBuffer {
                     let coord = cb.value(i);
                     new_buffer.push_coord(&coord);
                 }
-                CoordBuffer::Separated(new_buffer.into())
+                CoordBuffer::Separated(new_buffer.finish())
             }
             (CoordBuffer::Separated(cb), CoordType::Separated) => CoordBuffer::Separated(cb),
             (CoordBuffer::Separated(cb), CoordType::Interleaved) => {
@@ -115,7 +115,7 @@ impl CoordBuffer {
                     let coord = cb.value(i);
                     new_buffer.push_coord(&coord);
                 }
-                CoordBuffer::Interleaved(new_buffer.into())
+                CoordBuffer::Interleaved(new_buffer.finish())
             }
         }
     }

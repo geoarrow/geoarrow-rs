@@ -72,13 +72,13 @@ impl PointBuilder {
     pub fn finish(mut self) -> PointArray {
         let validity = self.validity.finish();
         PointArray::new(
-            self.coords.into(),
+            self.coords.finish(),
             validity,
             self.data_type.metadata().clone(),
         )
     }
 
-    /// Add a new coord to the end of this array, where the coord is a non-empty point
+    /// Add a new coord to the end of this array, interpreting the coord as a non-empty point.
     ///
     /// ## Panics
     ///
@@ -133,14 +133,14 @@ impl PointBuilder {
     /// Add a valid but empty point to the end of this array.
     #[inline]
     pub fn push_empty(&mut self) {
-        self.coords.push_nan_coord();
+        self.coords.push_constant(f64::NAN);
         self.validity.append_non_null();
     }
 
     /// Add a new null value to the end of this array.
     #[inline]
     pub fn push_null(&mut self) {
-        self.coords.push_nan_coord();
+        self.coords.push_constant(f64::NAN);
         self.validity.append_null();
     }
 

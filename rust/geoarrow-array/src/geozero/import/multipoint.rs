@@ -43,7 +43,8 @@ impl GeomProcessor for MultiPointBuilder {
         // # Safety:
         // This upholds invariants because we call try_push_length in multipoint_begin to ensure
         // offset arrays are correct.
-        unsafe { self.push_coord(&from_xy(x, y).expect("valid coord")) }.unwrap();
+        self.push_coord(&from_xy(x, y).expect("valid coord"))
+            .unwrap();
         Ok(())
     }
 
@@ -60,7 +61,8 @@ impl GeomProcessor for MultiPointBuilder {
         // # Safety:
         // This upholds invariants because we call try_push_length in multipoint_begin to ensure
         // offset arrays are correct.
-        unsafe { self.push_coord(&from_xyzm(x, y, z, m).expect("valid coord")) }.unwrap();
+        self.push_coord(&from_xyzm(x, y, z, m).expect("valid coord"))
+            .unwrap();
         Ok(())
     }
 

@@ -1,5 +1,5 @@
 use arrow_array::OffsetSizeTrait;
-use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
+use arrow_buffer::NullBufferBuilder;
 use geo_traits::{
     CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait,
     RectTrait,
@@ -131,12 +131,12 @@ impl PolygonBuilder {
 
     /// Push a raw offset to the underlying geometry offsets buffer.
     ///
-    /// # Safety
+    /// # Invariants
     ///
-    /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
+    /// Care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
     #[inline]
-    pub unsafe fn try_push_geom_offset(&mut self, offsets_length: usize) -> Result<()> {
+    pub(crate) fn try_push_geom_offset(&mut self, offsets_length: usize) -> Result<()> {
         self.geom_offsets.try_push_usize(offsets_length)?;
         self.validity.append(true);
         Ok(())
@@ -144,12 +144,12 @@ impl PolygonBuilder {
 
     /// Push a raw offset to the underlying ring offsets buffer.
     ///
-    /// # Safety
+    /// # Invariants
     ///
-    /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
+    /// Care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
     #[inline]
-    pub unsafe fn try_push_ring_offset(&mut self, offsets_length: usize) -> Result<()> {
+    pub(crate) fn try_push_ring_offset(&mut self, offsets_length: usize) -> Result<()> {
         self.ring_offsets.try_push_usize(offsets_length)?;
         Ok(())
     }
@@ -158,13 +158,10 @@ impl PolygonBuilder {
     pub fn finish(mut self) -> PolygonArray {
         let validity = self.validity.finish();
 
-        let geom_offsets: OffsetBuffer<i32> = self.geom_offsets.into();
-        let ring_offsets: OffsetBuffer<i32> = self.ring_offsets.into();
-
         PolygonArray::new(
-            self.coords.into(),
-            geom_offsets,
-            ring_offsets,
+            self.coords.finish(),
+            self.geom_offsets.finish(),
+            self.ring_offsets.finish(),
             validity,
             self.data_type.metadata().clone(),
         )
@@ -330,12 +327,12 @@ impl PolygonBuilder {
 
     /// Push a raw coordinate to the underlying coordinate array.
     ///
-    /// # Safety
+    /// # Invariants
     ///
-    /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
-    /// to the array upholds the necessary invariants of the array.
+    /// Care must be taken to ensure that pushing raw coordinates to the array upholds the
+    /// necessary invariants of the array.
     #[inline]
-    pub unsafe fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+    pub(crate) fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
         self.coords.push_coord(coord);
         Ok(())
     }

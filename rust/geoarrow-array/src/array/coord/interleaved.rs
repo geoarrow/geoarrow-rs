@@ -65,7 +65,7 @@ impl InterleavedCoordBuffer {
         coords: impl ExactSizeIterator<Item = &'a (impl CoordTrait<T = f64> + 'a)>,
         dim: Dimension,
     ) -> Result<Self> {
-        Ok(InterleavedCoordBufferBuilder::from_coords(coords, dim)?.into())
+        Ok(InterleavedCoordBufferBuilder::from_coords(coords, dim)?.finish())
     }
 
     /// Access the underlying coordinate buffer.
