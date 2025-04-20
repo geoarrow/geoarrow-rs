@@ -1,5 +1,5 @@
 use arrow_array::OffsetSizeTrait;
-use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
+use arrow_buffer::NullBufferBuilder;
 use geo_traits::{
     CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait,
     RectTrait,
@@ -7,6 +7,7 @@ use geo_traits::{
 use geoarrow_schema::{CoordType, PolygonType};
 
 use crate::array::{PolygonArray, WkbArray};
+use crate::builder::geo_trait_wrappers::{RectWrapper, TriangleWrapper};
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
 };
@@ -131,12 +132,12 @@ impl PolygonBuilder {
 
     /// Push a raw offset to the underlying geometry offsets buffer.
     ///
-    /// # Safety
+    /// # Invariants
     ///
-    /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
+    /// Care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
     #[inline]
-    pub unsafe fn try_push_geom_offset(&mut self, offsets_length: usize) -> Result<()> {
+    pub(crate) fn try_push_geom_offset(&mut self, offsets_length: usize) -> Result<()> {
         self.geom_offsets.try_push_usize(offsets_length)?;
         self.validity.append(true);
         Ok(())
@@ -144,12 +145,12 @@ impl PolygonBuilder {
 
     /// Push a raw offset to the underlying ring offsets buffer.
     ///
-    /// # Safety
+    /// # Invariants
     ///
-    /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
+    /// Care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
     #[inline]
-    pub unsafe fn try_push_ring_offset(&mut self, offsets_length: usize) -> Result<()> {
+    pub(crate) fn try_push_ring_offset(&mut self, offsets_length: usize) -> Result<()> {
         self.ring_offsets.try_push_usize(offsets_length)?;
         Ok(())
     }
@@ -158,13 +159,10 @@ impl PolygonBuilder {
     pub fn finish(mut self) -> PolygonArray {
         let validity = self.validity.finish();
 
-        let geom_offsets: OffsetBuffer<i32> = self.geom_offsets.into();
-        let ring_offsets: OffsetBuffer<i32> = self.ring_offsets.into();
-
         PolygonArray::new(
-            self.coords.into(),
-            geom_offsets,
-            ring_offsets,
+            self.coords.finish(),
+            self.geom_offsets.finish(),
+            self.ring_offsets.finish(),
             validity,
             self.data_type.metadata().clone(),
         )
@@ -228,56 +226,8 @@ impl PolygonBuilder {
     #[inline]
     pub fn push_rect(&mut self, value: Option<&impl RectTrait<T = f64>>) -> Result<()> {
         if let Some(rect) = value {
-            match rect.dim() {
-                geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => {}
-                _ => {
-                    return Err(GeoArrowError::General(
-                        "Only 2d rect supported when pushing to polygon.".to_string(),
-                    ));
-                }
-            };
-
-            // Only one ring
-            self.geom_offsets.try_push_usize(1)?;
-            // ring has 5 coords
-            self.ring_offsets.try_push_usize(5)?;
-
-            let lower = rect.min();
-            let upper = rect.max();
-
-            // Ref below because I always forget the ordering
-            // https://github.com/georust/geo/blob/76ad2a358bd079e9d47b1229af89608744d2635b/geo-types/src/geometry/rect.rs#L217-L225
-
-            self.coords.push_coord(&wkt::types::Coord {
-                x: lower.x(),
-                y: lower.y(),
-                z: None,
-                m: None,
-            });
-            self.coords.push_coord(&wkt::types::Coord {
-                x: lower.x(),
-                y: upper.y(),
-                z: None,
-                m: None,
-            });
-            self.coords.push_coord(&wkt::types::Coord {
-                x: upper.x(),
-                y: upper.y(),
-                z: None,
-                m: None,
-            });
-            self.coords.push_coord(&wkt::types::Coord {
-                x: upper.x(),
-                y: lower.y(),
-                z: None,
-                m: None,
-            });
-            self.coords.push_coord(&wkt::types::Coord {
-                x: lower.x(),
-                y: lower.y(),
-                z: None,
-                m: None,
-            });
+            let rect_wrapper = RectWrapper::try_new(rect)?;
+            self.push_polygon(Some(&rect_wrapper))?;
         } else {
             self.push_null();
         }
@@ -303,6 +253,7 @@ impl PolygonBuilder {
                     }
                 }
                 GeometryType::Rect(g) => self.push_rect(Some(g))?,
+                GeometryType::Triangle(tri) => self.push_polygon(Some(&TriangleWrapper(tri)))?,
                 _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
             }
         } else {
@@ -333,12 +284,12 @@ impl PolygonBuilder {
 
     /// Push a raw coordinate to the underlying coordinate array.
     ///
-    /// # Safety
+    /// # Invariants
     ///
-    /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
-    /// to the array upholds the necessary invariants of the array.
+    /// Care must be taken to ensure that pushing raw coordinates to the array upholds the
+    /// necessary invariants of the array.
     #[inline]
-    pub unsafe fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+    pub(crate) fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
         self.coords.push_coord(coord);
         Ok(())
     }

@@ -214,17 +214,6 @@ impl WkbCapacity {
         counter
     }
 
-    /// Create a capacity counter from an iterator of Geometries.
-    pub fn from_owned_geometries<'a>(
-        geoms: impl Iterator<Item = Option<(impl GeometryTrait<T = f64> + 'a)>>,
-    ) -> Self {
-        let mut counter = Self::new_empty();
-        for maybe_geom in geoms.into_iter() {
-            counter.add_geometry(maybe_geom.as_ref());
-        }
-        counter
-    }
-
     /// The number of bytes an array with this capacity would occupy.
     pub fn num_bytes<O: OffsetSizeTrait>(&self) -> usize {
         let offsets_byte_width = if O::IS_LARGE { 8 } else { 4 };

@@ -4,6 +4,7 @@ use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, Multi
 use geoarrow_schema::{CoordType, LineStringType};
 
 use crate::array::{LineStringArray, WkbArray};
+use crate::builder::geo_trait_wrappers::LineWrapper;
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
 };
@@ -110,8 +111,8 @@ impl LineStringBuilder {
     pub fn finish(mut self) -> LineStringArray {
         let validity = self.validity.finish();
         LineStringArray::new(
-            self.coords.into(),
-            self.geom_offsets.into(),
+            self.coords.finish(),
+            self.geom_offsets.finish(),
             validity,
             self.data_type.metadata().clone(),
         )
@@ -207,12 +208,12 @@ impl LineStringBuilder {
 
     /// Push a raw coordinate to the underlying coordinate array.
     ///
-    /// # Safety
+    /// # Invariants
     ///
-    /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
-    /// to the array upholds the necessary invariants of the array.
+    /// Care must be taken to ensure that pushing raw coordinates to the array upholds the
+    /// necessary invariants of the array.
     #[inline]
-    pub unsafe fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+    pub(crate) fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
         self.coords.try_push_coord(coord)
     }
 
@@ -234,6 +235,7 @@ impl LineStringBuilder {
                         return Err(GeoArrowError::General("Incorrect type".to_string()));
                     }
                 }
+                GeometryType::Line(l) => self.push_line_string(Some(&LineWrapper(l)))?,
                 _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
             }
         } else {

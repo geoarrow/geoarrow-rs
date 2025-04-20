@@ -5,8 +5,10 @@ use geo_traits::{
     MultiPolygonTrait, PointTrait, PolygonTrait,
 };
 use geoarrow_schema::GeometryCollectionType;
+use wkt::WktNum;
 
 use crate::array::{GeometryCollectionArray, WkbArray};
+use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
 use crate::builder::mixed::DEFAULT_PREFER_MULTI;
 use crate::builder::{MixedGeometryBuilder, OffsetsBuilder};
 use crate::capacity::GeometryCollectionCapacity;
@@ -85,7 +87,7 @@ impl<'a> GeometryCollectionBuilder {
         let validity = self.validity.finish();
         GeometryCollectionArray::new(
             self.geoms.finish(),
-            self.geom_offsets.into(),
+            self.geom_offsets.finish(),
             validity,
             self.data_type.metadata().clone(),
         )
@@ -93,8 +95,8 @@ impl<'a> GeometryCollectionBuilder {
 
     /// Creates a new [`GeometryCollectionBuilder`] with a capacity inferred by the provided
     /// iterator.
-    pub fn with_capacity_from_iter(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
+    pub fn with_capacity_from_iter<T: WktNum>(
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait<T = T> + 'a)>>,
         typ: GeometryCollectionType,
         prefer_multi: bool,
     ) -> Result<Self> {
@@ -104,9 +106,9 @@ impl<'a> GeometryCollectionBuilder {
 
     /// Reserve more space in the underlying buffers with the capacity inferred from the provided
     /// geometries.
-    pub fn reserve_from_iter(
+    pub fn reserve_from_iter<T: WktNum>(
         &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait<T = T> + 'a)>>,
     ) -> Result<()> {
         let counter = GeometryCollectionCapacity::from_geometry_collections(geoms)?;
         self.reserve(counter);
@@ -115,9 +117,9 @@ impl<'a> GeometryCollectionBuilder {
 
     /// Reserve more space in the underlying buffers with the capacity inferred from the provided
     /// geometries.
-    pub fn reserve_exact_from_iter(
+    pub fn reserve_exact_from_iter<T: WktNum>(
         &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait<T = T> + 'a)>>,
     ) -> Result<()> {
         let counter = GeometryCollectionCapacity::from_geometry_collections(geoms)?;
         self.reserve_exact(counter);
@@ -230,7 +232,9 @@ impl<'a> GeometryCollectionBuilder {
                 MultiLineString(p) => self.push_multi_line_string(Some(p))?,
                 MultiPolygon(p) => self.push_multi_polygon(Some(p))?,
                 GeometryCollection(p) => self.push_geometry_collection(Some(p))?,
-                Rect(_) | Triangle(_) | Line(_) => todo!(),
+                Rect(r) => self.push_polygon(Some(&RectWrapper::try_new(r)?))?,
+                Triangle(tri) => self.push_polygon(Some(&TriangleWrapper(tri)))?,
+                Line(l) => self.push_line_string(Some(&LineWrapper(l)))?,
             }
         } else {
             self.push_null();

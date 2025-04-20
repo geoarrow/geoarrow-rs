@@ -16,11 +16,12 @@ use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, GeozeroDatasource, P
 
 use crate::GeoArrowArray;
 use crate::array::from_arrow_array;
+use crate::builder::geo_trait_wrappers::RectWrapper;
 use crate::cast::AsGeoArrowArray;
 use crate::datatypes::GeoArrowType;
 use crate::geozero::export::scalar::{
     process_geometry, process_geometry_collection, process_line_string, process_multi_line_string,
-    process_multi_point, process_multi_polygon, process_point, process_polygon, process_rect,
+    process_multi_point, process_multi_polygon, process_point, process_polygon,
 };
 use crate::trait_::ArrayAccessor;
 
@@ -303,7 +304,12 @@ fn process_properties<P: PropertyProcessor>(
                     TimeUnit::Second => impl_timestamp!(TimestampSecondType),
                 }
             }
-            dt => todo!("unsupported type: {:?}", dt),
+            dt => {
+                return Err(GeozeroError::Properties(format!(
+                    "unsupported type: {:?}",
+                    dt
+                )));
+            }
         }
         property_idx += 1;
     }
@@ -380,7 +386,9 @@ fn process_geometry_n<P: GeomProcessor>(
         }
         Rect(_) => {
             let geom = arr.as_rect().value(i).unwrap();
-            process_rect(&geom, 0, processor)?;
+            let wrapper = RectWrapper::try_new(&geom)
+                .map_err(|err| geozero::error::GeozeroError::Geometry(err.to_string()))?;
+            process_polygon(&wrapper, true, 0, processor)?
         }
         Geometry(_) => {
             let geom = arr.as_geometry().value(i).unwrap();

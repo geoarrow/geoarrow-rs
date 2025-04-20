@@ -92,8 +92,8 @@ impl MultiPointBuilder {
         self.geom_offsets.shrink_to_fit();
 
         MultiPointArray::new(
-            self.coords.into(),
-            self.geom_offsets.into(),
+            self.coords.finish(),
+            self.geom_offsets.finish(),
             validity,
             self.data_type.metadata().clone(),
         )
@@ -206,29 +206,13 @@ impl MultiPointBuilder {
 
     /// Push a raw coordinate to the underlying coordinate array.
     ///
-    /// # Safety
+    /// # Invariant
     ///
-    /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
-    /// to the array upholds the necessary invariants of the array.
+    /// Care must be taken to ensure that pushing raw coordinates to the array upholds the
+    /// necessary invariants of the array.
     #[inline]
-    pub unsafe fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+    pub(crate) fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
         self.coords.try_push_coord(coord)
-    }
-
-    fn calculate_added_length(&self) -> Result<usize> {
-        let total_length = self.coords.len();
-        let offset = *self.geom_offsets.last() as usize;
-        total_length
-            .checked_sub(offset)
-            .ok_or(GeoArrowError::Overflow)
-    }
-
-    /// Needs to be called when a valid value was extended to this array.
-    /// This is a relatively low level function, prefer `try_push` when you can.
-    #[inline]
-    pub fn try_push_valid(&mut self) -> Result<()> {
-        let length = self.calculate_added_length()?;
-        self.try_push_length(length)
     }
 
     /// Needs to be called when a valid value was extended to this array.

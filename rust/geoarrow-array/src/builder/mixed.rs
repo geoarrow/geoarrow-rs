@@ -7,6 +7,7 @@ use geoarrow_schema::{
 };
 
 use crate::array::MixedGeometryArray;
+use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
 use crate::builder::{
     LineStringBuilder, MultiLineStringBuilder, MultiPointBuilder, MultiPolygonBuilder,
     PointBuilder, PolygonBuilder,
@@ -127,35 +128,6 @@ impl MixedGeometryBuilder {
             .reserve_exact(capacity.multi_line_string);
         self.multi_polygons.reserve_exact(capacity.multi_polygon);
     }
-
-    // /// The canonical method to create a [`MixedGeometryBuilder`] out of its internal
-    // /// components.
-    // ///
-    // /// # Implementation
-    // ///
-    // /// This function is `O(1)`.
-    // ///
-    // /// # Errors
-    // ///
-    // pub(crate) fn try_new(
-    //     coords: CoordBufferBuilder,
-    //     geom_offsets: BufferBuilder<O>,
-    //     ring_offsets: BufferBuilder<O>,
-    //     validity: Option<MutableBitmap>,
-    // ) -> Result<Self> {
-    //     check(
-    //         &coords.clone().into(),
-    //         &geom_offsets.clone().into(),
-    //         &ring_offsets.clone().into(),
-    //         validity.as_ref().map(|x| x.len()),
-    //     )?;
-    //     Ok(Self {
-    //         coords,
-    //         geom_offsets,
-    //         ring_offsets,
-    //         validity,
-    //     })
-    // }
 
     pub(crate) fn finish(self) -> MixedGeometryArray {
         MixedGeometryArray::new(
@@ -360,7 +332,9 @@ impl MixedGeometryBuilder {
                     ));
                 }
             }
-            Rect(_) | Triangle(_) | Line(_) => todo!(),
+            Rect(r) => self.push_polygon(&RectWrapper::try_new(r)?)?,
+            Triangle(tri) => self.push_polygon(&TriangleWrapper(tri))?,
+            Line(l) => self.push_line_string(&LineWrapper(l))?,
         };
         Ok(())
     }
