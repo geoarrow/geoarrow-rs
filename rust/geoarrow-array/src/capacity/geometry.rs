@@ -1,6 +1,7 @@
 use std::ops::AddAssign;
 
 use geo_traits::*;
+use geoarrow_schema::Dimension;
 use wkt::WktNum;
 
 use crate::array::DimensionIndex;
@@ -21,14 +22,14 @@ pub struct GeometryCapacity {
     nulls: usize,
 
     /// Simple: just the total number of points, nulls included
-    points: [usize; 4],
+    pub(crate) points: [usize; 4],
     /// An array of [LineStringCapacity], ordered XY, XYZ, XYM, XYZM
-    line_strings: [LineStringCapacity; 4],
-    polygons: [PolygonCapacity; 4],
-    mpoints: [MultiPointCapacity; 4],
-    mline_strings: [MultiLineStringCapacity; 4],
-    mpolygons: [MultiPolygonCapacity; 4],
-    gcs: [GeometryCollectionCapacity; 4],
+    pub(crate) line_strings: [LineStringCapacity; 4],
+    pub(crate) polygons: [PolygonCapacity; 4],
+    pub(crate) mpoints: [MultiPointCapacity; 4],
+    pub(crate) mline_strings: [MultiLineStringCapacity; 4],
+    pub(crate) mpolygons: [MultiPolygonCapacity; 4],
+    pub(crate) gcs: [GeometryCollectionCapacity; 4],
 
     /// Whether to prefer multi or single arrays for new geometries.
     prefer_multi: bool,
@@ -135,53 +136,39 @@ impl GeometryCapacity {
         total
     }
 
-    /// Access point capacities
-    ///
-    /// Values are represent dimensions in the order: XY, XYZ, XYM, XYZM.
-    pub fn points(&self) -> [usize; 4] {
-        self.points
+    /// Access point capacity
+    pub fn point(&self, dim: Dimension) -> usize {
+        self.points[dim.order()]
     }
 
-    /// Access LineString capacities
-    ///
-    /// Values are represent dimensions in the order: XY, XYZ, XYM, XYZM.
-    pub fn line_strings(&self) -> [LineStringCapacity; 4] {
-        self.line_strings
+    /// Access LineString capacity
+    pub fn line_string(&self, dim: Dimension) -> LineStringCapacity {
+        self.line_strings[dim.order()]
     }
 
-    /// Access Polygon capacities
-    ///
-    /// Values are represent dimensions in the order: XY, XYZ, XYM, XYZM.
-    pub fn polygons(&self) -> [PolygonCapacity; 4] {
-        self.polygons
+    /// Access Polygon capacity
+    pub fn polygon(&self, dim: Dimension) -> PolygonCapacity {
+        self.polygons[dim.order()]
     }
 
-    /// Access MultiPoint capacities
-    ///
-    /// Values are represent dimensions in the order: XY, XYZ, XYM, XYZM.
-    pub fn multi_points(&self) -> [MultiPointCapacity; 4] {
-        self.mpoints
+    /// Access MultiPoint capacity
+    pub fn multi_point(&self, dim: Dimension) -> MultiPointCapacity {
+        self.mpoints[dim.order()]
     }
 
-    /// Access point capacities
-    ///
-    /// Values are represent dimensions in the order: XY, XYZ, XYM, XYZM.
-    pub fn multi_line_strings(&self) -> [MultiLineStringCapacity; 4] {
-        self.mline_strings
+    /// Access point capacity
+    pub fn multi_line_string(&self, dim: Dimension) -> MultiLineStringCapacity {
+        self.mline_strings[dim.order()]
     }
 
-    /// Access point capacities
-    ///
-    /// Values are represent dimensions in the order: XY, XYZ, XYM, XYZM.
-    pub fn multi_polygons(&self) -> [MultiPolygonCapacity; 4] {
-        self.mpolygons
+    /// Access point capacity
+    pub fn multi_polygon(&self, dim: Dimension) -> MultiPolygonCapacity {
+        self.mpolygons[dim.order()]
     }
 
-    /// Access GeometryCollection capacities
-    ///
-    /// Values are represent dimensions in the order: XY, XYZ, XYM, XYZM.
-    pub fn geometry_collections(&self) -> [GeometryCollectionCapacity; 4] {
-        self.gcs
+    /// Access GeometryCollection capacity
+    pub fn geometry_collection(&self, dim: Dimension) -> GeometryCollectionCapacity {
+        self.gcs[dim.order()]
     }
 
     /// Add the capacity of the given Point
@@ -230,7 +217,8 @@ impl GeometryCapacity {
     #[inline]
     pub fn add_multi_point(&mut self, multi_point: Option<&impl MultiPointTrait>) {
         if let Some(multi_point) = multi_point {
-            self.multi_points()[multi_point.dim().order()].add_multi_point(Some(multi_point));
+            self.multi_point(multi_point.dim().try_into().unwrap())
+                .add_multi_point(Some(multi_point));
         } else {
             self.nulls += 1;
         }
@@ -240,7 +228,7 @@ impl GeometryCapacity {
     #[inline]
     pub fn add_multi_line_string(&mut self, multi_line_string: Option<&impl MultiLineStringTrait>) {
         if let Some(multi_line_string) = multi_line_string {
-            self.multi_line_strings()[multi_line_string.dim().order()]
+            self.multi_line_string(multi_line_string.dim().try_into().unwrap())
                 .add_multi_line_string(Some(multi_line_string));
         } else {
             self.nulls += 1;
@@ -251,7 +239,7 @@ impl GeometryCapacity {
     #[inline]
     pub fn add_multi_polygon(&mut self, multi_polygon: Option<&impl MultiPolygonTrait>) {
         if let Some(multi_polygon) = multi_polygon {
-            self.multi_polygons()[multi_polygon.dim().order()]
+            self.multi_polygon(multi_polygon.dim().try_into().unwrap())
                 .add_multi_polygon(Some(multi_polygon));
         } else {
             self.nulls += 1;
