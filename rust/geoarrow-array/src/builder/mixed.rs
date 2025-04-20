@@ -7,6 +7,7 @@ use geoarrow_schema::{
 };
 
 use crate::array::MixedGeometryArray;
+use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
 use crate::builder::{
     LineStringBuilder, MultiLineStringBuilder, MultiPointBuilder, MultiPolygonBuilder,
     PointBuilder, PolygonBuilder,
@@ -331,7 +332,9 @@ impl MixedGeometryBuilder {
                     ));
                 }
             }
-            Rect(_) | Triangle(_) | Line(_) => todo!(),
+            Rect(r) => self.push_polygon(&RectWrapper::try_new(r)?)?,
+            Triangle(tri) => self.push_polygon(&TriangleWrapper(tri))?,
+            Line(l) => self.push_line_string(&LineWrapper(l))?,
         };
         Ok(())
     }

@@ -1,12 +1,14 @@
 use std::ops::Add;
 
 use geo_traits::*;
+use wkt::WktNum;
 
+use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
 use crate::capacity::{
     LineStringCapacity, MultiLineStringCapacity, MultiPointCapacity, MultiPolygonCapacity,
     PolygonCapacity,
 };
-use crate::error::Result;
+use crate::error::{GeoArrowError, Result};
 
 /// A counter for the buffer sizes of a [`MixedGeometryArray`][crate::array::MixedGeometryArray].
 ///
@@ -107,7 +109,10 @@ impl MixedCapacity {
     }
 
     #[inline]
-    pub(crate) fn add_geometry(&mut self, geom: &impl GeometryTrait) -> Result<()> {
+    pub(crate) fn add_geometry<T: WktNum>(
+        &mut self,
+        geom: &impl GeometryTrait<T = T>,
+    ) -> Result<()> {
         match geom.as_type() {
             geo_traits::GeometryType::Point(_) => self.add_point(),
             geo_traits::GeometryType::LineString(g) => self.add_line_string(g),
@@ -116,9 +121,13 @@ impl MixedCapacity {
             geo_traits::GeometryType::MultiLineString(p) => self.add_multi_line_string(p),
             geo_traits::GeometryType::MultiPolygon(p) => self.add_multi_polygon(p),
             geo_traits::GeometryType::GeometryCollection(_) => {
-                panic!("nested geometry collections not supported")
+                return Err(GeoArrowError::General(
+                    "nested geometry collections not supported".to_string(),
+                ));
             }
-            _ => todo!(), // geo_traits::GeometryType::Rect(_) => todo!(),
+            geo_traits::GeometryType::Rect(r) => self.add_polygon(&RectWrapper::try_new(r)?),
+            geo_traits::GeometryType::Triangle(tri) => self.add_polygon(&TriangleWrapper(tri)),
+            geo_traits::GeometryType::Line(l) => self.add_line_string(&LineWrapper(l)),
         };
         Ok(())
     }

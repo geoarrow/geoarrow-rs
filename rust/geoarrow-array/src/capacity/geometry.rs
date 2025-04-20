@@ -1,8 +1,10 @@
 use std::ops::AddAssign;
 
 use geo_traits::*;
+use wkt::WktNum;
 
 use crate::array::DimensionIndex;
+use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
 use crate::capacity::{
     GeometryCollectionCapacity, LineStringCapacity, MultiLineStringCapacity, MultiPointCapacity,
     MultiPolygonCapacity, PolygonCapacity,
@@ -258,19 +260,24 @@ impl GeometryCapacity {
 
     /// Add the capacity of the given Geometry
     #[inline]
-    pub fn add_geometry(&mut self, geom: Option<&impl GeometryTrait>) -> Result<()> {
+    pub fn add_geometry<T: WktNum>(
+        &mut self,
+        geom: Option<&impl GeometryTrait<T = T>>,
+    ) -> Result<()> {
+        use geo_traits::GeometryType;
+
         if let Some(geom) = geom {
             match geom.as_type() {
-                geo_traits::GeometryType::Point(g) => self.add_point(Some(g)),
-                geo_traits::GeometryType::LineString(g) => self.add_line_string(Some(g)),
-                geo_traits::GeometryType::Polygon(g) => self.add_polygon(Some(g)),
-                geo_traits::GeometryType::MultiPoint(p) => self.add_multi_point(Some(p)),
-                geo_traits::GeometryType::MultiLineString(p) => self.add_multi_line_string(Some(p)),
-                geo_traits::GeometryType::MultiPolygon(p) => self.add_multi_polygon(Some(p)),
-                geo_traits::GeometryType::GeometryCollection(p) => {
-                    self.add_geometry_collection(Some(p))?
-                }
-                _ => todo!(),
+                GeometryType::Point(g) => self.add_point(Some(g)),
+                GeometryType::LineString(g) => self.add_line_string(Some(g)),
+                GeometryType::Polygon(g) => self.add_polygon(Some(g)),
+                GeometryType::MultiPoint(p) => self.add_multi_point(Some(p)),
+                GeometryType::MultiLineString(p) => self.add_multi_line_string(Some(p)),
+                GeometryType::MultiPolygon(p) => self.add_multi_polygon(Some(p)),
+                GeometryType::GeometryCollection(p) => self.add_geometry_collection(Some(p))?,
+                GeometryType::Rect(r) => self.add_polygon(Some(&RectWrapper::try_new(r)?)),
+                GeometryType::Triangle(tri) => self.add_polygon(Some(&TriangleWrapper(tri))),
+                GeometryType::Line(l) => self.add_line_string(Some(&LineWrapper(l))),
             };
         } else {
             self.nulls += 1;
@@ -280,9 +287,9 @@ impl GeometryCapacity {
 
     /// Add the capacity of the given GeometryCollection
     #[inline]
-    pub fn add_geometry_collection(
+    pub fn add_geometry_collection<T: WktNum>(
         &mut self,
-        gc: Option<&impl GeometryCollectionTrait>,
+        gc: Option<&impl GeometryCollectionTrait<T = T>>,
     ) -> Result<()> {
         if let Some(gc) = gc {
             self.gcs[gc.dim().order()].add_geometry_collection(Some(gc))?;
@@ -293,8 +300,8 @@ impl GeometryCapacity {
     }
 
     /// Construct a new counter pre-filled with the given geometries
-    pub fn from_geometries<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+    pub fn from_geometries<'a, T: WktNum>(
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = T> + 'a)>>,
         prefer_multi: bool,
     ) -> Result<Self> {
         let mut counter = Self::new_empty().with_prefer_multi(prefer_multi);

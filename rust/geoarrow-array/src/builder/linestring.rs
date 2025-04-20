@@ -4,6 +4,7 @@ use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, Multi
 use geoarrow_schema::{CoordType, LineStringType};
 
 use crate::array::{LineStringArray, WkbArray};
+use crate::builder::geo_trait_wrappers::LineWrapper;
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
 };
@@ -223,6 +224,7 @@ impl LineStringBuilder {
                         return Err(GeoArrowError::General("Incorrect type".to_string()));
                     }
                 }
+                GeometryType::Line(l) => self.push_line_string(Some(&LineWrapper(l)))?,
                 _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
             }
         } else {

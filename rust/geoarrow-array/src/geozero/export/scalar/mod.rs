@@ -7,7 +7,6 @@ mod multipoint;
 mod multipolygon;
 mod point;
 mod polygon;
-mod rect;
 
 pub(crate) use coord::process_coord;
 pub(crate) use geometry::process_geometry;
@@ -18,4 +17,3 @@ pub(crate) use multipoint::process_multi_point;
 pub(crate) use multipolygon::process_multi_polygon;
 pub(crate) use point::{process_point, process_point_as_coord};
 pub(crate) use polygon::process_polygon;
-pub(crate) use rect::process_rect;
