@@ -13,20 +13,21 @@ use geoarrow_schema::Dimension;
 ///
 /// None means that there is no common type to downcast to, and can be left as GeometryType or a
 /// serialized type.
-pub fn infer_downcast_type(
-    arrays: &[&dyn GeoArrowArray],
+pub fn infer_downcast_type<'a>(
+    arrays: impl Iterator<Item = &'a dyn GeoArrowArray>,
 ) -> Result<Option<(NativeType, Dimension)>> {
-    if arrays.is_empty() {
+    let mut type_ids = HashSet::new();
+    for array in arrays {
+        let type_id = get_type_ids(array)?;
+        type_ids.extend(type_id);
+    }
+
+    if type_ids.is_empty() {
         return Err(GeoArrowError::General(
             "Cannot infer type from empty sequence of arrays".to_string(),
         ));
     }
 
-    let mut type_ids = HashSet::new();
-    for array in arrays {
-        let type_id = get_type_ids(*array)?;
-        type_ids.extend(type_id);
-    }
     infer_from_native_type_and_dimension(type_ids)
 }
 
