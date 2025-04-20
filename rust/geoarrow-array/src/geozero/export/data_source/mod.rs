@@ -304,7 +304,12 @@ fn process_properties<P: PropertyProcessor>(
                     TimeUnit::Second => impl_timestamp!(TimestampSecondType),
                 }
             }
-            dt => todo!("unsupported type: {:?}", dt),
+            dt => {
+                return Err(GeozeroError::Properties(format!(
+                    "unsupported type: {:?}",
+                    dt
+                )));
+            }
         }
         property_idx += 1;
     }
