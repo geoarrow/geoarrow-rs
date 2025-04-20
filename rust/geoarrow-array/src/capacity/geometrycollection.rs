@@ -123,17 +123,6 @@ impl GeometryCollectionCapacity {
     }
 
     /// Create a capacity counter from an iterator of Geometries.
-    pub fn from_owned_geometries<'a>(
-        geoms: impl Iterator<Item = Option<(impl GeometryCollectionTrait + 'a)>>,
-    ) -> Result<Self> {
-        let mut counter = Self::new_empty();
-        for maybe_geom in geoms.into_iter() {
-            counter.add_geometry_collection(maybe_geom.as_ref())?;
-        }
-        Ok(counter)
-    }
-
-    /// Create a capacity counter from an iterator of Geometries.
     pub fn from_geometries<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
     ) -> Result<Self> {
