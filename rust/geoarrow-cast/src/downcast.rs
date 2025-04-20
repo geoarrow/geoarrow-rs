@@ -307,6 +307,7 @@ impl NativeTypeAndDimension {
 
 #[cfg(test)]
 mod test {
+    use geoarrow_array::cast::{to_wkb, to_wkt};
     use geoarrow_array::test;
     use geoarrow_schema::CoordType;
 
@@ -449,8 +450,13 @@ mod test {
     }
 
     #[test]
-    fn infer_get_type_ids_geometry() {
+    fn infer_get_type_ids_geometry_wkb_wkt() {
         let array = test::geometry::array(CoordType::Interleaved, false);
+        let wkb_array = to_wkb::<i32>(&array).unwrap();
+        let large_wkb_array = to_wkb::<i64>(&array).unwrap();
+        let wkt_array = to_wkt::<i32>(&array).unwrap();
+        let large_wkt_array = to_wkt::<i64>(&array).unwrap();
+
         let mut expected_types = HashSet::new();
         for dim in [
             Dimension::XY,
@@ -474,5 +480,9 @@ mod test {
         }
 
         assert_eq!(get_type_ids(&array).unwrap(), expected_types);
+        assert_eq!(get_type_ids(&wkb_array).unwrap(), expected_types);
+        assert_eq!(get_type_ids(&large_wkb_array).unwrap(), expected_types);
+        assert_eq!(get_type_ids(&wkt_array).unwrap(), expected_types);
+        assert_eq!(get_type_ids(&large_wkt_array).unwrap(), expected_types);
     }
 }
