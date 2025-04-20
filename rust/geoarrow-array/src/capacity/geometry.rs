@@ -60,11 +60,8 @@ impl GeometryCapacity {
     }
 
     /// Create a new empty capacity.
-    pub fn new_empty(prefer_multi: bool) -> Self {
-        Self {
-            prefer_multi,
-            ..Default::default()
-        }
+    pub fn new_empty() -> Self {
+        Default::default()
     }
 
     /// Set whether this capacity counter should prefer allocating "single-type" geometries like
@@ -181,54 +178,9 @@ impl GeometryCapacity {
     /// Access GeometryCollection capacities
     ///
     /// Values are represent dimensions in the order: XY, XYZ, XYM, XYZM.
-    pub fn gcs(&self) -> [GeometryCollectionCapacity; 4] {
+    pub fn geometry_collections(&self) -> [GeometryCollectionCapacity; 4] {
         self.gcs
     }
-
-    // pub fn point_compatible(&self) -> bool {
-    //     self.line_string.is_empty()
-    //         && self.polygon.is_empty()
-    //         && self.multi_point.is_empty()
-    //         && self.multi_line_string.is_empty()
-    //         && self.multi_polygon.is_empty()
-    // }
-
-    // pub fn line_string_compatible(&self) -> bool {
-    //     self.point == 0
-    //         && self.polygon.is_empty()
-    //         && self.multi_point.is_empty()
-    //         && self.multi_line_string.is_empty()
-    //         && self.multi_polygon.is_empty()
-    // }
-
-    // pub fn polygon_compatible(&self) -> bool {
-    //     self.point == 0
-    //         && self.line_string.is_empty()
-    //         && self.multi_point.is_empty()
-    //         && self.multi_line_string.is_empty()
-    //         && self.multi_polygon.is_empty()
-    // }
-
-    // pub fn multi_point_compatible(&self) -> bool {
-    //     self.line_string.is_empty()
-    //         && self.polygon.is_empty()
-    //         && self.multi_line_string.is_empty()
-    //         && self.multi_polygon.is_empty()
-    // }
-
-    // pub fn multi_line_string_compatible(&self) -> bool {
-    //     self.point == 0
-    //         && self.polygon.is_empty()
-    //         && self.multi_point.is_empty()
-    //         && self.multi_polygon.is_empty()
-    // }
-
-    // pub fn multi_polygon_compatible(&self) -> bool {
-    //     self.point == 0
-    //         && self.line_string.is_empty()
-    //         && self.multi_point.is_empty()
-    //         && self.multi_line_string.is_empty()
-    // }
 
     /// Add the capacity of the given Point
     #[inline]
@@ -345,21 +297,9 @@ impl GeometryCapacity {
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
         prefer_multi: bool,
     ) -> Result<Self> {
-        let mut counter = Self::new_empty(prefer_multi);
+        let mut counter = Self::new_empty().with_prefer_multi(prefer_multi);
         for maybe_geom in geoms.into_iter() {
             counter.add_geometry(maybe_geom)?;
-        }
-        Ok(counter)
-    }
-
-    /// Construct a new counter pre-filled with the given geometries
-    pub fn from_owned_geometries<'a>(
-        geoms: impl Iterator<Item = Option<(impl GeometryTrait + 'a)>>,
-        prefer_multi: bool,
-    ) -> Result<Self> {
-        let mut counter = Self::new_empty(prefer_multi);
-        for maybe_geom in geoms.into_iter() {
-            counter.add_geometry(maybe_geom.as_ref())?;
         }
         Ok(counter)
     }

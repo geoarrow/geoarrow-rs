@@ -134,7 +134,7 @@ impl<'a> GeometryBuilder {
                     Dimension::from_order(i),
                     Default::default(),
                 ),
-                capacity.gcs()[i],
+                capacity.geometry_collections()[i],
                 prefer_multi,
             )
         });
@@ -200,9 +200,13 @@ impl<'a> GeometryBuilder {
             .for_each(|(i, cap)| {
                 self.mpolygons[i].reserve(*cap);
             });
-        capacity.gcs().iter().enumerate().for_each(|(i, cap)| {
-            self.gcs[i].reserve(*cap);
-        });
+        capacity
+            .geometry_collections()
+            .iter()
+            .enumerate()
+            .for_each(|(i, cap)| {
+                self.gcs[i].reserve(*cap);
+            });
     }
 
     /// Reserves the minimum capacity for at least `additional` more Geometries.
@@ -256,9 +260,13 @@ impl<'a> GeometryBuilder {
             .for_each(|(i, cap)| {
                 self.mpolygons[i].reserve_exact(*cap);
             });
-        capacity.gcs().iter().enumerate().for_each(|(i, cap)| {
-            self.gcs[i].reserve_exact(*cap);
-        });
+        capacity
+            .geometry_collections()
+            .iter()
+            .enumerate()
+            .for_each(|(i, cap)| {
+                self.gcs[i].reserve_exact(*cap);
+            });
     }
 
     /// Consume the builder and convert to an immutable [`GeometryArray`]

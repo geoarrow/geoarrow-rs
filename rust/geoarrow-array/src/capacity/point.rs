@@ -40,6 +40,7 @@ impl PointCapacity {
         if let Some(g) = value {
             match g.as_type() {
                 GeometryType::Point(p) => self.add_point(Some(p)),
+
                 _ => return Err(GeoArrowError::General("incorrect type".to_string())),
             }
         } else {
