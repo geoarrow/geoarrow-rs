@@ -48,6 +48,7 @@ geo = "0.30.0"
 geo-traits = "0.2.0"
 geo-types = "0.7.16"
 geoarrow-array = { path = "rust/geoarrow-array" }
+geoarrow-cast = { path = "rust/geoarrow-cast" }
 geoarrow-geoparquet = { path = "rust/geoarrow-geoparquet" }
 geoarrow-schema = { path = "rust/geoarrow-schema" }
 geoarrow-test = { path = "rust/geoarrow-test" }

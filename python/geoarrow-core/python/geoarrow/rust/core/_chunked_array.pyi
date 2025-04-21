@@ -1,5 +1,8 @@
 from arro3.core.types import ArrowStreamExportable
+
 from ._array import GeoArrowArray
+from ._data_type import GeoArrowType
+from .types import CoordTypeInput
 
 class ChunkedGeoArrowArray:
     """
@@ -35,6 +38,8 @@ class ChunkedGeoArrowArray:
         """Return the i-th chunk of the array."""
     def chunks(self) -> list[GeoArrowArray]:
         """Return all chunks of the array."""
+    def cast(self, to_type: GeoArrowType, /) -> ChunkedGeoArrowArray: ...
+    def downcast(self, coord_type: CoordTypeInput) -> ChunkedGeoArrowArray: ...
     @property
     def type(self) -> GeoArrowArray:
         """Return the type of the array."""

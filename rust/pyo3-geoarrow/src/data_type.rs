@@ -93,6 +93,12 @@ impl PyGeoArrowType {
     }
 }
 
+impl AsRef<GeoArrowType> for PyGeoArrowType {
+    fn as_ref(&self) -> &GeoArrowType {
+        &self.0
+    }
+}
+
 impl From<GeoArrowType> for PyGeoArrowType {
     fn from(value: GeoArrowType) -> Self {
         Self(value)

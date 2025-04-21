@@ -21,11 +21,10 @@ arrow-schema = "55"
 geo-traits = "0.2"
 geoarrow = { path = "../rust/geoarrow" }
 geoarrow-array = { path = "../rust/geoarrow-array" }
-geoarrow-geoparquet = { path = "../rust/geoarrow-geoparquet" }
+geoarrow-cast = { path = "../rust/geoarrow-cast" }
 geoarrow-flatgeobuf = { path = "../rust/geoarrow-flatgeobuf" }
+geoarrow-geoparquet = { path = "../rust/geoarrow-geoparquet" }
 geoarrow-schema = { path = "../rust/geoarrow-schema" }
-# Uncomment when publishing
-# geoarrow = { version = "0.4.0-beta.1" }
 geozero = "0.14"
 indexmap = "2.5.0"
 numpy = "0.24"
