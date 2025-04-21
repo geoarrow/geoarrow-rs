@@ -1,6 +1,5 @@
 #![cfg_attr(not(test), deny(unused_crate_dependencies))]
 
-mod cast;
 mod constructors;
 // pub mod ffi;
 // pub mod interop;
