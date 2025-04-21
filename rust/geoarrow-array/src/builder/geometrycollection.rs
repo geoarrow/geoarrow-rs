@@ -62,6 +62,8 @@ impl<'a> GeometryCollectionBuilder {
     /// This can be desired when the user wants to downcast the array to a single geometry array
     /// later, as casting to a, say, `MultiPointArray` from a `GeometryCollectionArray` could be
     /// done zero-copy.
+    ///
+    /// Note that only geometries added _after_ this method is called will be affected.
     pub fn with_prefer_multi(self, prefer_multi: bool) -> Self {
         Self {
             geoms: self.geoms.with_prefer_multi(prefer_multi),
