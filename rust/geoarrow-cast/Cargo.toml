@@ -11,7 +11,9 @@ rust-version = { workspace = true }
 
 
 [dependencies]
+geo-traits = { workspace = true }
 geoarrow-array = { workspace = true }
+geoarrow-schema = { workspace = true }
 
 [dev-dependencies]
 geoarrow-array = { workspace = true, features = ["test-data"] }
