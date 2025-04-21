@@ -5,7 +5,8 @@ use std::sync::Arc;
 
 use arrow_array::builder::GenericStringBuilder;
 use arrow_array::cast::AsArray;
-use arrow_array::{BinaryArrayType, OffsetSizeTrait, StringArrayType};
+use arrow_array::iterator::ArrayIter;
+use arrow_array::{Array, BinaryArrayType, OffsetSizeTrait, StringArrayType};
 use geoarrow_schema::WkbType;
 use wkb::reader::read_wkb;
 
@@ -326,12 +327,12 @@ fn impl_to_wkb<'a, O: OffsetSizeTrait>(geo_arr: &'a impl ArrayAccessor<'a>) -> R
 /// Note that the GeoArrow metadata on the new array is taken from `to_type` **not** the original
 /// array. Ensure you construct the [GeoArrowType] with the correct metadata.
 pub fn from_wkb<'a, O: OffsetSizeTrait>(
-    arr: &impl BinaryArrayType<'a>,
+    arr: &impl BinaryArrayAccessor,
     to_type: GeoArrowType,
     prefer_multi: bool,
 ) -> Result<Arc<dyn GeoArrowArray>> {
-    let geoms = arr
-        .iter()
+    let geoms = (0..arr.len())
+        .map(|i| arr.get(i))
         .map(|maybe_buf| maybe_buf.map(|buf| read_wkb(buf)).transpose())
         .collect::<std::result::Result<Vec<_>, _>>()?;
 
@@ -399,6 +400,25 @@ pub fn from_wkb<'a, O: OffsetSizeTrait>(
         }
     };
     Ok(result)
+}
+
+trait BinaryArrayAccessor {
+    fn len(&self) -> usize;
+    fn get(&self, index: usize) -> Option<&[u8]>;
+}
+
+impl<O: OffsetSizeTrait> BinaryArrayAccessor for WkbArray<O> {
+    fn len(&self) -> usize {
+        self.array.len()
+    }
+
+    fn get(&self, index: usize) -> Option<&[u8]> {
+        if self.array.is_null(index) {
+            return None;
+        } else {
+            Some(self.array.value(index))
+        }
+    }
 }
 
 /// Convert a [GeoArrowArray] to a [WktArray].
