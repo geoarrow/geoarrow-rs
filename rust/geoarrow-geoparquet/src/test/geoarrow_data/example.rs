@@ -32,7 +32,7 @@ fn dimension_path_part(dim: Dimension) -> &'static str {
 /// Construct the filepath to files in geoarrow-data
 ///
 /// This suffix should either be "geo" or "native"
-fn geoparquet_wkb_filepath(data_type: GeoArrowType, suffix: &str) -> PathBuf {
+fn geoparquet_filepath(data_type: GeoArrowType, suffix: &str) -> PathBuf {
     let path = geoarrow_data_example_files();
     let mut fname = "example_".to_string();
 
@@ -110,7 +110,7 @@ fn point() {
     ] {
         for file_type in ["geo", "native"] {
             let expected_typ = PointType::new(CoordType::Separated, dim, Default::default());
-            let path = geoparquet_wkb_filepath(expected_typ.clone().into(), file_type);
+            let path = geoparquet_filepath(expected_typ.clone().into(), file_type);
             let (wkt_arr, geo_arr) = read_gpq_file(path);
 
             assert_eq!(geo_arr.data_type(), expected_typ.clone().into());
@@ -138,7 +138,7 @@ fn linestring() {
     ] {
         for file_type in ["geo", "native"] {
             let expected_typ = LineStringType::new(CoordType::Separated, dim, Default::default());
-            let path = geoparquet_wkb_filepath(expected_typ.clone().into(), file_type);
+            let path = geoparquet_filepath(expected_typ.clone().into(), file_type);
             let (wkt_arr, geo_arr) = read_gpq_file(path);
 
             assert_eq!(geo_arr.data_type(), expected_typ.clone().into());
@@ -166,7 +166,7 @@ fn polygon() {
     ] {
         for file_type in ["geo", "native"] {
             let expected_typ = PolygonType::new(CoordType::Separated, dim, Default::default());
-            let path = geoparquet_wkb_filepath(expected_typ.clone().into(), file_type);
+            let path = geoparquet_filepath(expected_typ.clone().into(), file_type);
             let (wkt_arr, geo_arr) = read_gpq_file(path);
 
             assert_eq!(geo_arr.data_type(), expected_typ.clone().into());
@@ -194,7 +194,7 @@ fn multipoint() {
     ] {
         for file_type in ["geo", "native"] {
             let expected_typ = MultiPointType::new(CoordType::Separated, dim, Default::default());
-            let path = geoparquet_wkb_filepath(expected_typ.clone().into(), file_type);
+            let path = geoparquet_filepath(expected_typ.clone().into(), file_type);
             let (wkt_arr, geo_arr) = read_gpq_file(path);
 
             assert_eq!(geo_arr.data_type(), expected_typ.clone().into());
@@ -223,7 +223,7 @@ fn multilinestring() {
         for file_type in ["geo", "native"] {
             let expected_typ =
                 MultiLineStringType::new(CoordType::Separated, dim, Default::default());
-            let path = geoparquet_wkb_filepath(expected_typ.clone().into(), file_type);
+            let path = geoparquet_filepath(expected_typ.clone().into(), file_type);
             let (wkt_arr, geo_arr) = read_gpq_file(path);
 
             assert_eq!(geo_arr.data_type(), expected_typ.clone().into());
@@ -252,7 +252,7 @@ fn multipolygon() {
     ] {
         for file_type in ["geo", "native"] {
             let expected_typ = MultiPolygonType::new(CoordType::Separated, dim, Default::default());
-            let path = geoparquet_wkb_filepath(expected_typ.clone().into(), file_type);
+            let path = geoparquet_filepath(expected_typ.clone().into(), file_type);
             let (wkt_arr, geo_arr) = read_gpq_file(path);
 
             assert_eq!(geo_arr.data_type(), expected_typ.clone().into());
@@ -281,7 +281,7 @@ fn geometrycollection() {
     ] {
         let expected_typ =
             GeometryCollectionType::new(CoordType::Separated, dim, Default::default());
-        let path = geoparquet_wkb_filepath(expected_typ.clone().into(), "geo");
+        let path = geoparquet_filepath(expected_typ.clone().into(), "geo");
         let (wkt_arr, geo_arr) = read_gpq_file(path);
 
         assert_eq!(geo_arr.data_type(), expected_typ.clone().into());
