@@ -1276,10 +1276,8 @@ name = "geoarrow-rust-core"
 version = "0.4.0-beta.4"
 dependencies = [
  "geoarrow-array",
- "geoarrow-cast",
  "geoarrow-schema",
  "pyo3",
- "pyo3-arrow",
  "pyo3-geoarrow 0.1.0-dev",
 ]
 
