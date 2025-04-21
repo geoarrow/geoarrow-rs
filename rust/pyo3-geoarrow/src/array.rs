@@ -7,6 +7,11 @@ use geoarrow_array::array::from_arrow_array;
 // use geoarrow::scalar::GeometryScalar;
 // use geoarrow::trait_::NativeArrayRef;
 use geoarrow_array::GeoArrowArray;
+use geoarrow_cast::downcast::NativeType;
+use geoarrow_schema::{
+    BoxType, GeometryCollectionType, LineStringType, MultiLineStringType, MultiPointType,
+    MultiPolygonType, PointType, PolygonType,
+};
 // use geozero::ProcessToJson;
 use pyo3::intern;
 use pyo3::prelude::*;
@@ -14,8 +19,8 @@ use pyo3::types::{PyCapsule, PyTuple, PyType};
 use pyo3_arrow::PyArray;
 use pyo3_arrow::ffi::to_array_pycapsules;
 
-use crate::PyGeoArrowType;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
+use crate::{PyCoordType, PyGeoArrowType};
 
 #[pyclass(
     module = "geoarrow.rust.core",
@@ -143,6 +148,43 @@ impl PyGeoArrowArray {
     #[getter]
     fn null_count(&self) -> usize {
         self.0.logical_null_count()
+    }
+
+    #[pyo3(signature = (to_type, /))]
+    fn cast(&self, to_type: PyGeoArrowType) -> PyGeoArrowResult<Self> {
+        let casted = geoarrow_cast::cast::cast(self.0.as_ref(), &to_type.into_inner())?;
+        Ok(Self(casted))
+    }
+
+    fn downcast(&self, coord_type: PyCoordType) -> PyGeoArrowResult<Self> {
+        if let Some((native_type, dim)) =
+            geoarrow_cast::downcast::infer_downcast_type(std::iter::once(self.0.as_ref()))?
+        {
+            let metadata = self.0.data_type().metadata().clone();
+            let to_type = match native_type {
+                NativeType::Point => PointType::new(coord_type.into(), dim, metadata).into(),
+                NativeType::LineString => {
+                    LineStringType::new(coord_type.into(), dim, metadata).into()
+                }
+                NativeType::Polygon => PolygonType::new(coord_type.into(), dim, metadata).into(),
+                NativeType::MultiPoint => {
+                    MultiPointType::new(coord_type.into(), dim, metadata).into()
+                }
+                NativeType::MultiLineString => {
+                    MultiLineStringType::new(coord_type.into(), dim, metadata).into()
+                }
+                NativeType::MultiPolygon => {
+                    MultiPolygonType::new(coord_type.into(), dim, metadata).into()
+                }
+                NativeType::GeometryCollection => {
+                    GeometryCollectionType::new(coord_type.into(), dim, metadata).into()
+                }
+                NativeType::Rect => BoxType::new(dim, metadata).into(),
+            };
+            self.cast(PyGeoArrowType::new(to_type))
+        } else {
+            Ok(Self::new(self.0.clone()))
+        }
     }
 
     #[getter]

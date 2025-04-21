@@ -17,6 +17,7 @@ arrow-cast = { workspace = true }
 arrow-buffer = { workspace = true }
 arrow-schema = { workspace = true }
 geoarrow-array = { workspace = true }
+geoarrow-cast = { workspace = true }
 geoarrow-schema = { workspace = true }
 pyo3 = { workspace = true, features = ["chrono", "indexmap"] }
 pyo3-arrow = { workspace = true }

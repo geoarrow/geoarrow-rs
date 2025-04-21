@@ -3090,6 +3090,7 @@ dependencies = [
  "arrow-cast",
  "arrow-schema",
  "geoarrow-array",
+ "geoarrow-cast",
  "geoarrow-schema",
  "pyo3",
  "pyo3-arrow",

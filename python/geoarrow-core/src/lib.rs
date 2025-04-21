@@ -1,13 +1,15 @@
 #![cfg_attr(not(test), deny(unused_crate_dependencies))]
 
-use pyo3::exceptions::PyRuntimeWarning;
-use pyo3::intern;
-use pyo3::prelude::*;
-use pyo3::types::PyTuple;
+mod cast;
 mod constructors;
 // pub mod ffi;
 // pub mod interop;
 // pub mod table;
+
+use pyo3::exceptions::PyRuntimeWarning;
+use pyo3::intern;
+use pyo3::prelude::*;
+use pyo3::types::PyTuple;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
