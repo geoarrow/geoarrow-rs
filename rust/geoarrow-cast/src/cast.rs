@@ -222,7 +222,7 @@ pub fn cast(array: &dyn GeoArrowArray, to_type: &GeoArrowType) -> Result<Arc<dyn
             let g_capacity = g_array.buffer_lengths();
             let gc_capacity = g_capacity.geometry_collection(to_type.dimension());
             let mut builder =
-                GeometryCollectionBuilder::with_capacity(to_type.clone(), gc_capacity, false);
+                GeometryCollectionBuilder::with_capacity(to_type.clone(), gc_capacity);
             for geom in array.as_geometry().iter() {
                 builder.push_geometry(geom.transpose()?.as_ref())?;
             }
@@ -244,10 +244,10 @@ pub fn cast(array: &dyn GeoArrowArray, to_type: &GeoArrowType) -> Result<Arc<dyn
         (_, LargeWkb(_)) => Arc::new(to_wkb::<i64>(array)?),
         (_, Wkt(_)) => Arc::new(to_wkt::<i32>(array)?),
         (_, LargeWkt(_)) => Arc::new(to_wkt::<i64>(array)?),
-        (Wkb(_), _) => from_wkb(array.as_wkb::<i32>(), to_type.clone(), false)?,
-        (LargeWkb(_), _) => from_wkb(array.as_wkb::<i64>(), to_type.clone(), false)?,
-        (Wkt(_), _) => from_wkt(array.as_wkt::<i32>(), to_type.clone(), false)?,
-        (LargeWkt(_), _) => from_wkt(array.as_wkt::<i64>(), to_type.clone(), false)?,
+        (Wkb(_), _) => from_wkb(array.as_wkb::<i32>(), to_type.clone())?,
+        (LargeWkb(_), _) => from_wkb(array.as_wkb::<i64>(), to_type.clone())?,
+        (Wkt(_), _) => from_wkt(array.as_wkt::<i32>(), to_type.clone())?,
+        (LargeWkt(_), _) => from_wkt(array.as_wkt::<i64>(), to_type.clone())?,
         (_, _) => {
             return Err(GeoArrowError::General(format!(
                 "Unsupported cast from {:?} to {:?}",

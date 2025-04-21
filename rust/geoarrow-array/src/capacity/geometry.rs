@@ -47,7 +47,6 @@ impl GeometryCapacity {
         mline_strings: [MultiLineStringCapacity; 4],
         mpolygons: [MultiPolygonCapacity; 4],
         gcs: [GeometryCollectionCapacity; 4],
-        prefer_multi: bool,
     ) -> Self {
         Self {
             nulls,
@@ -58,7 +57,7 @@ impl GeometryCapacity {
             mline_strings,
             mpolygons,
             gcs,
-            prefer_multi,
+            prefer_multi: false,
         }
     }
 
@@ -290,9 +289,8 @@ impl GeometryCapacity {
     /// Construct a new counter pre-filled with the given geometries
     pub fn from_geometries<'a, T: WktNum>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = T> + 'a)>>,
-        prefer_multi: bool,
     ) -> Result<Self> {
-        let mut counter = Self::new_empty().with_prefer_multi(prefer_multi);
+        let mut counter = Self::new_empty();
         for maybe_geom in geoms.into_iter() {
             counter.add_geometry(maybe_geom)?;
         }

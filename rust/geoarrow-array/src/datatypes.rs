@@ -490,10 +490,10 @@ mod test {
         let data_type: GeoArrowType = (&field).try_into().unwrap();
         assert_eq!(ml_array.data_type(), data_type);
 
-        let mut builder = GeometryBuilder::new(
-            GeometryType::new(CoordType::Interleaved, Default::default()),
-            true,
-        );
+        let mut builder = GeometryBuilder::new(GeometryType::new(
+            CoordType::Interleaved,
+            Default::default(),
+        ));
         builder.push_point(Some(&crate::test::point::p0())).unwrap();
         builder.push_point(Some(&crate::test::point::p1())).unwrap();
         builder.push_point(Some(&crate::test::point::p2())).unwrap();

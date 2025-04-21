@@ -307,10 +307,9 @@ mod test {
 
         let typ =
             GeometryCollectionType::new(CoordType::Interleaved, Dimension::XY, Default::default());
-        let geo_arr =
-            GeometryCollectionBuilder::from_nullable_geometry_collections(&geoms, typ, false)
-                .unwrap()
-                .finish();
+        let geo_arr = GeometryCollectionBuilder::from_nullable_geometry_collections(&geoms, typ)
+            .unwrap()
+            .finish();
 
         for null_idx in &null_idxs {
             assert!(geo_arr.is_null(*null_idx));
@@ -324,10 +323,9 @@ mod test {
 
         let typ =
             GeometryCollectionType::new(CoordType::Interleaved, Dimension::XY, Default::default());
-        let geo_arr =
-            GeometryCollectionBuilder::from_nullable_geometry_collections(&geoms, typ, false)
-                .unwrap()
-                .finish();
+        let geo_arr = GeometryCollectionBuilder::from_nullable_geometry_collections(&geoms, typ)
+            .unwrap()
+            .finish();
 
         assert_eq!(geo_arr.logical_nulls().unwrap(), expected_nulls);
     }

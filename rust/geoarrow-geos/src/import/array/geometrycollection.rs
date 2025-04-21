@@ -6,8 +6,6 @@ use geoarrow_schema::GeometryCollectionType;
 use crate::import::array::FromGEOS;
 use crate::import::scalar::GEOSGeometryCollection;
 
-const DEFAULT_PREFER_MULTI: bool = false;
-
 impl FromGEOS for GeometryCollectionBuilder {
     type GeoArrowType = GeometryCollectionType;
 
@@ -19,7 +17,7 @@ impl FromGEOS for GeometryCollectionBuilder {
             .into_iter()
             .map(|geom| geom.map(GEOSGeometryCollection::try_new).transpose())
             .collect::<Result<Vec<_>>>()?;
-        Self::from_nullable_geometry_collections(&geoms, typ, DEFAULT_PREFER_MULTI)
+        Self::from_nullable_geometry_collections(&geoms, typ)
     }
 }
 
