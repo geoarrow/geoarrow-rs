@@ -273,7 +273,10 @@ pub fn cast(array: &dyn GeoArrowArray, to_type: &GeoArrowType) -> Result<Arc<dyn
 mod test {
     use geoarrow_array::builder::MultiPointBuilder;
     use geoarrow_array::{IntoArrow, test};
-    use geoarrow_schema::{CoordType, Dimension, GeometryType, MultiPointType, PointType, WkbType};
+    use geoarrow_schema::{
+        CoordType, Dimension, GeometryType, LineStringType, MultiLineStringType, MultiPointType,
+        MultiPolygonType, PointType, PolygonType, WkbType,
+    };
     use wkt::wkt;
 
     use super::*;
@@ -329,7 +332,7 @@ mod test {
     }
 
     #[test]
-    fn downcast_single_multi_points() {
+    fn downcast_multi_points_to_points() {
         let mp1 = wkt! { MULTIPOINT(0.0 0.0) };
         let mp2 = wkt! { MULTIPOINT(1.0 2.0) };
         let mp3 = wkt! { MULTIPOINT(3.0 4.0) };
@@ -340,5 +343,84 @@ mod test {
         let p_type = PointType::new(coord_type, dim, metadata);
         let p_arr = cast(&mp_arr, &p_type.into()).unwrap();
         assert!(p_arr.as_point_opt().is_some());
+    }
+
+    #[test]
+    fn downcast_multi_points_to_points_fails() {
+        let mp1 = wkt! { MULTIPOINT(0.0 0.0) };
+        let mp2 = wkt! { MULTIPOINT(1.0 2.0) };
+        let mp3 = wkt! { MULTIPOINT(3.0 4.0, 5.0 6.0) };
+
+        let typ = MultiPointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let mp_arr = MultiPointBuilder::from_multi_points(&[mp1, mp2, mp3], typ).finish();
+        let (coord_type, dim, metadata) = mp_arr.ext_type().clone().into_inner();
+        let p_type = PointType::new(coord_type, dim, metadata);
+        assert!(cast(&mp_arr, &p_type.into()).is_err());
+    }
+
+    #[test]
+    fn downcast_multi_line_strings_to_line_strings() {
+        let geoms = geoarrow_test::raw::multilinestring::xy::geoms();
+        let single = geoms[0].clone().unwrap();
+
+        let typ =
+            MultiLineStringType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let mp_arr = MultiLineStringBuilder::from_multi_line_strings(
+            &[single.clone(), single.clone(), single],
+            typ,
+        )
+        .finish();
+        let (coord_type, dim, metadata) = mp_arr.ext_type().clone().into_inner();
+        let p_type = LineStringType::new(coord_type, dim, metadata);
+        let p_arr = cast(&mp_arr, &p_type.into()).unwrap();
+        assert!(p_arr.as_line_string_opt().is_some());
+    }
+
+    #[test]
+    fn downcast_multi_line_strings_to_line_strings_fails() {
+        let geoms = geoarrow_test::raw::multilinestring::xy::geoms();
+        let single = geoms[0].clone().unwrap();
+        let multi = geoms[1].clone().unwrap();
+
+        let typ =
+            MultiLineStringType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let mp_arr =
+            MultiLineStringBuilder::from_multi_line_strings(&[single.clone(), single, multi], typ)
+                .finish();
+        let (coord_type, dim, metadata) = mp_arr.ext_type().clone().into_inner();
+        let p_type = LineStringType::new(coord_type, dim, metadata);
+        assert!(cast(&mp_arr, &p_type.into()).is_err());
+    }
+
+    #[test]
+    fn downcast_multi_polygons_to_polygons() {
+        let geoms = geoarrow_test::raw::multipolygon::xy::geoms();
+        let single = geoms[0].clone().unwrap();
+
+        let typ = MultiPolygonType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let mp_arr = MultiPolygonBuilder::from_multi_polygons(
+            &[single.clone(), single.clone(), single],
+            typ,
+        )
+        .finish();
+        let (coord_type, dim, metadata) = mp_arr.ext_type().clone().into_inner();
+        let p_type = PolygonType::new(coord_type, dim, metadata);
+        let p_arr = cast(&mp_arr, &p_type.into()).unwrap();
+        assert!(p_arr.as_polygon_opt().is_some());
+    }
+
+    #[test]
+    fn downcast_multi_polygons_to_polygons_fails() {
+        let geoms = geoarrow_test::raw::multipolygon::xy::geoms();
+        let single = geoms[0].clone().unwrap();
+        let multi = geoms[1].clone().unwrap();
+
+        let typ = MultiPolygonType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let mp_arr =
+            MultiPolygonBuilder::from_multi_polygons(&[single.clone(), single, multi], typ)
+                .finish();
+        let (coord_type, dim, metadata) = mp_arr.ext_type().clone().into_inner();
+        let p_type = PolygonType::new(coord_type, dim, metadata);
+        assert!(cast(&mp_arr, &p_type.into()).is_err());
     }
 }
