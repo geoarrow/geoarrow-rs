@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
-use crate::GeoParquetWriterEncoding;
+use crate::writer::GeoParquetWriterEncoding;
 
 /// The actual encoding of the geometry in the Parquet file.
 ///

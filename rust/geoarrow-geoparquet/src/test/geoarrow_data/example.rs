@@ -17,7 +17,7 @@ use geoarrow_schema::{
     MultiPointType, MultiPolygonType, PointType, PolygonType,
 };
 
-use crate::GeoParquetRecordBatchReaderBuilder;
+use crate::reader::GeoParquetRecordBatchReaderBuilder;
 use crate::test::geoarrow_data_example_files;
 
 fn dimension_path_part(dim: Dimension) -> &'static str {

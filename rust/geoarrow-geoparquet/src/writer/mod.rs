@@ -1,3 +1,5 @@
+#![doc = include_str!("README.md")]
+
 #[cfg(feature = "async")]
 mod r#async;
 mod encode;

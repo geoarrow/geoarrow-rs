@@ -8,7 +8,7 @@ use geoarrow_array::array::from_arrow_array;
 use geoarrow_schema::CrsType;
 use serde_json::json;
 
-use crate::GeoParquetRecordBatchReaderBuilder;
+use crate::reader::GeoParquetRecordBatchReaderBuilder;
 use crate::test::geoarrow_data_example_crs_files;
 
 /// Read a GeoParquet file and return the WKT and geometry arrays; columns 0 and 1.
