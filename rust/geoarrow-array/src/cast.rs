@@ -326,7 +326,6 @@ fn impl_to_wkb<'a, O: OffsetSizeTrait>(geo_arr: &'a impl ArrayAccessor<'a>) -> R
 pub fn from_wkb<O: OffsetSizeTrait>(
     arr: &WkbArray<O>,
     to_type: GeoArrowType,
-    prefer_multi: bool,
 ) -> Result<Arc<dyn GeoArrowArray>> {
     let geoms = arr
         .iter()
@@ -349,19 +348,16 @@ pub fn from_wkb<O: OffsetSizeTrait>(
         MultiPolygon(typ) => {
             Arc::new(MultiPolygonBuilder::from_nullable_geometries(&geoms, typ)?.finish())
         }
-        GeometryCollection(typ) => Arc::new(
-            GeometryCollectionBuilder::from_nullable_geometries(&geoms, typ, prefer_multi)?
-                .finish(),
-        ),
+        GeometryCollection(typ) => {
+            Arc::new(GeometryCollectionBuilder::from_nullable_geometries(&geoms, typ)?.finish())
+        }
         Rect(_) => {
             return Err(GeoArrowError::General(format!(
                 "Invalid data type in from_wkb {:?}",
                 to_type,
             )));
         }
-        Geometry(typ) => {
-            Arc::new(GeometryBuilder::from_nullable_geometries(&geoms, typ, prefer_multi)?.finish())
-        }
+        Geometry(typ) => Arc::new(GeometryBuilder::from_nullable_geometries(&geoms, typ)?.finish()),
         Wkb(typ) => {
             // Note that here O is the _source_ offset type
             if O::IS_LARGE {
@@ -466,7 +462,6 @@ fn impl_to_wkt<'a, O: OffsetSizeTrait>(geo_arr: &'a impl ArrayAccessor<'a>) -> R
 pub fn from_wkt<O: OffsetSizeTrait>(
     arr: &WktArray<O>,
     to_type: GeoArrowType,
-    prefer_multi: bool,
 ) -> Result<Arc<dyn GeoArrowArray>> {
     let geoms = arr
         .iter()
@@ -489,19 +484,16 @@ pub fn from_wkt<O: OffsetSizeTrait>(
         MultiPolygon(typ) => {
             Arc::new(MultiPolygonBuilder::from_nullable_geometries(&geoms, typ)?.finish())
         }
-        GeometryCollection(typ) => Arc::new(
-            GeometryCollectionBuilder::from_nullable_geometries(&geoms, typ, prefer_multi)?
-                .finish(),
-        ),
+        GeometryCollection(typ) => {
+            Arc::new(GeometryCollectionBuilder::from_nullable_geometries(&geoms, typ)?.finish())
+        }
         Rect(_) => {
             return Err(GeoArrowError::General(format!(
                 "Invalid data type in from_wkt {:?}",
                 to_type,
             )));
         }
-        Geometry(typ) => {
-            Arc::new(GeometryBuilder::from_nullable_geometries(&geoms, typ, prefer_multi)?.finish())
-        }
+        Geometry(typ) => Arc::new(GeometryBuilder::from_nullable_geometries(&geoms, typ)?.finish()),
         Wkb(typ) => {
             let mut wkt_arr = to_wkb::<i32>(arr)?;
             wkt_arr.data_type = typ;
@@ -711,11 +703,11 @@ mod test {
                 let arr = test::point::array(coord_type, dim);
 
                 let wkb_arr = to_wkb::<i32>(&arr).unwrap();
-                let arr2 = from_wkb(&wkb_arr, arr.data_type().clone(), false).unwrap();
+                let arr2 = from_wkb(&wkb_arr, arr.data_type().clone()).unwrap();
                 assert_eq!(&arr, arr2.as_point());
 
                 let wkb_arr2 = to_wkb::<i64>(&arr).unwrap();
-                let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone(), false).unwrap();
+                let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone()).unwrap();
                 assert_eq!(&arr, arr3.as_point());
             }
         }
@@ -733,11 +725,11 @@ mod test {
                 let arr = test::linestring::array(coord_type, dim);
 
                 let wkb_arr = to_wkb::<i32>(&arr).unwrap();
-                let arr2 = from_wkb(&wkb_arr, arr.data_type().clone(), false).unwrap();
+                let arr2 = from_wkb(&wkb_arr, arr.data_type().clone()).unwrap();
                 assert_eq!(&arr, arr2.as_line_string());
 
                 let wkb_arr2 = to_wkb::<i64>(&arr).unwrap();
-                let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone(), false).unwrap();
+                let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone()).unwrap();
                 assert_eq!(&arr, arr3.as_line_string());
             }
         }
@@ -755,11 +747,11 @@ mod test {
                 let arr = test::polygon::array(coord_type, dim);
 
                 let wkb_arr = to_wkb::<i32>(&arr).unwrap();
-                let arr2 = from_wkb(&wkb_arr, arr.data_type().clone(), false).unwrap();
+                let arr2 = from_wkb(&wkb_arr, arr.data_type().clone()).unwrap();
                 assert_eq!(&arr, arr2.as_polygon());
 
                 let wkb_arr2 = to_wkb::<i64>(&arr).unwrap();
-                let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone(), false).unwrap();
+                let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone()).unwrap();
                 assert_eq!(&arr, arr3.as_polygon());
             }
         }
@@ -777,11 +769,11 @@ mod test {
                 let arr = test::multipoint::array(coord_type, dim);
 
                 let wkb_arr = to_wkb::<i32>(&arr).unwrap();
-                let arr2 = from_wkb(&wkb_arr, arr.data_type().clone(), false).unwrap();
+                let arr2 = from_wkb(&wkb_arr, arr.data_type().clone()).unwrap();
                 assert_eq!(&arr, arr2.as_multi_point());
 
                 let wkb_arr2 = to_wkb::<i64>(&arr).unwrap();
-                let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone(), false).unwrap();
+                let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone()).unwrap();
                 assert_eq!(&arr, arr3.as_multi_point());
             }
         }
@@ -799,11 +791,11 @@ mod test {
                 let arr = test::multilinestring::array(coord_type, dim);
 
                 let wkb_arr = to_wkb::<i32>(&arr).unwrap();
-                let arr2 = from_wkb(&wkb_arr, arr.data_type().clone(), false).unwrap();
+                let arr2 = from_wkb(&wkb_arr, arr.data_type().clone()).unwrap();
                 assert_eq!(&arr, arr2.as_multi_line_string());
 
                 let wkb_arr2 = to_wkb::<i64>(&arr).unwrap();
-                let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone(), false).unwrap();
+                let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone()).unwrap();
                 assert_eq!(&arr, arr3.as_multi_line_string());
             }
         }
@@ -821,11 +813,11 @@ mod test {
                 let arr = test::multipolygon::array(coord_type, dim);
 
                 let wkb_arr = to_wkb::<i32>(&arr).unwrap();
-                let arr2 = from_wkb(&wkb_arr, arr.data_type().clone(), false).unwrap();
+                let arr2 = from_wkb(&wkb_arr, arr.data_type().clone()).unwrap();
                 assert_eq!(&arr, arr2.as_multi_polygon());
 
                 let wkb_arr2 = to_wkb::<i64>(&arr).unwrap();
-                let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone(), false).unwrap();
+                let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone()).unwrap();
                 assert_eq!(&arr, arr3.as_multi_polygon());
             }
         }
@@ -840,17 +832,15 @@ mod test {
                 Dimension::XYM,
                 Dimension::XYZM,
             ] {
-                for prefer_multi in [false, true] {
-                    let arr = test::geometrycollection::array(coord_type, dim, prefer_multi);
+                let arr = test::geometrycollection::array(coord_type, dim, false);
 
-                    let wkb_arr = to_wkb::<i32>(&arr).unwrap();
-                    let arr2 = from_wkb(&wkb_arr, arr.data_type().clone(), prefer_multi).unwrap();
-                    assert_eq!(&arr, arr2.as_geometry_collection());
+                let wkb_arr = to_wkb::<i32>(&arr).unwrap();
+                let arr2 = from_wkb(&wkb_arr, arr.data_type().clone()).unwrap();
+                assert_eq!(&arr, arr2.as_geometry_collection());
 
-                    let wkb_arr2 = to_wkb::<i64>(&arr).unwrap();
-                    let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone(), prefer_multi).unwrap();
-                    assert_eq!(&arr, arr3.as_geometry_collection());
-                }
+                let wkb_arr2 = to_wkb::<i64>(&arr).unwrap();
+                let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone()).unwrap();
+                assert_eq!(&arr, arr3.as_geometry_collection());
             }
         }
     }
@@ -858,17 +848,15 @@ mod test {
     #[test]
     fn test_round_trip_wkb_geometry() {
         for coord_type in [CoordType::Interleaved, CoordType::Separated] {
-            for prefer_multi in [false, true] {
-                let arr = test::geometry::array(coord_type, prefer_multi);
+            let arr = test::geometry::array(coord_type, false);
 
-                let wkb_arr = to_wkb::<i32>(&arr).unwrap();
-                let arr2 = from_wkb(&wkb_arr, arr.data_type().clone(), prefer_multi).unwrap();
-                assert_eq!(&arr, arr2.as_geometry());
+            let wkb_arr = to_wkb::<i32>(&arr).unwrap();
+            let arr2 = from_wkb(&wkb_arr, arr.data_type().clone()).unwrap();
+            assert_eq!(&arr, arr2.as_geometry());
 
-                let wkb_arr2 = to_wkb::<i64>(&arr).unwrap();
-                let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone(), prefer_multi).unwrap();
-                assert_eq!(&arr, arr3.as_geometry());
-            }
+            let wkb_arr2 = to_wkb::<i64>(&arr).unwrap();
+            let arr3 = from_wkb(&wkb_arr2, arr.data_type().clone()).unwrap();
+            assert_eq!(&arr, arr3.as_geometry());
         }
     }
 
@@ -885,11 +873,11 @@ mod test {
                 let arr = test::point::array(coord_type, dim);
 
                 let wkt_arr = to_wkt::<i32>(&arr).unwrap();
-                let arr2 = from_wkt(&wkt_arr, arr.data_type().clone(), false).unwrap();
+                let arr2 = from_wkt(&wkt_arr, arr.data_type().clone()).unwrap();
                 assert_eq!(&arr, arr2.as_point());
 
                 let wkt_arr2 = to_wkt::<i64>(&arr).unwrap();
-                let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone(), false).unwrap();
+                let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone()).unwrap();
                 assert_eq!(&arr, arr3.as_point());
             }
         }
@@ -907,11 +895,11 @@ mod test {
                 let arr = test::linestring::array(coord_type, dim);
 
                 let wkt_arr = to_wkt::<i32>(&arr).unwrap();
-                let arr2 = from_wkt(&wkt_arr, arr.data_type().clone(), false).unwrap();
+                let arr2 = from_wkt(&wkt_arr, arr.data_type().clone()).unwrap();
                 assert_eq!(&arr, arr2.as_line_string());
 
                 let wkt_arr2 = to_wkt::<i64>(&arr).unwrap();
-                let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone(), false).unwrap();
+                let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone()).unwrap();
                 assert_eq!(&arr, arr3.as_line_string());
             }
         }
@@ -929,11 +917,11 @@ mod test {
                 let arr = test::polygon::array(coord_type, dim);
 
                 let wkt_arr = to_wkt::<i32>(&arr).unwrap();
-                let arr2 = from_wkt(&wkt_arr, arr.data_type().clone(), false).unwrap();
+                let arr2 = from_wkt(&wkt_arr, arr.data_type().clone()).unwrap();
                 assert_eq!(&arr, arr2.as_polygon());
 
                 let wkt_arr2 = to_wkt::<i64>(&arr).unwrap();
-                let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone(), false).unwrap();
+                let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone()).unwrap();
                 assert_eq!(&arr, arr3.as_polygon());
             }
         }
@@ -951,11 +939,11 @@ mod test {
                 let arr = test::multipoint::array(coord_type, dim);
 
                 let wkt_arr = to_wkt::<i32>(&arr).unwrap();
-                let arr2 = from_wkt(&wkt_arr, arr.data_type().clone(), false).unwrap();
+                let arr2 = from_wkt(&wkt_arr, arr.data_type().clone()).unwrap();
                 assert_eq!(&arr, arr2.as_multi_point());
 
                 let wkt_arr2 = to_wkt::<i64>(&arr).unwrap();
-                let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone(), false).unwrap();
+                let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone()).unwrap();
                 assert_eq!(&arr, arr3.as_multi_point());
             }
         }
@@ -973,11 +961,11 @@ mod test {
                 let arr = test::multilinestring::array(coord_type, dim);
 
                 let wkt_arr = to_wkt::<i32>(&arr).unwrap();
-                let arr2 = from_wkt(&wkt_arr, arr.data_type().clone(), false).unwrap();
+                let arr2 = from_wkt(&wkt_arr, arr.data_type().clone()).unwrap();
                 assert_eq!(&arr, arr2.as_multi_line_string());
 
                 let wkt_arr2 = to_wkt::<i64>(&arr).unwrap();
-                let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone(), false).unwrap();
+                let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone()).unwrap();
                 assert_eq!(&arr, arr3.as_multi_line_string());
             }
         }
@@ -995,11 +983,11 @@ mod test {
                 let arr = test::multipolygon::array(coord_type, dim);
 
                 let wkt_arr = to_wkt::<i32>(&arr).unwrap();
-                let arr2 = from_wkt(&wkt_arr, arr.data_type().clone(), false).unwrap();
+                let arr2 = from_wkt(&wkt_arr, arr.data_type().clone()).unwrap();
                 assert_eq!(&arr, arr2.as_multi_polygon());
 
                 let wkt_arr2 = to_wkt::<i64>(&arr).unwrap();
-                let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone(), false).unwrap();
+                let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone()).unwrap();
                 assert_eq!(&arr, arr3.as_multi_polygon());
             }
         }
@@ -1014,17 +1002,15 @@ mod test {
                 Dimension::XYM,
                 Dimension::XYZM,
             ] {
-                for prefer_multi in [false, true] {
-                    let arr = test::geometrycollection::array(coord_type, dim, prefer_multi);
+                let arr = test::geometrycollection::array(coord_type, dim, false);
 
-                    let wkt_arr = to_wkt::<i32>(&arr).unwrap();
-                    let arr2 = from_wkt(&wkt_arr, arr.data_type().clone(), prefer_multi).unwrap();
-                    assert_eq!(&arr, arr2.as_geometry_collection());
+                let wkt_arr = to_wkt::<i32>(&arr).unwrap();
+                let arr2 = from_wkt(&wkt_arr, arr.data_type().clone()).unwrap();
+                assert_eq!(&arr, arr2.as_geometry_collection());
 
-                    let wkt_arr2 = to_wkt::<i64>(&arr).unwrap();
-                    let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone(), prefer_multi).unwrap();
-                    assert_eq!(&arr, arr3.as_geometry_collection());
-                }
+                let wkt_arr2 = to_wkt::<i64>(&arr).unwrap();
+                let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone()).unwrap();
+                assert_eq!(&arr, arr3.as_geometry_collection());
             }
         }
     }
@@ -1032,17 +1018,15 @@ mod test {
     #[test]
     fn test_round_trip_wkt_geometry() {
         for coord_type in [CoordType::Interleaved, CoordType::Separated] {
-            for prefer_multi in [false, true] {
-                let arr = test::geometry::array(coord_type, prefer_multi);
+            let arr = test::geometry::array(coord_type, false);
 
-                let wkt_arr = to_wkt::<i32>(&arr).unwrap();
-                let arr2 = from_wkt(&wkt_arr, arr.data_type().clone(), prefer_multi).unwrap();
-                assert_eq!(&arr, arr2.as_geometry());
+            let wkt_arr = to_wkt::<i32>(&arr).unwrap();
+            let arr2 = from_wkt(&wkt_arr, arr.data_type().clone()).unwrap();
+            assert_eq!(&arr, arr2.as_geometry());
 
-                let wkt_arr2 = to_wkt::<i64>(&arr).unwrap();
-                let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone(), prefer_multi).unwrap();
-                assert_eq!(&arr, arr3.as_geometry());
-            }
+            let wkt_arr2 = to_wkt::<i64>(&arr).unwrap();
+            let arr3 = from_wkt(&wkt_arr2, arr.data_type().clone()).unwrap();
+            assert_eq!(&arr, arr3.as_geometry());
         }
     }
 

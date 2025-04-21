@@ -9,7 +9,6 @@ use wkt::WktNum;
 
 use crate::array::{GeometryCollectionArray, WkbArray};
 use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
-use crate::builder::mixed::DEFAULT_PREFER_MULTI;
 use crate::builder::{MixedGeometryBuilder, OffsetsBuilder};
 use crate::capacity::GeometryCollectionCapacity;
 use crate::error::{GeoArrowError, Result};
@@ -32,15 +31,14 @@ pub struct GeometryCollectionBuilder {
 
 impl<'a> GeometryCollectionBuilder {
     /// Creates a new empty [`GeometryCollectionBuilder`].
-    pub fn new(typ: GeometryCollectionType, prefer_multi: bool) -> Self {
-        Self::with_capacity(typ, Default::default(), prefer_multi)
+    pub fn new(typ: GeometryCollectionType) -> Self {
+        Self::with_capacity(typ, Default::default())
     }
 
     /// Creates a new empty [`GeometryCollectionBuilder`] with the provided capacity.
     pub fn with_capacity(
         typ: GeometryCollectionType,
         capacity: GeometryCollectionCapacity,
-        prefer_multi: bool,
     ) -> Self {
         Self {
             geoms: MixedGeometryBuilder::with_capacity_and_options(
@@ -48,11 +46,28 @@ impl<'a> GeometryCollectionBuilder {
                 capacity.mixed_capacity,
                 typ.coord_type(),
                 typ.metadata().clone(),
-                prefer_multi,
             ),
             geom_offsets: OffsetsBuilder::with_capacity(capacity.geom_capacity),
             validity: NullBufferBuilder::new(capacity.geom_capacity),
             data_type: typ,
+        }
+    }
+
+    /// Change whether to prefer multi or single arrays for new single-part geometries.
+    ///
+    /// If `true`, a new `Point` will be added to the `MultiPointBuilder` child array, a new
+    /// `LineString` will be added to the `MultiLineStringBuilder` child array, and a new `Polygon`
+    /// will be added to the `MultiPolygonBuilder` child array.
+    ///
+    /// This can be desired when the user wants to downcast the array to a single geometry array
+    /// later, as casting to a, say, `MultiPointArray` from a `GeometryCollectionArray` could be
+    /// done zero-copy.
+    ///
+    /// Note that only geometries added _after_ this method is called will be affected.
+    pub fn with_prefer_multi(self, prefer_multi: bool) -> Self {
+        Self {
+            geoms: self.geoms.with_prefer_multi(prefer_multi),
+            ..self
         }
     }
 
@@ -98,10 +113,9 @@ impl<'a> GeometryCollectionBuilder {
     pub fn with_capacity_from_iter<T: WktNum>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait<T = T> + 'a)>>,
         typ: GeometryCollectionType,
-        prefer_multi: bool,
     ) -> Result<Self> {
         let counter = GeometryCollectionCapacity::from_geometry_collections(geoms)?;
-        Ok(Self::with_capacity(typ, counter, prefer_multi))
+        Ok(Self::with_capacity(typ, counter))
     }
 
     /// Reserve more space in the underlying buffers with the capacity inferred from the provided
@@ -288,9 +302,8 @@ impl<'a> GeometryCollectionBuilder {
     pub fn from_geometry_collections(
         geoms: &[impl GeometryCollectionTrait<T = f64>],
         typ: GeometryCollectionType,
-        prefer_multi: bool,
     ) -> Result<Self> {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(Some), typ, prefer_multi)?;
+        let mut array = Self::with_capacity_from_iter(geoms.iter().map(Some), typ)?;
         array.extend_from_iter(geoms.iter().map(Some));
         Ok(array)
     }
@@ -299,10 +312,8 @@ impl<'a> GeometryCollectionBuilder {
     pub fn from_nullable_geometry_collections(
         geoms: &[Option<impl GeometryCollectionTrait<T = f64>>],
         typ: GeometryCollectionType,
-        prefer_multi: bool,
     ) -> Result<Self> {
-        let mut array =
-            Self::with_capacity_from_iter(geoms.iter().map(|x| x.as_ref()), typ, prefer_multi)?;
+        let mut array = Self::with_capacity_from_iter(geoms.iter().map(|x| x.as_ref()), typ)?;
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         Ok(array)
     }
@@ -311,10 +322,9 @@ impl<'a> GeometryCollectionBuilder {
     pub fn from_geometries(
         geoms: &[impl GeometryTrait<T = f64>],
         typ: GeometryCollectionType,
-        prefer_multi: bool,
     ) -> Result<Self> {
         let capacity = GeometryCollectionCapacity::from_geometries(geoms.iter().map(Some))?;
-        let mut array = Self::with_capacity(typ, capacity, prefer_multi);
+        let mut array = Self::with_capacity(typ, capacity);
         for geom in geoms {
             array.push_geometry(Some(geom))?;
         }
@@ -325,11 +335,10 @@ impl<'a> GeometryCollectionBuilder {
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         typ: GeometryCollectionType,
-        prefer_multi: bool,
     ) -> Result<Self> {
         let capacity =
             GeometryCollectionCapacity::from_geometries(geoms.iter().map(|x| x.as_ref()))?;
-        let mut array = Self::with_capacity(typ, capacity, prefer_multi);
+        let mut array = Self::with_capacity(typ, capacity);
         for geom in geoms {
             array.push_geometry(geom.as_ref())?;
         }
@@ -347,7 +356,7 @@ impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, GeometryCollectionType)>
             .iter()
             .map(|x| x.transpose())
             .collect::<Result<Vec<_>>>()?;
-        Self::from_nullable_geometries(&wkb_objects, typ, DEFAULT_PREFER_MULTI)
+        Self::from_nullable_geometries(&wkb_objects, typ)
     }
 }
 

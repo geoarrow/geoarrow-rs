@@ -68,7 +68,6 @@ impl MixedGeometryBuilder {
         capacity: MixedCapacity,
         coord_type: CoordType,
         metadata: Arc<Metadata>,
-        prefer_multi: bool,
     ) -> Self {
         // Don't store array metadata on child arrays
         Self {
@@ -100,7 +99,14 @@ impl MixedGeometryBuilder {
                 capacity.multi_polygon,
             ),
             offsets: vec![],
+            prefer_multi: DEFAULT_PREFER_MULTI,
+        }
+    }
+
+    pub(crate) fn with_prefer_multi(self, prefer_multi: bool) -> Self {
+        Self {
             prefer_multi,
+            ..self
         }
     }
 

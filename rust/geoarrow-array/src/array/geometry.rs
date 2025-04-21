@@ -147,7 +147,6 @@ impl GeometryArray {
             core::array::from_fn(|i| self.mline_strings[i].buffer_lengths()),
             core::array::from_fn(|i| self.mpolygons[i].buffer_lengths()),
             core::array::from_fn(|i| self.gcs[i].buffer_lengths()),
-            false,
         )
     }
 
@@ -759,14 +758,11 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
             let new_val = if let Some(arr) = arr.take() {
                 arr
             } else {
-                GeometryCollectionBuilder::new(
-                    GeometryCollectionType::new(
-                        coord_type,
-                        Dimension::from_order(i),
-                        Default::default(),
-                    ),
-                    false,
-                )
+                GeometryCollectionBuilder::new(GeometryCollectionType::new(
+                    coord_type,
+                    Dimension::from_order(i),
+                    Default::default(),
+                ))
                 .finish()
             };
             arr.replace(new_val);
@@ -970,14 +966,11 @@ fn empty_children(coord_type: CoordType) -> ChildrenArrays {
             .finish()
         }),
         core::array::from_fn(|i| {
-            GeometryCollectionBuilder::new(
-                GeometryCollectionType::new(
-                    coord_type,
-                    Dimension::from_order(i),
-                    Default::default(),
-                ),
-                false,
-            )
+            GeometryCollectionBuilder::new(GeometryCollectionType::new(
+                coord_type,
+                Dimension::from_order(i),
+                Default::default(),
+            ))
             .finish()
         }),
     )
@@ -1051,7 +1044,7 @@ mod test {
     fn geom_array(coord_type: CoordType) -> GeometryArray {
         let geoms = geoms();
         let typ = GeometryType::new(coord_type, Default::default());
-        GeometryBuilder::from_geometries(&geoms, typ, false)
+        GeometryBuilder::from_geometries(&geoms, typ)
             .unwrap()
             .finish()
     }
@@ -1117,7 +1110,7 @@ mod test {
             .collect::<Vec<_>>();
 
         let typ = GeometryType::new(CoordType::Interleaved, Default::default());
-        let geo_arr = GeometryBuilder::from_nullable_geometries(&geoms, typ, false)
+        let geo_arr = GeometryBuilder::from_nullable_geometries(&geoms, typ)
             .unwrap()
             .finish();
 
@@ -1132,7 +1125,7 @@ mod test {
         let expected_nulls = NullBuffer::from_iter(geoms.iter().map(|g| g.is_some()));
 
         let typ = GeometryType::new(CoordType::Interleaved, Default::default());
-        let geo_arr = GeometryBuilder::from_nullable_geometries(&geoms, typ, false)
+        let geo_arr = GeometryBuilder::from_nullable_geometries(&geoms, typ)
             .unwrap()
             .finish();
 

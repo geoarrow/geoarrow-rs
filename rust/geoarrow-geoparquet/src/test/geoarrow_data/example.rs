@@ -293,7 +293,7 @@ fn geometrycollection() {
         // NOTE: this hard-coding of `prefer_multi` to `true` matches some hard-coding somewhere in
         // the Parquet reader. Ideally we'd find a way to expose this.
         let from_wkt =
-            GeometryCollectionBuilder::from_nullable_geometries(&wkt_geoms, expected_typ, true)
+            GeometryCollectionBuilder::from_nullable_geometries(&wkt_geoms, expected_typ)
                 .unwrap()
                 .finish();
 

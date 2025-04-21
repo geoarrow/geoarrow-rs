@@ -80,16 +80,12 @@ pub struct GeometryBuilder {
 
 impl<'a> GeometryBuilder {
     /// Creates a new empty [`GeometryBuilder`].
-    pub fn new(typ: GeometryType, prefer_multi: bool) -> Self {
-        Self::with_capacity(typ, Default::default(), prefer_multi)
+    pub fn new(typ: GeometryType) -> Self {
+        Self::with_capacity(typ, Default::default())
     }
 
     /// Creates a new [`GeometryBuilder`] with given capacity and no validity.
-    pub fn with_capacity(
-        typ: GeometryType,
-        capacity: GeometryCapacity,
-        prefer_multi: bool,
-    ) -> Self {
+    pub fn with_capacity(typ: GeometryType, capacity: GeometryCapacity) -> Self {
         let metadata = typ.metadata().clone();
         let coord_type = typ.coord_type();
 
@@ -140,7 +136,6 @@ impl<'a> GeometryBuilder {
             GeometryCollectionBuilder::with_capacity(
                 GeometryCollectionType::new(coord_type, dim, Default::default()),
                 capacity.geometry_collection(dim),
-                prefer_multi,
             )
         });
 
@@ -156,8 +151,27 @@ impl<'a> GeometryBuilder {
             mpolygons,
             gcs,
             offsets: vec![],
-            prefer_multi,
             deferred_nulls: 0,
+            prefer_multi: DEFAULT_PREFER_MULTI,
+        }
+    }
+
+    /// Change whether to prefer multi or single arrays for new single-part geometries.
+    ///
+    /// If `true`, a new `Point` will be added to the `MultiPointBuilder` child array, a new
+    /// `LineString` will be added to the `MultiLineStringBuilder` child array, and a new `Polygon`
+    /// will be added to the `MultiPolygonBuilder` child array.
+    ///
+    /// This can be desired when the user wants to downcast the array to a single geometry array
+    /// later, as casting to a, say, `MultiPointArray` from a `GeometryArray` could be done
+    /// zero-copy.
+    ///
+    /// Note that only geometries added _after_ this method is called will be affected.
+    pub fn with_prefer_multi(self, prefer_multi: bool) -> Self {
+        Self {
+            prefer_multi,
+            gcs: self.gcs.map(|gc| gc.with_prefer_multi(prefer_multi)),
+            ..self
         }
     }
 
@@ -285,10 +299,9 @@ impl<'a> GeometryBuilder {
     pub fn with_capacity_from_iter<T: WktNum>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = T> + 'a)>>,
         typ: GeometryType,
-        prefer_multi: bool,
     ) -> Result<Self> {
-        let counter = GeometryCapacity::from_geometries(geoms, prefer_multi)?;
-        Ok(Self::with_capacity(typ, counter, prefer_multi))
+        let counter = GeometryCapacity::from_geometries(geoms)?;
+        Ok(Self::with_capacity(typ, counter))
     }
 
     /// Reserve more space in the underlying buffers with the capacity inferred from the provided
@@ -296,9 +309,8 @@ impl<'a> GeometryBuilder {
     pub fn reserve_from_iter<T: WktNum>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = T> + 'a)>>,
-        prefer_multi: bool,
     ) -> Result<()> {
-        let counter = GeometryCapacity::from_geometries(geoms, prefer_multi)?;
+        let counter = GeometryCapacity::from_geometries(geoms)?;
         self.reserve(counter);
         Ok(())
     }
@@ -308,9 +320,8 @@ impl<'a> GeometryBuilder {
     pub fn reserve_exact_from_iter<T: WktNum>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = T> + 'a)>>,
-        prefer_multi: bool,
     ) -> Result<()> {
-        let counter = GeometryCapacity::from_geometries(geoms, prefer_multi)?;
+        let counter = GeometryCapacity::from_geometries(geoms)?;
         self.reserve_exact(counter);
         Ok(())
     }
@@ -786,9 +797,8 @@ impl<'a> GeometryBuilder {
     pub fn from_geometries(
         geoms: &[impl GeometryTrait<T = f64>],
         typ: GeometryType,
-        prefer_multi: bool,
     ) -> Result<Self> {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(Some), typ, prefer_multi)?;
+        let mut array = Self::with_capacity_from_iter(geoms.iter().map(Some), typ)?;
         array.extend_from_iter(geoms.iter().map(Some));
         Ok(array)
     }
@@ -797,10 +807,8 @@ impl<'a> GeometryBuilder {
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         typ: GeometryType,
-        prefer_multi: bool,
     ) -> Result<Self> {
-        let mut array =
-            Self::with_capacity_from_iter(geoms.iter().map(|x| x.as_ref()), typ, prefer_multi)?;
+        let mut array = Self::with_capacity_from_iter(geoms.iter().map(|x| x.as_ref()), typ)?;
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         Ok(array)
     }
@@ -816,7 +824,7 @@ impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, GeometryType)> for GeometryBuilde
             .iter()
             .map(|x| x.transpose())
             .collect::<Result<Vec<_>>>()?;
-        Self::from_nullable_geometries(&wkb_objects, typ, DEFAULT_PREFER_MULTI)
+        Self::from_nullable_geometries(&wkb_objects, typ)
     }
 }
 
@@ -876,7 +884,7 @@ mod test {
     fn all_items_null() {
         // Testing the behavior of deferred nulls when there are no valid geometries.
         let typ = GeometryType::new(CoordType::Interleaved, Default::default());
-        let mut builder = GeometryBuilder::new(typ, false);
+        let mut builder = GeometryBuilder::new(typ);
 
         builder.push_null();
         builder.push_null();
@@ -894,7 +902,7 @@ mod test {
         let coord_type = CoordType::Interleaved;
         let typ = GeometryType::new(coord_type, Default::default());
 
-        let mut builder = GeometryBuilder::new(typ, false);
+        let mut builder = GeometryBuilder::new(typ);
         builder.push_null();
         builder.push_null();
 
@@ -926,7 +934,7 @@ mod test {
         let coord_type = CoordType::Interleaved;
         let typ = GeometryType::new(coord_type, Default::default());
 
-        let mut builder = GeometryBuilder::new(typ, false);
+        let mut builder = GeometryBuilder::new(typ);
         builder.push_null();
         builder.push_null();
 
@@ -966,7 +974,7 @@ mod test {
         let coord_type = CoordType::Interleaved;
         let typ = GeometryType::new(coord_type, Default::default());
 
-        let mut builder = GeometryBuilder::new(typ, false);
+        let mut builder = GeometryBuilder::new(typ);
         let point = wkt! { POINT Z (30. 10. 40.) };
         builder.push_point(Some(&point)).unwrap();
         builder.push_null();
