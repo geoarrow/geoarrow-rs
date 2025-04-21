@@ -93,6 +93,14 @@ impl LineStringBuilder {
         Ok(())
     }
 
+    /// Add a valid but empty LineString to the end of this array.
+    #[inline]
+    pub fn push_empty(&mut self) {
+        self.geom_offsets.extend_constant(1);
+        self.validity.append(true);
+    }
+
+    /// Add a new null value to the end of this array.
     #[inline]
     pub(crate) fn push_null(&mut self) {
         self.geom_offsets.extend_constant(1);
@@ -218,7 +226,10 @@ impl LineStringBuilder {
             match value.as_type() {
                 GeometryType::LineString(g) => self.push_line_string(Some(g))?,
                 GeometryType::MultiLineString(ml) => {
-                    if ml.num_line_strings() == 1 {
+                    let num_line_strings = ml.num_line_strings();
+                    if num_line_strings == 0 {
+                        self.push_empty();
+                    } else if num_line_strings == 1 {
                         self.push_line_string(Some(&ml.line_string(0).unwrap()))?
                     } else {
                         return Err(GeoArrowError::General("Incorrect type".to_string()));

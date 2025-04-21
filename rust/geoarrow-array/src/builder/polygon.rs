@@ -243,7 +243,10 @@ impl PolygonBuilder {
             match value.as_type() {
                 GeometryType::Polygon(g) => self.push_polygon(Some(g))?,
                 GeometryType::MultiPolygon(mp) => {
-                    if mp.num_polygons() == 1 {
+                    let num_polygons = mp.num_polygons();
+                    if num_polygons == 0 {
+                        self.push_empty();
+                    } else if num_polygons == 1 {
                         self.push_polygon(Some(&mp.polygon(0).unwrap()))?
                     } else {
                         return Err(GeoArrowError::General("Incorrect type".to_string()));
@@ -293,7 +296,7 @@ impl PolygonBuilder {
 
     #[inline]
     pub(crate) fn push_empty(&mut self) {
-        self.geom_offsets.try_push_usize(0).unwrap();
+        self.geom_offsets.extend_constant(1);
         self.validity.append(true);
     }
 

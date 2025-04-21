@@ -153,7 +153,10 @@ impl PointBuilder {
             match value.as_type() {
                 GeometryType::Point(p) => self.push_point(Some(p)),
                 GeometryType::MultiPoint(mp) => {
-                    if mp.num_points() == 1 {
+                    let num_points = mp.num_points();
+                    if num_points == 0 {
+                        self.push_empty();
+                    } else if num_points == 1 {
                         self.push_point(Some(&mp.point(0).unwrap()))
                     } else {
                         return Err(GeoArrowError::General("Incorrect type".to_string()));

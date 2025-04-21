@@ -36,6 +36,10 @@ pub enum GeoArrowError {
     #[error(transparent)]
     Arrow(#[from] ArrowError),
 
+    /// Error during casting from one type to another
+    #[error("Error during casting from one type to another: {0}")]
+    Cast(String),
+
     /// [std::io::Error]
     #[error(transparent)]
     IOError(#[from] std::io::Error),

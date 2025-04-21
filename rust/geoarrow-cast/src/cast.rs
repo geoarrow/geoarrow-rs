@@ -3,13 +3,19 @@ use std::sync::Arc;
 use geoarrow_array::array::{
     GeometryArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
 };
+use geoarrow_array::builder::{
+    GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder, MultiPointBuilder,
+    MultiPolygonBuilder, PointBuilder, PolygonBuilder,
+};
+use geoarrow_array::capacity::{LineStringCapacity, PolygonCapacity};
 use geoarrow_array::cast::{AsGeoArrowArray, from_wkb, from_wkt, to_wkb, to_wkt};
 use geoarrow_array::error::{GeoArrowError, Result};
-use geoarrow_array::{GeoArrowArray, GeoArrowType};
+use geoarrow_array::{ArrayAccessor, GeoArrowArray, GeoArrowType};
 
 /// Cast a `GeoArrowArray` to another `GeoArrowType`.
 ///
-/// Criteria:
+/// ### Criteria:
+///
 /// - Dimension must be compatible:
 ///     - If the source array and destination type are both dimension-aware, then their dimensions
 ///       must match.
@@ -20,28 +26,37 @@ use geoarrow_array::{GeoArrowArray, GeoArrowType};
 ///   `MultiLineString`, etc. But not `MultiPoint` to `Point`, etc. Those need to be aware of
 ///   potentially multiple batches of arrays. Whereas this `cast` can be applied in isolation to
 ///   multiple batches of a chunked array.
+///
+/// ### Infallible casts:
+///
+/// As long as the above criteria are met, these casts will always succeed without erroring.
+///
+/// - The same type with different coord types.
+/// - Any source array type to `Geometry`, `Wkb`, `LargeWkb`, `Wkt`, or `LargeWkt`.
+/// - `Point` to `MultiPoint`
+/// - `LineString` to `MultiLineString`
+/// - `Polygon` to `MultiPolygon`
+///
+/// ### Fallible casts:
+///
+/// - `Geometry` to any other native type.
+/// - Parsing `WKB` or `WKT` to any native type other than `Geometry`.
+/// - `MultiPoint` to `Point`
+/// - `MultiLineString` to `LineString`
+/// - `MultiPolygon` to `Polygon`
+///
 pub fn cast(array: &dyn GeoArrowArray, to_type: &GeoArrowType) -> Result<Arc<dyn GeoArrowArray>> {
     // We want to error if the dimensions aren't compatible, but allow conversions to
     // `GeometryArray`, `WKB`, etc where the target array isn't parameterized by a specific
     // dimension.
-    match (array.data_type().dimension(), to_type.dimension()) {
-        (Some(from_dim), Some(to_dim)) => {
-            if from_dim != to_dim {
-                return Err(GeoArrowError::General(format!(
-                    "Cannot cast from {:?} to {:?}: incompatible dimensions",
-                    from_dim, to_dim
-                )));
-            }
+    if let (Some(from_dim), Some(to_dim)) = (array.data_type().dimension(), to_type.dimension()) {
+        if from_dim != to_dim {
+            return Err(GeoArrowError::General(format!(
+                "Cannot cast from {:?} to {:?}: incompatible dimensions",
+                from_dim, to_dim
+            )));
         }
-        (None, None) => {}
-        (Some(_), None) => {}
-        (None, Some(_)) => {
-            return Err(GeoArrowError::General(
-                "Cannot infallibly cast from a dimension-less array to a dimension-aware array."
-                    .to_string(),
-            ));
-        }
-    };
+    }
 
     if array.data_type().metadata() != to_type.metadata() {
         return Err(GeoArrowError::General(format!(
@@ -89,6 +104,13 @@ pub fn cast(array: &dyn GeoArrowArray, to_type: &GeoArrowType) -> Result<Arc<dyn
             let geom_array = GeometryArray::from(array.as_polygon().clone());
             Arc::new(geom_array.into_coord_type(to_type.coord_type()))
         }
+        (MultiPoint(_), Point(to_type)) => {
+            let mut builder = PointBuilder::with_capacity(to_type.clone(), array.len());
+            for geom in array.as_multi_point().iter() {
+                builder.push_geometry(geom.transpose()?.as_ref())?;
+            }
+            Arc::new(builder.finish())
+        }
         (MultiPoint(_), MultiPoint(to_type)) => {
             let array = array.as_multi_point();
             Arc::new(array.clone().into_coord_type(to_type.coord_type()))
@@ -96,6 +118,17 @@ pub fn cast(array: &dyn GeoArrowArray, to_type: &GeoArrowType) -> Result<Arc<dyn
         (MultiPoint(_), Geometry(to_type)) => {
             let geom_array = GeometryArray::from(array.as_multi_point().clone());
             Arc::new(geom_array.into_coord_type(to_type.coord_type()))
+        }
+        (MultiLineString(_), LineString(to_type)) => {
+            let ml_array = array.as_multi_line_string();
+            let ml_capacity = ml_array.buffer_lengths();
+            let ls_capacity =
+                LineStringCapacity::new(ml_capacity.coord_capacity(), ml_capacity.geom_capacity());
+            let mut builder = LineStringBuilder::with_capacity(to_type.clone(), ls_capacity);
+            for geom in array.as_multi_line_string().iter() {
+                builder.push_geometry(geom.transpose()?.as_ref())?;
+            }
+            Arc::new(builder.finish())
         }
         (MultiLineString(_), MultiLineString(to_type)) => {
             let array = array.as_multi_line_string();
@@ -105,6 +138,20 @@ pub fn cast(array: &dyn GeoArrowArray, to_type: &GeoArrowType) -> Result<Arc<dyn
             let geom_array = GeometryArray::from(array.as_multi_line_string().clone());
             Arc::new(geom_array.into_coord_type(to_type.coord_type()))
         }
+        (MultiPolygon(_), Polygon(to_type)) => {
+            let mp_array = array.as_multi_polygon();
+            let mp_capacity = mp_array.buffer_lengths();
+            let p_capacity = PolygonCapacity::new(
+                mp_capacity.coord_capacity(),
+                mp_capacity.ring_capacity(),
+                mp_capacity.geom_capacity(),
+            );
+            let mut builder = PolygonBuilder::with_capacity(to_type.clone(), p_capacity);
+            for geom in mp_array.iter() {
+                builder.push_geometry(geom.transpose()?.as_ref())?;
+            }
+            Arc::new(builder.finish())
+        }
         (MultiPolygon(_), MultiPolygon(to_type)) => {
             let array = array.as_multi_polygon();
             Arc::new(array.clone().into_coord_type(to_type.coord_type()))
@@ -112,6 +159,74 @@ pub fn cast(array: &dyn GeoArrowArray, to_type: &GeoArrowType) -> Result<Arc<dyn
         (MultiPolygon(_), Geometry(to_type)) => {
             let geom_array = GeometryArray::from(array.as_multi_polygon().clone());
             Arc::new(geom_array.into_coord_type(to_type.coord_type()))
+        }
+        (Geometry(_), Point(to_type)) => {
+            let mut builder = PointBuilder::with_capacity(to_type.clone(), array.len());
+            for geom in array.as_geometry().iter() {
+                builder.push_geometry(geom.transpose()?.as_ref())?;
+            }
+            Arc::new(builder.finish())
+        }
+        (Geometry(_), LineString(to_type)) => {
+            let g_array = array.as_geometry();
+            let g_capacity = g_array.buffer_lengths();
+            let ls_capacity = g_capacity.line_string(to_type.dimension());
+            let mut builder = LineStringBuilder::with_capacity(to_type.clone(), ls_capacity);
+            for geom in array.as_geometry().iter() {
+                builder.push_geometry(geom.transpose()?.as_ref())?;
+            }
+            Arc::new(builder.finish())
+        }
+        (Geometry(_), Polygon(to_type)) => {
+            let g_array = array.as_geometry();
+            let g_capacity = g_array.buffer_lengths();
+            let p_capacity = g_capacity.polygon(to_type.dimension());
+            let mut builder = PolygonBuilder::with_capacity(to_type.clone(), p_capacity);
+            for geom in array.as_geometry().iter() {
+                builder.push_geometry(geom.transpose()?.as_ref())?;
+            }
+            Arc::new(builder.finish())
+        }
+        (Geometry(_), MultiPoint(to_type)) => {
+            let g_array = array.as_geometry();
+            let g_capacity = g_array.buffer_lengths();
+            let mp_capacity = g_capacity.multi_point(to_type.dimension());
+            let mut builder = MultiPointBuilder::with_capacity(to_type.clone(), mp_capacity);
+            for geom in array.as_geometry().iter() {
+                builder.push_geometry(geom.transpose()?.as_ref())?;
+            }
+            Arc::new(builder.finish())
+        }
+        (Geometry(_), MultiLineString(to_type)) => {
+            let g_array = array.as_geometry();
+            let g_capacity = g_array.buffer_lengths();
+            let ml_capacity = g_capacity.multi_line_string(to_type.dimension());
+            let mut builder = MultiLineStringBuilder::with_capacity(to_type.clone(), ml_capacity);
+            for geom in array.as_geometry().iter() {
+                builder.push_geometry(geom.transpose()?.as_ref())?;
+            }
+            Arc::new(builder.finish())
+        }
+        (Geometry(_), MultiPolygon(to_type)) => {
+            let g_array = array.as_geometry();
+            let g_capacity = g_array.buffer_lengths();
+            let mp_capacity = g_capacity.multi_polygon(to_type.dimension());
+            let mut builder = MultiPolygonBuilder::with_capacity(to_type.clone(), mp_capacity);
+            for geom in array.as_geometry().iter() {
+                builder.push_geometry(geom.transpose()?.as_ref())?;
+            }
+            Arc::new(builder.finish())
+        }
+        (Geometry(_), GeometryCollection(to_type)) => {
+            let g_array = array.as_geometry();
+            let g_capacity = g_array.buffer_lengths();
+            let gc_capacity = g_capacity.geometry_collection(to_type.dimension());
+            let mut builder =
+                GeometryCollectionBuilder::with_capacity(to_type.clone(), gc_capacity, false);
+            for geom in array.as_geometry().iter() {
+                builder.push_geometry(geom.transpose()?.as_ref())?;
+            }
+            Arc::new(builder.finish())
         }
         (Geometry(_), Geometry(to_type)) => {
             let array = array.as_geometry();
@@ -146,8 +261,13 @@ pub fn cast(array: &dyn GeoArrowArray, to_type: &GeoArrowType) -> Result<Arc<dyn
 
 #[cfg(test)]
 mod test {
+    use geoarrow_array::builder::MultiPointBuilder;
     use geoarrow_array::{IntoArrow, test};
-    use geoarrow_schema::{CoordType, Dimension, GeometryType, MultiPointType, PointType, WkbType};
+    use geoarrow_schema::{
+        CoordType, Dimension, GeometryType, LineStringType, MultiLineStringType, MultiPointType,
+        MultiPolygonType, PointType, PolygonType, WkbType,
+    };
+    use wkt::wkt;
 
     use super::*;
 
@@ -199,5 +319,240 @@ mod test {
             GeoArrowType::LargeWkb(WkbType::new(array.data_type().metadata().clone()));
         let wkb_array = cast(&array, &large_wkb_type).unwrap();
         assert!(wkb_array.as_wkb_opt::<i64>().is_some());
+    }
+
+    #[test]
+    fn downcast_multi_points_to_points() {
+        let mp1 = wkt! { MULTIPOINT(0.0 0.0) };
+        let mp2 = wkt! { MULTIPOINT(1.0 2.0) };
+        let mp3 = wkt! { MULTIPOINT(3.0 4.0) };
+
+        let typ = MultiPointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let mp_arr = MultiPointBuilder::from_multi_points(&[mp1, mp2, mp3], typ).finish();
+        let (coord_type, dim, metadata) = mp_arr.ext_type().clone().into_inner();
+        let p_type = PointType::new(coord_type, dim, metadata);
+        let p_arr = cast(&mp_arr, &p_type.into()).unwrap();
+        assert!(p_arr.as_point_opt().is_some());
+    }
+
+    #[test]
+    fn downcast_multi_points_to_points_fails() {
+        let mp1 = wkt! { MULTIPOINT(0.0 0.0) };
+        let mp2 = wkt! { MULTIPOINT(1.0 2.0) };
+        let mp3 = wkt! { MULTIPOINT(3.0 4.0, 5.0 6.0) };
+
+        let typ = MultiPointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let mp_arr = MultiPointBuilder::from_multi_points(&[mp1, mp2, mp3], typ).finish();
+        let (coord_type, dim, metadata) = mp_arr.ext_type().clone().into_inner();
+        let p_type = PointType::new(coord_type, dim, metadata);
+        assert!(cast(&mp_arr, &p_type.into()).is_err());
+    }
+
+    #[test]
+    fn downcast_multi_line_strings_to_line_strings() {
+        let geoms = geoarrow_test::raw::multilinestring::xy::geoms();
+        let single = geoms[0].clone().unwrap();
+
+        let typ =
+            MultiLineStringType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let mp_arr = MultiLineStringBuilder::from_multi_line_strings(
+            &[single.clone(), single.clone(), single],
+            typ,
+        )
+        .finish();
+        let (coord_type, dim, metadata) = mp_arr.ext_type().clone().into_inner();
+        let p_type = LineStringType::new(coord_type, dim, metadata);
+        let p_arr = cast(&mp_arr, &p_type.into()).unwrap();
+        assert!(p_arr.as_line_string_opt().is_some());
+    }
+
+    #[test]
+    fn downcast_multi_line_strings_to_line_strings_fails() {
+        let geoms = geoarrow_test::raw::multilinestring::xy::geoms();
+        let single = geoms[0].clone().unwrap();
+        let multi = geoms[1].clone().unwrap();
+
+        let typ =
+            MultiLineStringType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let mp_arr =
+            MultiLineStringBuilder::from_multi_line_strings(&[single.clone(), single, multi], typ)
+                .finish();
+        let (coord_type, dim, metadata) = mp_arr.ext_type().clone().into_inner();
+        let p_type = LineStringType::new(coord_type, dim, metadata);
+        assert!(cast(&mp_arr, &p_type.into()).is_err());
+    }
+
+    #[test]
+    fn downcast_multi_polygons_to_polygons() {
+        let geoms = geoarrow_test::raw::multipolygon::xy::geoms();
+        let single = geoms[0].clone().unwrap();
+
+        let typ = MultiPolygonType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let mp_arr = MultiPolygonBuilder::from_multi_polygons(
+            &[single.clone(), single.clone(), single],
+            typ,
+        )
+        .finish();
+        let (coord_type, dim, metadata) = mp_arr.ext_type().clone().into_inner();
+        let p_type = PolygonType::new(coord_type, dim, metadata);
+        let p_arr = cast(&mp_arr, &p_type.into()).unwrap();
+        assert!(p_arr.as_polygon_opt().is_some());
+    }
+
+    #[test]
+    fn downcast_multi_polygons_to_polygons_fails() {
+        let geoms = geoarrow_test::raw::multipolygon::xy::geoms();
+        let single = geoms[0].clone().unwrap();
+        let multi = geoms[1].clone().unwrap();
+
+        let typ = MultiPolygonType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let mp_arr =
+            MultiPolygonBuilder::from_multi_polygons(&[single.clone(), single, multi], typ)
+                .finish();
+        let (coord_type, dim, metadata) = mp_arr.ext_type().clone().into_inner();
+        let p_type = PolygonType::new(coord_type, dim, metadata);
+        assert!(cast(&mp_arr, &p_type.into()).is_err());
+    }
+
+    #[test]
+    fn downcast_geometry_to_point() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let array = test::point::array(coord_type, dim);
+                let orig_type = array.data_type().clone();
+                let g_array = GeometryArray::from(array.clone());
+
+                let casted = cast(&g_array, &orig_type).unwrap();
+                assert_eq!(casted.as_point(), &array);
+            }
+        }
+    }
+
+    #[test]
+    fn downcast_geometry_to_line_string() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let array = test::linestring::array(coord_type, dim);
+                let orig_type = array.data_type().clone();
+                let g_array = GeometryArray::from(array.clone());
+
+                let casted = cast(&g_array, &orig_type).unwrap();
+                assert_eq!(casted.as_line_string(), &array);
+            }
+        }
+    }
+
+    #[test]
+    fn downcast_geometry_to_polygon() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let array = test::polygon::array(coord_type, dim);
+                let orig_type = array.data_type().clone();
+                let g_array = GeometryArray::from(array.clone());
+
+                let casted = cast(&g_array, &orig_type).unwrap();
+                assert_eq!(casted.as_polygon(), &array);
+            }
+        }
+    }
+
+    #[test]
+    fn downcast_geometry_to_multi_point() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let array = test::multipoint::array(coord_type, dim);
+                let orig_type = array.data_type().clone();
+                let g_array = GeometryArray::from(array.clone());
+
+                let casted = cast(&g_array, &orig_type).unwrap();
+                assert_eq!(casted.as_multi_point(), &array);
+            }
+        }
+    }
+
+    #[test]
+    fn downcast_geometry_to_multi_line_string() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let array = test::multilinestring::array(coord_type, dim);
+                let orig_type = array.data_type().clone();
+                let g_array = GeometryArray::from(array.clone());
+
+                let casted = cast(&g_array, &orig_type).unwrap();
+                assert_eq!(casted.as_multi_line_string(), &array);
+            }
+        }
+    }
+
+    #[test]
+    fn downcast_geometry_to_multi_polygon() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let array = test::multipolygon::array(coord_type, dim);
+                let orig_type = array.data_type().clone();
+                let g_array = GeometryArray::from(array.clone());
+
+                let casted = cast(&g_array, &orig_type).unwrap();
+                assert_eq!(casted.as_multi_polygon(), &array);
+            }
+        }
+    }
+
+    #[test]
+    fn downcast_geometry_to_geometry_collection() {
+        for coord_type in [CoordType::Interleaved, CoordType::Separated] {
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                for prefer_multi in [false, true] {
+                    let array = test::geometrycollection::array(coord_type, dim, prefer_multi);
+                    let orig_type = array.data_type().clone();
+                    let g_array = GeometryArray::from(array.clone());
+
+                    let casted = cast(&g_array, &orig_type).unwrap();
+                    assert_eq!(casted.as_geometry_collection(), &array);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn downcast_geometry_to_point_fails() {
+        let array = test::geometry::array(CoordType::Interleaved, false);
+        let point_type = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        assert!(cast(&array, &point_type.into()).is_err());
     }
 }

@@ -94,49 +94,52 @@ impl<'a> GeometryBuilder {
         let coord_type = typ.coord_type();
 
         let points = core::array::from_fn(|i| {
+            let dim = Dimension::from_order(i);
             PointBuilder::with_capacity(
-                PointType::new(coord_type, Dimension::from_order(i), Default::default()),
-                capacity.points()[i],
+                PointType::new(coord_type, dim, Default::default()),
+                capacity.point(dim),
             )
         });
         let line_strings = core::array::from_fn(|i| {
+            let dim = Dimension::from_order(i);
             LineStringBuilder::with_capacity(
-                LineStringType::new(coord_type, Dimension::from_order(i), Default::default()),
-                capacity.line_strings()[i],
+                LineStringType::new(coord_type, dim, Default::default()),
+                capacity.line_string(dim),
             )
         });
         let polygons = core::array::from_fn(|i| {
+            let dim = Dimension::from_order(i);
             PolygonBuilder::with_capacity(
-                PolygonType::new(coord_type, Dimension::from_order(i), Default::default()),
-                capacity.polygons()[i],
+                PolygonType::new(coord_type, dim, Default::default()),
+                capacity.polygon(dim),
             )
         });
         let mpoints = core::array::from_fn(|i| {
+            let dim = Dimension::from_order(i);
             MultiPointBuilder::with_capacity(
-                MultiPointType::new(coord_type, Dimension::from_order(i), Default::default()),
-                capacity.multi_points()[i],
+                MultiPointType::new(coord_type, dim, Default::default()),
+                capacity.multi_point(dim),
             )
         });
         let mline_strings = core::array::from_fn(|i| {
+            let dim = Dimension::from_order(i);
             MultiLineStringBuilder::with_capacity(
-                MultiLineStringType::new(coord_type, Dimension::from_order(i), Default::default()),
-                capacity.multi_line_strings()[i],
+                MultiLineStringType::new(coord_type, dim, Default::default()),
+                capacity.multi_line_string(dim),
             )
         });
         let mpolygons = core::array::from_fn(|i| {
+            let dim = Dimension::from_order(i);
             MultiPolygonBuilder::with_capacity(
-                MultiPolygonType::new(coord_type, Dimension::from_order(i), Default::default()),
-                capacity.multi_polygons()[i],
+                MultiPolygonType::new(coord_type, dim, Default::default()),
+                capacity.multi_polygon(dim),
             )
         });
         let gcs = core::array::from_fn(|i| {
+            let dim = Dimension::from_order(i);
             GeometryCollectionBuilder::with_capacity(
-                GeometryCollectionType::new(
-                    coord_type,
-                    Dimension::from_order(i),
-                    Default::default(),
-                ),
-                capacity.geometry_collections()[i],
+                GeometryCollectionType::new(coord_type, dim, Default::default()),
+                capacity.geometry_collection(dim),
                 prefer_multi,
             )
         });
@@ -168,47 +171,35 @@ impl<'a> GeometryBuilder {
         self.types.reserve(total_num_geoms);
         self.offsets.reserve(total_num_geoms);
 
-        capacity.points().iter().enumerate().for_each(|(i, cap)| {
+        capacity.points.iter().enumerate().for_each(|(i, cap)| {
             self.points[i].reserve(*cap);
         });
         capacity
-            .line_strings()
+            .line_strings
             .iter()
             .enumerate()
             .for_each(|(i, cap)| {
                 self.line_strings[i].reserve(*cap);
             });
-        capacity.polygons().iter().enumerate().for_each(|(i, cap)| {
+        capacity.polygons.iter().enumerate().for_each(|(i, cap)| {
             self.polygons[i].reserve(*cap);
         });
+        capacity.mpoints.iter().enumerate().for_each(|(i, cap)| {
+            self.mpoints[i].reserve(*cap);
+        });
         capacity
-            .multi_points()
-            .iter()
-            .enumerate()
-            .for_each(|(i, cap)| {
-                self.mpoints[i].reserve(*cap);
-            });
-        capacity
-            .multi_line_strings()
+            .mline_strings
             .iter()
             .enumerate()
             .for_each(|(i, cap)| {
                 self.mline_strings[i].reserve(*cap);
             });
-        capacity
-            .multi_polygons()
-            .iter()
-            .enumerate()
-            .for_each(|(i, cap)| {
-                self.mpolygons[i].reserve(*cap);
-            });
-        capacity
-            .geometry_collections()
-            .iter()
-            .enumerate()
-            .for_each(|(i, cap)| {
-                self.gcs[i].reserve(*cap);
-            });
+        capacity.mpolygons.iter().enumerate().for_each(|(i, cap)| {
+            self.mpolygons[i].reserve(*cap);
+        });
+        capacity.gcs.iter().enumerate().for_each(|(i, cap)| {
+            self.gcs[i].reserve(*cap);
+        });
     }
 
     /// Reserves the minimum capacity for at least `additional` more Geometries.
@@ -228,47 +219,35 @@ impl<'a> GeometryBuilder {
         self.types.reserve_exact(total_num_geoms);
         self.offsets.reserve_exact(total_num_geoms);
 
-        capacity.points().iter().enumerate().for_each(|(i, cap)| {
+        capacity.points.iter().enumerate().for_each(|(i, cap)| {
             self.points[i].reserve_exact(*cap);
         });
         capacity
-            .line_strings()
+            .line_strings
             .iter()
             .enumerate()
             .for_each(|(i, cap)| {
                 self.line_strings[i].reserve_exact(*cap);
             });
-        capacity.polygons().iter().enumerate().for_each(|(i, cap)| {
+        capacity.polygons.iter().enumerate().for_each(|(i, cap)| {
             self.polygons[i].reserve_exact(*cap);
         });
+        capacity.mpoints.iter().enumerate().for_each(|(i, cap)| {
+            self.mpoints[i].reserve_exact(*cap);
+        });
         capacity
-            .multi_points()
-            .iter()
-            .enumerate()
-            .for_each(|(i, cap)| {
-                self.mpoints[i].reserve_exact(*cap);
-            });
-        capacity
-            .multi_line_strings()
+            .mline_strings
             .iter()
             .enumerate()
             .for_each(|(i, cap)| {
                 self.mline_strings[i].reserve_exact(*cap);
             });
-        capacity
-            .multi_polygons()
-            .iter()
-            .enumerate()
-            .for_each(|(i, cap)| {
-                self.mpolygons[i].reserve_exact(*cap);
-            });
-        capacity
-            .geometry_collections()
-            .iter()
-            .enumerate()
-            .for_each(|(i, cap)| {
-                self.gcs[i].reserve_exact(*cap);
-            });
+        capacity.mpolygons.iter().enumerate().for_each(|(i, cap)| {
+            self.mpolygons[i].reserve_exact(*cap);
+        });
+        capacity.gcs.iter().enumerate().for_each(|(i, cap)| {
+            self.gcs[i].reserve_exact(*cap);
+        });
     }
 
     /// Consume the builder and convert to an immutable [`GeometryArray`]
