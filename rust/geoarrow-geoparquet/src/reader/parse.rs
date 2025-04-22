@@ -22,7 +22,9 @@ use crate::metadata::{
 };
 use geoarrow_array::error::{GeoArrowError, Result};
 
-pub fn infer_target_schema(
+/// Given an Arrow schema and GeoParquet metadata, convert the schema to one with native GeoArrow
+/// geometry types for each geometry column.
+pub fn infer_native_geoarrow_schema(
     existing_schema: &Schema,
     geo_meta: &GeoParquetMetadata,
     coord_type: CoordType,

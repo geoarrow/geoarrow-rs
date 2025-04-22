@@ -2,9 +2,7 @@ use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use arrow_array::RecordBatchReader;
 use arrow_array::cast::AsArray;
-use arrow_schema::ArrowError;
 use geoarrow_array::array::{WktArray, from_arrow_array};
 use geoarrow_array::builder::{
     GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder, MultiPointBuilder,
@@ -16,8 +14,9 @@ use geoarrow_schema::{
     CoordType, Dimension, GeometryCollectionType, LineStringType, MultiLineStringType,
     MultiPointType, MultiPolygonType, PointType, PolygonType,
 };
+use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
 
-use crate::GeoParquetRecordBatchReaderBuilder;
+use crate::reader::{GeoParquetReaderBuilder, parse_record_batch};
 use crate::test::geoarrow_data_example_files;
 
 fn dimension_path_part(dim: Dimension) -> &'static str {
@@ -78,14 +77,15 @@ fn geoparquet_filepath(data_type: GeoArrowType, suffix: &str) -> PathBuf {
 fn read_gpq_file(path: impl AsRef<Path>) -> (WktArray<i32>, Arc<dyn GeoArrowArray>) {
     println!("reading path: {:?}", path.as_ref());
     let file = File::open(path).unwrap();
-    let reader = GeoParquetRecordBatchReaderBuilder::try_new(file)
-        .unwrap()
-        .build()
+    let reader_builder = ParquetRecordBatchReaderBuilder::try_new(file).unwrap();
+    let native_geoarrow_schema = reader_builder
+        .native_geoarrow_schema(CoordType::Separated)
         .unwrap();
+    let reader = reader_builder.build().unwrap();
 
-    let schema = reader.schema();
     let batches = reader
-        .collect::<std::result::Result<Vec<_>, ArrowError>>()
+        .map(|batch| parse_record_batch(batch?, native_geoarrow_schema.clone()))
+        .collect::<Result<Vec<_>, _>>()
         .unwrap();
     assert_eq!(batches.len(), 1);
 
@@ -95,7 +95,7 @@ fn read_gpq_file(path: impl AsRef<Path>) -> (WktArray<i32>, Arc<dyn GeoArrowArra
         batch.column(0).as_string::<i32>().clone(),
         Default::default(),
     );
-    let geo_arr = from_arrow_array(batch.column(1), schema.field(1)).unwrap();
+    let geo_arr = from_arrow_array(batch.column(1), native_geoarrow_schema.field(1)).unwrap();
 
     (wkt_arr, geo_arr)
 }
