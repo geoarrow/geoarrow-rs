@@ -69,21 +69,15 @@
 //! ```
 
 #![cfg_attr(not(test), warn(unused_crate_dependencies))]
-#![deny(missing_docs)]
+#![warn(missing_docs)]
 
 pub mod metadata;
-mod reader;
+pub mod reader;
 #[cfg(test)]
 mod test;
 mod total_bounds;
 mod writer;
 
-pub use reader::{
-    GeoParquetDatasetMetadata, GeoParquetReaderMetadata, GeoParquetReaderOptions,
-    GeoParquetRecordBatchReader, GeoParquetRecordBatchReaderBuilder,
-};
-#[cfg(feature = "async")]
-pub use reader::{GeoParquetRecordBatchStream, GeoParquetRecordBatchStreamBuilder};
 pub use writer::{
     GeoParquetWriter, GeoParquetWriterEncoding, GeoParquetWriterOptions, write_geoparquet,
 };

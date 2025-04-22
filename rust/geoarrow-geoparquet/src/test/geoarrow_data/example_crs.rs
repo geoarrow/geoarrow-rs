@@ -1,34 +1,34 @@
 use std::fs::File;
 use std::path::Path;
 
-use arrow_array::RecordBatchReader;
-use arrow_schema::ArrowError;
 use geoarrow_array::GeoArrowType;
 use geoarrow_array::array::from_arrow_array;
-use geoarrow_schema::CrsType;
+use geoarrow_schema::{CoordType, CrsType};
+use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
 use serde_json::json;
 
-use crate::GeoParquetRecordBatchReaderBuilder;
+use crate::reader::{GeoParquetReaderBuilder, parse_record_batch};
 use crate::test::geoarrow_data_example_crs_files;
 
 /// Read a GeoParquet file and return the WKT and geometry arrays; columns 0 and 1.
 fn read_gpq_file(path: impl AsRef<Path>) -> GeoArrowType {
     println!("reading path: {:?}", path.as_ref());
     let file = File::open(path).unwrap();
-    let reader = GeoParquetRecordBatchReaderBuilder::try_new(file)
-        .unwrap()
-        .build()
+    let reader_builder = ParquetRecordBatchReaderBuilder::try_new(file).unwrap();
+    let native_geoarrow_schema = reader_builder
+        .native_geoarrow_schema(CoordType::Separated)
         .unwrap();
+    let reader = reader_builder.build().unwrap();
 
-    let schema = reader.schema();
     let batches = reader
-        .collect::<std::result::Result<Vec<_>, ArrowError>>()
+        .map(|batch| parse_record_batch(batch?, native_geoarrow_schema.clone()))
+        .collect::<Result<Vec<_>, _>>()
         .unwrap();
     assert_eq!(batches.len(), 1);
 
     let batch = batches[0].clone();
 
-    let geo_arr = from_arrow_array(batch.column(0), schema.field(0)).unwrap();
+    let geo_arr = from_arrow_array(batch.column(0), native_geoarrow_schema.field(0)).unwrap();
 
     geo_arr.data_type().clone()
 }
