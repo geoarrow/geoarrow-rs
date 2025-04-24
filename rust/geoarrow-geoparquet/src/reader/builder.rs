@@ -76,6 +76,11 @@ impl<T: ChunkReader + 'static> GeoParquetRecordBatchReaderBuilder<T> {
         Self::from(builder).with_options(geo_options)
     }
 
+    /// Returns a reference to the geo metadata.
+    pub fn geo_meta(&self) -> Option<&GeoParquetMetadata> {
+        self.geo_meta.as_ref()
+    }
+
     /// Consume this builder, returning a [`GeoParquetRecordBatchReader`]
     pub fn build(self) -> Result<GeoParquetRecordBatchReader> {
         let output_schema = self.output_schema()?;
