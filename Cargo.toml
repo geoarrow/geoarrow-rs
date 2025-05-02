@@ -9,9 +9,7 @@ members = [
     "rust/geoarrow-test",
     "rust/geoarrow",
     "rust/pyo3-geoarrow",
-    # Comment out until datafusion 47 release so that the workspace can upgrade
-    # to arrow 55
-    # "rust/geodatafusion",
+    "rust/geodatafusion",
 ]
 exclude = ["js"]
 resolver = "2"
@@ -40,8 +38,8 @@ arrow-schema = "55"
 async-stream = "0.3"
 async-trait = "0.1"
 bytes = "1.10.0"
-# 47 rc https://lists.apache.org/thread/zrq9x9gf51r8b6m9qokf2q75kh251rm6
-datafusion = { git = "https://github.com/apache/datafusion", rev = "e4433049b04ca2c1e2031eb05d1a0990210f11d6" }
+# https://github.com/apache/datafusion/pull/15646
+datafusion = { git = "https://github.com/apache/datafusion", rev = "2d801940c3cb0cec3209aa890688590ded791865" }
 flatgeobuf = { version = "4.6", default-features = false }
 futures = "0.3"
 geo = "0.30.0"

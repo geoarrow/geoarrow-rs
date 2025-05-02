@@ -122,6 +122,15 @@ impl PointArray {
             nulls: self.nulls,
         }
     }
+
+    /// Change the [`Metadata`] of this array.
+    pub fn with_metadata(self, metadata: Arc<Metadata>) -> Self {
+        Self {
+            data_type: self.data_type.with_metadata(metadata),
+            coords: self.coords,
+            nulls: self.nulls,
+        }
+    }
 }
 
 impl GeoArrowArray for PointArray {
