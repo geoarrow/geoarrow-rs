@@ -22,7 +22,7 @@ This repository also includes [Python bindings](https://github.com/geoarrow/geoa
 
 ## Examples
 
-- [Rust examples](examples/README.md)
+- [Rust examples](rust/geoarrow/examples/README.md)
 
 ## References
 
