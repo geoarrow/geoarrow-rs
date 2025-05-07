@@ -158,8 +158,15 @@ impl MultiPointArray {
         Self {
             data_type: self.data_type.with_coord_type(coord_type),
             coords: self.coords.into_coord_type(coord_type),
-            geom_offsets: self.geom_offsets,
-            nulls: self.nulls,
+            ..self
+        }
+    }
+
+    /// Change the [`Metadata`] of this array.
+    pub fn with_metadata(self, metadata: Arc<Metadata>) -> Self {
+        Self {
+            data_type: self.data_type.with_metadata(metadata),
+            ..self
         }
     }
 }
@@ -206,6 +213,10 @@ impl GeoArrowArray for MultiPointArray {
 
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.slice(offset, length))
+    }
+
+    fn with_metadata(self, metadata: Arc<Metadata>) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.with_metadata(metadata))
     }
 }
 
