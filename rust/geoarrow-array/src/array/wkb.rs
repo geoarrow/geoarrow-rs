@@ -2,7 +2,8 @@ use std::sync::Arc;
 
 use arrow_array::cast::AsArray;
 use arrow_array::{
-    Array, ArrayRef, BinaryArray, GenericBinaryArray, LargeBinaryArray, OffsetSizeTrait,
+    Array, ArrayRef, BinaryArray, BinaryArrayType, GenericBinaryArray, LargeBinaryArray,
+    OffsetSizeTrait, make_array,
 };
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
@@ -25,15 +26,15 @@ use crate::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 ///
 /// Refer to [`crate::io::wkb`] for encoding and decoding this array to the native array types.
 #[derive(Debug, Clone, PartialEq)]
-pub struct WkbArray<O: OffsetSizeTrait> {
+pub struct WkbArray<A: for<'a> BinaryArrayType<'a>> {
     pub(crate) data_type: WkbType,
-    pub(crate) array: GenericBinaryArray<O>,
+    pub(crate) array: A,
 }
 
 // Implement geometry accessors
-impl<O: OffsetSizeTrait> WkbArray<O> {
+impl<A: for<'a> BinaryArrayType<'a>> WkbArray<A> {
     /// Create a new WkbArray from a BinaryArray
-    pub fn new(array: GenericBinaryArray<O>, metadata: Arc<Metadata>) -> Self {
+    pub fn new(array: A, metadata: Arc<Metadata>) -> Self {
         Self {
             data_type: WkbType::new(metadata),
             array,
@@ -87,7 +88,7 @@ impl<O: OffsetSizeTrait> WkbArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> GeoArrowArray for WkbArray<O> {
+impl<A: for<'a> BinaryArrayType<'a>> GeoArrowArray for WkbArray<A> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -137,7 +138,7 @@ impl<O: OffsetSizeTrait> GeoArrowArray for WkbArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> ArrayAccessor<'a> for WkbArray<O> {
+impl<'a, A: for<'b> BinaryArrayType<'b>> ArrayAccessor<'a> for WkbArray<A> {
     type Item = Wkb<'a>;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
@@ -146,16 +147,12 @@ impl<'a, O: OffsetSizeTrait> ArrayAccessor<'a> for WkbArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> IntoArrow for WkbArray<O> {
-    type ArrowArray = GenericBinaryArray<O>;
+impl<A: for<'a> BinaryArrayType<'a>> IntoArrow for WkbArray<A> {
+    type ArrowArray = ArrayRef;
     type ExtensionType = WkbType;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        GenericBinaryArray::new(
-            self.array.offsets().clone(),
-            self.array.values().clone(),
-            self.array.nulls().cloned(),
-        )
+        make_array(self.array.into_data())
     }
 
     fn ext_type(&self) -> &Self::ExtensionType {
@@ -169,7 +166,7 @@ impl<O: OffsetSizeTrait> From<(GenericBinaryArray<O>, WkbType)> for WkbArray<O> 
     }
 }
 
-impl TryFrom<(&dyn Array, WkbType)> for WkbArray<i32> {
+impl TryFrom<(&dyn Array, WkbType)> for WkbArray<&BinaryArray> {
     type Error = GeoArrowError;
     fn try_from((value, typ): (&dyn Array, WkbType)) -> Result<Self> {
         match value.data_type() {
