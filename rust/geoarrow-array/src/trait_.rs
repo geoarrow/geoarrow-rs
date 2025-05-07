@@ -6,6 +6,7 @@ use arrow_array::{Array, ArrayRef};
 use arrow_buffer::NullBuffer;
 use arrow_schema::extension::ExtensionType;
 use geo_traits::GeometryTrait;
+use geoarrow_schema::Metadata;
 
 use crate::datatypes::GeoArrowType;
 use crate::error::Result;
@@ -214,6 +215,9 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// This function panics iff `offset + length > self.len()`.
     #[must_use]
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray>;
+
+    /// Change the [`Metadata`] of this array.
+    fn with_metadata(self, metadata: Arc<Metadata>) -> Arc<dyn GeoArrowArray>;
 }
 
 /// A trait for accessing the values of a [`GeoArrowArray`].

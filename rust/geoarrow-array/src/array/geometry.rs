@@ -375,8 +375,6 @@ impl GeometryArray {
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
         Self {
             data_type: self.data_type.with_coord_type(coord_type),
-            type_ids: self.type_ids,
-            offsets: self.offsets,
             points: self.points.map(|arr| arr.into_coord_type(coord_type)),
             line_strings: self.line_strings.map(|arr| arr.into_coord_type(coord_type)),
             polygons: self.polygons.map(|arr| arr.into_coord_type(coord_type)),
@@ -386,6 +384,15 @@ impl GeometryArray {
                 .map(|arr| arr.into_coord_type(coord_type)),
             mpolygons: self.mpolygons.map(|arr| arr.into_coord_type(coord_type)),
             gcs: self.gcs.map(|arr| arr.into_coord_type(coord_type)),
+            ..self
+        }
+    }
+
+    /// Change the [`Metadata`] of this array.
+    pub fn with_metadata(self, metadata: Arc<Metadata>) -> Self {
+        Self {
+            data_type: self.data_type.with_metadata(metadata),
+            ..self
         }
     }
 
@@ -485,6 +492,10 @@ impl GeoArrowArray for GeometryArray {
 
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.slice(offset, length))
+    }
+
+    fn with_metadata(self, metadata: Arc<Metadata>) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.with_metadata(metadata))
     }
 }
 

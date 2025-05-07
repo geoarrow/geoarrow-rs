@@ -6,7 +6,7 @@ use arrow_array::{Array, ArrayRef, UnionArray};
 use arrow_buffer::ScalarBuffer;
 use arrow_schema::{DataType, UnionMode};
 use geoarrow_schema::{
-    CoordType, Dimension, GeometryCollectionType, LineStringType, Metadata, MultiLineStringType,
+    CoordType, Dimension, GeometryCollectionType, LineStringType, MultiLineStringType,
     MultiPointType, MultiPolygonType, PointType, PolygonType,
 };
 
@@ -65,8 +65,6 @@ pub struct MixedGeometryArray {
     pub(crate) coord_type: CoordType,
     pub(crate) dim: Dimension,
 
-    pub(crate) metadata: Arc<Metadata>,
-
     /// Invariant: every item in `type_ids` is `> 0 && < fields.len()` if `type_ids` are not provided. If `type_ids` exist in the NativeType, then every item in `type_ids` is `> 0 && `
     pub(crate) type_ids: ScalarBuffer<i8>,
 
@@ -107,7 +105,6 @@ impl MixedGeometryArray {
         multi_points: Option<MultiPointArray>,
         multi_line_strings: Option<MultiLineStringArray>,
         multi_polygons: Option<MultiPolygonArray>,
-        metadata: Arc<Metadata>,
     ) -> Self {
         let mut coord_types = HashSet::new();
         if let Some(points) = &points {
@@ -191,7 +188,6 @@ impl MixedGeometryArray {
                 ))
                 .finish(),
             ),
-            metadata,
             slice_offset: 0,
         }
     }
@@ -424,7 +420,6 @@ impl MixedGeometryArray {
             multi_points: self.multi_points.clone(),
             multi_line_strings: self.multi_line_strings.clone(),
             multi_polygons: self.multi_polygons.clone(),
-            metadata: self.metadata.clone(),
             slice_offset: self.slice_offset + offset,
         }
     }
@@ -432,17 +427,13 @@ impl MixedGeometryArray {
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
         Self {
             coord_type,
-            dim: self.dim,
-            metadata: self.metadata,
-            type_ids: self.type_ids,
-            offsets: self.offsets,
             points: self.points.into_coord_type(coord_type),
             line_strings: self.line_strings.into_coord_type(coord_type),
             polygons: self.polygons.into_coord_type(coord_type),
             multi_points: self.multi_points.into_coord_type(coord_type),
             multi_line_strings: self.multi_line_strings.into_coord_type(coord_type),
             multi_polygons: self.multi_polygons.into_coord_type(coord_type),
-            slice_offset: self.slice_offset,
+            ..self
         }
     }
 
@@ -660,9 +651,6 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
             multi_points,
             multi_line_strings,
             multi_polygons,
-            // Mixed array is only used inside of GeometryCollectionArray, and this array does not
-            // hold its own metadata
-            Default::default(),
         ))
     }
 }
@@ -684,7 +672,6 @@ impl TryFrom<(&dyn Array, Dimension, CoordType)> for MixedGeometryArray {
 impl PartialEq for MixedGeometryArray {
     fn eq(&self, other: &Self) -> bool {
         self.dim == other.dim
-            && self.metadata == other.metadata
             && self.type_ids == other.type_ids
             && self.offsets == other.offsets
             && self.points == other.points

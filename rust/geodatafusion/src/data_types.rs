@@ -5,7 +5,10 @@ use datafusion::error::DataFusionError;
 use datafusion::logical_expr::{Signature, Volatility};
 use geoarrow_array::array::{GeometryArray, PointArray, RectArray};
 use geoarrow_array::{GeoArrowArray, GeoArrowType};
-use geoarrow_schema::{BoxType, CoordType, Dimension, GeometryType, PointType};
+use geoarrow_schema::{
+    BoxType, CoordType, Dimension, GeometryCollectionType, GeometryType, LineStringType,
+    MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType,
+};
 
 use crate::error::GeoDataFusionResult;
 
@@ -43,17 +46,42 @@ pub fn GEOMETRY_TYPE() -> GeoArrowType {
 }
 
 pub(crate) fn any_single_geometry_type_input() -> Signature {
-    Signature::uniform(
-        1,
-        vec![
-            POINT2D_TYPE().into(),
-            POINT3D_TYPE().into(),
-            BOX2D_TYPE().into(),
-            BOX3D_TYPE().into(),
-            GEOMETRY_TYPE().into(),
-        ],
-        Volatility::Immutable,
-    )
+    let mut valid_types = vec![];
+
+    for coord_type in [CoordType::Separated, CoordType::Interleaved] {
+        for dim in [
+            Dimension::XY,
+            Dimension::XYZ,
+            Dimension::XYM,
+            Dimension::XYZM,
+        ] {
+            valid_types.push(PointType::new(coord_type, dim, Default::default()).data_type());
+            valid_types.push(LineStringType::new(coord_type, dim, Default::default()).data_type());
+            valid_types.push(PolygonType::new(coord_type, dim, Default::default()).data_type());
+            valid_types.push(MultiPointType::new(coord_type, dim, Default::default()).data_type());
+            valid_types
+                .push(MultiLineStringType::new(coord_type, dim, Default::default()).data_type());
+            valid_types
+                .push(MultiPolygonType::new(coord_type, dim, Default::default()).data_type());
+            valid_types
+                .push(GeometryCollectionType::new(coord_type, dim, Default::default()).data_type());
+        }
+    }
+
+    for coord_type in [CoordType::Separated, CoordType::Interleaved] {
+        valid_types.push(GeometryType::new(coord_type, Default::default()).data_type());
+    }
+
+    for dim in [
+        Dimension::XY,
+        Dimension::XYZ,
+        Dimension::XYM,
+        Dimension::XYZM,
+    ] {
+        valid_types.push(BoxType::new(dim, Default::default()).data_type());
+    }
+
+    Signature::uniform(1, valid_types, Volatility::Immutable)
 }
 
 /// This will not cast a PointArray to a GeometryArray

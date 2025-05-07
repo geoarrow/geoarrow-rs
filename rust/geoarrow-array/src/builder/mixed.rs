@@ -1,9 +1,7 @@
-use std::sync::Arc;
-
 use geo_traits::*;
 use geoarrow_schema::{
-    CoordType, Dimension, LineStringType, Metadata, MultiLineStringType, MultiPointType,
-    MultiPolygonType, PointType, PolygonType,
+    CoordType, Dimension, LineStringType, MultiLineStringType, MultiPointType, MultiPolygonType,
+    PointType, PolygonType,
 };
 
 use crate::array::MixedGeometryArray;
@@ -32,8 +30,6 @@ pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 /// - All arrays must have the same coordinate layout (interleaved or separated)
 #[derive(Debug)]
 pub(crate) struct MixedGeometryBuilder {
-    metadata: Arc<Metadata>,
-
     /// The dimension of this builder.
     ///
     /// All underlying arrays must contain a coordinate buffer of this same dimension.
@@ -67,11 +63,9 @@ impl MixedGeometryBuilder {
         dim: Dimension,
         capacity: MixedCapacity,
         coord_type: CoordType,
-        metadata: Arc<Metadata>,
     ) -> Self {
         // Don't store array metadata on child arrays
         Self {
-            metadata,
             dim,
             types: vec![],
             points: PointBuilder::with_capacity(
@@ -145,7 +139,6 @@ impl MixedGeometryBuilder {
             Some(self.multi_points.finish()),
             Some(self.multi_line_strings.finish()),
             Some(self.multi_polygons.finish()),
-            self.metadata,
         )
     }
 

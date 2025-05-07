@@ -122,6 +122,10 @@ impl<O: OffsetSizeTrait> GeoArrowArray for WktArray<O> {
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.slice(offset, length))
     }
+
+    fn with_metadata(self, metadata: Arc<Metadata>) -> Arc<dyn GeoArrowArray> {
+        Arc::new(Self::with_metadata(&self, metadata))
+    }
 }
 
 impl<'a, O: OffsetSizeTrait> ArrayAccessor<'a> for WktArray<O> {

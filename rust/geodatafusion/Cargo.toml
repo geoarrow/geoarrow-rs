@@ -30,4 +30,5 @@ thiserror = { workspace = true }
 
 [dev-dependencies]
 approx = { workspace = true }
+geoarrow-array = { workspace = true, features = ["test-data"] }
 tokio = { workspace = true, features = ["macros", "fs", "rt-multi-thread"] }
