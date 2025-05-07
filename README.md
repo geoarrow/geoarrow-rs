@@ -9,6 +9,31 @@ A Rust implementation of the [GeoArrow](https://github.com/geoarrow/geoarrow) sp
 
 This repository also includes [Python bindings](https://github.com/geoarrow/geoarrow-rs/blob/main/python/README.md) and [JavaScript (WebAssembly) bindings](https://github.com/geoarrow/geoarrow-rs/blob/main/js/README.md), wrapping the GeoArrow memory layout and offering vectorized geometry operations.
 
+## Project Status
+
+May 7, 2025
+
+The `geoarrow-rs` project is about 3 years old. Early prototyping started inside the [`geopolars`](https://github.com/geopolars/geopolars) repo before deciding I needed something more general (not tied to Polars) and creating first [`geopolars/geoarrow`](https://github.com/geopolars/geoarrow) and then lastly [`geoarrow/geoarrow-rs`](https://github.com/geoarrow/geoarrow-rs).
+
+However despite its age, the `geoarrow` crate suffers from a couple issues. For one, it took a while to figure out the right abstractions. And learning Rust at the same time didn't help. The `geoarrow` crate is also too monolithic. Some parts of `geoarrow` are production ready, but there's decidedly a _lot_ of code in `geoarrow` that is _not_ production ready. And it's very much not clear which parts of `geoarrow` are production ready or not.
+
+But I think `geoarrow-rs` has potential to form part of the core geospatial data engineering stack in Rust. And as part of that, we need a better delineation of which parts of the code are stable or not. As such, the `geoarrow-rs` repo is **currently ongoing a large refactor from a single crate to a monorepo of smaller crates, each with a more well-defined scope**.
+
+As of May 2025, avoid using the `geoarrow` crate and instead use the newer crates with a smaller scope, like `geoarrow-array`.
+
+These smaller crates are designed to mimic the upstream `arrow` crates as much as possible.
+
+### Stability
+
+- `geoarrow-schema`: Pretty stable
+- `geoarrow-array`: Pretty stable
+- `geoarrow-cast`: Pretty stable
+- `geoarrow-flatgeobuf`: Somewhat stable.
+- `geoarrow-geoparquet`: Somewhat stable. A decently large refactor is expected in https://github.com/geoarrow/geoarrow-rs/pull/1089.
+- Other Rust crates: unstable
+- Python bindings: unstable
+- JS bindings: unstable
+
 ## Documentation
 
 [**Documentation Website**](https://geoarrow.org/geoarrow-rs/)
