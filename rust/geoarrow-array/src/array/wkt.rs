@@ -256,7 +256,9 @@ mod test {
     fn parse_dyn_array_i32() {
         let wkb_array = wkt_data::<i32>();
         let array = wkb_array.to_array_ref();
-        let field = wkb_array.data_type.to_field("geometry", true, false);
+        let field = wkb_array
+            .data_type
+            .to_field("geometry", true, array.data_type().clone());
         let wkb_array_retour: WktArray<i32> = (array.as_ref(), &field).try_into().unwrap();
 
         assert_eq!(wkb_array, wkb_array_retour);
@@ -266,7 +268,9 @@ mod test {
     fn parse_dyn_array_i64() {
         let wkb_array = wkt_data::<i64>();
         let array = wkb_array.to_array_ref();
-        let field = wkb_array.data_type.to_field("geometry", true, false);
+        let field = wkb_array
+            .data_type
+            .to_field("geometry", true, array.data_type().clone());
         let wkb_array_retour: WktArray<i64> = (array.as_ref(), &field).try_into().unwrap();
 
         assert_eq!(wkb_array, wkb_array_retour);

@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use arrow_array::ArrayRef;
 use arrow_schema::extension::{EXTENSION_TYPE_METADATA_KEY, EXTENSION_TYPE_NAME_KEY};
-use arrow_schema::{Field, Schema, SchemaRef};
+use arrow_schema::{DataType, Field, Schema, SchemaRef};
 use geoarrow_array::GeoArrowType;
 use geoarrow_array::array::from_arrow_array;
 use geoarrow_array::crs::{CRSTransform, DefaultCRSTransform};
@@ -314,7 +314,9 @@ fn create_output_field(column_info: &ColumnInfo, name: String, nullable: bool) -
     use GeoParquetColumnEncoding as Encoding;
 
     match column_info.encoding {
-        Encoding::WKB => WkbType::new(Default::default()).to_field(name, nullable, false),
+        Encoding::WKB => {
+            WkbType::new(Default::default()).to_field(name, nullable, DataType::Binary)
+        }
         // A native encoding
         _ => {
             assert_eq!(column_info.geometry_types.len(), 1);

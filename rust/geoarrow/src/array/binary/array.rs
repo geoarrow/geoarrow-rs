@@ -99,12 +99,16 @@ impl<O: OffsetSizeTrait> ArrayBase for WKBArray<O> {
     }
 
     fn storage_type(&self) -> DataType {
-        self.data_type.data_type(O::IS_LARGE)
+        if O::IS_LARGE {
+            DataType::LargeBinary
+        } else {
+            DataType::Binary
+        }
     }
 
     fn extension_field(&self) -> Arc<Field> {
         self.data_type
-            .to_field("geometry", true, O::IS_LARGE)
+            .to_field("geometry", true, self.storage_type())
             .into()
     }
 
