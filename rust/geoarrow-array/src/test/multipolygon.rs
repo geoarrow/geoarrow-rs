@@ -1,6 +1,7 @@
-use geo_types::{MultiPolygon, polygon};
 use geoarrow_schema::{CoordType, Dimension, MultiPolygonType};
 use geoarrow_test::raw;
+use wkt::types::MultiPolygon;
+use wkt::wkt;
 
 use crate::array::MultiPolygonArray;
 use crate::builder::MultiPolygonBuilder;

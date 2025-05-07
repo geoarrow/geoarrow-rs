@@ -1,36 +1,20 @@
-use geo_types::{Polygon, polygon};
 use geoarrow_schema::{CoordType, Dimension, PolygonType};
 use geoarrow_test::raw;
+use wkt::types::Polygon;
+use wkt::wkt;
 
 use crate::array::PolygonArray;
 use crate::builder::PolygonBuilder;
 
 pub(crate) fn p0() -> Polygon {
-    polygon![
-        (x: -111., y: 45.),
-        (x: -111., y: 41.),
-        (x: -104., y: 41.),
-        (x: -104., y: 45.),
-    ]
+    wkt! { POLYGON ((-111. 45., -111. 41., -104. 41., -104. 45.)) }
 }
 
 pub(crate) fn p1() -> Polygon {
-    polygon!(
-        exterior: [
-            (x: -111., y: 45.),
-            (x: -111., y: 41.),
-            (x: -104., y: 41.),
-            (x: -104., y: 45.),
-        ],
-        interiors: [
-            [
-                (x: -110., y: 44.),
-                (x: -110., y: 42.),
-                (x: -105., y: 42.),
-                (x: -105., y: 44.),
-            ],
-        ],
-    )
+    wkt! { POLYGON (
+        (-111. 45., -111. 41., -104. 41., -104. 45.),
+        (-110. 44., -110. 42., -105. 42., -105. 44.)
+    ) }
 }
 
 pub(crate) fn p_array(coord_type: CoordType) -> PolygonArray {

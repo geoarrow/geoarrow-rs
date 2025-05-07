@@ -1,34 +1,17 @@
-use geo_types::{MultiLineString, line_string};
 use geoarrow_schema::{CoordType, Dimension, MultiLineStringType};
 use geoarrow_test::raw;
+use wkt::types::MultiLineString;
+use wkt::wkt;
 
 use crate::array::MultiLineStringArray;
 use crate::builder::MultiLineStringBuilder;
 
 pub(crate) fn ml0() -> MultiLineString {
-    MultiLineString::new(vec![line_string![
-        (x: -111., y: 45.),
-        (x: -111., y: 41.),
-        (x: -104., y: 41.),
-        (x: -104., y: 45.),
-    ]])
+    wkt! { MULTILINESTRING ((-111. 45., -111. 41., -104. 41., -104. 45.)) }
 }
 
 pub(crate) fn ml1() -> MultiLineString {
-    MultiLineString::new(vec![
-        line_string![
-            (x: -111., y: 45.),
-            (x: -111., y: 41.),
-            (x: -104., y: 41.),
-            (x: -104., y: 45.),
-        ],
-        line_string![
-            (x: -110., y: 44.),
-            (x: -110., y: 42.),
-            (x: -105., y: 42.),
-            (x: -105., y: 44.),
-        ],
-    ])
+    wkt! { MULTILINESTRING ((-111. 45., -111. 41., -104. 41., -104. 45.), (-110. 44., -110. 42., -105. 42., -105. 44.)) }
 }
 
 pub(crate) fn ml_array(coord_type: CoordType) -> MultiLineStringArray {
