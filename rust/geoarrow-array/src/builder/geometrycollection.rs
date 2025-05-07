@@ -45,7 +45,6 @@ impl<'a> GeometryCollectionBuilder {
                 typ.dimension(),
                 capacity.mixed_capacity,
                 typ.coord_type(),
-                typ.metadata().clone(),
             ),
             geom_offsets: OffsetsBuilder::with_capacity(capacity.geom_capacity),
             validity: NullBufferBuilder::new(capacity.geom_capacity),
