@@ -1,8 +1,11 @@
+use std::fmt::Debug;
 use std::sync::Arc;
 
 use arrow_array::cast::AsArray;
+use arrow_array::iterator::ArrayIter;
 use arrow_array::{
-    Array, ArrayRef, BinaryArray, GenericBinaryArray, LargeBinaryArray, OffsetSizeTrait,
+    Array, ArrayRef, BinaryArray, BinaryViewArray, GenericBinaryArray, LargeBinaryArray,
+    OffsetSizeTrait,
 };
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
@@ -25,15 +28,15 @@ use crate::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 ///
 /// Refer to [`crate::io::wkb`] for encoding and decoding this array to the native array types.
 #[derive(Debug, Clone, PartialEq)]
-pub struct WkbArray<O: OffsetSizeTrait> {
+pub struct WkbArray<A: GeoArrowBinaryArrayType> {
     pub(crate) data_type: WkbType,
-    pub(crate) array: GenericBinaryArray<O>,
+    pub(crate) array: A,
 }
 
 // Implement geometry accessors
-impl<O: OffsetSizeTrait> WkbArray<O> {
-    /// Create a new WkbArray from a BinaryArray
-    pub fn new(array: GenericBinaryArray<O>, metadata: Arc<Metadata>) -> Self {
+impl<A: GeoArrowBinaryArrayType> WkbArray<A> {
+    /// Create a new [WkbArray] from a [BinaryArray], [LargeBinaryArray], or [BinaryViewArray]
+    pub fn new(array: A, metadata: Arc<Metadata>) -> Self {
         Self {
             data_type: WkbType::new(metadata),
             array,
@@ -87,7 +90,7 @@ impl<O: OffsetSizeTrait> WkbArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> GeoArrowArray for WkbArray<O> {
+impl<A: GeoArrowBinaryArrayType> GeoArrowArray for WkbArray<A> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -121,10 +124,11 @@ impl<O: OffsetSizeTrait> GeoArrowArray for WkbArray<O> {
     }
 
     fn data_type(&self) -> GeoArrowType {
-        if O::IS_LARGE {
-            GeoArrowType::LargeWkb(self.data_type.clone())
-        } else {
-            GeoArrowType::Wkb(self.data_type.clone())
+        match self.array.data_type() {
+            DataType::Binary => GeoArrowType::Wkb(self.data_type.clone()),
+            DataType::LargeBinary => GeoArrowType::LargeWkb(self.data_type.clone()),
+            DataType::BinaryView => GeoArrowType::WkbView(self.data_type.clone()),
+            dt => panic!("Unexpected type: {:?}", dt),
         }
     }
 
@@ -137,7 +141,9 @@ impl<O: OffsetSizeTrait> GeoArrowArray for WkbArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> ArrayAccessor<'a> for WkbArray<O> {
+impl<'a, A: GeoArrowBinaryArrayType + arrow_array::BinaryArrayType<'a>> ArrayAccessor<'a>
+    for WkbArray<A>
+{
     type Item = Wkb<'a>;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
@@ -146,16 +152,12 @@ impl<'a, O: OffsetSizeTrait> ArrayAccessor<'a> for WkbArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> IntoArrow for WkbArray<O> {
-    type ArrowArray = GenericBinaryArray<O>;
+impl<A: GeoArrowBinaryArrayType> IntoArrow for WkbArray<A> {
+    type ArrowArray = A;
     type ExtensionType = WkbType;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        GenericBinaryArray::new(
-            self.array.offsets().clone(),
-            self.array.values().clone(),
-            self.array.nulls().cloned(),
-        )
+        self.array
     }
 
     fn ext_type(&self) -> &Self::ExtensionType {
@@ -163,19 +165,32 @@ impl<O: OffsetSizeTrait> IntoArrow for WkbArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<(GenericBinaryArray<O>, WkbType)> for WkbArray<O> {
-    fn from((value, typ): (GenericBinaryArray<O>, WkbType)) -> Self {
+impl From<(BinaryArray, WkbType)> for WkbArray<BinaryArray> {
+    fn from((value, typ): (BinaryArray, WkbType)) -> Self {
         Self::new(value, typ.metadata().clone())
     }
 }
 
-impl TryFrom<(&dyn Array, WkbType)> for WkbArray<i32> {
+impl From<(LargeBinaryArray, WkbType)> for WkbArray<LargeBinaryArray> {
+    fn from((value, typ): (LargeBinaryArray, WkbType)) -> Self {
+        Self::new(value, typ.metadata().clone())
+    }
+}
+
+impl From<(BinaryViewArray, WkbType)> for WkbArray<BinaryViewArray> {
+    fn from((value, typ): (BinaryViewArray, WkbType)) -> Self {
+        Self::new(value, typ.metadata().clone())
+    }
+}
+
+impl TryFrom<(&dyn Array, WkbType)> for WkbArray<BinaryArray> {
     type Error = GeoArrowError;
     fn try_from((value, typ): (&dyn Array, WkbType)) -> Result<Self> {
         match value.data_type() {
             DataType::Binary => Ok((value.as_binary::<i32>().clone(), typ).into()),
             DataType::LargeBinary => {
-                let geom_array: WkbArray<i64> = (value.as_binary::<i64>().clone(), typ).into();
+                let geom_array: WkbArray<LargeBinaryArray> =
+                    (value.as_binary::<i64>().clone(), typ).into();
                 geom_array.try_into()
             }
             _ => Err(GeoArrowError::General(format!(
@@ -186,12 +201,13 @@ impl TryFrom<(&dyn Array, WkbType)> for WkbArray<i32> {
     }
 }
 
-impl TryFrom<(&dyn Array, WkbType)> for WkbArray<i64> {
+impl TryFrom<(&dyn Array, WkbType)> for WkbArray<LargeBinaryArray> {
     type Error = GeoArrowError;
     fn try_from((value, typ): (&dyn Array, WkbType)) -> Result<Self> {
         match value.data_type() {
             DataType::Binary => {
-                let geom_array: WkbArray<i32> = (value.as_binary::<i32>().clone(), typ).into();
+                let geom_array: WkbArray<BinaryArray> =
+                    (value.as_binary::<i32>().clone(), typ).into();
                 Ok(geom_array.into())
             }
             DataType::LargeBinary => Ok((value.as_binary::<i64>().clone(), typ).into()),
@@ -203,7 +219,25 @@ impl TryFrom<(&dyn Array, WkbType)> for WkbArray<i64> {
     }
 }
 
-impl TryFrom<(&dyn Array, &Field)> for WkbArray<i32> {
+impl TryFrom<(&dyn Array, WkbType)> for WkbArray<BinaryViewArray> {
+    type Error = GeoArrowError;
+    fn try_from((value, typ): (&dyn Array, WkbType)) -> Result<Self> {
+        match value.data_type() {
+            // DataType::Binary => {
+            //     let geom_array: WkbArray<i32> = (value.as_binary::<i32>().clone(), typ).into();
+            //     Ok(geom_array.into())
+            // }
+            // DataType::LargeBinary => Ok((value.as_binary::<i64>().clone(), typ).into()),
+            DataType::BinaryView => Ok((value.as_binary_view().clone(), typ).into()),
+            _ => Err(GeoArrowError::General(format!(
+                "Unexpected type: {:?}",
+                value.data_type()
+            ))),
+        }
+    }
+}
+
+impl TryFrom<(&dyn Array, &Field)> for WkbArray<BinaryArray> {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
@@ -212,7 +246,7 @@ impl TryFrom<(&dyn Array, &Field)> for WkbArray<i32> {
     }
 }
 
-impl TryFrom<(&dyn Array, &Field)> for WkbArray<i64> {
+impl TryFrom<(&dyn Array, &Field)> for WkbArray<LargeBinaryArray> {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
@@ -221,8 +255,17 @@ impl TryFrom<(&dyn Array, &Field)> for WkbArray<i64> {
     }
 }
 
-impl From<WkbArray<i32>> for WkbArray<i64> {
-    fn from(value: WkbArray<i32>) -> Self {
+impl TryFrom<(&dyn Array, &Field)> for WkbArray<BinaryViewArray> {
+    type Error = GeoArrowError;
+
+    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+        let typ = field.try_extension_type::<WkbType>()?;
+        (arr, typ).try_into()
+    }
+}
+
+impl From<WkbArray<BinaryArray>> for WkbArray<LargeBinaryArray> {
+    fn from(value: WkbArray<BinaryArray>) -> Self {
         let binary_array = value.array;
         let (offsets, values, nulls) = binary_array.into_parts();
         let array = LargeBinaryArray::new(offsets_buffer_i32_to_i64(&offsets), values, nulls);
@@ -233,10 +276,10 @@ impl From<WkbArray<i32>> for WkbArray<i64> {
     }
 }
 
-impl TryFrom<WkbArray<i64>> for WkbArray<i32> {
+impl TryFrom<WkbArray<LargeBinaryArray>> for WkbArray<BinaryArray> {
     type Error = GeoArrowError;
 
-    fn try_from(value: WkbArray<i64>) -> Result<Self> {
+    fn try_from(value: WkbArray<LargeBinaryArray>) -> Result<Self> {
         let binary_array = value.array;
         let (offsets, values, nulls) = binary_array.into_parts();
         let array = BinaryArray::new(offsets_buffer_i64_to_i32(&offsets)?, values, nulls);
@@ -245,6 +288,47 @@ impl TryFrom<WkbArray<i64>> for WkbArray<i32> {
             array,
         })
     }
+}
+
+// https://www.reddit.com/r/rust/comments/12nhpvz/how_can_a_parameter_type_t_be_not_long_living/
+trait GeoArrowBinaryArrayType: Array + Clone + Debug + private::Sealed + 'static {}
+
+impl<O: OffsetSizeTrait> GeoArrowBinaryArrayType for GenericBinaryArray<O> {}
+impl<'a, O: OffsetSizeTrait> GeoArrowBinaryArrayType for &'a GenericBinaryArray<O> {}
+impl GeoArrowBinaryArrayType for BinaryViewArray {}
+
+// /// A trait for Arrow String Arrays, currently three types are supported:
+// /// - `BinaryArray`
+// /// - `LargeBinaryArray`
+// /// - `BinaryViewArray`
+// ///
+// /// This trait helps to abstract over the different types of binary arrays
+// /// so that we don't need to duplicate the implementation for each type.
+// trait BinaryArrayType<'a>: arrow_array::ArrayAccessor<Item = &'a [u8]> + Sized {
+//     /// Constructs a new iterator
+//     fn iter(&self) -> ArrayIter<Self>;
+// }
+
+// impl<'a, O: OffsetSizeTrait> BinaryArrayType<'a> for GenericBinaryArray<O> {
+//     fn iter(&self) -> ArrayIter<Self> {
+//         GenericBinaryArray::<O>::iter(self)
+//     }
+// }
+// impl<'a> BinaryArrayType<'a> for BinaryViewArray {
+//     fn iter(&self) -> ArrayIter<Self> {
+//         BinaryViewArray::iter(self)
+//     }
+// }
+
+// https://rust-lang.github.io/api-guidelines/future-proofing.html#sealed-traits-protect-against-downstream-implementations-c-sealed
+mod private {
+    use super::*;
+
+    pub trait Sealed {}
+
+    impl<O: OffsetSizeTrait> Sealed for GenericBinaryArray<O> {}
+    impl<'a, O: OffsetSizeTrait> Sealed for &'a GenericBinaryArray<O> {}
+    impl Sealed for BinaryViewArray {}
 }
 
 #[cfg(test)]

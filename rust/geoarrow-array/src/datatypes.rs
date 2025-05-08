@@ -55,6 +55,9 @@ pub enum GeoArrowType {
     /// Represents a [WkbArray][crate::array::WkbArray] with `i64` offsets.
     LargeWkb(WkbType),
 
+    /// Represents a [WkbArray][crate::array::WkbArray] with storing a [`BinaryViewArray`].
+    WkbView(WkbType),
+
     /// Represents a [WktArray][crate::array::WktArray] with `i32` offsets.
     Wkt(WktType),
 
@@ -84,13 +87,13 @@ impl GeoArrowType {
             GeometryCollection(t) => Some(t.coord_type()),
             Rect(_) => Some(CoordType::Separated),
             Geometry(t) => Some(t.coord_type()),
-            Wkb(_) | LargeWkb(_) | Wkt(_) | LargeWkt(_) => None,
+            Wkb(_) | LargeWkb(_) | WkbView(_) | Wkt(_) | LargeWkt(_) => None,
         }
     }
 
     /// Get the [`Dimension`] of this data type, if it has one.
     ///
-    /// "Unknown" native arrays can hold all dimensions.
+    /// [GeoArrowType::Geometry] can hold all dimensions and will return `None`.
     ///
     /// WKB and WKT arrays will return `None`.
     pub fn dimension(&self) -> Option<Dimension> {
@@ -104,7 +107,7 @@ impl GeoArrowType {
             MultiPolygon(t) => Some(t.dimension()),
             GeometryCollection(t) => Some(t.dimension()),
             Rect(t) => Some(t.dimension()),
-            Geometry(_) | Wkb(_) | LargeWkb(_) | Wkt(_) | LargeWkt(_) => None,
+            Geometry(_) | Wkb(_) | LargeWkb(_) | WkbView(_) | Wkt(_) | LargeWkt(_) => None,
         }
     }
 
@@ -121,7 +124,7 @@ impl GeoArrowType {
             GeometryCollection(t) => t.metadata(),
             Rect(t) => t.metadata(),
             Geometry(t) => t.metadata(),
-            Wkb(t) | LargeWkb(t) => t.metadata(),
+            Wkb(t) | LargeWkb(t) | WkbView(t) => t.metadata(),
             Wkt(t) | LargeWkt(t) => t.metadata(),
         }
     }
@@ -153,6 +156,7 @@ impl GeoArrowType {
             Geometry(t) => t.data_type(),
             Wkb(_) => DataType::Binary,
             LargeWkb(_) => DataType::LargeBinary,
+            WkbView(_) => DataType::BinaryView,
             Wkt(_) => DataType::Utf8,
             LargeWkt(_) => DataType::LargeUtf8,
         }
@@ -187,6 +191,9 @@ impl GeoArrowType {
             Wkb(t) => Field::new(name, DataType::Binary, nullable).with_extension_type(t.clone()),
             LargeWkb(t) => {
                 Field::new(name, DataType::LargeBinary, nullable).with_extension_type(t.clone())
+            }
+            WkbView(t) => {
+                Field::new(name, DataType::BinaryView, nullable).with_extension_type(t.clone())
             }
             Wkt(t) => Field::new(name, DataType::Utf8, nullable).with_extension_type(t.clone()),
             LargeWkt(t) => {
@@ -266,6 +273,7 @@ impl GeoArrowType {
             Geometry(t) => Geometry(t.with_metadata(meta)),
             Wkb(t) => Wkb(t.with_metadata(meta)),
             LargeWkb(t) => LargeWkb(t.with_metadata(meta)),
+            WkbView(t) => WkbView(t.with_metadata(meta)),
             Wkt(t) => Wkt(t.with_metadata(meta)),
             LargeWkt(t) => LargeWkt(t.with_metadata(meta)),
         }
