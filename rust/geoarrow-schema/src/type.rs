@@ -1355,14 +1355,6 @@ impl WkbType {
     pub fn metadata(&self) -> &Arc<Metadata> {
         &self.metadata
     }
-
-    /// Convert this type to a [`Field`], retaining extension metadata.
-    ///
-    /// This will panic if a data type is provided that is not compatible with WKB arrays.
-    pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool, data_type: DataType) -> Field {
-        self.supports_data_type(&data_type).unwrap();
-        Field::new(name, data_type, nullable).with_extension_type(self.clone())
-    }
 }
 
 impl ExtensionType for WkbType {
@@ -1422,14 +1414,6 @@ impl WktType {
     /// Retrieve the underlying [`Metadata`]
     pub fn metadata(&self) -> &Arc<Metadata> {
         &self.metadata
-    }
-
-    /// Convert this type to a [`Field`], retaining extension metadata.
-    ///
-    /// This will panic if a data type is provided that is not compatible with WKT arrays.
-    pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool, data_type: DataType) -> Field {
-        self.supports_data_type(&data_type).unwrap();
-        Field::new(name, data_type, nullable).with_extension_type(self.clone())
     }
 }
 

@@ -87,8 +87,8 @@ impl<O: OffsetSizeTrait> ArrayBase for WKTArray<O> {
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        self.data_type
-            .to_field("geometry", true, self.storage_type())
+        Field::new("geometry", self.storage_type(), true)
+            .with_extension_type(self.data_type.clone())
             .into()
     }
 

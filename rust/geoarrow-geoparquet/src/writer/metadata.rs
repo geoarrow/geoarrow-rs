@@ -314,9 +314,8 @@ fn create_output_field(column_info: &ColumnInfo, name: String, nullable: bool) -
     use GeoParquetColumnEncoding as Encoding;
 
     match column_info.encoding {
-        Encoding::WKB => {
-            WkbType::new(Default::default()).to_field(name, nullable, DataType::Binary)
-        }
+        Encoding::WKB => Field::new(name, DataType::Binary, nullable)
+            .with_extension_type(WkbType::new(Default::default())),
         // A native encoding
         _ => {
             assert_eq!(column_info.geometry_types.len(), 1);

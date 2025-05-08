@@ -184,10 +184,14 @@ impl GeoArrowType {
             GeometryCollection(t) => t.to_field(name, nullable),
             Rect(t) => t.to_field(name, nullable),
             Geometry(t) => t.to_field(name, nullable),
-            Wkb(t) => t.to_field(name, nullable, DataType::Binary),
-            LargeWkb(t) => t.to_field(name, nullable, DataType::LargeBinary),
-            Wkt(t) => t.to_field(name, nullable, DataType::Utf8),
-            LargeWkt(t) => t.to_field(name, nullable, DataType::LargeUtf8),
+            Wkb(t) => Field::new(name, DataType::Binary, nullable).with_extension_type(t.clone()),
+            LargeWkb(t) => {
+                Field::new(name, DataType::LargeBinary, nullable).with_extension_type(t.clone())
+            }
+            Wkt(t) => Field::new(name, DataType::Utf8, nullable).with_extension_type(t.clone()),
+            LargeWkt(t) => {
+                Field::new(name, DataType::LargeUtf8, nullable).with_extension_type(t.clone())
+            }
         }
     }
 
