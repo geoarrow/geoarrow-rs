@@ -1,5 +1,6 @@
 use arrow_buffer::OffsetBuffer;
 use geo_traits::PolygonTrait;
+use geoarrow_schema::Dimension;
 
 use crate::array::CoordBuffer;
 use crate::eq::polygon_eq;
@@ -40,18 +41,17 @@ impl<'a> Polygon<'a> {
             start_offset,
         }
     }
+
+    pub(crate) fn native_dim(&self) -> Dimension {
+        self.coords.dim()
+    }
 }
 
 impl<'a> PolygonTrait for Polygon<'a> {
-    type T = f64;
     type RingType<'b>
         = LineString<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.coords.dim().into()
-    }
 
     fn exterior(&self) -> Option<Self::RingType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
@@ -74,15 +74,10 @@ impl<'a> PolygonTrait for Polygon<'a> {
 }
 
 impl<'a> PolygonTrait for &'a Polygon<'a> {
-    type T = f64;
     type RingType<'b>
         = LineString<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.coords.dim().into()
-    }
 
     fn exterior(&self) -> Option<Self::RingType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
