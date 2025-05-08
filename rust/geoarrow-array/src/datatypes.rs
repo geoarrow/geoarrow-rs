@@ -151,10 +151,10 @@ impl GeoArrowType {
             GeometryCollection(t) => t.data_type(),
             Rect(t) => t.data_type(),
             Geometry(t) => t.data_type(),
-            Wkb(t) => t.data_type(false),
-            LargeWkb(t) => t.data_type(true),
-            Wkt(t) => t.data_type(false),
-            LargeWkt(t) => t.data_type(true),
+            Wkb(_) => DataType::Binary,
+            LargeWkb(_) => DataType::LargeBinary,
+            Wkt(_) => DataType::Utf8,
+            LargeWkt(_) => DataType::LargeUtf8,
         }
     }
 
@@ -184,10 +184,14 @@ impl GeoArrowType {
             GeometryCollection(t) => t.to_field(name, nullable),
             Rect(t) => t.to_field(name, nullable),
             Geometry(t) => t.to_field(name, nullable),
-            Wkb(t) => t.to_field(name, nullable, false),
-            LargeWkb(t) => t.to_field(name, nullable, true),
-            Wkt(t) => t.to_field(name, nullable, false),
-            LargeWkt(t) => t.to_field(name, nullable, true),
+            Wkb(t) => Field::new(name, DataType::Binary, nullable).with_extension_type(t.clone()),
+            LargeWkb(t) => {
+                Field::new(name, DataType::LargeBinary, nullable).with_extension_type(t.clone())
+            }
+            Wkt(t) => Field::new(name, DataType::Utf8, nullable).with_extension_type(t.clone()),
+            LargeWkt(t) => {
+                Field::new(name, DataType::LargeUtf8, nullable).with_extension_type(t.clone())
+            }
         }
     }
 

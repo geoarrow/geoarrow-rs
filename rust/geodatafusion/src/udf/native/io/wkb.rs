@@ -52,7 +52,10 @@ impl ScalarUDFImpl for AsBinary {
         let field = &args.arg_fields[0];
         let data_type = GeoArrowType::try_from(field).map_err(GeoDataFusionError::GeoArrow)?;
         let wkb_type = WkbType::new(data_type.metadata().clone());
-        Ok(wkb_type.to_field(field.name(), field.is_nullable(), false))
+        Ok(
+            Field::new(field.name(), DataType::Binary, field.is_nullable())
+                .with_extension_type(wkb_type),
+        )
     }
 
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {

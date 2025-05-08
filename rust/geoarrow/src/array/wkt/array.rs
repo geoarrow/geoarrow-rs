@@ -79,12 +79,16 @@ impl<O: OffsetSizeTrait> ArrayBase for WKTArray<O> {
     }
 
     fn storage_type(&self) -> DataType {
-        self.data_type.data_type(O::IS_LARGE)
+        if O::IS_LARGE {
+            DataType::LargeUtf8
+        } else {
+            DataType::Utf8
+        }
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        self.data_type
-            .to_field("geometry", true, O::IS_LARGE)
+        Field::new("geometry", self.storage_type(), true)
+            .with_extension_type(self.data_type.clone())
             .into()
     }
 
