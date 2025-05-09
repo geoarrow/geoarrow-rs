@@ -2180,6 +2180,7 @@ dependencies = [
  "geohash",
  "thiserror 1.0.69",
  "tokio",
+ "wkt 0.13.0",
 ]
 
 [[package]]
