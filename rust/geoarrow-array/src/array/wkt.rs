@@ -200,7 +200,10 @@ impl TryFrom<(&dyn Array, &Field)> for WktArray<i32> {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
-        let typ = field.try_extension_type::<WktType>()?;
+        let typ = field
+            .try_extension_type::<WktType>()
+            .ok()
+            .unwrap_or_default();
         (arr, typ).try_into()
     }
 }
@@ -209,7 +212,10 @@ impl TryFrom<(&dyn Array, &Field)> for WktArray<i64> {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
-        let typ = field.try_extension_type::<WktType>()?;
+        let typ = field
+            .try_extension_type::<WktType>()
+            .ok()
+            .unwrap_or_default();
         (arr, typ).try_into()
     }
 }
@@ -240,6 +246,7 @@ impl TryFrom<WktArray<i64>> for WktArray<i32> {
 
 #[cfg(test)]
 mod test {
+    use arrow_array::builder::{LargeStringBuilder, StringBuilder};
     use geoarrow_schema::{CoordType, Dimension};
 
     use crate::GeoArrowArray;
@@ -290,5 +297,23 @@ mod test {
         let wkb_array_i64: WktArray<i64> = wkb_array_i32.clone().into();
 
         assert_eq!(wkb_array, wkb_array_i64);
+    }
+
+    /// Passing a field without an extension name should not panic
+    #[test]
+    fn allow_field_without_extension_name() {
+        // String array
+        let mut builder = StringBuilder::new();
+        builder.append_value("POINT(1 2)");
+        let array = Arc::new(builder.finish()) as ArrayRef;
+        let field = Field::new("geometry", array.data_type().clone(), true);
+        let _wkt_arr = WktArray::<i32>::try_from((array.as_ref(), &field)).unwrap();
+
+        // Large string
+        let mut builder = LargeStringBuilder::new();
+        builder.append_value("POINT(1 2)");
+        let array = Arc::new(builder.finish()) as ArrayRef;
+        let field = Field::new("geometry", array.data_type().clone(), true);
+        let _wkt_arr = WktArray::<i64>::try_from((array.as_ref(), &field)).unwrap();
     }
 }

@@ -1335,7 +1335,7 @@ fn parse_box(data_type: &DataType) -> Result<Dimension, ArrowError> {
 /// A type representing a geoarrow WKB array.
 ///
 /// This implements the [`ExtensionType`] trait.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct WkbType {
     metadata: Arc<Metadata>,
 }
@@ -1395,7 +1395,7 @@ impl ExtensionType for WkbType {
 /// A type representing a geoarrow WKT array.
 ///
 /// This implements the [`ExtensionType`] trait.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct WktType {
     metadata: Arc<Metadata>,
 }
