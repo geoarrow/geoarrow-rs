@@ -1,5 +1,6 @@
 use arrow_buffer::OffsetBuffer;
 use geo_traits::MultiPolygonTrait;
+use geoarrow_schema::Dimension;
 
 use crate::array::CoordBuffer;
 use crate::eq::multi_polygon_eq;
@@ -45,25 +46,24 @@ impl<'a> MultiPolygon<'a> {
             start_offset,
         }
     }
+
+    pub(crate) fn native_dim(&self) -> Dimension {
+        self.coords.dim()
+    }
 }
 
 impl<'a> MultiPolygonTrait for MultiPolygon<'a> {
-    type T = f64;
-    type PolygonType<'b>
+    type InnerPolygonType<'b>
         = Polygon<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.coords.dim().into()
-    }
 
     fn num_polygons(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
-    unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::InnerPolygonType<'_> {
         Polygon::new(
             self.coords,
             self.polygon_offsets,
@@ -74,22 +74,17 @@ impl<'a> MultiPolygonTrait for MultiPolygon<'a> {
 }
 
 impl<'a> MultiPolygonTrait for &'a MultiPolygon<'a> {
-    type T = f64;
-    type PolygonType<'b>
+    type InnerPolygonType<'b>
         = Polygon<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.coords.dim().into()
-    }
 
     fn num_polygons(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
-    unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::InnerPolygonType<'_> {
         Polygon::new(
             self.coords,
             self.polygon_offsets,

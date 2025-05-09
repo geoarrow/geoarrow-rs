@@ -1,4 +1,5 @@
 use geo_traits::RectTrait;
+use geoarrow_schema::Dimension;
 
 use crate::array::SeparatedCoordBuffer;
 use crate::eq::rect_eq;
@@ -26,18 +27,17 @@ impl<'a> Rect<'a> {
             geom_index,
         }
     }
+
+    pub(crate) fn native_dim(&self) -> Dimension {
+        self.lower.dim
+    }
 }
 
 impl<'a> RectTrait for Rect<'a> {
-    type T = f64;
     type CoordType<'b>
         = SeparatedCoord<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.lower.dim.into()
-    }
 
     fn min(&self) -> Self::CoordType<'_> {
         self.lower.value(self.geom_index)
@@ -49,15 +49,10 @@ impl<'a> RectTrait for Rect<'a> {
 }
 
 impl<'a> RectTrait for &Rect<'a> {
-    type T = f64;
     type CoordType<'b>
         = SeparatedCoord<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.lower.dim.into()
-    }
 
     fn min(&self) -> Self::CoordType<'_> {
         self.lower.value(self.geom_index)

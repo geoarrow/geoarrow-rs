@@ -36,23 +36,17 @@ impl<'a> GeometryCollection<'a> {
             start_offset,
         }
     }
+
+    pub(crate) fn native_dim(&self) -> Dimension {
+        self.array.dim
+    }
 }
 
 impl<'a> GeometryCollectionTrait for GeometryCollection<'a> {
-    type T = f64;
     type GeometryType<'b>
         = Geometry<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        match self.array.dim {
-            Dimension::XY => geo_traits::Dimensions::Xy,
-            Dimension::XYZ => geo_traits::Dimensions::Xyz,
-            Dimension::XYM => geo_traits::Dimensions::Xym,
-            Dimension::XYZM => geo_traits::Dimensions::Xyzm,
-        }
-    }
 
     fn num_geometries(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
@@ -65,20 +59,10 @@ impl<'a> GeometryCollectionTrait for GeometryCollection<'a> {
 }
 
 impl<'a> GeometryCollectionTrait for &'a GeometryCollection<'a> {
-    type T = f64;
     type GeometryType<'b>
         = Geometry<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        match self.array.dim {
-            Dimension::XY => geo_traits::Dimensions::Xy,
-            Dimension::XYZ => geo_traits::Dimensions::Xyz,
-            Dimension::XYM => geo_traits::Dimensions::Xym,
-            Dimension::XYZM => geo_traits::Dimensions::Xyzm,
-        }
-    }
 
     fn num_geometries(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
