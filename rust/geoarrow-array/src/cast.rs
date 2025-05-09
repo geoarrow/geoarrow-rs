@@ -2,9 +2,11 @@
 
 use std::sync::Arc;
 
-use arrow_array::OffsetSizeTrait;
 use arrow_array::builder::GenericStringBuilder;
 use arrow_array::cast::AsArray;
+use arrow_array::{
+    BinaryArray, BinaryViewArray, GenericBinaryArray, LargeBinaryArray, OffsetSizeTrait,
+};
 use geoarrow_schema::WkbType;
 
 use crate::array::*;
@@ -130,12 +132,22 @@ pub trait AsGeoArrowArray {
     }
 
     /// Downcast this to a [`WkbArray`] with `O` offsets returning `None` if not possible
-    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&WkbArray<O>>;
+    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&WkbArray<GenericBinaryArray<O>>>;
 
     /// Downcast this to a [`WkbArray`] with `O` offsets panicking if not possible
     #[inline]
-    fn as_wkb<O: OffsetSizeTrait>(&self) -> &WkbArray<O> {
+    fn as_wkb<O: OffsetSizeTrait>(&self) -> &WkbArray<GenericBinaryArray<O>> {
         self.as_wkb_opt::<O>().unwrap()
+    }
+
+    /// Downcast this to a [`WkbArray`] backed by a [`BinaryViewArray`], returning `None` if not
+    /// possible
+    fn as_wkb_view_opt(&self) -> Option<&WkbArray<BinaryViewArray>>;
+
+    /// Downcast this to a [`WkbArray`] backed by a [`BinaryViewArray`], panicking if not possible
+    #[inline]
+    fn as_wkb_view(&self) -> &WkbArray<BinaryViewArray> {
+        self.as_wkb_view_opt().unwrap()
     }
 
     /// Downcast this to a [`WktArray`] with `O` offsets returning `None` if not possible
@@ -196,8 +208,9 @@ impl AsGeoArrowArray for dyn GeoArrowArray + '_ {
     }
 
     #[inline]
-    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&WkbArray<O>> {
-        self.as_any().downcast_ref::<WkbArray<O>>()
+    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&WkbArray<GenericBinaryArray<O>>> {
+        self.as_any()
+            .downcast_ref::<WkbArray<GenericBinaryArray<O>>>()
     }
 
     #[inline]
@@ -253,8 +266,9 @@ impl AsGeoArrowArray for Arc<dyn GeoArrowArray> {
     }
 
     #[inline]
-    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&WkbArray<O>> {
-        self.as_any().downcast_ref::<WkbArray<O>>()
+    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&WkbArray<GenericBinaryArray<O>>> {
+        self.as_any()
+            .downcast_ref::<WkbArray<GenericBinaryArray<O>>>()
     }
 
     #[inline]
@@ -264,7 +278,9 @@ impl AsGeoArrowArray for Arc<dyn GeoArrowArray> {
 }
 
 /// Convert a [GeoArrowArray] to a [WkbArray].
-pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<WkbArray<O>> {
+pub fn to_wkb<O: OffsetSizeTrait>(
+    arr: &dyn GeoArrowArray,
+) -> Result<WkbArray<GenericBinaryArray<O>>> {
     use GeoArrowType::*;
     match arr.data_type() {
         Point(_) => impl_to_wkb(arr.as_point()),
@@ -280,7 +296,7 @@ pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<WkbArray<O>
             // Note that here O is the _target_ offset type
             if O::IS_LARGE {
                 // We need to convert from i32 to i64
-                let large_arr: WkbArray<i64> = arr.as_wkb::<i32>().clone().into();
+                let large_arr: WkbArray<LargeBinaryArray> = arr.as_wkb::<i32>().clone().into();
                 let array = large_arr.to_array_ref().as_binary::<O>().clone();
                 Ok(WkbArray::new(array, typ.metadata().clone()))
             } else {
@@ -300,17 +316,20 @@ pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<WkbArray<O>
                 Ok(WkbArray::new(array, typ.metadata().clone()))
             } else {
                 // We need to convert from i64 to i32
-                let small_arr: WkbArray<i32> = arr.as_wkb::<i64>().clone().try_into()?;
+                let small_arr: WkbArray<BinaryArray> = arr.as_wkb::<i64>().clone().try_into()?;
                 let array = small_arr.to_array_ref().as_binary::<O>().clone();
                 Ok(WkbArray::new(array, typ.metadata().clone()))
             }
         }
+        WkbView(_) => todo!(),
         Wkt(_) => impl_to_wkb(arr.as_wkt::<i32>()),
         LargeWkt(_) => impl_to_wkb(arr.as_wkt::<i64>()),
     }
 }
 
-fn impl_to_wkb<'a, O: OffsetSizeTrait>(geo_arr: &'a impl ArrayAccessor<'a>) -> Result<WkbArray<O>> {
+fn impl_to_wkb<'a, O: OffsetSizeTrait>(
+    geo_arr: &'a impl ArrayAccessor<'a>,
+) -> Result<WkbArray<GenericBinaryArray<O>>> {
     let geoms = geo_arr
         .iter()
         .map(|x| x.transpose())
@@ -324,7 +343,7 @@ fn impl_to_wkb<'a, O: OffsetSizeTrait>(geo_arr: &'a impl ArrayAccessor<'a>) -> R
 /// Note that the GeoArrow metadata on the new array is taken from `to_type` **not** the original
 /// array. Ensure you construct the [GeoArrowType] with the correct metadata.
 pub fn from_wkb<O: OffsetSizeTrait>(
-    arr: &WkbArray<O>,
+    arr: &WkbArray<&GenericBinaryArray<O>>,
     to_type: GeoArrowType,
 ) -> Result<Arc<dyn GeoArrowArray>> {
     let geoms = arr
