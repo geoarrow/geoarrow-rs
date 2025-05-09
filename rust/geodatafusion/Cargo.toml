@@ -19,6 +19,7 @@ geoarrow-array = { workspace = true }
 geoarrow-schema = { workspace = true }
 geohash = { workspace = true }
 thiserror = { workspace = true }
+wkt = { workspace = true }
 
 [dev-dependencies]
 approx = { workspace = true }

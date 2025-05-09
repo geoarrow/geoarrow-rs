@@ -1,3 +1,3 @@
 mod point;
 
-pub use point::Point;
+pub use point::{MakePoint, MakePointM, Point, PointM, PointZ, PointZM};
