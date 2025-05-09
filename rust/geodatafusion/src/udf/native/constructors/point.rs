@@ -274,6 +274,7 @@ mod test {
 
     use super::*;
 
+    #[ignore = "UDFs on scalar input not yet supported (see https://github.com/geoarrow/geoarrow-rs/pull/1106#issuecomment-2866322000)"]
     #[tokio::test]
     async fn test_st_point() {
         let ctx = SessionContext::new();
