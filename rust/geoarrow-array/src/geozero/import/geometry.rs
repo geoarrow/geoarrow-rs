@@ -249,14 +249,15 @@ impl GeometryArrayBuilder for GeometryStreamBuilder {
 
 #[cfg(test)]
 mod test {
-    use geo_types::{Geometry, GeometryCollection};
     use geoarrow_schema::CoordType;
     use geozero::error::Result;
+    use wkt::Wkt;
+    use wkt::types::GeometryCollection;
 
     use super::*;
     use crate::test::{linestring, multilinestring, multipoint, multipolygon, point, polygon};
 
-    fn geoms() -> Vec<geo_types::Geometry> {
+    fn geoms() -> Vec<Wkt> {
         vec![
             point::p0().into(),
             point::p1().into(),

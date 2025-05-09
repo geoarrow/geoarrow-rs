@@ -13,8 +13,7 @@ rust-version = { workspace = true }
 [features]
 geozero = ["dep:geozero", "dep:arrow-json"]
 # Include test data in public API
-# TODO: Remove geo-types here
-test-data = ["dep:geoarrow-test", "dep:geo-types"]
+test-data = ["dep:geoarrow-test"]
 
 [dependencies]
 arrow-array = { workspace = true }
@@ -22,7 +21,6 @@ arrow-buffer = { workspace = true }
 arrow-json = { workspace = true, optional = true }
 arrow-schema = { workspace = true }
 geo-traits = { workspace = true }
-geo-types = { workspace = true, optional = true }
 geoarrow-schema = { workspace = true }
 geoarrow-test = { workspace = true, optional = true }
 geozero = { workspace = true, optional = true }
