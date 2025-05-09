@@ -11,24 +11,17 @@ rust-version = { workspace = true }
 
 
 [dependencies]
-datafusion = { workspace = true }
-arrow-array = { workspace = true, features = ["chrono-tz"] }
-arrow-buffer = { workspace = true }
-arrow-cast = { workspace = true }
-arrow-csv = { workspace = true, optional = true }
-arrow-data = { workspace = true }
-arrow-ipc = { workspace = true }
+arrow-array = { workspace = true }
 arrow-schema = { workspace = true }
-async-stream = { workspace = true, optional = true }
-async-trait = { workspace = true, optional = true }
+datafusion = { workspace = true }
 geo = { workspace = true }
-geohash = { workspace = true }
-geo-traits = { workspace = true }
 geoarrow-array = { workspace = true }
 geoarrow-schema = { workspace = true }
+geohash = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
 approx = { workspace = true }
+geo-traits = { workspace = true }
 geoarrow-array = { workspace = true, features = ["test-data"] }
 tokio = { workspace = true, features = ["macros", "fs", "rt-multi-thread"] }

@@ -263,10 +263,14 @@ impl ScalarUDFImpl for Point {
 
 #[cfg(test)]
 mod test {
-    // use approx::relative_eq;
+    use std::sync::Arc;
+
+    use approx::relative_eq;
+    use arrow_array::{RecordBatch, create_array};
+    use arrow_schema::Schema;
     use datafusion::prelude::SessionContext;
-    // use geo_traits::PointTrait;
-    // use geoarrow_array::ArrayAccessor;
+    use geo_traits::{CoordTrait, PointTrait};
+    use geoarrow_array::ArrayAccessor;
 
     use super::*;
 
@@ -299,5 +303,43 @@ mod test {
 
         // assert!(relative_eq!(x, -71.104));
         // assert!(relative_eq!(y, 42.315));
+    }
+
+    #[tokio::test]
+    async fn test_st_point_from_table() {
+        let ctx = SessionContext::new();
+
+        ctx.register_udf(Point::new(CoordType::Separated).into());
+
+        let x = create_array!(Float64, [-71.104]);
+        let y = create_array!(Float64, [42.315]);
+
+        let schema = Schema::new([
+            Arc::new(Field::new("x", x.data_type().clone(), true)),
+            Arc::new(Field::new("y", y.data_type().clone(), true)),
+        ]);
+        let batch = RecordBatch::try_new(Arc::new(schema), vec![x, y]).unwrap();
+
+        ctx.register_batch("t", batch).unwrap();
+
+        let sql_df = ctx.sql(r#"SELECT ST_Point(x, y) from t;"#).await.unwrap();
+
+        let output_batches = sql_df.collect().await.unwrap();
+        assert_eq!(output_batches.len(), 1);
+        let output_batch = &output_batches[0];
+        let output_schema = output_batch.schema();
+        let output_field = output_schema.field(0);
+
+        // This succeeds
+        assert_eq!(output_field.extension_type_name(), Some("geoarrow.point"));
+
+        let output_column = output_batch.column(0);
+        let point_arr = PointArray::try_from((output_column.as_ref(), output_field)).unwrap();
+
+        assert_eq!(point_arr.len(), 1);
+        let (x, y) = point_arr.value(0).unwrap().coord().unwrap().x_y();
+
+        assert!(relative_eq!(x, -71.104));
+        assert!(relative_eq!(y, 42.315));
     }
 }
