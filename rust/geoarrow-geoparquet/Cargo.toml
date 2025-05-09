@@ -20,6 +20,12 @@ compression = [
     "parquet/lz4",
     "parquet/zstd",
 ]
+snap = ["parquet/snap"]
+brotli = ["parquet/brotli"]
+flate2 = ["parquet/flate2"]
+lz4 = ["parquet/lz4"]
+zstd = ["parquet/zstd"]
+
 
 [dependencies]
 arrow-arith = { workspace = true }
