@@ -13,7 +13,7 @@ use geoarrow_schema::{
 use crate::error::GeoDataFusionResult;
 
 #[allow(non_snake_case)]
-pub fn POINT2D_TYPE() -> GeoArrowType {
+pub(crate) fn POINT2D_TYPE() -> GeoArrowType {
     GeoArrowType::Point(PointType::new(
         CoordType::Separated,
         Dimension::XY,
@@ -22,7 +22,7 @@ pub fn POINT2D_TYPE() -> GeoArrowType {
 }
 
 #[allow(non_snake_case)]
-pub fn POINT3D_TYPE() -> GeoArrowType {
+pub(crate) fn POINT3D_TYPE() -> GeoArrowType {
     GeoArrowType::Point(PointType::new(
         CoordType::Separated,
         Dimension::XYZ,
@@ -31,17 +31,17 @@ pub fn POINT3D_TYPE() -> GeoArrowType {
 }
 
 #[allow(non_snake_case)]
-pub fn BOX2D_TYPE() -> GeoArrowType {
+pub(crate) fn BOX2D_TYPE() -> GeoArrowType {
     GeoArrowType::Rect(BoxType::new(Dimension::XY, Default::default()))
 }
 
 #[allow(non_snake_case)]
-pub fn BOX3D_TYPE() -> GeoArrowType {
+pub(crate) fn BOX3D_TYPE() -> GeoArrowType {
     GeoArrowType::Rect(BoxType::new(Dimension::XYZ, Default::default()))
 }
 
 #[allow(non_snake_case)]
-pub fn GEOMETRY_TYPE() -> GeoArrowType {
+pub(crate) fn GEOMETRY_TYPE() -> GeoArrowType {
     GeoArrowType::Geometry(GeometryType::new(CoordType::Separated, Default::default()))
 }
 
