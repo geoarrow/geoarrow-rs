@@ -4,7 +4,7 @@
 //! allocation-free for any coordinate access.
 //!
 //! For "serialized" scalars emitted from the [`GenericWkbArray`][crate::array::GenericWkbArray] and
-//! [`WktArray`][crate::array::WktArray], there is an initial parsing step when accessing the
+//! [`GenericWktArray`][crate::array::GenericWktArray], there is an initial parsing step when accessing the
 //! scalar from the [`ArrayAccessor`][crate::ArrayAccessor] trait.
 //!
 //! All scalars implement [`geo_traits`]. You can iterate through geometry parts directly using the

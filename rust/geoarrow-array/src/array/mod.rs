@@ -32,7 +32,7 @@ pub use polygon::PolygonArray;
 pub use rect::RectArray;
 pub use wkb::{GenericWkbArray, LargeWkbArray, WkbArray};
 pub use wkb_view::WkbViewArray;
-pub use wkt::WktArray;
+pub use wkt::{GenericWktArray, LargeWktArray, WktArray};
 pub use wkt_view::WktViewArray;
 
 use std::sync::Arc;
@@ -57,11 +57,11 @@ pub fn from_arrow_array(array: &dyn Array, field: &Field) -> Result<Arc<dyn GeoA
         GeometryCollection(_) => Arc::new(GeometryCollectionArray::try_from((array, field))?),
         Rect(_) => Arc::new(RectArray::try_from((array, field))?),
         Geometry(_) => Arc::new(GeometryArray::try_from((array, field))?),
-        Wkb(_) => Arc::new(GenericWkbArray::<i32>::try_from((array, field))?),
-        LargeWkb(_) => Arc::new(GenericWkbArray::<i64>::try_from((array, field))?),
+        Wkb(_) => Arc::new(WkbArray::try_from((array, field))?),
+        LargeWkb(_) => Arc::new(LargeWkbArray::try_from((array, field))?),
         WkbView(_) => Arc::new(WkbViewArray::try_from((array, field))?),
-        Wkt(_) => Arc::new(WktArray::<i32>::try_from((array, field))?),
-        LargeWkt(_) => Arc::new(WktArray::<i64>::try_from((array, field))?),
+        Wkt(_) => Arc::new(WktArray::try_from((array, field))?),
+        LargeWkt(_) => Arc::new(LargeWktArray::try_from((array, field))?),
         WktView(_) => Arc::new(WktViewArray::try_from((array, field))?),
     };
     Ok(result)
@@ -95,8 +95,8 @@ impl GenericWkbArrayType<'_> for WkbViewArray {}
 ///
 /// Currently three types are supported:
 ///
-/// - [`WktArray<i32>`]
-/// - [`WktArray<i64>`]
+/// - [`GenericWktArray<i32>`]
+/// - [`GenericWktArray<i64>`]
 /// - [`WktViewArray`]
 ///
 /// This trait helps to abstract over the different types of WKT arrays so that we don’t need to
@@ -104,11 +104,11 @@ impl GenericWkbArrayType<'_> for WkbViewArray {}
 ///
 /// This is modeled after the upstream [`StringArrayType`][arrow_array::array::StringArrayType]
 /// trait.
-pub trait WktArrayType:
+pub trait GenericWktArrayType:
     Sized + for<'a> crate::GeoArrowArrayAccessor<'a, Item = ::wkt::Wkt>
 {
 }
 
-impl WktArrayType for WktArray<i32> {}
-impl WktArrayType for WktArray<i64> {}
-impl WktArrayType for WktViewArray {}
+impl GenericWktArrayType for GenericWktArray<i32> {}
+impl GenericWktArrayType for GenericWktArray<i64> {}
+impl GenericWktArrayType for WktViewArray {}

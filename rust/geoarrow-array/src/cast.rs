@@ -149,12 +149,12 @@ pub trait AsGeoArrowArray {
         self.as_wkb_view_opt().unwrap()
     }
 
-    /// Downcast this to a [`WktArray`] with `O` offsets returning `None` if not possible
-    fn as_wkt_opt<O: OffsetSizeTrait>(&self) -> Option<&WktArray<O>>;
+    /// Downcast this to a [`GenericWktArray`] with `O` offsets returning `None` if not possible
+    fn as_wkt_opt<O: OffsetSizeTrait>(&self) -> Option<&GenericWktArray<O>>;
 
-    /// Downcast this to a [`WktArray`] with `O` offsets panicking if not possible
+    /// Downcast this to a [`GenericWktArray`] with `O` offsets panicking if not possible
     #[inline]
-    fn as_wkt<O: OffsetSizeTrait>(&self) -> &WktArray<O> {
+    fn as_wkt<O: OffsetSizeTrait>(&self) -> &GenericWktArray<O> {
         self.as_wkt_opt::<O>().unwrap()
     }
 
@@ -226,8 +226,8 @@ impl AsGeoArrowArray for dyn GeoArrowArray + '_ {
     }
 
     #[inline]
-    fn as_wkt_opt<O: OffsetSizeTrait>(&self) -> Option<&WktArray<O>> {
-        self.as_any().downcast_ref::<WktArray<O>>()
+    fn as_wkt_opt<O: OffsetSizeTrait>(&self) -> Option<&GenericWktArray<O>> {
+        self.as_any().downcast_ref::<GenericWktArray<O>>()
     }
 
     #[inline]
@@ -293,8 +293,8 @@ impl AsGeoArrowArray for Arc<dyn GeoArrowArray> {
     }
 
     #[inline]
-    fn as_wkt_opt<O: OffsetSizeTrait>(&self) -> Option<&WktArray<O>> {
-        self.as_any().downcast_ref::<WktArray<O>>()
+    fn as_wkt_opt<O: OffsetSizeTrait>(&self) -> Option<&GenericWktArray<O>> {
+        self.as_any().downcast_ref::<GenericWktArray<O>>()
     }
 
     #[inline]
@@ -493,8 +493,8 @@ pub fn from_wkb<'a, A: GenericWkbArrayType<'a>>(
     Ok(result)
 }
 
-/// Convert a [GeoArrowArray] to a [WktArray].
-pub fn to_wkt<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<WktArray<O>> {
+/// Convert a [GeoArrowArray] to a [GenericWktArray].
+pub fn to_wkt<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<GenericWktArray<O>> {
     use GeoArrowType::*;
     match arr.data_type() {
         Point(_) => impl_to_wkt(arr.as_point()),
@@ -511,15 +511,15 @@ pub fn to_wkt<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<WktArray<O>
         WkbView(_) => impl_to_wkt(arr.as_wkb_view()),
         Wkt(typ) => {
             if O::IS_LARGE {
-                let large_arr: WktArray<i64> = arr.as_wkt::<i32>().clone().into();
+                let large_arr: GenericWktArray<i64> = arr.as_wkt::<i32>().clone().into();
                 let array = large_arr.to_array_ref().as_string::<O>().clone();
-                Ok(WktArray::new(array, typ.metadata().clone()))
+                Ok(GenericWktArray::new(array, typ.metadata().clone()))
             } else {
                 // Since O is already i32, we can just go via ArrayRef, and use .as_string to cast
                 // to O
                 let array = arr.as_wkt::<i32>().to_array_ref();
                 let array = array.as_string::<O>().clone();
-                Ok(WktArray::new(array, typ.metadata().clone()))
+                Ok(GenericWktArray::new(array, typ.metadata().clone()))
             }
         }
         LargeWkt(typ) => {
@@ -528,11 +528,11 @@ pub fn to_wkt<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<WktArray<O>
                 // to O
                 let array = arr.as_wkt::<i64>().to_array_ref();
                 let array = array.as_string::<O>().clone();
-                Ok(WktArray::new(array, typ.metadata().clone()))
+                Ok(GenericWktArray::new(array, typ.metadata().clone()))
             } else {
-                let small_arr: WktArray<i32> = arr.as_wkt::<i64>().clone().try_into()?;
+                let small_arr: GenericWktArray<i32> = arr.as_wkt::<i64>().clone().try_into()?;
                 let array = small_arr.to_array_ref().as_string::<O>().clone();
-                Ok(WktArray::new(array, typ.metadata().clone()))
+                Ok(GenericWktArray::new(array, typ.metadata().clone()))
             }
         }
         WktView(_) => {
@@ -543,7 +543,7 @@ pub fn to_wkt<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<WktArray<O>
 
 fn impl_to_wkt<'a, O: OffsetSizeTrait>(
     geo_arr: &'a impl GeoArrowArrayAccessor<'a>,
-) -> Result<WktArray<O>> {
+) -> Result<GenericWktArray<O>> {
     let metadata = geo_arr.data_type().metadata().clone();
     let mut builder = GenericStringBuilder::new();
 
@@ -556,7 +556,7 @@ fn impl_to_wkt<'a, O: OffsetSizeTrait>(
         }
     }
 
-    Ok(WktArray::new(builder.finish(), metadata))
+    Ok(GenericWktArray::new(builder.finish(), metadata))
 }
 
 /// Convert a [GeoArrowArray] to a [WktViewArray].
@@ -598,11 +598,14 @@ fn impl_to_wkt_view<'a>(geo_arr: &'a impl GeoArrowArrayAccessor<'a>) -> Result<W
     Ok(WktViewArray::new(builder.finish(), metadata))
 }
 
-/// Parse a [WktArray] to a [GeoArrowArray] with the designated [GeoArrowType].
+/// Parse a [GenericWktArray] to a [GeoArrowArray] with the designated [GeoArrowType].
 ///
 /// Note that the GeoArrow metadata on the new array is taken from `to_type` **not** the original
 /// array. Ensure you construct the [GeoArrowType] with the correct metadata.
-pub fn from_wkt<A: WktArrayType>(arr: &A, to_type: GeoArrowType) -> Result<Arc<dyn GeoArrowArray>> {
+pub fn from_wkt<A: GenericWktArrayType>(
+    arr: &A,
+    to_type: GeoArrowType,
+) -> Result<Arc<dyn GeoArrowArray>> {
     let geoms = arr
         .iter()
         .map(|g| g.transpose())
@@ -824,12 +827,12 @@ mod test {
 
     #[test]
     fn test_cast_wkt_in_to_wkt() {
-        let wkt_arr: WktArray<i32> =
+        let wkt_arr: GenericWktArray<i32> =
             to_wkt(&test::point::array(CoordType::Separated, Dimension::XY)).unwrap();
-        let wkt_arr2: WktArray<i32> = to_wkt(&wkt_arr).unwrap();
-        let wkt_arr3: WktArray<i64> = to_wkt(&wkt_arr2).unwrap();
-        let wkt_arr4: WktArray<i64> = to_wkt(&wkt_arr3).unwrap();
-        let wkt_arr5: WktArray<i32> = to_wkt(&wkt_arr4).unwrap();
+        let wkt_arr2: GenericWktArray<i32> = to_wkt(&wkt_arr).unwrap();
+        let wkt_arr3: GenericWktArray<i64> = to_wkt(&wkt_arr2).unwrap();
+        let wkt_arr4: GenericWktArray<i64> = to_wkt(&wkt_arr3).unwrap();
+        let wkt_arr5: GenericWktArray<i32> = to_wkt(&wkt_arr4).unwrap();
         assert_eq!(wkt_arr, wkt_arr5);
     }
 

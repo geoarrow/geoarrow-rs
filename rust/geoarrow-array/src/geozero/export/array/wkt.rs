@@ -2,11 +2,11 @@ use arrow_array::OffsetSizeTrait;
 use geozero::error::GeozeroError;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-use crate::array::WktArray;
+use crate::array::GenericWktArray;
 use crate::geozero::export::scalar::process_geometry;
 use crate::{GeoArrowArray, GeoArrowArrayAccessor};
 
-impl<O: OffsetSizeTrait> GeozeroGeometry for WktArray<O> {
+impl<O: OffsetSizeTrait> GeozeroGeometry for GenericWktArray<O> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,

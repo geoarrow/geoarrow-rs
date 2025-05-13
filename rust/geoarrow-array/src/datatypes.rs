@@ -58,10 +58,10 @@ pub enum GeoArrowType {
     /// Represents a [WkbViewArray][crate::array::WkbViewArray].
     WkbView(WkbType),
 
-    /// Represents a [WktArray][crate::array::WktArray] with `i32` offsets.
+    /// Represents a [GenericWktArray][crate::array::GenericWktArray] with `i32` offsets.
     Wkt(WktType),
 
-    /// Represents a [WktArray][crate::array::WktArray] with `i64` offsets.
+    /// Represents a [GenericWktArray][crate::array::GenericWktArray] with `i64` offsets.
     LargeWkt(WktType),
 
     /// Represents a [WktViewArray][crate::array::WktViewArray].
