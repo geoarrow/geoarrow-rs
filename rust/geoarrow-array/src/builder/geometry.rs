@@ -331,7 +331,7 @@ impl<'a> GeometryBuilder {
     /// If `self.prefer_multi` is `true`, it will be stored in the `MultiPointBuilder` child
     /// array. Otherwise, it will be stored in the `PointBuilder` child array.
     #[inline]
-    pub fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) -> Result<()> {
+    fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) -> Result<()> {
         if let Some(point) = value {
             let dim: Dimension = point.dim().try_into().unwrap();
             let array_idx = dim.order();
@@ -397,10 +397,7 @@ impl<'a> GeometryBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub fn push_line_string(
-        &mut self,
-        value: Option<&impl LineStringTrait<T = f64>>,
-    ) -> Result<()> {
+    fn push_line_string(&mut self, value: Option<&impl LineStringTrait<T = f64>>) -> Result<()> {
         if let Some(line_string) = value {
             let dim: Dimension = line_string.dim().try_into().unwrap();
             let array_idx = dim.order();
@@ -455,7 +452,7 @@ impl<'a> GeometryBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> Result<()> {
+    fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> Result<()> {
         if let Some(polygon) = value {
             let dim: Dimension = polygon.dim().try_into().unwrap();
             let array_idx = dim.order();
@@ -507,10 +504,7 @@ impl<'a> GeometryBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub fn push_multi_point(
-        &mut self,
-        value: Option<&impl MultiPointTrait<T = f64>>,
-    ) -> Result<()> {
+    fn push_multi_point(&mut self, value: Option<&impl MultiPointTrait<T = f64>>) -> Result<()> {
         if let Some(multi_point) = value {
             let dim: Dimension = multi_point.dim().try_into().unwrap();
             let array_idx = dim.order();
@@ -547,7 +541,7 @@ impl<'a> GeometryBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub fn push_multi_line_string(
+    fn push_multi_line_string(
         &mut self,
         value: Option<&impl MultiLineStringTrait<T = f64>>,
     ) -> Result<()> {
@@ -587,7 +581,7 @@ impl<'a> GeometryBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub fn push_multi_polygon(
+    fn push_multi_polygon(
         &mut self,
         value: Option<&impl MultiPolygonTrait<T = f64>>,
     ) -> Result<()> {
@@ -663,7 +657,7 @@ impl<'a> GeometryBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub fn push_geometry_collection(
+    fn push_geometry_collection(
         &mut self,
         value: Option<&impl GeometryCollectionTrait<T = f64>>,
     ) -> Result<()> {

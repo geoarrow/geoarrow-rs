@@ -141,7 +141,7 @@ impl<'a> GeometryCollectionBuilder {
 
     /// Push a Point onto the end of this builder
     #[inline]
-    pub fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) -> Result<()> {
+    fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) -> Result<()> {
         if let Some(geom) = value {
             self.geoms.push_point(geom)?;
             self.geom_offsets.try_push_usize(1)?;
@@ -154,10 +154,7 @@ impl<'a> GeometryCollectionBuilder {
 
     /// Push a LineString onto the end of this builder
     #[inline]
-    pub fn push_line_string(
-        &mut self,
-        value: Option<&impl LineStringTrait<T = f64>>,
-    ) -> Result<()> {
+    fn push_line_string(&mut self, value: Option<&impl LineStringTrait<T = f64>>) -> Result<()> {
         if let Some(geom) = value {
             self.geoms.push_line_string(geom)?;
             self.geom_offsets.try_push_usize(1)?;
@@ -170,7 +167,7 @@ impl<'a> GeometryCollectionBuilder {
 
     /// Push a Polygon onto the end of this builder
     #[inline]
-    pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> Result<()> {
+    fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> Result<()> {
         if let Some(geom) = value {
             self.geoms.push_polygon(geom)?;
             self.geom_offsets.try_push_usize(1)?;
@@ -183,10 +180,7 @@ impl<'a> GeometryCollectionBuilder {
 
     /// Push a MultiPoint onto the end of this builder
     #[inline]
-    pub fn push_multi_point(
-        &mut self,
-        value: Option<&impl MultiPointTrait<T = f64>>,
-    ) -> Result<()> {
+    fn push_multi_point(&mut self, value: Option<&impl MultiPointTrait<T = f64>>) -> Result<()> {
         if let Some(geom) = value {
             self.geoms.push_multi_point(geom)?;
             self.geom_offsets.try_push_usize(1)?;
@@ -199,7 +193,7 @@ impl<'a> GeometryCollectionBuilder {
 
     /// Push a MultiLineString onto the end of this builder
     #[inline]
-    pub fn push_multi_line_string(
+    fn push_multi_line_string(
         &mut self,
         value: Option<&impl MultiLineStringTrait<T = f64>>,
     ) -> Result<()> {
@@ -215,7 +209,7 @@ impl<'a> GeometryCollectionBuilder {
 
     /// Push a MultiPolygon onto the end of this builder
     #[inline]
-    pub fn push_multi_polygon(
+    fn push_multi_polygon(
         &mut self,
         value: Option<&impl MultiPolygonTrait<T = f64>>,
     ) -> Result<()> {

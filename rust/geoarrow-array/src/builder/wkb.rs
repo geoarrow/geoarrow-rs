@@ -1,15 +1,9 @@
 use arrow_array::OffsetSizeTrait;
 use arrow_array::builder::GenericBinaryBuilder;
-use geo_traits::{
-    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
-    MultiPolygonTrait, PointTrait, PolygonTrait,
-};
+use geo_traits::GeometryTrait;
 use geoarrow_schema::WkbType;
 use wkb::Endianness;
-use wkb::writer::{
-    write_geometry, write_geometry_collection, write_line_string, write_multi_line_string,
-    write_multi_point, write_multi_polygon, write_point, write_polygon,
-};
+use wkb::writer::write_geometry;
 
 use crate::array::GenericWkbArray;
 use crate::capacity::WkbCapacity;
@@ -52,91 +46,11 @@ impl<O: OffsetSizeTrait> WkbBuilder<O> {
     // pub fn reserve(&mut self, capacity: WkbCapacity) {
     // }
 
-    /// Push a Point onto the end of this builder
-    #[inline]
-    pub fn push_point(&mut self, geom: Option<&impl PointTrait<T = f64>>) {
-        if let Some(geom) = geom {
-            write_point(&mut self.0, geom, Endianness::LittleEndian).unwrap();
-            self.0.append_value("")
-        } else {
-            self.0.append_null();
-        }
-    }
-
-    /// Push a LineString onto the end of this builder
-    #[inline]
-    pub fn push_line_string(&mut self, geom: Option<&impl LineStringTrait<T = f64>>) {
-        if let Some(geom) = geom {
-            write_line_string(&mut self.0, geom, Endianness::LittleEndian).unwrap();
-            self.0.append_value("")
-        } else {
-            self.0.append_null()
-        }
-    }
-
-    /// Push a Polygon onto the end of this builder
-    #[inline]
-    pub fn push_polygon(&mut self, geom: Option<&impl PolygonTrait<T = f64>>) {
-        if let Some(geom) = geom {
-            write_polygon(&mut self.0, geom, Endianness::LittleEndian).unwrap();
-            self.0.append_value("")
-        } else {
-            self.0.append_null()
-        }
-    }
-
-    /// Push a MultiPoint onto the end of this builder
-    #[inline]
-    pub fn push_multi_point(&mut self, geom: Option<&impl MultiPointTrait<T = f64>>) {
-        if let Some(geom) = geom {
-            write_multi_point(&mut self.0, geom, Endianness::LittleEndian).unwrap();
-            self.0.append_value("")
-        } else {
-            self.0.append_null()
-        }
-    }
-
-    /// Push a MultiLineString onto the end of this builder
-    #[inline]
-    pub fn push_multi_line_string(&mut self, geom: Option<&impl MultiLineStringTrait<T = f64>>) {
-        if let Some(geom) = geom {
-            write_multi_line_string(&mut self.0, geom, Endianness::LittleEndian).unwrap();
-            self.0.append_value("")
-        } else {
-            self.0.append_null()
-        }
-    }
-
-    /// Push a MultiPolygon onto the end of this builder
-    #[inline]
-    pub fn push_multi_polygon(&mut self, geom: Option<&impl MultiPolygonTrait<T = f64>>) {
-        if let Some(geom) = geom {
-            write_multi_polygon(&mut self.0, geom, Endianness::LittleEndian).unwrap();
-            self.0.append_value("")
-        } else {
-            self.0.append_null()
-        }
-    }
-
     /// Push a Geometry onto the end of this builder
     #[inline]
     pub fn push_geometry(&mut self, geom: Option<&impl GeometryTrait<T = f64>>) {
         if let Some(geom) = geom {
             write_geometry(&mut self.0, geom, Endianness::LittleEndian).unwrap();
-            self.0.append_value("")
-        } else {
-            self.0.append_null()
-        }
-    }
-
-    /// Push a GeometryCollection onto the end of this builder
-    #[inline]
-    pub fn push_geometry_collection(
-        &mut self,
-        geom: Option<&impl GeometryCollectionTrait<T = f64>>,
-    ) {
-        if let Some(geom) = geom {
-            write_geometry_collection(&mut self.0, geom, Endianness::LittleEndian).unwrap();
             self.0.append_value("")
         } else {
             self.0.append_null()
