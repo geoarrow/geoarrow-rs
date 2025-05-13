@@ -18,13 +18,6 @@ use crate::capacity::PolygonCapacity;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
 
-pub type MutablePolygonParts = (
-    CoordBufferBuilder,
-    OffsetsBuilder<i32>,
-    OffsetsBuilder<i32>,
-    NullBufferBuilder,
-);
-
 /// The GeoArrow equivalent to `Vec<Option<Polygon>>`: a mutable collection of Polygons.
 ///
 /// Converting an [`PolygonBuilder`] into a [`PolygonArray`] is `O(1)`.
@@ -121,16 +114,6 @@ impl PolygonBuilder {
     ) {
         let counter = PolygonCapacity::from_polygons(geoms);
         self.reserve_exact(counter)
-    }
-
-    /// Extract the low-level APIs from the [`PolygonBuilder`].
-    pub fn into_inner(self) -> MutablePolygonParts {
-        (
-            self.coords,
-            self.geom_offsets,
-            self.ring_offsets,
-            self.validity,
-        )
     }
 
     /// Push a raw offset to the underlying geometry offsets buffer.

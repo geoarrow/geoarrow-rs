@@ -81,11 +81,6 @@ impl PointArray {
         &self.coords
     }
 
-    /// Access the
-    pub fn into_inner(self) -> (CoordBuffer, Option<NullBuffer>) {
-        (self.coords, self.nulls)
-    }
-
     /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> usize {
         self.len()

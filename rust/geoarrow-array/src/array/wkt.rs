@@ -50,11 +50,6 @@ impl<O: OffsetSizeTrait> GenericWktArray<O> {
         &self.array
     }
 
-    /// Consume self and access the underlying data.
-    pub fn into_inner(self) -> GenericStringArray<O> {
-        self.array
-    }
-
     /// Slices this [`GenericWkbArray`] in place.
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
