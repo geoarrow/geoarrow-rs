@@ -4,7 +4,7 @@ use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, Point
 use geoarrow_schema::{CoordType, PointType};
 
 // use super::array::check;
-use crate::array::{PointArray, GenericWkbArray};
+use crate::array::{GenericWkbArray, PointArray};
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder,
 };

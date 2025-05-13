@@ -5,7 +5,7 @@ use geoarrow_schema::{CoordType, MultiPointType};
 
 use crate::capacity::MultiPointCapacity;
 // use super::array::check;
-use crate::array::{MultiPointArray, GenericWkbArray};
+use crate::array::{GenericWkbArray, MultiPointArray};
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
 };

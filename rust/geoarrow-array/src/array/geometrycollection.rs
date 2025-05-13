@@ -6,7 +6,7 @@ use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{CoordType, GeometryCollectionType, Metadata};
 
-use crate::array::{MixedGeometryArray, GenericWkbArray};
+use crate::array::{GenericWkbArray, MixedGeometryArray};
 use crate::builder::GeometryCollectionBuilder;
 use crate::capacity::GeometryCollectionCapacity;
 use crate::datatypes::GeoArrowType;

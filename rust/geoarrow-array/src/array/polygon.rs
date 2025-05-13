@@ -7,7 +7,7 @@ use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{CoordType, Metadata, PolygonType};
 
-use crate::array::{CoordBuffer, RectArray, GenericWkbArray};
+use crate::array::{CoordBuffer, GenericWkbArray, RectArray};
 use crate::builder::PolygonBuilder;
 use crate::capacity::PolygonCapacity;
 use crate::datatypes::GeoArrowType;

@@ -3,7 +3,7 @@ use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
 use geoarrow_schema::{CoordType, LineStringType};
 
-use crate::array::{LineStringArray, GenericWkbArray};
+use crate::array::{GenericWkbArray, LineStringArray};
 use crate::builder::geo_trait_wrappers::LineWrapper;
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,

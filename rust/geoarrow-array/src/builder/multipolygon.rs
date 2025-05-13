@@ -7,7 +7,7 @@ use geoarrow_schema::{CoordType, MultiPolygonType};
 
 use crate::capacity::MultiPolygonCapacity;
 // use super::array::check;
-use crate::array::{MultiPolygonArray, GenericWkbArray};
+use crate::array::{GenericWkbArray, MultiPolygonArray};
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
 };

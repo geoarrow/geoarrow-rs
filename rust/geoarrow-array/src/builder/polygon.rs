@@ -6,7 +6,7 @@ use geo_traits::{
 };
 use geoarrow_schema::{CoordType, PolygonType};
 
-use crate::array::{PolygonArray, GenericWkbArray};
+use crate::array::{GenericWkbArray, PolygonArray};
 use crate::builder::geo_trait_wrappers::{RectWrapper, TriangleWrapper};
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,

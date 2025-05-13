@@ -4,7 +4,7 @@ use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, Multi
 use geoarrow_schema::{CoordType, MultiLineStringType};
 // use super::array::check;
 
-use crate::array::{MultiLineStringArray, GenericWkbArray};
+use crate::array::{GenericWkbArray, MultiLineStringArray};
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
 };
@@ -354,7 +354,9 @@ impl MultiLineStringBuilder {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, MultiLineStringType)> for MultiLineStringBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, MultiLineStringType)>
+    for MultiLineStringBuilder
+{
     type Error = GeoArrowError;
 
     fn try_from((value, typ): (GenericWkbArray<O>, MultiLineStringType)) -> Result<Self> {

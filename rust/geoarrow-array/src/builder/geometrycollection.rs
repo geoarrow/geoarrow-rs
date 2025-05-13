@@ -7,7 +7,7 @@ use geo_traits::{
 use geoarrow_schema::GeometryCollectionType;
 use wkt::WktNum;
 
-use crate::array::{GeometryCollectionArray, GenericWkbArray};
+use crate::array::{GenericWkbArray, GeometryCollectionArray};
 use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
 use crate::builder::{MixedGeometryBuilder, OffsetsBuilder};
 use crate::capacity::GeometryCollectionCapacity;
