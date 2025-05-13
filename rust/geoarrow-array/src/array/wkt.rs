@@ -20,12 +20,10 @@ use crate::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 
 /// An immutable array of WKT geometries using GeoArrow's in-memory representation.
 ///
-/// This is semantically equivalent to `Vec<Option<WKT>>` due to the internal validity bitmap.
+/// This is a wrapper around an Arrow [GenericStringArray] and is semantically equivalent to
+/// `Vec<Option<WKT>>` due to the internal validity bitmap.
 ///
-/// This is a wrapper around an Arrow [GenericStringArray], but additionally stores an
-/// [ArrayMetadata] so that we can persist CRS information about the data.
-///
-/// Refer to [`crate::io::wkt`] for encoding and decoding this array to the native array types.
+/// Refer to [`crate::cast`] for converting this array to other GeoArrow array types.
 #[derive(Debug, Clone, PartialEq)]
 pub struct GenericWktArray<O: OffsetSizeTrait> {
     pub(crate) data_type: WktType,

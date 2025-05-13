@@ -96,9 +96,7 @@ impl GeoArrowType {
 
     /// Get the [`Dimension`] of this data type, if it has one.
     ///
-    /// "Unknown" native arrays can hold all dimensions.
-    ///
-    /// WKB and WKT arrays will return `None`.
+    /// [`GeometryArray``], WKB and WKT arrays will return `None`.
     pub fn dimension(&self) -> Option<Dimension> {
         use GeoArrowType::*;
         match self {
@@ -140,11 +138,13 @@ impl GeoArrowType {
     ///
     /// # Examples
     ///
-    /// ```ignore
-    /// use geoarrow::{array::CoordType, datatypes::{GeoArrowType, Dimension}};
-    /// use arrow_schema::DataType;
-    ///
-    /// let data_type = GeoArrowType::Point(CoordType::Interleaved, Dimension::XY).to_data_type();
+    /// ```
+    /// # use arrow_schema::DataType;
+    /// # use geoarrow_array::GeoArrowType;
+    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// #
+    /// let point_type = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+    /// let data_type = GeoArrowType::Point(point_type).to_data_type();
     /// assert!(matches!(data_type, DataType::FixedSizeList(_, _)));
     /// ```
     pub fn to_data_type(&self) -> DataType {
@@ -173,13 +173,15 @@ impl GeoArrowType {
     ///
     /// # Examples
     ///
-    /// ```ignore
-    /// use geoarrow::datatypes::GeoArrowType;
-    ///
-    /// let geo_data_type = GeoArrowType::Point(Default::default(), 2.try_into().unwrap());
-    /// let field = geo_data_type.to_field("geometry", false);
+    /// ```
+    /// # use geoarrow_array::GeoArrowType;
+    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// #
+    /// let point_type = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+    /// let geoarrow_type = GeoArrowType::Point(point_type);
+    /// let field = geoarrow_type.to_field("geometry", true);
     /// assert_eq!(field.name(), "geometry");
-    /// assert!(!field.is_nullable());
+    /// assert!(field.is_nullable());
     /// assert_eq!(field.metadata()["ARROW:extension:name"], "geoarrow.point");
     /// ```
     pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool) -> Field {
@@ -209,11 +211,15 @@ impl GeoArrowType {
     ///
     /// # Examples
     ///
-    /// ```ignore
-    /// use geoarrow::{array::CoordType, datatypes::GeoArrowType};
+    /// ```
+    /// # use geoarrow_array::GeoArrowType;
+    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// #
+    /// let point_type = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+    /// let geoarrow_type = GeoArrowType::Point(point_type);
+    /// let new_type = geoarrow_type.with_coord_type(CoordType::Separated);
     ///
-    /// let geo_data_type = GeoArrowType::Point(CoordType::Interleaved, 2.try_into().unwrap());
-    /// let separated_geo_data_type = geo_data_type.with_coord_type(CoordType::Separated);
+    /// assert_eq!(new_type.coord_type(), Some(CoordType::Separated));
     /// ```
     pub fn with_coord_type(self, coord_type: CoordType) -> GeoArrowType {
         use GeoArrowType::*;
@@ -237,11 +243,15 @@ impl GeoArrowType {
     ///
     /// # Examples
     ///
-    /// ```ignore
-    /// use geoarrow::datatypes::GeoArrowType;
+    /// ```
+    /// # use geoarrow_array::GeoArrowType;
+    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// #
+    /// let point_type = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+    /// let geoarrow_type = GeoArrowType::Point(point_type);
+    /// let new_type = geoarrow_type.with_dimension(Dimension::XYZ);
     ///
-    /// let geo_data_type = GeoArrowType::Point(Default::default(), 2.try_into().unwrap());
-    /// let geo_data_type_3d = geo_data_type.with_dimension(3.try_into().unwrap());
+    /// assert_eq!(new_type.dimension(), Some(Dimension::XYZ));
     /// ```
     pub fn with_dimension(self, dim: Dimension) -> GeoArrowType {
         use GeoArrowType::*;
@@ -357,7 +367,7 @@ impl TryFrom<&Field> for GeoArrowType {
                 },
                 name => {
                     return Err(GeoArrowError::General(format!(
-                        "Expected GeoArrow native type, got '{}'.\nIf you're passing a serialized GeoArrow type like 'geoarrow.wkb' or 'geoarrow.wkt', you need to parse to a native representation.",
+                        "Expected GeoArrow type, got '{}'.",
                         name
                     )));
                 }
@@ -392,9 +402,11 @@ impl TryFrom<&Field> for GeoArrowType {
                 },
                 DataType::Binary => Wkb(WkbType::new(metadata)),
                 DataType::LargeBinary => LargeWkb(WkbType::new(metadata)),
+                DataType::BinaryView => WkbView(WkbType::new(metadata)),
                 DataType::Utf8 => Wkt(WktType::new(metadata)),
                 DataType::LargeUtf8 => LargeWkt(WktType::new(metadata)),
-                _ => return Err(GeoArrowError::General("Only FixedSizeList, Struct, Binary, LargeBinary, String, and LargeString arrays are unambigously typed for a GeoArrow type and can be used without extension metadata.\nEnsure your array input has GeoArrow metadata.".to_string())),
+                DataType::Utf8View => WktView(WktType::new(metadata)),
+                _ => return Err(GeoArrowError::General("Only FixedSizeList, Struct, Binary, LargeBinary, BinaryView, String, LargeString, and StringView arrays are unambigously typed for a GeoArrow type and can be used without extension metadata.\nEnsure your array input has GeoArrow metadata.".to_string())),
             };
             Ok(data_type)
         }

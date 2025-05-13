@@ -15,9 +15,10 @@ use crate::{GeoArrowArray, GeoArrowArrayAccessor, GeoArrowType, IntoArrow};
 
 /// An immutable array of WKT geometries.
 ///
-/// This is semantically equivalent to `Vec<Option<Wkt>>` due to the internal validity bitmap.
+/// This is stored as an Arrow [`StringViewArray`] and is semantically equivalent to
+/// `Vec<Option<Wkt>>` due to the internal validity bitmap.
 ///
-/// This is stored as an Arrow [`StringViewArray`].
+/// Refer to [`crate::cast`] for converting this array to other GeoArrow array types.
 #[derive(Debug, Clone, PartialEq)]
 pub struct WktViewArray {
     pub(crate) data_type: WktType,
