@@ -38,45 +38,49 @@ jobs:
       - name: Clippy
         run: cargo clippy --all-features --tests -- -D warnings
       - name: Check
-        run: cargo check --all-features --features gdal/bindgen
+        run: cargo check --all-features
       - name: Test
         run: cargo test --all-features
 
-  check-features-with-external-dependencies:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        args:
-          - ""
-          - "-F csv"
-          - "-F flatgeobuf"
-          - "-F flatgeobuf_async"
-          - "-F ipc_compression"
-          - "-F polylabel"
-          - "-F postgis"
-          - "-F rayon"
-          - "-F gdal -F gdal/bindgen"
-          - "-F geos"
-          - "-F proj"
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: "recursive"
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - uses: prefix-dev/setup-pixi@v0.8.1
-        with:
-          activate-environment: true
-          cache: true
-          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
-          manifest-path: build/pixi.toml
-      - name: Tweak environment to find GDAL
-        run: |
-          echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/envs/default/lib/pkgconfig" >> "$GITHUB_ENV"
-          echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/envs/default/lib" >> "$GITHUB_ENV"
-      - name: Test
-        run: cargo check ${{ matrix.args }}
+  # This part of the old test suite from `geoarrow` used external dependencies,
+  # especially GEOS, GDAL, and PROJ. Come back to this once we use these
+  # dependencies from inside the refactored geoarrow-* crates.
+
+  # check-features-with-external-dependencies:
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       args:
+  #         - ""
+  #         - "-F csv"
+  #         - "-F flatgeobuf"
+  #         - "-F flatgeobuf_async"
+  #         - "-F ipc_compression"
+  #         - "-F polylabel"
+  #         - "-F postgis"
+  #         - "-F rayon"
+  #         - "-F gdal -F gdal/bindgen"
+  #         - "-F geos"
+  #         - "-F proj"
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         submodules: "recursive"
+  #     - uses: dtolnay/rust-toolchain@stable
+  #     - uses: Swatinem/rust-cache@v2
+  #     - uses: prefix-dev/setup-pixi@v0.8.1
+  #       with:
+  #         activate-environment: true
+  #         cache: true
+  #         cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+  #         manifest-path: build/pixi.toml
+  #     - name: Tweak environment to find GDAL
+  #       run: |
+  #         echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/envs/default/lib/pkgconfig" >> "$GITHUB_ENV"
+  #         echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/envs/default/lib" >> "$GITHUB_ENV"
+  #     - name: Test
+  #       run: cargo check ${{ matrix.args }}
 
   # We don't build benchmarks on CI because they're quite slow to compile
   # build-benchmarks:
