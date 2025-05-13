@@ -38,7 +38,7 @@ jobs:
       - name: Clippy
         run: cargo clippy --all-features --tests -- -D warnings
       - name: Check
-        run: cargo check --all-features --features gdal/bindgen
+        run: cargo check --all-features
       - name: Test
         run: cargo test --all-features
 
