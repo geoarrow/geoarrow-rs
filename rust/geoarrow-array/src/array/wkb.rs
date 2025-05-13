@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use arrow_array::builder::GenericByteBuilder;
 use arrow_array::cast::AsArray;
 use arrow_array::{
     Array, ArrayRef, BinaryArray, GenericBinaryArray, LargeBinaryArray, OffsetSizeTrait,
@@ -9,6 +10,7 @@ use arrow_schema::{DataType, Field};
 use geoarrow_schema::{Metadata, WkbType};
 use wkb::reader::Wkb;
 
+use crate::array::WkbViewArray;
 use crate::capacity::WkbCapacity;
 use crate::datatypes::GeoArrowType;
 use crate::error::{GeoArrowError, Result};
@@ -245,6 +247,24 @@ impl TryFrom<WkbArray<i64>> for WkbArray<i32> {
             data_type: value.data_type,
             array,
         })
+    }
+}
+
+impl<O: OffsetSizeTrait> From<WkbViewArray> for WkbArray<O> {
+    fn from(value: WkbViewArray) -> Self {
+        let wkb_type = value.data_type;
+        let binary_view_array = value.array;
+
+        // Copy the bytes from the binary view array into a new byte array
+        let mut builder = GenericByteBuilder::new();
+        binary_view_array
+            .iter()
+            .for_each(|value| builder.append_option(value));
+
+        Self {
+            data_type: wkb_type,
+            array: builder.finish(),
+        }
     }
 }
 
