@@ -44,7 +44,9 @@ impl WktViewArray {
         &self.array
     }
 
-    /// Slices this [`WktViewArray`] in place.
+    /// Slice this [`WktViewArray`].
+    ///
+    ///
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
@@ -59,7 +61,7 @@ impl WktViewArray {
         }
     }
 
-    /// Replace the [ArrayMetadata] in the array with the given metadata
+    /// Replace the [Metadata] in the array with the given metadata
     pub fn with_metadata(&self, metadata: Arc<Metadata>) -> Self {
         let mut arr = self.clone();
         arr.data_type = self.data_type.clone().with_metadata(metadata);

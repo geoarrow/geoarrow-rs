@@ -17,7 +17,7 @@ use crate::error::{GeoArrowError, Result};
 /// "serialized" encodings.
 ///
 /// This is designed to aid in downcasting from dynamically-typed geometry arrays in combination
-/// with the [`AsGeoArrowArray`][crate::AsGeoArrowArray] trait.
+/// with the [`AsGeoArrowArray`][crate::cast::AsGeoArrowArray] trait.
 ///
 /// This type uniquely identifies the physical buffer layout of each geometry array type.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

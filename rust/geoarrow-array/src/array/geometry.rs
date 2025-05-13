@@ -341,7 +341,7 @@ impl GeometryArray {
         self.buffer_lengths().num_bytes()
     }
 
-    /// Slices this [`MixedGeometryArray`] in place.
+    /// Slice this [`GeometryArray`].
     ///
     /// # Implementation
     ///

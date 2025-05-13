@@ -50,7 +50,8 @@ impl<O: OffsetSizeTrait> GenericWktArray<O> {
         &self.array
     }
 
-    /// Slices this [`GenericWkbArray`] in place.
+    /// Slice this [`GenericWktArray`].
+    ///
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
@@ -65,7 +66,7 @@ impl<O: OffsetSizeTrait> GenericWktArray<O> {
         }
     }
 
-    /// Replace the [`ArrayMetadata`] contained in this array.
+    /// Replace the [`Metadata`] contained in this array.
     pub fn with_metadata(&self, metadata: Arc<Metadata>) -> Self {
         let mut arr = self.clone();
         arr.data_type = self.data_type.clone().with_metadata(metadata);
