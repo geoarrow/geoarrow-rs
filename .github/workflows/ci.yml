@@ -42,6 +42,23 @@ jobs:
       - name: Test
         run: cargo test --all-features
 
+  docs-no-warnings:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustdoc
+
+      - name: Test building docs
+        run: cargo doc --all-features --document-private-items
+        env:
+          RUSTDOCFLAGS: "-D warnings"
+
   # This part of the old test suite from `geoarrow` used external dependencies,
   # especially GEOS, GDAL, and PROJ. Come back to this once we use these
   # dependencies from inside the refactored geoarrow-* crates.
