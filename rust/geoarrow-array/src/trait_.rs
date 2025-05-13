@@ -364,8 +364,8 @@ pub trait GeoArrowArrayAccessor<'a>: GeoArrowArray {
     ///     PointBuilder::from_nullable_points([Some(&point1), None].into_iter(), point_type.clone())
     ///         .finish();
     ///
-    /// assert!(point_array.get(0).is_some());
-    /// assert!(point_array.get(1).is_none());
+    /// assert!(point_array.get(0).unwrap().is_some());
+    /// assert!(point_array.get(1).unwrap().is_none());
     /// ```
     ///
     /// # Errors
