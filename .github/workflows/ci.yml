@@ -54,7 +54,7 @@ jobs:
 
       # Note: in the future expand to all crates in the workspace
       - name: Test that docs build without warnings
-        run: cargo doc --all-features --document-private-items -p 'geoarrow-*'
+        run: cargo doc --all-features --document-private-items
         env:
           RUSTDOCFLAGS: "-D warnings"
 

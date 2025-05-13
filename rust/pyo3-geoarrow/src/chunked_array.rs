@@ -53,8 +53,8 @@ impl PyChunkedGeoArrowArray {
             )
     }
 
-    /// Create a new PyChunkedArray from a vec of [ArrayRef]s, inferring their data type
-    /// automatically.
+    /// Create a new PyChunkedArray from a vec of [ArrayRef][arrow_array::array::ArrayRef]s,
+    /// inferring their data type automatically.
     pub fn from_arrays(chunks: Vec<Arc<dyn GeoArrowArray>>) -> PyGeoArrowResult<Self> {
         if chunks.is_empty() {
             return Err(ArrowError::SchemaError(

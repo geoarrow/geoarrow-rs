@@ -59,7 +59,7 @@ impl Default for GeoParquetReaderOptions {
 }
 
 impl GeoParquetReaderOptions {
-    /// Set the size of [RecordBatch][arrow::array::RecordBatch] to produce.
+    /// Set the size of [RecordBatch][arrow_array::RecordBatch] to produce.
     ///
     /// Defaults to 1024. If the batch_size more than the file row count, use the file row count.
     pub fn with_batch_size(self, batch_size: usize) -> Self {
@@ -93,7 +93,7 @@ impl GeoParquetReaderOptions {
     /// allowing it to limit the final set of rows decoded after any pushed down predicates
     ///
     /// It is recommended to enable reading the page index if using this functionality, to allow
-    /// more efficient skipping over data pages. See [`ArrowReaderOptions::with_page_index`]
+    /// more efficient skipping over data pages. See `ArrowReaderOptions::with_page_index`
     pub fn with_limit(self, limit: usize) -> Self {
         Self {
             limit: Some(limit),
