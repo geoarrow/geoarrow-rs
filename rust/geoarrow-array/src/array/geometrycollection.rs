@@ -6,7 +6,7 @@ use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{CoordType, GeometryCollectionType, Metadata};
 
-use crate::array::{MixedGeometryArray, WkbArray};
+use crate::array::{GenericWkbArray, MixedGeometryArray};
 use crate::builder::GeometryCollectionBuilder;
 use crate::capacity::GeometryCollectionCapacity;
 use crate::datatypes::GeoArrowType;
@@ -250,12 +250,12 @@ impl TryFrom<(&dyn Array, &Field)> for GeometryCollectionArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, GeometryCollectionType)>
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, GeometryCollectionType)>
     for GeometryCollectionArray
 {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WkbArray<O>, GeometryCollectionType)) -> Result<Self> {
+    fn try_from(value: (GenericWkbArray<O>, GeometryCollectionType)) -> Result<Self> {
         let mut_arr: GeometryCollectionBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }

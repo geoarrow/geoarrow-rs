@@ -9,7 +9,7 @@ use arrow_schema::{DataType, Field};
 use geoarrow_schema::{Metadata, WktType};
 use wkt::Wkt;
 
-use crate::array::WktArray;
+use crate::array::GenericWktArray;
 use crate::error::{GeoArrowError, Result};
 use crate::{GeoArrowArray, GeoArrowArrayAccessor, GeoArrowType, IntoArrow};
 
@@ -169,8 +169,8 @@ impl TryFrom<(&dyn Array, &Field)> for WktViewArray {
     }
 }
 
-impl<O: OffsetSizeTrait> From<WktArray<O>> for WktViewArray {
-    fn from(value: WktArray<O>) -> Self {
+impl<O: OffsetSizeTrait> From<GenericWktArray<O>> for WktViewArray {
+    fn from(value: GenericWktArray<O>) -> Self {
         let wkb_type = value.data_type;
         let binary_view_array = value.array;
 

@@ -817,10 +817,10 @@ impl TryFrom<(&dyn Array, &Field)> for GeometryArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, GeometryType)> for GeometryArray {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, GeometryType)> for GeometryArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WkbArray<O>, GeometryType)) -> Result<Self> {
+    fn try_from(value: (GenericWkbArray<O>, GeometryType)) -> Result<Self> {
         let mut_arr: GeometryBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }

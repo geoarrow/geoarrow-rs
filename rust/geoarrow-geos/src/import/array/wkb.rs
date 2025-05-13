@@ -1,5 +1,5 @@
 use arrow_array::OffsetSizeTrait;
-use geoarrow_array::array::WkbArray;
+use geoarrow_array::array::GenericWkbArray;
 use geoarrow_array::builder::WkbBuilder;
 use geoarrow_array::error::Result;
 use geoarrow_schema::WkbType;
@@ -22,7 +22,7 @@ impl<O: OffsetSizeTrait> FromGEOS for WkbBuilder<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> FromGEOS for WkbArray<O> {
+impl<O: OffsetSizeTrait> FromGEOS for GenericWkbArray<O> {
     type GeoArrowType = WkbType;
 
     fn from_geos(

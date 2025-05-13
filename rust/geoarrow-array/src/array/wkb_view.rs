@@ -8,7 +8,7 @@ use arrow_schema::{DataType, Field};
 use geoarrow_schema::{Metadata, WkbType};
 use wkb::reader::Wkb;
 
-use crate::array::WkbArray;
+use crate::array::GenericWkbArray;
 use crate::error::{GeoArrowError, Result};
 use crate::{GeoArrowArray, GeoArrowArrayAccessor, GeoArrowType, IntoArrow};
 
@@ -24,7 +24,7 @@ pub struct WkbViewArray {
 }
 
 impl WkbViewArray {
-    /// Create a new WkbArray from a BinaryArray
+    /// Create a new GenericWkbArray from a BinaryArray
     pub fn new(array: BinaryViewArray, metadata: Arc<Metadata>) -> Self {
         Self {
             data_type: WkbType::new(metadata),
@@ -37,7 +37,7 @@ impl WkbViewArray {
         self.len() == 0
     }
 
-    /// Slices this [`WkbArray`] in place.
+    /// Slices this [`GenericWkbArray`] in place.
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
@@ -163,8 +163,8 @@ impl TryFrom<(&dyn Array, &Field)> for WkbViewArray {
     }
 }
 
-impl<O: OffsetSizeTrait> From<WkbArray<O>> for WkbViewArray {
-    fn from(value: WkbArray<O>) -> Self {
+impl<O: OffsetSizeTrait> From<GenericWkbArray<O>> for WkbViewArray {
+    fn from(value: GenericWkbArray<O>) -> Self {
         let wkb_type = value.data_type;
         let binary_view_array = value.array;
 

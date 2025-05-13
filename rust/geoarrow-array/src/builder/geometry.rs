@@ -8,7 +8,7 @@ use geoarrow_schema::{
 };
 use wkt::WktNum;
 
-use crate::array::{DimensionIndex, GeometryArray, WkbArray};
+use crate::array::{DimensionIndex, GenericWkbArray, GeometryArray};
 use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
 use crate::builder::{
     GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder, MultiPointBuilder,
@@ -814,11 +814,11 @@ impl<'a> GeometryBuilder {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, GeometryType)> for GeometryBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, GeometryType)> for GeometryBuilder {
     type Error = GeoArrowError;
 
     fn try_from(
-        (value, typ): (WkbArray<O>, GeometryType),
+        (value, typ): (GenericWkbArray<O>, GeometryType),
     ) -> std::result::Result<Self, Self::Error> {
         let wkb_objects = value
             .iter()

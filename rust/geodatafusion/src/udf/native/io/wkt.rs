@@ -8,7 +8,7 @@ use datafusion::logical_expr::{
     ColumnarValue, Documentation, ReturnFieldArgs, ScalarFunctionArgs, ScalarUDFImpl, Signature,
     Volatility,
 };
-use geoarrow_array::array::{WktArray, from_arrow_array};
+use geoarrow_array::array::{LargeWktArray, WktArray, from_arrow_array};
 use geoarrow_array::cast::{from_wkt, to_wkt};
 use geoarrow_array::{GeoArrowArray, GeoArrowType};
 use geoarrow_schema::{CoordType, GeometryType, WktType};
@@ -115,14 +115,10 @@ impl GeomFromText {
         let field = args.arg_fields[0];
         let to_type = GeoArrowType::try_from(args.return_field)?;
         let geom_arr = match field.data_type() {
-            DataType::Utf8 => from_wkt(
-                &WktArray::<i32>::try_from((array.as_ref(), field))?,
-                to_type,
-            ),
-            DataType::LargeUtf8 => from_wkt(
-                &WktArray::<i64>::try_from((array.as_ref(), field))?,
-                to_type,
-            ),
+            DataType::Utf8 => from_wkt(&WktArray::try_from((array.as_ref(), field))?, to_type),
+            DataType::LargeUtf8 => {
+                from_wkt(&LargeWktArray::try_from((array.as_ref(), field))?, to_type)
+            }
             _ => unreachable!(),
         }?;
 

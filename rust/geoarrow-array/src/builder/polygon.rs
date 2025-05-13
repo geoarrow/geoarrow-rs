@@ -6,7 +6,7 @@ use geo_traits::{
 };
 use geoarrow_schema::{CoordType, PolygonType};
 
-use crate::array::{PolygonArray, WkbArray};
+use crate::array::{GenericWkbArray, PolygonArray};
 use crate::builder::geo_trait_wrappers::{RectWrapper, TriangleWrapper};
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
@@ -337,10 +337,10 @@ impl PolygonBuilder {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, PolygonType)> for PolygonBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, PolygonType)> for PolygonBuilder {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (WkbArray<O>, PolygonType)) -> Result<Self> {
+    fn try_from((value, typ): (GenericWkbArray<O>, PolygonType)) -> Result<Self> {
         let wkb_objects = value
             .iter()
             .map(|x| x.transpose())

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::array::{CoordBuffer, WkbArray};
+use crate::array::{CoordBuffer, GenericWkbArray};
 use crate::builder::LineStringBuilder;
 use crate::capacity::LineStringCapacity;
 use crate::datatypes::GeoArrowType;
@@ -299,10 +299,10 @@ impl TryFrom<(&dyn Array, &Field)> for LineStringArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, LineStringType)> for LineStringArray {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, LineStringType)> for LineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WkbArray<O>, LineStringType)) -> Result<Self> {
+    fn try_from(value: (GenericWkbArray<O>, LineStringType)) -> Result<Self> {
         let mut_arr: LineStringBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }

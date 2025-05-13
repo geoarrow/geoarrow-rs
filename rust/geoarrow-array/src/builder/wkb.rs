@@ -11,12 +11,12 @@ use wkb::writer::{
     write_multi_point, write_multi_polygon, write_point, write_polygon,
 };
 
-use crate::array::WkbArray;
+use crate::array::GenericWkbArray;
 use crate::capacity::WkbCapacity;
 
 /// The GeoArrow equivalent to `Vec<Option<Wkb>>`: a mutable collection of Wkb buffers.
 ///
-/// Converting a [`WkbBuilder`] into a [`WkbArray`] is `O(1)`.
+/// Converting a [`WkbBuilder`] into a [`GenericWkbArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct WkbBuilder<O: OffsetSizeTrait>(GenericBinaryBuilder<O>, WkbType);
 
@@ -170,10 +170,10 @@ impl<O: OffsetSizeTrait> WkbBuilder<O> {
         array
     }
 
-    /// Consume this builder and convert to a [WkbArray].
+    /// Consume this builder and convert to a [GenericWkbArray].
     ///
     /// This is `O(1)`.
-    pub fn finish(mut self) -> WkbArray<O> {
-        WkbArray::new(self.0.finish(), self.1.metadata().clone())
+    pub fn finish(mut self) -> GenericWkbArray<O> {
+        GenericWkbArray::new(self.0.finish(), self.1.metadata().clone())
     }
 }

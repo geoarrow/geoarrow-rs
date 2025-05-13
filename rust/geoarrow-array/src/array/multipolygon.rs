@@ -6,7 +6,7 @@ use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{CoordType, Metadata, MultiPolygonType};
 
-use crate::array::{CoordBuffer, PolygonArray, WkbArray};
+use crate::array::{CoordBuffer, GenericWkbArray, PolygonArray};
 use crate::builder::MultiPolygonBuilder;
 use crate::capacity::MultiPolygonCapacity;
 use crate::datatypes::GeoArrowType;
@@ -421,10 +421,10 @@ impl TryFrom<(&dyn Array, &Field)> for MultiPolygonArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiPolygonType)> for MultiPolygonArray {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, MultiPolygonType)> for MultiPolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WkbArray<O>, MultiPolygonType)) -> Result<Self> {
+    fn try_from(value: (GenericWkbArray<O>, MultiPolygonType)) -> Result<Self> {
         let mut_arr: MultiPolygonBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }
