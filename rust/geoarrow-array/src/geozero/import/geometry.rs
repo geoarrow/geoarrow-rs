@@ -233,6 +233,13 @@ impl GeoArrowArrayBuilder for GeometryStreamBuilder {
         self.builder.push_null()
     }
 
+    fn push_geometry(
+        &mut self,
+        geometry: Option<&impl geo_traits::GeometryTrait<T = f64>>,
+    ) -> crate::error::Result<()> {
+        self.builder.push_geometry(geometry)
+    }
+
     fn finish(self) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.builder.finish())
     }

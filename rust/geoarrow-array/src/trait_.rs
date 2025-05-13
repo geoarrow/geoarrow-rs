@@ -399,7 +399,10 @@ pub trait GeoArrowArrayAccessor<'a>: GeoArrowArray {
 /// thereby making them useful to perform numeric operations without allocations.
 /// As in [`NativeArray`], concrete arrays (such as
 /// [`PointBuilder`][crate::array::PointBuilder]) implement how they are mutated.
-pub trait GeoArrowArrayBuilder: Debug + Send + Sync {
+//
+// Note: This trait is not yet publicly exported from this crate, as we're not sure how the API
+// should be, and in particular whether we need this trait to be dyn-compatible or not.
+pub(crate) trait GeoArrowArrayBuilder: Debug + Send + Sync {
     /// Returns the length of the array.
     ///
     /// # Examples
@@ -434,6 +437,10 @@ pub trait GeoArrowArrayBuilder: Debug + Send + Sync {
 
     /// Push a null value to this builder.
     fn push_null(&mut self);
+
+    /// Push a geometry to this builder.
+    #[allow(dead_code)]
+    fn push_geometry(&mut self, geometry: Option<&impl GeometryTrait<T = f64>>) -> Result<()>;
 
     /// Finish the builder and return an [`Arc`] to the resulting array.
     #[allow(dead_code)]

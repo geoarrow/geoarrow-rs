@@ -249,6 +249,10 @@ impl GeoArrowArrayBuilder for PointBuilder {
         self.push_null();
     }
 
+    fn push_geometry(&mut self, geometry: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+        self.push_geometry(geometry)
+    }
+
     fn finish(self) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.finish())
     }

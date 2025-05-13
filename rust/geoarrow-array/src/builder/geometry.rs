@@ -372,8 +372,8 @@ impl<'a> GeometryBuilder {
     }
 
     #[inline]
-    fn add_type(
-        child: &mut dyn GeoArrowArrayBuilder,
+    fn add_type<B: GeoArrowArrayBuilder>(
+        child: &mut B,
         offsets: &mut Vec<i32>,
         types: &mut Vec<i8>,
         type_id: i8,
@@ -759,9 +759,9 @@ impl<'a> GeometryBuilder {
     }
 
     /// Flush any deferred nulls to the desired array builder.
-    fn flush_deferred_nulls(
+    fn flush_deferred_nulls<B: GeoArrowArrayBuilder>(
         deferred_nulls: &mut usize,
-        child: &mut dyn GeoArrowArrayBuilder,
+        child: &mut B,
         offsets: &mut Vec<i32>,
         types: &mut Vec<i8>,
         type_id: i8,
@@ -830,6 +830,10 @@ impl GeoArrowArrayBuilder for GeometryBuilder {
 
     fn push_null(&mut self) {
         self.push_null();
+    }
+
+    fn push_geometry(&mut self, geometry: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+        self.push_geometry(geometry)
     }
 
     fn finish(self) -> Arc<dyn GeoArrowArray> {
