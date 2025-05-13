@@ -19,9 +19,10 @@ use crate::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 
 /// An immutable array of WKB geometries.
 ///
-/// This is semantically equivalent to `Vec<Option<Wkb>>` due to the internal validity bitmap.
+/// This is stored either as an Arrow [`BinaryArray`] or [`LargeBinaryArray`] and is semantically
+/// equivalent to `Vec<Option<Wkb>>` due to the internal validity bitmap.
 ///
-/// This is stored either as an Arrow [`BinaryArray`] or [`LargeBinaryArray`].
+/// Refer to [`crate::cast`] for converting this array to other GeoArrow array types.
 #[derive(Debug, Clone, PartialEq)]
 pub struct GenericWkbArray<O: OffsetSizeTrait> {
     pub(crate) data_type: WkbType,

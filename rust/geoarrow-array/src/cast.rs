@@ -1,4 +1,5 @@
-//! Helper functions for downcasting [`dyn GeoArrowArray`][GeoArrowArray] to concrete types.
+//! Helper functions for downcasting [`dyn GeoArrowArray`][GeoArrowArray] to concrete types and for
+//! converting between GeoArrow array representations.
 
 use std::sync::Arc;
 
@@ -303,7 +304,7 @@ impl AsGeoArrowArray for Arc<dyn GeoArrowArray> {
     }
 }
 
-/// Convert a [GeoArrowArray] to a [GenericWkbArray].
+/// Convert a [GeoArrowArray] to a [`GenericWkbArray`].
 pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<GenericWkbArray<O>> {
     use GeoArrowType::*;
     match arr.data_type() {
@@ -371,7 +372,7 @@ fn impl_to_wkb<'a, O: OffsetSizeTrait>(
     Ok(WkbBuilder::from_nullable_geometries(geoms.as_slice(), wkb_type).finish())
 }
 
-/// Convert a [GeoArrowArray] to a [WkbViewArray].
+/// Convert a [GeoArrowArray] to a [`WkbViewArray`].
 pub fn to_wkb_view(arr: &dyn GeoArrowArray) -> Result<WkbViewArray> {
     use GeoArrowType::*;
     match arr.data_type() {
@@ -417,7 +418,8 @@ fn impl_to_wkb_view<'a>(geo_arr: &'a impl GeoArrowArrayAccessor<'a>) -> Result<W
     ))
 }
 
-/// Parse a [GenericWkbArray] to a [GeoArrowArray] with the designated [GeoArrowType].
+/// Parse a [`GenericWkbArray`] or [`WkbViewArray`] to a [`GeoArrowArray`] with the designated
+/// [`GeoArrowType`].
 ///
 /// Note that the GeoArrow metadata on the new array is taken from `to_type` **not** the original
 /// array. Ensure you construct the [GeoArrowType] with the correct metadata.
@@ -493,7 +495,7 @@ pub fn from_wkb<'a, A: GenericWkbArrayType<'a>>(
     Ok(result)
 }
 
-/// Convert a [GeoArrowArray] to a [GenericWktArray].
+/// Convert a [GeoArrowArray] to a [`GenericWktArray`].
 pub fn to_wkt<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<GenericWktArray<O>> {
     use GeoArrowType::*;
     match arr.data_type() {
@@ -559,7 +561,7 @@ fn impl_to_wkt<'a, O: OffsetSizeTrait>(
     Ok(GenericWktArray::new(builder.finish(), metadata))
 }
 
-/// Convert a [GeoArrowArray] to a [WktViewArray].
+/// Convert a [GeoArrowArray] to a [`WktViewArray`].
 pub fn to_wkt_view(arr: &dyn GeoArrowArray) -> Result<WktViewArray> {
     use GeoArrowType::*;
     match arr.data_type() {
@@ -598,7 +600,8 @@ fn impl_to_wkt_view<'a>(geo_arr: &'a impl GeoArrowArrayAccessor<'a>) -> Result<W
     Ok(WktViewArray::new(builder.finish(), metadata))
 }
 
-/// Parse a [GenericWktArray] to a [GeoArrowArray] with the designated [GeoArrowType].
+/// Parse a [`GenericWktArray`] or [`WktViewArray`] to a [`GeoArrowArray`] with the designated
+/// [`GeoArrowType`].
 ///
 /// Note that the GeoArrow metadata on the new array is taken from `to_type` **not** the original
 /// array. Ensure you construct the [GeoArrowType] with the correct metadata.
