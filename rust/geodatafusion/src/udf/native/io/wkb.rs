@@ -8,7 +8,7 @@ use datafusion::logical_expr::{
     ColumnarValue, Documentation, ReturnFieldArgs, ScalarFunctionArgs, ScalarUDFImpl, Signature,
     Volatility,
 };
-use geoarrow_array::array::{WkbArray, from_arrow_array};
+use geoarrow_array::array::{LargeWkbArray, WkbArray, from_arrow_array};
 use geoarrow_array::cast::{from_wkb, to_wkb};
 use geoarrow_array::{GeoArrowArray, GeoArrowType};
 use geoarrow_schema::{CoordType, GeometryType, WkbType};
@@ -111,14 +111,10 @@ impl GeomFromWKB {
         let field = args.arg_fields[0];
         let to_type = GeoArrowType::try_from(args.return_field)?;
         let geom_arr = match field.data_type() {
-            DataType::Binary => from_wkb(
-                &WkbArray::<i32>::try_from((array.as_ref(), field))?,
-                to_type,
-            ),
-            DataType::LargeBinary => from_wkb(
-                &WkbArray::<i64>::try_from((array.as_ref(), field))?,
-                to_type,
-            ),
+            DataType::Binary => from_wkb(&WkbArray::try_from((array.as_ref(), field))?, to_type),
+            DataType::LargeBinary => {
+                from_wkb(&LargeWkbArray::try_from((array.as_ref(), field))?, to_type)
+            }
             _ => unreachable!(),
         }?;
         Ok(ColumnarValue::Array(geom_arr.to_array_ref()))

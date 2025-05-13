@@ -7,7 +7,7 @@ use geoarrow_schema::{CoordType, MultiPolygonType};
 
 use crate::capacity::MultiPolygonCapacity;
 // use super::array::check;
-use crate::array::{MultiPolygonArray, WkbArray};
+use crate::array::{MultiPolygonArray, GenericWkbArray};
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
 };
@@ -375,10 +375,10 @@ impl MultiPolygonBuilder {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiPolygonType)> for MultiPolygonBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, MultiPolygonType)> for MultiPolygonBuilder {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (WkbArray<O>, MultiPolygonType)) -> Result<Self> {
+    fn try_from((value, typ): (GenericWkbArray<O>, MultiPolygonType)) -> Result<Self> {
         let wkb_objects = value
             .iter()
             .map(|x| x.transpose())

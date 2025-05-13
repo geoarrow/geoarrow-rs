@@ -57,7 +57,7 @@ impl<O: OffsetSizeTrait> WktArray<O> {
         self.array
     }
 
-    /// Slices this [`WkbArray`] in place.
+    /// Slices this [`GenericWkbArray`] in place.
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]

@@ -131,12 +131,12 @@ pub trait AsGeoArrowArray {
         self.as_geometry_opt().unwrap()
     }
 
-    /// Downcast this to a [`WkbArray`] with `O` offsets returning `None` if not possible
-    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&WkbArray<O>>;
+    /// Downcast this to a [`GenericWkbArray`] with `O` offsets returning `None` if not possible
+    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&GenericWkbArray<O>>;
 
-    /// Downcast this to a [`WkbArray`] with `O` offsets panicking if not possible
+    /// Downcast this to a [`GenericWkbArray`] with `O` offsets panicking if not possible
     #[inline]
-    fn as_wkb<O: OffsetSizeTrait>(&self) -> &WkbArray<O> {
+    fn as_wkb<O: OffsetSizeTrait>(&self) -> &GenericWkbArray<O> {
         self.as_wkb_opt::<O>().unwrap()
     }
 
@@ -216,8 +216,8 @@ impl AsGeoArrowArray for dyn GeoArrowArray + '_ {
     }
 
     #[inline]
-    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&WkbArray<O>> {
-        self.as_any().downcast_ref::<WkbArray<O>>()
+    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&GenericWkbArray<O>> {
+        self.as_any().downcast_ref::<GenericWkbArray<O>>()
     }
 
     #[inline]
@@ -283,8 +283,8 @@ impl AsGeoArrowArray for Arc<dyn GeoArrowArray> {
     }
 
     #[inline]
-    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&WkbArray<O>> {
-        self.as_any().downcast_ref::<WkbArray<O>>()
+    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&GenericWkbArray<O>> {
+        self.as_any().downcast_ref::<GenericWkbArray<O>>()
     }
 
     #[inline]
@@ -303,8 +303,8 @@ impl AsGeoArrowArray for Arc<dyn GeoArrowArray> {
     }
 }
 
-/// Convert a [GeoArrowArray] to a [WkbArray].
-pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<WkbArray<O>> {
+/// Convert a [GeoArrowArray] to a [GenericWkbArray].
+pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<GenericWkbArray<O>> {
     use GeoArrowType::*;
     match arr.data_type() {
         Point(_) => impl_to_wkb(arr.as_point()),
@@ -320,15 +320,15 @@ pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<WkbArray<O>
             // Note that here O is the _target_ offset type
             if O::IS_LARGE {
                 // We need to convert from i32 to i64
-                let large_arr: WkbArray<i64> = arr.as_wkb::<i32>().clone().into();
+                let large_arr: GenericWkbArray<i64> = arr.as_wkb::<i32>().clone().into();
                 let array = large_arr.to_array_ref().as_binary::<O>().clone();
-                Ok(WkbArray::new(array, typ.metadata().clone()))
+                Ok(GenericWkbArray::new(array, typ.metadata().clone()))
             } else {
                 // Since O is already i32, we can just go via ArrayRef, and use .as_binary to cast
                 // to O
                 let array = arr.as_wkb::<i32>().to_array_ref();
                 let array = array.as_binary::<O>().clone();
-                Ok(WkbArray::new(array, typ.metadata().clone()))
+                Ok(GenericWkbArray::new(array, typ.metadata().clone()))
             }
         }
         LargeWkb(typ) => {
@@ -337,12 +337,12 @@ pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<WkbArray<O>
                 // to O
                 let array = arr.as_wkb::<i64>().to_array_ref();
                 let array = array.as_binary::<O>().clone();
-                Ok(WkbArray::new(array, typ.metadata().clone()))
+                Ok(GenericWkbArray::new(array, typ.metadata().clone()))
             } else {
                 // We need to convert from i64 to i32
-                let small_arr: WkbArray<i32> = arr.as_wkb::<i64>().clone().try_into()?;
+                let small_arr: GenericWkbArray<i32> = arr.as_wkb::<i64>().clone().try_into()?;
                 let array = small_arr.to_array_ref().as_binary::<O>().clone();
-                Ok(WkbArray::new(array, typ.metadata().clone()))
+                Ok(GenericWkbArray::new(array, typ.metadata().clone()))
             }
         }
         WkbView(_) => {
@@ -352,7 +352,7 @@ pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<WkbArray<O>
 
             let mut builder = GenericByteBuilder::new();
             array.iter().for_each(|value| builder.append_option(value));
-            Ok(WkbArray::new(builder.finish(), metadata))
+            Ok(GenericWkbArray::new(builder.finish(), metadata))
         }
         Wkt(_) => impl_to_wkb(arr.as_wkt::<i32>()),
         LargeWkt(_) => impl_to_wkb(arr.as_wkt::<i64>()),
@@ -362,7 +362,7 @@ pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<WkbArray<O>
 
 fn impl_to_wkb<'a, O: OffsetSizeTrait>(
     geo_arr: &'a impl GeoArrowArrayAccessor<'a>,
-) -> Result<WkbArray<O>> {
+) -> Result<GenericWkbArray<O>> {
     let geoms = geo_arr
         .iter()
         .map(|x| x.transpose())
@@ -417,14 +417,14 @@ fn impl_to_wkb_view<'a>(geo_arr: &'a impl GeoArrowArrayAccessor<'a>) -> Result<W
     ))
 }
 
-/// Parse a [WkbArray] to a [GeoArrowArray] with the designated [GeoArrowType].
+/// Parse a [GenericWkbArray] to a [GeoArrowArray] with the designated [GeoArrowType].
 ///
 /// Note that the GeoArrow metadata on the new array is taken from `to_type` **not** the original
 /// array. Ensure you construct the [GeoArrowType] with the correct metadata.
 ///
 /// Note that this will be slow if converting from a WKB array to another WKB-typed array. If
 /// possible, use the `From` impls on WKB-typed arrays.
-pub fn from_wkb<'a, A: WkbArrayType<'a>>(
+pub fn from_wkb<'a, A: GenericWkbArrayType<'a>>(
     arr: &'a A,
     to_type: GeoArrowType,
 ) -> Result<Arc<dyn GeoArrowArray>> {
@@ -813,12 +813,12 @@ mod test {
 
     #[test]
     fn test_cast_wkb_in_to_wkb() {
-        let wkb_arr: WkbArray<i32> =
+        let wkb_arr: GenericWkbArray<i32> =
             to_wkb(&test::point::array(CoordType::Separated, Dimension::XY)).unwrap();
-        let wkb_arr2: WkbArray<i32> = to_wkb(&wkb_arr).unwrap();
-        let wkb_arr3: WkbArray<i64> = to_wkb(&wkb_arr2).unwrap();
-        let wkb_arr4: WkbArray<i64> = to_wkb(&wkb_arr3).unwrap();
-        let wkb_arr5: WkbArray<i32> = to_wkb(&wkb_arr4).unwrap();
+        let wkb_arr2: GenericWkbArray<i32> = to_wkb(&wkb_arr).unwrap();
+        let wkb_arr3: GenericWkbArray<i64> = to_wkb(&wkb_arr2).unwrap();
+        let wkb_arr4: GenericWkbArray<i64> = to_wkb(&wkb_arr3).unwrap();
+        let wkb_arr5: GenericWkbArray<i32> = to_wkb(&wkb_arr4).unwrap();
         assert_eq!(wkb_arr, wkb_arr5);
     }
 
@@ -1175,11 +1175,13 @@ mod test {
 
     // Verify that this compiles with the macro
     #[allow(dead_code)]
-    fn _to_wkb_test_downcast_macro(arr: &dyn GeoArrowArray) -> Result<WkbArray<i32>> {
+    fn _to_wkb_test_downcast_macro(arr: &dyn GeoArrowArray) -> Result<GenericWkbArray<i32>> {
         downcast_geoarrow_array!(arr, impl_to_wkb)
     }
 
-    fn impl_to_wkb<'a>(geo_arr: &'a impl GeoArrowArrayAccessor<'a>) -> Result<WkbArray<i32>> {
+    fn impl_to_wkb<'a>(
+        geo_arr: &'a impl GeoArrowArrayAccessor<'a>,
+    ) -> Result<GenericWkbArray<i32>> {
         let geoms = geo_arr
             .iter()
             .map(|x| x.transpose())

@@ -7,7 +7,7 @@ use geo_traits::{
 use geoarrow_schema::GeometryCollectionType;
 use wkt::WktNum;
 
-use crate::array::{GeometryCollectionArray, WkbArray};
+use crate::array::{GeometryCollectionArray, GenericWkbArray};
 use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
 use crate::builder::{MixedGeometryBuilder, OffsetsBuilder};
 use crate::capacity::GeometryCollectionCapacity;
@@ -345,12 +345,12 @@ impl<'a> GeometryCollectionBuilder {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, GeometryCollectionType)>
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, GeometryCollectionType)>
     for GeometryCollectionBuilder
 {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (WkbArray<O>, GeometryCollectionType)) -> Result<Self> {
+    fn try_from((value, typ): (GenericWkbArray<O>, GeometryCollectionType)) -> Result<Self> {
         let wkb_objects = value
             .iter()
             .map(|x| x.transpose())

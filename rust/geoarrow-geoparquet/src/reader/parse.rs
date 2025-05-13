@@ -6,8 +6,8 @@ use std::sync::Arc;
 use arrow_array::{Array, ArrayRef, RecordBatch};
 use arrow_schema::{DataType, Field, FieldRef, Schema, SchemaRef};
 use geoarrow_array::array::{
-    LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
-    PolygonArray, WkbArray,
+    LargeWkbArray, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
+    PointArray, PolygonArray, WkbArray,
 };
 use geoarrow_array::cast::from_wkb;
 use geoarrow_array::{GeoArrowArray, GeoArrowType};
@@ -135,12 +135,12 @@ fn parse_array(array: ArrayRef, orig_field: &Field, target_field: &Field) -> Res
 fn parse_wkb_column(arr: &dyn Array, target_geo_data_type: GeoArrowType) -> Result<ArrayRef> {
     match arr.data_type() {
         DataType::Binary => {
-            let wkb_arr = WkbArray::<i32>::try_from((arr, WkbType::new(Default::default())))?;
+            let wkb_arr = WkbArray::try_from((arr, WkbType::new(Default::default())))?;
             let geom_arr = from_wkb(&wkb_arr, target_geo_data_type)?;
             Ok(geom_arr.to_array_ref())
         }
         DataType::LargeBinary => {
-            let wkb_arr = WkbArray::<i64>::try_from((arr, WkbType::new(Default::default())))?;
+            let wkb_arr = LargeWkbArray::try_from((arr, WkbType::new(Default::default())))?;
             let geom_arr = from_wkb(&wkb_arr, target_geo_data_type)?;
             Ok(geom_arr.to_array_ref())
         }

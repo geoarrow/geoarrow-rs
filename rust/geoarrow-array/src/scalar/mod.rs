@@ -3,7 +3,7 @@
 //! For all "native" GeoArrow scalar types, (all types defined in this module) it is `O(1)` and
 //! allocation-free for any coordinate access.
 //!
-//! For "serialized" scalars emitted from the [`WkbArray`][crate::array::WkbArray] and
+//! For "serialized" scalars emitted from the [`GenericWkbArray`][crate::array::GenericWkbArray] and
 //! [`WktArray`][crate::array::WktArray], there is an initial parsing step when accessing the
 //! scalar from the [`ArrayAccessor`][crate::ArrayAccessor] trait.
 //!
