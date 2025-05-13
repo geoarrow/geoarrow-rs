@@ -10,7 +10,7 @@ use crate::builder::{
 };
 use crate::capacity::LineStringCapacity;
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::{GeoArrowArrayAccessor, GeometryArrayBuilder};
+use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
 
 /// The GeoArrow equivalent to `Vec<Option<LineString>>`: a mutable collection of LineStrings.
 ///
@@ -268,7 +268,7 @@ impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, LineStringType)> for LineS
     }
 }
 
-impl GeometryArrayBuilder for LineStringBuilder {
+impl GeoArrowArrayBuilder for LineStringBuilder {
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
     }

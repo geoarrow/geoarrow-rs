@@ -13,7 +13,7 @@ use crate::builder::{
 };
 use crate::capacity::PolygonCapacity;
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::{GeoArrowArrayAccessor, GeometryArrayBuilder};
+use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
 
 pub type MutablePolygonParts = (
     CoordBufferBuilder,
@@ -349,7 +349,7 @@ impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, PolygonType)> for PolygonB
     }
 }
 
-impl GeometryArrayBuilder for PolygonBuilder {
+impl GeoArrowArrayBuilder for PolygonBuilder {
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
     }
