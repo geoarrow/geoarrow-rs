@@ -399,13 +399,13 @@ pub trait GeoArrowArrayAccessor<'a>: GeoArrowArray {
 /// thereby making them useful to perform numeric operations without allocations.
 /// As in [`NativeArray`], concrete arrays (such as
 /// [`PointBuilder`][crate::array::PointBuilder]) implement how they are mutated.
-pub trait GeometryArrayBuilder: Debug + Send + Sync {
+pub trait GeoArrowArrayBuilder: Debug + Send + Sync {
     /// Returns the length of the array.
     ///
     /// # Examples
     ///
     /// ```ignore
-    /// use geoarrow::{array::PointBuilder, trait_::GeometryArrayBuilder};
+    /// use geoarrow::{array::PointBuilder, trait_::GeoArrowArrayBuilder};
     /// use geoarrow_schema::Dimension;
     ///
     /// let mut builder = PointBuilder::new(Dimension::XY);
@@ -420,7 +420,7 @@ pub trait GeometryArrayBuilder: Debug + Send + Sync {
     /// # Examples
     ///
     /// ```ignore
-    /// use geoarrow::{array::PointBuilder, trait_::GeometryArrayBuilder};
+    /// use geoarrow::{array::PointBuilder, trait_::GeoArrowArrayBuilder};
     /// use geoarrow_schema::Dimension;
     ///
     /// let mut builder = PointBuilder::new(Dimension::XY);

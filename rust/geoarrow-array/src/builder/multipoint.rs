@@ -10,7 +10,7 @@ use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::{GeoArrowArrayAccessor, GeometryArrayBuilder};
+use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
 
 /// The GeoArrow equivalent to `Vec<Option<MultiPoint>>`: a mutable collection of MultiPoints.
 ///
@@ -271,7 +271,7 @@ impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, MultiPointType)> for Multi
     }
 }
 
-impl GeometryArrayBuilder for MultiPointBuilder {
+impl GeoArrowArrayBuilder for MultiPointBuilder {
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
     }

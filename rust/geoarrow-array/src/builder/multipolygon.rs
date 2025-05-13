@@ -12,7 +12,7 @@ use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::{GeoArrowArrayAccessor, GeometryArrayBuilder};
+use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
 
 /// The GeoArrow equivalent to `Vec<Option<MultiPolygon>>`: a mutable collection of MultiPolygons.
 ///
@@ -387,7 +387,7 @@ impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, MultiPolygonType)> for Mul
     }
 }
 
-impl GeometryArrayBuilder for MultiPolygonBuilder {
+impl GeoArrowArrayBuilder for MultiPolygonBuilder {
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
     }

@@ -7,7 +7,7 @@ use geozero::{GeomProcessor, GeozeroGeometry};
 
 use crate::array::GeometryArray;
 use crate::builder::GeometryBuilder;
-use crate::trait_::GeometryArrayBuilder;
+use crate::trait_::GeoArrowArrayBuilder;
 
 /// GeoZero trait to convert to GeoArrow [`GeometryArray`].
 ///
@@ -222,7 +222,7 @@ impl GeomProcessor for GeometryStreamBuilder {
     }
 }
 
-impl GeometryArrayBuilder for GeometryStreamBuilder {
+impl GeoArrowArrayBuilder for GeometryStreamBuilder {
     fn len(&self) -> usize {
         self.builder.len()
     }

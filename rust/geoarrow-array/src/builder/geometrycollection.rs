@@ -12,7 +12,7 @@ use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapp
 use crate::builder::{MixedGeometryBuilder, OffsetsBuilder};
 use crate::capacity::GeometryCollectionCapacity;
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::{GeoArrowArrayAccessor, GeometryArrayBuilder};
+use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
 
 /// The GeoArrow equivalent to `Vec<Option<GeometryCollection>>`: a mutable collection of
 /// GeometryCollections.
@@ -353,7 +353,7 @@ impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, GeometryCollectionType)>
     }
 }
 
-impl GeometryArrayBuilder for GeometryCollectionBuilder {
+impl GeoArrowArrayBuilder for GeometryCollectionBuilder {
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
     }

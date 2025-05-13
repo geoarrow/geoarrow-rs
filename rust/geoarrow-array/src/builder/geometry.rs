@@ -16,7 +16,7 @@ use crate::builder::{
 };
 use crate::capacity::GeometryCapacity;
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::{GeoArrowArrayAccessor, GeometryArrayBuilder};
+use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
 
 pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 
@@ -372,7 +372,7 @@ impl<'a> GeometryBuilder {
 
     #[inline]
     fn add_type(
-        child: &mut dyn GeometryArrayBuilder,
+        child: &mut dyn GeoArrowArrayBuilder,
         offsets: &mut Vec<i32>,
         types: &mut Vec<i8>,
         type_id: i8,
@@ -760,7 +760,7 @@ impl<'a> GeometryBuilder {
     /// Flush any deferred nulls to the desired array builder.
     fn flush_deferred_nulls(
         deferred_nulls: &mut usize,
-        child: &mut dyn GeometryArrayBuilder,
+        child: &mut dyn GeoArrowArrayBuilder,
         offsets: &mut Vec<i32>,
         types: &mut Vec<i8>,
         type_id: i8,
@@ -822,7 +822,7 @@ impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, GeometryType)> for Geometr
     }
 }
 
-impl GeometryArrayBuilder for GeometryBuilder {
+impl GeoArrowArrayBuilder for GeometryBuilder {
     fn len(&self) -> usize {
         self.types.len()
     }
