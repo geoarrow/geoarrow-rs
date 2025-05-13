@@ -240,8 +240,10 @@ pub(crate) fn bounding_rect(arr: &dyn GeoArrowArray) -> Result<RectArray> {
         Rect(_) => Ok(arr.as_rect().clone()),
         Wkb(_) => impl_array_accessor(arr.as_wkb::<i32>()),
         LargeWkb(_) => impl_array_accessor(arr.as_wkb::<i64>()),
+        WkbView(_) => impl_array_accessor(arr.as_wkb_view()),
         Wkt(_) => impl_array_accessor(arr.as_wkt::<i32>()),
         LargeWkt(_) => impl_array_accessor(arr.as_wkt::<i64>()),
+        WktView(_) => impl_array_accessor(arr.as_wkt_view()),
     }
 }
 
@@ -283,8 +285,10 @@ pub(crate) fn total_bounds(arr: &dyn GeoArrowArray) -> Result<BoundingRect> {
         Rect(_) => impl_total_bounds(arr.as_rect()),
         Wkb(_) => impl_total_bounds(arr.as_wkb::<i32>()),
         LargeWkb(_) => impl_total_bounds(arr.as_wkb::<i64>()),
+        WkbView(_) => impl_total_bounds(arr.as_wkb_view()),
         Wkt(_) => impl_total_bounds(arr.as_wkt::<i32>()),
         LargeWkt(_) => impl_total_bounds(arr.as_wkt::<i64>()),
+        WktView(_) => impl_total_bounds(arr.as_wkt_view()),
     }
 }
 

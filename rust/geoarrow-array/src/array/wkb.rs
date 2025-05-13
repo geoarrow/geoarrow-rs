@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use arrow_array::builder::GenericByteBuilder;
 use arrow_array::cast::AsArray;
 use arrow_array::{
     Array, ArrayRef, BinaryArray, GenericBinaryArray, LargeBinaryArray, OffsetSizeTrait,
@@ -9,6 +10,7 @@ use arrow_schema::{DataType, Field};
 use geoarrow_schema::{Metadata, WkbType};
 use wkb::reader::Wkb;
 
+use crate::array::WkbViewArray;
 use crate::capacity::WkbCapacity;
 use crate::datatypes::GeoArrowType;
 use crate::error::{GeoArrowError, Result};
@@ -19,11 +21,7 @@ use crate::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 ///
 /// This is semantically equivalent to `Vec<Option<Wkb>>` due to the internal validity bitmap.
 ///
-/// This array implements [`SerializedArray`], not [`NativeArray`]. This means that you'll need to
-/// parse the `WkbArray` into a native-typed GeoArrow array (such as
-/// [`GeometryArray`][crate::array::GeometryArray]) before using it for computations.
-///
-/// Refer to [`crate::io::wkb`] for encoding and decoding this array to the native array types.
+/// This is stored either as an Arrow [`BinaryArray`] or [`LargeBinaryArray`].
 #[derive(Debug, Clone, PartialEq)]
 pub struct WkbArray<O: OffsetSizeTrait> {
     pub(crate) data_type: WkbType,
@@ -151,11 +149,7 @@ impl<O: OffsetSizeTrait> IntoArrow for WkbArray<O> {
     type ExtensionType = WkbType;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        GenericBinaryArray::new(
-            self.array.offsets().clone(),
-            self.array.values().clone(),
-            self.array.nulls().cloned(),
-        )
+        self.array
     }
 
     fn ext_type(&self) -> &Self::ExtensionType {
@@ -165,7 +159,10 @@ impl<O: OffsetSizeTrait> IntoArrow for WkbArray<O> {
 
 impl<O: OffsetSizeTrait> From<(GenericBinaryArray<O>, WkbType)> for WkbArray<O> {
     fn from((value, typ): (GenericBinaryArray<O>, WkbType)) -> Self {
-        Self::new(value, typ.metadata().clone())
+        Self {
+            data_type: typ,
+            array: value,
+        }
     }
 }
 
@@ -250,6 +247,24 @@ impl TryFrom<WkbArray<i64>> for WkbArray<i32> {
             data_type: value.data_type,
             array,
         })
+    }
+}
+
+impl<O: OffsetSizeTrait> From<WkbViewArray> for WkbArray<O> {
+    fn from(value: WkbViewArray) -> Self {
+        let wkb_type = value.data_type;
+        let binary_view_array = value.array;
+
+        // Copy the bytes from the binary view array into a new byte array
+        let mut builder = GenericByteBuilder::new();
+        binary_view_array
+            .iter()
+            .for_each(|value| builder.append_option(value));
+
+        Self {
+            data_type: wkb_type,
+            array: builder.finish(),
+        }
     }
 }
 
