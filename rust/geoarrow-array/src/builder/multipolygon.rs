@@ -117,34 +117,6 @@ impl MultiPolygonBuilder {
         )
     }
 
-    /// Creates a new builder with a capacity inferred by the provided iterator.
-    pub fn with_capacity_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
-        typ: MultiPolygonType,
-    ) -> Self {
-        let capacity = MultiPolygonCapacity::from_multi_polygons(geoms);
-        Self::with_capacity(typ, capacity)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
-    ) {
-        let capacity = MultiPolygonCapacity::from_multi_polygons(geoms);
-        self.reserve(capacity)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_exact_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
-    ) {
-        let capacity = MultiPolygonCapacity::from_multi_polygons(geoms);
-        self.reserve_exact(capacity)
-    }
     /// Add a new Polygon to the end of this array.
     ///
     /// # Errors
@@ -351,7 +323,8 @@ impl MultiPolygonBuilder {
         geoms: &[impl MultiPolygonTrait<T = f64>],
         typ: MultiPolygonType,
     ) -> Self {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(Some), typ);
+        let capacity = MultiPolygonCapacity::from_multi_polygons(geoms.iter().map(Some));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(Some));
         array
     }
@@ -361,7 +334,8 @@ impl MultiPolygonBuilder {
         geoms: &[Option<impl MultiPolygonTrait<T = f64>>],
         typ: MultiPolygonType,
     ) -> Self {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(|x| x.as_ref()), typ);
+        let capacity = MultiPolygonCapacity::from_multi_polygons(geoms.iter().map(|x| x.as_ref()));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         array
     }

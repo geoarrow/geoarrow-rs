@@ -166,35 +166,6 @@ impl MultiLineStringBuilder {
         )
     }
 
-    /// Creates a new builder with a capacity inferred by the provided iterator.
-    pub fn with_capacity_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
-        typ: MultiLineStringType,
-    ) -> Self {
-        let counter = MultiLineStringCapacity::from_multi_line_strings(geoms);
-        Self::with_capacity(typ, counter)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
-    ) {
-        let counter = MultiLineStringCapacity::from_multi_line_strings(geoms);
-        self.reserve(counter)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_exact_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
-    ) {
-        let counter = MultiLineStringCapacity::from_multi_line_strings(geoms);
-        self.reserve_exact(counter)
-    }
-
     /// Add a new LineString to the end of this array.
     ///
     /// # Errors
@@ -330,7 +301,8 @@ impl MultiLineStringBuilder {
         geoms: &[impl MultiLineStringTrait<T = f64>],
         typ: MultiLineStringType,
     ) -> Self {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(Some), typ);
+        let capacity = MultiLineStringCapacity::from_multi_line_strings(geoms.iter().map(Some));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(Some));
         array
     }
@@ -340,7 +312,9 @@ impl MultiLineStringBuilder {
         geoms: &[Option<impl MultiLineStringTrait<T = f64>>],
         typ: MultiLineStringType,
     ) -> Self {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(|x| x.as_ref()), typ);
+        let capacity =
+            MultiLineStringCapacity::from_multi_line_strings(geoms.iter().map(|x| x.as_ref()));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         array
     }
