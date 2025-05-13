@@ -15,7 +15,7 @@ Use [builders][builder] to construct GeoArrow arrays. These builders offer a pus
 # use geoarrow_array::array::PointArray;
 # use geoarrow_array::builder::PointBuilder;
 # use geoarrow_array::scalar::Point;
-# use geoarrow_array::ArrayAccessor;
+# use geoarrow_array::GeoArrowArrayAccessor;
 # use geoarrow_schema::{CoordType, Dimension, PointType};
 #
 let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
@@ -93,7 +93,7 @@ This requires downcasting to the concrete type of the array. Use the [`cast::AsG
 
 ```rust
 use geoarrow_array::cast::AsGeoArrowArray;
-use geoarrow_array::{ArrayAccessor, GeoArrowArray};
+use geoarrow_array::{GeoArrowArrayAccessor, GeoArrowArray};
 
 fn iter_line_string_array(array: &dyn GeoArrowArray) {
     for row in array.as_line_string().iter() {
