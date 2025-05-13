@@ -126,25 +126,6 @@ impl MultiPolygonBuilder {
         Self::with_capacity(typ, capacity)
     }
 
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
-    ) {
-        let capacity = MultiPolygonCapacity::from_multi_polygons(geoms);
-        self.reserve(capacity)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_exact_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
-    ) {
-        let capacity = MultiPolygonCapacity::from_multi_polygons(geoms);
-        self.reserve_exact(capacity)
-    }
     /// Add a new Polygon to the end of this array.
     ///
     /// # Errors

@@ -175,26 +175,6 @@ impl MultiLineStringBuilder {
         Self::with_capacity(typ, counter)
     }
 
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
-    ) {
-        let counter = MultiLineStringCapacity::from_multi_line_strings(geoms);
-        self.reserve(counter)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_exact_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
-    ) {
-        let counter = MultiLineStringCapacity::from_multi_line_strings(geoms);
-        self.reserve_exact(counter)
-    }
-
     /// Add a new LineString to the end of this array.
     ///
     /// # Errors

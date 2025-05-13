@@ -130,26 +130,6 @@ impl LineStringBuilder {
         Self::with_capacity(typ, counter)
     }
 
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
-    ) {
-        let counter = LineStringCapacity::from_line_strings(geoms);
-        self.reserve(counter)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_exact_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
-    ) {
-        let counter = LineStringCapacity::from_line_strings(geoms);
-        self.reserve_exact(counter)
-    }
-
     /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_line_strings(geoms: &[impl LineStringTrait<T = f64>], typ: LineStringType) -> Self {
         let mut array = Self::with_capacity_from_iter(typ, geoms.iter().map(Some));

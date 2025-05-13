@@ -120,28 +120,6 @@ impl<'a> GeometryCollectionBuilder {
         Ok(Self::with_capacity(typ, counter))
     }
 
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_from_iter<T: WktNum>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait<T = T> + 'a)>>,
-    ) -> Result<()> {
-        let counter = GeometryCollectionCapacity::from_geometry_collections(geoms)?;
-        self.reserve(counter);
-        Ok(())
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_exact_from_iter<T: WktNum>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait<T = T> + 'a)>>,
-    ) -> Result<()> {
-        let counter = GeometryCollectionCapacity::from_geometry_collections(geoms)?;
-        self.reserve_exact(counter);
-        Ok(())
-    }
-
     /// Push a Point onto the end of this builder
     #[inline]
     fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) -> Result<()> {

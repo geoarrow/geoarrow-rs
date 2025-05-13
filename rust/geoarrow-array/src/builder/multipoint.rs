@@ -111,26 +111,6 @@ impl MultiPointBuilder {
         Self::with_capacity(typ, counter)
     }
 
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
-    ) {
-        let counter = MultiPointCapacity::from_multi_points(geoms);
-        self.reserve(counter)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_exact_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
-    ) {
-        let counter = MultiPointCapacity::from_multi_points(geoms);
-        self.reserve_exact(counter)
-    }
-
     /// Extend this builder with the given geometries
     pub fn extend_from_iter<'a>(
         &mut self,

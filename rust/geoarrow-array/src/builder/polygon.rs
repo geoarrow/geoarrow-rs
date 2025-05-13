@@ -96,26 +96,6 @@ impl PolygonBuilder {
         self.geom_offsets.reserve_exact(capacity.geom_capacity);
     }
 
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
-    ) {
-        let counter = PolygonCapacity::from_polygons(geoms);
-        self.reserve(counter)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_exact_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
-    ) {
-        let counter = PolygonCapacity::from_polygons(geoms);
-        self.reserve_exact(counter)
-    }
-
     /// Push a raw offset to the underlying geometry offsets buffer.
     ///
     /// # Invariants

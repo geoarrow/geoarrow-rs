@@ -305,28 +305,6 @@ impl<'a> GeometryBuilder {
         Ok(Self::with_capacity(typ, counter))
     }
 
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_from_iter<T: WktNum>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = T> + 'a)>>,
-    ) -> Result<()> {
-        let counter = GeometryCapacity::from_geometries(geoms)?;
-        self.reserve(counter);
-        Ok(())
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_exact_from_iter<T: WktNum>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = T> + 'a)>>,
-    ) -> Result<()> {
-        let counter = GeometryCapacity::from_geometries(geoms)?;
-        self.reserve_exact(counter);
-        Ok(())
-    }
-
     /// Add a new Point to the end of this array.
     ///
     /// If `self.prefer_multi` is `true`, it will be stored in the `MultiPointBuilder` child
