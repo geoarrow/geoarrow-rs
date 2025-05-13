@@ -36,6 +36,11 @@ impl WktViewArray {
         self.len() == 0
     }
 
+    /// Access the underlying string array.
+    pub fn inner(&self) -> &StringViewArray {
+        &self.array
+    }
+
     /// Slices this [`WktViewArray`] in place.
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.

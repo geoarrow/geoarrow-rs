@@ -67,6 +67,8 @@ pub fn from_arrow_array(array: &dyn Array, field: &Field) -> Result<Arc<dyn GeoA
     Ok(result)
 }
 
+// TODO: should we have an API to get the raw underlying string/&[u8] value?
+
 /// A trait for GeoArrow arrays that can hold WKB data.
 ///
 /// Currently three types are supported:
@@ -85,9 +87,9 @@ pub trait WkbArrayType<'a>:
 {
 }
 
-impl<'a> WkbArrayType<'a> for WkbArray<i32> {}
-impl<'a> WkbArrayType<'a> for WkbArray<i64> {}
-impl<'a> WkbArrayType<'a> for WkbViewArray {}
+impl WkbArrayType<'_> for WkbArray<i32> {}
+impl WkbArrayType<'_> for WkbArray<i64> {}
+impl WkbArrayType<'_> for WkbViewArray {}
 
 /// A trait for GeoArrow arrays that can hold WKT data.
 ///

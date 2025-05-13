@@ -282,8 +282,10 @@ pub fn get_geometry_types(data_type: &GeoArrowType) -> HashSet<GeoParquetGeometr
         GeoArrowType::Geometry(_)
         | GeoArrowType::Wkb(_)
         | GeoArrowType::LargeWkb(_)
+        | GeoArrowType::WkbView(_)
         | GeoArrowType::Wkt(_)
-        | GeoArrowType::LargeWkt(_) => {
+        | GeoArrowType::LargeWkt(_)
+        | GeoArrowType::WktView(_) => {
             // We don't have access to the actual data here, so we can't inspect better than this.
         }
     };

@@ -165,9 +165,8 @@ fn infer_flatgeobuf_geometry_type(schema: &Schema) -> Result<flatgeobuf::Geometr
         MultiPoint(_) => flatgeobuf::GeometryType::MultiPoint,
         MultiLineString(_) => flatgeobuf::GeometryType::MultiLineString,
         MultiPolygon(_) => flatgeobuf::GeometryType::MultiPolygon,
-        Rect(_) | Geometry(_) | Wkb(_) | LargeWkb(_) | Wkt(_) | LargeWkt(_) => {
-            flatgeobuf::GeometryType::Unknown
-        }
+        Rect(_) | Geometry(_) | Wkb(_) | LargeWkb(_) | WkbView(_) | Wkt(_) | LargeWkt(_)
+        | WktView(_) => flatgeobuf::GeometryType::Unknown,
         GeometryCollection(_) => flatgeobuf::GeometryType::GeometryCollection,
     };
     Ok(geometry_type)
