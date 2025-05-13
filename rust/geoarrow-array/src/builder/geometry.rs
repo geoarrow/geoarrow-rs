@@ -8,6 +8,7 @@ use geoarrow_schema::{
 };
 use wkt::WktNum;
 
+use crate::GeoArrowArray;
 use crate::array::{DimensionIndex, GenericWkbArray, GeometryArray};
 use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
 use crate::builder::{
@@ -829,6 +830,10 @@ impl GeoArrowArrayBuilder for GeometryBuilder {
 
     fn push_null(&mut self) {
         self.push_null();
+    }
+
+    fn finish(self) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.finish())
     }
 }
 

@@ -1,10 +1,12 @@
 use std::fmt::Debug;
+use std::sync::Arc;
 
 use geoarrow_schema::GeometryType;
 use geozero::error::GeozeroError;
 use geozero::geo_types::GeoWriter;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
+use crate::GeoArrowArray;
 use crate::array::GeometryArray;
 use crate::builder::GeometryBuilder;
 use crate::trait_::GeoArrowArrayBuilder;
@@ -231,20 +233,9 @@ impl GeoArrowArrayBuilder for GeometryStreamBuilder {
         self.builder.push_null()
     }
 
-    // fn push_geometry(
-    //     &mut self,
-    //     value: Option<&impl geo_traits::GeometryTrait<T = f64>>,
-    // ) -> crate::error::Result<()> {
-    //     self.builder.push_geometry(value)
-    // }
-
-    // fn finish(self) -> std::sync::Arc<dyn NativeArray> {
-    //     Arc::new(self.finish())
-    // }
-
-    // fn metadata(&self) -> Arc<Metadata> {
-    //     self.builder.metadata()
-    // }
+    fn finish(self) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.builder.finish())
+    }
 }
 
 #[cfg(test)]

@@ -1,9 +1,12 @@
+use std::sync::Arc;
+
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
 use geoarrow_schema::{CoordType, PointType};
 
 // use super::array::check;
+use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, PointArray};
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder,
@@ -244,5 +247,9 @@ impl GeoArrowArrayBuilder for PointBuilder {
 
     fn push_null(&mut self) {
         self.push_null();
+    }
+
+    fn finish(self) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.finish())
     }
 }
