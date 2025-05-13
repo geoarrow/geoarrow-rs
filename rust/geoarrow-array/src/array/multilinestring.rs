@@ -13,7 +13,7 @@ use crate::datatypes::GeoArrowType;
 use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::MultiLineString;
-use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
+use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 use crate::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
 
 /// An immutable array of MultiLineString geometries.
@@ -243,7 +243,7 @@ impl GeoArrowArray for MultiLineStringArray {
     }
 }
 
-impl<'a> ArrayAccessor<'a> for MultiLineStringArray {
+impl<'a> GeoArrowArrayAccessor<'a> for MultiLineStringArray {
     type Item = MultiLineString<'a>;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {

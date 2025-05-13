@@ -11,7 +11,7 @@ use crate::array::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
 use crate::eq::point_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Point;
-use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
+use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 
 /// An immutable array of Point geometries.
 ///
@@ -181,7 +181,7 @@ impl GeoArrowArray for PointArray {
     }
 }
 
-impl<'a> ArrayAccessor<'a> for PointArray {
+impl<'a> GeoArrowArrayAccessor<'a> for PointArray {
     type Item = Point<'a>;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {

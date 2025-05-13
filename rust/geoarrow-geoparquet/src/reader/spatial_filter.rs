@@ -8,7 +8,7 @@ use arrow_buffer::ScalarBuffer;
 use arrow_ord::cmp::{gt_eq, lt_eq};
 use geo_traits::{CoordTrait, RectTrait};
 use geo_types::{CoordNum, Rect, coord};
-use geoarrow_array::ArrayAccessor;
+use geoarrow_array::GeoArrowArrayAccessor;
 use geoarrow_array::array::{RectArray, from_arrow_array};
 use geoarrow_array::builder::RectBuilder;
 use geoarrow_array::error::{GeoArrowError, Result};

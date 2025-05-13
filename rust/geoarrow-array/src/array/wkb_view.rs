@@ -10,7 +10,7 @@ use wkb::reader::Wkb;
 
 use crate::array::WkbArray;
 use crate::error::{GeoArrowError, Result};
-use crate::{ArrayAccessor, GeoArrowArray, GeoArrowType, IntoArrow};
+use crate::{GeoArrowArray, GeoArrowArrayAccessor, GeoArrowType, IntoArrow};
 
 /// An immutable array of WKB geometries.
 ///
@@ -106,7 +106,7 @@ impl GeoArrowArray for WkbViewArray {
     }
 }
 
-impl<'a> ArrayAccessor<'a> for WkbViewArray {
+impl<'a> GeoArrowArrayAccessor<'a> for WkbViewArray {
     type Item = Wkb<'a>;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {

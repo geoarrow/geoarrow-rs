@@ -14,7 +14,7 @@ use crate::array::WkbViewArray;
 use crate::capacity::WkbCapacity;
 use crate::datatypes::GeoArrowType;
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
+use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 use crate::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 
 /// An immutable array of WKB geometries.
@@ -135,7 +135,7 @@ impl<O: OffsetSizeTrait> GeoArrowArray for WkbArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> ArrayAccessor<'a> for WkbArray<O> {
+impl<'a, O: OffsetSizeTrait> GeoArrowArrayAccessor<'a> for WkbArray<O> {
     type Item = Wkb<'a>;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {

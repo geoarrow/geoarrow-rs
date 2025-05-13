@@ -16,7 +16,7 @@ use crate::builder::{
 };
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeoArrowArray;
-use crate::{ArrayAccessor, GeoArrowType, IntoArrow};
+use crate::{GeoArrowArrayAccessor, GeoArrowType, IntoArrow};
 
 /// Helpers for downcasting a [`GeoArrowArray`] to a concrete implementation.
 ///
@@ -360,7 +360,9 @@ pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<WkbArray<O>
     }
 }
 
-fn impl_to_wkb<'a, O: OffsetSizeTrait>(geo_arr: &'a impl ArrayAccessor<'a>) -> Result<WkbArray<O>> {
+fn impl_to_wkb<'a, O: OffsetSizeTrait>(
+    geo_arr: &'a impl GeoArrowArrayAccessor<'a>,
+) -> Result<WkbArray<O>> {
     let geoms = geo_arr
         .iter()
         .map(|x| x.transpose())
@@ -391,7 +393,7 @@ pub fn to_wkb_view(arr: &dyn GeoArrowArray) -> Result<WkbViewArray> {
     }
 }
 
-fn impl_to_wkb_view<'a>(geo_arr: &'a impl ArrayAccessor<'a>) -> Result<WkbViewArray> {
+fn impl_to_wkb_view<'a>(geo_arr: &'a impl GeoArrowArrayAccessor<'a>) -> Result<WkbViewArray> {
     let geoms = geo_arr
         .iter()
         .map(|x| x.transpose())
@@ -539,7 +541,9 @@ pub fn to_wkt<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<WktArray<O>
     }
 }
 
-fn impl_to_wkt<'a, O: OffsetSizeTrait>(geo_arr: &'a impl ArrayAccessor<'a>) -> Result<WktArray<O>> {
+fn impl_to_wkt<'a, O: OffsetSizeTrait>(
+    geo_arr: &'a impl GeoArrowArrayAccessor<'a>,
+) -> Result<WktArray<O>> {
     let metadata = geo_arr.data_type().metadata().clone();
     let mut builder = GenericStringBuilder::new();
 
@@ -577,7 +581,7 @@ pub fn to_wkt_view(arr: &dyn GeoArrowArray) -> Result<WktViewArray> {
     }
 }
 
-fn impl_to_wkt_view<'a>(geo_arr: &'a impl ArrayAccessor<'a>) -> Result<WktViewArray> {
+fn impl_to_wkt_view<'a>(geo_arr: &'a impl GeoArrowArrayAccessor<'a>) -> Result<WktViewArray> {
     let metadata = geo_arr.data_type().metadata().clone();
     let mut builder = StringViewBuilder::new();
 
@@ -682,13 +686,13 @@ pub mod __private {
 /// use geo::Area;
 /// use geo_traits::to_geo::ToGeoGeometry;
 /// use geoarrow_array::error::Result;
-/// use geoarrow_array::{ArrayAccessor, GeoArrowArray, downcast_geoarrow_array};
+/// use geoarrow_array::{GeoArrowArrayAccessor, GeoArrowArray, downcast_geoarrow_array};
 ///
 /// pub fn unsigned_area(array: &dyn GeoArrowArray) -> Result<Float64Array> {
 ///     downcast_geoarrow_array!(array, impl_unsigned_area)
 /// }
 ///
-/// fn impl_unsigned_area<'a>(array: &'a impl ArrayAccessor<'a>) -> Result<Float64Array> {
+/// fn impl_unsigned_area<'a>(array: &'a impl GeoArrowArrayAccessor<'a>) -> Result<Float64Array> {
 ///     let mut builder = Float64Builder::with_capacity(array.len());
 ///
 ///     for item in array.iter() {
@@ -713,9 +717,9 @@ pub mod __private {
 /// # use geo::Area;
 /// # use geo_traits::to_geo::ToGeoGeometry;
 /// # use geoarrow_array::error::Result;
-/// # use geoarrow_array::{ArrayAccessor, GeoArrowType};
+/// # use geoarrow_array::{GeoArrowArrayAccessor, GeoArrowType};
 /// #
-/// # fn impl_unsigned_area<'a>(array: &'a impl ArrayAccessor<'a>) -> Result<Float64Array> {
+/// # fn impl_unsigned_area<'a>(array: &'a impl GeoArrowArrayAccessor<'a>) -> Result<Float64Array> {
 /// #     let mut builder = Float64Builder::with_capacity(array.len());
 /// #
 /// #     for item in array.iter() {
@@ -729,7 +733,7 @@ pub mod __private {
 /// #     Ok(builder.finish())
 /// # }
 /// #
-/// fn impl_unsigned_area_specialized<'a>(array: &'a impl ArrayAccessor<'a>) -> Result<Float64Array> {
+/// fn impl_unsigned_area_specialized<'a>(array: &'a impl GeoArrowArrayAccessor<'a>) -> Result<Float64Array> {
 ///     use GeoArrowType::*;
 ///     match array.data_type() {
 ///         Point(_) | LineString(_) | MultiPoint(_) | MultiLineString(_) => {
@@ -1175,7 +1179,7 @@ mod test {
         downcast_geoarrow_array!(arr, impl_to_wkb)
     }
 
-    fn impl_to_wkb<'a>(geo_arr: &'a impl ArrayAccessor<'a>) -> Result<WkbArray<i32>> {
+    fn impl_to_wkb<'a>(geo_arr: &'a impl GeoArrowArrayAccessor<'a>) -> Result<WkbArray<i32>> {
         let geoms = geo_arr
             .iter()
             .map(|x| x.transpose())

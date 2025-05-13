@@ -10,7 +10,7 @@ use geoarrow_array::builder::{
 use geoarrow_array::capacity::{LineStringCapacity, PolygonCapacity};
 use geoarrow_array::cast::{AsGeoArrowArray, from_wkb, from_wkt, to_wkb, to_wkt};
 use geoarrow_array::error::{GeoArrowError, Result};
-use geoarrow_array::{ArrayAccessor, GeoArrowArray, GeoArrowType};
+use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, GeoArrowType};
 
 /// Cast a `GeoArrowArray` to another `GeoArrowType`.
 ///

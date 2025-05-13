@@ -13,7 +13,7 @@ use crate::datatypes::GeoArrowType;
 use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::MultiPolygon;
-use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
+use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 use crate::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
 
 /// An immutable array of MultiPolygon geometries.
@@ -296,7 +296,7 @@ impl GeoArrowArray for MultiPolygonArray {
     }
 }
 
-impl<'a> ArrayAccessor<'a> for MultiPolygonArray {
+impl<'a> GeoArrowArrayAccessor<'a> for MultiPolygonArray {
     type Item = MultiPolygon<'a>;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {

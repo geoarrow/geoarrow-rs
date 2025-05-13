@@ -16,7 +16,7 @@ use crate::capacity::GeometryCapacity;
 use crate::datatypes::GeoArrowType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Geometry;
-use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
+use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 
 /// An immutable array of geometries of unknown geometry type and dimension.
 ///
@@ -499,7 +499,7 @@ impl GeoArrowArray for GeometryArray {
     }
 }
 
-impl<'a> ArrayAccessor<'a> for GeometryArray {
+impl<'a> GeoArrowArrayAccessor<'a> for GeometryArray {
     type Item = Geometry<'a>;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {

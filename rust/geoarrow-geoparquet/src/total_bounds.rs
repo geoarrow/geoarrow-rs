@@ -9,7 +9,7 @@ use geoarrow_array::array::RectArray;
 use geoarrow_array::builder::RectBuilder;
 use geoarrow_array::cast::AsGeoArrowArray;
 use geoarrow_array::error::Result;
-use geoarrow_array::{ArrayAccessor, GeoArrowArray, GeoArrowType};
+use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, GeoArrowType};
 use geoarrow_schema::{BoxType, Dimension};
 
 #[derive(Debug, Clone, Copy)]
@@ -248,7 +248,7 @@ pub(crate) fn bounding_rect(arr: &dyn GeoArrowArray) -> Result<RectArray> {
 }
 
 /// The actual implementation of computing the bounding rect
-fn impl_array_accessor<'a>(arr: &'a impl ArrayAccessor<'a>) -> Result<RectArray> {
+fn impl_array_accessor<'a>(arr: &'a impl GeoArrowArrayAccessor<'a>) -> Result<RectArray> {
     match arr.data_type() {
         GeoArrowType::Rect(_) => unreachable!(),
         _ => {
@@ -293,7 +293,7 @@ pub(crate) fn total_bounds(arr: &dyn GeoArrowArray) -> Result<BoundingRect> {
 }
 
 /// The actual implementation of computing the total bounds
-fn impl_total_bounds<'a>(arr: &'a impl ArrayAccessor<'a>) -> Result<BoundingRect> {
+fn impl_total_bounds<'a>(arr: &'a impl GeoArrowArrayAccessor<'a>) -> Result<BoundingRect> {
     let mut rect = BoundingRect::new();
 
     for item in arr.iter().flatten() {

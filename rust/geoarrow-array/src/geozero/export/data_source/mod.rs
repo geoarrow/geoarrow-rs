@@ -23,7 +23,7 @@ use crate::geozero::export::scalar::{
     process_geometry, process_geometry_collection, process_line_string, process_multi_line_string,
     process_multi_point, process_multi_polygon, process_point, process_polygon,
 };
-use crate::trait_::ArrayAccessor;
+use crate::trait_::GeoArrowArrayAccessor;
 
 impl GeozeroDatasource for GeozeroRecordBatchReader {
     fn process<P: FeatureProcessor>(&mut self, processor: &mut P) -> Result<(), GeozeroError> {

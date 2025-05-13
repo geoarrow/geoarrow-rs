@@ -12,7 +12,7 @@ use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapp
 use crate::builder::{MixedGeometryBuilder, OffsetsBuilder};
 use crate::capacity::GeometryCollectionCapacity;
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
+use crate::trait_::{GeoArrowArrayAccessor, GeometryArrayBuilder};
 
 /// The GeoArrow equivalent to `Vec<Option<GeometryCollection>>`: a mutable collection of
 /// GeometryCollections.

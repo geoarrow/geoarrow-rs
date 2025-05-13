@@ -83,7 +83,7 @@ pub fn from_arrow_array(array: &dyn Array, field: &Field) -> Result<Arc<dyn GeoA
 /// This is modeled after the upstream [`BinaryArrayType`][arrow_array::array::BinaryArrayType]
 /// trait.
 pub trait WkbArrayType<'a>:
-    Sized + crate::ArrayAccessor<'a, Item = ::wkb::reader::Wkb<'a>>
+    Sized + crate::GeoArrowArrayAccessor<'a, Item = ::wkb::reader::Wkb<'a>>
 {
 }
 
@@ -104,7 +104,10 @@ impl WkbArrayType<'_> for WkbViewArray {}
 ///
 /// This is modeled after the upstream [`StringArrayType`][arrow_array::array::StringArrayType]
 /// trait.
-pub trait WktArrayType: Sized + for<'a> crate::ArrayAccessor<'a, Item = ::wkt::Wkt> {}
+pub trait WktArrayType:
+    Sized + for<'a> crate::GeoArrowArrayAccessor<'a, Item = ::wkt::Wkt>
+{
+}
 
 impl WktArrayType for WktArray<i32> {}
 impl WktArrayType for WktArray<i64> {}

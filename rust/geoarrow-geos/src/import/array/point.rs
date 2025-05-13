@@ -41,7 +41,7 @@ mod test {
     use crate::export::to_geos_geometry;
 
     use geoarrow_array::test::point::array;
-    use geoarrow_array::{ArrayAccessor, IntoArrow};
+    use geoarrow_array::{GeoArrowArrayAccessor, IntoArrow};
     use geoarrow_schema::{CoordType, Dimension};
 
     #[test]

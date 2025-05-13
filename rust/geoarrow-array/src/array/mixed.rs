@@ -10,7 +10,7 @@ use geoarrow_schema::{
     MultiPointType, MultiPolygonType, PointType, PolygonType,
 };
 
-use crate::ArrayAccessor;
+use crate::GeoArrowArrayAccessor;
 use crate::array::{
     DimensionIndex, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
     PointArray, PolygonArray,
