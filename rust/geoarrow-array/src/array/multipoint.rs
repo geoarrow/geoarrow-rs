@@ -128,7 +128,7 @@ impl MultiPointArray {
         validity_len + self.buffer_lengths().num_bytes()
     }
 
-    /// Slices this [`MultiPointArray`] in place.
+    /// Slice this [`MultiPointArray`].
     ///
     /// # Implementation
     ///

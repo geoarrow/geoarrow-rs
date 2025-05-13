@@ -160,7 +160,8 @@ impl PolygonArray {
         validity_len + self.buffer_lengths().num_bytes()
     }
 
-    /// Slices this [`PolygonArray`] in place.
+    /// Slice this [`PolygonArray`].
+    ///
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]

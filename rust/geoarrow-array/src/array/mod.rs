@@ -1,6 +1,6 @@
 //! The concrete array definitions.
 //!
-//! All arrays implement the core [GeoArrowArray][crate::GeoArrowArray] trait.
+//! All arrays implement the core [GeoArrowArray] trait.
 
 mod coord;
 mod geometry;

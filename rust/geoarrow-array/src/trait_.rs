@@ -35,11 +35,12 @@ pub trait IntoArrow {
 
 /// A base trait for all GeoArrow arrays.
 ///
-/// This is a geospatial corollary to the upstream [`Array`][arrow_array::Array] trait.
+/// This is a geospatial corollary to the upstream [`Array`] trait.
 pub trait GeoArrowArray: Debug + Send + Sync {
     /// Returns the array as [`Any`] so that it can be downcasted to a specific implementation.
     ///
-    /// Prefer using [`AsGeoArrowArray`] instead of calling this method and manually downcasting.
+    /// Prefer using [`AsGeoArrowArray`][crate::cast::AsGeoArrowArray] instead of calling this
+    /// method and manually downcasting.
     fn as_any(&self) -> &dyn Any;
 
     /// Returns the [`GeoArrowType`] of this array.
@@ -150,9 +151,10 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// physical arrow representation.
     ///
     /// For most array types, this is equivalent to the "physical" nulls returned by
-    /// [`Array::nulls`]. However it is different for union arrays, including our [`GeometryArray`]
-    /// and [`GeometryCollectionArray`] types, because the unions aren't encoded in a single null
-    /// buffer.
+    /// [`Array::nulls`]. However it is different for union arrays, including our
+    /// [`GeometryArray`][crate::array::GeometryArray] and
+    /// [`GeometryCollectionArray`][crate::array::GeometryCollectionArray] types, because the
+    /// unions aren't encoded in a single null buffer.
     fn logical_nulls(&self) -> Option<NullBuffer>;
 
     /// Returns the number of null slots in this array.
@@ -417,11 +419,6 @@ pub trait GeoArrowArrayAccessor<'a>: GeoArrowArray {
 
 /// A trait describing a mutable geometry array; i.e. an array whose values can be changed.
 ///
-/// Mutable arrays cannot be cloned but can be mutated in place,
-/// thereby making them useful to perform numeric operations without allocations.
-/// As in [`NativeArray`], concrete arrays (such as
-/// [`PointBuilder`][crate::array::PointBuilder]) implement how they are mutated.
-//
 // Note: This trait is not yet publicly exported from this crate, as we're not sure how the API
 // should be, and in particular whether we need this trait to be dyn-compatible or not.
 pub(crate) trait GeoArrowArrayBuilder: Debug + Send + Sync {

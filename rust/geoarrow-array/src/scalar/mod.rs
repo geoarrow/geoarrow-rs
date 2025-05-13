@@ -7,7 +7,7 @@
 //! [`WkbViewArray`][crate::array::WkbViewArray],
 //! [`GenericWktArray`][crate::array::GenericWktArray], and
 //! [`WktViewArray`][crate::array::WktViewArray], there is an initial parsing step when accessing
-//! the scalar from the [`ArrayAccessor`][crate::ArrayAccessor] trait.
+//! the scalar from the [`GeoArrowArrayAccessor`][crate::GeoArrowArrayAccessor] trait.
 //!
 //! All scalars implement [`geo_traits`]. You can iterate through geometry parts directly using the
 //! APIs exposed by [`geo_traits`]. Or, for simplicity at the cost of a memory copy, you can use

@@ -18,7 +18,7 @@ pub(crate) fn process_point<P: GeomProcessor>(
 /// Note that this does _not_ call `processor.point_begin` and `processor.point_end` because as of
 /// geozero v0.12, `point_begin` and `point_end` are **not** called for each point in a
 /// MultiPoint
-/// https://github.com/georust/geozero/pull/183/files#diff-a583e23825ff28368eabfdbfdc362c6512e42097024d548fb18d88409feba76aR142-R143
+/// <https://github.com/georust/geozero/pull/183/files#diff-a583e23825ff28368eabfdbfdc362c6512e42097024d548fb18d88409feba76aR142-R143>
 pub(crate) fn process_point_as_coord<P: GeomProcessor>(
     geom: &impl PointTrait<T = f64>,
     coord_idx: usize,

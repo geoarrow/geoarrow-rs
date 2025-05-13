@@ -72,7 +72,7 @@ impl GeometryCollectionArray {
         validity_len + self.buffer_lengths().num_bytes()
     }
 
-    /// Slices this [`GeometryCollectionArray`] in place.
+    /// Slice this [`GeometryCollectionArray`].
     ///
     /// # Implementation
     ///

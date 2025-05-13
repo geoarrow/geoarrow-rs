@@ -42,6 +42,28 @@ jobs:
       - name: Test
         run: cargo test --all-features
 
+  docs-no-warnings:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      # TODO: switch back to pixi environment
+      - name: Install GEOS
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgeos-dev
+
+      # Note: in the future expand to all crates in the workspace
+      - name: Test that docs build without warnings
+        run: cargo doc --all-features --document-private-items
+        env:
+          RUSTDOCFLAGS: "-D warnings"
+
   # This part of the old test suite from `geoarrow` used external dependencies,
   # especially GEOS, GDAL, and PROJ. Come back to this once we use these
   # dependencies from inside the refactored geoarrow-* crates.
