@@ -508,14 +508,20 @@ mod test {
             CoordType::Interleaved,
             Default::default(),
         ));
-        builder.push_point(Some(&crate::test::point::p0())).unwrap();
-        builder.push_point(Some(&crate::test::point::p1())).unwrap();
-        builder.push_point(Some(&crate::test::point::p2())).unwrap();
         builder
-            .push_multi_line_string(Some(&crate::test::multilinestring::ml0()))
+            .push_geometry(Some(&crate::test::point::p0()))
             .unwrap();
         builder
-            .push_multi_line_string(Some(&crate::test::multilinestring::ml1()))
+            .push_geometry(Some(&crate::test::point::p1()))
+            .unwrap();
+        builder
+            .push_geometry(Some(&crate::test::point::p2()))
+            .unwrap();
+        builder
+            .push_geometry(Some(&crate::test::multilinestring::ml0()))
+            .unwrap();
+        builder
+            .push_geometry(Some(&crate::test::multilinestring::ml1()))
             .unwrap();
         let geom_array = builder.finish();
         let field = geom_array.data_type.to_field("geometry", true);
