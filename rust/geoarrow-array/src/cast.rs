@@ -138,6 +138,15 @@ pub trait AsGeoArrowArray {
         self.as_wkb_opt::<O>().unwrap()
     }
 
+    /// Downcast this to a [`WkbViewArray`] returning `None` if not possible
+    fn as_wkb_view_opt(&self) -> Option<&WkbViewArray>;
+
+    /// Downcast this to a [`WkbViewArray`] panicking if not possible
+    #[inline]
+    fn as_wkb_view(&self) -> &WkbViewArray {
+        self.as_wkb_view_opt().unwrap()
+    }
+
     /// Downcast this to a [`WktArray`] with `O` offsets returning `None` if not possible
     fn as_wkt_opt<O: OffsetSizeTrait>(&self) -> Option<&WktArray<O>>;
 
@@ -145,6 +154,15 @@ pub trait AsGeoArrowArray {
     #[inline]
     fn as_wkt<O: OffsetSizeTrait>(&self) -> &WktArray<O> {
         self.as_wkt_opt::<O>().unwrap()
+    }
+
+    /// Downcast this to a [`WktViewArray`] returning `None` if not possible
+    fn as_wkt_view_opt(&self) -> Option<&WktViewArray>;
+
+    /// Downcast this to a [`WktViewArray`] panicking if not possible
+    #[inline]
+    fn as_wkt_view(&self) -> &WktViewArray {
+        self.as_wkt_view_opt().unwrap()
     }
 }
 
@@ -201,8 +219,18 @@ impl AsGeoArrowArray for dyn GeoArrowArray + '_ {
     }
 
     #[inline]
+    fn as_wkb_view_opt(&self) -> Option<&WkbViewArray> {
+        self.as_any().downcast_ref::<WkbViewArray>()
+    }
+
+    #[inline]
     fn as_wkt_opt<O: OffsetSizeTrait>(&self) -> Option<&WktArray<O>> {
         self.as_any().downcast_ref::<WktArray<O>>()
+    }
+
+    #[inline]
+    fn as_wkt_view_opt(&self) -> Option<&WktViewArray> {
+        self.as_any().downcast_ref::<WktViewArray>()
     }
 }
 
@@ -258,8 +286,18 @@ impl AsGeoArrowArray for Arc<dyn GeoArrowArray> {
     }
 
     #[inline]
+    fn as_wkb_view_opt(&self) -> Option<&WkbViewArray> {
+        self.as_any().downcast_ref::<WkbViewArray>()
+    }
+
+    #[inline]
     fn as_wkt_opt<O: OffsetSizeTrait>(&self) -> Option<&WktArray<O>> {
         self.as_any().downcast_ref::<WktArray<O>>()
+    }
+
+    #[inline]
+    fn as_wkt_view_opt(&self) -> Option<&WktViewArray> {
+        self.as_any().downcast_ref::<WktViewArray>()
     }
 }
 
@@ -651,11 +689,17 @@ macro_rules! downcast_geoarrow_array {
             $crate::cast::__private::GeoArrowType::LargeWkb(_) => {
                 $fn($crate::cast::AsGeoArrowArray::as_wkb::<i64>($array))
             }
+            $crate::cast::__private::GeoArrowType::WkbView(_) => {
+                $fn($crate::cast::AsGeoArrowArray::as_wkb_view($array))
+            }
             $crate::cast::__private::GeoArrowType::Wkt(_) => {
                 $fn($crate::cast::AsGeoArrowArray::as_wkt::<i32>($array))
             }
             $crate::cast::__private::GeoArrowType::LargeWkt(_) => {
                 $fn($crate::cast::AsGeoArrowArray::as_wkt::<i64>($array))
+            }
+            $crate::cast::__private::GeoArrowType::WktView(_) => {
+                $fn($crate::cast::AsGeoArrowArray::as_wkt_view($array))
             }
         }
     };

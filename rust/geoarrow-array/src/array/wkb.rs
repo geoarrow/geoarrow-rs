@@ -19,11 +19,7 @@ use crate::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 ///
 /// This is semantically equivalent to `Vec<Option<Wkb>>` due to the internal validity bitmap.
 ///
-/// This array implements [`SerializedArray`], not [`NativeArray`]. This means that you'll need to
-/// parse the `WkbArray` into a native-typed GeoArrow array (such as
-/// [`GeometryArray`][crate::array::GeometryArray]) before using it for computations.
-///
-/// Refer to [`crate::io::wkb`] for encoding and decoding this array to the native array types.
+/// This is stored either as an Arrow [`BinaryArray`] or [`LargeBinaryArray`].
 #[derive(Debug, Clone, PartialEq)]
 pub struct WkbArray<O: OffsetSizeTrait> {
     pub(crate) data_type: WkbType,
@@ -151,11 +147,7 @@ impl<O: OffsetSizeTrait> IntoArrow for WkbArray<O> {
     type ExtensionType = WkbType;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        GenericBinaryArray::new(
-            self.array.offsets().clone(),
-            self.array.values().clone(),
-            self.array.nulls().cloned(),
-        )
+        self.array
     }
 
     fn ext_type(&self) -> &Self::ExtensionType {
@@ -165,7 +157,10 @@ impl<O: OffsetSizeTrait> IntoArrow for WkbArray<O> {
 
 impl<O: OffsetSizeTrait> From<(GenericBinaryArray<O>, WkbType)> for WkbArray<O> {
     fn from((value, typ): (GenericBinaryArray<O>, WkbType)) -> Self {
-        Self::new(value, typ.metadata().clone())
+        Self {
+            data_type: typ,
+            array: value,
+        }
     }
 }
 

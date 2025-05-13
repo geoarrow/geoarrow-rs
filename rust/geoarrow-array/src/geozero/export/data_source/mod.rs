@@ -370,6 +370,13 @@ fn process_geometry_n<P: GeomProcessor>(
                 .map_err(|err| GeozeroError::Geometry(err.to_string()))?;
             process_geometry(&geom, 0, processor)?;
         }
+        WkbView(_) => {
+            let geom = arr
+                .as_wkb_view()
+                .value(i)
+                .map_err(|err| GeozeroError::Geometry(err.to_string()))?;
+            process_geometry(&geom, 0, processor)?;
+        }
         Wkt(_) => {
             let geom = arr
                 .as_wkt::<i32>()
@@ -380,6 +387,13 @@ fn process_geometry_n<P: GeomProcessor>(
         LargeWkt(_) => {
             let geom = arr
                 .as_wkt::<i64>()
+                .value(i)
+                .map_err(|err| GeozeroError::Geometry(err.to_string()))?;
+            process_geometry(&geom, 0, processor)?;
+        }
+        WktView(_) => {
+            let geom = arr
+                .as_wkt_view()
                 .value(i)
                 .map_err(|err| GeozeroError::Geometry(err.to_string()))?;
             process_geometry(&geom, 0, processor)?;

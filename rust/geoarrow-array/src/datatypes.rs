@@ -55,11 +55,17 @@ pub enum GeoArrowType {
     /// Represents a [WkbArray][crate::array::WkbArray] with `i64` offsets.
     LargeWkb(WkbType),
 
+    /// Represents a [WkbViewArray][crate::array::WkbViewArray].
+    WkbView(WkbType),
+
     /// Represents a [WktArray][crate::array::WktArray] with `i32` offsets.
     Wkt(WktType),
 
     /// Represents a [WktArray][crate::array::WktArray] with `i64` offsets.
     LargeWkt(WktType),
+
+    /// Represents a [WktViewArray][crate::array::WktViewArray].
+    WktView(WktType),
 }
 
 impl From<GeoArrowType> for DataType {
@@ -84,7 +90,7 @@ impl GeoArrowType {
             GeometryCollection(t) => Some(t.coord_type()),
             Rect(_) => Some(CoordType::Separated),
             Geometry(t) => Some(t.coord_type()),
-            Wkb(_) | LargeWkb(_) | Wkt(_) | LargeWkt(_) => None,
+            Wkb(_) | LargeWkb(_) | WkbView(_) | Wkt(_) | LargeWkt(_) | WktView(_) => None,
         }
     }
 
@@ -104,7 +110,9 @@ impl GeoArrowType {
             MultiPolygon(t) => Some(t.dimension()),
             GeometryCollection(t) => Some(t.dimension()),
             Rect(t) => Some(t.dimension()),
-            Geometry(_) | Wkb(_) | LargeWkb(_) | Wkt(_) | LargeWkt(_) => None,
+            Geometry(_) | Wkb(_) | LargeWkb(_) | WkbView(_) | Wkt(_) | LargeWkt(_) | WktView(_) => {
+                None
+            }
         }
     }
 
@@ -121,8 +129,8 @@ impl GeoArrowType {
             GeometryCollection(t) => t.metadata(),
             Rect(t) => t.metadata(),
             Geometry(t) => t.metadata(),
-            Wkb(t) | LargeWkb(t) => t.metadata(),
-            Wkt(t) | LargeWkt(t) => t.metadata(),
+            Wkb(t) | LargeWkb(t) | WkbView(t) => t.metadata(),
+            Wkt(t) | LargeWkt(t) | WktView(t) => t.metadata(),
         }
     }
     /// Converts a [`GeoArrowType`] into the relevant arrow [`DataType`].
@@ -153,8 +161,10 @@ impl GeoArrowType {
             Geometry(t) => t.data_type(),
             Wkb(_) => DataType::Binary,
             LargeWkb(_) => DataType::LargeBinary,
+            WkbView(_) => DataType::BinaryView,
             Wkt(_) => DataType::Utf8,
             LargeWkt(_) => DataType::LargeUtf8,
+            WktView(_) => DataType::Utf8View,
         }
     }
 
@@ -184,13 +194,11 @@ impl GeoArrowType {
             GeometryCollection(t) => t.to_field(name, nullable),
             Rect(t) => t.to_field(name, nullable),
             Geometry(t) => t.to_field(name, nullable),
-            Wkb(t) => Field::new(name, DataType::Binary, nullable).with_extension_type(t.clone()),
-            LargeWkb(t) => {
-                Field::new(name, DataType::LargeBinary, nullable).with_extension_type(t.clone())
+            Wkb(t) | LargeWkb(t) | WkbView(t) => {
+                Field::new(name, self.to_data_type(), nullable).with_extension_type(t.clone())
             }
-            Wkt(t) => Field::new(name, DataType::Utf8, nullable).with_extension_type(t.clone()),
-            LargeWkt(t) => {
-                Field::new(name, DataType::LargeUtf8, nullable).with_extension_type(t.clone())
+            Wkt(t) | LargeWkt(t) | WktView(t) => {
+                Field::new(name, self.to_data_type(), nullable).with_extension_type(t.clone())
             }
         }
     }
@@ -266,8 +274,10 @@ impl GeoArrowType {
             Geometry(t) => Geometry(t.with_metadata(meta)),
             Wkb(t) => Wkb(t.with_metadata(meta)),
             LargeWkb(t) => LargeWkb(t.with_metadata(meta)),
+            WkbView(t) => WkbView(t.with_metadata(meta)),
             Wkt(t) => Wkt(t.with_metadata(meta)),
             LargeWkt(t) => LargeWkt(t.with_metadata(meta)),
+            WktView(t) => WktView(t.with_metadata(meta)),
         }
     }
 }
