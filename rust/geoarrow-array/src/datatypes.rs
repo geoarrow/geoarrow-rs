@@ -96,7 +96,7 @@ impl GeoArrowType {
 
     /// Get the [`Dimension`] of this data type, if it has one.
     ///
-    /// [`GeometryArray``], WKB and WKT arrays will return `None`.
+    /// [`GeometryArray`][crate::array::GeometryArray], WKB and WKT arrays will return `None`.
     pub fn dimension(&self) -> Option<Dimension> {
         use GeoArrowType::*;
         match self {
