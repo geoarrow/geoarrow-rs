@@ -31,16 +31,6 @@ impl<O: OffsetSizeTrait> WkbBuilder<O> {
         )
     }
 
-    /// Creates a new empty [`WkbBuilder`] with a capacity inferred by the provided geometry
-    /// iterator.
-    pub fn with_capacity_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
-        typ: WkbType,
-    ) -> Self {
-        let counter = WkbCapacity::from_geometries(geoms);
-        Self::with_capacity(typ, counter)
-    }
-
     // Upstream APIs don't exist for this yet. To implement this without upstream changes, we could
     // change to using manual `Vec`'s ourselves
     // pub fn reserve(&mut self, capacity: WkbCapacity) {
@@ -72,7 +62,8 @@ impl<O: OffsetSizeTrait> WkbBuilder<O> {
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         typ: WkbType,
     ) -> Self {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(|x| x.as_ref()), typ);
+        let capacity = WkbCapacity::from_geometries(geoms.iter().map(|x| x.as_ref()));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         array
     }

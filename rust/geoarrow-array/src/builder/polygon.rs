@@ -134,15 +134,6 @@ impl PolygonBuilder {
         )
     }
 
-    /// Creates a new builder with a capacity inferred by the provided iterator.
-    pub fn with_capacity_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
-        typ: PolygonType,
-    ) -> Self {
-        let counter = PolygonCapacity::from_polygons(geoms);
-        Self::with_capacity(typ, counter)
-    }
-
     /// Add a new Polygon to the end of this array.
     ///
     /// # Errors
@@ -276,7 +267,8 @@ impl PolygonBuilder {
 
     /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_polygons(geoms: &[impl PolygonTrait<T = f64>], typ: PolygonType) -> Self {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(Some), typ);
+        let capacity = PolygonCapacity::from_polygons(geoms.iter().map(Some));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(Some));
         array
     }
@@ -286,7 +278,8 @@ impl PolygonBuilder {
         geoms: &[Option<impl PolygonTrait<T = f64>>],
         typ: PolygonType,
     ) -> Self {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(|x| x.as_ref()), typ);
+        let capacity = PolygonCapacity::from_polygons(geoms.iter().map(|x| x.as_ref()));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         array
     }

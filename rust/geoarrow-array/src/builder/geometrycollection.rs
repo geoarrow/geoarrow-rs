@@ -7,7 +7,6 @@ use geo_traits::{
     MultiPolygonTrait, PointTrait, PolygonTrait,
 };
 use geoarrow_schema::GeometryCollectionType;
-use wkt::WktNum;
 
 use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, GeometryCollectionArray};
@@ -38,7 +37,8 @@ impl<'a> GeometryCollectionBuilder {
         Self::with_capacity(typ, Default::default())
     }
 
-    /// Creates a new empty [`GeometryCollectionBuilder`] with the provided capacity.
+    /// Creates a new empty [`GeometryCollectionBuilder`] with the provided
+    /// [capacity][GeometryCollectionCapacity].
     pub fn with_capacity(
         typ: GeometryCollectionType,
         capacity: GeometryCollectionCapacity,
@@ -108,16 +108,6 @@ impl<'a> GeometryCollectionBuilder {
             validity,
             self.data_type.metadata().clone(),
         )
-    }
-
-    /// Creates a new [`GeometryCollectionBuilder`] with a capacity inferred by the provided
-    /// iterator.
-    pub fn with_capacity_from_iter<T: WktNum>(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait<T = T> + 'a)>>,
-        typ: GeometryCollectionType,
-    ) -> Result<Self> {
-        let counter = GeometryCollectionCapacity::from_geometry_collections(geoms)?;
-        Ok(Self::with_capacity(typ, counter))
     }
 
     /// Push a Point onto the end of this builder
@@ -277,7 +267,9 @@ impl<'a> GeometryCollectionBuilder {
         geoms: &[impl GeometryCollectionTrait<T = f64>],
         typ: GeometryCollectionType,
     ) -> Result<Self> {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(Some), typ)?;
+        let capacity =
+            GeometryCollectionCapacity::from_geometry_collections(geoms.iter().map(Some))?;
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(Some));
         Ok(array)
     }
@@ -287,7 +279,10 @@ impl<'a> GeometryCollectionBuilder {
         geoms: &[Option<impl GeometryCollectionTrait<T = f64>>],
         typ: GeometryCollectionType,
     ) -> Result<Self> {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(|x| x.as_ref()), typ)?;
+        let capacity = GeometryCollectionCapacity::from_geometry_collections(
+            geoms.iter().map(|x| x.as_ref()),
+        )?;
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         Ok(array)
     }

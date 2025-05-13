@@ -102,15 +102,6 @@ impl MultiPointBuilder {
         )
     }
 
-    /// Creates a new builder with a capacity inferred by the provided iterator.
-    pub fn with_capacity_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
-        typ: MultiPointType,
-    ) -> Self {
-        let counter = MultiPointCapacity::from_multi_points(geoms);
-        Self::with_capacity(typ, counter)
-    }
-
     /// Extend this builder with the given geometries
     pub fn extend_from_iter<'a>(
         &mut self,
@@ -215,7 +206,8 @@ impl MultiPointBuilder {
 
     /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_multi_points(geoms: &[impl MultiPointTrait<T = f64>], typ: MultiPointType) -> Self {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(Some), typ);
+        let capacity = MultiPointCapacity::from_multi_points(geoms.iter().map(Some));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(Some));
         array
     }
@@ -225,7 +217,8 @@ impl MultiPointBuilder {
         geoms: &[Option<impl MultiPointTrait<T = f64>>],
         typ: MultiPointType,
     ) -> Self {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(|x| x.as_ref()), typ);
+        let capacity = MultiPointCapacity::from_multi_points(geoms.iter().map(|x| x.as_ref()));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         array
     }

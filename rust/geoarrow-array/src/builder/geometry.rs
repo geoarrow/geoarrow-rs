@@ -6,7 +6,6 @@ use geoarrow_schema::{
     Dimension, GeometryCollectionType, GeometryType, LineStringType, Metadata, MultiLineStringType,
     MultiPointType, MultiPolygonType, PointType, PolygonType,
 };
-use wkt::WktNum;
 
 use crate::GeoArrowArray;
 use crate::array::{DimensionIndex, GenericWkbArray, GeometryArray};
@@ -294,15 +293,6 @@ impl<'a> GeometryBuilder {
             self.gcs.map(|arr| arr.finish()),
             self.metadata,
         )
-    }
-
-    /// Creates a new builder with a capacity inferred by the provided iterator.
-    pub fn with_capacity_from_iter<T: WktNum>(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = T> + 'a)>>,
-        typ: GeometryType,
-    ) -> Result<Self> {
-        let counter = GeometryCapacity::from_geometries(geoms)?;
-        Ok(Self::with_capacity(typ, counter))
     }
 
     /// Add a new Point to the end of this array.
@@ -771,7 +761,8 @@ impl<'a> GeometryBuilder {
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         typ: GeometryType,
     ) -> Result<Self> {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(|x| x.as_ref()), typ)?;
+        let capacity = GeometryCapacity::from_geometries(geoms.iter().map(|x| x.as_ref()))?;
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         Ok(array)
     }
