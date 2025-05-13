@@ -788,16 +788,6 @@ impl<'a> GeometryBuilder {
             .unwrap();
     }
 
-    /// Create this builder from a slice of Geometries.
-    pub fn from_geometries(
-        geoms: &[impl GeometryTrait<T = f64>],
-        typ: GeometryType,
-    ) -> Result<Self> {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(Some), typ)?;
-        array.extend_from_iter(geoms.iter().map(Some));
-        Ok(array)
-    }
-
     /// Create this builder from a slice of nullable Geometries.
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],

@@ -67,13 +67,6 @@ impl<O: OffsetSizeTrait> WkbBuilder<O> {
             .for_each(|maybe_geom| self.push_geometry(maybe_geom));
     }
 
-    /// Create this builder from a slice of Geometries.
-    pub fn from_geometries(geoms: &[impl GeometryTrait<T = f64>], typ: WkbType) -> Self {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(Some), typ);
-        array.extend_from_iter(geoms.iter().map(Some));
-        array
-    }
-
     /// Create this builder from a slice of nullable Geometries.
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],

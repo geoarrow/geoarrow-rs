@@ -315,19 +315,6 @@ impl<'a> GeometryCollectionBuilder {
     }
 
     /// Construct a new builder, pre-filling it with the provided geometries
-    pub fn from_geometries(
-        geoms: &[impl GeometryTrait<T = f64>],
-        typ: GeometryCollectionType,
-    ) -> Result<Self> {
-        let capacity = GeometryCollectionCapacity::from_geometries(geoms.iter().map(Some))?;
-        let mut array = Self::with_capacity(typ, capacity);
-        for geom in geoms {
-            array.push_geometry(Some(geom))?;
-        }
-        Ok(array)
-    }
-
-    /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         typ: GeometryCollectionType,
