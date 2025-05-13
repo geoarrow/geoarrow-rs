@@ -66,3 +66,44 @@ pub fn from_arrow_array(array: &dyn Array, field: &Field) -> Result<Arc<dyn GeoA
     };
     Ok(result)
 }
+
+/// A trait for GeoArrow arrays that can hold WKB data.
+///
+/// Currently three types are supported:
+///
+/// - [`WkbArray<i32>`]
+/// - [`WkbArray<i64>`]
+/// - [`WkbViewArray`]
+///
+/// This trait helps to abstract over the different types of WKB arrays so that we don’t need to
+/// duplicate the implementation for each type.
+///
+/// This is modeled after the upstream [`BinaryArrayType`][arrow_array::array::BinaryArrayType]
+/// trait.
+pub trait WkbArrayType<'a>:
+    Sized + crate::ArrayAccessor<'a, Item = ::wkb::reader::Wkb<'a>>
+{
+}
+
+impl<'a> WkbArrayType<'a> for WkbArray<i32> {}
+impl<'a> WkbArrayType<'a> for WkbArray<i64> {}
+impl<'a> WkbArrayType<'a> for WkbViewArray {}
+
+/// A trait for GeoArrow arrays that can hold WKT data.
+///
+/// Currently three types are supported:
+///
+/// - [`WktArray<i32>`]
+/// - [`WktArray<i64>`]
+/// - [`WktViewArray`]
+///
+/// This trait helps to abstract over the different types of WKT arrays so that we don’t need to
+/// duplicate the implementation for each type.
+///
+/// This is modeled after the upstream [`StringArrayType`][arrow_array::array::StringArrayType]
+/// trait.
+pub trait WktArrayType: Sized + for<'a> crate::ArrayAccessor<'a, Item = ::wkt::Wkt> {}
+
+impl WktArrayType for WktArray<i32> {}
+impl WktArrayType for WktArray<i64> {}
+impl WktArrayType for WktViewArray {}

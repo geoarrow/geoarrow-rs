@@ -361,8 +361,8 @@ fn impl_to_wkb<'a, O: OffsetSizeTrait>(geo_arr: &'a impl ArrayAccessor<'a>) -> R
 ///
 /// Note that the GeoArrow metadata on the new array is taken from `to_type` **not** the original
 /// array. Ensure you construct the [GeoArrowType] with the correct metadata.
-pub fn from_wkb<O: OffsetSizeTrait>(
-    arr: &WkbArray<O>,
+pub fn from_wkb<'a, A: WkbArrayType<'a>>(
+    arr: &A,
     to_type: GeoArrowType,
 ) -> Result<Arc<dyn GeoArrowArray>> {
     let geoms = arr
@@ -397,27 +397,14 @@ pub fn from_wkb<O: OffsetSizeTrait>(
         }
         Geometry(typ) => Arc::new(GeometryBuilder::from_nullable_geometries(&geoms, typ)?.finish()),
         Wkb(typ) => {
-            // Note that here O is the _source_ offset type
-            if O::IS_LARGE {
-                // We need to convert from i64 to i32
-                let wkb_arr = WkbArray::<i64>::try_from((arr.to_array_ref().as_ref(), typ))?;
-                let small_arr: WkbArray<i32> = wkb_arr.try_into()?;
-                Arc::new(small_arr)
-            } else {
-                // No conversion needed
-                Arc::new(arr.clone())
-            }
+            let mut wkb_arr = to_wkb::<i32>(arr)?;
+            wkb_arr.data_type = typ;
+            Arc::new(wkb_arr)
         }
         LargeWkb(typ) => {
-            if O::IS_LARGE {
-                // No conversion needed
-                Arc::new(arr.clone())
-            } else {
-                // We need to convert from i32 to i64
-                let wkb_arr = WkbArray::<i32>::try_from((arr.to_array_ref().as_ref(), typ))?;
-                let large_arr: WkbArray<i64> = wkb_arr.into();
-                Arc::new(large_arr)
-            }
+            let mut wkb_arr = to_wkb::<i64>(arr)?;
+            wkb_arr.data_type = typ;
+            Arc::new(wkb_arr)
         }
         Wkt(typ) => {
             let mut wkt_arr = to_wkt::<i32>(arr)?;
@@ -497,10 +484,7 @@ fn impl_to_wkt<'a, O: OffsetSizeTrait>(geo_arr: &'a impl ArrayAccessor<'a>) -> R
 ///
 /// Note that the GeoArrow metadata on the new array is taken from `to_type` **not** the original
 /// array. Ensure you construct the [GeoArrowType] with the correct metadata.
-pub fn from_wkt<O: OffsetSizeTrait>(
-    arr: &WktArray<O>,
-    to_type: GeoArrowType,
-) -> Result<Arc<dyn GeoArrowArray>> {
+pub fn from_wkt<A: WktArrayType>(arr: &A, to_type: GeoArrowType) -> Result<Arc<dyn GeoArrowArray>> {
     let geoms = arr
         .iter()
         .map(|g| g.transpose())
@@ -543,27 +527,14 @@ pub fn from_wkt<O: OffsetSizeTrait>(
             Arc::new(wkt_arr)
         }
         Wkt(typ) => {
-            // Note that here O is the _source_ offset type
-            if O::IS_LARGE {
-                // We need to convert from i64 to i32
-                let wkb_arr = WktArray::<i64>::try_from((arr.to_array_ref().as_ref(), typ))?;
-                let small_arr: WktArray<i32> = wkb_arr.try_into()?;
-                Arc::new(small_arr)
-            } else {
-                // No conversion needed
-                Arc::new(arr.clone())
-            }
+            let mut wkt_arr = to_wkt::<i32>(arr)?;
+            wkt_arr.data_type = typ;
+            Arc::new(wkt_arr)
         }
         LargeWkt(typ) => {
-            if O::IS_LARGE {
-                // No conversion needed
-                Arc::new(arr.clone())
-            } else {
-                // We need to convert from i32 to i64
-                let wkb_arr = WktArray::<i32>::try_from((arr.to_array_ref().as_ref(), typ))?;
-                let large_arr: WktArray<i64> = wkb_arr.into();
-                Arc::new(large_arr)
-            }
+            let mut wkt_arr = to_wkt::<i64>(arr)?;
+            wkt_arr.data_type = typ;
+            Arc::new(wkt_arr)
         }
     };
     Ok(result)
