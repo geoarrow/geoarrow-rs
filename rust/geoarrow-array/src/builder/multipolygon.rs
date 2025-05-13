@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{
@@ -7,6 +9,7 @@ use geoarrow_schema::{CoordType, MultiPolygonType};
 
 use crate::capacity::MultiPolygonCapacity;
 // use super::array::check;
+use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, MultiPolygonArray};
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
@@ -394,5 +397,9 @@ impl GeoArrowArrayBuilder for MultiPolygonBuilder {
 
     fn push_null(&mut self) {
         self.push_null();
+    }
+
+    fn finish(self) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.finish())
     }
 }

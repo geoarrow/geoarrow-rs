@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
@@ -5,6 +7,7 @@ use geoarrow_schema::{CoordType, MultiPointType};
 
 use crate::capacity::MultiPointCapacity;
 // use super::array::check;
+use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, MultiPointArray};
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
@@ -278,5 +281,9 @@ impl GeoArrowArrayBuilder for MultiPointBuilder {
 
     fn push_null(&mut self) {
         self.push_null();
+    }
+
+    fn finish(self) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.finish())
     }
 }

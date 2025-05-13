@@ -434,4 +434,8 @@ pub trait GeoArrowArrayBuilder: Debug + Send + Sync {
 
     /// Push a null value to this builder.
     fn push_null(&mut self);
+
+    /// Finish the builder and return an [`Arc`] to the resulting array.
+    #[allow(dead_code)]
+    fn finish(self) -> Arc<dyn GeoArrowArray>;
 }

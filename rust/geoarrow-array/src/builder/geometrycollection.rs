@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{
@@ -7,6 +9,7 @@ use geo_traits::{
 use geoarrow_schema::GeometryCollectionType;
 use wkt::WktNum;
 
+use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, GeometryCollectionArray};
 use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
 use crate::builder::{MixedGeometryBuilder, OffsetsBuilder};
@@ -360,5 +363,9 @@ impl GeoArrowArrayBuilder for GeometryCollectionBuilder {
 
     fn push_null(&mut self) {
         self.push_null();
+    }
+
+    fn finish(self) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.finish())
     }
 }
