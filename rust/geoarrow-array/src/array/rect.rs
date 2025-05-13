@@ -11,7 +11,7 @@ use crate::array::SeparatedCoordBuffer;
 use crate::datatypes::GeoArrowType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Rect;
-use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
+use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 
 /// An immutable array of Rect or Box geometries.
 ///
@@ -145,7 +145,7 @@ impl GeoArrowArray for RectArray {
     }
 }
 
-impl<'a> ArrayAccessor<'a> for RectArray {
+impl<'a> GeoArrowArrayAccessor<'a> for RectArray {
     type Item = Rect<'a>;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {

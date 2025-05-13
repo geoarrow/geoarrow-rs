@@ -13,7 +13,7 @@ use crate::builder::{
 };
 use crate::capacity::PolygonCapacity;
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
+use crate::trait_::{GeoArrowArrayAccessor, GeometryArrayBuilder};
 
 pub type MutablePolygonParts = (
     CoordBufferBuilder,
@@ -366,7 +366,7 @@ mod test {
     use geo_types::{Rect, coord};
     use geoarrow_schema::{CoordType, Dimension, PolygonType};
 
-    use crate::ArrayAccessor;
+    use crate::GeoArrowArrayAccessor;
     use crate::builder::PolygonBuilder;
 
     #[test]

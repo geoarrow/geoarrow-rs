@@ -11,7 +11,7 @@ use arrow_schema::{DataType, Field};
 use geoarrow_schema::{Metadata, WktType};
 use wkt::Wkt;
 
-use crate::ArrayAccessor;
+use crate::GeoArrowArrayAccessor;
 use crate::array::WktViewArray;
 use crate::datatypes::GeoArrowType;
 use crate::error::{GeoArrowError, Result};
@@ -130,7 +130,7 @@ impl<O: OffsetSizeTrait> GeoArrowArray for WktArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> ArrayAccessor<'a> for WktArray<O> {
+impl<'a, O: OffsetSizeTrait> GeoArrowArrayAccessor<'a> for WktArray<O> {
     type Item = Wkt<f64>;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {

@@ -4,7 +4,7 @@ use geozero::{GeomProcessor, GeozeroGeometry};
 
 use crate::array::WktArray;
 use crate::geozero::export::scalar::process_geometry;
-use crate::{ArrayAccessor, GeoArrowArray};
+use crate::{GeoArrowArray, GeoArrowArrayAccessor};
 
 impl<O: OffsetSizeTrait> GeozeroGeometry for WktArray<O> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>

@@ -14,7 +14,7 @@ use crate::datatypes::GeoArrowType;
 use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Polygon;
-use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
+use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 use crate::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
 
 /// An immutable array of Polygon geometries using GeoArrow's in-memory representation.
@@ -247,7 +247,7 @@ impl GeoArrowArray for PolygonArray {
     }
 }
 
-impl<'a> ArrayAccessor<'a> for PolygonArray {
+impl<'a> GeoArrowArrayAccessor<'a> for PolygonArray {
     type Item = Polygon<'a>;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {

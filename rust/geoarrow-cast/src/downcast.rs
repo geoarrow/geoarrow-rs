@@ -6,7 +6,7 @@ use geo_traits::{
 };
 use geoarrow_array::cast::AsGeoArrowArray;
 use geoarrow_array::error::{GeoArrowError, Result};
-use geoarrow_array::{ArrayAccessor, GeoArrowArray, GeoArrowType};
+use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, GeoArrowType};
 use geoarrow_schema::Dimension;
 
 /// Infer a common native geometry type, if any

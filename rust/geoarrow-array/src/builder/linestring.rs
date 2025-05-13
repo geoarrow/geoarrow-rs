@@ -10,7 +10,7 @@ use crate::builder::{
 };
 use crate::capacity::LineStringCapacity;
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
+use crate::trait_::{GeoArrowArrayAccessor, GeometryArrayBuilder};
 
 /// The GeoArrow equivalent to `Vec<Option<LineString>>`: a mutable collection of LineStrings.
 ///

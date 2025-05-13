@@ -636,7 +636,7 @@ mod test {
     use arrow_schema::Schema;
     use datafusion::prelude::SessionContext;
     use geo_traits::{CoordTrait, PointTrait};
-    use geoarrow_array::ArrayAccessor;
+    use geoarrow_array::GeoArrowArrayAccessor;
 
     use super::*;
 

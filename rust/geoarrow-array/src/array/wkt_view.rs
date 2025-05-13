@@ -11,7 +11,7 @@ use wkt::Wkt;
 
 use crate::array::WktArray;
 use crate::error::{GeoArrowError, Result};
-use crate::{ArrayAccessor, GeoArrowArray, GeoArrowType, IntoArrow};
+use crate::{GeoArrowArray, GeoArrowArrayAccessor, GeoArrowType, IntoArrow};
 
 /// An immutable array of WKT geometries.
 ///
@@ -112,7 +112,7 @@ impl GeoArrowArray for WktViewArray {
     }
 }
 
-impl<'a> ArrayAccessor<'a> for WktViewArray {
+impl<'a> GeoArrowArrayAccessor<'a> for WktViewArray {
     type Item = Wkt<f64>;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {

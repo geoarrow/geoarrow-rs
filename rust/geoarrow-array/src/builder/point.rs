@@ -9,7 +9,7 @@ use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
+use crate::trait_::{GeoArrowArrayAccessor, GeometryArrayBuilder};
 
 /// The GeoArrow equivalent to `Vec<Option<Point>>`: a mutable collection of Points.
 ///
