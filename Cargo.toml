@@ -3,12 +3,12 @@ members = [
     "rust/geoarrow-array",
     "rust/geoarrow-cast",
     "rust/geoarrow-flatgeobuf",
-    "rust/geoarrow-geoparquet",
     "rust/geoarrow-geos",
     "rust/geoarrow-schema",
     "rust/geoarrow-test",
-    "rust/pyo3-geoarrow",
     "rust/geodatafusion",
+    "rust/geoparquet",
+    "rust/pyo3-geoarrow",
 ]
 exclude = ["js"]
 resolver = "2"
