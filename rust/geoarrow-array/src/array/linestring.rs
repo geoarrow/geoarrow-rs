@@ -124,7 +124,7 @@ impl LineStringArray {
         validity_len + self.buffer_lengths().num_bytes()
     }
 
-    /// Slices this [`LineStringArray`] in place.
+    /// Slice this [`LineStringArray`].
     ///
     /// # Implementation
     ///

@@ -76,14 +76,9 @@ impl PointArray {
 
     /// Access the underlying coordinate buffer
     ///
-    /// Note that some coordinates may be null, depending on the value of [`Self::nulls`]
+    /// Note that some coordinates may be null, depending on the value of [`Self::logical_nulls`]
     pub fn coords(&self) -> &CoordBuffer {
         &self.coords
-    }
-
-    /// Access the
-    pub fn into_inner(self) -> (CoordBuffer, Option<NullBuffer>) {
-        (self.coords, self.nulls)
     }
 
     /// The lengths of each buffer contained in this array.
@@ -98,7 +93,8 @@ impl PointArray {
         validity_len + self.buffer_lengths() * dimension.size() * 8
     }
 
-    /// Slices this [`PointArray`] in place.
+    /// Slice this [`PointArray`].
+    ///
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]

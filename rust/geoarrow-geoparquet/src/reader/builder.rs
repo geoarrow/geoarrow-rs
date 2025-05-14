@@ -20,7 +20,7 @@ pub trait GeoParquetReaderBuilder: Sized {
 
 /// A synchronous builder used to construct [`GeoParquetRecordBatchReader`] for a file.
 ///
-/// For an async API see [`crate::io::parquet::GeoParquetRecordBatchStreamBuilder`]
+/// For an async API see [`crate::reader::GeoParquetRecordBatchStreamBuilder`]
 pub struct GeoParquetRecordBatchReaderBuilder<T: ChunkReader + 'static> {
     builder: ParquetRecordBatchReaderBuilder<T>,
     geo_meta: Option<GeoParquetMetadata>,

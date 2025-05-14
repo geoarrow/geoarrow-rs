@@ -341,7 +341,7 @@ impl GeometryArray {
         self.buffer_lengths().num_bytes()
     }
 
-    /// Slices this [`MixedGeometryArray`] in place.
+    /// Slice this [`GeometryArray`].
     ///
     /// # Implementation
     ///
@@ -1053,9 +1053,9 @@ mod test {
     }
 
     fn geom_array(coord_type: CoordType) -> GeometryArray {
-        let geoms = geoms();
+        let geoms = geoms().into_iter().map(Some).collect::<Vec<_>>();
         let typ = GeometryType::new(coord_type, Default::default());
-        GeometryBuilder::from_geometries(&geoms, typ)
+        GeometryBuilder::from_nullable_geometries(&geoms, typ)
             .unwrap()
             .finish()
     }

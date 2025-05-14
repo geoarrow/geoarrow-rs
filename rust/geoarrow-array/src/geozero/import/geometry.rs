@@ -274,12 +274,12 @@ mod test {
 
     #[test]
     fn from_geo_using_geozero() -> Result<()> {
-        let geo_geoms = geoms();
-        let geo = Geometry::GeometryCollection(GeometryCollection(geo_geoms.clone()));
+        let geo_geoms = geoms().into_iter().map(Some).collect::<Vec<_>>();
+        let geo = Geometry::GeometryCollection(GeometryCollection(geoms()));
         let typ = GeometryType::new(CoordType::Interleaved, Default::default());
         let geo_arr = geo.to_geometry_array(typ.clone()).unwrap();
 
-        let geo_arr2 = GeometryBuilder::from_geometries(&geo_geoms, typ)
+        let geo_arr2 = GeometryBuilder::from_nullable_geometries(&geo_geoms, typ)
             .unwrap()
             .finish();
 

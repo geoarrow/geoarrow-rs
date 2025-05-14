@@ -57,19 +57,22 @@ impl RectArray {
 
     /// Access the coordinate buffer of the "lower" corner of the RectArray
     ///
-    /// Note that this needs to be interpreted in conjunction with the [null buffer][Self::nulls].
+    /// Note that this needs to be interpreted in conjunction with the [null
+    /// buffer][Self::logical_nulls].
     pub fn lower(&self) -> &SeparatedCoordBuffer {
         &self.lower
     }
 
     /// Access the coordinate buffer of the "upper" corner of the RectArray
     ///
-    /// Note that this needs to be interpreted in conjunction with the [null buffer][Self::nulls].
+    /// Note that this needs to be interpreted in conjunction with the [null
+    /// buffer][Self::logical_nulls].
     pub fn upper(&self) -> &SeparatedCoordBuffer {
         &self.upper
     }
 
-    /// Slices this [`RectArray`] in place.
+    /// Slice this [`RectArray`].
+    ///
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]

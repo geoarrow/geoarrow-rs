@@ -208,7 +208,8 @@ impl MultiPolygonArray {
         validity_len + self.buffer_lengths().num_bytes()
     }
 
-    /// Slices this [`MultiPolygonArray`] in place.
+    /// Slice this [`MultiPolygonArray`].
+    ///
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]

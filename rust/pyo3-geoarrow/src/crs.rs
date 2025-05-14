@@ -11,8 +11,7 @@ use serde_json::Value;
 use crate::PyGeoArrowError;
 use crate::error::PyGeoArrowResult;
 
-/// A wrapper around the CRS functionality contained within [Metadata] to integrate with
-/// `pyproj` Python APIs.
+/// A wrapper around [`Crs`] to integrate with `pyproj` Python APIs.
 #[derive(Clone, Debug, Default)]
 // TODO: should this be under an Arc?
 pub struct PyCrs(Crs);

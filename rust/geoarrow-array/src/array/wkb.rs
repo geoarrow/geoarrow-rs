@@ -19,9 +19,10 @@ use crate::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 
 /// An immutable array of WKB geometries.
 ///
-/// This is semantically equivalent to `Vec<Option<Wkb>>` due to the internal validity bitmap.
+/// This is stored either as an Arrow [`BinaryArray`] or [`LargeBinaryArray`] and is semantically
+/// equivalent to `Vec<Option<Wkb>>` due to the internal validity bitmap.
 ///
-/// This is stored either as an Arrow [`BinaryArray`] or [`LargeBinaryArray`].
+/// Refer to [`crate::cast`] for converting this array to other GeoArrow array types.
 #[derive(Debug, Clone, PartialEq)]
 pub struct GenericWkbArray<O: OffsetSizeTrait> {
     pub(crate) data_type: WkbType,
@@ -62,7 +63,9 @@ impl<O: OffsetSizeTrait> GenericWkbArray<O> {
         validity_len + self.buffer_lengths().num_bytes::<O>()
     }
 
-    /// Slices this [`GenericWkbArray`] in place.
+    /// Slice this [`GenericWkbArray`].
+    ///
+    ///
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
@@ -77,7 +80,7 @@ impl<O: OffsetSizeTrait> GenericWkbArray<O> {
         }
     }
 
-    /// Replace the [ArrayMetadata] in the array with the given metadata
+    /// Replace the [Metadata] in the array with the given metadata
     pub fn with_metadata(&self, metadata: Arc<Metadata>) -> Self {
         let mut arr = self.clone();
         arr.data_type = self.data_type.clone().with_metadata(metadata);

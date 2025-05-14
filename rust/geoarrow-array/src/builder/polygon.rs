@@ -18,13 +18,6 @@ use crate::capacity::PolygonCapacity;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
 
-pub type MutablePolygonParts = (
-    CoordBufferBuilder,
-    OffsetsBuilder<i32>,
-    OffsetsBuilder<i32>,
-    NullBufferBuilder,
-);
-
 /// The GeoArrow equivalent to `Vec<Option<Polygon>>`: a mutable collection of Polygons.
 ///
 /// Converting an [`PolygonBuilder`] into a [`PolygonArray`] is `O(1)`.
@@ -103,36 +96,6 @@ impl PolygonBuilder {
         self.geom_offsets.reserve_exact(capacity.geom_capacity);
     }
 
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
-    ) {
-        let counter = PolygonCapacity::from_polygons(geoms);
-        self.reserve(counter)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_exact_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
-    ) {
-        let counter = PolygonCapacity::from_polygons(geoms);
-        self.reserve_exact(counter)
-    }
-
-    /// Extract the low-level APIs from the [`PolygonBuilder`].
-    pub fn into_inner(self) -> MutablePolygonParts {
-        (
-            self.coords,
-            self.geom_offsets,
-            self.ring_offsets,
-            self.validity,
-        )
-    }
-
     /// Push a raw offset to the underlying geometry offsets buffer.
     ///
     /// # Invariants
@@ -169,15 +132,6 @@ impl PolygonBuilder {
             validity,
             self.data_type.metadata().clone(),
         )
-    }
-
-    /// Creates a new builder with a capacity inferred by the provided iterator.
-    pub fn with_capacity_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
-        typ: PolygonType,
-    ) -> Self {
-        let counter = PolygonCapacity::from_polygons(geoms);
-        Self::with_capacity(typ, counter)
     }
 
     /// Add a new Polygon to the end of this array.
@@ -313,7 +267,8 @@ impl PolygonBuilder {
 
     /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_polygons(geoms: &[impl PolygonTrait<T = f64>], typ: PolygonType) -> Self {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(Some), typ);
+        let capacity = PolygonCapacity::from_polygons(geoms.iter().map(Some));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(Some));
         array
     }
@@ -323,7 +278,8 @@ impl PolygonBuilder {
         geoms: &[Option<impl PolygonTrait<T = f64>>],
         typ: PolygonType,
     ) -> Self {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(|x| x.as_ref()), typ);
+        let capacity = PolygonCapacity::from_polygons(geoms.iter().map(|x| x.as_ref()));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         array
     }

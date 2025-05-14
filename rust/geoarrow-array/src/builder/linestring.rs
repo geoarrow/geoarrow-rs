@@ -121,38 +121,10 @@ impl LineStringBuilder {
         )
     }
 
-    /// Creates a new builder with a capacity inferred by the provided iterator.
-    pub fn with_capacity_from_iter<'a>(
-        typ: LineStringType,
-        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
-    ) -> Self {
-        let counter = LineStringCapacity::from_line_strings(geoms);
-        Self::with_capacity(typ, counter)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
-    ) {
-        let counter = LineStringCapacity::from_line_strings(geoms);
-        self.reserve(counter)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_exact_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
-    ) {
-        let counter = LineStringCapacity::from_line_strings(geoms);
-        self.reserve_exact(counter)
-    }
-
     /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_line_strings(geoms: &[impl LineStringTrait<T = f64>], typ: LineStringType) -> Self {
-        let mut array = Self::with_capacity_from_iter(typ, geoms.iter().map(Some));
+        let capacity = LineStringCapacity::from_line_strings(geoms.iter().map(Some));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(Some));
         array
     }
@@ -162,7 +134,8 @@ impl LineStringBuilder {
         geoms: &[Option<impl LineStringTrait<T = f64>>],
         typ: LineStringType,
     ) -> Self {
-        let mut array = Self::with_capacity_from_iter(typ, geoms.iter().map(|x| x.as_ref()));
+        let capacity = LineStringCapacity::from_line_strings(geoms.iter().map(|x| x.as_ref()));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         array
     }

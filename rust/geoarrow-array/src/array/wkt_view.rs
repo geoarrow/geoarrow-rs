@@ -15,9 +15,10 @@ use crate::{GeoArrowArray, GeoArrowArrayAccessor, GeoArrowType, IntoArrow};
 
 /// An immutable array of WKT geometries.
 ///
-/// This is semantically equivalent to `Vec<Option<Wkt>>` due to the internal validity bitmap.
+/// This is stored as an Arrow [`StringViewArray`] and is semantically equivalent to
+/// `Vec<Option<Wkt>>` due to the internal validity bitmap.
 ///
-/// This is stored as an Arrow [`StringViewArray`].
+/// Refer to [`crate::cast`] for converting this array to other GeoArrow array types.
 #[derive(Debug, Clone, PartialEq)]
 pub struct WktViewArray {
     pub(crate) data_type: WktType,
@@ -43,7 +44,9 @@ impl WktViewArray {
         &self.array
     }
 
-    /// Slices this [`WktViewArray`] in place.
+    /// Slice this [`WktViewArray`].
+    ///
+    ///
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
@@ -58,7 +61,7 @@ impl WktViewArray {
         }
     }
 
-    /// Replace the [ArrayMetadata] in the array with the given metadata
+    /// Replace the [Metadata] in the array with the given metadata
     pub fn with_metadata(&self, metadata: Arc<Metadata>) -> Self {
         let mut arr = self.clone();
         arr.data_type = self.data_type.clone().with_metadata(metadata);

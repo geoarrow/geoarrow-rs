@@ -20,12 +20,10 @@ use crate::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 
 /// An immutable array of WKT geometries using GeoArrow's in-memory representation.
 ///
-/// This is semantically equivalent to `Vec<Option<WKT>>` due to the internal validity bitmap.
+/// This is a wrapper around an Arrow [GenericStringArray] and is semantically equivalent to
+/// `Vec<Option<WKT>>` due to the internal validity bitmap.
 ///
-/// This is a wrapper around an Arrow [GenericStringArray], but additionally stores an
-/// [ArrayMetadata] so that we can persist CRS information about the data.
-///
-/// Refer to [`crate::io::wkt`] for encoding and decoding this array to the native array types.
+/// Refer to [`crate::cast`] for converting this array to other GeoArrow array types.
 #[derive(Debug, Clone, PartialEq)]
 pub struct GenericWktArray<O: OffsetSizeTrait> {
     pub(crate) data_type: WktType,
@@ -52,12 +50,8 @@ impl<O: OffsetSizeTrait> GenericWktArray<O> {
         &self.array
     }
 
-    /// Consume self and access the underlying data.
-    pub fn into_inner(self) -> GenericStringArray<O> {
-        self.array
-    }
-
-    /// Slices this [`GenericWkbArray`] in place.
+    /// Slice this [`GenericWktArray`].
+    ///
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
@@ -72,7 +66,7 @@ impl<O: OffsetSizeTrait> GenericWktArray<O> {
         }
     }
 
-    /// Replace the [`ArrayMetadata`] contained in this array.
+    /// Replace the [`Metadata`] contained in this array.
     pub fn with_metadata(&self, metadata: Arc<Metadata>) -> Self {
         let mut arr = self.clone();
         arr.data_type = self.data_type.clone().with_metadata(metadata);
