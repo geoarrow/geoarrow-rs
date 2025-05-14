@@ -3,7 +3,7 @@ use arrow_array::builder::GenericBinaryBuilder;
 use geo_traits::GeometryTrait;
 use geoarrow_schema::WkbType;
 use wkb::Endianness;
-use wkb::writer::write_geometry;
+use wkb::writer::{WriteOptions, write_geometry};
 
 use crate::array::GenericWkbArray;
 use crate::capacity::WkbCapacity;
@@ -40,7 +40,10 @@ impl<O: OffsetSizeTrait> WkbBuilder<O> {
     #[inline]
     pub fn push_geometry(&mut self, geom: Option<&impl GeometryTrait<T = f64>>) {
         if let Some(geom) = geom {
-            write_geometry(&mut self.0, geom, Endianness::LittleEndian).unwrap();
+            let wkb_options = WriteOptions {
+                endianness: Endianness::LittleEndian,
+            };
+            write_geometry(&mut self.0, geom, &wkb_options).unwrap();
             self.0.append_value("")
         } else {
             self.0.append_null()

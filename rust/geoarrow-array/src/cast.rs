@@ -9,6 +9,8 @@ use arrow_array::builder::{
 };
 use arrow_array::cast::AsArray;
 use geoarrow_schema::WkbType;
+use wkb::Endianness;
+use wkb::writer::WriteOptions;
 
 use crate::array::*;
 use crate::builder::{
@@ -401,10 +403,13 @@ fn impl_to_wkb_view<'a>(geo_arr: &'a impl GeoArrowArrayAccessor<'a>) -> Result<W
         .collect::<Result<Vec<_>>>()?;
 
     let mut builder = BinaryViewBuilder::new();
+    let wkb_options = WriteOptions {
+        endianness: Endianness::LittleEndian,
+    };
     for maybe_geom in geoms {
         if let Some(geom) = maybe_geom {
             let mut buf = Vec::new();
-            wkb::writer::write_geometry(&mut buf, &geom, wkb::Endianness::LittleEndian).unwrap();
+            wkb::writer::write_geometry(&mut buf, &geom, &wkb_options).unwrap();
             builder.append_value(buf);
         } else {
             builder.append_null();

@@ -48,9 +48,9 @@ pub enum GeoArrowError {
     #[error(transparent)]
     SerdeJsonError(#[from] serde_json::Error),
 
-    /// [wkb::error::WKBError]
+    /// [wkb::error::WkbError]
     #[error(transparent)]
-    WkbError(#[from] wkb::error::WKBError),
+    WkbError(#[from] wkb::error::WkbError),
 
     /// [wkt::error::Error]
     #[error("WKT error: {0}")]
