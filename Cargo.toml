@@ -67,9 +67,5 @@ serde_with = "3"
 thiserror = "1"
 tokio = { version = "1.9", default-features = false }
 url = "2.5"
-# to include https://github.com/georust/wkb/pull/53
-wkb = { git = "https://github.com/georust/wkb", rev = "5eb5c1dc9b181343f5fb46a13c7cc0fced009450" }
+wkb = "0.9"
 wkt = "0.14"
-
-[patch.crates-io]
-wkb = { git = "https://github.com/georust/wkb", rev = "5eb5c1dc9b181343f5fb46a13c7cc0fced009450" }

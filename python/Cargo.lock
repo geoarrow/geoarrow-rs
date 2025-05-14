@@ -1051,7 +1051,7 @@ dependencies = [
  "serde_json",
  "thiserror 1.0.69",
  "wkb",
- "wkt 0.13.0",
+ "wkt 0.14.0",
 ]
 
 [[package]]
@@ -1061,7 +1061,7 @@ dependencies = [
  "geo-traits 0.3.0",
  "geoarrow-array",
  "geoarrow-schema",
- "wkt 0.13.0",
+ "wkt 0.14.0",
 ]
 
 [[package]]
@@ -1154,7 +1154,7 @@ dependencies = [
  "geo-traits 0.3.0",
  "serde",
  "serde_json",
- "wkt 0.13.0",
+ "wkt 0.14.0",
 ]
 
 [[package]]
@@ -4197,11 +4197,11 @@ dependencies = [
 
 [[package]]
 name = "wkt"
-version = "0.13.0"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c505a1a3f6ebda15c778ffa0317b583b10b2393a5506281132a2eef6880a691"
+checksum = "efb2b923ccc882312e559ffaa832a055ba9d1ac0cc8e86b3e25453247e4b81d7"
 dependencies = [
- "geo-traits 0.2.0",
+ "geo-traits 0.3.0",
  "geo-types",
  "log",
  "num-traits",
