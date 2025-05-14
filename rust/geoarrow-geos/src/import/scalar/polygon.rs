@@ -103,6 +103,14 @@ impl<'a> GEOSConstPolygon<'a> {
             ))
         }
     }
+
+    pub(crate) fn dimension(&self) -> geo_traits::Dimensions {
+        match self.0.get_coordinate_dimension().unwrap() {
+            geos::Dimensions::TwoD => geo_traits::Dimensions::Xy,
+            geos::Dimensions::ThreeD => geo_traits::Dimensions::Xyz,
+            geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
+        }
+    }
 }
 
 impl PolygonTrait for GEOSConstPolygon<'_> {
