@@ -6,14 +6,14 @@ use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{CoordType, Metadata, MultiPolygonType};
 
-use crate::array::{CoordBuffer, PolygonArray, WkbArray};
+use crate::array::{CoordBuffer, GenericWkbArray, PolygonArray};
 use crate::builder::MultiPolygonBuilder;
 use crate::capacity::MultiPolygonCapacity;
 use crate::datatypes::GeoArrowType;
 use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::MultiPolygon;
-use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
+use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 use crate::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
 
 /// An immutable array of MultiPolygon geometries.
@@ -208,7 +208,8 @@ impl MultiPolygonArray {
         validity_len + self.buffer_lengths().num_bytes()
     }
 
-    /// Slices this [`MultiPolygonArray`] in place.
+    /// Slice this [`MultiPolygonArray`].
+    ///
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
@@ -296,7 +297,7 @@ impl GeoArrowArray for MultiPolygonArray {
     }
 }
 
-impl<'a> ArrayAccessor<'a> for MultiPolygonArray {
+impl<'a> GeoArrowArrayAccessor<'a> for MultiPolygonArray {
     type Item = MultiPolygon<'a>;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
@@ -421,10 +422,10 @@ impl TryFrom<(&dyn Array, &Field)> for MultiPolygonArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiPolygonType)> for MultiPolygonArray {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, MultiPolygonType)> for MultiPolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WkbArray<O>, MultiPolygonType)) -> Result<Self> {
+    fn try_from(value: (GenericWkbArray<O>, MultiPolygonType)) -> Result<Self> {
         let mut_arr: MultiPolygonBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }

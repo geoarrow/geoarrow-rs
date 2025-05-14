@@ -11,7 +11,7 @@ use crate::array::SeparatedCoordBuffer;
 use crate::datatypes::GeoArrowType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Rect;
-use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
+use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 
 /// An immutable array of Rect or Box geometries.
 ///
@@ -57,19 +57,22 @@ impl RectArray {
 
     /// Access the coordinate buffer of the "lower" corner of the RectArray
     ///
-    /// Note that this needs to be interpreted in conjunction with the [null buffer][Self::nulls].
+    /// Note that this needs to be interpreted in conjunction with the [null
+    /// buffer][Self::logical_nulls].
     pub fn lower(&self) -> &SeparatedCoordBuffer {
         &self.lower
     }
 
     /// Access the coordinate buffer of the "upper" corner of the RectArray
     ///
-    /// Note that this needs to be interpreted in conjunction with the [null buffer][Self::nulls].
+    /// Note that this needs to be interpreted in conjunction with the [null
+    /// buffer][Self::logical_nulls].
     pub fn upper(&self) -> &SeparatedCoordBuffer {
         &self.upper
     }
 
-    /// Slices this [`RectArray`] in place.
+    /// Slice this [`RectArray`].
+    ///
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
@@ -145,7 +148,7 @@ impl GeoArrowArray for RectArray {
     }
 }
 
-impl<'a> ArrayAccessor<'a> for RectArray {
+impl<'a> GeoArrowArrayAccessor<'a> for RectArray {
     type Item = Rect<'a>;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {

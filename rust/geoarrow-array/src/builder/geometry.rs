@@ -6,9 +6,9 @@ use geoarrow_schema::{
     Dimension, GeometryCollectionType, GeometryType, LineStringType, Metadata, MultiLineStringType,
     MultiPointType, MultiPolygonType, PointType, PolygonType,
 };
-use wkt::WktNum;
 
-use crate::array::{DimensionIndex, GeometryArray, WkbArray};
+use crate::GeoArrowArray;
+use crate::array::{DimensionIndex, GenericWkbArray, GeometryArray};
 use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
 use crate::builder::{
     GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder, MultiPointBuilder,
@@ -16,7 +16,7 @@ use crate::builder::{
 };
 use crate::capacity::GeometryCapacity;
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
+use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
 
 pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 
@@ -295,43 +295,12 @@ impl<'a> GeometryBuilder {
         )
     }
 
-    /// Creates a new builder with a capacity inferred by the provided iterator.
-    pub fn with_capacity_from_iter<T: WktNum>(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = T> + 'a)>>,
-        typ: GeometryType,
-    ) -> Result<Self> {
-        let counter = GeometryCapacity::from_geometries(geoms)?;
-        Ok(Self::with_capacity(typ, counter))
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_from_iter<T: WktNum>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = T> + 'a)>>,
-    ) -> Result<()> {
-        let counter = GeometryCapacity::from_geometries(geoms)?;
-        self.reserve(counter);
-        Ok(())
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_exact_from_iter<T: WktNum>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = T> + 'a)>>,
-    ) -> Result<()> {
-        let counter = GeometryCapacity::from_geometries(geoms)?;
-        self.reserve_exact(counter);
-        Ok(())
-    }
-
     /// Add a new Point to the end of this array.
     ///
     /// If `self.prefer_multi` is `true`, it will be stored in the `MultiPointBuilder` child
     /// array. Otherwise, it will be stored in the `PointBuilder` child array.
     #[inline]
-    pub fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) -> Result<()> {
+    fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) -> Result<()> {
         if let Some(point) = value {
             let dim: Dimension = point.dim().try_into().unwrap();
             let array_idx = dim.order();
@@ -371,8 +340,8 @@ impl<'a> GeometryBuilder {
     }
 
     #[inline]
-    fn add_type(
-        child: &mut dyn GeometryArrayBuilder,
+    fn add_type<B: GeoArrowArrayBuilder>(
+        child: &mut B,
         offsets: &mut Vec<i32>,
         types: &mut Vec<i8>,
         type_id: i8,
@@ -397,10 +366,7 @@ impl<'a> GeometryBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub fn push_line_string(
-        &mut self,
-        value: Option<&impl LineStringTrait<T = f64>>,
-    ) -> Result<()> {
+    fn push_line_string(&mut self, value: Option<&impl LineStringTrait<T = f64>>) -> Result<()> {
         if let Some(line_string) = value {
             let dim: Dimension = line_string.dim().try_into().unwrap();
             let array_idx = dim.order();
@@ -455,7 +421,7 @@ impl<'a> GeometryBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> Result<()> {
+    fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> Result<()> {
         if let Some(polygon) = value {
             let dim: Dimension = polygon.dim().try_into().unwrap();
             let array_idx = dim.order();
@@ -507,10 +473,7 @@ impl<'a> GeometryBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub fn push_multi_point(
-        &mut self,
-        value: Option<&impl MultiPointTrait<T = f64>>,
-    ) -> Result<()> {
+    fn push_multi_point(&mut self, value: Option<&impl MultiPointTrait<T = f64>>) -> Result<()> {
         if let Some(multi_point) = value {
             let dim: Dimension = multi_point.dim().try_into().unwrap();
             let array_idx = dim.order();
@@ -547,7 +510,7 @@ impl<'a> GeometryBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub fn push_multi_line_string(
+    fn push_multi_line_string(
         &mut self,
         value: Option<&impl MultiLineStringTrait<T = f64>>,
     ) -> Result<()> {
@@ -587,7 +550,7 @@ impl<'a> GeometryBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub fn push_multi_polygon(
+    fn push_multi_polygon(
         &mut self,
         value: Option<&impl MultiPolygonTrait<T = f64>>,
     ) -> Result<()> {
@@ -663,7 +626,7 @@ impl<'a> GeometryBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub fn push_geometry_collection(
+    fn push_geometry_collection(
         &mut self,
         value: Option<&impl GeometryCollectionTrait<T = f64>>,
     ) -> Result<()> {
@@ -764,9 +727,9 @@ impl<'a> GeometryBuilder {
     }
 
     /// Flush any deferred nulls to the desired array builder.
-    fn flush_deferred_nulls(
+    fn flush_deferred_nulls<B: GeoArrowArrayBuilder>(
         deferred_nulls: &mut usize,
-        child: &mut dyn GeometryArrayBuilder,
+        child: &mut B,
         offsets: &mut Vec<i32>,
         types: &mut Vec<i8>,
         type_id: i8,
@@ -793,32 +756,23 @@ impl<'a> GeometryBuilder {
             .unwrap();
     }
 
-    /// Create this builder from a slice of Geometries.
-    pub fn from_geometries(
-        geoms: &[impl GeometryTrait<T = f64>],
-        typ: GeometryType,
-    ) -> Result<Self> {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(Some), typ)?;
-        array.extend_from_iter(geoms.iter().map(Some));
-        Ok(array)
-    }
-
     /// Create this builder from a slice of nullable Geometries.
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         typ: GeometryType,
     ) -> Result<Self> {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(|x| x.as_ref()), typ)?;
+        let capacity = GeometryCapacity::from_geometries(geoms.iter().map(|x| x.as_ref()))?;
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         Ok(array)
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, GeometryType)> for GeometryBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, GeometryType)> for GeometryBuilder {
     type Error = GeoArrowError;
 
     fn try_from(
-        (value, typ): (WkbArray<O>, GeometryType),
+        (value, typ): (GenericWkbArray<O>, GeometryType),
     ) -> std::result::Result<Self, Self::Error> {
         let wkb_objects = value
             .iter()
@@ -828,13 +782,21 @@ impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, GeometryType)> for GeometryBuilde
     }
 }
 
-impl GeometryArrayBuilder for GeometryBuilder {
+impl GeoArrowArrayBuilder for GeometryBuilder {
     fn len(&self) -> usize {
         self.types.len()
     }
 
     fn push_null(&mut self) {
         self.push_null();
+    }
+
+    fn push_geometry(&mut self, geometry: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+        self.push_geometry(geometry)
+    }
+
+    fn finish(self) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.finish())
     }
 }
 

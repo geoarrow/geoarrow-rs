@@ -11,7 +11,7 @@ use crate::array::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
 use crate::eq::point_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Point;
-use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
+use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 
 /// An immutable array of Point geometries.
 ///
@@ -76,14 +76,9 @@ impl PointArray {
 
     /// Access the underlying coordinate buffer
     ///
-    /// Note that some coordinates may be null, depending on the value of [`Self::nulls`]
+    /// Note that some coordinates may be null, depending on the value of [`Self::logical_nulls`]
     pub fn coords(&self) -> &CoordBuffer {
         &self.coords
-    }
-
-    /// Access the
-    pub fn into_inner(self) -> (CoordBuffer, Option<NullBuffer>) {
-        (self.coords, self.nulls)
     }
 
     /// The lengths of each buffer contained in this array.
@@ -98,7 +93,8 @@ impl PointArray {
         validity_len + self.buffer_lengths() * dimension.size() * 8
     }
 
-    /// Slices this [`PointArray`] in place.
+    /// Slice this [`PointArray`].
+    ///
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
@@ -181,7 +177,7 @@ impl GeoArrowArray for PointArray {
     }
 }
 
-impl<'a> ArrayAccessor<'a> for PointArray {
+impl<'a> GeoArrowArrayAccessor<'a> for PointArray {
     type Item = Point<'a>;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {

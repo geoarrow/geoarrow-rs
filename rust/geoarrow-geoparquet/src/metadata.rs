@@ -159,7 +159,7 @@ impl GeoParquetGeometryType {
 ///
 /// Note: we use [`SerializeDisplay`] and [`DeserializeFromStr`] for serde because the GeoParquet
 /// spec says this concept is a single string with the dimension stored as a suffix.
-/// https://docs.rs/serde_with/3.12.0/serde_with/struct.DisplayFromStr.html
+/// <https://docs.rs/serde_with/3.12.0/serde_with/struct.DisplayFromStr.html>
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, SerializeDisplay, DeserializeFromStr)]
 pub struct GeoParquetGeometryTypeAndDimension {
     geometry_type: GeoParquetGeometryType,

@@ -16,7 +16,7 @@ use crate::capacity::GeometryCapacity;
 use crate::datatypes::GeoArrowType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Geometry;
-use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
+use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 
 /// An immutable array of geometries of unknown geometry type and dimension.
 ///
@@ -341,7 +341,7 @@ impl GeometryArray {
         self.buffer_lengths().num_bytes()
     }
 
-    /// Slices this [`MixedGeometryArray`] in place.
+    /// Slice this [`GeometryArray`].
     ///
     /// # Implementation
     ///
@@ -499,7 +499,7 @@ impl GeoArrowArray for GeometryArray {
     }
 }
 
-impl<'a> ArrayAccessor<'a> for GeometryArray {
+impl<'a> GeoArrowArrayAccessor<'a> for GeometryArray {
     type Item = Geometry<'a>;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
@@ -817,10 +817,10 @@ impl TryFrom<(&dyn Array, &Field)> for GeometryArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, GeometryType)> for GeometryArray {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, GeometryType)> for GeometryArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WkbArray<O>, GeometryType)) -> Result<Self> {
+    fn try_from(value: (GenericWkbArray<O>, GeometryType)) -> Result<Self> {
         let mut_arr: GeometryBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }
@@ -1053,9 +1053,9 @@ mod test {
     }
 
     fn geom_array(coord_type: CoordType) -> GeometryArray {
-        let geoms = geoms();
+        let geoms = geoms().into_iter().map(Some).collect::<Vec<_>>();
         let typ = GeometryType::new(coord_type, Default::default());
-        GeometryBuilder::from_geometries(&geoms, typ)
+        GeometryBuilder::from_nullable_geometries(&geoms, typ)
             .unwrap()
             .finish()
     }

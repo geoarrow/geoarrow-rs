@@ -1,16 +1,19 @@
+use std::sync::Arc;
+
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
 use geoarrow_schema::{CoordType, MultiLineStringType};
 // use super::array::check;
 
-use crate::array::{MultiLineStringArray, WkbArray};
+use crate::GeoArrowArray;
+use crate::array::{GenericWkbArray, MultiLineStringArray};
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
 };
 use crate::capacity::MultiLineStringCapacity;
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
+use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
 
 /// The GeoArrow equivalent to `Vec<Option<MultiLineString>>`: a mutable collection of
 /// MultiLineStrings.
@@ -163,35 +166,6 @@ impl MultiLineStringBuilder {
         )
     }
 
-    /// Creates a new builder with a capacity inferred by the provided iterator.
-    pub fn with_capacity_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
-        typ: MultiLineStringType,
-    ) -> Self {
-        let counter = MultiLineStringCapacity::from_multi_line_strings(geoms);
-        Self::with_capacity(typ, counter)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
-    ) {
-        let counter = MultiLineStringCapacity::from_multi_line_strings(geoms);
-        self.reserve(counter)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_exact_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
-    ) {
-        let counter = MultiLineStringCapacity::from_multi_line_strings(geoms);
-        self.reserve_exact(counter)
-    }
-
     /// Add a new LineString to the end of this array.
     ///
     /// # Errors
@@ -327,7 +301,8 @@ impl MultiLineStringBuilder {
         geoms: &[impl MultiLineStringTrait<T = f64>],
         typ: MultiLineStringType,
     ) -> Self {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(Some), typ);
+        let capacity = MultiLineStringCapacity::from_multi_line_strings(geoms.iter().map(Some));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(Some));
         array
     }
@@ -337,7 +312,9 @@ impl MultiLineStringBuilder {
         geoms: &[Option<impl MultiLineStringTrait<T = f64>>],
         typ: MultiLineStringType,
     ) -> Self {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(|x| x.as_ref()), typ);
+        let capacity =
+            MultiLineStringCapacity::from_multi_line_strings(geoms.iter().map(|x| x.as_ref()));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         array
     }
@@ -354,10 +331,12 @@ impl MultiLineStringBuilder {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiLineStringType)> for MultiLineStringBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, MultiLineStringType)>
+    for MultiLineStringBuilder
+{
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (WkbArray<O>, MultiLineStringType)) -> Result<Self> {
+    fn try_from((value, typ): (GenericWkbArray<O>, MultiLineStringType)) -> Result<Self> {
         let wkb_objects = value
             .iter()
             .map(|x| x.transpose())
@@ -366,12 +345,20 @@ impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiLineStringType)> for MultiLi
     }
 }
 
-impl GeometryArrayBuilder for MultiLineStringBuilder {
+impl GeoArrowArrayBuilder for MultiLineStringBuilder {
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
     }
 
     fn push_null(&mut self) {
         self.push_null();
+    }
+
+    fn push_geometry(&mut self, geometry: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+        self.push_geometry(geometry)
+    }
+
+    fn finish(self) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.finish())
     }
 }

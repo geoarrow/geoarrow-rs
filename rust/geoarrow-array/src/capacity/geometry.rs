@@ -37,6 +37,8 @@ pub struct GeometryCapacity {
 
 impl GeometryCapacity {
     /// Create a new capacity with known sizes.
+    ///
+    /// Note that the ordering within each array must be XY, XYZ, XYM, XYZM.
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         nulls: usize,
@@ -172,7 +174,7 @@ impl GeometryCapacity {
 
     /// Add the capacity of the given Point
     #[inline]
-    pub fn add_point(&mut self, point: Option<&impl PointTrait>) {
+    fn add_point(&mut self, point: Option<&impl PointTrait>) {
         if let Some(point) = point {
             if self.prefer_multi {
                 self.mpoints[point.dim().order()].add_point(Some(point));
@@ -186,7 +188,7 @@ impl GeometryCapacity {
 
     /// Add the capacity of the given LineString
     #[inline]
-    pub fn add_line_string(&mut self, line_string: Option<&impl LineStringTrait>) {
+    fn add_line_string(&mut self, line_string: Option<&impl LineStringTrait>) {
         if let Some(line_string) = line_string {
             if self.prefer_multi {
                 self.mline_strings[line_string.dim().order()].add_line_string(Some(line_string));
@@ -200,7 +202,7 @@ impl GeometryCapacity {
 
     /// Add the capacity of the given Polygon
     #[inline]
-    pub fn add_polygon(&mut self, polygon: Option<&impl PolygonTrait>) {
+    fn add_polygon(&mut self, polygon: Option<&impl PolygonTrait>) {
         if let Some(polygon) = polygon {
             if self.prefer_multi {
                 self.mpolygons[polygon.dim().order()].add_polygon(Some(polygon));
@@ -214,7 +216,7 @@ impl GeometryCapacity {
 
     /// Add the capacity of the given MultiPoint
     #[inline]
-    pub fn add_multi_point(&mut self, multi_point: Option<&impl MultiPointTrait>) {
+    fn add_multi_point(&mut self, multi_point: Option<&impl MultiPointTrait>) {
         if let Some(multi_point) = multi_point {
             self.multi_point(multi_point.dim().try_into().unwrap())
                 .add_multi_point(Some(multi_point));
@@ -225,7 +227,7 @@ impl GeometryCapacity {
 
     /// Add the capacity of the given MultiLineString
     #[inline]
-    pub fn add_multi_line_string(&mut self, multi_line_string: Option<&impl MultiLineStringTrait>) {
+    fn add_multi_line_string(&mut self, multi_line_string: Option<&impl MultiLineStringTrait>) {
         if let Some(multi_line_string) = multi_line_string {
             self.multi_line_string(multi_line_string.dim().try_into().unwrap())
                 .add_multi_line_string(Some(multi_line_string));
@@ -236,7 +238,7 @@ impl GeometryCapacity {
 
     /// Add the capacity of the given MultiPolygon
     #[inline]
-    pub fn add_multi_polygon(&mut self, multi_polygon: Option<&impl MultiPolygonTrait>) {
+    fn add_multi_polygon(&mut self, multi_polygon: Option<&impl MultiPolygonTrait>) {
         if let Some(multi_polygon) = multi_polygon {
             self.multi_polygon(multi_polygon.dim().try_into().unwrap())
                 .add_multi_polygon(Some(multi_polygon));
@@ -274,7 +276,7 @@ impl GeometryCapacity {
 
     /// Add the capacity of the given GeometryCollection
     #[inline]
-    pub fn add_geometry_collection<T: WktNum>(
+    fn add_geometry_collection<T: WktNum>(
         &mut self,
         gc: Option<&impl GeometryCollectionTrait<T = T>>,
     ) -> Result<()> {

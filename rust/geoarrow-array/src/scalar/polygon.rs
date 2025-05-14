@@ -112,7 +112,7 @@ mod test {
     use geoarrow_schema::{CoordType, Dimension, PolygonType};
     use wkt::wkt;
 
-    use crate::ArrayAccessor;
+    use crate::GeoArrowArrayAccessor;
     use crate::builder::PolygonBuilder;
 
     /// Test Eq where the current index is true but another index is false

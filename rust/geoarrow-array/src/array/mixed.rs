@@ -10,7 +10,7 @@ use geoarrow_schema::{
     MultiPointType, MultiPolygonType, PointType, PolygonType,
 };
 
-use crate::ArrayAccessor;
+use crate::GeoArrowArrayAccessor;
 use crate::array::{
     DimensionIndex, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
     PointArray, PolygonArray,
@@ -60,12 +60,10 @@ use crate::trait_::GeoArrowArray;
 /// - 37: GeometryCollection ZM
 #[derive(Debug, Clone)]
 pub struct MixedGeometryArray {
-    // We store the coord type and dimension separately because there's no NativeType::Mixed
-    // variant
     pub(crate) coord_type: CoordType,
     pub(crate) dim: Dimension,
 
-    /// Invariant: every item in `type_ids` is `> 0 && < fields.len()` if `type_ids` are not provided. If `type_ids` exist in the NativeType, then every item in `type_ids` is `> 0 && `
+    /// Invariant: every item in `type_ids` is `> 0 && < fields.len()` if `type_ids` are not provided.
     pub(crate) type_ids: ScalarBuffer<i8>,
 
     /// Invariant: `offsets.len() == type_ids.len()`
@@ -394,7 +392,7 @@ impl MixedGeometryArray {
         self.buffer_lengths().num_bytes()
     }
 
-    /// Slices this [`MixedGeometryArray`] in place.
+    /// Slice this [`MixedGeometryArray`].
     ///
     /// # Implementation
     ///
@@ -496,7 +494,7 @@ impl MixedGeometryArray {
             }
             6 => Geometry::MultiPolygon(self.multi_polygons.value(offset).expect(expect_msg)),
             7 => {
-                panic!("nested geometry collections not supported")
+                panic!("nested geometry collections not supported in GeoArrow")
             }
             _ => panic!("unknown type_id {}", type_id),
         }

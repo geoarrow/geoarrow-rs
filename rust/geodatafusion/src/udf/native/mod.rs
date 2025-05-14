@@ -2,8 +2,8 @@
 
 // mod accessors;
 // mod bounding_box;
-// mod constructors;
-mod io;
+pub mod constructors;
+pub mod io;
 // mod measurement;
 // mod processing;
 

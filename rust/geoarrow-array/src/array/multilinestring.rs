@@ -6,14 +6,14 @@ use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{CoordType, Metadata, MultiLineStringType};
 
-use crate::array::{CoordBuffer, LineStringArray, WkbArray};
+use crate::array::{CoordBuffer, GenericWkbArray, LineStringArray};
 use crate::builder::MultiLineStringBuilder;
 use crate::capacity::MultiLineStringCapacity;
 use crate::datatypes::GeoArrowType;
 use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::MultiLineString;
-use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
+use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 use crate::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
 
 /// An immutable array of MultiLineString geometries.
@@ -156,8 +156,10 @@ impl MultiLineStringArray {
         validity_len + self.buffer_lengths().num_bytes()
     }
 
-    /// Slices this [`MultiLineStringArray`] in place.
+    /// Slice this [`MultiLineStringArray`].
+    ///
     /// # Panic
+    ///
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
     pub fn slice(&self, offset: usize, length: usize) -> Self {
@@ -243,7 +245,7 @@ impl GeoArrowArray for MultiLineStringArray {
     }
 }
 
-impl<'a> ArrayAccessor<'a> for MultiLineStringArray {
+impl<'a> GeoArrowArrayAccessor<'a> for MultiLineStringArray {
     type Item = MultiLineString<'a>;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
@@ -349,10 +351,12 @@ impl TryFrom<(&dyn Array, &Field)> for MultiLineStringArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiLineStringType)> for MultiLineStringArray {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, MultiLineStringType)>
+    for MultiLineStringArray
+{
     type Error = GeoArrowError;
 
-    fn try_from(value: (WkbArray<O>, MultiLineStringType)) -> Result<Self> {
+    fn try_from(value: (GenericWkbArray<O>, MultiLineStringType)) -> Result<Self> {
         let mut_arr: MultiLineStringBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }

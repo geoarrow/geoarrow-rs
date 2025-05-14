@@ -2,7 +2,10 @@
 
 // mod geohash;
 mod wkb;
-// mod wkt;
+mod wkt;
+
+pub use wkb::{AsBinary, GeomFromWKB};
+pub use wkt::{AsText, GeomFromText};
 
 // use datafusion::prelude::SessionContext;
 

@@ -23,7 +23,7 @@ use crate::geozero::export::scalar::{
     process_geometry, process_geometry_collection, process_line_string, process_multi_line_string,
     process_multi_point, process_multi_polygon, process_point, process_polygon,
 };
-use crate::trait_::ArrayAccessor;
+use crate::trait_::GeoArrowArrayAccessor;
 
 impl GeozeroDatasource for GeozeroRecordBatchReader {
     fn process<P: FeatureProcessor>(&mut self, processor: &mut P) -> Result<(), GeozeroError> {
@@ -370,6 +370,13 @@ fn process_geometry_n<P: GeomProcessor>(
                 .map_err(|err| GeozeroError::Geometry(err.to_string()))?;
             process_geometry(&geom, 0, processor)?;
         }
+        WkbView(_) => {
+            let geom = arr
+                .as_wkb_view()
+                .value(i)
+                .map_err(|err| GeozeroError::Geometry(err.to_string()))?;
+            process_geometry(&geom, 0, processor)?;
+        }
         Wkt(_) => {
             let geom = arr
                 .as_wkt::<i32>()
@@ -380,6 +387,13 @@ fn process_geometry_n<P: GeomProcessor>(
         LargeWkt(_) => {
             let geom = arr
                 .as_wkt::<i64>()
+                .value(i)
+                .map_err(|err| GeozeroError::Geometry(err.to_string()))?;
+            process_geometry(&geom, 0, processor)?;
+        }
+        WktView(_) => {
+            let geom = arr
+                .as_wkt_view()
                 .value(i)
                 .map_err(|err| GeozeroError::Geometry(err.to_string()))?;
             process_geometry(&geom, 0, processor)?;

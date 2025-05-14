@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use arrow_array::ArrayRef;
 use arrow_schema::extension::{EXTENSION_TYPE_METADATA_KEY, EXTENSION_TYPE_NAME_KEY};
-use arrow_schema::{Field, Schema, SchemaRef};
+use arrow_schema::{DataType, Field, Schema, SchemaRef};
 use geoarrow_array::GeoArrowType;
 use geoarrow_array::array::from_arrow_array;
 use geoarrow_array::crs::{CRSTransform, DefaultCRSTransform};
@@ -282,8 +282,10 @@ pub fn get_geometry_types(data_type: &GeoArrowType) -> HashSet<GeoParquetGeometr
         GeoArrowType::Geometry(_)
         | GeoArrowType::Wkb(_)
         | GeoArrowType::LargeWkb(_)
+        | GeoArrowType::WkbView(_)
         | GeoArrowType::Wkt(_)
-        | GeoArrowType::LargeWkt(_) => {
+        | GeoArrowType::LargeWkt(_)
+        | GeoArrowType::WktView(_) => {
             // We don't have access to the actual data here, so we can't inspect better than this.
         }
     };
@@ -314,7 +316,8 @@ fn create_output_field(column_info: &ColumnInfo, name: String, nullable: bool) -
     use GeoParquetColumnEncoding as Encoding;
 
     match column_info.encoding {
-        Encoding::WKB => WkbType::new(Default::default()).to_field(name, nullable, false),
+        Encoding::WKB => Field::new(name, DataType::Binary, nullable)
+            .with_extension_type(WkbType::new(Default::default())),
         // A native encoding
         _ => {
             assert_eq!(column_info.geometry_types.len(), 1);

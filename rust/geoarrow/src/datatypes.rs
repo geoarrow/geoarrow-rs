@@ -306,10 +306,10 @@ impl SerializedType {
     pub fn to_data_type(&self) -> DataType {
         use SerializedType::*;
         match self {
-            WKB(t) => t.data_type(false),
-            LargeWKB(t) => t.data_type(true),
-            WKT(t) => t.data_type(false),
-            LargeWKT(t) => t.data_type(true),
+            WKB(_) => DataType::Binary,
+            LargeWKB(_) => DataType::LargeBinary,
+            WKT(_) => DataType::Utf8,
+            LargeWKT(_) => DataType::LargeUtf8,
         }
     }
 
@@ -326,10 +326,18 @@ impl SerializedType {
     /// metadata.
     pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool) -> Field {
         match self {
-            Self::WKB(t) => t.to_field(name, nullable, false),
-            Self::LargeWKB(t) => t.to_field(name, nullable, true),
-            Self::WKT(t) => t.to_field(name, nullable, false),
-            Self::LargeWKT(t) => t.to_field(name, nullable, true),
+            Self::WKB(t) => {
+                Field::new(name, DataType::Binary, nullable).with_extension_type(t.clone())
+            }
+            Self::LargeWKB(t) => {
+                Field::new(name, DataType::LargeBinary, nullable).with_extension_type(t.clone())
+            }
+            Self::WKT(t) => {
+                Field::new(name, DataType::Utf8, nullable).with_extension_type(t.clone())
+            }
+            Self::LargeWKT(t) => {
+                Field::new(name, DataType::LargeUtf8, nullable).with_extension_type(t.clone())
+            }
         }
     }
 }

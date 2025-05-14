@@ -7,9 +7,6 @@ use crate::{Crs, Edges};
 ///
 /// This follows the extension metadata [defined by the GeoArrow
 /// specification](https://geoarrow.org/extension-types).
-///
-/// This is serialized to JSON when a [`geoarrow`](self) array is exported to an [`arrow`] array
-/// and deserialized when imported from an [`arrow`] array.
 #[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct Metadata {
     // Raise the underlying crs fields to this level.

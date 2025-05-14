@@ -7,7 +7,6 @@ members = [
     "rust/geoarrow-geos",
     "rust/geoarrow-schema",
     "rust/geoarrow-test",
-    "rust/geoarrow",
     "rust/pyo3-geoarrow",
     "rust/geodatafusion",
 ]

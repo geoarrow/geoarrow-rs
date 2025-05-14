@@ -7,14 +7,14 @@ use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{CoordType, Metadata, PolygonType};
 
-use crate::array::{CoordBuffer, RectArray, WkbArray};
+use crate::array::{CoordBuffer, GenericWkbArray, RectArray};
 use crate::builder::PolygonBuilder;
 use crate::capacity::PolygonCapacity;
 use crate::datatypes::GeoArrowType;
 use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Polygon;
-use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
+use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 use crate::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
 
 /// An immutable array of Polygon geometries using GeoArrow's in-memory representation.
@@ -160,7 +160,8 @@ impl PolygonArray {
         validity_len + self.buffer_lengths().num_bytes()
     }
 
-    /// Slices this [`PolygonArray`] in place.
+    /// Slice this [`PolygonArray`].
+    ///
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
@@ -247,7 +248,7 @@ impl GeoArrowArray for PolygonArray {
     }
 }
 
-impl<'a> ArrayAccessor<'a> for PolygonArray {
+impl<'a> GeoArrowArrayAccessor<'a> for PolygonArray {
     type Item = Polygon<'a>;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
@@ -352,10 +353,10 @@ impl TryFrom<(&dyn Array, &Field)> for PolygonArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, PolygonType)> for PolygonArray {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, PolygonType)> for PolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WkbArray<O>, PolygonType)) -> Result<Self> {
+    fn try_from(value: (GenericWkbArray<O>, PolygonType)) -> Result<Self> {
         let mut_arr: PolygonBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }

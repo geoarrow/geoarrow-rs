@@ -6,14 +6,14 @@ use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{CoordType, Metadata, MultiPointType};
 
-use crate::array::{CoordBuffer, PointArray, WkbArray};
+use crate::array::{CoordBuffer, GenericWkbArray, PointArray};
 use crate::builder::MultiPointBuilder;
 use crate::capacity::MultiPointCapacity;
 use crate::datatypes::GeoArrowType;
 use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::MultiPoint;
-use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
+use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 use crate::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
 
 /// An immutable array of MultiPoint geometries.
@@ -128,7 +128,7 @@ impl MultiPointArray {
         validity_len + self.buffer_lengths().num_bytes()
     }
 
-    /// Slices this [`MultiPointArray`] in place.
+    /// Slice this [`MultiPointArray`].
     ///
     /// # Implementation
     ///
@@ -220,7 +220,7 @@ impl GeoArrowArray for MultiPointArray {
     }
 }
 
-impl<'a> ArrayAccessor<'a> for MultiPointArray {
+impl<'a> GeoArrowArrayAccessor<'a> for MultiPointArray {
     type Item = MultiPoint<'a>;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
@@ -302,10 +302,10 @@ impl TryFrom<(&dyn Array, &Field)> for MultiPointArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiPointType)> for MultiPointArray {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, MultiPointType)> for MultiPointArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WkbArray<O>, MultiPointType)) -> Result<Self> {
+    fn try_from(value: (GenericWkbArray<O>, MultiPointType)) -> Result<Self> {
         let mut_arr: MultiPointBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }

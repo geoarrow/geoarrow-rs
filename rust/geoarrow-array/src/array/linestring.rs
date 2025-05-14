@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
-use crate::array::{CoordBuffer, WkbArray};
+use crate::array::{CoordBuffer, GenericWkbArray};
 use crate::builder::LineStringBuilder;
 use crate::capacity::LineStringCapacity;
 use crate::datatypes::GeoArrowType;
 use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::LineString;
-use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
+use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 use crate::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
 
 use arrow_array::cast::AsArray;
@@ -124,7 +124,7 @@ impl LineStringArray {
         validity_len + self.buffer_lengths().num_bytes()
     }
 
-    /// Slices this [`LineStringArray`] in place.
+    /// Slice this [`LineStringArray`].
     ///
     /// # Implementation
     ///
@@ -215,7 +215,7 @@ impl GeoArrowArray for LineStringArray {
     }
 }
 
-impl<'a> ArrayAccessor<'a> for LineStringArray {
+impl<'a> GeoArrowArrayAccessor<'a> for LineStringArray {
     type Item = LineString<'a>;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
@@ -299,10 +299,10 @@ impl TryFrom<(&dyn Array, &Field)> for LineStringArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, LineStringType)> for LineStringArray {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, LineStringType)> for LineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WkbArray<O>, LineStringType)) -> Result<Self> {
+    fn try_from(value: (GenericWkbArray<O>, LineStringType)) -> Result<Self> {
         let mut_arr: LineStringBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }

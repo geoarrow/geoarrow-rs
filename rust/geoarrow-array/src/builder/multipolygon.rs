@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{
@@ -7,12 +9,13 @@ use geoarrow_schema::{CoordType, MultiPolygonType};
 
 use crate::capacity::MultiPolygonCapacity;
 // use super::array::check;
-use crate::array::{MultiPolygonArray, WkbArray};
+use crate::GeoArrowArray;
+use crate::array::{GenericWkbArray, MultiPolygonArray};
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
+use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
 
 /// The GeoArrow equivalent to `Vec<Option<MultiPolygon>>`: a mutable collection of MultiPolygons.
 ///
@@ -114,34 +117,6 @@ impl MultiPolygonBuilder {
         )
     }
 
-    /// Creates a new builder with a capacity inferred by the provided iterator.
-    pub fn with_capacity_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
-        typ: MultiPolygonType,
-    ) -> Self {
-        let capacity = MultiPolygonCapacity::from_multi_polygons(geoms);
-        Self::with_capacity(typ, capacity)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
-    ) {
-        let capacity = MultiPolygonCapacity::from_multi_polygons(geoms);
-        self.reserve(capacity)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_exact_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
-    ) {
-        let capacity = MultiPolygonCapacity::from_multi_polygons(geoms);
-        self.reserve_exact(capacity)
-    }
     /// Add a new Polygon to the end of this array.
     ///
     /// # Errors
@@ -348,7 +323,8 @@ impl MultiPolygonBuilder {
         geoms: &[impl MultiPolygonTrait<T = f64>],
         typ: MultiPolygonType,
     ) -> Self {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(Some), typ);
+        let capacity = MultiPolygonCapacity::from_multi_polygons(geoms.iter().map(Some));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(Some));
         array
     }
@@ -358,7 +334,8 @@ impl MultiPolygonBuilder {
         geoms: &[Option<impl MultiPolygonTrait<T = f64>>],
         typ: MultiPolygonType,
     ) -> Self {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(|x| x.as_ref()), typ);
+        let capacity = MultiPolygonCapacity::from_multi_polygons(geoms.iter().map(|x| x.as_ref()));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         array
     }
@@ -375,10 +352,10 @@ impl MultiPolygonBuilder {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiPolygonType)> for MultiPolygonBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, MultiPolygonType)> for MultiPolygonBuilder {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (WkbArray<O>, MultiPolygonType)) -> Result<Self> {
+    fn try_from((value, typ): (GenericWkbArray<O>, MultiPolygonType)) -> Result<Self> {
         let wkb_objects = value
             .iter()
             .map(|x| x.transpose())
@@ -387,12 +364,20 @@ impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiPolygonType)> for MultiPolyg
     }
 }
 
-impl GeometryArrayBuilder for MultiPolygonBuilder {
+impl GeoArrowArrayBuilder for MultiPolygonBuilder {
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
     }
 
     fn push_null(&mut self) {
         self.push_null();
+    }
+
+    fn push_geometry(&mut self, geometry: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+        self.push_geometry(geometry)
+    }
+
+    fn finish(self) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.finish())
     }
 }

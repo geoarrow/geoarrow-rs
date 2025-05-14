@@ -6,14 +6,14 @@ use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::{CoordType, GeometryCollectionType, Metadata};
 
-use crate::array::{MixedGeometryArray, WkbArray};
+use crate::array::{GenericWkbArray, MixedGeometryArray};
 use crate::builder::GeometryCollectionBuilder;
 use crate::capacity::GeometryCollectionCapacity;
 use crate::datatypes::GeoArrowType;
 use crate::eq::offset_buffer_eq;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::GeometryCollection;
-use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
+use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 use crate::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
 
 /// An immutable array of GeometryCollection geometries.
@@ -72,7 +72,7 @@ impl GeometryCollectionArray {
         validity_len + self.buffer_lengths().num_bytes()
     }
 
-    /// Slices this [`GeometryCollectionArray`] in place.
+    /// Slice this [`GeometryCollectionArray`].
     ///
     /// # Implementation
     ///
@@ -162,7 +162,7 @@ impl GeoArrowArray for GeometryCollectionArray {
     }
 }
 
-impl<'a> ArrayAccessor<'a> for GeometryCollectionArray {
+impl<'a> GeoArrowArrayAccessor<'a> for GeometryCollectionArray {
     type Item = GeometryCollection<'a>;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
@@ -250,12 +250,12 @@ impl TryFrom<(&dyn Array, &Field)> for GeometryCollectionArray {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, GeometryCollectionType)>
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, GeometryCollectionType)>
     for GeometryCollectionArray
 {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WkbArray<O>, GeometryCollectionType)) -> Result<Self> {
+    fn try_from(value: (GenericWkbArray<O>, GeometryCollectionType)) -> Result<Self> {
         let mut_arr: GeometryCollectionBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }

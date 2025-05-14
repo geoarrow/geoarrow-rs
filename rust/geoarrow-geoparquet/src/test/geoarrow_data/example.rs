@@ -5,13 +5,13 @@ use std::sync::Arc;
 use arrow_array::RecordBatchReader;
 use arrow_array::cast::AsArray;
 use arrow_schema::ArrowError;
-use geoarrow_array::array::{WktArray, from_arrow_array};
+use geoarrow_array::array::{GenericWktArray, WktArray, from_arrow_array};
 use geoarrow_array::builder::{
     GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder, MultiPointBuilder,
     MultiPolygonBuilder, PointBuilder, PolygonBuilder,
 };
 use geoarrow_array::cast::AsGeoArrowArray;
-use geoarrow_array::{ArrayAccessor, GeoArrowArray, GeoArrowType};
+use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, GeoArrowType};
 use geoarrow_schema::{
     CoordType, Dimension, GeometryCollectionType, LineStringType, MultiLineStringType,
     MultiPointType, MultiPolygonType, PointType, PolygonType,
@@ -75,7 +75,7 @@ fn geoparquet_filepath(data_type: GeoArrowType, suffix: &str) -> PathBuf {
 }
 
 /// Read a GeoParquet file and return the WKT and geometry arrays; columns 0 and 1.
-fn read_gpq_file(path: impl AsRef<Path>) -> (WktArray<i32>, Arc<dyn GeoArrowArray>) {
+fn read_gpq_file(path: impl AsRef<Path>) -> (GenericWktArray<i32>, Arc<dyn GeoArrowArray>) {
     println!("reading path: {:?}", path.as_ref());
     let file = File::open(path).unwrap();
     let reader = GeoParquetRecordBatchReaderBuilder::try_new(file)

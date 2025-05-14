@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
@@ -5,12 +7,13 @@ use geoarrow_schema::{CoordType, MultiPointType};
 
 use crate::capacity::MultiPointCapacity;
 // use super::array::check;
-use crate::array::{MultiPointArray, WkbArray};
+use crate::GeoArrowArray;
+use crate::array::{GenericWkbArray, MultiPointArray};
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
+use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
 
 /// The GeoArrow equivalent to `Vec<Option<MultiPoint>>`: a mutable collection of MultiPoints.
 ///
@@ -97,35 +100,6 @@ impl MultiPointBuilder {
             validity,
             self.data_type.metadata().clone(),
         )
-    }
-
-    /// Creates a new builder with a capacity inferred by the provided iterator.
-    pub fn with_capacity_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
-        typ: MultiPointType,
-    ) -> Self {
-        let counter = MultiPointCapacity::from_multi_points(geoms);
-        Self::with_capacity(typ, counter)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
-    ) {
-        let counter = MultiPointCapacity::from_multi_points(geoms);
-        self.reserve(counter)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_exact_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
-    ) {
-        let counter = MultiPointCapacity::from_multi_points(geoms);
-        self.reserve_exact(counter)
     }
 
     /// Extend this builder with the given geometries
@@ -232,7 +206,8 @@ impl MultiPointBuilder {
 
     /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_multi_points(geoms: &[impl MultiPointTrait<T = f64>], typ: MultiPointType) -> Self {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(Some), typ);
+        let capacity = MultiPointCapacity::from_multi_points(geoms.iter().map(Some));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(Some));
         array
     }
@@ -242,7 +217,8 @@ impl MultiPointBuilder {
         geoms: &[Option<impl MultiPointTrait<T = f64>>],
         typ: MultiPointType,
     ) -> Self {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(|x| x.as_ref()), typ);
+        let capacity = MultiPointCapacity::from_multi_points(geoms.iter().map(|x| x.as_ref()));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         array
     }
@@ -259,10 +235,10 @@ impl MultiPointBuilder {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiPointType)> for MultiPointBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, MultiPointType)> for MultiPointBuilder {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (WkbArray<O>, MultiPointType)) -> Result<Self> {
+    fn try_from((value, typ): (GenericWkbArray<O>, MultiPointType)) -> Result<Self> {
         let wkb_objects = value
             .iter()
             .map(|x| x.transpose())
@@ -271,12 +247,20 @@ impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiPointType)> for MultiPointBu
     }
 }
 
-impl GeometryArrayBuilder for MultiPointBuilder {
+impl GeoArrowArrayBuilder for MultiPointBuilder {
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
     }
 
     fn push_null(&mut self) {
         self.push_null();
+    }
+
+    fn push_geometry(&mut self, geometry: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+        self.push_geometry(geometry)
+    }
+
+    fn finish(self) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.finish())
     }
 }

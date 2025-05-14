@@ -1335,7 +1335,7 @@ fn parse_box(data_type: &DataType) -> Result<Dimension, ArrowError> {
 /// A type representing a geoarrow WKB array.
 ///
 /// This implements the [`ExtensionType`] trait.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct WkbType {
     metadata: Arc<Metadata>,
 }
@@ -1354,31 +1354,6 @@ impl WkbType {
     /// Retrieve the underlying [`Metadata`]
     pub fn metadata(&self) -> &Arc<Metadata> {
         &self.metadata
-    }
-
-    /// Convert to the corresponding [`DataType`].
-    ///
-    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
-    ///
-    /// ```
-    /// use arrow_schema::DataType;
-    /// use geoarrow_schema::WkbType;
-    ///
-    /// let geom_type = WkbType::new(Default::default());
-    ///
-    /// assert_eq!(geom_type.data_type(false), DataType::Binary);
-    /// ```
-    pub fn data_type(&self, large: bool) -> DataType {
-        if large {
-            DataType::LargeBinary
-        } else {
-            DataType::Binary
-        }
-    }
-
-    /// Convert this type to a [`Field`], retaining extension metadata.
-    pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool, large: bool) -> Field {
-        Field::new(name, self.data_type(large), nullable).with_extension_type(self.clone())
     }
 }
 
@@ -1401,7 +1376,7 @@ impl ExtensionType for WkbType {
 
     fn supports_data_type(&self, data_type: &DataType) -> Result<(), ArrowError> {
         match data_type {
-            DataType::Binary | DataType::LargeBinary => Ok(()),
+            DataType::Binary | DataType::LargeBinary | DataType::BinaryView => Ok(()),
             dt => Err(ArrowError::SchemaError(format!(
                 "Unexpected data type {dt}"
             ))),
@@ -1420,7 +1395,7 @@ impl ExtensionType for WkbType {
 /// A type representing a geoarrow WKT array.
 ///
 /// This implements the [`ExtensionType`] trait.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct WktType {
     metadata: Arc<Metadata>,
 }
@@ -1439,31 +1414,6 @@ impl WktType {
     /// Retrieve the underlying [`Metadata`]
     pub fn metadata(&self) -> &Arc<Metadata> {
         &self.metadata
-    }
-
-    /// Convert to the corresponding [`DataType`].
-    ///
-    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
-    ///
-    /// ```
-    /// use arrow_schema::DataType;
-    /// use geoarrow_schema::WktType;
-    ///
-    /// let geom_type = WktType::new(Default::default());
-    ///
-    /// assert_eq!(geom_type.data_type(false), DataType::Utf8);
-    /// ```
-    pub fn data_type(&self, large: bool) -> DataType {
-        if large {
-            DataType::LargeUtf8
-        } else {
-            DataType::Utf8
-        }
-    }
-
-    /// Convert this type to a [`Field`], retaining extension metadata.
-    pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool, large: bool) -> Field {
-        Field::new(name, self.data_type(large), nullable).with_extension_type(self.clone())
     }
 }
 
@@ -1486,7 +1436,7 @@ impl ExtensionType for WktType {
 
     fn supports_data_type(&self, data_type: &DataType) -> Result<(), ArrowError> {
         match data_type {
-            DataType::Utf8 | DataType::LargeUtf8 => Ok(()),
+            DataType::Utf8 | DataType::LargeUtf8 | DataType::Utf8View => Ok(()),
             dt => Err(ArrowError::SchemaError(format!(
                 "Unexpected data type {dt}"
             ))),

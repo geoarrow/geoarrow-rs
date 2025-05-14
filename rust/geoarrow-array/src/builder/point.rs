@@ -1,15 +1,18 @@
+use std::sync::Arc;
+
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
 use geoarrow_schema::{CoordType, PointType};
 
 // use super::array::check;
-use crate::array::{PointArray, WkbArray};
+use crate::GeoArrowArray;
+use crate::array::{GenericWkbArray, PointArray};
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
+use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
 
 /// The GeoArrow equivalent to `Vec<Option<Point>>`: a mutable collection of Points.
 ///
@@ -225,10 +228,10 @@ impl PointBuilder {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, PointType)> for PointBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, PointType)> for PointBuilder {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (WkbArray<O>, PointType)) -> Result<Self> {
+    fn try_from((value, typ): (GenericWkbArray<O>, PointType)) -> Result<Self> {
         let wkb_objects = value
             .iter()
             .map(|x| x.transpose())
@@ -237,12 +240,20 @@ impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, PointType)> for PointBuilder {
     }
 }
 
-impl GeometryArrayBuilder for PointBuilder {
+impl GeoArrowArrayBuilder for PointBuilder {
     fn len(&self) -> usize {
         self.coords.len()
     }
 
     fn push_null(&mut self) {
         self.push_null();
+    }
+
+    fn push_geometry(&mut self, geometry: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+        self.push_geometry(geometry)
+    }
+
+    fn finish(self) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.finish())
     }
 }

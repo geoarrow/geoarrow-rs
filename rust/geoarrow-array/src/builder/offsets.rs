@@ -22,13 +22,14 @@ impl<O: OffsetSizeTrait> Default for OffsetsBuilder<O> {
 }
 
 impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
-    /// Returns an empty [`Offsets`] (i.e. with a single element, the zero)
+    /// Returns an empty [`OffsetsBuilder`] (i.e. with a single element, the zero)
     #[inline]
     pub(crate) fn new() -> Self {
         Self(vec![O::zero()])
     }
 
-    /// Returns a new [`Offsets`] with a capacity, allocating at least `capacity + 1` entries.
+    /// Returns a new [`OffsetsBuilder`] with a capacity, allocating at least `capacity + 1`
+    /// entries.
     pub(crate) fn with_capacity(capacity: usize) -> Self {
         let mut offsets = Vec::with_capacity(capacity + 1);
         offsets.push(O::zero());
