@@ -107,11 +107,6 @@ impl MultiPointArray {
         &self.coords
     }
 
-    #[allow(dead_code)]
-    pub(crate) fn into_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, Option<NullBuffer>) {
-        (self.coords, self.geom_offsets, self.nulls)
-    }
-
     /// Access the underlying geometry offsets buffer
     pub fn geom_offsets(&self) -> &OffsetBuffer<i32> {
         &self.geom_offsets

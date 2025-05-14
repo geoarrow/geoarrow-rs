@@ -19,32 +19,6 @@ pub(crate) fn offsets_buffer_i64_to_i32(offsets: &OffsetBuffer<i64>) -> Result<O
     Ok(unsafe { OffsetBuffer::new_unchecked(i32_offsets.into()) })
 }
 
-#[allow(dead_code)]
-pub(crate) fn offsets_buffer_to_i64<O: OffsetSizeTrait>(
-    offsets: &OffsetBuffer<O>,
-) -> OffsetBuffer<i64> {
-    let i64_offsets = offsets
-        .iter()
-        .map(|x| x.to_i64().unwrap())
-        .collect::<Vec<_>>();
-    unsafe { OffsetBuffer::new_unchecked(i64_offsets.into()) }
-}
-
-#[allow(dead_code)]
-pub(crate) fn offsets_buffer_to_i32<O: OffsetSizeTrait>(
-    offsets: &OffsetBuffer<O>,
-) -> Result<OffsetBuffer<i32>> {
-    // TODO: raise nicer error. Ref:
-    // https://github.com/jorgecarleitao/arrow2/blob/6a4b53169a48cbd234cecde6ab6a98f84146fca2/src/offset.rs#L492
-    i32::try_from(offsets.last().as_usize()).unwrap();
-
-    let i32_offsets = offsets
-        .iter()
-        .map(|x| x.to_usize().unwrap() as i32)
-        .collect::<Vec<_>>();
-    Ok(unsafe { OffsetBuffer::new_unchecked(i32_offsets.into()) })
-}
-
 /// Offsets utils that I miss from arrow2
 pub(crate) trait OffsetBufferUtils<O: OffsetSizeTrait> {
     /// Returns the length an array with these offsets would be.

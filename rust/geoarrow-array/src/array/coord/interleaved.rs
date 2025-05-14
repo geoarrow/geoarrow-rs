@@ -54,12 +54,6 @@ impl InterleavedCoordBuffer {
         Ok(Self { coords, dim })
     }
 
-    // Currently used by a test
-    #[allow(dead_code)]
-    pub(crate) fn from_vec(coords: Vec<f64>, dim: Dimension) -> Result<Self> {
-        Self::try_new(coords.into(), dim)
-    }
-
     /// Construct from an iterator of coordinates.
     pub fn from_coords<'a>(
         coords: impl ExactSizeIterator<Item = &'a (impl CoordTrait<T = f64> + 'a)>,

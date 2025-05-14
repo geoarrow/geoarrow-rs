@@ -77,12 +77,6 @@ impl MultiPointCapacity {
         Ok(())
     }
 
-    #[allow(dead_code)]
-    pub(crate) fn add_point_capacity(&mut self, point_capacity: usize) {
-        self.coord_capacity += point_capacity;
-        self.geom_capacity += point_capacity;
-    }
-
     /// The coordinate buffer capacity
     pub fn coord_capacity(&self) -> usize {
         self.coord_capacity
