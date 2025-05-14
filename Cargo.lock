@@ -1593,20 +1593,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "geo-index"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8e6b2a121e60180a118037426b1e93d7f5904ebd95cf6e841a575195a65a31ce"
-dependencies = [
- "bytemuck",
- "float_next_after",
- "geo-traits 0.2.0",
- "num-traits",
- "thiserror 1.0.69",
- "tinyvec",
-]
-
-[[package]]
 name = "geo-traits"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1646,7 +1632,7 @@ dependencies = [
  "arrow-json",
  "arrow-schema",
  "geo",
- "geo-traits",
+ "geo-traits 0.3.0",
  "geo-types",
  "geoarrow-schema",
  "geoarrow-test",
@@ -1743,7 +1729,7 @@ dependencies = [
  "arrow-schema",
  "datafusion",
  "geo",
- "geo-traits",
+ "geo-traits 0.3.0",
  "geoarrow-array",
  "geoarrow-schema",
  "geohash",
@@ -3888,10 +3874,10 @@ dependencies = [
 [[package]]
 name = "wkb"
 version = "0.8.0"
-source = "git+https://github.com/georust/wkb?rev=5a2027995997017bcd531e6be7e5cf126db1d4c1#5a2027995997017bcd531e6be7e5cf126db1d4c1"
+source = "git+https://github.com/georust/wkb?rev=5eb5c1dc9b181343f5fb46a13c7cc0fced009450#5eb5c1dc9b181343f5fb46a13c7cc0fced009450"
 dependencies = [
  "byteorder",
- "geo-traits 0.2.0",
+ "geo-traits 0.3.0",
  "num_enum",
  "thiserror 1.0.69",
 ]
@@ -3911,7 +3897,7 @@ dependencies = [
 [[package]]
 name = "wkt"
 version = "0.13.0"
-source = "git+https://github.com/georust/wkt?rev=e39beb53c63e5e0b9232bad7a8fa083ce2d347a2#e39beb53c63e5e0b9232bad7a8fa083ce2d347a2"
+source = "git+https://github.com/georust/wkt?rev=24c598b0f327bdd93252990f1eb800623a49f722#24c598b0f327bdd93252990f1eb800623a49f722"
 dependencies = [
  "geo-traits 0.3.0",
  "geo-types",
