@@ -29,7 +29,7 @@ These smaller crates are designed to mimic the upstream `arrow` crates as much a
 - `geoarrow-array`: Pretty stable
 - `geoarrow-cast`: Pretty stable
 - `geoarrow-flatgeobuf`: Somewhat stable.
-- `geoarrow-geoparquet`: Somewhat stable. A decently large refactor is expected in https://github.com/geoarrow/geoarrow-rs/pull/1089.
+- `geoparquet`: Somewhat stable. A decently large refactor is expected in https://github.com/geoarrow/geoarrow-rs/pull/1089.
 - Other Rust crates: unstable
 - Python bindings: unstable
 - JS bindings: unstable

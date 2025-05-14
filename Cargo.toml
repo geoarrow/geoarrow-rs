@@ -3,12 +3,12 @@ members = [
     "rust/geoarrow-array",
     "rust/geoarrow-cast",
     "rust/geoarrow-flatgeobuf",
-    "rust/geoarrow-geoparquet",
     "rust/geoarrow-geos",
     "rust/geoarrow-schema",
     "rust/geoarrow-test",
-    "rust/pyo3-geoarrow",
     "rust/geodatafusion",
+    "rust/geoparquet",
+    "rust/pyo3-geoarrow",
 ]
 exclude = ["js"]
 resolver = "2"
@@ -46,10 +46,10 @@ geo-traits = "0.3.0"
 geo-types = "0.7.16"
 geoarrow-array = { path = "rust/geoarrow-array" }
 geoarrow-cast = { path = "rust/geoarrow-cast" }
-geoarrow-geoparquet = { path = "rust/geoarrow-geoparquet" }
 geoarrow-schema = { path = "rust/geoarrow-schema" }
 geoarrow-test = { path = "rust/geoarrow-test" }
 geohash = "0.13.1"
+geoparquet = { path = "rust/geoparquet" }
 geos = { version = "10", features = ["v3_10_0"] }
 geozero = "0.14"
 indexmap = "2.5.0"

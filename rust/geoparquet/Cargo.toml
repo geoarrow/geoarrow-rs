@@ -1,6 +1,6 @@
 
 [package]
-name = "geoarrow-geoparquet"
+name = "geoparquet"
 version = { workspace = true }
 authors = { workspace = true }
 edition = { workspace = true }

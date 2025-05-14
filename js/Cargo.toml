@@ -39,16 +39,10 @@ io_object_store = [
     "dep:url",
     "parquet/object_store",
 ]
-io_parquet = [
-    "dep:geoarrow-geoparquet",
-    "table",
-    "data",
-    "dep:bytes",
-    "dep:parquet",
-]
+io_parquet = ["dep:geoparquet", "table", "data", "dep:bytes", "dep:parquet"]
 io_parquet_async = [
     "async-stream",
-    "geoarrow-geoparquet/async",
+    "geoparquet/async",
     "io_http",
     "io_object_store",
     "io_parquet",
@@ -96,10 +90,10 @@ console_error_panic_hook = { version = "0.1.6", optional = true }
 futures = { version = "0.3.30", optional = true }
 geo = "0.30"
 geo-traits = "0.3"
-geoarrow-schema = { path = "../rust/geoarrow-schema" }
 geoarrow-array = { path = "../rust/geoarrow-array" }
-geoarrow-geoparquet = { path = "../rust/geoarrow-geoparquet", optional = true }
+geoarrow-schema = { path = "../rust/geoarrow-schema" }
 geodesy = { version = "0.12", optional = true, features = ["js"] }
+geoparquet = { path = "../rust/geoparquet", optional = true }
 object_store = { version = "0.12", optional = true }
 # Use released version when it supports object-store 0.12
 object-store-wasm = { git = "https://github.com/kylebarron/object-store-wasm", rev = "1b1c29c9915e1d099bdc19617ca59e9d80844478", optional = true, default-features = false, features = [
