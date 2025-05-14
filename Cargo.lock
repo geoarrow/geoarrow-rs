@@ -1715,7 +1715,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-test"
-version = "0.1.0-dev"
+version = "0.4.0-beta.4"
 dependencies = [
  "wkt 0.14.0",
 ]
