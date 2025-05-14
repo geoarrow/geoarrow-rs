@@ -1,5 +1,5 @@
 [workspace]
-members = ["geoarrow-compute", "geoarrow-core", "geoarrow-io", "pyo3-geoarrow"]
+members = ["geoarrow-compute", "geoarrow-core", "geoarrow-io"]
 resolver = "2"
 
 [workspace.package]
@@ -19,7 +19,6 @@ arrow-array = "55"
 arrow-buffer = "55"
 arrow-schema = "55"
 geo-traits = "0.2"
-geoarrow = { path = "../rust/geoarrow" }
 geoarrow-array = { path = "../rust/geoarrow-array" }
 geoarrow-cast = { path = "../rust/geoarrow-cast" }
 geoarrow-flatgeobuf = { path = "../rust/geoarrow-flatgeobuf" }
@@ -32,6 +31,6 @@ object_store = "0.12"
 parquet = "55"
 pyo3 = { version = "0.24", features = ["hashbrown", "serde", "anyhow"] }
 pyo3-arrow = "0.9"
-pyo3-geoarrow = { path = "./pyo3-geoarrow" }
+pyo3-geoarrow = { path = "../rust/pyo3-geoarrow" }
 serde_json = "1"
 thiserror = "1"

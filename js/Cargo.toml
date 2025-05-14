@@ -26,7 +26,7 @@ data = []
 
 geodesy = ["dep:geodesy"]
 debug = ["console_error_panic_hook"]
-io_flatgeobuf = ["geoarrow/flatgeobuf", "table"]
+# io_flatgeobuf = ["geoarrow/flatgeobuf", "table"]
 io_geojson = ["table"]
 io_http = []
 io_object_store = [
@@ -96,7 +96,6 @@ console_error_panic_hook = { version = "0.1.6", optional = true }
 futures = { version = "0.3.30", optional = true }
 geo = "0.30"
 geo-traits = "0.2"
-geoarrow = { path = "../rust/geoarrow" }
 geoarrow-schema = { path = "../rust/geoarrow-schema" }
 geoarrow-array = { path = "../rust/geoarrow-array" }
 geoarrow-geoparquet = { path = "../rust/geoarrow-geoparquet", optional = true }
