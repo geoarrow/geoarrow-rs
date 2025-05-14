@@ -3,7 +3,11 @@ use std::ops::Add;
 use geo_traits::{
     CoordTrait, GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait,
     MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
+    UnimplementedGeometryCollection, UnimplementedLine, UnimplementedLineString,
+    UnimplementedMultiLineString, UnimplementedMultiPoint, UnimplementedMultiPolygon,
+    UnimplementedPoint, UnimplementedPolygon, UnimplementedTriangle,
 };
+
 use geo_types::Coord;
 use geoarrow_array::array::RectArray;
 use geoarrow_array::builder::RectBuilder;
@@ -197,16 +201,7 @@ impl Add for BoundingRect {
 }
 
 impl RectTrait for BoundingRect {
-    type T = f64;
     type CoordType<'a> = Coord;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        if self.minz().is_some() && self.maxz().is_some() {
-            geo_traits::Dimensions::Xyz
-        } else {
-            geo_traits::Dimensions::Xy
-        }
-    }
 
     fn min(&self) -> Self::CoordType<'_> {
         Coord {
@@ -220,6 +215,76 @@ impl RectTrait for BoundingRect {
             x: self.maxx,
             y: self.maxy,
         }
+    }
+}
+
+impl GeometryTrait for BoundingRect {
+    type T = f64;
+    type PointType<'a>
+        = UnimplementedPoint<f64>
+    where
+        Self: 'a;
+    type LineStringType<'a>
+        = UnimplementedLineString<f64>
+    where
+        Self: 'a;
+    type PolygonType<'a>
+        = UnimplementedPolygon<f64>
+    where
+        Self: 'a;
+    type MultiPointType<'a>
+        = UnimplementedMultiPoint<f64>
+    where
+        Self: 'a;
+    type MultiLineStringType<'a>
+        = UnimplementedMultiLineString<f64>
+    where
+        Self: 'a;
+    type MultiPolygonType<'a>
+        = UnimplementedMultiPolygon<f64>
+    where
+        Self: 'a;
+    type GeometryCollectionType<'a>
+        = UnimplementedGeometryCollection<f64>
+    where
+        Self: 'a;
+    type RectType<'a>
+        = Self
+    where
+        Self: 'a;
+    type TriangleType<'a>
+        = UnimplementedTriangle<f64>
+    where
+        Self: 'a;
+    type LineType<'a>
+        = UnimplementedLine<f64>
+    where
+        Self: 'a;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        if self.minz().is_some() && self.maxz().is_some() {
+            geo_traits::Dimensions::Xyz
+        } else {
+            geo_traits::Dimensions::Xy
+        }
+    }
+
+    fn as_type(
+        &self,
+    ) -> GeometryType<
+        '_,
+        Self::PointType<'_>,
+        Self::LineStringType<'_>,
+        Self::PolygonType<'_>,
+        Self::MultiPointType<'_>,
+        Self::MultiLineStringType<'_>,
+        Self::MultiPolygonType<'_>,
+        Self::GeometryCollectionType<'_>,
+        Self::RectType<'_>,
+        Self::TriangleType<'_>,
+        Self::LineType<'_>,
+    > {
+        GeometryType::Rect(self)
     }
 }
 

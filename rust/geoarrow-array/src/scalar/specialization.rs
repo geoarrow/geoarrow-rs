@@ -1,9 +1,6 @@
 // Specialized implementations of GeometryTrait on each scalar type.
 
-use geo_traits::{
-    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
-    MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
-};
+use geo_traits::GeometryTrait;
 
 use crate::scalar::*;
 
@@ -53,7 +50,7 @@ macro_rules! impl_specialization {
                 Self: 'b;
 
             fn dim(&self) -> geo_traits::Dimensions {
-                $trait_name::dim(self)
+                self.native_dim().into()
             }
 
             fn as_type(
@@ -119,7 +116,7 @@ macro_rules! impl_specialization {
                 Self: 'b;
 
             fn dim(&self) -> geo_traits::Dimensions {
-                $trait_name::dim(self)
+                self.native_dim().into()
             }
 
             fn as_type(

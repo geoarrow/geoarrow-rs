@@ -42,7 +42,7 @@ datafusion = { git = "https://github.com/apache/datafusion", rev = "2d801940c3cb
 flatgeobuf = { version = "4.6", default-features = false }
 futures = "0.3"
 geo = "0.30.0"
-geo-traits = "0.2.0"
+geo-traits = "0.3.0"
 geo-types = "0.7.16"
 geoarrow-array = { path = "rust/geoarrow-array" }
 geoarrow-cast = { path = "rust/geoarrow-cast" }
@@ -68,5 +68,8 @@ thiserror = "1"
 tokio = { version = "1.9", default-features = false }
 url = "2.5"
 # to include https://github.com/georust/wkb/pull/53
-wkb = { git = "https://github.com/georust/wkb", rev = "5a2027995997017bcd531e6be7e5cf126db1d4c1" }
-wkt = "0.13"
+wkb = { git = "https://github.com/georust/wkb", rev = "5eb5c1dc9b181343f5fb46a13c7cc0fced009450" }
+wkt = "0.14"
+
+[patch.crates-io]
+wkb = { git = "https://github.com/georust/wkb", rev = "5eb5c1dc9b181343f5fb46a13c7cc0fced009450" }

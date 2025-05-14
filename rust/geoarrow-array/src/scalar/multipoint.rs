@@ -1,5 +1,6 @@
 use arrow_buffer::OffsetBuffer;
 use geo_traits::MultiPointTrait;
+use geoarrow_schema::Dimension;
 
 use crate::array::CoordBuffer;
 use crate::eq::multi_point_eq;
@@ -36,46 +37,40 @@ impl<'a> MultiPoint<'a> {
             start_offset,
         }
     }
+
+    pub(crate) fn native_dim(&self) -> Dimension {
+        self.coords.dim()
+    }
 }
 
 impl<'a> MultiPointTrait for MultiPoint<'a> {
-    type T = f64;
-    type PointType<'b>
+    type InnerPointType<'b>
         = Point<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.coords.dim().into()
-    }
 
     fn num_points(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::InnerPointType<'_> {
         Point::new(self.coords, self.start_offset + i)
     }
 }
 
 impl<'a> MultiPointTrait for &'a MultiPoint<'a> {
-    type T = f64;
-    type PointType<'b>
+    type InnerPointType<'b>
         = Point<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.coords.dim().into()
-    }
 
     fn num_points(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::InnerPointType<'_> {
         Point::new(self.coords, self.start_offset + i)
     }
 }
