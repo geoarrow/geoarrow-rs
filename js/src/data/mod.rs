@@ -1,3 +1,3 @@
-pub mod coord;
+mod coord;
 
-pub use coord::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
+pub use coord::JsCoordBuffer;
