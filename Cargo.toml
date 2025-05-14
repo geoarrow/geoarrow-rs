@@ -69,8 +69,7 @@ tokio = { version = "1.9", default-features = false }
 url = "2.5"
 # to include https://github.com/georust/wkb/pull/53
 wkb = { git = "https://github.com/georust/wkb", rev = "5eb5c1dc9b181343f5fb46a13c7cc0fced009450" }
-wkt = "0.13"
+wkt = "0.14"
 
 [patch.crates-io]
-wkt = { git = "https://github.com/georust/wkt", rev = "24c598b0f327bdd93252990f1eb800623a49f722" }
 wkb = { git = "https://github.com/georust/wkb", rev = "5eb5c1dc9b181343f5fb46a13c7cc0fced009450" }

@@ -921,6 +921,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "geo-traits"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2e7c353d12a704ccfab1ba8bfb1a7fe6cb18b665bf89d37f4f7890edcd260206"
+dependencies = [
+ "geo-types",
+]
+
+[[package]]
 name = "geo-types"
 version = "0.7.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -940,7 +949,7 @@ dependencies = [
  "arrow-array",
  "arrow-buffer",
  "arrow-schema",
- "geo-traits",
+ "geo-traits 0.3.0",
  "geoarrow-schema",
  "num-traits",
  "serde_json",
@@ -960,7 +969,7 @@ dependencies = [
  "arrow-schema",
  "async-stream",
  "futures",
- "geo-traits",
+ "geo-traits 0.3.0",
  "geo-types",
  "geoarrow-array",
  "geoarrow-schema",
@@ -975,7 +984,7 @@ name = "geoarrow-schema"
 version = "0.1.0-dev"
 dependencies = [
  "arrow-schema",
- "geo-traits",
+ "geo-traits 0.3.0",
  "serde",
  "serde_json",
 ]
@@ -993,7 +1002,7 @@ dependencies = [
  "console_error_panic_hook",
  "futures",
  "geo",
- "geo-traits",
+ "geo-traits 0.3.0",
  "geoarrow-array",
  "geoarrow-geoparquet",
  "geoarrow-schema",
@@ -3579,10 +3588,10 @@ dependencies = [
 [[package]]
 name = "wkb"
 version = "0.8.0"
-source = "git+https://github.com/georust/wkb?rev=5a2027995997017bcd531e6be7e5cf126db1d4c1#5a2027995997017bcd531e6be7e5cf126db1d4c1"
+source = "git+https://github.com/georust/wkb?rev=5eb5c1dc9b181343f5fb46a13c7cc0fced009450#5eb5c1dc9b181343f5fb46a13c7cc0fced009450"
 dependencies = [
  "byteorder",
- "geo-traits",
+ "geo-traits 0.3.0",
  "num_enum",
  "thiserror 1.0.69",
 ]
@@ -3593,7 +3602,7 @@ version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c505a1a3f6ebda15c778ffa0317b583b10b2393a5506281132a2eef6880a691"
 dependencies = [
- "geo-traits",
+ "geo-traits 0.2.0",
  "geo-types",
  "log",
  "num-traits",

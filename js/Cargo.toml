@@ -95,7 +95,7 @@ bytes = { version = "1", optional = true }
 console_error_panic_hook = { version = "0.1.6", optional = true }
 futures = { version = "0.3.30", optional = true }
 geo = "0.30"
-geo-traits = "0.2"
+geo-traits = "0.3"
 geoarrow-schema = { path = "../rust/geoarrow-schema" }
 geoarrow-array = { path = "../rust/geoarrow-array" }
 geoarrow-geoparquet = { path = "../rust/geoarrow-geoparquet", optional = true }

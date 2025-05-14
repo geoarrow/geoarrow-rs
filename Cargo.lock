@@ -1641,7 +1641,7 @@ dependencies = [
  "serde_json",
  "thiserror 1.0.69",
  "wkb",
- "wkt 0.13.0",
+ "wkt 0.14.0",
 ]
 
 [[package]]
@@ -1652,7 +1652,7 @@ dependencies = [
  "geoarrow-array",
  "geoarrow-schema",
  "geoarrow-test",
- "wkt 0.13.0",
+ "wkt 0.14.0",
 ]
 
 [[package]]
@@ -1665,7 +1665,7 @@ dependencies = [
  "geoarrow-array",
  "geoarrow-schema",
  "geozero",
- "wkt 0.13.0",
+ "wkt 0.14.0",
 ]
 
 [[package]]
@@ -1710,14 +1710,14 @@ dependencies = [
  "geo-traits 0.3.0",
  "serde",
  "serde_json",
- "wkt 0.13.0",
+ "wkt 0.14.0",
 ]
 
 [[package]]
 name = "geoarrow-test"
 version = "0.1.0-dev"
 dependencies = [
- "wkt 0.13.0",
+ "wkt 0.14.0",
 ]
 
 [[package]]
@@ -1735,7 +1735,7 @@ dependencies = [
  "geohash",
  "thiserror 1.0.69",
  "tokio",
- "wkt 0.13.0",
+ "wkt 0.14.0",
 ]
 
 [[package]]
@@ -3896,8 +3896,9 @@ dependencies = [
 
 [[package]]
 name = "wkt"
-version = "0.13.0"
-source = "git+https://github.com/georust/wkt?rev=24c598b0f327bdd93252990f1eb800623a49f722#24c598b0f327bdd93252990f1eb800623a49f722"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "efb2b923ccc882312e559ffaa832a055ba9d1ac0cc8e86b3e25453247e4b81d7"
 dependencies = [
  "geo-traits 0.3.0",
  "geo-types",
