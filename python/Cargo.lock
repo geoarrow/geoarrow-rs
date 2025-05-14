@@ -1038,7 +1038,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-array"
-version = "0.1.0-dev"
+version = "0.4.0-beta.4"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
@@ -1056,7 +1056,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-cast"
-version = "0.1.0-dev"
+version = "0.4.0-beta.4"
 dependencies = [
  "geo-traits 0.3.0",
  "geoarrow-array",
@@ -1066,7 +1066,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-flatgeobuf"
-version = "0.1.0-dev"
+version = "0.4.0-beta.4"
 dependencies = [
  "arrow-schema",
  "flatgeobuf",
@@ -1077,7 +1077,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-geoparquet"
-version = "0.1.0-dev"
+version = "0.4.0-beta.4"
 dependencies = [
  "arrow-arith",
  "arrow-array",
@@ -1148,7 +1148,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-schema"
-version = "0.1.0-dev"
+version = "0.4.0-beta.4"
 dependencies = [
  "arrow-schema",
  "geo-traits 0.3.0",
@@ -2451,7 +2451,7 @@ dependencies = [
 
 [[package]]
 name = "pyo3-geoarrow"
-version = "0.1.0-dev"
+version = "0.4.0-beta.4"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
@@ -4174,8 +4174,9 @@ dependencies = [
 
 [[package]]
 name = "wkb"
-version = "0.8.0"
-source = "git+https://github.com/georust/wkb?rev=5eb5c1dc9b181343f5fb46a13c7cc0fced009450#5eb5c1dc9b181343f5fb46a13c7cc0fced009450"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ff9eff6aebac4c64f9c7c057a68f6359284e2a80acf102dffe041fe219b3a082"
 dependencies = [
  "byteorder",
  "geo-traits 0.3.0",
