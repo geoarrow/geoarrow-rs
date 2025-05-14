@@ -12,7 +12,7 @@
 //! use arrow_array::RecordBatch;
 //! use arrow_array::RecordBatchReader;
 //! use arrow_schema::ArrowError;
-//! use geoarrow_geoparquet::{GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder};
+//! use geoparquet::{GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder};
 //!
 //! let file = File::open("../../fixtures/geoparquet/nybb.parquet").unwrap();
 //! let geo_options = GeoParquetReaderOptions::default().with_batch_size(65536);
@@ -42,7 +42,7 @@
 //! ```rust
 //! # #[cfg(feature = "async")]
 //! # {
-//! use geoarrow_geoparquet::{GeoParquetReaderOptions, GeoParquetRecordBatchStreamBuilder};
+//! use geoparquet::{GeoParquetReaderOptions, GeoParquetRecordBatchStreamBuilder};
 //! use tokio::fs::File;
 //!
 //! #[tokio::main]

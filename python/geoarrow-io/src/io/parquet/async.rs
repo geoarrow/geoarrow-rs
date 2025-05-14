@@ -12,12 +12,12 @@ use arrow::datatypes::SchemaRef;
 use geo_traits::CoordTrait;
 use geoarrow::error::GeoArrowError;
 use geoarrow::table::Table;
-use geoarrow_geoparquet::metadata::GeoParquetBboxCovering;
-use geoarrow_geoparquet::{
+use geoarrow_schema::CoordType;
+use geoparquet::metadata::GeoParquetBboxCovering;
+use geoparquet::{
     GeoParquetDatasetMetadata, GeoParquetReaderMetadata, GeoParquetReaderOptions,
     GeoParquetRecordBatchStream, GeoParquetRecordBatchStreamBuilder,
 };
-use geoarrow_schema::CoordType;
 use object_store::ObjectStore;
 use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::ParquetObjectReader;

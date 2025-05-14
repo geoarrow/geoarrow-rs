@@ -6,8 +6,8 @@ use crate::io::input::sync::FileWriter;
 use crate::io::input::{AnyFileReader, construct_reader};
 
 use arrow::array::RecordBatchReader;
-use geoarrow_geoparquet::{GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder};
-use geoarrow_geoparquet::{
+use geoparquet::{GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder};
+use geoparquet::{
     GeoParquetWriter as _GeoParquetWriter, GeoParquetWriterOptions,
     write_geoparquet as _write_geoparquet,
 };
@@ -35,7 +35,7 @@ pub fn read_parquet(
         #[cfg(feature = "async")]
         AnyFileReader::Async(async_reader) => {
             use crate::runtime::get_runtime;
-            use geoarrow_geoparquet::GeoParquetRecordBatchStreamBuilder;
+            use geoparquet::GeoParquetRecordBatchStreamBuilder;
             use parquet::arrow::async_reader::ParquetObjectReader;
 
             let runtime = get_runtime(py)?;
@@ -105,7 +105,7 @@ impl<'a> FromPyObject<'a> for GeoParquetEncoding {
     }
 }
 
-impl From<GeoParquetEncoding> for geoarrow_geoparquet::GeoParquetWriterEncoding {
+impl From<GeoParquetEncoding> for geoparquet::GeoParquetWriterEncoding {
     fn from(value: GeoParquetEncoding) -> Self {
         match value {
             GeoParquetEncoding::WKB => Self::WKB,
