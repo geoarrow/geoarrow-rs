@@ -22,8 +22,8 @@ geo-traits = "0.3"
 geoarrow-array = { path = "../rust/geoarrow-array" }
 geoarrow-cast = { path = "../rust/geoarrow-cast" }
 geoarrow-flatgeobuf = { path = "../rust/geoarrow-flatgeobuf" }
-geoarrow-geoparquet = { path = "../rust/geoarrow-geoparquet" }
 geoarrow-schema = { path = "../rust/geoarrow-schema" }
+geoparquet = { path = "../rust/geoparquet" }
 geozero = "0.14"
 indexmap = "2.5.0"
 numpy = "0.24"
