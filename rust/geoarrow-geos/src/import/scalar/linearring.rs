@@ -21,22 +21,21 @@ impl<'a> GEOSConstLinearRing<'a> {
             ))
         }
     }
-}
 
-impl LineStringTrait for GEOSConstLinearRing<'_> {
-    type T = f64;
-    type CoordType<'c>
-        = GEOSConstCoord
-    where
-        Self: 'c;
-
-    fn dim(&self) -> geo_traits::Dimensions {
+    pub(crate) fn dimension(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
             geos::Dimensions::TwoD => geo_traits::Dimensions::Xy,
             geos::Dimensions::ThreeD => geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
+}
+
+impl LineStringTrait for GEOSConstLinearRing<'_> {
+    type CoordType<'c>
+        = GEOSConstCoord
+    where
+        Self: 'c;
 
     fn num_coords(&self) -> usize {
         self.0.get_num_coordinates().unwrap()
@@ -47,7 +46,7 @@ impl LineStringTrait for GEOSConstLinearRing<'_> {
         GEOSConstCoord {
             coords: seq,
             geom_index: i,
-            dim: self.dim(),
+            dim: self.dimension(),
         }
     }
 }

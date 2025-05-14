@@ -19,22 +19,21 @@ impl GEOSLineString {
             ))
         }
     }
-}
 
-impl LineStringTrait for GEOSLineString {
-    type T = f64;
-    type CoordType<'b>
-        = GEOSConstCoord
-    where
-        Self: 'b;
-
-    fn dim(&self) -> geo_traits::Dimensions {
+    pub(crate) fn dimension(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
             geos::Dimensions::TwoD => geo_traits::Dimensions::Xy,
             geos::Dimensions::ThreeD => geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
+}
+
+impl LineStringTrait for GEOSLineString {
+    type CoordType<'b>
+        = GEOSConstCoord
+    where
+        Self: 'b;
 
     fn num_coords(&self) -> usize {
         self.0.get_num_points().unwrap()
@@ -45,25 +44,16 @@ impl LineStringTrait for GEOSLineString {
         GEOSConstCoord {
             coords: point.get_coord_seq().unwrap(),
             geom_index: 0,
-            dim: self.dim(),
+            dim: self.dimension(),
         }
     }
 }
 
 impl LineStringTrait for &GEOSLineString {
-    type T = f64;
     type CoordType<'b>
         = GEOSConstCoord
     where
         Self: 'b;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => geo_traits::Dimensions::Xy,
-            geos::Dimensions::ThreeD => geo_traits::Dimensions::Xyz,
-            geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
-        }
-    }
 
     fn num_coords(&self) -> usize {
         self.0.get_num_points().unwrap()
@@ -74,7 +64,7 @@ impl LineStringTrait for &GEOSLineString {
         GEOSConstCoord {
             coords: point.get_coord_seq().unwrap(),
             geom_index: 0,
-            dim: self.dim(),
+            dim: self.dimension(),
         }
     }
 }
@@ -96,22 +86,21 @@ impl<'a> GEOSConstLineString<'a> {
             ))
         }
     }
-}
 
-impl LineStringTrait for GEOSConstLineString<'_> {
-    type T = f64;
-    type CoordType<'b>
-        = GEOSConstCoord
-    where
-        Self: 'b;
-
-    fn dim(&self) -> geo_traits::Dimensions {
+    pub(crate) fn dimension(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
             geos::Dimensions::TwoD => geo_traits::Dimensions::Xy,
             geos::Dimensions::ThreeD => geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
+}
+
+impl LineStringTrait for GEOSConstLineString<'_> {
+    type CoordType<'b>
+        = GEOSConstCoord
+    where
+        Self: 'b;
 
     fn num_coords(&self) -> usize {
         self.0.get_num_points().unwrap()
@@ -122,25 +111,16 @@ impl LineStringTrait for GEOSConstLineString<'_> {
         GEOSConstCoord {
             coords: point.get_coord_seq().unwrap(),
             geom_index: 0,
-            dim: self.dim(),
+            dim: self.dimension(),
         }
     }
 }
 
 impl<'a> LineStringTrait for &'a GEOSConstLineString<'a> {
-    type T = f64;
     type CoordType<'b>
         = GEOSConstCoord
     where
         Self: 'b;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => geo_traits::Dimensions::Xy,
-            geos::Dimensions::ThreeD => geo_traits::Dimensions::Xyz,
-            geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
-        }
-    }
 
     fn num_coords(&self) -> usize {
         self.0.get_num_points().unwrap()
@@ -151,7 +131,7 @@ impl<'a> LineStringTrait for &'a GEOSConstLineString<'a> {
         GEOSConstCoord {
             coords: point.get_coord_seq().unwrap(),
             geom_index: 0,
-            dim: self.dim(),
+            dim: self.dimension(),
         }
     }
 }

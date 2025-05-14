@@ -20,22 +20,21 @@ impl GEOSPoint {
             ))
         }
     }
-}
 
-impl PointTrait for GEOSPoint {
-    type T = f64;
-    type CoordType<'a>
-        = GEOSConstCoord
-    where
-        Self: 'a;
-
-    fn dim(&self) -> geo_traits::Dimensions {
+    pub(crate) fn dimension(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
             geos::Dimensions::TwoD => geo_traits::Dimensions::Xy,
             geos::Dimensions::ThreeD => geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
+}
+
+impl PointTrait for GEOSPoint {
+    type CoordType<'a>
+        = GEOSConstCoord
+    where
+        Self: 'a;
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
         let is_empty = self.0.is_empty().unwrap();
@@ -45,26 +44,17 @@ impl PointTrait for GEOSPoint {
             Some(GEOSConstCoord {
                 coords: self.0.get_coord_seq().unwrap(),
                 geom_index: 0,
-                dim: self.dim(),
+                dim: self.dimension(),
             })
         }
     }
 }
 
 impl PointTrait for &GEOSPoint {
-    type T = f64;
     type CoordType<'a>
         = GEOSConstCoord
     where
         Self: 'a;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => geo_traits::Dimensions::Xy,
-            geos::Dimensions::ThreeD => geo_traits::Dimensions::Xyz,
-            geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
-        }
-    }
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
         let is_empty = self.0.is_empty().unwrap();
@@ -74,7 +64,7 @@ impl PointTrait for &GEOSPoint {
             Some(GEOSConstCoord {
                 coords: self.0.get_coord_seq().unwrap(),
                 geom_index: 0,
-                dim: self.dim(),
+                dim: self.dimension(),
             })
         }
     }
@@ -96,22 +86,21 @@ impl<'a> GEOSConstPoint<'a> {
             ))
         }
     }
-}
 
-impl PointTrait for GEOSConstPoint<'_> {
-    type T = f64;
-    type CoordType<'b>
-        = GEOSConstCoord
-    where
-        Self: 'b;
-
-    fn dim(&self) -> geo_traits::Dimensions {
+    pub(crate) fn dimension(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
             geos::Dimensions::TwoD => geo_traits::Dimensions::Xy,
             geos::Dimensions::ThreeD => geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
+}
+
+impl PointTrait for GEOSConstPoint<'_> {
+    type CoordType<'b>
+        = GEOSConstCoord
+    where
+        Self: 'b;
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
         let is_empty = self.0.is_empty().unwrap();
@@ -121,26 +110,17 @@ impl PointTrait for GEOSConstPoint<'_> {
             Some(GEOSConstCoord {
                 coords: self.0.get_coord_seq().unwrap(),
                 geom_index: 0,
-                dim: self.dim(),
+                dim: self.dimension(),
             })
         }
     }
 }
 
 impl PointTrait for &GEOSConstPoint<'_> {
-    type T = f64;
     type CoordType<'b>
         = GEOSConstCoord
     where
         Self: 'b;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => geo_traits::Dimensions::Xy,
-            geos::Dimensions::ThreeD => geo_traits::Dimensions::Xyz,
-            geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
-        }
-    }
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
         let is_empty = self.0.is_empty().unwrap();
@@ -150,7 +130,7 @@ impl PointTrait for &GEOSConstPoint<'_> {
             Some(GEOSConstCoord {
                 coords: self.0.get_coord_seq().unwrap(),
                 geom_index: 0,
-                dim: self.dim(),
+                dim: self.dimension(),
             })
         }
     }

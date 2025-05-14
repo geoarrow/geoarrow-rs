@@ -1,8 +1,4 @@
-use geo_traits::{
-    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
-    MultiPolygonTrait, PointTrait, PolygonTrait, UnimplementedLine, UnimplementedRect,
-    UnimplementedTriangle,
-};
+use geo_traits::{GeometryTrait, UnimplementedLine, UnimplementedRect, UnimplementedTriangle};
 use geos::Geom;
 
 use crate::import::scalar::geometrycollection::GEOSGeometryCollection;
@@ -100,3 +96,149 @@ impl GeometryTrait for GEOSGeometry {
         }
     }
 }
+
+// Specialized implementations on each WKT concrete type.
+
+macro_rules! impl_specialization {
+    ($geometry_type:ident, $geometry_variant:ident) => {
+        impl<'a> GeometryTrait for $geometry_type {
+            type T = f64;
+            type PointType<'b>
+                = GEOSPoint
+            where
+                Self: 'b;
+            type LineStringType<'b>
+                = GEOSLineString
+            where
+                Self: 'b;
+            type PolygonType<'b>
+                = GEOSPolygon
+            where
+                Self: 'b;
+            type MultiPointType<'b>
+                = GEOSMultiPoint
+            where
+                Self: 'b;
+            type MultiLineStringType<'b>
+                = GEOSMultiLineString
+            where
+                Self: 'b;
+            type MultiPolygonType<'b>
+                = GEOSMultiPolygon
+            where
+                Self: 'b;
+            type GeometryCollectionType<'b>
+                = GEOSGeometryCollection
+            where
+                Self: 'b;
+            type RectType<'b>
+                = geo_traits::UnimplementedRect<f64>
+            where
+                Self: 'b;
+            type LineType<'b>
+                = geo_traits::UnimplementedLine<f64>
+            where
+                Self: 'b;
+            type TriangleType<'b>
+                = geo_traits::UnimplementedTriangle<f64>
+            where
+                Self: 'b;
+
+            fn dim(&self) -> geo_traits::Dimensions {
+                self.dimension().into()
+            }
+
+            fn as_type(
+                &self,
+            ) -> geo_traits::GeometryType<
+                '_,
+                Self::PointType<'_>,
+                Self::LineStringType<'_>,
+                Self::PolygonType<'_>,
+                Self::MultiPointType<'_>,
+                Self::MultiLineStringType<'_>,
+                Self::MultiPolygonType<'_>,
+                Self::GeometryCollectionType<'_>,
+                Self::RectType<'_>,
+                Self::TriangleType<'_>,
+                Self::LineType<'_>,
+            > {
+                geo_traits::GeometryType::$geometry_variant(self)
+            }
+        }
+
+        impl<'a> GeometryTrait for &$geometry_type {
+            type T = f64;
+            type PointType<'b>
+                = GEOSPoint
+            where
+                Self: 'b;
+            type LineStringType<'b>
+                = GEOSLineString
+            where
+                Self: 'b;
+            type PolygonType<'b>
+                = GEOSPolygon
+            where
+                Self: 'b;
+            type MultiPointType<'b>
+                = GEOSMultiPoint
+            where
+                Self: 'b;
+            type MultiLineStringType<'b>
+                = GEOSMultiLineString
+            where
+                Self: 'b;
+            type MultiPolygonType<'b>
+                = GEOSMultiPolygon
+            where
+                Self: 'b;
+            type GeometryCollectionType<'b>
+                = GEOSGeometryCollection
+            where
+                Self: 'b;
+            type RectType<'b>
+                = geo_traits::UnimplementedRect<f64>
+            where
+                Self: 'b;
+            type LineType<'b>
+                = geo_traits::UnimplementedLine<f64>
+            where
+                Self: 'b;
+            type TriangleType<'b>
+                = geo_traits::UnimplementedTriangle<f64>
+            where
+                Self: 'b;
+
+            fn dim(&self) -> geo_traits::Dimensions {
+                self.dimension().into()
+            }
+
+            fn as_type(
+                &self,
+            ) -> geo_traits::GeometryType<
+                '_,
+                Self::PointType<'_>,
+                Self::LineStringType<'_>,
+                Self::PolygonType<'_>,
+                Self::MultiPointType<'_>,
+                Self::MultiLineStringType<'_>,
+                Self::MultiPolygonType<'_>,
+                Self::GeometryCollectionType<'_>,
+                Self::RectType<'_>,
+                Self::TriangleType<'_>,
+                Self::LineType<'_>,
+            > {
+                geo_traits::GeometryType::$geometry_variant(self)
+            }
+        }
+    };
+}
+
+impl_specialization!(GEOSPoint, Point);
+impl_specialization!(GEOSLineString, LineString);
+impl_specialization!(GEOSPolygon, Polygon);
+impl_specialization!(GEOSMultiPoint, MultiPoint);
+impl_specialization!(GEOSMultiLineString, MultiLineString);
+impl_specialization!(GEOSMultiPolygon, MultiPolygon);
+impl_specialization!(GEOSGeometryCollection, GeometryCollection);
