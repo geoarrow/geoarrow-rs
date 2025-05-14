@@ -20,3 +20,7 @@
 //     "geoarrow.multipolygon"
 //   );
 // });
+
+import { it } from "vitest";
+
+it("hello world", () => {});

@@ -1,7 +1,9 @@
 // import * as geoarrow from "../../pkg/node";
 // import { tableFromIPC } from "apache-arrow";
 // import { readFileSync } from "fs";
-// import { expect, it } from "vitest";
+import { it } from "vitest";
+
+it("hello world", () => {});
 
 // geoarrow.set_panic_hook();
 
