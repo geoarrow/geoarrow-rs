@@ -23,6 +23,5 @@ pub(crate) use mixed::MixedCapacity;
 pub use multilinestring::MultiLineStringCapacity;
 pub use multipoint::MultiPointCapacity;
 pub use multipolygon::MultiPolygonCapacity;
-pub use point::PointCapacity;
 pub use polygon::PolygonCapacity;
 pub use wkb::WkbCapacity;

@@ -86,12 +86,6 @@ impl CoordBuffer {
         }
     }
 
-    #[allow(dead_code)]
-    pub(crate) fn with_coords(self, coords: CoordBuffer) -> Self {
-        assert_eq!(coords.len(), self.len());
-        coords
-    }
-
     /// Convert this coordinate array into the given [CoordType]
     ///
     /// This is a no-op if the coord_type matches the existing coord type. Otherwise a full clone

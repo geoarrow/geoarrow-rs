@@ -160,23 +160,6 @@ impl MultiPolygonArray {
         &self.coords
     }
 
-    #[allow(dead_code)]
-    pub(crate) fn into_inner(
-        self,
-    ) -> (
-        CoordBuffer,
-        OffsetBuffer<i32>,
-        OffsetBuffer<i32>,
-        OffsetBuffer<i32>,
-    ) {
-        (
-            self.coords,
-            self.geom_offsets,
-            self.polygon_offsets,
-            self.ring_offsets,
-        )
-    }
-
     /// Access the underlying geometry offsets buffer
     pub fn geom_offsets(&self) -> &OffsetBuffer<i32> {
         &self.geom_offsets

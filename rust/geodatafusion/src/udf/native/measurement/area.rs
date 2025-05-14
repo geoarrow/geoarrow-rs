@@ -1,10 +1,11 @@
 use std::any::Any;
 use std::sync::{Arc, OnceLock};
 
-use arrow_schema::DataType;
+use arrow_schema::{DataType, Field};
 use datafusion::logical_expr::scalar_doc_sections::DOC_SECTION_OTHER;
-use datafusion::logical_expr::{ColumnarValue, Documentation, ScalarUDFImpl, Signature};
-use geoarrow::algorithm::geo::Area as _Area;
+use datafusion::logical_expr::{
+    ColumnarValue, Documentation, ReturnFieldArgs, ScalarUDFImpl, Signature,
+};
 
 use crate::data_types::{any_single_geometry_type_input, parse_to_native_array};
 use crate::error::GeoDataFusionResult;
@@ -41,8 +42,15 @@ impl ScalarUDFImpl for Area {
         Ok(DataType::Float64)
     }
 
-    fn invoke(&self, args: &[ColumnarValue]) -> datafusion::error::Result<ColumnarValue> {
-        Ok(area_impl(args)?)
+    // fn invoke(&self, args: &[ColumnarValue]) -> datafusion::error::Result<ColumnarValue> {
+    //     Ok(area_impl(args)?)
+    // }
+
+    fn invoke_with_args(
+        &self,
+        args: datafusion::logical_expr::ScalarFunctionArgs,
+    ) -> datafusion::error::Result<ColumnarValue> {
+        todo!()
     }
 
     fn documentation(&self) -> Option<&Documentation> {
