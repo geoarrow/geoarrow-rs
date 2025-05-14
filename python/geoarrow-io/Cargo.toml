@@ -25,9 +25,9 @@ async = [
     "dep:pyo3-object_store",
     "parquet/object_store",
     "dep:pyo3-async-runtimes",
-    "geoarrow/flatgeobuf_async",
-    "geoarrow-geoparquet/async",
-    "geoarrow/postgis",
+    # "geoarrow/flatgeobuf_async",
+    # "geoarrow-geoparquet/async",
+    # "geoarrow/postgis",
     "dep:sqlx",
     "dep:tokio",
 ]
@@ -55,11 +55,6 @@ pyo3-async-runtimes = { version = "0.24", features = [
 pyo3-object_store = { version = "0.2", optional = true }
 geo = "0.30"
 geo-traits = { workspace = true }
-geoarrow = { workspace = true, features = [
-    "csv",
-    "flatgeobuf",
-    "ipc_compression",
-] }
 geoarrow-array = { workspace = true }
 geoarrow-geoparquet = { workspace = true, features = ["compression"] }
 geoarrow-flatgeobuf = { workspace = true }
