@@ -558,7 +558,8 @@ fn impl_to_wkt<'a, O: OffsetSizeTrait>(
 
     for maybe_geom in geo_arr.iter() {
         if let Some(geom) = maybe_geom {
-            wkt::to_wkt::write_geometry(&mut builder, &geom?)?;
+            wkt::to_wkt::write_geometry(&mut builder, &geom?)
+                .map_err(|err| GeoArrowError::External(Box::new(err)))?;
             builder.append_value("");
         } else {
             builder.append_null();
@@ -599,7 +600,8 @@ fn impl_to_wkt_view<'a>(
     for maybe_geom in geo_arr.iter() {
         if let Some(geom) = maybe_geom {
             let mut s = String::new();
-            wkt::to_wkt::write_geometry(&mut s, &geom?)?;
+            wkt::to_wkt::write_geometry(&mut s, &geom?)
+                .map_err(|err| GeoArrowError::External(Box::new(err)))?;
             builder.append_value(s);
         } else {
             builder.append_null();
