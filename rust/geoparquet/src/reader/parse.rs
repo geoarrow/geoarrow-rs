@@ -11,6 +11,7 @@ use geoarrow_array::array::{
 };
 use geoarrow_array::cast::from_wkb;
 use geoarrow_array::{GeoArrowArray, GeoArrowType};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{
     CoordType, GeometryType, LineStringType, Metadata, MultiLineStringType, MultiPointType,
     MultiPolygonType, PointType, PolygonType, WkbType,
@@ -20,7 +21,6 @@ use crate::metadata::{
     GeoParquetColumnEncoding, GeoParquetColumnMetadata, GeoParquetGeometryTypeAndDimension,
     GeoParquetMetadata, infer_geo_data_type,
 };
-use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 pub fn infer_target_schema(
     existing_schema: &Schema,

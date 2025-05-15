@@ -1,8 +1,8 @@
 use geo_traits::{CoordTrait, PointTrait};
 use geoarrow_schema::Dimension;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 use crate::array::SeparatedCoordBuffer;
-use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// The GeoArrow equivalent to `Vec<Option<Coord>>`: a mutable collection of coordinates.
 ///

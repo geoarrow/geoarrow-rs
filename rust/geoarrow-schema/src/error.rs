@@ -1,9 +1,10 @@
 //! Defines [`GeoArrowError`], representing all errors returned by this crate.
 
-use arrow_schema::ArrowError;
 use std::borrow::Cow;
 use std::error::Error;
 use std::fmt::Debug;
+
+use arrow_schema::ArrowError;
 use thiserror::Error;
 
 /// Enum with all errors in this crate.

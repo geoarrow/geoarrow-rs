@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
-use geoarrow_array::array::from_arrow_array;
 // use geoarrow::ArrayBase;
 // use geoarrow::NativeArray;
 // use geoarrow::error::GeoArrowError;
 // use geoarrow::scalar::GeometryScalar;
 // use geoarrow::trait_::NativeArrayRef;
 use geoarrow_array::GeoArrowArray;
+use geoarrow_array::array::from_arrow_array;
 use geoarrow_cast::downcast::NativeType;
 use geoarrow_schema::{
     BoxType, GeometryCollectionType, LineStringType, MultiLineStringType, MultiPointType,

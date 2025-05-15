@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use arrow_array::OffsetSizeTrait;
 use geo_traits::*;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{
     Dimension, GeometryCollectionType, GeometryType, LineStringType, Metadata, MultiLineStringType,
     MultiPointType, MultiPolygonType, PointType, PolygonType,
@@ -16,7 +17,6 @@ use crate::builder::{
 };
 use crate::capacity::GeometryCapacity;
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
-use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 
@@ -848,9 +848,8 @@ mod test {
     use geoarrow_schema::CoordType;
     use wkt::wkt;
 
-    use crate::GeoArrowArray;
-
     use super::*;
+    use crate::GeoArrowArray;
 
     #[test]
     fn all_items_null() {

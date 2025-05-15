@@ -1,5 +1,12 @@
 use std::sync::Arc;
 
+use arrow_array::cast::AsArray;
+use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
+use arrow_buffer::{NullBuffer, OffsetBuffer};
+use arrow_schema::{DataType, Field};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
+use geoarrow_schema::{CoordType, LineStringType, Metadata};
+
 use crate::array::{CoordBuffer, GenericWkbArray};
 use crate::builder::LineStringBuilder;
 use crate::capacity::LineStringCapacity;
@@ -8,13 +15,6 @@ use crate::eq::offset_buffer_eq;
 use crate::scalar::LineString;
 use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 use crate::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
-use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-
-use arrow_array::cast::AsArray;
-use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
-use arrow_buffer::{NullBuffer, OffsetBuffer};
-use arrow_schema::{DataType, Field};
-use geoarrow_schema::{CoordType, LineStringType, Metadata};
 
 /// An immutable array of LineString geometries.
 ///
@@ -316,9 +316,8 @@ mod test {
     use geo_traits::to_geo::ToGeoLineString;
     use geoarrow_schema::{CoordType, Dimension};
 
-    use crate::test::linestring;
-
     use super::*;
+    use crate::test::linestring;
 
     #[test]
     fn geo_round_trip() {

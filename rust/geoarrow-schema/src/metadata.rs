@@ -69,7 +69,8 @@ impl TryFrom<&Field> for Metadata {
 
 #[cfg(test)]
 mod test {
-    use std::{collections::HashMap, str::FromStr};
+    use std::collections::HashMap;
+    use std::str::FromStr;
 
     use arrow_schema::DataType;
     use serde_json::{Value, json};

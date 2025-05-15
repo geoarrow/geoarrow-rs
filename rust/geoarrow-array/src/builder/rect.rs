@@ -1,11 +1,11 @@
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, RectTrait};
 use geoarrow_schema::BoxType;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 use crate::array::RectArray;
 use crate::builder::SeparatedCoordBufferBuilder;
 use crate::scalar::Rect;
-use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// The GeoArrow equivalent to `Vec<Option<Rect>>`: a mutable collection of Rects.
 ///

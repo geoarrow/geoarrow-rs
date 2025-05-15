@@ -278,9 +278,8 @@ mod test {
     use geoarrow_schema::{CoordType, Dimension};
     use geoarrow_test::raw;
 
-    use crate::test::geometrycollection;
-
     use super::*;
+    use crate::test::geometrycollection;
 
     #[test]
     fn try_from_arrow() {

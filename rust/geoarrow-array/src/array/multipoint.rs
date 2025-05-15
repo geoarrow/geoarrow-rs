@@ -336,9 +336,8 @@ mod test {
     use geo_traits::to_geo::ToGeoMultiPoint;
     use geoarrow_schema::{CoordType, Dimension};
 
-    use crate::test::multipoint;
-
     use super::*;
+    use crate::test::multipoint;
 
     #[test]
     fn geo_round_trip() {

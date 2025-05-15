@@ -1,7 +1,6 @@
 use std::ops::Add;
 
 use arrow_array::OffsetSizeTrait;
-
 use geo_traits::GeometryTrait;
 use wkb::writer::geometry_wkb_size;
 

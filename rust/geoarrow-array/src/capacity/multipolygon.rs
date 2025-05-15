@@ -1,8 +1,9 @@
 use std::ops::{Add, AddAssign};
 
-use crate::capacity::PolygonCapacity;
 use geo_traits::{GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
+
+use crate::capacity::PolygonCapacity;
 
 /// A counter for the buffer sizes of a [`MultiPolygonArray`][crate::array::MultiPolygonArray].
 ///

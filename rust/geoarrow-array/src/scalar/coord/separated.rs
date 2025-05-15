@@ -76,8 +76,9 @@ impl CoordTrait for &SeparatedCoord<'_> {
 
 #[cfg(test)]
 mod test {
-    use crate::array::{InterleavedCoordBuffer, SeparatedCoordBuffer};
     use geoarrow_schema::Dimension;
+
+    use crate::array::{InterleavedCoordBuffer, SeparatedCoordBuffer};
 
     /// Test Eq where the current index is true but another index is false
     #[test]

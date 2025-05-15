@@ -1,13 +1,14 @@
 use std::io::Write;
 
-use crate::writer::encode::encode_record_batch;
-use crate::writer::metadata::GeoParquetMetadataBuilder;
-use crate::writer::options::GeoParquetWriterOptions;
 use arrow_array::{RecordBatch, RecordBatchReader};
 use arrow_schema::Schema;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use parquet::arrow::ArrowWriter;
 use parquet::file::metadata::KeyValue;
+
+use crate::writer::encode::encode_record_batch;
+use crate::writer::metadata::GeoParquetMetadataBuilder;
+use crate::writer::options::GeoParquetWriterOptions;
 
 /// Write a [RecordBatchReader] to GeoParquet.
 pub fn write_geoparquet<W: Write + Send>(

@@ -1,8 +1,9 @@
 #![allow(dead_code)]
 
+use std::ops::Add;
+
 use geo_traits::{GeometryTrait, GeometryType, PointTrait};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use std::ops::Add;
 
 /// A counter for the buffer sizes of a [`PointArray`][crate::array::PointArray].
 ///

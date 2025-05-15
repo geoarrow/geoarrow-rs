@@ -33,14 +33,27 @@ jobs:
         run: |
           echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/envs/default/lib/pkgconfig" >> "$GITHUB_ENV"
           echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/envs/default/lib" >> "$GITHUB_ENV"
-      - name: Fmt
-        run: cargo fmt -- --check
       - name: Clippy
         run: cargo clippy --all-features --tests -- -D warnings
       - name: Check
         run: cargo check --all-features
       - name: Test
         run: cargo test --all-features
+
+  fmt:
+    name: Fmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2025-05-14
+          components: rustfmt
+      - name: Fmt
+        run: cargo +nightly-2025-05-14 fmt -- --check --unstable-features --config imports_granularity=Module,group_imports=StdExternalCrate
 
   docs-no-warnings:
     name: Lint and Test

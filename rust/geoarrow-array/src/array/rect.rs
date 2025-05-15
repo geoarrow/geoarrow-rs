@@ -254,10 +254,9 @@ mod test {
     use geo_traits::to_geo::ToGeoRect;
     use geoarrow_schema::Dimension;
 
+    use super::*;
     use crate::builder::RectBuilder;
     use crate::test::rect;
-
-    use super::*;
 
     #[test]
     fn geo_round_trip() {

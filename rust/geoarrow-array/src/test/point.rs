@@ -1,5 +1,4 @@
 use geo_types::{Point, point};
-
 use geoarrow_schema::{CoordType, Dimension, PointType};
 use geoarrow_test::raw;
 

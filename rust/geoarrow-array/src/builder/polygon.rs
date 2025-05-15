@@ -6,6 +6,7 @@ use geo_traits::{
     CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait,
     RectTrait,
 };
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, PolygonType};
 
 use crate::GeoArrowArray;
@@ -16,7 +17,6 @@ use crate::builder::{
 };
 use crate::capacity::PolygonCapacity;
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
-use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// The GeoArrow equivalent to `Vec<Option<Polygon>>`: a mutable collection of Polygons.
 ///

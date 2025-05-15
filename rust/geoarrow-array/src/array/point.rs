@@ -298,10 +298,9 @@ mod test {
     use geo_traits::to_geo::ToGeoPoint;
     use geoarrow_schema::{CoordType, Dimension};
 
+    use super::*;
     use crate::builder::PointBuilder;
     use crate::test::point;
-
-    use super::*;
 
     #[test]
     fn geo_round_trip() {

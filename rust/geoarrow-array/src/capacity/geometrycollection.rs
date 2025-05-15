@@ -1,13 +1,14 @@
 use std::ops::Add;
 
-use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
-use crate::capacity::MixedCapacity;
 use geo_traits::{
     GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
     MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait,
 };
 use geoarrow_schema::error::GeoArrowResult;
 use wkt::WktNum;
+
+use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
+use crate::capacity::MixedCapacity;
 
 /// A counter for the buffer sizes of a
 /// [`GeometryCollectionArray`][crate::array::GeometryCollectionArray].

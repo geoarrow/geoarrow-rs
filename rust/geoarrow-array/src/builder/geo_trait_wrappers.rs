@@ -10,9 +10,8 @@ use geo_traits::{
     UnimplementedMultiLineString, UnimplementedMultiPoint, UnimplementedMultiPolygon,
     UnimplementedPoint, UnimplementedPolygon, UnimplementedRect, UnimplementedTriangle,
 };
-use wkt::WktNum;
-
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
+use wkt::WktNum;
 
 pub(crate) struct RectWrapper<'a, T: WktNum, R: RectTrait<T = T>>(&'a R);
 

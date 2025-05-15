@@ -8,6 +8,7 @@ use arrow_array::{
 };
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{Metadata, WktType};
 use wkt::Wkt;
 
@@ -16,7 +17,6 @@ use crate::array::WktViewArray;
 use crate::datatypes::GeoArrowType;
 use crate::trait_::{GeoArrowArray, IntoArrow};
 use crate::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
-use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// An immutable array of WKT geometries using GeoArrow's in-memory representation.
 ///
@@ -279,11 +279,10 @@ mod test {
     use arrow_array::builder::{LargeStringBuilder, StringBuilder};
     use geoarrow_schema::{CoordType, Dimension};
 
+    use super::*;
     use crate::GeoArrowArray;
     use crate::cast::to_wkt;
     use crate::test::point;
-
-    use super::*;
 
     fn wkt_data<O: OffsetSizeTrait>() -> GenericWktArray<O> {
         to_wkt(&point::array(CoordType::Interleaved, Dimension::XY)).unwrap()

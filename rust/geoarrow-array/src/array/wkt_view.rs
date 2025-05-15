@@ -6,12 +6,12 @@ use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, OffsetSizeTrait, StringViewArray};
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{Metadata, WktType};
 use wkt::Wkt;
 
 use crate::array::GenericWktArray;
 use crate::{GeoArrowArray, GeoArrowArrayAccessor, GeoArrowType, IntoArrow};
-use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// An immutable array of WKT geometries.
 ///

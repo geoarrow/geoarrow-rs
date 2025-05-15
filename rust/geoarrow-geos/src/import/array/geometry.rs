@@ -34,12 +34,12 @@ impl FromGEOS for GeometryArray {
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use crate::export::to_geos_geometry;
-
     use geoarrow_array::test::geometry::array;
     use geoarrow_array::{GeoArrowArrayAccessor, IntoArrow};
     use geoarrow_schema::CoordType;
+
+    use super::*;
+    use crate::export::to_geos_geometry;
 
     #[ignore = "GEOS doesn't support XYM, XYZM; need to add option to only construct specific dimensions in geometry test array"]
     #[test]
