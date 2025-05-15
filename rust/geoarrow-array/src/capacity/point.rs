@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
-use crate::error::{GeoArrowError, Result};
 use geo_traits::{GeometryTrait, GeometryType, PointTrait};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use std::ops::Add;
 
 /// A counter for the buffer sizes of a [`PointArray`][crate::array::PointArray].
@@ -36,7 +36,7 @@ impl PointCapacity {
 
     /// Add the capacity of the given Geometry
     #[inline]
-    pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait>) -> Result<()> {
+    pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait>) -> GeoArrowResult<()> {
         if let Some(g) = value {
             match g.as_type() {
                 GeometryType::Point(p) => self.add_point(Some(p)),

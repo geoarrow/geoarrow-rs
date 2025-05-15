@@ -11,7 +11,7 @@ use geoarrow_schema::{
     WktType,
 };
 
-use crate::error::{GeoArrowError, Result};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// A type enum representing all possible GeoArrow geometry types, including both "native" and
 /// "serialized" encodings.
@@ -315,7 +315,7 @@ impl_into_geoarrowtype!(GeometryType, GeoArrowType::Geometry);
 impl TryFrom<&Field> for GeoArrowType {
     type Error = GeoArrowError;
 
-    fn try_from(field: &Field) -> Result<Self> {
+    fn try_from(field: &Field) -> GeoArrowResult<Self> {
         // TODO: should we make Metadata::deserialize public?
         let metadata: Metadata = if let Some(ext_meta) = field.extension_type_metadata() {
             serde_json::from_str(ext_meta)?

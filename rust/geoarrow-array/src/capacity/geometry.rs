@@ -10,7 +10,7 @@ use crate::capacity::{
     GeometryCollectionCapacity, LineStringCapacity, MultiLineStringCapacity, MultiPointCapacity,
     MultiPolygonCapacity, PolygonCapacity,
 };
-use crate::error::Result;
+use geoarrow_schema::error::GeoArrowResult;
 
 /// A counter for the buffer sizes of a [`GeometryArray`][crate::array::GeometryArray].
 ///
@@ -252,7 +252,7 @@ impl GeometryCapacity {
     pub fn add_geometry<T: WktNum>(
         &mut self,
         geom: Option<&impl GeometryTrait<T = T>>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         use geo_traits::GeometryType;
 
         if let Some(geom) = geom {
@@ -279,7 +279,7 @@ impl GeometryCapacity {
     fn add_geometry_collection<T: WktNum>(
         &mut self,
         gc: Option<&impl GeometryCollectionTrait<T = T>>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         if let Some(gc) = gc {
             self.gcs[gc.dim().order()].add_geometry_collection(Some(gc))?;
         } else {
@@ -291,7 +291,7 @@ impl GeometryCapacity {
     /// Construct a new counter pre-filled with the given geometries
     pub fn from_geometries<'a, T: WktNum>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = T> + 'a)>>,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let mut counter = Self::new_empty();
         for maybe_geom in geoms.into_iter() {
             counter.add_geometry(maybe_geom)?;

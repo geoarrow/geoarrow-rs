@@ -4,6 +4,7 @@ use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, Metadata, MultiPointType};
 
 use crate::array::{CoordBuffer, GenericWkbArray, PointArray};
@@ -11,7 +12,6 @@ use crate::builder::MultiPointBuilder;
 use crate::capacity::MultiPointCapacity;
 use crate::datatypes::GeoArrowType;
 use crate::eq::offset_buffer_eq;
-use crate::error::{GeoArrowError, Result};
 use crate::scalar::MultiPoint;
 use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 use crate::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
@@ -37,7 +37,7 @@ pub(super) fn check(
     coords: &CoordBuffer,
     validity_len: Option<usize>,
     geom_offsets: &OffsetBuffer<i32>,
-) -> Result<()> {
+) -> GeoArrowResult<()> {
     if validity_len.is_some_and(|len| len != geom_offsets.len_proxy()) {
         return Err(GeoArrowError::General(
             "nulls mask length must match the number of values".to_string(),
@@ -88,7 +88,7 @@ impl MultiPointArray {
         geom_offsets: OffsetBuffer<i32>,
         nulls: Option<NullBuffer>,
         metadata: Arc<Metadata>,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         check(&coords, nulls.as_ref().map(|v| v.len()), &geom_offsets)?;
         Ok(Self {
             data_type: MultiPointType::new(coords.coord_type(), coords.dim(), metadata),
@@ -218,7 +218,7 @@ impl GeoArrowArray for MultiPointArray {
 impl<'a> GeoArrowArrayAccessor<'a> for MultiPointArray {
     type Item = MultiPoint<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
+    unsafe fn value_unchecked(&'a self, index: usize) -> GeoArrowResult<Self::Item> {
         Ok(MultiPoint::new(&self.coords, &self.geom_offsets, index))
     }
 }
@@ -242,7 +242,7 @@ impl IntoArrow for MultiPointArray {
 impl TryFrom<(&GenericListArray<i32>, MultiPointType)> for MultiPointArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (&GenericListArray<i32>, MultiPointType)) -> Result<Self> {
+    fn try_from((value, typ): (&GenericListArray<i32>, MultiPointType)) -> GeoArrowResult<Self> {
         let coords = CoordBuffer::from_arrow(value.values().as_ref(), typ.dimension())?;
         let geom_offsets = value.offsets();
         let nulls = value.nulls();
@@ -259,7 +259,7 @@ impl TryFrom<(&GenericListArray<i32>, MultiPointType)> for MultiPointArray {
 impl TryFrom<(&GenericListArray<i64>, MultiPointType)> for MultiPointArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (&GenericListArray<i64>, MultiPointType)) -> Result<Self> {
+    fn try_from((value, typ): (&GenericListArray<i64>, MultiPointType)) -> GeoArrowResult<Self> {
         let coords = CoordBuffer::from_arrow(value.values().as_ref(), typ.dimension())?;
         let geom_offsets = offsets_buffer_i64_to_i32(value.offsets())?;
         let nulls = value.nulls();
@@ -276,7 +276,7 @@ impl TryFrom<(&GenericListArray<i64>, MultiPointType)> for MultiPointArray {
 impl TryFrom<(&dyn Array, MultiPointType)> for MultiPointArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (&dyn Array, MultiPointType)) -> Result<Self> {
+    fn try_from((value, typ): (&dyn Array, MultiPointType)) -> GeoArrowResult<Self> {
         match value.data_type() {
             DataType::List(_) => (value.as_list::<i32>(), typ).try_into(),
             DataType::LargeList(_) => (value.as_list::<i64>(), typ).try_into(),
@@ -291,7 +291,7 @@ impl TryFrom<(&dyn Array, MultiPointType)> for MultiPointArray {
 impl TryFrom<(&dyn Array, &Field)> for MultiPointArray {
     type Error = GeoArrowError;
 
-    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+    fn try_from((arr, field): (&dyn Array, &Field)) -> GeoArrowResult<Self> {
         let typ = field.try_extension_type::<MultiPointType>()?;
         (arr, typ).try_into()
     }
@@ -300,7 +300,7 @@ impl TryFrom<(&dyn Array, &Field)> for MultiPointArray {
 impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, MultiPointType)> for MultiPointArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (GenericWkbArray<O>, MultiPointType)) -> Result<Self> {
+    fn try_from(value: (GenericWkbArray<O>, MultiPointType)) -> GeoArrowResult<Self> {
         let mut_arr: MultiPointBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }

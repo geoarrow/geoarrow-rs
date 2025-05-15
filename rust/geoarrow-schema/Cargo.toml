@@ -16,4 +16,5 @@ arrow-schema = { workspace = true }
 geo-traits = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
+thiserror = { workspace = true }
 wkt = { workspace = true, optional = true }

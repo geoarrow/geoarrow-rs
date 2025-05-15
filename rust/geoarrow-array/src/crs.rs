@@ -9,7 +9,7 @@ use std::fmt::Debug;
 use geoarrow_schema::{Crs, CrsType};
 use serde_json::Value;
 
-use crate::error::{GeoArrowError, Result};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// CRS transforms used for writing GeoArrow data to file formats that require different CRS
 /// representations.
@@ -18,19 +18,19 @@ pub trait CRSTransform: Debug {
     ///
     /// Users should prefer calling `extract_projjson`, which will first unwrap the underlying
     /// array metadata if it's already PROJJSON.
-    fn _convert_to_projjson(&self, crs: &Crs) -> Result<Option<Value>>;
+    fn _convert_to_projjson(&self, crs: &Crs) -> GeoArrowResult<Option<Value>>;
 
     /// Convert the CRS contained in this Metadata to a WKT string.
     ///
     /// Users should prefer calling `extract_wkt`, which will first unwrap the underlying
     /// array metadata if it's already PROJJSON.
-    fn _convert_to_wkt(&self, crs: &Crs) -> Result<Option<String>>;
+    fn _convert_to_wkt(&self, crs: &Crs) -> GeoArrowResult<Option<String>>;
 
     /// Extract PROJJSON from the provided metadata.
     ///
     /// If the CRS is already stored as PROJJSON, this will return that. Otherwise it will call
     /// [`Self::_convert_to_projjson`].
-    fn extract_projjson(&self, crs: &Crs) -> Result<Option<Value>> {
+    fn extract_projjson(&self, crs: &Crs) -> GeoArrowResult<Option<Value>> {
         match crs.crs_type() {
             Some(CrsType::Projjson) => Ok(crs.crs_value().cloned()),
             _ => self._convert_to_projjson(crs),
@@ -41,7 +41,7 @@ pub trait CRSTransform: Debug {
     ///
     /// If the CRS is already stored as WKT, this will return that. Otherwise it will call
     /// [`Self::_convert_to_wkt`].
-    fn extract_wkt(&self, crs: &Crs) -> Result<Option<String>> {
+    fn extract_wkt(&self, crs: &Crs) -> GeoArrowResult<Option<String>> {
         if let (Some(crs), Some(crs_type)) = (crs.crs_value(), crs.crs_type()) {
             if crs_type == CrsType::Wkt2_2019 {
                 if let Value::String(inner) = crs {
@@ -61,14 +61,14 @@ pub trait CRSTransform: Debug {
 pub struct DefaultCRSTransform {}
 
 impl CRSTransform for DefaultCRSTransform {
-    fn _convert_to_projjson(&self, _crs: &Crs) -> Result<Option<Value>> {
+    fn _convert_to_projjson(&self, _crs: &Crs) -> GeoArrowResult<Option<Value>> {
         // Unable to convert CRS to PROJJSON
         // So we proceed with missing CRS
         // TODO: we should probably log this.
         Ok(None)
     }
 
-    fn _convert_to_wkt(&self, _crs: &Crs) -> Result<Option<String>> {
+    fn _convert_to_wkt(&self, _crs: &Crs) -> GeoArrowResult<Option<String>> {
         // Unable to convert CRS to WKT
         // So we proceed with missing CRS
         // TODO: we should probably log this.

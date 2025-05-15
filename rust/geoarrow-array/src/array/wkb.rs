@@ -13,9 +13,9 @@ use wkb::reader::Wkb;
 use crate::array::WkbViewArray;
 use crate::capacity::WkbCapacity;
 use crate::datatypes::GeoArrowType;
-use crate::error::{GeoArrowError, Result};
 use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 use crate::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// An immutable array of WKB geometries.
 ///
@@ -141,9 +141,9 @@ impl<O: OffsetSizeTrait> GeoArrowArray for GenericWkbArray<O> {
 impl<'a, O: OffsetSizeTrait> GeoArrowArrayAccessor<'a> for GenericWkbArray<O> {
     type Item = Wkb<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
+    unsafe fn value_unchecked(&'a self, index: usize) -> GeoArrowResult<Self::Item> {
         let buf = self.array.value(index);
-        Ok(Wkb::try_new(buf)?)
+        Wkb::try_new(buf).map_err(|err| GeoArrowError::External(Box::new(err)))
     }
 }
 
@@ -171,7 +171,7 @@ impl<O: OffsetSizeTrait> From<(GenericBinaryArray<O>, WkbType)> for GenericWkbAr
 
 impl TryFrom<(&dyn Array, WkbType)> for GenericWkbArray<i32> {
     type Error = GeoArrowError;
-    fn try_from((value, typ): (&dyn Array, WkbType)) -> Result<Self> {
+    fn try_from((value, typ): (&dyn Array, WkbType)) -> GeoArrowResult<Self> {
         match value.data_type() {
             DataType::Binary => Ok((value.as_binary::<i32>().clone(), typ).into()),
             DataType::LargeBinary => {
@@ -189,7 +189,7 @@ impl TryFrom<(&dyn Array, WkbType)> for GenericWkbArray<i32> {
 
 impl TryFrom<(&dyn Array, WkbType)> for GenericWkbArray<i64> {
     type Error = GeoArrowError;
-    fn try_from((value, typ): (&dyn Array, WkbType)) -> Result<Self> {
+    fn try_from((value, typ): (&dyn Array, WkbType)) -> GeoArrowResult<Self> {
         match value.data_type() {
             DataType::Binary => {
                 let geom_array: GenericWkbArray<i32> =
@@ -208,7 +208,7 @@ impl TryFrom<(&dyn Array, WkbType)> for GenericWkbArray<i64> {
 impl TryFrom<(&dyn Array, &Field)> for GenericWkbArray<i32> {
     type Error = GeoArrowError;
 
-    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+    fn try_from((arr, field): (&dyn Array, &Field)) -> GeoArrowResult<Self> {
         let typ = field
             .try_extension_type::<WkbType>()
             .ok()
@@ -220,7 +220,7 @@ impl TryFrom<(&dyn Array, &Field)> for GenericWkbArray<i32> {
 impl TryFrom<(&dyn Array, &Field)> for GenericWkbArray<i64> {
     type Error = GeoArrowError;
 
-    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+    fn try_from((arr, field): (&dyn Array, &Field)) -> GeoArrowResult<Self> {
         let typ = field
             .try_extension_type::<WkbType>()
             .ok()
@@ -244,7 +244,7 @@ impl From<GenericWkbArray<i32>> for GenericWkbArray<i64> {
 impl TryFrom<GenericWkbArray<i64>> for GenericWkbArray<i32> {
     type Error = GeoArrowError;
 
-    fn try_from(value: GenericWkbArray<i64>) -> Result<Self> {
+    fn try_from(value: GenericWkbArray<i64>) -> GeoArrowResult<Self> {
         let binary_array = value.array;
         let (offsets, values, nulls) = binary_array.into_parts();
         let array = BinaryArray::new(offsets_buffer_i64_to_i32(&offsets)?, values, nulls);

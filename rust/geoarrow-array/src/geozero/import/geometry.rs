@@ -2,6 +2,7 @@ use std::fmt::Debug;
 use std::sync::Arc;
 
 use geoarrow_schema::GeometryType;
+use geoarrow_schema::error::GeoArrowResult;
 use geozero::error::GeozeroError;
 use geozero::geo_types::GeoWriter;
 use geozero::{GeomProcessor, GeozeroGeometry};
@@ -236,7 +237,7 @@ impl GeoArrowArrayBuilder for GeometryStreamBuilder {
     fn push_geometry(
         &mut self,
         geometry: Option<&impl geo_traits::GeometryTrait<T = f64>>,
-    ) -> crate::error::Result<()> {
+    ) -> GeoArrowResult<()> {
         self.builder.push_geometry(geometry)
     }
 

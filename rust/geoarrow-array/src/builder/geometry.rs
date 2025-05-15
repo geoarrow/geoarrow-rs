@@ -15,8 +15,8 @@ use crate::builder::{
     MultiPolygonBuilder, PointBuilder, PolygonBuilder,
 };
 use crate::capacity::GeometryCapacity;
-use crate::error::{GeoArrowError, Result};
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 
@@ -300,7 +300,7 @@ impl<'a> GeometryBuilder {
     /// If `self.prefer_multi` is `true`, it will be stored in the `MultiPointBuilder` child
     /// array. Otherwise, it will be stored in the `PointBuilder` child array.
     #[inline]
-    fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) -> Result<()> {
+    fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) -> GeoArrowResult<()> {
         if let Some(point) = value {
             let dim: Dimension = point.dim().try_into().unwrap();
             let array_idx = dim.order();
@@ -366,7 +366,10 @@ impl<'a> GeometryBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    fn push_line_string(&mut self, value: Option<&impl LineStringTrait<T = f64>>) -> Result<()> {
+    fn push_line_string(
+        &mut self,
+        value: Option<&impl LineStringTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
         if let Some(line_string) = value {
             let dim: Dimension = line_string.dim().try_into().unwrap();
             let array_idx = dim.order();
@@ -421,7 +424,7 @@ impl<'a> GeometryBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> Result<()> {
+    fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> GeoArrowResult<()> {
         if let Some(polygon) = value {
             let dim: Dimension = polygon.dim().try_into().unwrap();
             let array_idx = dim.order();
@@ -473,7 +476,10 @@ impl<'a> GeometryBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    fn push_multi_point(&mut self, value: Option<&impl MultiPointTrait<T = f64>>) -> Result<()> {
+    fn push_multi_point(
+        &mut self,
+        value: Option<&impl MultiPointTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
         if let Some(multi_point) = value {
             let dim: Dimension = multi_point.dim().try_into().unwrap();
             let array_idx = dim.order();
@@ -513,7 +519,7 @@ impl<'a> GeometryBuilder {
     fn push_multi_line_string(
         &mut self,
         value: Option<&impl MultiLineStringTrait<T = f64>>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         if let Some(multi_line_string) = value {
             let dim: Dimension = multi_line_string.dim().try_into().unwrap();
             let array_idx = dim.order();
@@ -553,7 +559,7 @@ impl<'a> GeometryBuilder {
     fn push_multi_polygon(
         &mut self,
         value: Option<&impl MultiPolygonTrait<T = f64>>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         if let Some(multi_polygon) = value {
             let dim: Dimension = multi_polygon.dim().try_into().unwrap();
             let array_idx = dim.order();
@@ -586,7 +592,10 @@ impl<'a> GeometryBuilder {
 
     /// Add a new geometry to this builder
     #[inline]
-    pub fn push_geometry(&mut self, value: Option<&'a impl GeometryTrait<T = f64>>) -> Result<()> {
+    pub fn push_geometry(
+        &mut self,
+        value: Option<&'a impl GeometryTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
         use geo_traits::GeometryType::*;
 
         if let Some(geom) = value {
@@ -629,7 +638,7 @@ impl<'a> GeometryBuilder {
     fn push_geometry_collection(
         &mut self,
         value: Option<&impl GeometryCollectionTrait<T = f64>>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         if let Some(gc) = value {
             let dim: Dimension = gc.dim().try_into().unwrap();
             let array_idx = dim.order();
@@ -760,7 +769,7 @@ impl<'a> GeometryBuilder {
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         typ: GeometryType,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let capacity = GeometryCapacity::from_geometries(geoms.iter().map(|x| x.as_ref()))?;
         let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
@@ -771,13 +780,11 @@ impl<'a> GeometryBuilder {
 impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, GeometryType)> for GeometryBuilder {
     type Error = GeoArrowError;
 
-    fn try_from(
-        (value, typ): (GenericWkbArray<O>, GeometryType),
-    ) -> std::result::Result<Self, Self::Error> {
+    fn try_from((value, typ): (GenericWkbArray<O>, GeometryType)) -> GeoArrowResult<Self> {
         let wkb_objects = value
             .iter()
             .map(|x| x.transpose())
-            .collect::<Result<Vec<_>>>()?;
+            .collect::<GeoArrowResult<Vec<_>>>()?;
         Self::from_nullable_geometries(&wkb_objects, typ)
     }
 }
@@ -791,7 +798,10 @@ impl GeoArrowArrayBuilder for GeometryBuilder {
         self.push_null();
     }
 
-    fn push_geometry(&mut self, geometry: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+    fn push_geometry(
+        &mut self,
+        geometry: Option<&impl GeometryTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
         self.push_geometry(geometry)
     }
 

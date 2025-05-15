@@ -4,6 +4,7 @@ use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, GeometryCollectionType, Metadata};
 
 use crate::array::{GenericWkbArray, MixedGeometryArray};
@@ -11,7 +12,6 @@ use crate::builder::GeometryCollectionBuilder;
 use crate::capacity::GeometryCollectionCapacity;
 use crate::datatypes::GeoArrowType;
 use crate::eq::offset_buffer_eq;
-use crate::error::{GeoArrowError, Result};
 use crate::scalar::GeometryCollection;
 use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 use crate::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
@@ -165,7 +165,7 @@ impl GeoArrowArray for GeometryCollectionArray {
 impl<'a> GeoArrowArrayAccessor<'a> for GeometryCollectionArray {
     type Item = GeometryCollection<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
+    unsafe fn value_unchecked(&'a self, index: usize) -> GeoArrowResult<Self::Item> {
         Ok(GeometryCollection::new(
             &self.array,
             &self.geom_offsets,
@@ -193,7 +193,9 @@ impl IntoArrow for GeometryCollectionArray {
 impl TryFrom<(&GenericListArray<i32>, GeometryCollectionType)> for GeometryCollectionArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (&GenericListArray<i32>, GeometryCollectionType)) -> Result<Self> {
+    fn try_from(
+        (value, typ): (&GenericListArray<i32>, GeometryCollectionType),
+    ) -> GeoArrowResult<Self> {
         let geoms: MixedGeometryArray =
             (value.values().as_ref(), typ.dimension(), typ.coord_type()).try_into()?;
         let geom_offsets = value.offsets();
@@ -211,7 +213,9 @@ impl TryFrom<(&GenericListArray<i32>, GeometryCollectionType)> for GeometryColle
 impl TryFrom<(&GenericListArray<i64>, GeometryCollectionType)> for GeometryCollectionArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (&GenericListArray<i64>, GeometryCollectionType)) -> Result<Self> {
+    fn try_from(
+        (value, typ): (&GenericListArray<i64>, GeometryCollectionType),
+    ) -> GeoArrowResult<Self> {
         let geoms: MixedGeometryArray =
             (value.values().as_ref(), typ.dimension(), typ.coord_type()).try_into()?;
         let geom_offsets = offsets_buffer_i64_to_i32(value.offsets())?;
@@ -229,7 +233,7 @@ impl TryFrom<(&GenericListArray<i64>, GeometryCollectionType)> for GeometryColle
 impl TryFrom<(&dyn Array, GeometryCollectionType)> for GeometryCollectionArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (&dyn Array, GeometryCollectionType)) -> Result<Self> {
+    fn try_from((value, typ): (&dyn Array, GeometryCollectionType)) -> GeoArrowResult<Self> {
         match value.data_type() {
             DataType::List(_) => (value.as_list::<i32>(), typ).try_into(),
             DataType::LargeList(_) => (value.as_list::<i64>(), typ).try_into(),
@@ -244,7 +248,7 @@ impl TryFrom<(&dyn Array, GeometryCollectionType)> for GeometryCollectionArray {
 impl TryFrom<(&dyn Array, &Field)> for GeometryCollectionArray {
     type Error = GeoArrowError;
 
-    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+    fn try_from((arr, field): (&dyn Array, &Field)) -> GeoArrowResult<Self> {
         let typ = field.try_extension_type::<GeometryCollectionType>()?;
         (arr, typ).try_into()
     }
@@ -255,7 +259,7 @@ impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, GeometryCollectionType)>
 {
     type Error = GeoArrowError;
 
-    fn try_from(value: (GenericWkbArray<O>, GeometryCollectionType)) -> Result<Self> {
+    fn try_from(value: (GenericWkbArray<O>, GeometryCollectionType)) -> GeoArrowResult<Self> {
         let mut_arr: GeometryCollectionBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }

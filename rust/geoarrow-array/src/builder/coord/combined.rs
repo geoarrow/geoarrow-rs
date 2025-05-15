@@ -5,7 +5,7 @@ use geoarrow_schema::{CoordType, Dimension};
 
 use crate::array::CoordBuffer;
 use crate::builder::{InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder};
-use crate::error::Result;
+use geoarrow_schema::error::GeoArrowResult;
 
 /// The GeoArrow equivalent to `Vec<Coord>`: a mutable collection of coordinates.
 ///
@@ -107,7 +107,7 @@ impl CoordBufferBuilder {
     /// ## Errors
     ///
     /// - If the added coordinate does not have the same dimension as the coordinate buffer.
-    pub fn try_push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+    pub fn try_push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> GeoArrowResult<()> {
         match self {
             CoordBufferBuilder::Interleaved(cb) => cb.try_push_coord(coord),
             CoordBufferBuilder::Separated(cb) => cb.try_push_coord(coord),
@@ -142,7 +142,7 @@ impl CoordBufferBuilder {
     /// ## Errors
     ///
     /// - If the added point does not have the same dimension as the coordinate buffer.
-    pub fn try_push_point(&mut self, point: &impl PointTrait<T = f64>) -> Result<()> {
+    pub fn try_push_point(&mut self, point: &impl PointTrait<T = f64>) -> GeoArrowResult<()> {
         match self {
             CoordBufferBuilder::Interleaved(cb) => cb.try_push_point(point),
             CoordBufferBuilder::Separated(cb) => cb.try_push_point(point),

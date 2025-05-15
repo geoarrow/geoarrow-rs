@@ -39,12 +39,15 @@ use std::sync::Arc;
 
 use arrow_array::Array;
 use arrow_schema::Field;
+use geoarrow_schema::error::GeoArrowResult;
 
-use crate::error::Result;
 use crate::{GeoArrowArray, GeoArrowType};
 
 /// Construct a new [GeoArrowArray] from an Arrow [Array] and [Field].
-pub fn from_arrow_array(array: &dyn Array, field: &Field) -> Result<Arc<dyn GeoArrowArray>> {
+pub fn from_arrow_array(
+    array: &dyn Array,
+    field: &Field,
+) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
     use GeoArrowType::*;
 
     let result: Arc<dyn GeoArrowArray> = match GeoArrowType::try_from(field)? {

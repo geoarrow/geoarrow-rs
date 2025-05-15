@@ -8,7 +8,7 @@ use crate::capacity::{
     LineStringCapacity, MultiLineStringCapacity, MultiPointCapacity, MultiPolygonCapacity,
     PolygonCapacity,
 };
-use crate::error::{GeoArrowError, Result};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// A counter for the buffer sizes of a [`MixedGeometryArray`][crate::array::MixedGeometryArray].
 ///
@@ -112,7 +112,7 @@ impl MixedCapacity {
     pub(crate) fn add_geometry<T: WktNum>(
         &mut self,
         geom: &impl GeometryTrait<T = T>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         match geom.as_type() {
             geo_traits::GeometryType::Point(_) => self.add_point(),
             geo_traits::GeometryType::LineString(g) => self.add_line_string(g),

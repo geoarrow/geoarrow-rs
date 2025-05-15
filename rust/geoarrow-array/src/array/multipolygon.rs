@@ -4,6 +4,7 @@ use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, Metadata, MultiPolygonType};
 
 use crate::array::{CoordBuffer, GenericWkbArray, PolygonArray};
@@ -11,7 +12,6 @@ use crate::builder::MultiPolygonBuilder;
 use crate::capacity::MultiPolygonCapacity;
 use crate::datatypes::GeoArrowType;
 use crate::eq::offset_buffer_eq;
-use crate::error::{GeoArrowError, Result};
 use crate::scalar::MultiPolygon;
 use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 use crate::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
@@ -45,7 +45,7 @@ pub(super) fn check(
     polygon_offsets: &OffsetBuffer<i32>,
     ring_offsets: &OffsetBuffer<i32>,
     validity_len: Option<usize>,
-) -> Result<()> {
+) -> GeoArrowResult<()> {
     if validity_len.is_some_and(|len| len != geom_offsets.len_proxy()) {
         return Err(GeoArrowError::General(
             "nulls mask length must match the number of values".to_string(),
@@ -123,7 +123,7 @@ impl MultiPolygonArray {
         ring_offsets: OffsetBuffer<i32>,
         nulls: Option<NullBuffer>,
         metadata: Arc<Metadata>,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         check(
             &coords,
             &geom_offsets,
@@ -283,7 +283,7 @@ impl GeoArrowArray for MultiPolygonArray {
 impl<'a> GeoArrowArrayAccessor<'a> for MultiPolygonArray {
     type Item = MultiPolygon<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
+    unsafe fn value_unchecked(&'a self, index: usize) -> GeoArrowResult<Self::Item> {
         Ok(MultiPolygon::new(
             &self.coords,
             &self.geom_offsets,
@@ -328,7 +328,9 @@ impl IntoArrow for MultiPolygonArray {
 impl TryFrom<(&GenericListArray<i32>, MultiPolygonType)> for MultiPolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from((geom_array, typ): (&GenericListArray<i32>, MultiPolygonType)) -> Result<Self> {
+    fn try_from(
+        (geom_array, typ): (&GenericListArray<i32>, MultiPolygonType),
+    ) -> GeoArrowResult<Self> {
         let geom_offsets = geom_array.offsets();
         let nulls = geom_array.nulls();
 
@@ -356,7 +358,9 @@ impl TryFrom<(&GenericListArray<i32>, MultiPolygonType)> for MultiPolygonArray {
 impl TryFrom<(&GenericListArray<i64>, MultiPolygonType)> for MultiPolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from((geom_array, typ): (&GenericListArray<i64>, MultiPolygonType)) -> Result<Self> {
+    fn try_from(
+        (geom_array, typ): (&GenericListArray<i64>, MultiPolygonType),
+    ) -> GeoArrowResult<Self> {
         let geom_offsets = offsets_buffer_i64_to_i32(geom_array.offsets())?;
         let nulls = geom_array.nulls();
 
@@ -384,7 +388,7 @@ impl TryFrom<(&GenericListArray<i64>, MultiPolygonType)> for MultiPolygonArray {
 impl TryFrom<(&dyn Array, MultiPolygonType)> for MultiPolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (&dyn Array, MultiPolygonType)) -> Result<Self> {
+    fn try_from((value, typ): (&dyn Array, MultiPolygonType)) -> GeoArrowResult<Self> {
         match value.data_type() {
             DataType::List(_) => (value.as_list::<i32>(), typ).try_into(),
             DataType::LargeList(_) => (value.as_list::<i64>(), typ).try_into(),
@@ -399,7 +403,7 @@ impl TryFrom<(&dyn Array, MultiPolygonType)> for MultiPolygonArray {
 impl TryFrom<(&dyn Array, &Field)> for MultiPolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+    fn try_from((arr, field): (&dyn Array, &Field)) -> GeoArrowResult<Self> {
         let typ = field.try_extension_type::<MultiPolygonType>()?;
         (arr, typ).try_into()
     }
@@ -408,7 +412,7 @@ impl TryFrom<(&dyn Array, &Field)> for MultiPolygonArray {
 impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, MultiPolygonType)> for MultiPolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (GenericWkbArray<O>, MultiPolygonType)) -> Result<Self> {
+    fn try_from(value: (GenericWkbArray<O>, MultiPolygonType)) -> GeoArrowResult<Self> {
         let mut_arr: MultiPolygonBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }

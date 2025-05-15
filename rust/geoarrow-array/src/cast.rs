@@ -9,6 +9,7 @@ use arrow_array::builder::{
 };
 use arrow_array::cast::AsArray;
 use geoarrow_schema::WkbType;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use wkb::Endianness;
 use wkb::writer::WriteOptions;
 
@@ -17,7 +18,6 @@ use crate::builder::{
     GeometryBuilder, GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder,
     MultiPointBuilder, MultiPolygonBuilder, PointBuilder, PolygonBuilder, WkbBuilder,
 };
-use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeoArrowArray;
 use crate::{GeoArrowArrayAccessor, GeoArrowType, IntoArrow};
 
@@ -307,7 +307,7 @@ impl AsGeoArrowArray for Arc<dyn GeoArrowArray> {
 }
 
 /// Convert a [GeoArrowArray] to a [`GenericWkbArray`].
-pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<GenericWkbArray<O>> {
+pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> GeoArrowResult<GenericWkbArray<O>> {
     use GeoArrowType::*;
     match arr.data_type() {
         Point(_) => impl_to_wkb(arr.as_point()),
@@ -365,17 +365,17 @@ pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<GenericWkbA
 
 fn impl_to_wkb<'a, O: OffsetSizeTrait>(
     geo_arr: &'a impl GeoArrowArrayAccessor<'a>,
-) -> Result<GenericWkbArray<O>> {
+) -> GeoArrowResult<GenericWkbArray<O>> {
     let geoms = geo_arr
         .iter()
         .map(|x| x.transpose())
-        .collect::<Result<Vec<_>>>()?;
+        .collect::<GeoArrowResult<Vec<_>>>()?;
     let wkb_type = WkbType::new(geo_arr.data_type().metadata().clone());
     Ok(WkbBuilder::from_nullable_geometries(geoms.as_slice(), wkb_type).finish())
 }
 
 /// Convert a [GeoArrowArray] to a [`WkbViewArray`].
-pub fn to_wkb_view(arr: &dyn GeoArrowArray) -> Result<WkbViewArray> {
+pub fn to_wkb_view(arr: &dyn GeoArrowArray) -> GeoArrowResult<WkbViewArray> {
     use GeoArrowType::*;
     match arr.data_type() {
         Point(_) => impl_to_wkb_view(arr.as_point()),
@@ -396,11 +396,13 @@ pub fn to_wkb_view(arr: &dyn GeoArrowArray) -> Result<WkbViewArray> {
     }
 }
 
-fn impl_to_wkb_view<'a>(geo_arr: &'a impl GeoArrowArrayAccessor<'a>) -> Result<WkbViewArray> {
+fn impl_to_wkb_view<'a>(
+    geo_arr: &'a impl GeoArrowArrayAccessor<'a>,
+) -> GeoArrowResult<WkbViewArray> {
     let geoms = geo_arr
         .iter()
         .map(|x| x.transpose())
-        .collect::<Result<Vec<_>>>()?;
+        .collect::<GeoArrowResult<Vec<_>>>()?;
 
     let mut builder = BinaryViewBuilder::new();
     let wkb_options = WriteOptions {
@@ -434,11 +436,11 @@ fn impl_to_wkb_view<'a>(geo_arr: &'a impl GeoArrowArrayAccessor<'a>) -> Result<W
 pub fn from_wkb<'a, A: GenericWkbArrayType<'a>>(
     arr: &'a A,
     to_type: GeoArrowType,
-) -> Result<Arc<dyn GeoArrowArray>> {
+) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
     let geoms = arr
         .iter()
         .map(|g| g.transpose())
-        .collect::<Result<Vec<_>>>()?;
+        .collect::<GeoArrowResult<Vec<_>>>()?;
 
     use GeoArrowType::*;
     let result: Arc<dyn GeoArrowArray> = match to_type {
@@ -501,7 +503,7 @@ pub fn from_wkb<'a, A: GenericWkbArrayType<'a>>(
 }
 
 /// Convert a [GeoArrowArray] to a [`GenericWktArray`].
-pub fn to_wkt<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<GenericWktArray<O>> {
+pub fn to_wkt<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> GeoArrowResult<GenericWktArray<O>> {
     use GeoArrowType::*;
     match arr.data_type() {
         Point(_) => impl_to_wkt(arr.as_point()),
@@ -550,7 +552,7 @@ pub fn to_wkt<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> Result<GenericWktA
 
 fn impl_to_wkt<'a, O: OffsetSizeTrait>(
     geo_arr: &'a impl GeoArrowArrayAccessor<'a>,
-) -> Result<GenericWktArray<O>> {
+) -> GeoArrowResult<GenericWktArray<O>> {
     let metadata = geo_arr.data_type().metadata().clone();
     let mut builder = GenericStringBuilder::new();
 
@@ -567,7 +569,7 @@ fn impl_to_wkt<'a, O: OffsetSizeTrait>(
 }
 
 /// Convert a [GeoArrowArray] to a [`WktViewArray`].
-pub fn to_wkt_view(arr: &dyn GeoArrowArray) -> Result<WktViewArray> {
+pub fn to_wkt_view(arr: &dyn GeoArrowArray) -> GeoArrowResult<WktViewArray> {
     use GeoArrowType::*;
     match arr.data_type() {
         Point(_) => impl_to_wkt_view(arr.as_point()),
@@ -588,7 +590,9 @@ pub fn to_wkt_view(arr: &dyn GeoArrowArray) -> Result<WktViewArray> {
     }
 }
 
-fn impl_to_wkt_view<'a>(geo_arr: &'a impl GeoArrowArrayAccessor<'a>) -> Result<WktViewArray> {
+fn impl_to_wkt_view<'a>(
+    geo_arr: &'a impl GeoArrowArrayAccessor<'a>,
+) -> GeoArrowResult<WktViewArray> {
     let metadata = geo_arr.data_type().metadata().clone();
     let mut builder = StringViewBuilder::new();
 
@@ -613,11 +617,11 @@ fn impl_to_wkt_view<'a>(geo_arr: &'a impl GeoArrowArrayAccessor<'a>) -> Result<W
 pub fn from_wkt<A: GenericWktArrayType>(
     arr: &A,
     to_type: GeoArrowType,
-) -> Result<Arc<dyn GeoArrowArray>> {
+) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
     let geoms = arr
         .iter()
         .map(|g| g.transpose())
-        .collect::<Result<Vec<_>>>()?;
+        .collect::<GeoArrowResult<Vec<_>>>()?;
 
     use GeoArrowType::*;
     let result: Arc<dyn GeoArrowArray> = match to_type {
@@ -1186,13 +1190,15 @@ mod test {
 
     // Verify that this compiles with the macro
     #[allow(dead_code)]
-    fn _to_wkb_test_downcast_macro(arr: &dyn GeoArrowArray) -> Result<GenericWkbArray<i32>> {
+    fn _to_wkb_test_downcast_macro(
+        arr: &dyn GeoArrowArray,
+    ) -> GeoArrowResult<GenericWkbArray<i32>> {
         downcast_geoarrow_array!(arr, impl_to_wkb)
     }
 
     fn impl_to_wkb<'a>(
         geo_arr: &'a impl GeoArrowArrayAccessor<'a>,
-    ) -> Result<GenericWkbArray<i32>> {
+    ) -> GeoArrowResult<GenericWkbArray<i32>> {
         let geoms = geo_arr
             .iter()
             .map(|x| x.transpose())

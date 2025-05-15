@@ -11,8 +11,8 @@ use crate::builder::{
     PointBuilder, PolygonBuilder,
 };
 use crate::capacity::MixedCapacity;
-use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeoArrowArrayBuilder;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 
@@ -147,7 +147,7 @@ impl MixedGeometryBuilder {
     /// If `self.prefer_multi` is `true`, it will be stored in the `MultiPointBuilder` child
     /// array. Otherwise, it will be stored in the `PointBuilder` child array.
     #[inline]
-    pub(crate) fn push_point(&mut self, value: &impl PointTrait<T = f64>) -> Result<()> {
+    pub(crate) fn push_point(&mut self, value: &impl PointTrait<T = f64>) -> GeoArrowResult<()> {
         if self.prefer_multi {
             self.add_multi_point_type();
             self.multi_points.push_point(Some(value))
@@ -178,7 +178,10 @@ impl MixedGeometryBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub(crate) fn push_line_string(&mut self, value: &impl LineStringTrait<T = f64>) -> Result<()> {
+    pub(crate) fn push_line_string(
+        &mut self,
+        value: &impl LineStringTrait<T = f64>,
+    ) -> GeoArrowResult<()> {
         if self.prefer_multi {
             self.add_multi_line_string_type();
             self.multi_line_strings.push_line_string(Some(value))
@@ -209,7 +212,10 @@ impl MixedGeometryBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub(crate) fn push_polygon(&mut self, value: &impl PolygonTrait<T = f64>) -> Result<()> {
+    pub(crate) fn push_polygon(
+        &mut self,
+        value: &impl PolygonTrait<T = f64>,
+    ) -> GeoArrowResult<()> {
         if self.prefer_multi {
             self.add_multi_polygon_type();
             self.multi_polygons.push_polygon(Some(value))
@@ -236,7 +242,10 @@ impl MixedGeometryBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub(crate) fn push_multi_point(&mut self, value: &impl MultiPointTrait<T = f64>) -> Result<()> {
+    pub(crate) fn push_multi_point(
+        &mut self,
+        value: &impl MultiPointTrait<T = f64>,
+    ) -> GeoArrowResult<()> {
         self.add_multi_point_type();
         self.multi_points.push_multi_point(Some(value))
     }
@@ -262,7 +271,7 @@ impl MixedGeometryBuilder {
     pub(crate) fn push_multi_line_string(
         &mut self,
         value: &impl MultiLineStringTrait<T = f64>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         self.add_multi_line_string_type();
         self.multi_line_strings.push_multi_line_string(Some(value))
     }
@@ -288,7 +297,7 @@ impl MixedGeometryBuilder {
     pub(crate) fn push_multi_polygon(
         &mut self,
         value: &impl MultiPolygonTrait<T = f64>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         self.add_multi_polygon_type();
         self.multi_polygons.push_multi_polygon(Some(value))
     }
@@ -306,7 +315,10 @@ impl MixedGeometryBuilder {
     }
 
     #[inline]
-    pub(crate) fn push_geometry(&mut self, geom: &'_ impl GeometryTrait<T = f64>) -> Result<()> {
+    pub(crate) fn push_geometry(
+        &mut self,
+        geom: &'_ impl GeometryTrait<T = f64>,
+    ) -> GeoArrowResult<()> {
         use geo_traits::GeometryType::*;
 
         match geom.as_type() {
