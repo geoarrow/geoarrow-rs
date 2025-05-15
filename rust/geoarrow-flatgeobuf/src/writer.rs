@@ -4,7 +4,7 @@ use arrow_schema::Schema;
 use flatgeobuf::{FgbCrs, FgbWriter, FgbWriterOptions};
 use geoarrow_array::GeoArrowType;
 use geoarrow_array::geozero::export::GeozeroRecordBatchReader;
-use geoarrow_schema::crs::{CRSTransform, DefaultCRSTransform};
+use geoarrow_schema::crs::{CrsTransform, DefaultCrsTransform};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{Dimension, Metadata};
 use geozero::GeozeroDatasource;
@@ -29,7 +29,7 @@ pub struct FlatGeobufWriterOptions {
     /// This is implemented as an external trait so that external libraries can inject the method
     /// for CRS conversions. For example, the Python API uses the `pyproj` Python library to
     /// perform the conversion rather than linking into PROJ from Rust.
-    pub crs_transform: Option<Box<dyn CRSTransform>>,
+    pub crs_transform: Option<Box<dyn CrsTransform>>,
 }
 
 impl Default for FlatGeobufWriterOptions {
@@ -38,7 +38,7 @@ impl Default for FlatGeobufWriterOptions {
             write_index: true,
             detect_type: true,
             promote_to_multi: true,
-            crs_transform: Some(Box::new(DefaultCRSTransform::default())),
+            crs_transform: Some(Box::new(DefaultCrsTransform::default())),
             title: None,
             description: None,
             metadata: None,
@@ -49,14 +49,14 @@ impl Default for FlatGeobufWriterOptions {
 impl FlatGeobufWriterOptions {
     /// Create a WKT CRS from whatever CRS exists in the [Metadata].
     ///
-    /// This uses the [CRSTransform] supplied in the [FlatGeobufWriterOptions].
+    /// This uses the [CrsTransform] supplied in the [FlatGeobufWriterOptions].
     ///
     /// If no CRS exists in the Metadata, None will be returned here.
     fn create_wkt_crs(&self, array_meta: &Metadata) -> GeoArrowResult<Option<String>> {
         if let Some(crs_transform) = &self.crs_transform {
             crs_transform.extract_wkt(array_meta.crs())
         } else {
-            DefaultCRSTransform::default().extract_wkt(array_meta.crs())
+            DefaultCrsTransform::default().extract_wkt(array_meta.crs())
         }
     }
 

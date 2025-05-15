@@ -159,7 +159,7 @@ pub enum CrsType {
 
 /// CRS transforms used for writing GeoArrow data to file formats that require different CRS
 /// representations.
-pub trait CRSTransform: Debug {
+pub trait CrsTransform: Debug {
     /// Convert the CRS contained in this Metadata to a PROJJSON object.
     ///
     /// Users should prefer calling `extract_projjson`, which will first unwrap the underlying
@@ -204,9 +204,9 @@ pub trait CRSTransform: Debug {
 ///
 /// Instead of raising an error, this will **silently drop any CRS information when writing data**.
 #[derive(Debug, Clone, Default)]
-pub struct DefaultCRSTransform {}
+pub struct DefaultCrsTransform {}
 
-impl CRSTransform for DefaultCRSTransform {
+impl CrsTransform for DefaultCrsTransform {
     fn _convert_to_projjson(&self, _crs: &Crs) -> GeoArrowResult<Option<Value>> {
         // Unable to convert CRS to PROJJSON
         // So we proceed with missing CRS
