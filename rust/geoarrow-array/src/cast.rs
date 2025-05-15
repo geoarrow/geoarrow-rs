@@ -705,11 +705,11 @@ pub mod __private {
 /// use geoarrow_schema::error::GeoArrowResult;
 /// use geoarrow_array::{GeoArrowArrayAccessor, GeoArrowArray, downcast_geoarrow_array};
 ///
-/// pub fn unsigned_area(array: &dyn GeoArrowArray) -> Result<Float64Array> {
+/// pub fn unsigned_area(array: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
 ///     downcast_geoarrow_array!(array, impl_unsigned_area)
 /// }
 ///
-/// fn impl_unsigned_area<'a>(array: &'a impl GeoArrowArrayAccessor<'a>) -> Result<Float64Array> {
+/// fn impl_unsigned_area<'a>(array: &'a impl GeoArrowArrayAccessor<'a>) -> GeoArrowResult<Float64Array> {
 ///     let mut builder = Float64Builder::with_capacity(array.len());
 ///
 ///     for item in array.iter() {
@@ -736,7 +736,7 @@ pub mod __private {
 /// # use geoarrow_schema::error::GeoArrowResult;
 /// # use geoarrow_array::{GeoArrowArrayAccessor, GeoArrowType};
 /// #
-/// # fn impl_unsigned_area<'a>(array: &'a impl GeoArrowArrayAccessor<'a>) -> Result<Float64Array> {
+/// # fn impl_unsigned_area<'a>(array: &'a impl GeoArrowArrayAccessor<'a>) -> GeoArrowResult<Float64Array> {
 /// #     let mut builder = Float64Builder::with_capacity(array.len());
 /// #
 /// #     for item in array.iter() {
@@ -750,7 +750,7 @@ pub mod __private {
 /// #     Ok(builder.finish())
 /// # }
 /// #
-/// fn impl_unsigned_area_specialized<'a>(array: &'a impl GeoArrowArrayAccessor<'a>) -> Result<Float64Array> {
+/// fn impl_unsigned_area_specialized<'a>(array: &'a impl GeoArrowArrayAccessor<'a>) -> GeoArrowResult<Float64Array> {
 ///     use GeoArrowType::*;
 ///     match array.data_type() {
 ///         Point(_) | LineString(_) | MultiPoint(_) | MultiLineString(_) => {
