@@ -3,7 +3,7 @@ use arrow_schema::{ArrowError, SchemaRef};
 use async_stream::try_stream;
 use futures::Stream;
 use futures::stream::TryStreamExt;
-use geoarrow_array::error::{GeoArrowError, Result};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::{
     AsyncFileReader, ParquetRecordBatchStream, ParquetRecordBatchStreamBuilder,
@@ -39,7 +39,7 @@ impl<T: AsyncFileReader + Send + 'static> GeoParquetRecordBatchStreamBuilder<T> 
     /// // Read batch
     /// let batch: RecordBatch = reader.next().await.unwrap().unwrap();
     /// ```
-    pub async fn try_new(input: T) -> Result<Self> {
+    pub async fn try_new(input: T) -> GeoArrowResult<Self> {
         Self::try_new_with_options(input, Default::default(), Default::default()).await
     }
 
@@ -48,7 +48,7 @@ impl<T: AsyncFileReader + Send + 'static> GeoParquetRecordBatchStreamBuilder<T> 
         mut input: T,
         arrow_options: ArrowReaderOptions,
         geo_options: GeoParquetReaderOptions,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let metadata = ArrowReaderMetadata::load_async(&mut input, arrow_options)
             .await
             .map_err(|err| GeoArrowError::External(Box::new(err)))?;
@@ -85,7 +85,7 @@ impl<T: AsyncFileReader + Send + 'static> GeoParquetRecordBatchStreamBuilder<T> 
     }
 
     /// Consume this builder, returning a [`GeoParquetRecordBatchStream`]
-    pub fn build(self) -> Result<GeoParquetRecordBatchStream<T>> {
+    pub fn build(self) -> GeoArrowResult<GeoParquetRecordBatchStream<T>> {
         let output_schema = self.output_schema()?;
         let builder = self
             .options
@@ -117,7 +117,7 @@ impl<T: AsyncFileReader + Send + 'static> From<ParquetRecordBatchStreamBuilder<T
 impl<T: AsyncFileReader + Send + 'static> GeoParquetReaderBuilder
     for GeoParquetRecordBatchStreamBuilder<T>
 {
-    fn output_schema(&self) -> Result<SchemaRef> {
+    fn output_schema(&self) -> GeoArrowResult<SchemaRef> {
         if let Some(geo_meta) = &self.geo_meta {
             infer_target_schema(self.builder.schema(), geo_meta, self.options.coord_type)
         } else {
@@ -157,7 +157,7 @@ impl<T: AsyncFileReader + Unpin + Send + 'static> GeoParquetRecordBatchStream<T>
     }
 
     /// Collect all batches into an in-memory table.
-    pub async fn read_table(self) -> Result<(Vec<RecordBatch>, SchemaRef)> {
+    pub async fn read_table(self) -> GeoArrowResult<(Vec<RecordBatch>, SchemaRef)> {
         let output_schema = self.output_schema.clone();
         let batches = self.read_stream().try_collect::<_>().await?;
         Ok((batches, output_schema))
@@ -173,7 +173,7 @@ mod test {
     use crate::test::fixture_dir;
 
     #[tokio::test]
-    async fn nybb() -> Result<()> {
+    async fn nybb() -> GeoArrowResult<()> {
         let fixtures = fixture_dir();
         let file = File::open(fixtures.join("geoparquet/nybb.parquet"))
             .await

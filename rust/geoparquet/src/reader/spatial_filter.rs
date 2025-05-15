@@ -11,7 +11,7 @@ use geo_types::{CoordNum, Rect, coord};
 use geoarrow_array::GeoArrowArrayAccessor;
 use geoarrow_array::array::{RectArray, from_arrow_array};
 use geoarrow_array::builder::RectBuilder;
-use geoarrow_array::error::{GeoArrowError, Result};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{BoxType, Dimension};
 use parquet::arrow::ProjectionMask;
 use parquet::arrow::arrow_reader::{
@@ -60,7 +60,7 @@ impl<'a> ParquetBboxStatistics<'a> {
     pub fn try_new(
         parquet_schema: &SchemaDescriptor,
         paths: &'a GeoParquetBboxCovering,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let mut minx_col: Option<usize> = None;
         let mut miny_col: Option<usize> = None;
         let mut maxx_col: Option<usize> = None;
@@ -136,7 +136,7 @@ impl<'a> ParquetBboxStatistics<'a> {
     /// Extract the bounding box from a given row group's metadata.
     ///
     /// This uses the column statistics contained in the row group metadata.
-    pub fn get_bbox(&self, rg_meta: &RowGroupMetaData) -> Result<Rect> {
+    pub fn get_bbox(&self, rg_meta: &RowGroupMetaData) -> GeoArrowResult<Rect> {
         let (minx, _) = parse_statistics_f64(rg_meta.column(self.minx_col))?;
         let (miny, _) = parse_statistics_f64(rg_meta.column(self.miny_col))?;
         let (_, maxx) = parse_statistics_f64(rg_meta.column(self.maxx_col))?;
@@ -148,7 +148,7 @@ impl<'a> ParquetBboxStatistics<'a> {
     }
 
     /// Extract the bounding boxes for a sequence of row groups
-    pub fn get_bboxes(&self, row_groups: &[RowGroupMetaData]) -> Result<RectArray> {
+    pub fn get_bboxes(&self, row_groups: &[RowGroupMetaData]) -> GeoArrowResult<RectArray> {
         let mut builder = RectBuilder::with_capacity(
             BoxType::new(Dimension::XY, Default::default()),
             row_groups.len(),
@@ -164,7 +164,7 @@ pub(crate) fn apply_bbox_row_groups<T>(
     builder: ArrowReaderBuilder<T>,
     bbox_cols: &ParquetBboxStatistics,
     bbox_query: Rect,
-) -> Result<ArrowReaderBuilder<T>> {
+) -> GeoArrowResult<ArrowReaderBuilder<T>> {
     let row_groups = builder.metadata().row_groups();
     let row_groups_bounds = bbox_cols.get_bboxes(row_groups)?;
     let mut intersects_row_groups_idxs = vec![];
@@ -181,7 +181,7 @@ pub(crate) fn apply_bbox_row_filter<T>(
     builder: ArrowReaderBuilder<T>,
     bbox_cols: ParquetBboxStatistics,
     bbox_query: Rect,
-) -> Result<ArrowReaderBuilder<T>> {
+) -> GeoArrowResult<ArrowReaderBuilder<T>> {
     let parquet_schema = builder.parquet_schema();
 
     // If the min and max columns are the same, then it's a native column
@@ -208,7 +208,7 @@ fn construct_native_predicate(
     parquet_schema: &SchemaDescriptor,
     bbox_cols: ParquetBboxStatistics,
     bbox_query: Rect,
-) -> Result<Box<dyn ArrowPredicate>> {
+) -> GeoArrowResult<Box<dyn ArrowPredicate>> {
     let mask = ProjectionMask::leaves(
         parquet_schema,
         [
@@ -260,7 +260,7 @@ fn construct_bbox_columns_predicate(
     parquet_schema: &SchemaDescriptor,
     bbox_cols: ParquetBboxStatistics,
     bbox_query: Rect,
-) -> Result<Box<dyn ArrowPredicate>> {
+) -> GeoArrowResult<Box<dyn ArrowPredicate>> {
     let mask = ProjectionMask::leaves(
         parquet_schema,
         [
@@ -395,7 +395,7 @@ fn path_equals<T: AsRef<str> + Debug>(a: &[T], b: &ColumnPath) -> bool {
 /// Parse Parquet statistics as f64
 ///
 /// When statistics are stored as f32, this will upcast to f64.
-fn parse_statistics_f64(column_meta: &ColumnChunkMetaData) -> Result<(f64, f64)> {
+fn parse_statistics_f64(column_meta: &ColumnChunkMetaData) -> GeoArrowResult<(f64, f64)> {
     let stats = column_meta
         .statistics()
         .ok_or(GeoArrowError::General(format!(

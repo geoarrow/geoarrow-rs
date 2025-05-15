@@ -7,7 +7,7 @@ use arrow_schema::{DataType, Field, Schema, SchemaRef};
 use geoarrow_array::GeoArrowType;
 use geoarrow_array::array::from_arrow_array;
 use geoarrow_array::crs::{CRSTransform, DefaultCRSTransform};
-use geoarrow_array::error::Result;
+use geoarrow_schema::error::GeoArrowResult;
 use geoarrow_schema::{CoordType, Edges, Metadata, WkbType};
 use serde_json::Value;
 
@@ -48,7 +48,7 @@ impl ColumnInfo {
         data_type: &GeoArrowType,
         array_meta: Metadata,
         crs_transform: Option<&Box<dyn CRSTransform>>,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let encoding = GeoParquetColumnEncoding::try_new(writer_encoding, data_type)?;
         let geometry_types = get_geometry_types(data_type);
 
@@ -85,7 +85,7 @@ impl ColumnInfo {
     // Note: for these multi columns, we should first check the geometry_types HashSet, because we
     // shouldn't compute that for every array if we see in the first that the data is both multi
     // and single polygons.
-    pub fn update_geometry_types(&mut self, array: &ArrayRef, field: &Field) -> Result<()> {
+    pub fn update_geometry_types(&mut self, array: &ArrayRef, field: &Field) -> GeoArrowResult<()> {
         let array = from_arrow_array(array, field)?;
         let array_ref = array.as_ref();
 
@@ -169,7 +169,7 @@ pub struct GeoParquetMetadataBuilder {
 }
 
 impl GeoParquetMetadataBuilder {
-    pub fn try_new(schema: &Schema, options: &GeoParquetWriterOptions) -> Result<Self> {
+    pub fn try_new(schema: &Schema, options: &GeoParquetWriterOptions) -> GeoArrowResult<Self> {
         let mut columns = HashMap::new();
 
         for (col_idx, field) in schema.fields().iter().enumerate() {

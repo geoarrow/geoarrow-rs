@@ -1,5 +1,5 @@
 use geo_traits::PolygonTrait;
-use geoarrow_array::error::{GeoArrowError, Result};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geos::{Geom, GeometryTypes};
 
 use crate::import::scalar::linearring::GEOSConstLinearRing;
@@ -12,7 +12,7 @@ impl GEOSPolygon {
     }
 
     #[allow(dead_code)]
-    pub fn try_new(geom: geos::Geometry) -> Result<Self> {
+    pub fn try_new(geom: geos::Geometry) -> GeoArrowResult<Self> {
         if matches!(geom.geometry_type(), GeometryTypes::Polygon) {
             Ok(Self(geom))
         } else {
@@ -94,7 +94,7 @@ impl<'a> GEOSConstPolygon<'a> {
     }
 
     #[allow(dead_code)]
-    pub fn try_new(geom: geos::ConstGeometry<'a>) -> Result<Self> {
+    pub fn try_new(geom: geos::ConstGeometry<'a>) -> GeoArrowResult<Self> {
         if matches!(geom.geometry_type(), GeometryTypes::Polygon) {
             Ok(Self(geom))
         } else {

@@ -700,7 +700,7 @@ pub mod __private {
 /// use arrow_array::builder::Float64Builder;
 /// use geo::Area;
 /// use geo_traits::to_geo::ToGeoGeometry;
-/// use geoarrow_array::error::Result;
+/// use geoarrow_schema::error::GeoArrowResult;
 /// use geoarrow_array::{GeoArrowArrayAccessor, GeoArrowArray, downcast_geoarrow_array};
 ///
 /// pub fn unsigned_area(array: &dyn GeoArrowArray) -> Result<Float64Array> {
@@ -731,7 +731,7 @@ pub mod __private {
 /// # use arrow_array::builder::Float64Builder;
 /// # use geo::Area;
 /// # use geo_traits::to_geo::ToGeoGeometry;
-/// # use geoarrow_array::error::Result;
+/// # use geoarrow_schema::error::GeoArrowResult;
 /// # use geoarrow_array::{GeoArrowArrayAccessor, GeoArrowType};
 /// #
 /// # fn impl_unsigned_area<'a>(array: &'a impl GeoArrowArrayAccessor<'a>) -> Result<Float64Array> {

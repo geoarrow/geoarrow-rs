@@ -5,9 +5,9 @@ use geo_traits::{
     MultiPolygonTrait,
 };
 use geoarrow_array::cast::AsGeoArrowArray;
-use geoarrow_array::error::{GeoArrowError, Result};
 use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, GeoArrowType};
 use geoarrow_schema::Dimension;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// Infer a common native geometry type, if any
 ///
@@ -15,7 +15,7 @@ use geoarrow_schema::Dimension;
 /// serialized type.
 pub fn infer_downcast_type<'a>(
     arrays: impl Iterator<Item = &'a dyn GeoArrowArray>,
-) -> Result<Option<(NativeType, Dimension)>> {
+) -> GeoArrowResult<Option<(NativeType, Dimension)>> {
     let mut type_ids = HashSet::new();
     for array in arrays {
         let type_id = get_type_ids(array)?;
@@ -31,7 +31,7 @@ pub fn infer_downcast_type<'a>(
     infer_from_native_type_and_dimension(type_ids)
 }
 
-fn get_type_ids(array: &dyn GeoArrowArray) -> Result<HashSet<NativeTypeAndDimension>> {
+fn get_type_ids(array: &dyn GeoArrowArray) -> GeoArrowResult<HashSet<NativeTypeAndDimension>> {
     use GeoArrowType::*;
     let type_ids: HashSet<NativeTypeAndDimension> = match array.data_type() {
         Point(typ) => [NativeTypeAndDimension::new(
@@ -66,7 +66,7 @@ fn get_type_ids(array: &dyn GeoArrowArray) -> Result<HashSet<NativeTypeAndDimens
                     };
                     Ok::<_, GeoArrowError>(geom_type)
                 })
-                .collect::<Result<HashSet<NativeTypeAndDimension>>>()?
+                .collect::<GeoArrowResult<HashSet<NativeTypeAndDimension>>>()?
         }
         MultiLineString(typ) => {
             let dim = typ.dimension();
@@ -82,7 +82,7 @@ fn get_type_ids(array: &dyn GeoArrowArray) -> Result<HashSet<NativeTypeAndDimens
                     };
                     Ok::<_, GeoArrowError>(geom_type)
                 })
-                .collect::<Result<HashSet<NativeTypeAndDimension>>>()?
+                .collect::<GeoArrowResult<HashSet<NativeTypeAndDimension>>>()?
         }
         MultiPolygon(typ) => {
             let dim = typ.dimension();
@@ -98,7 +98,7 @@ fn get_type_ids(array: &dyn GeoArrowArray) -> Result<HashSet<NativeTypeAndDimens
                     };
                     Ok::<_, GeoArrowError>(geom_type)
                 })
-                .collect::<Result<HashSet<NativeTypeAndDimension>>>()?
+                .collect::<GeoArrowResult<HashSet<NativeTypeAndDimension>>>()?
         }
         GeometryCollection(typ) => {
             let dim = typ.dimension();
@@ -118,7 +118,7 @@ fn get_type_ids(array: &dyn GeoArrowArray) -> Result<HashSet<NativeTypeAndDimens
                     };
                     Ok::<_, GeoArrowError>(geom_type)
                 })
-                .collect::<Result<HashSet<NativeTypeAndDimension>>>()?
+                .collect::<GeoArrowResult<HashSet<NativeTypeAndDimension>>>()?
         }
         Rect(typ) => [NativeTypeAndDimension::new(
             NativeType::Rect,
@@ -137,7 +137,7 @@ fn get_type_ids(array: &dyn GeoArrowArray) -> Result<HashSet<NativeTypeAndDimens
                 .as_wkb::<i32>()
                 .iter()
                 .flatten()
-                .collect::<Result<Vec<_>>>()?;
+                .collect::<GeoArrowResult<Vec<_>>>()?;
             wkb_scalars
                 .iter()
                 .map(|wkb| {
@@ -145,14 +145,14 @@ fn get_type_ids(array: &dyn GeoArrowArray) -> Result<HashSet<NativeTypeAndDimens
                     let geom_type = NativeType::from_geometry_trait(wkb);
                     Ok(NativeTypeAndDimension::new(geom_type, dim))
                 })
-                .collect::<Result<HashSet<NativeTypeAndDimension>>>()?
+                .collect::<GeoArrowResult<HashSet<NativeTypeAndDimension>>>()?
         }
         LargeWkb(_) => {
             let wkb_scalars = array
                 .as_wkb::<i64>()
                 .iter()
                 .flatten()
-                .collect::<Result<Vec<_>>>()?;
+                .collect::<GeoArrowResult<Vec<_>>>()?;
             wkb_scalars
                 .iter()
                 .map(|wkb| {
@@ -160,14 +160,14 @@ fn get_type_ids(array: &dyn GeoArrowArray) -> Result<HashSet<NativeTypeAndDimens
                     let geom_type = NativeType::from_geometry_trait(wkb);
                     Ok(NativeTypeAndDimension::new(geom_type, dim))
                 })
-                .collect::<Result<HashSet<NativeTypeAndDimension>>>()?
+                .collect::<GeoArrowResult<HashSet<NativeTypeAndDimension>>>()?
         }
         WkbView(_) => {
             let wkb_scalars = array
                 .as_wkb_view()
                 .iter()
                 .flatten()
-                .collect::<Result<Vec<_>>>()?;
+                .collect::<GeoArrowResult<Vec<_>>>()?;
             wkb_scalars
                 .iter()
                 .map(|wkb| {
@@ -175,7 +175,7 @@ fn get_type_ids(array: &dyn GeoArrowArray) -> Result<HashSet<NativeTypeAndDimens
                     let geom_type = NativeType::from_geometry_trait(wkb);
                     Ok(NativeTypeAndDimension::new(geom_type, dim))
                 })
-                .collect::<Result<HashSet<NativeTypeAndDimension>>>()?
+                .collect::<GeoArrowResult<HashSet<NativeTypeAndDimension>>>()?
         }
         Wkt(_) => array
             .as_wkt::<i32>()
@@ -187,7 +187,7 @@ fn get_type_ids(array: &dyn GeoArrowArray) -> Result<HashSet<NativeTypeAndDimens
                 let geom_type = NativeTypeAndDimension::new(wkt_type.into(), wkt_dim.into());
                 Ok(geom_type)
             })
-            .collect::<Result<HashSet<NativeTypeAndDimension>>>()?,
+            .collect::<GeoArrowResult<HashSet<NativeTypeAndDimension>>>()?,
         LargeWkt(_) => array
             .as_wkt::<i64>()
             .inner()
@@ -198,7 +198,7 @@ fn get_type_ids(array: &dyn GeoArrowArray) -> Result<HashSet<NativeTypeAndDimens
                 let geom_type = NativeTypeAndDimension::new(wkt_type.into(), wkt_dim.into());
                 Ok(geom_type)
             })
-            .collect::<Result<HashSet<NativeTypeAndDimension>>>()?,
+            .collect::<GeoArrowResult<HashSet<NativeTypeAndDimension>>>()?,
         WktView(_) => array
             .as_wkt_view()
             .inner()
@@ -209,14 +209,14 @@ fn get_type_ids(array: &dyn GeoArrowArray) -> Result<HashSet<NativeTypeAndDimens
                 let geom_type = NativeTypeAndDimension::new(wkt_type.into(), wkt_dim.into());
                 Ok(geom_type)
             })
-            .collect::<Result<HashSet<NativeTypeAndDimension>>>()?,
+            .collect::<GeoArrowResult<HashSet<NativeTypeAndDimension>>>()?,
     };
     Ok(type_ids)
 }
 
 fn infer_from_native_type_and_dimension(
     type_ids: HashSet<NativeTypeAndDimension>,
-) -> Result<Option<(NativeType, Dimension)>> {
+) -> GeoArrowResult<Option<(NativeType, Dimension)>> {
     // Easy, if there's only one type, return that
     if type_ids.len() == 1 {
         let type_id = type_ids.into_iter().next().unwrap();

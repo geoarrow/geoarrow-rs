@@ -2,7 +2,7 @@ use pyo3::exceptions::{PyException, PyTypeError, PyValueError};
 use pyo3::prelude::*;
 
 pub enum PyGeoArrowError {
-    GeoArrowError(geoarrow_array::error::GeoArrowError),
+    GeoArrowError(geoarrow_schema::error::GeoArrowError),
     PyErr(PyErr),
     PyArrowError(pyo3_arrow::error::PyArrowError),
     SerdeJsonError(serde_json::Error),
@@ -21,8 +21,8 @@ impl From<PyGeoArrowError> for PyErr {
     }
 }
 
-impl From<geoarrow_array::error::GeoArrowError> for PyGeoArrowError {
-    fn from(other: geoarrow_array::error::GeoArrowError) -> Self {
+impl From<geoarrow_schema::error::GeoArrowError> for PyGeoArrowError {
+    fn from(other: geoarrow_schema::error::GeoArrowError) -> Self {
         Self::GeoArrowError(other)
     }
 }

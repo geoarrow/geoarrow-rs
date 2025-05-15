@@ -1,6 +1,6 @@
 use geo_types::Rect;
-use geoarrow_array::error::{GeoArrowError, Result};
 use geoarrow_schema::CoordType;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use parquet::arrow::ProjectionMask;
 use parquet::arrow::arrow_reader::ArrowReaderBuilder;
 
@@ -139,7 +139,7 @@ impl GeoParquetReaderOptions {
         self,
         mut builder: ArrowReaderBuilder<T>,
         geo_meta: Option<&GeoParquetMetadata>,
-    ) -> Result<ArrowReaderBuilder<T>> {
+    ) -> GeoArrowResult<ArrowReaderBuilder<T>> {
         if let Some(batch_size) = self.batch_size {
             builder = builder.with_batch_size(batch_size);
         }

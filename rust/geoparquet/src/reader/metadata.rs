@@ -19,7 +19,7 @@ use crate::metadata::{GeoParquetBboxCovering, GeoParquetMetadata};
 use crate::reader::parse::infer_target_schema;
 use crate::reader::spatial_filter::ParquetBboxStatistics;
 use crate::{GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder};
-use geoarrow_array::error::{GeoArrowError, Result};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// An extension trait
 trait ArrowReaderMetadataExt {
@@ -112,7 +112,7 @@ impl GeoParquetReaderMetadata {
     /// E.g. when a GeoParquet file stores WKB in a binary column, we transform that column to a
     /// native representation when loading. This means that the Arrow schema of the _source_ is not
     /// the same as the schema of what gets loaded.
-    pub fn resolved_schema(&self, coord_type: CoordType) -> Result<SchemaRef> {
+    pub fn resolved_schema(&self, coord_type: CoordType) -> GeoArrowResult<SchemaRef> {
         if let Some(geo_meta) = &self.geo_meta {
             infer_target_schema(self.meta.schema(), geo_meta, coord_type)
         } else {
@@ -139,7 +139,7 @@ impl GeoParquetReaderMetadata {
         &self,
         row_group_idx: usize,
         paths: Option<&GeoParquetBboxCovering>,
-    ) -> Result<Option<geo_types::Rect>> {
+    ) -> GeoArrowResult<Option<geo_types::Rect>> {
         let paths = if let Some(paths) = paths {
             paths
         } else {
@@ -161,7 +161,10 @@ impl GeoParquetReaderMetadata {
     ///
     /// As of GeoParquet 1.1 you won't need to pass in these column names, as they'll be specified
     /// in the metadata.
-    pub fn row_groups_bounds(&self, paths: Option<&GeoParquetBboxCovering>) -> Result<RectArray> {
+    pub fn row_groups_bounds(
+        &self,
+        paths: Option<&GeoParquetBboxCovering>,
+    ) -> GeoArrowResult<RectArray> {
         let paths = if let Some(paths) = paths {
             paths
         } else {
@@ -181,7 +184,7 @@ impl GeoParquetReaderMetadata {
             .row_groups()
             .iter()
             .map(|rg_meta| geo_statistics.get_bbox(rg_meta))
-            .collect::<Result<Vec<_>>>()?;
+            .collect::<GeoArrowResult<Vec<_>>>()?;
         let rect_type = BoxType::new(Dimension::XY, Default::default());
         let rect_array = RectBuilder::from_rects(rects.iter(), rect_type).finish();
         Ok(rect_array)
@@ -193,7 +196,7 @@ impl GeoParquetReaderMetadata {
     ///
     /// An Err will be returned if the column name does not exist in the dataset
     /// None will be returned if the metadata does not contain bounding box information.
-    pub fn file_bbox(&self, column_name: Option<&str>) -> Result<Option<&[f64]>> {
+    pub fn file_bbox(&self, column_name: Option<&str>) -> GeoArrowResult<Option<&[f64]>> {
         if let Some(geo_meta) = self.geo_metadata() {
             let column_name = column_name.unwrap_or(geo_meta.primary_column.as_str());
             let column_meta = geo_meta
@@ -210,7 +213,7 @@ impl GeoParquetReaderMetadata {
     }
 
     /// Access the Coordinate Reference System (CRS) of the given column
-    pub fn crs(&self, column_name: Option<&str>) -> Result<Option<&Value>> {
+    pub fn crs(&self, column_name: Option<&str>) -> GeoArrowResult<Option<&Value>> {
         if let Some(geo_meta) = self.geo_metadata() {
             let column_name = column_name.unwrap_or(geo_meta.primary_column.as_str());
             let column_meta = geo_meta
@@ -255,7 +258,7 @@ pub struct GeoParquetDatasetMetadata {
 
 impl GeoParquetDatasetMetadata {
     /// Construct dataset metadata from a key-value map of [ArrowReaderMetadata].
-    pub fn from_files(metas: HashMap<String, ArrowReaderMetadata>) -> Result<Self> {
+    pub fn from_files(metas: HashMap<String, ArrowReaderMetadata>) -> GeoArrowResult<Self> {
         if metas.is_empty() {
             return Err(GeoArrowError::General("No files provided".to_string()));
         }
@@ -309,7 +312,7 @@ impl GeoParquetDatasetMetadata {
     /// E.g. when a GeoParquet file stores WKB in a binary column, we transform that column to a
     /// native representation when loading. This means that the Arrow schema of the _source_ is not
     /// the same as the schema of what gets loaded.
-    pub fn resolved_schema(&self, coord_type: CoordType) -> Result<SchemaRef> {
+    pub fn resolved_schema(&self, coord_type: CoordType) -> GeoArrowResult<SchemaRef> {
         if let Some(geo_meta) = &self.geo_meta {
             infer_target_schema(&self.schema, geo_meta, coord_type)
         } else {
@@ -324,7 +327,7 @@ impl GeoParquetDatasetMetadata {
     ///
     /// An Err will be returned if the column name does not exist in the dataset
     /// None will be returned if the metadata does not contain bounding box information.
-    pub fn file_bbox(&self, column_name: Option<&str>) -> Result<Option<&[f64]>> {
+    pub fn file_bbox(&self, column_name: Option<&str>) -> GeoArrowResult<Option<&[f64]>> {
         if let Some(geo_meta) = self.geo_metadata() {
             let column_name = column_name.unwrap_or(geo_meta.primary_column.as_str());
             let column_meta = geo_meta
@@ -344,7 +347,7 @@ impl GeoParquetDatasetMetadata {
     ///
     /// This is returned as a PROJJSON object. I.e. the variant returned should always be
     /// `Value::Object`.
-    pub fn crs(&self, column_name: Option<&str>) -> Result<Option<&Value>> {
+    pub fn crs(&self, column_name: Option<&str>) -> GeoArrowResult<Option<&Value>> {
         if let Some(geo_meta) = self.geo_metadata() {
             let column_name = column_name.unwrap_or(geo_meta.primary_column.as_str());
             let column_meta = geo_meta

@@ -1,7 +1,7 @@
 use geoarrow_array::array::LineStringArray;
 use geoarrow_array::builder::LineStringBuilder;
-use geoarrow_array::error::Result;
 use geoarrow_schema::LineStringType;
+use geoarrow_schema::error::GeoArrowResult;
 
 use crate::import::array::FromGEOS;
 use crate::import::scalar::GEOSLineString;
@@ -12,11 +12,11 @@ impl FromGEOS for LineStringBuilder {
     fn from_geos(
         geoms: impl IntoIterator<Item = Option<geos::Geometry>>,
         typ: Self::GeoArrowType,
-    ) -> geoarrow_array::error::Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let geoms = geoms
             .into_iter()
             .map(|geom| geom.map(GEOSLineString::try_new).transpose())
-            .collect::<Result<Vec<_>>>()?;
+            .collect::<GeoArrowResult<Vec<_>>>()?;
         Ok(Self::from_nullable_line_strings(&geoms, typ))
     }
 }
@@ -27,7 +27,7 @@ impl FromGEOS for LineStringArray {
     fn from_geos(
         geoms: impl IntoIterator<Item = Option<geos::Geometry>>,
         typ: Self::GeoArrowType,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         Ok(LineStringBuilder::from_geos(geoms, typ)?.finish())
     }
 }

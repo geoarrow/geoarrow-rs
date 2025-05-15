@@ -2,9 +2,9 @@ use arrow_array::{Array, ArrayRef, RecordBatch};
 use arrow_schema::Field;
 use geoarrow_array::array::from_arrow_array;
 use geoarrow_array::cast::{AsGeoArrowArray, to_wkb};
-use geoarrow_array::error::Result;
 use geoarrow_array::{GeoArrowArray, GeoArrowType};
 use geoarrow_schema::CoordType;
+use geoarrow_schema::error::GeoArrowResult;
 
 use crate::metadata::GeoParquetColumnEncoding;
 use crate::total_bounds::{BoundingRect, total_bounds};
@@ -13,7 +13,7 @@ use crate::writer::metadata::{ColumnInfo, GeoParquetMetadataBuilder};
 pub(super) fn encode_record_batch(
     batch: &RecordBatch,
     metadata_builder: &mut GeoParquetMetadataBuilder,
-) -> Result<RecordBatch> {
+) -> GeoArrowResult<RecordBatch> {
     let mut new_columns = batch.columns().to_vec();
     for (column_idx, column_info) in metadata_builder.columns.iter_mut() {
         let array = batch.column(*column_idx);
@@ -36,7 +36,7 @@ fn encode_column(
     array: &dyn Array,
     field: &Field,
     column_info: &mut ColumnInfo,
-) -> Result<(ArrayRef, BoundingRect)> {
+) -> GeoArrowResult<(ArrayRef, BoundingRect)> {
     let geo_arr = from_arrow_array(array, field)?;
     let array_bounds = total_bounds(geo_arr.as_ref())?;
     let encoded_array = match column_info.encoding {
@@ -47,7 +47,7 @@ fn encode_column(
 }
 
 /// Encode column as WKB
-fn encode_wkb_column(geo_arr: &dyn GeoArrowArray) -> Result<ArrayRef> {
+fn encode_wkb_column(geo_arr: &dyn GeoArrowArray) -> GeoArrowResult<ArrayRef> {
     Ok(to_wkb::<i32>(geo_arr)?.to_array_ref())
 }
 

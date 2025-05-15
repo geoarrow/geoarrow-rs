@@ -3,7 +3,7 @@ use crate::writer::metadata::GeoParquetMetadataBuilder;
 use crate::writer::options::GeoParquetWriterOptions;
 use arrow_array::{RecordBatch, RecordBatchReader};
 use arrow_schema::Schema;
-use geoarrow_array::error::{GeoArrowError, Result};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use parquet::arrow::AsyncArrowWriter;
 use parquet::arrow::async_writer::AsyncFileWriter;
 use parquet::file::metadata::KeyValue;
@@ -13,7 +13,7 @@ pub async fn write_geoparquet_async<W: AsyncFileWriter>(
     stream: Box<dyn RecordBatchReader>,
     writer: W,
     options: &GeoParquetWriterOptions,
-) -> Result<()> {
+) -> GeoArrowResult<()> {
     let mut parquet_writer = GeoParquetWriterAsync::try_new(writer, &stream.schema(), options)?;
 
     for batch in stream {
@@ -32,7 +32,11 @@ pub struct GeoParquetWriterAsync<W: AsyncFileWriter> {
 
 impl<W: AsyncFileWriter> GeoParquetWriterAsync<W> {
     /// Construct a new [GeoParquetWriterAsync]
-    pub fn try_new(writer: W, schema: &Schema, options: &GeoParquetWriterOptions) -> Result<Self> {
+    pub fn try_new(
+        writer: W,
+        schema: &Schema,
+        options: &GeoParquetWriterOptions,
+    ) -> GeoArrowResult<Self> {
         let metadata_builder = GeoParquetMetadataBuilder::try_new(schema, options)?;
 
         let writer = AsyncArrowWriter::try_new(
@@ -49,7 +53,7 @@ impl<W: AsyncFileWriter> GeoParquetWriterAsync<W> {
     }
 
     /// Write a batch to an output file
-    pub async fn write_batch(&mut self, batch: &RecordBatch) -> Result<()> {
+    pub async fn write_batch(&mut self, batch: &RecordBatch) -> GeoArrowResult<()> {
         let encoded_batch = encode_record_batch(batch, &mut self.metadata_builder)?;
         self.writer
             .write(&encoded_batch)
@@ -68,7 +72,7 @@ impl<W: AsyncFileWriter> GeoParquetWriterAsync<W> {
     /// This must be called to write the Parquet footer.
     ///
     /// All the data in the inner buffer will be force flushed.
-    pub async fn finish(mut self) -> Result<()> {
+    pub async fn finish(mut self) -> GeoArrowResult<()> {
         if let Some(geo_meta) = self.metadata_builder.finish() {
             let kv_metadata = KeyValue::new("geo".to_string(), serde_json::to_string(&geo_meta)?);
             self.writer.append_key_value_metadata(kv_metadata);

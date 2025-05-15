@@ -1,8 +1,8 @@
 use arrow_array::OffsetSizeTrait;
 use geoarrow_array::array::GenericWkbArray;
 use geoarrow_array::builder::WkbBuilder;
-use geoarrow_array::error::Result;
 use geoarrow_schema::WkbType;
+use geoarrow_schema::error::GeoArrowResult;
 
 use crate::import::array::FromGEOS;
 use crate::import::scalar::GEOSGeometry;
@@ -13,7 +13,7 @@ impl<O: OffsetSizeTrait> FromGEOS for WkbBuilder<O> {
     fn from_geos(
         geoms: impl IntoIterator<Item = Option<geos::Geometry>>,
         typ: Self::GeoArrowType,
-    ) -> geoarrow_array::error::Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let geoms = geoms
             .into_iter()
             .map(|geom| geom.map(GEOSGeometry::new))
@@ -28,7 +28,7 @@ impl<O: OffsetSizeTrait> FromGEOS for GenericWkbArray<O> {
     fn from_geos(
         geoms: impl IntoIterator<Item = Option<geos::Geometry>>,
         typ: Self::GeoArrowType,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         Ok(WkbBuilder::from_geos(geoms, typ)?.finish())
     }
 }

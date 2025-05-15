@@ -1,5 +1,5 @@
 use geoarrow_array::crs::CRSTransform;
-use geoarrow_array::error::GeoArrowError;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{Crs, CrsType};
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
@@ -158,14 +158,14 @@ impl Default for PyprojCRSTransform {
 }
 
 impl CRSTransform for PyprojCRSTransform {
-    fn _convert_to_projjson(&self, crs: &Crs) -> geoarrow_array::error::Result<Option<Value>> {
+    fn _convert_to_projjson(&self, crs: &Crs) -> GeoArrowResult<Option<Value>> {
         let crs = PyCrs::from(crs.clone());
         let projjson = Python::with_gil(|py| crs.to_projjson(py))
             .map_err(|err| GeoArrowError::General(err.to_string()))?;
         Ok(projjson)
     }
 
-    fn _convert_to_wkt(&self, crs: &Crs) -> geoarrow_array::error::Result<Option<String>> {
+    fn _convert_to_wkt(&self, crs: &Crs) -> GeoArrowResult<Option<String>> {
         let crs = PyCrs::from(crs.clone());
         let wkt = Python::with_gil(|py| crs.to_wkt(py))
             .map_err(|err| GeoArrowError::General(err.to_string()))?;
