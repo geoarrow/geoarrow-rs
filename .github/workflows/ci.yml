@@ -52,7 +52,7 @@ jobs:
         with:
           components: rustfmt
       - name: Fmt
-        run: cargo +nightly fmt -- --check --unstable-features --config imports_granularity=Module,group_imports=StdExternalCrate
+        run: cargo +nightly-2025-05-14 fmt -- --check --unstable-features --config imports_granularity=Module,group_imports=StdExternalCrate
 
   docs-no-warnings:
     name: Lint and Test
