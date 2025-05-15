@@ -48,26 +48,13 @@ pub enum GeoArrowError {
     #[error(transparent)]
     SerdeJsonError(#[from] serde_json::Error),
 
-    /// [wkb::error::WkbError]
-    #[error(transparent)]
-    WkbError(#[from] wkb::error::WkbError),
-
     /// [wkt::error::Error]
     #[error("WKT error: {0}")]
     WktStrError(&'static str),
-
-    /// [wkt::error::Error]
-    #[error(transparent)]
-    WktError(#[from] wkt::error::Error),
-
-    /// [geozero::error::GeozeroError]
-    #[cfg(feature = "geozero")]
-    #[error(transparent)]
-    GeozeroError(#[from] geozero::error::GeozeroError),
 }
 
 /// Crate-specific result type.
-pub type Result<T> = std::result::Result<T, GeoArrowError>;
+pub type GeoArrowResult<T> = std::result::Result<T, GeoArrowError>;
 
 impl From<GeoArrowError> for ArrowError {
     /// Many APIs where we pass in a callback into the Arrow crate require the returned error type

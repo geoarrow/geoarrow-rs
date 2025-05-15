@@ -4,8 +4,8 @@ use arrow_schema::Schema;
 use flatgeobuf::{FgbCrs, FgbWriter, FgbWriterOptions};
 use geoarrow_array::GeoArrowType;
 use geoarrow_array::crs::{CRSTransform, DefaultCRSTransform};
-use geoarrow_array::error::{GeoArrowError, Result};
 use geoarrow_array::geozero::export::GeozeroRecordBatchReader;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{Dimension, Metadata};
 use geozero::GeozeroDatasource;
 
@@ -52,7 +52,7 @@ impl FlatGeobufWriterOptions {
     /// This uses the [CRSTransform] supplied in the [FlatGeobufWriterOptions].
     ///
     /// If no CRS exists in the Metadata, None will be returned here.
-    fn create_wkt_crs(&self, array_meta: &Metadata) -> Result<Option<String>> {
+    fn create_wkt_crs(&self, array_meta: &Metadata) -> GeoArrowResult<Option<String>> {
         if let Some(crs_transform) = &self.crs_transform {
             crs_transform.extract_wkt(array_meta.crs())
         } else {
@@ -104,7 +104,7 @@ pub fn write_flatgeobuf<W: Write, S: Into<GeozeroRecordBatchReader>>(
     stream: S,
     writer: W,
     name: &str,
-) -> Result<()> {
+) -> GeoArrowResult<()> {
     write_flatgeobuf_with_options(stream, writer, name, Default::default())
 }
 
@@ -117,7 +117,7 @@ pub fn write_flatgeobuf_with_options<W: Write, S: Into<GeozeroRecordBatchReader>
     writer: W,
     name: &str,
     options: FlatGeobufWriterOptions,
-) -> Result<()> {
+) -> GeoArrowResult<()> {
     let mut stream: GeozeroRecordBatchReader = stream.into();
 
     let schema = stream.as_ref().schema();
@@ -139,13 +139,15 @@ pub fn write_flatgeobuf_with_options<W: Write, S: Into<GeozeroRecordBatchReader>
 
     let mut fgb = FgbWriter::create_with_options(name, geometry_type, fgb_options)
         .map_err(|err| GeoArrowError::External(Box::new(err)))?;
-    stream.process(&mut fgb)?;
+    stream
+        .process(&mut fgb)
+        .map_err(|err| GeoArrowError::External(Box::new(err)))?;
     fgb.write(writer)
         .map_err(|err| GeoArrowError::External(Box::new(err)))?;
     Ok(())
 }
 
-fn infer_flatgeobuf_geometry_type(schema: &Schema) -> Result<flatgeobuf::GeometryType> {
+fn infer_flatgeobuf_geometry_type(schema: &Schema) -> GeoArrowResult<flatgeobuf::GeometryType> {
     let fields = &schema.fields;
     let geom_col_idxs = geometry_columns(schema);
     if geom_col_idxs.len() != 1 {

@@ -1,5 +1,5 @@
 use geo_traits::LineStringTrait;
-use geoarrow_array::error::{GeoArrowError, Result};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geos::{Geom, GeometryTypes};
 
 use crate::import::scalar::coord::GEOSConstCoord;
@@ -12,7 +12,7 @@ impl<'a> GEOSConstLinearRing<'a> {
     }
 
     #[allow(dead_code)]
-    pub fn try_new(geom: geos::ConstGeometry<'a>) -> Result<Self> {
+    pub fn try_new(geom: geos::ConstGeometry<'a>) -> GeoArrowResult<Self> {
         if matches!(geom.geometry_type(), GeometryTypes::LinearRing) {
             Ok(Self(geom))
         } else {

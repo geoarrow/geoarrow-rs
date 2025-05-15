@@ -9,7 +9,6 @@ pub mod cast;
 pub mod crs;
 mod datatypes;
 mod eq;
-pub mod error;
 #[cfg(feature = "geozero")]
 pub mod geozero;
 pub mod scalar;

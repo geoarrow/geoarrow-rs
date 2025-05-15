@@ -4,6 +4,7 @@ use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, Metadata, MultiLineStringType};
 
 use crate::array::{CoordBuffer, GenericWkbArray, LineStringArray};
@@ -11,7 +12,6 @@ use crate::builder::MultiLineStringBuilder;
 use crate::capacity::MultiLineStringCapacity;
 use crate::datatypes::GeoArrowType;
 use crate::eq::offset_buffer_eq;
-use crate::error::{GeoArrowError, Result};
 use crate::scalar::MultiLineString;
 use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 use crate::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
@@ -41,7 +41,7 @@ pub(super) fn check(
     geom_offsets: &OffsetBuffer<i32>,
     ring_offsets: &OffsetBuffer<i32>,
     validity_len: Option<usize>,
-) -> Result<()> {
+) -> GeoArrowResult<()> {
     if validity_len.is_some_and(|len| len != geom_offsets.len_proxy()) {
         return Err(GeoArrowError::General(
             "nulls mask length must match the number of values".to_string(),
@@ -102,7 +102,7 @@ impl MultiLineStringArray {
         ring_offsets: OffsetBuffer<i32>,
         nulls: Option<NullBuffer>,
         metadata: Arc<Metadata>,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         check(
             &coords,
             &geom_offsets,
@@ -248,7 +248,7 @@ impl GeoArrowArray for MultiLineStringArray {
 impl<'a> GeoArrowArrayAccessor<'a> for MultiLineStringArray {
     type Item = MultiLineString<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
+    unsafe fn value_unchecked(&'a self, index: usize) -> GeoArrowResult<Self::Item> {
         Ok(MultiLineString::new(
             &self.coords,
             &self.geom_offsets,
@@ -284,7 +284,9 @@ impl IntoArrow for MultiLineStringArray {
 impl TryFrom<(&GenericListArray<i32>, MultiLineStringType)> for MultiLineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from((geom_array, typ): (&GenericListArray<i32>, MultiLineStringType)) -> Result<Self> {
+    fn try_from(
+        (geom_array, typ): (&GenericListArray<i32>, MultiLineStringType),
+    ) -> GeoArrowResult<Self> {
         let geom_offsets = geom_array.offsets();
         let nulls = geom_array.nulls();
 
@@ -307,7 +309,9 @@ impl TryFrom<(&GenericListArray<i32>, MultiLineStringType)> for MultiLineStringA
 impl TryFrom<(&GenericListArray<i64>, MultiLineStringType)> for MultiLineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from((geom_array, typ): (&GenericListArray<i64>, MultiLineStringType)) -> Result<Self> {
+    fn try_from(
+        (geom_array, typ): (&GenericListArray<i64>, MultiLineStringType),
+    ) -> GeoArrowResult<Self> {
         let geom_offsets = offsets_buffer_i64_to_i32(geom_array.offsets())?;
         let nulls = geom_array.nulls();
 
@@ -330,7 +334,7 @@ impl TryFrom<(&GenericListArray<i64>, MultiLineStringType)> for MultiLineStringA
 impl TryFrom<(&dyn Array, MultiLineStringType)> for MultiLineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (&dyn Array, MultiLineStringType)) -> Result<Self> {
+    fn try_from((value, typ): (&dyn Array, MultiLineStringType)) -> GeoArrowResult<Self> {
         match value.data_type() {
             DataType::List(_) => (value.as_list::<i32>(), typ).try_into(),
             DataType::LargeList(_) => (value.as_list::<i64>(), typ).try_into(),
@@ -345,7 +349,7 @@ impl TryFrom<(&dyn Array, MultiLineStringType)> for MultiLineStringArray {
 impl TryFrom<(&dyn Array, &Field)> for MultiLineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+    fn try_from((arr, field): (&dyn Array, &Field)) -> GeoArrowResult<Self> {
         let typ = field.try_extension_type::<MultiLineStringType>()?;
         (arr, typ).try_into()
     }
@@ -356,7 +360,7 @@ impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, MultiLineStringType)>
 {
     type Error = GeoArrowError;
 
-    fn try_from(value: (GenericWkbArray<O>, MultiLineStringType)) -> Result<Self> {
+    fn try_from(value: (GenericWkbArray<O>, MultiLineStringType)) -> GeoArrowResult<Self> {
         let mut_arr: MultiLineStringBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }

@@ -7,6 +7,7 @@ mod coord_type;
 mod crs;
 mod dimension;
 mod edges;
+pub mod error;
 mod metadata;
 mod r#type;
 

@@ -1,7 +1,7 @@
 use geoarrow_array::array::GeometryArray;
 use geoarrow_array::builder::GeometryBuilder;
-use geoarrow_array::error::Result;
 use geoarrow_schema::GeometryType;
+use geoarrow_schema::error::GeoArrowResult;
 
 use crate::import::array::FromGEOS;
 use crate::import::scalar::GEOSGeometry;
@@ -12,7 +12,7 @@ impl FromGEOS for GeometryBuilder {
     fn from_geos(
         geoms: impl IntoIterator<Item = Option<geos::Geometry>>,
         typ: Self::GeoArrowType,
-    ) -> geoarrow_array::error::Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let geoms = geoms
             .into_iter()
             .map(|geom| geom.map(GEOSGeometry::new))
@@ -27,7 +27,7 @@ impl FromGEOS for GeometryArray {
     fn from_geos(
         geoms: impl IntoIterator<Item = Option<geos::Geometry>>,
         typ: Self::GeoArrowType,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         Ok(GeometryBuilder::from_geos(geoms, typ)?.finish())
     }
 }

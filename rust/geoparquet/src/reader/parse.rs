@@ -20,13 +20,13 @@ use crate::metadata::{
     GeoParquetColumnEncoding, GeoParquetColumnMetadata, GeoParquetGeometryTypeAndDimension,
     GeoParquetMetadata, infer_geo_data_type,
 };
-use geoarrow_array::error::{GeoArrowError, Result};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 pub fn infer_target_schema(
     existing_schema: &Schema,
     geo_meta: &GeoParquetMetadata,
     coord_type: CoordType,
-) -> Result<SchemaRef> {
+) -> GeoArrowResult<SchemaRef> {
     let mut new_fields: Vec<FieldRef> = Vec::with_capacity(existing_schema.fields().len());
     for existing_field in existing_schema.fields() {
         if let Some(column_meta) = geo_meta.columns.get(existing_field.name()) {
@@ -48,7 +48,7 @@ fn infer_target_field(
     existing_field: &Field,
     column_meta: &GeoParquetColumnMetadata,
     coord_type: CoordType,
-) -> Result<FieldRef> {
+) -> GeoArrowResult<FieldRef> {
     let metadata = Arc::new(Metadata::from(column_meta.clone()));
 
     let target_geo_data_type: GeoArrowType = match column_meta.encoding {
@@ -73,7 +73,7 @@ fn infer_target_wkb_type(
     geometry_types: &HashSet<GeoParquetGeometryTypeAndDimension>,
     coord_type: CoordType,
     metadata: Arc<Metadata>,
-) -> Result<GeoArrowType> {
+) -> GeoArrowResult<GeoArrowType> {
     Ok(
         infer_geo_data_type(geometry_types, coord_type, metadata.clone())?.unwrap_or(
             GeoArrowType::Geometry(GeometryType::new(coord_type, metadata)),
@@ -82,7 +82,10 @@ fn infer_target_wkb_type(
 }
 
 /// Parse a record batch to a GeoArrow record batch.
-pub fn parse_record_batch(batch: RecordBatch, target_schema: SchemaRef) -> Result<RecordBatch> {
+pub fn parse_record_batch(
+    batch: RecordBatch,
+    target_schema: SchemaRef,
+) -> GeoArrowResult<RecordBatch> {
     let orig_columns = batch.columns().to_vec();
     let mut output_columns = Vec::with_capacity(orig_columns.len());
 
@@ -111,7 +114,11 @@ pub fn parse_record_batch(batch: RecordBatch, target_schema: SchemaRef) -> Resul
 }
 
 /// Parse a single column based on provided GeoParquet metadata and target field
-fn parse_array(array: ArrayRef, orig_field: &Field, target_field: &Field) -> Result<ArrayRef> {
+fn parse_array(
+    array: ArrayRef,
+    orig_field: &Field,
+    target_field: &Field,
+) -> GeoArrowResult<ArrayRef> {
     let target_type = GeoArrowType::try_from(target_field)?;
     match orig_field.data_type() {
         DataType::Binary | DataType::LargeBinary | DataType::BinaryView => {
@@ -132,7 +139,10 @@ fn parse_array(array: ArrayRef, orig_field: &Field, target_field: &Field) -> Res
     }
 }
 
-fn parse_wkb_column(arr: &dyn Array, target_geo_data_type: GeoArrowType) -> Result<ArrayRef> {
+fn parse_wkb_column(
+    arr: &dyn Array,
+    target_geo_data_type: GeoArrowType,
+) -> GeoArrowResult<ArrayRef> {
     match arr.data_type() {
         DataType::Binary => {
             let wkb_arr = WkbArray::try_from((arr, WkbType::new(Default::default())))?;
@@ -151,14 +161,14 @@ fn parse_wkb_column(arr: &dyn Array, target_geo_data_type: GeoArrowType) -> Resu
     }
 }
 
-fn parse_point_column(array: &dyn Array, typ: PointType) -> Result<ArrayRef> {
+fn parse_point_column(array: &dyn Array, typ: PointType) -> GeoArrowResult<ArrayRef> {
     let geom_arr: PointArray = (array, typ).try_into()?;
     Ok(geom_arr.into_array_ref())
 }
 
 macro_rules! impl_parse_fn {
     ($fn_name:ident, $geoarrow_type:ty, $geom_type:ty) => {
-        fn $fn_name(array: &dyn Array, typ: $geom_type) -> Result<ArrayRef> {
+        fn $fn_name(array: &dyn Array, typ: $geom_type) -> GeoArrowResult<ArrayRef> {
             let geom_arr: $geoarrow_type = (array, typ).try_into()?;
             Ok(geom_arr.into_array_ref())
         }

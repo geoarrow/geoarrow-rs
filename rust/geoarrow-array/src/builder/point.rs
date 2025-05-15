@@ -11,8 +11,8 @@ use crate::array::{GenericWkbArray, PointArray};
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder,
 };
-use crate::error::{GeoArrowError, Result};
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// The GeoArrow equivalent to `Vec<Option<Point>>`: a mutable collection of Points.
 ///
@@ -107,7 +107,10 @@ impl PointBuilder {
     ///
     /// - If the added coordinate does not have the same dimension as the point array.
     #[inline]
-    pub fn try_push_coord(&mut self, value: Option<&impl CoordTrait<T = f64>>) -> Result<()> {
+    pub fn try_push_coord(
+        &mut self,
+        value: Option<&impl CoordTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
         if let Some(value) = value {
             self.coords.try_push_coord(value)?;
             self.validity.append(true);
@@ -123,7 +126,10 @@ impl PointBuilder {
     ///
     /// - If the added point does not have the same dimension as the point array.
     #[inline]
-    pub fn try_push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) -> Result<()> {
+    pub fn try_push_point(
+        &mut self,
+        value: Option<&impl PointTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
         if let Some(value) = value {
             self.coords.try_push_point(value)?;
             self.validity.append(true);
@@ -151,7 +157,10 @@ impl PointBuilder {
     ///
     /// This will error if the geometry type is not Point or a MultiPoint with length 1.
     #[inline]
-    pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+    pub fn push_geometry(
+        &mut self,
+        value: Option<&impl GeometryTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
         if let Some(value) = value {
             match value.as_type() {
                 GeometryType::Point(p) => self.push_point(Some(p)),
@@ -187,7 +196,7 @@ impl PointBuilder {
     pub fn extend_from_geometry_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         geoms.into_iter().try_for_each(|g| self.push_geometry(g))?;
         Ok(())
     }
@@ -220,7 +229,7 @@ impl PointBuilder {
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         typ: PointType,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let capacity = geoms.len();
         let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_geometry_iter(geoms.iter().map(|x| x.as_ref()))?;
@@ -231,11 +240,11 @@ impl PointBuilder {
 impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, PointType)> for PointBuilder {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (GenericWkbArray<O>, PointType)) -> Result<Self> {
+    fn try_from((value, typ): (GenericWkbArray<O>, PointType)) -> GeoArrowResult<Self> {
         let wkb_objects = value
             .iter()
             .map(|x| x.transpose())
-            .collect::<Result<Vec<_>>>()?;
+            .collect::<GeoArrowResult<Vec<_>>>()?;
         Self::from_nullable_geometries(&wkb_objects, typ)
     }
 }
@@ -249,7 +258,10 @@ impl GeoArrowArrayBuilder for PointBuilder {
         self.push_null();
     }
 
-    fn push_geometry(&mut self, geometry: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+    fn push_geometry(
+        &mut self,
+        geometry: Option<&impl GeometryTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
         self.push_geometry(geometry)
     }
 

@@ -1,7 +1,7 @@
 use geoarrow_array::array::PolygonArray;
 use geoarrow_array::builder::PolygonBuilder;
-use geoarrow_array::error::Result;
 use geoarrow_schema::PolygonType;
+use geoarrow_schema::error::GeoArrowResult;
 
 use crate::import::array::FromGEOS;
 use crate::import::scalar::GEOSPolygon;
@@ -12,11 +12,11 @@ impl FromGEOS for PolygonBuilder {
     fn from_geos(
         geoms: impl IntoIterator<Item = Option<geos::Geometry>>,
         typ: Self::GeoArrowType,
-    ) -> geoarrow_array::error::Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let geoms = geoms
             .into_iter()
             .map(|geom| geom.map(GEOSPolygon::try_new).transpose())
-            .collect::<Result<Vec<_>>>()?;
+            .collect::<GeoArrowResult<Vec<_>>>()?;
         Ok(Self::from_nullable_polygons(&geoms, typ))
     }
 }
@@ -27,7 +27,7 @@ impl FromGEOS for PolygonArray {
     fn from_geos(
         geoms: impl IntoIterator<Item = Option<geos::Geometry>>,
         typ: Self::GeoArrowType,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         Ok(PolygonBuilder::from_geos(geoms, typ)?.finish())
     }
 }

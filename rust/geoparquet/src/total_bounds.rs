@@ -12,8 +12,8 @@ use geo_types::Coord;
 use geoarrow_array::array::RectArray;
 use geoarrow_array::builder::RectBuilder;
 use geoarrow_array::cast::AsGeoArrowArray;
-use geoarrow_array::error::Result;
 use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, GeoArrowType};
+use geoarrow_schema::error::GeoArrowResult;
 use geoarrow_schema::{BoxType, Dimension};
 
 #[derive(Debug, Clone, Copy)]
@@ -291,7 +291,7 @@ impl GeometryTrait for BoundingRect {
 /// Create a new RectArray using the bounding box of each geometry.
 ///
 /// Note that this **does not** currently correctly handle the antimeridian
-pub(crate) fn bounding_rect(arr: &dyn GeoArrowArray) -> Result<RectArray> {
+pub(crate) fn bounding_rect(arr: &dyn GeoArrowArray) -> GeoArrowResult<RectArray> {
     use GeoArrowType::*;
     match arr.data_type() {
         Point(_) => impl_array_accessor(arr.as_point()),
@@ -313,7 +313,7 @@ pub(crate) fn bounding_rect(arr: &dyn GeoArrowArray) -> Result<RectArray> {
 }
 
 /// The actual implementation of computing the bounding rect
-fn impl_array_accessor<'a>(arr: &'a impl GeoArrowArrayAccessor<'a>) -> Result<RectArray> {
+fn impl_array_accessor<'a>(arr: &'a impl GeoArrowArrayAccessor<'a>) -> GeoArrowResult<RectArray> {
     match arr.data_type() {
         GeoArrowType::Rect(_) => unreachable!(),
         _ => {
@@ -336,7 +336,7 @@ fn impl_array_accessor<'a>(arr: &'a impl GeoArrowArrayAccessor<'a>) -> Result<Re
 }
 
 /// Get the total bounds (i.e. minx, miny, maxx, maxy) of the entire geoarrow array.
-pub(crate) fn total_bounds(arr: &dyn GeoArrowArray) -> Result<BoundingRect> {
+pub(crate) fn total_bounds(arr: &dyn GeoArrowArray) -> GeoArrowResult<BoundingRect> {
     use GeoArrowType::*;
     match arr.data_type() {
         Point(_) => impl_total_bounds(arr.as_point()),
@@ -358,7 +358,7 @@ pub(crate) fn total_bounds(arr: &dyn GeoArrowArray) -> Result<BoundingRect> {
 }
 
 /// The actual implementation of computing the total bounds
-fn impl_total_bounds<'a>(arr: &'a impl GeoArrowArrayAccessor<'a>) -> Result<BoundingRect> {
+fn impl_total_bounds<'a>(arr: &'a impl GeoArrowArrayAccessor<'a>) -> GeoArrowResult<BoundingRect> {
     let mut rect = BoundingRect::new();
 
     for item in arr.iter().flatten() {

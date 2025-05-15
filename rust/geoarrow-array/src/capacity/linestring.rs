@@ -1,7 +1,7 @@
 use std::ops::Add;
 
-use crate::error::{GeoArrowError, Result};
 use geo_traits::{GeometryTrait, GeometryType, LineStringTrait};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// A counter for the buffer sizes of a [`LineStringArray`][crate::array::LineStringArray].
 ///
@@ -49,7 +49,7 @@ impl LineStringCapacity {
     ///
     /// The type of the geometry must be LineString
     #[inline]
-    pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait>) -> Result<()> {
+    pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait>) -> GeoArrowResult<()> {
         self.geom_capacity += 1;
 
         if let Some(g) = value {
@@ -87,7 +87,7 @@ impl LineStringCapacity {
     /// Construct a new counter pre-filled with the given geometries
     pub fn from_geometries<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let mut counter = Self::new_empty();
         for g in geoms.into_iter() {
             counter.add_geometry(g)?;

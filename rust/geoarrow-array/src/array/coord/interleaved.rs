@@ -4,10 +4,10 @@ use arrow_array::{Array, FixedSizeListArray, Float64Array};
 use arrow_buffer::ScalarBuffer;
 use arrow_schema::{DataType, Field};
 use geo_traits::CoordTrait;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, Dimension, PointType};
 
 use crate::builder::InterleavedCoordBufferBuilder;
-use crate::error::{GeoArrowError, Result};
 use crate::scalar::InterleavedCoord;
 
 /// An array of coordinates stored interleaved in a single buffer.
@@ -20,7 +20,7 @@ pub struct InterleavedCoordBuffer {
     pub(crate) dim: Dimension,
 }
 
-fn check(coords: &ScalarBuffer<f64>, dim: Dimension) -> Result<()> {
+fn check(coords: &ScalarBuffer<f64>, dim: Dimension) -> GeoArrowResult<()> {
     if coords.len() % dim.size() != 0 {
         return Err(GeoArrowError::General(
             "Length of interleaved coordinate buffer must be a multiple of the dimension size"
@@ -49,7 +49,7 @@ impl InterleavedCoordBuffer {
     /// # Errors
     ///
     /// - if the coordinate buffer have different lengths
-    pub fn try_new(coords: ScalarBuffer<f64>, dim: Dimension) -> Result<Self> {
+    pub fn try_new(coords: ScalarBuffer<f64>, dim: Dimension) -> GeoArrowResult<Self> {
         check(&coords, dim)?;
         Ok(Self { coords, dim })
     }
@@ -58,7 +58,7 @@ impl InterleavedCoordBuffer {
     pub fn from_coords<'a>(
         coords: impl ExactSizeIterator<Item = &'a (impl CoordTrait<T = f64> + 'a)>,
         dim: Dimension,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         Ok(InterleavedCoordBufferBuilder::from_coords(coords, dim)?.finish())
     }
 
@@ -125,7 +125,7 @@ impl InterleavedCoordBuffer {
         }
     }
 
-    pub(crate) fn from_arrow(array: &FixedSizeListArray, dim: Dimension) -> Result<Self> {
+    pub(crate) fn from_arrow(array: &FixedSizeListArray, dim: Dimension) -> GeoArrowResult<Self> {
         if array.value_length() != dim.size() as i32 {
             return Err(GeoArrowError::General(format!(
                 "Expected the FixedSizeListArray to match the dimension. Array length is {}, dimension is: {:?} have size 2",

@@ -10,7 +10,7 @@ use crate::array::GeometryBuilder;
 use crate::chunked_array::ChunkedNativeArrayDyn;
 use crate::table::Table;
 use crate::{GeoParquetRecordBatchReaderBuilder, write_geoparquet};
-use geoarrow_array::error::Result;
+use geoarrow_schema::error::GeoArrowResult;
 
 #[ignore = "fails!"]
 #[test]

@@ -5,6 +5,7 @@ use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, OffsetSizeTrait, UnionArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field, UnionMode};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{
     CoordType, Dimension, GeometryCollectionType, GeometryType, LineStringType, Metadata,
     MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType,
@@ -14,7 +15,6 @@ use crate::array::*;
 use crate::builder::*;
 use crate::capacity::GeometryCapacity;
 use crate::datatypes::GeoArrowType;
-use crate::error::{GeoArrowError, Result};
 use crate::scalar::Geometry;
 use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 
@@ -502,7 +502,7 @@ impl GeoArrowArray for GeometryArray {
 impl<'a> GeoArrowArrayAccessor<'a> for GeometryArray {
     type Item = Geometry<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
+    unsafe fn value_unchecked(&'a self, index: usize) -> GeoArrowResult<Self::Item> {
         let type_id = self.type_ids[index];
         let offset = self.offsets[index] as usize;
 
@@ -573,9 +573,7 @@ impl IntoArrow for GeometryArray {
 impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
     type Error = GeoArrowError;
 
-    fn try_from(
-        (value, typ): (&UnionArray, GeometryType),
-    ) -> std::result::Result<Self, Self::Error> {
+    fn try_from((value, typ): (&UnionArray, GeometryType)) -> GeoArrowResult<Self> {
         let mut points: [Option<PointArray>; 4] = Default::default();
         let mut line_strings: [Option<LineStringArray>; 4] = Default::default();
         let mut polygons: [Option<PolygonArray>; 4] = Default::default();
@@ -797,7 +795,7 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
 impl TryFrom<(&dyn Array, GeometryType)> for GeometryArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (&dyn Array, GeometryType)) -> Result<Self> {
+    fn try_from((value, typ): (&dyn Array, GeometryType)) -> GeoArrowResult<Self> {
         match value.data_type() {
             DataType::Union(_, _) => (value.as_union(), typ).try_into(),
             _ => Err(GeoArrowError::General(format!(
@@ -811,7 +809,7 @@ impl TryFrom<(&dyn Array, GeometryType)> for GeometryArray {
 impl TryFrom<(&dyn Array, &Field)> for GeometryArray {
     type Error = GeoArrowError;
 
-    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+    fn try_from((arr, field): (&dyn Array, &Field)) -> GeoArrowResult<Self> {
         let typ = field.try_extension_type::<GeometryType>()?;
         (arr, typ).try_into()
     }
@@ -820,7 +818,7 @@ impl TryFrom<(&dyn Array, &Field)> for GeometryArray {
 impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, GeometryType)> for GeometryArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (GenericWkbArray<O>, GeometryType)) -> Result<Self> {
+    fn try_from(value: (GenericWkbArray<O>, GeometryType)) -> GeoArrowResult<Self> {
         let mut_arr: GeometryBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }

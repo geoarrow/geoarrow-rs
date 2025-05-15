@@ -5,6 +5,7 @@ use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, UnionArray};
 use arrow_buffer::ScalarBuffer;
 use arrow_schema::{DataType, UnionMode};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{
     CoordType, Dimension, GeometryCollectionType, LineStringType, MultiLineStringType,
     MultiPointType, MultiPolygonType, PointType, PolygonType,
@@ -21,7 +22,6 @@ use crate::builder::{
 };
 use crate::capacity::MixedCapacity;
 use crate::datatypes::GeoArrowType;
-use crate::error::{GeoArrowError, Result};
 use crate::scalar::Geometry;
 use crate::trait_::GeoArrowArray;
 
@@ -539,7 +539,7 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
 
     fn try_from(
         (value, dim, coord_type): (&UnionArray, Dimension, CoordType),
-    ) -> std::result::Result<Self, Self::Error> {
+    ) -> GeoArrowResult<Self> {
         let mut points: Option<PointArray> = None;
         let mut line_strings: Option<LineStringArray> = None;
         let mut polygons: Option<PolygonArray> = None;
@@ -656,7 +656,9 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
 impl TryFrom<(&dyn Array, Dimension, CoordType)> for MixedGeometryArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, dim, coord_type): (&dyn Array, Dimension, CoordType)) -> Result<Self> {
+    fn try_from(
+        (value, dim, coord_type): (&dyn Array, Dimension, CoordType),
+    ) -> GeoArrowResult<Self> {
         match value.data_type() {
             DataType::Union(_, _) => (value.as_union(), dim, coord_type).try_into(),
             _ => Err(GeoArrowError::General(format!(

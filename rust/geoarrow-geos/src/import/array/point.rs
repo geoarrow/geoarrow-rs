@@ -1,7 +1,7 @@
 use geoarrow_array::array::PointArray;
 use geoarrow_array::builder::PointBuilder;
-use geoarrow_array::error::Result;
 use geoarrow_schema::PointType;
+use geoarrow_schema::error::GeoArrowResult;
 
 use crate::import::array::FromGEOS;
 use crate::import::scalar::GEOSPoint;
@@ -12,11 +12,11 @@ impl FromGEOS for PointBuilder {
     fn from_geos(
         geoms: impl IntoIterator<Item = Option<geos::Geometry>>,
         typ: Self::GeoArrowType,
-    ) -> geoarrow_array::error::Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let geoms = geoms
             .into_iter()
             .map(|geom| geom.map(GEOSPoint::try_new).transpose())
-            .collect::<Result<Vec<_>>>()?;
+            .collect::<GeoArrowResult<Vec<_>>>()?;
         Ok(Self::from_nullable_points(
             geoms.iter().map(|x| x.as_ref()),
             typ,
@@ -30,7 +30,7 @@ impl FromGEOS for PointArray {
     fn from_geos(
         geoms: impl IntoIterator<Item = Option<geos::Geometry>>,
         typ: Self::GeoArrowType,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         Ok(PointBuilder::from_geos(geoms, typ)?.finish())
     }
 }

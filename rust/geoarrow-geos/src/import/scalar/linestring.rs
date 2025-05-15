@@ -1,5 +1,5 @@
 use geo_traits::LineStringTrait;
-use geoarrow_array::error::{GeoArrowError, Result};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geos::{Geom, GeometryTypes};
 
 use crate::import::scalar::coord::GEOSConstCoord;
@@ -10,7 +10,7 @@ impl GEOSLineString {
     pub fn new_unchecked(geom: geos::Geometry) -> Self {
         Self(geom)
     }
-    pub fn try_new(geom: geos::Geometry) -> Result<Self> {
+    pub fn try_new(geom: geos::Geometry) -> GeoArrowResult<Self> {
         if matches!(geom.geometry_type(), GeometryTypes::LineString) {
             Ok(Self(geom))
         } else {
@@ -77,7 +77,7 @@ impl<'a> GEOSConstLineString<'a> {
     }
 
     #[allow(dead_code)]
-    pub fn try_new(geom: geos::ConstGeometry<'a>) -> Result<Self> {
+    pub fn try_new(geom: geos::ConstGeometry<'a>) -> GeoArrowResult<Self> {
         if matches!(geom.geometry_type(), GeometryTypes::LineString) {
             Ok(Self(geom))
         } else {

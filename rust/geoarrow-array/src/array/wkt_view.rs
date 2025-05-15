@@ -10,8 +10,8 @@ use geoarrow_schema::{Metadata, WktType};
 use wkt::Wkt;
 
 use crate::array::GenericWktArray;
-use crate::error::{GeoArrowError, Result};
 use crate::{GeoArrowArray, GeoArrowArrayAccessor, GeoArrowType, IntoArrow};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// An immutable array of WKT geometries.
 ///
@@ -118,7 +118,7 @@ impl GeoArrowArray for WktViewArray {
 impl<'a> GeoArrowArrayAccessor<'a> for WktViewArray {
     type Item = Wkt<f64>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
+    unsafe fn value_unchecked(&'a self, index: usize) -> GeoArrowResult<Self::Item> {
         let s = unsafe { self.array.value_unchecked(index) };
         Wkt::from_str(s).map_err(GeoArrowError::WktStrError)
     }
@@ -149,7 +149,7 @@ impl From<(StringViewArray, WktType)> for WktViewArray {
 impl TryFrom<(&dyn Array, WktType)> for WktViewArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (&dyn Array, WktType)) -> Result<Self> {
+    fn try_from((value, typ): (&dyn Array, WktType)) -> GeoArrowResult<Self> {
         match value.data_type() {
             DataType::Utf8View => Ok((value.as_string_view().clone(), typ).into()),
             _ => Err(GeoArrowError::General(format!(
@@ -163,7 +163,7 @@ impl TryFrom<(&dyn Array, WktType)> for WktViewArray {
 impl TryFrom<(&dyn Array, &Field)> for WktViewArray {
     type Error = GeoArrowError;
 
-    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+    fn try_from((arr, field): (&dyn Array, &Field)) -> GeoArrowResult<Self> {
         let typ = field
             .try_extension_type::<WktType>()
             .ok()

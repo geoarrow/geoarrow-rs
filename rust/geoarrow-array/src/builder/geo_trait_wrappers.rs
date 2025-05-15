@@ -12,12 +12,12 @@ use geo_traits::{
 };
 use wkt::WktNum;
 
-use crate::error::{GeoArrowError, Result};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 pub(crate) struct RectWrapper<'a, T: WktNum, R: RectTrait<T = T>>(&'a R);
 
 impl<'a, T: WktNum, R: RectTrait<T = T>> RectWrapper<'a, T, R> {
-    pub(crate) fn try_new(rect: &'a R) -> Result<Self> {
+    pub(crate) fn try_new(rect: &'a R) -> GeoArrowResult<Self> {
         match rect.dim() {
             geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => {}
             _ => {

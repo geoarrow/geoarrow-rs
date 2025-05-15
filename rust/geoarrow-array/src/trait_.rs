@@ -7,9 +7,9 @@ use arrow_buffer::NullBuffer;
 use arrow_schema::extension::ExtensionType;
 use geo_traits::GeometryTrait;
 use geoarrow_schema::Metadata;
+use geoarrow_schema::error::GeoArrowResult;
 
 use crate::datatypes::GeoArrowType;
-use crate::error::Result;
 
 /// Convert GeoArrow arrays into their respective [arrow][arrow_array] arrays.
 pub trait IntoArrow {
@@ -311,7 +311,7 @@ pub trait GeoArrowArrayAccessor<'a>: GeoArrowArray {
     /// # Panics
     ///
     /// Panics if the value is outside the bounds of the array.
-    fn value(&'a self, index: usize) -> Result<Self::Item> {
+    fn value(&'a self, index: usize) -> GeoArrowResult<Self::Item> {
         assert!(index <= self.len());
         unsafe { self.value_unchecked(index) }
     }
@@ -348,7 +348,7 @@ pub trait GeoArrowArrayAccessor<'a>: GeoArrowArray {
     /// # Safety
     ///
     /// Caller is responsible for ensuring that the index is within the bounds of the array
-    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item>;
+    unsafe fn value_unchecked(&'a self, index: usize) -> GeoArrowResult<Self::Item>;
 
     /// Returns the value at slot `i` as an Arrow scalar, considering validity.
     ///
@@ -373,7 +373,7 @@ pub trait GeoArrowArrayAccessor<'a>: GeoArrowArray {
     /// # Errors
     ///
     /// Errors for invalid WKT and WKB geometries. Will never error for native arrays.
-    fn get(&'a self, index: usize) -> Result<Option<Self::Item>> {
+    fn get(&'a self, index: usize) -> GeoArrowResult<Option<Self::Item>> {
         if self.is_null(index) {
             return Ok(None);
         }
@@ -390,7 +390,7 @@ pub trait GeoArrowArrayAccessor<'a>: GeoArrowArray {
     /// # Safety
     ///
     /// Caller is responsible for ensuring that the index is within the bounds of the array
-    unsafe fn get_unchecked(&'a self, index: usize) -> Option<Result<Self::Item>> {
+    unsafe fn get_unchecked(&'a self, index: usize) -> Option<GeoArrowResult<Self::Item>> {
         if self.is_null(index) {
             return None;
         }
@@ -403,7 +403,7 @@ pub trait GeoArrowArrayAccessor<'a>: GeoArrowArray {
     /// # Errors
     ///
     /// Errors for invalid WKT and WKB geometries. Will never error for native arrays.
-    fn iter(&'a self) -> impl ExactSizeIterator<Item = Option<Result<Self::Item>>> + 'a {
+    fn iter(&'a self) -> impl ExactSizeIterator<Item = Option<GeoArrowResult<Self::Item>>> + 'a {
         (0..self.len()).map(|i| unsafe { self.get_unchecked(i) })
     }
 
@@ -412,7 +412,7 @@ pub trait GeoArrowArrayAccessor<'a>: GeoArrowArray {
     /// # Errors
     ///
     /// Errors for invalid WKT and WKB geometries. Will never error for native arrays.
-    fn iter_values(&'a self) -> impl ExactSizeIterator<Item = Result<Self::Item>> + 'a {
+    fn iter_values(&'a self) -> impl ExactSizeIterator<Item = GeoArrowResult<Self::Item>> + 'a {
         (0..self.len()).map(|i| unsafe { self.value_unchecked(i) })
     }
 }
@@ -435,7 +435,10 @@ pub(crate) trait GeoArrowArrayBuilder: Debug + Send + Sync {
 
     /// Push a geometry to this builder.
     #[allow(dead_code)]
-    fn push_geometry(&mut self, geometry: Option<&impl GeometryTrait<T = f64>>) -> Result<()>;
+    fn push_geometry(
+        &mut self,
+        geometry: Option<&impl GeometryTrait<T = f64>>,
+    ) -> GeoArrowResult<()>;
 
     /// Finish the builder and return an [`Arc`] to the resulting array.
     #[allow(dead_code)]

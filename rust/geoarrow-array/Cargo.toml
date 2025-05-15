@@ -28,7 +28,6 @@ geoarrow-test = { workspace = true, optional = true }
 geozero = { workspace = true, optional = true }
 num-traits = { workspace = true }
 serde_json = { workspace = true }
-thiserror = { workspace = true }
 wkb = { workspace = true }
 wkt = { workspace = true }
 

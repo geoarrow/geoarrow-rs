@@ -9,8 +9,8 @@ use geoarrow_array::builder::{
 };
 use geoarrow_array::capacity::{LineStringCapacity, PolygonCapacity};
 use geoarrow_array::cast::{AsGeoArrowArray, from_wkb, from_wkt, to_wkb, to_wkt};
-use geoarrow_array::error::{GeoArrowError, Result};
 use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, GeoArrowType};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// Cast a `GeoArrowArray` to another `GeoArrowType`.
 ///
@@ -45,7 +45,10 @@ use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, GeoArrowType};
 /// - `MultiLineString` to `LineString`
 /// - `MultiPolygon` to `Polygon`
 ///
-pub fn cast(array: &dyn GeoArrowArray, to_type: &GeoArrowType) -> Result<Arc<dyn GeoArrowArray>> {
+pub fn cast(
+    array: &dyn GeoArrowArray,
+    to_type: &GeoArrowType,
+) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
     // We want to error if the dimensions aren't compatible, but allow conversions to
     // `GeometryArray`, `WKB`, etc where the target array isn't parameterized by a specific
     // dimension.

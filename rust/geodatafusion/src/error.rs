@@ -2,7 +2,7 @@
 
 use arrow_schema::ArrowError;
 use datafusion::error::DataFusionError;
-use geoarrow_array::error::GeoArrowError;
+use geoarrow_schema::error::GeoArrowError;
 use std::fmt::Debug;
 use thiserror::Error;
 

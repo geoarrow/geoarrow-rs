@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use arrow_schema::Schema;
 use geoarrow_array::GeoArrowType;
-use geoarrow_array::error::{GeoArrowError, Result};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{
     CoordType, Crs, Dimension, Edges, GeometryCollectionType, GeometryType, LineStringType,
     Metadata, MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType,
@@ -53,7 +53,7 @@ impl GeoParquetColumnEncoding {
     pub(crate) fn try_new(
         writer_encoding: GeoParquetWriterEncoding,
         data_type: &GeoArrowType,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let new_encoding = match writer_encoding {
             GeoParquetWriterEncoding::WKB => Self::WKB,
             GeoParquetWriterEncoding::Native => match data_type {
@@ -116,7 +116,7 @@ pub enum GeoParquetGeometryType {
 impl FromStr for GeoParquetGeometryType {
     type Err = GeoArrowError;
 
-    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+    fn from_str(s: &str) -> GeoArrowResult<Self> {
         let out = match s {
             "Point" => Self::Point,
             "LineString" => Self::LineString,
@@ -220,7 +220,7 @@ impl GeoParquetGeometryTypeAndDimension {
 impl FromStr for GeoParquetGeometryTypeAndDimension {
     type Err = GeoArrowError;
 
-    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+    fn from_str(s: &str) -> GeoArrowResult<Self> {
         let (geometry_type, dimension) = if let Some((geom_type_str, dim_str)) = s.split_once(' ') {
             let dimension = match dim_str {
                 "Z" => Dimension::XYZ,
@@ -522,7 +522,7 @@ pub struct GeoParquetColumnMetadata {
 
 impl GeoParquetMetadata {
     /// Construct a [`GeoParquetMetadata`] from Parquet [`FileMetaData`]
-    pub fn from_parquet_meta(metadata: &FileMetaData) -> Result<Self> {
+    pub fn from_parquet_meta(metadata: &FileMetaData) -> GeoArrowResult<Self> {
         let kv_metadata = metadata.key_value_metadata();
 
         if let Some(metadata) = kv_metadata {
@@ -544,7 +544,7 @@ impl GeoParquetMetadata {
     ///
     /// This will expand the bounding box of each geometry column to include the bounding box
     /// defined in the other file's GeoParquet metadata
-    pub fn try_update(&mut self, other: &FileMetaData) -> Result<()> {
+    pub fn try_update(&mut self, other: &FileMetaData) -> GeoArrowResult<()> {
         let other = Self::from_parquet_meta(other)?;
         self.try_compatible_with(&other)?;
         for (column_name, column_meta) in self.columns.iter_mut() {
@@ -603,7 +603,7 @@ impl GeoParquetMetadata {
     }
 
     /// Assert that this metadata is compatible with another metadata instance, erroring if not
-    pub fn try_compatible_with(&self, other: &GeoParquetMetadata) -> Result<()> {
+    pub fn try_compatible_with(&self, other: &GeoParquetMetadata) -> GeoArrowResult<()> {
         if self.version.as_str() != other.version.as_str() {
             return Err(GeoArrowError::General(
                 "Different GeoParquet versions".to_string(),
@@ -678,7 +678,7 @@ impl GeoParquetMetadata {
     pub(crate) fn bbox_covering(
         &self,
         column_name: Option<&str>,
-    ) -> Result<Option<GeoParquetBboxCovering>> {
+    ) -> GeoArrowResult<Option<GeoParquetBboxCovering>> {
         let column_name = column_name.unwrap_or(&self.primary_column);
         let column_meta = self
             .columns
@@ -720,7 +720,7 @@ pub(crate) fn infer_geo_data_type(
     geometry_types: &HashSet<GeoParquetGeometryTypeAndDimension>,
     coord_type: CoordType,
     metadata: Arc<Metadata>,
-) -> Result<Option<GeoArrowType>> {
+) -> GeoArrowResult<Option<GeoArrowType>> {
     use GeoParquetGeometryType::*;
 
     let fallback_geometry_type =
@@ -817,7 +817,7 @@ pub(crate) fn find_geoparquet_geom_columns(
     metadata: &FileMetaData,
     schema: &Schema,
     coord_type: CoordType,
-) -> Result<Vec<(usize, Option<GeoArrowType>)>> {
+) -> GeoArrowResult<Vec<(usize, Option<GeoArrowType>)>> {
     let meta = GeoParquetMetadata::from_parquet_meta(metadata)?;
 
     meta.columns

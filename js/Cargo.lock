@@ -944,30 +944,8 @@ dependencies = [
  "geoarrow-schema",
  "num-traits",
  "serde_json",
- "thiserror 1.0.69",
  "wkb",
  "wkt",
-]
-
-[[package]]
-name = "geoarrow-geoparquet"
-version = "0.4.0-beta.4"
-dependencies = [
- "arrow-arith",
- "arrow-array",
- "arrow-buffer",
- "arrow-ord",
- "arrow-schema",
- "async-stream",
- "futures",
- "geo-traits",
- "geo-types",
- "geoarrow-array",
- "geoarrow-schema",
- "parquet",
- "serde",
- "serde_json",
- "serde_with",
 ]
 
 [[package]]
@@ -978,6 +956,7 @@ dependencies = [
  "geo-traits",
  "serde",
  "serde_json",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -995,9 +974,9 @@ dependencies = [
  "geo",
  "geo-traits",
  "geoarrow-array",
- "geoarrow-geoparquet",
  "geoarrow-schema",
  "geodesy",
+ "geoparquet",
  "object-store-wasm",
  "object_store",
  "parquet",
@@ -1042,6 +1021,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6e5ed84f8089c70234b0a8e0aedb6dc733671612ddc0d37c6066052f9781960"
 dependencies = [
  "libm",
+]
+
+[[package]]
+name = "geoparquet"
+version = "0.4.0-beta.4"
+dependencies = [
+ "arrow-arith",
+ "arrow-array",
+ "arrow-buffer",
+ "arrow-ord",
+ "arrow-schema",
+ "async-stream",
+ "futures",
+ "geo-traits",
+ "geo-types",
+ "geoarrow-array",
+ "geoarrow-schema",
+ "parquet",
+ "serde",
+ "serde_json",
+ "serde_with",
 ]
 
 [[package]]

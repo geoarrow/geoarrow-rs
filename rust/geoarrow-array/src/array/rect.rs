@@ -5,11 +5,11 @@ use arrow_array::types::Float64Type;
 use arrow_array::{Array, ArrayRef, StructArray};
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{BoxType, Metadata};
 
 use crate::array::SeparatedCoordBuffer;
 use crate::datatypes::GeoArrowType;
-use crate::error::{GeoArrowError, Result};
 use crate::scalar::Rect;
 use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 
@@ -151,7 +151,7 @@ impl GeoArrowArray for RectArray {
 impl<'a> GeoArrowArrayAccessor<'a> for RectArray {
     type Item = Rect<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
+    unsafe fn value_unchecked(&'a self, index: usize) -> GeoArrowResult<Self::Item> {
         Ok(Rect::new(&self.lower, &self.upper, index))
     }
 }
@@ -184,7 +184,7 @@ impl IntoArrow for RectArray {
 impl TryFrom<(&StructArray, BoxType)> for RectArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (&StructArray, BoxType)) -> Result<Self> {
+    fn try_from((value, typ): (&StructArray, BoxType)) -> GeoArrowResult<Self> {
         let dim = typ.dimension();
         let nulls = value.nulls();
         let columns = value.columns();
@@ -220,7 +220,7 @@ impl TryFrom<(&StructArray, BoxType)> for RectArray {
 impl TryFrom<(&dyn Array, BoxType)> for RectArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, dim): (&dyn Array, BoxType)) -> Result<Self> {
+    fn try_from((value, dim): (&dyn Array, BoxType)) -> GeoArrowResult<Self> {
         match value.data_type() {
             DataType::Struct(_) => (value.as_struct(), dim).try_into(),
             _ => Err(GeoArrowError::General(
@@ -233,7 +233,7 @@ impl TryFrom<(&dyn Array, BoxType)> for RectArray {
 impl TryFrom<(&dyn Array, &Field)> for RectArray {
     type Error = GeoArrowError;
 
-    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+    fn try_from((arr, field): (&dyn Array, &Field)) -> GeoArrowResult<Self> {
         let typ = field.try_extension_type::<BoxType>()?;
         (arr, typ).try_into()
     }

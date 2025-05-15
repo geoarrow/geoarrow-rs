@@ -1,5 +1,5 @@
 use geo_traits::MultiLineStringTrait;
-use geoarrow_array::error::{GeoArrowError, Result};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geos::{Geom, GeometryTypes};
 
 use crate::import::scalar::linestring::GEOSConstLineString;
@@ -13,7 +13,7 @@ impl GEOSMultiLineString {
     }
 
     #[allow(dead_code)]
-    pub fn try_new(geom: geos::Geometry) -> Result<Self> {
+    pub fn try_new(geom: geos::Geometry) -> GeoArrowResult<Self> {
         if matches!(geom.geometry_type(), GeometryTypes::MultiLineString) {
             Ok(Self(geom))
         } else {

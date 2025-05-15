@@ -15,8 +15,8 @@ use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
 };
 use crate::capacity::PolygonCapacity;
-use crate::error::{GeoArrowError, Result};
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// The GeoArrow equivalent to `Vec<Option<Polygon>>`: a mutable collection of Polygons.
 ///
@@ -103,7 +103,7 @@ impl PolygonBuilder {
     /// Care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
     #[inline]
-    pub(crate) fn try_push_geom_offset(&mut self, offsets_length: usize) -> Result<()> {
+    pub(crate) fn try_push_geom_offset(&mut self, offsets_length: usize) -> GeoArrowResult<()> {
         self.geom_offsets.try_push_usize(offsets_length)?;
         self.validity.append(true);
         Ok(())
@@ -116,7 +116,7 @@ impl PolygonBuilder {
     /// Care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
     #[inline]
-    pub(crate) fn try_push_ring_offset(&mut self, offsets_length: usize) -> Result<()> {
+    pub(crate) fn try_push_ring_offset(&mut self, offsets_length: usize) -> GeoArrowResult<()> {
         self.ring_offsets.try_push_usize(offsets_length)?;
         Ok(())
     }
@@ -140,7 +140,10 @@ impl PolygonBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> Result<()> {
+    pub fn push_polygon(
+        &mut self,
+        value: Option<&impl PolygonTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
         if let Some(polygon) = value {
             let exterior_ring = polygon.exterior();
             if exterior_ring.is_none() {
@@ -181,7 +184,7 @@ impl PolygonBuilder {
 
     /// Add a new Rect to this builder
     #[inline]
-    pub fn push_rect(&mut self, value: Option<&impl RectTrait<T = f64>>) -> Result<()> {
+    pub fn push_rect(&mut self, value: Option<&impl RectTrait<T = f64>>) -> GeoArrowResult<()> {
         if let Some(rect) = value {
             let rect_wrapper = RectWrapper::try_new(rect)?;
             self.push_polygon(Some(&rect_wrapper))?;
@@ -195,7 +198,10 @@ impl PolygonBuilder {
     ///
     /// This will error if the geometry type is not Polygon, a MultiPolygon of length 1, or Rect.
     #[inline]
-    pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+    pub fn push_geometry(
+        &mut self,
+        value: Option<&impl GeometryTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
         if let Some(value) = value {
             match value.as_type() {
                 GeometryType::Polygon(g) => self.push_polygon(Some(g))?,
@@ -234,7 +240,7 @@ impl PolygonBuilder {
     pub fn extend_from_geometry_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         geoms.into_iter().try_for_each(|g| self.push_geometry(g))?;
         Ok(())
     }
@@ -246,7 +252,7 @@ impl PolygonBuilder {
     /// Care must be taken to ensure that pushing raw coordinates to the array upholds the
     /// necessary invariants of the array.
     #[inline]
-    pub(crate) fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+    pub(crate) fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> GeoArrowResult<()> {
         self.coords.push_coord(coord);
         Ok(())
     }
@@ -288,7 +294,7 @@ impl PolygonBuilder {
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         typ: PolygonType,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let capacity = PolygonCapacity::from_geometries(geoms.iter().map(|x| x.as_ref()))?;
         let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_geometry_iter(geoms.iter().map(|x| x.as_ref()))?;
@@ -299,11 +305,11 @@ impl PolygonBuilder {
 impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, PolygonType)> for PolygonBuilder {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (GenericWkbArray<O>, PolygonType)) -> Result<Self> {
+    fn try_from((value, typ): (GenericWkbArray<O>, PolygonType)) -> GeoArrowResult<Self> {
         let wkb_objects = value
             .iter()
             .map(|x| x.transpose())
-            .collect::<Result<Vec<_>>>()?;
+            .collect::<GeoArrowResult<Vec<_>>>()?;
         Self::from_nullable_geometries(&wkb_objects, typ)
     }
 }
@@ -317,7 +323,10 @@ impl GeoArrowArrayBuilder for PolygonBuilder {
         self.push_null();
     }
 
-    fn push_geometry(&mut self, geometry: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+    fn push_geometry(
+        &mut self,
+        geometry: Option<&impl GeometryTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
         self.push_geometry(geometry)
     }
 
