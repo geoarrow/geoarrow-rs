@@ -4,7 +4,7 @@
 #![warn(missing_docs)]
 
 mod coord_type;
-mod crs;
+pub mod crs;
 mod dimension;
 mod edges;
 pub mod error;

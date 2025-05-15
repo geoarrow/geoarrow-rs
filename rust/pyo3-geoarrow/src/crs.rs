@@ -1,4 +1,4 @@
-use geoarrow_array::crs::CRSTransform;
+use geoarrow_schema::crs::CRSTransform;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{Crs, CrsType};
 use pyo3::exceptions::PyValueError;

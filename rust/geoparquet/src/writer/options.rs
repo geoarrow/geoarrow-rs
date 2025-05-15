@@ -1,4 +1,4 @@
-use geoarrow_array::crs::CRSTransform;
+use geoarrow_schema::crs::CRSTransform;
 use parquet::file::properties::WriterProperties;
 
 /// Allowed encodings when writing to GeoParquet

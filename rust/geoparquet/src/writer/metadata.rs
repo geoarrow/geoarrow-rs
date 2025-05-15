@@ -6,7 +6,7 @@ use arrow_schema::extension::{EXTENSION_TYPE_METADATA_KEY, EXTENSION_TYPE_NAME_K
 use arrow_schema::{DataType, Field, Schema, SchemaRef};
 use geoarrow_array::GeoArrowType;
 use geoarrow_array::array::from_arrow_array;
-use geoarrow_array::crs::{CRSTransform, DefaultCRSTransform};
+use geoarrow_schema::crs::{CRSTransform, DefaultCRSTransform};
 use geoarrow_schema::error::GeoArrowResult;
 use geoarrow_schema::{CoordType, Edges, Metadata, WkbType};
 use serde_json::Value;

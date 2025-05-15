@@ -178,7 +178,8 @@ mod test {
     use arrow_schema::Schema;
     use datafusion::prelude::SessionContext;
     use geoarrow_array::test::point;
-    use geoarrow_schema::{CoordType, Crs, Dimension, Metadata};
+    use geoarrow_schema::crs::Crs;
+    use geoarrow_schema::{CoordType, Dimension, Metadata};
 
     use super::*;
 
