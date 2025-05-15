@@ -200,7 +200,7 @@ pub trait CrsTransform: Debug {
     }
 }
 
-/// A default implementation for [CRSTransform] which does not do any CRS conversion.
+/// A default implementation for [CrsTransform] which does not do any CRS conversion.
 ///
 /// Instead of raising an error, this will **silently drop any CRS information when writing data**.
 #[derive(Debug, Clone, Default)]
