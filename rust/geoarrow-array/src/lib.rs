@@ -6,7 +6,6 @@ pub mod array;
 pub mod builder;
 pub mod capacity;
 pub mod cast;
-pub mod crs;
 mod datatypes;
 mod eq;
 #[cfg(feature = "geozero")]

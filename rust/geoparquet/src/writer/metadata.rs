@@ -6,7 +6,7 @@ use arrow_schema::extension::{EXTENSION_TYPE_METADATA_KEY, EXTENSION_TYPE_NAME_K
 use arrow_schema::{DataType, Field, Schema, SchemaRef};
 use geoarrow_array::GeoArrowType;
 use geoarrow_array::array::from_arrow_array;
-use geoarrow_array::crs::{CRSTransform, DefaultCRSTransform};
+use geoarrow_schema::crs::{CrsTransform, DefaultCrsTransform};
 use geoarrow_schema::error::GeoArrowResult;
 use geoarrow_schema::{CoordType, Edges, Metadata, WkbType};
 use serde_json::Value;
@@ -47,7 +47,7 @@ impl ColumnInfo {
         writer_encoding: GeoParquetWriterEncoding,
         data_type: &GeoArrowType,
         array_meta: Metadata,
-        crs_transform: Option<&Box<dyn CRSTransform>>,
+        crs_transform: Option<&Box<dyn CrsTransform>>,
     ) -> GeoArrowResult<Self> {
         let encoding = GeoParquetColumnEncoding::try_new(writer_encoding, data_type)?;
         let geometry_types = get_geometry_types(data_type);
@@ -55,7 +55,7 @@ impl ColumnInfo {
         let crs = if let Some(crs_transform) = crs_transform {
             crs_transform.extract_projjson(array_meta.crs())?
         } else {
-            DefaultCRSTransform::default().extract_projjson(array_meta.crs())?
+            DefaultCrsTransform::default().extract_projjson(array_meta.crs())?
         };
         let edges = array_meta.edges();
 

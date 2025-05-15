@@ -1,4 +1,4 @@
-use geoarrow_array::crs::CRSTransform;
+use geoarrow_schema::crs::CrsTransform;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{Crs, CrsType};
 use pyo3::exceptions::PyValueError;
@@ -141,7 +141,7 @@ impl<'py> IntoPyObject<'py> for PyCrs {
     }
 }
 
-/// An implementation of [CRSTransform] using pyproj.
+/// An implementation of [CrsTransform] using pyproj.
 #[derive(Debug)]
 pub struct PyprojCRSTransform {}
 
@@ -157,7 +157,7 @@ impl Default for PyprojCRSTransform {
     }
 }
 
-impl CRSTransform for PyprojCRSTransform {
+impl CrsTransform for PyprojCRSTransform {
     fn _convert_to_projjson(&self, crs: &Crs) -> GeoArrowResult<Option<Value>> {
         let crs = PyCrs::from(crs.clone());
         let projjson = Python::with_gil(|py| crs.to_projjson(py))

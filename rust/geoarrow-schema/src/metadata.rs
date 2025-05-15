@@ -1,7 +1,8 @@
 use arrow_schema::{ArrowError, Field};
 use serde::{Deserialize, Serialize};
 
-use crate::{Crs, Edges};
+use crate::Edges;
+use crate::crs::Crs;
 
 /// GeoArrow extension metadata.
 ///
