@@ -18,7 +18,12 @@ mod wkb_view;
 mod wkt;
 mod wkt_view;
 
+use std::sync::Arc;
+
+use arrow_array::Array;
+use arrow_schema::Field;
 pub use coord::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
+use geoarrow_schema::error::GeoArrowResult;
 pub(crate) use geometry::DimensionIndex;
 pub use geometry::GeometryArray;
 pub use geometrycollection::GeometryCollectionArray;
@@ -34,12 +39,6 @@ pub use wkb::{GenericWkbArray, LargeWkbArray, WkbArray};
 pub use wkb_view::WkbViewArray;
 pub use wkt::{GenericWktArray, LargeWktArray, WktArray};
 pub use wkt_view::WktViewArray;
-
-use std::sync::Arc;
-
-use arrow_array::Array;
-use arrow_schema::Field;
-use geoarrow_schema::error::GeoArrowResult;
 
 use crate::{GeoArrowArray, GeoArrowType};
 

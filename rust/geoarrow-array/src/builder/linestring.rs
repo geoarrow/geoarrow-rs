@@ -3,6 +3,7 @@ use std::sync::Arc;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, LineStringType};
 
 use crate::GeoArrowArray;
@@ -13,7 +14,6 @@ use crate::builder::{
 };
 use crate::capacity::LineStringCapacity;
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
-use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// The GeoArrow equivalent to `Vec<Option<LineString>>`: a mutable collection of LineStrings.
 ///

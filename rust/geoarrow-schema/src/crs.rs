@@ -1,9 +1,10 @@
 //! Defines GeoArrow CRS metadata and CRS transforms used for writing GeoArrow data to file formats
 //! that require different CRS representations.
 
+use std::fmt::Debug;
+
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::fmt::Debug;
 
 use crate::error::{GeoArrowError, GeoArrowResult};
 

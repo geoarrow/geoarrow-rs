@@ -5,13 +5,12 @@ use std::sync::Arc;
 
 use arrow_schema::extension::ExtensionType;
 use arrow_schema::{DataType, Field};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{
     BoxType, CoordType, Dimension, GeometryCollectionType, GeometryType, LineStringType, Metadata,
     MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType, WkbType,
     WktType,
 };
-
-use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// A type enum representing all possible GeoArrow geometry types, including both "native" and
 /// "serialized" encodings.

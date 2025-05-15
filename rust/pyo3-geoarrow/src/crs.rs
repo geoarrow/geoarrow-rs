@@ -53,12 +53,9 @@ impl PyCrs {
 
         let crs_obj = match self.0.crs_type() {
             Some(CrsType::Projjson) => {
-                let args = PyTuple::new(
-                    py,
-                    vec![serde_json::to_string(
-                        &self.0.crs_value().as_ref().unwrap(),
-                    )?],
-                )?;
+                let args = PyTuple::new(py, vec![serde_json::to_string(
+                    &self.0.crs_value().as_ref().unwrap(),
+                )?])?;
                 crs_class.call_method1(intern!(py, "from_json"), args)?
             }
             Some(CrsType::AuthorityCode) => match self.0.crs_value().as_ref().unwrap() {

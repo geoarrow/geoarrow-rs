@@ -399,9 +399,8 @@ mod test {
     use geo_traits::to_geo::ToGeoMultiLineString;
     use geoarrow_schema::{CoordType, Dimension};
 
-    use crate::test::multilinestring;
-
     use super::*;
+    use crate::test::multilinestring;
 
     #[test]
     fn geo_round_trip() {

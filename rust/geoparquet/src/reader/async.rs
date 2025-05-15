@@ -166,9 +166,9 @@ impl<T: AsyncFileReader + Unpin + Send + 'static> GeoParquetRecordBatchStream<T>
 
 #[cfg(all(test, feature = "compression"))]
 mod test {
-    use super::*;
     use tokio::fs::File;
 
+    use super::*;
     use crate::metadata::GeoParquetBboxCovering;
     use crate::test::fixture_dir;
 

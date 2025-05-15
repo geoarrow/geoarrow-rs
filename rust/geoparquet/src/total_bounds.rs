@@ -7,7 +7,6 @@ use geo_traits::{
     UnimplementedMultiLineString, UnimplementedMultiPoint, UnimplementedMultiPolygon,
     UnimplementedPoint, UnimplementedPolygon, UnimplementedTriangle,
 };
-
 use geo_types::Coord;
 use geoarrow_array::array::RectArray;
 use geoarrow_array::builder::RectBuilder;

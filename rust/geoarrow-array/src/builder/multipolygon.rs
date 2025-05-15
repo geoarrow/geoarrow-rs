@@ -5,17 +5,17 @@ use arrow_buffer::NullBufferBuilder;
 use geo_traits::{
     CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait,
 };
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, MultiPolygonType};
 
-use crate::capacity::MultiPolygonCapacity;
 // use super::array::check;
 use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, MultiPolygonArray};
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
 };
+use crate::capacity::MultiPolygonCapacity;
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
-use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// The GeoArrow equivalent to `Vec<Option<MultiPolygon>>`: a mutable collection of MultiPolygons.
 ///

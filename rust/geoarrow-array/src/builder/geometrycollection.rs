@@ -7,6 +7,7 @@ use geo_traits::{
     MultiPolygonTrait, PointTrait, PolygonTrait,
 };
 use geoarrow_schema::GeometryCollectionType;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, GeometryCollectionArray};
@@ -14,7 +15,6 @@ use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapp
 use crate::builder::{MixedGeometryBuilder, OffsetsBuilder};
 use crate::capacity::GeometryCollectionCapacity;
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
-use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// The GeoArrow equivalent to `Vec<Option<GeometryCollection>>`: a mutable collection of
 /// GeometryCollections.

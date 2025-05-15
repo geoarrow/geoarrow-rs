@@ -1,4 +1,5 @@
 use geo_traits::*;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{
     CoordType, Dimension, LineStringType, MultiLineStringType, MultiPointType, MultiPolygonType,
     PointType, PolygonType,
@@ -12,7 +13,6 @@ use crate::builder::{
 };
 use crate::capacity::MixedCapacity;
 use crate::trait_::GeoArrowArrayBuilder;
-use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 

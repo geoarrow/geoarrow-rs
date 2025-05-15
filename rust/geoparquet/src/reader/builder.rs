@@ -168,11 +168,11 @@ impl RecordBatchReader for GeoParquetRecordBatchReader {
 
 #[cfg(all(test, feature = "compression"))]
 mod test {
+    use std::fs::File;
+
     use arrow_array::cast::AsArray;
 
     use super::*;
-    use std::fs::File;
-
     use crate::metadata::GeoParquetBboxCovering;
     use crate::test::fixture_dir;
 

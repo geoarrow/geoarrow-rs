@@ -7,6 +7,7 @@ use arrow_array::{
 };
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{Metadata, WkbType};
 use wkb::reader::Wkb;
 
@@ -15,7 +16,6 @@ use crate::capacity::WkbCapacity;
 use crate::datatypes::GeoArrowType;
 use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 use crate::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
-use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// An immutable array of WKB geometries.
 ///
@@ -291,11 +291,10 @@ pub type LargeWkbArray = GenericWkbArray<i64>;
 mod test {
     use arrow_array::builder::{BinaryBuilder, LargeBinaryBuilder};
 
+    use super::*;
     use crate::GeoArrowArray;
     use crate::builder::WkbBuilder;
     use crate::test::point;
-
-    use super::*;
 
     fn wkb_data<O: OffsetSizeTrait>() -> GenericWkbArray<O> {
         let mut builder = WkbBuilder::new(WkbType::new(Default::default()));

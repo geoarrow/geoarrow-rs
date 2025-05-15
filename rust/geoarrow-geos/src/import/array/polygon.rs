@@ -34,12 +34,12 @@ impl FromGEOS for PolygonArray {
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use crate::export::to_geos_geometry;
-
     use geoarrow_array::test::polygon::array;
     use geoarrow_array::{GeoArrowArrayAccessor, IntoArrow};
     use geoarrow_schema::{CoordType, Dimension};
+
+    use super::*;
+    use crate::export::to_geos_geometry;
 
     #[test]
     fn geos_round_trip() {

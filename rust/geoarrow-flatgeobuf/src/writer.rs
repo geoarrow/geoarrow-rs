@@ -230,10 +230,11 @@ mod test {
         ];
         let schema = Arc::new(Schema::new(fields));
 
-        let batch = RecordBatch::try_new(
-            schema.clone(),
-            vec![u8_array, string_array, point_array.into_array_ref()],
-        )
+        let batch = RecordBatch::try_new(schema.clone(), vec![
+            u8_array,
+            string_array,
+            point_array.into_array_ref(),
+        ])
         .unwrap();
 
         (vec![batch], schema)

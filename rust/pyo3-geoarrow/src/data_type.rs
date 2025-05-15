@@ -1,8 +1,5 @@
 use std::sync::Arc;
 
-use crate::error::{PyGeoArrowError, PyGeoArrowResult};
-use crate::{PyCoordType, PyCrs, PyDimension, PyEdges};
-
 use geoarrow_array::GeoArrowType;
 use geoarrow_schema::{
     BoxType, GeometryCollectionType, GeometryType, LineStringType, Metadata, MultiLineStringType,
@@ -12,6 +9,9 @@ use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyType};
 use pyo3_arrow::PyField;
 use pyo3_arrow::ffi::to_schema_pycapsule;
+
+use crate::error::{PyGeoArrowError, PyGeoArrowResult};
+use crate::{PyCoordType, PyCrs, PyDimension, PyEdges};
 
 #[pyclass(module = "geoarrow.rust.core", name = "GeoArrowType", subclass, frozen)]
 pub struct PyGeoArrowType(pub(crate) GeoArrowType);

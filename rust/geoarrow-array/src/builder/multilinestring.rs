@@ -3,9 +3,10 @@ use std::sync::Arc;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, MultiLineStringType};
-// use super::array::check;
 
+// use super::array::check;
 use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, MultiLineStringArray};
 use crate::builder::{
@@ -13,7 +14,6 @@ use crate::builder::{
 };
 use crate::capacity::MultiLineStringCapacity;
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
-use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// The GeoArrow equivalent to `Vec<Option<MultiLineString>>`: a mutable collection of
 /// MultiLineStrings.

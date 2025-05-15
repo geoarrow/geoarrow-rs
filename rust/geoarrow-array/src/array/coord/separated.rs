@@ -5,12 +5,12 @@ use arrow_array::types::Float64Type;
 use arrow_array::{ArrayRef, Float64Array, StructArray};
 use arrow_buffer::ScalarBuffer;
 use arrow_schema::{DataType, Field};
+use geo_traits::CoordTrait;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, Dimension, PointType};
 
 use crate::builder::SeparatedCoordBufferBuilder;
 use crate::scalar::SeparatedCoord;
-use geo_traits::CoordTrait;
 
 /// An array of coordinates stored in separate buffers of the same length.
 ///

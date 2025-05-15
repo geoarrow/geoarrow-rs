@@ -1509,12 +1509,11 @@ fn coord_type_to_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
 mod test {
     use std::sync::Arc;
 
-    use crate::crs::Crs;
-    use crate::edges::Edges;
+    use arrow_schema::{DataType, Field};
 
     use super::*;
-    use arrow_schema::DataType;
-    use arrow_schema::Field;
+    use crate::crs::Crs;
+    use crate::edges::Edges;
 
     #[test]
     fn test_point_interleaved_xy() {

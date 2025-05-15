@@ -1,7 +1,5 @@
 mod record_batch_reader;
 
-pub use record_batch_reader::GeozeroRecordBatchReader;
-
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -13,6 +11,7 @@ use arrow_json::writer::make_encoder;
 use arrow_schema::{DataType, Schema, TimeUnit};
 use geozero::error::GeozeroError;
 use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, GeozeroDatasource, PropertyProcessor};
+pub use record_batch_reader::GeozeroRecordBatchReader;
 
 use crate::GeoArrowArray;
 use crate::array::from_arrow_array;

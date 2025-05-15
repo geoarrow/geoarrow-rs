@@ -2,6 +2,7 @@ use std::ops::AddAssign;
 
 use geo_traits::*;
 use geoarrow_schema::Dimension;
+use geoarrow_schema::error::GeoArrowResult;
 use wkt::WktNum;
 
 use crate::array::DimensionIndex;
@@ -10,7 +11,6 @@ use crate::capacity::{
     GeometryCollectionCapacity, LineStringCapacity, MultiLineStringCapacity, MultiPointCapacity,
     MultiPolygonCapacity, PolygonCapacity,
 };
-use geoarrow_schema::error::GeoArrowResult;
 
 /// A counter for the buffer sizes of a [`GeometryArray`][crate::array::GeometryArray].
 ///

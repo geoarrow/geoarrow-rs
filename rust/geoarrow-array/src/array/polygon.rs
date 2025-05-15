@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
 use arrow_array::cast::AsArray;
-use arrow_array::{Array, OffsetSizeTrait};
-use arrow_array::{ArrayRef, GenericListArray};
+use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
@@ -407,9 +406,8 @@ mod test {
     use geo_traits::to_geo::ToGeoPolygon;
     use geoarrow_schema::{CoordType, Dimension};
 
-    use crate::test::polygon;
-
     use super::*;
+    use crate::test::polygon;
 
     #[test]
     fn geo_round_trip() {

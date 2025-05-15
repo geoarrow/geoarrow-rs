@@ -1,8 +1,9 @@
 use std::ops::{Add, AddAssign};
 
-use crate::capacity::LineStringCapacity;
 use geo_traits::{GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
+
+use crate::capacity::LineStringCapacity;
 
 /// A counter for the buffer sizes of a
 /// [`MultiLineStringArray`][crate::array::MultiLineStringArray].

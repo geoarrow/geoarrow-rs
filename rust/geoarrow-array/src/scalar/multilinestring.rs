@@ -87,10 +87,11 @@ impl<G: MultiLineStringTrait<T = f64>> PartialEq<G> for MultiLineString<'_> {
 
 #[cfg(test)]
 mod test {
+    use geoarrow_schema::{CoordType, Dimension, MultiLineStringType};
+
     use crate::builder::MultiLineStringBuilder;
     use crate::test::multilinestring::{ml0, ml1};
     use crate::trait_::GeoArrowArrayAccessor;
-    use geoarrow_schema::{CoordType, Dimension, MultiLineStringType};
 
     /// Test Eq where the current index is true but another index is false
     #[test]

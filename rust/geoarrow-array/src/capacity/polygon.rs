@@ -1,7 +1,6 @@
 use std::ops::Add;
 
 use geo_traits::{GeometryTrait, GeometryType, LineStringTrait, PolygonTrait, RectTrait};
-
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// A counter for the buffer sizes of a [`PolygonArray`][crate::array::PolygonArray].

@@ -454,9 +454,8 @@ mod test {
     use geo_traits::to_geo::ToGeoMultiPolygon;
     use geoarrow_schema::{CoordType, Dimension};
 
-    use crate::test::multipolygon;
-
     use super::*;
+    use crate::test::multipolygon;
 
     #[test]
     fn geo_round_trip() {

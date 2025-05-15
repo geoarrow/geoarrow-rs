@@ -1,6 +1,7 @@
 use std::ops::Add;
 
 use geo_traits::*;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use wkt::WktNum;
 
 use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
@@ -8,7 +9,6 @@ use crate::capacity::{
     LineStringCapacity, MultiLineStringCapacity, MultiPointCapacity, MultiPolygonCapacity,
     PolygonCapacity,
 };
-use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// A counter for the buffer sizes of a [`MixedGeometryArray`][crate::array::MixedGeometryArray].
 ///
