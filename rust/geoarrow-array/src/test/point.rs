@@ -1,27 +1,21 @@
-use geo_types::{Point, point};
-
 use geoarrow_schema::{CoordType, Dimension, PointType};
 use geoarrow_test::raw;
+use wkt::types::Point;
+use wkt::wkt;
 
 use crate::array::PointArray;
 use crate::builder::PointBuilder;
 
 pub(crate) fn p0() -> Point {
-    point!(
-        x: 0., y: 1.
-    )
+    wkt! { POINT (0. 1.) }
 }
 
 pub(crate) fn p1() -> Point {
-    point!(
-        x: 1., y: 2.
-    )
+    wkt! { POINT (1. 2.) }
 }
 
 pub(crate) fn p2() -> Point {
-    point!(
-        x: 2., y: 3.
-    )
+    wkt! { POINT (2. 3.) }
 }
 
 pub(crate) fn point_array(coord_type: CoordType) -> PointArray {

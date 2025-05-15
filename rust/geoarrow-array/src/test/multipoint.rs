@@ -1,30 +1,17 @@
-use geo_types::{MultiPoint, point};
 use geoarrow_schema::{CoordType, Dimension, MultiPointType};
 use geoarrow_test::raw;
+use wkt::types::MultiPoint;
+use wkt::wkt;
 
 use crate::array::MultiPointArray;
 use crate::builder::MultiPointBuilder;
 
 pub(crate) fn mp0() -> MultiPoint {
-    MultiPoint::new(vec![
-        point!(
-            x: 0., y: 1.
-        ),
-        point!(
-            x: 1., y: 2.
-        ),
-    ])
+    wkt! { MULTIPOINT (0. 1., 1. 2.) }
 }
 
 pub(crate) fn mp1() -> MultiPoint {
-    MultiPoint::new(vec![
-        point!(
-            x: 3., y: 4.
-        ),
-        point!(
-            x: 5., y: 6.
-        ),
-    ])
+    wkt! { MULTIPOINT (3. 4., 5. 6.) }
 }
 
 pub(crate) fn mp_array(coord_type: CoordType) -> MultiPointArray {

@@ -1,22 +1,17 @@
-use geo_types::{LineString, line_string};
 use geoarrow_schema::{CoordType, Dimension, LineStringType};
 use geoarrow_test::raw;
+use wkt::types::LineString;
+use wkt::wkt;
 
 use crate::array::LineStringArray;
 use crate::builder::LineStringBuilder;
 
 pub(crate) fn ls0() -> LineString {
-    line_string![
-        (x: 0., y: 1.),
-        (x: 1., y: 2.)
-    ]
+    wkt! { LINESTRING (0. 1., 1. 2.) }
 }
 
 pub(crate) fn ls1() -> LineString {
-    line_string![
-        (x: 3., y: 4.),
-        (x: 5., y: 6.)
-    ]
+    wkt! { LINESTRING (3. 4., 5. 6.) }
 }
 
 pub(crate) fn ls_array(coord_type: CoordType) -> LineStringArray {

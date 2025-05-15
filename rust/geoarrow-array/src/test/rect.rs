@@ -1,15 +1,63 @@
-use geo_types::{Rect, coord};
+use geo_traits::RectTrait;
+use geoarrow_schema::{BoxType, Dimension};
+use wkt::types::Coord;
 
 use crate::array::RectArray;
 use crate::builder::RectBuilder;
-use geoarrow_schema::{BoxType, Dimension};
+
+#[derive(PartialEq, Clone, Copy)]
+pub struct Rect {
+    min: Coord<f64>,
+    max: Coord<f64>,
+}
+
+impl RectTrait for Rect {
+    type T = f64;
+    type CoordType<'a> = Coord;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        geo_traits::Dimensions::Xy
+    }
+
+    fn min(&self) -> Self::CoordType<'_> {
+        self.min
+    }
+
+    fn max(&self) -> Self::CoordType<'_> {
+        self.max
+    }
+}
 
 pub(crate) fn r0() -> Rect {
-    Rect::new(coord! { x: 10., y: 20. }, coord! { x: 30., y: 10. })
+    let min = Coord {
+        x: 10.,
+        y: 20.,
+        z: None,
+        m: None,
+    };
+    let max = Coord {
+        x: 30.,
+        y: 10.,
+        z: None,
+        m: None,
+    };
+    Rect { min, max }
 }
 
 pub(crate) fn r1() -> Rect {
-    Rect::new(coord! { x: 100., y: 200. }, coord! { x: 300., y: 100. })
+    let min = Coord {
+        x: 100.,
+        y: 200.,
+        z: None,
+        m: None,
+    };
+    let max = Coord {
+        x: 300.,
+        y: 100.,
+        z: None,
+        m: None,
+    };
+    Rect { min, max }
 }
 
 pub(crate) fn r_array() -> RectArray {
