@@ -209,12 +209,15 @@ fn construct_native_predicate(
     bbox_cols: ParquetBboxStatistics,
     bbox_query: Rect,
 ) -> GeoArrowResult<Box<dyn ArrowPredicate>> {
-    let mask = ProjectionMask::leaves(parquet_schema, [
-        bbox_cols.minx_col,
-        bbox_cols.miny_col,
-        bbox_cols.maxx_col,
-        bbox_cols.maxy_col,
-    ]);
+    let mask = ProjectionMask::leaves(
+        parquet_schema,
+        [
+            bbox_cols.minx_col,
+            bbox_cols.miny_col,
+            bbox_cols.maxx_col,
+            bbox_cols.maxy_col,
+        ],
+    );
 
     let predicate = ArrowPredicateFn::new(mask, move |batch| {
         let array = batch.column(0);
@@ -258,12 +261,15 @@ fn construct_bbox_columns_predicate(
     bbox_cols: ParquetBboxStatistics,
     bbox_query: Rect,
 ) -> GeoArrowResult<Box<dyn ArrowPredicate>> {
-    let mask = ProjectionMask::leaves(parquet_schema, [
-        bbox_cols.minx_col,
-        bbox_cols.miny_col,
-        bbox_cols.maxx_col,
-        bbox_cols.maxy_col,
-    ]);
+    let mask = ProjectionMask::leaves(
+        parquet_schema,
+        [
+            bbox_cols.minx_col,
+            bbox_cols.miny_col,
+            bbox_cols.maxx_col,
+            bbox_cols.maxy_col,
+        ],
+    );
 
     // The GeoParquet spec allows the bounding box columns to be either Double or Float data type.
     // We need to know which type it is so that we can downcast the produced Arrow arrays to the
