@@ -4,7 +4,7 @@ use std::sync::Arc;
 use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, OffsetSizeTrait, UnionArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
-use arrow_schema::{DataType, Field, UnionMode};
+use arrow_schema::{ArrowError, DataType, Field, UnionMode};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{
     CoordType, Dimension, GeometryCollectionType, GeometryType, LineStringType, Metadata,
@@ -855,28 +855,6 @@ impl DimensionIndex for Dimension {
             i => Err(
                 ArrowError::SchemaError(format!("unsupported index in from_order: {}", i)).into(),
             ),
-        }
-    }
-}
-
-impl DimensionIndex for geo_traits::Dimensions {
-    fn order(&self) -> usize {
-        match self {
-            Self::Xy => 0,
-            Self::Xyz => 1,
-            Self::Xym => 2,
-            Self::Xyzm => 3,
-            Self::Unknown(_) => panic!("Unsupported DimensionIndex with unknown dimension"),
-        }
-    }
-
-    fn from_order(index: usize) -> Self {
-        match index {
-            0 => Self::Xy,
-            1 => Self::Xyz,
-            2 => Self::Xym,
-            3 => Self::Xyzm,
-            _ => panic!("unsupported index in from_order"),
         }
     }
 }
