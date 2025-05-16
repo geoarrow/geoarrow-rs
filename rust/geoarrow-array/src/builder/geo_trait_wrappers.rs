@@ -87,7 +87,7 @@ impl<T: WktNum, R: RectTrait<T = T>> PolygonTrait for RectWrapper<'_, T, R> {
     }
 
     unsafe fn interior_unchecked(&self, _: usize) -> Self::RingType<'_> {
-        panic!("interior_unchecked called on a rect")
+        unreachable!("interior_unchecked called on a rect")
     }
 }
 
@@ -176,7 +176,7 @@ impl<'a, T: WktNum, R: RectTrait<T = T>> LineStringTrait for &'a RectWrapper<'a,
             2 => self.ur(),
             3 => self.lr(),
             4 => self.ll(),
-            _ => panic!("out of range for rect coord: {i}"),
+            _ => unreachable!("out of range for rect coord: {i}"),
         }
     }
 }
@@ -264,7 +264,7 @@ impl<T, Tri: TriangleTrait<T = T>> PolygonTrait for TriangleWrapper<'_, T, Tri> 
     }
 
     unsafe fn interior_unchecked(&self, _: usize) -> Self::RingType<'_> {
-        panic!("interior_unchecked called on a triangle")
+        unreachable!("interior_unchecked called on a triangle")
     }
 }
 
@@ -284,7 +284,7 @@ impl<'a, T, Tri: TriangleTrait<T = T>> LineStringTrait for &'a TriangleWrapper<'
             1 => self.0.second(),
             2 => self.0.third(),
             3 => self.0.first(),
-            _ => panic!("out of range for triangle ring: {i}"),
+            _ => unreachable!("out of range for triangle ring: {i}"),
         }
     }
 }
@@ -437,7 +437,7 @@ impl<T, L: LineTrait<T = T>> LineStringTrait for LineWrapper<'_, T, L> {
         match i {
             0 => self.0.start(),
             1 => self.0.end(),
-            _ => panic!("out of range for line coord: {i}"),
+            _ => unreachable!("out of range for line coord: {i}"),
         }
     }
 }

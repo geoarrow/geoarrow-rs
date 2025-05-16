@@ -90,49 +90,49 @@ impl<'a> GeometryBuilder {
         let coord_type = typ.coord_type();
 
         let points = core::array::from_fn(|i| {
-            let dim = Dimension::from_order(i);
+            let dim = Dimension::from_order(i).unwrap();
             PointBuilder::with_capacity(
                 PointType::new(coord_type, dim, Default::default()),
                 capacity.point(dim),
             )
         });
         let line_strings = core::array::from_fn(|i| {
-            let dim = Dimension::from_order(i);
+            let dim = Dimension::from_order(i).unwrap();
             LineStringBuilder::with_capacity(
                 LineStringType::new(coord_type, dim, Default::default()),
                 capacity.line_string(dim),
             )
         });
         let polygons = core::array::from_fn(|i| {
-            let dim = Dimension::from_order(i);
+            let dim = Dimension::from_order(i).unwrap();
             PolygonBuilder::with_capacity(
                 PolygonType::new(coord_type, dim, Default::default()),
                 capacity.polygon(dim),
             )
         });
         let mpoints = core::array::from_fn(|i| {
-            let dim = Dimension::from_order(i);
+            let dim = Dimension::from_order(i).unwrap();
             MultiPointBuilder::with_capacity(
                 MultiPointType::new(coord_type, dim, Default::default()),
                 capacity.multi_point(dim),
             )
         });
         let mline_strings = core::array::from_fn(|i| {
-            let dim = Dimension::from_order(i);
+            let dim = Dimension::from_order(i).unwrap();
             MultiLineStringBuilder::with_capacity(
                 MultiLineStringType::new(coord_type, dim, Default::default()),
                 capacity.multi_line_string(dim),
             )
         });
         let mpolygons = core::array::from_fn(|i| {
-            let dim = Dimension::from_order(i);
+            let dim = Dimension::from_order(i).unwrap();
             MultiPolygonBuilder::with_capacity(
                 MultiPolygonType::new(coord_type, dim, Default::default()),
                 capacity.multi_polygon(dim),
             )
         });
         let gcs = core::array::from_fn(|i| {
-            let dim = Dimension::from_order(i);
+            let dim = Dimension::from_order(i).unwrap();
             GeometryCollectionBuilder::with_capacity(
                 GeometryCollectionType::new(coord_type, dim, Default::default()),
                 capacity.geometry_collection(dim),

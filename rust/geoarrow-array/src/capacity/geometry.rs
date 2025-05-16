@@ -174,77 +174,98 @@ impl GeometryCapacity {
 
     /// Add the capacity of the given Point
     #[inline]
-    fn add_point(&mut self, point: Option<&impl PointTrait>) {
+    fn add_point(&mut self, point: Option<&impl PointTrait>) -> GeoArrowResult<()> {
         if let Some(point) = point {
+            let dim = Dimension::try_from(point.dim())?;
             if self.prefer_multi {
-                self.mpoints[point.dim().order()].add_point(Some(point));
+                self.mpoints[dim.order()].add_point(Some(point));
             } else {
-                self.points[point.dim().order()] += 1;
+                self.points[dim.order()] += 1;
             }
         } else {
             self.nulls += 1;
         }
+        Ok(())
     }
 
     /// Add the capacity of the given LineString
     #[inline]
-    fn add_line_string(&mut self, line_string: Option<&impl LineStringTrait>) {
+    fn add_line_string(
+        &mut self,
+        line_string: Option<&impl LineStringTrait>,
+    ) -> GeoArrowResult<()> {
         if let Some(line_string) = line_string {
+            let dim = Dimension::try_from(line_string.dim())?;
             if self.prefer_multi {
-                self.mline_strings[line_string.dim().order()].add_line_string(Some(line_string));
+                self.mline_strings[dim.order()].add_line_string(Some(line_string));
             } else {
-                self.line_strings[line_string.dim().order()].add_line_string(Some(line_string));
+                self.line_strings[dim.order()].add_line_string(Some(line_string));
             }
         } else {
             self.nulls += 1;
         }
+        Ok(())
     }
 
     /// Add the capacity of the given Polygon
     #[inline]
-    fn add_polygon(&mut self, polygon: Option<&impl PolygonTrait>) {
+    fn add_polygon(&mut self, polygon: Option<&impl PolygonTrait>) -> GeoArrowResult<()> {
         if let Some(polygon) = polygon {
+            let dim = Dimension::try_from(polygon.dim())?;
             if self.prefer_multi {
-                self.mpolygons[polygon.dim().order()].add_polygon(Some(polygon));
+                self.mpolygons[dim.order()].add_polygon(Some(polygon));
             } else {
-                self.polygons[polygon.dim().order()].add_polygon(Some(polygon));
+                self.polygons[dim.order()].add_polygon(Some(polygon));
             }
         } else {
             self.nulls += 1;
         }
+        Ok(())
     }
 
     /// Add the capacity of the given MultiPoint
     #[inline]
-    fn add_multi_point(&mut self, multi_point: Option<&impl MultiPointTrait>) {
+    fn add_multi_point(
+        &mut self,
+        multi_point: Option<&impl MultiPointTrait>,
+    ) -> GeoArrowResult<()> {
         if let Some(multi_point) = multi_point {
-            self.multi_point(multi_point.dim().try_into().unwrap())
+            self.multi_point(multi_point.dim().try_into()?)
                 .add_multi_point(Some(multi_point));
         } else {
             self.nulls += 1;
         }
+        Ok(())
     }
 
     /// Add the capacity of the given MultiLineString
     #[inline]
-    fn add_multi_line_string(&mut self, multi_line_string: Option<&impl MultiLineStringTrait>) {
+    fn add_multi_line_string(
+        &mut self,
+        multi_line_string: Option<&impl MultiLineStringTrait>,
+    ) -> GeoArrowResult<()> {
         if let Some(multi_line_string) = multi_line_string {
-            self.multi_line_string(multi_line_string.dim().try_into().unwrap())
+            self.multi_line_string(multi_line_string.dim().try_into()?)
                 .add_multi_line_string(Some(multi_line_string));
         } else {
             self.nulls += 1;
         }
+        Ok(())
     }
 
     /// Add the capacity of the given MultiPolygon
     #[inline]
-    fn add_multi_polygon(&mut self, multi_polygon: Option<&impl MultiPolygonTrait>) {
+    fn add_multi_polygon(
+        &mut self,
+        multi_polygon: Option<&impl MultiPolygonTrait>,
+    ) -> GeoArrowResult<()> {
         if let Some(multi_polygon) = multi_polygon {
-            self.multi_polygon(multi_polygon.dim().try_into().unwrap())
+            self.multi_polygon(multi_polygon.dim().try_into()?)
                 .add_multi_polygon(Some(multi_polygon));
         } else {
             self.nulls += 1;
         }
+        Ok(())
     }
 
     /// Add the capacity of the given Geometry
@@ -263,11 +284,11 @@ impl GeometryCapacity {
                 GeometryType::MultiPoint(p) => self.add_multi_point(Some(p)),
                 GeometryType::MultiLineString(p) => self.add_multi_line_string(Some(p)),
                 GeometryType::MultiPolygon(p) => self.add_multi_polygon(Some(p)),
-                GeometryType::GeometryCollection(p) => self.add_geometry_collection(Some(p))?,
+                GeometryType::GeometryCollection(p) => self.add_geometry_collection(Some(p)),
                 GeometryType::Rect(r) => self.add_polygon(Some(&RectWrapper::try_new(r)?)),
                 GeometryType::Triangle(tri) => self.add_polygon(Some(&TriangleWrapper(tri))),
                 GeometryType::Line(l) => self.add_line_string(Some(&LineWrapper(l))),
-            };
+            }?;
         } else {
             self.nulls += 1;
         }
@@ -281,7 +302,7 @@ impl GeometryCapacity {
         gc: Option<&impl GeometryCollectionTrait<T = T>>,
     ) -> GeoArrowResult<()> {
         if let Some(gc) = gc {
-            self.gcs[gc.dim().order()].add_geometry_collection(Some(gc))?;
+            self.gcs[Dimension::try_from(gc.dim())?.order()].add_geometry_collection(Some(gc))?;
         } else {
             self.nulls += 1;
         };
