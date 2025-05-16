@@ -11,6 +11,7 @@ rust-version = { workspace = true }
 
 
 [dependencies]
+arrow-schema = { workspace = true }
 geo-traits = { workspace = true }
 geoarrow-array = { workspace = true }
 geoarrow-schema = { workspace = true, features = ["wkt"] }

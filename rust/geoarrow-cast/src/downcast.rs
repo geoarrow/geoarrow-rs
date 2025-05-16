@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+use arrow_schema::ArrowError;
 use geo_traits::{
     GeometryCollectionTrait, GeometryTrait, MultiLineStringTrait, MultiPointTrait,
     MultiPolygonTrait,
@@ -183,7 +184,7 @@ fn get_type_ids(array: &dyn GeoArrowArray) -> GeoArrowResult<HashSet<NativeTypeA
             .iter()
             .flatten()
             .map(|s| {
-                let (wkt_type, wkt_dim) = wkt::infer_type(s).map_err(GeoArrowError::Cast)?;
+                let (wkt_type, wkt_dim) = wkt::infer_type(s).map_err(ArrowError::CastError)?;
                 let geom_type = NativeTypeAndDimension::new(wkt_type.into(), wkt_dim.into());
                 Ok(geom_type)
             })
@@ -194,7 +195,7 @@ fn get_type_ids(array: &dyn GeoArrowArray) -> GeoArrowResult<HashSet<NativeTypeA
             .iter()
             .flatten()
             .map(|s| {
-                let (wkt_type, wkt_dim) = wkt::infer_type(s).map_err(GeoArrowError::Cast)?;
+                let (wkt_type, wkt_dim) = wkt::infer_type(s).map_err(ArrowError::CastError)?;
                 let geom_type = NativeTypeAndDimension::new(wkt_type.into(), wkt_dim.into());
                 Ok(geom_type)
             })
@@ -205,7 +206,7 @@ fn get_type_ids(array: &dyn GeoArrowArray) -> GeoArrowResult<HashSet<NativeTypeA
             .iter()
             .flatten()
             .map(|s| {
-                let (wkt_type, wkt_dim) = wkt::infer_type(s).map_err(GeoArrowError::Cast)?;
+                let (wkt_type, wkt_dim) = wkt::infer_type(s).map_err(ArrowError::CastError)?;
                 let geom_type = NativeTypeAndDimension::new(wkt_type.into(), wkt_dim.into());
                 Ok(geom_type)
             })
