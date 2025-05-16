@@ -6,20 +6,8 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CoordType {
     /// Interleaved coordinates.
-    // #[default]
     Interleaved,
 
     /// Separated coordinates.
     Separated,
-}
-
-impl CoordType {
-    /// Specify Interleaved as a "default".
-    ///
-    /// There are discussions ongoing about whether `CoordType` should implement [Default]. This
-    /// exists for places where we want to use a default value of `CoordType` without currently
-    /// defining `Default` on `CoordType`.
-    pub fn default_interleaved() -> Self {
-        Self::Interleaved
-    }
 }
