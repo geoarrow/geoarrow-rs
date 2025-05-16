@@ -529,7 +529,8 @@ impl GeoParquetMetadata {
             for kv in metadata {
                 if kv.key == "geo" {
                     if let Some(value) = &kv.value {
-                        return Ok(serde_json::from_str(value)?);
+                        return serde_json::from_str(value)
+                            .map_err(|err| GeoArrowError::GeoParquet(err.to_string()));
                     }
                 }
             }

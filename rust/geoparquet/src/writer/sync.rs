@@ -75,7 +75,11 @@ impl<W: Write + Send> GeoParquetWriter<W> {
     /// All the data in the inner buffer will be force flushed.
     pub fn finish(mut self) -> GeoArrowResult<()> {
         if let Some(geo_meta) = self.metadata_builder.finish() {
-            let kv_metadata = KeyValue::new("geo".to_string(), serde_json::to_string(&geo_meta)?);
+            let kv_metadata = KeyValue::new(
+                "geo".to_string(),
+                serde_json::to_string(&geo_meta)
+                    .map_err(|err| GeoArrowError::GeoParquet(err.to_string()))?,
+            );
             self.writer.append_key_value_metadata(kv_metadata);
         }
 

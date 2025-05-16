@@ -48,10 +48,6 @@ pub enum GeoArrowError {
     #[error("Overflow")]
     Overflow,
 
-    /// [serde_json::Error]
-    #[error(transparent)]
-    SerdeJsonError(#[from] serde_json::Error),
-
     /// WKB Error
     #[error("WKB error: {0}")]
     Wkb(String),

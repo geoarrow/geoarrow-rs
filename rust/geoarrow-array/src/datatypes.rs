@@ -317,7 +317,12 @@ impl TryFrom<&Field> for GeoArrowType {
     fn try_from(field: &Field) -> GeoArrowResult<Self> {
         // TODO: should we make Metadata::deserialize public?
         let metadata: Metadata = if let Some(ext_meta) = field.extension_type_metadata() {
-            serde_json::from_str(ext_meta)?
+            serde_json::from_str(ext_meta).map_err(|err| {
+                GeoArrowError::InvalidGeoArrow(format!(
+                    "Failed to deserialize GeoArrow metadata: {}",
+                    err
+                ))
+            })?
         } else {
             Default::default()
         };
