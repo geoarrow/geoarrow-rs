@@ -482,7 +482,7 @@ impl GeoArrowArray for GeometryArray {
             5 => self.mline_strings[dim].is_null(offset),
             6 => self.mpolygons[dim].is_null(offset),
             7 => self.gcs[dim].is_null(offset),
-            _ => panic!("unknown type_id {}", type_id),
+            _ => unreachable!("unknown type_id {}", type_id),
         }
     }
 
@@ -516,7 +516,7 @@ impl<'a> GeoArrowArrayAccessor<'a> for GeometryArray {
             5 => Geometry::MultiLineString(self.mline_strings[dim].value(offset)?),
             6 => Geometry::MultiPolygon(self.mpolygons[dim].value(offset)?),
             7 => Geometry::GeometryCollection(self.gcs[dim].value(offset)?),
-            _ => panic!("unknown type_id {}", type_id),
+            _ => unreachable!("unknown type_id {}", type_id),
         };
         Ok(result)
     }
@@ -587,11 +587,11 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
         match value.data_type() {
             DataType::Union(fields, mode) => {
                 if !matches!(mode, UnionMode::Dense) {
-                    return Err(GeoArrowError::General("Expected dense union".to_string()));
+                    return Err(ArrowError::SchemaError("Expected dense union".to_string()).into());
                 }
 
                 for (type_id, _field) in fields.iter() {
-                    let dim = Dimension::from_order((type_id / 10) as _);
+                    let dim = Dimension::from_order((type_id / 10) as _)?;
                     let index = dim.order();
 
                     match type_id % 10 {
@@ -671,7 +671,12 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
                     }
                 }
             }
-            _ => panic!("expected union type"),
+            _ => {
+                return Err(ArrowError::CastError(
+                    "expected union type when converting to GeometryArray".to_string(),
+                )
+                .into());
+            }
         };
 
         let type_ids = value.type_ids().clone();
@@ -691,7 +696,7 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
             } else {
                 PointBuilder::new(PointType::new(
                     coord_type,
-                    Dimension::from_order(i),
+                    Dimension::from_order(i).unwrap(),
                     Default::default(),
                 ))
                 .finish()
@@ -704,7 +709,7 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
             } else {
                 LineStringBuilder::new(LineStringType::new(
                     coord_type,
-                    Dimension::from_order(i),
+                    Dimension::from_order(i).unwrap(),
                     Default::default(),
                 ))
                 .finish()
@@ -717,7 +722,7 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
             } else {
                 PolygonBuilder::new(PolygonType::new(
                     coord_type,
-                    Dimension::from_order(i),
+                    Dimension::from_order(i).unwrap(),
                     Default::default(),
                 ))
                 .finish()
@@ -730,7 +735,7 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
             } else {
                 MultiPointBuilder::new(MultiPointType::new(
                     coord_type,
-                    Dimension::from_order(i),
+                    Dimension::from_order(i).unwrap(),
                     Default::default(),
                 ))
                 .finish()
@@ -743,7 +748,7 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
             } else {
                 MultiLineStringBuilder::new(MultiLineStringType::new(
                     coord_type,
-                    Dimension::from_order(i),
+                    Dimension::from_order(i).unwrap(),
                     Default::default(),
                 ))
                 .finish()
@@ -756,7 +761,7 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
             } else {
                 MultiPolygonBuilder::new(MultiPolygonType::new(
                     coord_type,
-                    Dimension::from_order(i),
+                    Dimension::from_order(i).unwrap(),
                     Default::default(),
                 ))
                 .finish()
@@ -769,7 +774,7 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
             } else {
                 GeometryCollectionBuilder::new(GeometryCollectionType::new(
                     coord_type,
-                    Dimension::from_order(i),
+                    Dimension::from_order(i).unwrap(),
                     Default::default(),
                 ))
                 .finish()
@@ -824,11 +829,11 @@ impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, GeometryType)> for Geometr
     }
 }
 
-pub(crate) trait DimensionIndex {
+pub(crate) trait DimensionIndex: Sized {
     /// Get the positional index of the internal array for the given dimension.
     fn order(&self) -> usize;
 
-    fn from_order(index: usize) -> Self;
+    fn from_order(index: usize) -> GeoArrowResult<Self>;
 }
 
 impl DimensionIndex for Dimension {
@@ -841,13 +846,15 @@ impl DimensionIndex for Dimension {
         }
     }
 
-    fn from_order(index: usize) -> Self {
+    fn from_order(index: usize) -> GeoArrowResult<Self> {
         match index {
-            0 => Self::XY,
-            1 => Self::XYZ,
-            2 => Self::XYM,
-            3 => Self::XYZM,
-            _ => panic!("unsupported index in from_order"),
+            0 => Ok(Self::XY),
+            1 => Ok(Self::XYZ),
+            2 => Ok(Self::XYM),
+            3 => Ok(Self::XYZM),
+            i => Err(
+                ArrowError::SchemaError(format!("unsupported index in from_order: {}", i)).into(),
+            ),
         }
     }
 }
@@ -929,7 +936,7 @@ fn empty_children(coord_type: CoordType) -> ChildrenArrays {
         core::array::from_fn(|i| {
             PointBuilder::new(PointType::new(
                 coord_type,
-                Dimension::from_order(i),
+                Dimension::from_order(i).unwrap(),
                 Default::default(),
             ))
             .finish()
@@ -937,7 +944,7 @@ fn empty_children(coord_type: CoordType) -> ChildrenArrays {
         core::array::from_fn(|i| {
             LineStringBuilder::new(LineStringType::new(
                 coord_type,
-                Dimension::from_order(i),
+                Dimension::from_order(i).unwrap(),
                 Default::default(),
             ))
             .finish()
@@ -945,7 +952,7 @@ fn empty_children(coord_type: CoordType) -> ChildrenArrays {
         core::array::from_fn(|i| {
             PolygonBuilder::new(PolygonType::new(
                 coord_type,
-                Dimension::from_order(i),
+                Dimension::from_order(i).unwrap(),
                 Default::default(),
             ))
             .finish()
@@ -953,7 +960,7 @@ fn empty_children(coord_type: CoordType) -> ChildrenArrays {
         core::array::from_fn(|i| {
             MultiPointBuilder::new(MultiPointType::new(
                 coord_type,
-                Dimension::from_order(i),
+                Dimension::from_order(i).unwrap(),
                 Default::default(),
             ))
             .finish()
@@ -961,7 +968,7 @@ fn empty_children(coord_type: CoordType) -> ChildrenArrays {
         core::array::from_fn(|i| {
             MultiLineStringBuilder::new(MultiLineStringType::new(
                 coord_type,
-                Dimension::from_order(i),
+                Dimension::from_order(i).unwrap(),
                 Default::default(),
             ))
             .finish()
@@ -969,7 +976,7 @@ fn empty_children(coord_type: CoordType) -> ChildrenArrays {
         core::array::from_fn(|i| {
             MultiPolygonBuilder::new(MultiPolygonType::new(
                 coord_type,
-                Dimension::from_order(i),
+                Dimension::from_order(i).unwrap(),
                 Default::default(),
             ))
             .finish()
@@ -977,7 +984,7 @@ fn empty_children(coord_type: CoordType) -> ChildrenArrays {
         core::array::from_fn(|i| {
             GeometryCollectionBuilder::new(GeometryCollectionType::new(
                 coord_type,
-                Dimension::from_order(i),
+                Dimension::from_order(i).unwrap(),
                 Default::default(),
             ))
             .finish()

@@ -4,7 +4,7 @@ use std::sync::Arc;
 use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, UnionArray};
 use arrow_buffer::ScalarBuffer;
-use arrow_schema::{DataType, UnionMode};
+use arrow_schema::{ArrowError, DataType, UnionMode};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{
     CoordType, Dimension, GeometryCollectionType, LineStringType, MultiLineStringType,
@@ -496,7 +496,7 @@ impl MixedGeometryArray {
             7 => {
                 panic!("nested geometry collections not supported in GeoArrow")
             }
-            _ => panic!("unknown type_id {}", type_id),
+            _ => unreachable!("unknown type_id {}", type_id),
         }
     }
 
@@ -554,7 +554,7 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                 }
 
                 for (type_id, _field) in fields.iter() {
-                    let found_dimension = Dimension::from_order((type_id / 10) as _);
+                    let found_dimension = Dimension::from_order((type_id / 10) as _)?;
 
                     if dim != found_dimension {
                         return Err(GeoArrowError::General(format!(
@@ -625,15 +625,21 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                             );
                         }
                         _ => {
-                            return Err(GeoArrowError::General(format!(
-                                "Unexpected type_id {}",
+                            return Err(ArrowError::CastError(format!(
+                                "Unexpected type_id {} when converting to MixedGeometryArray",
                                 type_id
-                            )));
+                            ))
+                            .into());
                         }
                     }
                 }
             }
-            _ => panic!("expected union type"),
+            _ => {
+                return Err(ArrowError::CastError(
+                    "expected union type when converting to MixedGeometryArray".to_string(),
+                )
+                .into());
+            }
         };
 
         let type_ids = value.type_ids().clone();
