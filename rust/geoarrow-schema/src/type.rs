@@ -119,8 +119,6 @@ define_basic_type!(
 impl PointType {
     /// Convert to the corresponding [`DataType`].
     ///
-    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
-    ///
     /// ```
     /// use arrow_schema::{DataType, Field};
     /// use geoarrow_schema::{CoordType, Dimension, PointType};
@@ -184,11 +182,11 @@ fn parse_point(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowErro
         // TODO: use list_size for dimension when 2, or 4
         DataType::FixedSizeList(inner_field, _list_size) => Ok((
             CoordType::Interleaved,
-            Dimension::from_interleaved_field(inner_field),
+            Dimension::from_interleaved_field(inner_field)?,
         )),
         DataType::Struct(struct_fields) => Ok((
             CoordType::Separated,
-            Dimension::from_separated_field(struct_fields),
+            Dimension::from_separated_field(struct_fields)?,
         )),
         dt => Err(ArrowError::SchemaError(format!(
             "Unexpected data type {dt}"
@@ -198,8 +196,6 @@ fn parse_point(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowErro
 
 impl LineStringType {
     /// Convert to the corresponding [`DataType`].
-    ///
-    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     ///
     /// ```
     /// use arrow_schema::{DataType, Field};
@@ -280,8 +276,6 @@ fn parse_linestring(data_type: &DataType) -> Result<(CoordType, Dimension), Arro
 
 impl PolygonType {
     /// Convert to the corresponding [`DataType`].
-    ///
-    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     ///
     /// ```
     /// use arrow_schema::{DataType, Field};
@@ -377,8 +371,6 @@ fn parse_polygon(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowEr
 impl MultiPointType {
     /// Convert to the corresponding [`DataType`].
     ///
-    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
-    ///
     /// ```
     /// use arrow_schema::{DataType, Field};
     /// use geoarrow_schema::{CoordType, Dimension, MultiPointType};
@@ -460,8 +452,6 @@ fn parse_multipoint(data_type: &DataType) -> Result<(CoordType, Dimension), Arro
 
 impl MultiLineStringType {
     /// Convert to the corresponding [`DataType`].
-    ///
-    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     ///
     /// ```
     /// use arrow_schema::{DataType, Field};
@@ -557,8 +547,6 @@ fn parse_multilinestring(data_type: &DataType) -> Result<(CoordType, Dimension),
 
 impl MultiPolygonType {
     /// Convert to the corresponding [`DataType`].
-    ///
-    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     ///
     /// ```
     /// use arrow_schema::{DataType, Field};
@@ -665,8 +653,6 @@ fn parse_multipolygon(data_type: &DataType) -> Result<(CoordType, Dimension), Ar
 
 impl GeometryCollectionType {
     /// Convert to the corresponding [`DataType`].
-    ///
-    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     ///
     /// ```
     /// use std::sync::Arc;
@@ -970,8 +956,6 @@ impl GeometryType {
     }
 
     /// Convert to the corresponding [`DataType`].
-    ///
-    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     pub fn data_type(&self) -> DataType {
         let mut fields = vec![];
         let type_ids = vec![
@@ -1188,8 +1172,6 @@ impl BoxType {
     }
 
     /// Convert to the corresponding [`DataType`].
-    ///
-    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     ///
     /// ```
     /// use arrow_schema::{DataType, Field};
