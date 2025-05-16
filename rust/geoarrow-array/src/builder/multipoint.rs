@@ -6,8 +6,6 @@ use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, Point
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, MultiPointType};
 
-use crate::util::GeometryTypeName;
-// use super::array::check;
 use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, MultiPointArray};
 use crate::builder::{
@@ -15,6 +13,7 @@ use crate::builder::{
 };
 use crate::capacity::MultiPointCapacity;
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
+use crate::util::GeometryTypeName;
 
 /// The GeoArrow equivalent to `Vec<Option<MultiPoint>>`: a mutable collection of MultiPoints.
 ///

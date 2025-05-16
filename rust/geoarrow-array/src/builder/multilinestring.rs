@@ -6,8 +6,6 @@ use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, Multi
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, MultiLineStringType};
 
-use crate::util::GeometryTypeName;
-// use super::array::check;
 use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, MultiLineStringArray};
 use crate::builder::{
@@ -15,6 +13,7 @@ use crate::builder::{
 };
 use crate::capacity::MultiLineStringCapacity;
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
+use crate::util::GeometryTypeName;
 
 /// The GeoArrow equivalent to `Vec<Option<MultiLineString>>`: a mutable collection of
 /// MultiLineStrings.

@@ -8,8 +8,6 @@ use geo_traits::{
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, MultiPolygonType};
 
-use crate::util::GeometryTypeName;
-// use super::array::check;
 use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, MultiPolygonArray};
 use crate::builder::{
@@ -17,6 +15,7 @@ use crate::builder::{
 };
 use crate::capacity::MultiPolygonCapacity;
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
+use crate::util::GeometryTypeName;
 
 /// The GeoArrow equivalent to `Vec<Option<MultiPolygon>>`: a mutable collection of MultiPolygons.
 ///
