@@ -143,13 +143,14 @@ impl GeoParquetReaderMetadata {
         let paths = if let Some(paths) = paths {
             paths
         } else {
-            let geo_meta = self
-                .geo_meta
-                .as_ref()
-                .ok_or(GeoArrowError::General("No geospatial metadata".to_string()))?;
-            &geo_meta.bbox_covering(None)?.ok_or(GeoArrowError::General(
-                "No covering metadata found".to_string(),
-            ))?
+            let geo_meta = self.geo_meta.as_ref().ok_or(GeoArrowError::GeoParquet(
+                "No geospatial metadata".to_string(),
+            ))?;
+            &geo_meta
+                .bbox_covering(None)?
+                .ok_or(GeoArrowError::GeoParquet(
+                    "No covering metadata found".to_string(),
+                ))?
         };
 
         let geo_statistics = ParquetBboxStatistics::try_new(self.meta.parquet_schema(), paths)?;
@@ -168,13 +169,14 @@ impl GeoParquetReaderMetadata {
         let paths = if let Some(paths) = paths {
             paths
         } else {
-            let geo_meta = self
-                .geo_meta
-                .as_ref()
-                .ok_or(GeoArrowError::General("No geospatial metadata".to_string()))?;
-            &geo_meta.bbox_covering(None)?.ok_or(GeoArrowError::General(
-                "No covering metadata found".to_string(),
-            ))?
+            let geo_meta = self.geo_meta.as_ref().ok_or(GeoArrowError::GeoParquet(
+                "No geospatial metadata".to_string(),
+            ))?;
+            &geo_meta
+                .bbox_covering(None)?
+                .ok_or(GeoArrowError::GeoParquet(
+                    "No covering metadata found".to_string(),
+                ))?
         };
 
         let geo_statistics = ParquetBboxStatistics::try_new(self.meta.parquet_schema(), paths)?;
@@ -199,13 +201,14 @@ impl GeoParquetReaderMetadata {
     pub fn file_bbox(&self, column_name: Option<&str>) -> GeoArrowResult<Option<&[f64]>> {
         if let Some(geo_meta) = self.geo_metadata() {
             let column_name = column_name.unwrap_or(geo_meta.primary_column.as_str());
-            let column_meta = geo_meta
-                .columns
-                .get(column_name)
-                .ok_or(GeoArrowError::General(format!(
-                    "Column {} not found in GeoParquet metadata",
-                    column_name
-                )))?;
+            let column_meta =
+                geo_meta
+                    .columns
+                    .get(column_name)
+                    .ok_or(GeoArrowError::GeoParquet(format!(
+                        "Column {} not found in GeoParquet metadata",
+                        column_name
+                    )))?;
             Ok(column_meta.bbox.as_deref())
         } else {
             Ok(None)
@@ -216,13 +219,14 @@ impl GeoParquetReaderMetadata {
     pub fn crs(&self, column_name: Option<&str>) -> GeoArrowResult<Option<&Value>> {
         if let Some(geo_meta) = self.geo_metadata() {
             let column_name = column_name.unwrap_or(geo_meta.primary_column.as_str());
-            let column_meta = geo_meta
-                .columns
-                .get(column_name)
-                .ok_or(GeoArrowError::General(format!(
-                    "Column {} not found in GeoParquet metadata",
-                    column_name
-                )))?;
+            let column_meta =
+                geo_meta
+                    .columns
+                    .get(column_name)
+                    .ok_or(GeoArrowError::GeoParquet(format!(
+                        "Column {} not found in GeoParquet metadata",
+                        column_name
+                    )))?;
             Ok(column_meta.crs.as_ref())
         } else {
             Ok(None)
@@ -260,7 +264,7 @@ impl GeoParquetDatasetMetadata {
     /// Construct dataset metadata from a key-value map of [ArrowReaderMetadata].
     pub fn from_files(metas: HashMap<String, ArrowReaderMetadata>) -> GeoArrowResult<Self> {
         if metas.is_empty() {
-            return Err(GeoArrowError::General("No files provided".to_string()));
+            return Err(GeoArrowError::GeoParquet("No files provided".to_string()));
         }
 
         let mut schema: Option<SchemaRef> = None;
@@ -330,13 +334,14 @@ impl GeoParquetDatasetMetadata {
     pub fn file_bbox(&self, column_name: Option<&str>) -> GeoArrowResult<Option<&[f64]>> {
         if let Some(geo_meta) = self.geo_metadata() {
             let column_name = column_name.unwrap_or(geo_meta.primary_column.as_str());
-            let column_meta = geo_meta
-                .columns
-                .get(column_name)
-                .ok_or(GeoArrowError::General(format!(
-                    "Column {} not found in GeoParquet metadata",
-                    column_name
-                )))?;
+            let column_meta =
+                geo_meta
+                    .columns
+                    .get(column_name)
+                    .ok_or(GeoArrowError::GeoParquet(format!(
+                        "Column {} not found in GeoParquet metadata",
+                        column_name
+                    )))?;
             Ok(column_meta.bbox.as_deref())
         } else {
             Ok(None)
@@ -350,13 +355,14 @@ impl GeoParquetDatasetMetadata {
     pub fn crs(&self, column_name: Option<&str>) -> GeoArrowResult<Option<&Value>> {
         if let Some(geo_meta) = self.geo_metadata() {
             let column_name = column_name.unwrap_or(geo_meta.primary_column.as_str());
-            let column_meta = geo_meta
-                .columns
-                .get(column_name)
-                .ok_or(GeoArrowError::General(format!(
-                    "Column {} not found in GeoParquet metadata",
-                    column_name
-                )))?;
+            let column_meta =
+                geo_meta
+                    .columns
+                    .get(column_name)
+                    .ok_or(GeoArrowError::GeoParquet(format!(
+                        "Column {} not found in GeoParquet metadata",
+                        column_name
+                    )))?;
             Ok(column_meta.crs.as_ref())
         } else {
             Ok(None)

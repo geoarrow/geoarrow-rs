@@ -10,9 +10,29 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 #[non_exhaustive]
 pub enum GeoArrowError {
+    /// [ArrowError]
+    #[error(transparent)]
+    Arrow(#[from] ArrowError),
+
+    /// CRS error
+    #[error("CRS related error: {0}")]
+    Crs(String),
+
     /// Wraps an external error.
     #[error("External error: {0}")]
     External(#[from] Box<dyn Error + Send + Sync>),
+
+    /// FlatGeobuf error
+    #[error("FlatGeobuf error: {0}")]
+    FlatGeobuf(String),
+
+    /// GeoParquet error
+    #[error("GeoParquet error: {0}")]
+    GeoParquet(String),
+
+    /// [std::io::Error]
+    #[error(transparent)]
+    IOError(#[from] std::io::Error),
 
     /// Invalid data not conforming to GeoArrow specification
     #[error("Data not conforming to GeoArrow specification: {0}")]
@@ -27,14 +47,6 @@ pub enum GeoArrowError {
     /// The solution is usually to use a higher-capacity container-backing type.
     #[error("Overflow")]
     Overflow,
-
-    /// [ArrowError]
-    #[error(transparent)]
-    Arrow(#[from] ArrowError),
-
-    /// [std::io::Error]
-    #[error(transparent)]
-    IOError(#[from] std::io::Error),
 
     /// [serde_json::Error]
     #[error(transparent)]

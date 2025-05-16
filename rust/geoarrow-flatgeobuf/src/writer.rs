@@ -124,7 +124,7 @@ pub fn write_flatgeobuf_with_options<W: Write, S: Into<GeozeroRecordBatchReader>
     let fields = &schema.fields;
     let geom_col_idxs = geometry_columns(schema.as_ref());
     if geom_col_idxs.len() != 1 {
-        return Err(GeoArrowError::General(
+        return Err(GeoArrowError::FlatGeobuf(
             "Only one geometry column currently supported in FlatGeobuf writer".to_string(),
         ));
     }
@@ -151,7 +151,7 @@ fn infer_flatgeobuf_geometry_type(schema: &Schema) -> GeoArrowResult<flatgeobuf:
     let fields = &schema.fields;
     let geom_col_idxs = geometry_columns(schema);
     if geom_col_idxs.len() != 1 {
-        return Err(GeoArrowError::General(
+        return Err(GeoArrowError::FlatGeobuf(
             "Only one geometry column currently supported in FlatGeobuf writer".to_string(),
         ));
     }

@@ -16,7 +16,7 @@ impl GEOSMultiPolygon {
         if matches!(geom.geometry_type(), GeometryTypes::MultiPolygon) {
             Ok(Self(geom))
         } else {
-            Err(GeoArrowError::General(
+            Err(GeoArrowError::IncorrectGeometryType(
                 "Geometry type must be multi polygon".to_string(),
             ))
         }

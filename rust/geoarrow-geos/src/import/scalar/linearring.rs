@@ -16,7 +16,7 @@ impl<'a> GEOSConstLinearRing<'a> {
         if matches!(geom.geometry_type(), GeometryTypes::LinearRing) {
             Ok(Self(geom))
         } else {
-            Err(GeoArrowError::General(
+            Err(GeoArrowError::IncorrectGeometryType(
                 "Geometry type must be linear ring".to_string(),
             ))
         }

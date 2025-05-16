@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use arrow_schema::ArrowError;
 use geoarrow_array::array::{
     GeometryArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
 };
@@ -10,7 +11,7 @@ use geoarrow_array::builder::{
 use geoarrow_array::capacity::{LineStringCapacity, PolygonCapacity};
 use geoarrow_array::cast::{AsGeoArrowArray, from_wkb, from_wkt, to_wkb, to_wkt};
 use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, GeoArrowType};
-use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
+use geoarrow_schema::error::GeoArrowResult;
 
 /// Cast a `GeoArrowArray` to another `GeoArrowType`.
 ///
@@ -54,19 +55,21 @@ pub fn cast(
     // dimension.
     if let (Some(from_dim), Some(to_dim)) = (array.data_type().dimension(), to_type.dimension()) {
         if from_dim != to_dim {
-            return Err(GeoArrowError::General(format!(
+            return Err(ArrowError::CastError(format!(
                 "Cannot cast from {:?} to {:?}: incompatible dimensions",
-                from_dim, to_dim
-            )));
+                from_dim, to_dim,
+            ))
+            .into());
         }
     }
 
     if array.data_type().metadata() != to_type.metadata() {
-        return Err(GeoArrowError::General(format!(
+        return Err(ArrowError::CastError(format!(
             "Cannot cast from {:?} to {:?}: incompatible metadata",
             array.data_type().metadata(),
             to_type.metadata(),
-        )));
+        ))
+        .into());
     }
 
     use GeoArrowType::*;
@@ -252,11 +255,12 @@ pub fn cast(
         (Wkt(_), _) => from_wkt(array.as_wkt::<i32>(), to_type.clone())?,
         (LargeWkt(_), _) => from_wkt(array.as_wkt::<i64>(), to_type.clone())?,
         (_, _) => {
-            return Err(GeoArrowError::General(format!(
+            return Err(ArrowError::CastError(format!(
                 "Unsupported cast from {:?} to {:?}",
                 array.data_type(),
                 to_type
-            )));
+            ))
+            .into());
         }
     };
     Ok(out)

@@ -64,7 +64,7 @@ impl GeoParquetColumnEncoding {
                 GeoArrowType::MultiLineString(_) => Self::MultiLineString,
                 GeoArrowType::MultiPolygon(_) => Self::MultiPolygon,
                 dt => {
-                    return Err(GeoArrowError::General(format!(
+                    return Err(GeoArrowError::GeoParquet(format!(
                         "unsupported data type for native encoding: {:?}",
                         dt
                     )));
@@ -126,7 +126,7 @@ impl FromStr for GeoParquetGeometryType {
             "MultiPolygon" => Self::MultiPolygon,
             "GeometryCollection" => Self::GeometryCollection,
             other => {
-                return Err(GeoArrowError::General(format!(
+                return Err(GeoArrowError::GeoParquet(format!(
                     "Unknown value for geometry_type: {other}"
                 )));
             }
@@ -227,7 +227,7 @@ impl FromStr for GeoParquetGeometryTypeAndDimension {
                 "M" => Dimension::XYM,
                 "ZM" => Dimension::XYZM,
                 _ => {
-                    return Err(GeoArrowError::General(format!(
+                    return Err(GeoArrowError::GeoParquet(format!(
                         "Unknown dimension suffix: {dim_str}"
                     )));
                 }
@@ -535,7 +535,7 @@ impl GeoParquetMetadata {
             }
         }
 
-        Err(GeoArrowError::General(
+        Err(GeoArrowError::GeoParquet(
             "expected a 'geo' key in GeoParquet metadata".to_string(),
         ))
     }
@@ -605,13 +605,13 @@ impl GeoParquetMetadata {
     /// Assert that this metadata is compatible with another metadata instance, erroring if not
     pub fn try_compatible_with(&self, other: &GeoParquetMetadata) -> GeoArrowResult<()> {
         if self.version.as_str() != other.version.as_str() {
-            return Err(GeoArrowError::General(
+            return Err(GeoArrowError::GeoParquet(
                 "Different GeoParquet versions".to_string(),
             ));
         }
 
         if self.primary_column.as_str() != other.primary_column.as_str() {
-            return Err(GeoArrowError::General(
+            return Err(GeoArrowError::GeoParquet(
                 "Different GeoParquet primary columns".to_string(),
             ));
         }
@@ -621,20 +621,20 @@ impl GeoParquetMetadata {
             let right = other
                 .columns
                 .get(key)
-                .ok_or(GeoArrowError::General(format!(
+                .ok_or(GeoArrowError::GeoParquet(format!(
                     "Other GeoParquet metadata missing column {}",
                     key
                 )))?;
 
             if left.encoding != right.encoding {
-                return Err(GeoArrowError::General(format!(
+                return Err(GeoArrowError::GeoParquet(format!(
                     "Different GeoParquet encodings for column {}",
                     key
                 )));
             }
 
             if left.geometry_types != right.geometry_types {
-                return Err(GeoArrowError::General(format!(
+                return Err(GeoArrowError::GeoParquet(format!(
                     "Different GeoParquet geometry types for column {}",
                     key
                 )));
@@ -642,7 +642,7 @@ impl GeoParquetMetadata {
 
             if let (Some(left_bbox), Some(right_bbox)) = (&left.bbox, &right.bbox) {
                 if left_bbox.len() != right_bbox.len() {
-                    return Err(GeoArrowError::General(format!(
+                    return Err(GeoArrowError::GeoParquet(format!(
                         "Different bbox dimensions for column {}",
                         key
                     )));
@@ -652,14 +652,14 @@ impl GeoParquetMetadata {
             match (left.crs.as_ref(), right.crs.as_ref()) {
                 (Some(left_crs), Some(right_crs)) => {
                     if left_crs != right_crs {
-                        return Err(GeoArrowError::General(format!(
+                        return Err(GeoArrowError::GeoParquet(format!(
                             "Different GeoParquet CRS for column {}",
                             key
                         )));
                     }
                 }
                 (Some(_), None) | (None, Some(_)) => {
-                    return Err(GeoArrowError::General(format!(
+                    return Err(GeoArrowError::GeoParquet(format!(
                         "Different GeoParquet CRS for column {}",
                         key
                     )));
@@ -683,7 +683,7 @@ impl GeoParquetMetadata {
         let column_meta = self
             .columns
             .get(column_name)
-            .ok_or(GeoArrowError::General(format!(
+            .ok_or(GeoArrowError::GeoParquet(format!(
                 "Column name {column_name} not found in metadata"
             )))?;
         if let Some(covering) = &column_meta.covering {

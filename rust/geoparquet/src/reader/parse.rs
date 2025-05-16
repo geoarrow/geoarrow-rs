@@ -124,9 +124,9 @@ fn parse_array(
         DataType::Binary | DataType::LargeBinary | DataType::BinaryView => {
             parse_wkb_column(array.as_ref(), target_field.try_into()?)
         }
-        DataType::Utf8 | DataType::LargeUtf8 | DataType::Utf8View => Err(GeoArrowError::General(
-            "WKT input not supported in GeoParquet.".to_string(),
-        )),
+        DataType::Utf8 | DataType::LargeUtf8 | DataType::Utf8View => Err(
+            GeoArrowError::GeoParquet("WKT input not supported in GeoParquet.".to_string()),
+        ),
         _ => match target_type {
             GeoArrowType::Point(typ) => parse_point_column(&array, typ),
             GeoArrowType::LineString(typ) => parse_line_string_column(&array, typ),
@@ -154,7 +154,7 @@ fn parse_wkb_column(
             let geom_arr = from_wkb(&wkb_arr, target_geo_data_type)?;
             Ok(geom_arr.to_array_ref())
         }
-        dt => Err(GeoArrowError::General(format!(
+        dt => Err(GeoArrowError::GeoParquet(format!(
             "Expected WKB array to have binary data type, got {}",
             dt
         ))),

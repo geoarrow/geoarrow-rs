@@ -15,7 +15,7 @@ impl GEOSGeometryCollection {
         if matches!(geom.geometry_type(), GeometryTypes::GeometryCollection) {
             Ok(Self(geom))
         } else {
-            Err(GeoArrowError::General(
+            Err(GeoArrowError::IncorrectGeometryType(
                 "Geometry type must be geometry collection".to_string(),
             ))
         }
