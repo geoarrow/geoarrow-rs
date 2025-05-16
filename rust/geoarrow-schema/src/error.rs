@@ -1,6 +1,5 @@
 //! Defines [`GeoArrowError`], representing all errors returned by this crate.
 
-use std::borrow::Cow;
 use std::error::Error;
 use std::fmt::Debug;
 
@@ -15,14 +14,6 @@ pub enum GeoArrowError {
     #[error("External error: {0}")]
     External(#[from] Box<dyn Error + Send + Sync>),
 
-    /// Incorrect type was passed to an operation.
-    #[error("Incorrect type passed to operation: {0}")]
-    IncorrectType(Cow<'static, str>),
-
-    /// Returned when functionality is not yet available.
-    #[error("Not yet implemented: {0}")]
-    NotYetImplemented(String),
-
     /// General error.
     #[error("General error: {0}")]
     General(String),
@@ -36,10 +27,6 @@ pub enum GeoArrowError {
     /// [ArrowError]
     #[error(transparent)]
     Arrow(#[from] ArrowError),
-
-    /// Error during casting from one type to another
-    #[error("Error during casting from one type to another: {0}")]
-    Cast(String),
 
     /// [std::io::Error]
     #[error(transparent)]
