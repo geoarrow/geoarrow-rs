@@ -6,6 +6,7 @@ use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, Point
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, MultiPointType};
 
+use crate::util::GeometryTypeName;
 // use super::array::check;
 use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, MultiPointArray};
@@ -173,7 +174,12 @@ impl MultiPointBuilder {
             match value.as_type() {
                 GeometryType::Point(g) => self.push_point(Some(g))?,
                 GeometryType::MultiPoint(g) => self.push_multi_point(Some(g))?,
-                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+                gt => {
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
+                        "Expected MultiPoint compatible geometry, got {}",
+                        gt.name()
+                    )));
+                }
             }
         } else {
             self.push_null();

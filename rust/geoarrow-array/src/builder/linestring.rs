@@ -14,6 +14,7 @@ use crate::builder::{
 };
 use crate::capacity::LineStringCapacity;
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
+use crate::util::GeometryTypeName;
 
 /// The GeoArrow equivalent to `Vec<Option<LineString>>`: a mutable collection of LineStrings.
 ///
@@ -211,11 +212,19 @@ impl LineStringBuilder {
                     } else if num_line_strings == 1 {
                         self.push_line_string(Some(&ml.line_string(0).unwrap()))?
                     } else {
-                        return Err(GeoArrowError::General("Incorrect type".to_string()));
+                        return Err(GeoArrowError::IncorrectGeometryType(format!(
+                            "Expected MultiLineString with only one LineString in LineStringBuilder, got {} line strings",
+                            num_line_strings
+                        )));
                     }
                 }
                 GeometryType::Line(l) => self.push_line_string(Some(&LineWrapper(l)))?,
-                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+                gt => {
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
+                        "Expected LineString, got {}",
+                        gt.name()
+                    )));
+                }
             }
         } else {
             self.push_null();

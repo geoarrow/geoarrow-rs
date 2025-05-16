@@ -47,24 +47,24 @@ pub(super) fn check(
     validity_len: Option<usize>,
 ) -> GeoArrowResult<()> {
     if validity_len.is_some_and(|len| len != geom_offsets.len_proxy()) {
-        return Err(GeoArrowError::General(
+        return Err(GeoArrowError::InvalidGeoArrow(
             "nulls mask length must match the number of values".to_string(),
         ));
     }
     if *ring_offsets.last() as usize != coords.len() {
-        return Err(GeoArrowError::General(
+        return Err(GeoArrowError::InvalidGeoArrow(
             "largest ring offset must match coords length".to_string(),
         ));
     }
 
     if *polygon_offsets.last() as usize != ring_offsets.len_proxy() {
-        return Err(GeoArrowError::General(
+        return Err(GeoArrowError::InvalidGeoArrow(
             "largest polygon offset must match ring offsets length".to_string(),
         ));
     }
 
     if *geom_offsets.last() as usize != polygon_offsets.len_proxy() {
-        return Err(GeoArrowError::General(
+        return Err(GeoArrowError::InvalidGeoArrow(
             "largest geometry offset must match polygon offsets length".to_string(),
         ));
     }
@@ -392,9 +392,9 @@ impl TryFrom<(&dyn Array, MultiPolygonType)> for MultiPolygonArray {
         match value.data_type() {
             DataType::List(_) => (value.as_list::<i32>(), typ).try_into(),
             DataType::LargeList(_) => (value.as_list::<i64>(), typ).try_into(),
-            _ => Err(GeoArrowError::General(format!(
-                "Unexpected type: {:?}",
-                value.data_type()
+            dt => Err(GeoArrowError::InvalidGeoArrow(format!(
+                "Unexpected MultiPolygon DataType: {:?}",
+                dt
             ))),
         }
     }

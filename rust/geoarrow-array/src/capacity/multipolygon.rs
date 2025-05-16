@@ -4,6 +4,7 @@ use geo_traits::{GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 use crate::capacity::PolygonCapacity;
+use crate::util::GeometryTypeName;
 
 /// A counter for the buffer sizes of a [`MultiPolygonArray`][crate::array::MultiPolygonArray].
 ///
@@ -126,7 +127,12 @@ impl MultiPolygonCapacity {
             match geom.as_type() {
                 GeometryType::Polygon(g) => self.add_polygon(Some(g)),
                 GeometryType::MultiPolygon(g) => self.add_multi_polygon(Some(g)),
-                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+                gt => {
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
+                        "Expected MultiPolygon, got {}",
+                        gt.name()
+                    )));
+                }
             }
         } else {
             self.geom_capacity += 1;

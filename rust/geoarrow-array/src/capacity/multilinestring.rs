@@ -4,6 +4,7 @@ use geo_traits::{GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTr
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 use crate::capacity::LineStringCapacity;
+use crate::util::GeometryTypeName;
 
 /// A counter for the buffer sizes of a
 /// [`MultiLineStringArray`][crate::array::MultiLineStringArray].
@@ -86,7 +87,12 @@ impl MultiLineStringCapacity {
             match geom.as_type() {
                 GeometryType::LineString(g) => self.add_line_string(Some(g)),
                 GeometryType::MultiLineString(g) => self.add_multi_line_string(Some(g)),
-                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+                gt => {
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
+                        "Expected LineString or MultiLineString, got {}",
+                        gt.name()
+                    )));
+                }
             }
         } else {
             self.geom_capacity += 1;

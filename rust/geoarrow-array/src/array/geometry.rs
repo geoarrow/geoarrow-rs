@@ -663,8 +663,8 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
                             );
                         }
                         _ => {
-                            return Err(GeoArrowError::General(format!(
-                                "Unexpected type_id {}",
+                            return Err(GeoArrowError::InvalidGeoArrow(format!(
+                                "Unexpected type_id when converting to GeometryArray {}",
                                 type_id
                             )));
                         }
@@ -672,10 +672,9 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
                 }
             }
             _ => {
-                return Err(ArrowError::CastError(
+                return Err(GeoArrowError::InvalidGeoArrow(
                     "expected union type when converting to GeometryArray".to_string(),
-                )
-                .into());
+                ));
             }
         };
 
@@ -803,9 +802,9 @@ impl TryFrom<(&dyn Array, GeometryType)> for GeometryArray {
     fn try_from((value, typ): (&dyn Array, GeometryType)) -> GeoArrowResult<Self> {
         match value.data_type() {
             DataType::Union(_, _) => (value.as_union(), typ).try_into(),
-            _ => Err(GeoArrowError::General(format!(
-                "Unexpected type: {:?}",
-                value.data_type()
+            dt => Err(GeoArrowError::InvalidGeoArrow(format!(
+                "Unexpected GeometryArray DataType: {:?}",
+                dt
             ))),
         }
     }

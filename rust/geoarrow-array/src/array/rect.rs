@@ -189,7 +189,7 @@ impl TryFrom<(&StructArray, BoxType)> for RectArray {
         let nulls = value.nulls();
         let columns = value.columns();
         if columns.len() != dim.size() * 2 {
-            return Err(GeoArrowError::General(format!(
+            return Err(GeoArrowError::InvalidGeoArrow(format!(
                 "Invalid number of columns for RectArray: expected {} but got {}",
                 dim.size() * 2,
                 columns.len()
@@ -223,9 +223,10 @@ impl TryFrom<(&dyn Array, BoxType)> for RectArray {
     fn try_from((value, dim): (&dyn Array, BoxType)) -> GeoArrowResult<Self> {
         match value.data_type() {
             DataType::Struct(_) => (value.as_struct(), dim).try_into(),
-            _ => Err(GeoArrowError::General(
-                "Invalid data type for RectArray".to_string(),
-            )),
+            dt => Err(GeoArrowError::InvalidGeoArrow(format!(
+                "Unexpected Rect DataType: {:?}",
+                dt
+            ))),
         }
     }
 }

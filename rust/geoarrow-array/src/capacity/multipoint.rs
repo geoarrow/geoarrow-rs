@@ -3,6 +3,8 @@ use std::ops::{Add, AddAssign};
 use geo_traits::{GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
+use crate::util::GeometryTypeName;
+
 /// A counter for the buffer sizes of a [`MultiPointArray`][crate::array::MultiPointArray].
 ///
 /// This can be used to reduce allocations by allocating once for exactly the array size you need.
@@ -71,7 +73,12 @@ impl MultiPointCapacity {
             match g.as_type() {
                 GeometryType::Point(p) => self.add_valid_point(p),
                 GeometryType::MultiPoint(p) => self.add_valid_multi_point(p),
-                _ => return Err(GeoArrowError::General("incorrect type".to_string())),
+                gt => {
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
+                        "Expected Point or MultiPoint, got {}",
+                        gt.name()
+                    )));
+                }
             }
         };
         Ok(())

@@ -98,7 +98,7 @@ impl InterleavedCoordBufferBuilder {
             Dimension::XY => match coord.dim() {
                 geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => {}
                 d => {
-                    return Err(GeoArrowError::General(format!(
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
                         "coord dimension must be XY for this buffer; got {d:?}."
                     )));
                 }
@@ -106,7 +106,7 @@ impl InterleavedCoordBufferBuilder {
             Dimension::XYZ => match coord.dim() {
                 geo_traits::Dimensions::Xyz | geo_traits::Dimensions::Unknown(3) => {}
                 d => {
-                    return Err(GeoArrowError::General(format!(
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
                         "coord dimension must be XYZ for this buffer; got {d:?}."
                     )));
                 }
@@ -114,7 +114,7 @@ impl InterleavedCoordBufferBuilder {
             Dimension::XYM => match coord.dim() {
                 geo_traits::Dimensions::Xym | geo_traits::Dimensions::Unknown(3) => {}
                 d => {
-                    return Err(GeoArrowError::General(format!(
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
                         "coord dimension must be XYM for this buffer; got {d:?}."
                     )));
                 }
@@ -122,7 +122,7 @@ impl InterleavedCoordBufferBuilder {
             Dimension::XYZM => match coord.dim() {
                 geo_traits::Dimensions::Xyzm | geo_traits::Dimensions::Unknown(4) => {}
                 d => {
-                    return Err(GeoArrowError::General(format!(
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
                         "coord dimension must be XYZM for this buffer; got {d:?}."
                     )));
                 }

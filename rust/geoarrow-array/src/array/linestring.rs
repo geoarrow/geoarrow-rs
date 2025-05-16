@@ -39,13 +39,13 @@ pub(super) fn check(
     geom_offsets: &OffsetBuffer<i32>,
 ) -> GeoArrowResult<()> {
     if validity_len.is_some_and(|len| len != geom_offsets.len_proxy()) {
-        return Err(GeoArrowError::General(
+        return Err(GeoArrowError::InvalidGeoArrow(
             "nulls mask length must match the number of values".to_string(),
         ));
     }
 
     if *geom_offsets.last() as usize != coords.len() {
-        return Err(GeoArrowError::General(
+        return Err(GeoArrowError::InvalidGeoArrow(
             "largest geometry offset must match coords length".to_string(),
         ));
     }
@@ -277,9 +277,9 @@ impl TryFrom<(&dyn Array, LineStringType)> for LineStringArray {
         match value.data_type() {
             DataType::List(_) => (value.as_list::<i32>(), typ).try_into(),
             DataType::LargeList(_) => (value.as_list::<i64>(), typ).try_into(),
-            _ => Err(GeoArrowError::General(format!(
-                "Unexpected type: {:?}",
-                value.data_type()
+            dt => Err(GeoArrowError::InvalidGeoArrow(format!(
+                "Unexpected LineString DataType: {:?}",
+                dt
             ))),
         }
     }

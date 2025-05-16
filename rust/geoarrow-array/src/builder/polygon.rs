@@ -17,6 +17,7 @@ use crate::builder::{
 };
 use crate::capacity::PolygonCapacity;
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
+use crate::util::GeometryTypeName;
 
 /// The GeoArrow equivalent to `Vec<Option<Polygon>>`: a mutable collection of Polygons.
 ///
@@ -212,12 +213,20 @@ impl PolygonBuilder {
                     } else if num_polygons == 1 {
                         self.push_polygon(Some(&mp.polygon(0).unwrap()))?
                     } else {
-                        return Err(GeoArrowError::General("Incorrect type".to_string()));
+                        return Err(GeoArrowError::IncorrectGeometryType(format!(
+                            "Expected MultiPolygon with only one polygon in PolygonBuilder, got {} polygons",
+                            num_polygons
+                        )));
                     }
                 }
                 GeometryType::Rect(g) => self.push_rect(Some(g))?,
                 GeometryType::Triangle(tri) => self.push_polygon(Some(&TriangleWrapper(tri)))?,
-                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+                gt => {
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
+                        "Expected Polygon compatible geometry, got {}",
+                        gt.name()
+                    )));
+                }
             }
         } else {
             self.push_null();

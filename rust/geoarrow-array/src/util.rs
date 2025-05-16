@@ -1,5 +1,3 @@
-//! Note: This entire mod is a candidate to upstream into arrow-rs.
-
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
@@ -58,5 +56,40 @@ impl<O: OffsetSizeTrait> OffsetBufferUtils<O> for OffsetBuffer<O> {
     #[inline]
     fn last(&self) -> &O {
         self.as_ref().last().unwrap()
+    }
+}
+
+pub(crate) trait GeometryTypeName {
+    /// Returns the name of the geometry type.
+    fn name(&self) -> String;
+}
+
+impl<'a, P, LS, Y, MP, ML, MY, GC, R, T, L> GeometryTypeName
+    for geo_traits::GeometryType<'a, P, LS, Y, MP, ML, MY, GC, R, T, L>
+where
+    P: geo_traits::PointTrait,
+    LS: geo_traits::LineStringTrait,
+    Y: geo_traits::PolygonTrait,
+    MP: geo_traits::MultiPointTrait,
+    ML: geo_traits::MultiLineStringTrait,
+    MY: geo_traits::MultiPolygonTrait,
+    GC: geo_traits::GeometryCollectionTrait,
+    R: geo_traits::RectTrait,
+    T: geo_traits::TriangleTrait,
+    L: geo_traits::LineTrait,
+{
+    fn name(&self) -> String {
+        match self {
+            Self::Point(_) => "Point".to_string(),
+            Self::LineString(_) => "LineString".to_string(),
+            Self::Polygon(_) => "Polygon".to_string(),
+            Self::MultiPoint(_) => "MultiPoint".to_string(),
+            Self::MultiLineString(_) => "MultiLineString".to_string(),
+            Self::MultiPolygon(_) => "MultiPolygon".to_string(),
+            Self::GeometryCollection(_) => "GeometryCollection".to_string(),
+            Self::Rect(_) => "Rect".to_string(),
+            Self::Triangle(_) => "Triangle".to_string(),
+            Self::Line(_) => "Line".to_string(),
+        }
     }
 }

@@ -38,7 +38,7 @@ fn check(buffers: &[ScalarBuffer<f64>; 4], dim: Dimension) -> GeoArrowResult<()>
     };
 
     if !all_same_length {
-        return Err(GeoArrowError::General(
+        return Err(GeoArrowError::InvalidGeoArrow(
             "all buffers must have the same length".to_string(),
         ));
     }
@@ -66,7 +66,7 @@ impl SeparatedCoordBuffer {
     /// equal the dimension size.
     pub fn from_vec(buffers: Vec<ScalarBuffer<f64>>, dim: Dimension) -> GeoArrowResult<Self> {
         if buffers.len() != dim.size() {
-            return Err(GeoArrowError::General(
+            return Err(GeoArrowError::InvalidGeoArrow(
                 "Buffers must match dimension length ".into(),
             ));
         }

@@ -6,6 +6,7 @@ use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, Multi
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, MultiLineStringType};
 
+use crate::util::GeometryTypeName;
 // use super::array::check;
 use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, MultiLineStringArray};
@@ -251,7 +252,12 @@ impl MultiLineStringBuilder {
             match value.as_type() {
                 GeometryType::LineString(g) => self.push_line_string(Some(g))?,
                 GeometryType::MultiLineString(g) => self.push_multi_line_string(Some(g))?,
-                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+                gt => {
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
+                        "Expected MultiLineString compatible geometry, got {}",
+                        gt.name()
+                    )));
+                }
             }
         } else {
             self.push_null();

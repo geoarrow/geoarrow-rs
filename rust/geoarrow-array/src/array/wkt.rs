@@ -129,7 +129,7 @@ impl<'a, O: OffsetSizeTrait> GeoArrowArrayAccessor<'a> for GenericWktArray<O> {
 
     unsafe fn value_unchecked(&'a self, index: usize) -> GeoArrowResult<Self::Item> {
         let s = unsafe { self.array.value_unchecked(index) };
-        Wkt::from_str(s).map_err(GeoArrowError::WktStrError)
+        Wkt::from_str(s).map_err(|err| GeoArrowError::Wkt(err.to_string()))
     }
 }
 
@@ -167,9 +167,9 @@ impl TryFrom<(&dyn Array, WktType)> for GenericWktArray<i32> {
                     (value.as_string::<i64>().clone(), typ).into();
                 geom_array.try_into()
             }
-            _ => Err(GeoArrowError::General(format!(
-                "Unexpected type: {:?}",
-                value.data_type()
+            dt => Err(GeoArrowError::InvalidGeoArrow(format!(
+                "Unexpected WktArray DataType: {:?}",
+                dt
             ))),
         }
     }
@@ -186,9 +186,9 @@ impl TryFrom<(&dyn Array, WktType)> for GenericWktArray<i64> {
                 Ok(geom_array.into())
             }
             DataType::LargeUtf8 => Ok((value.as_string::<i64>().clone(), typ).into()),
-            _ => Err(GeoArrowError::General(format!(
-                "Unexpected type: {:?}",
-                value.data_type()
+            dt => Err(GeoArrowError::InvalidGeoArrow(format!(
+                "Unexpected WktArray DataType: {:?}",
+                dt
             ))),
         }
     }

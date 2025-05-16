@@ -179,9 +179,9 @@ impl TryFrom<(&dyn Array, WkbType)> for GenericWkbArray<i32> {
                     (value.as_binary::<i64>().clone(), typ).into();
                 geom_array.try_into()
             }
-            _ => Err(GeoArrowError::General(format!(
-                "Unexpected type: {:?}",
-                value.data_type()
+            dt => Err(GeoArrowError::InvalidGeoArrow(format!(
+                "Unexpected GenericWkbArray DataType: {:?}",
+                dt
             ))),
         }
     }
@@ -197,9 +197,9 @@ impl TryFrom<(&dyn Array, WkbType)> for GenericWkbArray<i64> {
                 Ok(geom_array.into())
             }
             DataType::LargeBinary => Ok((value.as_binary::<i64>().clone(), typ).into()),
-            _ => Err(GeoArrowError::General(format!(
-                "Unexpected type: {:?}",
-                value.data_type()
+            dt => Err(GeoArrowError::InvalidGeoArrow(format!(
+                "Unexpected GenericWkbArray DataType: {:?}",
+                dt
             ))),
         }
     }

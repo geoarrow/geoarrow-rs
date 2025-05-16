@@ -78,7 +78,7 @@ impl RectBuilder {
         data_type: BoxType,
     ) -> GeoArrowResult<Self> {
         if lower.len() != upper.len() {
-            return Err(GeoArrowError::General(
+            return Err(GeoArrowError::InvalidGeoArrow(
                 "Lower and upper lengths must match".to_string(),
             ));
         }

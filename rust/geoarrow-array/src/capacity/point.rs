@@ -42,7 +42,11 @@ impl PointCapacity {
             match g.as_type() {
                 GeometryType::Point(p) => self.add_point(Some(p)),
 
-                _ => return Err(GeoArrowError::General("incorrect type".to_string())),
+                _ => {
+                    return Err(GeoArrowError::IncorrectGeometryType(
+                        "Expected point in PointCapacity".to_string(),
+                    ));
+                }
             }
         } else {
             self.geom_capacity += 1;
