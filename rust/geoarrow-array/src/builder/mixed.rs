@@ -338,8 +338,8 @@ impl MixedGeometryBuilder {
                 if gc.num_geometries() == 1 {
                     self.push_geometry(&gc.geometry(0).unwrap())?
                 } else {
-                    return Err(GeoArrowError::General(
-                        "nested geometry collections not supported".to_string(),
+                    return Err(GeoArrowError::InvalidGeoArrow(
+                        "nested geometry collections not supported in GeoArrow".to_string(),
                     ));
                 }
             }

@@ -19,10 +19,11 @@ impl<'a, T: WktNum, R: RectTrait<T = T>> RectWrapper<'a, T, R> {
     pub(crate) fn try_new(rect: &'a R) -> GeoArrowResult<Self> {
         match rect.dim() {
             geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => {}
-            _ => {
-                return Err(GeoArrowError::General(
-                    "Only 2d rect supported when pushing to polygon.".to_string(),
-                ));
+            dim => {
+                return Err(GeoArrowError::IncorrectGeometryType(format!(
+                    "Only 2d rects supported when pushing to polygon. Got dimension: {:?}",
+                    dim
+                )));
             }
         };
 

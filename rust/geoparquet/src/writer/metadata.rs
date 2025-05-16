@@ -7,7 +7,7 @@ use arrow_schema::{DataType, Field, Schema, SchemaRef};
 use geoarrow_array::GeoArrowType;
 use geoarrow_array::array::from_arrow_array;
 use geoarrow_schema::crs::{CrsTransform, DefaultCrsTransform};
-use geoarrow_schema::error::GeoArrowResult;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, Edges, Metadata, WkbType};
 use serde_json::Value;
 
@@ -46,18 +46,18 @@ impl ColumnInfo {
         name: String,
         writer_encoding: GeoParquetWriterEncoding,
         data_type: &GeoArrowType,
-        array_meta: Metadata,
+        metadata: Metadata,
         crs_transform: Option<&Box<dyn CrsTransform>>,
     ) -> GeoArrowResult<Self> {
         let encoding = GeoParquetColumnEncoding::try_new(writer_encoding, data_type)?;
         let geometry_types = get_geometry_types(data_type);
 
         let crs = if let Some(crs_transform) = crs_transform {
-            crs_transform.extract_projjson(array_meta.crs())?
+            crs_transform.extract_projjson(metadata.crs())?
         } else {
-            DefaultCrsTransform::default().extract_projjson(array_meta.crs())?
+            DefaultCrsTransform::default().extract_projjson(metadata.crs())?
         };
-        let edges = array_meta.edges();
+        let edges = metadata.edges();
 
         Ok(Self {
             name,
@@ -180,9 +180,15 @@ impl GeoParquetMetadataBuilder {
 
                 let column_name = schema.field(col_idx).name().clone();
 
-                let array_meta =
+                // TODO: should we make Metadata::deserialize public?
+                let metadata =
                     if let Some(ext_meta) = field.metadata().get(EXTENSION_TYPE_METADATA_KEY) {
-                        serde_json::from_str(ext_meta)?
+                        serde_json::from_str(ext_meta).map_err(|err| {
+                            GeoArrowError::InvalidGeoArrow(format!(
+                                "Failed to deserialize GeoArrow metadata: {}",
+                                err
+                            ))
+                        })?
                     } else {
                         Metadata::default()
                     };
@@ -193,7 +199,7 @@ impl GeoParquetMetadataBuilder {
                     column_name,
                     options.encoding,
                     &geo_data_type,
-                    array_meta,
+                    metadata,
                     options.crs_transform.as_ref(),
                 )?;
 

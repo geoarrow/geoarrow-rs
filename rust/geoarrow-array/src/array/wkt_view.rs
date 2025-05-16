@@ -120,7 +120,7 @@ impl<'a> GeoArrowArrayAccessor<'a> for WktViewArray {
 
     unsafe fn value_unchecked(&'a self, index: usize) -> GeoArrowResult<Self::Item> {
         let s = unsafe { self.array.value_unchecked(index) };
-        Wkt::from_str(s).map_err(GeoArrowError::WktStrError)
+        Wkt::from_str(s).map_err(|err| GeoArrowError::Wkt(err.to_string()))
     }
 }
 
@@ -152,9 +152,9 @@ impl TryFrom<(&dyn Array, WktType)> for WktViewArray {
     fn try_from((value, typ): (&dyn Array, WktType)) -> GeoArrowResult<Self> {
         match value.data_type() {
             DataType::Utf8View => Ok((value.as_string_view().clone(), typ).into()),
-            _ => Err(GeoArrowError::General(format!(
-                "Unexpected type: {:?}",
-                value.data_type()
+            dt => Err(GeoArrowError::InvalidGeoArrow(format!(
+                "Unexpected WktView DataType: {:?}",
+                dt
             ))),
         }
     }

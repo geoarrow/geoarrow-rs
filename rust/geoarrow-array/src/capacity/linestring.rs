@@ -3,6 +3,8 @@ use std::ops::Add;
 use geo_traits::{GeometryTrait, GeometryType, LineStringTrait};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
+use crate::util::GeometryTypeName;
+
 /// A counter for the buffer sizes of a [`LineStringArray`][crate::array::LineStringArray].
 ///
 /// This can be used to reduce allocations by allocating once for exactly the array size you need.
@@ -55,7 +57,12 @@ impl LineStringCapacity {
         if let Some(g) = value {
             match g.as_type() {
                 GeometryType::LineString(p) => self.add_valid_line_string(p),
-                _ => return Err(GeoArrowError::General("incorrect type".to_string())),
+                gt => {
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
+                        "Expected LineString, got {}",
+                        gt.name()
+                    )));
+                }
             }
         };
         Ok(())

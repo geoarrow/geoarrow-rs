@@ -462,8 +462,8 @@ pub fn from_wkb<'a, A: GenericWkbArrayType<'a>>(
             Arc::new(GeometryCollectionBuilder::from_nullable_geometries(&geoms, typ)?.finish())
         }
         Rect(_) => {
-            return Err(GeoArrowError::General(format!(
-                "Invalid data type in from_wkb {:?}",
+            return Err(GeoArrowError::IncorrectGeometryType(format!(
+                "Cannot decode WKB geometries to Rect geometry type in from_wkb {:?}",
                 to_type,
             )));
         }
@@ -645,8 +645,8 @@ pub fn from_wkt<A: GenericWktArrayType>(
             Arc::new(GeometryCollectionBuilder::from_nullable_geometries(&geoms, typ)?.finish())
         }
         Rect(_) => {
-            return Err(GeoArrowError::General(format!(
-                "Invalid data type in from_wkt {:?}",
+            return Err(GeoArrowError::IncorrectGeometryType(format!(
+                "Cannot decode WKT geometries to Rect geometry type in from_wkt {:?}",
                 to_type,
             )));
         }

@@ -161,14 +161,14 @@ impl CrsTransform for PyprojCRSTransform {
     fn _convert_to_projjson(&self, crs: &Crs) -> GeoArrowResult<Option<Value>> {
         let crs = PyCrs::from(crs.clone());
         let projjson = Python::with_gil(|py| crs.to_projjson(py))
-            .map_err(|err| GeoArrowError::General(err.to_string()))?;
+            .map_err(|err| GeoArrowError::Crs(err.to_string()))?;
         Ok(projjson)
     }
 
     fn _convert_to_wkt(&self, crs: &Crs) -> GeoArrowResult<Option<String>> {
         let crs = PyCrs::from(crs.clone());
         let wkt = Python::with_gil(|py| crs.to_wkt(py))
-            .map_err(|err| GeoArrowError::General(err.to_string()))?;
+            .map_err(|err| GeoArrowError::Crs(err.to_string()))?;
         Ok(wkt)
     }
 }

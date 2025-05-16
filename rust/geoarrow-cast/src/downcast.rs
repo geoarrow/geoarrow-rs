@@ -24,9 +24,10 @@ pub fn infer_downcast_type<'a>(
     }
 
     if type_ids.is_empty() {
-        return Err(GeoArrowError::General(
-            "Cannot infer type from empty sequence of arrays".to_string(),
-        ));
+        return Err(ArrowError::CastError(
+            "Empty iterator of arrays passed to infer_downcast_type".to_string(),
+        )
+        .into());
     }
 
     infer_from_native_type_and_dimension(type_ids)

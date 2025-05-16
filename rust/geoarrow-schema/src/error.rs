@@ -10,13 +10,37 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 #[non_exhaustive]
 pub enum GeoArrowError {
+    /// [ArrowError]
+    #[error(transparent)]
+    Arrow(#[from] ArrowError),
+
+    /// CRS error
+    #[error("CRS related error: {0}")]
+    Crs(String),
+
     /// Wraps an external error.
     #[error("External error: {0}")]
     External(#[from] Box<dyn Error + Send + Sync>),
 
-    /// General error.
-    #[error("General error: {0}")]
-    General(String),
+    /// FlatGeobuf error
+    #[error("FlatGeobuf error: {0}")]
+    FlatGeobuf(String),
+
+    /// GeoParquet error
+    #[error("GeoParquet error: {0}")]
+    GeoParquet(String),
+
+    /// [std::io::Error]
+    #[error(transparent)]
+    IOError(#[from] std::io::Error),
+
+    /// Invalid data not conforming to GeoArrow specification
+    #[error("Data not conforming to GeoArrow specification: {0}")]
+    InvalidGeoArrow(String),
+
+    /// Incorrect geometry type for operation
+    #[error("Incorrect geometry type for operation: {0}")]
+    IncorrectGeometryType(String),
 
     /// Whenever pushing to a container fails because it does not support more entries.
     ///
@@ -24,21 +48,13 @@ pub enum GeoArrowError {
     #[error("Overflow")]
     Overflow,
 
-    /// [ArrowError]
-    #[error(transparent)]
-    Arrow(#[from] ArrowError),
+    /// WKB Error
+    #[error("WKB error: {0}")]
+    Wkb(String),
 
-    /// [std::io::Error]
-    #[error(transparent)]
-    IOError(#[from] std::io::Error),
-
-    /// [serde_json::Error]
-    #[error(transparent)]
-    SerdeJsonError(#[from] serde_json::Error),
-
-    /// [wkt::error::Error]
+    /// WKT Error
     #[error("WKT error: {0}")]
-    WktStrError(&'static str),
+    Wkt(String),
 }
 
 /// Crate-specific result type.

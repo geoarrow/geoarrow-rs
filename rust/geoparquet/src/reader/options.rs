@@ -164,12 +164,14 @@ impl GeoParquetReaderOptions {
             let bbox_paths = if let Some(paths) = bbox_paths {
                 paths
             } else {
-                let geo_meta = geo_meta
-                    .as_ref()
-                    .ok_or(GeoArrowError::General("No geospatial metadata".to_string()))?;
-                geo_meta.bbox_covering(None)?.ok_or(GeoArrowError::General(
-                    "No covering metadata found".to_string(),
-                ))?
+                let geo_meta = geo_meta.as_ref().ok_or(GeoArrowError::GeoParquet(
+                    "No geospatial metadata".to_string(),
+                ))?;
+                geo_meta
+                    .bbox_covering(None)?
+                    .ok_or(GeoArrowError::GeoParquet(
+                        "No covering metadata found".to_string(),
+                    ))?
             };
 
             let bbox_cols = ParquetBboxStatistics::try_new(builder.parquet_schema(), &bbox_paths)?;

@@ -128,8 +128,8 @@ impl CoordBuffer {
                     InterleavedCoordBuffer::from_arrow(downcasted, dim)?,
                 ))
             }
-            _ => Err(GeoArrowError::General(format!(
-                "Unexpected type: {:?}",
+            _ => Err(GeoArrowError::InvalidGeoArrow(format!(
+                "Unexpected coord buffer type: {:?}",
                 value.data_type()
             ))),
         }

@@ -16,7 +16,7 @@ impl GEOSMultiPoint {
         if matches!(geom.geometry_type(), GeometryTypes::MultiPoint) {
             Ok(Self(geom))
         } else {
-            Err(GeoArrowError::General(
+            Err(GeoArrowError::IncorrectGeometryType(
                 "Geometry type must be multi point".to_string(),
             ))
         }

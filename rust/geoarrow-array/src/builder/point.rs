@@ -6,13 +6,13 @@ use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, Point
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, PointType};
 
-// use super::array::check;
 use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, PointArray};
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder,
 };
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
+use crate::util::GeometryTypeName;
 
 /// The GeoArrow equivalent to `Vec<Option<Point>>`: a mutable collection of Points.
 ///
@@ -171,10 +171,18 @@ impl PointBuilder {
                     } else if num_points == 1 {
                         self.push_point(Some(&mp.point(0).unwrap()))
                     } else {
-                        return Err(GeoArrowError::General("Incorrect type".to_string()));
+                        return Err(GeoArrowError::IncorrectGeometryType(format!(
+                            "Expected MultiPoint with only one point in PointBuilder, got {} points",
+                            num_points
+                        )));
                     }
                 }
-                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+                gt => {
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
+                        "Expected point, got {}",
+                        gt.name()
+                    )));
+                }
             }
         } else {
             self.push_null()

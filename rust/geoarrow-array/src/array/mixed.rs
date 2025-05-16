@@ -4,7 +4,7 @@ use std::sync::Arc;
 use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, UnionArray};
 use arrow_buffer::ScalarBuffer;
-use arrow_schema::{ArrowError, DataType, UnionMode};
+use arrow_schema::{DataType, UnionMode};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{
     CoordType, Dimension, GeometryCollectionType, LineStringType, MultiLineStringType,
@@ -550,14 +550,16 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
         match value.data_type() {
             DataType::Union(fields, mode) => {
                 if !matches!(mode, UnionMode::Dense) {
-                    return Err(GeoArrowError::General("Expected dense union".to_string()));
+                    return Err(GeoArrowError::InvalidGeoArrow(
+                        "Expected dense union".to_string(),
+                    ));
                 }
 
                 for (type_id, _field) in fields.iter() {
                     let found_dimension = Dimension::from_order((type_id / 10) as _)?;
 
                     if dim != found_dimension {
-                        return Err(GeoArrowError::General(format!(
+                        return Err(GeoArrowError::InvalidGeoArrow(format!(
                             "expected dimension: {:?}, found child array with dimension {:?} and type_id: {}",
                             dim, found_dimension, type_id
                         )));
@@ -625,20 +627,18 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                             );
                         }
                         _ => {
-                            return Err(ArrowError::CastError(format!(
+                            return Err(GeoArrowError::InvalidGeoArrow(format!(
                                 "Unexpected type_id {} when converting to MixedGeometryArray",
                                 type_id
-                            ))
-                            .into());
+                            )));
                         }
                     }
                 }
             }
             _ => {
-                return Err(ArrowError::CastError(
+                return Err(GeoArrowError::InvalidGeoArrow(
                     "expected union type when converting to MixedGeometryArray".to_string(),
-                )
-                .into());
+                ));
             }
         };
 
@@ -667,9 +667,9 @@ impl TryFrom<(&dyn Array, Dimension, CoordType)> for MixedGeometryArray {
     ) -> GeoArrowResult<Self> {
         match value.data_type() {
             DataType::Union(_, _) => (value.as_union(), dim, coord_type).try_into(),
-            _ => Err(GeoArrowError::General(format!(
-                "Unexpected type: {:?}",
-                value.data_type()
+            dt => Err(GeoArrowError::InvalidGeoArrow(format!(
+                "Unexpected MixedGeometryArray DataType: {:?}",
+                dt
             ))),
         }
     }

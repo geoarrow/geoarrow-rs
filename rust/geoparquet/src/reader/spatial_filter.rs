@@ -94,28 +94,28 @@ impl<'a> ParquetBboxStatistics<'a> {
         }
 
         if minx_col.is_none() {
-            return Err(GeoArrowError::General(format!(
+            return Err(GeoArrowError::GeoParquet(format!(
                 "Unable to find xmin_path: {:?}",
                 paths.xmin
             )));
         }
 
         if miny_col.is_none() {
-            return Err(GeoArrowError::General(format!(
+            return Err(GeoArrowError::GeoParquet(format!(
                 "Unable to find ymin_path: {:?}",
                 paths.ymin
             )));
         }
 
         if maxx_col.is_none() {
-            return Err(GeoArrowError::General(format!(
+            return Err(GeoArrowError::GeoParquet(format!(
                 "Unable to find xmax_path: {:?}",
                 paths.xmax
             )));
         }
 
         if maxy_col.is_none() {
-            return Err(GeoArrowError::General(format!(
+            return Err(GeoArrowError::GeoParquet(format!(
                 "Unable to find ymax_path: {:?}",
                 paths.ymax
             )));
@@ -280,7 +280,7 @@ fn construct_bbox_columns_predicate(
     column_types.insert(parquet_schema.column(bbox_cols.maxx_col).physical_type());
     column_types.insert(parquet_schema.column(bbox_cols.maxy_col).physical_type());
     if column_types.len() != 1 {
-        return Err(GeoArrowError::General(format!(
+        return Err(GeoArrowError::GeoParquet(format!(
             "Expected one column type for GeoParquet bbox columns, got {:?}",
             column_types
         )));
@@ -290,7 +290,7 @@ fn construct_bbox_columns_predicate(
     if !(matches!(column_type, parquet::basic::Type::FLOAT)
         || matches!(column_type, parquet::basic::Type::DOUBLE))
     {
-        return Err(GeoArrowError::General(format!(
+        return Err(GeoArrowError::GeoParquet(format!(
             "Expected column type for GeoParquet bbox column to be FLOAT or DOUBLE, got {:?}",
             column_type
         )));
@@ -398,7 +398,7 @@ fn path_equals<T: AsRef<str> + Debug>(a: &[T], b: &ColumnPath) -> bool {
 fn parse_statistics_f64(column_meta: &ColumnChunkMetaData) -> GeoArrowResult<(f64, f64)> {
     let stats = column_meta
         .statistics()
-        .ok_or(GeoArrowError::General(format!(
+        .ok_or(GeoArrowError::GeoParquet(format!(
             "No statistics for column {}",
             column_meta.column_path()
         )))?;
@@ -411,7 +411,7 @@ fn parse_statistics_f64(column_meta: &ColumnChunkMetaData) -> GeoArrowResult<(f6
             *typed_stats.min_opt().unwrap() as f64,
             *typed_stats.max_opt().unwrap() as f64,
         )),
-        st => Err(GeoArrowError::General(format!(
+        st => Err(GeoArrowError::GeoParquet(format!(
             "Unexpected statistics type: {:?}",
             st
         ))),

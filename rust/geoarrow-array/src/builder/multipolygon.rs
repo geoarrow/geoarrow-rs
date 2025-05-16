@@ -8,7 +8,6 @@ use geo_traits::{
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, MultiPolygonType};
 
-// use super::array::check;
 use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, MultiPolygonArray};
 use crate::builder::{
@@ -16,6 +15,7 @@ use crate::builder::{
 };
 use crate::capacity::MultiPolygonCapacity;
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
+use crate::util::GeometryTypeName;
 
 /// The GeoArrow equivalent to `Vec<Option<MultiPolygon>>`: a mutable collection of MultiPolygons.
 ///
@@ -232,7 +232,12 @@ impl MultiPolygonBuilder {
                 GeometryType::Polygon(g) => self.push_polygon(Some(g))?,
                 GeometryType::MultiPolygon(g) => self.push_multi_polygon(Some(g))?,
                 // TODO: support rect
-                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+                gt => {
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
+                        "Expected MultiPolygon compatible geometry, got {}",
+                        gt.name()
+                    )));
+                }
             }
         } else {
             self.push_null();

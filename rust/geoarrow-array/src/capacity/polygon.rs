@@ -3,6 +3,8 @@ use std::ops::Add;
 use geo_traits::{GeometryTrait, GeometryType, LineStringTrait, PolygonTrait, RectTrait};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
+use crate::util::GeometryTypeName;
+
 /// A counter for the buffer sizes of a [`PolygonArray`][crate::array::PolygonArray].
 ///
 /// This can be used to reduce allocations by allocating once for exactly the array size you need.
@@ -89,7 +91,12 @@ impl PolygonCapacity {
             match geom.as_type() {
                 GeometryType::Polygon(g) => self.add_polygon(Some(g)),
                 GeometryType::Rect(g) => self.add_rect(Some(g)),
-                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+                gt => {
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
+                        "Expected polygon, got {}",
+                        gt.name()
+                    )));
+                }
             }
         } else {
             self.geom_capacity += 1;

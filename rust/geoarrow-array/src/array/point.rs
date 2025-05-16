@@ -30,7 +30,7 @@ pub struct PointArray {
 /// - Validity mask must have the same length as the coordinates.
 pub(super) fn check(coords: &CoordBuffer, validity_len: Option<usize>) -> GeoArrowResult<()> {
     if validity_len.is_some_and(|len| len != coords.len()) {
-        return Err(GeoArrowError::General(
+        return Err(GeoArrowError::InvalidGeoArrow(
             "validity mask length must match the number of values".to_string(),
         ));
     }
@@ -246,9 +246,10 @@ impl TryFrom<(&dyn Array, PointType)> for PointArray {
         match value.data_type() {
             DataType::FixedSizeList(_, _) => (value.as_fixed_size_list(), typ).try_into(),
             DataType::Struct(_) => (value.as_struct(), typ).try_into(),
-            _ => Err(GeoArrowError::General(
-                "Invalid data type for PointArray".to_string(),
-            )),
+            dt => Err(GeoArrowError::InvalidGeoArrow(format!(
+                "Unexpected Point DataType: {:?}",
+                dt
+            ))),
         }
     }
 }

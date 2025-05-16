@@ -22,7 +22,7 @@ pub struct InterleavedCoordBuffer {
 
 fn check(coords: &ScalarBuffer<f64>, dim: Dimension) -> GeoArrowResult<()> {
     if coords.len() % dim.size() != 0 {
-        return Err(GeoArrowError::General(
+        return Err(GeoArrowError::InvalidGeoArrow(
             "Length of interleaved coordinate buffer must be a multiple of the dimension size"
                 .to_string(),
         ));
@@ -127,7 +127,7 @@ impl InterleavedCoordBuffer {
 
     pub(crate) fn from_arrow(array: &FixedSizeListArray, dim: Dimension) -> GeoArrowResult<Self> {
         if array.value_length() != dim.size() as i32 {
-            return Err(GeoArrowError::General(format!(
+            return Err(GeoArrowError::InvalidGeoArrow(format!(
                 "Expected the FixedSizeListArray to match the dimension. Array length is {}, dimension is: {:?} have size 2",
                 array.value_length(),
                 dim

@@ -121,8 +121,8 @@ impl MixedCapacity {
             geo_traits::GeometryType::MultiLineString(p) => self.add_multi_line_string(p),
             geo_traits::GeometryType::MultiPolygon(p) => self.add_multi_polygon(p),
             geo_traits::GeometryType::GeometryCollection(_) => {
-                return Err(GeoArrowError::General(
-                    "nested geometry collections not supported".to_string(),
+                return Err(GeoArrowError::InvalidGeoArrow(
+                    "nested geometry collections not supported in GeoArrow".to_string(),
                 ));
             }
             geo_traits::GeometryType::Rect(r) => self.add_polygon(&RectWrapper::try_new(r)?),

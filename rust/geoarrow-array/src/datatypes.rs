@@ -317,7 +317,12 @@ impl TryFrom<&Field> for GeoArrowType {
     fn try_from(field: &Field) -> GeoArrowResult<Self> {
         // TODO: should we make Metadata::deserialize public?
         let metadata: Metadata = if let Some(ext_meta) = field.extension_type_metadata() {
-            serde_json::from_str(ext_meta)?
+            serde_json::from_str(ext_meta).map_err(|err| {
+                GeoArrowError::InvalidGeoArrow(format!(
+                    "Failed to deserialize GeoArrow metadata: {}",
+                    err
+                ))
+            })?
         } else {
             Default::default()
         };
@@ -348,7 +353,7 @@ impl TryFrom<&Field> for GeoArrowType {
                     DataType::Binary => Wkb(WkbType::new(metadata.into())),
                     DataType::LargeBinary => LargeWkb(WkbType::new(metadata.into())),
                     _ => {
-                        return Err(GeoArrowError::General(format!(
+                        return Err(GeoArrowError::InvalidGeoArrow(format!(
                             "Expected binary type for geoarrow.wkb, got '{}'",
                             field.data_type()
                         )));
@@ -358,14 +363,14 @@ impl TryFrom<&Field> for GeoArrowType {
                     DataType::Utf8 => Wkt(WktType::new(metadata.into())),
                     DataType::LargeUtf8 => LargeWkt(WktType::new(metadata.into())),
                     _ => {
-                        return Err(GeoArrowError::General(format!(
+                        return Err(GeoArrowError::InvalidGeoArrow(format!(
                             "Expected string type for geoarrow.wkt, got '{}'",
                             field.data_type()
                         )));
                     }
                 },
                 name => {
-                    return Err(GeoArrowError::General(format!(
+                    return Err(GeoArrowError::InvalidGeoArrow(format!(
                         "Expected GeoArrow type, got '{}'.",
                         name
                     )));
@@ -377,26 +382,26 @@ impl TryFrom<&Field> for GeoArrowType {
             let data_type = match field.data_type() {
                 DataType::Struct(struct_fields) => {
                     if !struct_fields.iter().all(|f| matches!(f.data_type(), DataType::Float64) ) {
-                        return Err(GeoArrowError::General("all struct fields must be Float64 when inferring point type.".to_string()));
+                        return Err(GeoArrowError::InvalidGeoArrow("all struct fields must be Float64 when inferring point type.".to_string()));
                     }
 
                     match struct_fields.len() {
                         2 =>  GeoArrowType::Point(PointType::new(CoordType::Separated , Dimension::XY, metadata)),
                         3 => GeoArrowType::Point(PointType::new(CoordType::Separated , Dimension::XYZ, metadata)),
                         4 => GeoArrowType::Point(PointType::new(CoordType::Separated , Dimension::XYZM, metadata)),
-                        l => return Err(GeoArrowError::General(format!("invalid number of struct fields: {l}"))),
+                        l => return Err(GeoArrowError::InvalidGeoArrow(format!("invalid number of struct fields: {l}"))),
                     }
                 },
                 DataType::FixedSizeList(inner_field, list_size) => {
                     if !matches!(inner_field.data_type(), DataType::Float64 )  {
-                        return Err(GeoArrowError::General(format!("invalid inner field type of fixed size list: {}", inner_field.data_type())));
+                        return Err(GeoArrowError::InvalidGeoArrow(format!("invalid inner field type of fixed size list: {}", inner_field.data_type())));
                     }
 
                     match list_size {
                         2 => GeoArrowType::Point(PointType::new(CoordType::Interleaved , Dimension::XY, metadata)),
                         3 => GeoArrowType::Point(PointType::new(CoordType::Interleaved , Dimension::XYZ, metadata)),
                         4 => GeoArrowType::Point(PointType::new(CoordType::Interleaved , Dimension::XYZM, metadata)),
-                        _ => return Err(GeoArrowError::General(format!("invalid list_size: {list_size}"))),
+                        _ => return Err(GeoArrowError::InvalidGeoArrow(format!("invalid list_size: {list_size}"))),
                     }
                 },
                 DataType::Binary => Wkb(WkbType::new(metadata)),
@@ -405,7 +410,7 @@ impl TryFrom<&Field> for GeoArrowType {
                 DataType::Utf8 => Wkt(WktType::new(metadata)),
                 DataType::LargeUtf8 => LargeWkt(WktType::new(metadata)),
                 DataType::Utf8View => WktView(WktType::new(metadata)),
-                _ => return Err(GeoArrowError::General("Only FixedSizeList, Struct, Binary, LargeBinary, BinaryView, String, LargeString, and StringView arrays are unambigously typed for a GeoArrow type and can be used without extension metadata.\nEnsure your array input has GeoArrow metadata.".to_string())),
+                _ => return Err(GeoArrowError::InvalidGeoArrow("Only FixedSizeList, Struct, Binary, LargeBinary, BinaryView, String, LargeString, and StringView arrays are unambigously typed for a GeoArrow type and can be used without extension metadata.\nEnsure your array input has GeoArrow metadata.".to_string())),
             };
             Ok(data_type)
         }

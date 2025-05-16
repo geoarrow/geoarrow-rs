@@ -15,7 +15,7 @@ impl GEOSPoint {
         if matches!(geom.geometry_type(), GeometryTypes::Point) {
             Ok(Self(geom))
         } else {
-            Err(GeoArrowError::General(
+            Err(GeoArrowError::IncorrectGeometryType(
                 "Geometry type must be point".to_string(),
             ))
         }
@@ -81,7 +81,7 @@ impl<'a> GEOSConstPoint<'a> {
         if matches!(geom.geometry_type(), GeometryTypes::Point) {
             Ok(Self(geom))
         } else {
-            Err(GeoArrowError::General(
+            Err(GeoArrowError::IncorrectGeometryType(
                 "Geometry type must be point".to_string(),
             ))
         }
