@@ -186,7 +186,8 @@ fn get_type_ids(array: &dyn GeoArrowArray) -> GeoArrowResult<HashSet<NativeTypeA
             .flatten()
             .map(|s| {
                 let (wkt_type, wkt_dim) = wkt::infer_type(s).map_err(ArrowError::CastError)?;
-                let geom_type = NativeTypeAndDimension::new(wkt_type.into(), wkt_dim.into());
+                let geom_type =
+                    NativeTypeAndDimension::new(wkt_type.into(), wkt_dim_to_geoarrow_dim(wkt_dim));
                 Ok(geom_type)
             })
             .collect::<GeoArrowResult<HashSet<NativeTypeAndDimension>>>()?,
@@ -197,7 +198,8 @@ fn get_type_ids(array: &dyn GeoArrowArray) -> GeoArrowResult<HashSet<NativeTypeA
             .flatten()
             .map(|s| {
                 let (wkt_type, wkt_dim) = wkt::infer_type(s).map_err(ArrowError::CastError)?;
-                let geom_type = NativeTypeAndDimension::new(wkt_type.into(), wkt_dim.into());
+                let geom_type =
+                    NativeTypeAndDimension::new(wkt_type.into(), wkt_dim_to_geoarrow_dim(wkt_dim));
                 Ok(geom_type)
             })
             .collect::<GeoArrowResult<HashSet<NativeTypeAndDimension>>>()?,
@@ -208,12 +210,22 @@ fn get_type_ids(array: &dyn GeoArrowArray) -> GeoArrowResult<HashSet<NativeTypeA
             .flatten()
             .map(|s| {
                 let (wkt_type, wkt_dim) = wkt::infer_type(s).map_err(ArrowError::CastError)?;
-                let geom_type = NativeTypeAndDimension::new(wkt_type.into(), wkt_dim.into());
+                let geom_type =
+                    NativeTypeAndDimension::new(wkt_type.into(), wkt_dim_to_geoarrow_dim(wkt_dim));
                 Ok(geom_type)
             })
             .collect::<GeoArrowResult<HashSet<NativeTypeAndDimension>>>()?,
     };
     Ok(type_ids)
+}
+
+fn wkt_dim_to_geoarrow_dim(wkt_dim: wkt::types::Dimension) -> Dimension {
+    match wkt_dim {
+        wkt::types::Dimension::XY => Dimension::XY,
+        wkt::types::Dimension::XYZ => Dimension::XYZ,
+        wkt::types::Dimension::XYM => Dimension::XYM,
+        wkt::types::Dimension::XYZM => Dimension::XYZM,
+    }
 }
 
 fn infer_from_native_type_and_dimension(
