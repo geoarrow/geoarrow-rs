@@ -13,7 +13,7 @@ pub enum CoordType {
     /// The size of the internal fixed-size list depends on the [dimension][crate::Dimension] of
     /// the array.
     ///
-    /// ```
+    /// ```notest
     /// FixedSizeList<double>[n_dim]
     /// ```
     Interleaved,
@@ -22,7 +22,7 @@ pub enum CoordType {
     ///
     /// This stores coordinates in an Arrow [struct-typed][arrow_schema::DataType::Struct] array:
     ///
-    /// ```
+    /// ```notest
     /// Struct<x: double, y: double, [z: double, [m: double>]]
     /// ```
     Separated,
