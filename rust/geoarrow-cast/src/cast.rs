@@ -1,3 +1,5 @@
+//! Cast kernels to convert [`GeoArrowArray`] to other geometry types.
+
 use std::sync::Arc;
 
 use arrow_schema::ArrowError;
@@ -9,31 +11,32 @@ use geoarrow_array::builder::{
     MultiPolygonBuilder, PointBuilder, PolygonBuilder,
 };
 use geoarrow_array::capacity::{LineStringCapacity, PolygonCapacity};
-use geoarrow_array::cast::{AsGeoArrowArray, from_wkb, from_wkt, to_wkb, to_wkt};
+use geoarrow_array::cast::{
+    AsGeoArrowArray, from_wkb, from_wkt, to_wkb, to_wkb_view, to_wkt, to_wkt_view,
+};
 use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, GeoArrowType};
 use geoarrow_schema::error::GeoArrowResult;
 
-/// Cast a `GeoArrowArray` to another `GeoArrowType`.
+/// Cast a [`GeoArrowArray`] to another [`GeoArrowType`].
 ///
 /// ### Criteria:
 ///
 /// - Dimension must be compatible:
 ///     - If the source array and destination type are both dimension-aware, then their dimensions
 ///       must match.
-///     - Casts to dimensionless arrays are always allowed.
-///     - Casts from dimensionless arrays to dimension-aware arrays are never allowed.
-/// - GeoArrow Metadata must match.
-/// - Only supports infallible casts. E.g. `Point` to `MultiPoint`, `LineString` to
-///   `MultiLineString`, etc. But not `MultiPoint` to `Point`, etc. Those need to be aware of
-///   potentially multiple batches of arrays. Whereas this `cast` can be applied in isolation to
-///   multiple batches of a chunked array.
+///     - Casts from dimension-aware to dimensionless arrays (`GeometryArray`, `WkbArray`,
+///       `WkbViewArray`, `WktArray`, `WktViewArray`) are always allowed.
+/// - GeoArrow [`Metadata`][geoarrow_schema::Metadata] on the [`GeoArrowType`] must match. Use
+///   [`GeoArrowArray::with_metadata`]
+///   to change the metadata on an array.
 ///
 /// ### Infallible casts:
 ///
 /// As long as the above criteria are met, these casts will always succeed without erroring.
 ///
-/// - The same type with different coord types.
-/// - Any source array type to `Geometry`, `Wkb`, `LargeWkb`, `Wkt`, or `LargeWkt`.
+/// - The same geometry type with different coord types.
+/// - Any source array type to `Geometry`, `Wkb`, `LargeWkb`, `WkbView`, `Wkt`, `LargeWkt`, or
+///   `WktView`.
 /// - `Point` to `MultiPoint`
 /// - `LineString` to `MultiLineString`
 /// - `Polygon` to `MultiPolygon`
@@ -46,6 +49,9 @@ use geoarrow_schema::error::GeoArrowResult;
 /// - `MultiLineString` to `LineString`
 /// - `MultiPolygon` to `Polygon`
 ///
+// TODO: need to check this behavior:
+//
+//     - Casts from dimensionless arrays to dimension-aware arrays are never allowed.
 pub fn cast(
     array: &dyn GeoArrowArray,
     to_type: &GeoArrowType,
@@ -248,12 +254,16 @@ pub fn cast(
         }
         (_, Wkb(_)) => Arc::new(to_wkb::<i32>(array)?),
         (_, LargeWkb(_)) => Arc::new(to_wkb::<i64>(array)?),
+        (_, WkbView(_)) => Arc::new(to_wkb_view(array)?),
         (_, Wkt(_)) => Arc::new(to_wkt::<i32>(array)?),
         (_, LargeWkt(_)) => Arc::new(to_wkt::<i64>(array)?),
+        (_, WktView(_)) => Arc::new(to_wkt_view(array)?),
         (Wkb(_), _) => from_wkb(array.as_wkb::<i32>(), to_type.clone())?,
         (LargeWkb(_), _) => from_wkb(array.as_wkb::<i64>(), to_type.clone())?,
+        (WkbView(_), _) => from_wkb(array.as_wkb_view(), to_type.clone())?,
         (Wkt(_), _) => from_wkt(array.as_wkt::<i32>(), to_type.clone())?,
         (LargeWkt(_), _) => from_wkt(array.as_wkt::<i64>(), to_type.clone())?,
+        (WktView(_), _) => from_wkt(array.as_wkt_view(), to_type.clone())?,
         (_, _) => {
             return Err(ArrowError::CastError(format!(
                 "Unsupported cast from {:?} to {:?}",

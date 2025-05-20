@@ -5,7 +5,7 @@ authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
 repository = { workspace = true }
-description = "Rust implementation of GeoArrow"
+description = "Functions for converting from one GeoArrow geometry type to another."
 categories = { workspace = true }
 rust-version = { workspace = true }
 
