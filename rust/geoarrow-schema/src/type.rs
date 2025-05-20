@@ -74,45 +74,52 @@ macro_rules! define_basic_type {
 }
 
 define_basic_type!(
-    /// A type representing a Point geometry.
+    /// A GeoArrow Point type.
     ///
-    /// This implements the [`ExtensionType`] trait.
+    /// Refer to the [GeoArrow
+    /// specification](https://github.com/geoarrow/geoarrow/blob/main/format.md#point).
     PointType
 );
 define_basic_type!(
-    /// A type representing a LineString geometry.
+    /// A GeoArrow LineString type.
     ///
-    /// This implements the [`ExtensionType`] trait.
+    /// Refer to the [GeoArrow
+    /// specification](https://github.com/geoarrow/geoarrow/blob/main/format.md#linestring).
     LineStringType
 );
 define_basic_type!(
-    /// A type representing a Polygon geometry.
+    /// A GeoArrow Polygon type.
     ///
-    /// This implements the [`ExtensionType`] trait.
+    /// Refer to the [GeoArrow
+    /// specification](https://github.com/geoarrow/geoarrow/blob/main/format.md#polygon).
     PolygonType
 );
 define_basic_type!(
-    /// A type representing a MultiPoint geometry.
+    /// A GeoArrow MultiPoint type.
     ///
-    /// This implements the [`ExtensionType`] trait.
+    /// Refer to the [GeoArrow
+    /// specification](https://github.com/geoarrow/geoarrow/blob/main/format.md#multipoint).
     MultiPointType
 );
 define_basic_type!(
-    /// A type representing a MultiLineString geometry.
+    /// A GeoArrow MultiLineString type.
     ///
-    /// This implements the [`ExtensionType`] trait.
+    /// Refer to the [GeoArrow
+    /// specification](https://github.com/geoarrow/geoarrow/blob/main/format.md#multilinestring).
     MultiLineStringType
 );
 define_basic_type!(
-    /// A type representing a MultiPolygon geometry.
+    /// A GeoArrow MultiPolygon type.
     ///
-    /// This implements the [`ExtensionType`] trait.
+    /// Refer to the [GeoArrow
+    /// specification](https://github.com/geoarrow/geoarrow/blob/main/format.md#multipolygon).
     MultiPolygonType
 );
 define_basic_type!(
-    /// A type representing a GeometryCollection geometry.
+    /// A GeoArrow GeometryCollection type.
     ///
-    /// This implements the [`ExtensionType`] trait.
+    /// Refer to the [GeoArrow
+    /// specification](https://github.com/geoarrow/geoarrow/blob/main/format.md#geometrycollection).
     GeometryCollectionType
 );
 
@@ -917,9 +924,10 @@ fn parse_geometry_collection(data_type: &DataType) -> Result<(CoordType, Dimensi
     }
 }
 
-/// A type representing a geoarrow array of unknown geometry type and dimension.
+/// A GeoArrow Geometry type.
 ///
-/// This implements the [`ExtensionType`] trait.
+/// Refer to the [GeoArrow
+/// specification](https://github.com/geoarrow/geoarrow/blob/main/format.md#geometry).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct GeometryType {
     coord_type: CoordType,
@@ -1136,9 +1144,10 @@ fn parse_geometry(data_type: &DataType) -> Result<CoordType, ArrowError> {
     }
 }
 
-/// A type representing a geoarrow "box" or "rect" array.
+/// A GeoArrow "Box" or "Rect" type.
 ///
-/// This implements the [`ExtensionType`] trait.
+/// Refer to the [GeoArrow
+/// specification](https://github.com/geoarrow/geoarrow/blob/main/format.md#box).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct BoxType {
     dim: Dimension,
@@ -1314,9 +1323,10 @@ fn parse_box(data_type: &DataType) -> Result<Dimension, ArrowError> {
     }
 }
 
-/// A type representing a geoarrow WKB array.
+/// A GeoArrow WKB type.
 ///
-/// This implements the [`ExtensionType`] trait.
+/// This extension type support multiple physical data types, including [`DataType::Binary`],
+/// [`DataType::LargeBinary`], and [`DataType::BinaryView`].
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct WkbType {
     metadata: Arc<Metadata>,
@@ -1374,9 +1384,10 @@ impl ExtensionType for WkbType {
     }
 }
 
-/// A type representing a geoarrow WKT array.
+/// A GeoArrow WKT type.
 ///
-/// This implements the [`ExtensionType`] trait.
+/// This extension type support multiple physical data types, including [`DataType::Utf8`],
+/// [`DataType::LargeUtf8`], and [`DataType::Utf8View`].
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct WktType {
     metadata: Arc<Metadata>,

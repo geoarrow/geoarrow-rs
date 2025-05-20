@@ -28,6 +28,10 @@ use crate::error::{GeoArrowError, GeoArrowResult};
 /// encoding](https://www.geopackage.org/spec130/index.html#gpb_format): axis order is always
 /// (longitude, latitude) and (easting, northing) regardless of the the axis order encoded in the
 /// CRS specification.
+///
+/// Note that [`PartialEq`] and [`Eq`] currently use their default, derived implementations, so
+/// only `Crs` that are structurally exactly equal will compare as equal. Two different
+/// representations of the same logical CRS will not compare as equal.
 #[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct Crs {
     /// One of:
