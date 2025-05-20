@@ -8,6 +8,10 @@ use crate::crs::Crs;
 ///
 /// This follows the extension metadata [defined by the GeoArrow
 /// specification](https://geoarrow.org/extension-types).
+///
+/// This struct is contained within all GeoArrow geometry type definitions, such as
+/// [`PointType`][crate::PointType], [`GeometryType`][crate::GeometryType], or
+/// [`WkbType`][crate::WkbType].
 #[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct Metadata {
     // Raise the underlying crs fields to this level.
