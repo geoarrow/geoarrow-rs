@@ -943,7 +943,6 @@ dependencies = [
  "geo-traits",
  "geoarrow-schema",
  "num-traits",
- "serde_json",
  "wkb",
  "wkt",
 ]

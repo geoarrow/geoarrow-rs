@@ -1,4 +1,4 @@
-use geoarrow_array::GeoArrowType;
+use geoarrow_schema::GeoArrowType;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(js_name = GeoArrowType)]
