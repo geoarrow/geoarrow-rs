@@ -9,6 +9,7 @@ use arrow_array::types::*;
 use arrow_array::{Array, RecordBatch};
 use arrow_json::writer::make_encoder;
 use arrow_schema::{DataType, Schema, TimeUnit};
+use geoarrow_schema::GeoArrowType;
 use geozero::error::GeozeroError;
 use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, GeozeroDatasource, PropertyProcessor};
 pub use record_batch_reader::GeozeroRecordBatchReader;
@@ -17,7 +18,6 @@ use crate::GeoArrowArray;
 use crate::array::from_arrow_array;
 use crate::builder::geo_trait_wrappers::RectWrapper;
 use crate::cast::AsGeoArrowArray;
-use crate::datatypes::GeoArrowType;
 use crate::geozero::export::scalar::{
     process_geometry, process_geometry_collection, process_line_string, process_multi_line_string,
     process_multi_point, process_multi_polygon, process_point, process_polygon,

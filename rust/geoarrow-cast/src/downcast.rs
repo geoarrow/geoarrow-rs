@@ -8,9 +8,9 @@ use geo_traits::{
     MultiPolygonTrait,
 };
 use geoarrow_array::cast::AsGeoArrowArray;
-use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, GeoArrowType};
-use geoarrow_schema::Dimension;
+use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
+use geoarrow_schema::{Dimension, GeoArrowType};
 
 /// Infer the simplest, most-compact native geometry type from the provided arrays, if any.
 ///
@@ -31,7 +31,7 @@ use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 /// simplest geometry type that fits our data.
 ///
 /// ```
-/// # use geoarrow_array::GeoArrowType;
+/// # use geoarrow_schema::GeoArrowType;
 /// # use geoarrow_array::builder::WkbBuilder;
 /// use geoarrow_cast::cast::cast;
 /// use geoarrow_cast::downcast::{NativeType, infer_downcast_type};

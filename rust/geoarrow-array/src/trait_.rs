@@ -6,10 +6,8 @@ use arrow_array::{Array, ArrayRef};
 use arrow_buffer::NullBuffer;
 use arrow_schema::extension::ExtensionType;
 use geo_traits::GeometryTrait;
-use geoarrow_schema::Metadata;
 use geoarrow_schema::error::GeoArrowResult;
-
-use crate::datatypes::GeoArrowType;
+use geoarrow_schema::{GeoArrowType, Metadata};
 
 /// Convert GeoArrow arrays into their respective [arrow][arrow_array] arrays.
 pub trait IntoArrow {
@@ -48,8 +46,8 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     ///
     /// ```
     /// # use geoarrow_array::builder::PointBuilder;
-    /// # use geoarrow_array::{GeoArrowArray, GeoArrowType};
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_array::GeoArrowArray;
+    /// # use geoarrow_schema::{CoordType, Dimension, PointType, GeoArrowType};
     /// #
     /// let point = geo_types::point!(x: 1., y: 2.);
     /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
@@ -442,4 +440,135 @@ pub(crate) trait GeoArrowArrayBuilder: Debug + Send + Sync {
     /// Finish the builder and return an [`Arc`] to the resulting array.
     #[allow(dead_code)]
     fn finish(self) -> Arc<dyn GeoArrowArray>;
+}
+
+#[cfg(test)]
+mod test {
+    use std::sync::Arc;
+
+    use arrow_array::Array;
+    use arrow_array::builder::{ArrayBuilder, FixedSizeListBuilder, Float64Builder, StructBuilder};
+    use arrow_schema::{DataType, Field};
+    use geoarrow_schema::{CoordType, Dimension, GeometryType, PointType};
+
+    use super::*;
+    use crate::builder::GeometryBuilder;
+    use crate::trait_::GeoArrowArray;
+
+    #[test]
+    fn infer_type_interleaved_point() {
+        let test_cases = [
+            (2, Dimension::XY),
+            (3, Dimension::XYZ),
+            (4, Dimension::XYZM),
+        ];
+        for (list_size, dim) in test_cases.into_iter() {
+            let array = FixedSizeListBuilder::new(Float64Builder::new(), list_size).finish();
+            let t =
+                GeoArrowType::try_from(&Field::new("", array.data_type().clone(), true)).unwrap();
+            assert_eq!(
+                t,
+                GeoArrowType::Point(PointType::new(
+                    CoordType::Interleaved,
+                    dim,
+                    Default::default()
+                ))
+            );
+        }
+    }
+
+    #[test]
+    fn infer_type_separated_point() {
+        let test_cases = [
+            (
+                vec![
+                    Arc::new(Field::new("x", DataType::Float64, true)),
+                    Arc::new(Field::new("y", DataType::Float64, true)),
+                ],
+                vec![
+                    Box::new(Float64Builder::new()) as Box<dyn ArrayBuilder>,
+                    Box::new(Float64Builder::new()),
+                ],
+                Dimension::XY,
+            ),
+            (
+                vec![
+                    Arc::new(Field::new("x", DataType::Float64, true)),
+                    Arc::new(Field::new("y", DataType::Float64, true)),
+                    Arc::new(Field::new("z", DataType::Float64, true)),
+                ],
+                vec![
+                    Box::new(Float64Builder::new()) as Box<dyn ArrayBuilder>,
+                    Box::new(Float64Builder::new()),
+                    Box::new(Float64Builder::new()),
+                ],
+                Dimension::XYZ,
+            ),
+            (
+                vec![
+                    Arc::new(Field::new("x", DataType::Float64, true)),
+                    Arc::new(Field::new("y", DataType::Float64, true)),
+                    Arc::new(Field::new("z", DataType::Float64, true)),
+                    Arc::new(Field::new("m", DataType::Float64, true)),
+                ],
+                vec![
+                    Box::new(Float64Builder::new()) as Box<dyn ArrayBuilder>,
+                    Box::new(Float64Builder::new()),
+                    Box::new(Float64Builder::new()),
+                    Box::new(Float64Builder::new()),
+                ],
+                Dimension::XYZM,
+            ),
+        ];
+        for (fields, builders, dim) in test_cases.into_iter() {
+            let array = StructBuilder::new(fields, builders).finish();
+            let t =
+                GeoArrowType::try_from(&Field::new("", array.data_type().clone(), true)).unwrap();
+            assert_eq!(
+                t,
+                GeoArrowType::Point(PointType::new(
+                    CoordType::Separated,
+                    dim,
+                    Default::default()
+                ))
+            );
+        }
+    }
+
+    #[test]
+    fn native_type_round_trip() {
+        let point_array = crate::test::point::point_array(CoordType::Interleaved);
+        let field = point_array.data_type.to_field("geometry", true);
+        let data_type: GeoArrowType = (&field).try_into().unwrap();
+        assert_eq!(point_array.data_type(), data_type);
+
+        let ml_array = crate::test::multilinestring::ml_array(CoordType::Interleaved);
+        let field = ml_array.data_type.to_field("geometry", true);
+        let data_type: GeoArrowType = (&field).try_into().unwrap();
+        assert_eq!(ml_array.data_type(), data_type);
+
+        let mut builder = GeometryBuilder::new(GeometryType::new(
+            CoordType::Interleaved,
+            Default::default(),
+        ));
+        builder
+            .push_geometry(Some(&crate::test::point::p0()))
+            .unwrap();
+        builder
+            .push_geometry(Some(&crate::test::point::p1()))
+            .unwrap();
+        builder
+            .push_geometry(Some(&crate::test::point::p2()))
+            .unwrap();
+        builder
+            .push_geometry(Some(&crate::test::multilinestring::ml0()))
+            .unwrap();
+        builder
+            .push_geometry(Some(&crate::test::multilinestring::ml1()))
+            .unwrap();
+        let geom_array = builder.finish();
+        let field = geom_array.data_type.to_field("geometry", true);
+        let data_type: GeoArrowType = (&field).try_into().unwrap();
+        assert_eq!(geom_array.data_type(), data_type);
+    }
 }

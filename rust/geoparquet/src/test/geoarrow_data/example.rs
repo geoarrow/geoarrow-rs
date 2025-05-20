@@ -11,10 +11,10 @@ use geoarrow_array::builder::{
     MultiPolygonBuilder, PointBuilder, PolygonBuilder,
 };
 use geoarrow_array::cast::AsGeoArrowArray;
-use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, GeoArrowType};
+use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor};
 use geoarrow_schema::{
-    CoordType, Dimension, GeometryCollectionType, LineStringType, MultiLineStringType,
-    MultiPointType, MultiPolygonType, PointType, PolygonType,
+    CoordType, Dimension, GeoArrowType, GeometryCollectionType, LineStringType,
+    MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType,
 };
 
 use crate::GeoParquetRecordBatchReaderBuilder;

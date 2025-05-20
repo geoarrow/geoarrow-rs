@@ -7,14 +7,13 @@ use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{ArrowError, DataType, Field, UnionMode};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{
-    CoordType, Dimension, GeometryCollectionType, GeometryType, LineStringType, Metadata,
-    MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType,
+    CoordType, Dimension, GeoArrowType, GeometryCollectionType, GeometryType, LineStringType,
+    Metadata, MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType,
 };
 
 use crate::array::*;
 use crate::builder::*;
 use crate::capacity::GeometryCapacity;
-use crate::datatypes::GeoArrowType;
 use crate::scalar::Geometry;
 use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 

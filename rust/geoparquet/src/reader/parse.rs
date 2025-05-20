@@ -5,16 +5,16 @@ use std::sync::Arc;
 
 use arrow_array::{Array, ArrayRef, RecordBatch};
 use arrow_schema::{DataType, Field, FieldRef, Schema, SchemaRef};
+use geoarrow_array::GeoArrowArray;
 use geoarrow_array::array::{
     LargeWkbArray, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
     PointArray, PolygonArray, WkbArray,
 };
 use geoarrow_array::cast::from_wkb;
-use geoarrow_array::{GeoArrowArray, GeoArrowType};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{
-    CoordType, GeometryType, LineStringType, Metadata, MultiLineStringType, MultiPointType,
-    MultiPolygonType, PointType, PolygonType, WkbType,
+    CoordType, GeoArrowType, GeometryType, LineStringType, Metadata, MultiLineStringType,
+    MultiPointType, MultiPolygonType, PointType, PolygonType, WkbType,
 };
 
 use crate::metadata::{

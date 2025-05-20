@@ -8,8 +8,8 @@ use arrow_array::builder::{
     BinaryViewBuilder, GenericByteBuilder, GenericStringBuilder, StringViewBuilder,
 };
 use arrow_array::cast::AsArray;
-use geoarrow_schema::WkbType;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
+use geoarrow_schema::{GeoArrowType, WkbType};
 use wkb::Endianness;
 use wkb::writer::WriteOptions;
 
@@ -19,7 +19,7 @@ use crate::builder::{
     MultiPointBuilder, MultiPolygonBuilder, PointBuilder, PolygonBuilder, WkbBuilder,
 };
 use crate::trait_::GeoArrowArray;
-use crate::{GeoArrowArrayAccessor, GeoArrowType, IntoArrow};
+use crate::{GeoArrowArrayAccessor, IntoArrow};
 
 /// Helpers for downcasting a [`GeoArrowArray`] to a concrete implementation.
 ///
@@ -690,7 +690,7 @@ pub fn from_wkt<A: GenericWktArrayType>(
 /// Name follows `serde` convention
 #[doc(hidden)]
 pub mod __private {
-    pub use crate::GeoArrowType;
+    pub use geoarrow_schema::GeoArrowType;
 }
 
 /// Downcast a [GeoArrowArray] to a concrete-typed array based on its [`GeoArrowType`].
@@ -734,7 +734,8 @@ pub mod __private {
 /// # use geo::Area;
 /// # use geo_traits::to_geo::ToGeoGeometry;
 /// # use geoarrow_schema::error::GeoArrowResult;
-/// # use geoarrow_array::{GeoArrowArrayAccessor, GeoArrowType};
+/// # use geoarrow_schema::GeoArrowType;
+/// # use geoarrow_array::GeoArrowArrayAccessor;
 /// #
 /// # fn impl_unsigned_area<'a>(array: &'a impl GeoArrowArrayAccessor<'a>) -> GeoArrowResult<Float64Array> {
 /// #     let mut builder = Float64Builder::with_capacity(array.len());

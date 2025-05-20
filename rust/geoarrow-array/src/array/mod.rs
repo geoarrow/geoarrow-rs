@@ -23,6 +23,7 @@ use std::sync::Arc;
 use arrow_array::Array;
 use arrow_schema::Field;
 pub use coord::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
+use geoarrow_schema::GeoArrowType;
 use geoarrow_schema::error::GeoArrowResult;
 pub(crate) use geometry::DimensionIndex;
 pub use geometry::GeometryArray;
@@ -40,7 +41,7 @@ pub use wkb_view::WkbViewArray;
 pub use wkt::{GenericWktArray, LargeWktArray, WktArray};
 pub use wkt_view::WktViewArray;
 
-use crate::{GeoArrowArray, GeoArrowType};
+use crate::GeoArrowArray;
 
 /// Construct a new [GeoArrowArray] from an Arrow [Array] and [Field].
 pub fn from_arrow_array(

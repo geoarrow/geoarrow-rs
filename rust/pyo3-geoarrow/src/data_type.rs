@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use geoarrow_array::GeoArrowType;
 use geoarrow_schema::{
-    BoxType, GeometryCollectionType, GeometryType, LineStringType, Metadata, MultiLineStringType,
-    MultiPointType, MultiPolygonType, PointType, PolygonType, WkbType, WktType,
+    BoxType, GeoArrowType, GeometryCollectionType, GeometryType, LineStringType, Metadata,
+    MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType, WkbType,
+    WktType,
 };
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyType};

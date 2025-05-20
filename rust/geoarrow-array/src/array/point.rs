@@ -5,9 +5,8 @@ use arrow_array::{Array, ArrayRef, FixedSizeListArray, StructArray};
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geoarrow_schema::{CoordType, Metadata, PointType};
+use geoarrow_schema::{CoordType, GeoArrowType, Metadata, PointType};
 
-use crate::GeoArrowType;
 use crate::array::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
 use crate::eq::point_eq;
 use crate::scalar::Point;

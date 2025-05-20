@@ -7,4 +7,4 @@ All geometry type definitions, such as [`PointType`], [`GeometryType`], or
 [`ExtensionType`][arrow_schema::extension::ExtensionType] trait.
 
 Instances of type definitions are included within the variants on the
-GeoArrowType enum.
+[`GeoArrowType`] enum.

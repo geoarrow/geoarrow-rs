@@ -2,13 +2,12 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use arrow_array::ArrayRef;
-use arrow_schema::extension::{EXTENSION_TYPE_METADATA_KEY, EXTENSION_TYPE_NAME_KEY};
+use arrow_schema::extension::EXTENSION_TYPE_NAME_KEY;
 use arrow_schema::{DataType, Field, Schema, SchemaRef};
-use geoarrow_array::GeoArrowType;
 use geoarrow_array::array::from_arrow_array;
 use geoarrow_schema::crs::{CrsTransform, DefaultCrsTransform};
-use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geoarrow_schema::{CoordType, Edges, Metadata, WkbType};
+use geoarrow_schema::error::GeoArrowResult;
+use geoarrow_schema::{CoordType, Edges, GeoArrowType, Metadata, WkbType};
 use serde_json::Value;
 
 use crate::metadata::{
@@ -180,19 +179,7 @@ impl GeoParquetMetadataBuilder {
 
                 let column_name = schema.field(col_idx).name().clone();
 
-                // TODO: should we make Metadata::deserialize public?
-                let metadata =
-                    if let Some(ext_meta) = field.metadata().get(EXTENSION_TYPE_METADATA_KEY) {
-                        serde_json::from_str(ext_meta).map_err(|err| {
-                            GeoArrowError::InvalidGeoArrow(format!(
-                                "Failed to deserialize GeoArrow metadata: {}",
-                                err
-                            ))
-                        })?
-                    } else {
-                        Metadata::default()
-                    };
-
+                let metadata = Metadata::try_from(field.as_ref())?;
                 let geo_data_type = field.as_ref().try_into()?;
 
                 let column_info = ColumnInfo::try_new(

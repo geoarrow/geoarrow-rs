@@ -6,10 +6,9 @@ use arrow_array::{Array, ArrayRef, StructArray};
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geoarrow_schema::{BoxType, Metadata};
+use geoarrow_schema::{BoxType, GeoArrowType, Metadata};
 
 use crate::array::SeparatedCoordBuffer;
-use crate::datatypes::GeoArrowType;
 use crate::scalar::Rect;
 use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 

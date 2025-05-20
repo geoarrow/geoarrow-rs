@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
 use arrow_schema::ArrowError;
+use geoarrow_array::GeoArrowArray;
 use geoarrow_array::array::from_arrow_array;
-use geoarrow_array::{GeoArrowArray, GeoArrowType};
 use geoarrow_cast::downcast::NativeType;
 use geoarrow_schema::{
-    BoxType, GeometryCollectionType, LineStringType, MultiLineStringType, MultiPointType,
-    MultiPolygonType, PointType, PolygonType,
+    BoxType, GeoArrowType, GeometryCollectionType, LineStringType, MultiLineStringType,
+    MultiPointType, MultiPolygonType, PointType, PolygonType,
 };
 use pyo3::intern;
 use pyo3::prelude::*;
