@@ -146,7 +146,7 @@ impl ExtensionType for PointType {
     type Metadata = Arc<Metadata>;
 
     fn metadata(&self) -> &Self::Metadata {
-        &self.metadata
+        self.metadata()
     }
 
     fn serialize_metadata(&self) -> Option<String> {
@@ -232,7 +232,7 @@ impl ExtensionType for LineStringType {
     type Metadata = Arc<Metadata>;
 
     fn metadata(&self) -> &Self::Metadata {
-        &self.metadata
+        self.metadata()
     }
 
     fn serialize_metadata(&self) -> Option<String> {
@@ -317,7 +317,7 @@ impl ExtensionType for PolygonType {
     type Metadata = Arc<Metadata>;
 
     fn metadata(&self) -> &Self::Metadata {
-        &self.metadata
+        self.metadata()
     }
 
     fn serialize_metadata(&self) -> Option<String> {
@@ -409,7 +409,7 @@ impl ExtensionType for MultiPointType {
     type Metadata = Arc<Metadata>;
 
     fn metadata(&self) -> &Self::Metadata {
-        &self.metadata
+        self.metadata()
     }
 
     fn serialize_metadata(&self) -> Option<String> {
@@ -494,7 +494,7 @@ impl ExtensionType for MultiLineStringType {
     type Metadata = Arc<Metadata>;
 
     fn metadata(&self) -> &Self::Metadata {
-        &self.metadata
+        self.metadata()
     }
 
     fn serialize_metadata(&self) -> Option<String> {
@@ -590,7 +590,7 @@ impl ExtensionType for MultiPolygonType {
     type Metadata = Arc<Metadata>;
 
     fn metadata(&self) -> &Self::Metadata {
-        &self.metadata
+        self.metadata()
     }
 
     fn serialize_metadata(&self) -> Option<String> {
@@ -801,7 +801,7 @@ impl ExtensionType for GeometryCollectionType {
     type Metadata = Arc<Metadata>;
 
     fn metadata(&self) -> &Self::Metadata {
-        &self.metadata
+        self.metadata()
     }
 
     fn serialize_metadata(&self) -> Option<String> {
@@ -1048,7 +1048,7 @@ impl ExtensionType for GeometryType {
     type Metadata = Arc<Metadata>;
 
     fn metadata(&self) -> &Self::Metadata {
-        &self.metadata
+        self.metadata()
     }
 
     fn serialize_metadata(&self) -> Option<String> {
@@ -1261,7 +1261,7 @@ impl ExtensionType for BoxType {
     type Metadata = Arc<Metadata>;
 
     fn metadata(&self) -> &Self::Metadata {
-        &self.metadata
+        self.metadata()
     }
 
     fn serialize_metadata(&self) -> Option<String> {
@@ -1352,7 +1352,7 @@ impl ExtensionType for WkbType {
     type Metadata = Arc<Metadata>;
 
     fn metadata(&self) -> &Self::Metadata {
-        &self.metadata
+        self.metadata()
     }
 
     fn serialize_metadata(&self) -> Option<String> {
@@ -1411,7 +1411,7 @@ impl ExtensionType for WktType {
     type Metadata = Arc<Metadata>;
 
     fn metadata(&self) -> &Self::Metadata {
-        &self.metadata
+        self.metadata()
     }
 
     fn serialize_metadata(&self) -> Option<String> {
