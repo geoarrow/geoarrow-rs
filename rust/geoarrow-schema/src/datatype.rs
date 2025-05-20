@@ -140,8 +140,7 @@ impl GeoArrowType {
     ///
     /// ```
     /// # use arrow_schema::DataType;
-    /// # use geoarrow_array::GeoArrowType;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{CoordType, Dimension, GeoArrowType, PointType};
     /// #
     /// let point_type = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
     /// let data_type = GeoArrowType::Point(point_type).to_data_type();
@@ -174,8 +173,7 @@ impl GeoArrowType {
     /// # Examples
     ///
     /// ```
-    /// # use geoarrow_array::GeoArrowType;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{CoordType, Dimension, GeoArrowType, PointType};
     /// #
     /// let point_type = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
     /// let geoarrow_type = GeoArrowType::Point(point_type);
@@ -212,8 +210,7 @@ impl GeoArrowType {
     /// # Examples
     ///
     /// ```
-    /// # use geoarrow_array::GeoArrowType;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{CoordType, Dimension, GeoArrowType, PointType};
     /// #
     /// let point_type = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
     /// let geoarrow_type = GeoArrowType::Point(point_type);
@@ -244,8 +241,7 @@ impl GeoArrowType {
     /// # Examples
     ///
     /// ```
-    /// # use geoarrow_array::GeoArrowType;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{CoordType, Dimension, GeoArrowType, PointType};
     /// #
     /// let point_type = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
     /// let geoarrow_type = GeoArrowType::Point(point_type);

@@ -46,8 +46,8 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     ///
     /// ```
     /// # use geoarrow_array::builder::PointBuilder;
-    /// # use geoarrow_array::{GeoArrowArray, GeoArrowType};
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_array::GeoArrowArray;
+    /// # use geoarrow_schema::{CoordType, Dimension, PointType, GeoArrowType};
     /// #
     /// let point = geo_types::point!(x: 1., y: 2.);
     /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());

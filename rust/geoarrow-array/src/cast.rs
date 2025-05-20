@@ -734,7 +734,8 @@ pub mod __private {
 /// # use geo::Area;
 /// # use geo_traits::to_geo::ToGeoGeometry;
 /// # use geoarrow_schema::error::GeoArrowResult;
-/// # use geoarrow_array::{GeoArrowArrayAccessor, GeoArrowType};
+/// # use geoarrow_schema::GeoArrowType;
+/// # use geoarrow_array::GeoArrowArrayAccessor;
 /// #
 /// # fn impl_unsigned_area<'a>(array: &'a impl GeoArrowArrayAccessor<'a>) -> GeoArrowResult<Float64Array> {
 /// #     let mut builder = Float64Builder::with_capacity(array.len());

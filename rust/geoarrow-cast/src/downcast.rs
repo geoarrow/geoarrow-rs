@@ -31,7 +31,7 @@ use geoarrow_schema::{Dimension, GeoArrowType};
 /// simplest geometry type that fits our data.
 ///
 /// ```
-/// # use geoarrow_array::GeoArrowType;
+/// # use geoarrow_schema::GeoArrowType;
 /// # use geoarrow_array::builder::WkbBuilder;
 /// use geoarrow_cast::cast::cast;
 /// use geoarrow_cast::downcast::{NativeType, infer_downcast_type};
