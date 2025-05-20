@@ -1,3 +1,5 @@
+//! Utilities for inferring native geometry types from arbitrary GeoArrow input.
+
 use std::collections::HashSet;
 
 use arrow_schema::ArrowError;
@@ -10,10 +12,75 @@ use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, GeoArrowType};
 use geoarrow_schema::Dimension;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
-/// Infer a common native geometry type, if any
+/// Infer the simplest, most-compact native geometry type from the provided arrays, if any.
 ///
-/// None means that there is no common type to downcast to, and can be left as GeometryType or a
-/// serialized type.
+/// This accepts an [Iterator] of [`GeoArrowArray`] because it's important to have schema stability
+/// across batches of a chunked GeoArrow array. You don't want to separately downcast different
+/// batches because they could have different mixtures of geometry types.
+///
+/// A return value of `None` means that there is no common native type (other than `Geometry`) to
+/// downcast to. So your input data can be represented as a `GeometryArray` or as a serialized
+/// array.
+///
+/// After inferring a common type, use [`cast`][crate::cast::cast] to cast input to a specific
+/// output type.
+///
+/// ## Examples
+///
+/// Let's say we have a WKB array with unknown data. We can use `infer_downcast_type` to find the
+/// simplest geometry type that fits our data.
+///
+/// ```
+/// # use geoarrow_array::GeoArrowType;
+/// # use geoarrow_array::builder::WkbBuilder;
+/// use geoarrow_cast::cast::cast;
+/// use geoarrow_cast::downcast::{NativeType, infer_downcast_type};
+/// # use geoarrow_schema::{CoordType, Dimension, PointType};
+/// use wkt::wkt;
+///
+/// let mut builder = WkbBuilder::<i32>::new(Default::default());
+///
+/// # All of the data in the WkbArray are 2-dimensional points
+/// builder.push_geometry(Some(&wkt!(POINT (0. 1.))));
+/// builder.push_geometry(Some(&wkt!(POINT (2. 3.))));
+/// builder.push_geometry(Some(&wkt!(POINT (4. 5.))));
+///
+/// let wkb_array = builder.finish();
+///
+/// let (native_type, dim) = infer_downcast_type(std::iter::once(&wkb_array as _))
+///     .unwrap()
+///     .unwrap();
+/// assert_eq!(native_type, NativeType::Point);
+/// assert_eq!(dim, Dimension::XY);
+///
+/// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+/// cast(&wkb_array, &GeoArrowType::Point(point_type)).unwrap();
+/// ```
+///
+/// However, if you have geometry types in your array that aren't compatible with a single GeoArrow
+/// native type, you'll get `None` back from `infer_downcast_type`.
+///
+/// ```
+/// use geoarrow_array::builder::WkbBuilder;
+/// use geoarrow_cast::downcast::infer_downcast_type;
+/// use geoarrow_schema::WkbType;
+/// use wkt::wkt;
+///
+/// let wkb_type = WkbType::new(Default::default());
+/// let mut builder = WkbBuilder::<i32>::new(wkb_type);
+///
+/// # Incompatible geometry types in a single simple native-typed array.
+/// builder.push_geometry(Some(&wkt!(POINT (0. 1.))));
+/// builder.push_geometry(Some(&wkt!(LINESTRING (2. 3., 4. 5.))));
+///
+/// let wkb_array = builder.finish();
+///
+/// assert_eq!(
+///     infer_downcast_type(std::iter::once(&wkb_array as _)).unwrap(),
+///     None
+/// );
+/// ```
+///
 pub fn infer_downcast_type<'a>(
     arrays: impl Iterator<Item = &'a dyn GeoArrowArray>,
 ) -> GeoArrowResult<Option<(NativeType, Dimension)>> {
@@ -33,6 +100,7 @@ pub fn infer_downcast_type<'a>(
     infer_from_native_type_and_dimension(type_ids)
 }
 
+/// Get GeoArrow type ids from an array
 fn get_type_ids(array: &dyn GeoArrowArray) -> GeoArrowResult<HashSet<NativeTypeAndDimension>> {
     use GeoArrowType::*;
     let type_ids: HashSet<NativeTypeAndDimension> = match array.data_type() {
@@ -273,13 +341,21 @@ fn infer_from_native_type_and_dimension(
 /// An enum representing the different native GeoArrow geometry types.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum NativeType {
+    #[allow(missing_docs)]
     Point,
+    #[allow(missing_docs)]
     LineString,
+    #[allow(missing_docs)]
     Polygon,
+    #[allow(missing_docs)]
     MultiPoint,
+    #[allow(missing_docs)]
     MultiLineString,
+    #[allow(missing_docs)]
     MultiPolygon,
+    #[allow(missing_docs)]
     GeometryCollection,
+    #[allow(missing_docs)]
     Rect,
 }
 
