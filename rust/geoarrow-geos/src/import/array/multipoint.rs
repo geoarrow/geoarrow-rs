@@ -52,7 +52,7 @@ mod test {
                     .map(|opt_x| opt_x.map(|x| to_geos_geometry(&x.unwrap()).unwrap()))
                     .collect::<Vec<_>>();
                 let round_trip =
-                    MultiPointArray::from_geos(geos_geoms, arr.ext_type().clone()).unwrap();
+                    MultiPointArray::from_geos(geos_geoms, arr.extension_type().clone()).unwrap();
                 assert_eq!(arr, round_trip);
             }
         }

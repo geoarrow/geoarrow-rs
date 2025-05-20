@@ -81,7 +81,7 @@ You can use the [`to_array_ref`][GeoArrowArray::to_array_ref] or [`into_array_re
 
 Alternatively, if you have a concrete GeoArrow array type, you can use [`IntoArray`][crate::IntoArrow] to convert to a concrete arrow array type.
 
-The easiest way today to access an arrow [`Field`] is to use [`IntoArray::ext_type`][crate::IntoArrow::ext_type] and then call `to_field` on the result. We like to make this process simpler in the future.
+The easiest way today to access an arrow [`Field`] is to use [`IntoArray::extension_type`][crate::IntoArrow::extension_type] and then call `to_field` on the result. We like to make this process simpler in the future.
 
 ## Downcasting a GeoArrow array
 

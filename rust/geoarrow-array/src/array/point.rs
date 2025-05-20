@@ -206,7 +206,7 @@ impl IntoArrow for PointArray {
         }
     }
 
-    fn ext_type(&self) -> &Self::ExtensionType {
+    fn extension_type(&self) -> &Self::ExtensionType {
         &self.data_type
     }
 }
@@ -338,7 +338,7 @@ mod test {
             ] {
                 let geo_arr = point::array(coord_type, dim);
 
-                let point_type = geo_arr.ext_type().clone();
+                let point_type = geo_arr.extension_type().clone();
                 let field = point_type.to_field("geometry", true);
 
                 let arrow_arr = geo_arr.to_array_ref();

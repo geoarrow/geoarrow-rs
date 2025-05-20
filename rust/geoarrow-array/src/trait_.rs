@@ -24,13 +24,12 @@ pub trait IntoArrow {
     ///
     /// Note that [arrow][arrow_array] arrays do not maintain Arrow extension metadata, so the
     /// result of this method will omit any spatial extension information. Ensure you call
-    /// [Self::ext_type] to get extension information that you can add to a
+    /// [Self::extension_type] to get extension information that you can add to a
     /// [`Field`][arrow_schema::Field].
-    // Return Arc<Self::ArrowArray>? Could that replace `into_array_ref` on the trait?
     fn into_arrow(self) -> Self::ArrowArray;
 
     /// Return the Arrow extension type representing this array.
-    fn ext_type(&self) -> &Self::ExtensionType;
+    fn extension_type(&self) -> &Self::ExtensionType;
 }
 
 /// A base trait for all GeoArrow arrays.

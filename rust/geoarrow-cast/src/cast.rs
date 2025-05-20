@@ -304,7 +304,7 @@ mod test {
         );
         let array3 = cast(&array, &p_type.into()).unwrap();
         assert_eq!(
-            array3.as_point().ext_type().coord_type(),
+            array3.as_point().extension_type().coord_type(),
             CoordType::Separated
         );
 
@@ -346,7 +346,7 @@ mod test {
 
         let typ = MultiPointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
         let mp_arr = MultiPointBuilder::from_multi_points(&[mp1, mp2, mp3], typ).finish();
-        let (coord_type, dim, metadata) = mp_arr.ext_type().clone().into_inner();
+        let (coord_type, dim, metadata) = mp_arr.extension_type().clone().into_inner();
         let p_type = PointType::new(coord_type, dim, metadata);
         let p_arr = cast(&mp_arr, &p_type.into()).unwrap();
         assert!(p_arr.as_point_opt().is_some());
@@ -360,7 +360,7 @@ mod test {
 
         let typ = MultiPointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
         let mp_arr = MultiPointBuilder::from_multi_points(&[mp1, mp2, mp3], typ).finish();
-        let (coord_type, dim, metadata) = mp_arr.ext_type().clone().into_inner();
+        let (coord_type, dim, metadata) = mp_arr.extension_type().clone().into_inner();
         let p_type = PointType::new(coord_type, dim, metadata);
         assert!(cast(&mp_arr, &p_type.into()).is_err());
     }
@@ -377,7 +377,7 @@ mod test {
             typ,
         )
         .finish();
-        let (coord_type, dim, metadata) = mp_arr.ext_type().clone().into_inner();
+        let (coord_type, dim, metadata) = mp_arr.extension_type().clone().into_inner();
         let p_type = LineStringType::new(coord_type, dim, metadata);
         let p_arr = cast(&mp_arr, &p_type.into()).unwrap();
         assert!(p_arr.as_line_string_opt().is_some());
@@ -394,7 +394,7 @@ mod test {
         let mp_arr =
             MultiLineStringBuilder::from_multi_line_strings(&[single.clone(), single, multi], typ)
                 .finish();
-        let (coord_type, dim, metadata) = mp_arr.ext_type().clone().into_inner();
+        let (coord_type, dim, metadata) = mp_arr.extension_type().clone().into_inner();
         let p_type = LineStringType::new(coord_type, dim, metadata);
         assert!(cast(&mp_arr, &p_type.into()).is_err());
     }
@@ -410,7 +410,7 @@ mod test {
             typ,
         )
         .finish();
-        let (coord_type, dim, metadata) = mp_arr.ext_type().clone().into_inner();
+        let (coord_type, dim, metadata) = mp_arr.extension_type().clone().into_inner();
         let p_type = PolygonType::new(coord_type, dim, metadata);
         let p_arr = cast(&mp_arr, &p_type.into()).unwrap();
         assert!(p_arr.as_polygon_opt().is_some());
@@ -426,7 +426,7 @@ mod test {
         let mp_arr =
             MultiPolygonBuilder::from_multi_polygons(&[single.clone(), single, multi], typ)
                 .finish();
-        let (coord_type, dim, metadata) = mp_arr.ext_type().clone().into_inner();
+        let (coord_type, dim, metadata) = mp_arr.extension_type().clone().into_inner();
         let p_type = PolygonType::new(coord_type, dim, metadata);
         assert!(cast(&mp_arr, &p_type.into()).is_err());
     }

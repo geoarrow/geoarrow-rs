@@ -176,7 +176,7 @@ impl IntoArrow for RectArray {
         StructArray::new(fields, arrays, nulls)
     }
 
-    fn ext_type(&self) -> &Self::ExtensionType {
+    fn extension_type(&self) -> &Self::ExtensionType {
         &self.data_type
     }
 }
@@ -280,12 +280,12 @@ mod test {
     fn try_from_arrow() {
         let geo_arr = rect::r_array();
 
-        let ext_type = geo_arr.ext_type().clone();
-        let field = ext_type.to_field("geometry", true);
+        let extension_type = geo_arr.extension_type().clone();
+        let field = extension_type.to_field("geometry", true);
 
         let arrow_arr = geo_arr.to_array_ref();
 
-        let geo_arr2: RectArray = (arrow_arr.as_ref(), ext_type).try_into().unwrap();
+        let geo_arr2: RectArray = (arrow_arr.as_ref(), extension_type).try_into().unwrap();
         let geo_arr3: RectArray = (arrow_arr.as_ref(), &field).try_into().unwrap();
 
         assert_eq!(geo_arr, geo_arr2);
