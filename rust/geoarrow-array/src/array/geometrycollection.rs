@@ -185,7 +185,7 @@ impl IntoArrow for GeometryCollectionArray {
         GenericListArray::new(geometries_field, self.geom_offsets, values, nulls)
     }
 
-    fn ext_type(&self) -> &Self::ExtensionType {
+    fn extension_type(&self) -> &Self::ExtensionType {
         &self.data_type
     }
 }
@@ -293,7 +293,7 @@ mod test {
                 for prefer_multi in [true, false] {
                     let geo_arr = geometrycollection::array(coord_type, dim, prefer_multi);
 
-                    let point_type = geo_arr.ext_type().clone();
+                    let point_type = geo_arr.extension_type().clone();
                     let field = point_type.to_field("geometry", true);
 
                     let arrow_arr = geo_arr.to_array_ref();

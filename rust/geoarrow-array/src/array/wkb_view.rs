@@ -126,7 +126,7 @@ impl IntoArrow for WkbViewArray {
         self.array
     }
 
-    fn ext_type(&self) -> &Self::ExtensionType {
+    fn extension_type(&self) -> &Self::ExtensionType {
         &self.data_type
     }
 }

@@ -155,7 +155,7 @@ impl<O: OffsetSizeTrait> IntoArrow for GenericWkbArray<O> {
         self.array
     }
 
-    fn ext_type(&self) -> &Self::ExtensionType {
+    fn extension_type(&self) -> &Self::ExtensionType {
         &self.data_type
     }
 }
