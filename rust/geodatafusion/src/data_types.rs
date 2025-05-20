@@ -3,11 +3,11 @@ use std::sync::Arc;
 use arrow_array::ArrayRef;
 use datafusion::error::DataFusionError;
 use datafusion::logical_expr::{Signature, Volatility};
+use geoarrow_array::GeoArrowArray;
 use geoarrow_array::array::{GeometryArray, PointArray, RectArray};
-use geoarrow_array::{GeoArrowArray, GeoArrowType};
 use geoarrow_schema::{
-    BoxType, CoordType, Dimension, GeometryCollectionType, GeometryType, LineStringType,
-    MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType,
+    BoxType, CoordType, Dimension, GeoArrowType, GeometryCollectionType, GeometryType,
+    LineStringType, MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType,
 };
 
 use crate::error::GeoDataFusionResult;

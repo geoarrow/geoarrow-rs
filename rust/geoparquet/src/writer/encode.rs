@@ -1,10 +1,10 @@
 use arrow_array::{Array, ArrayRef, RecordBatch};
 use arrow_schema::Field;
+use geoarrow_array::GeoArrowArray;
 use geoarrow_array::array::from_arrow_array;
 use geoarrow_array::cast::{AsGeoArrowArray, to_wkb};
-use geoarrow_array::{GeoArrowArray, GeoArrowType};
-use geoarrow_schema::CoordType;
 use geoarrow_schema::error::GeoArrowResult;
+use geoarrow_schema::{CoordType, GeoArrowType};
 
 use crate::metadata::GeoParquetColumnEncoding;
 use crate::total_bounds::{BoundingRect, total_bounds};

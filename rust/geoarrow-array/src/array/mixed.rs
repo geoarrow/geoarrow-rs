@@ -7,8 +7,8 @@ use arrow_buffer::ScalarBuffer;
 use arrow_schema::{DataType, UnionMode};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{
-    CoordType, Dimension, GeometryCollectionType, LineStringType, MultiLineStringType,
-    MultiPointType, MultiPolygonType, PointType, PolygonType,
+    CoordType, Dimension, GeoArrowType, GeometryCollectionType, LineStringType,
+    MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType,
 };
 
 use crate::GeoArrowArrayAccessor;
@@ -21,7 +21,6 @@ use crate::builder::{
     PointBuilder, PolygonBuilder,
 };
 use crate::capacity::MixedCapacity;
-use crate::datatypes::GeoArrowType;
 use crate::scalar::Geometry;
 use crate::trait_::GeoArrowArray;
 

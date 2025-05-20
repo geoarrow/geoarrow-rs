@@ -8,12 +8,11 @@ use arrow_array::{
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geoarrow_schema::{Metadata, WkbType};
+use geoarrow_schema::{GeoArrowType, Metadata, WkbType};
 use wkb::reader::Wkb;
 
 use crate::array::WkbViewArray;
 use crate::capacity::WkbCapacity;
-use crate::datatypes::GeoArrowType;
 use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 use crate::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 

@@ -6,11 +6,11 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use arrow_schema::Schema;
-use geoarrow_array::GeoArrowType;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{
-    CoordType, Crs, Dimension, Edges, GeometryCollectionType, GeometryType, LineStringType,
-    Metadata, MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType,
+    CoordType, Crs, Dimension, Edges, GeoArrowType, GeometryCollectionType, GeometryType,
+    LineStringType, Metadata, MultiLineStringType, MultiPointType, MultiPolygonType, PointType,
+    PolygonType,
 };
 use parquet::file::metadata::FileMetaData;
 use serde::{Deserialize, Serialize};

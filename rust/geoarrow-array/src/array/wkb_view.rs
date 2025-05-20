@@ -6,11 +6,11 @@ use arrow_array::{Array, ArrayRef, BinaryViewArray, OffsetSizeTrait};
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geoarrow_schema::{Metadata, WkbType};
+use geoarrow_schema::{GeoArrowType, Metadata, WkbType};
 use wkb::reader::Wkb;
 
 use crate::array::GenericWkbArray;
-use crate::{GeoArrowArray, GeoArrowArrayAccessor, GeoArrowType, IntoArrow};
+use crate::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 
 /// An immutable array of WKB geometries.
 ///

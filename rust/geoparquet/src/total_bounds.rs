@@ -11,9 +11,9 @@ use geo_types::Coord;
 use geoarrow_array::array::RectArray;
 use geoarrow_array::builder::RectBuilder;
 use geoarrow_array::cast::AsGeoArrowArray;
-use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, GeoArrowType};
+use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor};
 use geoarrow_schema::error::GeoArrowResult;
-use geoarrow_schema::{BoxType, Dimension};
+use geoarrow_schema::{BoxType, Dimension, GeoArrowType};
 
 #[derive(Debug, Clone, Copy)]
 pub struct BoundingRect {

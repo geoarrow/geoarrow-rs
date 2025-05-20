@@ -4,6 +4,7 @@
 
 mod coord_type;
 pub mod crs;
+mod datatype;
 mod dimension;
 mod edges;
 pub mod error;
@@ -12,6 +13,7 @@ mod r#type;
 
 pub use coord_type::CoordType;
 pub use crs::{Crs, CrsType};
+pub use datatype::GeoArrowType;
 pub use dimension::Dimension;
 pub use edges::Edges;
 pub use metadata::Metadata;

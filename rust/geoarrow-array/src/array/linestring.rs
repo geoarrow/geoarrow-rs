@@ -5,12 +5,11 @@ use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geoarrow_schema::{CoordType, LineStringType, Metadata};
+use geoarrow_schema::{CoordType, GeoArrowType, LineStringType, Metadata};
 
 use crate::array::{CoordBuffer, GenericWkbArray};
 use crate::builder::LineStringBuilder;
 use crate::capacity::LineStringCapacity;
-use crate::datatypes::GeoArrowType;
 use crate::eq::offset_buffer_eq;
 use crate::scalar::LineString;
 use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};

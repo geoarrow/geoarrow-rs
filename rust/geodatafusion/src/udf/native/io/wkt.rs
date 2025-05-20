@@ -8,10 +8,10 @@ use datafusion::logical_expr::{
     ColumnarValue, Documentation, ReturnFieldArgs, ScalarFunctionArgs, ScalarUDFImpl, Signature,
     Volatility,
 };
+use geoarrow_array::GeoArrowArray;
 use geoarrow_array::array::{LargeWktArray, WktArray, from_arrow_array};
 use geoarrow_array::cast::{from_wkt, to_wkt};
-use geoarrow_array::{GeoArrowArray, GeoArrowType};
-use geoarrow_schema::{CoordType, GeometryType, WktType};
+use geoarrow_schema::{CoordType, GeoArrowType, GeometryType, WktType};
 
 use crate::data_types::any_single_geometry_type_input;
 use crate::error::{GeoDataFusionError, GeoDataFusionResult};

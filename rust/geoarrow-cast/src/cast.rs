@@ -14,7 +14,8 @@ use geoarrow_array::capacity::{LineStringCapacity, PolygonCapacity};
 use geoarrow_array::cast::{
     AsGeoArrowArray, from_wkb, from_wkt, to_wkb, to_wkb_view, to_wkt, to_wkt_view,
 };
-use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, GeoArrowType};
+use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor};
+use geoarrow_schema::GeoArrowType;
 use geoarrow_schema::error::GeoArrowResult;
 
 /// Cast a [`GeoArrowArray`] to another [`GeoArrowType`].

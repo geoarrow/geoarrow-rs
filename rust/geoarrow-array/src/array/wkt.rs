@@ -9,12 +9,11 @@ use arrow_array::{
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geoarrow_schema::{Metadata, WktType};
+use geoarrow_schema::{GeoArrowType, Metadata, WktType};
 use wkt::Wkt;
 
 use crate::GeoArrowArrayAccessor;
 use crate::array::WktViewArray;
-use crate::datatypes::GeoArrowType;
 use crate::trait_::{GeoArrowArray, IntoArrow};
 use crate::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 

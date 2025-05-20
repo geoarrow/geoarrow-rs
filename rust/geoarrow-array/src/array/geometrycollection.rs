@@ -5,12 +5,11 @@ use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geoarrow_schema::{CoordType, GeometryCollectionType, Metadata};
+use geoarrow_schema::{CoordType, GeoArrowType, GeometryCollectionType, Metadata};
 
 use crate::array::{GenericWkbArray, MixedGeometryArray};
 use crate::builder::GeometryCollectionBuilder;
 use crate::capacity::GeometryCollectionCapacity;
-use crate::datatypes::GeoArrowType;
 use crate::eq::offset_buffer_eq;
 use crate::scalar::GeometryCollection;
 use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};

@@ -6,10 +6,8 @@ use arrow_array::{Array, ArrayRef};
 use arrow_buffer::NullBuffer;
 use arrow_schema::extension::ExtensionType;
 use geo_traits::GeometryTrait;
-use geoarrow_schema::Metadata;
 use geoarrow_schema::error::GeoArrowResult;
-
-use crate::datatypes::GeoArrowType;
+use geoarrow_schema::{GeoArrowType, Metadata};
 
 /// Convert GeoArrow arrays into their respective [arrow][arrow_array] arrays.
 pub trait IntoArrow {

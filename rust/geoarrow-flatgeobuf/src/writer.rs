@@ -2,11 +2,10 @@ use std::io::Write;
 
 use arrow_schema::Schema;
 use flatgeobuf::{FgbCrs, FgbWriter, FgbWriterOptions};
-use geoarrow_array::GeoArrowType;
 use geoarrow_array::geozero::export::GeozeroRecordBatchReader;
 use geoarrow_schema::crs::{CrsTransform, DefaultCrsTransform};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geoarrow_schema::{Dimension, Metadata};
+use geoarrow_schema::{Dimension, GeoArrowType, Metadata};
 use geozero::GeozeroDatasource;
 
 /// Options for the FlatGeobuf writer
