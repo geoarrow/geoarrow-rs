@@ -34,8 +34,9 @@ use geoarrow_schema::error::GeoArrowResult;
 ///
 /// As long as the above criteria are met, these casts will always succeed without erroring.
 ///
-/// - The same type with different coord types.
-/// - Any source array type to `Geometry`, `Wkb`, `LargeWkb`, `Wkt`, or `LargeWkt`.
+/// - The same geometry type with different coord types.
+/// - Any source array type to `Geometry`, `Wkb`, `LargeWkb`, `WkbView`, `Wkt`, `LargeWkt`, or
+///   `WktView`.
 /// - `Point` to `MultiPoint`
 /// - `LineString` to `MultiLineString`
 /// - `Polygon` to `MultiPolygon`

@@ -40,7 +40,6 @@ use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 ///
 /// let mut builder = WkbBuilder::<i32>::new(Default::default());
 ///
-/// # All of the data in the WkbArray are 2-dimensional points
 /// builder.push_geometry(Some(&wkt!(POINT (0. 1.))));
 /// builder.push_geometry(Some(&wkt!(POINT (2. 3.))));
 /// builder.push_geometry(Some(&wkt!(POINT (4. 5.))));
@@ -61,15 +60,14 @@ use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 /// native type, you'll get `None` back from `infer_downcast_type`.
 ///
 /// ```
-/// use geoarrow_array::builder::WkbBuilder;
+/// # use geoarrow_array::builder::WkbBuilder;
 /// use geoarrow_cast::downcast::infer_downcast_type;
-/// use geoarrow_schema::WkbType;
+/// # use geoarrow_schema::WkbType;
 /// use wkt::wkt;
 ///
 /// let wkb_type = WkbType::new(Default::default());
 /// let mut builder = WkbBuilder::<i32>::new(wkb_type);
 ///
-/// # Incompatible geometry types in a single simple native-typed array.
 /// builder.push_geometry(Some(&wkt!(POINT (0. 1.))));
 /// builder.push_geometry(Some(&wkt!(LINESTRING (2. 3., 4. 5.))));
 ///
