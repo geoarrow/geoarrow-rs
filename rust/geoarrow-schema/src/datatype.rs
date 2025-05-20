@@ -313,34 +313,22 @@ impl TryFrom<&Field> for GeoArrowType {
     type Error = GeoArrowError;
 
     fn try_from(field: &Field) -> GeoArrowResult<Self> {
-        let metadata = Metadata::try_from(field)?;
-
         use GeoArrowType::*;
         if let Some(extension_name) = field.extension_type_name() {
             let data_type = match extension_name {
-                PointType::NAME => Point(PointType::try_new(field.data_type(), metadata)?),
-                LineStringType::NAME => {
-                    LineString(LineStringType::try_new(field.data_type(), metadata)?)
-                }
-                PolygonType::NAME => Polygon(PolygonType::try_new(field.data_type(), metadata)?),
-                MultiPointType::NAME => {
-                    MultiPoint(MultiPointType::try_new(field.data_type(), metadata)?)
-                }
-                MultiLineStringType::NAME => {
-                    MultiLineString(MultiLineStringType::try_new(field.data_type(), metadata)?)
-                }
-                MultiPolygonType::NAME => {
-                    MultiPolygon(MultiPolygonType::try_new(field.data_type(), metadata)?)
-                }
-                GeometryCollectionType::NAME => GeometryCollection(
-                    GeometryCollectionType::try_new(field.data_type(), metadata)?,
-                ),
-                BoxType::NAME => Rect(BoxType::try_new(field.data_type(), metadata)?),
-                GeometryType::NAME => Geometry(GeometryType::try_new(field.data_type(), metadata)?),
+                PointType::NAME => Point(field.extension_type()),
+                LineStringType::NAME => LineString(field.extension_type()),
+                PolygonType::NAME => Polygon(field.extension_type()),
+                MultiPointType::NAME => MultiPoint(field.extension_type()),
+                MultiLineStringType::NAME => MultiLineString(field.extension_type()),
+                MultiPolygonType::NAME => MultiPolygon(field.extension_type()),
+                GeometryCollectionType::NAME => GeometryCollection(field.extension_type()),
+                BoxType::NAME => Rect(field.extension_type()),
+                GeometryType::NAME => Geometry(field.extension_type()),
                 WkbType::NAME | "ogc.wkb" => match field.data_type() {
-                    DataType::Binary => Wkb(WkbType::new(metadata.into())),
-                    DataType::LargeBinary => LargeWkb(WkbType::new(metadata.into())),
-                    DataType::BinaryView => WkbView(WkbType::new(metadata.into())),
+                    DataType::Binary => Wkb(field.extension_type()),
+                    DataType::LargeBinary => LargeWkb(field.extension_type()),
+                    DataType::BinaryView => WkbView(field.extension_type()),
                     _ => {
                         return Err(GeoArrowError::InvalidGeoArrow(format!(
                             "Expected binary type for geoarrow.wkb, got '{}'",
@@ -349,9 +337,9 @@ impl TryFrom<&Field> for GeoArrowType {
                     }
                 },
                 WktType::NAME => match field.data_type() {
-                    DataType::Utf8 => Wkt(WktType::new(metadata.into())),
-                    DataType::LargeUtf8 => LargeWkt(WktType::new(metadata.into())),
-                    DataType::Utf8View => WktView(WktType::new(metadata.into())),
+                    DataType::Utf8 => Wkt(field.extension_type()),
+                    DataType::LargeUtf8 => LargeWkt(field.extension_type()),
+                    DataType::Utf8View => WktView(field.extension_type()),
                     _ => {
                         return Err(GeoArrowError::InvalidGeoArrow(format!(
                             "Expected string type for geoarrow.wkt, got '{}'",
@@ -368,7 +356,7 @@ impl TryFrom<&Field> for GeoArrowType {
             };
             Ok(data_type)
         } else {
-            let metadata = Arc::new(metadata);
+            let metadata = Arc::new(Metadata::try_from(field)?);
             let data_type = match field.data_type() {
                 DataType::Struct(struct_fields) => {
                     if !struct_fields.iter().all(|f| matches!(f.data_type(), DataType::Float64) ) {
@@ -376,7 +364,7 @@ impl TryFrom<&Field> for GeoArrowType {
                     }
 
                     match struct_fields.len() {
-                        2 =>  GeoArrowType::Point(PointType::new(CoordType::Separated , Dimension::XY, metadata)),
+                        2 => GeoArrowType::Point(PointType::new(CoordType::Separated , Dimension::XY, metadata)),
                         3 => GeoArrowType::Point(PointType::new(CoordType::Separated , Dimension::XYZ, metadata)),
                         4 => GeoArrowType::Point(PointType::new(CoordType::Separated , Dimension::XYZM, metadata)),
                         l => return Err(GeoArrowError::InvalidGeoArrow(format!("invalid number of struct fields: {l}"))),
