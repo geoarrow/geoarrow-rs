@@ -1,5 +1,5 @@
 use arrow_json::Encoder;
-use geo_traits::LineStringTrait;
+use geo_traits::{CoordTrait, LineStringTrait};
 use geoarrow_array::GeoArrowArrayAccessor;
 use geoarrow_array::array::LineStringArray;
 
@@ -21,17 +21,20 @@ impl Encoder for LineStringEncoder {
 }
 
 /// Encode a LineString geometry including the `type: LineString` header
-fn encode_line_string(geom: &impl LineStringTrait<T = f64>, out: &mut Vec<u8>) {
+pub(crate) fn encode_line_string(geom: &impl LineStringTrait<T = f64>, out: &mut Vec<u8>) {
     out.extend(br#"{"type":"LineString","coordinates":"#);
-    encode_line_string_coords(geom, out);
+    encode_coords(geom.coords(), out);
     out.push(b'}');
 }
 
 /// Encode the coordinates of a LineString geometry
-pub(crate) fn encode_line_string_coords(geom: &impl LineStringTrait<T = f64>, out: &mut Vec<u8>) {
+pub(crate) fn encode_coords(
+    coords: impl ExactSizeIterator<Item = impl CoordTrait<T = f64>>,
+    out: &mut Vec<u8>,
+) {
     out.push(b'[');
-    let num_coords = geom.num_coords();
-    for (idx, coord) in geom.coords().enumerate() {
+    let num_coords = coords.len();
+    for (idx, coord) in coords.enumerate() {
         encode_coord(&coord, out);
         if idx < num_coords - 1 {
             out.push(b',');

@@ -1,9 +1,9 @@
 use arrow_json::Encoder;
-use geo_traits::PolygonTrait;
+use geo_traits::{LineStringTrait, PolygonTrait};
 use geoarrow_array::GeoArrowArrayAccessor;
 use geoarrow_array::array::PolygonArray;
 
-use crate::encoders::linestring::encode_line_string_coords;
+use crate::encoders::linestring::encode_coords;
 
 pub(crate) struct PolygonEncoder(PolygonArray);
 
@@ -29,7 +29,7 @@ pub(crate) fn encode_polygon(geom: &impl PolygonTrait<T = f64>, out: &mut Vec<u8
 pub(crate) fn encode_polygon_rings(geom: &impl PolygonTrait<T = f64>, out: &mut Vec<u8>) {
     out.push(b'[');
     if let Some(exterior) = geom.exterior() {
-        encode_line_string_coords(&exterior, out);
+        encode_coords(exterior.coords(), out);
     }
 
     let num_interiors = geom.num_interiors();
@@ -38,7 +38,7 @@ pub(crate) fn encode_polygon_rings(geom: &impl PolygonTrait<T = f64>, out: &mut 
     }
 
     for (idx, interior) in geom.interiors().enumerate() {
-        encode_line_string_coords(&interior, out);
+        encode_coords(interior.coords(), out);
         if idx < num_interiors - 1 {
             out.push(b',');
         }

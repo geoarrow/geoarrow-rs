@@ -5,7 +5,7 @@ use arrow_array::RecordBatch;
 use arrow_json::{ArrayWriter, LineDelimitedWriter, WriterBuilder};
 use arrow_schema::ArrowError;
 
-use crate::encoders::GeometryEncoderFactory;
+use crate::encoders::GeoArrowEncoderFactory;
 
 pub struct GeoJsonWriter<W: Write> {
     /// Underlying writer to use to write bytes
@@ -18,7 +18,7 @@ impl<W: Write> GeoJsonWriter<W> {
         Self::write_header(&mut writer).unwrap();
 
         let array_writer = WriterBuilder::new()
-            .with_encoder_factory(Arc::new(GeometryEncoderFactory))
+            .with_encoder_factory(Arc::new(GeoArrowEncoderFactory))
             .build(writer);
         Ok(Self {
             writer: array_writer,
@@ -69,7 +69,7 @@ impl<W: Write> GeoJsonLinesWriter<W> {
     /// Construct a new writer
     pub fn new(writer: W) -> Self {
         let line_writer = WriterBuilder::new()
-            .with_encoder_factory(Arc::new(GeometryEncoderFactory))
+            .with_encoder_factory(Arc::new(GeoArrowEncoderFactory))
             .build(writer);
         Self {
             writer: line_writer,
@@ -118,45 +118,21 @@ mod test {
     use std::vec;
 
     use arrow_schema::Schema;
-    use geo_types::{Point, point};
-    use geoarrow_array::array::PointArray;
-    use geoarrow_array::builder::PointBuilder;
+    use geoarrow_array::test::point;
     use geoarrow_array::{GeoArrowArray, IntoArrow};
-    use geoarrow_schema::{CoordType, Dimension, PointType};
+    use geoarrow_schema::{CoordType, Dimension};
 
     use super::*;
 
-    // TODO: refactor to use communal test data.
-    fn p0() -> Point {
-        point!(
-            x: 0., y: 1.
-        )
-    }
-
-    fn p1() -> Point {
-        point!(
-            x: 1., y: 2.
-        )
-    }
-
-    fn p2() -> Point {
-        point!(
-            x: 2., y: 3.
-        )
-    }
-
-    fn point_array(coord_type: CoordType) -> PointArray {
-        let geoms = [Some(p0()), Some(p1()), None, Some(p2())];
-        let typ = PointType::new(coord_type, Dimension::XY, Default::default());
-        PointBuilder::from_nullable_points(geoms.iter().map(|x| x.as_ref()), typ).finish()
-    }
-
     #[test]
     fn test_geometry_encoder_factory() {
-        let geo_arr = point_array(CoordType::Interleaved);
+        let point_arr = test::point::array(CoordType::Interleaved, Dimension::XY);
 
-        let field = geo_arr.extension_type().to_field("geometry", true);
-        let array = geo_arr.to_array_ref();
+        // Slice to avoid empty points
+        let point_arr = point_arr.slice(0, 2);
+
+        let field = point_arr.extension_type().to_field("geometry", true);
+        let array = point_arr.to_array_ref();
 
         let schema = Schema::new(vec![Arc::new(field)]);
         let batch = RecordBatch::try_new(Arc::new(schema), vec![array]).unwrap();
@@ -168,6 +144,17 @@ mod test {
 
         let s = String::from_utf8(buffer).unwrap();
         println!("{}", s);
+
+        let _expected = r#"
+        {
+            "type":"FeatureCollection",
+            "features": [
+                {"geometry":{"type":"Point","coordinates":[30,10]}},
+                {"geometry":{"type":"Point","coordinates":[40,20]}}
+            ]
+        }
+        "#;
+
         // {
         //   "type": "FeatureCollection",
         //   "features": [
