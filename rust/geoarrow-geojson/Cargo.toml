@@ -15,7 +15,7 @@ arrow-array = { workspace = true }
 arrow-json = { workspace = true }
 arrow-schema = { workspace = true }
 geo-traits = { workspace = true }
-geoarrow-array = { workspace = true }
+geoarrow-array = { workspace = true, features = ["test-data"] }
 geoarrow-schema = { workspace = true }
 
 [dev-dependencies]

@@ -4,7 +4,13 @@ use geoarrow_array::GeoArrowArrayAccessor;
 use geoarrow_array::array::PointArray;
 use std::io::Write;
 
-pub(crate) struct PointEncoder(pub(crate) PointArray);
+pub(crate) struct PointEncoder(PointArray);
+
+impl PointEncoder {
+    pub(crate) fn new(array: PointArray) -> Self {
+        Self(array)
+    }
+}
 
 impl Encoder for PointEncoder {
     fn encode(&mut self, idx: usize, out: &mut Vec<u8>) {
@@ -32,4 +38,34 @@ pub(crate) fn encode_coord(coord: &impl CoordTrait<T = f64>, out: &mut Vec<u8>) 
         }
     }
     out.push(b']');
+}
+
+#[cfg(test)]
+mod test {
+    use geoarrow_array::test::point::array;
+    use geoarrow_schema::{CoordType, Dimension};
+
+    use super::*;
+
+    #[test]
+    fn encode_point() {
+        let mut encoder = PointEncoder::new(array(CoordType::Separated, Dimension::XY));
+
+        let mut out = vec![];
+        encoder.encode(0, &mut out);
+        let s = String::from_utf8(out).unwrap();
+        let expected = r#"{"type":"Point","coordinates":[30,10]}"#;
+        assert_eq!(s, expected);
+    }
+
+    #[test]
+    fn encode_point_xyz() {
+        let mut encoder = PointEncoder::new(array(CoordType::Separated, Dimension::XYZ));
+
+        let mut out = vec![];
+        encoder.encode(0, &mut out);
+        let s = String::from_utf8(out).unwrap();
+        let expected = r#"{"type":"Point","coordinates":[30,10,40]}"#;
+        assert_eq!(s, expected);
+    }
 }

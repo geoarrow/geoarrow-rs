@@ -27,19 +27,19 @@ impl EncoderFactory for GeometryEncoderFactory {
             let geom_arr = (array, typ)
                 .try_into()
                 .map_err(|err| ArrowError::ExternalError(Box::new(err)))?;
-            let encoder = PointEncoder(geom_arr);
+            let encoder = PointEncoder::new(geom_arr);
             Ok(Some(NullableEncoder::new(Box::new(encoder), nulls)))
         } else if let Ok(typ) = field.try_extension_type::<LineStringType>() {
             let geom_arr = (array, typ)
                 .try_into()
                 .map_err(|err| ArrowError::ExternalError(Box::new(err)))?;
-            let encoder = LineStringEncoder(geom_arr);
+            let encoder = LineStringEncoder::new(geom_arr);
             Ok(Some(NullableEncoder::new(Box::new(encoder), nulls)))
         } else if let Ok(typ) = field.try_extension_type::<PolygonType>() {
             let geom_arr = (array, typ)
                 .try_into()
                 .map_err(|err| ArrowError::ExternalError(Box::new(err)))?;
-            let encoder = PolygonEncoder(geom_arr);
+            let encoder = PolygonEncoder::new(geom_arr);
             Ok(Some(NullableEncoder::new(Box::new(encoder), nulls)))
         } else {
             Ok(None)
