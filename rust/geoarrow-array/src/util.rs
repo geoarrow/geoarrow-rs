@@ -64,8 +64,8 @@ pub(crate) trait GeometryTypeName {
     fn name(&self) -> String;
 }
 
-impl<'a, P, LS, Y, MP, ML, MY, GC, R, T, L> GeometryTypeName
-    for geo_traits::GeometryType<'a, P, LS, Y, MP, ML, MY, GC, R, T, L>
+impl<P, LS, Y, MP, ML, MY, GC, R, T, L> GeometryTypeName
+    for geo_traits::GeometryType<'_, P, LS, Y, MP, ML, MY, GC, R, T, L>
 where
     P: geo_traits::PointTrait,
     LS: geo_traits::LineStringTrait,
