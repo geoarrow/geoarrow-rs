@@ -1,8 +1,9 @@
+use std::io::Write;
+
 use arrow_json::Encoder;
 use geo_traits::{CoordTrait, PointTrait};
 use geoarrow_array::GeoArrowArrayAccessor;
 use geoarrow_array::array::PointArray;
-use std::io::Write;
 
 pub(crate) struct PointEncoder(PointArray);
 
