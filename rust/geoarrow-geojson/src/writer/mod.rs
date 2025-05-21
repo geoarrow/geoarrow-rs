@@ -155,7 +155,7 @@ mod test {
     fn test_geometry_encoder_factory() {
         let geo_arr = point_array(CoordType::Interleaved);
 
-        let field = geo_arr.ext_type().to_field("geometry", true);
+        let field = geo_arr.extension_type().to_field("geometry", true);
         let array = geo_arr.to_array_ref();
 
         let schema = Schema::new(vec![Arc::new(field)]);

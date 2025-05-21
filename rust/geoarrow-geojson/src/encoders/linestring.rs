@@ -1,6 +1,6 @@
 use arrow_json::Encoder;
 use geo_traits::LineStringTrait;
-use geoarrow_array::ArrayAccessor;
+use geoarrow_array::GeoArrowArrayAccessor;
 use geoarrow_array::array::LineStringArray;
 
 use crate::encoders::point::encode_coord;
