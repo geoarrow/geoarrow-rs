@@ -3,6 +3,7 @@ members = [
     "rust/geoarrow-array",
     "rust/geoarrow-cast",
     "rust/geoarrow-flatgeobuf",
+    "rust/geoarrow-geojson",
     "rust/geoarrow-geos",
     "rust/geoarrow-schema",
     "rust/geoarrow-test",
@@ -46,6 +47,7 @@ geo-traits = "0.3.0"
 geo-types = "0.7.16"
 geoarrow-array = { path = "rust/geoarrow-array" }
 geoarrow-cast = { path = "rust/geoarrow-cast" }
+geoarrow-geojson = { path = "rust/geoarrow-geojson" }
 geoarrow-schema = { path = "rust/geoarrow-schema" }
 geoarrow-test = { path = "rust/geoarrow-test" }
 geohash = "0.13.1"
