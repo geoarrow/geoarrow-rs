@@ -65,7 +65,7 @@ trait SharedIO<T: AsyncFileReader + Unpin + Clone + 'static> {
         let stream = builder
             .with_row_groups(vec![i])
             .build()
-            .map_err(geoarrow::error::GeoArrowError::from)?;
+            .map_err(|err| geoarrow_array::error::GeoArrowError::External(Box::new(err)))?;
         let results = stream.try_collect::<Vec<_>>().await.unwrap();
 
         // NOTE: This is not only one batch by default due to arrow-rs's default rechunking.

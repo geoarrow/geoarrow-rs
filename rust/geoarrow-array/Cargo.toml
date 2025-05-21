@@ -1,29 +1,36 @@
 
 [package]
 name = "geoarrow-array"
-version = "0.1.0-dev"
-authors = ["Kyle Barron <kylebarron2@gmail.com>"]
+version = { workspace = true }
+authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
 repository = { workspace = true }
 description = "Rust implementation of GeoArrow"
-categories = ["science::geo"]
+categories = { workspace = true }
 rust-version = { workspace = true }
 
+[features]
+geozero = ["dep:geozero", "dep:arrow-json"]
+# Include test data in public API
+# TODO: Remove geo-types here
+test-data = ["dep:geoarrow-test", "dep:geo-types"]
 
 [dependencies]
 arrow-array = { workspace = true }
 arrow-buffer = { workspace = true }
+arrow-json = { workspace = true, optional = true }
 arrow-schema = { workspace = true }
 geo-traits = { workspace = true }
+geo-types = { workspace = true, optional = true }
+geoarrow-schema = { workspace = true }
+geoarrow-test = { workspace = true, optional = true }
 geozero = { workspace = true, optional = true }
-geoarrow-schema = { path = "../geoarrow-schema" }
 num-traits = { workspace = true }
-serde_json = { workspace = true }
-thiserror = { workspace = true }
 wkb = { workspace = true }
 wkt = { workspace = true }
 
 [dev-dependencies]
-geo-types = { workspace = true }
 geo = { workspace = true }
+geo-types = { workspace = true }
+geoarrow-test = { workspace = true }

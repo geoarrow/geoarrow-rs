@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{
@@ -5,13 +7,14 @@ use geo_traits::{
     MultiPolygonTrait, PointTrait, PolygonTrait,
 };
 use geoarrow_schema::GeometryCollectionType;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
-use crate::array::{GeometryCollectionArray, WkbArray};
-use crate::builder::mixed::DEFAULT_PREFER_MULTI;
+use crate::GeoArrowArray;
+use crate::array::{GenericWkbArray, GeometryCollectionArray};
+use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
 use crate::builder::{MixedGeometryBuilder, OffsetsBuilder};
 use crate::capacity::GeometryCollectionCapacity;
-use crate::error::{GeoArrowError, Result};
-use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
+use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
 
 /// The GeoArrow equivalent to `Vec<Option<GeometryCollection>>`: a mutable collection of
 /// GeometryCollections.
@@ -30,27 +33,43 @@ pub struct GeometryCollectionBuilder {
 
 impl<'a> GeometryCollectionBuilder {
     /// Creates a new empty [`GeometryCollectionBuilder`].
-    pub fn new(typ: GeometryCollectionType, prefer_multi: bool) -> Self {
-        Self::with_capacity(typ, Default::default(), prefer_multi)
+    pub fn new(typ: GeometryCollectionType) -> Self {
+        Self::with_capacity(typ, Default::default())
     }
 
-    /// Creates a new empty [`GeometryCollectionBuilder`] with the provided capacity.
+    /// Creates a new empty [`GeometryCollectionBuilder`] with the provided
+    /// [capacity][GeometryCollectionCapacity].
     pub fn with_capacity(
         typ: GeometryCollectionType,
         capacity: GeometryCollectionCapacity,
-        prefer_multi: bool,
     ) -> Self {
         Self {
             geoms: MixedGeometryBuilder::with_capacity_and_options(
                 typ.dimension(),
                 capacity.mixed_capacity,
                 typ.coord_type(),
-                typ.metadata().clone(),
-                prefer_multi,
             ),
             geom_offsets: OffsetsBuilder::with_capacity(capacity.geom_capacity),
             validity: NullBufferBuilder::new(capacity.geom_capacity),
             data_type: typ,
+        }
+    }
+
+    /// Change whether to prefer multi or single arrays for new single-part geometries.
+    ///
+    /// If `true`, a new `Point` will be added to the `MultiPointBuilder` child array, a new
+    /// `LineString` will be added to the `MultiLineStringBuilder` child array, and a new `Polygon`
+    /// will be added to the `MultiPolygonBuilder` child array.
+    ///
+    /// This can be desired when the user wants to downcast the array to a single geometry array
+    /// later, as casting to a, say, `MultiPointArray` from a `GeometryCollectionArray` could be
+    /// done zero-copy.
+    ///
+    /// Note that only geometries added _after_ this method is called will be affected.
+    pub fn with_prefer_multi(self, prefer_multi: bool) -> Self {
+        Self {
+            geoms: self.geoms.with_prefer_multi(prefer_multi),
+            ..self
         }
     }
 
@@ -85,114 +104,108 @@ impl<'a> GeometryCollectionBuilder {
         let validity = self.validity.finish();
         GeometryCollectionArray::new(
             self.geoms.finish(),
-            self.geom_offsets.into(),
+            self.geom_offsets.finish(),
             validity,
             self.data_type.metadata().clone(),
         )
     }
 
-    /// Creates a new [`GeometryCollectionBuilder`] with a capacity inferred by the provided
-    /// iterator.
-    pub fn with_capacity_from_iter(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
-        typ: GeometryCollectionType,
-        prefer_multi: bool,
-    ) -> Result<Self> {
-        let counter = GeometryCollectionCapacity::from_geometry_collections(geoms)?;
-        Ok(Self::with_capacity(typ, counter, prefer_multi))
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_from_iter(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
-    ) -> Result<()> {
-        let counter = GeometryCollectionCapacity::from_geometry_collections(geoms)?;
-        self.reserve(counter);
-        Ok(())
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_exact_from_iter(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
-    ) -> Result<()> {
-        let counter = GeometryCollectionCapacity::from_geometry_collections(geoms)?;
-        self.reserve_exact(counter);
-        Ok(())
-    }
-
     /// Push a Point onto the end of this builder
     #[inline]
-    pub fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) -> Result<()> {
-        self.geoms.push_point(value)?;
-        self.geom_offsets.try_push_usize(1)?;
-        self.validity.append(value.is_some());
+    fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) -> GeoArrowResult<()> {
+        if let Some(geom) = value {
+            self.geoms.push_point(geom)?;
+            self.geom_offsets.try_push_usize(1)?;
+            self.validity.append(value.is_some());
+        } else {
+            self.push_null();
+        }
         Ok(())
     }
 
     /// Push a LineString onto the end of this builder
     #[inline]
-    pub fn push_line_string(
+    fn push_line_string(
         &mut self,
         value: Option<&impl LineStringTrait<T = f64>>,
-    ) -> Result<()> {
-        self.geoms.push_line_string(value)?;
-        self.geom_offsets.try_push_usize(1)?;
-        self.validity.append(value.is_some());
+    ) -> GeoArrowResult<()> {
+        if let Some(geom) = value {
+            self.geoms.push_line_string(geom)?;
+            self.geom_offsets.try_push_usize(1)?;
+            self.validity.append(value.is_some());
+        } else {
+            self.push_null();
+        }
         Ok(())
     }
 
     /// Push a Polygon onto the end of this builder
     #[inline]
-    pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> Result<()> {
-        self.geoms.push_polygon(value)?;
-        self.geom_offsets.try_push_usize(1)?;
-        self.validity.append(value.is_some());
+    fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> GeoArrowResult<()> {
+        if let Some(geom) = value {
+            self.geoms.push_polygon(geom)?;
+            self.geom_offsets.try_push_usize(1)?;
+            self.validity.append(value.is_some());
+        } else {
+            self.push_null();
+        }
         Ok(())
     }
 
     /// Push a MultiPoint onto the end of this builder
     #[inline]
-    pub fn push_multi_point(
+    fn push_multi_point(
         &mut self,
         value: Option<&impl MultiPointTrait<T = f64>>,
-    ) -> Result<()> {
-        self.geoms.push_multi_point(value)?;
-        self.geom_offsets.try_push_usize(1)?;
-        self.validity.append(value.is_some());
+    ) -> GeoArrowResult<()> {
+        if let Some(geom) = value {
+            self.geoms.push_multi_point(geom)?;
+            self.geom_offsets.try_push_usize(1)?;
+            self.validity.append(value.is_some());
+        } else {
+            self.push_null();
+        }
         Ok(())
     }
 
     /// Push a MultiLineString onto the end of this builder
     #[inline]
-    pub fn push_multi_line_string(
+    fn push_multi_line_string(
         &mut self,
         value: Option<&impl MultiLineStringTrait<T = f64>>,
-    ) -> Result<()> {
-        self.geoms.push_multi_line_string(value)?;
-        self.geom_offsets.try_push_usize(1)?;
-        self.validity.append(value.is_some());
+    ) -> GeoArrowResult<()> {
+        if let Some(geom) = value {
+            self.geoms.push_multi_line_string(geom)?;
+            self.geom_offsets.try_push_usize(1)?;
+            self.validity.append(value.is_some());
+        } else {
+            self.push_null();
+        }
         Ok(())
     }
 
     /// Push a MultiPolygon onto the end of this builder
     #[inline]
-    pub fn push_multi_polygon(
+    fn push_multi_polygon(
         &mut self,
         value: Option<&impl MultiPolygonTrait<T = f64>>,
-    ) -> Result<()> {
-        self.geoms.push_multi_polygon(value)?;
-        self.geom_offsets.try_push_usize(1)?;
-        self.validity.append(value.is_some());
+    ) -> GeoArrowResult<()> {
+        if let Some(geom) = value {
+            self.geoms.push_multi_polygon(geom)?;
+            self.geom_offsets.try_push_usize(1)?;
+            self.validity.append(value.is_some());
+        } else {
+            self.push_null();
+        }
         Ok(())
     }
 
     /// Push a Geometry onto the end of this builder
     #[inline]
-    pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+    pub fn push_geometry(
+        &mut self,
+        value: Option<&impl GeometryTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
         use geo_traits::GeometryType::*;
 
         if let Some(g) = value {
@@ -206,7 +219,9 @@ impl<'a> GeometryCollectionBuilder {
                 MultiLineString(p) => self.push_multi_line_string(Some(p))?,
                 MultiPolygon(p) => self.push_multi_polygon(Some(p))?,
                 GeometryCollection(p) => self.push_geometry_collection(Some(p))?,
-                Rect(_) | Triangle(_) | Line(_) => todo!(),
+                Rect(r) => self.push_polygon(Some(&RectWrapper::try_new(r)?))?,
+                Triangle(tri) => self.push_polygon(Some(&TriangleWrapper(tri)))?,
+                Line(l) => self.push_line_string(Some(&LineWrapper(l)))?,
             }
         } else {
             self.push_null();
@@ -219,11 +234,11 @@ impl<'a> GeometryCollectionBuilder {
     pub fn push_geometry_collection(
         &mut self,
         value: Option<&impl GeometryCollectionTrait<T = f64>>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         if let Some(gc) = value {
             let num_geoms = gc.num_geometries();
             for g in gc.geometries() {
-                self.geoms.push_geometry(Some(&g))?;
+                self.geoms.push_geometry(&g)?;
             }
             self.try_push_length(num_geoms)?;
         } else {
@@ -244,7 +259,7 @@ impl<'a> GeometryCollectionBuilder {
     }
 
     #[inline]
-    pub(crate) fn try_push_length(&mut self, geom_offsets_length: usize) -> Result<()> {
+    pub(crate) fn try_push_length(&mut self, geom_offsets_length: usize) -> GeoArrowResult<()> {
         self.geom_offsets.try_push_usize(geom_offsets_length)?;
         self.validity.append(true);
         Ok(())
@@ -260,9 +275,10 @@ impl<'a> GeometryCollectionBuilder {
     pub fn from_geometry_collections(
         geoms: &[impl GeometryCollectionTrait<T = f64>],
         typ: GeometryCollectionType,
-        prefer_multi: bool,
-    ) -> Result<Self> {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(Some), typ, prefer_multi)?;
+    ) -> GeoArrowResult<Self> {
+        let capacity =
+            GeometryCollectionCapacity::from_geometry_collections(geoms.iter().map(Some))?;
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(Some));
         Ok(array)
     }
@@ -271,25 +287,12 @@ impl<'a> GeometryCollectionBuilder {
     pub fn from_nullable_geometry_collections(
         geoms: &[Option<impl GeometryCollectionTrait<T = f64>>],
         typ: GeometryCollectionType,
-        prefer_multi: bool,
-    ) -> Result<Self> {
-        let mut array =
-            Self::with_capacity_from_iter(geoms.iter().map(|x| x.as_ref()), typ, prefer_multi)?;
+    ) -> GeoArrowResult<Self> {
+        let capacity = GeometryCollectionCapacity::from_geometry_collections(
+            geoms.iter().map(|x| x.as_ref()),
+        )?;
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
-        Ok(array)
-    }
-
-    /// Construct a new builder, pre-filling it with the provided geometries
-    pub fn from_geometries(
-        geoms: &[impl GeometryTrait<T = f64>],
-        typ: GeometryCollectionType,
-        prefer_multi: bool,
-    ) -> Result<Self> {
-        let capacity = GeometryCollectionCapacity::from_geometries(geoms.iter().map(Some))?;
-        let mut array = Self::with_capacity(typ, capacity, prefer_multi);
-        for geom in geoms {
-            array.push_geometry(Some(geom))?;
-        }
         Ok(array)
     }
 
@@ -297,11 +300,10 @@ impl<'a> GeometryCollectionBuilder {
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         typ: GeometryCollectionType,
-        prefer_multi: bool,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let capacity =
             GeometryCollectionCapacity::from_geometries(geoms.iter().map(|x| x.as_ref()))?;
-        let mut array = Self::with_capacity(typ, capacity, prefer_multi);
+        let mut array = Self::with_capacity(typ, capacity);
         for geom in geoms {
             array.push_geometry(geom.as_ref())?;
         }
@@ -309,26 +311,39 @@ impl<'a> GeometryCollectionBuilder {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, GeometryCollectionType)>
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, GeometryCollectionType)>
     for GeometryCollectionBuilder
 {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (WkbArray<O>, GeometryCollectionType)) -> Result<Self> {
+    fn try_from(
+        (value, typ): (GenericWkbArray<O>, GeometryCollectionType),
+    ) -> GeoArrowResult<Self> {
         let wkb_objects = value
             .iter()
             .map(|x| x.transpose())
-            .collect::<Result<Vec<_>>>()?;
-        Self::from_nullable_geometries(&wkb_objects, typ, DEFAULT_PREFER_MULTI)
+            .collect::<GeoArrowResult<Vec<_>>>()?;
+        Self::from_nullable_geometries(&wkb_objects, typ)
     }
 }
 
-impl GeometryArrayBuilder for GeometryCollectionBuilder {
+impl GeoArrowArrayBuilder for GeometryCollectionBuilder {
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
     }
 
     fn push_null(&mut self) {
         self.push_null();
+    }
+
+    fn push_geometry(
+        &mut self,
+        geometry: Option<&impl GeometryTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
+        self.push_geometry(geometry)
+    }
+
+    fn finish(self) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.finish())
     }
 }

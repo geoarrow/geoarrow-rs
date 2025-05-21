@@ -6,17 +6,15 @@ pub mod array;
 pub mod builder;
 pub mod capacity;
 pub mod cast;
-mod datatypes;
 mod eq;
-pub mod error;
 #[cfg(feature = "geozero")]
 pub mod geozero;
 pub mod scalar;
 mod trait_;
 pub(crate) mod util;
 
-pub use datatypes::GeoArrowType;
-pub use trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
+pub use trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 
-#[cfg(test)]
-pub(crate) mod test;
+#[cfg(any(test, feature = "test-data"))]
+#[allow(missing_docs)]
+pub mod test;

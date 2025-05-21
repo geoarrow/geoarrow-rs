@@ -36,7 +36,22 @@ from ._constructors import multipolygons as multipolygons
 from ._constructors import points as points
 from ._constructors import polygons as polygons
 from .enums import CoordType, Dimension
-from .types import CoordTypeT, CRSInput, DimensionT
+from .types import CRSInput
+
+from ._array import GeoArrowArray as GeoArrowArray
+from ._chunked_array import ChunkedGeoArrowArray as ChunkedGeoArrowArray
+from ._data_type import GeoArrowType as GeoArrowType
+from ._data_type import point as point
+from ._data_type import linestring as linestring
+from ._data_type import polygon as polygon
+from ._data_type import multipoint as multipoint
+from ._data_type import multilinestring as multilinestring
+from ._data_type import multipolygon as multipolygon
+from ._data_type import geometrycollection as geometrycollection
+from ._data_type import geometry as geometry
+from ._data_type import box as box
+from ._data_type import wkb as wkb
+from ._data_type import wkt as wkt
 
 class Geometry:
     """
@@ -214,14 +229,14 @@ class NativeType:
             "geometry",
             "geometrycollection",
         ],
-        dimension: DimensionT,
-        coord_type: CoordTypeT,
+        dimension: Dimension,
+        coord_type: CoordType,
     ) -> None: ...
     @overload
     def __init__(
         self,
         type: Literal["box"],
-        dimension: DimensionT,
+        dimension: Dimension,
         coord_type: None = None,
     ) -> None: ...
     def __init__(
@@ -237,8 +252,8 @@ class NativeType:
             "geometrycollection",
             "box",
         ],
-        dimension: DimensionT | None = None,
-        coord_type: CoordTypeT | None = None,
+        dimension: Dimension | None = None,
+        coord_type: CoordType | None = None,
     ) -> None:
         """Create a new NativeType
 
@@ -489,18 +504,18 @@ def from_shapely(input, *, crs: CRSInput | None = None) -> NativeArray:
 def from_wkb(
     input: ArrowArrayExportable,
     *,
-    coord_type: CoordTypeT = CoordType.Interleaved,
+    coord_type: CoordType = CoordType.Interleaved,
 ) -> NativeArray: ...
 @overload
 def from_wkb(
     input: ArrowStreamExportable,
     *,
-    coord_type: CoordTypeT = CoordType.Interleaved,
+    coord_type: CoordType = CoordType.Interleaved,
 ) -> ChunkedNativeArray: ...
 def from_wkb(
     input: ArrowArrayExportable | ArrowStreamExportable,
     *,
-    coord_type: CoordTypeT = CoordType.Interleaved,
+    coord_type: CoordType = CoordType.Interleaved,
 ) -> NativeArray | ChunkedNativeArray:
     """
     Parse an Arrow BinaryArray from WKB to its GeoArrow-native counterpart.
@@ -522,18 +537,18 @@ def from_wkb(
 def from_wkt(
     input: ArrowArrayExportable,
     *,
-    coord_type: CoordTypeT = CoordType.Interleaved,
+    coord_type: CoordType = CoordType.Interleaved,
 ) -> NativeArray: ...
 @overload
 def from_wkt(
     input: ArrowStreamExportable,
     *,
-    coord_type: CoordTypeT = CoordType.Interleaved,
+    coord_type: CoordType = CoordType.Interleaved,
 ) -> ChunkedNativeArray: ...
 def from_wkt(
     input: ArrowArrayExportable | ArrowStreamExportable,
     *,
-    coord_type: CoordTypeT = CoordType.Interleaved,
+    coord_type: CoordType = CoordType.Interleaved,
 ) -> NativeArray | ChunkedNativeArray:
     """
     Parse an Arrow StringArray from WKT to its GeoArrow-native counterpart.

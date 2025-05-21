@@ -64,57 +64,67 @@ macro_rules! define_basic_type {
             pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool) -> Field {
                 Field::new(name, self.data_type(), nullable).with_extension_type(self.clone())
             }
+
+            /// Extract into components
+            pub fn into_inner(self) -> (CoordType, Dimension, Arc<Metadata>) {
+                (self.coord_type, self.dim, self.metadata)
+            }
         }
     };
 }
 
 define_basic_type!(
-    /// A type representing a Point geometry.
+    /// A GeoArrow Point type.
     ///
-    /// This implements the [`ExtensionType`] trait.
+    /// Refer to the [GeoArrow
+    /// specification](https://github.com/geoarrow/geoarrow/blob/main/format.md#point).
     PointType
 );
 define_basic_type!(
-    /// A type representing a LineString geometry.
+    /// A GeoArrow LineString type.
     ///
-    /// This implements the [`ExtensionType`] trait.
+    /// Refer to the [GeoArrow
+    /// specification](https://github.com/geoarrow/geoarrow/blob/main/format.md#linestring).
     LineStringType
 );
 define_basic_type!(
-    /// A type representing a Polygon geometry.
+    /// A GeoArrow Polygon type.
     ///
-    /// This implements the [`ExtensionType`] trait.
+    /// Refer to the [GeoArrow
+    /// specification](https://github.com/geoarrow/geoarrow/blob/main/format.md#polygon).
     PolygonType
 );
 define_basic_type!(
-    /// A type representing a MultiPoint geometry.
+    /// A GeoArrow MultiPoint type.
     ///
-    /// This implements the [`ExtensionType`] trait.
+    /// Refer to the [GeoArrow
+    /// specification](https://github.com/geoarrow/geoarrow/blob/main/format.md#multipoint).
     MultiPointType
 );
 define_basic_type!(
-    /// A type representing a MultiLineString geometry.
+    /// A GeoArrow MultiLineString type.
     ///
-    /// This implements the [`ExtensionType`] trait.
+    /// Refer to the [GeoArrow
+    /// specification](https://github.com/geoarrow/geoarrow/blob/main/format.md#multilinestring).
     MultiLineStringType
 );
 define_basic_type!(
-    /// A type representing a MultiPolygon geometry.
+    /// A GeoArrow MultiPolygon type.
     ///
-    /// This implements the [`ExtensionType`] trait.
+    /// Refer to the [GeoArrow
+    /// specification](https://github.com/geoarrow/geoarrow/blob/main/format.md#multipolygon).
     MultiPolygonType
 );
 define_basic_type!(
-    /// A type representing a GeometryCollection geometry.
+    /// A GeoArrow GeometryCollection type.
     ///
-    /// This implements the [`ExtensionType`] trait.
+    /// Refer to the [GeoArrow
+    /// specification](https://github.com/geoarrow/geoarrow/blob/main/format.md#geometrycollection).
     GeometryCollectionType
 );
 
 impl PointType {
     /// Convert to the corresponding [`DataType`].
-    ///
-    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     ///
     /// ```
     /// use arrow_schema::{DataType, Field};
@@ -133,10 +143,10 @@ impl PointType {
 impl ExtensionType for PointType {
     const NAME: &'static str = "geoarrow.point";
 
-    type Metadata = Metadata;
+    type Metadata = Arc<Metadata>;
 
     fn metadata(&self) -> &Self::Metadata {
-        &self.metadata
+        self.metadata()
     }
 
     fn serialize_metadata(&self) -> Option<String> {
@@ -144,7 +154,7 @@ impl ExtensionType for PointType {
     }
 
     fn deserialize_metadata(metadata: Option<&str>) -> Result<Self::Metadata, ArrowError> {
-        Metadata::deserialize(metadata)
+        Ok(Arc::new(Metadata::deserialize(metadata)?))
     }
 
     fn supports_data_type(&self, data_type: &DataType) -> Result<(), ArrowError> {
@@ -169,7 +179,7 @@ impl ExtensionType for PointType {
         Ok(Self {
             coord_type,
             dim,
-            metadata: Arc::new(metadata),
+            metadata,
         })
     }
 }
@@ -179,11 +189,11 @@ fn parse_point(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowErro
         // TODO: use list_size for dimension when 2, or 4
         DataType::FixedSizeList(inner_field, _list_size) => Ok((
             CoordType::Interleaved,
-            Dimension::from_interleaved_field(inner_field),
+            Dimension::from_interleaved_field(inner_field)?,
         )),
         DataType::Struct(struct_fields) => Ok((
             CoordType::Separated,
-            Dimension::from_separated_field(struct_fields),
+            Dimension::from_separated_field(struct_fields)?,
         )),
         dt => Err(ArrowError::SchemaError(format!(
             "Unexpected data type {dt}"
@@ -193,8 +203,6 @@ fn parse_point(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowErro
 
 impl LineStringType {
     /// Convert to the corresponding [`DataType`].
-    ///
-    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     ///
     /// ```
     /// use arrow_schema::{DataType, Field};
@@ -221,10 +229,10 @@ impl LineStringType {
 impl ExtensionType for LineStringType {
     const NAME: &'static str = "geoarrow.linestring";
 
-    type Metadata = Metadata;
+    type Metadata = Arc<Metadata>;
 
     fn metadata(&self) -> &Self::Metadata {
-        &self.metadata
+        self.metadata()
     }
 
     fn serialize_metadata(&self) -> Option<String> {
@@ -232,7 +240,7 @@ impl ExtensionType for LineStringType {
     }
 
     fn deserialize_metadata(metadata: Option<&str>) -> Result<Self::Metadata, ArrowError> {
-        Metadata::deserialize(metadata)
+        Ok(Arc::new(Metadata::deserialize(metadata)?))
     }
 
     fn supports_data_type(&self, data_type: &DataType) -> Result<(), ArrowError> {
@@ -257,7 +265,7 @@ impl ExtensionType for LineStringType {
         Ok(Self {
             coord_type,
             dim,
-            metadata: Arc::new(metadata),
+            metadata,
         })
     }
 }
@@ -275,8 +283,6 @@ fn parse_linestring(data_type: &DataType) -> Result<(CoordType, Dimension), Arro
 
 impl PolygonType {
     /// Convert to the corresponding [`DataType`].
-    ///
-    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     ///
     /// ```
     /// use arrow_schema::{DataType, Field};
@@ -308,10 +314,10 @@ impl PolygonType {
 impl ExtensionType for PolygonType {
     const NAME: &'static str = "geoarrow.polygon";
 
-    type Metadata = Metadata;
+    type Metadata = Arc<Metadata>;
 
     fn metadata(&self) -> &Self::Metadata {
-        &self.metadata
+        self.metadata()
     }
 
     fn serialize_metadata(&self) -> Option<String> {
@@ -319,7 +325,7 @@ impl ExtensionType for PolygonType {
     }
 
     fn deserialize_metadata(metadata: Option<&str>) -> Result<Self::Metadata, ArrowError> {
-        Metadata::deserialize(metadata)
+        Ok(Arc::new(Metadata::deserialize(metadata)?))
     }
 
     fn supports_data_type(&self, data_type: &DataType) -> Result<(), ArrowError> {
@@ -344,7 +350,7 @@ impl ExtensionType for PolygonType {
         Ok(Self {
             coord_type,
             dim,
-            metadata: Arc::new(metadata),
+            metadata,
         })
     }
 }
@@ -371,8 +377,6 @@ fn parse_polygon(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowEr
 
 impl MultiPointType {
     /// Convert to the corresponding [`DataType`].
-    ///
-    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     ///
     /// ```
     /// use arrow_schema::{DataType, Field};
@@ -402,10 +406,10 @@ impl MultiPointType {
 impl ExtensionType for MultiPointType {
     const NAME: &'static str = "geoarrow.multipoint";
 
-    type Metadata = Metadata;
+    type Metadata = Arc<Metadata>;
 
     fn metadata(&self) -> &Self::Metadata {
-        &self.metadata
+        self.metadata()
     }
 
     fn serialize_metadata(&self) -> Option<String> {
@@ -413,7 +417,7 @@ impl ExtensionType for MultiPointType {
     }
 
     fn deserialize_metadata(metadata: Option<&str>) -> Result<Self::Metadata, ArrowError> {
-        Metadata::deserialize(metadata)
+        Ok(Arc::new(Metadata::deserialize(metadata)?))
     }
 
     fn supports_data_type(&self, data_type: &DataType) -> Result<(), ArrowError> {
@@ -438,7 +442,7 @@ impl ExtensionType for MultiPointType {
         Ok(Self {
             coord_type,
             dim,
-            metadata: Arc::new(metadata),
+            metadata,
         })
     }
 }
@@ -455,8 +459,6 @@ fn parse_multipoint(data_type: &DataType) -> Result<(CoordType, Dimension), Arro
 
 impl MultiLineStringType {
     /// Convert to the corresponding [`DataType`].
-    ///
-    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     ///
     /// ```
     /// use arrow_schema::{DataType, Field};
@@ -489,10 +491,10 @@ impl MultiLineStringType {
 impl ExtensionType for MultiLineStringType {
     const NAME: &'static str = "geoarrow.multilinestring";
 
-    type Metadata = Metadata;
+    type Metadata = Arc<Metadata>;
 
     fn metadata(&self) -> &Self::Metadata {
-        &self.metadata
+        self.metadata()
     }
 
     fn serialize_metadata(&self) -> Option<String> {
@@ -500,7 +502,7 @@ impl ExtensionType for MultiLineStringType {
     }
 
     fn deserialize_metadata(metadata: Option<&str>) -> Result<Self::Metadata, ArrowError> {
-        Metadata::deserialize(metadata)
+        Ok(Arc::new(Metadata::deserialize(metadata)?))
     }
 
     fn supports_data_type(&self, data_type: &DataType) -> Result<(), ArrowError> {
@@ -525,7 +527,7 @@ impl ExtensionType for MultiLineStringType {
         Ok(Self {
             coord_type,
             dim,
-            metadata: Arc::new(metadata),
+            metadata,
         })
     }
 }
@@ -552,8 +554,6 @@ fn parse_multilinestring(data_type: &DataType) -> Result<(CoordType, Dimension),
 
 impl MultiPolygonType {
     /// Convert to the corresponding [`DataType`].
-    ///
-    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     ///
     /// ```
     /// use arrow_schema::{DataType, Field};
@@ -587,10 +587,10 @@ impl MultiPolygonType {
 impl ExtensionType for MultiPolygonType {
     const NAME: &'static str = "geoarrow.multipolygon";
 
-    type Metadata = Metadata;
+    type Metadata = Arc<Metadata>;
 
     fn metadata(&self) -> &Self::Metadata {
-        &self.metadata
+        self.metadata()
     }
 
     fn serialize_metadata(&self) -> Option<String> {
@@ -598,7 +598,7 @@ impl ExtensionType for MultiPolygonType {
     }
 
     fn deserialize_metadata(metadata: Option<&str>) -> Result<Self::Metadata, ArrowError> {
-        Metadata::deserialize(metadata)
+        Ok(Arc::new(Metadata::deserialize(metadata)?))
     }
 
     fn supports_data_type(&self, data_type: &DataType) -> Result<(), ArrowError> {
@@ -623,7 +623,7 @@ impl ExtensionType for MultiPolygonType {
         Ok(Self {
             coord_type,
             dim,
-            metadata: Arc::new(metadata),
+            metadata,
         })
     }
 }
@@ -660,8 +660,6 @@ fn parse_multipolygon(data_type: &DataType) -> Result<(CoordType, Dimension), Ar
 
 impl GeometryCollectionType {
     /// Convert to the corresponding [`DataType`].
-    ///
-    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     ///
     /// ```
     /// use std::sync::Arc;
@@ -800,10 +798,10 @@ fn mixed_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
 impl ExtensionType for GeometryCollectionType {
     const NAME: &'static str = "geoarrow.geometrycollection";
 
-    type Metadata = Metadata;
+    type Metadata = Arc<Metadata>;
 
     fn metadata(&self) -> &Self::Metadata {
-        &self.metadata
+        self.metadata()
     }
 
     fn serialize_metadata(&self) -> Option<String> {
@@ -811,7 +809,7 @@ impl ExtensionType for GeometryCollectionType {
     }
 
     fn deserialize_metadata(metadata: Option<&str>) -> Result<Self::Metadata, ArrowError> {
-        Metadata::deserialize(metadata)
+        Ok(Arc::new(Metadata::deserialize(metadata)?))
     }
 
     fn supports_data_type(&self, data_type: &DataType) -> Result<(), ArrowError> {
@@ -836,7 +834,7 @@ impl ExtensionType for GeometryCollectionType {
         Ok(Self {
             coord_type,
             dim,
-            metadata: Arc::new(metadata),
+            metadata,
         })
     }
 }
@@ -926,9 +924,10 @@ fn parse_geometry_collection(data_type: &DataType) -> Result<(CoordType, Dimensi
     }
 }
 
-/// A type representing a geoarrow array of unknown geometry type and dimension.
+/// A GeoArrow Geometry type.
 ///
-/// This implements the [`ExtensionType`] trait.
+/// Refer to the [GeoArrow
+/// specification](https://github.com/geoarrow/geoarrow/blob/main/format.md#geometry).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct GeometryType {
     coord_type: CoordType,
@@ -965,8 +964,6 @@ impl GeometryType {
     }
 
     /// Convert to the corresponding [`DataType`].
-    ///
-    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     pub fn data_type(&self) -> DataType {
         let mut fields = vec![];
         let type_ids = vec![
@@ -1048,10 +1045,10 @@ impl GeometryType {
 impl ExtensionType for GeometryType {
     const NAME: &'static str = "geoarrow.geometry";
 
-    type Metadata = Metadata;
+    type Metadata = Arc<Metadata>;
 
     fn metadata(&self) -> &Self::Metadata {
-        &self.metadata
+        self.metadata()
     }
 
     fn serialize_metadata(&self) -> Option<String> {
@@ -1059,7 +1056,7 @@ impl ExtensionType for GeometryType {
     }
 
     fn deserialize_metadata(metadata: Option<&str>) -> Result<Self::Metadata, ArrowError> {
-        Metadata::deserialize(metadata)
+        Ok(Arc::new(Metadata::deserialize(metadata)?))
     }
 
     fn supports_data_type(&self, data_type: &DataType) -> Result<(), ArrowError> {
@@ -1077,7 +1074,7 @@ impl ExtensionType for GeometryType {
         let coord_type = parse_geometry(data_type)?;
         Ok(Self {
             coord_type,
-            metadata: Arc::new(metadata),
+            metadata,
         })
     }
 }
@@ -1147,9 +1144,10 @@ fn parse_geometry(data_type: &DataType) -> Result<CoordType, ArrowError> {
     }
 }
 
-/// A type representing a geoarrow "box" or "rect" array.
+/// A GeoArrow "Box" or "Rect" type.
 ///
-/// This implements the [`ExtensionType`] trait.
+/// Refer to the [GeoArrow
+/// specification](https://github.com/geoarrow/geoarrow/blob/main/format.md#box).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct BoxType {
     dim: Dimension,
@@ -1183,8 +1181,6 @@ impl BoxType {
     }
 
     /// Convert to the corresponding [`DataType`].
-    ///
-    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
     ///
     /// ```
     /// use arrow_schema::{DataType, Field};
@@ -1262,10 +1258,10 @@ impl BoxType {
 impl ExtensionType for BoxType {
     const NAME: &'static str = "geoarrow.box";
 
-    type Metadata = Metadata;
+    type Metadata = Arc<Metadata>;
 
     fn metadata(&self) -> &Self::Metadata {
-        &self.metadata
+        self.metadata()
     }
 
     fn serialize_metadata(&self) -> Option<String> {
@@ -1273,7 +1269,7 @@ impl ExtensionType for BoxType {
     }
 
     fn deserialize_metadata(metadata: Option<&str>) -> Result<Self::Metadata, ArrowError> {
-        Metadata::deserialize(metadata)
+        Ok(Arc::new(Metadata::deserialize(metadata)?))
     }
 
     fn supports_data_type(&self, data_type: &DataType) -> Result<(), ArrowError> {
@@ -1289,10 +1285,7 @@ impl ExtensionType for BoxType {
 
     fn try_new(data_type: &DataType, metadata: Self::Metadata) -> Result<Self, ArrowError> {
         let dim = parse_box(data_type)?;
-        Ok(Self {
-            dim,
-            metadata: Arc::new(metadata),
-        })
+        Ok(Self { dim, metadata })
     }
 }
 
@@ -1327,10 +1320,11 @@ fn parse_box(data_type: &DataType) -> Result<Dimension, ArrowError> {
     }
 }
 
-/// A type representing a geoarrow WKB array.
+/// A GeoArrow WKB type.
 ///
-/// This implements the [`ExtensionType`] trait.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+/// This extension type support multiple physical data types, including [`DataType::Binary`],
+/// [`DataType::LargeBinary`], and [`DataType::BinaryView`].
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct WkbType {
     metadata: Arc<Metadata>,
 }
@@ -1350,40 +1344,15 @@ impl WkbType {
     pub fn metadata(&self) -> &Arc<Metadata> {
         &self.metadata
     }
-
-    /// Convert to the corresponding [`DataType`].
-    ///
-    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
-    ///
-    /// ```
-    /// use arrow_schema::DataType;
-    /// use geoarrow_schema::WkbType;
-    ///
-    /// let geom_type = WkbType::new(Default::default());
-    ///
-    /// assert_eq!(geom_type.data_type(false), DataType::Binary);
-    /// ```
-    pub fn data_type(&self, large: bool) -> DataType {
-        if large {
-            DataType::LargeBinary
-        } else {
-            DataType::Binary
-        }
-    }
-
-    /// Convert this type to a [`Field`], retaining extension metadata.
-    pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool, large: bool) -> Field {
-        Field::new(name, self.data_type(large), nullable).with_extension_type(self.clone())
-    }
 }
 
 impl ExtensionType for WkbType {
     const NAME: &'static str = "geoarrow.wkb";
 
-    type Metadata = Metadata;
+    type Metadata = Arc<Metadata>;
 
     fn metadata(&self) -> &Self::Metadata {
-        &self.metadata
+        self.metadata()
     }
 
     fn serialize_metadata(&self) -> Option<String> {
@@ -1391,12 +1360,12 @@ impl ExtensionType for WkbType {
     }
 
     fn deserialize_metadata(metadata: Option<&str>) -> Result<Self::Metadata, ArrowError> {
-        Metadata::deserialize(metadata)
+        Ok(Arc::new(Metadata::deserialize(metadata)?))
     }
 
     fn supports_data_type(&self, data_type: &DataType) -> Result<(), ArrowError> {
         match data_type {
-            DataType::Binary | DataType::LargeBinary => Ok(()),
+            DataType::Binary | DataType::LargeBinary | DataType::BinaryView => Ok(()),
             dt => Err(ArrowError::SchemaError(format!(
                 "Unexpected data type {dt}"
             ))),
@@ -1404,18 +1373,17 @@ impl ExtensionType for WkbType {
     }
 
     fn try_new(data_type: &DataType, metadata: Self::Metadata) -> Result<Self, ArrowError> {
-        let wkb = Self {
-            metadata: Arc::new(metadata),
-        };
+        let wkb = Self { metadata };
         wkb.supports_data_type(data_type)?;
         Ok(wkb)
     }
 }
 
-/// A type representing a geoarrow WKT array.
+/// A GeoArrow WKT type.
 ///
-/// This implements the [`ExtensionType`] trait.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+/// This extension type support multiple physical data types, including [`DataType::Utf8`],
+/// [`DataType::LargeUtf8`], and [`DataType::Utf8View`].
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct WktType {
     metadata: Arc<Metadata>,
 }
@@ -1435,40 +1403,15 @@ impl WktType {
     pub fn metadata(&self) -> &Arc<Metadata> {
         &self.metadata
     }
-
-    /// Convert to the corresponding [`DataType`].
-    ///
-    /// Each type uniquely maps to a [`DataType`], so this is a 1:1 conversion.
-    ///
-    /// ```
-    /// use arrow_schema::DataType;
-    /// use geoarrow_schema::WktType;
-    ///
-    /// let geom_type = WktType::new(Default::default());
-    ///
-    /// assert_eq!(geom_type.data_type(false), DataType::Utf8);
-    /// ```
-    pub fn data_type(&self, large: bool) -> DataType {
-        if large {
-            DataType::LargeUtf8
-        } else {
-            DataType::Utf8
-        }
-    }
-
-    /// Convert this type to a [`Field`], retaining extension metadata.
-    pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool, large: bool) -> Field {
-        Field::new(name, self.data_type(large), nullable).with_extension_type(self.clone())
-    }
 }
 
 impl ExtensionType for WktType {
     const NAME: &'static str = "geoarrow.wkt";
 
-    type Metadata = Metadata;
+    type Metadata = Arc<Metadata>;
 
     fn metadata(&self) -> &Self::Metadata {
-        &self.metadata
+        self.metadata()
     }
 
     fn serialize_metadata(&self) -> Option<String> {
@@ -1476,12 +1419,12 @@ impl ExtensionType for WktType {
     }
 
     fn deserialize_metadata(metadata: Option<&str>) -> Result<Self::Metadata, ArrowError> {
-        Metadata::deserialize(metadata)
+        Ok(Arc::new(Metadata::deserialize(metadata)?))
     }
 
     fn supports_data_type(&self, data_type: &DataType) -> Result<(), ArrowError> {
         match data_type {
-            DataType::Utf8 | DataType::LargeUtf8 => Ok(()),
+            DataType::Utf8 | DataType::LargeUtf8 | DataType::Utf8View => Ok(()),
             dt => Err(ArrowError::SchemaError(format!(
                 "Unexpected data type {dt}"
             ))),
@@ -1489,9 +1432,7 @@ impl ExtensionType for WktType {
     }
 
     fn try_new(data_type: &DataType, metadata: Self::Metadata) -> Result<Self, ArrowError> {
-        let wkb = Self {
-            metadata: Arc::new(metadata),
-        };
+        let wkb = Self { metadata };
         wkb.supports_data_type(data_type)?;
         Ok(wkb)
     }
@@ -1554,18 +1495,17 @@ fn coord_type_to_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
 mod test {
     use std::sync::Arc;
 
-    use crate::crs::Crs;
-    use crate::edges::Edges;
+    use arrow_schema::{DataType, Field};
 
     use super::*;
-    use arrow_schema::DataType;
-    use arrow_schema::Field;
+    use crate::crs::Crs;
+    use crate::edges::Edges;
 
     #[test]
     fn test_point_interleaved_xy() {
         let data_type =
             DataType::FixedSizeList(Arc::new(Field::new("xy", DataType::Float64, false)), 2);
-        let metadata = Metadata::default();
+        let metadata = Arc::new(Metadata::default());
         let type_ = PointType::try_new(&data_type, metadata).unwrap();
 
         assert_eq!(type_.coord_type, CoordType::Interleaved);
@@ -1583,7 +1523,7 @@ mod test {
             ]
             .into(),
         );
-        let metadata = Metadata::default();
+        let metadata = Arc::new(Metadata::default());
         let type_ = PointType::try_new(&data_type, metadata).unwrap();
 
         assert_eq!(type_.coord_type, CoordType::Separated);
@@ -1596,7 +1536,7 @@ mod test {
         let data_type =
             DataType::FixedSizeList(Arc::new(Field::new("xy", DataType::Float64, false)), 2);
         let crs = Crs::from_authority_code("EPSG:4326".to_string());
-        let metadata = Metadata::new(crs, Some(Edges::Spherical));
+        let metadata = Arc::new(Metadata::new(crs, Some(Edges::Spherical)));
         let type_ = PointType::try_new(&data_type, metadata).unwrap();
 
         let expected = r#"{"crs":"EPSG:4326","crs_type":"authority_code","edges":"spherical"}"#;

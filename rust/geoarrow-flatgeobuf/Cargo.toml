@@ -1,0 +1,22 @@
+[package]
+name = "geoarrow-flatgeobuf"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+description = "Reader and writer for FlatGeobuf files to GeoArrow memory."
+categories = { workspace = true }
+rust-version = { workspace = true }
+
+
+[dependencies]
+arrow-schema = { workspace = true }
+flatgeobuf = { workspace = true }
+geoarrow-array = { workspace = true, features = ["geozero"] }
+geoarrow-schema = { workspace = true }
+geozero = { workspace = true }
+
+[dev-dependencies]
+arrow-array = { workspace = true }
+wkt = { workspace = true }

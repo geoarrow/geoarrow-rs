@@ -2,7 +2,7 @@ use geozero::{GeomProcessor, GeozeroGeometry};
 
 use crate::array::PolygonArray;
 use crate::geozero::export::scalar::process_polygon;
-use crate::{ArrayAccessor, GeoArrowArray};
+use crate::{GeoArrowArray, GeoArrowArrayAccessor};
 
 impl GeozeroGeometry for PolygonArray {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>

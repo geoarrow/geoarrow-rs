@@ -1,0 +1,13 @@
+[package]
+name = "geoarrow-test"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+description = "Test data for GeoArrow data "
+categories = ["science::geo"]
+rust-version = { workspace = true }
+
+[dependencies]
+wkt = { workspace = true }

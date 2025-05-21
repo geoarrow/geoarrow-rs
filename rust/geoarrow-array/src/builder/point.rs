@@ -1,15 +1,18 @@
+use std::sync::Arc;
+
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, PointType};
 
-// use super::array::check;
-use crate::array::{PointArray, WkbArray};
+use crate::GeoArrowArray;
+use crate::array::{GenericWkbArray, PointArray};
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder,
 };
-use crate::error::{GeoArrowError, Result};
-use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
+use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
+use crate::util::GeometryTypeName;
 
 /// The GeoArrow equivalent to `Vec<Option<Point>>`: a mutable collection of Points.
 ///
@@ -72,13 +75,13 @@ impl PointBuilder {
     pub fn finish(mut self) -> PointArray {
         let validity = self.validity.finish();
         PointArray::new(
-            self.coords.into(),
+            self.coords.finish(),
             validity,
             self.data_type.metadata().clone(),
         )
     }
 
-    /// Add a new coord to the end of this array, where the coord is a non-empty point
+    /// Add a new coord to the end of this array, interpreting the coord as a non-empty point.
     ///
     /// ## Panics
     ///
@@ -104,7 +107,10 @@ impl PointBuilder {
     ///
     /// - If the added coordinate does not have the same dimension as the point array.
     #[inline]
-    pub fn try_push_coord(&mut self, value: Option<&impl CoordTrait<T = f64>>) -> Result<()> {
+    pub fn try_push_coord(
+        &mut self,
+        value: Option<&impl CoordTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
         if let Some(value) = value {
             self.coords.try_push_coord(value)?;
             self.validity.append(true);
@@ -120,7 +126,10 @@ impl PointBuilder {
     ///
     /// - If the added point does not have the same dimension as the point array.
     #[inline]
-    pub fn try_push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) -> Result<()> {
+    pub fn try_push_point(
+        &mut self,
+        value: Option<&impl PointTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
         if let Some(value) = value {
             self.coords.try_push_point(value)?;
             self.validity.append(true);
@@ -133,14 +142,14 @@ impl PointBuilder {
     /// Add a valid but empty point to the end of this array.
     #[inline]
     pub fn push_empty(&mut self) {
-        self.coords.push_nan_coord();
+        self.coords.push_constant(f64::NAN);
         self.validity.append_non_null();
     }
 
     /// Add a new null value to the end of this array.
     #[inline]
     pub fn push_null(&mut self) {
-        self.coords.push_nan_coord();
+        self.coords.push_constant(f64::NAN);
         self.validity.append_null();
     }
 
@@ -148,18 +157,32 @@ impl PointBuilder {
     ///
     /// This will error if the geometry type is not Point or a MultiPoint with length 1.
     #[inline]
-    pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+    pub fn push_geometry(
+        &mut self,
+        value: Option<&impl GeometryTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
         if let Some(value) = value {
             match value.as_type() {
                 GeometryType::Point(p) => self.push_point(Some(p)),
                 GeometryType::MultiPoint(mp) => {
-                    if mp.num_points() == 1 {
+                    let num_points = mp.num_points();
+                    if num_points == 0 {
+                        self.push_empty();
+                    } else if num_points == 1 {
                         self.push_point(Some(&mp.point(0).unwrap()))
                     } else {
-                        return Err(GeoArrowError::General("Incorrect type".to_string()));
+                        return Err(GeoArrowError::IncorrectGeometryType(format!(
+                            "Expected MultiPoint with only one point in PointBuilder, got {} points",
+                            num_points
+                        )));
                     }
                 }
-                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+                gt => {
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
+                        "Expected point, got {}",
+                        gt.name()
+                    )));
+                }
             }
         } else {
             self.push_null()
@@ -181,7 +204,7 @@ impl PointBuilder {
     pub fn extend_from_geometry_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         geoms.into_iter().try_for_each(|g| self.push_geometry(g))?;
         Ok(())
     }
@@ -214,7 +237,7 @@ impl PointBuilder {
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         typ: PointType,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let capacity = geoms.len();
         let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_geometry_iter(geoms.iter().map(|x| x.as_ref()))?;
@@ -222,24 +245,35 @@ impl PointBuilder {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, PointType)> for PointBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, PointType)> for PointBuilder {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (WkbArray<O>, PointType)) -> Result<Self> {
+    fn try_from((value, typ): (GenericWkbArray<O>, PointType)) -> GeoArrowResult<Self> {
         let wkb_objects = value
             .iter()
             .map(|x| x.transpose())
-            .collect::<Result<Vec<_>>>()?;
+            .collect::<GeoArrowResult<Vec<_>>>()?;
         Self::from_nullable_geometries(&wkb_objects, typ)
     }
 }
 
-impl GeometryArrayBuilder for PointBuilder {
+impl GeoArrowArrayBuilder for PointBuilder {
     fn len(&self) -> usize {
         self.coords.len()
     }
 
     fn push_null(&mut self) {
         self.push_null();
+    }
+
+    fn push_geometry(
+        &mut self,
+        geometry: Option<&impl GeometryTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
+        self.push_geometry(geometry)
+    }
+
+    fn finish(self) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.finish())
     }
 }

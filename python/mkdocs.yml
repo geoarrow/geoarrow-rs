@@ -24,12 +24,14 @@ nav:
   - API Reference:
       - geoarrow.rust.core:
           - api/core/index.md
-          - api/core/geometry/array.md
-          - api/core/geometry/chunked.md
-          - api/core/geometry/scalar.md
-          - api/core/geometry/type.md
-          - api/core/constructors.md
-          - api/core/functions.md
+          - api/core/array.md
+          - api/core/chunked_array.md
+          - api/core/geometry_type.md
+          # - api/core/geometry/chunked.md
+          # - api/core/geometry/scalar.md
+          # - api/core/geometry/type.md
+          # - api/core/constructors.md
+          # - api/core/functions.md
           - api/core/enums.md
           - api/core/types.md
       - geoarrow.rust.compute:

@@ -156,10 +156,9 @@ mod test {
     use geo_types::{Geometry, GeometryCollection};
     use geoarrow_schema::{CoordType, Dimension};
 
-    use crate::ArrayAccessor;
-    use crate::test::{linestring, point};
-
     use super::*;
+    use crate::GeoArrowArrayAccessor;
+    use crate::test::{linestring, point};
 
     #[test]
     fn from_geozero() {

@@ -15,7 +15,7 @@ Use [builders][builder] to construct GeoArrow arrays. These builders offer a pus
 # use geoarrow_array::array::PointArray;
 # use geoarrow_array::builder::PointBuilder;
 # use geoarrow_array::scalar::Point;
-# use geoarrow_array::ArrayAccessor;
+# use geoarrow_array::GeoArrowArrayAccessor;
 # use geoarrow_schema::{CoordType, Dimension, PointType};
 #
 let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
@@ -50,7 +50,8 @@ If you have an [`Array`] and [`Field`] but don't know the geometry type of the a
 # use arrow_schema::Field;
 # use geoarrow_array::array::{from_arrow_array, PointArray};
 # use geoarrow_array::cast::AsGeoArrowArray;
-# use geoarrow_array::{GeoArrowArray, GeoArrowType};
+# use geoarrow_array::GeoArrowArray;
+# use geoarrow_schema::GeoArrowType;
 #
 fn use_from_arrow_array(array: &dyn Array, field: &Field) {
     let geoarrow_array: Arc<dyn GeoArrowArray> = from_arrow_array(array, field).unwrap();
@@ -79,9 +80,9 @@ fn convert_to_point_array(array: &dyn Array, field: &Field) {
 
 You can use the [`to_array_ref`][GeoArrowArray::to_array_ref] or [`into_array_ref`][GeoArrowArray::into_array_ref] methods on [`GeoArrowArray`] to convert to an [`ArrayRef`].
 
-Alternatively, if you have a concrete GeoArrow array type, you can use [`IntoArray`] to convert to a concrete arrow array type.
+Alternatively, if you have a concrete GeoArrow array type, you can use [`IntoArray`][crate::IntoArrow] to convert to a concrete arrow array type.
 
-The easiest way today to access an arrow [`Field`] is to use [`IntoArray::ext_type`] and then call `to_field` on the result. We like to make this process simpler in the future.
+The easiest way today to access an arrow [`Field`] is to use [`IntoArray::extension_type`][crate::IntoArrow::extension_type] and then call `to_field` on the result. We like to make this process simpler in the future.
 
 ## Downcasting a GeoArrow array
 
@@ -93,7 +94,7 @@ This requires downcasting to the concrete type of the array. Use the [`cast::AsG
 
 ```rust
 use geoarrow_array::cast::AsGeoArrowArray;
-use geoarrow_array::{ArrayAccessor, GeoArrowArray};
+use geoarrow_array::{GeoArrowArrayAccessor, GeoArrowArray};
 
 fn iter_line_string_array(array: &dyn GeoArrowArray) {
     for row in array.as_line_string().iter() {

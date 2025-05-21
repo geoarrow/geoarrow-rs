@@ -1,0 +1,22 @@
+[package]
+name = "geoarrow-geos"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+description = "Rust implementation of GeoArrow"
+categories = { workspace = true }
+rust-version = { workspace = true }
+
+
+[dependencies]
+arrow-array = { workspace = true }
+arrow-schema = { workspace = true }
+geo-traits = { workspace = true }
+geoarrow-array = { workspace = true, features = ["test-data"] }
+geoarrow-schema = { workspace = true }
+geos = { workspace = true }
+
+[dev-dependencies]
+geos = { workspace = true, features = ["static"] }

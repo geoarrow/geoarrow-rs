@@ -1,15 +1,14 @@
-use crate::data::RectData;
 use crate::error::{GeoArrowWasmError, WasmResult};
 use crate::io::parquet::options::JsParquetReaderOptions;
 use arrow_wasm::{RecordBatch, Table};
 use futures::stream::StreamExt;
 use geo_traits::CoordTrait;
-use geoarrow::io::parquet::metadata::GeoParquetBboxCovering;
-use geoarrow::io::parquet::{
+use geoarrow_schema::CoordType;
+use geoparquet::metadata::GeoParquetBboxCovering;
+use geoparquet::{
     GeoParquetDatasetMetadata, GeoParquetReaderMetadata, GeoParquetReaderOptions,
     GeoParquetRecordBatchStream, GeoParquetRecordBatchStreamBuilder,
 };
-use geoarrow_schema::CoordType;
 use object_store::ObjectStore;
 use object_store_wasm::http::HttpStore;
 use parquet::arrow::arrow_reader::ArrowReaderMetadata;
@@ -81,16 +80,16 @@ impl ParquetFile {
         }
     }
 
-    /// Get the bounds of all row groups.
-    ///
-    /// As of GeoParquet 1.1 you won't need to pass in these column names, as they'll be specified
-    /// in the metadata.
-    #[wasm_bindgen(js_name = rowGroupsBounds)]
-    pub fn row_groups_bounds(&self, bbox_paths: JsValue) -> WasmResult<RectData> {
-        let paths: Option<GeoParquetBboxCovering> = serde_wasm_bindgen::from_value(bbox_paths)?;
-        let bounds = self.geoparquet_meta.row_groups_bounds(paths.as_ref())?;
-        Ok(bounds.into())
-    }
+    // /// Get the bounds of all row groups.
+    // ///
+    // /// As of GeoParquet 1.1 you won't need to pass in these column names, as they'll be specified
+    // /// in the metadata.
+    // #[wasm_bindgen(js_name = rowGroupsBounds)]
+    // pub fn row_groups_bounds(&self, bbox_paths: JsValue) -> WasmResult<RectData> {
+    //     let paths: Option<GeoParquetBboxCovering> = serde_wasm_bindgen::from_value(bbox_paths)?;
+    //     let bounds = self.geoparquet_meta.row_groups_bounds(paths.as_ref())?;
+    //     Ok(bounds.into())
+    // }
 
     /// Access the bounding box of the given column for the entire file
     ///
@@ -115,8 +114,7 @@ impl ParquetFile {
             options.unwrap_or_default().into(),
         )
         .build()?;
-        let table = stream.read_table().await?;
-        let (batches, schema) = table.into_inner();
+        let (batches, schema) = stream.read_table().await?;
         Ok(Table::new(schema, batches))
     }
     #[wasm_bindgen]
@@ -180,8 +178,10 @@ impl ParquetDataset {
     fn to_readers(
         &self,
         geo_options: GeoParquetReaderOptions,
-    ) -> Result<Vec<GeoParquetRecordBatchStream<ParquetObjectReader>>, geoarrow::error::GeoArrowError>
-    {
+    ) -> Result<
+        Vec<GeoParquetRecordBatchStream<ParquetObjectReader>>,
+        geoarrow_array::error::GeoArrowError,
+    > {
         self.meta
             .to_stream_builders(
                 |path| ParquetObjectReader::new(self.store.clone(), path.into()),
@@ -230,12 +230,11 @@ impl ParquetDataset {
         let tables = futures::future::join_all(request_futures)
             .await
             .into_iter()
-            .collect::<Result<Vec<_>, geoarrow::error::GeoArrowError>>()?;
+            .collect::<Result<Vec<_>, geoarrow_array::error::GeoArrowError>>()?;
 
         let mut all_batches = vec![];
-        tables.into_iter().for_each(|table| {
-            let (table_batches, _schema) = table.into_inner();
-            all_batches.extend(table_batches);
+        tables.into_iter().for_each(|(batches, _schema)| {
+            all_batches.extend(batches);
         });
         let table = geoarrow::table::Table::try_new(all_batches, output_schema)?;
         let (batches, schema) = table.into_inner();

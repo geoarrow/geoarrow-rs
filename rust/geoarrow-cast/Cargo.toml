@@ -1,0 +1,22 @@
+[package]
+name = "geoarrow-cast"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+description = "Functions for converting from one GeoArrow geometry type to another."
+categories = { workspace = true }
+rust-version = { workspace = true }
+
+
+[dependencies]
+arrow-schema = { workspace = true }
+geo-traits = { workspace = true }
+geoarrow-array = { workspace = true }
+geoarrow-schema = { workspace = true }
+wkt = { workspace = true }
+
+[dev-dependencies]
+geoarrow-array = { workspace = true, features = ["test-data"] }
+geoarrow-test = { workspace = true }

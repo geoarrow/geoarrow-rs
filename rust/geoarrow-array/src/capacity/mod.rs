@@ -4,12 +4,6 @@
 //! first pass over these geometries to count exactly how big each underlying buffer of the Arrow
 //! array must be, allocate _once_ for exactly what you need, and then fill those buffers in a
 //! second pass. Capacity counters help with this process.
-//!
-//! Note that you may not need to use capacity counters directly. All builders have APIs that
-//! internally use capacity counters. See e.g.
-//! [`PolygonBuilder::with_capacity_from_iter`][crate::builder::PolygonBuilder::with_capacity_from_iter],
-//! which internally uses a [`PolygonCapacity`] to count the capacities to instantiate underlying
-//! buffers with.
 
 mod geometry;
 mod geometrycollection;
@@ -29,6 +23,5 @@ pub(crate) use mixed::MixedCapacity;
 pub use multilinestring::MultiLineStringCapacity;
 pub use multipoint::MultiPointCapacity;
 pub use multipolygon::MultiPolygonCapacity;
-pub use point::PointCapacity;
 pub use polygon::PolygonCapacity;
-pub use wkb::WKBCapacity;
+pub use wkb::WkbCapacity;

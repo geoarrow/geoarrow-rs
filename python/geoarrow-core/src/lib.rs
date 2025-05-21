@@ -1,11 +1,14 @@
+#![cfg_attr(not(test), deny(unused_crate_dependencies))]
+
+mod constructors;
+// pub mod ffi;
+// pub mod interop;
+// pub mod table;
+
 use pyo3::exceptions::PyRuntimeWarning;
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::PyTuple;
-mod constructors;
-pub mod ffi;
-pub mod interop;
-pub mod table;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -35,13 +38,24 @@ fn _rust(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     check_debug_build(py)?;
     m.add_wrapped(wrap_pyfunction!(___version))?;
 
-    m.add_class::<pyo3_geoarrow::PyGeometry>()?;
-    m.add_class::<pyo3_geoarrow::PyNativeArray>()?;
-    m.add_class::<pyo3_geoarrow::PyChunkedNativeArray>()?;
-    m.add_class::<pyo3_geoarrow::PyNativeType>()?;
+    m.add_class::<pyo3_geoarrow::PyGeoArrowArray>()?;
+    m.add_class::<pyo3_geoarrow::PyChunkedGeoArrowArray>()?;
+    m.add_class::<pyo3_geoarrow::PyGeoArrowType>()?;
 
-    m.add_class::<pyo3_geoarrow::PySerializedArray>()?;
-    m.add_class::<pyo3_geoarrow::PySerializedType>()?;
+    // Type constructors
+
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::point, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::geometry, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::geometrycollection, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::linestring, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::multilinestring, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::multipoint, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::multipolygon, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::point, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::polygon, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::wkb, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::wkt, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::r#box, m)?)?;
 
     // Constructors
 
@@ -54,35 +68,35 @@ fn _rust(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
 
     // Top-level table functions
 
-    m.add_function(wrap_pyfunction!(crate::table::geometry_col, m)?)?;
+    // m.add_function(wrap_pyfunction!(crate::table::geometry_col, m)?)?;
 
     // Interop
 
-    m.add_function(wrap_pyfunction!(
-        crate::interop::pyogrio::from_pyogrio::read_pyogrio,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(
-        crate::interop::geopandas::from_geopandas::from_geopandas,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(
-        crate::interop::geopandas::to_geopandas::to_geopandas,
-        m
-    )?)?;
+    // m.add_function(wrap_pyfunction!(
+    //     crate::interop::pyogrio::from_pyogrio::read_pyogrio,
+    //     m
+    // )?)?;
+    // m.add_function(wrap_pyfunction!(
+    //     crate::interop::geopandas::from_geopandas::from_geopandas,
+    //     m
+    // )?)?;
+    // m.add_function(wrap_pyfunction!(
+    //     crate::interop::geopandas::to_geopandas::to_geopandas,
+    //     m
+    // )?)?;
 
-    m.add_function(wrap_pyfunction!(
-        crate::interop::shapely::from_shapely::from_shapely,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(
-        crate::interop::shapely::to_shapely::to_shapely,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(crate::interop::wkb::from_wkb, m)?)?;
-    m.add_function(wrap_pyfunction!(crate::interop::wkb::to_wkb, m)?)?;
-    m.add_function(wrap_pyfunction!(crate::interop::wkt::from_wkt, m)?)?;
-    m.add_function(wrap_pyfunction!(crate::interop::wkt::to_wkt, m)?)?;
+    // m.add_function(wrap_pyfunction!(
+    //     crate::interop::shapely::from_shapely::from_shapely,
+    //     m
+    // )?)?;
+    // m.add_function(wrap_pyfunction!(
+    //     crate::interop::shapely::to_shapely::to_shapely,
+    //     m
+    // )?)?;
+    // m.add_function(wrap_pyfunction!(crate::interop::wkb::from_wkb, m)?)?;
+    // m.add_function(wrap_pyfunction!(crate::interop::wkb::to_wkb, m)?)?;
+    // m.add_function(wrap_pyfunction!(crate::interop::wkt::from_wkt, m)?)?;
+    // m.add_function(wrap_pyfunction!(crate::interop::wkt::to_wkt, m)?)?;
 
     // Exceptions
     // create_exception!(m, GeoArrowException, pyo3::exceptions::PyException);

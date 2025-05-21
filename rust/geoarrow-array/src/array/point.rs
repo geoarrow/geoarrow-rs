@@ -4,14 +4,13 @@ use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, FixedSizeListArray, StructArray};
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
-use geoarrow_schema::{Metadata, PointType};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
+use geoarrow_schema::{CoordType, GeoArrowType, Metadata, PointType};
 
-use crate::GeoArrowType;
 use crate::array::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
 use crate::eq::point_eq;
-use crate::error::{GeoArrowError, Result};
 use crate::scalar::Point;
-use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
+use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 
 /// An immutable array of Point geometries.
 ///
@@ -22,15 +21,15 @@ use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
 pub struct PointArray {
     pub(crate) data_type: PointType,
     pub(crate) coords: CoordBuffer,
-    pub(crate) validity: Option<NullBuffer>,
+    pub(crate) nulls: Option<NullBuffer>,
 }
 
 /// Perform checks:
 ///
 /// - Validity mask must have the same length as the coordinates.
-pub(super) fn check(coords: &CoordBuffer, validity_len: Option<usize>) -> Result<()> {
+pub(super) fn check(coords: &CoordBuffer, validity_len: Option<usize>) -> GeoArrowResult<()> {
     if validity_len.is_some_and(|len| len != coords.len()) {
-        return Err(GeoArrowError::General(
+        return Err(GeoArrowError::InvalidGeoArrow(
             "validity mask length must match the number of values".to_string(),
         ));
     }
@@ -60,30 +59,25 @@ impl PointArray {
     ///
     /// # Errors
     ///
-    /// - if the validity is not `None` and its length is different from the number of geometries
+    /// - if the nulls is not `None` and its length is different from the number of geometries
     pub fn try_new(
         coords: CoordBuffer,
-        validity: Option<NullBuffer>,
+        nulls: Option<NullBuffer>,
         metadata: Arc<Metadata>,
-    ) -> Result<Self> {
-        check(&coords, validity.as_ref().map(|v| v.len()))?;
+    ) -> GeoArrowResult<Self> {
+        check(&coords, nulls.as_ref().map(|v| v.len()))?;
         Ok(Self {
             data_type: PointType::new(coords.coord_type(), coords.dim(), metadata),
             coords,
-            validity,
+            nulls,
         })
     }
 
     /// Access the underlying coordinate buffer
     ///
-    /// Note that some coordinates may be null, depending on the value of [`Self::nulls`]
+    /// Note that some coordinates may be null, depending on the value of [`Self::logical_nulls`]
     pub fn coords(&self) -> &CoordBuffer {
         &self.coords
-    }
-
-    /// Access the
-    pub fn into_inner(self) -> (CoordBuffer, Option<NullBuffer>) {
-        (self.coords, self.validity)
     }
 
     /// The lengths of each buffer contained in this array.
@@ -94,11 +88,12 @@ impl PointArray {
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
         let dimension = self.data_type.dimension();
-        let validity_len = self.nulls().map(|v| v.buffer().len()).unwrap_or(0);
+        let validity_len = self.nulls.as_ref().map(|v| v.buffer().len()).unwrap_or(0);
         validity_len + self.buffer_lengths() * dimension.size() * 8
     }
 
-    /// Slices this [`PointArray`] in place.
+    /// Slice this [`PointArray`].
+    ///
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
@@ -110,7 +105,24 @@ impl PointArray {
         Self {
             data_type: self.data_type.clone(),
             coords: self.coords.slice(offset, length),
-            validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
+            nulls: self.nulls.as_ref().map(|v| v.slice(offset, length)),
+        }
+    }
+
+    /// Change the [`CoordType`] of this array.
+    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        Self {
+            data_type: self.data_type.with_coord_type(coord_type),
+            coords: self.coords.into_coord_type(coord_type),
+            ..self
+        }
+    }
+
+    /// Change the [`Metadata`] of this array.
+    pub fn with_metadata(self, metadata: Arc<Metadata>) -> Self {
+        Self {
+            data_type: self.data_type.with_metadata(metadata),
+            ..self
         }
     }
 }
@@ -134,8 +146,21 @@ impl GeoArrowArray for PointArray {
     }
 
     #[inline]
-    fn nulls(&self) -> Option<&NullBuffer> {
-        self.validity.as_ref()
+    fn logical_nulls(&self) -> Option<NullBuffer> {
+        self.nulls.clone()
+    }
+
+    #[inline]
+    fn logical_null_count(&self) -> usize {
+        self.nulls.as_ref().map(|v| v.null_count()).unwrap_or(0)
+    }
+
+    #[inline]
+    fn is_null(&self, i: usize) -> bool {
+        self.nulls
+            .as_ref()
+            .map(|n| n.is_null(i))
+            .unwrap_or_default()
     }
 
     fn data_type(&self) -> GeoArrowType {
@@ -145,12 +170,16 @@ impl GeoArrowArray for PointArray {
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.slice(offset, length))
     }
+
+    fn with_metadata(self, metadata: Arc<Metadata>) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.with_metadata(metadata))
+    }
 }
 
-impl<'a> ArrayAccessor<'a> for PointArray {
+impl<'a> GeoArrowArrayAccessor<'a> for PointArray {
     type Item = Point<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
+    unsafe fn value_unchecked(&'a self, index: usize) -> GeoArrowResult<Self::Item> {
         Ok(Point::new(&self.coords, index))
     }
 }
@@ -160,7 +189,7 @@ impl IntoArrow for PointArray {
     type ExtensionType = PointType;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let validity = self.validity;
+        let validity = self.nulls;
         let dim = self.coords.dim();
         match self.coords {
             CoordBuffer::Interleaved(c) => Arc::new(FixedSizeListArray::new(
@@ -176,7 +205,7 @@ impl IntoArrow for PointArray {
         }
     }
 
-    fn ext_type(&self) -> &Self::ExtensionType {
+    fn extension_type(&self) -> &Self::ExtensionType {
         &self.data_type
     }
 }
@@ -184,7 +213,7 @@ impl IntoArrow for PointArray {
 impl TryFrom<(&FixedSizeListArray, PointType)> for PointArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (&FixedSizeListArray, PointType)) -> Result<Self> {
+    fn try_from((value, typ): (&FixedSizeListArray, PointType)) -> GeoArrowResult<Self> {
         let interleaved_coords = InterleavedCoordBuffer::from_arrow(value, typ.dimension())?;
 
         Ok(Self::new(
@@ -198,7 +227,7 @@ impl TryFrom<(&FixedSizeListArray, PointType)> for PointArray {
 impl TryFrom<(&StructArray, PointType)> for PointArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (&StructArray, PointType)) -> Result<Self> {
+    fn try_from((value, typ): (&StructArray, PointType)) -> GeoArrowResult<Self> {
         let validity = value.nulls();
         let separated_coords = SeparatedCoordBuffer::from_arrow(value, typ.dimension())?;
         Ok(Self::new(
@@ -212,13 +241,14 @@ impl TryFrom<(&StructArray, PointType)> for PointArray {
 impl TryFrom<(&dyn Array, PointType)> for PointArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (&dyn Array, PointType)) -> Result<Self> {
+    fn try_from((value, typ): (&dyn Array, PointType)) -> GeoArrowResult<Self> {
         match value.data_type() {
             DataType::FixedSizeList(_, _) => (value.as_fixed_size_list(), typ).try_into(),
             DataType::Struct(_) => (value.as_struct(), typ).try_into(),
-            _ => Err(GeoArrowError::General(
-                "Invalid data type for PointArray".to_string(),
-            )),
+            dt => Err(GeoArrowError::InvalidGeoArrow(format!(
+                "Unexpected Point DataType: {:?}",
+                dt
+            ))),
         }
     }
 }
@@ -226,7 +256,7 @@ impl TryFrom<(&dyn Array, PointType)> for PointArray {
 impl TryFrom<(&dyn Array, &Field)> for PointArray {
     type Error = GeoArrowError;
 
-    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+    fn try_from((arr, field): (&dyn Array, &Field)) -> GeoArrowResult<Self> {
         let typ = field.try_extension_type::<PointType>()?;
         (arr, typ).try_into()
     }
@@ -236,7 +266,7 @@ impl TryFrom<(&dyn Array, &Field)> for PointArray {
 // as (NaN, NaN). By default, these resolve to false
 impl PartialEq for PointArray {
     fn eq(&self, other: &Self) -> bool {
-        if self.validity != other.validity {
+        if self.nulls != other.nulls {
             return false;
         }
 
@@ -268,10 +298,9 @@ mod test {
     use geo_traits::to_geo::ToGeoPoint;
     use geoarrow_schema::{CoordType, Dimension};
 
+    use super::*;
     use crate::builder::PointBuilder;
     use crate::test::point;
-
-    use super::*;
 
     #[test]
     fn geo_round_trip() {
@@ -300,29 +329,61 @@ mod test {
     #[test]
     fn try_from_arrow() {
         for coord_type in [CoordType::Interleaved, CoordType::Separated] {
-            let geo_arr = point::point_array(coord_type);
+            for dim in [
+                Dimension::XY,
+                Dimension::XYZ,
+                Dimension::XYM,
+                Dimension::XYZM,
+            ] {
+                let geo_arr = point::array(coord_type, dim);
 
-            let point_type = geo_arr.ext_type().clone();
-            let field = point_type.to_field("geometry", true);
+                let point_type = geo_arr.extension_type().clone();
+                let field = point_type.to_field("geometry", true);
 
-            let arrow_arr = geo_arr.to_array_ref();
+                let arrow_arr = geo_arr.to_array_ref();
 
-            let geo_arr2: PointArray = (arrow_arr.as_ref(), point_type).try_into().unwrap();
-            let geo_arr3: PointArray = (arrow_arr.as_ref(), &field).try_into().unwrap();
+                let geo_arr2: PointArray = (arrow_arr.as_ref(), point_type).try_into().unwrap();
+                let geo_arr3: PointArray = (arrow_arr.as_ref(), &field).try_into().unwrap();
+
+                assert_eq!(geo_arr, geo_arr2);
+                assert_eq!(geo_arr, geo_arr3);
+            }
+        }
+    }
+
+    #[test]
+    fn into_coord_type() {
+        for dim in [
+            Dimension::XY,
+            Dimension::XYZ,
+            Dimension::XYM,
+            Dimension::XYZM,
+        ] {
+            let geo_arr = point::array(CoordType::Interleaved, dim);
+            let geo_arr2 = geo_arr
+                .clone()
+                .into_coord_type(CoordType::Separated)
+                .into_coord_type(CoordType::Interleaved);
 
             assert_eq!(geo_arr, geo_arr2);
-            assert_eq!(geo_arr, geo_arr3);
         }
     }
 
     #[test]
     fn partial_eq() {
-        let arr1 = point::point_array(CoordType::Interleaved);
-        let arr2 = point::point_array(CoordType::Separated);
-        assert_eq!(arr1, arr1);
-        assert_eq!(arr2, arr2);
-        assert_eq!(arr1, arr2);
+        for dim in [
+            Dimension::XY,
+            Dimension::XYZ,
+            Dimension::XYM,
+            Dimension::XYZM,
+        ] {
+            let arr1 = point::array(CoordType::Interleaved, dim);
+            let arr2 = point::array(CoordType::Separated, dim);
+            assert_eq!(arr1, arr1);
+            assert_eq!(arr2, arr2);
+            assert_eq!(arr1, arr2);
 
-        assert_ne!(arr1, arr2.slice(0, 2));
+            assert_ne!(arr1, arr2.slice(0, 2));
+        }
     }
 }

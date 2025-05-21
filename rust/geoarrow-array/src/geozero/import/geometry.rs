@@ -1,13 +1,16 @@
 use std::fmt::Debug;
+use std::sync::Arc;
 
 use geoarrow_schema::GeometryType;
+use geoarrow_schema::error::GeoArrowResult;
 use geozero::error::GeozeroError;
 use geozero::geo_types::GeoWriter;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
+use crate::GeoArrowArray;
 use crate::array::GeometryArray;
 use crate::builder::GeometryBuilder;
-use crate::trait_::GeometryArrayBuilder;
+use crate::trait_::GeoArrowArrayBuilder;
 
 /// GeoZero trait to convert to GeoArrow [`GeometryArray`].
 ///
@@ -16,29 +19,17 @@ use crate::trait_::GeometryArrayBuilder;
 /// (This is because the internal GeoWriter only supports XY dimensions.)
 pub trait ToGeometryArray {
     /// Convert to GeoArrow [`GeometryArray`]
-    fn to_geometry_array(
-        &self,
-        typ: GeometryType,
-        prefer_multi: bool,
-    ) -> geozero::error::Result<GeometryArray> {
-        Ok(self.to_geometry_builder(typ, prefer_multi)?.finish())
+    fn to_geometry_array(&self, typ: GeometryType) -> geozero::error::Result<GeometryArray> {
+        Ok(self.to_geometry_builder(typ)?.finish())
     }
 
     /// Convert to a GeoArrow [`GeometryBuilder`]
-    fn to_geometry_builder(
-        &self,
-        typ: GeometryType,
-        prefer_multi: bool,
-    ) -> geozero::error::Result<GeometryBuilder>;
+    fn to_geometry_builder(&self, typ: GeometryType) -> geozero::error::Result<GeometryBuilder>;
 }
 
 impl<T: GeozeroGeometry> ToGeometryArray for T {
-    fn to_geometry_builder(
-        &self,
-        typ: GeometryType,
-        prefer_multi: bool,
-    ) -> geozero::error::Result<GeometryBuilder> {
-        let mut stream_builder = GeometryStreamBuilder::new(typ, prefer_multi);
+    fn to_geometry_builder(&self, typ: GeometryType) -> geozero::error::Result<GeometryBuilder> {
+        let mut stream_builder = GeometryStreamBuilder::new(typ);
         self.process_geom(&mut stream_builder)?;
         Ok(stream_builder.builder)
     }
@@ -83,9 +74,9 @@ struct GeometryStreamBuilder {
 }
 
 impl GeometryStreamBuilder {
-    pub fn new(typ: GeometryType, prefer_multi: bool) -> Self {
+    pub fn new(typ: GeometryType) -> Self {
         Self {
-            builder: GeometryBuilder::new(typ, prefer_multi),
+            builder: GeometryBuilder::new(typ),
             current_geometry: GeoWriter::new(),
             geometry_collection_level: 0,
         }
@@ -234,7 +225,7 @@ impl GeomProcessor for GeometryStreamBuilder {
     }
 }
 
-impl GeometryArrayBuilder for GeometryStreamBuilder {
+impl GeoArrowArrayBuilder for GeometryStreamBuilder {
     fn len(&self) -> usize {
         self.builder.len()
     }
@@ -243,20 +234,16 @@ impl GeometryArrayBuilder for GeometryStreamBuilder {
         self.builder.push_null()
     }
 
-    // fn push_geometry(
-    //     &mut self,
-    //     value: Option<&impl geo_traits::GeometryTrait<T = f64>>,
-    // ) -> crate::error::Result<()> {
-    //     self.builder.push_geometry(value)
-    // }
+    fn push_geometry(
+        &mut self,
+        geometry: Option<&impl geo_traits::GeometryTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
+        self.builder.push_geometry(geometry)
+    }
 
-    // fn finish(self) -> std::sync::Arc<dyn NativeArray> {
-    //     Arc::new(self.finish())
-    // }
-
-    // fn metadata(&self) -> Arc<Metadata> {
-    //     self.builder.metadata()
-    // }
+    fn finish(self) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.builder.finish())
+    }
 }
 
 #[cfg(test)]
@@ -288,12 +275,12 @@ mod test {
 
     #[test]
     fn from_geo_using_geozero() -> Result<()> {
-        let geo_geoms = geoms();
-        let geo = Geometry::GeometryCollection(GeometryCollection(geo_geoms.clone()));
+        let geo_geoms = geoms().into_iter().map(Some).collect::<Vec<_>>();
+        let geo = Geometry::GeometryCollection(GeometryCollection(geoms()));
         let typ = GeometryType::new(CoordType::Interleaved, Default::default());
-        let geo_arr = geo.to_geometry_array(typ.clone(), true).unwrap();
+        let geo_arr = geo.to_geometry_array(typ.clone()).unwrap();
 
-        let geo_arr2 = GeometryBuilder::from_geometries(&geo_geoms, typ, true)
+        let geo_arr2 = GeometryBuilder::from_nullable_geometries(&geo_geoms, typ)
             .unwrap()
             .finish();
 

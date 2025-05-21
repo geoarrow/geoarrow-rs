@@ -1,5 +1,6 @@
 use arrow_buffer::OffsetBuffer;
 use geo_traits::MultiLineStringTrait;
+use geoarrow_schema::Dimension;
 
 use crate::array::CoordBuffer;
 use crate::eq::multi_line_string_eq;
@@ -40,46 +41,40 @@ impl<'a> MultiLineString<'a> {
             start_offset,
         }
     }
+
+    pub(crate) fn native_dim(&self) -> Dimension {
+        self.coords.dim()
+    }
 }
 
 impl<'a> MultiLineStringTrait for MultiLineString<'a> {
-    type T = f64;
-    type LineStringType<'b>
+    type InnerLineStringType<'b>
         = LineString<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.coords.dim().into()
-    }
 
     fn num_line_strings(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
-    unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::InnerLineStringType<'_> {
         LineString::new(self.coords, self.ring_offsets, self.start_offset + i)
     }
 }
 
 impl<'a> MultiLineStringTrait for &'a MultiLineString<'a> {
-    type T = f64;
-    type LineStringType<'b>
+    type InnerLineStringType<'b>
         = LineString<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.coords.dim().into()
-    }
 
     fn num_line_strings(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
-    unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::InnerLineStringType<'_> {
         LineString::new(self.coords, self.ring_offsets, self.start_offset + i)
     }
 }
@@ -92,10 +87,11 @@ impl<G: MultiLineStringTrait<T = f64>> PartialEq<G> for MultiLineString<'_> {
 
 #[cfg(test)]
 mod test {
+    use geoarrow_schema::{CoordType, Dimension, MultiLineStringType};
+
     use crate::builder::MultiLineStringBuilder;
     use crate::test::multilinestring::{ml0, ml1};
-    use crate::trait_::ArrayAccessor;
-    use geoarrow_schema::{CoordType, Dimension, MultiLineStringType};
+    use crate::trait_::GeoArrowArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

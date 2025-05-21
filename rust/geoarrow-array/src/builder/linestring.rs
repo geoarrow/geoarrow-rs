@@ -1,15 +1,20 @@
+use std::sync::Arc;
+
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, LineStringType};
 
-use crate::array::{LineStringArray, WkbArray};
+use crate::GeoArrowArray;
+use crate::array::{GenericWkbArray, LineStringArray};
+use crate::builder::geo_trait_wrappers::LineWrapper;
 use crate::builder::{
     CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
 };
 use crate::capacity::LineStringCapacity;
-use crate::error::{GeoArrowError, Result};
-use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
+use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
+use crate::util::GeometryTypeName;
 
 /// The GeoArrow equivalent to `Vec<Option<LineString>>`: a mutable collection of LineStrings.
 ///
@@ -86,12 +91,20 @@ impl LineStringBuilder {
     /// Needs to be called when a valid value was extended to this array.
     /// This is a relatively low level function, prefer `try_push` when you can.
     #[inline]
-    pub(crate) fn try_push_length(&mut self, geom_offsets_length: usize) -> Result<()> {
+    pub(crate) fn try_push_length(&mut self, geom_offsets_length: usize) -> GeoArrowResult<()> {
         self.geom_offsets.try_push_usize(geom_offsets_length)?;
         self.validity.append(true);
         Ok(())
     }
 
+    /// Add a valid but empty LineString to the end of this array.
+    #[inline]
+    pub fn push_empty(&mut self) {
+        self.geom_offsets.extend_constant(1);
+        self.validity.append(true);
+    }
+
+    /// Add a new null value to the end of this array.
     #[inline]
     pub(crate) fn push_null(&mut self) {
         self.geom_offsets.extend_constant(1);
@@ -102,45 +115,17 @@ impl LineStringBuilder {
     pub fn finish(mut self) -> LineStringArray {
         let validity = self.validity.finish();
         LineStringArray::new(
-            self.coords.into(),
-            self.geom_offsets.into(),
+            self.coords.finish(),
+            self.geom_offsets.finish(),
             validity,
             self.data_type.metadata().clone(),
         )
     }
 
-    /// Creates a new builder with a capacity inferred by the provided iterator.
-    pub fn with_capacity_from_iter<'a>(
-        typ: LineStringType,
-        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
-    ) -> Self {
-        let counter = LineStringCapacity::from_line_strings(geoms);
-        Self::with_capacity(typ, counter)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
-    ) {
-        let counter = LineStringCapacity::from_line_strings(geoms);
-        self.reserve(counter)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_exact_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
-    ) {
-        let counter = LineStringCapacity::from_line_strings(geoms);
-        self.reserve_exact(counter)
-    }
-
     /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_line_strings(geoms: &[impl LineStringTrait<T = f64>], typ: LineStringType) -> Self {
-        let mut array = Self::with_capacity_from_iter(typ, geoms.iter().map(Some));
+        let capacity = LineStringCapacity::from_line_strings(geoms.iter().map(Some));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(Some));
         array
     }
@@ -150,7 +135,8 @@ impl LineStringBuilder {
         geoms: &[Option<impl LineStringTrait<T = f64>>],
         typ: LineStringType,
     ) -> Self {
-        let mut array = Self::with_capacity_from_iter(typ, geoms.iter().map(|x| x.as_ref()));
+        let capacity = LineStringCapacity::from_line_strings(geoms.iter().map(|x| x.as_ref()));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         array
     }
@@ -164,7 +150,7 @@ impl LineStringBuilder {
     pub fn push_line_string(
         &mut self,
         value: Option<&impl LineStringTrait<T = f64>>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         if let Some(line_string) = value {
             let num_coords = line_string.num_coords();
             for coord in line_string.coords() {
@@ -192,19 +178,19 @@ impl LineStringBuilder {
     pub fn extend_from_geometry_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         geoms.into_iter().try_for_each(|g| self.push_geometry(g))?;
         Ok(())
     }
 
     /// Push a raw coordinate to the underlying coordinate array.
     ///
-    /// # Safety
+    /// # Invariants
     ///
-    /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
-    /// to the array upholds the necessary invariants of the array.
+    /// Care must be taken to ensure that pushing raw coordinates to the array upholds the
+    /// necessary invariants of the array.
     #[inline]
-    pub unsafe fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+    pub(crate) fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> GeoArrowResult<()> {
         self.coords.try_push_coord(coord)
     }
 
@@ -212,18 +198,33 @@ impl LineStringBuilder {
     ///
     /// This will error if the geometry type is not LineString or a MultiLineString with length 1.
     #[inline]
-    pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+    pub fn push_geometry(
+        &mut self,
+        value: Option<&impl GeometryTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
         if let Some(value) = value {
             match value.as_type() {
                 GeometryType::LineString(g) => self.push_line_string(Some(g))?,
                 GeometryType::MultiLineString(ml) => {
-                    if ml.num_line_strings() == 1 {
+                    let num_line_strings = ml.num_line_strings();
+                    if num_line_strings == 0 {
+                        self.push_empty();
+                    } else if num_line_strings == 1 {
                         self.push_line_string(Some(&ml.line_string(0).unwrap()))?
                     } else {
-                        return Err(GeoArrowError::General("Incorrect type".to_string()));
+                        return Err(GeoArrowError::IncorrectGeometryType(format!(
+                            "Expected MultiLineString with only one LineString in LineStringBuilder, got {} line strings",
+                            num_line_strings
+                        )));
                     }
                 }
-                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+                GeometryType::Line(l) => self.push_line_string(Some(&LineWrapper(l)))?,
+                gt => {
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
+                        "Expected LineString, got {}",
+                        gt.name()
+                    )));
+                }
             }
         } else {
             self.push_null();
@@ -235,7 +236,7 @@ impl LineStringBuilder {
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         typ: LineStringType,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let capacity = LineStringCapacity::from_geometries(geoms.iter().map(|x| x.as_ref()))?;
         let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_geometry_iter(geoms.iter().map(|x| x.as_ref()))?;
@@ -243,24 +244,35 @@ impl LineStringBuilder {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, LineStringType)> for LineStringBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, LineStringType)> for LineStringBuilder {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (WkbArray<O>, LineStringType)) -> Result<Self> {
+    fn try_from((value, typ): (GenericWkbArray<O>, LineStringType)) -> GeoArrowResult<Self> {
         let wkb_objects = value
             .iter()
             .map(|x| x.transpose())
-            .collect::<Result<Vec<_>>>()?;
+            .collect::<GeoArrowResult<Vec<_>>>()?;
         Self::from_nullable_geometries(&wkb_objects, typ)
     }
 }
 
-impl GeometryArrayBuilder for LineStringBuilder {
+impl GeoArrowArrayBuilder for LineStringBuilder {
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
     }
 
     fn push_null(&mut self) {
         self.push_null();
+    }
+
+    fn push_geometry(
+        &mut self,
+        geometry: Option<&impl GeometryTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
+        self.push_geometry(geometry)
+    }
+
+    fn finish(self) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.finish())
     }
 }

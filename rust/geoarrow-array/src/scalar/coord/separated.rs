@@ -76,38 +76,23 @@ impl CoordTrait for &SeparatedCoord<'_> {
 
 #[cfg(test)]
 mod test {
-    use arrow_buffer::ScalarBuffer;
+    use geoarrow_schema::Dimension;
 
     use crate::array::{InterleavedCoordBuffer, SeparatedCoordBuffer};
-    use geoarrow_schema::Dimension;
 
     /// Test Eq where the current index is true but another index is false
     #[test]
     fn test_eq_other_index_false() {
         let x1 = vec![0., 1., 2.];
         let y1 = vec![3., 4., 5.];
-        let buf1 = SeparatedCoordBuffer::new(
-            [
-                x1.into(),
-                y1.into(),
-                ScalarBuffer::from(vec![]),
-                ScalarBuffer::from(vec![]),
-            ],
-            Dimension::XY,
-        );
+        let buf1 =
+            SeparatedCoordBuffer::from_vec(vec![x1.into(), y1.into()], Dimension::XY).unwrap();
         let coord1 = buf1.value(0);
 
         let x2 = vec![0., 100., 2.];
         let y2 = vec![3., 400., 5.];
-        let buf2 = SeparatedCoordBuffer::new(
-            [
-                x2.into(),
-                y2.into(),
-                ScalarBuffer::from(vec![]),
-                ScalarBuffer::from(vec![]),
-            ],
-            Dimension::XY,
-        );
+        let buf2 =
+            SeparatedCoordBuffer::from_vec(vec![x2.into(), y2.into()], Dimension::XY).unwrap();
         let coord2 = buf2.value(0);
 
         assert_eq!(coord1, coord2);
@@ -117,15 +102,8 @@ mod test {
     fn test_eq_against_interleaved_coord() {
         let x1 = vec![0., 1., 2.];
         let y1 = vec![3., 4., 5.];
-        let buf1 = SeparatedCoordBuffer::new(
-            [
-                x1.into(),
-                y1.into(),
-                ScalarBuffer::from(vec![]),
-                ScalarBuffer::from(vec![]),
-            ],
-            Dimension::XY,
-        );
+        let buf1 =
+            SeparatedCoordBuffer::from_vec(vec![x1.into(), y1.into()], Dimension::XY).unwrap();
         let coord1 = buf1.value(0);
 
         let coords2 = vec![0., 3., 1., 4., 2., 5.];

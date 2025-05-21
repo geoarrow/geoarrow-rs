@@ -2,7 +2,7 @@ use geozero::{GeomProcessor, GeozeroGeometry};
 
 use crate::array::MultiPolygonArray;
 use crate::geozero::export::scalar::process_multi_polygon;
-use crate::{ArrayAccessor, GeoArrowArray};
+use crate::{GeoArrowArray, GeoArrowArrayAccessor};
 
 impl GeozeroGeometry for MultiPolygonArray {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>

@@ -1,9 +1,9 @@
 #[cfg(feature = "algorithm")]
 pub mod algorithm;
 #[cfg(feature = "data")]
-pub mod broadcasting;
-#[cfg(feature = "data")]
 pub mod data;
+pub mod data_type;
+pub mod dimension;
 pub mod error;
 pub mod ffi;
 pub mod io;
