@@ -6,7 +6,7 @@ use arrow_schema::extension::EXTENSION_TYPE_NAME_KEY;
 use arrow_schema::{DataType, Field, Schema, SchemaRef};
 use geoarrow_array::array::from_arrow_array;
 use geoarrow_schema::crs::{CrsTransform, DefaultCrsTransform};
-use geoarrow_schema::error::GeoArrowResult;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, Edges, GeoArrowType, Metadata, WkbType};
 use serde_json::Value;
 
@@ -171,6 +171,7 @@ impl GeoParquetMetadataBuilder {
     pub fn try_new(schema: &Schema, options: &GeoParquetWriterOptions) -> GeoArrowResult<Self> {
         let mut columns = HashMap::new();
 
+        let mut options_primary_column_seen = !options.primary_column.is_some();
         for (col_idx, field) in schema.fields().iter().enumerate() {
             if let Some(ext_name) = field.metadata().get(EXTENSION_TYPE_NAME_KEY) {
                 if !ext_name.starts_with("geoarrow") {
@@ -178,6 +179,12 @@ impl GeoParquetMetadataBuilder {
                 }
 
                 let column_name = schema.field(col_idx).name().clone();
+                options_primary_column_seen = !options_primary_column_seen
+                    && options
+                        .primary_column
+                        .as_deref()
+                        .map(|c| c == column_name)
+                        .unwrap_or_default();
 
                 let metadata = Metadata::try_from(field.as_ref())?;
                 let geo_data_type = field.as_ref().try_into()?;
@@ -193,13 +200,22 @@ impl GeoParquetMetadataBuilder {
                 columns.insert(col_idx, column_info);
             }
         }
-
-        let output_schema = create_output_schema(schema, &columns);
-        Ok(Self {
-            primary_column: options.primary_column.clone(),
-            columns,
-            output_schema,
-        })
+        if options_primary_column_seen {
+            let output_schema = create_output_schema(schema, &columns);
+            Ok(Self {
+                primary_column: options.primary_column.clone(),
+                columns,
+                output_schema,
+            })
+        } else {
+            Err(GeoArrowError::GeoParquet(format!(
+                "options primary_column={} is not a geometry column in the schema",
+                options
+                    .primary_column
+                    .as_deref()
+                    .expect("this should only be false if the primary column is set")
+            )))
+        }
     }
 
     #[allow(dead_code)]
@@ -318,5 +334,24 @@ fn create_output_field(column_info: &ColumnInfo, name: String, nullable: bool) -
             let ga_type = gpq_type.to_data_type(CoordType::Separated, Default::default());
             ga_type.to_field(name, nullable)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::GeoParquetMetadataBuilder;
+    use crate::writer::options::GeoParquetWriterOptions;
+    use arrow_schema::Schema;
+    use geoarrow_schema::error::GeoArrowError;
+
+    #[test]
+    fn primary_column_not_geometry() {
+        let schema = Schema::empty();
+        let mut options = GeoParquetWriterOptions::default();
+        options.primary_column = Some("not-a-geometry-column".to_string());
+        assert!(matches!(
+            GeoParquetMetadataBuilder::try_new(&schema, &options),
+            Err(GeoArrowError::GeoParquet(_))
+        ));
     }
 }
