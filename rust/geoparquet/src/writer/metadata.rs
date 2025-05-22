@@ -179,8 +179,8 @@ impl GeoParquetMetadataBuilder {
                 }
 
                 let column_name = schema.field(col_idx).name().clone();
-                options_primary_column_seen = !options_primary_column_seen
-                    && options
+                options_primary_column_seen = options_primary_column_seen
+                    || options
                         .primary_column
                         .as_deref()
                         .map(|c| c == column_name)
