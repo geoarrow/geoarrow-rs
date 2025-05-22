@@ -196,7 +196,7 @@ impl GeoParquetMetadataBuilder {
 
         let output_schema = create_output_schema(schema, &columns);
         Ok(Self {
-            primary_column: None,
+            primary_column: options.primary_column.clone(),
             columns,
             output_schema,
         })

@@ -22,6 +22,9 @@ pub struct GeoParquetWriterOptions {
     /// Set the type of encoding to use for writing to GeoParquet.
     pub encoding: GeoParquetWriterEncoding,
 
+    /// Set the primary geometry column name.
+    pub primary_column: Option<String>,
+
     /// The parquet [WriterProperties] to use for writing to file
     pub writer_properties: Option<WriterProperties>,
 
