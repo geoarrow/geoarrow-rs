@@ -1,5 +1,7 @@
 # geoarrow-array
 
+GeoArrow array definitions.
+
 The central type in Apache Arrow are arrays, which are a known-length sequence of values all having the same type. This crate provides concrete implementations of each type defined in the [GeoArrow specification], as well as a [GeoArrowArray] trait that can be used for type-erasure.
 
 [GeoArrow specification]: https://github.com/geoarrow/geoarrow
