@@ -928,7 +928,7 @@ fn parse_geometry_collection(data_type: &DataType) -> Result<(CoordType, Dimensi
 ///
 /// Refer to the [GeoArrow
 /// specification](https://github.com/geoarrow/geoarrow/blob/main/format.md#geometry).
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct GeometryType {
     coord_type: CoordType,
     metadata: Arc<Metadata>,
