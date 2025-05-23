@@ -20,14 +20,26 @@ pub enum CoordBufferBuilder {
 
 impl CoordBufferBuilder {
     /// Initialize a buffer of a given length with all coordinates set to the given value.
-    pub fn initialize(len: usize, interleaved: bool, dim: Dimension, value: f64) -> Self {
-        match interleaved {
-            true => CoordBufferBuilder::Interleaved(InterleavedCoordBufferBuilder::initialize(
-                len, dim, value,
-            )),
-            false => CoordBufferBuilder::Separated(SeparatedCoordBufferBuilder::initialize(
-                len, dim, value,
-            )),
+    pub fn initialize(len: usize, coord_type: CoordType, dim: Dimension, value: f64) -> Self {
+        match coord_type {
+            CoordType::Interleaved => CoordBufferBuilder::Interleaved(
+                InterleavedCoordBufferBuilder::initialize(len, dim, value),
+            ),
+            CoordType::Separated => CoordBufferBuilder::Separated(
+                SeparatedCoordBufferBuilder::initialize(len, dim, value),
+            ),
+        }
+    }
+
+    /// Create a new builder with the given capacity and dimension
+    pub fn with_capacity(len: usize, coord_type: CoordType, dim: Dimension) -> Self {
+        match coord_type {
+            CoordType::Interleaved => CoordBufferBuilder::Interleaved(
+                InterleavedCoordBufferBuilder::with_capacity(len, dim),
+            ),
+            CoordType::Separated => {
+                CoordBufferBuilder::Separated(SeparatedCoordBufferBuilder::with_capacity(len, dim))
+            }
         }
     }
 
