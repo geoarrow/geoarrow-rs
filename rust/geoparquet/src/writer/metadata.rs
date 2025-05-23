@@ -171,7 +171,7 @@ impl GeoParquetMetadataBuilder {
     pub fn try_new(schema: &Schema, options: &GeoParquetWriterOptions) -> GeoArrowResult<Self> {
         let mut columns = HashMap::new();
 
-        let mut options_primary_column_seen = !options.primary_column.is_some();
+        let mut options_primary_column_seen = options.primary_column.is_none();
         for (col_idx, field) in schema.fields().iter().enumerate() {
             if let Some(ext_name) = field.metadata().get(EXTENSION_TYPE_NAME_KEY) {
                 if !ext_name.starts_with("geoarrow") {
@@ -347,8 +347,10 @@ mod tests {
     #[test]
     fn primary_column_not_geometry() {
         let schema = Schema::empty();
-        let mut options = GeoParquetWriterOptions::default();
-        options.primary_column = Some("not-a-geometry-column".to_string());
+        let options = GeoParquetWriterOptions {
+            primary_column: Some("not-a-geometry-column".to_string()),
+            ..Default::default()
+        };
         assert!(matches!(
             GeoParquetMetadataBuilder::try_new(&schema, &options),
             Err(GeoArrowError::GeoParquet(_))
