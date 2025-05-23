@@ -339,10 +339,11 @@ fn create_output_field(column_info: &ColumnInfo, name: String, nullable: bool) -
 
 #[cfg(test)]
 mod tests {
-    use super::GeoParquetMetadataBuilder;
-    use crate::writer::options::GeoParquetWriterOptions;
     use arrow_schema::Schema;
     use geoarrow_schema::error::GeoArrowError;
+
+    use super::GeoParquetMetadataBuilder;
+    use crate::writer::options::GeoParquetWriterOptions;
 
     #[test]
     fn primary_column_not_geometry() {
