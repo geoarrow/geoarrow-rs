@@ -3,14 +3,12 @@ use std::sync::Arc;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
+use geoarrow_schema::PointType;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geoarrow_schema::{CoordType, PointType};
 
 use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, PointArray};
-use crate::builder::{
-    CoordBufferBuilder, InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder,
-};
+use crate::builder::CoordBufferBuilder;
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
 use crate::util::GeometryTypeName;
 
@@ -32,14 +30,7 @@ impl PointBuilder {
 
     /// Creates a new [`PointBuilder`] with a capacity.
     pub fn with_capacity(typ: PointType, capacity: usize) -> Self {
-        let coords = match typ.coord_type() {
-            CoordType::Interleaved => CoordBufferBuilder::Interleaved(
-                InterleavedCoordBufferBuilder::with_capacity(capacity, typ.dimension()),
-            ),
-            CoordType::Separated => CoordBufferBuilder::Separated(
-                SeparatedCoordBufferBuilder::with_capacity(capacity, typ.dimension()),
-            ),
-        };
+        let coords = CoordBufferBuilder::with_capacity(capacity, typ.coord_type(), typ.dimension());
         Self {
             coords,
             validity: NullBufferBuilder::new(capacity),
