@@ -206,7 +206,6 @@ impl GeoParquetMetadataBuilder {
                     primary_column
                 )));
             }
-        } else {
         }
         let output_schema = create_output_schema(schema, &columns);
         Ok(Self {
