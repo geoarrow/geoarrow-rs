@@ -348,7 +348,8 @@ fn create_output_field(column_info: &ColumnInfo, name: String, nullable: bool) -
 #[cfg(test)]
 mod tests {
     use arrow_schema::Schema;
-    use geoarrow_schema::{CoordType, Dimension, Metadata, PointType, error::GeoArrowError};
+    use geoarrow_schema::error::GeoArrowError;
+    use geoarrow_schema::{CoordType, Dimension, Metadata, PointType};
 
     use super::GeoParquetMetadataBuilder;
     use crate::writer::options::GeoParquetWriterOptions;
