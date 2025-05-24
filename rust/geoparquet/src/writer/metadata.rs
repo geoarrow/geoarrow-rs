@@ -181,6 +181,7 @@ impl GeoParquetMetadataBuilder {
                 }
 
                 let column_name = schema.field(col_idx).name().clone();
+
                 let metadata = Metadata::try_from(field.as_ref())?;
                 let geo_data_type = field.as_ref().try_into()?;
 
