@@ -17,6 +17,9 @@ use crate::metadata::{
 use crate::total_bounds::BoundingRect;
 use crate::writer::options::{GeoParquetWriterEncoding, GeoParquetWriterOptions};
 
+// https://github.com/geoarrow/geoarrow-rs/pull/1159#issuecomment-2904610370
+const INFERRED_PRIMARY_COLUMN_NAMES: [&str; 2] = ["geometry", "geography"];
+
 /// Information for one geometry column being written to Parquet
 pub struct ColumnInfo {
     /// The name of this geometry column
@@ -171,7 +174,6 @@ impl GeoParquetMetadataBuilder {
     pub fn try_new(schema: &Schema, options: &GeoParquetWriterOptions) -> GeoArrowResult<Self> {
         let mut columns = HashMap::new();
 
-        let mut options_primary_column_seen = options.primary_column.is_none();
         for (col_idx, field) in schema.fields().iter().enumerate() {
             if let Some(ext_name) = field.metadata().get(EXTENSION_TYPE_NAME_KEY) {
                 if !ext_name.starts_with("geoarrow") {
@@ -179,13 +181,6 @@ impl GeoParquetMetadataBuilder {
                 }
 
                 let column_name = schema.field(col_idx).name().clone();
-                options_primary_column_seen = options_primary_column_seen
-                    || options
-                        .primary_column
-                        .as_deref()
-                        .map(|c| c == column_name)
-                        .unwrap_or_default();
-
                 let metadata = Metadata::try_from(field.as_ref())?;
                 let geo_data_type = field.as_ref().try_into()?;
 
@@ -200,22 +195,24 @@ impl GeoParquetMetadataBuilder {
                 columns.insert(col_idx, column_info);
             }
         }
-        if options_primary_column_seen {
-            let output_schema = create_output_schema(schema, &columns);
-            Ok(Self {
-                primary_column: options.primary_column.clone(),
-                columns,
-                output_schema,
-            })
+        if let Some(primary_column) = options.primary_column.as_deref() {
+            if !columns
+                .values()
+                .any(|column_info| column_info.name == primary_column)
+            {
+                return Err(GeoArrowError::GeoParquet(format!(
+                    "Designated primary column: {} does not exist as a geometry field in schema",
+                    primary_column
+                )));
+            }
         } else {
-            Err(GeoArrowError::GeoParquet(format!(
-                "options primary_column={} is not a geometry column in the schema",
-                options
-                    .primary_column
-                    .as_deref()
-                    .expect("this should only be false if the primary column is set")
-            )))
         }
+        let output_schema = create_output_schema(schema, &columns);
+        Ok(Self {
+            primary_column: options.primary_column.clone(),
+            columns,
+            output_schema,
+        })
     }
 
     #[allow(dead_code)]
@@ -238,11 +235,22 @@ impl GeoParquetMetadataBuilder {
         if columns.is_empty() {
             None
         } else {
+            let primary_column = if let Some(primary_column) = self.primary_column {
+                primary_column
+            } else if let Some(column_name) = columns
+                .keys()
+                .find(|column_name| INFERRED_PRIMARY_COLUMN_NAMES.contains(&column_name.as_str()))
+            {
+                column_name.clone()
+            } else {
+                // Make it deterministic which key we use.
+                let keys: Vec<_> = columns.keys().collect();
+                assert!(!keys.is_empty()); // We already checked for empty columns
+                keys[0].to_string()
+            };
             Some(GeoParquetMetadata {
                 version: "1.1.0".to_string(),
-                primary_column: self
-                    .primary_column
-                    .unwrap_or_else(|| columns.keys().next().unwrap().clone()),
+                primary_column,
                 columns,
             })
         }
@@ -340,7 +348,7 @@ fn create_output_field(column_info: &ColumnInfo, name: String, nullable: bool) -
 #[cfg(test)]
 mod tests {
     use arrow_schema::Schema;
-    use geoarrow_schema::error::GeoArrowError;
+    use geoarrow_schema::{CoordType, Dimension, Metadata, PointType, error::GeoArrowError};
 
     use super::GeoParquetMetadataBuilder;
     use crate::writer::options::GeoParquetWriterOptions;
@@ -356,5 +364,83 @@ mod tests {
             GeoParquetMetadataBuilder::try_new(&schema, &options),
             Err(GeoArrowError::GeoParquet(_))
         ));
+    }
+
+    #[test]
+    fn primary_column_none_no_geometry() {
+        let schema = Schema::empty();
+        let options = GeoParquetWriterOptions::default();
+        assert!(
+            GeoParquetMetadataBuilder::try_new(&schema, &options)
+                .unwrap()
+                .finish()
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn primary_column_none() {
+        let field = PointType::new(
+            CoordType::Interleaved,
+            Dimension::XY,
+            Metadata::default().into(),
+        )
+        .to_field("anything", false);
+        let schema = Schema::new(vec![field]);
+        let options = GeoParquetWriterOptions::default();
+        let metadata = GeoParquetMetadataBuilder::try_new(&schema, &options)
+            .unwrap()
+            .finish()
+            .unwrap();
+        assert_eq!(metadata.primary_column, "anything");
+    }
+
+    #[test]
+    fn primary_column_none_default_to_geometry() {
+        let field_a = PointType::new(
+            CoordType::Interleaved,
+            Dimension::XY,
+            Metadata::default().into(),
+        )
+        .to_field("anything", false);
+        let field_b = PointType::new(
+            CoordType::Interleaved,
+            Dimension::XY,
+            Metadata::default().into(),
+        )
+        .to_field("geometry", false);
+        let schema = Schema::new(vec![field_a, field_b]);
+        let options = GeoParquetWriterOptions::default();
+        let metadata = GeoParquetMetadataBuilder::try_new(&schema, &options)
+            .unwrap()
+            .finish()
+            .unwrap();
+        assert_eq!(metadata.primary_column, "geometry");
+    }
+
+    #[test]
+    fn primary_column() {
+        let field_a = PointType::new(
+            CoordType::Interleaved,
+            Dimension::XY,
+            Metadata::default().into(),
+        )
+        .to_field("anything", false);
+        let field_b = PointType::new(
+            CoordType::Interleaved,
+            Dimension::XY,
+            Metadata::default().into(),
+        )
+        .to_field("geometry", false);
+        let schema = Schema::new(vec![field_a, field_b]);
+        let options = GeoParquetWriterOptions {
+            primary_column: Some("anything".to_string()),
+            ..Default::default()
+        };
+        let metadata = GeoParquetMetadataBuilder::try_new(&schema, &options)
+            .unwrap()
+            .finish()
+            .unwrap();
+        assert_eq!(metadata.primary_column, "anything");
     }
 }
