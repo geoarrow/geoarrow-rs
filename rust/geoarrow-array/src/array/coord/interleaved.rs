@@ -99,7 +99,7 @@ impl InterleavedCoordBuffer {
     }
 
     pub(crate) fn storage_type(&self) -> DataType {
-        PointType::new(self.dim)
+        PointType::new(self.dim, Default::default())
             .with_coord_type(Self::COORD_TYPE)
             .data_type()
     }

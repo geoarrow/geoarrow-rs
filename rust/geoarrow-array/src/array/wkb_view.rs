@@ -28,7 +28,7 @@ impl WkbViewArray {
     /// Create a new GenericWkbArray from a BinaryArray
     pub fn new(array: BinaryViewArray, metadata: Arc<Metadata>) -> Self {
         Self {
-            data_type: WkbType::new().with_metadata(metadata),
+            data_type: WkbType::new(metadata),
             array,
         }
     }

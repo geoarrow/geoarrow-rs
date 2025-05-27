@@ -33,7 +33,7 @@ impl<O: OffsetSizeTrait> GenericWkbArray<O> {
     /// Create a new GenericWkbArray from a BinaryArray
     pub fn new(array: GenericBinaryArray<O>, metadata: Arc<Metadata>) -> Self {
         Self {
-            data_type: WkbType::new().with_metadata(metadata),
+            data_type: WkbType::new(metadata),
             array,
         }
     }
@@ -296,7 +296,7 @@ mod test {
     use crate::test::point;
 
     fn wkb_data<O: OffsetSizeTrait>() -> GenericWkbArray<O> {
-        let mut builder = WkbBuilder::new(WkbType::new());
+        let mut builder = WkbBuilder::new(WkbType::new(Default::default()));
         builder.push_geometry(Some(&point::p0()));
         builder.push_geometry(Some(&point::p1()));
         builder.push_geometry(Some(&point::p2()));

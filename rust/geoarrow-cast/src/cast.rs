@@ -298,9 +298,8 @@ mod test {
         assert_eq!(&array, array2.as_point());
 
         // Cast to other coord type
-        let p_type = PointType::new(Dimension::XY)
-            .with_coord_type(CoordType::Separated)
-            .with_metadata(array.data_type().metadata().clone());
+        let p_type = PointType::new(Dimension::XY, array.data_type().metadata().clone())
+            .with_coord_type(CoordType::Separated);
         let array3 = cast(&array, &p_type.into()).unwrap();
         assert_eq!(
             array3.as_point().extension_type().coord_type(),
@@ -308,16 +307,14 @@ mod test {
         );
 
         // Cast to multi point
-        let mp_type = MultiPointType::new(Dimension::XY)
-            .with_coord_type(CoordType::Interleaved)
-            .with_metadata(array.data_type().metadata().clone());
+        let mp_type = MultiPointType::new(Dimension::XY, array.data_type().metadata().clone())
+            .with_coord_type(CoordType::Interleaved);
         let mp_array = cast(&array, &mp_type.into()).unwrap();
         assert!(mp_array.as_multi_point_opt().is_some());
 
         // Cast to geometry
-        let mp_type = GeometryType::new()
-            .with_coord_type(CoordType::Interleaved)
-            .with_metadata(array.data_type().metadata().clone());
+        let mp_type = GeometryType::new(array.data_type().metadata().clone())
+            .with_coord_type(CoordType::Interleaved);
         let mp_array = cast(&array, &mp_type.into()).unwrap();
         assert!(mp_array.as_geometry_opt().is_some());
     }
@@ -326,14 +323,12 @@ mod test {
     fn cast_to_wkb() {
         let array = test::point::array(CoordType::Interleaved, Dimension::XY);
 
-        let wkb_type =
-            GeoArrowType::Wkb(WkbType::new().with_metadata(array.data_type().metadata().clone()));
+        let wkb_type = GeoArrowType::Wkb(WkbType::new(array.data_type().metadata().clone()));
         let wkb_array = cast(&array, &wkb_type).unwrap();
         assert!(wkb_array.as_wkb_opt::<i32>().is_some());
 
-        let large_wkb_type = GeoArrowType::LargeWkb(
-            WkbType::new().with_metadata(array.data_type().metadata().clone()),
-        );
+        let large_wkb_type =
+            GeoArrowType::LargeWkb(WkbType::new(array.data_type().metadata().clone()));
         let wkb_array = cast(&array, &large_wkb_type).unwrap();
         assert!(wkb_array.as_wkb_opt::<i64>().is_some());
     }
@@ -344,12 +339,10 @@ mod test {
         let mp2 = wkt! { MULTIPOINT(1.0 2.0) };
         let mp3 = wkt! { MULTIPOINT(3.0 4.0) };
 
-        let typ = MultiPointType::new(Dimension::XY);
+        let typ = MultiPointType::new(Dimension::XY, Default::default());
         let mp_arr = MultiPointBuilder::from_multi_points(&[mp1, mp2, mp3], typ).finish();
         let (coord_type, dim, metadata) = mp_arr.extension_type().clone().into_inner();
-        let p_type = PointType::new(dim)
-            .with_coord_type(coord_type)
-            .with_metadata(metadata);
+        let p_type = PointType::new(dim, metadata).with_coord_type(coord_type);
         let p_arr = cast(&mp_arr, &p_type.into()).unwrap();
         assert!(p_arr.as_point_opt().is_some());
     }
@@ -360,12 +353,10 @@ mod test {
         let mp2 = wkt! { MULTIPOINT(1.0 2.0) };
         let mp3 = wkt! { MULTIPOINT(3.0 4.0, 5.0 6.0) };
 
-        let typ = MultiPointType::new(Dimension::XY);
+        let typ = MultiPointType::new(Dimension::XY, Default::default());
         let mp_arr = MultiPointBuilder::from_multi_points(&[mp1, mp2, mp3], typ).finish();
         let (coord_type, dim, metadata) = mp_arr.extension_type().clone().into_inner();
-        let p_type = PointType::new(dim)
-            .with_coord_type(coord_type)
-            .with_metadata(metadata);
+        let p_type = PointType::new(dim, metadata).with_coord_type(coord_type);
         assert!(cast(&mp_arr, &p_type.into()).is_err());
     }
 
@@ -374,16 +365,14 @@ mod test {
         let geoms = geoarrow_test::raw::multilinestring::xy::geoms();
         let single = geoms[0].clone().unwrap();
 
-        let typ = MultiLineStringType::new(Dimension::XY);
+        let typ = MultiLineStringType::new(Dimension::XY, Default::default());
         let mp_arr = MultiLineStringBuilder::from_multi_line_strings(
             &[single.clone(), single.clone(), single],
             typ,
         )
         .finish();
         let (coord_type, dim, metadata) = mp_arr.extension_type().clone().into_inner();
-        let p_type = LineStringType::new(dim)
-            .with_coord_type(coord_type)
-            .with_metadata(metadata);
+        let p_type = LineStringType::new(dim, metadata).with_coord_type(coord_type);
         let p_arr = cast(&mp_arr, &p_type.into()).unwrap();
         assert!(p_arr.as_line_string_opt().is_some());
     }
@@ -394,14 +383,12 @@ mod test {
         let single = geoms[0].clone().unwrap();
         let multi = geoms[1].clone().unwrap();
 
-        let typ = MultiLineStringType::new(Dimension::XY);
+        let typ = MultiLineStringType::new(Dimension::XY, Default::default());
         let mp_arr =
             MultiLineStringBuilder::from_multi_line_strings(&[single.clone(), single, multi], typ)
                 .finish();
         let (coord_type, dim, metadata) = mp_arr.extension_type().clone().into_inner();
-        let p_type = LineStringType::new(dim)
-            .with_coord_type(coord_type)
-            .with_metadata(metadata);
+        let p_type = LineStringType::new(dim, metadata).with_coord_type(coord_type);
         assert!(cast(&mp_arr, &p_type.into()).is_err());
     }
 
@@ -410,16 +397,14 @@ mod test {
         let geoms = geoarrow_test::raw::multipolygon::xy::geoms();
         let single = geoms[0].clone().unwrap();
 
-        let typ = MultiPolygonType::new(Dimension::XY);
+        let typ = MultiPolygonType::new(Dimension::XY, Default::default());
         let mp_arr = MultiPolygonBuilder::from_multi_polygons(
             &[single.clone(), single.clone(), single],
             typ,
         )
         .finish();
         let (coord_type, dim, metadata) = mp_arr.extension_type().clone().into_inner();
-        let p_type = PolygonType::new(dim)
-            .with_coord_type(coord_type)
-            .with_metadata(metadata);
+        let p_type = PolygonType::new(dim, metadata).with_coord_type(coord_type);
         let p_arr = cast(&mp_arr, &p_type.into()).unwrap();
         assert!(p_arr.as_polygon_opt().is_some());
     }
@@ -430,14 +415,12 @@ mod test {
         let single = geoms[0].clone().unwrap();
         let multi = geoms[1].clone().unwrap();
 
-        let typ = MultiPolygonType::new(Dimension::XY);
+        let typ = MultiPolygonType::new(Dimension::XY, Default::default());
         let mp_arr =
             MultiPolygonBuilder::from_multi_polygons(&[single.clone(), single, multi], typ)
                 .finish();
         let (coord_type, dim, metadata) = mp_arr.extension_type().clone().into_inner();
-        let p_type = PolygonType::new(dim)
-            .with_coord_type(coord_type)
-            .with_metadata(metadata);
+        let p_type = PolygonType::new(dim, metadata).with_coord_type(coord_type);
         assert!(cast(&mp_arr, &p_type.into()).is_err());
     }
 
@@ -579,7 +562,7 @@ mod test {
     #[test]
     fn downcast_geometry_to_point_fails() {
         let array = test::geometry::array(Default::default(), false);
-        let point_type = PointType::new(Dimension::XY);
+        let point_type = PointType::new(Dimension::XY, Default::default());
         assert!(cast(&array, &point_type.into()).is_err());
     }
 }

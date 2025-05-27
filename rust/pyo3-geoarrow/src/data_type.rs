@@ -159,9 +159,8 @@ macro_rules! impl_native_type_constructor {
         ) -> PyGeoArrowType {
             let edges = edges.map(|e| e.into());
             let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
-            <$geoarrow_type>::new(dimension.into())
+            <$geoarrow_type>::new(dimension.into(), metadata)
                 .with_coord_type(coord_type.into())
-                .with_metadata(metadata)
                 .into()
         }
     };
@@ -180,9 +179,7 @@ impl_native_type_constructor!(geometrycollection, GeometryCollectionType);
 pub fn r#box(dimension: PyDimension, crs: Option<PyCrs>, edges: Option<PyEdges>) -> PyGeoArrowType {
     let edges = edges.map(|e| e.into());
     let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
-    BoxType::new(dimension.into())
-        .with_metadata(metadata)
-        .into()
+    BoxType::new(dimension.into(), metadata).into()
 }
 
 #[pyfunction]
@@ -194,9 +191,8 @@ pub fn geometry(
 ) -> PyGeoArrowType {
     let edges = edges.map(|e| e.into());
     let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
-    GeometryType::new()
+    GeometryType::new(metadata)
         .with_coord_type(coord_type.into())
-        .with_metadata(metadata)
         .into()
 }
 
@@ -205,7 +201,7 @@ pub fn geometry(
 pub fn wkb(crs: Option<PyCrs>, edges: Option<PyEdges>) -> PyGeoArrowType {
     let edges = edges.map(|e| e.into());
     let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
-    WkbType::new().with_metadata(metadata).into()
+    WkbType::new(metadata).into()
 }
 
 #[pyfunction]
@@ -213,5 +209,5 @@ pub fn wkb(crs: Option<PyCrs>, edges: Option<PyEdges>) -> PyGeoArrowType {
 pub fn wkt(crs: Option<PyCrs>, edges: Option<PyEdges>) -> PyGeoArrowType {
     let edges = edges.map(|e| e.into());
     let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
-    WktType::new().with_metadata(metadata).into()
+    WktType::new(metadata).into()
 }

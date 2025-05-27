@@ -159,7 +159,7 @@ mod test {
                 .map(Geometry::MultiPolygon)
                 .collect(),
         );
-        let typ = MultiPolygonType::new(Dimension::XY);
+        let typ = MultiPolygonType::new(Dimension::XY, Default::default());
         let geo_arr = geo.to_multi_polygon_array(typ.clone()).unwrap();
 
         let geo_arr2 = MultiPolygonBuilder::from_multi_polygons(&geo_geoms, typ).finish();

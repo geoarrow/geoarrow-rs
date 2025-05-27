@@ -107,7 +107,7 @@ mod test {
                 .map(Geometry::LineString)
                 .collect(),
         );
-        let typ = LineStringType::new(Dimension::XY);
+        let typ = LineStringType::new(Dimension::XY, Default::default());
         let geo_arr = geo.to_line_string_array(typ.clone()).unwrap();
 
         let geo_arr2 = LineStringBuilder::from_line_strings(&geo_geoms, typ).finish();

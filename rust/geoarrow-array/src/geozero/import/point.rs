@@ -171,7 +171,7 @@ mod test {
             .into(),
         );
 
-        let typ = PointType::new(Dimension::XY);
+        let typ = PointType::new(Dimension::XY, Default::default());
         let point_array = geo.to_point_array(typ).unwrap();
         assert_eq!(point_array.value(0).unwrap(), point::p0());
         assert_eq!(point_array.value(1).unwrap(), point::p1());
@@ -185,7 +185,7 @@ mod test {
             Geometry::LineString(linestring::ls0()),
         ]));
 
-        let typ = PointType::new(Dimension::XY);
+        let typ = PointType::new(Dimension::XY, Default::default());
         let err = ToPointArray::to_point_array(&geo, typ).unwrap_err();
         assert!(matches!(err, geozero::error::GeozeroError::Geometry(..)));
     }

@@ -44,11 +44,9 @@ impl GeometryCollectionArray {
         nulls: Option<NullBuffer>,
         metadata: Arc<Metadata>,
     ) -> Self {
-        let coord_type = array.coord_type;
         Self {
-            data_type: GeometryCollectionType::new(array.dim)
-                .with_coord_type(coord_type)
-                .with_metadata(metadata),
+            data_type: GeometryCollectionType::new(array.dim, metadata)
+                .with_coord_type(array.coord_type),
             array,
             geom_offsets,
             nulls,
@@ -320,7 +318,7 @@ mod test {
             .filter_map(|(i, geom)| if geom.is_none() { Some(i) } else { None })
             .collect::<Vec<_>>();
 
-        let typ = GeometryCollectionType::new(Dimension::XY);
+        let typ = GeometryCollectionType::new(Dimension::XY, Default::default());
         let geo_arr = GeometryCollectionBuilder::from_nullable_geometry_collections(&geoms, typ)
             .unwrap()
             .finish();
@@ -335,7 +333,7 @@ mod test {
         let geoms = raw::geometrycollection::xy::geoms();
         let expected_nulls = NullBuffer::from_iter(geoms.iter().map(|g| g.is_some()));
 
-        let typ = GeometryCollectionType::new(Dimension::XY);
+        let typ = GeometryCollectionType::new(Dimension::XY, Default::default());
         let geo_arr = GeometryCollectionBuilder::from_nullable_geometry_collections(&geoms, typ)
             .unwrap()
             .finish();

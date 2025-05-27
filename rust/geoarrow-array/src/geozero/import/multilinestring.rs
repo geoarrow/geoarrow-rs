@@ -139,7 +139,7 @@ mod test {
                 .map(Geometry::MultiLineString)
                 .collect(),
         );
-        let typ = MultiLineStringType::new(Dimension::XY);
+        let typ = MultiLineStringType::new(Dimension::XY, Default::default());
         let geo_arr = geo.to_multi_line_string_array(typ.clone()).unwrap();
 
         let geo_arr2 = MultiLineStringBuilder::from_multi_line_strings(&geo_geoms, typ).finish();

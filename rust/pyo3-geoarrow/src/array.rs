@@ -163,35 +163,28 @@ impl PyGeoArrowArray {
             let metadata = self.0.data_type().metadata().clone();
             let coord_type = coord_type.into();
             let to_type = match native_type {
-                NativeType::Point => PointType::new(dim)
+                NativeType::Point => PointType::new(dim, metadata)
                     .with_coord_type(coord_type)
-                    .with_metadata(metadata)
                     .into(),
-                NativeType::LineString => LineStringType::new(dim)
+                NativeType::LineString => LineStringType::new(dim, metadata)
                     .with_coord_type(coord_type)
-                    .with_metadata(metadata)
                     .into(),
-                NativeType::Polygon => PolygonType::new(dim)
+                NativeType::Polygon => PolygonType::new(dim, metadata)
                     .with_coord_type(coord_type)
-                    .with_metadata(metadata)
                     .into(),
-                NativeType::MultiPoint => MultiPointType::new(dim)
+                NativeType::MultiPoint => MultiPointType::new(dim, metadata)
                     .with_coord_type(coord_type)
-                    .with_metadata(metadata)
                     .into(),
-                NativeType::MultiLineString => MultiLineStringType::new(dim)
+                NativeType::MultiLineString => MultiLineStringType::new(dim, metadata)
                     .with_coord_type(coord_type)
-                    .with_metadata(metadata)
                     .into(),
-                NativeType::MultiPolygon => MultiPolygonType::new(dim)
+                NativeType::MultiPolygon => MultiPolygonType::new(dim, metadata)
                     .with_coord_type(coord_type)
-                    .with_metadata(metadata)
                     .into(),
-                NativeType::GeometryCollection => GeometryCollectionType::new(dim)
+                NativeType::GeometryCollection => GeometryCollectionType::new(dim, metadata)
                     .with_coord_type(coord_type)
-                    .with_metadata(metadata)
                     .into(),
-                NativeType::Rect => BoxType::new(dim).with_metadata(metadata).into(),
+                NativeType::Rect => BoxType::new(dim, metadata).into(),
             };
             self.cast(PyGeoArrowType::new(to_type))
         } else {

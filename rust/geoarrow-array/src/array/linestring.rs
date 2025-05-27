@@ -90,9 +90,8 @@ impl LineStringArray {
     ) -> GeoArrowResult<Self> {
         check(&coords, nulls.as_ref().map(|v| v.len()), &geom_offsets)?;
         Ok(Self {
-            data_type: LineStringType::new(coords.dim())
-                .with_coord_type(coords.coord_type())
-                .with_metadata(metadata),
+            data_type: LineStringType::new(coords.dim(), metadata)
+                .with_coord_type(coords.coord_type()),
             coords,
             geom_offsets,
             nulls,
@@ -324,7 +323,8 @@ mod test {
     fn geo_round_trip() {
         for coord_type in [CoordType::Interleaved, CoordType::Separated] {
             let geoms = [Some(linestring::ls0()), None, Some(linestring::ls1()), None];
-            let typ = LineStringType::new(Dimension::XY).with_coord_type(coord_type);
+            let typ =
+                LineStringType::new(Dimension::XY, Default::default()).with_coord_type(coord_type);
             let geo_arr = LineStringBuilder::from_nullable_line_strings(&geoms, typ).finish();
 
             for (i, g) in geo_arr.iter().enumerate() {
@@ -350,7 +350,8 @@ mod test {
                 .map(|x| x.transpose().unwrap().map(|g| g.to_line_string()))
                 .collect::<Vec<_>>();
 
-            let typ = LineStringType::new(Dimension::XY).with_coord_type(coord_type);
+            let typ =
+                LineStringType::new(Dimension::XY, Default::default()).with_coord_type(coord_type);
             let geo_arr2 = LineStringBuilder::from_nullable_line_strings(&geo_geoms, typ).finish();
             assert_eq!(geo_arr, geo_arr2);
         }

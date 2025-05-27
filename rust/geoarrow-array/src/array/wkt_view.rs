@@ -29,7 +29,7 @@ impl WktViewArray {
     /// Create a new WktViewArray from a StringViewArray
     pub fn new(array: StringViewArray, metadata: Arc<Metadata>) -> Self {
         Self {
-            data_type: WktType::new().with_metadata(metadata),
+            data_type: WktType::new(metadata),
             array,
         }
     }

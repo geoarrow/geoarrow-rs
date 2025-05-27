@@ -109,7 +109,7 @@ mod test {
                 .map(Geometry::MultiPoint)
                 .collect(),
         );
-        let typ = MultiPointType::new(Dimension::XY);
+        let typ = MultiPointType::new(Dimension::XY, Default::default());
         let geo_arr = geo.to_multi_point_array(typ.clone()).unwrap();
 
         let geo_arr2 = MultiPointBuilder::from_multi_points(&geo_geoms, typ).finish();

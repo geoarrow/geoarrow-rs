@@ -67,9 +67,7 @@ impl PointArray {
     ) -> GeoArrowResult<Self> {
         check(&coords, nulls.as_ref().map(|v| v.len()))?;
         Ok(Self {
-            data_type: PointType::new(coords.dim())
-                .with_coord_type(coords.coord_type())
-                .with_metadata(metadata),
+            data_type: PointType::new(coords.dim(), metadata).with_coord_type(coords.coord_type()),
             coords,
             nulls,
         })
@@ -313,7 +311,7 @@ mod test {
                 None,
                 Some(point::p2()),
             ];
-            let typ = PointType::new(Dimension::XY).with_coord_type(coord_type);
+            let typ = PointType::new(Dimension::XY, Default::default()).with_coord_type(coord_type);
             let geo_arr =
                 PointBuilder::from_nullable_points(geoms.iter().map(|x| x.as_ref()), typ).finish();
 

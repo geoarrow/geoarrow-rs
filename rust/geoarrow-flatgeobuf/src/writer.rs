@@ -213,7 +213,7 @@ mod test {
             Some(wkt! { POINT (1. 2.) }),
             Some(wkt! { POINT (1. 2.) }),
         ];
-        let typ = PointType::new(Dimension::XY);
+        let typ = PointType::new(Dimension::XY, Default::default());
         PointBuilder::from_nullable_points(geoms.iter().map(|x| x.as_ref()), typ).finish()
     }
 

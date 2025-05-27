@@ -76,11 +76,7 @@ fn infer_target_wkb_type(
 ) -> GeoArrowResult<GeoArrowType> {
     Ok(
         infer_geo_data_type(geometry_types, coord_type, metadata.clone())?.unwrap_or(
-            GeoArrowType::Geometry(
-                GeometryType::new()
-                    .with_coord_type(coord_type)
-                    .with_metadata(metadata),
-            ),
+            GeoArrowType::Geometry(GeometryType::new(metadata).with_coord_type(coord_type)),
         ),
     )
 }
@@ -149,12 +145,12 @@ fn parse_wkb_column(
 ) -> GeoArrowResult<ArrayRef> {
     match arr.data_type() {
         DataType::Binary => {
-            let wkb_arr = WkbArray::try_from((arr, WkbType::new()))?;
+            let wkb_arr = WkbArray::try_from((arr, WkbType::new(Default::default())))?;
             let geom_arr = from_wkb(&wkb_arr, target_geo_data_type)?;
             Ok(geom_arr.to_array_ref())
         }
         DataType::LargeBinary => {
-            let wkb_arr = LargeWkbArray::try_from((arr, WkbType::new()))?;
+            let wkb_arr = LargeWkbArray::try_from((arr, WkbType::new(Default::default())))?;
             let geom_arr = from_wkb(&wkb_arr, target_geo_data_type)?;
             Ok(geom_arr.to_array_ref())
         }

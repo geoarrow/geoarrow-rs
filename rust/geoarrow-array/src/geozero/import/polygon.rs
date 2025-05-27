@@ -121,7 +121,7 @@ mod test {
                 .map(Geometry::Polygon)
                 .collect(),
         );
-        let typ = PolygonType::new(Dimension::XY);
+        let typ = PolygonType::new(Dimension::XY, Default::default());
         let geo_arr = gc.to_polygon_array(typ.clone()).unwrap();
 
         let geo_arr2 = PolygonBuilder::from_polygons(&geo_geoms, typ).finish();

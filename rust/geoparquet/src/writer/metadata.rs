@@ -334,9 +334,8 @@ fn create_output_field(column_info: &ColumnInfo, name: String, nullable: bool) -
     use GeoParquetColumnEncoding as Encoding;
 
     match column_info.encoding {
-        Encoding::WKB => {
-            Field::new(name, DataType::Binary, nullable).with_extension_type(WkbType::new())
-        }
+        Encoding::WKB => Field::new(name, DataType::Binary, nullable)
+            .with_extension_type(WkbType::new(Default::default())),
         // A native encoding
         _ => {
             assert_eq!(column_info.geometry_types.len(), 1);
@@ -383,7 +382,7 @@ mod tests {
 
     #[test]
     fn primary_column_none() {
-        let field = PointType::new(Dimension::XY).to_field("anything", false);
+        let field = PointType::new(Dimension::XY, Default::default()).to_field("anything", false);
         let schema = Schema::new(vec![field]);
         let options = GeoParquetWriterOptions::default();
         let metadata = GeoParquetMetadataBuilder::try_new(&schema, &options)
@@ -395,8 +394,8 @@ mod tests {
 
     #[test]
     fn primary_column_none_default_to_geometry() {
-        let field_a = PointType::new(Dimension::XY).to_field("anything", false);
-        let field_b = PointType::new(Dimension::XY).to_field("geometry", false);
+        let field_a = PointType::new(Dimension::XY, Default::default()).to_field("anything", false);
+        let field_b = PointType::new(Dimension::XY, Default::default()).to_field("geometry", false);
         let schema = Schema::new(vec![field_a, field_b]);
         let options = GeoParquetWriterOptions::default();
         let metadata = GeoParquetMetadataBuilder::try_new(&schema, &options)
@@ -408,8 +407,8 @@ mod tests {
 
     #[test]
     fn primary_column() {
-        let field_a = PointType::new(Dimension::XY).to_field("anything", false);
-        let field_b = PointType::new(Dimension::XY).to_field("geometry", false);
+        let field_a = PointType::new(Dimension::XY, Default::default()).to_field("anything", false);
+        let field_b = PointType::new(Dimension::XY, Default::default()).to_field("geometry", false);
         let schema = Schema::new(vec![field_a, field_b]);
         let options = GeoParquetWriterOptions {
             primary_column: Some("anything".to_string()),

@@ -69,27 +69,27 @@ impl MixedGeometryBuilder {
             dim,
             types: vec![],
             points: PointBuilder::with_capacity(
-                PointType::new(dim).with_coord_type(coord_type),
+                PointType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.point,
             ),
             line_strings: LineStringBuilder::with_capacity(
-                LineStringType::new(dim).with_coord_type(coord_type),
+                LineStringType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.line_string,
             ),
             polygons: PolygonBuilder::with_capacity(
-                PolygonType::new(dim).with_coord_type(coord_type),
+                PolygonType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.polygon,
             ),
             multi_points: MultiPointBuilder::with_capacity(
-                MultiPointType::new(dim).with_coord_type(coord_type),
+                MultiPointType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.multi_point,
             ),
             multi_line_strings: MultiLineStringBuilder::with_capacity(
-                MultiLineStringType::new(dim).with_coord_type(coord_type),
+                MultiLineStringType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.multi_line_string,
             ),
             multi_polygons: MultiPolygonBuilder::with_capacity(
-                MultiPolygonType::new(dim).with_coord_type(coord_type),
+                MultiPolygonType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.multi_polygon,
             ),
             offsets: vec![],

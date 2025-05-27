@@ -109,9 +109,8 @@ impl MultiLineStringArray {
             nulls.as_ref().map(|v| v.len()),
         )?;
         Ok(Self {
-            data_type: MultiLineStringType::new(coords.dim())
-                .with_coord_type(coords.coord_type())
-                .with_metadata(metadata),
+            data_type: MultiLineStringType::new(coords.dim(), metadata)
+                .with_coord_type(coords.coord_type()),
             coords,
             geom_offsets,
             ring_offsets,
@@ -370,9 +369,7 @@ impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, MultiLineStringType)>
 impl From<LineStringArray> for MultiLineStringArray {
     fn from(value: LineStringArray) -> Self {
         let (coord_type, dimension, metadata) = value.data_type.into_inner();
-        let new_type = MultiLineStringType::new(dimension)
-            .with_coord_type(coord_type)
-            .with_metadata(metadata);
+        let new_type = MultiLineStringType::new(dimension, metadata).with_coord_type(coord_type);
 
         let coords = value.coords;
         let geom_offsets = OffsetBuffer::from_lengths(vec![1; coords.len()]);
@@ -414,7 +411,8 @@ mod test {
                 Some(multilinestring::ml1()),
                 None,
             ];
-            let typ = MultiLineStringType::new(Dimension::XY).with_coord_type(coord_type);
+            let typ = MultiLineStringType::new(Dimension::XY, Default::default())
+                .with_coord_type(coord_type);
             let geo_arr =
                 MultiLineStringBuilder::from_nullable_multi_line_strings(&geoms, typ).finish();
 
@@ -444,7 +442,8 @@ mod test {
                 .map(|x| x.transpose().unwrap().map(|g| g.to_multi_line_string()))
                 .collect::<Vec<_>>();
 
-            let typ = MultiLineStringType::new(Dimension::XY).with_coord_type(coord_type);
+            let typ = MultiLineStringType::new(Dimension::XY, Default::default())
+                .with_coord_type(coord_type);
             let geo_arr2 =
                 MultiLineStringBuilder::from_nullable_multi_line_strings(&geo_geoms, typ).finish();
             assert_eq!(geo_arr, geo_arr2);

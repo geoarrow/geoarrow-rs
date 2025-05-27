@@ -345,7 +345,7 @@ mod test {
 
     #[test]
     fn test_push_rect() {
-        let mut builder = PolygonBuilder::new(PolygonType::new(Dimension::XY));
+        let mut builder = PolygonBuilder::new(PolygonType::new(Dimension::XY, Default::default()));
 
         let rect = Rect::new(coord! { x: 10., y: 20. }, coord! { x: 30., y: 10. });
         builder.push_rect(Some(&rect)).unwrap();

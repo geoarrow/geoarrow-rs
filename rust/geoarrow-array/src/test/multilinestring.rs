@@ -33,12 +33,13 @@ pub(crate) fn ml1() -> MultiLineString {
 
 pub(crate) fn ml_array(coord_type: CoordType) -> MultiLineStringArray {
     let geoms = vec![Some(ml0()), None, Some(ml1()), None];
-    let typ = MultiLineStringType::new(Dimension::XY).with_coord_type(coord_type);
+    let typ =
+        MultiLineStringType::new(Dimension::XY, Default::default()).with_coord_type(coord_type);
     MultiLineStringBuilder::from_nullable_multi_line_strings(&geoms, typ).finish()
 }
 
 pub fn array(coord_type: CoordType, dim: Dimension) -> MultiLineStringArray {
-    let typ = MultiLineStringType::new(dim).with_coord_type(coord_type);
+    let typ = MultiLineStringType::new(dim, Default::default()).with_coord_type(coord_type);
     let geoms = match dim {
         Dimension::XY => raw::multilinestring::xy::geoms(),
         Dimension::XYZ => raw::multilinestring::xyz::geoms(),

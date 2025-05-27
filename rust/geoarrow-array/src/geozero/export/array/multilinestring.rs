@@ -31,7 +31,7 @@ mod test {
 
     #[test]
     fn geozero_process_geom() -> geozero::error::Result<()> {
-        let typ = MultiLineStringType::new(Dimension::XY);
+        let typ = MultiLineStringType::new(Dimension::XY, Default::default());
         let geo_arr =
             MultiLineStringBuilder::from_multi_line_strings(&[&ml0(), &ml1()], typ).finish();
         let wkt = ToWkt::to_wkt(&geo_arr)?;

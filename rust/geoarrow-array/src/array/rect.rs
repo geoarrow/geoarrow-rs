@@ -47,7 +47,7 @@ impl RectArray {
     ) -> Self {
         assert_eq!(lower.dim(), upper.dim());
         Self {
-            data_type: BoxType::new(lower.dim()).with_metadata(metadata),
+            data_type: BoxType::new(lower.dim(), metadata),
             lower,
             upper,
             nulls,
@@ -261,7 +261,7 @@ mod test {
     #[test]
     fn geo_round_trip() {
         let geoms = [Some(rect::r0()), None, Some(rect::r1()), None];
-        let typ = BoxType::new(Dimension::XY);
+        let typ = BoxType::new(Dimension::XY, Default::default());
         let geo_arr =
             RectBuilder::from_nullable_rects(geoms.iter().map(|x| x.as_ref()), typ).finish();
 

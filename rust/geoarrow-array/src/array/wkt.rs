@@ -34,7 +34,7 @@ impl<O: OffsetSizeTrait> GenericWktArray<O> {
     /// Create a new GenericWktArray from a StringArray
     pub fn new(array: GenericStringArray<O>, metadata: Arc<Metadata>) -> Self {
         Self {
-            data_type: WktType::new().with_metadata(metadata),
+            data_type: WktType::new(metadata),
             array,
         }
     }

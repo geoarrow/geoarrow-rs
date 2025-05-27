@@ -90,9 +90,8 @@ impl MultiPointArray {
     ) -> GeoArrowResult<Self> {
         check(&coords, nulls.as_ref().map(|v| v.len()), &geom_offsets)?;
         Ok(Self {
-            data_type: MultiPointType::new(coords.dim())
-                .with_coord_type(coords.coord_type())
-                .with_metadata(metadata),
+            data_type: MultiPointType::new(coords.dim(), metadata)
+                .with_coord_type(coords.coord_type()),
             coords,
             geom_offsets,
             nulls,
@@ -310,9 +309,7 @@ impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, MultiPointType)> for Multi
 impl From<PointArray> for MultiPointArray {
     fn from(value: PointArray) -> Self {
         let (coord_type, dimension, metadata) = value.data_type.into_inner();
-        let new_type = MultiPointType::new(dimension)
-            .with_coord_type(coord_type)
-            .with_metadata(metadata);
+        let new_type = MultiPointType::new(dimension, metadata).with_coord_type(coord_type);
 
         let coords = value.coords;
         let geom_offsets = OffsetBuffer::from_lengths(vec![1; coords.len()]);
@@ -346,7 +343,8 @@ mod test {
     fn geo_round_trip() {
         for coord_type in [CoordType::Interleaved, CoordType::Separated] {
             let geoms = [Some(multipoint::mp0()), None, Some(multipoint::mp1()), None];
-            let typ = MultiPointType::new(Dimension::XY).with_coord_type(coord_type);
+            let typ =
+                MultiPointType::new(Dimension::XY, Default::default()).with_coord_type(coord_type);
             let geo_arr = MultiPointBuilder::from_nullable_multi_points(&geoms, typ).finish();
 
             for (i, g) in geo_arr.iter().enumerate() {
@@ -372,7 +370,8 @@ mod test {
                 .map(|x| x.transpose().unwrap().map(|g| g.to_multi_point()))
                 .collect::<Vec<_>>();
 
-            let typ = MultiPointType::new(Dimension::XY).with_coord_type(coord_type);
+            let typ =
+                MultiPointType::new(Dimension::XY, Default::default()).with_coord_type(coord_type);
             let geo_arr2 = MultiPointBuilder::from_nullable_multi_points(&geo_geoms, typ).finish();
             assert_eq!(geo_arr, geo_arr2);
         }

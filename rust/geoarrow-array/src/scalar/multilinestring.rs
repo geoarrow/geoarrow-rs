@@ -96,7 +96,7 @@ mod test {
     /// Test Eq where the current index is true but another index is false
     #[test]
     fn test_eq_other_index_false() {
-        let typ = MultiLineStringType::new(Dimension::XY);
+        let typ = MultiLineStringType::new(Dimension::XY, Default::default());
 
         let arr1 = MultiLineStringBuilder::from_multi_line_strings(
             vec![ml0(), ml1()].as_slice(),

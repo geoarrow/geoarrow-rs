@@ -119,7 +119,7 @@ mod test {
     #[test]
     fn test_access_empty_polygon() {
         let empty_polygon: wkt::types::Polygon<f64> = wkt! { POLYGON EMPTY };
-        let typ = PolygonType::new(Dimension::XY);
+        let typ = PolygonType::new(Dimension::XY, Default::default());
         let polygon_array = PolygonBuilder::from_polygons(&[empty_polygon], typ).finish();
 
         let geo_polygon = polygon_array.value(0).unwrap().to_polygon();

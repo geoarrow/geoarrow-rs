@@ -131,9 +131,8 @@ impl MultiPolygonArray {
             nulls.as_ref().map(|v| v.len()),
         )?;
         Ok(Self {
-            data_type: MultiPolygonType::new(coords.dim())
-                .with_coord_type(coords.coord_type())
-                .with_metadata(metadata),
+            data_type: MultiPolygonType::new(coords.dim(), metadata)
+                .with_coord_type(coords.coord_type()),
             coords,
             geom_offsets,
             polygon_offsets,
@@ -422,9 +421,7 @@ impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, MultiPolygonType)> for Mul
 impl From<PolygonArray> for MultiPolygonArray {
     fn from(value: PolygonArray) -> Self {
         let (coord_type, dimension, metadata) = value.data_type.into_inner();
-        let new_type = MultiPolygonType::new(dimension)
-            .with_coord_type(coord_type)
-            .with_metadata(metadata);
+        let new_type = MultiPolygonType::new(dimension, metadata).with_coord_type(coord_type);
 
         let coords = value.coords;
         let geom_offsets = OffsetBuffer::from_lengths(vec![1; coords.len()]);
@@ -469,7 +466,8 @@ mod test {
                 Some(multipolygon::mp1()),
                 None,
             ];
-            let typ = MultiPolygonType::new(Dimension::XY).with_coord_type(coord_type);
+            let typ = MultiPolygonType::new(Dimension::XY, Default::default())
+                .with_coord_type(coord_type);
             let geo_arr = MultiPolygonBuilder::from_nullable_multi_polygons(&geoms, typ).finish();
 
             for (i, g) in geo_arr.iter().enumerate() {
@@ -498,7 +496,8 @@ mod test {
                 .map(|x| x.transpose().unwrap().map(|g| g.to_multi_polygon()))
                 .collect::<Vec<_>>();
 
-            let typ = MultiPolygonType::new(Dimension::XY).with_coord_type(coord_type);
+            let typ = MultiPolygonType::new(Dimension::XY, Default::default())
+                .with_coord_type(coord_type);
             let geo_arr2 =
                 MultiPolygonBuilder::from_nullable_multi_polygons(&geo_geoms, typ).finish();
             assert_eq!(geo_arr, geo_arr2);

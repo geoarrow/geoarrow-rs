@@ -364,9 +364,9 @@ impl TryFrom<&Field> for GeoArrowType {
                     }
 
                     match struct_fields.len() {
-                        2 => GeoArrowType::Point(PointType::new( Dimension::XY).with_coord_type(CoordType::Separated).with_metadata(metadata)),
-                        3 => GeoArrowType::Point(PointType::new( Dimension::XYZ).with_coord_type(CoordType::Separated).with_metadata(metadata)),
-                        4 => GeoArrowType::Point(PointType::new( Dimension::XYZM).with_coord_type(CoordType::Separated).with_metadata(metadata)),
+                        2 => GeoArrowType::Point(PointType::new( Dimension::XY, metadata).with_coord_type(CoordType::Separated)),
+                        3 => GeoArrowType::Point(PointType::new( Dimension::XYZ, metadata).with_coord_type(CoordType::Separated)),
+                        4 => GeoArrowType::Point(PointType::new( Dimension::XYZM, metadata).with_coord_type(CoordType::Separated)),
                         l => return Err(GeoArrowError::InvalidGeoArrow(format!("invalid number of struct fields: {l}"))),
                     }
                 },
@@ -376,18 +376,18 @@ impl TryFrom<&Field> for GeoArrowType {
                     }
 
                     match list_size {
-                        2 => GeoArrowType::Point(PointType::new(Dimension::XY).with_coord_type(CoordType::Interleaved).with_metadata(metadata)),
-                        3 => GeoArrowType::Point(PointType::new(Dimension::XYZ).with_coord_type(CoordType::Interleaved).with_metadata(metadata)),
-                        4 => GeoArrowType::Point(PointType::new(Dimension::XYZM).with_coord_type(CoordType::Interleaved).with_metadata(metadata)),
+                        2 => GeoArrowType::Point(PointType::new(Dimension::XY, metadata).with_coord_type(CoordType::Interleaved)),
+                        3 => GeoArrowType::Point(PointType::new(Dimension::XYZ, metadata).with_coord_type(CoordType::Interleaved)),
+                        4 => GeoArrowType::Point(PointType::new(Dimension::XYZM, metadata).with_coord_type(CoordType::Interleaved)),
                         _ => return Err(GeoArrowError::InvalidGeoArrow(format!("invalid list_size: {list_size}"))),
                     }
                 },
-                DataType::Binary => Wkb(WkbType::new().with_metadata(metadata)),
-                DataType::LargeBinary => LargeWkb(WkbType::new().with_metadata(metadata)),
-                DataType::BinaryView => WkbView(WkbType::new().with_metadata(metadata)),
-                DataType::Utf8 => Wkt(WktType::new().with_metadata(metadata)),
-                DataType::LargeUtf8 => LargeWkt(WktType::new().with_metadata(metadata)),
-                DataType::Utf8View => WktView(WktType::new().with_metadata(metadata)),
+                DataType::Binary => Wkb(WkbType::new(metadata)),
+                DataType::LargeBinary => LargeWkb(WkbType::new(metadata)),
+                DataType::BinaryView => WkbView(WkbType::new(metadata)),
+                DataType::Utf8 => Wkt(WktType::new(metadata)),
+                DataType::LargeUtf8 => LargeWkt(WktType::new(metadata)),
+                DataType::Utf8View => WktView(WktType::new(metadata)),
                 _ => return Err(GeoArrowError::InvalidGeoArrow("Only FixedSizeList, Struct, Binary, LargeBinary, BinaryView, String, LargeString, and StringView arrays are unambigously typed for a GeoArrow type and can be used without extension metadata.\nEnsure your array input has GeoArrow metadata.".to_string())),
             };
             Ok(data_type)

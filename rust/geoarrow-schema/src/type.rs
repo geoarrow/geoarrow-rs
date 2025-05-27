@@ -22,11 +22,11 @@ macro_rules! define_basic_type {
 
         impl $struct_name {
             /// Construct a new type from parts.
-            pub fn new(dim: Dimension) -> Self {
+            pub fn new(dim: Dimension, metadata: Arc<Metadata>) -> Self {
                 Self {
                     coord_type: Default::default(),
                     dim,
-                    metadata: Default::default(),
+                    metadata,
                 }
             }
 
@@ -936,8 +936,11 @@ pub struct GeometryType {
 
 impl GeometryType {
     /// Construct a new type from parts.
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new(metadata: Arc<Metadata>) -> Self {
+        Self {
+            coord_type: Default::default(),
+            metadata,
+        }
     }
 
     /// Change the underlying [`CoordType`]
@@ -1153,11 +1156,8 @@ pub struct BoxType {
 
 impl BoxType {
     /// Construct a new type from parts.
-    pub fn new(dim: Dimension) -> Self {
-        Self {
-            dim,
-            metadata: Default::default(),
-        }
+    pub fn new(dim: Dimension, metadata: Arc<Metadata>) -> Self {
+        Self { dim, metadata }
     }
 
     /// Change the underlying [`Dimension`]
@@ -1331,8 +1331,8 @@ pub struct WkbType {
 
 impl WkbType {
     /// Construct a new type from parts.
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new(metadata: Arc<Metadata>) -> Self {
+        Self { metadata }
     }
 
     /// Change the underlying [`Metadata`]
@@ -1390,8 +1390,8 @@ pub struct WktType {
 
 impl WktType {
     /// Construct a new type from parts.
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new(metadata: Arc<Metadata>) -> Self {
+        Self { metadata }
     }
 
     /// Change the underlying [`Metadata`]
@@ -1545,7 +1545,7 @@ mod test {
 
     #[test]
     fn geometry_data_type() {
-        let typ = GeometryCollectionType::new(Dimension::XY);
+        let typ = GeometryCollectionType::new(Dimension::XY, Default::default());
         dbg!(typ.data_type());
     }
 }

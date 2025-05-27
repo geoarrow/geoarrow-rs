@@ -14,6 +14,6 @@ pub(crate) fn r1() -> Rect {
 
 pub(crate) fn r_array() -> RectArray {
     let geoms = [Some(r0()), None, Some(r1()), None];
-    let typ = BoxType::new(Dimension::XY);
+    let typ = BoxType::new(Dimension::XY, Default::default());
     RectBuilder::from_nullable_rects(geoms.iter().map(|x| x.as_ref()), typ).finish()
 }
