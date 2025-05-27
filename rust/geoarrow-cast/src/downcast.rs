@@ -35,7 +35,7 @@ use geoarrow_schema::{Dimension, GeoArrowType};
 /// # use geoarrow_array::builder::WkbBuilder;
 /// use geoarrow_cast::cast::cast;
 /// use geoarrow_cast::downcast::{NativeType, infer_downcast_type};
-/// # use geoarrow_schema::{CoordType, Dimension, PointType};
+/// # use geoarrow_schema::{Dimension, PointType};
 /// use wkt::wkt;
 ///
 /// let mut builder = WkbBuilder::<i32>::new(Default::default());
@@ -52,7 +52,7 @@ use geoarrow_schema::{Dimension, GeoArrowType};
 /// assert_eq!(native_type, NativeType::Point);
 /// assert_eq!(dim, Dimension::XY);
 ///
-/// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+/// let point_type = PointType::new(Dimension::XY, Default::default());
 /// cast(&wkb_array, &GeoArrowType::Point(point_type)).unwrap();
 /// ```
 ///
