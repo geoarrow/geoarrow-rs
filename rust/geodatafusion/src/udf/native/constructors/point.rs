@@ -66,7 +66,8 @@ impl ScalarUDFImpl for Point {
     }
 
     fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<Field> {
-        let mut typ = PointType::new(self.coord_type, Dimension::XY, Default::default());
+        let mut typ =
+            PointType::new(Dimension::XY, Default::default()).with_coord_type(self.coord_type);
 
         if let Some(srid) = args.scalar_arguments.get(2) {
             if let Some(ScalarValue::Int64(srid_val)) = srid {
@@ -155,7 +156,8 @@ impl ScalarUDFImpl for PointZ {
     }
 
     fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<Field> {
-        let mut typ = PointType::new(self.coord_type, Dimension::XYZ, Default::default());
+        let mut typ =
+            PointType::new(Dimension::XYZ, Default::default()).with_coord_type(self.coord_type);
 
         if let Some(srid) = args.scalar_arguments.get(3) {
             if let Some(ScalarValue::Int64(srid_val)) = srid {
@@ -245,7 +247,8 @@ impl ScalarUDFImpl for PointM {
     }
 
     fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<Field> {
-        let mut typ = PointType::new(self.coord_type, Dimension::XYM, Default::default());
+        let mut typ =
+            PointType::new(Dimension::XYM, Default::default()).with_coord_type(self.coord_type);
 
         if let Some(srid) = args.scalar_arguments.get(3) {
             if let Some(ScalarValue::Int64(srid_val)) = srid {
@@ -337,7 +340,8 @@ impl ScalarUDFImpl for PointZM {
     }
 
     fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<Field> {
-        let mut typ = PointType::new(self.coord_type, Dimension::XY, Default::default());
+        let mut typ =
+            PointType::new(Dimension::XY, Default::default()).with_coord_type(self.coord_type);
 
         if let Some(srid) = args.scalar_arguments.get(4) {
             if let Some(ScalarValue::Int64(srid_val)) = srid {
@@ -435,7 +439,7 @@ impl ScalarUDFImpl for MakePoint {
             _ => unreachable!(),
         };
 
-        let typ = PointType::new(self.coord_type, dim, Default::default());
+        let typ = PointType::new(dim, Default::default()).with_coord_type(self.coord_type);
         Ok(typ.to_field("", true))
     }
 
@@ -502,7 +506,8 @@ impl ScalarUDFImpl for MakePointM {
     }
 
     fn return_field_from_args(&self, _args: ReturnFieldArgs) -> Result<Field> {
-        let typ = PointType::new(self.coord_type, Dimension::XYM, Default::default());
+        let typ =
+            PointType::new(Dimension::XYM, Default::default()).with_coord_type(self.coord_type);
         Ok(typ.to_field("", true))
     }
 

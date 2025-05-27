@@ -47,10 +47,10 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// ```
     /// # use geoarrow_array::builder::PointBuilder;
     /// # use geoarrow_array::GeoArrowArray;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType, GeoArrowType};
+    /// # use geoarrow_schema::{Dimension, PointType, GeoArrowType};
     /// #
     /// let point = geo_types::point!(x: 1., y: 2.);
-    /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let point_array = PointBuilder::from_points([point].iter(), point_type.clone()).finish();
     /// assert_eq!(point_array.data_type(), GeoArrowType::Point(point_type));
     /// ```
@@ -71,10 +71,10 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// # use arrow_array::ArrayRef;
     /// # use geoarrow_array::builder::PointBuilder;
     /// # use geoarrow_array::GeoArrowArray;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{Dimension, PointType};
     /// #
     /// let point = geo_types::point!(x: 1., y: 2.);
-    /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let point_array = PointBuilder::from_points([point].iter(), point_type.clone()).finish();
     /// let array_ref: ArrayRef = point_array.into_array_ref();
     /// ```
@@ -95,10 +95,10 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// # use arrow_array::ArrayRef;
     /// # use geoarrow_array::builder::PointBuilder;
     /// # use geoarrow_array::GeoArrowArray;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{Dimension, PointType};
     /// #
     /// let point = geo_types::point!(x: 1., y: 2.);
-    /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let point_array = PointBuilder::from_points([point].iter(), point_type.clone()).finish();
     /// let array_ref: ArrayRef = point_array.to_array_ref();
     /// ```
@@ -113,10 +113,10 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// # use arrow_array::ArrayRef;
     /// # use geoarrow_array::builder::PointBuilder;
     /// # use geoarrow_array::GeoArrowArray;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{Dimension, PointType};
     /// #
     /// let point = geo_types::point!(x: 1., y: 2.);
-    /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let point_array = PointBuilder::from_points([point].iter(), point_type.clone()).finish();
     /// assert_eq!(point_array.len(), 1);
     /// ```
@@ -130,10 +130,10 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// # use arrow_array::ArrayRef;
     /// # use geoarrow_array::builder::PointBuilder;
     /// # use geoarrow_array::GeoArrowArray;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{Dimension, PointType};
     /// #
     /// let point = geo_types::point!(x: 1., y: 2.);
-    /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let point_array = PointBuilder::from_points([point].iter(), point_type.clone()).finish();
     /// assert!(!point_array.is_empty());
     /// ```
@@ -163,10 +163,10 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// ```
     /// # use geoarrow_array::GeoArrowArray;
     /// # use geoarrow_array::builder::PointBuilder;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{Dimension, PointType};
     /// #
     /// let point = geo_types::point!(x: 1., y: 2.);
-    /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let point_array =
     ///     PointBuilder::from_nullable_points([Some(&point), None].into_iter(), point_type.clone()).finish();
     /// assert_eq!(point_array.logical_null_count(), 1);
@@ -180,11 +180,11 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// ```
     /// # use geoarrow_array::GeoArrowArray;
     /// # use geoarrow_array::builder::PointBuilder;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{Dimension, PointType};
     /// #
     /// let point = geo_types::point!(x: 1., y: 2.);
     ///
-    /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let point_array =
     ///     PointBuilder::from_nullable_points([Some(&point), None].into_iter(), point_type.clone()).finish();
     /// assert!(point_array.is_null(1));
@@ -202,11 +202,11 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// ```
     /// # use geoarrow_array::GeoArrowArray;
     /// # use geoarrow_array::builder::PointBuilder;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{Dimension, PointType};
     /// #
     /// let point = geo_types::point!(x: 1., y: 2.);
     ///
-    /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let point_array =
     ///     PointBuilder::from_nullable_points([Some(&point), None].into_iter(), point_type.clone()).finish();
     /// assert!(point_array.is_valid(0));
@@ -229,12 +229,12 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// #
     /// # use geoarrow_array::GeoArrowArray;
     /// # use geoarrow_array::builder::PointBuilder;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{Dimension, PointType};
     /// #
     /// let point1 = geo_types::point!(x: 1., y: 2.);
     /// let point2 = geo_types::point!(x: 3., y: 4.);
     ///
-    /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let point_array =
     ///     Arc::new(PointBuilder::from_points([point1, point2].iter(), point_type.clone()).finish())
     ///         as Arc<dyn GeoArrowArray>;
@@ -287,11 +287,11 @@ pub trait GeoArrowArrayAccessor<'a>: GeoArrowArray {
     /// use geo_traits::{CoordTrait, PointTrait};
     /// # use geoarrow_array::GeoArrowArrayAccessor;
     /// # use geoarrow_array::builder::PointBuilder;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{Dimension, PointType};
     ///
     /// let point1 = geo_types::point!(x: 1., y: 2.);
     ///
-    /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let point_array =
     ///     PointBuilder::from_nullable_points([Some(&point1), None].into_iter(), point_type.clone())
     ///         .finish();
@@ -321,11 +321,11 @@ pub trait GeoArrowArrayAccessor<'a>: GeoArrowArray {
     /// use geo_traits::{CoordTrait, PointTrait};
     /// # use geoarrow_array::GeoArrowArrayAccessor;
     /// # use geoarrow_array::builder::PointBuilder;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{Dimension, PointType};
     ///
     /// let point1 = geo_types::point!(x: 1., y: 2.);
     ///
-    /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let point_array =
     ///     PointBuilder::from_nullable_points([Some(&point1), None].into_iter(), point_type.clone())
     ///         .finish();
@@ -354,11 +354,11 @@ pub trait GeoArrowArrayAccessor<'a>: GeoArrowArray {
     /// ```
     /// # use geoarrow_array::GeoArrowArrayAccessor;
     /// # use geoarrow_array::builder::PointBuilder;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{Dimension, PointType};
     /// #
     /// let point1 = geo_types::point!(x: 1., y: 2.);
     ///
-    /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let point_array =
     ///     PointBuilder::from_nullable_points([Some(&point1), None].into_iter(), point_type.clone())
     ///         .finish();
@@ -468,11 +468,9 @@ mod test {
                 GeoArrowType::try_from(&Field::new("", array.data_type().clone(), true)).unwrap();
             assert_eq!(
                 t,
-                GeoArrowType::Point(PointType::new(
-                    CoordType::Interleaved,
-                    dim,
-                    Default::default()
-                ))
+                GeoArrowType::Point(
+                    PointType::new(dim, Default::default()).with_coord_type(CoordType::Interleaved)
+                )
             );
         }
     }
@@ -526,11 +524,9 @@ mod test {
                 GeoArrowType::try_from(&Field::new("", array.data_type().clone(), true)).unwrap();
             assert_eq!(
                 t,
-                GeoArrowType::Point(PointType::new(
-                    CoordType::Separated,
-                    dim,
-                    Default::default()
-                ))
+                GeoArrowType::Point(
+                    PointType::new(dim, Default::default()).with_coord_type(CoordType::Separated)
+                )
             );
         }
     }
@@ -547,10 +543,9 @@ mod test {
         let data_type: GeoArrowType = (&field).try_into().unwrap();
         assert_eq!(ml_array.data_type(), data_type);
 
-        let mut builder = GeometryBuilder::new(GeometryType::new(
-            CoordType::Interleaved,
-            Default::default(),
-        ));
+        let mut builder = GeometryBuilder::new(
+            GeometryType::new(Default::default()).with_coord_type(CoordType::Interleaved),
+        );
         builder
             .push_geometry(Some(&crate::test::point::p0()))
             .unwrap();

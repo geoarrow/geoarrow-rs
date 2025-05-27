@@ -109,7 +109,7 @@ impl<G: PolygonTrait<T = f64>> PartialEq<G> for Polygon<'_> {
 mod test {
     use geo::HasDimensions;
     use geo_traits::to_geo::ToGeoPolygon;
-    use geoarrow_schema::{CoordType, Dimension, PolygonType};
+    use geoarrow_schema::{Dimension, PolygonType};
     use wkt::wkt;
 
     use crate::GeoArrowArrayAccessor;
@@ -119,7 +119,7 @@ mod test {
     #[test]
     fn test_access_empty_polygon() {
         let empty_polygon: wkt::types::Polygon<f64> = wkt! { POLYGON EMPTY };
-        let typ = PolygonType::new(CoordType::Separated, Dimension::XY, Default::default());
+        let typ = PolygonType::new(Dimension::XY, Default::default());
         let polygon_array = PolygonBuilder::from_polygons(&[empty_polygon], typ).finish();
 
         let geo_polygon = polygon_array.value(0).unwrap().to_polygon();

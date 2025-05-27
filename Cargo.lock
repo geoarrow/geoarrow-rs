@@ -1705,7 +1705,6 @@ dependencies = [
  "arrow-array",
  "arrow-schema",
  "datafusion",
- "geo",
  "geo-traits 0.3.0",
  "geoarrow-array",
  "geoarrow-schema",

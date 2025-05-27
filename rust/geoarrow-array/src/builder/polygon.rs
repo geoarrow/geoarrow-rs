@@ -338,18 +338,14 @@ mod test {
     use geo::BoundingRect;
     use geo_traits::to_geo::ToGeoPolygon;
     use geo_types::{Rect, coord};
-    use geoarrow_schema::{CoordType, Dimension, PolygonType};
+    use geoarrow_schema::{Dimension, PolygonType};
 
     use crate::GeoArrowArrayAccessor;
     use crate::builder::PolygonBuilder;
 
     #[test]
     fn test_push_rect() {
-        let mut builder = PolygonBuilder::new(PolygonType::new(
-            CoordType::Separated,
-            Dimension::XY,
-            Default::default(),
-        ));
+        let mut builder = PolygonBuilder::new(PolygonType::new(Dimension::XY, Default::default()));
 
         let rect = Rect::new(coord! { x: 10., y: 20. }, coord! { x: 30., y: 10. });
         builder.push_rect(Some(&rect)).unwrap();

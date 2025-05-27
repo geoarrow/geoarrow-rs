@@ -317,7 +317,7 @@ fn impl_array_accessor<'a>(arr: &'a impl GeoArrowArrayAccessor<'a>) -> GeoArrowR
         GeoArrowType::Rect(_) => unreachable!(),
         _ => {
             let mut builder = RectBuilder::with_capacity(
-                BoxType::new(Dimension::XY, Default::default()),
+                BoxType::new(Dimension::XY, arr.data_type().metadata().clone()),
                 arr.len(),
             );
             for item in arr.iter() {

@@ -189,24 +189,29 @@ impl PyChunkedGeoArrowArray {
             geoarrow_cast::downcast::infer_downcast_type(self.chunks.iter().map(|x| x.as_ref()))?
         {
             let metadata = self.data_type.metadata().clone();
+            let coord_type = coord_type.into();
             let to_type = match native_type {
-                NativeType::Point => PointType::new(coord_type.into(), dim, metadata).into(),
-                NativeType::LineString => {
-                    LineStringType::new(coord_type.into(), dim, metadata).into()
-                }
-                NativeType::Polygon => PolygonType::new(coord_type.into(), dim, metadata).into(),
-                NativeType::MultiPoint => {
-                    MultiPointType::new(coord_type.into(), dim, metadata).into()
-                }
-                NativeType::MultiLineString => {
-                    MultiLineStringType::new(coord_type.into(), dim, metadata).into()
-                }
-                NativeType::MultiPolygon => {
-                    MultiPolygonType::new(coord_type.into(), dim, metadata).into()
-                }
-                NativeType::GeometryCollection => {
-                    GeometryCollectionType::new(coord_type.into(), dim, metadata).into()
-                }
+                NativeType::Point => PointType::new(dim, metadata)
+                    .with_coord_type(coord_type)
+                    .into(),
+                NativeType::LineString => LineStringType::new(dim, metadata)
+                    .with_coord_type(coord_type)
+                    .into(),
+                NativeType::Polygon => PolygonType::new(dim, metadata)
+                    .with_coord_type(coord_type)
+                    .into(),
+                NativeType::MultiPoint => MultiPointType::new(dim, metadata)
+                    .with_coord_type(coord_type)
+                    .into(),
+                NativeType::MultiLineString => MultiLineStringType::new(dim, metadata)
+                    .with_coord_type(coord_type)
+                    .into(),
+                NativeType::MultiPolygon => MultiPolygonType::new(dim, metadata)
+                    .with_coord_type(coord_type)
+                    .into(),
+                NativeType::GeometryCollection => GeometryCollectionType::new(dim, metadata)
+                    .with_coord_type(coord_type)
+                    .into(),
                 NativeType::Rect => BoxType::new(dim, metadata).into(),
             };
             self.cast(PyGeoArrowType::new(to_type))

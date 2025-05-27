@@ -156,33 +156,39 @@ impl MixedGeometryArray {
             type_ids,
             offsets,
             points: points.unwrap_or(
-                PointBuilder::new(PointType::new(coord_type, dim, Default::default())).finish(),
+                PointBuilder::new(
+                    PointType::new(dim, Default::default()).with_coord_type(coord_type),
+                )
+                .finish(),
             ),
             line_strings: line_strings.unwrap_or(
-                LineStringBuilder::new(LineStringType::new(coord_type, dim, Default::default()))
-                    .finish(),
+                LineStringBuilder::new(
+                    LineStringType::new(dim, Default::default()).with_coord_type(coord_type),
+                )
+                .finish(),
             ),
             polygons: polygons.unwrap_or(
-                PolygonBuilder::new(PolygonType::new(coord_type, dim, Default::default())).finish(),
+                PolygonBuilder::new(
+                    PolygonType::new(dim, Default::default()).with_coord_type(coord_type),
+                )
+                .finish(),
             ),
             multi_points: multi_points.unwrap_or(
-                MultiPointBuilder::new(MultiPointType::new(coord_type, dim, Default::default()))
-                    .finish(),
+                MultiPointBuilder::new(
+                    MultiPointType::new(dim, Default::default()).with_coord_type(coord_type),
+                )
+                .finish(),
             ),
             multi_line_strings: multi_line_strings.unwrap_or(
-                MultiLineStringBuilder::new(MultiLineStringType::new(
-                    coord_type,
-                    dim,
-                    Default::default(),
-                ))
+                MultiLineStringBuilder::new(
+                    MultiLineStringType::new(dim, Default::default()).with_coord_type(coord_type),
+                )
                 .finish(),
             ),
             multi_polygons: multi_polygons.unwrap_or(
-                MultiPolygonBuilder::new(MultiPolygonType::new(
-                    coord_type,
-                    dim,
-                    Default::default(),
-                ))
+                MultiPolygonBuilder::new(
+                    MultiPolygonType::new(dim, Default::default()).with_coord_type(coord_type),
+                )
                 .finish(),
             ),
             slice_offset: 0,
@@ -459,7 +465,9 @@ impl MixedGeometryArray {
     }
 
     pub(crate) fn storage_type(&self) -> DataType {
-        match GeometryCollectionType::new(self.coord_type, self.dim, Default::default()).data_type()
+        match GeometryCollectionType::new(self.dim, Default::default())
+            .with_coord_type(self.coord_type)
+            .data_type()
         {
             DataType::List(inner_field) => inner_field.data_type().clone(),
             _ => unreachable!(),
@@ -569,7 +577,8 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                             points = Some(
                                 (
                                     value.child(type_id).as_ref(),
-                                    PointType::new(coord_type, dim, Default::default()),
+                                    PointType::new(dim, Default::default())
+                                        .with_coord_type(coord_type),
                                 )
                                     .try_into()
                                     .unwrap(),
@@ -579,7 +588,8 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                             line_strings = Some(
                                 (
                                     value.child(type_id).as_ref(),
-                                    LineStringType::new(coord_type, dim, Default::default()),
+                                    LineStringType::new(dim, Default::default())
+                                        .with_coord_type(coord_type),
                                 )
                                     .try_into()
                                     .unwrap(),
@@ -589,7 +599,8 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                             polygons = Some(
                                 (
                                     value.child(type_id).as_ref(),
-                                    PolygonType::new(coord_type, dim, Default::default()),
+                                    PolygonType::new(dim, Default::default())
+                                        .with_coord_type(coord_type),
                                 )
                                     .try_into()
                                     .unwrap(),
@@ -599,7 +610,8 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                             multi_points = Some(
                                 (
                                     value.child(type_id).as_ref(),
-                                    MultiPointType::new(coord_type, dim, Default::default()),
+                                    MultiPointType::new(dim, Default::default())
+                                        .with_coord_type(coord_type),
                                 )
                                     .try_into()
                                     .unwrap(),
@@ -609,7 +621,8 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                             multi_line_strings = Some(
                                 (
                                     value.child(type_id).as_ref(),
-                                    MultiLineStringType::new(coord_type, dim, Default::default()),
+                                    MultiLineStringType::new(dim, Default::default())
+                                        .with_coord_type(coord_type),
                                 )
                                     .try_into()
                                     .unwrap(),
@@ -619,7 +632,8 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                             multi_polygons = Some(
                                 (
                                     value.child(type_id).as_ref(),
-                                    MultiPolygonType::new(coord_type, dim, Default::default()),
+                                    MultiPolygonType::new(dim, Default::default())
+                                        .with_coord_type(coord_type),
                                 )
                                     .try_into()
                                     .unwrap(),

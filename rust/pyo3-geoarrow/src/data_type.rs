@@ -159,7 +159,9 @@ macro_rules! impl_native_type_constructor {
         ) -> PyGeoArrowType {
             let edges = edges.map(|e| e.into());
             let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
-            <$geoarrow_type>::new(coord_type.into(), dimension.into(), metadata).into()
+            <$geoarrow_type>::new(dimension.into(), metadata)
+                .with_coord_type(coord_type.into())
+                .into()
         }
     };
 }
@@ -189,7 +191,9 @@ pub fn geometry(
 ) -> PyGeoArrowType {
     let edges = edges.map(|e| e.into());
     let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
-    GeometryType::new(coord_type.into(), metadata).into()
+    GeometryType::new(metadata)
+        .with_coord_type(coord_type.into())
+        .into()
 }
 
 #[pyfunction]

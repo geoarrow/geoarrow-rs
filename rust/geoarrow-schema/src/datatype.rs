@@ -139,11 +139,11 @@ impl GeoArrowType {
     ///
     /// ```
     /// # use arrow_schema::DataType;
-    /// # use geoarrow_schema::{CoordType, Dimension, GeoArrowType, PointType};
+    /// # use geoarrow_schema::{Dimension, GeoArrowType, PointType};
     /// #
-    /// let point_type = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let data_type = GeoArrowType::Point(point_type).to_data_type();
-    /// assert!(matches!(data_type, DataType::FixedSizeList(_, _)));
+    /// assert!(matches!(data_type, DataType::Struct(_)));
     /// ```
     pub fn to_data_type(&self) -> DataType {
         use GeoArrowType::*;
@@ -172,9 +172,9 @@ impl GeoArrowType {
     /// # Examples
     ///
     /// ```
-    /// # use geoarrow_schema::{CoordType, Dimension, GeoArrowType, PointType};
+    /// # use geoarrow_schema::{Dimension, GeoArrowType, PointType};
     /// #
-    /// let point_type = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let geoarrow_type = GeoArrowType::Point(point_type);
     /// let field = geoarrow_type.to_field("geometry", true);
     /// assert_eq!(field.name(), "geometry");
@@ -212,7 +212,7 @@ impl GeoArrowType {
     /// ```
     /// # use geoarrow_schema::{CoordType, Dimension, GeoArrowType, PointType};
     /// #
-    /// let point_type = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let geoarrow_type = GeoArrowType::Point(point_type);
     /// let new_type = geoarrow_type.with_coord_type(CoordType::Separated);
     ///
@@ -242,9 +242,9 @@ impl GeoArrowType {
     /// # Examples
     ///
     /// ```
-    /// # use geoarrow_schema::{CoordType, Dimension, GeoArrowType, PointType};
+    /// # use geoarrow_schema::{Dimension, GeoArrowType, PointType};
     /// #
-    /// let point_type = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let geoarrow_type = GeoArrowType::Point(point_type);
     /// let new_type = geoarrow_type.with_dimension(Dimension::XYZ);
     ///
@@ -364,9 +364,9 @@ impl TryFrom<&Field> for GeoArrowType {
                     }
 
                     match struct_fields.len() {
-                        2 => GeoArrowType::Point(PointType::new(CoordType::Separated , Dimension::XY, metadata)),
-                        3 => GeoArrowType::Point(PointType::new(CoordType::Separated , Dimension::XYZ, metadata)),
-                        4 => GeoArrowType::Point(PointType::new(CoordType::Separated , Dimension::XYZM, metadata)),
+                        2 => GeoArrowType::Point(PointType::new( Dimension::XY, metadata).with_coord_type(CoordType::Separated)),
+                        3 => GeoArrowType::Point(PointType::new( Dimension::XYZ, metadata).with_coord_type(CoordType::Separated)),
+                        4 => GeoArrowType::Point(PointType::new( Dimension::XYZM, metadata).with_coord_type(CoordType::Separated)),
                         l => return Err(GeoArrowError::InvalidGeoArrow(format!("invalid number of struct fields: {l}"))),
                     }
                 },
@@ -376,9 +376,9 @@ impl TryFrom<&Field> for GeoArrowType {
                     }
 
                     match list_size {
-                        2 => GeoArrowType::Point(PointType::new(CoordType::Interleaved , Dimension::XY, metadata)),
-                        3 => GeoArrowType::Point(PointType::new(CoordType::Interleaved , Dimension::XYZ, metadata)),
-                        4 => GeoArrowType::Point(PointType::new(CoordType::Interleaved , Dimension::XYZM, metadata)),
+                        2 => GeoArrowType::Point(PointType::new(Dimension::XY, metadata).with_coord_type(CoordType::Interleaved)),
+                        3 => GeoArrowType::Point(PointType::new(Dimension::XYZ, metadata).with_coord_type(CoordType::Interleaved)),
+                        4 => GeoArrowType::Point(PointType::new(Dimension::XYZM, metadata).with_coord_type(CoordType::Interleaved)),
                         _ => return Err(GeoArrowError::InvalidGeoArrow(format!("invalid list_size: {list_size}"))),
                     }
                 },

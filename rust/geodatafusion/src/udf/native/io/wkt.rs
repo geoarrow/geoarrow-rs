@@ -149,7 +149,8 @@ impl ScalarUDFImpl for GeomFromText {
         let input_field = &args.arg_fields[0];
         let data_type =
             GeoArrowType::try_from(input_field).map_err(GeoDataFusionError::GeoArrow)?;
-        let geom_type = GeometryType::new(self.coord_type, data_type.metadata().clone());
+        let geom_type =
+            GeometryType::new(data_type.metadata().clone()).with_coord_type(self.coord_type);
         Ok(geom_type.to_field(input_field.name(), input_field.is_nullable()))
     }
 

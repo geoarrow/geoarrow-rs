@@ -111,7 +111,8 @@ impl PolygonArray {
             nulls.as_ref().map(|v| v.len()),
         )?;
         Ok(Self {
-            data_type: PolygonType::new(coords.coord_type(), coords.dim(), metadata),
+            data_type: PolygonType::new(coords.dim(), metadata)
+                .with_coord_type(coords.coord_type()),
             coords,
             geom_offsets,
             ring_offsets,
@@ -363,10 +364,10 @@ impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, PolygonType)> for PolygonA
 impl From<RectArray> for PolygonArray {
     fn from(value: RectArray) -> Self {
         let polygon_type = PolygonType::new(
-            CoordType::Separated,
             value.data_type.dimension(),
             value.data_type.metadata().clone(),
-        );
+        )
+        .with_coord_type(CoordType::Separated);
 
         // The number of output geoms is the same as the input
         let geom_capacity = value.len();
@@ -412,7 +413,8 @@ mod test {
     fn geo_round_trip() {
         for coord_type in [CoordType::Interleaved, CoordType::Separated] {
             let geoms = [Some(polygon::p0()), None, Some(polygon::p1()), None];
-            let typ = PolygonType::new(coord_type, Dimension::XY, Default::default());
+            let typ =
+                PolygonType::new(Dimension::XY, Default::default()).with_coord_type(coord_type);
             let geo_arr = PolygonBuilder::from_nullable_polygons(&geoms, typ).finish();
 
             for (i, g) in geo_arr.iter().enumerate() {
@@ -435,7 +437,8 @@ mod test {
                 .map(|x| x.transpose().unwrap().map(|g| g.to_polygon()))
                 .collect::<Vec<_>>();
 
-            let typ = PolygonType::new(coord_type, Dimension::XY, Default::default());
+            let typ =
+                PolygonType::new(Dimension::XY, Default::default()).with_coord_type(coord_type);
             let geo_arr2 = PolygonBuilder::from_nullable_polygons(&geo_geoms, typ).finish();
             assert_eq!(geo_arr, geo_arr2);
         }
