@@ -139,11 +139,11 @@ impl GeoArrowType {
     ///
     /// ```
     /// # use arrow_schema::DataType;
-    /// # use geoarrow_schema::{CoordType, Dimension, GeoArrowType, PointType};
+    /// # use geoarrow_schema::{Dimension, GeoArrowType, PointType};
     /// #
-    /// let point_type = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let data_type = GeoArrowType::Point(point_type).to_data_type();
-    /// assert!(matches!(data_type, DataType::FixedSizeList(_, _)));
+    /// assert!(matches!(data_type, DataType::Struct(_)));
     /// ```
     pub fn to_data_type(&self) -> DataType {
         use GeoArrowType::*;
@@ -172,9 +172,9 @@ impl GeoArrowType {
     /// # Examples
     ///
     /// ```
-    /// # use geoarrow_schema::{CoordType, Dimension, GeoArrowType, PointType};
+    /// # use geoarrow_schema::{Dimension, GeoArrowType, PointType};
     /// #
-    /// let point_type = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let geoarrow_type = GeoArrowType::Point(point_type);
     /// let field = geoarrow_type.to_field("geometry", true);
     /// assert_eq!(field.name(), "geometry");
@@ -212,7 +212,7 @@ impl GeoArrowType {
     /// ```
     /// # use geoarrow_schema::{CoordType, Dimension, GeoArrowType, PointType};
     /// #
-    /// let point_type = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let geoarrow_type = GeoArrowType::Point(point_type);
     /// let new_type = geoarrow_type.with_coord_type(CoordType::Separated);
     ///
@@ -242,9 +242,9 @@ impl GeoArrowType {
     /// # Examples
     ///
     /// ```
-    /// # use geoarrow_schema::{CoordType, Dimension, GeoArrowType, PointType};
+    /// # use geoarrow_schema::{Dimension, GeoArrowType, PointType};
     /// #
-    /// let point_type = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let geoarrow_type = GeoArrowType::Point(point_type);
     /// let new_type = geoarrow_type.with_dimension(Dimension::XYZ);
     ///
