@@ -244,8 +244,9 @@ impl GeoParquetMetadataBuilder {
                 column_name.clone()
             } else {
                 // Make it deterministic which key we use.
-                let keys: Vec<_> = columns.keys().collect();
+                let mut keys: Vec<_> = columns.keys().collect();
                 assert!(!keys.is_empty()); // We already checked for empty columns
+                keys.sort();
                 keys[0].to_string()
             };
             Some(GeoParquetMetadata {
