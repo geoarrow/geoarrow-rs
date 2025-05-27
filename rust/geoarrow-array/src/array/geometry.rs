@@ -122,7 +122,9 @@ impl GeometryArray {
         let coord_type = coord_types.into_iter().next().unwrap();
 
         Self {
-            data_type: GeometryType::new(coord_type, metadata),
+            data_type: GeometryType::new()
+                .with_coord_type(coord_type)
+                .with_metadata(metadata),
             type_ids,
             offsets,
             points,
@@ -598,7 +600,7 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
                             points[index] = Some(
                                 (
                                     value.child(type_id).as_ref(),
-                                    PointType::new(coord_type, dim, Default::default()),
+                                    PointType::new(dim).with_coord_type(coord_type),
                                 )
                                     .try_into()?,
                             );
@@ -607,7 +609,7 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
                             line_strings[index] = Some(
                                 (
                                     value.child(type_id).as_ref(),
-                                    LineStringType::new(coord_type, dim, Default::default()),
+                                    LineStringType::new(dim).with_coord_type(coord_type),
                                 )
                                     .try_into()?,
                             );
@@ -616,7 +618,7 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
                             polygons[index] = Some(
                                 (
                                     value.child(type_id).as_ref(),
-                                    PolygonType::new(coord_type, dim, Default::default()),
+                                    PolygonType::new(dim).with_coord_type(coord_type),
                                 )
                                     .try_into()?,
                             );
@@ -625,7 +627,7 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
                             mpoints[index] = Some(
                                 (
                                     value.child(type_id).as_ref(),
-                                    MultiPointType::new(coord_type, dim, Default::default()),
+                                    MultiPointType::new(dim).with_coord_type(coord_type),
                                 )
                                     .try_into()?,
                             );
@@ -634,7 +636,7 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
                             mline_strings[index] = Some(
                                 (
                                     value.child(type_id).as_ref(),
-                                    MultiLineStringType::new(coord_type, dim, Default::default()),
+                                    MultiLineStringType::new(dim).with_coord_type(coord_type),
                                 )
                                     .try_into()?,
                             );
@@ -643,7 +645,7 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
                             mpolygons[index] = Some(
                                 (
                                     value.child(type_id).as_ref(),
-                                    MultiPolygonType::new(coord_type, dim, Default::default()),
+                                    MultiPolygonType::new(dim).with_coord_type(coord_type),
                                 )
                                     .try_into()?,
                             );
@@ -652,11 +654,7 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
                             gcs[index] = Some(
                                 (
                                     value.child(type_id).as_ref(),
-                                    GeometryCollectionType::new(
-                                        coord_type,
-                                        dim,
-                                        Default::default(),
-                                    ),
+                                    GeometryCollectionType::new(dim).with_coord_type(coord_type),
                                 )
                                     .try_into()?,
                             );
@@ -692,11 +690,9 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
             let new_val = if let Some(arr) = arr.take() {
                 arr
             } else {
-                PointBuilder::new(PointType::new(
-                    coord_type,
-                    Dimension::from_order(i).unwrap(),
-                    Default::default(),
-                ))
+                PointBuilder::new(
+                    PointType::new(Dimension::from_order(i).unwrap()).with_coord_type(coord_type),
+                )
                 .finish()
             };
             arr.replace(new_val);
@@ -705,11 +701,10 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
             let new_val = if let Some(arr) = arr.take() {
                 arr
             } else {
-                LineStringBuilder::new(LineStringType::new(
-                    coord_type,
-                    Dimension::from_order(i).unwrap(),
-                    Default::default(),
-                ))
+                LineStringBuilder::new(
+                    LineStringType::new(Dimension::from_order(i).unwrap())
+                        .with_coord_type(coord_type),
+                )
                 .finish()
             };
             arr.replace(new_val);
@@ -718,11 +713,9 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
             let new_val = if let Some(arr) = arr.take() {
                 arr
             } else {
-                PolygonBuilder::new(PolygonType::new(
-                    coord_type,
-                    Dimension::from_order(i).unwrap(),
-                    Default::default(),
-                ))
+                PolygonBuilder::new(
+                    PolygonType::new(Dimension::from_order(i).unwrap()).with_coord_type(coord_type),
+                )
                 .finish()
             };
             arr.replace(new_val);
@@ -731,11 +724,10 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
             let new_val = if let Some(arr) = arr.take() {
                 arr
             } else {
-                MultiPointBuilder::new(MultiPointType::new(
-                    coord_type,
-                    Dimension::from_order(i).unwrap(),
-                    Default::default(),
-                ))
+                MultiPointBuilder::new(
+                    MultiPointType::new(Dimension::from_order(i).unwrap())
+                        .with_coord_type(coord_type),
+                )
                 .finish()
             };
             arr.replace(new_val);
@@ -744,11 +736,10 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
             let new_val = if let Some(arr) = arr.take() {
                 arr
             } else {
-                MultiLineStringBuilder::new(MultiLineStringType::new(
-                    coord_type,
-                    Dimension::from_order(i).unwrap(),
-                    Default::default(),
-                ))
+                MultiLineStringBuilder::new(
+                    MultiLineStringType::new(Dimension::from_order(i).unwrap())
+                        .with_coord_type(coord_type),
+                )
                 .finish()
             };
             arr.replace(new_val);
@@ -757,11 +748,10 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
             let new_val = if let Some(arr) = arr.take() {
                 arr
             } else {
-                MultiPolygonBuilder::new(MultiPolygonType::new(
-                    coord_type,
-                    Dimension::from_order(i).unwrap(),
-                    Default::default(),
-                ))
+                MultiPolygonBuilder::new(
+                    MultiPolygonType::new(Dimension::from_order(i).unwrap())
+                        .with_coord_type(coord_type),
+                )
                 .finish()
             };
             arr.replace(new_val);
@@ -770,11 +760,10 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
             let new_val = if let Some(arr) = arr.take() {
                 arr
             } else {
-                GeometryCollectionBuilder::new(GeometryCollectionType::new(
-                    coord_type,
-                    Dimension::from_order(i).unwrap(),
-                    Default::default(),
-                ))
+                GeometryCollectionBuilder::new(
+                    GeometryCollectionType::new(Dimension::from_order(i).unwrap())
+                        .with_coord_type(coord_type),
+                )
                 .finish()
             };
             arr.replace(new_val);
@@ -910,59 +899,48 @@ type ChildrenArrays = (
 fn empty_children(coord_type: CoordType) -> ChildrenArrays {
     (
         core::array::from_fn(|i| {
-            PointBuilder::new(PointType::new(
-                coord_type,
-                Dimension::from_order(i).unwrap(),
-                Default::default(),
-            ))
+            PointBuilder::new(
+                PointType::new(Dimension::from_order(i).unwrap()).with_coord_type(coord_type),
+            )
             .finish()
         }),
         core::array::from_fn(|i| {
-            LineStringBuilder::new(LineStringType::new(
-                coord_type,
-                Dimension::from_order(i).unwrap(),
-                Default::default(),
-            ))
+            LineStringBuilder::new(
+                LineStringType::new(Dimension::from_order(i).unwrap()).with_coord_type(coord_type),
+            )
             .finish()
         }),
         core::array::from_fn(|i| {
-            PolygonBuilder::new(PolygonType::new(
-                coord_type,
-                Dimension::from_order(i).unwrap(),
-                Default::default(),
-            ))
+            PolygonBuilder::new(
+                PolygonType::new(Dimension::from_order(i).unwrap()).with_coord_type(coord_type),
+            )
             .finish()
         }),
         core::array::from_fn(|i| {
-            MultiPointBuilder::new(MultiPointType::new(
-                coord_type,
-                Dimension::from_order(i).unwrap(),
-                Default::default(),
-            ))
+            MultiPointBuilder::new(
+                MultiPointType::new(Dimension::from_order(i).unwrap()).with_coord_type(coord_type),
+            )
             .finish()
         }),
         core::array::from_fn(|i| {
-            MultiLineStringBuilder::new(MultiLineStringType::new(
-                coord_type,
-                Dimension::from_order(i).unwrap(),
-                Default::default(),
-            ))
+            MultiLineStringBuilder::new(
+                MultiLineStringType::new(Dimension::from_order(i).unwrap())
+                    .with_coord_type(coord_type),
+            )
             .finish()
         }),
         core::array::from_fn(|i| {
-            MultiPolygonBuilder::new(MultiPolygonType::new(
-                coord_type,
-                Dimension::from_order(i).unwrap(),
-                Default::default(),
-            ))
+            MultiPolygonBuilder::new(
+                MultiPolygonType::new(Dimension::from_order(i).unwrap())
+                    .with_coord_type(coord_type),
+            )
             .finish()
         }),
         core::array::from_fn(|i| {
-            GeometryCollectionBuilder::new(GeometryCollectionType::new(
-                coord_type,
-                Dimension::from_order(i).unwrap(),
-                Default::default(),
-            ))
+            GeometryCollectionBuilder::new(
+                GeometryCollectionType::new(Dimension::from_order(i).unwrap())
+                    .with_coord_type(coord_type),
+            )
             .finish()
         }),
     )
@@ -978,7 +956,9 @@ macro_rules! impl_primitive_cast {
 
                 let type_ids = vec![value.type_id(dim); value.len()].into();
                 let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
-                let data_type = GeometryType::new(coord_type, metadata);
+                let data_type = GeometryType::new()
+                    .with_coord_type(coord_type)
+                    .with_metadata(metadata);
                 let mut children = empty_children(coord_type);
 
                 children.$value_edit[dim.order()] = value;
@@ -1035,7 +1015,7 @@ mod test {
 
     fn geom_array(coord_type: CoordType) -> GeometryArray {
         let geoms = geoms().into_iter().map(Some).collect::<Vec<_>>();
-        let typ = GeometryType::new(coord_type, Default::default());
+        let typ = GeometryType::new().with_coord_type(coord_type);
         GeometryBuilder::from_nullable_geometries(&geoms, typ)
             .unwrap()
             .finish()
@@ -1101,7 +1081,7 @@ mod test {
             .filter_map(|(i, geom)| if geom.is_none() { Some(i) } else { None })
             .collect::<Vec<_>>();
 
-        let typ = GeometryType::new(CoordType::Interleaved, Default::default());
+        let typ = GeometryType::new();
         let geo_arr = GeometryBuilder::from_nullable_geometries(&geoms, typ)
             .unwrap()
             .finish();
@@ -1116,7 +1096,7 @@ mod test {
         let geoms = raw::geometry::geoms();
         let expected_nulls = NullBuffer::from_iter(geoms.iter().map(|g| g.is_some()));
 
-        let typ = GeometryType::new(CoordType::Interleaved, Default::default());
+        let typ = GeometryType::new();
         let geo_arr = GeometryBuilder::from_nullable_geometries(&geoms, typ)
             .unwrap()
             .finish();

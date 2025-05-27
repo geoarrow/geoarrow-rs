@@ -142,7 +142,7 @@ impl GeomProcessor for MultiPolygonBuilder {
 #[cfg(test)]
 mod test {
     use geo_types::Geometry;
-    use geoarrow_schema::{CoordType, Dimension};
+    use geoarrow_schema::Dimension;
     use geozero::error::Result;
 
     use super::*;
@@ -159,7 +159,7 @@ mod test {
                 .map(Geometry::MultiPolygon)
                 .collect(),
         );
-        let typ = MultiPolygonType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let typ = MultiPolygonType::new(Dimension::XY);
         let geo_arr = geo.to_multi_polygon_array(typ.clone()).unwrap();
 
         let geo_arr2 = MultiPolygonBuilder::from_multi_polygons(&geo_geoms, typ).finish();

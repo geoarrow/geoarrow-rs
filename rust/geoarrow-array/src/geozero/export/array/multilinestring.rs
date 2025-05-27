@@ -23,7 +23,7 @@ impl GeozeroGeometry for MultiLineStringArray {
 
 #[cfg(test)]
 mod test {
-    use geoarrow_schema::{CoordType, Dimension, MultiLineStringType};
+    use geoarrow_schema::{Dimension, MultiLineStringType};
     use geozero::ToWkt;
 
     use crate::builder::MultiLineStringBuilder;
@@ -31,8 +31,7 @@ mod test {
 
     #[test]
     fn geozero_process_geom() -> geozero::error::Result<()> {
-        let typ =
-            MultiLineStringType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let typ = MultiLineStringType::new(Dimension::XY);
         let geo_arr =
             MultiLineStringBuilder::from_multi_line_strings(&[&ml0(), &ml1()], typ).finish();
         let wkt = ToWkt::to_wkt(&geo_arr)?;

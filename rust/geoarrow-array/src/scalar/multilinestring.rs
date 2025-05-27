@@ -87,7 +87,7 @@ impl<G: MultiLineStringTrait<T = f64>> PartialEq<G> for MultiLineString<'_> {
 
 #[cfg(test)]
 mod test {
-    use geoarrow_schema::{CoordType, Dimension, MultiLineStringType};
+    use geoarrow_schema::{Dimension, MultiLineStringType};
 
     use crate::builder::MultiLineStringBuilder;
     use crate::test::multilinestring::{ml0, ml1};
@@ -96,8 +96,7 @@ mod test {
     /// Test Eq where the current index is true but another index is false
     #[test]
     fn test_eq_other_index_false() {
-        let typ =
-            MultiLineStringType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let typ = MultiLineStringType::new(Dimension::XY);
 
         let arr1 = MultiLineStringBuilder::from_multi_line_strings(
             vec![ml0(), ml1()].as_slice(),

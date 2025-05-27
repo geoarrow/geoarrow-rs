@@ -199,7 +199,7 @@ mod test {
     use geoarrow_array::GeoArrowArray;
     use geoarrow_array::array::PointArray;
     use geoarrow_array::builder::PointBuilder;
-    use geoarrow_schema::{CoordType, PointType};
+    use geoarrow_schema::PointType;
     use wkt::wkt;
 
     use super::*;
@@ -213,7 +213,7 @@ mod test {
             Some(wkt! { POINT (1. 2.) }),
             Some(wkt! { POINT (1. 2.) }),
         ];
-        let typ = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let typ = PointType::new(Dimension::XY);
         PointBuilder::from_nullable_points(geoms.iter().map(|x| x.as_ref()), typ).finish()
     }
 

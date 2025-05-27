@@ -109,7 +109,7 @@ fn point() {
         Dimension::XYZM,
     ] {
         for file_type in ["geo", "native"] {
-            let expected_typ = PointType::new(CoordType::Separated, dim, Default::default());
+            let expected_typ = PointType::new(dim).with_coord_type(CoordType::Separated);
             let path = geoparquet_filepath(expected_typ.clone().into(), file_type);
             let (wkt_arr, geo_arr) = read_gpq_file(path);
 
@@ -137,7 +137,7 @@ fn linestring() {
         Dimension::XYZM,
     ] {
         for file_type in ["geo", "native"] {
-            let expected_typ = LineStringType::new(CoordType::Separated, dim, Default::default());
+            let expected_typ = LineStringType::new(dim).with_coord_type(CoordType::Separated);
             let path = geoparquet_filepath(expected_typ.clone().into(), file_type);
             let (wkt_arr, geo_arr) = read_gpq_file(path);
 
@@ -165,7 +165,7 @@ fn polygon() {
         Dimension::XYZM,
     ] {
         for file_type in ["geo", "native"] {
-            let expected_typ = PolygonType::new(CoordType::Separated, dim, Default::default());
+            let expected_typ = PolygonType::new(dim).with_coord_type(CoordType::Separated);
             let path = geoparquet_filepath(expected_typ.clone().into(), file_type);
             let (wkt_arr, geo_arr) = read_gpq_file(path);
 
@@ -193,7 +193,7 @@ fn multipoint() {
         Dimension::XYZM,
     ] {
         for file_type in ["geo", "native"] {
-            let expected_typ = MultiPointType::new(CoordType::Separated, dim, Default::default());
+            let expected_typ = MultiPointType::new(dim).with_coord_type(CoordType::Separated);
             let path = geoparquet_filepath(expected_typ.clone().into(), file_type);
             let (wkt_arr, geo_arr) = read_gpq_file(path);
 
@@ -221,8 +221,7 @@ fn multilinestring() {
         Dimension::XYZM,
     ] {
         for file_type in ["geo", "native"] {
-            let expected_typ =
-                MultiLineStringType::new(CoordType::Separated, dim, Default::default());
+            let expected_typ = MultiLineStringType::new(dim).with_coord_type(CoordType::Separated);
             let path = geoparquet_filepath(expected_typ.clone().into(), file_type);
             let (wkt_arr, geo_arr) = read_gpq_file(path);
 
@@ -251,7 +250,7 @@ fn multipolygon() {
         Dimension::XYZM,
     ] {
         for file_type in ["geo", "native"] {
-            let expected_typ = MultiPolygonType::new(CoordType::Separated, dim, Default::default());
+            let expected_typ = MultiPolygonType::new(dim).with_coord_type(CoordType::Separated);
             let path = geoparquet_filepath(expected_typ.clone().into(), file_type);
             let (wkt_arr, geo_arr) = read_gpq_file(path);
 
@@ -279,8 +278,7 @@ fn geometrycollection() {
         Dimension::XYM,
         Dimension::XYZM,
     ] {
-        let expected_typ =
-            GeometryCollectionType::new(CoordType::Separated, dim, Default::default());
+        let expected_typ = GeometryCollectionType::new(dim).with_coord_type(CoordType::Separated);
         let path = geoparquet_filepath(expected_typ.clone().into(), "geo");
         let (wkt_arr, geo_arr) = read_gpq_file(path);
 

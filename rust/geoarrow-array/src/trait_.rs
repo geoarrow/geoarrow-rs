@@ -468,11 +468,7 @@ mod test {
                 GeoArrowType::try_from(&Field::new("", array.data_type().clone(), true)).unwrap();
             assert_eq!(
                 t,
-                GeoArrowType::Point(PointType::new(
-                    CoordType::Interleaved,
-                    dim,
-                    Default::default()
-                ))
+                GeoArrowType::Point(PointType::new(dim).with_coord_type(CoordType::Interleaved))
             );
         }
     }
@@ -526,11 +522,7 @@ mod test {
                 GeoArrowType::try_from(&Field::new("", array.data_type().clone(), true)).unwrap();
             assert_eq!(
                 t,
-                GeoArrowType::Point(PointType::new(
-                    CoordType::Separated,
-                    dim,
-                    Default::default()
-                ))
+                GeoArrowType::Point(PointType::new(dim).with_coord_type(CoordType::Separated))
             );
         }
     }
@@ -547,10 +539,8 @@ mod test {
         let data_type: GeoArrowType = (&field).try_into().unwrap();
         assert_eq!(ml_array.data_type(), data_type);
 
-        let mut builder = GeometryBuilder::new(GeometryType::new(
-            CoordType::Interleaved,
-            Default::default(),
-        ));
+        let mut builder =
+            GeometryBuilder::new(GeometryType::new().with_coord_type(CoordType::Interleaved));
         builder
             .push_geometry(Some(&crate::test::point::p0()))
             .unwrap();

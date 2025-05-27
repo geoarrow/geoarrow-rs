@@ -316,10 +316,7 @@ fn impl_array_accessor<'a>(arr: &'a impl GeoArrowArrayAccessor<'a>) -> GeoArrowR
     match arr.data_type() {
         GeoArrowType::Rect(_) => unreachable!(),
         _ => {
-            let mut builder = RectBuilder::with_capacity(
-                BoxType::new(Dimension::XY, Default::default()),
-                arr.len(),
-            );
+            let mut builder = RectBuilder::with_capacity(BoxType::new(Dimension::XY), arr.len());
             for item in arr.iter() {
                 if let Some(item) = item {
                     let mut rect = BoundingRect::new();

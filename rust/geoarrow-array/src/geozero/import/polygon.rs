@@ -105,7 +105,7 @@ impl GeomProcessor for PolygonBuilder {
 #[cfg(test)]
 mod test {
     use geo_types::Geometry;
-    use geoarrow_schema::{CoordType, Dimension};
+    use geoarrow_schema::Dimension;
     use geozero::error::Result;
 
     use super::*;
@@ -121,7 +121,7 @@ mod test {
                 .map(Geometry::Polygon)
                 .collect(),
         );
-        let typ = PolygonType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let typ = PolygonType::new(Dimension::XY);
         let geo_arr = gc.to_polygon_array(typ.clone()).unwrap();
 
         let geo_arr2 = PolygonBuilder::from_polygons(&geo_geoms, typ).finish();

@@ -92,49 +92,49 @@ impl<'a> GeometryBuilder {
         let points = core::array::from_fn(|i| {
             let dim = Dimension::from_order(i).unwrap();
             PointBuilder::with_capacity(
-                PointType::new(coord_type, dim, Default::default()),
+                PointType::new(dim).with_coord_type(coord_type),
                 capacity.point(dim),
             )
         });
         let line_strings = core::array::from_fn(|i| {
             let dim = Dimension::from_order(i).unwrap();
             LineStringBuilder::with_capacity(
-                LineStringType::new(coord_type, dim, Default::default()),
+                LineStringType::new(dim).with_coord_type(coord_type),
                 capacity.line_string(dim),
             )
         });
         let polygons = core::array::from_fn(|i| {
             let dim = Dimension::from_order(i).unwrap();
             PolygonBuilder::with_capacity(
-                PolygonType::new(coord_type, dim, Default::default()),
+                PolygonType::new(dim).with_coord_type(coord_type),
                 capacity.polygon(dim),
             )
         });
         let mpoints = core::array::from_fn(|i| {
             let dim = Dimension::from_order(i).unwrap();
             MultiPointBuilder::with_capacity(
-                MultiPointType::new(coord_type, dim, Default::default()),
+                MultiPointType::new(dim).with_coord_type(coord_type),
                 capacity.multi_point(dim),
             )
         });
         let mline_strings = core::array::from_fn(|i| {
             let dim = Dimension::from_order(i).unwrap();
             MultiLineStringBuilder::with_capacity(
-                MultiLineStringType::new(coord_type, dim, Default::default()),
+                MultiLineStringType::new(dim).with_coord_type(coord_type),
                 capacity.multi_line_string(dim),
             )
         });
         let mpolygons = core::array::from_fn(|i| {
             let dim = Dimension::from_order(i).unwrap();
             MultiPolygonBuilder::with_capacity(
-                MultiPolygonType::new(coord_type, dim, Default::default()),
+                MultiPolygonType::new(dim).with_coord_type(coord_type),
                 capacity.multi_polygon(dim),
             )
         });
         let gcs = core::array::from_fn(|i| {
             let dim = Dimension::from_order(i).unwrap();
             GeometryCollectionBuilder::with_capacity(
-                GeometryCollectionType::new(coord_type, dim, Default::default()),
+                GeometryCollectionType::new(dim).with_coord_type(coord_type),
                 capacity.geometry_collection(dim),
             )
         });
@@ -854,7 +854,7 @@ mod test {
     #[test]
     fn all_items_null() {
         // Testing the behavior of deferred nulls when there are no valid geometries.
-        let typ = GeometryType::new(CoordType::Interleaved, Default::default());
+        let typ = GeometryType::new();
         let mut builder = GeometryBuilder::new(typ);
 
         builder.push_null();
@@ -871,7 +871,7 @@ mod test {
     #[test]
     fn deferred_nulls() {
         let coord_type = CoordType::Interleaved;
-        let typ = GeometryType::new(coord_type, Default::default());
+        let typ = GeometryType::new().with_coord_type(coord_type);
 
         let mut builder = GeometryBuilder::new(typ);
         builder.push_null();
@@ -903,7 +903,7 @@ mod test {
     #[test]
     fn later_nulls_after_deferred_nulls_pushed_directly() {
         let coord_type = CoordType::Interleaved;
-        let typ = GeometryType::new(coord_type, Default::default());
+        let typ = GeometryType::new().with_coord_type(coord_type);
 
         let mut builder = GeometryBuilder::new(typ);
         builder.push_null();
@@ -943,7 +943,7 @@ mod test {
     #[test]
     fn nulls_no_deferred() {
         let coord_type = CoordType::Interleaved;
-        let typ = GeometryType::new(coord_type, Default::default());
+        let typ = GeometryType::new().with_coord_type(coord_type);
 
         let mut builder = GeometryBuilder::new(typ);
         let point = wkt! { POINT Z (30. 10. 40.) };

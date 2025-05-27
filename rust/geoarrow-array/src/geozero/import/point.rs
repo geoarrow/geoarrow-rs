@@ -154,7 +154,7 @@ impl GeomProcessor for PointBuilder {
 mod test {
 
     use geo_types::{Geometry, GeometryCollection};
-    use geoarrow_schema::{CoordType, Dimension};
+    use geoarrow_schema::Dimension;
 
     use super::*;
     use crate::GeoArrowArrayAccessor;
@@ -171,7 +171,7 @@ mod test {
             .into(),
         );
 
-        let typ = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let typ = PointType::new(Dimension::XY);
         let point_array = geo.to_point_array(typ).unwrap();
         assert_eq!(point_array.value(0).unwrap(), point::p0());
         assert_eq!(point_array.value(1).unwrap(), point::p1());
@@ -185,7 +185,7 @@ mod test {
             Geometry::LineString(linestring::ls0()),
         ]));
 
-        let typ = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let typ = PointType::new(Dimension::XY);
         let err = ToPointArray::to_point_array(&geo, typ).unwrap_err();
         assert!(matches!(err, geozero::error::GeozeroError::Geometry(..)));
     }

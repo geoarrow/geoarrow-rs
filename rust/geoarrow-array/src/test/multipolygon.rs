@@ -51,12 +51,12 @@ pub(crate) fn mp1() -> MultiPolygon {
 
 pub(crate) fn mp_array(coord_type: CoordType) -> MultiPolygonArray {
     let geoms = vec![Some(mp0()), None, Some(mp1()), None];
-    let typ = MultiPolygonType::new(coord_type, Dimension::XY, Default::default());
+    let typ = MultiPolygonType::new(Dimension::XY).with_coord_type(coord_type);
     MultiPolygonBuilder::from_nullable_multi_polygons(&geoms, typ).finish()
 }
 
 pub fn array(coord_type: CoordType, dim: Dimension) -> MultiPolygonArray {
-    let typ = MultiPolygonType::new(coord_type, dim, Default::default());
+    let typ = MultiPolygonType::new(dim).with_coord_type(coord_type);
     let geoms = match dim {
         Dimension::XY => raw::multipolygon::xy::geoms(),
         Dimension::XYZ => raw::multipolygon::xyz::geoms(),

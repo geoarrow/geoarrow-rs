@@ -91,7 +91,7 @@ impl GeomProcessor for LineStringBuilder {
 #[cfg(test)]
 mod test {
     use geo_types::{Geometry, LineString};
-    use geoarrow_schema::{CoordType, Dimension};
+    use geoarrow_schema::Dimension;
     use geozero::error::Result;
 
     use super::*;
@@ -107,7 +107,7 @@ mod test {
                 .map(Geometry::LineString)
                 .collect(),
         );
-        let typ = LineStringType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let typ = LineStringType::new(Dimension::XY);
         let geo_arr = geo.to_line_string_array(typ.clone()).unwrap();
 
         let geo_arr2 = LineStringBuilder::from_line_strings(&geo_geoms, typ).finish();

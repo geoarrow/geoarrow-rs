@@ -370,7 +370,7 @@ fn impl_to_wkb<'a, O: OffsetSizeTrait>(
         .iter()
         .map(|x| x.transpose())
         .collect::<GeoArrowResult<Vec<_>>>()?;
-    let wkb_type = WkbType::new(geo_arr.data_type().metadata().clone());
+    let wkb_type = WkbType::new().with_metadata(geo_arr.data_type().metadata().clone());
     Ok(WkbBuilder::from_nullable_geometries(geoms.as_slice(), wkb_type).finish())
 }
 
@@ -1207,7 +1207,7 @@ mod test {
             .map(|x| x.transpose())
             .collect::<std::result::Result<Vec<_>, _>>()
             .unwrap();
-        let wkb_type = WkbType::new(Default::default());
+        let wkb_type = WkbType::new().with_metadata(geo_arr.data_type().metadata().clone());
         Ok(WkbBuilder::from_nullable_geometries(geoms.as_slice(), wkb_type).finish())
     }
 }

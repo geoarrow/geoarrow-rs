@@ -22,11 +22,11 @@ macro_rules! define_basic_type {
 
         impl $struct_name {
             /// Construct a new type from parts.
-            pub fn new(coord_type: CoordType, dim: Dimension, metadata: Arc<Metadata>) -> Self {
+            pub fn new(dim: Dimension) -> Self {
                 Self {
-                    coord_type,
+                    coord_type: Default::default(),
                     dim,
-                    metadata,
+                    metadata: Default::default(),
                 }
             }
 
@@ -936,11 +936,8 @@ pub struct GeometryType {
 
 impl GeometryType {
     /// Construct a new type from parts.
-    pub fn new(coord_type: CoordType, metadata: Arc<Metadata>) -> Self {
-        Self {
-            coord_type,
-            metadata,
-        }
+    pub fn new() -> Self {
+        Default::default()
     }
 
     /// Change the underlying [`CoordType`]
@@ -1156,8 +1153,11 @@ pub struct BoxType {
 
 impl BoxType {
     /// Construct a new type from parts.
-    pub fn new(dim: Dimension, metadata: Arc<Metadata>) -> Self {
-        Self { dim, metadata }
+    pub fn new(dim: Dimension) -> Self {
+        Self {
+            dim,
+            metadata: Default::default(),
+        }
     }
 
     /// Change the underlying [`Dimension`]
@@ -1331,8 +1331,8 @@ pub struct WkbType {
 
 impl WkbType {
     /// Construct a new type from parts.
-    pub fn new(metadata: Arc<Metadata>) -> Self {
-        Self { metadata }
+    pub fn new() -> Self {
+        Default::default()
     }
 
     /// Change the underlying [`Metadata`]
@@ -1390,8 +1390,8 @@ pub struct WktType {
 
 impl WktType {
     /// Construct a new type from parts.
-    pub fn new(metadata: Arc<Metadata>) -> Self {
-        Self { metadata }
+    pub fn new() -> Self {
+        Default::default()
     }
 
     /// Change the underlying [`Metadata`]
@@ -1545,8 +1545,7 @@ mod test {
 
     #[test]
     fn geometry_data_type() {
-        let typ =
-            GeometryCollectionType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let typ = GeometryCollectionType::new(Dimension::XY);
         dbg!(typ.data_type());
     }
 }

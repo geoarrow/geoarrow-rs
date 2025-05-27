@@ -192,26 +192,40 @@ impl GeoParquetGeometryTypeAndDimension {
         metadata: Arc<Metadata>,
     ) -> GeoArrowType {
         match self.geometry_type {
-            GeoParquetGeometryType::Point => {
-                GeoArrowType::Point(PointType::new(coord_type, self.dimension, metadata))
-            }
-            GeoParquetGeometryType::LineString => {
-                GeoArrowType::LineString(LineStringType::new(coord_type, self.dimension, metadata))
-            }
-            GeoParquetGeometryType::Polygon => {
-                GeoArrowType::Polygon(PolygonType::new(coord_type, self.dimension, metadata))
-            }
-            GeoParquetGeometryType::MultiPoint => {
-                GeoArrowType::MultiPoint(MultiPointType::new(coord_type, self.dimension, metadata))
-            }
+            GeoParquetGeometryType::Point => GeoArrowType::Point(
+                PointType::new(self.dimension)
+                    .with_coord_type(coord_type)
+                    .with_metadata(metadata),
+            ),
+            GeoParquetGeometryType::LineString => GeoArrowType::LineString(
+                LineStringType::new(self.dimension)
+                    .with_coord_type(coord_type)
+                    .with_metadata(metadata),
+            ),
+            GeoParquetGeometryType::Polygon => GeoArrowType::Polygon(
+                PolygonType::new(self.dimension)
+                    .with_coord_type(coord_type)
+                    .with_metadata(metadata),
+            ),
+            GeoParquetGeometryType::MultiPoint => GeoArrowType::MultiPoint(
+                MultiPointType::new(self.dimension)
+                    .with_coord_type(coord_type)
+                    .with_metadata(metadata),
+            ),
             GeoParquetGeometryType::MultiLineString => GeoArrowType::MultiLineString(
-                MultiLineStringType::new(coord_type, self.dimension, metadata),
+                MultiLineStringType::new(self.dimension)
+                    .with_coord_type(coord_type)
+                    .with_metadata(metadata),
             ),
             GeoParquetGeometryType::MultiPolygon => GeoArrowType::MultiPolygon(
-                MultiPolygonType::new(coord_type, self.dimension, metadata),
+                MultiPolygonType::new(self.dimension)
+                    .with_coord_type(coord_type)
+                    .with_metadata(metadata),
             ),
             GeoParquetGeometryType::GeometryCollection => GeoArrowType::GeometryCollection(
-                GeometryCollectionType::new(coord_type, self.dimension, metadata),
+                GeometryCollectionType::new(self.dimension)
+                    .with_coord_type(coord_type)
+                    .with_metadata(metadata),
             ),
         }
     }
@@ -724,8 +738,11 @@ pub(crate) fn infer_geo_data_type(
 ) -> GeoArrowResult<Option<GeoArrowType>> {
     use GeoParquetGeometryType::*;
 
-    let fallback_geometry_type =
-        GeoArrowType::Geometry(GeometryType::new(coord_type, metadata.clone()));
+    let fallback_geometry_type = GeoArrowType::Geometry(
+        GeometryType::new()
+            .with_coord_type(coord_type)
+            .with_metadata(metadata.clone()),
+    );
 
     match geometry_types.len() {
         // TODO: for unknown geometry type, should we leave it as WKB?
@@ -765,11 +782,11 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == point_count {
-                return Ok(Some(GeoArrowType::MultiPoint(MultiPointType::new(
-                    coord_type,
-                    single_dimension,
-                    metadata,
-                ))));
+                return Ok(Some(GeoArrowType::MultiPoint(
+                    MultiPointType::new(single_dimension)
+                        .with_coord_type(coord_type)
+                        .with_metadata(metadata),
+                )));
             }
 
             // Check if we can cast to MultiLineString
@@ -783,7 +800,9 @@ pub(crate) fn infer_geo_data_type(
 
             if geometry_types.len() == linestring_count {
                 return Ok(Some(GeoArrowType::MultiLineString(
-                    MultiLineStringType::new(coord_type, single_dimension, metadata),
+                    MultiLineStringType::new(single_dimension)
+                        .with_coord_type(coord_type)
+                        .with_metadata(metadata),
                 )));
             }
 
@@ -797,17 +816,14 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == polygon_count {
-                return Ok(Some(GeoArrowType::MultiPolygon(MultiPolygonType::new(
-                    coord_type,
-                    single_dimension,
-                    metadata,
-                ))));
+                return Ok(Some(GeoArrowType::MultiPolygon(
+                    MultiPolygonType::new(single_dimension)
+                        .with_coord_type(coord_type)
+                        .with_metadata(metadata),
+                )));
             }
 
-            Ok(Some(GeoArrowType::Geometry(GeometryType::new(
-                coord_type,
-                Default::default(),
-            ))))
+            Ok(Some(fallback_geometry_type))
         }
     }
 }
