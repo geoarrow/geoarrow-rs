@@ -14,7 +14,6 @@ rust-version = { workspace = true }
 arrow-array = { workspace = true }
 arrow-schema = { workspace = true }
 datafusion = { workspace = true }
-geo = { workspace = true }
 geoarrow-array = { workspace = true }
 geoarrow-schema = { workspace = true }
 geohash = { workspace = true }
