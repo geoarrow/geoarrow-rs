@@ -26,11 +26,11 @@ geoarrow-schema = { path = "../rust/geoarrow-schema" }
 geoparquet = { path = "../rust/geoparquet" }
 geozero = "0.14"
 indexmap = "2.5.0"
-numpy = "0.24"
+numpy = "0.25"
 object_store = "0.12"
 parquet = "55"
-pyo3 = { version = "0.24", features = ["hashbrown", "serde", "anyhow"] }
-pyo3-arrow = "0.9"
+pyo3 = { version = "0.25", features = ["hashbrown", "serde", "anyhow"] }
+pyo3-arrow = "0.10.1"
 pyo3-geoarrow = { path = "../rust/pyo3-geoarrow" }
 serde_json = "1"
 thiserror = "1"
