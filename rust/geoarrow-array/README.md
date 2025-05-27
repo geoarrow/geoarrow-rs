@@ -18,9 +18,9 @@ Use [builders][builder] to construct GeoArrow arrays. These builders offer a pus
 # use geoarrow_array::builder::PointBuilder;
 # use geoarrow_array::scalar::Point;
 # use geoarrow_array::GeoArrowArrayAccessor;
-# use geoarrow_schema::{CoordType, Dimension, PointType};
+# use geoarrow_schema::{Dimension, PointType};
 #
-let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+let point_type = PointType::new(Dimension::XY, Default::default());
 let mut builder = PointBuilder::new(point_type);
 
 builder.push_point(Some(&geo_types::point!(x: 0., y: 1.)));

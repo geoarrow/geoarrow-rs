@@ -34,14 +34,14 @@ use crate::{GeoArrowArrayAccessor, IntoArrow};
 /// use geoarrow_array::cast::AsGeoArrowArray;
 /// use geoarrow_array::GeoArrowArray;
 /// use geo_traits::CoordTrait;
-/// use geoarrow_schema::{CoordType, Dimension, PointType};
+/// use geoarrow_schema::{Dimension, PointType};
 ///
 /// let point1 = point!(x: 1., y: 2.);
 /// let point2 = point!(x: 3., y: 4.);
 /// let point3 = point!(x: 5., y: 6.);
 /// let geoms = [point1, point2, point3];
 ///
-/// let geom_type = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+/// let geom_type = PointType::new(Dimension::XY, Default::default());
 /// let point_array = PointBuilder::from_points(geoms.iter(), geom_type).finish();
 ///
 /// let generic_array: Arc<dyn GeoArrowArray> = Arc::new(point_array.clone());
