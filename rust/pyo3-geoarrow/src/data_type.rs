@@ -159,7 +159,10 @@ macro_rules! impl_native_type_constructor {
         ) -> PyGeoArrowType {
             let edges = edges.map(|e| e.into());
             let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
-            <$geoarrow_type>::new(coord_type.into(), dimension.into(), metadata).into()
+            <$geoarrow_type>::new(dimension.into())
+                .with_coord_type(coord_type.into())
+                .with_metadata(metadata)
+                .into()
         }
     };
 }
@@ -177,7 +180,9 @@ impl_native_type_constructor!(geometrycollection, GeometryCollectionType);
 pub fn r#box(dimension: PyDimension, crs: Option<PyCrs>, edges: Option<PyEdges>) -> PyGeoArrowType {
     let edges = edges.map(|e| e.into());
     let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
-    BoxType::new(dimension.into(), metadata).into()
+    BoxType::new(dimension.into())
+        .with_metadata(metadata)
+        .into()
 }
 
 #[pyfunction]
@@ -189,7 +194,10 @@ pub fn geometry(
 ) -> PyGeoArrowType {
     let edges = edges.map(|e| e.into());
     let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
-    GeometryType::new(coord_type.into(), metadata).into()
+    GeometryType::new()
+        .with_coord_type(coord_type.into())
+        .with_metadata(metadata)
+        .into()
 }
 
 #[pyfunction]
@@ -197,7 +205,7 @@ pub fn geometry(
 pub fn wkb(crs: Option<PyCrs>, edges: Option<PyEdges>) -> PyGeoArrowType {
     let edges = edges.map(|e| e.into());
     let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
-    WkbType::new(metadata).into()
+    WkbType::new().with_metadata(metadata).into()
 }
 
 #[pyfunction]
@@ -205,5 +213,5 @@ pub fn wkb(crs: Option<PyCrs>, edges: Option<PyEdges>) -> PyGeoArrowType {
 pub fn wkt(crs: Option<PyCrs>, edges: Option<PyEdges>) -> PyGeoArrowType {
     let edges = edges.map(|e| e.into());
     let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
-    WktType::new(metadata).into()
+    WktType::new().with_metadata(metadata).into()
 }

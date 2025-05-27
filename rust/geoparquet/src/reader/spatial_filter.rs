@@ -149,10 +149,8 @@ impl<'a> ParquetBboxStatistics<'a> {
 
     /// Extract the bounding boxes for a sequence of row groups
     pub fn get_bboxes(&self, row_groups: &[RowGroupMetaData]) -> GeoArrowResult<RectArray> {
-        let mut builder = RectBuilder::with_capacity(
-            BoxType::new(Dimension::XY, Default::default()),
-            row_groups.len(),
-        );
+        // TODO: add the CRS of the geometry column?
+        let mut builder = RectBuilder::with_capacity(BoxType::new(Dimension::XY), row_groups.len());
         for rg_meta in row_groups.iter() {
             builder.push_rect(Some(&self.get_bbox(rg_meta)?));
         }

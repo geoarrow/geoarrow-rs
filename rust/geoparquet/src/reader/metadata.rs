@@ -187,7 +187,8 @@ impl GeoParquetReaderMetadata {
             .iter()
             .map(|rg_meta| geo_statistics.get_bbox(rg_meta))
             .collect::<GeoArrowResult<Vec<_>>>()?;
-        let rect_type = BoxType::new(Dimension::XY, Default::default());
+        // TODO: add the CRS of the geometry column.
+        let rect_type = BoxType::new(Dimension::XY);
         let rect_array = RectBuilder::from_rects(rects.iter(), rect_type).finish();
         Ok(rect_array)
     }

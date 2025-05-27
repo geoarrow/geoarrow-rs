@@ -351,7 +351,7 @@ fn create_output_field(column_info: &ColumnInfo, name: String, nullable: bool) -
 mod tests {
     use arrow_schema::Schema;
     use geoarrow_schema::error::GeoArrowError;
-    use geoarrow_schema::{CoordType, Dimension, Metadata, PointType};
+    use geoarrow_schema::{Dimension, PointType};
 
     use super::GeoParquetMetadataBuilder;
     use crate::writer::options::GeoParquetWriterOptions;
@@ -383,12 +383,7 @@ mod tests {
 
     #[test]
     fn primary_column_none() {
-        let field = PointType::new(
-            CoordType::Interleaved,
-            Dimension::XY,
-            Metadata::default().into(),
-        )
-        .to_field("anything", false);
+        let field = PointType::new(Dimension::XY).to_field("anything", false);
         let schema = Schema::new(vec![field]);
         let options = GeoParquetWriterOptions::default();
         let metadata = GeoParquetMetadataBuilder::try_new(&schema, &options)
@@ -400,18 +395,8 @@ mod tests {
 
     #[test]
     fn primary_column_none_default_to_geometry() {
-        let field_a = PointType::new(
-            CoordType::Interleaved,
-            Dimension::XY,
-            Metadata::default().into(),
-        )
-        .to_field("anything", false);
-        let field_b = PointType::new(
-            CoordType::Interleaved,
-            Dimension::XY,
-            Metadata::default().into(),
-        )
-        .to_field("geometry", false);
+        let field_a = PointType::new(Dimension::XY).to_field("anything", false);
+        let field_b = PointType::new(Dimension::XY).to_field("geometry", false);
         let schema = Schema::new(vec![field_a, field_b]);
         let options = GeoParquetWriterOptions::default();
         let metadata = GeoParquetMetadataBuilder::try_new(&schema, &options)
@@ -423,18 +408,8 @@ mod tests {
 
     #[test]
     fn primary_column() {
-        let field_a = PointType::new(
-            CoordType::Interleaved,
-            Dimension::XY,
-            Metadata::default().into(),
-        )
-        .to_field("anything", false);
-        let field_b = PointType::new(
-            CoordType::Interleaved,
-            Dimension::XY,
-            Metadata::default().into(),
-        )
-        .to_field("geometry", false);
+        let field_a = PointType::new(Dimension::XY).to_field("anything", false);
+        let field_b = PointType::new(Dimension::XY).to_field("geometry", false);
         let schema = Schema::new(vec![field_a, field_b]);
         let options = GeoParquetWriterOptions {
             primary_column: Some("anything".to_string()),

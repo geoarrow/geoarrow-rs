@@ -326,12 +326,14 @@ mod test {
     fn cast_to_wkb() {
         let array = test::point::array(CoordType::Interleaved, Dimension::XY);
 
-        let wkb_type = GeoArrowType::Wkb(WkbType::new(array.data_type().metadata().clone()));
+        let wkb_type =
+            GeoArrowType::Wkb(WkbType::new().with_metadata(array.data_type().metadata().clone()));
         let wkb_array = cast(&array, &wkb_type).unwrap();
         assert!(wkb_array.as_wkb_opt::<i32>().is_some());
 
-        let large_wkb_type =
-            GeoArrowType::LargeWkb(WkbType::new(array.data_type().metadata().clone()));
+        let large_wkb_type = GeoArrowType::LargeWkb(
+            WkbType::new().with_metadata(array.data_type().metadata().clone()),
+        );
         let wkb_array = cast(&array, &large_wkb_type).unwrap();
         assert!(wkb_array.as_wkb_opt::<i64>().is_some());
     }
@@ -576,8 +578,8 @@ mod test {
 
     #[test]
     fn downcast_geometry_to_point_fails() {
-        let array = test::geometry::array(CoordType::Interleaved, false);
-        let point_type = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let array = test::geometry::array(Default::default(), false);
+        let point_type = PointType::new(Dimension::XY);
         assert!(cast(&array, &point_type.into()).is_err());
     }
 }
