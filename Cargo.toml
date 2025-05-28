@@ -44,12 +44,12 @@ futures = "0.3"
 geo = "0.30.0"
 geo-traits = "0.3.0"
 geo-types = "0.7.16"
-geoarrow-array = { path = "rust/geoarrow-array" }
-geoarrow-cast = { path = "rust/geoarrow-cast" }
-geoarrow-schema = { path = "rust/geoarrow-schema" }
-geoarrow-test = { path = "rust/geoarrow-test" }
+geoarrow-array = { path = "rust/geoarrow-array", version = "0.4" }
+geoarrow-cast = { path = "rust/geoarrow-cast", version = "0.4" }
+geoarrow-schema = { path = "rust/geoarrow-schema", version = "0.4" }
+geoarrow-test = { path = "rust/geoarrow-test", version = "0.4" }
 geohash = "0.13.1"
-geoparquet = { path = "rust/geoparquet" }
+geoparquet = { path = "rust/geoparquet", version = "0.4" }
 geos = { version = "10", features = ["v3_10_0"] }
 geozero = "0.14"
 indexmap = "2.5.0"
