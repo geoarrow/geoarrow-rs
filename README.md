@@ -9,6 +9,16 @@ A Rust implementation of the [GeoArrow](https://github.com/geoarrow/geoarrow) sp
 
 This repository also includes [Python bindings](https://github.com/geoarrow/geoarrow-rs/blob/main/python/README.md) and [JavaScript (WebAssembly) bindings](https://github.com/geoarrow/geoarrow-rs/blob/main/js/README.md), wrapping the GeoArrow memory layout and offering vectorized geometry operations.
 
+## Documentation
+
+[**Documentation Website**](https://geoarrow.org/geoarrow-rs/)
+
+<!-- - [Use from Rust](https://geoarrow.org/geoarrow-rs/rust) -->
+<!-- - [Use from Python](https://geoarrow.org/geoarrow-rs/python) -->
+<!-- - [Use from JavaScript](https://geoarrow.org/geoarrow-rs/js)
+- [Create your own Rust-JavaScript library with `wasm-bindgen`](https://docs.rs/geoarrow-wasm/latest/geoarrow_wasm/) -->
+<!-- - [Create your own Rust-Python library with `pyo3-geoarrow`](https://docs.rs/geoarrow-wasm/latest/geoarrow_wasm/) -->
+
 ## Project Status
 
 May 7, 2025
@@ -33,21 +43,6 @@ These smaller crates are designed to mimic the upstream `arrow` crates as much a
 - Other Rust crates: unstable
 - Python bindings: unstable
 - JS bindings: unstable
-
-## Documentation
-
-[**Documentation Website**](https://geoarrow.org/geoarrow-rs/)
-
-<!--
-- [Use from Rust](https://docs.rs/geoarrow/latest/geoarrow/)
-- [Use from Python](https://geoarrow.org/geoarrow-rs/python)
-- [Use from JavaScript](https://geoarrow.org/geoarrow-rs/js)
-- [Create your own Rust-JavaScript library with `wasm-bindgen`](https://docs.rs/geoarrow-wasm/latest/geoarrow_wasm/) -->
-<!-- - [Create your own Rust-Python library with `pyo3-geoarrow`](https://docs.rs/geoarrow-wasm/latest/geoarrow_wasm/) -->
-
-## Examples
-
-- [Rust examples](rust/geoarrow/examples/README.md)
 
 ## References
 
