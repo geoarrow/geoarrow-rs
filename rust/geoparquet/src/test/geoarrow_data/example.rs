@@ -311,9 +311,8 @@ mod async_tests {
     use parquet::arrow::ParquetRecordBatchStreamBuilder;
     use tokio::fs::File;
 
-    use crate::reader::GeoParquetRecordBatchStream;
-
     use super::*;
+    use crate::reader::GeoParquetRecordBatchStream;
 
     /// Read a GeoParquet file and return the WKT and geometry arrays; columns 0 and 1.
     async fn read_gpq_file_async(
