@@ -4,7 +4,7 @@ use geoarrow_schema::CoordType;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use parquet::arrow::arrow_reader::{ArrowPredicate, ArrowReaderBuilder, RowFilter};
 
-use crate::metadata::{GeoParquetBboxCovering, GeoParquetMetadata};
+use crate::metadata::GeoParquetMetadata;
 use crate::reader::parse::infer_geoarrow_schema;
 use crate::reader::spatial_filter::{ParquetBboxStatistics, bbox_arrow_predicate, bbox_row_groups};
 
@@ -42,7 +42,8 @@ pub trait GeoParquetReaderBuilder: Sized {
     fn intersecting_arrow_predicate(
         &self,
         bbox: Rect,
-        bbox_paths: Option<GeoParquetBboxCovering>,
+        geo_metadata: &GeoParquetMetadata,
+        column_name: Option<&str>,
     ) -> GeoArrowResult<Box<dyn ArrowPredicate>>;
 
     /// Apply a spatial intersection [RowFilter] to this [`ArrowReaderBuilder`].
@@ -54,7 +55,8 @@ pub trait GeoParquetReaderBuilder: Sized {
     fn with_intersecting_row_filter(
         self,
         bbox: Rect,
-        bbox_paths: Option<GeoParquetBboxCovering>,
+        geo_metadata: &GeoParquetMetadata,
+        column_name: Option<&str>,
     ) -> GeoArrowResult<Self>;
 
     /// Find the row groups that intersect with the bounding box.
@@ -64,7 +66,8 @@ pub trait GeoParquetReaderBuilder: Sized {
     fn intersecting_row_groups(
         &self,
         bbox: Rect,
-        bbox_paths: Option<GeoParquetBboxCovering>,
+        geo_metadata: &GeoParquetMetadata,
+        column_name: Option<&str>,
     ) -> GeoArrowResult<Vec<usize>>;
 
     /// Select row groups to read based on the bounding box.
@@ -74,7 +77,8 @@ pub trait GeoParquetReaderBuilder: Sized {
     fn with_intersecting_row_groups(
         self,
         bbox: Rect,
-        bbox_paths: Option<GeoParquetBboxCovering>,
+        geo_metadata: &GeoParquetMetadata,
+        column_name: Option<&str>,
     ) -> GeoArrowResult<Self>;
 }
 
@@ -95,24 +99,19 @@ impl<T> GeoParquetReaderBuilder for ArrowReaderBuilder<T> {
     fn intersecting_arrow_predicate(
         &self,
         bbox: Rect,
-        bbox_paths: Option<GeoParquetBboxCovering>,
+        geo_metadata: &GeoParquetMetadata,
+        column_name: Option<&str>,
     ) -> GeoArrowResult<Box<dyn ArrowPredicate>> {
-        // TODO: deduplicate across these two args
-        let bbox_paths = if let Some(paths) = bbox_paths {
-            paths
-        } else {
-            let geo_meta = self.geoparquet_metadata().ok_or(GeoArrowError::GeoParquet(
-                "No geospatial metadata and bbox paths were not passed".to_string(),
-            ))?;
+        let column_name = column_name.unwrap_or(&geo_metadata.primary_column);
+        let covering =
+            geo_metadata
+                .bbox_covering(Some(column_name))?
+                .ok_or(GeoArrowError::GeoParquet(format!(
+                    "No covering metadata found for column: {:?}",
+                    column_name
+                )))?;
 
-            geo_meta
-                .bbox_covering(None)?
-                .ok_or(GeoArrowError::GeoParquet(
-                    "No covering metadata found".to_string(),
-                ))?
-        };
-
-        let bbox_cols = ParquetBboxStatistics::try_new(self.parquet_schema(), &bbox_paths)?;
+        let bbox_cols = ParquetBboxStatistics::try_new(self.parquet_schema(), &covering)?;
 
         bbox_arrow_predicate(self.parquet_schema(), bbox_cols, bbox)
     }
@@ -120,32 +119,29 @@ impl<T> GeoParquetReaderBuilder for ArrowReaderBuilder<T> {
     fn with_intersecting_row_filter(
         self,
         bbox: Rect,
-        bbox_paths: Option<GeoParquetBboxCovering>,
+        geo_metadata: &GeoParquetMetadata,
+        column_name: Option<&str>,
     ) -> GeoArrowResult<Self> {
-        let predicate = self.intersecting_arrow_predicate(bbox, bbox_paths)?;
+        let predicate = self.intersecting_arrow_predicate(bbox, geo_metadata, column_name)?;
         Ok(self.with_row_filter(RowFilter::new(vec![predicate])))
     }
 
     fn intersecting_row_groups(
         &self,
         bbox: Rect,
-        bbox_paths: Option<GeoParquetBboxCovering>,
+        geo_metadata: &GeoParquetMetadata,
+        column_name: Option<&str>,
     ) -> GeoArrowResult<Vec<usize>> {
-        let bbox_paths = if let Some(paths) = bbox_paths {
-            paths
-        } else {
-            let geo_meta = self.geoparquet_metadata().ok_or(GeoArrowError::GeoParquet(
-                "No geospatial metadata and bbox paths were not passed".to_string(),
-            ))?;
+        let column_name = column_name.unwrap_or(&geo_metadata.primary_column);
+        let covering =
+            geo_metadata
+                .bbox_covering(Some(column_name))?
+                .ok_or(GeoArrowError::GeoParquet(format!(
+                    "No covering metadata found for column: {:?}",
+                    column_name
+                )))?;
 
-            geo_meta
-                .bbox_covering(None)?
-                .ok_or(GeoArrowError::GeoParquet(
-                    "No covering metadata found".to_string(),
-                ))?
-        };
-
-        let bbox_cols = ParquetBboxStatistics::try_new(self.parquet_schema(), &bbox_paths)?;
+        let bbox_cols = ParquetBboxStatistics::try_new(self.parquet_schema(), &covering)?;
 
         bbox_row_groups(self.metadata().row_groups(), &bbox_cols, bbox)
     }
@@ -153,9 +149,10 @@ impl<T> GeoParquetReaderBuilder for ArrowReaderBuilder<T> {
     fn with_intersecting_row_groups(
         self,
         bbox: Rect,
-        bbox_paths: Option<GeoParquetBboxCovering>,
+        geo_metadata: &GeoParquetMetadata,
+        column_name: Option<&str>,
     ) -> GeoArrowResult<Self> {
-        let row_groups = self.intersecting_row_groups(bbox, bbox_paths)?;
+        let row_groups = self.intersecting_row_groups(bbox, geo_metadata, column_name)?;
         if row_groups.is_empty() {
             return Err(GeoArrowError::GeoParquet(
                 "No row groups intersect with the bounding box".to_string(),
