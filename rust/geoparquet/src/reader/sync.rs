@@ -10,8 +10,6 @@ use crate::reader::parse::{parse_record_batch, validate_target_schema};
 ///
 /// This implements [`RecordBatchReader`], which means it also implements `Iterator<Item =
 /// ArrowResult<RecordBatch>>`.
-///
-/// This will parse any geometries to their native representation.
 pub struct GeoParquetRecordBatchReader {
     reader: ParquetRecordBatchReader,
     target_schema: SchemaRef,

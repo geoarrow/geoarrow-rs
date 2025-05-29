@@ -3,13 +3,15 @@ use std::task::{Context, Poll};
 
 use arrow_schema::SchemaRef;
 use futures::Stream;
-use geoarrow_schema::error::GeoArrowResult;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use parquet::arrow::async_reader::{AsyncFileReader, ParquetRecordBatchStream};
 
+use crate::reader::GeoParquetRecordBatchReader;
 use crate::reader::parse::{parse_record_batch, validate_target_schema};
 
 /// A wrapper around a [`ParquetRecordBatchStream`] to apply GeoArrow metadata onto emitted
 /// [`RecordBatch`]es.
+#[derive(Debug)]
 pub struct GeoParquetRecordBatchStream<T: AsyncFileReader + Send + 'static> {
     stream: ParquetRecordBatchStream<T>,
     target_schema: SchemaRef,
@@ -53,5 +55,33 @@ impl<T: AsyncFileReader + Unpin + Send + 'static> GeoParquetRecordBatchStream<T>
     /// this method.
     pub fn schema(&self) -> SchemaRef {
         self.target_schema.clone()
+    }
+
+    /// Fetches the next row group from the stream.
+    ///
+    /// Users can continue to call this function to get row groups and decode them concurrently.
+    ///
+    /// This is a wrapper around the upstream [`ParquetRecordBatchStream::next_row_group`].
+    ///
+    /// ## Notes
+    ///
+    /// `GeoParquetRecordBatchStream` should be used either as a `Stream` or with `next_row_group`;
+    /// they should not be used simultaneously.
+    ///
+    /// ## Returns
+    ///
+    /// - `Ok(None)` if the stream has ended.
+    /// - `Err(error)` if the stream has errored. All subsequent calls will return `Ok(None)`.
+    /// - `Ok(Some(reader))` which holds all the data for the row group.
+    pub async fn next_row_group(&mut self) -> GeoArrowResult<Option<GeoParquetRecordBatchReader>> {
+        let maybe_reader = self
+            .stream
+            .next_row_group()
+            .await
+            .map_err(|err| GeoArrowError::External(Box::new(err)))?;
+
+        maybe_reader
+            .map(|reader| GeoParquetRecordBatchReader::try_new(reader, self.target_schema.clone()))
+            .transpose()
     }
 }
