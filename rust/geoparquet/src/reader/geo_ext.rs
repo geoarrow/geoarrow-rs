@@ -5,7 +5,7 @@ use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use parquet::arrow::arrow_reader::ArrowReaderBuilder;
 
 use crate::metadata::{GeoParquetBboxCovering, GeoParquetMetadata};
-use crate::reader::parse::infer_native_geoarrow_schema;
+use crate::reader::parse::infer_geoarrow_schema;
 use crate::reader::spatial_filter::{
     ParquetBboxStatistics, apply_bbox_row_filter, apply_bbox_row_groups,
 };
@@ -16,12 +16,20 @@ use crate::reader::spatial_filter::{
 pub trait GeoParquetReaderBuilder: Sized {
     /// Parse the geospatial metadata, if any, from the parquet file metadata.
     ///
-    /// Returns `None` if the file does not contain geospatial metadata.
-    fn geo_metadata(&self) -> Option<GeoParquetMetadata>;
+    /// Returns `None` if the file does not contain geospatial metadata or if it is not valid.
+    fn geoparquet_metadata(&self) -> Option<GeoParquetMetadata>;
 
     /// Convert the Arrow schema provided by the underlying [ArrowReaderBuilder] into one with
     /// native GeoArrow geometries, based on the GeoParquet metadata.
-    fn native_geoarrow_schema(&self, coord_type: CoordType) -> GeoArrowResult<SchemaRef>;
+    ///
+    /// First construct the GeoParquet metadata from the
+    /// [`geoparquet_metadata`][Self::geoparquet_metadata] method.
+    fn geoarrow_schema(
+        &self,
+        geo_metadata: &GeoParquetMetadata,
+        parse_to_native: bool,
+        coord_type: CoordType,
+    ) -> GeoArrowResult<SchemaRef>;
 
     /// Add a spatial [RowFilter] to this reader builder.
     ///
@@ -46,18 +54,17 @@ pub trait GeoParquetReaderBuilder: Sized {
 }
 
 impl<T> GeoParquetReaderBuilder for ArrowReaderBuilder<T> {
-    fn geo_metadata(&self) -> Option<GeoParquetMetadata> {
+    fn geoparquet_metadata(&self) -> Option<GeoParquetMetadata> {
         GeoParquetMetadata::from_parquet_meta(self.metadata().file_metadata()).ok()
     }
 
-    fn native_geoarrow_schema(&self, coord_type: CoordType) -> GeoArrowResult<SchemaRef> {
-        {
-            if let Some(geo_meta) = self.geo_metadata() {
-                infer_native_geoarrow_schema(self.schema(), &geo_meta, coord_type)
-            } else {
-                Ok(self.schema().clone())
-            }
-        }
+    fn geoarrow_schema(
+        &self,
+        geo_metadata: &GeoParquetMetadata,
+        parse_to_native: bool,
+        coord_type: CoordType,
+    ) -> GeoArrowResult<SchemaRef> {
+        infer_geoarrow_schema(self.schema(), geo_metadata, parse_to_native, coord_type)
     }
 
     fn with_spatial_row_filter(
@@ -69,7 +76,7 @@ impl<T> GeoParquetReaderBuilder for ArrowReaderBuilder<T> {
         let bbox_paths = if let Some(paths) = bbox_paths {
             paths
         } else {
-            let geo_meta = self.geo_metadata().ok_or(GeoArrowError::GeoParquet(
+            let geo_meta = self.geoparquet_metadata().ok_or(GeoArrowError::GeoParquet(
                 "No geospatial metadata and bbox paths were not passed".to_string(),
             ))?;
 
@@ -93,7 +100,7 @@ impl<T> GeoParquetReaderBuilder for ArrowReaderBuilder<T> {
         let bbox_paths = if let Some(paths) = bbox_paths {
             paths
         } else {
-            let geo_meta = self.geo_metadata().ok_or(GeoArrowError::GeoParquet(
+            let geo_meta = self.geoparquet_metadata().ok_or(GeoArrowError::GeoParquet(
                 "No geospatial metadata and bbox paths were not passed".to_string(),
             ))?;
 

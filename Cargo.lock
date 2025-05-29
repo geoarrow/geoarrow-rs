@@ -1732,6 +1732,7 @@ dependencies = [
  "arrow-buffer",
  "arrow-ord",
  "arrow-schema",
+ "futures",
  "geo-traits 0.3.0",
  "geo-types",
  "geoarrow-array",

@@ -16,7 +16,7 @@ use geoarrow_schema::{
 };
 use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
 
-use crate::reader::{GeoParquetReaderBuilder, parse_record_batch};
+use crate::reader::{GeoParquetReaderBuilder, GeoParquetRecordBatchReader};
 use crate::test::geoarrow_data_example_files;
 
 fn dimension_path_part(dim: Dimension) -> &'static str {
@@ -78,15 +78,14 @@ fn read_gpq_file(path: impl AsRef<Path>) -> (GenericWktArray<i32>, Arc<dyn GeoAr
     println!("reading path: {:?}", path.as_ref());
     let file = File::open(path).unwrap();
     let reader_builder = ParquetRecordBatchReaderBuilder::try_new(file).unwrap();
-    let native_geoarrow_schema = reader_builder
-        .native_geoarrow_schema(CoordType::Separated)
+    let gpq_meta = reader_builder.geoparquet_metadata().unwrap();
+    let geoarrow_schema = reader_builder
+        .geoarrow_schema(&gpq_meta, true, CoordType::Separated)
         .unwrap();
     let reader = reader_builder.build().unwrap();
+    let reader = GeoParquetRecordBatchReader::try_new(reader, geoarrow_schema.clone()).unwrap();
 
-    let batches = reader
-        .map(|batch| parse_record_batch(batch?, native_geoarrow_schema.clone()))
-        .collect::<Result<Vec<_>, _>>()
-        .unwrap();
+    let batches = reader.collect::<Result<Vec<_>, _>>().unwrap();
     assert_eq!(batches.len(), 1);
 
     let batch = batches[0].clone();
@@ -95,7 +94,7 @@ fn read_gpq_file(path: impl AsRef<Path>) -> (GenericWktArray<i32>, Arc<dyn GeoAr
         batch.column(0).as_string::<i32>().clone(),
         Default::default(),
     );
-    let geo_arr = from_arrow_array(batch.column(1), native_geoarrow_schema.field(1)).unwrap();
+    let geo_arr = from_arrow_array(batch.column(1), geoarrow_schema.field(1)).unwrap();
 
     (wkt_arr, geo_arr)
 }

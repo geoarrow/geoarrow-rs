@@ -12,7 +12,7 @@ use parquet::schema::types::SchemaDescriptor;
 use serde_json::Value;
 
 use crate::metadata::{GeoParquetBboxCovering, GeoParquetMetadata};
-use crate::reader::parse::infer_native_geoarrow_schema;
+use crate::reader::parse::infer_geoarrow_schema;
 use crate::reader::spatial_filter::ParquetBboxStatistics;
 
 /// An extension trait to DRY some code across the file and dataset metadata.
@@ -106,9 +106,13 @@ impl GeoParquetReaderMetadata {
     /// E.g. when a GeoParquet file stores WKB in a binary column, we transform that column to a
     /// native representation when loading. This means that the Arrow schema of the _source_ is not
     /// the same as the schema of what gets loaded.
-    pub fn resolved_schema(&self, coord_type: CoordType) -> GeoArrowResult<SchemaRef> {
+    pub fn geoarrow_schema(
+        &self,
+        parse_to_native: bool,
+        coord_type: CoordType,
+    ) -> GeoArrowResult<SchemaRef> {
         if let Some(geo_meta) = &self.geo_meta {
-            infer_native_geoarrow_schema(self.meta.schema(), geo_meta, coord_type)
+            infer_geoarrow_schema(self.meta.schema(), geo_meta, parse_to_native, coord_type)
         } else {
             // If non-geospatial, return the same schema as output
             Ok(self.meta.schema().clone())
@@ -311,9 +315,13 @@ impl GeoParquetDatasetMetadata {
     /// E.g. when a GeoParquet file stores WKB in a binary column, we transform that column to a
     /// native representation when loading. This means that the Arrow schema of the _source_ is not
     /// the same as the schema of what gets loaded.
-    pub fn resolved_schema(&self, coord_type: CoordType) -> GeoArrowResult<SchemaRef> {
+    pub fn geoarrow_schema(
+        &self,
+        parse_to_native: bool,
+        coord_type: CoordType,
+    ) -> GeoArrowResult<SchemaRef> {
         if let Some(geo_meta) = &self.geo_meta {
-            infer_native_geoarrow_schema(&self.schema, geo_meta, coord_type)
+            infer_geoarrow_schema(&self.schema, geo_meta, parse_to_native, coord_type)
         } else {
             // If non-geospatial, return the same schema as output
             Ok(self.schema.clone())
