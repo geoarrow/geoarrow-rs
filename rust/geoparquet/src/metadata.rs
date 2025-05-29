@@ -5,7 +5,6 @@ use std::fmt::Display;
 use std::str::FromStr;
 use std::sync::Arc;
 
-use arrow_schema::Schema;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{
     CoordType, Crs, Dimension, Edges, GeoArrowType, GeometryCollectionType, GeometryType,
@@ -804,31 +803,6 @@ pub(crate) fn infer_geo_data_type(
             Ok(Some(fallback_geometry_type))
         }
     }
-}
-
-/// Find all geometry columns in the Arrow schema, constructing their NativeTypes
-#[allow(dead_code)]
-pub(crate) fn find_geoparquet_geom_columns(
-    metadata: &FileMetaData,
-    schema: &Schema,
-    coord_type: CoordType,
-) -> GeoArrowResult<Vec<(usize, Option<GeoArrowType>)>> {
-    let meta = GeoParquetMetadata::from_parquet_meta(metadata)?;
-
-    meta.columns
-        .iter()
-        .map(|(col_name, col_meta)| {
-            let geometry_column_index = schema
-                .fields()
-                .iter()
-                .position(|field| field.name().as_str() == col_name.as_str())
-                .unwrap();
-            Ok((
-                geometry_column_index,
-                infer_geo_data_type(&col_meta.geometry_types, coord_type, Default::default())?,
-            ))
-        })
-        .collect()
 }
 
 #[cfg(test)]
