@@ -39,3 +39,4 @@ serde_json = { workspace = true }
 
 [dev-dependencies]
 tokio = { version = "1.9", features = ["macros", "fs", "rt-multi-thread"] }
+tokio-test = "0.4"

@@ -1,7 +1,8 @@
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-use arrow_schema::SchemaRef;
+use arrow_array::RecordBatch;
+use arrow_schema::{ArrowError, SchemaRef};
 use futures::Stream;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use parquet::arrow::async_reader::{AsyncFileReader, ParquetRecordBatchStream};
@@ -34,7 +35,7 @@ impl<T: AsyncFileReader + Send + Unpin + 'static> GeoParquetRecordBatchStream<T>
 }
 
 impl<T: AsyncFileReader + Send + Unpin + 'static> Stream for GeoParquetRecordBatchStream<T> {
-    type Item = std::result::Result<arrow_array::RecordBatch, arrow_schema::ArrowError>;
+    type Item = Result<RecordBatch, ArrowError>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         match Pin::new(&mut self.stream).poll_next(cx) {
