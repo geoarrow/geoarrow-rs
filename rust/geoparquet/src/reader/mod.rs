@@ -1,3 +1,6 @@
+//! Read the GeoParquet file format into Arrow [`RecordBatch`][arrow_array::RecordBatch]es with
+//! GeoArrow metadata.
+
 #[cfg(feature = "async")]
 mod r#async;
 mod geo_ext;

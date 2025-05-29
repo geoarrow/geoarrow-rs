@@ -14,9 +14,7 @@ use geoarrow_array::builder::RectBuilder;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{BoxType, Dimension};
 use parquet::arrow::ProjectionMask;
-use parquet::arrow::arrow_reader::{
-    ArrowPredicate, ArrowPredicateFn, ArrowReaderBuilder, RowFilter,
-};
+use parquet::arrow::arrow_reader::{ArrowPredicate, ArrowPredicateFn};
 use parquet::file::metadata::{ColumnChunkMetaData, RowGroupMetaData};
 use parquet::file::statistics::Statistics;
 use parquet::schema::types::{ColumnPath, SchemaDescriptor};
@@ -161,12 +159,12 @@ impl<'a> ParquetBboxStatistics<'a> {
     }
 }
 
-pub(crate) fn apply_bbox_row_groups<T>(
-    builder: ArrowReaderBuilder<T>,
+pub(crate) fn bbox_row_groups(
+    row_groups: &[RowGroupMetaData],
     bbox_cols: &ParquetBboxStatistics,
     bbox_query: Rect,
-) -> GeoArrowResult<ArrowReaderBuilder<T>> {
-    let row_groups = builder.metadata().row_groups();
+) -> GeoArrowResult<Vec<usize>> {
+    // let row_groups = builder.metadata().row_groups();
     let row_groups_bounds = bbox_cols.get_bboxes(row_groups)?;
     let mut intersects_row_groups_idxs = vec![];
     for (row_group_idx, row_group_bounds) in row_groups_bounds.iter_values().enumerate() {
@@ -175,25 +173,21 @@ pub(crate) fn apply_bbox_row_groups<T>(
         }
     }
 
-    Ok(builder.with_row_groups(intersects_row_groups_idxs))
+    Ok(intersects_row_groups_idxs)
 }
 
-pub(crate) fn apply_bbox_row_filter<T>(
-    builder: ArrowReaderBuilder<T>,
+pub(crate) fn bbox_arrow_predicate(
+    parquet_schema: &SchemaDescriptor,
     bbox_cols: ParquetBboxStatistics,
     bbox_query: Rect,
-) -> GeoArrowResult<ArrowReaderBuilder<T>> {
-    let parquet_schema = builder.parquet_schema();
-
+) -> GeoArrowResult<Box<dyn ArrowPredicate>> {
     // If the min and max columns are the same, then it's a native column
-    let predicate =
-        if bbox_cols.minx_col == bbox_cols.maxx_col && bbox_cols.miny_col == bbox_cols.maxy_col {
-            construct_native_predicate(parquet_schema, bbox_cols, bbox_query)?
-        } else {
-            construct_bbox_columns_predicate(parquet_schema, bbox_cols, bbox_query)?
-        };
-    let filter = RowFilter::new(vec![predicate]);
-    Ok(builder.with_row_filter(filter))
+    if bbox_cols.minx_col == bbox_cols.maxx_col && bbox_cols.miny_col == bbox_cols.maxy_col {
+        construct_native_predicate(parquet_schema, bbox_cols, bbox_query)
+    } else {
+        construct_bbox_columns_predicate(parquet_schema, bbox_cols, bbox_query)
+    }
+    // Ok(RowFilter::new(vec![predicate]))
 }
 
 /// Upcast a Float32Array to a Float64Array
