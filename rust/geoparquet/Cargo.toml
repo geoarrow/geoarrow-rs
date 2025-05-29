@@ -12,7 +12,7 @@ rust-version = { workspace = true }
 
 
 [features]
-async = ["parquet/async", "dep:async-stream", "dep:futures"]
+async = ["parquet/async"]
 compression = [
     "parquet/snap",
     "parquet/brotli",
@@ -27,8 +27,6 @@ arrow-array = { workspace = true }
 arrow-buffer = { workspace = true }
 arrow-ord = { workspace = true }
 arrow-schema = { workspace = true }
-async-stream = { workspace = true, optional = true }
-futures = { workspace = true, optional = true }
 geo-traits = { workspace = true }
 geo-types = { workspace = true }
 geoarrow-array = { workspace = true }

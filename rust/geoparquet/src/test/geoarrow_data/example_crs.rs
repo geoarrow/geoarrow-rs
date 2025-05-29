@@ -1,9 +1,6 @@
 use std::fs::File;
 use std::path::Path;
 
-use arrow_array::RecordBatchReader;
-use arrow_schema::ArrowError;
-use geoarrow_array::GeoArrowType;
 use geoarrow_array::array::from_arrow_array;
 use geoarrow_schema::{CoordType, CrsType, GeoArrowType};
 use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;

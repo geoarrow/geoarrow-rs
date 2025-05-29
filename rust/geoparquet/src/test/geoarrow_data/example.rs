@@ -3,7 +3,6 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use arrow_array::cast::AsArray;
-use arrow_schema::ArrowError;
 use geoarrow_array::array::{GenericWktArray, WktArray, from_arrow_array};
 use geoarrow_array::builder::{
     GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder, MultiPointBuilder,

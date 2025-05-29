@@ -4,21 +4,16 @@ use std::sync::Arc;
 use arrow_schema::SchemaRef;
 use geoarrow_array::array::RectArray;
 use geoarrow_array::builder::RectBuilder;
-use geoarrow_array::error::{GeoArrowError, Result};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{BoxType, CoordType, Dimension};
 use parquet::arrow::arrow_reader::ArrowReaderMetadata;
-#[cfg(feature = "async")]
-use parquet::arrow::async_reader::AsyncFileReader;
 use parquet::file::metadata::ParquetMetaData;
-use parquet::file::reader::ChunkReader;
 use parquet::schema::types::SchemaDescriptor;
 use serde_json::Value;
 
 use crate::metadata::{GeoParquetBboxCovering, GeoParquetMetadata};
 use crate::reader::parse::infer_native_geoarrow_schema;
 use crate::reader::spatial_filter::ParquetBboxStatistics;
-use crate::{GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder};
 
 /// An extension trait to DRY some code across the file and dataset metadata.
 trait ArrowReaderMetadataExt {
