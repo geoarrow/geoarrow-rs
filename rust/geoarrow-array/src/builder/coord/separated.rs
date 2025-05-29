@@ -1,8 +1,8 @@
 use geo_traits::{CoordTrait, PointTrait};
 use geoarrow_schema::Dimension;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 use crate::array::SeparatedCoordBuffer;
-use crate::error::{GeoArrowError, Result};
 
 /// The GeoArrow equivalent to `Vec<Option<Coord>>`: a mutable collection of coordinates.
 ///
@@ -106,13 +106,13 @@ impl SeparatedCoordBufferBuilder {
     /// ## Errors
     ///
     /// - If the added coordinate does not have the same dimension as the coordinate buffer.
-    pub fn try_push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+    pub fn try_push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> GeoArrowResult<()> {
         // Note duplicated across buffer types; consider refactoring
         match self.dim {
             Dimension::XY => match coord.dim() {
                 geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => {}
                 d => {
-                    return Err(GeoArrowError::General(format!(
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
                         "coord dimension must be XY for this buffer; got {d:?}."
                     )));
                 }
@@ -120,7 +120,7 @@ impl SeparatedCoordBufferBuilder {
             Dimension::XYZ => match coord.dim() {
                 geo_traits::Dimensions::Xyz | geo_traits::Dimensions::Unknown(3) => {}
                 d => {
-                    return Err(GeoArrowError::General(format!(
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
                         "coord dimension must be XYZ for this buffer; got {d:?}."
                     )));
                 }
@@ -128,7 +128,7 @@ impl SeparatedCoordBufferBuilder {
             Dimension::XYM => match coord.dim() {
                 geo_traits::Dimensions::Xym | geo_traits::Dimensions::Unknown(3) => {}
                 d => {
-                    return Err(GeoArrowError::General(format!(
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
                         "coord dimension must be XYM for this buffer; got {d:?}."
                     )));
                 }
@@ -136,7 +136,7 @@ impl SeparatedCoordBufferBuilder {
             Dimension::XYZM => match coord.dim() {
                 geo_traits::Dimensions::Xyzm | geo_traits::Dimensions::Unknown(4) => {}
                 d => {
-                    return Err(GeoArrowError::General(format!(
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
                         "coord dimension must be XYZM for this buffer; got {d:?}."
                     )));
                 }
@@ -178,7 +178,10 @@ impl SeparatedCoordBufferBuilder {
     /// ## Errors
     ///
     /// - If the added point does not have the same dimension as the coordinate buffer.
-    pub(crate) fn try_push_point(&mut self, point: &impl PointTrait<T = f64>) -> Result<()> {
+    pub(crate) fn try_push_point(
+        &mut self,
+        point: &impl PointTrait<T = f64>,
+    ) -> GeoArrowResult<()> {
         if let Some(coord) = point.coord() {
             self.try_push_coord(&coord)?;
         } else {
@@ -191,7 +194,7 @@ impl SeparatedCoordBufferBuilder {
     pub fn from_coords<'a>(
         coords: impl ExactSizeIterator<Item = &'a (impl CoordTrait<T = f64> + 'a)>,
         dim: Dimension,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let mut buffer = SeparatedCoordBufferBuilder::with_capacity(coords.len(), dim);
         for coord in coords {
             buffer.try_push_coord(coord)?;

@@ -1,13 +1,14 @@
 use std::ops::Add;
 
-use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
-use crate::capacity::MixedCapacity;
-use crate::error::Result;
 use geo_traits::{
     GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
     MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait,
 };
+use geoarrow_schema::error::GeoArrowResult;
 use wkt::WktNum;
+
+use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
+use crate::capacity::MixedCapacity;
 
 /// A counter for the buffer sizes of a
 /// [`GeometryCollectionArray`][crate::array::GeometryCollectionArray].
@@ -77,7 +78,7 @@ impl GeometryCollectionCapacity {
     fn add_valid_geometry_collection<T: WktNum>(
         &mut self,
         geom: &impl GeometryCollectionTrait<T = T>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         for g in geom.geometries() {
             self.mixed_capacity.add_geometry(&g)?
         }
@@ -89,7 +90,7 @@ impl GeometryCollectionCapacity {
     pub fn add_geometry<T: WktNum>(
         &mut self,
         geom: Option<&impl GeometryTrait<T = T>>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         use GeometryType::*;
         if let Some(geom) = geom {
             match geom.as_type() {
@@ -113,7 +114,7 @@ impl GeometryCollectionCapacity {
     pub fn add_geometry_collection<'a, T: WktNum>(
         &mut self,
         geom: Option<&'a (impl GeometryCollectionTrait<T = T> + 'a)>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         if let Some(geom) = geom {
             self.add_valid_geometry_collection(geom)?;
         }
@@ -124,7 +125,7 @@ impl GeometryCollectionCapacity {
     /// Create a capacity counter from an iterator of GeometryCollections.
     pub fn from_geometry_collections<'a, T: WktNum>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait<T = T> + 'a)>>,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let mut counter = Self::new_empty();
         for maybe_geom in geoms.into_iter() {
             counter.add_geometry_collection(maybe_geom)?;
@@ -135,7 +136,7 @@ impl GeometryCollectionCapacity {
     /// Create a capacity counter from an iterator of Geometries.
     pub fn from_geometries<'a, T: WktNum>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = T> + 'a)>>,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let mut counter = Self::new_empty();
         for maybe_geom in geoms.into_iter() {
             counter.add_geometry(maybe_geom)?;

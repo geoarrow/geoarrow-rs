@@ -1,20 +1,19 @@
 use std::sync::Arc;
 
-use crate::array::{CoordBuffer, WkbArray};
-use crate::builder::LineStringBuilder;
-use crate::capacity::LineStringCapacity;
-use crate::datatypes::GeoArrowType;
-use crate::eq::offset_buffer_eq;
-use crate::error::{GeoArrowError, Result};
-use crate::scalar::LineString;
-use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
-use crate::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
-
 use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
-use geoarrow_schema::{CoordType, LineStringType, Metadata};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
+use geoarrow_schema::{CoordType, GeoArrowType, LineStringType, Metadata};
+
+use crate::array::{CoordBuffer, GenericWkbArray};
+use crate::builder::LineStringBuilder;
+use crate::capacity::LineStringCapacity;
+use crate::eq::offset_buffer_eq;
+use crate::scalar::LineString;
+use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
+use crate::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
 
 /// An immutable array of LineString geometries.
 ///
@@ -37,15 +36,15 @@ pub(super) fn check(
     coords: &CoordBuffer,
     validity_len: Option<usize>,
     geom_offsets: &OffsetBuffer<i32>,
-) -> Result<()> {
+) -> GeoArrowResult<()> {
     if validity_len.is_some_and(|len| len != geom_offsets.len_proxy()) {
-        return Err(GeoArrowError::General(
+        return Err(GeoArrowError::InvalidGeoArrow(
             "nulls mask length must match the number of values".to_string(),
         ));
     }
 
     if *geom_offsets.last() as usize != coords.len() {
-        return Err(GeoArrowError::General(
+        return Err(GeoArrowError::InvalidGeoArrow(
             "largest geometry offset must match coords length".to_string(),
         ));
     }
@@ -88,10 +87,11 @@ impl LineStringArray {
         geom_offsets: OffsetBuffer<i32>,
         nulls: Option<NullBuffer>,
         metadata: Arc<Metadata>,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         check(&coords, nulls.as_ref().map(|v| v.len()), &geom_offsets)?;
         Ok(Self {
-            data_type: LineStringType::new(coords.coord_type(), coords.dim(), metadata),
+            data_type: LineStringType::new(coords.dim(), metadata)
+                .with_coord_type(coords.coord_type()),
             coords,
             geom_offsets,
             nulls,
@@ -101,11 +101,6 @@ impl LineStringArray {
     /// Access the underlying coordinate buffer
     pub fn coords(&self) -> &CoordBuffer {
         &self.coords
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn into_inner(self) -> (CoordBuffer, OffsetBuffer<i32>, Option<NullBuffer>) {
-        (self.coords, self.geom_offsets, self.nulls)
     }
 
     /// Access the underlying geometry offsets buffer
@@ -124,7 +119,7 @@ impl LineStringArray {
         validity_len + self.buffer_lengths().num_bytes()
     }
 
-    /// Slices this [`LineStringArray`] in place.
+    /// Slice this [`LineStringArray`].
     ///
     /// # Implementation
     ///
@@ -154,8 +149,15 @@ impl LineStringArray {
         Self {
             data_type: self.data_type.with_coord_type(coord_type),
             coords: self.coords.into_coord_type(coord_type),
-            geom_offsets: self.geom_offsets,
-            nulls: self.nulls,
+            ..self
+        }
+    }
+
+    /// Change the [`Metadata`] of this array.
+    pub fn with_metadata(self, metadata: Arc<Metadata>) -> Self {
+        Self {
+            data_type: self.data_type.with_metadata(metadata),
+            ..self
         }
     }
 }
@@ -202,12 +204,16 @@ impl GeoArrowArray for LineStringArray {
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.slice(offset, length))
     }
+
+    fn with_metadata(self, metadata: Arc<Metadata>) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.with_metadata(metadata))
+    }
 }
 
-impl<'a> ArrayAccessor<'a> for LineStringArray {
+impl<'a> GeoArrowArrayAccessor<'a> for LineStringArray {
     type Item = LineString<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
+    unsafe fn value_unchecked(&'a self, index: usize) -> GeoArrowResult<Self::Item> {
         Ok(LineString::new(&self.coords, &self.geom_offsets, index))
     }
 }
@@ -226,7 +232,7 @@ impl IntoArrow for LineStringArray {
         GenericListArray::new(vertices_field, self.geom_offsets, coord_array, nulls)
     }
 
-    fn ext_type(&self) -> &Self::ExtensionType {
+    fn extension_type(&self) -> &Self::ExtensionType {
         &self.data_type
     }
 }
@@ -234,7 +240,7 @@ impl IntoArrow for LineStringArray {
 impl TryFrom<(&GenericListArray<i32>, LineStringType)> for LineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (&GenericListArray<i32>, LineStringType)) -> Result<Self> {
+    fn try_from((value, typ): (&GenericListArray<i32>, LineStringType)) -> GeoArrowResult<Self> {
         let coords = CoordBuffer::from_arrow(value.values().as_ref(), typ.dimension())?;
         let geom_offsets = value.offsets();
         let nulls = value.nulls();
@@ -251,7 +257,7 @@ impl TryFrom<(&GenericListArray<i32>, LineStringType)> for LineStringArray {
 impl TryFrom<(&GenericListArray<i64>, LineStringType)> for LineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (&GenericListArray<i64>, LineStringType)) -> Result<Self> {
+    fn try_from((value, typ): (&GenericListArray<i64>, LineStringType)) -> GeoArrowResult<Self> {
         let coords = CoordBuffer::from_arrow(value.values().as_ref(), typ.dimension())?;
         let geom_offsets = offsets_buffer_i64_to_i32(value.offsets())?;
         let nulls = value.nulls();
@@ -267,13 +273,13 @@ impl TryFrom<(&GenericListArray<i64>, LineStringType)> for LineStringArray {
 impl TryFrom<(&dyn Array, LineStringType)> for LineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (&dyn Array, LineStringType)) -> Result<Self> {
+    fn try_from((value, typ): (&dyn Array, LineStringType)) -> GeoArrowResult<Self> {
         match value.data_type() {
             DataType::List(_) => (value.as_list::<i32>(), typ).try_into(),
             DataType::LargeList(_) => (value.as_list::<i64>(), typ).try_into(),
-            _ => Err(GeoArrowError::General(format!(
-                "Unexpected type: {:?}",
-                value.data_type()
+            dt => Err(GeoArrowError::InvalidGeoArrow(format!(
+                "Unexpected LineString DataType: {:?}",
+                dt
             ))),
         }
     }
@@ -282,16 +288,16 @@ impl TryFrom<(&dyn Array, LineStringType)> for LineStringArray {
 impl TryFrom<(&dyn Array, &Field)> for LineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+    fn try_from((arr, field): (&dyn Array, &Field)) -> GeoArrowResult<Self> {
         let typ = field.try_extension_type::<LineStringType>()?;
         (arr, typ).try_into()
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, LineStringType)> for LineStringArray {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, LineStringType)> for LineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WkbArray<O>, LineStringType)) -> Result<Self> {
+    fn try_from(value: (GenericWkbArray<O>, LineStringType)) -> GeoArrowResult<Self> {
         let mut_arr: LineStringBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }
@@ -310,15 +316,15 @@ mod test {
     use geo_traits::to_geo::ToGeoLineString;
     use geoarrow_schema::{CoordType, Dimension};
 
-    use crate::test::linestring;
-
     use super::*;
+    use crate::test::linestring;
 
     #[test]
     fn geo_round_trip() {
         for coord_type in [CoordType::Interleaved, CoordType::Separated] {
             let geoms = [Some(linestring::ls0()), None, Some(linestring::ls1()), None];
-            let typ = LineStringType::new(coord_type, Dimension::XY, Default::default());
+            let typ =
+                LineStringType::new(Dimension::XY, Default::default()).with_coord_type(coord_type);
             let geo_arr = LineStringBuilder::from_nullable_line_strings(&geoms, typ).finish();
 
             for (i, g) in geo_arr.iter().enumerate() {
@@ -344,7 +350,8 @@ mod test {
                 .map(|x| x.transpose().unwrap().map(|g| g.to_line_string()))
                 .collect::<Vec<_>>();
 
-            let typ = LineStringType::new(coord_type, Dimension::XY, Default::default());
+            let typ =
+                LineStringType::new(Dimension::XY, Default::default()).with_coord_type(coord_type);
             let geo_arr2 = LineStringBuilder::from_nullable_line_strings(&geo_geoms, typ).finish();
             assert_eq!(geo_arr, geo_arr2);
         }
@@ -361,12 +368,13 @@ mod test {
             ] {
                 let geo_arr = linestring::array(coord_type, dim);
 
-                let ext_type = geo_arr.ext_type().clone();
-                let field = ext_type.to_field("geometry", true);
+                let extension_type = geo_arr.extension_type().clone();
+                let field = extension_type.to_field("geometry", true);
 
                 let arrow_arr = geo_arr.to_array_ref();
 
-                let geo_arr2: LineStringArray = (arrow_arr.as_ref(), ext_type).try_into().unwrap();
+                let geo_arr2: LineStringArray =
+                    (arrow_arr.as_ref(), extension_type).try_into().unwrap();
                 let geo_arr3: LineStringArray = (arrow_arr.as_ref(), &field).try_into().unwrap();
 
                 assert_eq!(geo_arr, geo_arr2);

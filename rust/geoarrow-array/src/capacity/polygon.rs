@@ -1,8 +1,9 @@
 use std::ops::Add;
 
 use geo_traits::{GeometryTrait, GeometryType, LineStringTrait, PolygonTrait, RectTrait};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
-use crate::error::{GeoArrowError, Result};
+use crate::util::GeometryTypeName;
 
 /// A counter for the buffer sizes of a [`PolygonArray`][crate::array::PolygonArray].
 ///
@@ -85,12 +86,17 @@ impl PolygonCapacity {
     ///
     /// The type of the geometry must be either Polygon or Rect
     #[inline]
-    pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait>) -> Result<()> {
+    pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait>) -> GeoArrowResult<()> {
         if let Some(geom) = value {
             match geom.as_type() {
                 GeometryType::Polygon(g) => self.add_polygon(Some(g)),
                 GeometryType::Rect(g) => self.add_rect(Some(g)),
-                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+                gt => {
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
+                        "Expected polygon, got {}",
+                        gt.name()
+                    )));
+                }
             }
         } else {
             self.geom_capacity += 1;
@@ -121,7 +127,7 @@ impl PolygonCapacity {
     /// Construct a new counter pre-filled with the given geometries
     pub fn from_geometries<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let mut counter = Self::new_empty();
         for g in geoms.into_iter() {
             counter.add_geometry(g)?;

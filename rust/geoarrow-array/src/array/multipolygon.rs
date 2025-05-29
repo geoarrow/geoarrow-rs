@@ -4,16 +4,15 @@ use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
-use geoarrow_schema::{CoordType, Metadata, MultiPolygonType};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
+use geoarrow_schema::{CoordType, GeoArrowType, Metadata, MultiPolygonType};
 
-use crate::array::{CoordBuffer, PolygonArray, WkbArray};
+use crate::array::{CoordBuffer, GenericWkbArray, PolygonArray};
 use crate::builder::MultiPolygonBuilder;
 use crate::capacity::MultiPolygonCapacity;
-use crate::datatypes::GeoArrowType;
 use crate::eq::offset_buffer_eq;
-use crate::error::{GeoArrowError, Result};
 use crate::scalar::MultiPolygon;
-use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
+use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 use crate::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
 
 /// An immutable array of MultiPolygon geometries.
@@ -45,26 +44,26 @@ pub(super) fn check(
     polygon_offsets: &OffsetBuffer<i32>,
     ring_offsets: &OffsetBuffer<i32>,
     validity_len: Option<usize>,
-) -> Result<()> {
+) -> GeoArrowResult<()> {
     if validity_len.is_some_and(|len| len != geom_offsets.len_proxy()) {
-        return Err(GeoArrowError::General(
+        return Err(GeoArrowError::InvalidGeoArrow(
             "nulls mask length must match the number of values".to_string(),
         ));
     }
     if *ring_offsets.last() as usize != coords.len() {
-        return Err(GeoArrowError::General(
+        return Err(GeoArrowError::InvalidGeoArrow(
             "largest ring offset must match coords length".to_string(),
         ));
     }
 
     if *polygon_offsets.last() as usize != ring_offsets.len_proxy() {
-        return Err(GeoArrowError::General(
+        return Err(GeoArrowError::InvalidGeoArrow(
             "largest polygon offset must match ring offsets length".to_string(),
         ));
     }
 
     if *geom_offsets.last() as usize != polygon_offsets.len_proxy() {
-        return Err(GeoArrowError::General(
+        return Err(GeoArrowError::InvalidGeoArrow(
             "largest geometry offset must match polygon offsets length".to_string(),
         ));
     }
@@ -123,7 +122,7 @@ impl MultiPolygonArray {
         ring_offsets: OffsetBuffer<i32>,
         nulls: Option<NullBuffer>,
         metadata: Arc<Metadata>,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         check(
             &coords,
             &geom_offsets,
@@ -132,7 +131,8 @@ impl MultiPolygonArray {
             nulls.as_ref().map(|v| v.len()),
         )?;
         Ok(Self {
-            data_type: MultiPolygonType::new(coords.coord_type(), coords.dim(), metadata),
+            data_type: MultiPolygonType::new(coords.dim(), metadata)
+                .with_coord_type(coords.coord_type()),
             coords,
             geom_offsets,
             polygon_offsets,
@@ -158,23 +158,6 @@ impl MultiPolygonArray {
     /// Access the underlying coordinate buffer
     pub fn coords(&self) -> &CoordBuffer {
         &self.coords
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn into_inner(
-        self,
-    ) -> (
-        CoordBuffer,
-        OffsetBuffer<i32>,
-        OffsetBuffer<i32>,
-        OffsetBuffer<i32>,
-    ) {
-        (
-            self.coords,
-            self.geom_offsets,
-            self.polygon_offsets,
-            self.ring_offsets,
-        )
     }
 
     /// Access the underlying geometry offsets buffer
@@ -208,7 +191,8 @@ impl MultiPolygonArray {
         validity_len + self.buffer_lengths().num_bytes()
     }
 
-    /// Slices this [`MultiPolygonArray`] in place.
+    /// Slice this [`MultiPolygonArray`].
+    ///
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
@@ -234,10 +218,15 @@ impl MultiPolygonArray {
         Self {
             data_type: self.data_type.with_coord_type(coord_type),
             coords: self.coords.into_coord_type(coord_type),
-            geom_offsets: self.geom_offsets,
-            polygon_offsets: self.polygon_offsets,
-            ring_offsets: self.ring_offsets,
-            nulls: self.nulls,
+            ..self
+        }
+    }
+
+    /// Change the [`Metadata`] of this array.
+    pub fn with_metadata(self, metadata: Arc<Metadata>) -> Self {
+        Self {
+            data_type: self.data_type.with_metadata(metadata),
+            ..self
         }
     }
 }
@@ -285,12 +274,16 @@ impl GeoArrowArray for MultiPolygonArray {
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.slice(offset, length))
     }
+
+    fn with_metadata(self, metadata: Arc<Metadata>) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.with_metadata(metadata))
+    }
 }
 
-impl<'a> ArrayAccessor<'a> for MultiPolygonArray {
+impl<'a> GeoArrowArrayAccessor<'a> for MultiPolygonArray {
     type Item = MultiPolygon<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
+    unsafe fn value_unchecked(&'a self, index: usize) -> GeoArrowResult<Self::Item> {
         Ok(MultiPolygon::new(
             &self.coords,
             &self.geom_offsets,
@@ -327,7 +320,7 @@ impl IntoArrow for MultiPolygonArray {
         GenericListArray::new(polygons_field, self.geom_offsets, polygons_array, nulls)
     }
 
-    fn ext_type(&self) -> &Self::ExtensionType {
+    fn extension_type(&self) -> &Self::ExtensionType {
         &self.data_type
     }
 }
@@ -335,7 +328,9 @@ impl IntoArrow for MultiPolygonArray {
 impl TryFrom<(&GenericListArray<i32>, MultiPolygonType)> for MultiPolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from((geom_array, typ): (&GenericListArray<i32>, MultiPolygonType)) -> Result<Self> {
+    fn try_from(
+        (geom_array, typ): (&GenericListArray<i32>, MultiPolygonType),
+    ) -> GeoArrowResult<Self> {
         let geom_offsets = geom_array.offsets();
         let nulls = geom_array.nulls();
 
@@ -363,7 +358,9 @@ impl TryFrom<(&GenericListArray<i32>, MultiPolygonType)> for MultiPolygonArray {
 impl TryFrom<(&GenericListArray<i64>, MultiPolygonType)> for MultiPolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from((geom_array, typ): (&GenericListArray<i64>, MultiPolygonType)) -> Result<Self> {
+    fn try_from(
+        (geom_array, typ): (&GenericListArray<i64>, MultiPolygonType),
+    ) -> GeoArrowResult<Self> {
         let geom_offsets = offsets_buffer_i64_to_i32(geom_array.offsets())?;
         let nulls = geom_array.nulls();
 
@@ -391,13 +388,13 @@ impl TryFrom<(&GenericListArray<i64>, MultiPolygonType)> for MultiPolygonArray {
 impl TryFrom<(&dyn Array, MultiPolygonType)> for MultiPolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (&dyn Array, MultiPolygonType)) -> Result<Self> {
+    fn try_from((value, typ): (&dyn Array, MultiPolygonType)) -> GeoArrowResult<Self> {
         match value.data_type() {
             DataType::List(_) => (value.as_list::<i32>(), typ).try_into(),
             DataType::LargeList(_) => (value.as_list::<i64>(), typ).try_into(),
-            _ => Err(GeoArrowError::General(format!(
-                "Unexpected type: {:?}",
-                value.data_type()
+            dt => Err(GeoArrowError::InvalidGeoArrow(format!(
+                "Unexpected MultiPolygon DataType: {:?}",
+                dt
             ))),
         }
     }
@@ -406,16 +403,16 @@ impl TryFrom<(&dyn Array, MultiPolygonType)> for MultiPolygonArray {
 impl TryFrom<(&dyn Array, &Field)> for MultiPolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+    fn try_from((arr, field): (&dyn Array, &Field)) -> GeoArrowResult<Self> {
         let typ = field.try_extension_type::<MultiPolygonType>()?;
         (arr, typ).try_into()
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiPolygonType)> for MultiPolygonArray {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, MultiPolygonType)> for MultiPolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WkbArray<O>, MultiPolygonType)) -> Result<Self> {
+    fn try_from(value: (GenericWkbArray<O>, MultiPolygonType)) -> GeoArrowResult<Self> {
         let mut_arr: MultiPolygonBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }
@@ -424,7 +421,7 @@ impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiPolygonType)> for MultiPolyg
 impl From<PolygonArray> for MultiPolygonArray {
     fn from(value: PolygonArray) -> Self {
         let (coord_type, dimension, metadata) = value.data_type.into_inner();
-        let new_type = MultiPolygonType::new(coord_type, dimension, metadata);
+        let new_type = MultiPolygonType::new(dimension, metadata).with_coord_type(coord_type);
 
         let coords = value.coords;
         let geom_offsets = OffsetBuffer::from_lengths(vec![1; coords.len()]);
@@ -457,9 +454,8 @@ mod test {
     use geo_traits::to_geo::ToGeoMultiPolygon;
     use geoarrow_schema::{CoordType, Dimension};
 
-    use crate::test::multipolygon;
-
     use super::*;
+    use crate::test::multipolygon;
 
     #[test]
     fn geo_round_trip() {
@@ -470,7 +466,8 @@ mod test {
                 Some(multipolygon::mp1()),
                 None,
             ];
-            let typ = MultiPolygonType::new(coord_type, Dimension::XY, Default::default());
+            let typ = MultiPolygonType::new(Dimension::XY, Default::default())
+                .with_coord_type(coord_type);
             let geo_arr = MultiPolygonBuilder::from_nullable_multi_polygons(&geoms, typ).finish();
 
             for (i, g) in geo_arr.iter().enumerate() {
@@ -499,7 +496,8 @@ mod test {
                 .map(|x| x.transpose().unwrap().map(|g| g.to_multi_polygon()))
                 .collect::<Vec<_>>();
 
-            let typ = MultiPolygonType::new(coord_type, Dimension::XY, Default::default());
+            let typ = MultiPolygonType::new(Dimension::XY, Default::default())
+                .with_coord_type(coord_type);
             let geo_arr2 =
                 MultiPolygonBuilder::from_nullable_multi_polygons(&geo_geoms, typ).finish();
             assert_eq!(geo_arr, geo_arr2);
@@ -517,13 +515,13 @@ mod test {
             ] {
                 let geo_arr = multipolygon::array(coord_type, dim);
 
-                let ext_type = geo_arr.ext_type().clone();
-                let field = ext_type.to_field("geometry", true);
+                let extension_type = geo_arr.extension_type().clone();
+                let field = extension_type.to_field("geometry", true);
 
                 let arrow_arr = geo_arr.to_array_ref();
 
                 let geo_arr2: MultiPolygonArray =
-                    (arrow_arr.as_ref(), ext_type).try_into().unwrap();
+                    (arrow_arr.as_ref(), extension_type).try_into().unwrap();
                 let geo_arr3: MultiPolygonArray = (arrow_arr.as_ref(), &field).try_into().unwrap();
 
                 assert_eq!(geo_arr, geo_arr2);

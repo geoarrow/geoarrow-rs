@@ -1,7 +1,7 @@
 use geoarrow_array::array::MultiPointArray;
 use geoarrow_array::builder::MultiPointBuilder;
-use geoarrow_array::error::Result;
 use geoarrow_schema::MultiPointType;
+use geoarrow_schema::error::GeoArrowResult;
 
 use crate::import::array::FromGEOS;
 use crate::import::scalar::GEOSMultiPoint;
@@ -12,11 +12,11 @@ impl FromGEOS for MultiPointBuilder {
     fn from_geos(
         geoms: impl IntoIterator<Item = Option<geos::Geometry>>,
         typ: Self::GeoArrowType,
-    ) -> geoarrow_array::error::Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let geoms = geoms
             .into_iter()
             .map(|geom| geom.map(GEOSMultiPoint::try_new).transpose())
-            .collect::<Result<Vec<_>>>()?;
+            .collect::<GeoArrowResult<Vec<_>>>()?;
         Ok(Self::from_nullable_multi_points(&geoms, typ))
     }
 }
@@ -27,19 +27,19 @@ impl FromGEOS for MultiPointArray {
     fn from_geos(
         geoms: impl IntoIterator<Item = Option<geos::Geometry>>,
         typ: Self::GeoArrowType,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         Ok(MultiPointBuilder::from_geos(geoms, typ)?.finish())
     }
 }
 
 #[cfg(test)]
 mod test {
+    use geoarrow_array::test::multipoint::array;
+    use geoarrow_array::{GeoArrowArrayAccessor, IntoArrow};
+    use geoarrow_schema::{CoordType, Dimension};
+
     use super::*;
     use crate::export::to_geos_geometry;
-
-    use geoarrow_array::test::multipoint::array;
-    use geoarrow_array::{ArrayAccessor, IntoArrow};
-    use geoarrow_schema::{CoordType, Dimension};
 
     #[test]
     fn geos_round_trip() {
@@ -52,7 +52,7 @@ mod test {
                     .map(|opt_x| opt_x.map(|x| to_geos_geometry(&x.unwrap()).unwrap()))
                     .collect::<Vec<_>>();
                 let round_trip =
-                    MultiPointArray::from_geos(geos_geoms, arr.ext_type().clone()).unwrap();
+                    MultiPointArray::from_geos(geos_geoms, arr.extension_type().clone()).unwrap();
                 assert_eq!(arr, round_trip);
             }
         }

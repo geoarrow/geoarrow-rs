@@ -3,21 +3,18 @@ members = [
     "rust/geoarrow-array",
     "rust/geoarrow-cast",
     "rust/geoarrow-flatgeobuf",
-    "rust/geoarrow-geoparquet",
     "rust/geoarrow-geos",
     "rust/geoarrow-schema",
     "rust/geoarrow-test",
-    "rust/geoarrow",
+    "rust/geodatafusion",
+    "rust/geoparquet",
     "rust/pyo3-geoarrow",
-    # Comment out until datafusion 47 release so that the workspace can upgrade
-    # to arrow 55
-    # "rust/geodatafusion",
 ]
 exclude = ["js"]
 resolver = "2"
 
 [workspace.package]
-version = "0.1.0-dev"
+version = "0.4.0"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
@@ -40,28 +37,28 @@ arrow-schema = "55"
 async-stream = "0.3"
 async-trait = "0.1"
 bytes = "1.10.0"
-# 47 rc https://lists.apache.org/thread/zrq9x9gf51r8b6m9qokf2q75kh251rm6
-datafusion = { git = "https://github.com/apache/datafusion", rev = "e4433049b04ca2c1e2031eb05d1a0990210f11d6" }
+# https://github.com/apache/datafusion/pull/15646
+datafusion = { git = "https://github.com/apache/datafusion", rev = "2d801940c3cb0cec3209aa890688590ded791865" }
 flatgeobuf = { version = "4.6", default-features = false }
 futures = "0.3"
 geo = "0.30.0"
-geo-traits = "0.2.0"
+geo-traits = "0.3.0"
 geo-types = "0.7.16"
-geoarrow-array = { path = "rust/geoarrow-array" }
-geoarrow-cast = { path = "rust/geoarrow-cast" }
-geoarrow-geoparquet = { path = "rust/geoarrow-geoparquet" }
-geoarrow-schema = { path = "rust/geoarrow-schema" }
-geoarrow-test = { path = "rust/geoarrow-test" }
+geoarrow-array = { path = "rust/geoarrow-array", version = "0.4" }
+geoarrow-cast = { path = "rust/geoarrow-cast", version = "0.4" }
+geoarrow-schema = { path = "rust/geoarrow-schema", version = "0.4" }
+geoarrow-test = { path = "rust/geoarrow-test", version = "0.4" }
 geohash = "0.13.1"
+geoparquet = { path = "rust/geoparquet", version = "0.4" }
 geos = { version = "10", features = ["v3_10_0"] }
 geozero = "0.14"
 indexmap = "2.5.0"
 num-traits = "0.2.19"
-numpy = "0.24"
+numpy = "0.25"
 object_store = "0.12"
 parquet = { version = "55", default-features = false }
-pyo3 = "0.24"
-pyo3-arrow = "0.9"
+pyo3 = "0.25"
+pyo3-arrow = "0.10.1"
 pyo3-geoarrow = { path = "rust/pyo3-geoarrow" }
 rstar = "0.12.2"
 serde = "1"
@@ -70,7 +67,5 @@ serde_with = "3"
 thiserror = "1"
 tokio = { version = "1.9", default-features = false }
 url = "2.5"
-# to include https://github.com/georust/wkb/pull/53
-wkb = { git = "https://github.com/georust/wkb", rev = "5a2027995997017bcd531e6be7e5cf126db1d4c1" }
-# https://github.com/georust/wkt/pull/137
-wkt = { git = "https://github.com/georust/wkt", rev = "270ffe0eaf5ba5255c364dbade39c451562a9e9b" }
+wkb = "0.9"
+wkt = "0.14"

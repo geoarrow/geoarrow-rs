@@ -1,8 +1,8 @@
 use geo_types::{Rect, coord};
+use geoarrow_schema::{BoxType, Dimension};
 
 use crate::array::RectArray;
 use crate::builder::RectBuilder;
-use geoarrow_schema::{BoxType, Dimension};
 
 pub(crate) fn r0() -> Rect {
     Rect::new(coord! { x: 10., y: 20. }, coord! { x: 30., y: 10. })

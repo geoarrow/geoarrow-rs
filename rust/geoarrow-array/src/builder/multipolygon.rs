@@ -1,18 +1,19 @@
+use std::sync::Arc;
+
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{
     CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait,
 };
-use geoarrow_schema::{CoordType, MultiPolygonType};
+use geoarrow_schema::MultiPolygonType;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
+use crate::GeoArrowArray;
+use crate::array::{GenericWkbArray, MultiPolygonArray};
+use crate::builder::{CoordBufferBuilder, OffsetsBuilder};
 use crate::capacity::MultiPolygonCapacity;
-// use super::array::check;
-use crate::array::{MultiPolygonArray, WkbArray};
-use crate::builder::{
-    CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
-};
-use crate::error::{GeoArrowError, Result};
-use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
+use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
+use crate::util::GeometryTypeName;
 
 /// The GeoArrow equivalent to `Vec<Option<MultiPolygon>>`: a mutable collection of MultiPolygons.
 ///
@@ -44,21 +45,11 @@ impl MultiPolygonBuilder {
 
     /// Creates a new [`MultiPolygonBuilder`] with a capacity.
     pub fn with_capacity(typ: MultiPolygonType, capacity: MultiPolygonCapacity) -> Self {
-        let coords = match typ.coord_type() {
-            CoordType::Interleaved => {
-                CoordBufferBuilder::Interleaved(InterleavedCoordBufferBuilder::with_capacity(
-                    capacity.coord_capacity,
-                    typ.dimension(),
-                ))
-            }
-            CoordType::Separated => {
-                CoordBufferBuilder::Separated(SeparatedCoordBufferBuilder::with_capacity(
-                    capacity.coord_capacity,
-                    typ.dimension(),
-                ))
-            }
-        };
-
+        let coords = CoordBufferBuilder::with_capacity(
+            capacity.coord_capacity,
+            typ.coord_type(),
+            typ.dimension(),
+        );
         Self {
             coords,
             geom_offsets: OffsetsBuilder::with_capacity(capacity.geom_capacity),
@@ -114,41 +105,16 @@ impl MultiPolygonBuilder {
         )
     }
 
-    /// Creates a new builder with a capacity inferred by the provided iterator.
-    pub fn with_capacity_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
-        typ: MultiPolygonType,
-    ) -> Self {
-        let capacity = MultiPolygonCapacity::from_multi_polygons(geoms);
-        Self::with_capacity(typ, capacity)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
-    ) {
-        let capacity = MultiPolygonCapacity::from_multi_polygons(geoms);
-        self.reserve(capacity)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_exact_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
-    ) {
-        let capacity = MultiPolygonCapacity::from_multi_polygons(geoms);
-        self.reserve_exact(capacity)
-    }
     /// Add a new Polygon to the end of this array.
     ///
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> Result<()> {
+    pub fn push_polygon(
+        &mut self,
+        value: Option<&impl PolygonTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
         if let Some(polygon) = value {
             let exterior_ring = polygon.exterior();
             if exterior_ring.is_none() {
@@ -200,7 +166,7 @@ impl MultiPolygonBuilder {
     pub fn push_multi_polygon(
         &mut self,
         value: Option<&impl MultiPolygonTrait<T = f64>>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         if let Some(multi_polygon) = value {
             // Total number of polygons in this MultiPolygon
             let num_polygons = multi_polygon.num_polygons();
@@ -245,13 +211,21 @@ impl MultiPolygonBuilder {
     ///
     /// This will error if the geometry type is not Polygon or MultiPolygon.
     #[inline]
-    pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+    pub fn push_geometry(
+        &mut self,
+        value: Option<&impl GeometryTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
         if let Some(value) = value {
             match value.as_type() {
                 GeometryType::Polygon(g) => self.push_polygon(Some(g))?,
                 GeometryType::MultiPolygon(g) => self.push_multi_polygon(Some(g))?,
                 // TODO: support rect
-                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+                gt => {
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
+                        "Expected MultiPolygon compatible geometry, got {}",
+                        gt.name()
+                    )));
+                }
             }
         } else {
             self.push_null();
@@ -274,7 +248,7 @@ impl MultiPolygonBuilder {
     pub fn extend_from_geometry_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         geoms.into_iter().try_for_each(|g| self.push_geometry(g))?;
         Ok(())
     }
@@ -286,7 +260,7 @@ impl MultiPolygonBuilder {
     /// Care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
     #[inline]
-    pub(crate) fn try_push_geom_offset(&mut self, offsets_length: usize) -> Result<()> {
+    pub(crate) fn try_push_geom_offset(&mut self, offsets_length: usize) -> GeoArrowResult<()> {
         self.geom_offsets.try_push_usize(offsets_length)?;
         self.validity.append(true);
         Ok(())
@@ -299,7 +273,7 @@ impl MultiPolygonBuilder {
     /// Care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
     #[inline]
-    pub(crate) fn try_push_polygon_offset(&mut self, offsets_length: usize) -> Result<()> {
+    pub(crate) fn try_push_polygon_offset(&mut self, offsets_length: usize) -> GeoArrowResult<()> {
         self.polygon_offsets.try_push_usize(offsets_length)?;
         Ok(())
     }
@@ -311,7 +285,7 @@ impl MultiPolygonBuilder {
     /// Care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
     #[inline]
-    pub(crate) fn try_push_ring_offset(&mut self, offsets_length: usize) -> Result<()> {
+    pub(crate) fn try_push_ring_offset(&mut self, offsets_length: usize) -> GeoArrowResult<()> {
         self.ring_offsets.try_push_usize(offsets_length)?;
         Ok(())
     }
@@ -323,7 +297,7 @@ impl MultiPolygonBuilder {
     /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
     /// to the array upholds the necessary invariants of the array.
     #[inline]
-    pub unsafe fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+    pub unsafe fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> GeoArrowResult<()> {
         self.coords.push_coord(coord);
         Ok(())
     }
@@ -348,7 +322,8 @@ impl MultiPolygonBuilder {
         geoms: &[impl MultiPolygonTrait<T = f64>],
         typ: MultiPolygonType,
     ) -> Self {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(Some), typ);
+        let capacity = MultiPolygonCapacity::from_multi_polygons(geoms.iter().map(Some));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(Some));
         array
     }
@@ -358,7 +333,8 @@ impl MultiPolygonBuilder {
         geoms: &[Option<impl MultiPolygonTrait<T = f64>>],
         typ: MultiPolygonType,
     ) -> Self {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(|x| x.as_ref()), typ);
+        let capacity = MultiPolygonCapacity::from_multi_polygons(geoms.iter().map(|x| x.as_ref()));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         array
     }
@@ -367,7 +343,7 @@ impl MultiPolygonBuilder {
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         typ: MultiPolygonType,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let capacity = MultiPolygonCapacity::from_geometries(geoms.iter().map(|x| x.as_ref()))?;
         let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_geometry_iter(geoms.iter().map(|x| x.as_ref()))?;
@@ -375,24 +351,35 @@ impl MultiPolygonBuilder {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiPolygonType)> for MultiPolygonBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, MultiPolygonType)> for MultiPolygonBuilder {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (WkbArray<O>, MultiPolygonType)) -> Result<Self> {
+    fn try_from((value, typ): (GenericWkbArray<O>, MultiPolygonType)) -> GeoArrowResult<Self> {
         let wkb_objects = value
             .iter()
             .map(|x| x.transpose())
-            .collect::<Result<Vec<_>>>()?;
+            .collect::<GeoArrowResult<Vec<_>>>()?;
         Self::from_nullable_geometries(&wkb_objects, typ)
     }
 }
 
-impl GeometryArrayBuilder for MultiPolygonBuilder {
+impl GeoArrowArrayBuilder for MultiPolygonBuilder {
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
     }
 
     fn push_null(&mut self) {
         self.push_null();
+    }
+
+    fn push_geometry(
+        &mut self,
+        geometry: Option<&impl GeometryTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
+        self.push_geometry(geometry)
+    }
+
+    fn finish(self) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.finish())
     }
 }

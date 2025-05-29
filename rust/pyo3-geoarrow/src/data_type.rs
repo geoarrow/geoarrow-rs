@@ -1,17 +1,17 @@
 use std::sync::Arc;
 
-use crate::error::{PyGeoArrowError, PyGeoArrowResult};
-use crate::{PyCoordType, PyCrs, PyDimension, PyEdges};
-
-use geoarrow_array::GeoArrowType;
 use geoarrow_schema::{
-    BoxType, GeometryCollectionType, GeometryType, LineStringType, Metadata, MultiLineStringType,
-    MultiPointType, MultiPolygonType, PointType, PolygonType, WkbType, WktType,
+    BoxType, GeoArrowType, GeometryCollectionType, GeometryType, LineStringType, Metadata,
+    MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType, WkbType,
+    WktType,
 };
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyType};
 use pyo3_arrow::PyField;
 use pyo3_arrow::ffi::to_schema_pycapsule;
+
+use crate::error::{PyGeoArrowError, PyGeoArrowResult};
+use crate::{PyCoordType, PyCrs, PyDimension, PyEdges};
 
 #[pyclass(module = "geoarrow.rust.core", name = "GeoArrowType", subclass, frozen)]
 pub struct PyGeoArrowType(pub(crate) GeoArrowType);
@@ -159,7 +159,9 @@ macro_rules! impl_native_type_constructor {
         ) -> PyGeoArrowType {
             let edges = edges.map(|e| e.into());
             let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
-            <$geoarrow_type>::new(coord_type.into(), dimension.into(), metadata).into()
+            <$geoarrow_type>::new(dimension.into(), metadata)
+                .with_coord_type(coord_type.into())
+                .into()
         }
     };
 }
@@ -189,7 +191,9 @@ pub fn geometry(
 ) -> PyGeoArrowType {
     let edges = edges.map(|e| e.into());
     let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
-    GeometryType::new(coord_type.into(), metadata).into()
+    GeometryType::new(metadata)
+        .with_coord_type(coord_type.into())
+        .into()
 }
 
 #[pyfunction]

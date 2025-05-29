@@ -2,20 +2,30 @@
 
 **This is the changelog for the core Rust library**. There's a [separate changelog](./python/CHANGELOG.md) for the Python bindings, and there will be another for the JS bindings.
 
-## Unreleased
+## [0.4.0] - 2025-05-28
 
-### Breaking changes
+This release contains more or less a **full rewrite** of the GeoArrow Rust library.
 
-- Renames:
-  - `GeometryArrayTrait` renamed to `NativeArray`.
-  - `GeometryArrayRef` renamed to `NativeArrayRef`.
-  - `GeometryArrayTrait` renamed to `NativeScalar`.
-  - `GeometryArrayDyn` renamed to `NativeArrayDyn`.
-  - `GeometryArrayAccessor` renamed to `ArrayAccessor`.
-  - `AsGeometryArray` renamed to `AsNativeArray`.
-  - `AsChunkedGeometryArray` renamed to `AsChunkedNativeArray`.
-  - `ChunkedGeometryArrayTrait` renamed to `ChunkedNativeArray`.
-- `GeometryArrayTrait`/`NativeArray` no longer implemented on coordinate buffers
+> The `geoarrow-rs` project is about 3 years old. Early prototyping started inside the [`geopolars`](https://github.com/geopolars/geopolars) repo before deciding I needed something more general (not tied to Polars) and creating first [`geopolars/geoarrow`](https://github.com/geopolars/geoarrow) and then lastly [`geoarrow/geoarrow-rs`](https://github.com/geoarrow/geoarrow-rs).
+>
+> However despite its age, the `geoarrow` crate suffers from a couple issues. For one, it took a while to figure out the right abstractions. And learning Rust at the same time didn't help. The `geoarrow` crate is also too monolithic. Some parts of `geoarrow` are production ready, but there's decidedly a _lot_ of code in `geoarrow` that is _not_ production ready. And it's very much not clear which parts of `geoarrow` are production ready or not.
+>
+> But I think `geoarrow-rs` has potential to form part of the core geospatial data engineering stack in Rust. And as part of that, we need a better delineation of which parts of the code are stable or not. As such, the `geoarrow-rs` repo is **currently ongoing a large refactor from a single crate to a monorepo of smaller crates, each with a more well-defined scope**.
+>
+> As of May 2025, avoid using the `geoarrow` crate and instead use the newer crates with a smaller scope, like `geoarrow-array`.
+
+### New Features :magic_wand:
+
+- Full support for the GeoArrow 0.2 specification, including all geometry array types and dimensions. See documentation in `geoarrow-array`.
+- Native support for the upstream [Arrow `ExtensionType`](https://github.com/apache/arrow-rs/pull/5822/) concept introduced in arrow `54.2`. See documentation in `geoarrow-schema`.
+
+### Removed functionality :wrench:
+
+A significant amount of code from the previous `geoarrow` crate is not currently available in the refactored `geoarrow-*` crates.
+
+Some of this is intentional. Similar to the upstream `arrow` crate, we no longer export a `ChunkedArray` concept, suggesting the user to use streaming concepts like iterators where possible.
+
+Other functionality like format readers and writers is intended to be restored once stable, but additional work needs to take place before there's enough confidence in that code.
 
 ## [0.3.0] - 2024-09-07
 

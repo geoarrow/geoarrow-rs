@@ -4,16 +4,15 @@ use arrow_array::cast::AsArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
-use geoarrow_schema::{CoordType, GeometryCollectionType, Metadata};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
+use geoarrow_schema::{CoordType, GeoArrowType, GeometryCollectionType, Metadata};
 
-use crate::array::{MixedGeometryArray, WkbArray};
+use crate::array::{GenericWkbArray, MixedGeometryArray};
 use crate::builder::GeometryCollectionBuilder;
 use crate::capacity::GeometryCollectionCapacity;
-use crate::datatypes::GeoArrowType;
 use crate::eq::offset_buffer_eq;
-use crate::error::{GeoArrowError, Result};
 use crate::scalar::GeometryCollection;
-use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
+use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 use crate::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
 
 /// An immutable array of GeometryCollection geometries.
@@ -45,9 +44,9 @@ impl GeometryCollectionArray {
         nulls: Option<NullBuffer>,
         metadata: Arc<Metadata>,
     ) -> Self {
-        let coord_type = array.coord_type;
         Self {
-            data_type: GeometryCollectionType::new(coord_type, array.dim, metadata),
+            data_type: GeometryCollectionType::new(array.dim, metadata)
+                .with_coord_type(array.coord_type),
             array,
             geom_offsets,
             nulls,
@@ -72,7 +71,7 @@ impl GeometryCollectionArray {
         validity_len + self.buffer_lengths().num_bytes()
     }
 
-    /// Slices this [`GeometryCollectionArray`] in place.
+    /// Slice this [`GeometryCollectionArray`].
     ///
     /// # Implementation
     ///
@@ -100,8 +99,15 @@ impl GeometryCollectionArray {
         Self {
             data_type: self.data_type.with_coord_type(coord_type),
             array: self.array.into_coord_type(coord_type),
-            geom_offsets: self.geom_offsets,
-            nulls: self.nulls,
+            ..self
+        }
+    }
+
+    /// Change the [`Metadata`] of this array.
+    pub fn with_metadata(self, metadata: Arc<Metadata>) -> Self {
+        Self {
+            data_type: self.data_type.with_metadata(metadata),
+            ..self
         }
     }
 }
@@ -149,12 +155,16 @@ impl GeoArrowArray for GeometryCollectionArray {
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.slice(offset, length))
     }
+
+    fn with_metadata(self, metadata: Arc<Metadata>) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.with_metadata(metadata))
+    }
 }
 
-impl<'a> ArrayAccessor<'a> for GeometryCollectionArray {
+impl<'a> GeoArrowArrayAccessor<'a> for GeometryCollectionArray {
     type Item = GeometryCollection<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
+    unsafe fn value_unchecked(&'a self, index: usize) -> GeoArrowResult<Self::Item> {
         Ok(GeometryCollection::new(
             &self.array,
             &self.geom_offsets,
@@ -174,7 +184,7 @@ impl IntoArrow for GeometryCollectionArray {
         GenericListArray::new(geometries_field, self.geom_offsets, values, nulls)
     }
 
-    fn ext_type(&self) -> &Self::ExtensionType {
+    fn extension_type(&self) -> &Self::ExtensionType {
         &self.data_type
     }
 }
@@ -182,7 +192,9 @@ impl IntoArrow for GeometryCollectionArray {
 impl TryFrom<(&GenericListArray<i32>, GeometryCollectionType)> for GeometryCollectionArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (&GenericListArray<i32>, GeometryCollectionType)) -> Result<Self> {
+    fn try_from(
+        (value, typ): (&GenericListArray<i32>, GeometryCollectionType),
+    ) -> GeoArrowResult<Self> {
         let geoms: MixedGeometryArray =
             (value.values().as_ref(), typ.dimension(), typ.coord_type()).try_into()?;
         let geom_offsets = value.offsets();
@@ -200,7 +212,9 @@ impl TryFrom<(&GenericListArray<i32>, GeometryCollectionType)> for GeometryColle
 impl TryFrom<(&GenericListArray<i64>, GeometryCollectionType)> for GeometryCollectionArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (&GenericListArray<i64>, GeometryCollectionType)) -> Result<Self> {
+    fn try_from(
+        (value, typ): (&GenericListArray<i64>, GeometryCollectionType),
+    ) -> GeoArrowResult<Self> {
         let geoms: MixedGeometryArray =
             (value.values().as_ref(), typ.dimension(), typ.coord_type()).try_into()?;
         let geom_offsets = offsets_buffer_i64_to_i32(value.offsets())?;
@@ -218,13 +232,13 @@ impl TryFrom<(&GenericListArray<i64>, GeometryCollectionType)> for GeometryColle
 impl TryFrom<(&dyn Array, GeometryCollectionType)> for GeometryCollectionArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (&dyn Array, GeometryCollectionType)) -> Result<Self> {
+    fn try_from((value, typ): (&dyn Array, GeometryCollectionType)) -> GeoArrowResult<Self> {
         match value.data_type() {
             DataType::List(_) => (value.as_list::<i32>(), typ).try_into(),
             DataType::LargeList(_) => (value.as_list::<i64>(), typ).try_into(),
-            _ => Err(GeoArrowError::General(format!(
-                "Unexpected type: {:?}",
-                value.data_type()
+            dt => Err(GeoArrowError::InvalidGeoArrow(format!(
+                "Unexpected GeometryCollection Arrow DataType: {:?}",
+                dt
             ))),
         }
     }
@@ -233,18 +247,18 @@ impl TryFrom<(&dyn Array, GeometryCollectionType)> for GeometryCollectionArray {
 impl TryFrom<(&dyn Array, &Field)> for GeometryCollectionArray {
     type Error = GeoArrowError;
 
-    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+    fn try_from((arr, field): (&dyn Array, &Field)) -> GeoArrowResult<Self> {
         let typ = field.try_extension_type::<GeometryCollectionType>()?;
         (arr, typ).try_into()
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, GeometryCollectionType)>
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, GeometryCollectionType)>
     for GeometryCollectionArray
 {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WkbArray<O>, GeometryCollectionType)) -> Result<Self> {
+    fn try_from(value: (GenericWkbArray<O>, GeometryCollectionType)) -> GeoArrowResult<Self> {
         let mut_arr: GeometryCollectionBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }
@@ -263,9 +277,8 @@ mod test {
     use geoarrow_schema::{CoordType, Dimension};
     use geoarrow_test::raw;
 
-    use crate::test::geometrycollection;
-
     use super::*;
+    use crate::test::geometrycollection;
 
     #[test]
     fn try_from_arrow() {
@@ -279,7 +292,7 @@ mod test {
                 for prefer_multi in [true, false] {
                     let geo_arr = geometrycollection::array(coord_type, dim, prefer_multi);
 
-                    let point_type = geo_arr.ext_type().clone();
+                    let point_type = geo_arr.extension_type().clone();
                     let field = point_type.to_field("geometry", true);
 
                     let arrow_arr = geo_arr.to_array_ref();
@@ -305,8 +318,7 @@ mod test {
             .filter_map(|(i, geom)| if geom.is_none() { Some(i) } else { None })
             .collect::<Vec<_>>();
 
-        let typ =
-            GeometryCollectionType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let typ = GeometryCollectionType::new(Dimension::XY, Default::default());
         let geo_arr = GeometryCollectionBuilder::from_nullable_geometry_collections(&geoms, typ)
             .unwrap()
             .finish();
@@ -321,8 +333,7 @@ mod test {
         let geoms = raw::geometrycollection::xy::geoms();
         let expected_nulls = NullBuffer::from_iter(geoms.iter().map(|g| g.is_some()));
 
-        let typ =
-            GeometryCollectionType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let typ = GeometryCollectionType::new(Dimension::XY, Default::default());
         let geo_arr = GeometryCollectionBuilder::from_nullable_geometry_collections(&geoms, typ)
             .unwrap()
             .finish();

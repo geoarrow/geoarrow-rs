@@ -1,7 +1,7 @@
 use geoarrow_array::array::MultiPolygonArray;
 use geoarrow_array::builder::MultiPolygonBuilder;
-use geoarrow_array::error::Result;
 use geoarrow_schema::MultiPolygonType;
+use geoarrow_schema::error::GeoArrowResult;
 
 use crate::import::array::FromGEOS;
 use crate::import::scalar::GEOSMultiPolygon;
@@ -12,11 +12,11 @@ impl FromGEOS for MultiPolygonBuilder {
     fn from_geos(
         geoms: impl IntoIterator<Item = Option<geos::Geometry>>,
         typ: Self::GeoArrowType,
-    ) -> geoarrow_array::error::Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let geoms = geoms
             .into_iter()
             .map(|geom| geom.map(GEOSMultiPolygon::try_new).transpose())
-            .collect::<Result<Vec<_>>>()?;
+            .collect::<GeoArrowResult<Vec<_>>>()?;
         Ok(Self::from_nullable_multi_polygons(&geoms, typ))
     }
 }
@@ -27,18 +27,18 @@ impl FromGEOS for MultiPolygonArray {
     fn from_geos(
         geoms: impl IntoIterator<Item = Option<geos::Geometry>>,
         typ: Self::GeoArrowType,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         Ok(MultiPolygonBuilder::from_geos(geoms, typ)?.finish())
     }
 }
 #[cfg(test)]
 mod test {
+    use geoarrow_array::test::multipolygon::array;
+    use geoarrow_array::{GeoArrowArrayAccessor, IntoArrow};
+    use geoarrow_schema::{CoordType, Dimension};
+
     use super::*;
     use crate::export::to_geos_geometry;
-
-    use geoarrow_array::test::multipolygon::array;
-    use geoarrow_array::{ArrayAccessor, IntoArrow};
-    use geoarrow_schema::{CoordType, Dimension};
 
     #[test]
     fn geos_round_trip() {
@@ -51,7 +51,7 @@ mod test {
                     .map(|opt_x| opt_x.map(|x| to_geos_geometry(&x.unwrap()).unwrap()))
                     .collect::<Vec<_>>();
                 let round_trip =
-                    MultiPolygonArray::from_geos(geos_geoms, arr.ext_type().clone()).unwrap();
+                    MultiPolygonArray::from_geos(geos_geoms, arr.extension_type().clone()).unwrap();
                 assert_eq!(arr, round_trip);
             }
         }

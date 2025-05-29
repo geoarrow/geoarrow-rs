@@ -1,11 +1,11 @@
 use core::f64;
 
 use geo_traits::{CoordTrait, PointTrait};
+use geoarrow_schema::error::GeoArrowResult;
 use geoarrow_schema::{CoordType, Dimension};
 
 use crate::array::CoordBuffer;
 use crate::builder::{InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder};
-use crate::error::Result;
 
 /// The GeoArrow equivalent to `Vec<Coord>`: a mutable collection of coordinates.
 ///
@@ -20,14 +20,26 @@ pub enum CoordBufferBuilder {
 
 impl CoordBufferBuilder {
     /// Initialize a buffer of a given length with all coordinates set to the given value.
-    pub fn initialize(len: usize, interleaved: bool, dim: Dimension, value: f64) -> Self {
-        match interleaved {
-            true => CoordBufferBuilder::Interleaved(InterleavedCoordBufferBuilder::initialize(
-                len, dim, value,
-            )),
-            false => CoordBufferBuilder::Separated(SeparatedCoordBufferBuilder::initialize(
-                len, dim, value,
-            )),
+    pub fn initialize(len: usize, coord_type: CoordType, dim: Dimension, value: f64) -> Self {
+        match coord_type {
+            CoordType::Interleaved => CoordBufferBuilder::Interleaved(
+                InterleavedCoordBufferBuilder::initialize(len, dim, value),
+            ),
+            CoordType::Separated => CoordBufferBuilder::Separated(
+                SeparatedCoordBufferBuilder::initialize(len, dim, value),
+            ),
+        }
+    }
+
+    /// Create a new builder with the given capacity and dimension
+    pub fn with_capacity(len: usize, coord_type: CoordType, dim: Dimension) -> Self {
+        match coord_type {
+            CoordType::Interleaved => CoordBufferBuilder::Interleaved(
+                InterleavedCoordBufferBuilder::with_capacity(len, dim),
+            ),
+            CoordType::Separated => {
+                CoordBufferBuilder::Separated(SeparatedCoordBufferBuilder::with_capacity(len, dim))
+            }
         }
     }
 
@@ -107,7 +119,7 @@ impl CoordBufferBuilder {
     /// ## Errors
     ///
     /// - If the added coordinate does not have the same dimension as the coordinate buffer.
-    pub fn try_push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+    pub fn try_push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> GeoArrowResult<()> {
         match self {
             CoordBufferBuilder::Interleaved(cb) => cb.try_push_coord(coord),
             CoordBufferBuilder::Separated(cb) => cb.try_push_coord(coord),
@@ -142,7 +154,7 @@ impl CoordBufferBuilder {
     /// ## Errors
     ///
     /// - If the added point does not have the same dimension as the coordinate buffer.
-    pub fn try_push_point(&mut self, point: &impl PointTrait<T = f64>) -> Result<()> {
+    pub fn try_push_point(&mut self, point: &impl PointTrait<T = f64>) -> GeoArrowResult<()> {
         match self {
             CoordBufferBuilder::Interleaved(cb) => cb.try_push_point(point),
             CoordBufferBuilder::Separated(cb) => cb.try_push_point(point),

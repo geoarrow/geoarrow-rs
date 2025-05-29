@@ -2,11 +2,11 @@ use std::sync::Arc;
 
 use arrow_array::{Array, ArrayRef, FixedSizeListArray, StructArray};
 use arrow_schema::DataType;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, Dimension};
 
 use crate::array::{InterleavedCoordBuffer, SeparatedCoordBuffer};
 use crate::builder::{InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder};
-use crate::error::{GeoArrowError, Result};
 use crate::scalar::Coord;
 
 /// An Arrow representation of an array of coordinates.
@@ -86,12 +86,6 @@ impl CoordBuffer {
         }
     }
 
-    #[allow(dead_code)]
-    pub(crate) fn with_coords(self, coords: CoordBuffer) -> Self {
-        assert_eq!(coords.len(), self.len());
-        coords
-    }
-
     /// Convert this coordinate array into the given [CoordType]
     ///
     /// This is a no-op if the coord_type matches the existing coord type. Otherwise a full clone
@@ -120,7 +114,7 @@ impl CoordBuffer {
         }
     }
 
-    pub(crate) fn from_arrow(value: &dyn Array, dim: Dimension) -> Result<Self> {
+    pub(crate) fn from_arrow(value: &dyn Array, dim: Dimension) -> GeoArrowResult<Self> {
         match value.data_type() {
             DataType::Struct(_) => {
                 let downcasted = value.as_any().downcast_ref::<StructArray>().unwrap();
@@ -134,8 +128,8 @@ impl CoordBuffer {
                     InterleavedCoordBuffer::from_arrow(downcasted, dim)?,
                 ))
             }
-            _ => Err(GeoArrowError::General(format!(
-                "Unexpected type: {:?}",
+            _ => Err(GeoArrowError::InvalidGeoArrow(format!(
+                "Unexpected coord buffer type: {:?}",
                 value.data_type()
             ))),
         }

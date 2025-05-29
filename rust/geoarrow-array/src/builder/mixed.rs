@@ -1,9 +1,8 @@
-use std::sync::Arc;
-
 use geo_traits::*;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{
-    CoordType, Dimension, LineStringType, Metadata, MultiLineStringType, MultiPointType,
-    MultiPolygonType, PointType, PolygonType,
+    CoordType, Dimension, LineStringType, MultiLineStringType, MultiPointType, MultiPolygonType,
+    PointType, PolygonType,
 };
 
 use crate::array::MixedGeometryArray;
@@ -13,8 +12,7 @@ use crate::builder::{
     PointBuilder, PolygonBuilder,
 };
 use crate::capacity::MixedCapacity;
-use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayBuilder;
+use crate::trait_::GeoArrowArrayBuilder;
 
 pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 
@@ -32,8 +30,6 @@ pub(crate) const DEFAULT_PREFER_MULTI: bool = false;
 /// - All arrays must have the same coordinate layout (interleaved or separated)
 #[derive(Debug)]
 pub(crate) struct MixedGeometryBuilder {
-    metadata: Arc<Metadata>,
-
     /// The dimension of this builder.
     ///
     /// All underlying arrays must contain a coordinate buffer of this same dimension.
@@ -67,35 +63,33 @@ impl MixedGeometryBuilder {
         dim: Dimension,
         capacity: MixedCapacity,
         coord_type: CoordType,
-        metadata: Arc<Metadata>,
     ) -> Self {
         // Don't store array metadata on child arrays
         Self {
-            metadata,
             dim,
             types: vec![],
             points: PointBuilder::with_capacity(
-                PointType::new(coord_type, dim, Default::default()),
+                PointType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.point,
             ),
             line_strings: LineStringBuilder::with_capacity(
-                LineStringType::new(coord_type, dim, Default::default()),
+                LineStringType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.line_string,
             ),
             polygons: PolygonBuilder::with_capacity(
-                PolygonType::new(coord_type, dim, Default::default()),
+                PolygonType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.polygon,
             ),
             multi_points: MultiPointBuilder::with_capacity(
-                MultiPointType::new(coord_type, dim, Default::default()),
+                MultiPointType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.multi_point,
             ),
             multi_line_strings: MultiLineStringBuilder::with_capacity(
-                MultiLineStringType::new(coord_type, dim, Default::default()),
+                MultiLineStringType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.multi_line_string,
             ),
             multi_polygons: MultiPolygonBuilder::with_capacity(
-                MultiPolygonType::new(coord_type, dim, Default::default()),
+                MultiPolygonType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.multi_polygon,
             ),
             offsets: vec![],
@@ -145,7 +139,6 @@ impl MixedGeometryBuilder {
             Some(self.multi_points.finish()),
             Some(self.multi_line_strings.finish()),
             Some(self.multi_polygons.finish()),
-            self.metadata,
         )
     }
 
@@ -154,7 +147,7 @@ impl MixedGeometryBuilder {
     /// If `self.prefer_multi` is `true`, it will be stored in the `MultiPointBuilder` child
     /// array. Otherwise, it will be stored in the `PointBuilder` child array.
     #[inline]
-    pub(crate) fn push_point(&mut self, value: &impl PointTrait<T = f64>) -> Result<()> {
+    pub(crate) fn push_point(&mut self, value: &impl PointTrait<T = f64>) -> GeoArrowResult<()> {
         if self.prefer_multi {
             self.add_multi_point_type();
             self.multi_points.push_point(Some(value))
@@ -185,7 +178,10 @@ impl MixedGeometryBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub(crate) fn push_line_string(&mut self, value: &impl LineStringTrait<T = f64>) -> Result<()> {
+    pub(crate) fn push_line_string(
+        &mut self,
+        value: &impl LineStringTrait<T = f64>,
+    ) -> GeoArrowResult<()> {
         if self.prefer_multi {
             self.add_multi_line_string_type();
             self.multi_line_strings.push_line_string(Some(value))
@@ -216,7 +212,10 @@ impl MixedGeometryBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub(crate) fn push_polygon(&mut self, value: &impl PolygonTrait<T = f64>) -> Result<()> {
+    pub(crate) fn push_polygon(
+        &mut self,
+        value: &impl PolygonTrait<T = f64>,
+    ) -> GeoArrowResult<()> {
         if self.prefer_multi {
             self.add_multi_polygon_type();
             self.multi_polygons.push_polygon(Some(value))
@@ -243,7 +242,10 @@ impl MixedGeometryBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub(crate) fn push_multi_point(&mut self, value: &impl MultiPointTrait<T = f64>) -> Result<()> {
+    pub(crate) fn push_multi_point(
+        &mut self,
+        value: &impl MultiPointTrait<T = f64>,
+    ) -> GeoArrowResult<()> {
         self.add_multi_point_type();
         self.multi_points.push_multi_point(Some(value))
     }
@@ -269,7 +271,7 @@ impl MixedGeometryBuilder {
     pub(crate) fn push_multi_line_string(
         &mut self,
         value: &impl MultiLineStringTrait<T = f64>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         self.add_multi_line_string_type();
         self.multi_line_strings.push_multi_line_string(Some(value))
     }
@@ -295,7 +297,7 @@ impl MixedGeometryBuilder {
     pub(crate) fn push_multi_polygon(
         &mut self,
         value: &impl MultiPolygonTrait<T = f64>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         self.add_multi_polygon_type();
         self.multi_polygons.push_multi_polygon(Some(value))
     }
@@ -313,7 +315,10 @@ impl MixedGeometryBuilder {
     }
 
     #[inline]
-    pub(crate) fn push_geometry(&mut self, geom: &'_ impl GeometryTrait<T = f64>) -> Result<()> {
+    pub(crate) fn push_geometry(
+        &mut self,
+        geom: &'_ impl GeometryTrait<T = f64>,
+    ) -> GeoArrowResult<()> {
         use geo_traits::GeometryType::*;
 
         match geom.as_type() {
@@ -333,8 +338,8 @@ impl MixedGeometryBuilder {
                 if gc.num_geometries() == 1 {
                     self.push_geometry(&gc.geometry(0).unwrap())?
                 } else {
-                    return Err(GeoArrowError::General(
-                        "nested geometry collections not supported".to_string(),
+                    return Err(GeoArrowError::InvalidGeoArrow(
+                        "nested geometry collections not supported in GeoArrow".to_string(),
                     ));
                 }
             }

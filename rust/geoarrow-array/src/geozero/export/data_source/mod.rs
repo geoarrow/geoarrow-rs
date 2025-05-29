@@ -1,7 +1,5 @@
 mod record_batch_reader;
 
-pub use record_batch_reader::GeozeroRecordBatchReader;
-
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -11,19 +9,20 @@ use arrow_array::types::*;
 use arrow_array::{Array, RecordBatch};
 use arrow_json::writer::make_encoder;
 use arrow_schema::{DataType, Schema, TimeUnit};
+use geoarrow_schema::GeoArrowType;
 use geozero::error::GeozeroError;
 use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, GeozeroDatasource, PropertyProcessor};
+pub use record_batch_reader::GeozeroRecordBatchReader;
 
 use crate::GeoArrowArray;
 use crate::array::from_arrow_array;
 use crate::builder::geo_trait_wrappers::RectWrapper;
 use crate::cast::AsGeoArrowArray;
-use crate::datatypes::GeoArrowType;
 use crate::geozero::export::scalar::{
     process_geometry, process_geometry_collection, process_line_string, process_multi_line_string,
     process_multi_point, process_multi_polygon, process_point, process_polygon,
 };
-use crate::trait_::ArrayAccessor;
+use crate::trait_::GeoArrowArrayAccessor;
 
 impl GeozeroDatasource for GeozeroRecordBatchReader {
     fn process<P: FeatureProcessor>(&mut self, processor: &mut P) -> Result<(), GeozeroError> {
@@ -370,6 +369,13 @@ fn process_geometry_n<P: GeomProcessor>(
                 .map_err(|err| GeozeroError::Geometry(err.to_string()))?;
             process_geometry(&geom, 0, processor)?;
         }
+        WkbView(_) => {
+            let geom = arr
+                .as_wkb_view()
+                .value(i)
+                .map_err(|err| GeozeroError::Geometry(err.to_string()))?;
+            process_geometry(&geom, 0, processor)?;
+        }
         Wkt(_) => {
             let geom = arr
                 .as_wkt::<i32>()
@@ -380,6 +386,13 @@ fn process_geometry_n<P: GeomProcessor>(
         LargeWkt(_) => {
             let geom = arr
                 .as_wkt::<i64>()
+                .value(i)
+                .map_err(|err| GeozeroError::Geometry(err.to_string()))?;
+            process_geometry(&geom, 0, processor)?;
+        }
+        WktView(_) => {
+            let geom = arr
+                .as_wkt_view()
                 .value(i)
                 .map_err(|err| GeozeroError::Geometry(err.to_string()))?;
             process_geometry(&geom, 0, processor)?;

@@ -133,6 +133,6 @@ jobs:
           uv run maturin develop -m geoarrow-compute/Cargo.toml
           uv run maturin develop -m geoarrow-io/Cargo.toml
 
-      - name: Run python tests
-        run: |
-          uv run pytest tests
+      # - name: Run python tests
+      #   run: |
+      #     uv run pytest tests

@@ -1,20 +1,18 @@
 use std::sync::Arc;
 
 use arrow_array::cast::AsArray;
-use arrow_array::{Array, OffsetSizeTrait};
-use arrow_array::{ArrayRef, GenericListArray};
+use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
-use geoarrow_schema::{CoordType, Metadata, PolygonType};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
+use geoarrow_schema::{CoordType, GeoArrowType, Metadata, PolygonType};
 
-use crate::array::{CoordBuffer, RectArray, WkbArray};
+use crate::array::{CoordBuffer, GenericWkbArray, RectArray};
 use crate::builder::PolygonBuilder;
 use crate::capacity::PolygonCapacity;
-use crate::datatypes::GeoArrowType;
 use crate::eq::offset_buffer_eq;
-use crate::error::{GeoArrowError, Result};
 use crate::scalar::Polygon;
-use crate::trait_::{ArrayAccessor, GeoArrowArray, IntoArrow};
+use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 use crate::util::{OffsetBufferUtils, offsets_buffer_i64_to_i32};
 
 /// An immutable array of Polygon geometries using GeoArrow's in-memory representation.
@@ -44,21 +42,21 @@ pub(super) fn check(
     geom_offsets: &OffsetBuffer<i32>,
     ring_offsets: &OffsetBuffer<i32>,
     validity_len: Option<usize>,
-) -> Result<()> {
+) -> GeoArrowResult<()> {
     if validity_len.is_some_and(|len| len != geom_offsets.len_proxy()) {
-        return Err(GeoArrowError::General(
+        return Err(GeoArrowError::InvalidGeoArrow(
             "nulls mask length must match the number of values".to_string(),
         ));
     }
 
     if *ring_offsets.last() as usize != coords.len() {
-        return Err(GeoArrowError::General(
+        return Err(GeoArrowError::InvalidGeoArrow(
             "largest ring offset must match coords length".to_string(),
         ));
     }
 
     if *geom_offsets.last() as usize != ring_offsets.len_proxy() {
-        return Err(GeoArrowError::General(
+        return Err(GeoArrowError::InvalidGeoArrow(
             "largest geometry offset must match ring offsets length".to_string(),
         ));
     }
@@ -105,7 +103,7 @@ impl PolygonArray {
         ring_offsets: OffsetBuffer<i32>,
         nulls: Option<NullBuffer>,
         metadata: Arc<Metadata>,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         check(
             &coords,
             &geom_offsets,
@@ -113,7 +111,8 @@ impl PolygonArray {
             nulls.as_ref().map(|v| v.len()),
         )?;
         Ok(Self {
-            data_type: PolygonType::new(coords.coord_type(), coords.dim(), metadata),
+            data_type: PolygonType::new(coords.dim(), metadata)
+                .with_coord_type(coords.coord_type()),
             coords,
             geom_offsets,
             ring_offsets,
@@ -160,7 +159,8 @@ impl PolygonArray {
         validity_len + self.buffer_lengths().num_bytes()
     }
 
-    /// Slices this [`PolygonArray`] in place.
+    /// Slice this [`PolygonArray`].
+    ///
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
@@ -185,9 +185,15 @@ impl PolygonArray {
         Self {
             data_type: self.data_type.with_coord_type(coord_type),
             coords: self.coords.into_coord_type(coord_type),
-            geom_offsets: self.geom_offsets,
-            ring_offsets: self.ring_offsets,
-            nulls: self.nulls,
+            ..self
+        }
+    }
+
+    /// Change the [`Metadata`] of this array.
+    pub fn with_metadata(self, metadata: Arc<Metadata>) -> Self {
+        Self {
+            data_type: self.data_type.with_metadata(metadata),
+            ..self
         }
     }
 }
@@ -235,12 +241,16 @@ impl GeoArrowArray for PolygonArray {
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.slice(offset, length))
     }
+
+    fn with_metadata(self, metadata: Arc<Metadata>) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.with_metadata(metadata))
+    }
 }
 
-impl<'a> ArrayAccessor<'a> for PolygonArray {
+impl<'a> GeoArrowArrayAccessor<'a> for PolygonArray {
     type Item = Polygon<'a>;
 
-    unsafe fn value_unchecked(&'a self, index: usize) -> Result<Self::Item> {
+    unsafe fn value_unchecked(&'a self, index: usize) -> GeoArrowResult<Self::Item> {
         Ok(Polygon::new(
             &self.coords,
             &self.geom_offsets,
@@ -268,7 +278,7 @@ impl IntoArrow for PolygonArray {
         GenericListArray::new(rings_field, self.geom_offsets, ring_array, nulls)
     }
 
-    fn ext_type(&self) -> &Self::ExtensionType {
+    fn extension_type(&self) -> &Self::ExtensionType {
         &self.data_type
     }
 }
@@ -276,7 +286,7 @@ impl IntoArrow for PolygonArray {
 impl TryFrom<(&GenericListArray<i32>, PolygonType)> for PolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from((geom_array, typ): (&GenericListArray<i32>, PolygonType)) -> Result<Self> {
+    fn try_from((geom_array, typ): (&GenericListArray<i32>, PolygonType)) -> GeoArrowResult<Self> {
         let geom_offsets = geom_array.offsets();
         let nulls = geom_array.nulls();
 
@@ -299,7 +309,7 @@ impl TryFrom<(&GenericListArray<i32>, PolygonType)> for PolygonArray {
 impl TryFrom<(&GenericListArray<i64>, PolygonType)> for PolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from((geom_array, typ): (&GenericListArray<i64>, PolygonType)) -> Result<Self> {
+    fn try_from((geom_array, typ): (&GenericListArray<i64>, PolygonType)) -> GeoArrowResult<Self> {
         let geom_offsets = offsets_buffer_i64_to_i32(geom_array.offsets())?;
         let nulls = geom_array.nulls();
 
@@ -321,13 +331,13 @@ impl TryFrom<(&GenericListArray<i64>, PolygonType)> for PolygonArray {
 impl TryFrom<(&dyn Array, PolygonType)> for PolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (&dyn Array, PolygonType)) -> Result<Self> {
+    fn try_from((value, typ): (&dyn Array, PolygonType)) -> GeoArrowResult<Self> {
         match value.data_type() {
             DataType::List(_) => (value.as_list::<i32>(), typ).try_into(),
             DataType::LargeList(_) => (value.as_list::<i64>(), typ).try_into(),
-            _ => Err(GeoArrowError::General(format!(
-                "Unexpected type: {:?}",
-                value.data_type()
+            dt => Err(GeoArrowError::InvalidGeoArrow(format!(
+                "Unexpected Polygon DataType: {:?}",
+                dt
             ))),
         }
     }
@@ -336,16 +346,16 @@ impl TryFrom<(&dyn Array, PolygonType)> for PolygonArray {
 impl TryFrom<(&dyn Array, &Field)> for PolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+    fn try_from((arr, field): (&dyn Array, &Field)) -> GeoArrowResult<Self> {
         let typ = field.try_extension_type::<PolygonType>()?;
         (arr, typ).try_into()
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, PolygonType)> for PolygonArray {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, PolygonType)> for PolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: (WkbArray<O>, PolygonType)) -> Result<Self> {
+    fn try_from(value: (GenericWkbArray<O>, PolygonType)) -> GeoArrowResult<Self> {
         let mut_arr: PolygonBuilder = value.try_into()?;
         Ok(mut_arr.finish())
     }
@@ -354,10 +364,10 @@ impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, PolygonType)> for PolygonArray {
 impl From<RectArray> for PolygonArray {
     fn from(value: RectArray) -> Self {
         let polygon_type = PolygonType::new(
-            CoordType::Separated,
             value.data_type.dimension(),
             value.data_type.metadata().clone(),
-        );
+        )
+        .with_coord_type(CoordType::Separated);
 
         // The number of output geoms is the same as the input
         let geom_capacity = value.len();
@@ -396,15 +406,15 @@ mod test {
     use geo_traits::to_geo::ToGeoPolygon;
     use geoarrow_schema::{CoordType, Dimension};
 
-    use crate::test::polygon;
-
     use super::*;
+    use crate::test::polygon;
 
     #[test]
     fn geo_round_trip() {
         for coord_type in [CoordType::Interleaved, CoordType::Separated] {
             let geoms = [Some(polygon::p0()), None, Some(polygon::p1()), None];
-            let typ = PolygonType::new(coord_type, Dimension::XY, Default::default());
+            let typ =
+                PolygonType::new(Dimension::XY, Default::default()).with_coord_type(coord_type);
             let geo_arr = PolygonBuilder::from_nullable_polygons(&geoms, typ).finish();
 
             for (i, g) in geo_arr.iter().enumerate() {
@@ -427,7 +437,8 @@ mod test {
                 .map(|x| x.transpose().unwrap().map(|g| g.to_polygon()))
                 .collect::<Vec<_>>();
 
-            let typ = PolygonType::new(coord_type, Dimension::XY, Default::default());
+            let typ =
+                PolygonType::new(Dimension::XY, Default::default()).with_coord_type(coord_type);
             let geo_arr2 = PolygonBuilder::from_nullable_polygons(&geo_geoms, typ).finish();
             assert_eq!(geo_arr, geo_arr2);
         }
@@ -444,12 +455,13 @@ mod test {
             ] {
                 let geo_arr = polygon::array(coord_type, dim);
 
-                let ext_type = geo_arr.ext_type().clone();
-                let field = ext_type.to_field("geometry", true);
+                let extension_type = geo_arr.extension_type().clone();
+                let field = extension_type.to_field("geometry", true);
 
                 let arrow_arr = geo_arr.to_array_ref();
 
-                let geo_arr2: PolygonArray = (arrow_arr.as_ref(), ext_type).try_into().unwrap();
+                let geo_arr2: PolygonArray =
+                    (arrow_arr.as_ref(), extension_type).try_into().unwrap();
                 let geo_arr3: PolygonArray = (arrow_arr.as_ref(), &field).try_into().unwrap();
 
                 assert_eq!(geo_arr, geo_arr2);

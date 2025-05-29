@@ -4,8 +4,7 @@ use std::hint::unreachable_unchecked;
 
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
-
-use crate::error::GeoArrowError as Error;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// A wrapper type of [`Vec<O>`] representing the invariants of Arrow's offsets.
 /// It is guaranteed to (sound to assume that):
@@ -22,13 +21,14 @@ impl<O: OffsetSizeTrait> Default for OffsetsBuilder<O> {
 }
 
 impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
-    /// Returns an empty [`Offsets`] (i.e. with a single element, the zero)
+    /// Returns an empty [`OffsetsBuilder`] (i.e. with a single element, the zero)
     #[inline]
     pub(crate) fn new() -> Self {
         Self(vec![O::zero()])
     }
 
-    /// Returns a new [`Offsets`] with a capacity, allocating at least `capacity + 1` entries.
+    /// Returns a new [`OffsetsBuilder`] with a capacity, allocating at least `capacity + 1`
+    /// entries.
     pub(crate) fn with_capacity(capacity: usize) -> Self {
         let mut offsets = Vec::with_capacity(capacity + 1);
         offsets.push(O::zero());
@@ -57,7 +57,7 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
     /// This function:
     /// * checks that this length does not overflow
     #[inline]
-    pub(crate) fn try_push_usize(&mut self, length: usize) -> Result<(), Error> {
+    pub(crate) fn try_push_usize(&mut self, length: usize) -> GeoArrowResult<()> {
         let length = O::usize_as(length);
 
         let old_length = self.last();
@@ -125,10 +125,10 @@ impl From<OffsetsBuilder<i32>> for OffsetsBuilder<i64> {
 }
 
 impl TryFrom<OffsetsBuilder<i64>> for OffsetsBuilder<i32> {
-    type Error = Error;
+    type Error = GeoArrowError;
 
-    fn try_from(offsets: OffsetsBuilder<i64>) -> Result<Self, Self::Error> {
-        i32::try_from(*offsets.last()).map_err(|_| Error::Overflow)?;
+    fn try_from(offsets: OffsetsBuilder<i64>) -> GeoArrowResult<Self> {
+        i32::try_from(*offsets.last()).map_err(|_| GeoArrowError::Overflow)?;
 
         // this conversion is lossless and uphelds all invariants
         Ok(Self(

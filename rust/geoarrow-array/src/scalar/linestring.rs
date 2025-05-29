@@ -1,5 +1,6 @@
 use arrow_buffer::OffsetBuffer;
 use geo_traits::LineStringTrait;
+use geoarrow_schema::Dimension;
 
 use crate::array::CoordBuffer;
 use crate::eq::line_string_eq;
@@ -35,18 +36,17 @@ impl<'a> LineString<'a> {
             start_offset,
         }
     }
+
+    pub(crate) fn native_dim(&self) -> Dimension {
+        self.coords.dim()
+    }
 }
 
 impl<'a> LineStringTrait for LineString<'a> {
-    type T = f64;
     type CoordType<'b>
         = Coord<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.coords.dim().into()
-    }
 
     fn num_coords(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
@@ -59,15 +59,10 @@ impl<'a> LineStringTrait for LineString<'a> {
 }
 
 impl<'a> LineStringTrait for &'a LineString<'a> {
-    type T = f64;
     type CoordType<'b>
         = Coord<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.coords.dim().into()
-    }
 
     fn num_coords(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
