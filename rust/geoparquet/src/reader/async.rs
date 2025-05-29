@@ -21,6 +21,9 @@ pub struct GeoParquetRecordBatchStream<T: AsyncFileReader + Send + 'static> {
 impl<T: AsyncFileReader + Send + Unpin + 'static> GeoParquetRecordBatchStream<T> {
     /// Create a new [`GeoParquetRecordBatchStream`] from a [`ParquetRecordBatchStream`].
     ///
+    /// Use [`geoarrow_schema`][crate::reader::GeoParquetReaderBuilder::geoarrow_schema] to infer a
+    /// GeoArrow schema.
+    ///
     /// This will validate that the target schema is compatible with the original schema.
     pub fn try_new(
         stream: ParquetRecordBatchStream<T>,

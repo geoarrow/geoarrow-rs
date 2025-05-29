@@ -1,4 +1,6 @@
-//! Strongly-typed structs corresponding to the metadata provided by the GeoParquet specification.
+//! Structs corresponding to the metadata defined by the [GeoParquet specification].
+//!
+//! [GeoParquet specification]: https://geoparquet.org/releases/v1.1.0/
 
 use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
@@ -16,7 +18,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
-use crate::GeoParquetWriterEncoding;
+use crate::writer::GeoParquetWriterEncoding;
 
 /// The actual encoding of the geometry in the Parquet file.
 ///

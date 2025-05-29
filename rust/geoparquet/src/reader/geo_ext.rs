@@ -9,6 +9,19 @@ use crate::reader::parse::infer_geoarrow_schema;
 use crate::reader::spatial_filter::{ParquetBboxStatistics, bbox_arrow_predicate, bbox_row_groups};
 
 /// A trait that extends the [`ArrowReaderBuilder`] with methods for reading GeoParquet files.
+///
+/// Instead of creating _wrapper_ structs around the upstream
+/// [`ParquetRecordBatchReaderBuilder`][parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder]
+/// and
+/// [`ParquetRecordBatchStreamBuilder`][parquet::arrow::async_reader::ParquetRecordBatchStreamBuilder],
+/// which would require the `geoparquet` crate to fully duplicate all of the builder functionality
+/// of the upstream `parquet` crate, this trait provides a way to extend the upstream builders
+/// directly with geospatial functionality.
+///
+/// Once you've finished modifying your builder, call `build` and then pass the resulting reader or
+/// stream to a [`GeoParquetRecordBatchReader`][crate::reader::GeoParquetRecordBatchReader] or
+/// [`GeoParquetRecordBatchStream`][crate::reader::GeoParquetRecordBatchStream], respectively, to
+/// read the data.
 pub trait GeoParquetReaderBuilder: Sized {
     /// Parse the geospatial metadata, if any, from the parquet file metadata.
     ///
@@ -39,6 +52,8 @@ pub trait GeoParquetReaderBuilder: Sized {
     ///
     /// Note that the `bbox` must be in the same coordinate system as the geometries in the
     /// designated geometry column.
+    ///
+    /// If `column_name` is `None`, the primary geometry column will be used.
     fn intersecting_arrow_predicate(
         &self,
         bbox: Rect,
@@ -52,6 +67,8 @@ pub trait GeoParquetReaderBuilder: Sized {
     /// use more than one [`ArrowPredicate`] in your [`RowFilter`], use
     /// `Self::intersecting_arrow_predicate` to create the [`ArrowPredicate`] yourself. Then create
     /// your own [`RowFilter`] that you pass to [`ArrowReaderBuilder::with_row_filter`].
+    ///
+    /// If `column_name` is `None`, the primary geometry column will be used.
     fn with_intersecting_row_filter(
         self,
         bbox: Rect,
@@ -63,6 +80,8 @@ pub trait GeoParquetReaderBuilder: Sized {
     ///
     /// Note that the `bbox` must be in the same coordinate system as the geometries in the
     /// designated geometry column.
+    ///
+    /// If `column_name` is `None`, the primary geometry column will be used.
     fn intersecting_row_groups(
         &self,
         bbox: Rect,
@@ -74,6 +93,8 @@ pub trait GeoParquetReaderBuilder: Sized {
     ///
     /// Note that this will **replace** any existing row group selection. If you want more detailed
     /// selection of row groups, use [`ArrowReaderBuilder::with_row_groups`] yourself.
+    ///
+    /// If `column_name` is `None`, the primary geometry column will be used.
     fn with_intersecting_row_groups(
         self,
         bbox: Rect,

@@ -16,6 +16,12 @@ pub struct GeoParquetRecordBatchReader {
 }
 
 impl GeoParquetRecordBatchReader {
+    /// Create a new [`GeoParquetRecordBatchReader`] from a [`ParquetRecordBatchReader`].
+    ///
+    /// Use [`geoarrow_schema`][crate::reader::GeoParquetReaderBuilder::geoarrow_schema] to infer a
+    /// GeoArrow schema.
+    ///
+    /// This will validate that the target schema is compatible with the original schema.
     pub fn try_new(
         reader: ParquetRecordBatchReader,
         target_schema: SchemaRef,
