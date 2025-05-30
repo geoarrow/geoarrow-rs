@@ -25,10 +25,9 @@ async = [
     "dep:pyo3-object_store",
     "parquet/object_store",
     "dep:pyo3-async-runtimes",
-    # "geoarrow/flatgeobuf_async",
-    # "geoarrow-geoparquet/async",
+    "geoparquet/async",
     # "geoarrow/postgis",
-    "dep:sqlx",
+    # "dep:sqlx",
     "dep:tokio",
 ]
 
@@ -53,17 +52,17 @@ pyo3-async-runtimes = { version = "0.25", features = [
 geo = "0.30"
 geo-traits = { workspace = true }
 geoarrow-array = { workspace = true }
-geoarrow-flatgeobuf = { workspace = true }
+# geoarrow-flatgeobuf = { workspace = true }
 geoarrow-schema = { workspace = true }
 geoparquet = { workspace = true, features = ["compression"] }
 pyo3-object_store = { version = "0.5", optional = true }
 serde_json = { workspace = true }
-sqlx = { version = "0.7", default-features = false, features = [
-    "postgres",
-], optional = true }
+# sqlx = { version = "0.7", default-features = false, features = [
+#     "postgres",
+# ], optional = true }
 tokio = { version = "1.9", features = ["rt"], optional = true }
 url = "2.5"
 
 # Pin to fix strange pyodide compilation errors.
 # See https://github.com/geoarrow/geoarrow-rs/issues/868
-cc = "1.1, <1.2"
+# cc = "1.1, <1.2"

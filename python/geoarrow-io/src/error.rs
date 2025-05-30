@@ -2,7 +2,8 @@ use pyo3::exceptions::{PyException, PyIOError, PyTypeError, PyValueError};
 use pyo3::prelude::*;
 
 pub enum PyGeoArrowError {
-    GeoArrowError(geoarrow::error::GeoArrowError),
+    ParquetError(parquet::errors::ParquetError),
+    GeoArrowError(geoarrow_schema::error::GeoArrowError),
     IOError(std::io::Error),
     PyArrowError(pyo3_arrow::error::PyArrowError),
     PyErr(PyErr),
@@ -12,12 +13,12 @@ pub enum PyGeoArrowError {
     ObjectStorePathError(object_store::path::Error),
     SerdeJsonError(serde_json::Error),
     UrlParseError(url::ParseError),
-    NewGeoArrowError(geoarrow_array::error::GeoArrowError),
 }
 
 impl From<PyGeoArrowError> for PyErr {
     fn from(error: PyGeoArrowError) -> Self {
         match error {
+            PyGeoArrowError::ParquetError(err) => PyException::new_err(err.to_string()),
             PyGeoArrowError::GeoArrowError(err) => PyException::new_err(err.to_string()),
             PyGeoArrowError::IOError(err) => PyIOError::new_err(err.to_string()),
             PyGeoArrowError::PyErr(err) => err,
@@ -28,19 +29,18 @@ impl From<PyGeoArrowError> for PyErr {
             PyGeoArrowError::ObjectStorePathError(err) => PyException::new_err(err.to_string()),
             PyGeoArrowError::SerdeJsonError(err) => PyException::new_err(err.to_string()),
             PyGeoArrowError::UrlParseError(err) => PyException::new_err(err.to_string()),
-            PyGeoArrowError::NewGeoArrowError(err) => PyException::new_err(err.to_string()),
         }
     }
 }
 
-impl From<geoarrow_array::error::GeoArrowError> for PyGeoArrowError {
-    fn from(other: geoarrow_array::error::GeoArrowError) -> Self {
-        Self::NewGeoArrowError(other)
+impl From<parquet::errors::ParquetError> for PyGeoArrowError {
+    fn from(value: parquet::errors::ParquetError) -> Self {
+        Self::ParquetError(value)
     }
 }
 
-impl From<geoarrow::error::GeoArrowError> for PyGeoArrowError {
-    fn from(other: geoarrow::error::GeoArrowError) -> Self {
+impl From<geoarrow_schema::error::GeoArrowError> for PyGeoArrowError {
+    fn from(other: geoarrow_schema::error::GeoArrowError) -> Self {
         Self::GeoArrowError(other)
     }
 }
