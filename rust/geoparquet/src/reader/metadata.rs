@@ -3,9 +3,8 @@ use std::sync::Arc;
 
 use arrow_schema::SchemaRef;
 use geoarrow_array::array::RectArray;
-use geoarrow_array::builder::RectBuilder;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geoarrow_schema::{BoxType, CoordType, Crs, Dimension, Metadata};
+use geoarrow_schema::{CoordType, Crs, Metadata};
 use parquet::arrow::arrow_reader::ArrowReaderMetadata;
 use parquet::file::metadata::ParquetMetaData;
 use parquet::schema::types::SchemaDescriptor;
@@ -170,18 +169,10 @@ impl GeoParquetReaderMetadata {
 
         let geo_statistics =
             ParquetBboxStatistics::try_new(self.meta.parquet_schema(), &bbox_covering)?;
-
-        let geoarrow_meta = Metadata::from(column_meta.clone());
-        let rect_type = BoxType::new(Dimension::XY, Arc::new(geoarrow_meta));
-        let mut rect_builder =
-            RectBuilder::with_capacity(rect_type, self.meta.metadata().num_row_groups());
-
-        for row_group in self.meta.metadata().row_groups() {
-            let rect = geo_statistics.get_bbox(row_group)?;
-            rect_builder.push_rect(Some(&rect));
-        }
-
-        Ok(rect_builder.finish())
+        geo_statistics.get_bboxes(
+            self.meta.metadata().row_groups(),
+            Arc::new(column_meta.clone().into()),
+        )
     }
 
     /// Access the bounding box of the given column for the entire file
