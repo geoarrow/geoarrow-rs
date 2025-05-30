@@ -64,11 +64,15 @@ pub struct GeoParquetReaderMetadata {
 
 impl GeoParquetReaderMetadata {
     /// Construct a new [GeoParquetReaderMetadata] from [ArrowReaderMetadata]
-    pub fn new(meta: ArrowReaderMetadata) -> Self {
-        let geo_meta = GeoParquetMetadata::from_parquet_meta(meta.metadata().file_metadata())
-            .ok()
-            .map(Arc::new);
-        Self { meta, geo_meta }
+    pub fn try_new(meta: ArrowReaderMetadata) -> GeoArrowResult<Self> {
+        let geo_meta = if let Some(geo_meta) =
+            GeoParquetMetadata::from_parquet_meta(meta.metadata().file_metadata())
+        {
+            Some(Arc::new(geo_meta?))
+        } else {
+            None
+        };
+        Ok(Self { meta, geo_meta })
     }
 
     /// Access the underlying [ArrowReaderMetadata].
@@ -230,12 +234,6 @@ impl GeoParquetReaderMetadata {
     }
 }
 
-impl From<ArrowReaderMetadata> for GeoParquetReaderMetadata {
-    fn from(value: ArrowReaderMetadata) -> Self {
-        Self::new(value)
-    }
-}
-
 /// The metadata necessary to represent a collection of GeoParquet files that share the same
 /// schema.
 ///
@@ -272,12 +270,15 @@ impl GeoParquetDatasetMetadata {
                 schema = Some(meta.schema().clone());
             }
 
-            if let Some(geo_meta) = geo_meta.as_mut() {
-                geo_meta.try_update(meta.metadata().file_metadata())?;
-            } else {
-                geo_meta = Some(GeoParquetMetadata::from_parquet_meta(
-                    meta.metadata().file_metadata(),
-                )?);
+            if let Some(new_geo_meta) =
+                GeoParquetMetadata::from_parquet_meta(meta.metadata().file_metadata())
+            {
+                let new_geo_meta = new_geo_meta?;
+                if let Some(geo_meta) = geo_meta.as_mut() {
+                    geo_meta.try_update(&new_geo_meta)?;
+                } else {
+                    geo_meta = Some(new_geo_meta);
+                }
             }
         }
 
