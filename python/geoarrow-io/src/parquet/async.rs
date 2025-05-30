@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::input::{AnyFileReader, AsyncFileReader, construct_reader};
-use crate::parquet::options::{PyGeoParquetBboxCovering, apply_options, create_options};
+use crate::parquet::options::{PyGeoParquetBboxCovering, apply_options};
 #[cfg(feature = "async")]
 use crate::runtime::get_runtime;
 
@@ -23,7 +23,7 @@ use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::ParquetObjectReader;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3_arrow::export::{Arro3Schema, Arro3Table};
+use pyo3_arrow::export::{Arro3Array, Arro3Schema, Arro3Table};
 use pyo3_arrow::{PyArray, PyTable};
 use pyo3_async_runtimes::tokio::future_into_py;
 use pyo3_geoarrow::{PyCoordType, PyCrs};
@@ -74,8 +74,8 @@ async fn read_parquet_async_inner(
     }
 
     let gpq_meta = builder.geoparquet_metadata().ok_or(PyValueError::new_err(
-        "Not a GeoParquet file; no or invalid GeoParquet metadata.",
-    ))?;
+        "Not a GeoParquet file; no `geo` key in Parquet metadata.",
+    ))??;
     let geoarrow_schema = builder.geoarrow_schema(
         &gpq_meta,
         parse_to_native,
@@ -112,7 +112,7 @@ impl ParquetFile {
                 .await
                 .unwrap();
             // .map_err(|err| GeoArrowError::ParquetError)?;
-            let geoparquet_meta = GeoParquetReaderMetadata::new(arrow_meta);
+            let geoparquet_meta = GeoParquetReaderMetadata::try_new(arrow_meta).unwrap();
             Ok::<_, PyGeoArrowError>((path, geoparquet_meta))
         })?;
         Ok(Self {
@@ -177,15 +177,9 @@ impl ParquetFile {
         }
     }
 
-    #[pyo3(signature = (bbox_paths=None))]
-    pub fn row_groups_bounds(
-        &self,
-        py: Python,
-        bbox_paths: Option<PyGeoParquetBboxCovering>,
-    ) -> PyGeoArrowResult<PyObject> {
+    pub fn row_groups_bounds(&self, py: Python) -> PyGeoArrowResult<Arro3Array> {
         use geoarrow_array::GeoArrowArray;
 
-        let paths: Option<GeoParquetBboxCovering> = bbox_paths.map(|x| x.into());
         let bounds = self.geoparquet_meta.row_groups_bounds(paths.as_ref())?;
         Ok(PyArray::new(
             bounds.to_array_ref(),
@@ -210,7 +204,6 @@ impl ParquetFile {
         bbox: Option<[f64; 4]>,
         parse_to_native: bool,
         coord_type: Option<PyCoordType>,
-        // bbox_paths: Option<PyGeoParquetBboxCovering>,
     ) -> PyGeoArrowResult<PyObject> {
         let object_reader = ParquetObjectReader::new(self.store.clone(), self.path.clone());
         let builder = ParquetRecordBatchStreamBuilder::new_with_metadata(
@@ -220,8 +213,8 @@ impl ParquetFile {
         let builder = apply_options(builder, batch_size, limit, offset, bbox)?;
 
         let gpq_meta = builder.geoparquet_metadata().ok_or(PyValueError::new_err(
-            "Not a GeoParquet file; no or invalid GeoParquet metadata.",
-        ))?;
+            "Not a GeoParquet file; no `geo` key in Parquet metadata.",
+        ))??;
         let geoarrow_schema = builder.geoarrow_schema(
             &gpq_meta,
             parse_to_native,
@@ -250,17 +243,17 @@ impl ParquetFile {
         limit: Option<usize>,
         offset: Option<usize>,
         bbox: Option<[f64; 4]>,
-        bbox_paths: Option<PyGeoParquetBboxCovering>,
     ) -> PyGeoArrowResult<Arro3Table> {
         let runtime = get_runtime(py)?;
-        let reader = ParquetObjectReader::new(self.store.clone(), self.path.clone());
-        let options = create_options(batch_size, limit, offset, bbox, bbox_paths)?;
-        let stream = GeoParquetRecordBatchStreamBuilder::new_with_metadata_and_options(
-            reader,
-            self.geoparquet_meta.clone(),
-            options,
-        )
-        .build()?;
+        let object_reader = ParquetObjectReader::new(self.store.clone(), self.path.clone());
+        // let options = create_options(batch_size, limit, offset, bbox, bbox_paths)?;
+        let builder = ParquetRecordBatchStreamBuilder::new_with_metadata(
+            object_reader,
+            self.geoparquet_meta.arrow_metadata().clone(),
+        );
+        let builder = apply_options(builder, batch_size, limit, offset, bbox)?;
+
+        // .build()?;
         runtime.block_on(async move {
             let (batches, schema) = stream
                 .read_table()
