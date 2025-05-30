@@ -1,9 +1,13 @@
 Read GeoParquet data as GeoArrow.
 
-The APIs in this crate
+This module provides the ability to read GeoParquet files as synchronous
+iterators or asynchronous streams of [`RecordBatch`][arrow_array::RecordBatch]es
+with GeoArrow metadata.
 
-into Arrow [`RecordBatch`][arrow_array::RecordBatch]es with
-GeoArrow metadata.
+The APIs in this crate are meant to be used in conjunction with the
+[`parquet`][parquet] crate. This `geoparquet` crate intends to have as few
+wrappers as possible around upstream `parquet` APIs in favor of injecting onto
+upstream reader builders directly.
 
 ## Overview
 
