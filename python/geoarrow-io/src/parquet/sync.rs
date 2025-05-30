@@ -2,16 +2,18 @@ use std::str::FromStr;
 use std::sync::Mutex;
 
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
-use crate::io::input::sync::FileWriter;
-use crate::io::input::{AnyFileReader, construct_reader};
+use crate::input::sync::FileWriter;
+use crate::input::{AnyFileReader, construct_reader};
 
-use arrow::array::RecordBatchReader;
-use geoparquet::{GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder};
-use geoparquet::{
+use futures::TryStreamExt;
+use geoparquet::reader::{
+    GeoParquetReaderBuilder, GeoParquetRecordBatchReader, GeoParquetRecordBatchStream,
+};
+use geoparquet::writer::{
     GeoParquetWriter as _GeoParquetWriter, GeoParquetWriterOptions,
     write_geoparquet as _write_geoparquet,
 };
-use parquet::arrow::arrow_reader::ArrowReaderOptions;
+use parquet::arrow::arrow_reader::{ArrowReaderOptions, ParquetRecordBatchReaderBuilder};
 use parquet::basic::Compression;
 use parquet::file::properties::{WriterProperties, WriterVersion};
 use pyo3::exceptions::PyValueError;
@@ -20,67 +22,85 @@ use pyo3_arrow::PySchema;
 use pyo3_arrow::export::Arro3Table;
 use pyo3_arrow::input::AnyRecordBatch;
 use pyo3_arrow::{PyRecordBatch, PyTable};
-use pyo3_geoarrow::PyprojCRSTransform;
+use pyo3_geoarrow::{PyCoordType, PyprojCRSTransform};
 
 #[pyfunction]
-#[pyo3(signature = (path, *, store=None, batch_size=None))]
+#[pyo3(signature = (path, *, store=None, batch_size=None, parse_to_native=true, coord_type=None))]
 pub fn read_parquet(
     py: Python,
     path: Bound<PyAny>,
     store: Option<Bound<PyAny>>,
     batch_size: Option<usize>,
+    parse_to_native: bool,
+    coord_type: Option<PyCoordType>,
 ) -> PyGeoArrowResult<Arro3Table> {
     let reader = construct_reader(path, store)?;
     match reader {
         #[cfg(feature = "async")]
         AnyFileReader::Async(async_reader) => {
             use crate::runtime::get_runtime;
-            use geoparquet::GeoParquetRecordBatchStreamBuilder;
-            use parquet::arrow::async_reader::ParquetObjectReader;
+            use parquet::arrow::async_reader::{
+                ParquetObjectReader, ParquetRecordBatchStreamBuilder,
+            };
 
             let runtime = get_runtime(py)?;
 
             let table = runtime.block_on(async move {
-                let reader = ParquetObjectReader::new(async_reader.store, async_reader.path);
-
-                let mut geo_options = GeoParquetReaderOptions::default();
-
-                if let Some(batch_size) = batch_size {
-                    geo_options = geo_options.with_batch_size(batch_size);
-                }
-
-                let (batches, schema) = GeoParquetRecordBatchStreamBuilder::try_new_with_options(
-                    reader,
+                let object_reader = ParquetObjectReader::new(async_reader.store, async_reader.path);
+                let mut builder = ParquetRecordBatchStreamBuilder::new_with_options(
+                    object_reader,
                     ArrowReaderOptions::new().with_page_index(true),
-                    geo_options,
                 )
-                .await?
-                .build()?
-                .read_table()
                 .await?;
 
-                let table = Arro3Table::from(PyTable::try_new(batches, schema).unwrap());
+                if let Some(batch_size) = batch_size {
+                    builder = builder.with_batch_size(batch_size);
+                }
+
+                let gpq_meta = builder.geoparquet_metadata().ok_or(PyValueError::new_err(
+                    "Not a GeoParquet file; no or invalid GeoParquet metadata.",
+                ))?;
+                let geoarrow_schema = builder.geoarrow_schema(
+                    &gpq_meta,
+                    parse_to_native,
+                    coord_type.unwrap_or_default().into(),
+                )?;
+
+                let stream = GeoParquetRecordBatchStream::try_new(
+                    builder.build()?,
+                    geoarrow_schema.clone(),
+                )?;
+                let batches = stream.try_collect().await?;
+
+                let table = Arro3Table::from(PyTable::try_new(batches, geoarrow_schema).unwrap());
                 Ok::<_, PyGeoArrowError>(table)
             })?;
             Ok(table)
         }
         AnyFileReader::Sync(sync_reader) => {
-            let mut geo_options = GeoParquetReaderOptions::default();
-
-            if let Some(batch_size) = batch_size {
-                geo_options = geo_options.with_batch_size(batch_size);
-            }
-
-            let reader = GeoParquetRecordBatchReaderBuilder::try_new_with_options(
+            let mut builder = ParquetRecordBatchReaderBuilder::try_new_with_options(
                 sync_reader,
                 ArrowReaderOptions::new().with_page_index(true),
-                geo_options,
-            )?
-            .build()?;
-            let schema = reader.schema();
+            )?;
 
+            if let Some(batch_size) = batch_size {
+                builder = builder.with_batch_size(batch_size);
+            }
+
+            let gpq_meta = builder.geoparquet_metadata().ok_or(PyValueError::new_err(
+                "Not a GeoParquet file; no or invalid GeoParquet metadata.",
+            ))?;
+            let geoarrow_schema = builder.geoarrow_schema(
+                &gpq_meta,
+                parse_to_native,
+                coord_type.unwrap_or_default().into(),
+            )?;
+
+            let reader =
+                GeoParquetRecordBatchReader::try_new(builder.build()?, geoarrow_schema.clone())?;
             let batches = reader.collect::<Result<Vec<_>, _>>()?;
-            let table = Arro3Table::from(PyTable::try_new(batches, schema).unwrap());
+
+            let table = Arro3Table::from(PyTable::try_new(batches, geoarrow_schema).unwrap());
             Ok(table)
         }
     }
@@ -105,7 +125,7 @@ impl<'a> FromPyObject<'a> for GeoParquetEncoding {
     }
 }
 
-impl From<GeoParquetEncoding> for geoparquet::GeoParquetWriterEncoding {
+impl From<GeoParquetEncoding> for geoparquet::writer::GeoParquetWriterEncoding {
     fn from(value: GeoParquetEncoding) -> Self {
         match value {
             GeoParquetEncoding::WKB => Self::WKB,
@@ -167,6 +187,7 @@ pub fn write_parquet(
 
     let options = GeoParquetWriterOptions {
         encoding: encoding.into(),
+        primary_column: None,
         crs_transform: Some(Box::new(PyprojCRSTransform::new())),
         writer_properties: Some(props.build()),
     };

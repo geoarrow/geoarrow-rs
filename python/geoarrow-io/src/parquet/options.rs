@@ -1,7 +1,7 @@
 use geo::coord;
 use geoarrow_schema::CoordType;
-use geoparquet::GeoParquetReaderOptions;
 use geoparquet::metadata::GeoParquetBboxCovering;
+use parquet::arrow::arrow_reader::ArrowReaderOptions;
 use pyo3::prelude::*;
 
 use crate::error::PyGeoArrowResult;
@@ -36,9 +36,9 @@ pub fn create_options(
     batch_size: Option<usize>,
     limit: Option<usize>,
     offset: Option<usize>,
-    bbox: Option<[f64; 4]>,
-    bbox_paths: Option<PyGeoParquetBboxCovering>,
-) -> PyGeoArrowResult<GeoParquetReaderOptions> {
+    // bbox: Option<[f64; 4]>,
+    // bbox_paths: Option<PyGeoParquetBboxCovering>,
+) -> PyGeoArrowResult<ArrowReaderOptions> {
     let bbox = bbox.map(|item| {
         geo::Rect::new(
             coord! {x: item[0], y: item[1]},

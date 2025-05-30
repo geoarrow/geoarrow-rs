@@ -2,23 +2,23 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
-use crate::io::input::{AnyFileReader, AsyncFileReader, construct_reader};
-use crate::io::parquet::options::{PyGeoParquetBboxCovering, create_options};
+use crate::input::{AnyFileReader, AsyncFileReader, construct_reader};
+use crate::parquet::options::{PyGeoParquetBboxCovering, create_options};
 #[cfg(feature = "async")]
 use crate::runtime::get_runtime;
-use crate::util::to_arro3_table;
 
 use arrow::datatypes::SchemaRef;
+use futures::TryStreamExt;
 use geo_traits::CoordTrait;
-use geoarrow::error::GeoArrowError;
-use geoarrow::table::Table;
 use geoarrow_schema::CoordType;
+use geoarrow_schema::error::GeoArrowError;
 use geoparquet::metadata::GeoParquetBboxCovering;
-use geoparquet::{
-    GeoParquetDatasetMetadata, GeoParquetReaderMetadata, GeoParquetReaderOptions,
-    GeoParquetRecordBatchStream, GeoParquetRecordBatchStreamBuilder,
+use geoparquet::reader::{
+    GeoParquetDatasetMetadata, GeoParquetReaderBuilder, GeoParquetReaderMetadata,
+    GeoParquetRecordBatchStream,
 };
 use object_store::ObjectStore;
+use parquet::arrow::ParquetRecordBatchStreamBuilder;
 use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::ParquetObjectReader;
 use pyo3::exceptions::PyValueError;
@@ -26,22 +26,27 @@ use pyo3::prelude::*;
 use pyo3_arrow::export::{Arro3Schema, Arro3Table};
 use pyo3_arrow::{PyArray, PyTable};
 use pyo3_async_runtimes::tokio::future_into_py;
-use pyo3_geoarrow::PyCrs;
+use pyo3_geoarrow::{PyCoordType, PyCrs};
 use pyo3_object_store::AnyObjectStore;
 
 #[pyfunction]
-#[pyo3(signature = (path, *, store=None, batch_size=None))]
+#[pyo3(signature = (path, *, store=None, batch_size=None, parse_to_native=true, coord_type=None))]
 pub fn read_parquet_async(
     py: Python,
     path: Bound<PyAny>,
     store: Option<Bound<PyAny>>,
     batch_size: Option<usize>,
+    parse_to_native: bool,
+    coord_type: Option<PyCoordType>,
 ) -> PyGeoArrowResult<PyObject> {
     let reader = construct_reader(path, store)?;
     match reader {
         AnyFileReader::Async(async_reader) => {
             let fut = future_into_py(py, async move {
-                Ok(read_parquet_async_inner(async_reader, batch_size).await?)
+                Ok(
+                    read_parquet_async_inner(async_reader, batch_size, parse_to_native, coord_type)
+                        .await?,
+                )
             })?;
             Ok(fut.into())
         }
@@ -54,26 +59,33 @@ pub fn read_parquet_async(
 async fn read_parquet_async_inner(
     async_reader: AsyncFileReader,
     batch_size: Option<usize>,
+    parse_to_native: bool,
+    coord_type: Option<PyCoordType>,
 ) -> PyGeoArrowResult<Arro3Table> {
-    let reader = ParquetObjectReader::new(async_reader.store, async_reader.path);
-
-    let mut geo_options = GeoParquetReaderOptions::default();
-
-    if let Some(batch_size) = batch_size {
-        geo_options = geo_options.with_batch_size(batch_size);
-    }
-
-    let (batches, schema) = GeoParquetRecordBatchStreamBuilder::try_new_with_options(
-        reader,
+    let object_reader = ParquetObjectReader::new(async_reader.store, async_reader.path);
+    let mut builder = ParquetRecordBatchStreamBuilder::new_with_options(
+        object_reader,
         ArrowReaderOptions::new().with_page_index(true),
-        geo_options,
     )
-    .await?
-    .build()?
-    .read_table()
     .await?;
 
-    let table = Arro3Table::from(PyTable::try_new(batches, schema).unwrap());
+    if let Some(batch_size) = batch_size {
+        builder = builder.with_batch_size(batch_size);
+    }
+
+    let gpq_meta = builder.geoparquet_metadata().ok_or(PyValueError::new_err(
+        "Not a GeoParquet file; no or invalid GeoParquet metadata.",
+    ))?;
+    let geoarrow_schema = builder.geoarrow_schema(
+        &gpq_meta,
+        parse_to_native,
+        coord_type.unwrap_or_default().into(),
+    )?;
+
+    let stream = GeoParquetRecordBatchStream::try_new(builder.build()?, geoarrow_schema.clone())?;
+    let batches = stream.try_collect().await?;
+
+    let table = Arro3Table::from(PyTable::try_new(batches, geoarrow_schema).unwrap());
     Ok(table)
 }
 
@@ -120,11 +132,14 @@ impl ParquetFile {
         self.geoparquet_meta.num_row_groups()
     }
 
-    #[getter]
-    fn schema_arrow(&self) -> PyGeoArrowResult<Arro3Schema> {
+    fn schema_arrow(
+        &self,
+        parse_to_native: bool,
+        coord_type: Option<PyCoordType>,
+    ) -> PyGeoArrowResult<Arro3Schema> {
         let schema = self
             .geoparquet_meta
-            .resolved_schema(CoordType::default_interleaved())?;
+            .geoarrow_schema(parse_to_native, coord_type.unwrap_or_default().into())?;
         Ok(schema.into())
     }
 
@@ -207,7 +222,7 @@ impl ParquetFile {
             let (batches, schema) = stream
                 .read_table()
                 .await
-                .map_err(PyGeoArrowError::NewGeoArrowError)?;
+                .map_err(PyGeoArrowError::GeoArrowError)?;
             let table = Arro3Table::from(PyTable::try_new(batches, schema).unwrap());
             Ok(table)
         })?;
@@ -237,7 +252,7 @@ impl ParquetFile {
             let (batches, schema) = stream
                 .read_table()
                 .await
-                .map_err(PyGeoArrowError::NewGeoArrowError)?;
+                .map_err(PyGeoArrowError::GeoArrowError)?;
             let table = Arro3Table::from(PyTable::try_new(batches, schema).unwrap());
             Ok(table)
         })
@@ -355,7 +370,7 @@ impl ParquetDataset {
             .await
             .into_iter()
             .collect::<Result<Vec<_>, geoarrow_array::error::GeoArrowError>>()
-            .map_err(PyGeoArrowError::NewGeoArrowError)?;
+            .map_err(PyGeoArrowError::GeoArrowError)?;
 
         let mut all_batches = vec![];
         tables.into_iter().for_each(|(batches, _schema)| {
@@ -396,11 +411,14 @@ impl ParquetDataset {
         self.meta.num_row_groups()
     }
 
-    #[getter]
-    fn schema_arrow(&self) -> PyGeoArrowResult<Arro3Schema> {
+    fn schema_arrow(
+        &self,
+        parse_to_native: bool,
+        coord_type: Option<PyCoordType>,
+    ) -> PyGeoArrowResult<Arro3Schema> {
         let schema = self
             .meta
-            .resolved_schema(CoordType::default_interleaved())?;
+            .geoarrow_schema(parse_to_native, coord_type.unwrap_or_default().into())?;
         Ok(schema.into())
     }
 
