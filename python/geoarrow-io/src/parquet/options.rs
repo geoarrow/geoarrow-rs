@@ -1,7 +1,7 @@
 use geo::coord;
 use geoarrow_schema::CoordType;
 use geoparquet::metadata::GeoParquetBboxCovering;
-use parquet::arrow::arrow_reader::ArrowReaderOptions;
+use parquet::arrow::arrow_reader::{ArrowReaderBuilder, ArrowReaderOptions};
 use pyo3::prelude::*;
 
 use crate::error::PyGeoArrowResult;
@@ -32,13 +32,14 @@ impl From<PyGeoParquetBboxCovering> for GeoParquetBboxCovering {
     }
 }
 
-pub fn create_options(
+pub fn apply_options<T>(
+    mut builder: ArrowReaderBuilder<T>,
     batch_size: Option<usize>,
     limit: Option<usize>,
     offset: Option<usize>,
-    // bbox: Option<[f64; 4]>,
+    bbox: Option<[f64; 4]>,
     // bbox_paths: Option<PyGeoParquetBboxCovering>,
-) -> PyGeoArrowResult<ArrowReaderOptions> {
+) -> PyGeoArrowResult<ArrowReaderBuilder<T>> {
     let bbox = bbox.map(|item| {
         geo::Rect::new(
             coord! {x: item[0], y: item[1]},
@@ -47,16 +48,14 @@ pub fn create_options(
     });
     let bbox_paths: Option<GeoParquetBboxCovering> = bbox_paths.map(|x| x.into());
 
-    let mut options = GeoParquetReaderOptions::default();
-
     if let Some(batch_size) = batch_size {
-        options = options.with_batch_size(batch_size);
+        builder = builder.with_batch_size(batch_size);
     }
     if let Some(limit) = limit {
-        options = options.with_limit(limit);
+        builder = builder.with_limit(limit);
     }
     if let Some(offset) = offset {
-        options = options.with_offset(offset);
+        builder = builder.with_offset(offset);
     }
     match (bbox, bbox_paths) {
         (Some(bbox), bbox_paths) => {
@@ -65,9 +64,5 @@ pub fn create_options(
         _ => panic!("Need to pass bbox paths currently with bbox"),
     }
 
-    options = options.with_coord_type(CoordType::Interleaved);
-
-    // TODO: support column projection
-
-    Ok(options)
+    Ok(builder)
 }

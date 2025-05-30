@@ -5,8 +5,6 @@ use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::PyTuple;
 pub mod error;
-// pub mod ffi;
-// pub mod io;
 pub(crate) mod input;
 pub mod parquet;
 #[cfg(feature = "async")]
