@@ -606,6 +606,9 @@ impl GeoParquetMetadata {
         Ok(())
     }
 
+    /// Access the geometry column with the given name.
+    ///
+    /// Returns (geometry column name, geometry column metadata)
     pub(crate) fn geometry_column<'a>(
         &'a self,
         column_name: Option<&'a str>,
