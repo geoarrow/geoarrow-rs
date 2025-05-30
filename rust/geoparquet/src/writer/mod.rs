@@ -1,3 +1,5 @@
+//! Write GeoArrow data to GeoParquet.
+
 #[cfg(feature = "async")]
 mod r#async;
 mod encode;

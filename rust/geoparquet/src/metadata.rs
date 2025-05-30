@@ -1,11 +1,12 @@
-//! Strongly-typed structs corresponding to the metadata provided by the GeoParquet specification.
+//! Structs corresponding to the metadata defined by the [GeoParquet specification].
+//!
+//! [GeoParquet specification]: https://geoparquet.org/releases/v1.1.0/
 
 use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
 use std::str::FromStr;
 use std::sync::Arc;
 
-use arrow_schema::Schema;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{
     CoordType, Crs, Dimension, Edges, GeoArrowType, GeometryCollectionType, GeometryType,
@@ -17,7 +18,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
-use crate::GeoParquetWriterEncoding;
+use crate::writer::GeoParquetWriterEncoding;
 
 /// The actual encoding of the geometry in the Parquet file.
 ///
@@ -522,32 +523,32 @@ pub struct GeoParquetColumnMetadata {
 
 impl GeoParquetMetadata {
     /// Construct a [`GeoParquetMetadata`] from Parquet [`FileMetaData`]
-    pub fn from_parquet_meta(metadata: &FileMetaData) -> GeoArrowResult<Self> {
+    ///
+    /// Returns `None` if the file does not contain GeoParquet metadata (i.e. there is no `geo`
+    /// key). Returns `Some(Err(...))` if the metadata is present but cannot be parsed.
+    pub fn from_parquet_meta(metadata: &FileMetaData) -> Option<GeoArrowResult<Self>> {
         let kv_metadata = metadata.key_value_metadata();
 
         if let Some(metadata) = kv_metadata {
             for kv in metadata {
                 if kv.key == "geo" {
-                    if let Some(value) = &kv.value {
-                        return serde_json::from_str(value)
-                            .map_err(|err| GeoArrowError::GeoParquet(err.to_string()));
-                    }
+                    return kv.value.as_ref().map(|value| {
+                        serde_json::from_str(value)
+                            .map_err(|err| GeoArrowError::GeoParquet(err.to_string()))
+                    });
                 }
             }
         }
 
-        Err(GeoArrowError::GeoParquet(
-            "expected a 'geo' key in GeoParquet metadata".to_string(),
-        ))
+        None
     }
 
     /// Update a GeoParquetMetadata from another file's metadata
     ///
     /// This will expand the bounding box of each geometry column to include the bounding box
     /// defined in the other file's GeoParquet metadata
-    pub fn try_update(&mut self, other: &FileMetaData) -> GeoArrowResult<()> {
-        let other = Self::from_parquet_meta(other)?;
-        self.try_compatible_with(&other)?;
+    pub fn try_update(&mut self, other: &GeoParquetMetadata) -> GeoArrowResult<()> {
+        self.try_compatible_with(other)?;
         for (column_name, column_meta) in self.columns.iter_mut() {
             let other_column_meta = other.columns.get(column_name.as_str()).unwrap();
             match (column_meta.bbox.as_mut(), &other_column_meta.bbox) {
@@ -804,31 +805,6 @@ pub(crate) fn infer_geo_data_type(
             Ok(Some(fallback_geometry_type))
         }
     }
-}
-
-/// Find all geometry columns in the Arrow schema, constructing their NativeTypes
-#[allow(dead_code)]
-pub(crate) fn find_geoparquet_geom_columns(
-    metadata: &FileMetaData,
-    schema: &Schema,
-    coord_type: CoordType,
-) -> GeoArrowResult<Vec<(usize, Option<GeoArrowType>)>> {
-    let meta = GeoParquetMetadata::from_parquet_meta(metadata)?;
-
-    meta.columns
-        .iter()
-        .map(|(col_name, col_meta)| {
-            let geometry_column_index = schema
-                .fields()
-                .iter()
-                .position(|field| field.name().as_str() == col_name.as_str())
-                .unwrap();
-            Ok((
-                geometry_column_index,
-                infer_geo_data_type(&col_meta.geometry_types, coord_type, Default::default())?,
-            ))
-        })
-        .collect()
 }
 
 #[cfg(test)]

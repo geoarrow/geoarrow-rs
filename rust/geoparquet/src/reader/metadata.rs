@@ -7,21 +7,15 @@ use geoarrow_array::builder::RectBuilder;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{BoxType, CoordType, Dimension};
 use parquet::arrow::arrow_reader::ArrowReaderMetadata;
-#[cfg(feature = "async")]
-use parquet::arrow::async_reader::AsyncFileReader;
 use parquet::file::metadata::ParquetMetaData;
-use parquet::file::reader::ChunkReader;
 use parquet::schema::types::SchemaDescriptor;
 use serde_json::Value;
 
-#[cfg(feature = "async")]
-use crate::GeoParquetRecordBatchStreamBuilder;
 use crate::metadata::{GeoParquetBboxCovering, GeoParquetMetadata};
-use crate::reader::parse::infer_target_schema;
+use crate::reader::parse::infer_geoarrow_schema;
 use crate::reader::spatial_filter::ParquetBboxStatistics;
-use crate::{GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder};
 
-/// An extension trait
+/// An extension trait to DRY some code across the file and dataset metadata.
 trait ArrowReaderMetadataExt {
     /// Access the [ArrowReaderMetadata] of this builder.
     fn reader_metadata(&self) -> &ArrowReaderMetadata;
@@ -49,9 +43,6 @@ impl ArrowReaderMetadataExt for ArrowReaderMetadata {
     }
 }
 
-/// The metadata necessary to construct a [`GeoParquetRecordBatchReaderBuilder`] or
-/// [`GeoParquetRecordBatchStreamBuilder`].
-///
 /// This represents the metadata of a _single_ GeoParquet file. If you have a collection of
 /// GeoParquet files representing a collective dataset with the same schema, use
 /// [GeoParquetDatasetMetadata].
@@ -73,11 +64,15 @@ pub struct GeoParquetReaderMetadata {
 
 impl GeoParquetReaderMetadata {
     /// Construct a new [GeoParquetReaderMetadata] from [ArrowReaderMetadata]
-    pub fn new(meta: ArrowReaderMetadata) -> Self {
-        let geo_meta = GeoParquetMetadata::from_parquet_meta(meta.metadata().file_metadata())
-            .ok()
-            .map(Arc::new);
-        Self { meta, geo_meta }
+    pub fn try_new(meta: ArrowReaderMetadata) -> GeoArrowResult<Self> {
+        let geo_meta = if let Some(geo_meta) =
+            GeoParquetMetadata::from_parquet_meta(meta.metadata().file_metadata())
+        {
+            Some(Arc::new(geo_meta?))
+        } else {
+            None
+        };
+        Ok(Self { meta, geo_meta })
     }
 
     /// Access the underlying [ArrowReaderMetadata].
@@ -112,9 +107,13 @@ impl GeoParquetReaderMetadata {
     /// E.g. when a GeoParquet file stores WKB in a binary column, we transform that column to a
     /// native representation when loading. This means that the Arrow schema of the _source_ is not
     /// the same as the schema of what gets loaded.
-    pub fn resolved_schema(&self, coord_type: CoordType) -> GeoArrowResult<SchemaRef> {
+    pub fn geoarrow_schema(
+        &self,
+        parse_to_native: bool,
+        coord_type: CoordType,
+    ) -> GeoArrowResult<SchemaRef> {
         if let Some(geo_meta) = &self.geo_meta {
-            infer_target_schema(self.meta.schema(), geo_meta, coord_type)
+            infer_geoarrow_schema(self.meta.schema(), geo_meta, parse_to_native, coord_type)
         } else {
             // If non-geospatial, return the same schema as output
             Ok(self.meta.schema().clone())
@@ -235,13 +234,7 @@ impl GeoParquetReaderMetadata {
     }
 }
 
-impl From<ArrowReaderMetadata> for GeoParquetReaderMetadata {
-    fn from(value: ArrowReaderMetadata) -> Self {
-        Self::new(value)
-    }
-}
-
-/// The metadata necessary to represent a collection of (Geo)Parquet files that share the same
+/// The metadata necessary to represent a collection of GeoParquet files that share the same
 /// schema.
 ///
 /// If you have only one GeoParquet file, use [GeoParquetReaderMetadata].
@@ -277,12 +270,15 @@ impl GeoParquetDatasetMetadata {
                 schema = Some(meta.schema().clone());
             }
 
-            if let Some(geo_meta) = geo_meta.as_mut() {
-                geo_meta.try_update(meta.metadata().file_metadata())?;
-            } else {
-                geo_meta = Some(GeoParquetMetadata::from_parquet_meta(
-                    meta.metadata().file_metadata(),
-                )?);
+            if let Some(new_geo_meta) =
+                GeoParquetMetadata::from_parquet_meta(meta.metadata().file_metadata())
+            {
+                let new_geo_meta = new_geo_meta?;
+                if let Some(geo_meta) = geo_meta.as_mut() {
+                    geo_meta.try_update(&new_geo_meta)?;
+                } else {
+                    geo_meta = Some(new_geo_meta);
+                }
             }
         }
 
@@ -317,9 +313,13 @@ impl GeoParquetDatasetMetadata {
     /// E.g. when a GeoParquet file stores WKB in a binary column, we transform that column to a
     /// native representation when loading. This means that the Arrow schema of the _source_ is not
     /// the same as the schema of what gets loaded.
-    pub fn resolved_schema(&self, coord_type: CoordType) -> GeoArrowResult<SchemaRef> {
+    pub fn geoarrow_schema(
+        &self,
+        parse_to_native: bool,
+        coord_type: CoordType,
+    ) -> GeoArrowResult<SchemaRef> {
         if let Some(geo_meta) = &self.geo_meta {
-            infer_target_schema(&self.schema, geo_meta, coord_type)
+            infer_geoarrow_schema(&self.schema, geo_meta, parse_to_native, coord_type)
         } else {
             // If non-geospatial, return the same schema as output
             Ok(self.schema.clone())
@@ -370,58 +370,58 @@ impl GeoParquetDatasetMetadata {
         }
     }
 
-    /// Construct a collection of asynchronous [GeoParquetRecordBatchStreamBuilder] from this
-    /// dataset metadata
-    #[cfg(feature = "async")]
-    pub fn to_stream_builders<T: AsyncFileReader + Send + 'static, F>(
-        &self,
-        reader_cb: F,
-        geo_options: GeoParquetReaderOptions,
-    ) -> Vec<GeoParquetRecordBatchStreamBuilder<T>>
-    where
-        F: Fn(&str) -> T,
-    {
-        self.files
-            .iter()
-            .map(|(path, arrow_meta)| {
-                let reader = reader_cb(path);
-                let file_metadata = GeoParquetReaderMetadata {
-                    meta: arrow_meta.clone(),
-                    geo_meta: self.geo_meta.clone(),
-                };
-                GeoParquetRecordBatchStreamBuilder::new_with_metadata_and_options(
-                    reader,
-                    file_metadata,
-                    geo_options.clone(),
-                )
-            })
-            .collect()
-    }
+    // /// Construct a collection of asynchronous [GeoParquetRecordBatchStreamBuilder] from this
+    // /// dataset metadata
+    // #[cfg(feature = "async")]
+    // pub fn to_stream_builders<T: AsyncFileReader + Send + 'static, F>(
+    //     &self,
+    //     reader_cb: F,
+    //     geo_options: GeoParquetReaderOptions,
+    // ) -> Vec<GeoParquetRecordBatchStreamBuilder<T>>
+    // where
+    //     F: Fn(&str) -> T,
+    // {
+    //     self.files
+    //         .iter()
+    //         .map(|(path, arrow_meta)| {
+    //             let reader = reader_cb(path);
+    //             let file_metadata = GeoParquetReaderMetadata {
+    //                 meta: arrow_meta.clone(),
+    //                 geo_meta: self.geo_meta.clone(),
+    //             };
+    //             GeoParquetRecordBatchStreamBuilder::new_with_metadata_and_options(
+    //                 reader,
+    //                 file_metadata,
+    //                 geo_options.clone(),
+    //             )
+    //         })
+    //         .collect()
+    // }
 
-    /// Construct a collection of synchronous [GeoParquetRecordBatchReaderBuilder] from this
-    /// dataset metadata
-    pub fn to_sync_builders<T: ChunkReader + 'static, F>(
-        &self,
-        reader_cb: F,
-        geo_options: GeoParquetReaderOptions,
-    ) -> Vec<GeoParquetRecordBatchReaderBuilder<T>>
-    where
-        F: Fn(&str) -> T,
-    {
-        self.files
-            .iter()
-            .map(|(path, arrow_meta)| {
-                let reader = reader_cb(path);
-                let file_metadata = GeoParquetReaderMetadata {
-                    meta: arrow_meta.clone(),
-                    geo_meta: self.geo_meta.clone(),
-                };
-                GeoParquetRecordBatchReaderBuilder::new_with_metadata_and_options(
-                    reader,
-                    file_metadata,
-                    geo_options.clone(),
-                )
-            })
-            .collect()
-    }
+    // /// Construct a collection of synchronous [GeoParquetRecordBatchReaderBuilder] from this
+    // /// dataset metadata
+    // pub fn to_sync_builders<T: ChunkReader + 'static, F>(
+    //     &self,
+    //     reader_cb: F,
+    //     geo_options: GeoParquetReaderOptions,
+    // ) -> Vec<GeoParquetRecordBatchReaderBuilder<T>>
+    // where
+    //     F: Fn(&str) -> T,
+    // {
+    //     self.files
+    //         .iter()
+    //         .map(|(path, arrow_meta)| {
+    //             let reader = reader_cb(path);
+    //             let file_metadata = GeoParquetReaderMetadata {
+    //                 meta: arrow_meta.clone(),
+    //                 geo_meta: self.geo_meta.clone(),
+    //             };
+    //             GeoParquetRecordBatchReaderBuilder::new_with_metadata_and_options(
+    //                 reader,
+    //                 file_metadata,
+    //                 geo_options.clone(),
+    //             )
+    //         })
+    //         .collect()
+    // }
 }

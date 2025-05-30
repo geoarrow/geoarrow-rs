@@ -1,13 +1,15 @@
-#[cfg(feature = "async")]
-mod r#async;
-mod builder;
-mod metadata;
-mod options;
-mod parse;
-mod spatial_filter;
+#![doc = include_str!("README.md")]
 
 #[cfg(feature = "async")]
-pub use r#async::{GeoParquetRecordBatchStream, GeoParquetRecordBatchStreamBuilder};
-pub use builder::{GeoParquetRecordBatchReader, GeoParquetRecordBatchReaderBuilder};
+mod r#async;
+mod geo_ext;
+mod metadata;
+mod parse;
+mod spatial_filter;
+mod sync;
+
+#[cfg(feature = "async")]
+pub use r#async::GeoParquetRecordBatchStream;
+pub use geo_ext::GeoParquetReaderBuilder;
 pub use metadata::{GeoParquetDatasetMetadata, GeoParquetReaderMetadata};
-pub use options::GeoParquetReaderOptions;
+pub use sync::GeoParquetRecordBatchReader;
