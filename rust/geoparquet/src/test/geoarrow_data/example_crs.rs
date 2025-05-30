@@ -14,7 +14,7 @@ fn read_gpq_file(path: impl AsRef<Path>) -> GeoArrowType {
     println!("reading path: {:?}", path.as_ref());
     let file = File::open(path).unwrap();
     let reader_builder = ParquetRecordBatchReaderBuilder::try_new(file).unwrap();
-    let gpq_meta = reader_builder.geoparquet_metadata().unwrap();
+    let gpq_meta = reader_builder.geoparquet_metadata().unwrap().unwrap();
     let geoarrow_schema = reader_builder
         .geoarrow_schema(&gpq_meta, true, CoordType::Separated)
         .unwrap();

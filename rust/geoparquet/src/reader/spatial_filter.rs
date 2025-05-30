@@ -164,7 +164,6 @@ pub(crate) fn bbox_row_groups(
     bbox_cols: &ParquetBboxStatistics,
     bbox_query: Rect,
 ) -> GeoArrowResult<Vec<usize>> {
-    // let row_groups = builder.metadata().row_groups();
     let row_groups_bounds = bbox_cols.get_bboxes(row_groups)?;
     let mut intersects_row_groups_idxs = vec![];
     for (row_group_idx, row_group_bounds) in row_groups_bounds.iter_values().enumerate() {

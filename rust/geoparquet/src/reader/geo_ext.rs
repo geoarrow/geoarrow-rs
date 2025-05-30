@@ -25,8 +25,9 @@ use crate::reader::spatial_filter::{ParquetBboxStatistics, bbox_arrow_predicate,
 pub trait GeoParquetReaderBuilder: Sized {
     /// Parse the geospatial metadata, if any, from the parquet file metadata.
     ///
-    /// Returns `None` if the file does not contain geospatial metadata or if it is not valid.
-    fn geoparquet_metadata(&self) -> Option<GeoParquetMetadata>;
+    /// Returns `None` if the file does not contain GeoParquet metadata (i.e. there is no `geo`
+    /// key). Returns `Some(Err(...))` if the metadata is present but cannot be parsed.
+    fn geoparquet_metadata(&self) -> Option<GeoArrowResult<GeoParquetMetadata>>;
 
     /// Convert the Arrow schema provided by the underlying [ArrowReaderBuilder] into one with
     /// GeoArrow metadata on each geometry column described in the GeoParquet metadata.
@@ -104,8 +105,8 @@ pub trait GeoParquetReaderBuilder: Sized {
 }
 
 impl<T> GeoParquetReaderBuilder for ArrowReaderBuilder<T> {
-    fn geoparquet_metadata(&self) -> Option<GeoParquetMetadata> {
-        GeoParquetMetadata::from_parquet_meta(self.metadata().file_metadata()).ok()
+    fn geoparquet_metadata(&self) -> Option<GeoArrowResult<GeoParquetMetadata>> {
+        GeoParquetMetadata::from_parquet_meta(self.metadata().file_metadata())
     }
 
     fn geoarrow_schema(

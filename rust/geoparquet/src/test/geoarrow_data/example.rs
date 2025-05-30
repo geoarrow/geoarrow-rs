@@ -78,7 +78,7 @@ fn read_gpq_file(path: impl AsRef<Path>) -> (GenericWktArray<i32>, Arc<dyn GeoAr
     println!("reading path: {:?}", path.as_ref());
     let file = File::open(path).unwrap();
     let reader_builder = ParquetRecordBatchReaderBuilder::try_new(file).unwrap();
-    let gpq_meta = reader_builder.geoparquet_metadata().unwrap();
+    let gpq_meta = reader_builder.geoparquet_metadata().unwrap().unwrap();
     let geoarrow_schema = reader_builder
         .geoarrow_schema(&gpq_meta, true, CoordType::Separated)
         .unwrap();
@@ -321,7 +321,7 @@ mod async_tests {
         println!("reading path: {:?}", path.as_ref());
         let file = File::open(path).await.unwrap();
         let reader_builder = ParquetRecordBatchStreamBuilder::new(file).await.unwrap();
-        let gpq_meta = reader_builder.geoparquet_metadata().unwrap();
+        let gpq_meta = reader_builder.geoparquet_metadata().unwrap().unwrap();
         let geoarrow_schema = reader_builder
             .geoarrow_schema(&gpq_meta, true, CoordType::Separated)
             .unwrap();

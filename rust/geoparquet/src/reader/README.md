@@ -1,9 +1,13 @@
 Read GeoParquet data as GeoArrow.
 
-The APIs in this crate
+This module provides the ability to read GeoParquet files as synchronous
+iterators or asynchronous streams of [`RecordBatch`][arrow_array::RecordBatch]es
+with GeoArrow metadata.
 
-into Arrow [`RecordBatch`][arrow_array::RecordBatch]es with
-GeoArrow metadata.
+The APIs in this crate are meant to be used in conjunction with the
+[`parquet`] crate. This `geoparquet` crate intends to have as few
+wrappers as possible around upstream `parquet` APIs in favor of injecting onto
+upstream reader builders directly.
 
 ## Overview
 
@@ -36,7 +40,7 @@ use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
 let file = File::open("../../fixtures/geoparquet/nybb.parquet").unwrap();
 let builder = ParquetRecordBatchReaderBuilder::try_new(file).unwrap();
 
-let geoparquet_metadata = builder.geoparquet_metadata().unwrap();
+let geoparquet_metadata = builder.geoparquet_metadata().unwrap().unwrap();
 let geoarrow_schema = builder
     .geoarrow_schema(&geoparquet_metadata, true, Default::default())
     .unwrap();
@@ -76,7 +80,7 @@ let file = File::open("../../fixtures/geoparquet/nybb.parquet")
     .unwrap();
 let builder = ParquetRecordBatchStreamBuilder::new(file).await.unwrap();
 
-let geoparquet_metadata = builder.geoparquet_metadata().unwrap();
+let geoparquet_metadata = builder.geoparquet_metadata().unwrap().unwrap();
 let geoarrow_schema = builder
     .geoarrow_schema(&geoparquet_metadata, true, Default::default())
     .unwrap();

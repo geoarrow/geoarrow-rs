@@ -523,32 +523,32 @@ pub struct GeoParquetColumnMetadata {
 
 impl GeoParquetMetadata {
     /// Construct a [`GeoParquetMetadata`] from Parquet [`FileMetaData`]
-    pub fn from_parquet_meta(metadata: &FileMetaData) -> GeoArrowResult<Self> {
+    ///
+    /// Returns `None` if the file does not contain GeoParquet metadata (i.e. there is no `geo`
+    /// key). Returns `Some(Err(...))` if the metadata is present but cannot be parsed.
+    pub fn from_parquet_meta(metadata: &FileMetaData) -> Option<GeoArrowResult<Self>> {
         let kv_metadata = metadata.key_value_metadata();
 
         if let Some(metadata) = kv_metadata {
             for kv in metadata {
                 if kv.key == "geo" {
-                    if let Some(value) = &kv.value {
-                        return serde_json::from_str(value)
-                            .map_err(|err| GeoArrowError::GeoParquet(err.to_string()));
-                    }
+                    return kv.value.as_ref().map(|value| {
+                        serde_json::from_str(value)
+                            .map_err(|err| GeoArrowError::GeoParquet(err.to_string()))
+                    });
                 }
             }
         }
 
-        Err(GeoArrowError::GeoParquet(
-            "expected a 'geo' key in GeoParquet metadata".to_string(),
-        ))
+        None
     }
 
     /// Update a GeoParquetMetadata from another file's metadata
     ///
     /// This will expand the bounding box of each geometry column to include the bounding box
     /// defined in the other file's GeoParquet metadata
-    pub fn try_update(&mut self, other: &FileMetaData) -> GeoArrowResult<()> {
-        let other = Self::from_parquet_meta(other)?;
-        self.try_compatible_with(&other)?;
+    pub fn try_update(&mut self, other: &GeoParquetMetadata) -> GeoArrowResult<()> {
+        self.try_compatible_with(other)?;
         for (column_name, column_meta) in self.columns.iter_mut() {
             let other_column_meta = other.columns.get(column_name.as_str()).unwrap();
             match (column_meta.bbox.as_mut(), &other_column_meta.bbox) {
