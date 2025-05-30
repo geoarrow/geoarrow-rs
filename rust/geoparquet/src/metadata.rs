@@ -454,73 +454,6 @@ pub struct GeoParquetMetadata {
     pub columns: HashMap<String, GeoParquetColumnMetadata>,
 }
 
-/// GeoParquet column metadata
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct GeoParquetColumnMetadata {
-    /// Name of the geometry encoding format. As of GeoParquet 1.1, `"WKB"`, `"point"`,
-    /// `"linestring"`, `"polygon"`, `"multipoint"`, `"multilinestring"`, and `"multipolygon"` are
-    /// supported.
-    pub encoding: GeoParquetColumnEncoding,
-
-    /// The geometry types of all geometries, or an empty array if they are not known.
-    ///
-    /// This field captures the geometry types of the geometries in the column, when known.
-    /// Accepted geometry types are: `"Point"`, `"LineString"`, `"Polygon"`, `"MultiPoint"`,
-    /// `"MultiLineString"`, `"MultiPolygon"`, `"GeometryCollection"`.
-    ///
-    /// In addition, the following rules are used:
-    ///
-    /// - In case of 3D geometries, a `" Z"` suffix gets added (e.g. `["Point Z"]`).
-    /// - A list of multiple values indicates that multiple geometry types are present (e.g.
-    ///   `["Polygon", "MultiPolygon"]`).
-    /// - An empty array explicitly signals that the geometry types are not known.
-    /// - The geometry types in the list must be unique (e.g. `["Point", "Point"]` is not valid).
-    ///
-    /// It is expected that this field is strictly correct. For example, if having both polygons
-    /// and multipolygons, it is not sufficient to specify `["MultiPolygon"]`, but it is expected
-    /// to specify `["Polygon", "MultiPolygon"]`. Or if having 3D points, it is not sufficient to
-    /// specify `["Point"]`, but it is expected to list `["Point Z"]`.
-    pub geometry_types: HashSet<GeoParquetGeometryTypeAndDimension>,
-
-    /// [PROJJSON](https://proj.org/specifications/projjson.html) object representing the
-    /// Coordinate Reference System (CRS) of the geometry. If the field is not provided, the
-    /// default CRS is [OGC:CRS84](https://www.opengis.net/def/crs/OGC/1.3/CRS84), which means the
-    /// data in this column must be stored in longitude, latitude based on the WGS84 datum.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub crs: Option<Value>,
-
-    /// Winding order of exterior ring of polygons. If present must be `"counterclockwise"`;
-    /// interior rings are wound in opposite order. If absent, no assertions are made regarding the
-    /// winding order.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub orientation: Option<String>,
-
-    /// Name of the coordinate system for the edges. Must be one of `"planar"` or `"spherical"`.
-    /// The default value is `"planar"`.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub edges: Option<String>,
-
-    /// Bounding Box of the geometries in the file, formatted according to RFC 7946, section 5.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub bbox: Option<Vec<f64>>,
-
-    /// Coordinate epoch in case of a dynamic CRS, expressed as a decimal year.
-    ///
-    /// In a dynamic CRS, coordinates of a point on the surface of the Earth may change with time.
-    /// To be unambiguous, the coordinates must always be qualified with the epoch at which they
-    /// are valid.
-    ///
-    /// The optional epoch field allows to specify this in case the crs field defines a dynamic
-    /// CRS. The coordinate epoch is expressed as a decimal year (e.g. `2021.47`). Currently, this
-    /// specification only supports an epoch per column (and not per geometry).
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub epoch: Option<f64>,
-
-    /// Object containing bounding box column names to help accelerate spatial data retrieval
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub covering: Option<GeoParquetCovering>,
-}
-
 impl GeoParquetMetadata {
     /// Construct a [`GeoParquetMetadata`] from Parquet [`FileMetaData`]
     ///
@@ -673,27 +606,113 @@ impl GeoParquetMetadata {
         Ok(())
     }
 
-    /// Get the bounding box covering for a geometry column
+    pub(crate) fn geometry_column<'a>(
+        &'a self,
+        column_name: Option<&'a str>,
+    ) -> GeoArrowResult<(&'a str, &'a GeoParquetColumnMetadata)> {
+        if let Some(column_name) = column_name {
+            let column_meta = self
+                .columns
+                .get(column_name)
+                .ok_or(GeoArrowError::GeoParquet(format!(
+                    "Geometry column with name {column_name} not found in metadata"
+                )))?;
+            Ok((column_name, column_meta))
+        } else {
+            let column_meta =
+                self.columns
+                    .get(&self.primary_column)
+                    .ok_or(GeoArrowError::GeoParquet(format!(
+                        "Inferred primary geometry column with name {} not found in metadata",
+                        self.primary_column
+                    )))?;
+            Ok((&self.primary_column, column_meta))
+        }
+    }
+}
+
+/// GeoParquet column metadata
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct GeoParquetColumnMetadata {
+    /// Name of the geometry encoding format. As of GeoParquet 1.1, `"WKB"`, `"point"`,
+    /// `"linestring"`, `"polygon"`, `"multipoint"`, `"multilinestring"`, and `"multipolygon"` are
+    /// supported.
+    pub encoding: GeoParquetColumnEncoding,
+
+    /// The geometry types of all geometries, or an empty array if they are not known.
     ///
-    /// If the desired column does not have covering metadata, if it is a native encoding its
-    /// covering will be inferred.
+    /// This field captures the geometry types of the geometries in the column, when known.
+    /// Accepted geometry types are: `"Point"`, `"LineString"`, `"Polygon"`, `"MultiPoint"`,
+    /// `"MultiLineString"`, `"MultiPolygon"`, `"GeometryCollection"`.
+    ///
+    /// In addition, the following rules are used:
+    ///
+    /// - In case of 3D geometries, a `" Z"` suffix gets added (e.g. `["Point Z"]`).
+    /// - A list of multiple values indicates that multiple geometry types are present (e.g.
+    ///   `["Polygon", "MultiPolygon"]`).
+    /// - An empty array explicitly signals that the geometry types are not known.
+    /// - The geometry types in the list must be unique (e.g. `["Point", "Point"]` is not valid).
+    ///
+    /// It is expected that this field is strictly correct. For example, if having both polygons
+    /// and multipolygons, it is not sufficient to specify `["MultiPolygon"]`, but it is expected
+    /// to specify `["Polygon", "MultiPolygon"]`. Or if having 3D points, it is not sufficient to
+    /// specify `["Point"]`, but it is expected to list `["Point Z"]`.
+    pub geometry_types: HashSet<GeoParquetGeometryTypeAndDimension>,
+
+    /// [PROJJSON](https://proj.org/specifications/projjson.html) object representing the
+    /// Coordinate Reference System (CRS) of the geometry. If the field is not provided, the
+    /// default CRS is [OGC:CRS84](https://www.opengis.net/def/crs/OGC/1.3/CRS84), which means the
+    /// data in this column must be stored in longitude, latitude based on the WGS84 datum.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub crs: Option<Value>,
+
+    /// Winding order of exterior ring of polygons. If present must be `"counterclockwise"`;
+    /// interior rings are wound in opposite order. If absent, no assertions are made regarding the
+    /// winding order.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub orientation: Option<String>,
+
+    /// Name of the coordinate system for the edges. Must be one of `"planar"` or `"spherical"`.
+    /// The default value is `"planar"`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub edges: Option<String>,
+
+    /// Bounding Box of the geometries in the file, formatted according to RFC 7946, section 5.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bbox: Option<Vec<f64>>,
+
+    /// Coordinate epoch in case of a dynamic CRS, expressed as a decimal year.
+    ///
+    /// In a dynamic CRS, coordinates of a point on the surface of the Earth may change with time.
+    /// To be unambiguous, the coordinates must always be qualified with the epoch at which they
+    /// are valid.
+    ///
+    /// The optional epoch field allows to specify this in case the crs field defines a dynamic
+    /// CRS. The coordinate epoch is expressed as a decimal year (e.g. `2021.47`). Currently, this
+    /// specification only supports an epoch per column (and not per geometry).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub epoch: Option<f64>,
+
+    /// Object containing bounding box column names to help accelerate spatial data retrieval
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub covering: Option<GeoParquetCovering>,
+}
+
+impl GeoParquetColumnMetadata {
+    /// Get the bounding box covering for this geometry column.
+    ///
+    /// If the geometry column described by this [`GeoParquetColumnMetadata`] has associated
+    /// bounding box columns, those will be returned. If it is a native encoding its covering will
+    /// be inferred from the native columns. If it is a WKB encoding without associated bounding
+    /// box columns, `None` will be returned.
     pub(crate) fn bbox_covering(
         &self,
-        column_name: Option<&str>,
-    ) -> GeoArrowResult<Option<GeoParquetBboxCovering>> {
-        let column_name = column_name.unwrap_or(&self.primary_column);
-        let column_meta = self
-            .columns
-            .get(column_name)
-            .ok_or(GeoArrowError::GeoParquet(format!(
-                "Column name {column_name} not found in metadata"
-            )))?;
-        if let Some(covering) = &column_meta.covering {
-            Ok(Some(covering.bbox.clone()))
+        geometry_column_name: &str,
+    ) -> Option<GeoParquetBboxCovering> {
+        if let Some(covering) = &self.covering {
+            Some(covering.bbox.clone())
         } else {
-            let inferred_covering =
-                GeoParquetBboxCovering::infer_from_native(column_name, column_meta);
-            Ok(inferred_covering)
+            GeoParquetBboxCovering::infer_from_native(geometry_column_name, self)
         }
     }
 }
