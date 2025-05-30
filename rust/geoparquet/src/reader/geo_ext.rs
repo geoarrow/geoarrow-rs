@@ -124,16 +124,16 @@ impl<T> GeoParquetReaderBuilder for ArrowReaderBuilder<T> {
         geo_metadata: &GeoParquetMetadata,
         column_name: Option<&str>,
     ) -> GeoArrowResult<Box<dyn ArrowPredicate>> {
-        let column_name = column_name.unwrap_or(&geo_metadata.primary_column);
-        let covering =
-            geo_metadata
-                .bbox_covering(Some(column_name))?
+        let (column_name, column_meta) = geo_metadata.geometry_column(column_name)?;
+        let bbox_covering =
+            column_meta
+                .bbox_covering(column_name)
                 .ok_or(GeoArrowError::GeoParquet(format!(
-                    "No covering metadata found for column: {:?}",
+                    "No covering metadata found for column: {}",
                     column_name
                 )))?;
 
-        let bbox_cols = ParquetBboxStatistics::try_new(self.parquet_schema(), &covering)?;
+        let bbox_cols = ParquetBboxStatistics::try_new(self.parquet_schema(), &bbox_covering)?;
 
         bbox_arrow_predicate(self.parquet_schema(), bbox_cols, bbox)
     }
@@ -154,16 +154,16 @@ impl<T> GeoParquetReaderBuilder for ArrowReaderBuilder<T> {
         geo_metadata: &GeoParquetMetadata,
         column_name: Option<&str>,
     ) -> GeoArrowResult<Vec<usize>> {
-        let column_name = column_name.unwrap_or(&geo_metadata.primary_column);
-        let covering =
-            geo_metadata
-                .bbox_covering(Some(column_name))?
+        let (column_name, column_meta) = geo_metadata.geometry_column(column_name)?;
+        let bbox_covering =
+            column_meta
+                .bbox_covering(column_name)
                 .ok_or(GeoArrowError::GeoParquet(format!(
-                    "No covering metadata found for column: {:?}",
+                    "No covering metadata found for column: {}",
                     column_name
                 )))?;
 
-        let bbox_cols = ParquetBboxStatistics::try_new(self.parquet_schema(), &covering)?;
+        let bbox_cols = ParquetBboxStatistics::try_new(self.parquet_schema(), &bbox_covering)?;
 
         bbox_row_groups(self.metadata().row_groups(), &bbox_cols, bbox)
     }

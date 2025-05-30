@@ -3,15 +3,13 @@ use std::sync::Arc;
 
 use arrow_schema::SchemaRef;
 use geoarrow_array::array::RectArray;
-use geoarrow_array::builder::RectBuilder;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geoarrow_schema::{BoxType, CoordType, Dimension};
+use geoarrow_schema::{CoordType, Crs, Metadata};
 use parquet::arrow::arrow_reader::ArrowReaderMetadata;
 use parquet::file::metadata::ParquetMetaData;
 use parquet::schema::types::SchemaDescriptor;
-use serde_json::Value;
 
-use crate::metadata::{GeoParquetBboxCovering, GeoParquetMetadata};
+use crate::metadata::GeoParquetMetadata;
 use crate::reader::parse::infer_geoarrow_schema;
 use crate::reader::spatial_filter::ParquetBboxStatistics;
 
@@ -59,7 +57,7 @@ impl ArrowReaderMetadataExt for ArrowReaderMetadata {
 #[derive(Debug, Clone)]
 pub struct GeoParquetReaderMetadata {
     meta: ArrowReaderMetadata,
-    geo_meta: Option<Arc<GeoParquetMetadata>>,
+    geo_meta: Arc<GeoParquetMetadata>,
 }
 
 impl GeoParquetReaderMetadata {
@@ -68,9 +66,11 @@ impl GeoParquetReaderMetadata {
         let geo_meta = if let Some(geo_meta) =
             GeoParquetMetadata::from_parquet_meta(meta.metadata().file_metadata())
         {
-            Some(Arc::new(geo_meta?))
+            Arc::new(geo_meta?)
         } else {
-            None
+            return Err(GeoArrowError::GeoParquet(
+                "No `geo` key in Parquet metadata".to_string(),
+            ));
         };
         Ok(Self { meta, geo_meta })
     }
@@ -81,8 +81,8 @@ impl GeoParquetReaderMetadata {
     }
 
     /// Access the geo metadata of this file.
-    pub fn geo_metadata(&self) -> Option<&Arc<GeoParquetMetadata>> {
-        self.geo_meta.as_ref()
+    pub fn geo_metadata(&self) -> &Arc<GeoParquetMetadata> {
+        &self.geo_meta
     }
 
     /// Returns a reference to the [`ParquetMetaData`] for this parquet file
@@ -112,12 +112,12 @@ impl GeoParquetReaderMetadata {
         parse_to_native: bool,
         coord_type: CoordType,
     ) -> GeoArrowResult<SchemaRef> {
-        if let Some(geo_meta) = &self.geo_meta {
-            infer_geoarrow_schema(self.meta.schema(), geo_meta, parse_to_native, coord_type)
-        } else {
-            // If non-geospatial, return the same schema as output
-            Ok(self.meta.schema().clone())
-        }
+        infer_geoarrow_schema(
+            self.meta.schema(),
+            &self.geo_meta,
+            parse_to_native,
+            coord_type,
+        )
     }
 
     /// The number of rows in this file.
@@ -137,22 +137,18 @@ impl GeoParquetReaderMetadata {
     pub fn row_group_bounds(
         &self,
         row_group_idx: usize,
-        paths: Option<&GeoParquetBboxCovering>,
+        column_name: Option<&str>,
     ) -> GeoArrowResult<Option<geo_types::Rect>> {
-        let paths = if let Some(paths) = paths {
-            paths
-        } else {
-            let geo_meta = self.geo_meta.as_ref().ok_or(GeoArrowError::GeoParquet(
-                "No geospatial metadata".to_string(),
-            ))?;
-            &geo_meta
-                .bbox_covering(None)?
-                .ok_or(GeoArrowError::GeoParquet(
-                    "No covering metadata found".to_string(),
-                ))?
-        };
-
-        let geo_statistics = ParquetBboxStatistics::try_new(self.meta.parquet_schema(), paths)?;
+        let (column_name, column_meta) = self.geo_meta.geometry_column(column_name)?;
+        let bbox_covering =
+            column_meta
+                .bbox_covering(column_name)
+                .ok_or(GeoArrowError::GeoParquet(format!(
+                    "No covering metadata found for column: {}",
+                    column_name
+                )))?;
+        let geo_statistics =
+            ParquetBboxStatistics::try_new(self.meta.parquet_schema(), &bbox_covering)?;
         let row_group_meta = self.meta.metadata().row_group(row_group_idx);
         Ok(Some(geo_statistics.get_bbox(row_group_meta)?))
     }
@@ -161,35 +157,22 @@ impl GeoParquetReaderMetadata {
     ///
     /// As of GeoParquet 1.1 you won't need to pass in these column names, as they'll be specified
     /// in the metadata.
-    pub fn row_groups_bounds(
-        &self,
-        paths: Option<&GeoParquetBboxCovering>,
-    ) -> GeoArrowResult<RectArray> {
-        let paths = if let Some(paths) = paths {
-            paths
-        } else {
-            let geo_meta = self.geo_meta.as_ref().ok_or(GeoArrowError::GeoParquet(
-                "No geospatial metadata".to_string(),
-            ))?;
-            &geo_meta
-                .bbox_covering(None)?
-                .ok_or(GeoArrowError::GeoParquet(
-                    "No covering metadata found".to_string(),
-                ))?
-        };
+    pub fn row_groups_bounds(&self, column_name: Option<&str>) -> GeoArrowResult<RectArray> {
+        let (column_name, column_meta) = self.geo_meta.geometry_column(column_name)?;
+        let bbox_covering =
+            column_meta
+                .bbox_covering(column_name)
+                .ok_or(GeoArrowError::GeoParquet(format!(
+                    "No covering metadata found for column: {}",
+                    column_name
+                )))?;
 
-        let geo_statistics = ParquetBboxStatistics::try_new(self.meta.parquet_schema(), paths)?;
-        let rects = self
-            .meta
-            .metadata()
-            .row_groups()
-            .iter()
-            .map(|rg_meta| geo_statistics.get_bbox(rg_meta))
-            .collect::<GeoArrowResult<Vec<_>>>()?;
-        // TODO: add the CRS of the geometry column.
-        let rect_type = BoxType::new(Dimension::XY, Default::default());
-        let rect_array = RectBuilder::from_rects(rects.iter(), rect_type).finish();
-        Ok(rect_array)
+        let geo_statistics =
+            ParquetBboxStatistics::try_new(self.meta.parquet_schema(), &bbox_covering)?;
+        geo_statistics.get_bboxes(
+            self.meta.metadata().row_groups(),
+            Arc::new(column_meta.clone().into()),
+        )
     }
 
     /// Access the bounding box of the given column for the entire file
@@ -198,39 +181,24 @@ impl GeoParquetReaderMetadata {
     ///
     /// An Err will be returned if the column name does not exist in the dataset
     /// None will be returned if the metadata does not contain bounding box information.
-    pub fn file_bbox(&self, column_name: Option<&str>) -> GeoArrowResult<Option<&[f64]>> {
-        if let Some(geo_meta) = self.geo_metadata() {
-            let column_name = column_name.unwrap_or(geo_meta.primary_column.as_str());
-            let column_meta =
-                geo_meta
-                    .columns
-                    .get(column_name)
-                    .ok_or(GeoArrowError::GeoParquet(format!(
-                        "Column {} not found in GeoParquet metadata",
-                        column_name
-                    )))?;
-            Ok(column_meta.bbox.as_deref())
-        } else {
-            Ok(None)
-        }
+    pub fn file_bbox<'a>(
+        &'a self,
+        column_name: Option<&'a str>,
+    ) -> GeoArrowResult<Option<&'a [f64]>> {
+        let (_, column_meta) = self.geo_meta.geometry_column(column_name)?;
+        Ok(column_meta.bbox.as_deref())
+    }
+
+    /// Access the GeoArrow [`Metadata`] from the provided geometry column.
+    pub fn geoarrow_metadata(&self, column_name: Option<&str>) -> GeoArrowResult<Metadata> {
+        let (_, column_meta) = self.geo_meta.geometry_column(column_name)?;
+        Ok(column_meta.clone().into())
     }
 
     /// Access the Coordinate Reference System (CRS) of the given column
-    pub fn crs(&self, column_name: Option<&str>) -> GeoArrowResult<Option<&Value>> {
-        if let Some(geo_meta) = self.geo_metadata() {
-            let column_name = column_name.unwrap_or(geo_meta.primary_column.as_str());
-            let column_meta =
-                geo_meta
-                    .columns
-                    .get(column_name)
-                    .ok_or(GeoArrowError::GeoParquet(format!(
-                        "Column {} not found in GeoParquet metadata",
-                        column_name
-                    )))?;
-            Ok(column_meta.crs.as_ref())
-        } else {
-            Ok(None)
-        }
+    pub fn crs(&self, column_name: Option<&str>) -> GeoArrowResult<Crs> {
+        let geoarrow_meta = self.geoarrow_metadata(column_name)?;
+        Ok(geoarrow_meta.crs().clone())
     }
 }
 
@@ -250,7 +218,7 @@ impl GeoParquetReaderMetadata {
 ///    time a reader is constructed.
 pub struct GeoParquetDatasetMetadata {
     files: HashMap<String, ArrowReaderMetadata>,
-    geo_meta: Option<Arc<GeoParquetMetadata>>,
+    geo_meta: Arc<GeoParquetMetadata>,
     schema: SchemaRef,
 }
 
@@ -264,7 +232,7 @@ impl GeoParquetDatasetMetadata {
         let mut schema: Option<SchemaRef> = None;
         let mut geo_meta: Option<GeoParquetMetadata> = None;
         for meta in metas.values() {
-            if let Some(ref _prior_schema) = schema {
+            if let Some(_prior_schema) = &schema {
                 // TODO: check that schemas are equivalent
             } else {
                 schema = Some(meta.schema().clone());
@@ -285,13 +253,17 @@ impl GeoParquetDatasetMetadata {
         Ok(Self {
             files: metas,
             schema: schema.unwrap(),
-            geo_meta: geo_meta.map(Arc::new),
+            geo_meta: geo_meta
+                .ok_or(GeoArrowError::GeoParquet(
+                    "Expected GeoParquet dataset to have Geo metadata".to_string(),
+                ))?
+                .into(),
         })
     }
 
     /// Access the geo metadata of this file.
-    pub fn geo_metadata(&self) -> Option<&Arc<GeoParquetMetadata>> {
-        self.geo_meta.as_ref()
+    pub fn geo_metadata(&self) -> &Arc<GeoParquetMetadata> {
+        &self.geo_meta
     }
 
     /// The total number of rows across all files.
@@ -318,12 +290,7 @@ impl GeoParquetDatasetMetadata {
         parse_to_native: bool,
         coord_type: CoordType,
     ) -> GeoArrowResult<SchemaRef> {
-        if let Some(geo_meta) = &self.geo_meta {
-            infer_geoarrow_schema(&self.schema, geo_meta, parse_to_native, coord_type)
-        } else {
-            // If non-geospatial, return the same schema as output
-            Ok(self.schema.clone())
-        }
+        infer_geoarrow_schema(&self.schema, &self.geo_meta, parse_to_native, coord_type)
     }
 
     /// Access the bounding box of the given column for the entire file
@@ -332,96 +299,23 @@ impl GeoParquetDatasetMetadata {
     ///
     /// An Err will be returned if the column name does not exist in the dataset
     /// None will be returned if the metadata does not contain bounding box information.
-    pub fn file_bbox(&self, column_name: Option<&str>) -> GeoArrowResult<Option<&[f64]>> {
-        if let Some(geo_meta) = self.geo_metadata() {
-            let column_name = column_name.unwrap_or(geo_meta.primary_column.as_str());
-            let column_meta =
-                geo_meta
-                    .columns
-                    .get(column_name)
-                    .ok_or(GeoArrowError::GeoParquet(format!(
-                        "Column {} not found in GeoParquet metadata",
-                        column_name
-                    )))?;
-            Ok(column_meta.bbox.as_deref())
-        } else {
-            Ok(None)
-        }
+    pub fn file_bbox<'a>(
+        &'a self,
+        column_name: Option<&'a str>,
+    ) -> GeoArrowResult<Option<&'a [f64]>> {
+        let (_, column_meta) = self.geo_meta.geometry_column(column_name)?;
+        Ok(column_meta.bbox.as_deref())
+    }
+
+    /// Access the GeoArrow [`Metadata`] from the provided geometry column.
+    pub fn geoarrow_metadata(&self, column_name: Option<&str>) -> GeoArrowResult<Metadata> {
+        let (_, column_meta) = self.geo_meta.geometry_column(column_name)?;
+        Ok(column_meta.clone().into())
     }
 
     /// Access the Coordinate Reference System (CRS) of the given column
-    ///
-    /// This is returned as a PROJJSON object. I.e. the variant returned should always be
-    /// `Value::Object`.
-    pub fn crs(&self, column_name: Option<&str>) -> GeoArrowResult<Option<&Value>> {
-        if let Some(geo_meta) = self.geo_metadata() {
-            let column_name = column_name.unwrap_or(geo_meta.primary_column.as_str());
-            let column_meta =
-                geo_meta
-                    .columns
-                    .get(column_name)
-                    .ok_or(GeoArrowError::GeoParquet(format!(
-                        "Column {} not found in GeoParquet metadata",
-                        column_name
-                    )))?;
-            Ok(column_meta.crs.as_ref())
-        } else {
-            Ok(None)
-        }
+    pub fn crs(&self, column_name: Option<&str>) -> GeoArrowResult<Crs> {
+        let geoarrow_meta = self.geoarrow_metadata(column_name)?;
+        Ok(geoarrow_meta.crs().clone())
     }
-
-    // /// Construct a collection of asynchronous [GeoParquetRecordBatchStreamBuilder] from this
-    // /// dataset metadata
-    // #[cfg(feature = "async")]
-    // pub fn to_stream_builders<T: AsyncFileReader + Send + 'static, F>(
-    //     &self,
-    //     reader_cb: F,
-    //     geo_options: GeoParquetReaderOptions,
-    // ) -> Vec<GeoParquetRecordBatchStreamBuilder<T>>
-    // where
-    //     F: Fn(&str) -> T,
-    // {
-    //     self.files
-    //         .iter()
-    //         .map(|(path, arrow_meta)| {
-    //             let reader = reader_cb(path);
-    //             let file_metadata = GeoParquetReaderMetadata {
-    //                 meta: arrow_meta.clone(),
-    //                 geo_meta: self.geo_meta.clone(),
-    //             };
-    //             GeoParquetRecordBatchStreamBuilder::new_with_metadata_and_options(
-    //                 reader,
-    //                 file_metadata,
-    //                 geo_options.clone(),
-    //             )
-    //         })
-    //         .collect()
-    // }
-
-    // /// Construct a collection of synchronous [GeoParquetRecordBatchReaderBuilder] from this
-    // /// dataset metadata
-    // pub fn to_sync_builders<T: ChunkReader + 'static, F>(
-    //     &self,
-    //     reader_cb: F,
-    //     geo_options: GeoParquetReaderOptions,
-    // ) -> Vec<GeoParquetRecordBatchReaderBuilder<T>>
-    // where
-    //     F: Fn(&str) -> T,
-    // {
-    //     self.files
-    //         .iter()
-    //         .map(|(path, arrow_meta)| {
-    //             let reader = reader_cb(path);
-    //             let file_metadata = GeoParquetReaderMetadata {
-    //                 meta: arrow_meta.clone(),
-    //                 geo_meta: self.geo_meta.clone(),
-    //             };
-    //             GeoParquetRecordBatchReaderBuilder::new_with_metadata_and_options(
-    //                 reader,
-    //                 file_metadata,
-    //                 geo_options.clone(),
-    //             )
-    //         })
-    //         .collect()
-    // }
 }
