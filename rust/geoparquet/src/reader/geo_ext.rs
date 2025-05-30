@@ -47,7 +47,7 @@ pub trait GeoParquetReaderBuilder: Sized {
     /// `bbox`.
     ///
     /// Note that this will **replace** any existing [`RowFilter`]s. If you want to use more than
-    /// one filter, you should create [`ArrowPredicate`s] directly and pass in your own
+    /// one filter, you should create [`ArrowPredicate`]s directly and pass in your own
     /// [`RowFilter`] to [`ArrowReaderBuilder::with_row_filter`].
     ///
     /// Note that the `bbox` must be in the same coordinate system as the geometries in the

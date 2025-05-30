@@ -16,7 +16,7 @@ The general overview of reading a GeoParquet file is as follows:
     Even if you plan to leave geometries as WKB, you still need to call this method, as it will ensure the GeoArrow metadata is applied to the WKB geometry column.
 
 4. (Optional) Use the [`GeoParquetReaderBuilder`] trait to inject any spatial filter functionality onto the reader.
-5. Call `build` to get a [reader][parquet::arrow::arrow_reader::ParquetRecordBatchReader] or [stream][parquet::arrow::async_reader::ParquetRecordBatchStream]. Then wrap that with a [`GeoParquetRecordBatchReader`][geoparquet::reader::GeoParquetRecordBatchReader] or [`GeoParquetRecordBatchStream`][geoparquet::reader::GeoParquetRecordBatchStream], including the inferred GeoArrow schema from step 3.
+5. Call `build` to get a [reader][parquet::arrow::arrow_reader::ParquetRecordBatchReader] or [stream][parquet::arrow::async_reader::ParquetRecordBatchStream]. Then wrap that with a [`GeoParquetRecordBatchReader`] or [`GeoParquetRecordBatchStream`], including the inferred GeoArrow schema from step 3.
 
     Now any [`RecordBatch`][arrow_array::RecordBatch]es emitted by the reader or stream will have GeoArrow metadata on each geometry column. And if, in step 3, you chose to parse geometries to their GeoArrow-native representation, these geospatial-aware wrappers will parse the WKB column to a GeoArrow-native representation.
 

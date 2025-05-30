@@ -43,9 +43,6 @@ impl ArrowReaderMetadataExt for ArrowReaderMetadata {
     }
 }
 
-/// The metadata necessary to construct a [`GeoParquetRecordBatchReaderBuilder`] or
-/// [`GeoParquetRecordBatchStreamBuilder`].
-///
 /// This represents the metadata of a _single_ GeoParquet file. If you have a collection of
 /// GeoParquet files representing a collective dataset with the same schema, use
 /// [GeoParquetDatasetMetadata].
@@ -239,7 +236,7 @@ impl From<ArrowReaderMetadata> for GeoParquetReaderMetadata {
     }
 }
 
-/// The metadata necessary to represent a collection of (Geo)Parquet files that share the same
+/// The metadata necessary to represent a collection of GeoParquet files that share the same
 /// schema.
 ///
 /// If you have only one GeoParquet file, use [GeoParquetReaderMetadata].
