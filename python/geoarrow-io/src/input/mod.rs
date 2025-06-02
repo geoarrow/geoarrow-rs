@@ -30,6 +30,7 @@ pub enum AnyFileReader {
 /// Construct a reader for the user that will always be asynchronous
 ///
 /// object_store default instances will be created for local and HTTP(s) files.
+#[allow(dead_code)]
 #[cfg(feature = "async")]
 pub fn construct_async_reader(
     file: Bound<PyAny>,
@@ -87,6 +88,7 @@ pub fn construct_reader(
     Ok(AnyFileReader::Sync(file.extract()?))
 }
 
+#[allow(dead_code)]
 #[cfg(feature = "async")]
 fn default_http_store(path_or_url: &str) -> PyGeoArrowResult<AsyncFileReader> {
     let url = Url::parse(path_or_url)?;
