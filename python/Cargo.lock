@@ -168,6 +168,7 @@ dependencies = [
  "atoi",
  "base64",
  "chrono",
+ "comfy-table",
  "half",
  "lexical-core",
  "num",
@@ -504,6 +505,16 @@ checksum = "8f10f8c9340e31fc120ff885fcdb54a0b48e474bbd77cab557f0c30a3e569402"
 dependencies = [
  "parse-zoneinfo",
  "phf_codegen",
+]
+
+[[package]]
+name = "comfy-table"
+version = "7.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a65ebfec4fb190b6f90e944a817d60499ee0744e582530e2c9900a22e591d9a"
+dependencies = [
+ "unicode-segmentation",
+ "unicode-width",
 ]
 
 [[package]]
@@ -948,7 +959,7 @@ dependencies = [
  "geo",
  "numpy",
  "pyo3",
- "pyo3-arrow",
+ "pyo3-arrow 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "pyo3-geoarrow",
 ]
 
@@ -977,7 +988,7 @@ dependencies = [
  "object_store",
  "parquet",
  "pyo3",
- "pyo3-arrow",
+ "pyo3-arrow 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "pyo3-async-runtimes",
  "pyo3-file",
  "pyo3-geoarrow",
@@ -2169,6 +2180,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "pyo3-arrow"
+version = "0.10.1"
+source = "git+https://github.com/kylebarron/arro3?rev=a622e151587f34cf4b901a9048b16a83b601eac3#a622e151587f34cf4b901a9048b16a83b601eac3"
+dependencies = [
+ "arrow-array",
+ "arrow-buffer",
+ "arrow-cast",
+ "arrow-data",
+ "arrow-schema",
+ "arrow-select",
+ "half",
+ "indexmap 2.9.0",
+ "numpy",
+ "pyo3",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "pyo3-async-runtimes"
 version = "0.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2223,7 +2252,7 @@ dependencies = [
  "geoarrow-cast",
  "geoarrow-schema",
  "pyo3",
- "pyo3-arrow",
+ "pyo3-arrow 0.10.1 (git+https://github.com/kylebarron/arro3?rev=a622e151587f34cf4b901a9048b16a83b601eac3)",
  "serde_json",
  "url",
 ]
@@ -3226,6 +3255,18 @@ name = "unicode-ident"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5a5f39404a5da50712a4c1eecf25e90dd62b613502b7e925fd4e4d19b5c96512"
+
+[[package]]
+name = "unicode-segmentation"
+version = "1.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f6ccf251212114b54433ec949fd6a7841275f9ada20dddd2f29e9ceea4501493"
+
+[[package]]
+name = "unicode-width"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1fc81956842c57dac11422a97c3b8195a1ff727f06e85c84ed2e8aa277c9a0fd"
 
 [[package]]
 name = "unindent"

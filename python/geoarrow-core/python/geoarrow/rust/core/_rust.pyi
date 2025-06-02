@@ -39,6 +39,7 @@ from .enums import CoordType, Dimension
 from .types import CRSInput
 
 from ._array import GeoArrowArray as GeoArrowArray
+from ._array_reader import GeoArrowArrayReader as GeoArrowArrayReader
 from ._chunked_array import ChunkedGeoArrowArray as ChunkedGeoArrowArray
 from ._data_type import GeoArrowType as GeoArrowType
 from ._data_type import point as point
