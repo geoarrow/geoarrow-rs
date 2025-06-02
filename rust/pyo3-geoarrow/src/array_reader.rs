@@ -54,7 +54,7 @@ impl PyGeoArrowArrayReader {
         self.0.into_reader()
     }
 
-    /// Consume this reader and create a [PyChunkedArray] object
+    /// Consume this reader and create a [PyChunkedGeoArrowArray] object
     pub fn into_chunked_array(self) -> PyGeoArrowResult<PyChunkedGeoArrowArray> {
         self.read_all()
     }
