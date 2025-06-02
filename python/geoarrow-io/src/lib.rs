@@ -69,7 +69,7 @@ fn _io(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     // )?)?;
     m.add_function(wrap_pyfunction!(crate::parquet::read_parquet, m)?)?;
     m.add_function(wrap_pyfunction!(crate::parquet::write_parquet, m)?)?;
-    m.add_class::<crate::parquet::ParquetWriter>()?;
+    m.add_class::<crate::parquet::PyGeoParquetWriter>()?;
 
     // m.add_function(wrap_pyfunction!(crate::csv::write_csv, m)?)?;
     // m.add_function(wrap_pyfunction!(

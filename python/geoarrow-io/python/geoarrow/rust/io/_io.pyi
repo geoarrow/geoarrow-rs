@@ -9,7 +9,7 @@ from ._geojson import write_geojson as write_geojson
 from ._geojson import write_geojson_lines as write_geojson_lines
 from ._parquet import GeoParquetDataset as GeoParquetDataset
 from ._parquet import GeoParquetFile as GeoParquetFile
-from ._parquet import ParquetWriter as ParquetWriter
+from ._parquet import GeoParquetWriter as GeoParquetWriter
 from ._parquet import read_parquet as read_parquet
 from ._parquet import read_parquet_async as read_parquet_async
 from ._parquet import write_parquet as write_parquet

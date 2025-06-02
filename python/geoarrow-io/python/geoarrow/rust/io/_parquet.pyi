@@ -222,7 +222,7 @@ class GeoParquetDataset:
             _description_
         """
 
-class ParquetWriter:
+class GeoParquetWriter:
     """Writer interface for a single Parquet file.
 
     This allows you to write Parquet files that are larger than memory.

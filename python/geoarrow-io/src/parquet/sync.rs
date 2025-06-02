@@ -10,8 +10,7 @@ use geoparquet::reader::{
     GeoParquetReaderBuilder, GeoParquetRecordBatchReader, GeoParquetRecordBatchStream,
 };
 use geoparquet::writer::{
-    GeoParquetWriter as _GeoParquetWriter, GeoParquetWriterOptions,
-    write_geoparquet as _write_geoparquet,
+    GeoParquetWriter, GeoParquetWriterOptions, write_geoparquet as _write_geoparquet,
 };
 use parquet::arrow::arrow_reader::{ArrowReaderOptions, ParquetRecordBatchReaderBuilder};
 use parquet::basic::Compression;
@@ -195,13 +194,13 @@ pub fn write_parquet(
     Ok(())
 }
 
-#[pyclass(module = "geoarrow.rust.io", frozen)]
-pub struct ParquetWriter {
-    file: Mutex<Option<_GeoParquetWriter<FileWriter>>>,
+#[pyclass(module = "geoarrow.rust.io", name = "GeoParquetWriter", frozen)]
+pub struct PyGeoParquetWriter {
+    file: Mutex<Option<GeoParquetWriter<FileWriter>>>,
 }
 
 #[pymethods]
-impl ParquetWriter {
+impl PyGeoParquetWriter {
     #[new]
     pub fn new(py: Python, file: PyObject, schema: PySchema) -> PyGeoArrowResult<Self> {
         let file_writer = file.extract::<FileWriter>(py)?;
@@ -209,7 +208,7 @@ impl ParquetWriter {
             crs_transform: Some(Box::new(PyprojCRSTransform::new())),
             ..Default::default()
         };
-        let geoparquet_writer = _GeoParquetWriter::try_new(file_writer, schema.as_ref(), &options)?;
+        let geoparquet_writer = GeoParquetWriter::try_new(file_writer, schema.as_ref(), &options)?;
         Ok(Self {
             file: Mutex::new(Some(geoparquet_writer)),
         })
