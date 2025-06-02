@@ -66,7 +66,7 @@ impl PyCrs {
                     let (authority, code) =
                         value.split_once(':').expect("expected : in authority code");
                     let args = PyTuple::new(py, vec![authority, code])?;
-                    crs_class.call_method1(intern!(py, "from_json"), args)?
+                    crs_class.call_method1(intern!(py, "from_authority"), args)?
                 }
                 _ => panic!("Expected string value"),
             },
