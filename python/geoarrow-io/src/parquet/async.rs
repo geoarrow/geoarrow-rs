@@ -504,6 +504,31 @@ impl GeoParquetDataset {
         Ok(self.meta.crs(column_name)?.into())
     }
 
+    fn fragment(&self, path: &str) -> PyGeoArrowResult<GeoParquetFile> {
+        if let Some(meta) = self.meta.files().get(path) {
+            Ok(GeoParquetFile {
+                path: path.into(),
+                geoparquet_meta: GeoParquetReaderMetadata::from_arrow_meta(meta.clone()).unwrap(),
+                store: self.store.clone(),
+            })
+        } else {
+            Err(PyValueError::new_err(format!("File '{}' not found in dataset", path)).into())
+        }
+    }
+
+    #[getter]
+    fn fragments(&self) -> Vec<GeoParquetFile> {
+        self.meta
+            .files()
+            .iter()
+            .map(|(path, meta)| GeoParquetFile {
+                path: path.clone().into(),
+                geoparquet_meta: GeoParquetReaderMetadata::from_arrow_meta(meta.clone()).unwrap(),
+                store: self.store.clone(),
+            })
+            .collect()
+    }
+
     #[allow(clippy::too_many_arguments)]
     #[pyo3(signature = (*, batch_size=None, limit=None, offset=None, bbox=None, parse_to_native=true, coord_type=None))]
     fn read_async<'py>(

@@ -188,6 +188,13 @@ class GeoParquetDataset:
         Returns:
             CRS
         """
+
+    def fragment(self, path: str) -> GeoParquetFile:
+        """Get a single file from this dataset."""
+    @property
+    def fragments(self) -> List[GeoParquetFile]:
+        """Get the list of files in this dataset."""
+
     async def read_async(
         self,
         *,
