@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 use std::fmt::Debug;
+use std::sync::Arc;
 
 use arrow_array::cast::AsArray;
 use arrow_array::types::{Float32Type, Float64Type};
@@ -12,7 +13,7 @@ use geoarrow_array::GeoArrowArrayAccessor;
 use geoarrow_array::array::{RectArray, from_arrow_array};
 use geoarrow_array::builder::RectBuilder;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geoarrow_schema::{BoxType, Dimension};
+use geoarrow_schema::{BoxType, Dimension, Metadata};
 use parquet::arrow::ProjectionMask;
 use parquet::arrow::arrow_reader::{ArrowPredicate, ArrowPredicateFn};
 use parquet::file::metadata::{ColumnChunkMetaData, RowGroupMetaData};
@@ -55,9 +56,9 @@ pub(crate) struct ParquetBboxStatistics<'a> {
 
 impl<'a> ParquetBboxStatistics<'a> {
     /// Loops through the columns in the SchemaDescriptor, looking at each's path
-    pub fn try_new(
+    pub(crate) fn try_new(
         parquet_schema: &SchemaDescriptor,
-        paths: &'a GeoParquetBboxCovering,
+        bbox_covering: &'a GeoParquetBboxCovering,
     ) -> GeoArrowResult<Self> {
         let mut minx_col: Option<usize> = None;
         let mut miny_col: Option<usize> = None;
@@ -74,19 +75,19 @@ impl<'a> ParquetBboxStatistics<'a> {
             // NOTE: we **don't** want to `continue` out of the loop after matching one of these
             // paths because in the native encoding case the same column can be _both_ the minx and
             // maxx column paths.
-            if minx_col.is_none() && path_equals(paths.xmin.as_ref(), column_meta.path()) {
+            if minx_col.is_none() && path_equals(bbox_covering.xmin.as_ref(), column_meta.path()) {
                 minx_col = Some(column_idx);
             }
 
-            if miny_col.is_none() && path_equals(paths.ymin.as_ref(), column_meta.path()) {
+            if miny_col.is_none() && path_equals(bbox_covering.ymin.as_ref(), column_meta.path()) {
                 miny_col = Some(column_idx);
             }
 
-            if maxx_col.is_none() && path_equals(paths.xmax.as_ref(), column_meta.path()) {
+            if maxx_col.is_none() && path_equals(bbox_covering.xmax.as_ref(), column_meta.path()) {
                 maxx_col = Some(column_idx);
             }
 
-            if maxy_col.is_none() && path_equals(paths.ymax.as_ref(), column_meta.path()) {
+            if maxy_col.is_none() && path_equals(bbox_covering.ymax.as_ref(), column_meta.path()) {
                 maxy_col = Some(column_idx);
             }
         }
@@ -94,36 +95,36 @@ impl<'a> ParquetBboxStatistics<'a> {
         if minx_col.is_none() {
             return Err(GeoArrowError::GeoParquet(format!(
                 "Unable to find xmin_path: {:?}",
-                paths.xmin
+                bbox_covering.xmin
             )));
         }
 
         if miny_col.is_none() {
             return Err(GeoArrowError::GeoParquet(format!(
                 "Unable to find ymin_path: {:?}",
-                paths.ymin
+                bbox_covering.ymin
             )));
         }
 
         if maxx_col.is_none() {
             return Err(GeoArrowError::GeoParquet(format!(
                 "Unable to find xmax_path: {:?}",
-                paths.xmax
+                bbox_covering.xmax
             )));
         }
 
         if maxy_col.is_none() {
             return Err(GeoArrowError::GeoParquet(format!(
                 "Unable to find ymax_path: {:?}",
-                paths.ymax
+                bbox_covering.ymax
             )));
         }
 
         Ok(Self {
-            minx_col_path: paths.xmin.as_slice(),
-            miny_col_path: paths.ymin.as_slice(),
-            maxx_col_path: paths.xmax.as_slice(),
-            maxy_col_path: paths.ymax.as_slice(),
+            minx_col_path: bbox_covering.xmin.as_slice(),
+            miny_col_path: bbox_covering.ymin.as_slice(),
+            maxx_col_path: bbox_covering.xmax.as_slice(),
+            maxy_col_path: bbox_covering.ymax.as_slice(),
             minx_col: minx_col.unwrap(),
             miny_col: miny_col.unwrap(),
             maxx_col: maxx_col.unwrap(),
@@ -134,7 +135,7 @@ impl<'a> ParquetBboxStatistics<'a> {
     /// Extract the bounding box from a given row group's metadata.
     ///
     /// This uses the column statistics contained in the row group metadata.
-    pub fn get_bbox(&self, rg_meta: &RowGroupMetaData) -> GeoArrowResult<Rect> {
+    pub(crate) fn get_bbox(&self, rg_meta: &RowGroupMetaData) -> GeoArrowResult<Rect> {
         let (minx, _) = parse_statistics_f64(rg_meta.column(self.minx_col))?;
         let (miny, _) = parse_statistics_f64(rg_meta.column(self.miny_col))?;
         let (_, maxx) = parse_statistics_f64(rg_meta.column(self.maxx_col))?;
@@ -146,12 +147,16 @@ impl<'a> ParquetBboxStatistics<'a> {
     }
 
     /// Extract the bounding boxes for a sequence of row groups
-    pub fn get_bboxes(&self, row_groups: &[RowGroupMetaData]) -> GeoArrowResult<RectArray> {
-        // TODO: add the CRS of the geometry column?
-        let mut builder = RectBuilder::with_capacity(
-            BoxType::new(Dimension::XY, Default::default()),
-            row_groups.len(),
-        );
+    ///
+    /// If `metadata` is provided, it will be assigned onto the generated `RectArray`.
+    pub(crate) fn get_bboxes(
+        &self,
+        row_groups: &[RowGroupMetaData],
+        metadata: Arc<Metadata>,
+    ) -> GeoArrowResult<RectArray> {
+        let rect_type = BoxType::new(Dimension::XY, metadata);
+
+        let mut builder = RectBuilder::with_capacity(rect_type, row_groups.len());
         for rg_meta in row_groups.iter() {
             builder.push_rect(Some(&self.get_bbox(rg_meta)?));
         }
@@ -164,7 +169,7 @@ pub(crate) fn bbox_row_groups(
     bbox_cols: &ParquetBboxStatistics,
     bbox_query: Rect,
 ) -> GeoArrowResult<Vec<usize>> {
-    let row_groups_bounds = bbox_cols.get_bboxes(row_groups)?;
+    let row_groups_bounds = bbox_cols.get_bboxes(row_groups, Default::default())?;
     let mut intersects_row_groups_idxs = vec![];
     for (row_group_idx, row_group_bounds) in row_groups_bounds.iter_values().enumerate() {
         if rect_intersects(&row_group_bounds?, &bbox_query) {
