@@ -17,7 +17,7 @@ from .types import GeoParquetEncodingT
 
 class GeoParquetFile:
     @classmethod
-    def open(cls, path: str, store: ObjectStore) -> ParquetFile:
+    def open(cls, path: str, store: ObjectStore) -> GeoParquetFile:
         """
         Open a Parquet file from the given path.
 
@@ -29,7 +29,7 @@ class GeoParquetFile:
         """
 
     @classmethod
-    async def open_async(cls, path: str, store: ObjectStore) -> ParquetFile:
+    async def open_async(cls, path: str, store: ObjectStore) -> GeoParquetFile:
         """
         Open a Parquet file from the given path asynchronously.
 
@@ -44,7 +44,7 @@ class GeoParquetFile:
         """The number of row groups in this file."""
     def schema_arrow(
         self,
-        parse_to_native: bool,
+        parse_to_native: bool = True,
         coord_type: CoordTypeInput | None = None,
     ) -> Schema:
         """Access the Arrow schema of the generated data"""
@@ -103,7 +103,7 @@ class GeoParquetFile:
         limit: int | None = None,
         offset: int | None = None,
         bbox: Sequence[int | float] | None = None,
-        parse_to_native: bool,
+        parse_to_native: bool = True,
         coord_type: CoordTypeInput | None = None,
     ) -> Table:
         """Perform an async read with the given options
@@ -125,7 +125,7 @@ class GeoParquetFile:
         limit: int | None = None,
         offset: int | None = None,
         bbox: Sequence[int | float] | None = None,
-        parse_to_native: bool,
+        parse_to_native: bool = True,
         coord_type: CoordTypeInput | None = None,
     ) -> Table:
         """Perform a sync read with the given options
@@ -163,7 +163,7 @@ class GeoParquetDataset:
         """The total number of row groups across all files"""
     def schema_arrow(
         self,
-        parse_to_native: bool,
+        parse_to_native: bool = True,
         coord_type: CoordTypeInput | None = None,
     ) -> Schema:
         """Access the Arrow schema of the generated data"""
@@ -183,7 +183,7 @@ class GeoParquetDataset:
         limit: int | None = None,
         offset: int | None = None,
         bbox: Sequence[int | float] | None = None,
-        parse_to_native: bool,
+        parse_to_native: bool = True,
         coord_type: CoordTypeInput | None = None,
     ) -> Table:
         """Perform an async read with the given options
@@ -206,7 +206,7 @@ class GeoParquetDataset:
         limit: int | None = None,
         offset: int | None = None,
         bbox: Sequence[int | float] | None = None,
-        parse_to_native: bool,
+        parse_to_native: bool = True,
         coord_type: CoordTypeInput | None = None,
     ) -> Table:
         """Perform a sync read with the given options

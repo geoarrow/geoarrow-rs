@@ -162,6 +162,7 @@ impl GeoParquetFile {
         self.geoparquet_meta.num_row_groups()
     }
 
+    #[pyo3(signature = (parse_to_native=true, coord_type=None))]
     fn schema_arrow(
         &self,
         parse_to_native: bool,
@@ -199,6 +200,7 @@ impl GeoParquetFile {
         }
     }
 
+    #[pyo3(signature = (column_name=None))]
     pub fn row_groups_bounds(&self, column_name: Option<&str>) -> PyGeoArrowResult<Arro3Array> {
         let bounds = self.geoparquet_meta.row_groups_bounds(column_name)?;
         Ok(PyArray::new(
@@ -437,6 +439,7 @@ impl GeoParquetDataset {
         self.meta.num_row_groups()
     }
 
+    #[pyo3(signature = (parse_to_native=true, coord_type=None))]
     fn schema_arrow(
         &self,
         parse_to_native: bool,
