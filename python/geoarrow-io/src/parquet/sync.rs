@@ -58,8 +58,8 @@ pub fn read_parquet(
                 }
 
                 let gpq_meta = builder.geoparquet_metadata().ok_or(PyValueError::new_err(
-                    "Not a GeoParquet file; no or invalid GeoParquet metadata.",
-                ))?;
+                    "Not a GeoParquet file; no GeoParquet metadata.",
+                ))??;
                 let geoarrow_schema = builder.geoarrow_schema(
                     &gpq_meta,
                     parse_to_native,
@@ -88,8 +88,8 @@ pub fn read_parquet(
             }
 
             let gpq_meta = builder.geoparquet_metadata().ok_or(PyValueError::new_err(
-                "Not a GeoParquet file; no or invalid GeoParquet metadata.",
-            ))?;
+                "Not a GeoParquet file; no GeoParquet metadata.",
+            ))??;
             let geoarrow_schema = builder.geoarrow_schema(
                 &gpq_meta,
                 parse_to_native,
