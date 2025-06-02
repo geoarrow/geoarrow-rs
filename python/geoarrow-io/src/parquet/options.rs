@@ -1,67 +1,58 @@
-use geo::coord;
-use geoarrow_schema::CoordType;
-use geoparquet::metadata::GeoParquetBboxCovering;
-use parquet::arrow::arrow_reader::{ArrowReaderBuilder, ArrowReaderOptions};
+use geo::{Rect, coord};
+use geoparquet::metadata::GeoParquetMetadata;
+use geoparquet::reader::GeoParquetReaderBuilder;
+use parquet::arrow::arrow_reader::ArrowReaderBuilder;
 use pyo3::prelude::*;
 
 use crate::error::PyGeoArrowResult;
 
-#[derive(FromPyObject)]
-#[pyo3(from_item_all)]
-pub struct PyGeoParquetBboxCovering {
-    xmin: Vec<String>,
-    ymin: Vec<String>,
-    #[pyo3(default)]
-    zmin: Option<Vec<String>>,
-    xmax: Vec<String>,
-    ymax: Vec<String>,
-    #[pyo3(default)]
-    zmax: Option<Vec<String>>,
+#[derive(Debug, Clone, Copy)]
+pub struct PyRect(Rect<f64>);
+
+impl<'py> FromPyObject<'py> for PyRect {
+    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
+        let bbox = ob.extract::<[f64; 4]>()?;
+        Ok(Self(Rect::new(
+            coord! {x: bbox[0], y: bbox[1]},
+            coord! {x: bbox[2], y: bbox[3]},
+        )))
+    }
 }
 
-impl From<PyGeoParquetBboxCovering> for GeoParquetBboxCovering {
-    fn from(value: PyGeoParquetBboxCovering) -> Self {
-        Self {
-            xmin: value.xmin,
-            ymin: value.ymin,
-            zmin: value.zmin,
-            xmax: value.xmax,
-            ymax: value.ymax,
-            zmax: value.zmax,
-        }
-    }
+#[derive(Debug, Clone)]
+pub struct PyGeoParquetBboxQuery {
+    pub bbox: PyRect,
+    pub column_name: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct PyGeoParquetReadOptions {
+    pub batch_size: Option<usize>,
+    pub limit: Option<usize>,
+    pub offset: Option<usize>,
+    pub bbox_query: Option<PyGeoParquetBboxQuery>,
 }
 
 pub fn apply_options<T>(
     mut builder: ArrowReaderBuilder<T>,
-    batch_size: Option<usize>,
-    limit: Option<usize>,
-    offset: Option<usize>,
-    bbox: Option<[f64; 4]>,
-    // bbox_paths: Option<PyGeoParquetBboxCovering>,
+    geo_metadata: &GeoParquetMetadata,
+    options: PyGeoParquetReadOptions,
 ) -> PyGeoArrowResult<ArrowReaderBuilder<T>> {
-    let bbox = bbox.map(|item| {
-        geo::Rect::new(
-            coord! {x: item[0], y: item[1]},
-            coord! {x: item[2], y: item[3]},
-        )
-    });
-    let bbox_paths: Option<GeoParquetBboxCovering> = bbox_paths.map(|x| x.into());
-
-    if let Some(batch_size) = batch_size {
+    if let Some(batch_size) = options.batch_size {
         builder = builder.with_batch_size(batch_size);
     }
-    if let Some(limit) = limit {
+    if let Some(limit) = options.limit {
         builder = builder.with_limit(limit);
     }
-    if let Some(offset) = offset {
+    if let Some(offset) = options.offset {
         builder = builder.with_offset(offset);
     }
-    match (bbox, bbox_paths) {
-        (Some(bbox), bbox_paths) => {
-            options = options.with_bbox(bbox, bbox_paths);
-        }
-        _ => panic!("Need to pass bbox paths currently with bbox"),
+
+    if let Some(PyGeoParquetBboxQuery { bbox, column_name }) = options.bbox_query {
+        builder =
+            builder.with_intersecting_row_groups(bbox.0, geo_metadata, column_name.as_deref())?;
+        builder =
+            builder.with_intersecting_row_filter(bbox.0, geo_metadata, column_name.as_deref())?;
     }
 
     Ok(builder)

@@ -3,16 +3,18 @@ use std::sync::Arc;
 
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::input::{AnyFileReader, AsyncFileReader, construct_reader};
-use crate::parquet::options::{PyGeoParquetBboxCovering, apply_options};
+use crate::parquet::options::{
+    PyGeoParquetBboxQuery, PyGeoParquetReadOptions, PyRect, apply_options,
+};
 #[cfg(feature = "async")]
 use crate::runtime::get_runtime;
 
 use arrow::datatypes::SchemaRef;
 use futures::TryStreamExt;
 use geo_traits::CoordTrait;
+use geoarrow_array::GeoArrowArray;
 use geoarrow_schema::CoordType;
 use geoarrow_schema::error::GeoArrowError;
-use geoparquet::metadata::GeoParquetBboxCovering;
 use geoparquet::reader::{
     GeoParquetDatasetMetadata, GeoParquetReaderBuilder, GeoParquetReaderMetadata,
     GeoParquetRecordBatchStream,
@@ -110,8 +112,7 @@ impl ParquetFile {
             let mut reader = ParquetObjectReader::new(cloned_store.clone(), path.clone());
             let arrow_meta = ArrowReaderMetadata::load_async(&mut reader, Default::default())
                 .await
-                .unwrap();
-            // .map_err(|err| GeoArrowError::ParquetError)?;
+                .map_err(|err| GeoArrowError::External(Box::new(err)))?;
             let geoparquet_meta = GeoParquetReaderMetadata::try_new(arrow_meta).unwrap();
             Ok::<_, PyGeoArrowError>((path, geoparquet_meta))
         })?;
@@ -144,27 +145,19 @@ impl ParquetFile {
     }
 
     #[pyo3(signature = (column_name=None))]
-    fn crs(&self, py: Python, column_name: Option<&str>) -> PyGeoArrowResult<PyObject> {
-        if let Some(crs) = self.geoparquet_meta.crs(column_name)? {
-            Ok(PyCrs::from_projjson(crs.clone())
-                .to_pyproj(py)
-                .map_err(PyErr::from)?)
-        } else {
-            Ok(py.None())
-        }
+    fn crs(&self, column_name: Option<&str>) -> PyGeoArrowResult<PyCrs> {
+        Ok(self.geoparquet_meta.crs(column_name)?.into())
     }
 
-    #[pyo3(signature = (row_group_idx, bbox_paths=None))]
+    #[pyo3(signature = (row_group_idx, column_name=None))]
     pub fn row_group_bounds(
         &self,
         row_group_idx: usize,
-        bbox_paths: Option<PyGeoParquetBboxCovering>,
+        column_name: Option<&str>,
     ) -> PyGeoArrowResult<Option<Vec<f64>>> {
-        let paths: Option<GeoParquetBboxCovering> = bbox_paths.map(|x| x.into());
-
         if let Some(bounds) = self
             .geoparquet_meta
-            .row_group_bounds(row_group_idx, paths.as_ref())?
+            .row_group_bounds(row_group_idx, column_name)?
         {
             Ok(Some(vec![
                 bounds.min().x(),
@@ -177,20 +170,20 @@ impl ParquetFile {
         }
     }
 
-    pub fn row_groups_bounds(&self, py: Python) -> PyGeoArrowResult<Arro3Array> {
-        use geoarrow_array::GeoArrowArray;
-
-        let bounds = self.geoparquet_meta.row_groups_bounds(paths.as_ref())?;
+    pub fn row_groups_bounds(&self, column_name: Option<&str>) -> PyGeoArrowResult<Arro3Array> {
+        let bounds = self.geoparquet_meta.row_groups_bounds(column_name)?;
         Ok(PyArray::new(
             bounds.to_array_ref(),
             Arc::new(bounds.data_type().to_field("bounds", true)),
         )
-        .to_arro3(py)?
-        .unbind())
+        .into())
     }
 
     #[pyo3(signature = (column_name=None))]
-    fn file_bbox(&self, column_name: Option<&str>) -> PyGeoArrowResult<Option<&[f64]>> {
+    fn file_bbox<'py>(
+        &'py self,
+        column_name: Option<&'py str>,
+    ) -> PyGeoArrowResult<Option<&'py [f64]>> {
         Ok(self.geoparquet_meta.file_bbox(column_name)?)
     }
 
@@ -201,68 +194,102 @@ impl ParquetFile {
         batch_size: Option<usize>,
         limit: Option<usize>,
         offset: Option<usize>,
-        bbox: Option<[f64; 4]>,
+        bbox: Option<PyRect>,
         parse_to_native: bool,
         coord_type: Option<PyCoordType>,
     ) -> PyGeoArrowResult<PyObject> {
-        let object_reader = ParquetObjectReader::new(self.store.clone(), self.path.clone());
-        let builder = ParquetRecordBatchStreamBuilder::new_with_metadata(
-            object_reader,
-            self.geoparquet_meta.arrow_metadata().clone(),
-        );
-        let builder = apply_options(builder, batch_size, limit, offset, bbox)?;
-
-        let gpq_meta = builder.geoparquet_metadata().ok_or(PyValueError::new_err(
-            "Not a GeoParquet file; no `geo` key in Parquet metadata.",
-        ))??;
-        let geoarrow_schema = builder.geoarrow_schema(
-            &gpq_meta,
+        let stream = construct_file_stream(
+            self.path.clone(),
+            self.geoparquet_meta.clone(),
+            self.store.clone(),
+            batch_size,
+            limit,
+            offset,
+            bbox,
             parse_to_native,
-            coord_type.unwrap_or_default().into(),
+            coord_type,
         )?;
-
-        let stream =
-            GeoParquetRecordBatchStream::try_new(builder.build()?, geoarrow_schema.clone())?;
         let fut = future_into_py(py, async move {
+            let schema = stream.schema().clone();
             let batches = stream
                 .try_collect()
                 .await
                 .map_err(|err| PyGeoArrowError::GeoArrowError(err.into()))?;
-
-            let table = Arro3Table::from(PyTable::try_new(batches, geoarrow_schema).unwrap());
-            Ok(table)
+            Ok(Arro3Table::from(PyTable::try_new(batches, schema)?))
         })?;
         Ok(fut.into())
     }
 
-    #[pyo3(signature = (*, batch_size=None, limit=None, offset=None, bbox=None, bbox_paths=None))]
+    #[pyo3(signature = (*, batch_size=None, limit=None, offset=None, bbox=None, parse_to_native=true, coord_type=None))]
     fn read(
         &self,
         py: Python,
         batch_size: Option<usize>,
         limit: Option<usize>,
         offset: Option<usize>,
-        bbox: Option<[f64; 4]>,
+        bbox: Option<PyRect>,
+        parse_to_native: bool,
+        coord_type: Option<PyCoordType>,
     ) -> PyGeoArrowResult<Arro3Table> {
         let runtime = get_runtime(py)?;
-        let object_reader = ParquetObjectReader::new(self.store.clone(), self.path.clone());
-        // let options = create_options(batch_size, limit, offset, bbox, bbox_paths)?;
-        let builder = ParquetRecordBatchStreamBuilder::new_with_metadata(
-            object_reader,
-            self.geoparquet_meta.arrow_metadata().clone(),
-        );
-        let builder = apply_options(builder, batch_size, limit, offset, bbox)?;
-
-        // .build()?;
+        let stream = construct_file_stream(
+            self.path.clone(),
+            self.geoparquet_meta.clone(),
+            self.store.clone(),
+            batch_size,
+            limit,
+            offset,
+            bbox,
+            parse_to_native,
+            coord_type,
+        )?;
         runtime.block_on(async move {
-            let (batches, schema) = stream
-                .read_table()
+            let schema = stream.schema().clone();
+            let batches = stream
+                .try_collect()
                 .await
-                .map_err(PyGeoArrowError::GeoArrowError)?;
-            let table = Arro3Table::from(PyTable::try_new(batches, schema).unwrap());
-            Ok(table)
+                .map_err(|err| PyGeoArrowError::GeoArrowError(err.into()))?;
+            Ok(Arro3Table::from(PyTable::try_new(batches, schema)?))
         })
     }
+}
+
+fn construct_file_stream(
+    path: object_store::path::Path,
+    geoparquet_meta: GeoParquetReaderMetadata,
+    store: Arc<dyn ObjectStore>,
+    batch_size: Option<usize>,
+    limit: Option<usize>,
+    offset: Option<usize>,
+    bbox: Option<PyRect>,
+    parse_to_native: bool,
+    coord_type: Option<PyCoordType>,
+) -> PyGeoArrowResult<GeoParquetRecordBatchStream<ParquetObjectReader>> {
+    let options = PyGeoParquetReadOptions {
+        batch_size,
+        limit,
+        offset,
+        bbox_query: bbox.map(|bbox| PyGeoParquetBboxQuery {
+            bbox,
+            column_name: None,
+        }),
+    };
+
+    let object_reader = ParquetObjectReader::new(store, path);
+    let builder = ParquetRecordBatchStreamBuilder::new_with_metadata(
+        object_reader,
+        geoparquet_meta.arrow_metadata().clone(),
+    );
+
+    let geoarrow_schema = builder.geoarrow_schema(
+        &geoparquet_meta.geo_metadata(),
+        parse_to_native,
+        coord_type.unwrap_or_default().into(),
+    )?;
+    let builder = apply_options(builder, &geoparquet_meta.geo_metadata(), options)?;
+
+    let stream = GeoParquetRecordBatchStream::try_new(builder.build()?, geoarrow_schema.clone())?;
+    Ok(stream)
 }
 
 // Remove once we ensure that below method is working
@@ -429,14 +456,8 @@ impl ParquetDataset {
     }
 
     #[pyo3(signature = (column_name=None))]
-    fn crs(&self, py: Python, column_name: Option<&str>) -> PyGeoArrowResult<PyObject> {
-        if let Some(crs) = self.meta.crs(column_name)? {
-            Ok(PyCrs::from_projjson(crs.clone())
-                .to_pyproj(py)
-                .map_err(PyErr::from)?)
-        } else {
-            Ok(py.None())
-        }
+    fn crs(&self, column_name: Option<&str>) -> PyGeoArrowResult<PyCrs> {
+        Ok(self.meta.crs(column_name)?.into())
     }
 
     #[pyo3(signature = (*, batch_size=None, limit=None, offset=None, bbox=None, bbox_paths=None))]
@@ -446,8 +467,7 @@ impl ParquetDataset {
         batch_size: Option<usize>,
         limit: Option<usize>,
         offset: Option<usize>,
-        bbox: Option<[f64; 4]>,
-        bbox_paths: Option<PyGeoParquetBboxCovering>,
+        bbox: Option<PyRect>,
     ) -> PyGeoArrowResult<Bound<'py, PyAny>> {
         let options = create_options(batch_size, limit, offset, bbox, bbox_paths)?;
         let readers = self.to_readers(options)?;
@@ -468,8 +488,7 @@ impl ParquetDataset {
         batch_size: Option<usize>,
         limit: Option<usize>,
         offset: Option<usize>,
-        bbox: Option<[f64; 4]>,
-        bbox_paths: Option<PyGeoParquetBboxCovering>,
+        bbox: Option<PyRect>,
     ) -> PyGeoArrowResult<Arro3Table> {
         let runtime = get_runtime(py)?;
         let options = create_options(batch_size, limit, offset, bbox, bbox_paths)?;
