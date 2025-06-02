@@ -1,6 +1,7 @@
 #![cfg_attr(not(test), warn(unused_crate_dependencies))]
 
 mod array;
+mod array_reader;
 mod chunked_array;
 mod coord_buffer;
 mod coord_type;
@@ -10,10 +11,12 @@ mod dimension;
 mod edges;
 mod error;
 mod ffi;
+// mod input;
 mod offset_buffer;
 // mod scalar;
 
 pub use array::PyGeoArrowArray;
+pub use array_reader::PyGeoArrowArrayReader;
 pub use chunked_array::PyChunkedGeoArrowArray;
 pub use coord_buffer::PyCoordBuffer;
 pub use coord_type::PyCoordType;

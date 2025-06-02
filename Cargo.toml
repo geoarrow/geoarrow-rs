@@ -58,7 +58,8 @@ numpy = "0.25"
 object_store = "0.12"
 parquet = { version = "55", default-features = false }
 pyo3 = "0.25"
-pyo3-arrow = "0.10.1"
+# https://github.com/kylebarron/arro3/pull/354
+pyo3-arrow = { git = "https://github.com/kylebarron/arro3", rev = "a622e151587f34cf4b901a9048b16a83b601eac3" }
 pyo3-geoarrow = { path = "rust/pyo3-geoarrow" }
 rstar = "0.12.2"
 serde = "1"
