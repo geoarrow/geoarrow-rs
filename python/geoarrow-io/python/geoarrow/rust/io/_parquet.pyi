@@ -13,9 +13,9 @@ from geoarrow.rust.core.types import CoordTypeInput
 from pyproj import CRS
 
 from .enums import GeoParquetEncoding
-from .types import BboxCovering, GeoParquetEncodingT
+from .types import GeoParquetEncodingT
 
-class ParquetFile:
+class GeoParquetFile:
     @classmethod
     def open(cls, path: str, store: ObjectStore) -> ParquetFile:
         """
@@ -141,7 +141,7 @@ class ParquetFile:
             _description_
         """
 
-class ParquetDataset:
+class GeoParquetDataset:
     def __init__(self, paths: Sequence[str], store: ObjectStore) -> None:
         """
         Construct a new ParquetDataset
