@@ -199,8 +199,6 @@ class GeoParquetDataset:
         self,
         *,
         batch_size: int | None = None,
-        limit: int | None = None,
-        offset: int | None = None,
         bbox: Sequence[int | float] | None = None,
         parse_to_native: bool = True,
         coord_type: CoordTypeInput | None = None,
@@ -209,8 +207,6 @@ class GeoParquetDataset:
 
         Args:
             batch_size: _description_. Defaults to None.
-            limit: _description_. Defaults to None.
-            offset: _description_. Defaults to None.
             bbox: _description_. Defaults to None.
             bbox_paths: _description_. Defaults to None.
 
@@ -222,8 +218,6 @@ class GeoParquetDataset:
         self,
         *,
         batch_size: int | None = None,
-        limit: int | None = None,
-        offset: int | None = None,
         bbox: Sequence[int | float] | None = None,
         parse_to_native: bool = True,
         coord_type: CoordTypeInput | None = None,
@@ -232,8 +226,6 @@ class GeoParquetDataset:
 
         Args:
             batch_size: _description_. Defaults to None.
-            limit: _description_. Defaults to None.
-            offset: _description_. Defaults to None.
             bbox: _description_. Defaults to None.
             bbox_paths: _description_. Defaults to None.
 

@@ -535,16 +535,14 @@ impl GeoParquetDataset {
         &self,
         py: Python<'py>,
         batch_size: Option<usize>,
-        limit: Option<usize>,
-        offset: Option<usize>,
         bbox: Option<PyRect>,
         parse_to_native: bool,
         coord_type: Option<PyCoordType>,
     ) -> PyGeoArrowResult<Bound<'py, PyAny>> {
         let options = PyGeoParquetReadOptions {
             batch_size,
-            limit,
-            offset,
+            limit: None,
+            offset: None,
             bbox_query: bbox.map(|bbox| PyGeoParquetBboxQuery {
                 bbox,
                 column_name: None,
@@ -561,8 +559,6 @@ impl GeoParquetDataset {
         &self,
         py: Python,
         batch_size: Option<usize>,
-        limit: Option<usize>,
-        offset: Option<usize>,
         bbox: Option<PyRect>,
         parse_to_native: bool,
         coord_type: Option<PyCoordType>,
@@ -570,8 +566,8 @@ impl GeoParquetDataset {
         let runtime = get_runtime(py)?;
         let options = PyGeoParquetReadOptions {
             batch_size,
-            limit,
-            offset,
+            limit: None,
+            offset: None,
             bbox_query: bbox.map(|bbox| PyGeoParquetBboxQuery {
                 bbox,
                 column_name: None,
