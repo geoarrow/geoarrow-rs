@@ -5,10 +5,7 @@ use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::input::sync::FileWriter;
 use crate::input::{AnyFileReader, construct_reader};
 
-use futures::TryStreamExt;
-use geoparquet::reader::{
-    GeoParquetReaderBuilder, GeoParquetRecordBatchReader, GeoParquetRecordBatchStream,
-};
+use geoparquet::reader::{GeoParquetReaderBuilder, GeoParquetRecordBatchReader};
 use geoparquet::writer::{
     GeoParquetWriter, GeoParquetWriterOptions, write_geoparquet as _write_geoparquet,
 };
@@ -37,10 +34,13 @@ pub fn read_parquet(
     match reader {
         #[cfg(feature = "async")]
         AnyFileReader::Async(async_reader) => {
-            use crate::runtime::get_runtime;
+            use futures::TryStreamExt;
+            use geoparquet::reader::GeoParquetRecordBatchStream;
             use parquet::arrow::async_reader::{
                 ParquetObjectReader, ParquetRecordBatchStreamBuilder,
             };
+
+            use crate::runtime::get_runtime;
 
             let runtime = get_runtime(py)?;
 
