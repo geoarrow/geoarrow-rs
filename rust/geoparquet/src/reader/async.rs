@@ -55,6 +55,8 @@ impl<T: AsyncFileReader + Send + Unpin + 'static> Stream for GeoParquetRecordBat
 impl<T: AsyncFileReader + Unpin + Send + 'static> GeoParquetRecordBatchStream<T> {
     /// Returns the schema of this [`GeoParquetRecordBatchStream`].
     ///
+    /// This schema includes GeoArrow metadata.
+    ///
     /// All [`RecordBatch`]es returned by this stream will have the same schema as returned from
     /// this method.
     pub fn schema(&self) -> SchemaRef {

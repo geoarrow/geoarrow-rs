@@ -61,8 +61,20 @@ pub struct GeoParquetReaderMetadata {
 }
 
 impl GeoParquetReaderMetadata {
+    /// Construct a new [GeoParquetReaderMetadata] from an [ArrowReaderMetadata] and separate
+    /// [GeoParquetMetadata].
+    ///
+    /// If you don't yet have a [GeoParquetMetadata], use
+    /// [`from_arrow_meta`][Self::from_arrow_meta] instead.
+    pub fn new(meta: ArrowReaderMetadata, geo_meta: GeoParquetMetadata) -> Self {
+        Self {
+            meta,
+            geo_meta: Arc::new(geo_meta),
+        }
+    }
+
     /// Construct a new [GeoParquetReaderMetadata] from [ArrowReaderMetadata]
-    pub fn try_new(meta: ArrowReaderMetadata) -> GeoArrowResult<Self> {
+    pub fn from_arrow_meta(meta: ArrowReaderMetadata) -> GeoArrowResult<Self> {
         let geo_meta = if let Some(geo_meta) =
             GeoParquetMetadata::from_parquet_meta(meta.metadata().file_metadata())
         {
@@ -219,6 +231,7 @@ impl GeoParquetReaderMetadata {
 pub struct GeoParquetDatasetMetadata {
     files: HashMap<String, ArrowReaderMetadata>,
     geo_meta: Arc<GeoParquetMetadata>,
+    /// Raw schema from the Parquet file(s). This does not include GeoArrow metadata.
     schema: SchemaRef,
 }
 
@@ -259,6 +272,11 @@ impl GeoParquetDatasetMetadata {
                 ))?
                 .into(),
         })
+    }
+
+    /// Access underlying per-file metadata.
+    pub fn files(&self) -> &HashMap<String, ArrowReaderMetadata> {
+        &self.files
     }
 
     /// Access the geo metadata of this file.
