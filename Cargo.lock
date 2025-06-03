@@ -1759,6 +1759,7 @@ dependencies = [
  "geo-types",
  "geoarrow-array",
  "geoarrow-schema",
+ "indexmap 2.9.0",
  "parquet",
  "serde",
  "serde_json",

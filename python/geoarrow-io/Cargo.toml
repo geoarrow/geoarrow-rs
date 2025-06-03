@@ -35,6 +35,7 @@ async = [
 arrow = { workspace = true }
 bytes = "1"
 futures = { version = "0.3", optional = true }
+indexmap = { workspace = true }
 object_store = { workspace = true, features = [
     "aws",
     "azure",

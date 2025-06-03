@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
@@ -17,6 +16,7 @@ use geoparquet::reader::{
     GeoParquetDatasetMetadata, GeoParquetReaderBuilder, GeoParquetReaderMetadata,
     GeoParquetRecordBatchStream,
 };
+use indexmap::IndexMap;
 use object_store::ObjectStore;
 use parquet::arrow::ParquetRecordBatchStreamBuilder;
 use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
@@ -335,7 +335,7 @@ fn construct_file_stream(
 async fn fetch_arrow_metadata_objects(
     path_inputs: Vec<PathInput>,
     store: Arc<dyn ObjectStore>,
-) -> Result<HashMap<String, ArrowReaderMetadata>, GeoArrowError> {
+) -> Result<IndexMap<String, ArrowReaderMetadata>, GeoArrowError> {
     let paths: Vec<_> = path_inputs.iter().map(|path| path.path()).collect();
     let mut readers = path_inputs
         .iter()
@@ -355,7 +355,7 @@ async fn fetch_arrow_metadata_objects(
         .collect::<Result<Vec<_>, parquet::errors::ParquetError>>()
         .map_err(|err| GeoArrowError::External(Box::new(err)))?;
 
-    let mut hashmap: HashMap<String, ArrowReaderMetadata> = HashMap::new();
+    let mut hashmap: IndexMap<String, ArrowReaderMetadata> = IndexMap::new();
     for (path, arrow_meta) in paths.iter().zip(parquet_metas) {
         hashmap.insert(path.to_string(), arrow_meta);
     }
@@ -530,7 +530,7 @@ impl GeoParquetDataset {
     }
 
     #[allow(clippy::too_many_arguments)]
-    #[pyo3(signature = (*, batch_size=None, limit=None, offset=None, bbox=None, parse_to_native=true, coord_type=None))]
+    #[pyo3(signature = (*, batch_size=None, bbox=None, parse_to_native=true, coord_type=None))]
     fn read_async<'py>(
         &self,
         py: Python<'py>,
@@ -554,7 +554,7 @@ impl GeoParquetDataset {
     }
 
     #[allow(clippy::too_many_arguments)]
-    #[pyo3(signature = (*, batch_size=None, limit=None, offset=None, bbox=None, parse_to_native=true, coord_type=None))]
+    #[pyo3(signature = (*, batch_size=None, bbox=None, parse_to_native=true, coord_type=None))]
     fn read(
         &self,
         py: Python,
