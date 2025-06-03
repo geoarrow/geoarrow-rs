@@ -175,11 +175,6 @@ impl<T> GeoParquetReaderBuilder for ArrowReaderBuilder<T> {
         column_name: Option<&str>,
     ) -> GeoArrowResult<Self> {
         let row_groups = self.intersecting_row_groups(bbox, geo_metadata, column_name)?;
-        if row_groups.is_empty() {
-            return Err(GeoArrowError::GeoParquet(
-                "No row groups intersect with the bounding box".to_string(),
-            ));
-        }
         Ok(self.with_row_groups(row_groups))
     }
 }

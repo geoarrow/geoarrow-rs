@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
@@ -17,12 +16,15 @@ use geoparquet::reader::{
     GeoParquetDatasetMetadata, GeoParquetReaderBuilder, GeoParquetReaderMetadata,
     GeoParquetRecordBatchStream,
 };
+use indexmap::IndexMap;
 use object_store::ObjectStore;
 use parquet::arrow::ParquetRecordBatchStreamBuilder;
 use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::ParquetObjectReader;
 use pyo3::exceptions::PyValueError;
+use pyo3::intern;
 use pyo3::prelude::*;
+use pyo3::types::PyMapping;
 use pyo3::types::PyType;
 use pyo3_arrow::export::{Arro3Array, Arro3Schema, Arro3Table};
 use pyo3_arrow::{PyArray, PyTable};
@@ -104,15 +106,17 @@ impl GeoParquetFile {
     pub(crate) fn open(
         _cls: &Bound<PyType>,
         py: Python,
-        path: String,
+        path: PathInput,
         store: AnyObjectStore,
     ) -> PyGeoArrowResult<Self> {
         let runtime = get_runtime(py)?;
         let store = store.into_dyn();
         let cloned_store = store.clone();
         let (path, geoparquet_meta) = runtime.block_on(async move {
-            let path: object_store::path::Path = path.into();
-            let mut reader = ParquetObjectReader::new(cloned_store.clone(), path.clone());
+            let mut reader = ParquetObjectReader::new(cloned_store.clone(), path.path());
+            if let Some(size) = path.size() {
+                reader = reader.with_file_size(size);
+            }
             let arrow_meta = ArrowReaderMetadata::load_async(&mut reader, Default::default())
                 .await
                 .map_err(|err| GeoArrowError::External(Box::new(err)))?;
@@ -120,7 +124,7 @@ impl GeoParquetFile {
             Ok::<_, PyGeoArrowError>((path, geoparquet_meta))
         })?;
         Ok(Self {
-            path,
+            path: path.path(),
             geoparquet_meta,
             store,
         })
@@ -130,14 +134,16 @@ impl GeoParquetFile {
     pub(crate) fn open_async<'py>(
         _cls: &Bound<PyType>,
         py: Python<'py>,
-        path: String,
+        path: PathInput,
         store: AnyObjectStore,
     ) -> PyResult<Bound<'py, PyAny>> {
         let store = store.into_dyn();
         let cloned_store = store.clone();
         future_into_py(py, async move {
-            let path: object_store::path::Path = path.into();
-            let mut reader = ParquetObjectReader::new(cloned_store.clone(), path.clone());
+            let mut reader = ParquetObjectReader::new(cloned_store.clone(), path.path());
+            if let Some(size) = path.size() {
+                reader = reader.with_file_size(size);
+            }
             let arrow_meta = ArrowReaderMetadata::load_async(&mut reader, Default::default())
                 .await
                 .map_err(|err| GeoArrowError::External(Box::new(err)))
@@ -145,7 +151,7 @@ impl GeoParquetFile {
             let geoparquet_meta = GeoParquetReaderMetadata::from_arrow_meta(arrow_meta)
                 .map_err(PyGeoArrowError::GeoArrowError)?;
             Ok(Self {
-                path,
+                path: path.path(),
                 geoparquet_meta,
                 store,
             })
@@ -327,13 +333,18 @@ fn construct_file_stream(
 /// Create a reader per path with the given ObjectStore instance.
 // TODO: deduplicate with JS binding
 async fn fetch_arrow_metadata_objects(
-    paths: Vec<String>,
+    path_inputs: Vec<PathInput>,
     store: Arc<dyn ObjectStore>,
-) -> Result<HashMap<String, ArrowReaderMetadata>, GeoArrowError> {
-    let paths: Vec<object_store::path::Path> = paths.into_iter().map(|path| path.into()).collect();
-    let mut readers = paths
+) -> Result<IndexMap<String, ArrowReaderMetadata>, GeoArrowError> {
+    let paths: Vec<_> = path_inputs.iter().map(|path| path.path()).collect();
+    let mut readers = path_inputs
         .iter()
-        .map(|path| ParquetObjectReader::new(store.clone(), path.clone()))
+        .map(|path| match path {
+            PathInput::Path(path) => ParquetObjectReader::new(store.clone(), path.clone().into()),
+            PathInput::PathWithSize((path, size)) => {
+                ParquetObjectReader::new(store.clone(), path.clone().into()).with_file_size(*size)
+            }
+        })
         .collect::<Vec<_>>();
     let parquet_meta_futures = readers
         .iter_mut()
@@ -344,7 +355,7 @@ async fn fetch_arrow_metadata_objects(
         .collect::<Result<Vec<_>, parquet::errors::ParquetError>>()
         .map_err(|err| GeoArrowError::External(Box::new(err)))?;
 
-    let mut hashmap: HashMap<String, ArrowReaderMetadata> = HashMap::new();
+    let mut hashmap: IndexMap<String, ArrowReaderMetadata> = IndexMap::new();
     for (path, arrow_meta) in paths.iter().zip(parquet_metas) {
         hashmap.insert(path.to_string(), arrow_meta);
     }
@@ -410,10 +421,47 @@ impl GeoParquetDataset {
     }
 }
 
+pub enum PathInput {
+    Path(String),
+    PathWithSize((String, u64)),
+}
+
+impl PathInput {
+    fn path(&self) -> object_store::path::Path {
+        match self {
+            PathInput::Path(path) | PathInput::PathWithSize((path, _)) => path.clone().into(),
+        }
+    }
+
+    fn size(&self) -> Option<u64> {
+        match self {
+            PathInput::Path(_) => None,
+            PathInput::PathWithSize((_, size)) => Some(*size),
+        }
+    }
+}
+
+impl<'py> FromPyObject<'py> for PathInput {
+    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
+        let py = ob.py();
+        if let Ok(path) = ob.extract::<String>() {
+            Ok(PathInput::Path(path))
+        } else if let Ok(mapping) = ob.downcast::<PyMapping>() {
+            let path = mapping.get_item(intern!(py, "path"))?.extract::<String>()?;
+            let size = mapping.get_item(intern!(py, "size"))?.extract()?;
+            Ok(PathInput::PathWithSize((path, size)))
+        } else {
+            Err(PyValueError::new_err(
+                "Expected a string or a dict with keys 'path' and 'size'",
+            ))
+        }
+    }
+}
+
 #[pymethods]
 impl GeoParquetDataset {
     #[new]
-    pub fn new(py: Python, paths: Vec<String>, store: AnyObjectStore) -> PyGeoArrowResult<Self> {
+    pub fn new(py: Python, paths: Vec<PathInput>, store: AnyObjectStore) -> PyGeoArrowResult<Self> {
         let runtime = get_runtime(py)?;
         let store = store.into_dyn();
         let cloned_store = store.clone();
@@ -456,22 +504,45 @@ impl GeoParquetDataset {
         Ok(self.meta.crs(column_name)?.into())
     }
 
+    fn fragment(&self, path: &str) -> PyGeoArrowResult<GeoParquetFile> {
+        if let Some(meta) = self.meta.files().get(path) {
+            Ok(GeoParquetFile {
+                path: path.into(),
+                geoparquet_meta: GeoParquetReaderMetadata::from_arrow_meta(meta.clone()).unwrap(),
+                store: self.store.clone(),
+            })
+        } else {
+            Err(PyValueError::new_err(format!("File '{}' not found in dataset", path)).into())
+        }
+    }
+
+    #[getter]
+    fn fragments(&self) -> Vec<GeoParquetFile> {
+        self.meta
+            .files()
+            .iter()
+            .map(|(path, meta)| GeoParquetFile {
+                path: path.clone().into(),
+                geoparquet_meta: GeoParquetReaderMetadata::from_arrow_meta(meta.clone()).unwrap(),
+                store: self.store.clone(),
+            })
+            .collect()
+    }
+
     #[allow(clippy::too_many_arguments)]
-    #[pyo3(signature = (*, batch_size=None, limit=None, offset=None, bbox=None, parse_to_native=true, coord_type=None))]
+    #[pyo3(signature = (*, batch_size=None, bbox=None, parse_to_native=true, coord_type=None))]
     fn read_async<'py>(
         &self,
         py: Python<'py>,
         batch_size: Option<usize>,
-        limit: Option<usize>,
-        offset: Option<usize>,
         bbox: Option<PyRect>,
         parse_to_native: bool,
         coord_type: Option<PyCoordType>,
     ) -> PyGeoArrowResult<Bound<'py, PyAny>> {
         let options = PyGeoParquetReadOptions {
             batch_size,
-            limit,
-            offset,
+            limit: None,
+            offset: None,
             bbox_query: bbox.map(|bbox| PyGeoParquetBboxQuery {
                 bbox,
                 column_name: None,
@@ -483,13 +554,11 @@ impl GeoParquetDataset {
     }
 
     #[allow(clippy::too_many_arguments)]
-    #[pyo3(signature = (*, batch_size=None, limit=None, offset=None, bbox=None, parse_to_native=true, coord_type=None))]
+    #[pyo3(signature = (*, batch_size=None, bbox=None, parse_to_native=true, coord_type=None))]
     fn read(
         &self,
         py: Python,
         batch_size: Option<usize>,
-        limit: Option<usize>,
-        offset: Option<usize>,
         bbox: Option<PyRect>,
         parse_to_native: bool,
         coord_type: Option<PyCoordType>,
@@ -497,8 +566,8 @@ impl GeoParquetDataset {
         let runtime = get_runtime(py)?;
         let options = PyGeoParquetReadOptions {
             batch_size,
-            limit,
-            offset,
+            limit: None,
+            offset: None,
             bbox_query: bbox.map(|bbox| PyGeoParquetBboxQuery {
                 bbox,
                 column_name: None,

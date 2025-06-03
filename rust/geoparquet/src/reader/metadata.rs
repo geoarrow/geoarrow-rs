@@ -1,10 +1,10 @@
-use std::collections::HashMap;
 use std::sync::Arc;
 
 use arrow_schema::SchemaRef;
 use geoarrow_array::array::RectArray;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, Crs, Metadata};
+use indexmap::IndexMap;
 use parquet::arrow::arrow_reader::ArrowReaderMetadata;
 use parquet::file::metadata::ParquetMetaData;
 use parquet::schema::types::SchemaDescriptor;
@@ -229,7 +229,7 @@ impl GeoParquetReaderMetadata {
 /// 2. Using a cached copy of the [`ParquetMetaData`] rather than reading it from the file each
 ///    time a reader is constructed.
 pub struct GeoParquetDatasetMetadata {
-    files: HashMap<String, ArrowReaderMetadata>,
+    files: IndexMap<String, ArrowReaderMetadata>,
     geo_meta: Arc<GeoParquetMetadata>,
     /// Raw schema from the Parquet file(s). This does not include GeoArrow metadata.
     schema: SchemaRef,
@@ -237,7 +237,7 @@ pub struct GeoParquetDatasetMetadata {
 
 impl GeoParquetDatasetMetadata {
     /// Construct dataset metadata from a key-value map of [ArrowReaderMetadata].
-    pub fn from_files(metas: HashMap<String, ArrowReaderMetadata>) -> GeoArrowResult<Self> {
+    pub fn from_files(metas: IndexMap<String, ArrowReaderMetadata>) -> GeoArrowResult<Self> {
         if metas.is_empty() {
             return Err(GeoArrowError::GeoParquet("No files provided".to_string()));
         }
@@ -275,7 +275,7 @@ impl GeoParquetDatasetMetadata {
     }
 
     /// Access underlying per-file metadata.
-    pub fn files(&self) -> &HashMap<String, ArrowReaderMetadata> {
+    pub fn files(&self) -> &IndexMap<String, ArrowReaderMetadata> {
         &self.files
     }
 

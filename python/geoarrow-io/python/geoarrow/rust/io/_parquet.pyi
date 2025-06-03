@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import BinaryIO, List, Optional, Sequence, Union
+from typing import BinaryIO, List, Optional, Sequence, TypedDict, Union
 
 from arro3.core import Array, Schema, Table
 from arro3.core.types import (
@@ -15,9 +15,21 @@ from pyproj import CRS
 from .enums import GeoParquetEncoding
 from .types import GeoParquetEncodingT
 
+class PathInput(TypedDict):
+    path: str
+    """The path to the file."""
+
+    size: int
+    """The size of the file in bytes.
+
+    If this is provided, only bounded range requests will be made instead of suffix
+    requests. This is useful for object stores that do not support suffix requests, in
+    particular Azure.
+    """
+
 class GeoParquetFile:
     @classmethod
-    def open(cls, path: str, store: ObjectStore) -> GeoParquetFile:
+    def open(cls, path: str | PathInput, store: ObjectStore) -> GeoParquetFile:
         """
         Open a Parquet file from the given path.
 
@@ -29,7 +41,9 @@ class GeoParquetFile:
         """
 
     @classmethod
-    async def open_async(cls, path: str, store: ObjectStore) -> GeoParquetFile:
+    async def open_async(
+        cls, path: str | PathInput, store: ObjectStore
+    ) -> GeoParquetFile:
         """
         Open a Parquet file from the given path asynchronously.
 
@@ -142,7 +156,9 @@ class GeoParquetFile:
         """
 
 class GeoParquetDataset:
-    def __init__(self, paths: Sequence[str], store: ObjectStore) -> None:
+    def __init__(
+        self, paths: Sequence[str] | Sequence[PathInput], store: ObjectStore
+    ) -> None:
         """
         Construct a new ParquetDataset
 
@@ -176,12 +192,17 @@ class GeoParquetDataset:
         Returns:
             CRS
         """
+
+    def fragment(self, path: str) -> GeoParquetFile:
+        """Get a single file from this dataset."""
+    @property
+    def fragments(self) -> List[GeoParquetFile]:
+        """Get the list of files in this dataset."""
+
     async def read_async(
         self,
         *,
         batch_size: int | None = None,
-        limit: int | None = None,
-        offset: int | None = None,
         bbox: Sequence[int | float] | None = None,
         parse_to_native: bool = True,
         coord_type: CoordTypeInput | None = None,
@@ -190,8 +211,6 @@ class GeoParquetDataset:
 
         Args:
             batch_size: _description_. Defaults to None.
-            limit: _description_. Defaults to None.
-            offset: _description_. Defaults to None.
             bbox: _description_. Defaults to None.
             bbox_paths: _description_. Defaults to None.
 
@@ -203,8 +222,6 @@ class GeoParquetDataset:
         self,
         *,
         batch_size: int | None = None,
-        limit: int | None = None,
-        offset: int | None = None,
         bbox: Sequence[int | float] | None = None,
         parse_to_native: bool = True,
         coord_type: CoordTypeInput | None = None,
@@ -213,8 +230,6 @@ class GeoParquetDataset:
 
         Args:
             batch_size: _description_. Defaults to None.
-            limit: _description_. Defaults to None.
-            offset: _description_. Defaults to None.
             bbox: _description_. Defaults to None.
             bbox_paths: _description_. Defaults to None.
 

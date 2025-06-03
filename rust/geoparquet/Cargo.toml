@@ -32,6 +32,7 @@ geo-traits = { workspace = true }
 geo-types = { workspace = true }
 geoarrow-array = { workspace = true }
 geoarrow-schema = { workspace = true }
+indexmap = { workspace = true }
 parquet = { workspace = true, features = ["arrow"] }
 serde = { workspace = true, features = ["derive"] }
 serde_with = { workspace = true }
