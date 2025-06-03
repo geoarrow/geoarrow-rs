@@ -29,7 +29,7 @@ class PathInput(TypedDict):
 
 class GeoParquetFile:
     @classmethod
-    def open(cls, path: PathInput, store: ObjectStore) -> GeoParquetFile:
+    def open(cls, path: str | PathInput, store: ObjectStore) -> GeoParquetFile:
         """
         Open a Parquet file from the given path.
 
@@ -41,7 +41,9 @@ class GeoParquetFile:
         """
 
     @classmethod
-    async def open_async(cls, path: PathInput, store: ObjectStore) -> GeoParquetFile:
+    async def open_async(
+        cls, path: str | PathInput, store: ObjectStore
+    ) -> GeoParquetFile:
         """
         Open a Parquet file from the given path asynchronously.
 
@@ -154,7 +156,9 @@ class GeoParquetFile:
         """
 
 class GeoParquetDataset:
-    def __init__(self, paths: Sequence[str], store: ObjectStore) -> None:
+    def __init__(
+        self, paths: Sequence[str] | Sequence[PathInput], store: ObjectStore
+    ) -> None:
         """
         Construct a new ParquetDataset
 
