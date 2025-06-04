@@ -4,7 +4,7 @@ from typing import Tuple, overload
 
 from arro3.core import Array, ChunkedArray, Table
 from arro3.core.types import ArrowArrayExportable, ArrowStreamExportable
-from geoarrow.rust.core import ChunkedNativeArray, NativeArray
+from geoarrow.rust.core import GeoArrowArray, ChunkedGeoArrowArray
 
 from .enums import AreaMethod, LengthMethod, RotateOrigin, SimplifyMethod
 from .types import (
@@ -23,14 +23,14 @@ from .types import (
 @overload
 def affine_transform(
     input: ArrowArrayExportable, transform: AffineTransform
-) -> NativeArray: ...
+) -> GeoArrowArray: ...
 @overload
 def affine_transform(
     input: ArrowStreamExportable, transform: AffineTransform
-) -> ChunkedNativeArray: ...
+) -> ChunkedGeoArrowArray: ...
 def affine_transform(
     input: ArrowArrayExportable | ArrowStreamExportable, transform: AffineTransform
-) -> NativeArray | ChunkedNativeArray:
+) -> GeoArrowArray | ChunkedGeoArrowArray:
     """
     Apply an affine transformation to geometries.
 
@@ -39,7 +39,7 @@ def affine_transform(
 
     Args:
         input: input geometry array or chunked geometry array other: an affine
-        transformation to apply to all geometries.
+            transformation to apply to all geometries.
 
             This integrates with the [`affine`](https://github.com/rasterio/affine)
             Python library, and most users should use that integration, though it allows
@@ -83,12 +83,12 @@ def area(
     """
 
 @overload
-def center(input: ArrowArrayExportable) -> NativeArray: ...
+def center(input: ArrowArrayExportable) -> GeoArrowArray: ...
 @overload
-def center(input: ArrowStreamExportable) -> ChunkedNativeArray: ...
+def center(input: ArrowStreamExportable) -> ChunkedGeoArrowArray: ...
 def center(
     input: ArrowArrayExportable | ArrowStreamExportable,
-) -> NativeArray | ChunkedNativeArray:
+) -> GeoArrowArray | ChunkedGeoArrowArray:
     """
     Compute the center of geometries
 
@@ -103,12 +103,12 @@ def center(
     """
 
 @overload
-def centroid(input: ArrowArrayExportable) -> NativeArray: ...
+def centroid(input: ArrowArrayExportable) -> GeoArrowArray: ...
 @overload
-def centroid(input: ArrowStreamExportable) -> ChunkedNativeArray: ...
+def centroid(input: ArrowStreamExportable) -> ChunkedGeoArrowArray: ...
 def centroid(
     input: ArrowArrayExportable | ArrowStreamExportable,
-) -> NativeArray | ChunkedNativeArray:
+) -> GeoArrowArray | ChunkedGeoArrowArray:
     """
     Calculation of the centroid.
 
@@ -129,15 +129,15 @@ def centroid(
 @overload
 def chaikin_smoothing(
     input: ArrowArrayExportable, n_iterations: int
-) -> NativeArray: ...
+) -> GeoArrowArray: ...
 @overload
 def chaikin_smoothing(
     input: ArrowStreamExportable, n_iterations: int
-) -> ChunkedNativeArray: ...
+) -> ChunkedGeoArrowArray: ...
 def chaikin_smoothing(
     input: ArrowArrayExportable | ArrowStreamExportable,
     n_iterations: int,
-) -> NativeArray | ChunkedNativeArray:
+) -> GeoArrowArray | ChunkedGeoArrowArray:
     """
     Smoothen `LineString`, `Polygon`, `MultiLineString` and `MultiPolygon` using
     Chaikins algorithm.
@@ -161,12 +161,12 @@ def chaikin_smoothing(
     """
 
 @overload
-def convex_hull(input: ArrowArrayExportable) -> NativeArray: ...
+def convex_hull(input: ArrowArrayExportable) -> GeoArrowArray: ...
 @overload
-def convex_hull(input: ArrowStreamExportable) -> ChunkedNativeArray: ...
+def convex_hull(input: ArrowStreamExportable) -> ChunkedGeoArrowArray: ...
 def convex_hull(
     input: ArrowArrayExportable | ArrowStreamExportable,
-) -> NativeArray | ChunkedNativeArray:
+) -> GeoArrowArray | ChunkedGeoArrowArray:
     """
     Returns the convex hull of a Polygon. The hull is always oriented
     counter-clockwise.
@@ -184,14 +184,14 @@ def convex_hull(
     """
 
 @overload
-def densify(input: ArrowArrayExportable, max_distance: float) -> NativeArray: ...
+def densify(input: ArrowArrayExportable, max_distance: float) -> GeoArrowArray: ...
 @overload
 def densify(
     input: ArrowStreamExportable, max_distance: float
-) -> ChunkedNativeArray: ...
+) -> ChunkedGeoArrowArray: ...
 def densify(
     input: ArrowArrayExportable, max_distance: float
-) -> NativeArray | ChunkedNativeArray:
+) -> GeoArrowArray | ChunkedGeoArrowArray:
     """
     Return a new linear geometry containing both existing and new interpolated
     coordinates with a maximum distance of `max_distance` between them.
@@ -207,12 +207,12 @@ def densify(
     """
 
 @overload
-def envelope(input: ArrowArrayExportable) -> NativeArray: ...
+def envelope(input: ArrowArrayExportable) -> GeoArrowArray: ...
 @overload
-def envelope(input: ArrowStreamExportable) -> ChunkedNativeArray: ...
+def envelope(input: ArrowStreamExportable) -> ChunkedGeoArrowArray: ...
 def envelope(
     input: ArrowArrayExportable | ArrowStreamExportable,
-) -> NativeArray | ChunkedNativeArray:
+) -> GeoArrowArray | ChunkedGeoArrowArray:
     """
     Computes the minimum axis-aligned bounding box that encloses an input geometry
 
@@ -261,12 +261,9 @@ def frechet_distance(
 
     Args:
         input: input geometry array or chunked geometry array other: the geometry or
-        geometry array to compare against. This must contain geometries of
-            `LineString`` type. A variety of inputs are accepted:
+            geometry array to compare against. This must contain geometries of
+            `LineString` type. A variety of inputs are accepted:
 
-            - A scalar [`LineString`][geoarrow.rust.core.LineString]
-            - A [`LineStringArray`][geoarrow.rust.core.LineStringArray]
-            - A [`ChunkedLineStringArray`][geoarrow.rust.core.ChunkedLineStringArray]
             - Any Python class that implements the Geo Interface, such as a [`shapely`
               LineString][shapely.LineString]
             - Any GeoArrow array or chunked array of `LineString` type
@@ -359,12 +356,12 @@ def length(
 def line_interpolate_point(
     input: ArrowArrayExportable,
     fraction: float | int | ArrowArrayExportable | NumpyArrayProtocolf64,
-) -> NativeArray: ...
+) -> GeoArrowArray: ...
 @overload
 def line_interpolate_point(
     input: ArrowStreamExportable,
     fraction: float | int | ArrowStreamExportable,
-) -> ChunkedNativeArray: ...
+) -> ChunkedGeoArrowArray: ...
 def line_interpolate_point(
     input: ArrowArrayExportable | ArrowStreamExportable,
     fraction: float
@@ -372,7 +369,7 @@ def line_interpolate_point(
     | ArrowArrayExportable
     | ArrowStreamExportable
     | NumpyArrayProtocolf64,
-) -> NativeArray | ChunkedNativeArray:
+) -> GeoArrowArray | ChunkedGeoArrowArray:
     """
     Returns a point interpolated at given distance on a line.
 
@@ -428,8 +425,8 @@ def line_locate_point(
         point: the fractional distance along the line. A variety of inputs are accepted:
 
             - A scalar [`Geometry`][geoarrow.rust.core.Geometry]
-            - A [`NativeArray`][geoarrow.rust.core.NativeArray]
-            - A [`ChunkedNativeArray`][geoarrow.rust.core.ChunkedNativeArray]
+            - A [`GeoArrowArray`][geoarrow.rust.core.GeoArrowArray]
+            - A [`ChunkedGeoArrowArray`][geoarrow.rust.core.ChunkedGeoArrowArray]
             - Any Python class that implements the Geo Interface, such as a [`shapely` Point][shapely.Point]
             - Any GeoArrow array or chunked array of `Point` type
 
@@ -441,16 +438,16 @@ def line_locate_point(
 def polylabel(
     input: ArrowArrayExportable,
     tolerance: float,
-) -> NativeArray: ...
+) -> GeoArrowArray: ...
 @overload
 def polylabel(
     input: ArrowStreamExportable,
     tolerance: float,
-) -> ChunkedNativeArray: ...
+) -> ChunkedGeoArrowArray: ...
 def polylabel(
     input: ArrowArrayExportable | ArrowStreamExportable,
     tolerance: float,
-) -> NativeArray | ChunkedNativeArray:
+) -> GeoArrowArray | ChunkedGeoArrowArray:
     """
     Calculate a Polygon's ideal label position by calculating its _pole of inaccessibility_.
 
@@ -494,8 +491,8 @@ def signed_area(
         input: input geometry array or chunked geometry array
 
     Other args:
-         method: The method to use for area calculation. One of "Ellipsoidal", "Euclidean", or
-            "Spherical". Refer to the documentation on
+        method: The method to use for area calculation. One of "Ellipsoidal"
+            "Euclidean", or "Spherical". Refer to the documentation on
             [AreaMethod][geoarrow.rust.compute.enums.AreaMethod] for more information.
 
     Returns:
@@ -508,29 +505,29 @@ def rotate(
     angle: float,
     *,
     origin: RotateOrigin | RotateOriginT | tuple[float, float],
-) -> NativeArray: ...
+) -> GeoArrowArray: ...
 @overload
 def rotate(
     geom: ArrowStreamExportable,
     angle: float,
     *,
     origin: RotateOrigin | RotateOriginT | tuple[float, float],
-) -> ChunkedNativeArray: ...
+) -> ChunkedGeoArrowArray: ...
 def rotate(
     geom: ArrowArrayExportable | ArrowStreamExportable,
     angle: float,
     *,
     origin: RotateOrigin | RotateOriginT | tuple[float, float],
-) -> NativeArray | ChunkedNativeArray: ...
+) -> GeoArrowArray | ChunkedGeoArrowArray: ...
 @overload
-def scale(geom: ArrowArrayExportable, xfact: float, yfact: float) -> NativeArray: ...
+def scale(geom: ArrowArrayExportable, xfact: float, yfact: float) -> GeoArrowArray: ...
 @overload
 def scale(
     geom: ArrowStreamExportable, xfact: float, yfact: float
-) -> ChunkedNativeArray: ...
+) -> ChunkedGeoArrowArray: ...
 def scale(
     geom: ArrowArrayExportable | ArrowStreamExportable, xfact: float, yfact: float
-) -> NativeArray | ChunkedNativeArray:
+) -> GeoArrowArray | ChunkedGeoArrowArray:
     """Returns a scaled geometry, scaled by factors along each dimension.
 
     Args:
@@ -548,20 +545,20 @@ def simplify(
     epsilon: float,
     *,
     method: SimplifyMethod | SimplifyMethodT = SimplifyMethod.RDP,
-) -> NativeArray: ...
+) -> GeoArrowArray: ...
 @overload
 def simplify(
     input: ArrowStreamExportable,
     epsilon: float,
     *,
     method: SimplifyMethod | SimplifyMethodT = SimplifyMethod.RDP,
-) -> ChunkedNativeArray: ...
+) -> ChunkedGeoArrowArray: ...
 def simplify(
     input: ArrowArrayExportable | ArrowStreamExportable,
     epsilon: float,
     *,
     method: SimplifyMethod | SimplifyMethodT = SimplifyMethod.RDP,
-) -> NativeArray | ChunkedNativeArray:
+) -> GeoArrowArray | ChunkedGeoArrowArray:
     """
     Simplifies a geometry.
 
@@ -581,12 +578,12 @@ def simplify(
     """
 
 @overload
-def skew(geom: ArrowArrayExportable, xs: float, ys: float) -> NativeArray: ...
+def skew(geom: ArrowArrayExportable, xs: float, ys: float) -> GeoArrowArray: ...
 @overload
-def skew(geom: ArrowStreamExportable, xs: float, ys: float) -> ChunkedNativeArray: ...
+def skew(geom: ArrowStreamExportable, xs: float, ys: float) -> ChunkedGeoArrowArray: ...
 def skew(
     geom: ArrowArrayExportable | ArrowStreamExportable, xs: float, ys: float
-) -> NativeArray | ChunkedNativeArray:
+) -> GeoArrowArray | ChunkedGeoArrowArray:
     """
     Skew a geometry from it's bounding box center, using different values for `xs` and
     `ys` to distort the geometry's [aspect
@@ -602,14 +599,16 @@ def skew(
     """
 
 @overload
-def translate(geom: ArrowArrayExportable, xoff: float, yoff: float) -> NativeArray: ...
+def translate(
+    geom: ArrowArrayExportable, xoff: float, yoff: float
+) -> GeoArrowArray: ...
 @overload
 def translate(
     geom: ArrowStreamExportable, xoff: float, yoff: float
-) -> ChunkedNativeArray: ...
+) -> ChunkedGeoArrowArray: ...
 def translate(
     geom: ArrowArrayExportable | ArrowStreamExportable, xoff: float, yoff: float
-) -> NativeArray | ChunkedNativeArray:
+) -> GeoArrowArray | ChunkedGeoArrowArray:
     """Returns a scaled geometry, scaled by factors along each dimension.
 
     Args:

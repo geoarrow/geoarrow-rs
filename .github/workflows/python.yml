@@ -133,6 +133,11 @@ jobs:
           uv run maturin develop -m geoarrow-compute/Cargo.toml
           uv run maturin develop -m geoarrow-io/Cargo.toml
 
+      # Ensure docs build without warnings
+      - name: Check docs
+        if: "${{ matrix.python-version == 3.12 }}"
+        run: uv run mkdocs build --strict
+
       # - name: Run python tests
       #   run: |
       #     uv run pytest tests
