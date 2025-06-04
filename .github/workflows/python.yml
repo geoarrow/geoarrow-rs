@@ -135,7 +135,7 @@ jobs:
 
       # Ensure docs build without warnings
       - name: Check docs
-        if: "${{ matrix.python-version == 3.11 }}"
+        if: "${{ matrix.python-version == 3.12 }}"
         run: uv run mkdocs build --strict
 
       # - name: Run python tests
