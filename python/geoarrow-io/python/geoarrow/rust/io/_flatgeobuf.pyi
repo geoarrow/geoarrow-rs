@@ -66,8 +66,8 @@ def read_flatgeobuf(
         store: an ObjectStore instance for this url. This is required only if the file is at a remote
             location.
         batch_size: the number of rows to include in each internal batch of the table.
-        bbox: A spatial filter for reading rows, of the format (minx, miny, maxx, maxy). If set to
-        `None`, no spatial filtering will be performed.
+        bbox: A spatial filter for reading rows, of the format (minx, miny, maxx, maxy).
+            If set to `None`, no spatial filtering will be performed.
 
     Returns:
         Table from FlatGeobuf file.

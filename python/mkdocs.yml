@@ -34,10 +34,10 @@ nav:
           # - api/core/functions.md
           - api/core/enums.md
           - api/core/types.md
-      - geoarrow.rust.compute:
-          - api/compute/functions.md
-          - api/compute/enums.md
-          - api/compute/types.md
+      # - geoarrow.rust.compute:
+      #     - api/compute/functions.md
+      #     - api/compute/enums.md
+      #     - api/compute/types.md
       - geoarrow.rust.io:
           - api/io/arrow_ipc.md
           - api/io/csv.md
@@ -52,9 +52,8 @@ nav:
       - ecosystem/lonboard.md
       - ecosystem/pyogrio.md
       - ecosystem/shapely.md
-  - Performance:
-      - performance/multithreading.md
   - Changelog: CHANGELOG.md
+  - Developing: DEVELOP.md
 
   # - Caveats: caveats.md
   # - Performance: performance.md

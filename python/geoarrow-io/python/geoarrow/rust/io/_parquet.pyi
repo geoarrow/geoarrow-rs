@@ -127,7 +127,6 @@ class GeoParquetFile:
             limit: _description_. Defaults to None.
             offset: _description_. Defaults to None.
             bbox: _description_. Defaults to None.
-            bbox_paths: _description_. Defaults to None.
 
         Returns:
             _description_
@@ -149,7 +148,6 @@ class GeoParquetFile:
             limit: _description_. Defaults to None.
             offset: _description_. Defaults to None.
             bbox: _description_. Defaults to None.
-            bbox_paths: _description_. Defaults to None.
 
         Returns:
             _description_
@@ -212,7 +210,6 @@ class GeoParquetDataset:
         Args:
             batch_size: _description_. Defaults to None.
             bbox: _description_. Defaults to None.
-            bbox_paths: _description_. Defaults to None.
 
         Returns:
             _description_
@@ -231,7 +228,6 @@ class GeoParquetDataset:
         Args:
             batch_size: _description_. Defaults to None.
             bbox: _description_. Defaults to None.
-            bbox_paths: _description_. Defaults to None.
 
         Returns:
             _description_
