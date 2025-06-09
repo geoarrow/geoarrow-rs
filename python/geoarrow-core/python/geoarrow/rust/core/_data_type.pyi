@@ -34,7 +34,7 @@ class GeoArrowType:
 
     `geoarrow-types` is recommended to register GeoArrow extension types into the pyarrow type registry.
 
-    ```
+    ```py
     from geoarrow.types.type_pyarrow import register_extension_types
     from geoarrow.rust.core import point
 
