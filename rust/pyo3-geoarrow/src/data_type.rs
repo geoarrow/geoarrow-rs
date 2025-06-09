@@ -145,6 +145,13 @@ impl PyGeoArrowType {
     fn edges(&self) -> Option<PyEdges> {
         self.0.metadata().edges().map(|e| e.into())
     }
+
+    #[pyo3(signature = (crs=None, *, edges=None))]
+    fn with_crs(&self, crs: Option<PyCrs>, edges: Option<PyEdges>) -> Self {
+        let edges = edges.map(|e| e.into());
+        let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
+        Self(self.0.clone().with_metadata(metadata))
+    }
 }
 
 impl AsRef<GeoArrowType> for PyGeoArrowType {

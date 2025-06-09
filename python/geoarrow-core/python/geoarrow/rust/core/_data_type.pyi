@@ -81,6 +81,17 @@ class GeoArrowType:
     @property
     def edges(self) -> Edges | None:
         """The edge interpolation of this type."""
+    def with_crs(
+        self, crs: CRSInput | None = None, *, edges: EdgesInput | None = None
+    ) -> GeoArrowType:
+        """Return a new type with the given CRS and edge interpolation.
+
+        Args:
+            crs: the CRS of the type. Defaults to None.
+
+        Keyword Args:
+            edges: the edge interpolation of the type. Defaults to None.
+        """
 
 def point(
     dimension: DimensionInput,
