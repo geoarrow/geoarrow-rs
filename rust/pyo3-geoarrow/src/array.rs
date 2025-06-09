@@ -80,10 +80,16 @@ impl PyGeoArrowArray {
         Ok(to_array_pycapsules(py, field, &array, requested_schema)?)
     }
 
-    // /// Check for equality with other object.
-    // fn __eq__(&self, other: &PyGeoArrowArray) -> bool {
-    //     self.0 == other.0
-    // }
+    /// Check for equality with other object.
+    fn __eq__(&self, other: &Bound<PyAny>) -> bool {
+        // Do extraction within body because `__eq__` should never raise an exception.
+        if let Ok(other) = other.extract::<Self>() {
+            self.0.data_type() == other.0.data_type()
+                && self.0.to_array_ref() == other.0.to_array_ref()
+        } else {
+            false
+        }
+    }
 
     // #[getter]
     // fn __geo_interface__<'py>(&'py self, py: Python<'py>) -> PyGeoArrowResult<Bound<'py, PyAny>> {
@@ -128,7 +134,7 @@ impl PyGeoArrowArray {
     }
 
     fn __repr__(&self) -> String {
-        "geoarrow.rust.core.NativeArray".to_string()
+        "GeoArrowArray".to_string()
     }
 
     #[classmethod]
@@ -157,6 +163,10 @@ impl PyGeoArrowArray {
         Ok(Self(casted))
     }
 
+    #[pyo3(
+        signature = (*, coord_type = PyCoordType::Separated),
+        text_signature = "(*, coord_type='separated')"
+    )]
     fn downcast(&self, coord_type: PyCoordType) -> PyGeoArrowResult<Self> {
         if let Some((native_type, dim)) =
             geoarrow_cast::downcast::infer_downcast_type(std::iter::once(self.0.as_ref()))?
