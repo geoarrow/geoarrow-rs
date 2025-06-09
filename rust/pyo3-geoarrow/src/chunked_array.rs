@@ -15,8 +15,9 @@ use pyo3_arrow::ffi::{ArrayIterator, to_stream_pycapsule};
 use pyo3_arrow::input::AnyArray;
 use pyo3_arrow::{PyArrayReader, PyChunkedArray};
 
+use crate::data_type::PyGeoArrowType;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
-use crate::{PyCoordType, PyGeoArrowArray, PyGeoArrowType};
+use crate::{PyCoordType, PyGeoArrowArray};
 
 #[pyclass(
     module = "geoarrow.rust.core",

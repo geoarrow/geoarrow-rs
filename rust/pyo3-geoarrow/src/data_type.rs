@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
 use geoarrow_schema::{
-    BoxType, GeoArrowType, GeometryCollectionType, GeometryType, LineStringType, Metadata,
-    MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType, WkbType,
-    WktType,
+    BoxType, CoordType, GeoArrowType, GeometryCollectionType, GeometryType, LineStringType,
+    Metadata, MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType,
+    WkbType, WktType,
 };
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyType};
@@ -54,8 +54,62 @@ impl PyGeoArrowType {
     }
 
     fn __repr__(&self) -> String {
-        // TODO: implement Display for GeoArrowType
-        format!("geoarrow.rust.core.GeoArrowType({:?})", self.0)
+        fn repr_coord_type(coord_type: CoordType) -> &'static str {
+            match coord_type {
+                CoordType::Interleaved => "interleaved",
+                CoordType::Separated => "separated",
+            }
+        }
+
+        use GeoArrowType::*;
+        match &self.0 {
+            Point(typ) => format!(
+                "GeoArrowType(Point(dimension=\"{}\", coord_type=\"{}\"))",
+                typ.dimension(),
+                repr_coord_type(typ.coord_type())
+            ),
+            LineString(typ) => format!(
+                "GeoArrowType(LineString(dimension=\"{}\", coord_type=\"{}\"))",
+                typ.dimension(),
+                repr_coord_type(typ.coord_type())
+            ),
+            Polygon(typ) => format!(
+                "GeoArrowType(Polygon(dimension=\"{}\", coord_type=\"{}\"))",
+                typ.dimension(),
+                repr_coord_type(typ.coord_type())
+            ),
+            MultiPoint(typ) => format!(
+                "GeoArrowType(MultiPoint(dimension=\"{}\", coord_type=\"{}\"))",
+                typ.dimension(),
+                repr_coord_type(typ.coord_type())
+            ),
+            MultiLineString(typ) => format!(
+                "GeoArrowType(MultiLineString(dimension=\"{}\", coord_type=\"{}\"))",
+                typ.dimension(),
+                repr_coord_type(typ.coord_type())
+            ),
+            MultiPolygon(typ) => format!(
+                "GeoArrowType(MultiPolygon(dimension=\"{}\", coord_type=\"{}\"))",
+                typ.dimension(),
+                repr_coord_type(typ.coord_type())
+            ),
+            Geometry(typ) => format!(
+                "GeoArrowType(Geometry(coord_type=\"{}\"))",
+                repr_coord_type(typ.coord_type())
+            ),
+            GeometryCollection(typ) => format!(
+                "GeoArrowType(GeometryCollection(dimension=\"{}\", coord_type=\"{}\"))",
+                typ.dimension(),
+                repr_coord_type(typ.coord_type())
+            ),
+            Rect(typ) => format!("GeoArrowType(Box(dimension=\"{}\"))", typ.dimension()),
+            Wkb(_) => "GeoArrowType(Wkb)".to_string(),
+            LargeWkb(_) => "GeoArrowType(LargeWkb)".to_string(),
+            WkbView(_) => "GeoArrowType(WkbView)".to_string(),
+            Wkt(_) => "GeoArrowType(Wkt)".to_string(),
+            LargeWkt(_) => "GeoArrowType(LargeWkt)".to_string(),
+            WktView(_) => "GeoArrowType(WktView)".to_string(),
+        }
     }
 
     #[classmethod]
@@ -144,13 +198,14 @@ impl_from_geoarrow_type!(MultiPolygonType, MultiPolygon);
 impl_from_geoarrow_type!(GeometryType, Geometry);
 impl_from_geoarrow_type!(GeometryCollectionType, GeometryCollection);
 impl_from_geoarrow_type!(BoxType, Rect);
-impl_from_geoarrow_type!(WkbType, Wkb);
-impl_from_geoarrow_type!(WktType, Wkt);
 
 macro_rules! impl_native_type_constructor {
     ($fn_name:ident, $geoarrow_type:ty) => {
         #[pyfunction]
-        #[pyo3(signature = (dimension, coord_type, *, crs=None, edges=None))]
+        #[pyo3(
+            signature = (dimension, *, coord_type = PyCoordType::Separated, crs=None, edges=None),
+            text_signature = "(dimension, *, coord_type='separated', crs=None, edges=None)"
+        )]
         pub fn $fn_name(
             dimension: PyDimension,
             coord_type: PyCoordType,
@@ -183,7 +238,10 @@ pub fn r#box(dimension: PyDimension, crs: Option<PyCrs>, edges: Option<PyEdges>)
 }
 
 #[pyfunction]
-#[pyo3(signature = (coord_type, *, crs=None, edges=None))]
+#[pyo3(
+    signature = (*, coord_type = PyCoordType::Separated, crs=None, edges=None),
+    text_signature = "(*, coord_type='separated', crs=None, edges=None)"
+)]
 pub fn geometry(
     coord_type: PyCoordType,
     crs: Option<PyCrs>,
@@ -196,18 +254,21 @@ pub fn geometry(
         .into()
 }
 
-#[pyfunction]
-#[pyo3(signature = (*, crs=None, edges=None))]
-pub fn wkb(crs: Option<PyCrs>, edges: Option<PyEdges>) -> PyGeoArrowType {
-    let edges = edges.map(|e| e.into());
-    let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
-    WkbType::new(metadata).into()
+macro_rules! impl_wkb_wkt {
+    ($method_name:ident, $type_constructor:ty, $variant:expr) => {
+        #[pyfunction]
+        #[pyo3(signature = (*, crs=None, edges=None))]
+        pub fn $method_name(crs: Option<PyCrs>, edges: Option<PyEdges>) -> PyGeoArrowType {
+            let edges = edges.map(|e| e.into());
+            let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
+            $variant(<$type_constructor>::new(metadata)).into()
+        }
+    };
 }
 
-#[pyfunction]
-#[pyo3(signature = (*, crs=None, edges=None))]
-pub fn wkt(crs: Option<PyCrs>, edges: Option<PyEdges>) -> PyGeoArrowType {
-    let edges = edges.map(|e| e.into());
-    let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
-    WktType::new(metadata).into()
-}
+impl_wkb_wkt!(wkb, WkbType, GeoArrowType::Wkb);
+impl_wkb_wkt!(large_wkb, WkbType, GeoArrowType::LargeWkb);
+impl_wkb_wkt!(wkb_view, WkbType, GeoArrowType::WkbView);
+impl_wkb_wkt!(wkt, WktType, GeoArrowType::Wkt);
+impl_wkb_wkt!(large_wkt, WktType, GeoArrowType::LargeWkt);
+impl_wkb_wkt!(wkt_view, WktType, GeoArrowType::WktView);

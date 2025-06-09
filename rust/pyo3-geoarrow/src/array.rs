@@ -19,8 +19,9 @@ use pyo3::types::{PyCapsule, PyTuple, PyType};
 use pyo3_arrow::PyArray;
 use pyo3_arrow::ffi::to_array_pycapsules;
 
+use crate::PyCoordType;
+use crate::data_type::PyGeoArrowType;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
-use crate::{PyCoordType, PyGeoArrowType};
 
 #[pyclass(
     module = "geoarrow.rust.core",
