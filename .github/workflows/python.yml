@@ -70,12 +70,13 @@ jobs:
           args: --no-default-features -m python/geoarrow-core/Cargo.toml -i python${{ env.PYTHON_VERSION }}
           rust-toolchain: nightly
 
-      - name: Build wheels (io)
-        uses: PyO3/maturin-action@v1
-        with:
-          target: wasm32-unknown-emscripten
-          args: --no-default-features -m python/geoarrow-io/Cargo.toml -i python${{ env.PYTHON_VERSION }}
-          rust-toolchain: nightly
+      # This started to fail as of https://github.com/geoarrow/geoarrow-rs/pull/1170
+      # - name: Build wheels (io)
+      #   uses: PyO3/maturin-action@v1
+      #   with:
+      #     target: wasm32-unknown-emscripten
+      #     args: --no-default-features -m python/geoarrow-io/Cargo.toml -i python${{ env.PYTHON_VERSION }}
+      #     rust-toolchain: nightly
 
   # lint-python:
   #   name: Lint Python code
