@@ -686,6 +686,15 @@ wheels = [
 ]
 
 [[package]]
+name = "geoarrow-types"
+version = "0.3.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a5/97/fa35f5d13a803b8f16e59c1f18f06607b9df5683c08bd7cd7a48a29ce988/geoarrow_types-0.3.0.tar.gz", hash = "sha256:82243e4be88b268fa978ae5bba6c6680c3556735e795965b2fe3e6fbfea9f9ee", size = 23708, upload-time = "2025-05-27T03:39:39.979Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b6/16/e37cb1b0894c9cf3f9b1c50ebcfab56a0d9fe7c3b6f97d5680a7eb27ca08/geoarrow_types-0.3.0-py3-none-any.whl", hash = "sha256:439df6101632080442beccc7393cac54d6c7f6965da897554349e94d2492f613", size = 19025, upload-time = "2025-05-27T03:39:38.652Z" },
+]
+
+[[package]]
 name = "geodatasets"
 version = "2024.8.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2098,6 +2107,7 @@ dev = [
     { name = "affine" },
     { name = "arro3-core" },
     { name = "black" },
+    { name = "geoarrow-types" },
     { name = "geodatasets" },
     { name = "geopandas", version = "1.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "geopandas", version = "1.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
@@ -2127,6 +2137,7 @@ dev = [
     { name = "affine", specifier = ">=2.4.0" },
     { name = "arro3-core", specifier = ">=0.5.0" },
     { name = "black", specifier = ">=24.10.0" },
+    { name = "geoarrow-types", specifier = ">=0.3.0" },
     { name = "geodatasets", specifier = ">=2024.8.0" },
     { name = "geopandas", specifier = ">=1.0.1" },
     { name = "griffe-inherited-docstrings", specifier = ">=1.0.1" },
