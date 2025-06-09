@@ -1,5 +1,5 @@
 use std::any::Any;
-use std::sync::OnceLock;
+use std::sync::{Arc, OnceLock};
 
 use arrow_schema::{DataType, Field};
 use datafusion::error::{DataFusionError, Result};
@@ -30,8 +30,8 @@ impl AsText {
 
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> GeoDataFusionResult<ColumnarValue> {
         let array = &ColumnarValue::values_to_arrays(&args.args)?[0];
-        let field = args.arg_fields[0];
-        let geo_array = from_arrow_array(&array, field)?;
+        let field = &args.arg_fields[0];
+        let geo_array = from_arrow_array(&array, field.as_ref())?;
         let wkt_arr = to_wkt::<i32>(geo_array.as_ref())?;
         Ok(ColumnarValue::Array(wkt_arr.into_array_ref()))
     }
@@ -62,17 +62,18 @@ impl ScalarUDFImpl for AsText {
         Err(DataFusionError::Internal("return_type".to_string()))
     }
 
-    fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<Field> {
+    fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<Arc<Field>> {
         let input_field = &args.arg_fields[0];
         let data_type =
-            GeoArrowType::try_from(input_field).map_err(GeoDataFusionError::GeoArrow)?;
+            GeoArrowType::try_from(input_field.as_ref()).map_err(GeoDataFusionError::GeoArrow)?;
         let wkb_type = WktType::new(data_type.metadata().clone());
         Ok(Field::new(
             input_field.name(),
             DataType::Utf8,
             input_field.is_nullable(),
         )
-        .with_extension_type(wkb_type))
+        .with_extension_type(wkb_type)
+        .into())
     }
 
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
@@ -112,13 +113,17 @@ impl GeomFromText {
 
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> GeoDataFusionResult<ColumnarValue> {
         let array = &ColumnarValue::values_to_arrays(&args.args)?[0];
-        let field = args.arg_fields[0];
-        let to_type = GeoArrowType::try_from(args.return_field)?;
+        let field = &args.arg_fields[0];
+        let to_type = GeoArrowType::try_from(args.return_field.as_ref())?;
         let geom_arr = match field.data_type() {
-            DataType::Utf8 => from_wkt(&WktArray::try_from((array.as_ref(), field))?, to_type),
-            DataType::LargeUtf8 => {
-                from_wkt(&LargeWktArray::try_from((array.as_ref(), field))?, to_type)
-            }
+            DataType::Utf8 => from_wkt(
+                &WktArray::try_from((array.as_ref(), field.as_ref()))?,
+                to_type,
+            ),
+            DataType::LargeUtf8 => from_wkt(
+                &LargeWktArray::try_from((array.as_ref(), field.as_ref()))?,
+                to_type,
+            ),
             _ => unreachable!(),
         }?;
 
@@ -145,13 +150,15 @@ impl ScalarUDFImpl for GeomFromText {
         Err(DataFusionError::Internal("return_type".to_string()))
     }
 
-    fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<Field> {
+    fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<Arc<Field>> {
         let input_field = &args.arg_fields[0];
         let data_type =
-            GeoArrowType::try_from(input_field).map_err(GeoDataFusionError::GeoArrow)?;
+            GeoArrowType::try_from(input_field.as_ref()).map_err(GeoDataFusionError::GeoArrow)?;
         let geom_type =
             GeometryType::new(data_type.metadata().clone()).with_coord_type(self.coord_type);
-        Ok(geom_type.to_field(input_field.name(), input_field.is_nullable()))
+        Ok(geom_type
+            .to_field(input_field.name(), input_field.is_nullable())
+            .into())
     }
 
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
