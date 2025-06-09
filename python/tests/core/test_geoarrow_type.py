@@ -168,3 +168,14 @@ def test_from_geoarrow_pyarrow():
         assert isinstance(typ, PointType)
 
         assert rust_type == GeoArrowType.from_arrow(typ)
+
+
+def test_with_crs():
+    point_type = point("xy")
+    assert point_type.crs is None
+    new_crs = pyproj.CRS.from_epsg(4326)
+    updated_type = point_type.with_crs(new_crs, edges="spherical")
+    assert updated_type.crs == new_crs
+    assert updated_type.dimension == point_type.dimension
+    assert updated_type.coord_type == point_type.coord_type
+    assert updated_type.edges == Edges.SPHERICAL
