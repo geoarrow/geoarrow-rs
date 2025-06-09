@@ -99,10 +99,21 @@ impl PyChunkedGeoArrowArray {
         Ok(to_stream_pycapsule(py, array_reader, requested_schema)?)
     }
 
-    // /// Check for equality with other object.
-    // fn __eq__(&self, _other: &PyNativeArray) -> bool {
-    //     self.0 == other.0
-    // }
+    /// Check for equality with other object.
+    fn __eq__(&self, other: &Bound<PyAny>) -> bool {
+        // Do extraction within body because `__eq__` should never raise an exception.
+        if let Ok(other) = other.extract::<Self>() {
+            self.data_type == other.data_type
+                && self.chunks.len() == other.chunks.len()
+                && self
+                    .chunks
+                    .iter()
+                    .zip(other.chunks)
+                    .all(|(left, right)| left.to_array_ref() == right.to_array_ref())
+        } else {
+            false
+        }
+    }
 
     // fn __getitem__(&self, i: isize) -> PyGeoArrowResult<Option<PyGeometry>> {
     //     // Handle negative indexes from the end
@@ -132,8 +143,7 @@ impl PyChunkedGeoArrowArray {
     }
 
     fn __repr__(&self) -> String {
-        // self.0.to_string()
-        "geoarrow.rust.core.ChunkedGeometryArray".to_string()
+        "ChunkedGeoArrowArray".to_string()
     }
 
     #[classmethod]
@@ -185,6 +195,10 @@ impl PyChunkedGeoArrowArray {
         Self::from_arrays(casted)
     }
 
+    #[pyo3(
+        signature = (*, coord_type = PyCoordType::Separated),
+        text_signature = "(*, coord_type='separated')"
+    )]
     fn downcast(&self, coord_type: PyCoordType) -> PyGeoArrowResult<Self> {
         if let Some((native_type, dim)) =
             geoarrow_cast::downcast::infer_downcast_type(self.chunks.iter().map(|x| x.as_ref()))?
