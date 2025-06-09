@@ -7,7 +7,11 @@ from .enums import CoordType, Dimension, Edges
 from pyproj.crs.crs import CRS
 
 CRSInput = Union[CRS, str, dict, int]
-"""Acceptable input for the CRS parameter."""
+"""Acceptable input for the CRS parameter.
+
+This can be a `pyproj.CRS` object or anything that can be passed to
+`pyproj.CRS.from_user_input()`.
+"""
 
 IntFloat = Union[int, float]
 

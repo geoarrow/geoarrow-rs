@@ -32,12 +32,11 @@ impl<'py> FromPyObject<'py> for PyCrs {
 
         let projjson_string = ob
             .call_method0(intern!(py, "to_json"))?
-            .extract::<String>()?;
+            .extract::<PyBackedStr>()?;
         let projjson_value = serde_json::from_str(&projjson_string)
             .map_err(|err| PyValueError::new_err(err.to_string()))?;
 
-        let crs = Crs::from_projjson(projjson_value);
-        Ok(Self(crs))
+        Ok(Self(Crs::from_projjson(projjson_value)))
     }
 }
 
