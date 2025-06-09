@@ -1,6 +1,6 @@
 import numpy as np
 from arro3.core import ArrayReader, Field, RecordBatch, RecordBatchReader, Schema, Table
-from geoarrow.rust.core import get_crs, points
+from geoarrow.rust.core import get_crs, point, points
 from pyproj import CRS
 
 
@@ -42,3 +42,29 @@ def test_get_crs():
     reader = ArrayReader.from_arrays(array.field, [array])
     assert get_crs(reader) == crs
     assert not reader.closed
+
+
+def test_pyproj_crs():
+    crs = CRS.from_epsg(4326)
+    typ = point("xy", crs=crs)
+    assert typ.crs == crs
+
+
+def test_crs_inference():
+    s = "epsg:4326"
+    expected_crs = CRS.from_user_input(s)
+    typ = point("xy", crs=s)
+    assert typ.crs == expected_crs
+
+    projjson_str = expected_crs.to_json()
+    typ = point("xy", crs=projjson_str)
+    assert typ.crs == expected_crs
+
+    projjson_dict = expected_crs.to_json_dict()
+    typ = point("xy", crs=projjson_dict)
+    assert typ.crs == expected_crs
+
+
+def test_no_crs():
+    typ = point("xy")
+    assert typ.crs is None
