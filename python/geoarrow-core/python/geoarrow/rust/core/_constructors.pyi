@@ -3,7 +3,7 @@ from typing import List, Tuple
 from arro3.core.types import ArrayInput
 from geoarrow.rust.core.types import CRSInput
 
-from ._rust import NativeArray
+from ._array import GeoArrowArray
 
 CoordsInput = ArrayInput | Tuple[ArrayInput, ...] | List[ArrayInput]
 """Allowed coordinate input types.
@@ -21,7 +21,7 @@ def points(
     coords: CoordsInput,
     *,
     crs: CRSInput | None = None,
-) -> NativeArray:
+) -> GeoArrowArray:
     """Create a GeoArrow point array from parts.
 
     This is similar in principle to [`shapely.points`][].
@@ -60,7 +60,7 @@ def linestrings(
     geom_offsets: ArrayInput,
     *,
     crs: CRSInput | None = None,
-) -> NativeArray:
+) -> GeoArrowArray:
     """Create a GeoArrow linestring array from parts.
 
     This is similar in principle to [`shapely.linestrings`][].
@@ -92,7 +92,7 @@ def polygons(
     ring_offsets: ArrayInput,
     *,
     crs: CRSInput | None = None,
-) -> NativeArray:
+) -> GeoArrowArray:
     """Create a GeoArrow polygon array from coordinates.
 
     This is similar in principle to [`shapely.polygons`][].
@@ -111,7 +111,7 @@ def multipoints(
     geom_offsets: ArrayInput,
     *,
     crs: CRSInput | None = None,
-) -> NativeArray:
+) -> GeoArrowArray:
     """Create a GeoArrow multipoint array from parts.
 
     This is similar in principle to [`shapely.multipoints`][].
@@ -130,7 +130,7 @@ def multilinestrings(
     ring_offsets: ArrayInput,
     *,
     crs: CRSInput | None = None,
-) -> NativeArray:
+) -> GeoArrowArray:
     """Create a GeoArrow multilinestring array from parts.
 
     Args:
@@ -149,7 +149,7 @@ def multipolygons(
     ring_offsets: ArrayInput,
     *,
     crs: CRSInput | None = None,
-) -> NativeArray:
+) -> GeoArrowArray:
     """Create a GeoArrow multipolygon array from parts.
 
     Args:

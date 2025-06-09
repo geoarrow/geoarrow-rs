@@ -5,12 +5,10 @@ from ._data_type import GeoArrowType
 from .types import CoordTypeInput
 
 class ChunkedGeoArrowArray:
-    """
-    A class representing a chunked GeoArrow array.
+    """A chunked GeoArrow array.
 
     This class is used to handle chunked arrays in GeoArrow, which can be
     composed of multiple chunks of data.
-
     """
 
     def __arrow_c_stream__(self, requested_schema: object | None = None) -> object:
