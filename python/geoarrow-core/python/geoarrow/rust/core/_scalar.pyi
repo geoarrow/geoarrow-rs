@@ -1,3 +1,5 @@
+from ._data_type import GeoArrowType
+
 class GeoArrowScalar:
     """
     An immutable geometry scalar using GeoArrow's in-memory representation.
@@ -30,3 +32,14 @@ class GeoArrowScalar:
 
         [Geo Interface]: https://gist.github.com/sgillies/2217756
         """
+
+    @property
+    def is_null(self) -> bool:
+        """Check if the scalar is null.
+
+        Note that Arrow arrays hold a separate null bitmap, so this is separate from
+        whether the geometry is empty.
+        """
+    @property
+    def type(self) -> GeoArrowType:
+        """The type of the scalar."""

@@ -15,6 +15,7 @@ use pyo3::types::{PyCapsule, PyTuple};
 use pyo3_arrow::ffi::to_array_pycapsules;
 
 use crate::PyGeoArrowArray;
+use crate::data_type::PyGeoArrowType;
 use crate::error::PyGeoArrowResult;
 
 /// This is modeled as a geospatial array of length 1
@@ -99,7 +100,7 @@ impl PyGeoArrowScalar {
         max_x += (max_x - min_x) * 0.05;
         max_y += (max_y - min_y) * 0.05;
 
-        svg.set_dimensions(min_x, min_y, max_x, max_y, 100, 100);
+        svg.set_dimensions(min_x, min_y, max_x, max_y, 300, 300);
 
         // This sequence is necessary so that the SvgWriter writes the header. See
         // https://github.com/georust/geozero/blob/6c820ad7a0cac8c864058c783f548407427712d3/geozero/src/svg/mod.rs#L51-L58
@@ -126,6 +127,16 @@ impl PyGeoArrowScalar {
         // todo!()
         // let scalar = <$geoarrow_scalar>::from(&self.0);
         // Ok(scalar.to_string())
+    }
+
+    #[getter]
+    fn is_null(&self) -> bool {
+        self.0.is_null(0)
+    }
+
+    #[getter]
+    fn r#type(&self) -> PyGeoArrowType {
+        self.0.data_type().into()
     }
 }
 
