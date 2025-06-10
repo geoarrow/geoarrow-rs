@@ -8,6 +8,7 @@ use geoarrow_schema::{
     BoxType, GeoArrowType, GeometryCollectionType, LineStringType, MultiLineStringType,
     MultiPointType, MultiPolygonType, PointType, PolygonType,
 };
+use pyo3::exceptions::PyIndexError;
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyTuple, PyType};
@@ -17,6 +18,7 @@ use pyo3_arrow::{PyArrayReader, PyChunkedArray};
 
 use crate::data_type::PyGeoArrowType;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
+use crate::scalar::PyGeoArrowScalar;
 use crate::{PyCoordType, PyGeoArrowArray};
 
 #[pyclass(
@@ -115,28 +117,29 @@ impl PyChunkedGeoArrowArray {
         }
     }
 
-    // fn __getitem__(&self, i: isize) -> PyGeoArrowResult<Option<PyGeometry>> {
-    //     // Handle negative indexes from the end
-    //     let i = if i < 0 {
-    //         let i = self.__len__() as isize + i;
-    //         if i < 0 {
-    //             return Err(PyIndexError::new_err("Index out of range").into());
-    //         }
-    //         i as usize
-    //     } else {
-    //         i as usize
-    //     };
-    //     if i >= self.0.len() {
-    //         return Err(PyIndexError::new_err("Index out of range").into());
-    //     }
+    fn __getitem__(&self, i: isize) -> PyGeoArrowResult<PyGeoArrowScalar> {
+        // Handle negative indexes from the end
+        let mut i = if i < 0 {
+            let i = self.__len__() as isize + i;
+            if i < 0 {
+                return Err(PyIndexError::new_err("Index out of range").into());
+            }
+            i as usize
+        } else {
+            i as usize
+        };
+        if i >= self.__len__() {
+            return Err(PyIndexError::new_err("Index out of range").into());
+        }
 
-    //     let sliced = self.0.slice(i, 1)?;
-    //     let geom_chunks = sliced.geometry_chunks();
-    //     assert_eq!(geom_chunks.len(), 1);
-    //     Ok(Some(PyGeometry(
-    //         GeometryScalar::try_new(geom_chunks[0].clone()).unwrap(),
-    //     )))
-    // }
+        for chunk in self.chunks() {
+            if i < chunk.inner().len() {
+                return PyGeoArrowScalar::try_new(chunk.inner().slice(i, 1));
+            }
+            i -= chunk.inner().len();
+        }
+        unreachable!("index in range but past end of last chunk")
+    }
 
     fn __len__(&self) -> usize {
         self.chunks.iter().fold(0, |acc, arr| acc + arr.len())

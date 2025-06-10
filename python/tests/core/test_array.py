@@ -1,3 +1,4 @@
+import geodatasets
 import geopandas as gpd
 import pyarrow as pa
 import shapely
@@ -14,3 +15,12 @@ def test_eq():
         pa_arr = pa.array(arr)
         assert arr == pa_arr
         assert arr == GeoArrowArray.from_arrow(pa_arr)
+
+
+def test_getitem():
+    # Tests both the __getitem__ method and the scalar geo interface in round trip
+    # conversion to shapely.
+    gdf = gpd.read_file(geodatasets.get_path("ny.bb"))
+    arr = GeoArrowArray.from_arrow(gdf.geometry.to_arrow("geoarrow"))
+    for i in range(len(arr)):
+        assert shapely.geometry.shape(arr[i]).equals(gdf.geometry.iloc[i])  # type: ignore

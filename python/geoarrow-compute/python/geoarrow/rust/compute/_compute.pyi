@@ -424,7 +424,7 @@ def line_locate_point(
         input: input geometry array or chunked geometry array
         point: the fractional distance along the line. A variety of inputs are accepted:
 
-            - A scalar [`Geometry`][geoarrow.rust.core.Geometry]
+            - A scalar [`GeoArrowScalar`][geoarrow.rust.core.GeoArrowScalar]
             - A [`GeoArrowArray`][geoarrow.rust.core.GeoArrowArray]
             - A [`ChunkedGeoArrowArray`][geoarrow.rust.core.ChunkedGeoArrowArray]
             - Any Python class that implements the Geo Interface, such as a [`shapely` Point][shapely.Point]

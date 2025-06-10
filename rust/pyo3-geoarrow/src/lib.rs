@@ -11,9 +11,8 @@ mod dimension;
 mod edges;
 mod error;
 mod ffi;
-// mod input;
 mod offset_buffer;
-// mod scalar;
+mod scalar;
 
 pub use array::PyGeoArrowArray;
 pub use array_reader::PyGeoArrowArrayReader;
@@ -25,4 +24,4 @@ pub use dimension::PyDimension;
 pub use edges::PyEdges;
 pub use error::{PyGeoArrowError, PyGeoArrowResult};
 pub use offset_buffer::PyOffsetBuffer;
-// pub use scalar::PyGeometry;
+pub use scalar::PyGeoArrowScalar;
