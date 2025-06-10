@@ -81,8 +81,9 @@ impl PyGeoArrowScalar {
 
     #[cfg(feature = "geozero")]
     fn _repr_svg_(&self) -> PyGeoArrowResult<String> {
-        use crate::scalar::bounding_rect::bounding_rect;
         use geozero::FeatureProcessor;
+
+        use crate::scalar::bounding_rect::bounding_rect;
 
         let bounds = bounding_rect(&self.0)?.unwrap_or_default();
         let mut min_x = bounds.minx();
@@ -153,9 +154,8 @@ fn process_svg_geom<W: Write>(
     arr: &dyn GeoArrowArray,
     svg: &mut geozero::svg::SvgWriter<W>,
 ) -> geozero::error::Result<()> {
-    use geozero::GeozeroGeometry;
-
     use GeoArrowType::*;
+    use geozero::GeozeroGeometry;
     match arr.data_type() {
         Point(_) => arr.as_point().process_geom(svg),
         LineString(_) => arr.as_line_string().process_geom(svg),
@@ -177,9 +177,8 @@ fn process_svg_geom<W: Write>(
 
 #[cfg(feature = "geozero")]
 fn to_json(arr: &dyn GeoArrowArray) -> geozero::error::Result<String> {
-    use geozero::ToJson;
-
     use GeoArrowType::*;
+    use geozero::ToJson;
     match arr.data_type() {
         Point(_) => arr.as_point().to_json(),
         LineString(_) => arr.as_line_string().to_json(),
