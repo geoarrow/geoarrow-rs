@@ -1,3 +1,4 @@
+#[cfg(feature = "geozero")]
 mod bounding_rect;
 
 use std::io::Write;
@@ -15,7 +16,6 @@ use pyo3_arrow::ffi::to_array_pycapsules;
 
 use crate::PyGeoArrowArray;
 use crate::error::PyGeoArrowResult;
-use crate::scalar::bounding_rect::bounding_rect;
 
 /// This is modeled as a geospatial array of length 1
 #[pyclass(
@@ -70,6 +70,7 @@ impl PyGeoArrowScalar {
         }
     }
 
+    #[cfg(feature = "geozero")]
     #[getter]
     fn __geo_interface__<'py>(&'py self, py: Python<'py>) -> PyGeoArrowResult<Bound<'py, PyAny>> {
         let json_string = to_json(&self.0).map_err(|err| GeoArrowError::External(Box::new(err)))?;
@@ -79,6 +80,7 @@ impl PyGeoArrowScalar {
 
     #[cfg(feature = "geozero")]
     fn _repr_svg_(&self) -> PyGeoArrowResult<String> {
+        use crate::scalar::bounding_rect::bounding_rect;
         use geozero::FeatureProcessor;
 
         let bounds = bounding_rect(&self.0)?.unwrap_or_default();
