@@ -11,6 +11,9 @@ keywords = ["python", "arrow"]
 categories = []
 rust-version = { workspace = true }
 
+[features]
+geozero = ["dep:geozero", "geoarrow-array/geozero"]
+
 [dependencies]
 arrow-array = { workspace = true }
 arrow-cast = { workspace = true }
@@ -19,6 +22,7 @@ arrow-schema = { workspace = true }
 geoarrow-array = { workspace = true }
 geoarrow-cast = { workspace = true }
 geoarrow-schema = { workspace = true }
+geozero = { workspace = true, optional = true }
 pyo3 = { workspace = true, features = ["chrono", "indexmap"] }
 pyo3-arrow = { workspace = true }
 serde_json = { workspace = true }

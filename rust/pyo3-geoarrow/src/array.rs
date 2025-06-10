@@ -1,18 +1,13 @@
 use std::sync::Arc;
 
-// use geoarrow::ArrayBase;
-// use geoarrow::NativeArray;
-// use geoarrow::error::GeoArrowError;
-// use geoarrow::scalar::GeometryScalar;
-// use geoarrow::trait_::NativeArrayRef;
 use geoarrow_array::GeoArrowArray;
 use geoarrow_array::array::from_arrow_array;
 use geoarrow_cast::downcast::NativeType;
+use geoarrow_schema::GeoArrowType;
 use geoarrow_schema::{
     BoxType, GeometryCollectionType, LineStringType, MultiLineStringType, MultiPointType,
     MultiPolygonType, PointType, PolygonType,
 };
-// use geozero::ProcessToJson;
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyTuple, PyType};
@@ -91,23 +86,42 @@ impl PyGeoArrowArray {
         }
     }
 
-    // #[getter]
-    // fn __geo_interface__<'py>(&'py self, py: Python<'py>) -> PyGeoArrowResult<Bound<'py, PyAny>> {
-    //     // Note: We create a Table out of this array so that each row can be its own Feature in a
-    //     // FeatureCollection
+    #[cfg(feature = "geozero")]
+    #[getter]
+    fn __geo_interface__<'py>(&'py self, py: Python<'py>) -> PyGeoArrowResult<Bound<'py, PyAny>> {
+        // Note: We create a Table out of this array so that each row can be its own Feature in a
+        // FeatureCollection
 
-    //     let field = self.0.extension_field();
-    //     let geometry = self.0.to_array_ref();
-    //     let schema = Arc::new(Schema::new(vec![field]));
-    //     let batch = RecordBatch::try_new(schema.clone(), vec![geometry])?;
+        // use
 
-    //     let mut table = geoarrow::table::Table::try_new(vec![batch], schema)?;
-    //     let json_string = table.to_json().map_err(GeoArrowError::GeozeroError)?;
+        use GeoArrowType::*;
+        use geoarrow_array::cast::AsGeoArrowArray;
+        match self.0.data_type() {
+            GeoArrowType::Point(_) => {
+                use geoarrow_array::GeoArrowArrayAccessor;
 
-    //     let json_mod = py.import(intern!(py, "json"))?;
-    //     let args = (json_string,);
-    //     Ok(json_mod.call_method1(intern!(py, "loads"), args)?)
-    // }
+                let x = self.0.as_point();
+                for geom in x.iter_values() {
+                    use geozero::ToJson;
+
+                    let geom = geom.unwrap();
+                    let json = geom.to_json().unwrap();
+                }
+            }
+        }
+
+        let field = self.0.extension_field();
+        let geometry = self.0.to_array_ref();
+        let schema = Arc::new(Schema::new(vec![field]));
+        let batch = RecordBatch::try_new(schema.clone(), vec![geometry])?;
+
+        let mut table = geoarrow::table::Table::try_new(vec![batch], schema)?;
+        let json_string = table.to_json().map_err(GeoArrowError::GeozeroError)?;
+
+        let json_mod = py.import(intern!(py, "json"))?;
+        let args = (json_string,);
+        Ok(json_mod.call_method1(intern!(py, "loads"), args)?)
+    }
 
     // fn __getitem__(&self, i: isize) -> PyGeoArrowResult<Option<PyGeometry>> {
     //     // Handle negative indexes from the end

@@ -2852,6 +2852,7 @@ dependencies = [
  "geoarrow-array",
  "geoarrow-cast",
  "geoarrow-schema",
+ "geozero",
  "pyo3",
  "pyo3-arrow",
  "serde_json",
