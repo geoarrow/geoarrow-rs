@@ -1,4 +1,5 @@
 from arro3.core.types import ArrowStreamExportable
+from geoarrow.rust.core._scalar import GeoArrowScalar
 
 from ._array import GeoArrowArray
 from ._data_type import GeoArrowType
@@ -23,6 +24,7 @@ class ChunkedGeoArrowArray:
         convert this array into a pyarrow array, without copying memory.
         """
     def __eq__(self, value: object) -> bool: ...
+    def __getitem__(self, item: int) -> GeoArrowScalar: ...
     def __len__(self) -> int: ...
     def __repr__(self) -> str: ...
     @classmethod

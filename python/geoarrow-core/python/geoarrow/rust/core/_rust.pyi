@@ -43,39 +43,9 @@ from ._data_type import wkb as wkb
 from ._data_type import wkb_view as wkb_view
 from ._data_type import wkt as wkt
 from ._data_type import wkt_view as wkt_view
+from ._scalar import GeoArrowScalar as GeoArrowScalar
 from .enums import CoordType
 from .types import CRSInput
-
-class Geometry:
-    """
-    An immutable geometry scalar using GeoArrow's in-memory representation.
-
-    **Note**: for best performance, do as many operations as possible on arrays or chunked
-    arrays instead of scalars.
-    """
-    def __arrow_c_array__(
-        self, requested_schema: object | None = None
-    ) -> Tuple[object, object]:
-        """
-        An implementation of the [Arrow PyCapsule
-        Interface](https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html).
-        This dunder method should not be called directly, but enables zero-copy data
-        transfer to other Python libraries that understand Arrow memory.
-
-        For example, you can call [`pyarrow.array()`][pyarrow.array] to convert this
-        array into a pyarrow array, without copying memory.
-        """
-    def __eq__(self, other: object) -> bool: ...
-    @property
-    def __geo_interface__(self) -> dict:
-        """Implements the "geo interface protocol".
-
-        See <https://gist.github.com/sgillies/2217756>
-        """
-    def __repr__(self) -> str:
-        """Text representation."""
-    def _repr_svg_(self) -> str:
-        """Render as SVG in IPython/Jupyter."""
 
 @overload
 def geometry_col(input: ArrowArrayExportable) -> GeoArrowArray: ...

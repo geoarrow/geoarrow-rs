@@ -1,10 +1,5 @@
 use std::sync::Arc;
 
-// use geoarrow::ArrayBase;
-// use geoarrow::NativeArray;
-// use geoarrow::error::GeoArrowError;
-// use geoarrow::scalar::GeometryScalar;
-// use geoarrow::trait_::NativeArrayRef;
 use geoarrow_array::GeoArrowArray;
 use geoarrow_array::array::from_arrow_array;
 use geoarrow_cast::downcast::NativeType;
@@ -12,7 +7,7 @@ use geoarrow_schema::{
     BoxType, GeometryCollectionType, LineStringType, MultiLineStringType, MultiPointType,
     MultiPolygonType, PointType, PolygonType,
 };
-// use geozero::ProcessToJson;
+use pyo3::exceptions::PyIndexError;
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyTuple, PyType};
@@ -22,6 +17,7 @@ use pyo3_arrow::ffi::to_array_pycapsules;
 use crate::PyCoordType;
 use crate::data_type::PyGeoArrowType;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
+use crate::scalar::PyGeoArrowScalar;
 
 #[pyclass(
     module = "geoarrow.rust.core",
@@ -44,17 +40,21 @@ impl PyGeoArrowArray {
         PyArray::from_arrow_pycapsule(schema_capsule, array_capsule)?.try_into()
     }
 
+    pub fn inner(&self) -> &Arc<dyn GeoArrowArray> {
+        &self.0
+    }
+
     pub fn into_inner(self) -> Arc<dyn GeoArrowArray> {
         self.0
     }
 
-    /// Export to a geoarrow.rust.core.NativeArray.
+    /// Export to a geoarrow.rust.core.GeoArrowArray.
     ///
     /// This requires that you depend on geoarrow-rust-core from your Python package.
     pub fn to_geoarrow<'py>(&'py self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let geoarrow_mod = py.import(intern!(py, "geoarrow.rust.core"))?;
         geoarrow_mod
-            .getattr(intern!(py, "NativeArray"))?
+            .getattr(intern!(py, "GeoArrowArray"))?
             .call_method1(
                 intern!(py, "from_arrow_pycapsule"),
                 self.__arrow_c_array__(py, None)?,
@@ -80,7 +80,6 @@ impl PyGeoArrowArray {
         Ok(to_array_pycapsules(py, field, &array, requested_schema)?)
     }
 
-    /// Check for equality with other object.
     fn __eq__(&self, other: &Bound<PyAny>) -> bool {
         // Do extraction within body because `__eq__` should never raise an exception.
         if let Ok(other) = other.extract::<Self>() {
@@ -109,25 +108,23 @@ impl PyGeoArrowArray {
     //     Ok(json_mod.call_method1(intern!(py, "loads"), args)?)
     // }
 
-    // fn __getitem__(&self, i: isize) -> PyGeoArrowResult<Option<PyGeometry>> {
-    //     // Handle negative indexes from the end
-    //     let i = if i < 0 {
-    //         let i = self.0.len() as isize + i;
-    //         if i < 0 {
-    //             return Err(PyIndexError::new_err("Index out of range").into());
-    //         }
-    //         i as usize
-    //     } else {
-    //         i as usize
-    //     };
-    //     if i >= self.0.len() {
-    //         return Err(PyIndexError::new_err("Index out of range").into());
-    //     }
+    fn __getitem__(&self, i: isize) -> PyGeoArrowResult<PyGeoArrowScalar> {
+        // Handle negative indexes from the end
+        let i = if i < 0 {
+            let i = self.0.len() as isize + i;
+            if i < 0 {
+                return Err(PyIndexError::new_err("Index out of range").into());
+            }
+            i as usize
+        } else {
+            i as usize
+        };
+        if i >= self.0.len() {
+            return Err(PyIndexError::new_err("Index out of range").into());
+        }
 
-    //     Ok(Some(PyGeometry(
-    //         GeometryScalar::try_new(self.0.slice(i, 1)).unwrap(),
-    //     )))
-    // }
+        PyGeoArrowScalar::try_new(self.0.slice(i, 1))
+    }
 
     fn __len__(&self) -> usize {
         self.0.len()

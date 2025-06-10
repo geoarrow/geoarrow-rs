@@ -930,12 +930,14 @@ version = "0.4.0"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
+ "arrow-json",
  "arrow-schema",
  "geo-traits",
  "geoarrow-schema",
+ "geozero",
  "num-traits",
  "wkb",
- "wkt",
+ "wkt 0.14.0",
 ]
 
 [[package]]
@@ -946,7 +948,7 @@ dependencies = [
  "geo-traits",
  "geoarrow-array",
  "geoarrow-schema",
- "wkt",
+ "wkt 0.14.0",
 ]
 
 [[package]]
@@ -1020,6 +1022,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "geojson"
+version = "0.24.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e26f3c45b36fccc9cf2805e61d4da6bc4bbd5a3a9589b01afa3a40eff703bd79"
+dependencies = [
+ "log",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.12",
+]
+
+[[package]]
 name = "geoparquet"
 version = "0.4.0"
 dependencies = [
@@ -1038,6 +1052,20 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with",
+]
+
+[[package]]
+name = "geozero"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e5f28f34864745eb2f123c990c6ffd92c1584bd39439b3f27ff2a0f4ea5b309b"
+dependencies = [
+ "geo-types",
+ "geojson",
+ "log",
+ "serde_json",
+ "thiserror 1.0.69",
+ "wkt 0.11.1",
 ]
 
 [[package]]
@@ -2250,9 +2278,12 @@ dependencies = [
  "arrow-buffer",
  "arrow-cast",
  "arrow-schema",
+ "geo-traits",
+ "geo-types",
  "geoarrow-array",
  "geoarrow-cast",
  "geoarrow-schema",
+ "geozero",
  "pyo3",
  "pyo3-arrow 0.10.1 (git+https://github.com/kylebarron/arro3?rev=a622e151587f34cf4b901a9048b16a83b601eac3)",
  "serde_json",
@@ -3620,6 +3651,18 @@ dependencies = [
  "byteorder",
  "geo-traits",
  "num_enum",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "wkt"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "54f7f1ff4ea4c18936d6cd26a6fd24f0003af37e951a8e0e8b9e9a2d0bd0a46d"
+dependencies = [
+ "geo-types",
+ "log",
+ "num-traits",
  "thiserror 1.0.69",
 ]
 
