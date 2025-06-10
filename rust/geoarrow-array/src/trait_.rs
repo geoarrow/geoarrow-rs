@@ -9,6 +9,8 @@ use geo_traits::GeometryTrait;
 use geoarrow_schema::error::GeoArrowResult;
 use geoarrow_schema::{GeoArrowType, Metadata};
 
+use crate::array::from_arrow_array;
+
 /// Convert GeoArrow arrays into their respective [arrow][arrow_array] arrays.
 pub trait IntoArrow {
     /// The type of arrow array that this geoarrow array can be converted into.
@@ -250,6 +252,99 @@ pub trait GeoArrowArray: Debug + Send + Sync {
 
     /// Change the [`Metadata`] of this array.
     fn with_metadata(self, metadata: Arc<Metadata>) -> Arc<dyn GeoArrowArray>;
+}
+
+/// Ergonomics: Allow use of an `Arc<dyn GeoArrowArray>` as an `&dyn GeoArrowArray`
+impl GeoArrowArray for Arc<dyn GeoArrowArray> {
+    fn as_any(&self) -> &dyn Any {
+        self.as_ref().as_any()
+    }
+
+    fn data_type(&self) -> GeoArrowType {
+        self.as_ref().data_type()
+    }
+
+    fn into_array_ref(self) -> ArrayRef {
+        self.as_ref().to_array_ref()
+    }
+
+    fn to_array_ref(&self) -> ArrayRef {
+        self.as_ref().to_array_ref()
+    }
+
+    fn len(&self) -> usize {
+        self.as_ref().len()
+    }
+
+    fn logical_nulls(&self) -> Option<NullBuffer> {
+        self.as_ref().logical_nulls()
+    }
+
+    fn logical_null_count(&self) -> usize {
+        self.as_ref().logical_null_count()
+    }
+
+    fn is_null(&self, i: usize) -> bool {
+        self.as_ref().is_null(i)
+    }
+
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray> {
+        self.as_ref().slice(offset, length)
+    }
+
+    fn with_metadata(self, metadata: Arc<Metadata>) -> Arc<dyn GeoArrowArray> {
+        // This is a hack to allow consuming self
+        let field = self.data_type().with_metadata(metadata).to_field("", true);
+        let array = self.as_ref().to_array_ref();
+        // This unwrap should be fine because we know we start with a GeoArrow array
+        from_arrow_array(array.as_ref(), &field).unwrap()
+    }
+}
+
+impl<T: GeoArrowArray> GeoArrowArray for &T {
+    fn as_any(&self) -> &dyn Any {
+        T::as_any(self)
+    }
+
+    fn data_type(&self) -> GeoArrowType {
+        T::data_type(self)
+    }
+
+    fn into_array_ref(self) -> ArrayRef {
+        T::to_array_ref(self)
+    }
+
+    fn to_array_ref(&self) -> ArrayRef {
+        T::to_array_ref(self)
+    }
+
+    fn len(&self) -> usize {
+        T::len(self)
+    }
+
+    fn logical_nulls(&self) -> Option<NullBuffer> {
+        T::logical_nulls(self)
+    }
+
+    fn logical_null_count(&self) -> usize {
+        T::logical_null_count(self)
+    }
+
+    fn is_null(&self, i: usize) -> bool {
+        T::is_null(self, i)
+    }
+
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray> {
+        T::slice(self, offset, length)
+    }
+
+    fn with_metadata(self, metadata: Arc<Metadata>) -> Arc<dyn GeoArrowArray> {
+        // This is a hack to allow consuming self
+        let field = self.data_type().with_metadata(metadata).to_field("", true);
+        let array = T::to_array_ref(self);
+        // This unwrap should be fine because we know we start with a GeoArrow array
+        from_arrow_array(array.as_ref(), &field).unwrap()
+    }
 }
 
 /// A trait for accessing the values of a [`GeoArrowArray`].
