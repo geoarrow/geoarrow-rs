@@ -2,7 +2,7 @@ from arro3.core.types import ArrowStreamExportable
 from geoarrow.rust.core._scalar import GeoScalar
 
 from ._array import GeoArray
-from ._data_type import GeoArrowType
+from ._data_type import GeoType
 from .enums import CoordType
 from .types import CoordTypeInput
 
@@ -48,8 +48,8 @@ class GeoChunkedArray:
         """Return the i-th chunk of the array."""
     def chunks(self) -> list[GeoArray]:
         """Return all chunks of the array."""
-    def cast(self, to_type: GeoArrowType, /) -> GeoChunkedArray:
-        """Cast to another `GeoArrowType`.
+    def cast(self, to_type: GeoType, /) -> GeoChunkedArray:
+        """Cast to another `GeoType`.
 
         ### Criteria:
 
@@ -88,5 +88,5 @@ class GeoChunkedArray:
         If there is no simpler representation, the array is returned unchanged.
         """
     @property
-    def type(self) -> GeoArrowType:
+    def type(self) -> GeoType:
         """Return the type of the chunked array."""

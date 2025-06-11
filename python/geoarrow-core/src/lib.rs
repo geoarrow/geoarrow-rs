@@ -42,7 +42,7 @@ fn _rust(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<pyo3_geoarrow::PyGeoArray>()?;
     m.add_class::<pyo3_geoarrow::PyGeoArrayReader>()?;
     m.add_class::<pyo3_geoarrow::PyGeoScalar>()?;
-    m.add_class::<pyo3_geoarrow::data_type::PyGeoArrowType>()?;
+    m.add_class::<pyo3_geoarrow::data_type::PyGeoType>()?;
 
     // Type constructors
 

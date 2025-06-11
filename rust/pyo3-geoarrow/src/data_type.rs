@@ -13,10 +13,10 @@ use pyo3_arrow::ffi::to_schema_pycapsule;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::{PyCoordType, PyCrs, PyDimension, PyEdges};
 
-#[pyclass(module = "geoarrow.rust.core", name = "GeoArrowType", subclass, frozen)]
-pub struct PyGeoArrowType(pub(crate) GeoArrowType);
+#[pyclass(module = "geoarrow.rust.core", name = "GeoType", subclass, frozen)]
+pub struct PyGeoType(pub(crate) GeoArrowType);
 
-impl PyGeoArrowType {
+impl PyGeoType {
     pub fn new(data_type: GeoArrowType) -> Self {
         Self(data_type)
     }
@@ -33,7 +33,7 @@ impl PyGeoArrowType {
 
 #[allow(non_snake_case)]
 #[pymethods]
-impl PyGeoArrowType {
+impl PyGeoType {
     #[allow(unused_variables)]
     fn __arrow_c_schema__<'py>(
         &'py self,
@@ -64,51 +64,51 @@ impl PyGeoArrowType {
         use GeoArrowType::*;
         match &self.0 {
             Point(typ) => format!(
-                "GeoArrowType(Point(dimension=\"{}\", coord_type=\"{}\"))",
+                "GeoType(Point(dimension=\"{}\", coord_type=\"{}\"))",
                 typ.dimension(),
                 repr_coord_type(typ.coord_type())
             ),
             LineString(typ) => format!(
-                "GeoArrowType(LineString(dimension=\"{}\", coord_type=\"{}\"))",
+                "GeoType(LineString(dimension=\"{}\", coord_type=\"{}\"))",
                 typ.dimension(),
                 repr_coord_type(typ.coord_type())
             ),
             Polygon(typ) => format!(
-                "GeoArrowType(Polygon(dimension=\"{}\", coord_type=\"{}\"))",
+                "GeoType(Polygon(dimension=\"{}\", coord_type=\"{}\"))",
                 typ.dimension(),
                 repr_coord_type(typ.coord_type())
             ),
             MultiPoint(typ) => format!(
-                "GeoArrowType(MultiPoint(dimension=\"{}\", coord_type=\"{}\"))",
+                "GeoType(MultiPoint(dimension=\"{}\", coord_type=\"{}\"))",
                 typ.dimension(),
                 repr_coord_type(typ.coord_type())
             ),
             MultiLineString(typ) => format!(
-                "GeoArrowType(MultiLineString(dimension=\"{}\", coord_type=\"{}\"))",
+                "GeoType(MultiLineString(dimension=\"{}\", coord_type=\"{}\"))",
                 typ.dimension(),
                 repr_coord_type(typ.coord_type())
             ),
             MultiPolygon(typ) => format!(
-                "GeoArrowType(MultiPolygon(dimension=\"{}\", coord_type=\"{}\"))",
+                "GeoType(MultiPolygon(dimension=\"{}\", coord_type=\"{}\"))",
                 typ.dimension(),
                 repr_coord_type(typ.coord_type())
             ),
             Geometry(typ) => format!(
-                "GeoArrowType(Geometry(coord_type=\"{}\"))",
+                "GeoType(Geometry(coord_type=\"{}\"))",
                 repr_coord_type(typ.coord_type())
             ),
             GeometryCollection(typ) => format!(
-                "GeoArrowType(GeometryCollection(dimension=\"{}\", coord_type=\"{}\"))",
+                "GeoType(GeometryCollection(dimension=\"{}\", coord_type=\"{}\"))",
                 typ.dimension(),
                 repr_coord_type(typ.coord_type())
             ),
-            Rect(typ) => format!("GeoArrowType(Box(dimension=\"{}\"))", typ.dimension()),
-            Wkb(_) => "GeoArrowType(Wkb)".to_string(),
-            LargeWkb(_) => "GeoArrowType(LargeWkb)".to_string(),
-            WkbView(_) => "GeoArrowType(WkbView)".to_string(),
-            Wkt(_) => "GeoArrowType(Wkt)".to_string(),
-            LargeWkt(_) => "GeoArrowType(LargeWkt)".to_string(),
-            WktView(_) => "GeoArrowType(WktView)".to_string(),
+            Rect(typ) => format!("GeoType(Box(dimension=\"{}\"))", typ.dimension()),
+            Wkb(_) => "GeoType(Wkb)".to_string(),
+            LargeWkb(_) => "GeoType(LargeWkb)".to_string(),
+            WkbView(_) => "GeoType(WkbView)".to_string(),
+            Wkt(_) => "GeoType(Wkt)".to_string(),
+            LargeWkt(_) => "GeoType(LargeWkt)".to_string(),
+            WktView(_) => "GeoType(WktView)".to_string(),
         }
     }
 
@@ -154,31 +154,31 @@ impl PyGeoArrowType {
     }
 }
 
-impl AsRef<GeoArrowType> for PyGeoArrowType {
+impl AsRef<GeoArrowType> for PyGeoType {
     fn as_ref(&self) -> &GeoArrowType {
         &self.0
     }
 }
 
-impl From<GeoArrowType> for PyGeoArrowType {
+impl From<GeoArrowType> for PyGeoType {
     fn from(value: GeoArrowType) -> Self {
         Self(value)
     }
 }
 
-impl From<PyGeoArrowType> for GeoArrowType {
-    fn from(value: PyGeoArrowType) -> Self {
+impl From<PyGeoType> for GeoArrowType {
+    fn from(value: PyGeoType) -> Self {
         value.0
     }
 }
 
-impl<'a> FromPyObject<'a> for PyGeoArrowType {
+impl<'a> FromPyObject<'a> for PyGeoType {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         Ok(ob.extract::<PyField>()?.try_into()?)
     }
 }
 
-impl TryFrom<PyField> for PyGeoArrowType {
+impl TryFrom<PyField> for PyGeoType {
     type Error = PyGeoArrowError;
 
     fn try_from(value: PyField) -> Result<Self, Self::Error> {
@@ -188,7 +188,7 @@ impl TryFrom<PyField> for PyGeoArrowType {
 
 macro_rules! impl_from_geoarrow_type {
     ($geoarrow_type:ty, $variant:ident) => {
-        impl From<$geoarrow_type> for PyGeoArrowType {
+        impl From<$geoarrow_type> for PyGeoType {
             fn from(value: $geoarrow_type) -> Self {
                 Self(GeoArrowType::$variant(value))
             }
@@ -218,7 +218,7 @@ macro_rules! impl_native_type_constructor {
             coord_type: PyCoordType,
             crs: Option<PyCrs>,
             edges: Option<PyEdges>,
-        ) -> PyGeoArrowType {
+        ) -> PyGeoType {
             let edges = edges.map(|e| e.into());
             let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
             <$geoarrow_type>::new(dimension.into(), metadata)
@@ -238,7 +238,7 @@ impl_native_type_constructor!(geometrycollection, GeometryCollectionType);
 
 #[pyfunction]
 #[pyo3(signature = (dimension, *, crs=None, edges=None))]
-pub fn r#box(dimension: PyDimension, crs: Option<PyCrs>, edges: Option<PyEdges>) -> PyGeoArrowType {
+pub fn r#box(dimension: PyDimension, crs: Option<PyCrs>, edges: Option<PyEdges>) -> PyGeoType {
     let edges = edges.map(|e| e.into());
     let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
     BoxType::new(dimension.into(), metadata).into()
@@ -249,11 +249,7 @@ pub fn r#box(dimension: PyDimension, crs: Option<PyCrs>, edges: Option<PyEdges>)
     signature = (*, coord_type = PyCoordType::Separated, crs=None, edges=None),
     text_signature = "(*, coord_type='separated', crs=None, edges=None)"
 )]
-pub fn geometry(
-    coord_type: PyCoordType,
-    crs: Option<PyCrs>,
-    edges: Option<PyEdges>,
-) -> PyGeoArrowType {
+pub fn geometry(coord_type: PyCoordType, crs: Option<PyCrs>, edges: Option<PyEdges>) -> PyGeoType {
     let edges = edges.map(|e| e.into());
     let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
     GeometryType::new(metadata)
@@ -265,7 +261,7 @@ macro_rules! impl_wkb_wkt {
     ($method_name:ident, $type_constructor:ty, $variant:expr) => {
         #[pyfunction]
         #[pyo3(signature = (*, crs=None, edges=None))]
-        pub fn $method_name(crs: Option<PyCrs>, edges: Option<PyEdges>) -> PyGeoArrowType {
+        pub fn $method_name(crs: Option<PyCrs>, edges: Option<PyEdges>) -> PyGeoType {
             let edges = edges.map(|e| e.into());
             let metadata = Arc::new(Metadata::new(crs.unwrap_or_default().into(), edges));
             $variant(<$type_constructor>::new(metadata)).into()

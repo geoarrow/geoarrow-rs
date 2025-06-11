@@ -16,7 +16,7 @@ use pyo3_arrow::ffi::{ArrayIterator, to_stream_pycapsule};
 use pyo3_arrow::input::AnyArray;
 use pyo3_arrow::{PyArrayReader, PyChunkedArray};
 
-use crate::data_type::PyGeoArrowType;
+use crate::data_type::PyGeoType;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::scalar::PyGeoScalar;
 use crate::{PyCoordType, PyGeoArray};
@@ -188,7 +188,7 @@ impl PyGeoChunkedArray {
     }
 
     #[pyo3(signature = (to_type, /))]
-    fn cast(&self, to_type: PyGeoArrowType) -> PyGeoArrowResult<Self> {
+    fn cast(&self, to_type: PyGeoType) -> PyGeoArrowResult<Self> {
         let casted = self
             .chunks
             .iter()
@@ -232,14 +232,14 @@ impl PyGeoChunkedArray {
                     .into(),
                 NativeType::Rect => BoxType::new(dim, metadata).into(),
             };
-            self.cast(PyGeoArrowType::new(to_type))
+            self.cast(PyGeoType::new(to_type))
         } else {
             Ok(Self::new(self.chunks.clone(), self.data_type.clone()))
         }
     }
 
     #[getter]
-    fn r#type(&self) -> PyGeoArrowType {
+    fn r#type(&self) -> PyGeoType {
         self.data_type.clone().into()
     }
 }

@@ -1,6 +1,6 @@
 # Geometry Type
 
-::: geoarrow.rust.core.GeoArrowType
+::: geoarrow.rust.core.GeoType
 ::: geoarrow.rust.core.point
 ::: geoarrow.rust.core.linestring
 ::: geoarrow.rust.core.polygon

@@ -15,7 +15,7 @@ use pyo3::types::{PyCapsule, PyTuple};
 use pyo3_arrow::ffi::to_array_pycapsules;
 
 use crate::PyGeoArray;
-use crate::data_type::PyGeoArrowType;
+use crate::data_type::PyGeoType;
 use crate::error::PyGeoArrowResult;
 
 /// This is modeled as a geospatial array of length 1
@@ -131,7 +131,7 @@ impl PyGeoScalar {
     }
 
     #[getter]
-    fn r#type(&self) -> PyGeoArrowType {
+    fn r#type(&self) -> PyGeoType {
         self.0.data_type().into()
     }
 }

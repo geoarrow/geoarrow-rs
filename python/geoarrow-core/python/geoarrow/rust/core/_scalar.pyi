@@ -1,4 +1,4 @@
-from ._data_type import GeoArrowType
+from ._data_type import GeoType
 
 class GeoScalar:
     """
@@ -41,5 +41,5 @@ class GeoScalar:
         whether the geometry is empty.
         """
     @property
-    def type(self) -> GeoArrowType:
+    def type(self) -> GeoType:
         """The type of the scalar."""
