@@ -196,3 +196,9 @@ impl PyGeoArrayReader {
         }
     }
 }
+
+impl<'a> FromPyObject<'a> for PyGeoArrayReader {
+    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
+        Ok(Self::try_new(ob.extract()?)?)
+    }
+}

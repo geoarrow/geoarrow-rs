@@ -11,6 +11,7 @@ mod dimension;
 mod edges;
 mod error;
 mod ffi;
+pub mod input;
 mod offset_buffer;
 mod scalar;
 
