@@ -1,11 +1,8 @@
-use std::sync::Arc;
-
-use geoarrow_array::array::from_arrow_array;
+use geoarrow_array::{GeoArrowArrayIterator, GeoArrowArrayReader};
 use geoarrow_schema::GeoArrowType;
-use geoarrow_schema::error::GeoArrowError;
+use geoarrow_schema::error::GeoArrowResult;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3_arrow::ffi::{ArrayIterator, ArrayReader};
 
 use crate::{PyGeoArray, PyGeoArrayReader, PyGeoArrowResult, PyGeoChunkedArray};
 
@@ -23,25 +20,23 @@ impl AnyGeoArray {
     ///
     /// All arrays from the stream will be materialized in memory.
     pub fn into_chunked_array(self) -> PyGeoArrowResult<PyGeoChunkedArray> {
-        let data_type = self.data_type();
         let reader = self.into_reader()?;
-        let field = reader.field();
-        let chunks = reader
-            .map(|array| from_arrow_array(array?.as_ref(), &field))
-            .collect::<Result<_, GeoArrowError>>()?;
-
-        Ok(PyGeoChunkedArray::new(chunks, data_type))
+        let data_type = reader.data_type();
+        let chunks = reader.collect::<GeoArrowResult<Vec<_>>>()?;
+        Ok(PyGeoChunkedArray::try_new(chunks, data_type)?)
     }
 
-    pub fn into_reader(self) -> PyResult<Box<dyn ArrayReader + Send>> {
+    pub fn into_reader(self) -> PyResult<Box<dyn GeoArrowArrayReader + Send>> {
         match self {
             Self::Array(array) => {
                 let geo_array = array.into_inner();
-                let field = Arc::new(geo_array.data_type().to_field("", true));
-                let array = geo_array.to_array_ref();
-                Ok(Box::new(ArrayIterator::new(vec![Ok(array)], field)))
+                let data_type = geo_array.data_type();
+                Ok(Box::new(GeoArrowArrayIterator::new(
+                    vec![Ok(geo_array)],
+                    data_type,
+                )))
             }
-            Self::Stream(stream) => stream.into_inner().0.into_reader(),
+            Self::Stream(stream) => stream.into_reader(),
         }
     }
 
