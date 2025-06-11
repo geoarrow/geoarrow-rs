@@ -1,6 +1,6 @@
 from ._data_type import GeoArrowType
 
-class GeoArrowScalar:
+class GeoScalar:
     """
     An immutable geometry scalar using GeoArrow's in-memory representation.
 

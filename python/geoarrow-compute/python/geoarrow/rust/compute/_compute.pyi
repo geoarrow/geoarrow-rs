@@ -4,7 +4,7 @@ from typing import Tuple, overload
 
 from arro3.core import Array, ChunkedArray, Table
 from arro3.core.types import ArrowArrayExportable, ArrowStreamExportable
-from geoarrow.rust.core import GeoArrowArray, ChunkedGeoArrowArray
+from geoarrow.rust.core import GeoArray, GeoChunkedArray
 
 from .enums import AreaMethod, LengthMethod, RotateOrigin, SimplifyMethod
 from .types import (
@@ -23,14 +23,14 @@ from .types import (
 @overload
 def affine_transform(
     input: ArrowArrayExportable, transform: AffineTransform
-) -> GeoArrowArray: ...
+) -> GeoArray: ...
 @overload
 def affine_transform(
     input: ArrowStreamExportable, transform: AffineTransform
-) -> ChunkedGeoArrowArray: ...
+) -> GeoChunkedArray: ...
 def affine_transform(
     input: ArrowArrayExportable | ArrowStreamExportable, transform: AffineTransform
-) -> GeoArrowArray | ChunkedGeoArrowArray:
+) -> GeoArray | GeoChunkedArray:
     """
     Apply an affine transformation to geometries.
 
@@ -83,12 +83,12 @@ def area(
     """
 
 @overload
-def center(input: ArrowArrayExportable) -> GeoArrowArray: ...
+def center(input: ArrowArrayExportable) -> GeoArray: ...
 @overload
-def center(input: ArrowStreamExportable) -> ChunkedGeoArrowArray: ...
+def center(input: ArrowStreamExportable) -> GeoChunkedArray: ...
 def center(
     input: ArrowArrayExportable | ArrowStreamExportable,
-) -> GeoArrowArray | ChunkedGeoArrowArray:
+) -> GeoArray | GeoChunkedArray:
     """
     Compute the center of geometries
 
@@ -103,12 +103,12 @@ def center(
     """
 
 @overload
-def centroid(input: ArrowArrayExportable) -> GeoArrowArray: ...
+def centroid(input: ArrowArrayExportable) -> GeoArray: ...
 @overload
-def centroid(input: ArrowStreamExportable) -> ChunkedGeoArrowArray: ...
+def centroid(input: ArrowStreamExportable) -> GeoChunkedArray: ...
 def centroid(
     input: ArrowArrayExportable | ArrowStreamExportable,
-) -> GeoArrowArray | ChunkedGeoArrowArray:
+) -> GeoArray | GeoChunkedArray:
     """
     Calculation of the centroid.
 
@@ -127,17 +127,15 @@ def centroid(
     """
 
 @overload
-def chaikin_smoothing(
-    input: ArrowArrayExportable, n_iterations: int
-) -> GeoArrowArray: ...
+def chaikin_smoothing(input: ArrowArrayExportable, n_iterations: int) -> GeoArray: ...
 @overload
 def chaikin_smoothing(
     input: ArrowStreamExportable, n_iterations: int
-) -> ChunkedGeoArrowArray: ...
+) -> GeoChunkedArray: ...
 def chaikin_smoothing(
     input: ArrowArrayExportable | ArrowStreamExportable,
     n_iterations: int,
-) -> GeoArrowArray | ChunkedGeoArrowArray:
+) -> GeoArray | GeoChunkedArray:
     """
     Smoothen `LineString`, `Polygon`, `MultiLineString` and `MultiPolygon` using
     Chaikins algorithm.
@@ -161,12 +159,12 @@ def chaikin_smoothing(
     """
 
 @overload
-def convex_hull(input: ArrowArrayExportable) -> GeoArrowArray: ...
+def convex_hull(input: ArrowArrayExportable) -> GeoArray: ...
 @overload
-def convex_hull(input: ArrowStreamExportable) -> ChunkedGeoArrowArray: ...
+def convex_hull(input: ArrowStreamExportable) -> GeoChunkedArray: ...
 def convex_hull(
     input: ArrowArrayExportable | ArrowStreamExportable,
-) -> GeoArrowArray | ChunkedGeoArrowArray:
+) -> GeoArray | GeoChunkedArray:
     """
     Returns the convex hull of a Polygon. The hull is always oriented
     counter-clockwise.
@@ -184,14 +182,12 @@ def convex_hull(
     """
 
 @overload
-def densify(input: ArrowArrayExportable, max_distance: float) -> GeoArrowArray: ...
+def densify(input: ArrowArrayExportable, max_distance: float) -> GeoArray: ...
 @overload
-def densify(
-    input: ArrowStreamExportable, max_distance: float
-) -> ChunkedGeoArrowArray: ...
+def densify(input: ArrowStreamExportable, max_distance: float) -> GeoChunkedArray: ...
 def densify(
     input: ArrowArrayExportable, max_distance: float
-) -> GeoArrowArray | ChunkedGeoArrowArray:
+) -> GeoArray | GeoChunkedArray:
     """
     Return a new linear geometry containing both existing and new interpolated
     coordinates with a maximum distance of `max_distance` between them.
@@ -207,12 +203,12 @@ def densify(
     """
 
 @overload
-def envelope(input: ArrowArrayExportable) -> GeoArrowArray: ...
+def envelope(input: ArrowArrayExportable) -> GeoArray: ...
 @overload
-def envelope(input: ArrowStreamExportable) -> ChunkedGeoArrowArray: ...
+def envelope(input: ArrowStreamExportable) -> GeoChunkedArray: ...
 def envelope(
     input: ArrowArrayExportable | ArrowStreamExportable,
-) -> GeoArrowArray | ChunkedGeoArrowArray:
+) -> GeoArray | GeoChunkedArray:
     """
     Computes the minimum axis-aligned bounding box that encloses an input geometry
 
@@ -356,12 +352,12 @@ def length(
 def line_interpolate_point(
     input: ArrowArrayExportable,
     fraction: float | int | ArrowArrayExportable | NumpyArrayProtocolf64,
-) -> GeoArrowArray: ...
+) -> GeoArray: ...
 @overload
 def line_interpolate_point(
     input: ArrowStreamExportable,
     fraction: float | int | ArrowStreamExportable,
-) -> ChunkedGeoArrowArray: ...
+) -> GeoChunkedArray: ...
 def line_interpolate_point(
     input: ArrowArrayExportable | ArrowStreamExportable,
     fraction: float
@@ -369,7 +365,7 @@ def line_interpolate_point(
     | ArrowArrayExportable
     | ArrowStreamExportable
     | NumpyArrayProtocolf64,
-) -> GeoArrowArray | ChunkedGeoArrowArray:
+) -> GeoArray | GeoChunkedArray:
     """
     Returns a point interpolated at given distance on a line.
 
@@ -424,9 +420,9 @@ def line_locate_point(
         input: input geometry array or chunked geometry array
         point: the fractional distance along the line. A variety of inputs are accepted:
 
-            - A scalar [`GeoArrowScalar`][geoarrow.rust.core.GeoArrowScalar]
-            - A [`GeoArrowArray`][geoarrow.rust.core.GeoArrowArray]
-            - A [`ChunkedGeoArrowArray`][geoarrow.rust.core.ChunkedGeoArrowArray]
+            - A scalar [`GeoScalar`][geoarrow.rust.core.GeoScalar]
+            - A [`GeoArray`][geoarrow.rust.core.GeoArray]
+            - A [`GeoChunkedArray`][geoarrow.rust.core.GeoChunkedArray]
             - Any Python class that implements the Geo Interface, such as a [`shapely` Point][shapely.Point]
             - Any GeoArrow array or chunked array of `Point` type
 
@@ -438,16 +434,16 @@ def line_locate_point(
 def polylabel(
     input: ArrowArrayExportable,
     tolerance: float,
-) -> GeoArrowArray: ...
+) -> GeoArray: ...
 @overload
 def polylabel(
     input: ArrowStreamExportable,
     tolerance: float,
-) -> ChunkedGeoArrowArray: ...
+) -> GeoChunkedArray: ...
 def polylabel(
     input: ArrowArrayExportable | ArrowStreamExportable,
     tolerance: float,
-) -> GeoArrowArray | ChunkedGeoArrowArray:
+) -> GeoArray | GeoChunkedArray:
     """
     Calculate a Polygon's ideal label position by calculating its _pole of inaccessibility_.
 
@@ -505,29 +501,29 @@ def rotate(
     angle: float,
     *,
     origin: RotateOrigin | RotateOriginT | tuple[float, float],
-) -> GeoArrowArray: ...
+) -> GeoArray: ...
 @overload
 def rotate(
     geom: ArrowStreamExportable,
     angle: float,
     *,
     origin: RotateOrigin | RotateOriginT | tuple[float, float],
-) -> ChunkedGeoArrowArray: ...
+) -> GeoChunkedArray: ...
 def rotate(
     geom: ArrowArrayExportable | ArrowStreamExportable,
     angle: float,
     *,
     origin: RotateOrigin | RotateOriginT | tuple[float, float],
-) -> GeoArrowArray | ChunkedGeoArrowArray: ...
+) -> GeoArray | GeoChunkedArray: ...
 @overload
-def scale(geom: ArrowArrayExportable, xfact: float, yfact: float) -> GeoArrowArray: ...
+def scale(geom: ArrowArrayExportable, xfact: float, yfact: float) -> GeoArray: ...
 @overload
 def scale(
     geom: ArrowStreamExportable, xfact: float, yfact: float
-) -> ChunkedGeoArrowArray: ...
+) -> GeoChunkedArray: ...
 def scale(
     geom: ArrowArrayExportable | ArrowStreamExportable, xfact: float, yfact: float
-) -> GeoArrowArray | ChunkedGeoArrowArray:
+) -> GeoArray | GeoChunkedArray:
     """Returns a scaled geometry, scaled by factors along each dimension.
 
     Args:
@@ -545,20 +541,20 @@ def simplify(
     epsilon: float,
     *,
     method: SimplifyMethod | SimplifyMethodT = SimplifyMethod.RDP,
-) -> GeoArrowArray: ...
+) -> GeoArray: ...
 @overload
 def simplify(
     input: ArrowStreamExportable,
     epsilon: float,
     *,
     method: SimplifyMethod | SimplifyMethodT = SimplifyMethod.RDP,
-) -> ChunkedGeoArrowArray: ...
+) -> GeoChunkedArray: ...
 def simplify(
     input: ArrowArrayExportable | ArrowStreamExportable,
     epsilon: float,
     *,
     method: SimplifyMethod | SimplifyMethodT = SimplifyMethod.RDP,
-) -> GeoArrowArray | ChunkedGeoArrowArray:
+) -> GeoArray | GeoChunkedArray:
     """
     Simplifies a geometry.
 
@@ -578,12 +574,12 @@ def simplify(
     """
 
 @overload
-def skew(geom: ArrowArrayExportable, xs: float, ys: float) -> GeoArrowArray: ...
+def skew(geom: ArrowArrayExportable, xs: float, ys: float) -> GeoArray: ...
 @overload
-def skew(geom: ArrowStreamExportable, xs: float, ys: float) -> ChunkedGeoArrowArray: ...
+def skew(geom: ArrowStreamExportable, xs: float, ys: float) -> GeoChunkedArray: ...
 def skew(
     geom: ArrowArrayExportable | ArrowStreamExportable, xs: float, ys: float
-) -> GeoArrowArray | ChunkedGeoArrowArray:
+) -> GeoArray | GeoChunkedArray:
     """
     Skew a geometry from it's bounding box center, using different values for `xs` and
     `ys` to distort the geometry's [aspect
@@ -599,16 +595,14 @@ def skew(
     """
 
 @overload
-def translate(
-    geom: ArrowArrayExportable, xoff: float, yoff: float
-) -> GeoArrowArray: ...
+def translate(geom: ArrowArrayExportable, xoff: float, yoff: float) -> GeoArray: ...
 @overload
 def translate(
     geom: ArrowStreamExportable, xoff: float, yoff: float
-) -> ChunkedGeoArrowArray: ...
+) -> GeoChunkedArray: ...
 def translate(
     geom: ArrowArrayExportable | ArrowStreamExportable, xoff: float, yoff: float
-) -> GeoArrowArray | ChunkedGeoArrowArray:
+) -> GeoArray | GeoChunkedArray:
     """Returns a scaled geometry, scaled by factors along each dimension.
 
     Args:

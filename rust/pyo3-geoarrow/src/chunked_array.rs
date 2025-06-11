@@ -18,21 +18,21 @@ use pyo3_arrow::{PyArrayReader, PyChunkedArray};
 
 use crate::data_type::PyGeoArrowType;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
-use crate::scalar::PyGeoArrowScalar;
-use crate::{PyCoordType, PyGeoArrowArray};
+use crate::scalar::PyGeoScalar;
+use crate::{PyCoordType, PyGeoArray};
 
 #[pyclass(
     module = "geoarrow.rust.core",
-    name = "ChunkedGeoArrowArray",
+    name = "GeoChunkedArray",
     subclass,
     frozen
 )]
-pub struct PyChunkedGeoArrowArray {
+pub struct PyGeoChunkedArray {
     chunks: Vec<Arc<dyn GeoArrowArray>>,
     data_type: GeoArrowType,
 }
 
-impl PyChunkedGeoArrowArray {
+impl PyGeoChunkedArray {
     pub fn new(chunks: Vec<Arc<dyn GeoArrowArray>>, data_type: GeoArrowType) -> Self {
         // TODO: validate all chunks have the same data type
         Self { chunks, data_type }
@@ -49,7 +49,7 @@ impl PyChunkedGeoArrowArray {
     pub fn to_geoarrow<'py>(&'py self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let geoarrow_mod = py.import(intern!(py, "geoarrow.rust.core"))?;
         geoarrow_mod
-            .getattr(intern!(py, "ChunkedGeoArrowArray"))?
+            .getattr(intern!(py, "GeoChunkedArray"))?
             .call_method1(
                 intern!(py, "from_arrow_pycapsule"),
                 PyTuple::new(py, vec![self.__arrow_c_stream__(py, None)?])?,
@@ -83,7 +83,7 @@ impl PyChunkedGeoArrowArray {
 }
 
 #[pymethods]
-impl PyChunkedGeoArrowArray {
+impl PyGeoChunkedArray {
     #[pyo3(signature = (requested_schema=None))]
     fn __arrow_c_stream__<'py>(
         &self,
@@ -117,7 +117,7 @@ impl PyChunkedGeoArrowArray {
         }
     }
 
-    fn __getitem__(&self, i: isize) -> PyGeoArrowResult<PyGeoArrowScalar> {
+    fn __getitem__(&self, i: isize) -> PyGeoArrowResult<PyGeoScalar> {
         // Handle negative indexes from the end
         let mut i = if i < 0 {
             let i = self.__len__() as isize + i;
@@ -134,7 +134,7 @@ impl PyChunkedGeoArrowArray {
 
         for chunk in self.chunks() {
             if i < chunk.inner().len() {
-                return PyGeoArrowScalar::try_new(chunk.inner().slice(i, 1));
+                return PyGeoScalar::try_new(chunk.inner().slice(i, 1));
             }
             i -= chunk.inner().len();
         }
@@ -146,7 +146,7 @@ impl PyChunkedGeoArrowArray {
     }
 
     fn __repr__(&self) -> String {
-        "ChunkedGeoArrowArray".to_string()
+        "GeoChunkedArray".to_string()
     }
 
     #[classmethod]
@@ -176,14 +176,14 @@ impl PyChunkedGeoArrowArray {
         self.chunks.len()
     }
 
-    fn chunk(&self, i: usize) -> PyGeoArrowArray {
-        PyGeoArrowArray::new(self.chunks[i].clone())
+    fn chunk(&self, i: usize) -> PyGeoArray {
+        PyGeoArray::new(self.chunks[i].clone())
     }
 
-    fn chunks(&self) -> Vec<PyGeoArrowArray> {
+    fn chunks(&self) -> Vec<PyGeoArray> {
         self.chunks
             .iter()
-            .map(|chunk| PyGeoArrowArray::new(chunk.clone()))
+            .map(|chunk| PyGeoArray::new(chunk.clone()))
             .collect()
     }
 
@@ -244,14 +244,14 @@ impl PyChunkedGeoArrowArray {
     }
 }
 
-impl<'a> FromPyObject<'a> for PyChunkedGeoArrowArray {
+impl<'a> FromPyObject<'a> for PyGeoChunkedArray {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         let chunked_array = ob.extract::<AnyArray>()?.into_chunked_array()?;
         chunked_array.try_into().map_err(PyErr::from)
     }
 }
 
-impl TryFrom<PyChunkedArray> for PyChunkedGeoArrowArray {
+impl TryFrom<PyChunkedArray> for PyGeoChunkedArray {
     type Error = PyGeoArrowError;
 
     fn try_from(value: PyChunkedArray) -> Result<Self, Self::Error> {
@@ -268,7 +268,7 @@ impl TryFrom<PyChunkedArray> for PyChunkedGeoArrowArray {
     }
 }
 
-impl TryFrom<PyArrayReader> for PyChunkedGeoArrowArray {
+impl TryFrom<PyArrayReader> for PyGeoChunkedArray {
     type Error = PyGeoArrowError;
 
     fn try_from(value: PyArrayReader) -> Result<Self, Self::Error> {

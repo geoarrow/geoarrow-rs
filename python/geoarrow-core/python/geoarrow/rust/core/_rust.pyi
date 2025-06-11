@@ -17,9 +17,9 @@ try:
 except ImportError:
     pass
 
-from ._array import GeoArrowArray as GeoArrowArray
-from ._array_reader import GeoArrowArrayReader as GeoArrowArrayReader
-from ._chunked_array import ChunkedGeoArrowArray as ChunkedGeoArrowArray
+from ._array import GeoArray as GeoArray
+from ._array_reader import GeoArrayReader as GeoArrayReader
+from ._chunked_array import GeoChunkedArray as GeoChunkedArray
 from ._constructors import CoordsInput as CoordsInput
 from ._constructors import linestrings as linestrings
 from ._constructors import multilinestrings as multilinestrings
@@ -43,17 +43,17 @@ from ._data_type import wkb as wkb
 from ._data_type import wkb_view as wkb_view
 from ._data_type import wkt as wkt
 from ._data_type import wkt_view as wkt_view
-from ._scalar import GeoArrowScalar as GeoArrowScalar
+from ._scalar import GeoScalar as GeoScalar
 from .enums import CoordType
 from .types import CRSInput
 
 @overload
-def geometry_col(input: ArrowArrayExportable) -> GeoArrowArray: ...
+def geometry_col(input: ArrowArrayExportable) -> GeoArray: ...
 @overload
-def geometry_col(input: ArrowStreamExportable) -> ChunkedGeoArrowArray: ...
+def geometry_col(input: ArrowStreamExportable) -> GeoChunkedArray: ...
 def geometry_col(
     input: ArrowArrayExportable | ArrowStreamExportable,
-) -> GeoArrowArray | ChunkedGeoArrowArray:
+) -> GeoArray | GeoChunkedArray:
     """Access the geometry column of a Table or RecordBatch
 
     Args:
@@ -190,7 +190,7 @@ def from_geopandas(input: gpd.GeoDataFrame) -> Table:
         A GeoArrow Table
     """
 
-def from_shapely(input, *, crs: CRSInput | None = None) -> GeoArrowArray:
+def from_shapely(input, *, crs: CRSInput | None = None) -> GeoArray:
     """
     Create a GeoArrow array from an array of Shapely geometries.
 
@@ -222,18 +222,18 @@ def from_wkb(
     input: ArrowArrayExportable,
     *,
     coord_type: CoordType = CoordType.INTERLEAVED,
-) -> GeoArrowArray: ...
+) -> GeoArray: ...
 @overload
 def from_wkb(
     input: ArrowStreamExportable,
     *,
     coord_type: CoordType = CoordType.INTERLEAVED,
-) -> ChunkedGeoArrowArray: ...
+) -> GeoChunkedArray: ...
 def from_wkb(
     input: ArrowArrayExportable | ArrowStreamExportable,
     *,
     coord_type: CoordType = CoordType.INTERLEAVED,
-) -> GeoArrowArray | ChunkedGeoArrowArray:
+) -> GeoArray | GeoChunkedArray:
     """
     Parse an Arrow BinaryArray from WKB to its GeoArrow-native counterpart.
 
@@ -255,18 +255,18 @@ def from_wkt(
     input: ArrowArrayExportable,
     *,
     coord_type: CoordType = CoordType.INTERLEAVED,
-) -> GeoArrowArray: ...
+) -> GeoArray: ...
 @overload
 def from_wkt(
     input: ArrowStreamExportable,
     *,
     coord_type: CoordType = CoordType.INTERLEAVED,
-) -> ChunkedGeoArrowArray: ...
+) -> GeoChunkedArray: ...
 def from_wkt(
     input: ArrowArrayExportable | ArrowStreamExportable,
     *,
     coord_type: CoordType = CoordType.INTERLEAVED,
-) -> GeoArrowArray | ChunkedGeoArrowArray:
+) -> GeoArray | GeoChunkedArray:
     """
     Parse an Arrow StringArray from WKT to its GeoArrow-native counterpart.
 
@@ -324,10 +324,10 @@ def to_shapely(
     """
 
 @overload
-def to_wkb(input: ArrowArrayExportable) -> GeoArrowArray: ...
+def to_wkb(input: ArrowArrayExportable) -> GeoArray: ...
 @overload
-def to_wkb(input: ArrowStreamExportable) -> ChunkedGeoArrowArray: ...
-def to_wkb(input: ArrowArrayExportable) -> GeoArrowArray:
+def to_wkb(input: ArrowStreamExportable) -> GeoChunkedArray: ...
+def to_wkb(input: ArrowArrayExportable) -> GeoArray:
     """
     Encode a GeoArrow-native geometry array to a WKBArray, holding ISO-formatted WKB geometries.
 
