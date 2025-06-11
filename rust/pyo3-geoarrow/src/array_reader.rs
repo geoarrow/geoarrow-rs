@@ -4,11 +4,11 @@ use geoarrow_schema::GeoArrowType;
 use pyo3::exceptions::{PyIOError, PyStopIteration};
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyType};
+use pyo3_arrow::PyArrayReader;
 use pyo3_arrow::error::PyArrowResult;
 use pyo3_arrow::export::Arro3ArrayReader;
 use pyo3_arrow::ffi::{ArrayIterator, ArrayReader, to_schema_pycapsule, to_stream_pycapsule};
 use pyo3_arrow::input::AnyArray;
-use pyo3_arrow::{PyArray, PyArrayReader, PyField};
 
 use crate::data_type::PyGeoType;
 use crate::{PyGeoArray, PyGeoArrowError, PyGeoArrowResult, PyGeoChunkedArray};
@@ -145,19 +145,16 @@ impl PyGeoArrayReader {
     #[classmethod]
     fn from_arrays(
         _cls: &Bound<PyType>,
-        r#type: PyField,
-        arrays: Vec<PyArray>,
+        r#type: PyGeoType,
+        arrays: Vec<PyGeoArray>,
     ) -> PyGeoArrowResult<Self> {
         let arrays = arrays
             .into_iter()
-            .map(|array| {
-                let (arr, _field) = array.into_inner();
-                arr
-            })
+            .map(|array| array.into_inner().to_array_ref())
             .collect::<Vec<_>>();
         PyArrayReader::new(Box::new(ArrayIterator::new(
             arrays.into_iter().map(Ok),
-            r#type.into_inner(),
+            r#type.into_inner().to_field("", true).into(),
         )))
         .try_into()
     }
