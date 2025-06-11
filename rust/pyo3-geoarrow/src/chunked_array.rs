@@ -8,7 +8,7 @@ use geoarrow_schema::{
     BoxType, GeoArrowType, GeometryCollectionType, LineStringType, MultiLineStringType,
     MultiPointType, MultiPolygonType, PointType, PolygonType,
 };
-use pyo3::exceptions::PyIndexError;
+use pyo3::exceptions::{PyIndexError, PyTypeError};
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyTuple, PyType};
@@ -33,9 +33,13 @@ pub struct PyGeoChunkedArray {
 }
 
 impl PyGeoChunkedArray {
-    pub fn new(chunks: Vec<Arc<dyn GeoArrowArray>>, data_type: GeoArrowType) -> Self {
-        // TODO: validate all chunks have the same data type
-        Self { chunks, data_type }
+    /// Construct a new [PyGeoChunkedArray] from existing chunks and a field.
+    pub fn try_new(chunks: Vec<Arc<dyn GeoArrowArray>>, data_type: GeoArrowType) -> PyResult<Self> {
+        if !chunks.iter().all(|chunk| chunk.data_type() == data_type) {
+            return Err(PyTypeError::new_err("All chunks must have same data type"));
+        }
+
+        Ok(Self { chunks, data_type })
     }
 
     /// Import from a raw Arrow C Stream capsule
@@ -74,7 +78,7 @@ impl PyGeoChunkedArray {
         }
 
         let data_type = chunks[0].data_type();
-        Ok(Self::new(chunks, data_type))
+        Ok(Self::try_new(chunks, data_type)?)
     }
 
     pub fn into_inner(self) -> (Vec<Arc<dyn GeoArrowArray>>, GeoArrowType) {
@@ -234,7 +238,7 @@ impl PyGeoChunkedArray {
             };
             self.cast(PyGeoType::new(to_type))
         } else {
-            Ok(Self::new(self.chunks.clone(), self.data_type.clone()))
+            Ok(Self::try_new(self.chunks.clone(), self.data_type.clone())?)
         }
     }
 
