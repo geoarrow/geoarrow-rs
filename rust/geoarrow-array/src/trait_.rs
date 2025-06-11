@@ -537,6 +537,76 @@ pub(crate) trait GeoArrowArrayBuilder: Debug + Send + Sync {
     fn finish(self) -> Arc<dyn GeoArrowArray>;
 }
 
+/// Trait for types that can read `Arc<dyn GeoArrowArray>`'s.
+///
+/// There is no direct parallel to this in the upstream [arrow-array] crate. The closest is
+/// [RecordBatchReader][arrow_array::RecordBatchReader], which has the same implementation over an
+/// iterator of `RecordBatch`es. However, it is useful to have an iterator of GeoArrow arrays with
+/// a known [`GeoArrowType`].
+///
+/// To create from an iterator, see [GeoArrowArrayIterator].
+pub trait GeoArrowArrayReader: Iterator<Item = GeoArrowResult<Arc<dyn GeoArrowArray>>> {
+    /// Returns the field of this `GeoArrowArrayReader`.
+    ///
+    /// Implementation of this trait should guarantee that all `Arc<dyn GeoArrowArray>`'s returned
+    /// by this reader should have the same [`GeoArrowType`] as returned from this method.
+    fn data_type(&self) -> GeoArrowType;
+}
+
+impl<R: GeoArrowArrayReader + ?Sized> GeoArrowArrayReader for Box<R> {
+    fn data_type(&self) -> GeoArrowType {
+        self.as_ref().data_type()
+    }
+}
+
+/// An iterator of [`Arc<dyn GeoArrowArray>`] with an attached [`GeoArrowType`]
+pub struct GeoArrowArrayIterator<I>
+where
+    I: IntoIterator<Item = GeoArrowResult<Arc<dyn GeoArrowArray>>>,
+{
+    inner: I::IntoIter,
+    inner_type: GeoArrowType,
+}
+
+impl<I> GeoArrowArrayIterator<I>
+where
+    I: IntoIterator<Item = GeoArrowResult<Arc<dyn GeoArrowArray>>>,
+{
+    /// Create a new [GeoArrowArrayIterator].
+    ///
+    /// If `iter` is an infallible iterator, use `.map(Ok)`.
+    pub fn new(iter: I, data_type: GeoArrowType) -> Self {
+        Self {
+            inner: iter.into_iter(),
+            inner_type: data_type,
+        }
+    }
+}
+
+impl<I> Iterator for GeoArrowArrayIterator<I>
+where
+    I: IntoIterator<Item = GeoArrowResult<Arc<dyn GeoArrowArray>>>,
+{
+    type Item = I::Item;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next()
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.inner.size_hint()
+    }
+}
+
+impl<I> GeoArrowArrayReader for GeoArrowArrayIterator<I>
+where
+    I: IntoIterator<Item = GeoArrowResult<Arc<dyn GeoArrowArray>>>,
+{
+    fn data_type(&self) -> GeoArrowType {
+        self.inner_type.clone()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use std::sync::Arc;

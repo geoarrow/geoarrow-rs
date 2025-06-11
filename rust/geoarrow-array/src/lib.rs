@@ -13,7 +13,9 @@ pub mod scalar;
 mod trait_;
 pub(crate) mod util;
 
-pub use trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
+pub use trait_::{
+    GeoArrowArray, GeoArrowArrayAccessor, GeoArrowArrayIterator, GeoArrowArrayReader, IntoArrow,
+};
 
 #[cfg(any(test, feature = "test-data"))]
 #[allow(missing_docs)]
