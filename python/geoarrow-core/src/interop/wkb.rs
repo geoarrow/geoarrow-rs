@@ -13,7 +13,7 @@ use pyo3_geoarrow::{PyGeoArray, PyGeoArrayReader};
 use pyo3_geoarrow::PyGeoArrowResult;
 
 #[pyfunction]
-#[pyo3(signature = (input, *, to_type = None))]
+#[pyo3(signature = (input, to_type = None))]
 pub fn from_wkb(
     py: Python,
     input: AnyGeoArray,

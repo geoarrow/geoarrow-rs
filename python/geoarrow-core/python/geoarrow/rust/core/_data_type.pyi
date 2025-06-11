@@ -233,7 +233,7 @@ def geometrycollection(
 
 def geometry(
     *,
-    coord_type: CoordType,
+    coord_type: CoordType = CoordType.SEPARATED,
     crs: CRSInput | None = None,
     edges: EdgesInput | None = None,
 ) -> GeoType:
