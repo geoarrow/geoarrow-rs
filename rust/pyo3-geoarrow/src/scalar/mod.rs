@@ -14,20 +14,15 @@ use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyTuple};
 use pyo3_arrow::ffi::to_array_pycapsules;
 
-use crate::PyGeoArrowArray;
+use crate::PyGeoArray;
 use crate::data_type::PyGeoArrowType;
 use crate::error::PyGeoArrowResult;
 
 /// This is modeled as a geospatial array of length 1
-#[pyclass(
-    module = "geoarrow.rust.core",
-    name = "GeoArrowScalar",
-    subclass,
-    frozen
-)]
-pub struct PyGeoArrowScalar(Arc<dyn GeoArrowArray>);
+#[pyclass(module = "geoarrow.rust.core", name = "GeoScalar", subclass, frozen)]
+pub struct PyGeoScalar(Arc<dyn GeoArrowArray>);
 
-impl PyGeoArrowScalar {
+impl PyGeoScalar {
     pub fn try_new(array: Arc<dyn GeoArrowArray>) -> PyGeoArrowResult<Self> {
         if array.len() != 1 {
             Err(
@@ -49,7 +44,7 @@ impl PyGeoArrowScalar {
 }
 
 #[pymethods]
-impl PyGeoArrowScalar {
+impl PyGeoScalar {
     #[pyo3(signature = (requested_schema=None))]
     fn __arrow_c_array__<'py>(
         &'py self,
@@ -141,11 +136,9 @@ impl PyGeoArrowScalar {
     }
 }
 
-impl<'a> FromPyObject<'a> for PyGeoArrowScalar {
+impl<'a> FromPyObject<'a> for PyGeoScalar {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
-        Ok(Self::try_new(
-            ob.extract::<PyGeoArrowArray>()?.into_inner(),
-        )?)
+        Ok(Self::try_new(ob.extract::<PyGeoArray>()?.into_inner())?)
     }
 }
 

@@ -17,17 +17,12 @@ use pyo3_arrow::ffi::to_array_pycapsules;
 use crate::PyCoordType;
 use crate::data_type::PyGeoArrowType;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
-use crate::scalar::PyGeoArrowScalar;
+use crate::scalar::PyGeoScalar;
 
-#[pyclass(
-    module = "geoarrow.rust.core",
-    name = "GeoArrowArray",
-    subclass,
-    frozen
-)]
-pub struct PyGeoArrowArray(Arc<dyn GeoArrowArray>);
+#[pyclass(module = "geoarrow.rust.core", name = "GeoArray", subclass, frozen)]
+pub struct PyGeoArray(Arc<dyn GeoArrowArray>);
 
-impl PyGeoArrowArray {
+impl PyGeoArray {
     pub fn new(array: Arc<dyn GeoArrowArray>) -> Self {
         Self(array)
     }
@@ -63,7 +58,7 @@ impl PyGeoArrowArray {
 }
 
 #[pymethods]
-impl PyGeoArrowArray {
+impl PyGeoArray {
     #[new]
     fn py_new(data: &Bound<PyAny>) -> PyResult<Self> {
         data.extract()
@@ -108,7 +103,7 @@ impl PyGeoArrowArray {
     //     Ok(json_mod.call_method1(intern!(py, "loads"), args)?)
     // }
 
-    fn __getitem__(&self, i: isize) -> PyGeoArrowResult<PyGeoArrowScalar> {
+    fn __getitem__(&self, i: isize) -> PyGeoArrowResult<PyGeoScalar> {
         // Handle negative indexes from the end
         let i = if i < 0 {
             let i = self.0.len() as isize + i;
@@ -123,7 +118,7 @@ impl PyGeoArrowArray {
             return Err(PyIndexError::new_err("Index out of range").into());
         }
 
-        PyGeoArrowScalar::try_new(self.0.slice(i, 1))
+        PyGeoScalar::try_new(self.0.slice(i, 1))
     }
 
     fn __len__(&self) -> usize {
@@ -206,25 +201,25 @@ impl PyGeoArrowArray {
     }
 }
 
-impl From<Arc<dyn GeoArrowArray>> for PyGeoArrowArray {
+impl From<Arc<dyn GeoArrowArray>> for PyGeoArray {
     fn from(value: Arc<dyn GeoArrowArray>) -> Self {
         Self(value)
     }
 }
 
-impl From<PyGeoArrowArray> for Arc<dyn GeoArrowArray> {
-    fn from(value: PyGeoArrowArray) -> Self {
+impl From<PyGeoArray> for Arc<dyn GeoArrowArray> {
+    fn from(value: PyGeoArray) -> Self {
         value.0
     }
 }
 
-impl<'a> FromPyObject<'a> for PyGeoArrowArray {
+impl<'a> FromPyObject<'a> for PyGeoArray {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         Ok(ob.extract::<PyArray>()?.try_into()?)
     }
 }
 
-impl TryFrom<PyArray> for PyGeoArrowArray {
+impl TryFrom<PyArray> for PyGeoArray {
     type Error = PyGeoArrowError;
 
     fn try_from(value: PyArray) -> Result<Self, Self::Error> {

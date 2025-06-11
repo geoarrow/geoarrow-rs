@@ -11,20 +11,20 @@ use pyo3_arrow::input::AnyArray;
 use pyo3_arrow::{PyArray, PyArrayReader, PyField};
 
 use crate::data_type::PyGeoArrowType;
-use crate::{PyChunkedGeoArrowArray, PyGeoArrowArray, PyGeoArrowError, PyGeoArrowResult};
+use crate::{PyGeoArray, PyGeoArrowError, PyGeoArrowResult, PyGeoChunkedArray};
 
 /// A Python-facing GeoArrow array reader.
 ///
 /// This is a wrapper around a [PyArrayReader].
 #[pyclass(
     module = "geoarrow.rust.core",
-    name = "GeoArrowArrayReader",
+    name = "GeoArrayReader",
     subclass,
     frozen
 )]
-pub struct PyGeoArrowArrayReader(PyArrayReader, GeoArrowType);
+pub struct PyGeoArrayReader(PyArrayReader, GeoArrowType);
 
-impl PyGeoArrowArrayReader {
+impl PyGeoArrayReader {
     /// Construct a new [PyArrayReader] from an existing [ArrayReader].
     pub fn try_new(reader: PyArrayReader) -> PyGeoArrowResult<Self> {
         let field = reader.field_ref()?;
@@ -53,8 +53,8 @@ impl PyGeoArrowArrayReader {
         self.0.into_reader()
     }
 
-    /// Consume this reader and create a [PyChunkedGeoArrowArray] object
-    pub fn into_chunked_array(self) -> PyGeoArrowResult<PyChunkedGeoArrowArray> {
+    /// Consume this reader and create a [PyGeoChunkedArray] object
+    pub fn into_chunked_array(self) -> PyGeoArrowResult<PyGeoChunkedArray> {
         self.read_all()
     }
 
@@ -71,7 +71,7 @@ impl PyGeoArrowArrayReader {
     }
 }
 
-impl TryFrom<Box<dyn ArrayReader + Send>> for PyGeoArrowArrayReader {
+impl TryFrom<Box<dyn ArrayReader + Send>> for PyGeoArrayReader {
     type Error = PyGeoArrowError;
 
     fn try_from(value: Box<dyn ArrayReader + Send>) -> Result<Self, Self::Error> {
@@ -79,7 +79,7 @@ impl TryFrom<Box<dyn ArrayReader + Send>> for PyGeoArrowArrayReader {
     }
 }
 
-impl TryFrom<PyArrayReader> for PyGeoArrowArrayReader {
+impl TryFrom<PyArrayReader> for PyGeoArrayReader {
     type Error = PyGeoArrowError;
 
     fn try_from(value: PyArrayReader) -> Result<Self, Self::Error> {
@@ -88,7 +88,7 @@ impl TryFrom<PyArrayReader> for PyGeoArrowArrayReader {
 }
 
 #[pymethods]
-impl PyGeoArrowArrayReader {
+impl PyGeoArrayReader {
     fn __arrow_c_schema__<'py>(&'py self, py: Python<'py>) -> PyArrowResult<Bound<'py, PyCapsule>> {
         to_schema_pycapsule(py, self.field_ref()?.as_ref())
     }
@@ -115,7 +115,7 @@ impl PyGeoArrowArrayReader {
         slf
     }
 
-    fn __next__(&self) -> PyGeoArrowResult<PyGeoArrowArray> {
+    fn __next__(&self) -> PyGeoArrowResult<PyGeoArray> {
         self.read_next_array()
     }
 
@@ -172,17 +172,17 @@ impl PyGeoArrowArrayReader {
         self.1.clone().into()
     }
 
-    fn read_all(&self) -> PyGeoArrowResult<PyChunkedGeoArrowArray> {
+    fn read_all(&self) -> PyGeoArrowResult<PyGeoChunkedArray> {
         let (chunks, field) = self.0.to_chunked_array()?.into_inner();
         let geo_arrays = chunks
             .iter()
             .map(|array| from_arrow_array(array, &field))
             .collect::<Result<Vec<_>, _>>()?;
 
-        Ok(PyChunkedGeoArrowArray::new(geo_arrays, self.1.clone()))
+        Ok(PyGeoChunkedArray::new(geo_arrays, self.1.clone()))
     }
 
-    fn read_next_array(&self) -> PyGeoArrowResult<PyGeoArrowArray> {
+    fn read_next_array(&self) -> PyGeoArrowResult<PyGeoArray> {
         let mut inner = self.0.as_ref().lock().unwrap();
         let stream = inner
             .as_mut()
@@ -190,7 +190,7 @@ impl PyGeoArrowArrayReader {
 
         if let Some(next_array) = stream.next() {
             let array = from_arrow_array(&next_array?, &self.1.to_field("", true))?;
-            Ok(PyGeoArrowArray::new(array))
+            Ok(PyGeoArray::new(array))
         } else {
             Err(PyStopIteration::new_err("").into())
         }

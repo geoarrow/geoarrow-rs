@@ -1,12 +1,12 @@
 from arro3.core.types import ArrowStreamExportable
-from geoarrow.rust.core._scalar import GeoArrowScalar
+from geoarrow.rust.core._scalar import GeoScalar
 
-from ._array import GeoArrowArray
+from ._array import GeoArray
 from ._data_type import GeoArrowType
 from .enums import CoordType
 from .types import CoordTypeInput
 
-class ChunkedGeoArrowArray:
+class GeoChunkedArray:
     """A chunked GeoArrow array.
 
     This class is used to handle chunked arrays in GeoArrow, which can be
@@ -24,11 +24,11 @@ class ChunkedGeoArrowArray:
         convert this array into a pyarrow array, without copying memory.
         """
     def __eq__(self, value: object) -> bool: ...
-    def __getitem__(self, item: int) -> GeoArrowScalar: ...
+    def __getitem__(self, item: int) -> GeoScalar: ...
     def __len__(self) -> int: ...
     def __repr__(self) -> str: ...
     @classmethod
-    def from_arrow(cls, data: ArrowStreamExportable) -> ChunkedGeoArrowArray:
+    def from_arrow(cls, data: ArrowStreamExportable) -> GeoChunkedArray:
         """Import from an Arrow chunked array/stream object.
 
         This uses the Arrow PyCapsule interface to import the array, so any producer
@@ -37,18 +37,18 @@ class ChunkedGeoArrowArray:
         The existing array must have associated GeoArrow metadata.
         """
     @classmethod
-    def from_arrow_pycapsule(cls, capsule: object) -> ChunkedGeoArrowArray: ...
+    def from_arrow_pycapsule(cls, capsule: object) -> GeoChunkedArray: ...
     @property
     def null_count(self) -> int:
         """The number of null values in the chunked array."""
     @property
     def num_chunks(self) -> int:
         """Return the number of chunks in the array."""
-    def chunk(self, i: int) -> GeoArrowArray:
+    def chunk(self, i: int) -> GeoArray:
         """Return the i-th chunk of the array."""
-    def chunks(self) -> list[GeoArrowArray]:
+    def chunks(self) -> list[GeoArray]:
         """Return all chunks of the array."""
-    def cast(self, to_type: GeoArrowType, /) -> ChunkedGeoArrowArray:
+    def cast(self, to_type: GeoArrowType, /) -> GeoChunkedArray:
         """Cast to another `GeoArrowType`.
 
         ### Criteria:
@@ -82,7 +82,7 @@ class ChunkedGeoArrowArray:
         """
     def downcast(
         self, *, coord_type: CoordTypeInput = CoordType.SEPARATED
-    ) -> ChunkedGeoArrowArray:
+    ) -> GeoChunkedArray:
         """Downcast to its simplest, most-compact native geometry representation.
 
         If there is no simpler representation, the array is returned unchanged.

@@ -14,9 +14,9 @@ mod ffi;
 mod offset_buffer;
 mod scalar;
 
-pub use array::PyGeoArrowArray;
-pub use array_reader::PyGeoArrowArrayReader;
-pub use chunked_array::PyChunkedGeoArrowArray;
+pub use array::PyGeoArray;
+pub use array_reader::PyGeoArrayReader;
+pub use chunked_array::PyGeoChunkedArray;
 pub use coord_buffer::PyCoordBuffer;
 pub use coord_type::PyCoordType;
 pub use crs::{PyCrs, PyprojCRSTransform};
@@ -24,4 +24,4 @@ pub use dimension::PyDimension;
 pub use edges::PyEdges;
 pub use error::{PyGeoArrowError, PyGeoArrowResult};
 pub use offset_buffer::PyOffsetBuffer;
-pub use scalar::PyGeoArrowScalar;
+pub use scalar::PyGeoScalar;

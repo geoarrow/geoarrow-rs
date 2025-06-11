@@ -1,11 +1,11 @@
 from arro3.core.types import ArrowArrayExportable
-from geoarrow.rust.core._scalar import GeoArrowScalar
+from geoarrow.rust.core._scalar import GeoScalar
 
 from ._data_type import GeoArrowType
 from .enums import CoordType
 from .types import CoordTypeInput
 
-class GeoArrowArray:
+class GeoArray:
     def __arrow_c_array__(
         self, requested_schema: object | None = None
     ) -> tuple[object, object]:
@@ -20,11 +20,11 @@ class GeoArrowArray:
         """
 
     def __eq__(self, value: object) -> bool: ...
-    def __getitem__(self, item: int) -> GeoArrowScalar: ...
+    def __getitem__(self, item: int) -> GeoScalar: ...
     def __len__(self) -> int: ...
     def __repr__(self) -> str: ...
     @classmethod
-    def from_arrow(cls, data: ArrowArrayExportable) -> GeoArrowArray:
+    def from_arrow(cls, data: ArrowArrayExportable) -> GeoArray:
         """Import an array from an Arrow array object.
 
         This uses the Arrow PyCapsule interface to import the array, so any producer
@@ -37,11 +37,11 @@ class GeoArrowArray:
         cls,
         schema_capsule: object,
         array_capsule: object,
-    ) -> GeoArrowArray: ...
+    ) -> GeoArray: ...
     @property
     def null_count(self) -> int:
         """The number of null values in the array."""
-    def cast(self, to_type: GeoArrowType, /) -> GeoArrowArray:
+    def cast(self, to_type: GeoArrowType, /) -> GeoArray:
         """Cast to another `GeoArrowType`.
 
         ### Criteria:
@@ -74,9 +74,7 @@ class GeoArrowArray:
         - `MultiPolygon` to `Polygon`
         """
 
-    def downcast(
-        self, *, coord_type: CoordTypeInput = CoordType.SEPARATED
-    ) -> GeoArrowArray:
+    def downcast(self, *, coord_type: CoordTypeInput = CoordType.SEPARATED) -> GeoArray:
         """Downcast to its simplest, most-compact native geometry representation.
 
         If there is no simpler representation, the array is returned unchanged.
