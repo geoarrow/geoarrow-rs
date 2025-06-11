@@ -43,6 +43,7 @@ from ._data_type import wkb as wkb
 from ._data_type import wkb_view as wkb_view
 from ._data_type import wkt as wkt
 from ._data_type import wkt_view as wkt_view
+from ._interop import from_wkb as from_wkb
 from ._scalar import GeoScalar as GeoScalar
 from .enums import CoordType
 from .types import CRSInput
@@ -215,39 +216,6 @@ def from_shapely(input, *, crs: CRSInput | None = None) -> GeoArray:
     Returns:
 
         A GeoArrow array
-    """
-
-@overload
-def from_wkb(
-    input: ArrowArrayExportable,
-    *,
-    coord_type: CoordType = CoordType.INTERLEAVED,
-) -> GeoArray: ...
-@overload
-def from_wkb(
-    input: ArrowStreamExportable,
-    *,
-    coord_type: CoordType = CoordType.INTERLEAVED,
-) -> GeoChunkedArray: ...
-def from_wkb(
-    input: ArrowArrayExportable | ArrowStreamExportable,
-    *,
-    coord_type: CoordType = CoordType.INTERLEAVED,
-) -> GeoArray | GeoChunkedArray:
-    """
-    Parse an Arrow BinaryArray from WKB to its GeoArrow-native counterpart.
-
-    This will handle both ISO and EWKB flavors of WKB. Any embedded SRID in
-    EWKB-flavored WKB will be ignored.
-
-    Args:
-        input: An Arrow array of Binary type holding WKB-formatted geometries.
-
-    Other args:
-        coord_type: Specify the coordinate type of the generated GeoArrow data.
-
-    Returns:
-        A GeoArrow-native geometry array
     """
 
 @overload
