@@ -57,12 +57,12 @@ class GeoArrayReader:
         """Construct this object from a bare Arrow PyCapsule"""
     @classmethod
     def from_arrays(
-        cls, field: ArrowSchemaExportable, arrays: Sequence[ArrowArrayExportable]
+        cls, type: ArrowSchemaExportable, arrays: Sequence[ArrowArrayExportable]
     ) -> GeoArrayReader:
         """Construct an GeoArrayReader from existing data.
 
         Args:
-            field: The Arrow field that describes the sequence of array data.
+            type: The Arrow field that describes the sequence of array data.
             arrays: A sequence (list or tuple) of Array data.
         """
     @classmethod
