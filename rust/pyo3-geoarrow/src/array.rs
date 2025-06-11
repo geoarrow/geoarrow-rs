@@ -15,7 +15,7 @@ use pyo3_arrow::PyArray;
 use pyo3_arrow::ffi::to_array_pycapsules;
 
 use crate::PyCoordType;
-use crate::data_type::PyGeoArrowType;
+use crate::data_type::PyGeoType;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::scalar::PyGeoScalar;
 
@@ -150,7 +150,7 @@ impl PyGeoArray {
     }
 
     #[pyo3(signature = (to_type, /))]
-    fn cast(&self, to_type: PyGeoArrowType) -> PyGeoArrowResult<Self> {
+    fn cast(&self, to_type: PyGeoType) -> PyGeoArrowResult<Self> {
         let casted = geoarrow_cast::cast::cast(self.0.as_ref(), &to_type.into_inner())?;
         Ok(Self(casted))
     }
@@ -189,14 +189,14 @@ impl PyGeoArray {
                     .into(),
                 NativeType::Rect => BoxType::new(dim, metadata).into(),
             };
-            self.cast(PyGeoArrowType::new(to_type))
+            self.cast(PyGeoType::new(to_type))
         } else {
             Ok(Self::new(self.0.clone()))
         }
     }
 
     #[getter]
-    fn r#type(&self) -> PyGeoArrowType {
+    fn r#type(&self) -> PyGeoType {
         self.0.data_type().into()
     }
 }

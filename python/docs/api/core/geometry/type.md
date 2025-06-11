@@ -1,3 +1,3 @@
 # Type
 
-::: geoarrow.rust.core.GeoArrowType
+::: geoarrow.rust.core.GeoType

@@ -8,7 +8,7 @@ from arro3.core.types import (
 
 from ._array import GeoArray
 from ._chunked_array import GeoChunkedArray
-from ._data_type import GeoArrowType
+from ._data_type import GeoType
 
 class GeoArrayReader:
     """A stream of GeoArrow `Array`s.
@@ -81,4 +81,4 @@ class GeoArrayReader:
     def read_next_array(self) -> GeoArray:
         """Read the next array from this stream."""
     @property
-    def type(self) -> GeoArrowType: ...
+    def type(self) -> GeoType: ...

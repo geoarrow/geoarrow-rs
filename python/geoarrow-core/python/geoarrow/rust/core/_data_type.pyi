@@ -9,7 +9,7 @@ from geoarrow.rust.core.types import (
 from pyproj.crs.crs import CRS
 
 __all__ = [
-    "GeoArrowType",
+    "GeoType",
     "point",
     "linestring",
     "polygon",
@@ -23,7 +23,7 @@ __all__ = [
     "wkt",
 ]
 
-class GeoArrowType:
+class GeoType:
     """A GeoArrow data type.
 
     This implements the [Arrow PyCapsule
@@ -56,9 +56,9 @@ class GeoArrowType:
     def __eq__(self, other: object) -> bool: ...
     def __repr__(self) -> str: ...
     @classmethod
-    def from_arrow(cls, data: ArrowSchemaExportable) -> GeoArrowType: ...
+    def from_arrow(cls, data: ArrowSchemaExportable) -> GeoType: ...
     @classmethod
-    def from_arrow_pycapsule(cls, capsule: object) -> GeoArrowType: ...
+    def from_arrow_pycapsule(cls, capsule: object) -> GeoType: ...
     @property
     def coord_type(self) -> CoordType | None:
         """The coordinate type of the type.
@@ -83,7 +83,7 @@ class GeoArrowType:
         """The edge interpolation of this type."""
     def with_crs(
         self, crs: CRSInput | None = None, *, edges: EdgesInput | None = None
-    ) -> GeoArrowType:
+    ) -> GeoType:
         """Return a new type with the given CRS and edge interpolation.
 
         Args:
@@ -99,7 +99,7 @@ def point(
     coord_type: CoordTypeInput = CoordType.SEPARATED,
     crs: CRSInput | None = None,
     edges: EdgesInput | None = None,
-) -> GeoArrowType:
+) -> GeoType:
     """Create a new Arrow type for a GeoArrow Point array.
 
     Args:
@@ -115,10 +115,10 @@ def point(
         from geoarrow.rust.core import point
 
         point("xy")
-        # GeoArrowType(Point(dimension="XY", coord_type="separated"))
+        # GeoType(Point(dimension="XY", coord_type="separated"))
 
         point("xy", coord_type="interleaved")
-        # GeoArrowType(Point(dimension="XY", coord_type="interleaved"))
+        # GeoType(Point(dimension="XY", coord_type="interleaved"))
         ```
 
     """
@@ -129,7 +129,7 @@ def linestring(
     coord_type: CoordTypeInput = CoordType.SEPARATED,
     crs: CRSInput | None = None,
     edges: EdgesInput | None = None,
-) -> GeoArrowType:
+) -> GeoType:
     """Create a new Arrow type for a GeoArrow LineString array.
 
     Args:
@@ -147,7 +147,7 @@ def polygon(
     coord_type: CoordTypeInput = CoordType.SEPARATED,
     crs: CRSInput | None = None,
     edges: EdgesInput | None = None,
-) -> GeoArrowType:
+) -> GeoType:
     """Create a new Arrow type for a GeoArrow Polygon array.
 
     Args:
@@ -165,7 +165,7 @@ def multipoint(
     coord_type: CoordTypeInput = CoordType.SEPARATED,
     crs: CRSInput | None = None,
     edges: EdgesInput | None = None,
-) -> GeoArrowType:
+) -> GeoType:
     """Create a new Arrow type for a GeoArrow MultiPoint array.
 
     Args:
@@ -183,7 +183,7 @@ def multilinestring(
     coord_type: CoordTypeInput = CoordType.SEPARATED,
     crs: CRSInput | None = None,
     edges: EdgesInput | None = None,
-) -> GeoArrowType:
+) -> GeoType:
     """Create a new Arrow type for a GeoArrow MultiLineString array.
 
     Args:
@@ -201,7 +201,7 @@ def multipolygon(
     coord_type: CoordTypeInput = CoordType.SEPARATED,
     crs: CRSInput | None = None,
     edges: EdgesInput | None = None,
-) -> GeoArrowType:
+) -> GeoType:
     """Create a new Arrow type for a GeoArrow MultiPolygon array.
 
     Args:
@@ -219,7 +219,7 @@ def geometrycollection(
     coord_type: CoordTypeInput = CoordType.SEPARATED,
     crs: CRSInput | None = None,
     edges: EdgesInput | None = None,
-) -> GeoArrowType:
+) -> GeoType:
     """Create a new Arrow type for a GeoArrow GeometryCollection array.
 
     Args:
@@ -236,7 +236,7 @@ def geometry(
     coord_type: CoordType,
     crs: CRSInput | None = None,
     edges: EdgesInput | None = None,
-) -> GeoArrowType:
+) -> GeoType:
     """Create a new Arrow type for a GeoArrow Geometry array.
 
     Keyword Args:
@@ -250,7 +250,7 @@ def box(
     *,
     crs: CRSInput | None = None,
     edges: EdgesInput | None = None,
-) -> GeoArrowType:
+) -> GeoType:
     """Create a new Arrow type for a GeoArrow Box array.
 
     Args:
@@ -265,7 +265,7 @@ def wkb(
     *,
     crs: CRSInput | None = None,
     edges: EdgesInput | None = None,
-) -> GeoArrowType:
+) -> GeoType:
     """Create a new Arrow type for a GeoArrow WKB array.
 
     This type is backed by an Arrow BinaryArray with `i32` offsets, allowing a maximum
@@ -280,7 +280,7 @@ def large_wkb(
     *,
     crs: CRSInput | None = None,
     edges: EdgesInput | None = None,
-) -> GeoArrowType:
+) -> GeoType:
     """Create a new Arrow type for a GeoArrow WKB array.
 
     This type is backed by an Arrow LargeBinaryArray with `i64` offsets, allowing more
@@ -295,7 +295,7 @@ def wkb_view(
     *,
     crs: CRSInput | None = None,
     edges: EdgesInput | None = None,
-) -> GeoArrowType:
+) -> GeoType:
     """Create a new Arrow type for a GeoArrow WKB array.
 
     This type is backed by an Arrow [BinaryViewArray](https://arrow.apache.org/docs/format/Columnar.html#variable-size-binary-view-layout).
@@ -309,7 +309,7 @@ def wkt(
     *,
     crs: CRSInput | None = None,
     edges: EdgesInput | None = None,
-) -> GeoArrowType:
+) -> GeoType:
     """Create a new Arrow type for a GeoArrow WKT array.
 
     This type is backed by an Arrow StringArray with `i32` offsets, allowing a maximum
@@ -324,7 +324,7 @@ def large_wkt(
     *,
     crs: CRSInput | None = None,
     edges: EdgesInput | None = None,
-) -> GeoArrowType:
+) -> GeoType:
     """Create a new Arrow type for a GeoArrow WKT array.
 
     This type is backed by an Arrow LargeString array with `i64` offsets, allowing more
@@ -339,7 +339,7 @@ def wkt_view(
     *,
     crs: CRSInput | None = None,
     edges: EdgesInput | None = None,
-) -> GeoArrowType:
+) -> GeoType:
     """Create a new Arrow type for a GeoArrow WKT array.
 
     This type is backed by an Arrow

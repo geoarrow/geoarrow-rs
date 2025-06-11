@@ -1,7 +1,7 @@
 from arro3.core.types import ArrowArrayExportable
 from geoarrow.rust.core._scalar import GeoScalar
 
-from ._data_type import GeoArrowType
+from ._data_type import GeoType
 from .enums import CoordType
 from .types import CoordTypeInput
 
@@ -41,8 +41,8 @@ class GeoArray:
     @property
     def null_count(self) -> int:
         """The number of null values in the array."""
-    def cast(self, to_type: GeoArrowType, /) -> GeoArray:
-        """Cast to another `GeoArrowType`.
+    def cast(self, to_type: GeoType, /) -> GeoArray:
+        """Cast to another `GeoType`.
 
         ### Criteria:
 
@@ -80,5 +80,5 @@ class GeoArray:
         If there is no simpler representation, the array is returned unchanged.
         """
     @property
-    def type(self) -> GeoArrowType:
+    def type(self) -> GeoType:
         """The type of the array."""

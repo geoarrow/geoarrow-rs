@@ -10,7 +10,7 @@ use pyo3_arrow::ffi::{ArrayIterator, ArrayReader, to_schema_pycapsule, to_stream
 use pyo3_arrow::input::AnyArray;
 use pyo3_arrow::{PyArray, PyArrayReader, PyField};
 
-use crate::data_type::PyGeoArrowType;
+use crate::data_type::PyGeoType;
 use crate::{PyGeoArray, PyGeoArrowError, PyGeoArrowResult, PyGeoChunkedArray};
 
 /// A Python-facing GeoArrow array reader.
@@ -168,7 +168,7 @@ impl PyGeoArrayReader {
     }
 
     #[getter]
-    fn r#type(&self) -> PyGeoArrowType {
+    fn r#type(&self) -> PyGeoType {
         self.1.clone().into()
     }
 

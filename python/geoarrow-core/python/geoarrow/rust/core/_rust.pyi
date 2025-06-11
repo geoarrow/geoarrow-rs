@@ -27,7 +27,7 @@ from ._constructors import multipoints as multipoints
 from ._constructors import multipolygons as multipolygons
 from ._constructors import points as points
 from ._constructors import polygons as polygons
-from ._data_type import GeoArrowType as GeoArrowType
+from ._data_type import GeoType as GeoType
 from ._data_type import box as box
 from ._data_type import geometry as geometry
 from ._data_type import geometrycollection as geometrycollection
