@@ -19,7 +19,7 @@ pub enum AnyGeoArray {
 }
 
 impl AnyGeoArray {
-    /// Consume this and convert it into a [PyChunkedArray].
+    /// Consume this and convert it into a [PyGeoChunkedArray].
     ///
     /// All arrays from the stream will be materialized in memory.
     pub fn into_chunked_array(self) -> PyGeoArrowResult<PyGeoChunkedArray> {
