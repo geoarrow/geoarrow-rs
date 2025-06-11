@@ -3,6 +3,7 @@ use std::sync::{Arc, Mutex};
 use geoarrow_array::array::from_arrow_array;
 use geoarrow_array::{GeoArrowArrayIterator, GeoArrowArrayReader};
 use geoarrow_schema::GeoArrowType;
+use geoarrow_schema::error::GeoArrowResult;
 use pyo3::exceptions::{PyIOError, PyStopIteration, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyType};
@@ -190,10 +191,7 @@ impl PyGeoArrayReader {
             .take()
             .ok_or(PyIOError::new_err("Cannot read from closed stream."))?;
         let data_type = stream.data_type();
-        let mut arrays = vec![];
-        for array in stream {
-            arrays.push(array?);
-        }
+        let arrays = stream.collect::<GeoArrowResult<_>>()?;
         Ok(PyGeoChunkedArray::try_new(arrays, data_type)?)
     }
 
