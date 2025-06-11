@@ -10,7 +10,7 @@ use crate::runtime::get_runtime;
 
 use futures::TryStreamExt;
 use geo_traits::CoordTrait;
-use geoarrow_array::GeoArray;
+use geoarrow_array::GeoArrowArray;
 use geoarrow_schema::error::GeoArrowError;
 use geoparquet::reader::{
     GeoParquetDatasetMetadata, GeoParquetReaderBuilder, GeoParquetReaderMetadata,
