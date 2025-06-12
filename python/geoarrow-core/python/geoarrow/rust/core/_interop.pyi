@@ -74,7 +74,7 @@ def to_wkb(
 
     Args:
         input: Input data to parse.
-        to_type: The target WKB array type to convert to. Can be one of "wkb" (binary array with `i32` offsets), "large_wkb" (binary array with `i64` offsets), or "wkb_view" (binary view array).
+        wkb_type: The target WKB array type to convert to. Can be one of "wkb" (binary array with `i32` offsets), "large_wkb" (binary array with `i64` offsets), or "wkb_view" (binary view array).
 
     Returns:
         If `input` is an Array-like, a `GeoArray` will be returned. If `input` is a Stream-like (`ChunkedArray` or `ArrayReader`), a `GeoArrayReader` will be returned.
@@ -98,7 +98,7 @@ def to_wkt(
 
     Args:
         input: Input data to parse.
-        to_type: The target WKT array type to convert to. Can be one of "wkt" (string array with `i32` offsets), "large_wkt" (string array with `i64` offsets), or "wkt_view" (string view array).
+        wkt_type: The target WKT array type to convert to. Can be one of "wkt" (string array with `i32` offsets), "large_wkt" (string array with `i64` offsets), or "wkt_view" (string view array).
 
     Returns:
         If `input` is an Array-like, a `GeoArray` will be returned. If `input` is a Stream-like (`ChunkedArray` or `ArrayReader`), a `GeoArrayReader` will be returned.
