@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Sequence, Tuple, overload
 
-from arro3.core import Array, ChunkedArray, Table
+from arro3.core import Table
 from arro3.core.types import ArrowArrayExportable, ArrowStreamExportable
 
 try:
@@ -44,8 +44,10 @@ from ._data_type import wkb_view as wkb_view
 from ._data_type import wkt as wkt
 from ._data_type import wkt_view as wkt_view
 from ._interop import from_wkb as from_wkb
+from ._interop import from_wkt as from_wkt
+from ._interop import to_wkb as to_wkb
+from ._interop import to_wkt as to_wkt
 from ._scalar import GeoScalar as GeoScalar
-from .enums import CoordType
 from .types import CRSInput
 
 @overload
@@ -218,51 +220,6 @@ def from_shapely(input, *, crs: CRSInput | None = None) -> GeoArray:
         A GeoArrow array
     """
 
-@overload
-def from_wkt(
-    input: ArrowArrayExportable,
-    *,
-    coord_type: CoordType = CoordType.INTERLEAVED,
-) -> GeoArray: ...
-@overload
-def from_wkt(
-    input: ArrowStreamExportable,
-    *,
-    coord_type: CoordType = CoordType.INTERLEAVED,
-) -> GeoChunkedArray: ...
-def from_wkt(
-    input: ArrowArrayExportable | ArrowStreamExportable,
-    *,
-    coord_type: CoordType = CoordType.INTERLEAVED,
-) -> GeoArray | GeoChunkedArray:
-    """
-    Parse an Arrow StringArray from WKT to its GeoArrow-native counterpart.
-
-    Args:
-        input: An Arrow array of string type holding WKT-formatted geometries.
-
-    Other args:
-        coord_type: Specify the coordinate type of the generated GeoArrow data.
-
-    Returns:
-        A GeoArrow-native geometry array
-    """
-
-@overload
-def to_wkt(input: ArrowArrayExportable) -> Array: ...
-@overload
-def to_wkt(input: ArrowStreamExportable) -> ChunkedArray: ...
-def to_wkt(input: ArrowArrayExportable | ArrowStreamExportable) -> Array | ChunkedArray:
-    """
-    Encode a geometry array to WKT.
-
-    Args:
-        input: An Arrow array of string type holding WKT-formatted geometries.
-
-    Returns:
-        A GeoArrow-native geometry array
-    """
-
 def to_geopandas(input: ArrowStreamExportable) -> gpd.GeoDataFrame:
     """
     Convert a GeoArrow Table to a [GeoPandas GeoDataFrame][geopandas.GeoDataFrame].
@@ -289,19 +246,4 @@ def to_shapely(
 
     Returns:
         numpy array with Shapely objects
-    """
-
-@overload
-def to_wkb(input: ArrowArrayExportable) -> GeoArray: ...
-@overload
-def to_wkb(input: ArrowStreamExportable) -> GeoChunkedArray: ...
-def to_wkb(input: ArrowArrayExportable) -> GeoArray:
-    """
-    Encode a GeoArrow-native geometry array to a WKBArray, holding ISO-formatted WKB geometries.
-
-    Args:
-        input: A GeoArrow-native geometry array
-
-    Returns:
-        An array with WKB-formatted geometries
     """
