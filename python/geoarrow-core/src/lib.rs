@@ -1,8 +1,8 @@
 #![cfg_attr(not(test), deny(unused_crate_dependencies))]
 
 mod constructors;
+mod interop;
 // pub mod ffi;
-// pub mod interop;
 // pub mod table;
 
 use pyo3::exceptions::PyRuntimeWarning;
@@ -105,10 +105,10 @@ fn _rust(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     //     crate::interop::shapely::to_shapely::to_shapely,
     //     m
     // )?)?;
-    // m.add_function(wrap_pyfunction!(crate::interop::wkb::from_wkb, m)?)?;
-    // m.add_function(wrap_pyfunction!(crate::interop::wkb::to_wkb, m)?)?;
-    // m.add_function(wrap_pyfunction!(crate::interop::wkt::from_wkt, m)?)?;
-    // m.add_function(wrap_pyfunction!(crate::interop::wkt::to_wkt, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::interop::from_wkb, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::interop::to_wkb, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::interop::from_wkt, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::interop::to_wkt, m)?)?;
 
     // Exceptions
     // create_exception!(m, GeoArrowException, pyo3::exceptions::PyException);
