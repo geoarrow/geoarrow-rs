@@ -38,8 +38,7 @@ async-stream = "0.3"
 async-trait = "0.1"
 bytes = "1.10.0"
 chrono = { version = "0.4.41", default-features = false }
-# https://github.com/apache/datafusion/pull/15646
-datafusion = { git = "https://github.com/apache/datafusion", rev = "0f83c1d233499e80fd9b0baf89dd624099c1d1ba" }
+datafusion = { version = "48.0.0" }
 flatgeobuf = { version = "4.6", default-features = false }
 futures = "0.3"
 geo = "0.30.0"
