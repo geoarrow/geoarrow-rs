@@ -19,6 +19,7 @@ use pyo3_arrow::{PyArrayReader, PyChunkedArray};
 use crate::data_type::PyGeoType;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::scalar::PyGeoScalar;
+use crate::utils::text_repr::text_repr;
 use crate::{PyCoordType, PyGeoArray};
 
 #[pyclass(
@@ -150,7 +151,7 @@ impl PyGeoChunkedArray {
     }
 
     fn __repr__(&self) -> String {
-        "GeoChunkedArray".to_string()
+        format!("GeoChunkedArray({})", text_repr(&self.data_type))
     }
 
     #[classmethod]

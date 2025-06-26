@@ -18,6 +18,7 @@ use crate::PyCoordType;
 use crate::data_type::PyGeoType;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::scalar::PyGeoScalar;
+use crate::utils::text_repr::text_repr;
 
 #[pyclass(module = "geoarrow.rust.core", name = "GeoArray", subclass, frozen)]
 pub struct PyGeoArray(Arc<dyn GeoArrowArray>);
@@ -126,7 +127,7 @@ impl PyGeoArray {
     }
 
     fn __repr__(&self) -> String {
-        "GeoArrowArray".to_string()
+        format!("GeoArray({})", text_repr(&self.0.data_type()))
     }
 
     #[classmethod]

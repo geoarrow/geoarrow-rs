@@ -14,6 +14,7 @@ mod ffi;
 pub mod input;
 mod offset_buffer;
 mod scalar;
+mod utils;
 
 pub use array::PyGeoArray;
 pub use array_reader::PyGeoArrayReader;

@@ -17,6 +17,7 @@ use pyo3_arrow::ffi::to_array_pycapsules;
 use crate::PyGeoArray;
 use crate::data_type::PyGeoType;
 use crate::error::PyGeoArrowResult;
+use crate::utils::text_repr::text_repr;
 
 /// This is modeled as a geospatial array of length 1
 #[pyclass(module = "geoarrow.rust.core", name = "GeoScalar", subclass, frozen)]
@@ -118,11 +119,9 @@ impl PyGeoScalar {
         Ok(string)
     }
 
-    fn __repr__(&self) -> PyGeoArrowResult<String> {
-        Ok("geoarrow.rust.core.Geometry".to_string())
-        // todo!()
-        // let scalar = <$geoarrow_scalar>::from(&self.0);
-        // Ok(scalar.to_string())
+    fn __repr__(&self) -> String {
+        // TODO: print WKT representation
+        format!("GeoScalar({})", text_repr(&self.0.data_type()))
     }
 
     #[getter]

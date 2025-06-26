@@ -13,6 +13,7 @@ use pyo3_arrow::ffi::{ArrayIterator, ArrayReader, to_schema_pycapsule, to_stream
 use pyo3_arrow::input::AnyArray;
 
 use crate::data_type::PyGeoType;
+use crate::utils::text_repr::text_repr;
 use crate::{PyGeoArray, PyGeoArrowError, PyGeoArrowResult, PyGeoChunkedArray};
 
 /// A Python-facing GeoArrow array reader.
@@ -122,9 +123,9 @@ impl PyGeoArrayReader {
         self.read_next_array()
     }
 
-    // fn __repr__(&self) -> String {
-    //     self.to_string()
-    // }
+    fn __repr__(&self) -> String {
+        format!("GeoArrayReader({})", text_repr(self.data_type()))
+    }
 
     #[getter]
     fn closed(&self) -> bool {
