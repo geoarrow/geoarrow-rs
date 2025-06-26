@@ -24,3 +24,9 @@ def test_getitem():
     arr = GeoArray.from_arrow(gdf.geometry.to_arrow("geoarrow"))
     for i in range(len(arr)):
         assert shapely.geometry.shape(arr[i]).equals(gdf.geometry.iloc[i])  # type: ignore
+
+
+def test_repr():
+    geoms = shapely.points([1, 2, 3], [4, 5, 6])
+    arr = GeoArray.from_arrow(gpd.GeoSeries(geoms).to_arrow("geoarrow"))
+    assert repr(arr) == 'GeoArray(Point(dimension="XY", coord_type="interleaved"))'
