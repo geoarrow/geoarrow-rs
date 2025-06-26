@@ -179,3 +179,8 @@ def test_with_crs():
     assert updated_type.dimension == point_type.dimension
     assert updated_type.coord_type == point_type.coord_type
     assert updated_type.edges == Edges.SPHERICAL
+
+
+def test_repr():
+    point_type = point("xy")
+    assert repr(point_type) == 'GeoType(Point(dimension="XY", coord_type="separated"))'

@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
 use geoarrow_schema::{
-    BoxType, CoordType, GeoArrowType, GeometryCollectionType, GeometryType, LineStringType,
-    Metadata, MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType,
-    WkbType, WktType,
+    BoxType, GeoArrowType, GeometryCollectionType, GeometryType, LineStringType, Metadata,
+    MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType, WkbType,
+    WktType,
 };
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyType};
@@ -11,6 +11,7 @@ use pyo3_arrow::PyField;
 use pyo3_arrow::ffi::to_schema_pycapsule;
 
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
+use crate::utils::text_repr::text_repr;
 use crate::{PyCoordType, PyCrs, PyDimension, PyEdges};
 
 #[pyclass(module = "geoarrow.rust.core", name = "GeoType", subclass, frozen)]
@@ -54,62 +55,7 @@ impl PyGeoType {
     }
 
     fn __repr__(&self) -> String {
-        fn repr_coord_type(coord_type: CoordType) -> &'static str {
-            match coord_type {
-                CoordType::Interleaved => "interleaved",
-                CoordType::Separated => "separated",
-            }
-        }
-
-        use GeoArrowType::*;
-        match &self.0 {
-            Point(typ) => format!(
-                "GeoType(Point(dimension=\"{}\", coord_type=\"{}\"))",
-                typ.dimension(),
-                repr_coord_type(typ.coord_type())
-            ),
-            LineString(typ) => format!(
-                "GeoType(LineString(dimension=\"{}\", coord_type=\"{}\"))",
-                typ.dimension(),
-                repr_coord_type(typ.coord_type())
-            ),
-            Polygon(typ) => format!(
-                "GeoType(Polygon(dimension=\"{}\", coord_type=\"{}\"))",
-                typ.dimension(),
-                repr_coord_type(typ.coord_type())
-            ),
-            MultiPoint(typ) => format!(
-                "GeoType(MultiPoint(dimension=\"{}\", coord_type=\"{}\"))",
-                typ.dimension(),
-                repr_coord_type(typ.coord_type())
-            ),
-            MultiLineString(typ) => format!(
-                "GeoType(MultiLineString(dimension=\"{}\", coord_type=\"{}\"))",
-                typ.dimension(),
-                repr_coord_type(typ.coord_type())
-            ),
-            MultiPolygon(typ) => format!(
-                "GeoType(MultiPolygon(dimension=\"{}\", coord_type=\"{}\"))",
-                typ.dimension(),
-                repr_coord_type(typ.coord_type())
-            ),
-            Geometry(typ) => format!(
-                "GeoType(Geometry(coord_type=\"{}\"))",
-                repr_coord_type(typ.coord_type())
-            ),
-            GeometryCollection(typ) => format!(
-                "GeoType(GeometryCollection(dimension=\"{}\", coord_type=\"{}\"))",
-                typ.dimension(),
-                repr_coord_type(typ.coord_type())
-            ),
-            Rect(typ) => format!("GeoType(Box(dimension=\"{}\"))", typ.dimension()),
-            Wkb(_) => "GeoType(Wkb)".to_string(),
-            LargeWkb(_) => "GeoType(LargeWkb)".to_string(),
-            WkbView(_) => "GeoType(WkbView)".to_string(),
-            Wkt(_) => "GeoType(Wkt)".to_string(),
-            LargeWkt(_) => "GeoType(LargeWkt)".to_string(),
-            WktView(_) => "GeoType(WktView)".to_string(),
-        }
+        format!("GeoType({})", text_repr(&self.0))
     }
 
     #[classmethod]

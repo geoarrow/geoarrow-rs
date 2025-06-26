@@ -32,3 +32,14 @@ def test_getitem():
 
     for i in range(len(ca)):
         assert shapely.geometry.shape(ca[i]).equals(gdf.geometry.iloc[i])  # type: ignore
+
+
+def test_repr():
+    geoms1 = shapely.points([1, 2, 3], [4, 5, 6])
+    geoms2 = shapely.points([10, 20, 30], [40, 50, 60])
+    arr1 = GeoArray.from_arrow(gpd.GeoSeries(geoms1).to_arrow("geoarrow"))
+    arr2 = GeoArray.from_arrow(gpd.GeoSeries(geoms2).to_arrow("geoarrow"))
+    ca = GeoChunkedArray.from_arrow(ChunkedArray([arr1, arr2]))
+    assert (
+        repr(ca) == 'GeoChunkedArray(Point(dimension="XY", coord_type="interleaved"))'
+    )

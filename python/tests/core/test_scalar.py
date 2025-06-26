@@ -25,3 +25,9 @@ def test_type():
     geoms = shapely.points([1, 2, 3], [4, 5, 6])
     arr = GeoArray.from_arrow(gpd.GeoSeries(geoms).to_arrow("geoarrow"))
     assert arr[0].type == point("xy", coord_type="interleaved")
+
+
+def test_repr():
+    geoms = shapely.points([1, 2, 3], [4, 5, 6])
+    arr = GeoArray.from_arrow(gpd.GeoSeries(geoms).to_arrow("geoarrow"))
+    assert repr(arr[0]) == 'GeoScalar(Point(dimension="XY", coord_type="interleaved"))'
