@@ -153,8 +153,7 @@ impl TryFrom<(&dyn Array, WktType)> for WktViewArray {
         match value.data_type() {
             DataType::Utf8View => Ok((value.as_string_view().clone(), typ).into()),
             dt => Err(GeoArrowError::InvalidGeoArrow(format!(
-                "Unexpected WktView DataType: {:?}",
-                dt
+                "Unexpected WktView DataType: {dt:?}",
             ))),
         }
     }

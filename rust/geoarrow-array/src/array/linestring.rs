@@ -278,8 +278,7 @@ impl TryFrom<(&dyn Array, LineStringType)> for LineStringArray {
             DataType::List(_) => (value.as_list::<i32>(), typ).try_into(),
             DataType::LargeList(_) => (value.as_list::<i64>(), typ).try_into(),
             dt => Err(GeoArrowError::InvalidGeoArrow(format!(
-                "Unexpected LineString DataType: {:?}",
-                dt
+                "Unexpected LineString DataType: {dt:?}",
             ))),
         }
     }

@@ -203,8 +203,7 @@ impl PolygonBuilder {
                         self.push_polygon(Some(&mp.polygon(0).unwrap()))?
                     } else {
                         return Err(GeoArrowError::IncorrectGeometryType(format!(
-                            "Expected MultiPolygon with only one polygon in PolygonBuilder, got {} polygons",
-                            num_polygons
+                            "Expected MultiPolygon with only one polygon in PolygonBuilder, got {num_polygons} polygons",
                         )));
                     }
                 }

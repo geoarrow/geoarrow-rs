@@ -167,8 +167,7 @@ impl TryFrom<(&dyn Array, WktType)> for GenericWktArray<i32> {
                 geom_array.try_into()
             }
             dt => Err(GeoArrowError::InvalidGeoArrow(format!(
-                "Unexpected WktArray DataType: {:?}",
-                dt
+                "Unexpected WktArray DataType: {dt:?}",
             ))),
         }
     }
@@ -186,8 +185,7 @@ impl TryFrom<(&dyn Array, WktType)> for GenericWktArray<i64> {
             }
             DataType::LargeUtf8 => Ok((value.as_string::<i64>().clone(), typ).into()),
             dt => Err(GeoArrowError::InvalidGeoArrow(format!(
-                "Unexpected WktArray DataType: {:?}",
-                dt
+                "Unexpected WktArray DataType: {dt:?}",
             ))),
         }
     }

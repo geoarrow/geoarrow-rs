@@ -56,8 +56,8 @@ impl Dimension {
                 Self::XYZ
             } else {
                 return Err(ArrowError::SchemaError(format!(
-                    "Invalid field names for separated coordinates with 3 dimensions: {:?}",
-                    field_names
+                    "Invalid field names for separated coordinates with 3 dimensions: {field_names:?}",
+
                 ))
                 .into());
             }
@@ -65,8 +65,7 @@ impl Dimension {
             Self::XYZM
         } else {
             return Err(ArrowError::SchemaError(format!(
-                "Invalid fields for separated coordinates: {:?}",
-                fields
+                "Invalid fields for separated coordinates: {fields:?}",
             ))
             .into());
         };
@@ -108,8 +107,7 @@ impl TryFrom<geo_traits::Dimensions> for Dimension {
                 Ok(Dimension::XYZM)
             }
             _ => Err(ArrowError::SchemaError(format!(
-                "Unsupported dimension {:?}",
-                value
+                "Unsupported dimension {value:?}"
             ))),
         }
     }

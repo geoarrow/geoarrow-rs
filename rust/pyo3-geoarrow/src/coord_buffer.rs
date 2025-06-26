@@ -143,14 +143,12 @@ impl<'py> FromPyObject<'py> for PyCoordBuffer {
                                 .into(),
                         )),
                         _ => Err(PyValueError::new_err(format!(
-                            "Unsupported fixed size list size {}",
-                            list_size
+                            "Unsupported fixed size list size {list_size}",
                         ))),
                     }
                 }
                 dt => Err(PyValueError::new_err(format!(
-                    "Expected coords to be FixedSizeList data type, got {}",
-                    dt
+                    "Expected coords to be FixedSizeList data type, got {dt}",
                 ))),
             }
         }

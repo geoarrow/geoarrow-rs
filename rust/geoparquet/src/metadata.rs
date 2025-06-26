@@ -66,8 +66,7 @@ impl GeoParquetColumnEncoding {
                 GeoArrowType::MultiPolygon(_) => Self::MultiPolygon,
                 dt => {
                     return Err(GeoArrowError::GeoParquet(format!(
-                        "unsupported data type for native encoding: {:?}",
-                        dt
+                        "unsupported data type for native encoding: {dt:?}",
                     )));
                 }
             },
@@ -557,29 +556,25 @@ impl GeoParquetMetadata {
                 .columns
                 .get(key)
                 .ok_or(GeoArrowError::GeoParquet(format!(
-                    "Other GeoParquet metadata missing column {}",
-                    key
+                    "Other GeoParquet metadata missing column {key}",
                 )))?;
 
             if left.encoding != right.encoding {
                 return Err(GeoArrowError::GeoParquet(format!(
-                    "Different GeoParquet encodings for column {}",
-                    key
+                    "Different GeoParquet encodings for column {key}",
                 )));
             }
 
             if left.geometry_types != right.geometry_types {
                 return Err(GeoArrowError::GeoParquet(format!(
-                    "Different GeoParquet geometry types for column {}",
-                    key
+                    "Different GeoParquet geometry types for column {key}",
                 )));
             }
 
             if let (Some(left_bbox), Some(right_bbox)) = (&left.bbox, &right.bbox) {
                 if left_bbox.len() != right_bbox.len() {
                     return Err(GeoArrowError::GeoParquet(format!(
-                        "Different bbox dimensions for column {}",
-                        key
+                        "Different bbox dimensions for column {key}",
                     )));
                 }
             }
@@ -588,15 +583,13 @@ impl GeoParquetMetadata {
                 (Some(left_crs), Some(right_crs)) => {
                     if left_crs != right_crs {
                         return Err(GeoArrowError::GeoParquet(format!(
-                            "Different GeoParquet CRS for column {}",
-                            key
+                            "Different GeoParquet CRS for column {key}",
                         )));
                     }
                 }
                 (Some(_), None) | (None, Some(_)) => {
                     return Err(GeoArrowError::GeoParquet(format!(
-                        "Different GeoParquet CRS for column {}",
-                        key
+                        "Different GeoParquet CRS for column {key}",
                     )));
                 }
                 (None, None) => (),

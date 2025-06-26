@@ -246,8 +246,7 @@ impl TryFrom<(&dyn Array, PointType)> for PointArray {
             DataType::FixedSizeList(_, _) => (value.as_fixed_size_list(), typ).try_into(),
             DataType::Struct(_) => (value.as_struct(), typ).try_into(),
             dt => Err(GeoArrowError::InvalidGeoArrow(format!(
-                "Unexpected Point DataType: {:?}",
-                dt
+                "Unexpected Point DataType: {dt:?}",
             ))),
         }
     }

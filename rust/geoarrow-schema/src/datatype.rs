@@ -349,8 +349,7 @@ impl TryFrom<&Field> for GeoArrowType {
                 },
                 name => {
                     return Err(GeoArrowError::InvalidGeoArrow(format!(
-                        "Expected GeoArrow type, got Arrow extension type with name: '{}'.",
-                        name
+                        "Expected GeoArrow type, got Arrow extension type with name: '{name}'.",
                     )));
                 }
             };

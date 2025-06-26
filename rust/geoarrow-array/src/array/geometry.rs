@@ -666,8 +666,7 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
                         }
                         _ => {
                             return Err(GeoArrowError::InvalidGeoArrow(format!(
-                                "Unexpected type_id when converting to GeometryArray {}",
-                                type_id
+                                "Unexpected type_id when converting to GeometryArray {type_id}",
                             )));
                         }
                     }
@@ -801,8 +800,7 @@ impl TryFrom<(&dyn Array, GeometryType)> for GeometryArray {
         match value.data_type() {
             DataType::Union(_, _) => (value.as_union(), typ).try_into(),
             dt => Err(GeoArrowError::InvalidGeoArrow(format!(
-                "Unexpected GeometryArray DataType: {:?}",
-                dt
+                "Unexpected GeometryArray DataType: {dt:?}",
             ))),
         }
     }
@@ -849,9 +847,9 @@ impl DimensionIndex for Dimension {
             1 => Ok(Self::XYZ),
             2 => Ok(Self::XYM),
             3 => Ok(Self::XYZM),
-            i => Err(
-                ArrowError::SchemaError(format!("unsupported index in from_order: {}", i)).into(),
-            ),
+            i => {
+                Err(ArrowError::SchemaError(format!("unsupported index in from_order: {i}")).into())
+            }
         }
     }
 }
