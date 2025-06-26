@@ -53,8 +53,7 @@ fn impl_from_wkb(
         GeoArrowType::WkbView(_) => _from_wkb(input_array.as_wkb_view(), to_type)?,
         typ => {
             return Err(GeoArrowError::IncorrectGeometryType(format!(
-                "Expected a WKB array in from_wkb, got {:?}",
-                typ
+                "Expected a WKB array in from_wkb, got {typ:?}"
             )));
         }
     };

@@ -53,8 +53,7 @@ fn impl_from_wkt(
         GeoArrowType::WktView(_) => _from_wkt(input_array.as_wkt_view(), to_type)?,
         typ => {
             return Err(GeoArrowError::IncorrectGeometryType(format!(
-                "Expected a WKT array in from_wkt, got {:?}",
-                typ
+                "Expected a WKT array in from_wkt, got {typ:?}",
             )));
         }
     };
