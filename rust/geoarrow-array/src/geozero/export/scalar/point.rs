@@ -60,8 +60,7 @@ pub(crate) fn process_point_as_coord<P: GeomProcessor>(
             )?,
             d => {
                 return Err(geozero::error::GeozeroError::Geometry(format!(
-                    "Unexpected dimension {:?}",
-                    d
+                    "Unexpected dimension {d:?}",
                 )));
             }
         };

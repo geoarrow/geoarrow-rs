@@ -211,8 +211,7 @@ fn parse_wkb_column(
             Ok(geom_arr.to_array_ref())
         }
         dt => Err(GeoArrowError::GeoParquet(format!(
-            "Expected WKB input array to have binary data type, got {}",
-            dt
+            "Expected WKB input array to have binary data type, got {dt}",
         ))),
     }
 }

@@ -339,8 +339,7 @@ impl TryFrom<(&dyn Array, MultiLineStringType)> for MultiLineStringArray {
             DataType::List(_) => (value.as_list::<i32>(), typ).try_into(),
             DataType::LargeList(_) => (value.as_list::<i64>(), typ).try_into(),
             dt => Err(GeoArrowError::InvalidGeoArrow(format!(
-                "Unexpected MultiLineString DataType: {:?}",
-                dt
+                "Unexpected MultiLineString DataType: {dt:?}",
             ))),
         }
     }

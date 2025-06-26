@@ -393,8 +393,7 @@ impl TryFrom<(&dyn Array, MultiPolygonType)> for MultiPolygonArray {
             DataType::List(_) => (value.as_list::<i32>(), typ).try_into(),
             DataType::LargeList(_) => (value.as_list::<i64>(), typ).try_into(),
             dt => Err(GeoArrowError::InvalidGeoArrow(format!(
-                "Unexpected MultiPolygon DataType: {:?}",
-                dt
+                "Unexpected MultiPolygon DataType: {dt:?}",
             ))),
         }
     }

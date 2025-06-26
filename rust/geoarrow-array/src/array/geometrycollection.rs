@@ -237,8 +237,7 @@ impl TryFrom<(&dyn Array, GeometryCollectionType)> for GeometryCollectionArray {
             DataType::List(_) => (value.as_list::<i32>(), typ).try_into(),
             DataType::LargeList(_) => (value.as_list::<i64>(), typ).try_into(),
             dt => Err(GeoArrowError::InvalidGeoArrow(format!(
-                "Unexpected GeometryCollection Arrow DataType: {:?}",
-                dt
+                "Unexpected GeometryCollection Arrow DataType: {dt:?}"
             ))),
         }
     }

@@ -305,8 +305,7 @@ fn process_properties<P: PropertyProcessor>(
             }
             dt => {
                 return Err(GeozeroError::Properties(format!(
-                    "unsupported type: {:?}",
-                    dt
+                    "unsupported type: {dt:?}",
                 )));
             }
         }

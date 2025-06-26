@@ -63,8 +63,7 @@ pub fn cast(
     if let (Some(from_dim), Some(to_dim)) = (array.data_type().dimension(), to_type.dimension()) {
         if from_dim != to_dim {
             return Err(ArrowError::CastError(format!(
-                "Cannot cast from {:?} to {:?}: incompatible dimensions",
-                from_dim, to_dim,
+                "Cannot cast from {from_dim:?} to {to_dim:?}: incompatible dimensions",
             ))
             .into());
         }

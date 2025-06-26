@@ -280,8 +280,7 @@ fn construct_bbox_columns_predicate(
     column_types.insert(parquet_schema.column(bbox_cols.maxy_col).physical_type());
     if column_types.len() != 1 {
         return Err(GeoArrowError::GeoParquet(format!(
-            "Expected one column type for GeoParquet bbox columns, got {:?}",
-            column_types
+            "Expected one column type for GeoParquet bbox columns, got {column_types:?}",
         )));
     }
 
@@ -290,8 +289,7 @@ fn construct_bbox_columns_predicate(
         || matches!(column_type, parquet::basic::Type::DOUBLE))
     {
         return Err(GeoArrowError::GeoParquet(format!(
-            "Expected column type for GeoParquet bbox column to be FLOAT or DOUBLE, got {:?}",
-            column_type
+            "Expected column type for GeoParquet bbox column to be FLOAT or DOUBLE, got {column_type:?}",
         )));
     }
 
@@ -411,8 +409,7 @@ fn parse_statistics_f64(column_meta: &ColumnChunkMetaData) -> GeoArrowResult<(f6
             *typed_stats.max_opt().unwrap() as f64,
         )),
         st => Err(GeoArrowError::GeoParquet(format!(
-            "Unexpected statistics type: {:?}",
-            st
+            "Unexpected statistics type: {st:?}",
         ))),
     }
 }

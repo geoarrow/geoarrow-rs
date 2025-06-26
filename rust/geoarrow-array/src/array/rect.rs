@@ -223,8 +223,7 @@ impl TryFrom<(&dyn Array, BoxType)> for RectArray {
         match value.data_type() {
             DataType::Struct(_) => (value.as_struct(), dim).try_into(),
             dt => Err(GeoArrowError::InvalidGeoArrow(format!(
-                "Unexpected Rect DataType: {:?}",
-                dt
+                "Unexpected Rect DataType: {dt:?}",
             ))),
         }
     }

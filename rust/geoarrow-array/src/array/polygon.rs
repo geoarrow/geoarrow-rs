@@ -336,8 +336,7 @@ impl TryFrom<(&dyn Array, PolygonType)> for PolygonArray {
             DataType::List(_) => (value.as_list::<i32>(), typ).try_into(),
             DataType::LargeList(_) => (value.as_list::<i64>(), typ).try_into(),
             dt => Err(GeoArrowError::InvalidGeoArrow(format!(
-                "Unexpected Polygon DataType: {:?}",
-                dt
+                "Unexpected Polygon DataType: {dt:?}",
             ))),
         }
     }

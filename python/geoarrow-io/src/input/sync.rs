@@ -104,8 +104,7 @@ impl ChunkReader for FileReader {
 
         if read != length {
             return Err(parquet::errors::ParquetError::EOF(format!(
-                "Expected to read {} bytes, read only {}",
-                length, read,
+                "Expected to read {length} bytes, read only {read}",
             )));
         }
         Ok(buffer.into())

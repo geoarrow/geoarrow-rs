@@ -567,8 +567,7 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
 
                     if dim != found_dimension {
                         return Err(GeoArrowError::InvalidGeoArrow(format!(
-                            "expected dimension: {:?}, found child array with dimension {:?} and type_id: {}",
-                            dim, found_dimension, type_id
+                            "expected dimension: {dim:?}, found child array with dimension {found_dimension:?} and type_id: {type_id}",
                         )));
                     }
 
@@ -641,8 +640,7 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                         }
                         _ => {
                             return Err(GeoArrowError::InvalidGeoArrow(format!(
-                                "Unexpected type_id {} when converting to MixedGeometryArray",
-                                type_id
+                                "Unexpected type_id {type_id} when converting to MixedGeometryArray",
                             )));
                         }
                     }
@@ -681,8 +679,7 @@ impl TryFrom<(&dyn Array, Dimension, CoordType)> for MixedGeometryArray {
         match value.data_type() {
             DataType::Union(_, _) => (value.as_union(), dim, coord_type).try_into(),
             dt => Err(GeoArrowError::InvalidGeoArrow(format!(
-                "Unexpected MixedGeometryArray DataType: {:?}",
-                dt
+                "Unexpected MixedGeometryArray DataType: {dt:?}",
             ))),
         }
     }
