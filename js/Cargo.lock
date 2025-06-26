@@ -935,7 +935,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-array"
-version = "0.4.0-beta.4"
+version = "0.4.0"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
@@ -949,7 +949,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-schema"
-version = "0.4.0-beta.4"
+version = "0.4.0"
 dependencies = [
  "arrow-schema",
  "geo-traits",
@@ -1024,19 +1024,19 @@ dependencies = [
 
 [[package]]
 name = "geoparquet"
-version = "0.4.0-beta.4"
+version = "0.4.0"
 dependencies = [
  "arrow-arith",
  "arrow-array",
  "arrow-buffer",
  "arrow-ord",
  "arrow-schema",
- "async-stream",
  "futures",
  "geo-traits",
  "geo-types",
  "geoarrow-array",
  "geoarrow-schema",
+ "indexmap 2.7.1",
  "parquet",
  "serde",
  "serde_json",
