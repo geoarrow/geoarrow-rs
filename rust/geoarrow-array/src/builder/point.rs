@@ -163,8 +163,7 @@ impl PointBuilder {
                         self.push_point(Some(&mp.point(0).unwrap()))
                     } else {
                         return Err(GeoArrowError::IncorrectGeometryType(format!(
-                            "Expected MultiPoint with only one point in PointBuilder, got {} points",
-                            num_points
+                            "Expected MultiPoint with only one point in PointBuilder, got {num_points} points",
                         )));
                     }
                 }

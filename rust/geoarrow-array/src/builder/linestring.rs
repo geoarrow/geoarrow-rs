@@ -202,8 +202,7 @@ impl LineStringBuilder {
                         self.push_line_string(Some(&ml.line_string(0).unwrap()))?
                     } else {
                         return Err(GeoArrowError::IncorrectGeometryType(format!(
-                            "Expected MultiLineString with only one LineString in LineStringBuilder, got {} line strings",
-                            num_line_strings
+                            "Expected MultiLineString with only one LineString in LineStringBuilder, got {num_line_strings} line strings",
                         )));
                     }
                 }

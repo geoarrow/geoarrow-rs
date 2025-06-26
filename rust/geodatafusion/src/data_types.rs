@@ -142,6 +142,6 @@ pub(crate) fn parse_to_native_array(
             geometry_type,
         ))?))
     } else {
-        Err(DataFusionError::Execution(format!("Unexpected input data type: {}", data_type)).into())
+        Err(DataFusionError::Execution(format!("Unexpected input data type: {data_type}")).into())
     }
 }

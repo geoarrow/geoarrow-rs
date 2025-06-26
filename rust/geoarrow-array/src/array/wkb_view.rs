@@ -147,8 +147,7 @@ impl TryFrom<(&dyn Array, WkbType)> for WkbViewArray {
         match value.data_type() {
             DataType::BinaryView => Ok((value.as_binary_view().clone(), typ).into()),
             dt => Err(GeoArrowError::InvalidGeoArrow(format!(
-                "Unexpected WkbView DataType: {:?}",
-                dt
+                "Unexpected WkbView DataType: {dt:?}",
             ))),
         }
     }

@@ -1301,20 +1301,17 @@ fn parse_box(data_type: &DataType) -> Result<Dimension, ArrowError> {
                     Ok(Dimension::XYZ)
                 } else {
                     Err(ArrowError::SchemaError(format!(
-                        "unexpected either mmin and mmax or zmin and zmax for struct with 6 fields. Got names: {:?}",
-                        names
+                        "unexpected either mmin and mmax or zmin and zmax for struct with 6 fields. Got names: {names:?}",
                     )))
                 }
             }
             8 => Ok(Dimension::XYZM),
             num_fields => Err(ArrowError::SchemaError(format!(
-                "unexpected number of struct fields: {}",
-                num_fields
+                "unexpected number of struct fields: {num_fields}",
             ))),
         },
         dt => Err(ArrowError::SchemaError(format!(
-            "unexpected data type parsing box: {:?}",
-            dt
+            "unexpected data type parsing box: {dt:?}",
         ))),
     }
 }

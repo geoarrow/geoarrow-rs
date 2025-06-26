@@ -21,8 +21,7 @@ impl<'a, T: WktNum, R: RectTrait<T = T>> RectWrapper<'a, T, R> {
             geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => {}
             dim => {
                 return Err(GeoArrowError::IncorrectGeometryType(format!(
-                    "Only 2d rects supported when pushing to polygon. Got dimension: {:?}",
-                    dim
+                    "Only 2d rects supported when pushing to polygon. Got dimension: {dim:?}",
                 )));
             }
         };

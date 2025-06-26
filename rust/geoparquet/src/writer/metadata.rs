@@ -202,8 +202,7 @@ impl GeoParquetMetadataBuilder {
                 .any(|column_info| column_info.name == primary_column)
             {
                 return Err(GeoArrowError::GeoParquet(format!(
-                    "Designated primary column: {} does not exist as a geometry field in schema",
-                    primary_column
+                    "Designated primary column: {primary_column} does not exist as a geometry field in schema",
                 )));
             }
         }

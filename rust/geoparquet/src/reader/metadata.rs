@@ -156,8 +156,7 @@ impl GeoParquetReaderMetadata {
             column_meta
                 .bbox_covering(column_name)
                 .ok_or(GeoArrowError::GeoParquet(format!(
-                    "No covering metadata found for column: {}",
-                    column_name
+                    "No covering metadata found for column: {column_name}",
                 )))?;
         let geo_statistics =
             ParquetBboxStatistics::try_new(self.meta.parquet_schema(), &bbox_covering)?;
@@ -175,8 +174,7 @@ impl GeoParquetReaderMetadata {
             column_meta
                 .bbox_covering(column_name)
                 .ok_or(GeoArrowError::GeoParquet(format!(
-                    "No covering metadata found for column: {}",
-                    column_name
+                    "No covering metadata found for column: {column_name}",
                 )))?;
 
         let geo_statistics =

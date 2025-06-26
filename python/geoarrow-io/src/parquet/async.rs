@@ -512,7 +512,7 @@ impl GeoParquetDataset {
                 store: self.store.clone(),
             })
         } else {
-            Err(PyValueError::new_err(format!("File '{}' not found in dataset", path)).into())
+            Err(PyValueError::new_err(format!("File '{path}' not found in dataset")).into())
         }
     }
 
