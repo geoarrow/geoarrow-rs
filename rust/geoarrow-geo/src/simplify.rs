@@ -1,34 +1,18 @@
 use std::sync::Arc;
 
-use arrow_array::Float64Array;
-use arrow_array::builder::Float64Builder;
-use geo::{Area, Simplify};
+use geo::Simplify;
 use geo_traits::to_geo::{ToGeoGeometry, ToGeoLineString};
 use geoarrow_array::builder::{GeometryBuilder, LineStringBuilder};
 use geoarrow_array::cast::AsGeoArrowArray;
-use geoarrow_array::error::Result;
 use geoarrow_array::scalar::LineString;
-use geoarrow_array::{ArrayAccessor, GeoArrowArray, GeoArrowType};
-use geoarrow_schema::{CoordType, GeometryType};
+use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor};
+use geoarrow_schema::error::GeoArrowResult;
+use geoarrow_schema::{GeoArrowType, GeometryType};
 
-pub fn simplify<'a>(array: &'a impl ArrayAccessor<'a>) -> Result<Float64Array> {
-    let mut builder = Float64Builder::with_capacity(array.len());
-
-    for item in array.iter() {
-        if let Some(geom) = item {
-            builder.append_value(geom?.to_geometry().unsigned_area());
-        } else {
-            builder.append_null();
-        }
-    }
-
-    Ok(builder.finish())
-}
-
-pub fn simplify2<'a>(
-    array: &'a (impl ArrayAccessor<'a> + AsGeoArrowArray),
+pub fn simplify<'a>(
+    array: &'a (impl GeoArrowArrayAccessor<'a> + AsGeoArrowArray),
     epsilon: &f64,
-) -> Result<Arc<dyn GeoArrowArray>> {
+) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
     match array.data_type() {
         GeoArrowType::LineString(typ) => {
             let mut builder = LineStringBuilder::new(typ);
@@ -43,9 +27,8 @@ pub fn simplify2<'a>(
             Ok(Arc::new(builder.finish()))
         }
         GeoArrowType::Wkb(typ) => {
-            let geom_typ =
-                GeometryType::new(CoordType::default_interleaved(), typ.metadata().clone());
-            let mut builder = GeometryBuilder::new(geom_typ, true);
+            let geom_typ = GeometryType::new(typ.metadata().clone());
+            let mut builder = GeometryBuilder::new(geom_typ);
             for item in array.as_line_string().iter() {
                 if let Some(geom) = item {
                     let simplified_geom = simplify_geometry(&geom?.to_geometry(), epsilon);
@@ -66,6 +49,6 @@ fn simplify_geometry(geom: &geo::Geometry, epsilon: &f64) -> geo::Geometry {
         geo::Geometry::Polygon(g) => geo::Geometry::Polygon(g.simplify(epsilon)),
         geo::Geometry::MultiLineString(g) => geo::Geometry::MultiLineString(g.simplify(epsilon)),
         geo::Geometry::MultiPolygon(g) => geo::Geometry::MultiPolygon(g.simplify(epsilon)),
-        _ => panic!("Unsupported geometry type for simplification: {:?}", geom),
+        _ => panic!("Unsupported geometry type for simplification: {geom:?}"),
     }
 }

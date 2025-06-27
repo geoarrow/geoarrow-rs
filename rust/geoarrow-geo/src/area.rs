@@ -3,14 +3,15 @@ use arrow_array::builder::Float64Builder;
 use arrow_buffer::NullBuffer;
 use geo::Area;
 use geo_traits::to_geo::ToGeoGeometry;
-use geoarrow_array::error::Result;
-use geoarrow_array::{ArrayAccessor, GeoArrowArray, GeoArrowType, downcast_geoarrow_array};
+use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, downcast_geoarrow_array};
+use geoarrow_schema::GeoArrowType;
+use geoarrow_schema::error::GeoArrowResult;
 
-pub fn unsigned_area(array: &dyn GeoArrowArray) -> Result<Float64Array> {
+pub fn unsigned_area(array: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
     downcast_geoarrow_array!(array, _unsigned_area_impl)
 }
 
-pub fn signed_area(array: &dyn GeoArrowArray) -> Result<Float64Array> {
+pub fn signed_area(array: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
     downcast_geoarrow_array!(array, _signed_area_impl)
 }
 
@@ -19,30 +20,34 @@ fn _zeros(len: usize, nulls: Option<NullBuffer>) -> Float64Array {
     Float64Array::new(values.into(), nulls)
 }
 
-fn _unsigned_area_impl<'a>(array: &'a impl ArrayAccessor<'a>) -> Result<Float64Array> {
+fn _unsigned_area_impl<'a>(
+    array: &'a impl GeoArrowArrayAccessor<'a>,
+) -> GeoArrowResult<Float64Array> {
     use GeoArrowType::*;
     match array.data_type() {
         Point(_) | LineString(_) | MultiPoint(_) | MultiLineString(_) => {
-            Ok(_zeros(array.len(), array.nulls().cloned()))
+            Ok(_zeros(array.len(), array.logical_nulls()))
         }
         _ => _area_impl(array, Area::unsigned_area),
     }
 }
 
-fn _signed_area_impl<'a>(array: &'a impl ArrayAccessor<'a>) -> Result<Float64Array> {
+fn _signed_area_impl<'a>(
+    array: &'a impl GeoArrowArrayAccessor<'a>,
+) -> GeoArrowResult<Float64Array> {
     use GeoArrowType::*;
     match array.data_type() {
         Point(_) | LineString(_) | MultiPoint(_) | MultiLineString(_) => {
-            Ok(_zeros(array.len(), array.nulls().cloned()))
+            Ok(_zeros(array.len(), array.logical_nulls()))
         }
         _ => _area_impl(array, Area::signed_area),
     }
 }
 
 fn _area_impl<'a, F: Fn(&geo::Geometry) -> f64>(
-    array: &'a impl ArrayAccessor<'a>,
+    array: &'a impl GeoArrowArrayAccessor<'a>,
     area_fn: F,
-) -> Result<Float64Array> {
+) -> GeoArrowResult<Float64Array> {
     let mut builder = Float64Builder::with_capacity(array.len());
 
     for item in array.iter() {
