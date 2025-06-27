@@ -3,9 +3,10 @@ use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy)]
 pub enum PyCoordType {
     Interleaved,
+    #[default]
     Separated,
 }
 

@@ -1,15 +1,17 @@
 use arrow_schema::{ArrowError, Field};
 use serde::{Deserialize, Serialize};
 
-use crate::{Crs, Edges};
+use crate::Edges;
+use crate::crs::Crs;
 
 /// GeoArrow extension metadata.
 ///
 /// This follows the extension metadata [defined by the GeoArrow
 /// specification](https://geoarrow.org/extension-types).
 ///
-/// This is serialized to JSON when a [`geoarrow`](self) array is exported to an [`arrow`] array
-/// and deserialized when imported from an [`arrow`] array.
+/// This struct is contained within all GeoArrow geometry type definitions, such as
+/// [`PointType`][crate::PointType], [`GeometryType`][crate::GeometryType], or
+/// [`WkbType`][crate::WkbType].
 #[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct Metadata {
     // Raise the underlying crs fields to this level.
@@ -71,7 +73,8 @@ impl TryFrom<&Field> for Metadata {
 
 #[cfg(test)]
 mod test {
-    use std::{collections::HashMap, str::FromStr};
+    use std::collections::HashMap;
+    use std::str::FromStr;
 
     use arrow_schema::DataType;
     use serde_json::{Value, json};

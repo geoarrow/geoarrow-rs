@@ -1,44 +1,68 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import BinaryIO, List, Optional, Sequence, Union
+from typing import BinaryIO, List, Optional, Sequence, TypedDict, Union
 
-from arro3.core import Schema, Table
+from arro3.core import Array, Schema, Table
 from arro3.core.types import (
     ArrowArrayExportable,
     ArrowSchemaExportable,
     ArrowStreamExportable,
 )
-from geoarrow.rust.core import NativeArray
+from geoarrow.rust.core.types import CoordTypeInput
 from pyproj import CRS
 
 from .enums import GeoParquetEncoding
-from .types import BboxCovering, GeoParquetEncodingT
+from .types import GeoParquetEncodingT
 
-class ParquetFile:
-    def __init__(self, path: str, store: ObjectStore) -> None:
+class PathInput(TypedDict):
+    path: str
+    """The path to the file."""
+
+    size: int
+    """The size of the file in bytes.
+
+    If this is provided, only bounded range requests will be made instead of suffix
+    requests. This is useful for object stores that do not support suffix requests, in
+    particular Azure.
+    """
+
+class GeoParquetFile:
+    @classmethod
+    def open(cls, path: str | PathInput, store: ObjectStore) -> GeoParquetFile:
         """
-        Construct a new ParquetFile
+        Open a Parquet file from the given path.
 
-        This will synchronously fetch metadata from the provided path
+        This will synchronously fetch metadata from the provided path.
 
         Args:
             path: a string URL to read from.
-            store: the file system interface to read from.
-
-        Returns:
-            A new ParquetFile object.
+            store: the object store interface to read from.
         """
+
+    @classmethod
+    async def open_async(
+        cls, path: str | PathInput, store: ObjectStore
+    ) -> GeoParquetFile:
+        """
+        Open a Parquet file from the given path asynchronously.
+
+        This will fetch metadata from the provided path in an async manner.
+        """
+
     @property
     def num_rows(self) -> int:
         """The number of rows in this file."""
     @property
     def num_row_groups(self) -> int:
         """The number of row groups in this file."""
-    @property
-    def schema_arrow(self) -> Schema:
+    def schema_arrow(
+        self,
+        parse_to_native: bool = True,
+        coord_type: CoordTypeInput | None = None,
+    ) -> Schema:
         """Access the Arrow schema of the generated data"""
-    def crs(self, column_name: str | None = None) -> CRS:
+    def crs(self, column_name: str | None = None) -> CRS | None:
         """Access the CRS of this file.
 
         Args:
@@ -48,18 +72,23 @@ class ParquetFile:
             CRS
         """
     def row_group_bounds(
-        self, row_group_idx: int, bbox_paths: BboxCovering | None = None
+        self,
+        row_group_idx: int,
+        column_name: str | None = None,
     ) -> List[float]:
         """Get the bounds of a single row group.
 
         Args:
             row_group_idx: The row group index.
-            bbox_paths: For files written with spatial partitioning, you don't need to pass in these column names, as they'll be specified in the metadata Defaults to None.
+            column_name: The geometry column name. If there is more than one geometry column in the file, you must specify which you want to read. Defaults to None.
 
         Returns:
             The bounds of a single row group.
         """
-    def row_groups_bounds(self, bbox_paths: BboxCovering | None = None) -> NativeArray:
+    def row_groups_bounds(
+        self,
+        column_name: str | None = None,
+    ) -> Array:
         """
         Get the bounds of all row groups.
 
@@ -67,7 +96,7 @@ class ParquetFile:
         specified in the metadata.
 
         Args:
-            bbox_paths: For files written with spatial partitioning, you don't need to pass in these column names, as they'll be specified in the metadata Defaults to None.
+            column_name: The geometry column name. If there is more than one geometry column in the file, you must specify which you want to read. Defaults to None.
 
         Returns:
             A geoarrow "box" array with bounds of all row groups.
@@ -88,7 +117,8 @@ class ParquetFile:
         limit: int | None = None,
         offset: int | None = None,
         bbox: Sequence[int | float] | None = None,
-        bbox_paths: BboxCovering | None = None,
+        parse_to_native: bool = True,
+        coord_type: CoordTypeInput | None = None,
     ) -> Table:
         """Perform an async read with the given options
 
@@ -97,7 +127,6 @@ class ParquetFile:
             limit: _description_. Defaults to None.
             offset: _description_. Defaults to None.
             bbox: _description_. Defaults to None.
-            bbox_paths: _description_. Defaults to None.
 
         Returns:
             _description_
@@ -109,7 +138,8 @@ class ParquetFile:
         limit: int | None = None,
         offset: int | None = None,
         bbox: Sequence[int | float] | None = None,
-        bbox_paths: BboxCovering | None = None,
+        parse_to_native: bool = True,
+        coord_type: CoordTypeInput | None = None,
     ) -> Table:
         """Perform a sync read with the given options
 
@@ -118,14 +148,15 @@ class ParquetFile:
             limit: _description_. Defaults to None.
             offset: _description_. Defaults to None.
             bbox: _description_. Defaults to None.
-            bbox_paths: _description_. Defaults to None.
 
         Returns:
             _description_
         """
 
-class ParquetDataset:
-    def __init__(self, paths: Sequence[str], store: ObjectStore) -> None:
+class GeoParquetDataset:
+    def __init__(
+        self, paths: Sequence[str] | Sequence[PathInput], store: ObjectStore
+    ) -> None:
         """
         Construct a new ParquetDataset
 
@@ -144,10 +175,13 @@ class ParquetDataset:
     @property
     def num_row_groups(self) -> int:
         """The total number of row groups across all files"""
-    @property
-    def schema_arrow(self) -> Schema:
+    def schema_arrow(
+        self,
+        parse_to_native: bool = True,
+        coord_type: CoordTypeInput | None = None,
+    ) -> Schema:
         """Access the Arrow schema of the generated data"""
-    def crs(self, column_name: str | None = None) -> CRS:
+    def crs(self, column_name: str | None = None) -> CRS | None:
         """Access the CRS of this file.
 
         Args:
@@ -156,23 +190,26 @@ class ParquetDataset:
         Returns:
             CRS
         """
+
+    def fragment(self, path: str) -> GeoParquetFile:
+        """Get a single file from this dataset."""
+    @property
+    def fragments(self) -> List[GeoParquetFile]:
+        """Get the list of files in this dataset."""
+
     async def read_async(
         self,
         *,
         batch_size: int | None = None,
-        limit: int | None = None,
-        offset: int | None = None,
         bbox: Sequence[int | float] | None = None,
-        bbox_paths: BboxCovering | None = None,
+        parse_to_native: bool = True,
+        coord_type: CoordTypeInput | None = None,
     ) -> Table:
         """Perform an async read with the given options
 
         Args:
             batch_size: _description_. Defaults to None.
-            limit: _description_. Defaults to None.
-            offset: _description_. Defaults to None.
             bbox: _description_. Defaults to None.
-            bbox_paths: _description_. Defaults to None.
 
         Returns:
             _description_
@@ -182,25 +219,21 @@ class ParquetDataset:
         self,
         *,
         batch_size: int | None = None,
-        limit: int | None = None,
-        offset: int | None = None,
         bbox: Sequence[int | float] | None = None,
-        bbox_paths: BboxCovering | None = None,
+        parse_to_native: bool = True,
+        coord_type: CoordTypeInput | None = None,
     ) -> Table:
         """Perform a sync read with the given options
 
         Args:
             batch_size: _description_. Defaults to None.
-            limit: _description_. Defaults to None.
-            offset: _description_. Defaults to None.
             bbox: _description_. Defaults to None.
-            bbox_paths: _description_. Defaults to None.
 
         Returns:
             _description_
         """
 
-class ParquetWriter:
+class GeoParquetWriter:
     """Writer interface for a single Parquet file.
 
     This allows you to write Parquet files that are larger than memory.

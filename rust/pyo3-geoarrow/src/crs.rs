@@ -1,5 +1,5 @@
-use geoarrow_array::crs::CRSTransform;
-use geoarrow_array::error::GeoArrowError;
+use geoarrow_schema::crs::CrsTransform;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{Crs, CrsType};
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
@@ -11,8 +11,7 @@ use serde_json::Value;
 use crate::PyGeoArrowError;
 use crate::error::PyGeoArrowResult;
 
-/// A wrapper around the CRS functionality contained within [Metadata] to integrate with
-/// `pyproj` Python APIs.
+/// A wrapper around [`Crs`] to integrate with `pyproj` Python APIs.
 #[derive(Clone, Debug, Default)]
 // TODO: should this be under an Arc?
 pub struct PyCrs(Crs);
@@ -33,12 +32,11 @@ impl<'py> FromPyObject<'py> for PyCrs {
 
         let projjson_string = ob
             .call_method0(intern!(py, "to_json"))?
-            .extract::<String>()?;
+            .extract::<PyBackedStr>()?;
         let projjson_value = serde_json::from_str(&projjson_string)
             .map_err(|err| PyValueError::new_err(err.to_string()))?;
 
-        let crs = Crs::from_projjson(projjson_value);
-        Ok(Self(crs))
+        Ok(Self(Crs::from_projjson(projjson_value)))
     }
 }
 
@@ -67,7 +65,7 @@ impl PyCrs {
                     let (authority, code) =
                         value.split_once(':').expect("expected : in authority code");
                     let args = PyTuple::new(py, vec![authority, code])?;
-                    crs_class.call_method1(intern!(py, "from_json"), args)?
+                    crs_class.call_method1(intern!(py, "from_authority"), args)?
                 }
                 _ => panic!("Expected string value"),
             },
@@ -142,7 +140,7 @@ impl<'py> IntoPyObject<'py> for PyCrs {
     }
 }
 
-/// An implementation of [CRSTransform] using pyproj.
+/// An implementation of [CrsTransform] using pyproj.
 #[derive(Debug)]
 pub struct PyprojCRSTransform {}
 
@@ -158,18 +156,18 @@ impl Default for PyprojCRSTransform {
     }
 }
 
-impl CRSTransform for PyprojCRSTransform {
-    fn _convert_to_projjson(&self, crs: &Crs) -> geoarrow_array::error::Result<Option<Value>> {
+impl CrsTransform for PyprojCRSTransform {
+    fn _convert_to_projjson(&self, crs: &Crs) -> GeoArrowResult<Option<Value>> {
         let crs = PyCrs::from(crs.clone());
         let projjson = Python::with_gil(|py| crs.to_projjson(py))
-            .map_err(|err| GeoArrowError::General(err.to_string()))?;
+            .map_err(|err| GeoArrowError::Crs(err.to_string()))?;
         Ok(projjson)
     }
 
-    fn _convert_to_wkt(&self, crs: &Crs) -> geoarrow_array::error::Result<Option<String>> {
+    fn _convert_to_wkt(&self, crs: &Crs) -> GeoArrowResult<Option<String>> {
         let crs = PyCrs::from(crs.clone());
         let wkt = Python::with_gil(|py| crs.to_wkt(py))
-            .map_err(|err| GeoArrowError::General(err.to_string()))?;
+            .map_err(|err| GeoArrowError::Crs(err.to_string()))?;
         Ok(wkt)
     }
 }

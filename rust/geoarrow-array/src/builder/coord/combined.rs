@@ -1,11 +1,11 @@
 use core::f64;
 
 use geo_traits::{CoordTrait, PointTrait};
+use geoarrow_schema::error::GeoArrowResult;
 use geoarrow_schema::{CoordType, Dimension};
 
 use crate::array::CoordBuffer;
 use crate::builder::{InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder};
-use crate::error::Result;
 
 /// The GeoArrow equivalent to `Vec<Coord>`: a mutable collection of coordinates.
 ///
@@ -19,14 +19,26 @@ pub enum CoordBufferBuilder {
 }
 
 impl CoordBufferBuilder {
-    /// Initialize a buffer of a given length with all coordinates set to 0.0
-    pub fn initialize(len: usize, interleaved: bool, dim: Dimension) -> Self {
-        match interleaved {
-            true => {
-                CoordBufferBuilder::Interleaved(InterleavedCoordBufferBuilder::initialize(len, dim))
-            }
-            false => {
-                CoordBufferBuilder::Separated(SeparatedCoordBufferBuilder::initialize(len, dim))
+    /// Initialize a buffer of a given length with all coordinates set to the given value.
+    pub fn initialize(len: usize, coord_type: CoordType, dim: Dimension, value: f64) -> Self {
+        match coord_type {
+            CoordType::Interleaved => CoordBufferBuilder::Interleaved(
+                InterleavedCoordBufferBuilder::initialize(len, dim, value),
+            ),
+            CoordType::Separated => CoordBufferBuilder::Separated(
+                SeparatedCoordBufferBuilder::initialize(len, dim, value),
+            ),
+        }
+    }
+
+    /// Create a new builder with the given capacity and dimension
+    pub fn with_capacity(len: usize, coord_type: CoordType, dim: Dimension) -> Self {
+        match coord_type {
+            CoordType::Interleaved => CoordBufferBuilder::Interleaved(
+                InterleavedCoordBufferBuilder::with_capacity(len, dim),
+            ),
+            CoordType::Separated => {
+                CoordBufferBuilder::Separated(SeparatedCoordBufferBuilder::with_capacity(len, dim))
             }
         }
     }
@@ -107,21 +119,21 @@ impl CoordBufferBuilder {
     /// ## Errors
     ///
     /// - If the added coordinate does not have the same dimension as the coordinate buffer.
-    pub fn try_push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+    pub fn try_push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> GeoArrowResult<()> {
         match self {
             CoordBufferBuilder::Interleaved(cb) => cb.try_push_coord(coord),
             CoordBufferBuilder::Separated(cb) => cb.try_push_coord(coord),
         }
     }
 
-    /// Push a valid coordinate with NaN values
+    /// Push a valid coordinate with the given constant value
     ///
     /// Used in the case of point and rect arrays, where a `null` array value still needs to have
     /// space allocated for it.
-    pub fn push_nan_coord(&mut self) {
+    pub(crate) fn push_constant(&mut self, value: f64) {
         match self {
-            CoordBufferBuilder::Interleaved(cb) => cb.push_nan_coord(),
-            CoordBufferBuilder::Separated(cb) => cb.push_nan_coord(),
+            CoordBufferBuilder::Interleaved(cb) => cb.push_constant(value),
+            CoordBufferBuilder::Separated(cb) => cb.push_constant(value),
         }
     }
 
@@ -142,19 +154,18 @@ impl CoordBufferBuilder {
     /// ## Errors
     ///
     /// - If the added point does not have the same dimension as the coordinate buffer.
-    pub fn try_push_point(&mut self, point: &impl PointTrait<T = f64>) -> Result<()> {
+    pub fn try_push_point(&mut self, point: &impl PointTrait<T = f64>) -> GeoArrowResult<()> {
         match self {
             CoordBufferBuilder::Interleaved(cb) => cb.try_push_point(point),
             CoordBufferBuilder::Separated(cb) => cb.try_push_point(point),
         }
     }
-}
 
-impl From<CoordBufferBuilder> for CoordBuffer {
-    fn from(value: CoordBufferBuilder) -> Self {
-        match value {
-            CoordBufferBuilder::Interleaved(cb) => CoordBuffer::Interleaved(cb.into()),
-            CoordBufferBuilder::Separated(cb) => CoordBuffer::Separated(cb.into()),
+    /// Consume the builder and convert to an immutable [`CoordBuffer`]
+    pub fn finish(self) -> CoordBuffer {
+        match self {
+            CoordBufferBuilder::Interleaved(cb) => CoordBuffer::Interleaved(cb.finish()),
+            CoordBufferBuilder::Separated(cb) => CoordBuffer::Separated(cb.finish()),
         }
     }
 }

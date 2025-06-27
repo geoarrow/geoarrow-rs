@@ -1,15 +1,25 @@
 use geo_traits::RectTrait;
-use geozero::GeomProcessor;
+use geozero::{GeomProcessor, GeozeroGeometry};
 
-/// Process a [RectTrait] through a [GeomProcessor].
+use crate::builder::geo_trait_wrappers::RectWrapper;
+use crate::geozero::export::scalar::process_polygon;
+use crate::scalar::Rect;
+
 pub(crate) fn process_rect<P: GeomProcessor>(
-    _geom: &impl RectTrait<T = f64>,
-    _geom_idx: usize,
-    _processor: &mut P,
+    geom: &impl RectTrait<T = f64>,
+    geom_idx: usize,
+    processor: &mut P,
 ) -> geozero::error::Result<()> {
-    todo!("Implement process_rect");
-    // processor.point_begin(geom_idx)?;
-    // process_point_as_coord(geom, 0, processor)?;
-    // processor.point_end(geom_idx)?;
-    // Ok(())
+    let polygon = RectWrapper::try_new(geom)
+        .map_err(|err| geozero::error::GeozeroError::Geometry(err.to_string()))?;
+    process_polygon(&polygon, true, geom_idx, processor)
+}
+
+impl GeozeroGeometry for Rect<'_> {
+    fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
+    where
+        Self: Sized,
+    {
+        process_rect(self, 0, processor)
+    }
 }

@@ -1,9 +1,6 @@
 // Specialized implementations of GeometryTrait on each scalar type.
 
-use geo_traits::{
-    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
-    MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
-};
+use geo_traits::GeometryTrait;
 
 use crate::scalar::*;
 
@@ -53,21 +50,21 @@ macro_rules! impl_specialization {
                 Self: 'b;
 
             fn dim(&self) -> geo_traits::Dimensions {
-                $trait_name::dim(self)
+                self.native_dim().into()
             }
 
             fn as_type(
                 &self,
             ) -> geo_traits::GeometryType<
                 '_,
-                Point,
-                LineString,
-                Polygon,
-                MultiPoint,
-                MultiLineString,
-                MultiPolygon,
-                GeometryCollection,
-                Rect,
+                Self::PointType<'_>,
+                Self::LineStringType<'_>,
+                Self::PolygonType<'_>,
+                Self::MultiPointType<'_>,
+                Self::MultiLineStringType<'_>,
+                Self::MultiPolygonType<'_>,
+                Self::GeometryCollectionType<'_>,
+                Self::RectType<'_>,
                 Self::TriangleType<'_>,
                 Self::LineType<'_>,
             > {
@@ -119,21 +116,21 @@ macro_rules! impl_specialization {
                 Self: 'b;
 
             fn dim(&self) -> geo_traits::Dimensions {
-                $trait_name::dim(self)
+                self.native_dim().into()
             }
 
             fn as_type(
                 &self,
             ) -> geo_traits::GeometryType<
                 '_,
-                Point,
-                LineString,
-                Polygon,
-                MultiPoint,
-                MultiLineString,
-                MultiPolygon,
-                GeometryCollection,
-                Rect,
+                Self::PointType<'_>,
+                Self::LineStringType<'_>,
+                Self::PolygonType<'_>,
+                Self::MultiPointType<'_>,
+                Self::MultiLineStringType<'_>,
+                Self::MultiPolygonType<'_>,
+                Self::GeometryCollectionType<'_>,
+                Self::RectType<'_>,
                 Self::TriangleType<'_>,
                 Self::LineType<'_>,
             > {

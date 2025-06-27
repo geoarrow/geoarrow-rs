@@ -47,7 +47,7 @@ pub(crate) fn dims_to_geos(dim: geo_traits::Dimensions) -> geos::CoordDimensions
         geo_traits::Dimensions::Xyz | geo_traits::Dimensions::Unknown(3) => {
             geos::CoordDimensions::ThreeD
         }
-        _ => panic!("Invalid coord dimension for GEOS: {:?}", dim),
+        _ => panic!("Invalid coord dimension for GEOS: {dim:?}",),
     }
 }
 

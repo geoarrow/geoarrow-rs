@@ -2,7 +2,7 @@ use arrow_array::{RecordBatchIterator, RecordBatchReader};
 use arrow_wasm::Table;
 // use parquet_wasm::utils::assert_parquet_file_not_empty;
 use bytes::Bytes;
-use geoarrow_geoparquet::{
+use geoparquet::{
     GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder,
     write_geoparquet as _write_geoparquet,
 };

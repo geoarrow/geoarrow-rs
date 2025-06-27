@@ -1,5 +1,5 @@
 use geo_traits::GeometryCollectionTrait;
-use geoarrow_array::error::{GeoArrowError, Result};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geos::{Geom, GeometryTypes};
 
 use crate::import::scalar::geometry::GEOSGeometry;
@@ -11,28 +11,27 @@ impl GEOSGeometryCollection {
         Self(geom)
     }
 
-    pub fn try_new(geom: geos::Geometry) -> Result<Self> {
+    pub fn try_new(geom: geos::Geometry) -> GeoArrowResult<Self> {
         if matches!(geom.geometry_type(), GeometryTypes::GeometryCollection) {
             Ok(Self(geom))
         } else {
-            Err(GeoArrowError::General(
+            Err(GeoArrowError::IncorrectGeometryType(
                 "Geometry type must be geometry collection".to_string(),
             ))
         }
     }
-}
 
-impl GeometryCollectionTrait for GEOSGeometryCollection {
-    type T = f64;
-    type GeometryType<'a> = GEOSGeometry;
-
-    fn dim(&self) -> geo_traits::Dimensions {
+    pub(crate) fn dimension(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
             geos::Dimensions::TwoD => geo_traits::Dimensions::Xy,
             geos::Dimensions::ThreeD => geo_traits::Dimensions::Unknown(3),
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
+}
+
+impl GeometryCollectionTrait for GEOSGeometryCollection {
+    type GeometryType<'a> = GEOSGeometry;
 
     fn num_geometries(&self) -> usize {
         self.0.get_num_geometries().unwrap()

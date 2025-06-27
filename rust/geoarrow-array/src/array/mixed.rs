@@ -2,26 +2,25 @@ use std::collections::HashSet;
 use std::sync::Arc;
 
 use arrow_array::cast::AsArray;
-use arrow_array::{Array, ArrayRef, OffsetSizeTrait, UnionArray};
+use arrow_array::{Array, ArrayRef, UnionArray};
 use arrow_buffer::ScalarBuffer;
 use arrow_schema::{DataType, UnionMode};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{
-    CoordType, Dimension, GeometryCollectionType, LineStringType, Metadata, MultiLineStringType,
-    MultiPointType, MultiPolygonType, PointType, PolygonType,
+    CoordType, Dimension, GeoArrowType, GeometryCollectionType, LineStringType,
+    MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType,
 };
 
-use crate::ArrayAccessor;
+use crate::GeoArrowArrayAccessor;
 use crate::array::{
     DimensionIndex, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
-    PointArray, PolygonArray, WkbArray,
+    PointArray, PolygonArray,
 };
 use crate::builder::{
-    LineStringBuilder, MixedGeometryBuilder, MultiLineStringBuilder, MultiPointBuilder,
-    MultiPolygonBuilder, PointBuilder, PolygonBuilder,
+    LineStringBuilder, MultiLineStringBuilder, MultiPointBuilder, MultiPolygonBuilder,
+    PointBuilder, PolygonBuilder,
 };
 use crate::capacity::MixedCapacity;
-use crate::datatypes::GeoArrowType;
-use crate::error::{GeoArrowError, Result};
 use crate::scalar::Geometry;
 use crate::trait_::GeoArrowArray;
 
@@ -60,14 +59,10 @@ use crate::trait_::GeoArrowArray;
 /// - 37: GeometryCollection ZM
 #[derive(Debug, Clone)]
 pub struct MixedGeometryArray {
-    // We store the coord type and dimension separately because there's no NativeType::Mixed
-    // variant
     pub(crate) coord_type: CoordType,
     pub(crate) dim: Dimension,
 
-    pub(crate) metadata: Arc<Metadata>,
-
-    /// Invariant: every item in `type_ids` is `> 0 && < fields.len()` if `type_ids` are not provided. If `type_ids` exist in the NativeType, then every item in `type_ids` is `> 0 && `
+    /// Invariant: every item in `type_ids` is `> 0 && < fields.len()` if `type_ids` are not provided.
     pub(crate) type_ids: ScalarBuffer<i8>,
 
     /// Invariant: `offsets.len() == type_ids.len()`
@@ -107,7 +102,6 @@ impl MixedGeometryArray {
         multi_points: Option<MultiPointArray>,
         multi_line_strings: Option<MultiLineStringArray>,
         multi_polygons: Option<MultiPolygonArray>,
-        metadata: Arc<Metadata>,
     ) -> Self {
         let mut coord_types = HashSet::new();
         if let Some(points) = &points {
@@ -162,36 +156,41 @@ impl MixedGeometryArray {
             type_ids,
             offsets,
             points: points.unwrap_or(
-                PointBuilder::new(PointType::new(coord_type, dim, Default::default())).finish(),
+                PointBuilder::new(
+                    PointType::new(dim, Default::default()).with_coord_type(coord_type),
+                )
+                .finish(),
             ),
             line_strings: line_strings.unwrap_or(
-                LineStringBuilder::new(LineStringType::new(coord_type, dim, Default::default()))
-                    .finish(),
+                LineStringBuilder::new(
+                    LineStringType::new(dim, Default::default()).with_coord_type(coord_type),
+                )
+                .finish(),
             ),
             polygons: polygons.unwrap_or(
-                PolygonBuilder::new(PolygonType::new(coord_type, dim, Default::default())).finish(),
+                PolygonBuilder::new(
+                    PolygonType::new(dim, Default::default()).with_coord_type(coord_type),
+                )
+                .finish(),
             ),
             multi_points: multi_points.unwrap_or(
-                MultiPointBuilder::new(MultiPointType::new(coord_type, dim, Default::default()))
-                    .finish(),
+                MultiPointBuilder::new(
+                    MultiPointType::new(dim, Default::default()).with_coord_type(coord_type),
+                )
+                .finish(),
             ),
             multi_line_strings: multi_line_strings.unwrap_or(
-                MultiLineStringBuilder::new(MultiLineStringType::new(
-                    coord_type,
-                    dim,
-                    Default::default(),
-                ))
+                MultiLineStringBuilder::new(
+                    MultiLineStringType::new(dim, Default::default()).with_coord_type(coord_type),
+                )
                 .finish(),
             ),
             multi_polygons: multi_polygons.unwrap_or(
-                MultiPolygonBuilder::new(MultiPolygonType::new(
-                    coord_type,
-                    dim,
-                    Default::default(),
-                ))
+                MultiPolygonBuilder::new(
+                    MultiPolygonType::new(dim, Default::default()).with_coord_type(coord_type),
+                )
                 .finish(),
             ),
-            metadata,
             slice_offset: 0,
         }
     }
@@ -398,7 +397,7 @@ impl MixedGeometryArray {
         self.buffer_lengths().num_bytes()
     }
 
-    /// Slices this [`MixedGeometryArray`] in place.
+    /// Slice this [`MixedGeometryArray`].
     ///
     /// # Implementation
     ///
@@ -424,24 +423,21 @@ impl MixedGeometryArray {
             multi_points: self.multi_points.clone(),
             multi_line_strings: self.multi_line_strings.clone(),
             multi_polygons: self.multi_polygons.clone(),
-            metadata: self.metadata.clone(),
             slice_offset: self.slice_offset + offset,
         }
     }
 
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
-        let metadata = self.metadata;
-        Self::new(
-            self.type_ids,
-            self.offsets,
-            Some(self.points.into_coord_type(coord_type)),
-            Some(self.line_strings.into_coord_type(coord_type)),
-            Some(self.polygons.into_coord_type(coord_type)),
-            Some(self.multi_points.into_coord_type(coord_type)),
-            Some(self.multi_line_strings.into_coord_type(coord_type)),
-            Some(self.multi_polygons.into_coord_type(coord_type)),
-            metadata,
-        )
+        Self {
+            coord_type,
+            points: self.points.into_coord_type(coord_type),
+            line_strings: self.line_strings.into_coord_type(coord_type),
+            polygons: self.polygons.into_coord_type(coord_type),
+            multi_points: self.multi_points.into_coord_type(coord_type),
+            multi_line_strings: self.multi_line_strings.into_coord_type(coord_type),
+            multi_polygons: self.multi_polygons.into_coord_type(coord_type),
+            ..self
+        }
     }
 
     pub fn contained_types(&self) -> HashSet<GeoArrowType> {
@@ -469,7 +465,9 @@ impl MixedGeometryArray {
     }
 
     pub(crate) fn storage_type(&self) -> DataType {
-        match GeometryCollectionType::new(self.coord_type, self.dim, Default::default()).data_type()
+        match GeometryCollectionType::new(self.dim, Default::default())
+            .with_coord_type(self.coord_type)
+            .data_type()
         {
             DataType::List(inner_field) => inner_field.data_type().clone(),
             _ => unreachable!(),
@@ -493,7 +491,7 @@ impl MixedGeometryArray {
         let offset = self.offsets[index] as usize;
 
         let expect_msg = "native geometry value access should never error";
-        match type_id {
+        match type_id % 10 {
             1 => Geometry::Point(self.points.value(offset).expect(expect_msg)),
             2 => Geometry::LineString(self.line_strings.value(offset).expect(expect_msg)),
             3 => Geometry::Polygon(self.polygons.value(offset).expect(expect_msg)),
@@ -503,20 +501,9 @@ impl MixedGeometryArray {
             }
             6 => Geometry::MultiPolygon(self.multi_polygons.value(offset).expect(expect_msg)),
             7 => {
-                panic!("nested geometry collections not supported")
+                panic!("nested geometry collections not supported in GeoArrow")
             }
-            11 => Geometry::Point(self.points.value(offset).expect(expect_msg)),
-            12 => Geometry::LineString(self.line_strings.value(offset).expect(expect_msg)),
-            13 => Geometry::Polygon(self.polygons.value(offset).expect(expect_msg)),
-            14 => Geometry::MultiPoint(self.multi_points.value(offset).expect(expect_msg)),
-            15 => {
-                Geometry::MultiLineString(self.multi_line_strings.value(offset).expect(expect_msg))
-            }
-            16 => Geometry::MultiPolygon(self.multi_polygons.value(offset).expect(expect_msg)),
-            17 => {
-                panic!("nested geometry collections not supported")
-            }
-            _ => panic!("unknown type_id {}", type_id),
+            _ => unreachable!("unknown type_id {}", type_id),
         }
     }
 
@@ -559,7 +546,7 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
 
     fn try_from(
         (value, dim, coord_type): (&UnionArray, Dimension, CoordType),
-    ) -> std::result::Result<Self, Self::Error> {
+    ) -> GeoArrowResult<Self> {
         let mut points: Option<PointArray> = None;
         let mut line_strings: Option<LineStringArray> = None;
         let mut polygons: Option<PolygonArray> = None;
@@ -570,16 +557,17 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
         match value.data_type() {
             DataType::Union(fields, mode) => {
                 if !matches!(mode, UnionMode::Dense) {
-                    return Err(GeoArrowError::General("Expected dense union".to_string()));
+                    return Err(GeoArrowError::InvalidGeoArrow(
+                        "Expected dense union".to_string(),
+                    ));
                 }
 
                 for (type_id, _field) in fields.iter() {
-                    let found_dimension = Dimension::from_order((type_id / 10) as _);
+                    let found_dimension = Dimension::from_order((type_id / 10) as _)?;
 
                     if dim != found_dimension {
-                        return Err(GeoArrowError::General(format!(
-                            "expected dimension: {:?}, found child array with dimension {:?} and type_id: {}",
-                            dim, found_dimension, type_id
+                        return Err(GeoArrowError::InvalidGeoArrow(format!(
+                            "expected dimension: {dim:?}, found child array with dimension {found_dimension:?} and type_id: {type_id}",
                         )));
                     }
 
@@ -588,7 +576,8 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                             points = Some(
                                 (
                                     value.child(type_id).as_ref(),
-                                    PointType::new(coord_type, dim, Default::default()),
+                                    PointType::new(dim, Default::default())
+                                        .with_coord_type(coord_type),
                                 )
                                     .try_into()
                                     .unwrap(),
@@ -598,7 +587,8 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                             line_strings = Some(
                                 (
                                     value.child(type_id).as_ref(),
-                                    LineStringType::new(coord_type, dim, Default::default()),
+                                    LineStringType::new(dim, Default::default())
+                                        .with_coord_type(coord_type),
                                 )
                                     .try_into()
                                     .unwrap(),
@@ -608,7 +598,8 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                             polygons = Some(
                                 (
                                     value.child(type_id).as_ref(),
-                                    PolygonType::new(coord_type, dim, Default::default()),
+                                    PolygonType::new(dim, Default::default())
+                                        .with_coord_type(coord_type),
                                 )
                                     .try_into()
                                     .unwrap(),
@@ -618,7 +609,8 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                             multi_points = Some(
                                 (
                                     value.child(type_id).as_ref(),
-                                    MultiPointType::new(coord_type, dim, Default::default()),
+                                    MultiPointType::new(dim, Default::default())
+                                        .with_coord_type(coord_type),
                                 )
                                     .try_into()
                                     .unwrap(),
@@ -628,7 +620,8 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                             multi_line_strings = Some(
                                 (
                                     value.child(type_id).as_ref(),
-                                    MultiLineStringType::new(coord_type, dim, Default::default()),
+                                    MultiLineStringType::new(dim, Default::default())
+                                        .with_coord_type(coord_type),
                                 )
                                     .try_into()
                                     .unwrap(),
@@ -638,22 +631,26 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                             multi_polygons = Some(
                                 (
                                     value.child(type_id).as_ref(),
-                                    MultiPolygonType::new(coord_type, dim, Default::default()),
+                                    MultiPolygonType::new(dim, Default::default())
+                                        .with_coord_type(coord_type),
                                 )
                                     .try_into()
                                     .unwrap(),
                             );
                         }
                         _ => {
-                            return Err(GeoArrowError::General(format!(
-                                "Unexpected type_id {}",
-                                type_id
+                            return Err(GeoArrowError::InvalidGeoArrow(format!(
+                                "Unexpected type_id {type_id} when converting to MixedGeometryArray",
                             )));
                         }
                     }
                 }
             }
-            _ => panic!("expected union type"),
+            _ => {
+                return Err(GeoArrowError::InvalidGeoArrow(
+                    "expected union type when converting to MixedGeometryArray".to_string(),
+                ));
+            }
         };
 
         let type_ids = value.type_ids().clone();
@@ -669,9 +666,6 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
             multi_points,
             multi_line_strings,
             multi_polygons,
-            // Mixed array is only used inside of GeometryCollectionArray, and this array does not
-            // hold its own metadata
-            Default::default(),
         ))
     }
 }
@@ -679,30 +673,21 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
 impl TryFrom<(&dyn Array, Dimension, CoordType)> for MixedGeometryArray {
     type Error = GeoArrowError;
 
-    fn try_from((value, dim, coord_type): (&dyn Array, Dimension, CoordType)) -> Result<Self> {
+    fn try_from(
+        (value, dim, coord_type): (&dyn Array, Dimension, CoordType),
+    ) -> GeoArrowResult<Self> {
         match value.data_type() {
             DataType::Union(_, _) => (value.as_union(), dim, coord_type).try_into(),
-            _ => Err(GeoArrowError::General(format!(
-                "Unexpected type: {:?}",
-                value.data_type()
+            dt => Err(GeoArrowError::InvalidGeoArrow(format!(
+                "Unexpected MixedGeometryArray DataType: {dt:?}",
             ))),
         }
-    }
-}
-
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, Dimension)> for MixedGeometryArray {
-    type Error = GeoArrowError;
-
-    fn try_from(value: (WkbArray<O>, Dimension)) -> Result<Self> {
-        let mut_arr: MixedGeometryBuilder = value.try_into()?;
-        Ok(mut_arr.finish())
     }
 }
 
 impl PartialEq for MixedGeometryArray {
     fn eq(&self, other: &Self) -> bool {
         self.dim == other.dim
-            && self.metadata == other.metadata
             && self.type_ids == other.type_ids
             && self.offsets == other.offsets
             && self.points == other.points

@@ -7,4 +7,4 @@
         - "^__arrow"
         - "^__geo"
       members:
-        - Geometry
+        - GeoScalar

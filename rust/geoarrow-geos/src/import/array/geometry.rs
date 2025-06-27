@@ -1,12 +1,10 @@
 use geoarrow_array::array::GeometryArray;
 use geoarrow_array::builder::GeometryBuilder;
-use geoarrow_array::error::Result;
 use geoarrow_schema::GeometryType;
+use geoarrow_schema::error::GeoArrowResult;
 
 use crate::import::array::FromGEOS;
 use crate::import::scalar::GEOSGeometry;
-
-const DEFAULT_PREFER_MULTI: bool = false;
 
 impl FromGEOS for GeometryBuilder {
     type GeoArrowType = GeometryType;
@@ -14,12 +12,12 @@ impl FromGEOS for GeometryBuilder {
     fn from_geos(
         geoms: impl IntoIterator<Item = Option<geos::Geometry>>,
         typ: Self::GeoArrowType,
-    ) -> geoarrow_array::error::Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let geoms = geoms
             .into_iter()
             .map(|geom| geom.map(GEOSGeometry::new))
             .collect::<Vec<_>>();
-        Self::from_nullable_geometries(&geoms, typ, DEFAULT_PREFER_MULTI)
+        Self::from_nullable_geometries(&geoms, typ)
     }
 }
 
@@ -29,19 +27,19 @@ impl FromGEOS for GeometryArray {
     fn from_geos(
         geoms: impl IntoIterator<Item = Option<geos::Geometry>>,
         typ: Self::GeoArrowType,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         Ok(GeometryBuilder::from_geos(geoms, typ)?.finish())
     }
 }
 
 #[cfg(test)]
 mod test {
+    use geoarrow_array::test::geometry::array;
+    use geoarrow_array::{GeoArrowArrayAccessor, IntoArrow};
+    use geoarrow_schema::CoordType;
+
     use super::*;
     use crate::export::to_geos_geometry;
-
-    use geoarrow_array::test::geometry::array;
-    use geoarrow_array::{ArrayAccessor, IntoArrow};
-    use geoarrow_schema::CoordType;
 
     #[ignore = "GEOS doesn't support XYM, XYZM; need to add option to only construct specific dimensions in geometry test array"]
     #[test]
@@ -53,7 +51,8 @@ mod test {
                 .iter()
                 .map(|opt_x| opt_x.map(|x| to_geos_geometry(&x.unwrap()).unwrap()))
                 .collect::<Vec<_>>();
-            let round_trip = GeometryArray::from_geos(geos_geoms, arr.ext_type().clone()).unwrap();
+            let round_trip =
+                GeometryArray::from_geos(geos_geoms, arr.extension_type().clone()).unwrap();
             assert_eq!(arr, round_trip);
         }
     }

@@ -5,11 +5,10 @@ use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::PyTuple;
 pub mod error;
-// pub mod ffi;
-pub mod io;
+pub(crate) mod input;
+pub mod parquet;
 #[cfg(feature = "async")]
 mod runtime;
-mod util;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -46,43 +45,43 @@ fn _io(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
         pyo3_object_store::register_store_module(py, m, "geoarrow.rust.io", "store")?;
         pyo3_object_store::register_exceptions_module(py, m, "geoarrow.rust.io", "exceptions")?;
 
-        m.add_class::<crate::io::parquet::ParquetFile>()?;
-        m.add_class::<crate::io::parquet::ParquetDataset>()?;
+        m.add_class::<crate::parquet::GeoParquetFile>()?;
+        m.add_class::<crate::parquet::GeoParquetDataset>()?;
 
-        m.add_function(wrap_pyfunction!(
-            crate::io::flatgeobuf::read_flatgeobuf_async,
-            m
-        )?)?;
-        m.add_function(wrap_pyfunction!(crate::io::parquet::read_parquet_async, m)?)?;
+        // m.add_function(wrap_pyfunction!(
+        //     crate::flatgeobuf::read_flatgeobuf_async,
+        //     m
+        // )?)?;
+        m.add_function(wrap_pyfunction!(crate::parquet::read_parquet_async, m)?)?;
 
-        m.add_function(wrap_pyfunction!(crate::io::postgis::read_postgis, m)?)?;
-        m.add_function(wrap_pyfunction!(crate::io::postgis::read_postgis_async, m)?)?;
+        // m.add_function(wrap_pyfunction!(crate::postgis::read_postgis, m)?)?;
+        // m.add_function(wrap_pyfunction!(crate::postgis::read_postgis_async, m)?)?;
     }
 
     // IO
 
-    m.add_function(wrap_pyfunction!(crate::io::csv::read_csv, m)?)?;
-    m.add_function(wrap_pyfunction!(crate::io::flatgeobuf::read_flatgeobuf, m)?)?;
-    m.add_function(wrap_pyfunction!(crate::io::geojson::read_geojson, m)?)?;
-    m.add_function(wrap_pyfunction!(
-        crate::io::geojson_lines::read_geojson_lines,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(crate::io::parquet::read_parquet, m)?)?;
-    m.add_function(wrap_pyfunction!(crate::io::parquet::write_parquet, m)?)?;
-    m.add_class::<crate::io::parquet::ParquetWriter>()?;
+    // m.add_function(wrap_pyfunction!(crate::csv::read_csv, m)?)?;
+    // m.add_function(wrap_pyfunction!(crate::flatgeobuf::read_flatgeobuf, m)?)?;
+    // m.add_function(wrap_pyfunction!(crate::geojson::read_geojson, m)?)?;
+    // m.add_function(wrap_pyfunction!(
+    //     crate::geojson_lines::read_geojson_lines,
+    //     m
+    // )?)?;
+    m.add_function(wrap_pyfunction!(crate::parquet::read_parquet, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::parquet::write_parquet, m)?)?;
+    m.add_class::<crate::parquet::PyGeoParquetWriter>()?;
 
-    m.add_function(wrap_pyfunction!(crate::io::csv::write_csv, m)?)?;
-    m.add_function(wrap_pyfunction!(
-        crate::io::flatgeobuf::write_flatgeobuf,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(crate::io::geojson::write_geojson, m)?)?;
-    m.add_function(wrap_pyfunction!(
-        crate::io::geojson_lines::write_geojson_lines,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(crate::io::shapefile::read_shapefile, m)?)?;
+    // m.add_function(wrap_pyfunction!(crate::csv::write_csv, m)?)?;
+    // m.add_function(wrap_pyfunction!(
+    //     crate::flatgeobuf::write_flatgeobuf,
+    //     m
+    // )?)?;
+    // m.add_function(wrap_pyfunction!(crate::geojson::write_geojson, m)?)?;
+    // m.add_function(wrap_pyfunction!(
+    //     crate::geojson_lines::write_geojson_lines,
+    //     m
+    // )?)?;
+    // m.add_function(wrap_pyfunction!(crate::shapefile::read_shapefile, m)?)?;
 
     Ok(())
 }

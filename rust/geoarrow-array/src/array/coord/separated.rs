@@ -5,12 +5,12 @@ use arrow_array::types::Float64Type;
 use arrow_array::{ArrayRef, Float64Array, StructArray};
 use arrow_buffer::ScalarBuffer;
 use arrow_schema::{DataType, Field};
+use geo_traits::CoordTrait;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, Dimension, PointType};
 
 use crate::builder::SeparatedCoordBufferBuilder;
-use crate::error::{GeoArrowError, Result};
 use crate::scalar::SeparatedCoord;
-use geo_traits::CoordTrait;
 
 /// An array of coordinates stored in separate buffers of the same length.
 ///
@@ -24,7 +24,7 @@ pub struct SeparatedCoordBuffer {
     pub(crate) dim: Dimension,
 }
 
-fn check(buffers: &[ScalarBuffer<f64>; 4], dim: Dimension) -> Result<()> {
+fn check(buffers: &[ScalarBuffer<f64>; 4], dim: Dimension) -> GeoArrowResult<()> {
     let all_same_length = match dim {
         Dimension::XY => buffers[0].len() == buffers[1].len(),
         Dimension::XYZ | Dimension::XYM => {
@@ -38,7 +38,7 @@ fn check(buffers: &[ScalarBuffer<f64>; 4], dim: Dimension) -> Result<()> {
     };
 
     if !all_same_length {
-        return Err(GeoArrowError::General(
+        return Err(GeoArrowError::InvalidGeoArrow(
             "all buffers must have the same length".to_string(),
         ));
     }
@@ -55,7 +55,7 @@ impl SeparatedCoordBuffer {
     /// The number of _valid_ buffers in the array must match the dimension size. E.g. if the `dim`
     /// is `Dimension::XY`, then only the first two buffers must have non-zero length, and the last
     /// two buffers in the array can have length zero.
-    pub fn from_array(buffers: [ScalarBuffer<f64>; 4], dim: Dimension) -> Result<Self> {
+    pub fn from_array(buffers: [ScalarBuffer<f64>; 4], dim: Dimension) -> GeoArrowResult<Self> {
         check(&buffers, dim)?;
         Ok(Self { buffers, dim })
     }
@@ -64,9 +64,9 @@ impl SeparatedCoordBuffer {
     ///
     /// All buffers within `buffers` must have the same length, and the length of `buffers` must
     /// equal the dimension size.
-    pub fn from_vec(buffers: Vec<ScalarBuffer<f64>>, dim: Dimension) -> Result<Self> {
+    pub fn from_vec(buffers: Vec<ScalarBuffer<f64>>, dim: Dimension) -> GeoArrowResult<Self> {
         if buffers.len() != dim.size() {
-            return Err(GeoArrowError::General(
+            return Err(GeoArrowError::InvalidGeoArrow(
                 "Buffers must match dimension length ".into(),
             ));
         }
@@ -203,7 +203,9 @@ impl SeparatedCoordBuffer {
     }
 
     pub(crate) fn storage_type(&self) -> DataType {
-        PointType::new(Self::COORD_TYPE, self.dim, Default::default()).data_type()
+        PointType::new(self.dim, Default::default())
+            .with_coord_type(Self::COORD_TYPE)
+            .data_type()
     }
 
     /// The number of coordinates
@@ -229,7 +231,7 @@ impl SeparatedCoordBuffer {
         }
     }
 
-    pub(crate) fn from_arrow(array: &StructArray, dim: Dimension) -> Result<Self> {
+    pub(crate) fn from_arrow(array: &StructArray, dim: Dimension) -> GeoArrowResult<Self> {
         let buffers = array
             .columns()
             .iter()
@@ -242,8 +244,8 @@ impl SeparatedCoordBuffer {
     pub fn from_coords<'a>(
         coords: impl ExactSizeIterator<Item = &'a (impl CoordTrait<T = f64> + 'a)>,
         dim: Dimension,
-    ) -> Result<Self> {
-        Ok(SeparatedCoordBufferBuilder::from_coords(coords, dim)?.into())
+    ) -> GeoArrowResult<Self> {
+        Ok(SeparatedCoordBufferBuilder::from_coords(coords, dim)?.finish())
     }
 }
 

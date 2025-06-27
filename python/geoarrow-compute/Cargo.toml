@@ -17,18 +17,12 @@ rust-version = { workspace = true }
 name = "_compute"
 crate-type = ["cdylib"]
 
-[features]
-default = ["libc", "rayon"]
-libc = ["geoarrow/polylabel"]
-rayon = ["geoarrow/rayon"]
-
 [dependencies]
 arrow = { workspace = true }
 arrow-array = { workspace = true }
 arrow-buffer = { workspace = true }
 pyo3 = { workspace = true }
 pyo3-arrow = { workspace = true }
-pyo3-geoarrow = { path = "../pyo3-geoarrow" }
+pyo3-geoarrow = { workspace = true }
 geo = "0.30"
-geoarrow = { workspace = true }
 numpy = { workspace = true }

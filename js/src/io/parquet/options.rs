@@ -1,6 +1,6 @@
 use geo::coord;
-use geoarrow_geoparquet::GeoParquetReaderOptions;
 use geoarrow_schema::CoordType;
+use geoparquet::GeoParquetReaderOptions;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -12,7 +12,7 @@ pub struct JsGeoParquetBboxPaths {
     pub ymax: Vec<String>,
 }
 
-impl From<JsGeoParquetBboxPaths> for geoarrow_geoparquet::metadata::GeoParquetBboxCovering {
+impl From<JsGeoParquetBboxPaths> for geoparquet::metadata::GeoParquetBboxCovering {
     fn from(value: JsGeoParquetBboxPaths) -> Self {
         Self {
             xmin: value.xmin,
@@ -42,7 +42,7 @@ pub struct JsParquetReaderOptions {
     pub bbox_paths: Option<JsGeoParquetBboxPaths>,
 }
 
-impl From<JsParquetReaderOptions> for geoarrow_geoparquet::GeoParquetReaderOptions {
+impl From<JsParquetReaderOptions> for geoparquet::GeoParquetReaderOptions {
     fn from(value: JsParquetReaderOptions) -> Self {
         let bbox = value.bbox.map(|item| {
             geo::Rect::new(

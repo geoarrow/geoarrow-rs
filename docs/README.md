@@ -16,9 +16,10 @@ doesn't touch the `js/` or `python/` directories, which are deployed separately.
 uv run mkdocs build
 git checkout gh-pages
 cd ..
+git pull
 rm -rf 404.html assets index.html sitemap.xml sitemap.xml.gz search stylesheets
 mv -f docs/site/* ./
-git add 404.html assets index.html sitemap.xml sitemap.xml.gz search stylesheets
+git add 404.html assets index.html sitemap.xml sitemap.xml.gz search stylesheets rust
 git commit -m "New revision of top-level docs site"
 git push
 # Return to previous branch

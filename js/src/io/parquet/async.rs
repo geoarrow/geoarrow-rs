@@ -3,12 +3,12 @@ use crate::io::parquet::options::JsParquetReaderOptions;
 use arrow_wasm::{RecordBatch, Table};
 use futures::stream::StreamExt;
 use geo_traits::CoordTrait;
-use geoarrow_geoparquet::metadata::GeoParquetBboxCovering;
-use geoarrow_geoparquet::{
+use geoarrow_schema::CoordType;
+use geoparquet::metadata::GeoParquetBboxCovering;
+use geoparquet::{
     GeoParquetDatasetMetadata, GeoParquetReaderMetadata, GeoParquetReaderOptions,
     GeoParquetRecordBatchStream, GeoParquetRecordBatchStreamBuilder,
 };
-use geoarrow_schema::CoordType;
 use object_store::ObjectStore;
 use object_store_wasm::http::HttpStore;
 use parquet::arrow::arrow_reader::ArrowReaderMetadata;

@@ -1,5 +1,6 @@
 use arrow_buffer::OffsetBuffer;
 use geo_traits::PolygonTrait;
+use geoarrow_schema::Dimension;
 
 use crate::array::CoordBuffer;
 use crate::eq::polygon_eq;
@@ -40,18 +41,17 @@ impl<'a> Polygon<'a> {
             start_offset,
         }
     }
+
+    pub(crate) fn native_dim(&self) -> Dimension {
+        self.coords.dim()
+    }
 }
 
 impl<'a> PolygonTrait for Polygon<'a> {
-    type T = f64;
     type RingType<'b>
         = LineString<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.coords.dim().into()
-    }
 
     fn exterior(&self) -> Option<Self::RingType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
@@ -74,15 +74,10 @@ impl<'a> PolygonTrait for Polygon<'a> {
 }
 
 impl<'a> PolygonTrait for &'a Polygon<'a> {
-    type T = f64;
     type RingType<'b>
         = LineString<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.coords.dim().into()
-    }
 
     fn exterior(&self) -> Option<Self::RingType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
@@ -114,17 +109,17 @@ impl<G: PolygonTrait<T = f64>> PartialEq<G> for Polygon<'_> {
 mod test {
     use geo::HasDimensions;
     use geo_traits::to_geo::ToGeoPolygon;
-    use geoarrow_schema::{CoordType, Dimension, PolygonType};
+    use geoarrow_schema::{Dimension, PolygonType};
     use wkt::wkt;
 
-    use crate::ArrayAccessor;
+    use crate::GeoArrowArrayAccessor;
     use crate::builder::PolygonBuilder;
 
     /// Test Eq where the current index is true but another index is false
     #[test]
     fn test_access_empty_polygon() {
         let empty_polygon: wkt::types::Polygon<f64> = wkt! { POLYGON EMPTY };
-        let typ = PolygonType::new(CoordType::Separated, Dimension::XY, Default::default());
+        let typ = PolygonType::new(Dimension::XY, Default::default());
         let polygon_array = PolygonBuilder::from_polygons(&[empty_polygon], typ).finish();
 
         let geo_polygon = polygon_array.value(0).unwrap().to_polygon();

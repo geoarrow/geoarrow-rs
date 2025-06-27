@@ -21,6 +21,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = { workspace = true }
-pyo3-geoarrow = { path = "../../rust/pyo3-geoarrow" }
+pyo3-geoarrow = { workspace = true, features = ["geozero"] }
 geoarrow-array = { workspace = true }
 geoarrow-schema = { workspace = true }
