@@ -39,7 +39,7 @@ impl InterleavedCoordBuffer {
     ///
     /// # Panics
     ///
-    /// - if the coordinate buffer have different lengths
+    /// - if coords.len() % dim.size() != 0
     pub fn new(coords: ScalarBuffer<f64>, dim: Dimension) -> Self {
         Self::try_new(coords, dim).unwrap()
     }

@@ -404,7 +404,7 @@ pub trait GeoArrowArrayAccessor<'a>: GeoArrowArray {
     ///
     /// Panics if the value is outside the bounds of the array.
     fn value(&'a self, index: usize) -> GeoArrowResult<Self::Item> {
-        assert!(index <= self.len());
+        assert!(index < self.len());
         unsafe { self.value_unchecked(index) }
     }
 
