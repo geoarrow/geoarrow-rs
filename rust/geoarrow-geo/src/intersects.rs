@@ -1,0 +1,128 @@
+use arrow_array::BooleanArray;
+use geo_traits::to_geo::ToGeoGeometry;
+use geoarrow_array::GeoArrowArrayAccessor;
+use geoarrow_schema::error::GeoArrowResult;
+use geo::intersects::Intersects;
+
+pub fn intersects<'a>(
+    left_array: &'a impl GeoArrowArrayAccessor<'a>,
+    right_array: &'a impl GeoArrowArrayAccessor<'a>
+) -> GeoArrowResult<BooleanArray> {
+    
+    assert_eq!(left_array.len(), right_array.len(), "Input arrays must have the same length");
+    
+    let mut builder = BooleanArray::builder(left_array.len());
+
+    for (maybe_left,maybe_right) in left_array.iter().zip(right_array.iter()) {
+        match (maybe_left, maybe_right) {
+            (Some(left), Some(right)) => {
+                let left_geom = left?.to_geometry();
+                let right_geom = right?.to_geometry();
+                let intersects = left_geom.intersects(&right_geom);
+                builder.append_value(intersects);
+            },
+            _ => {
+                // If either is null, the result is null
+                builder.append_null();
+            }
+        }
+    }
+
+    Ok(builder.finish())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use geo::{line_string, polygon, Geometry};
+    use geoarrow_array::{array::GeometryArray, builder::PolygonBuilder};
+    use geoarrow_array::builder::GeometryBuilder;
+    use geoarrow_schema::{BoxType, CoordType, Dimension, GeometryType, PolygonType};
+
+    #[test]
+    fn test_intersects() {
+        // Group matching pairs for better visibility
+        let test_pairs = vec![
+            // Pair 1: Should intersect, overlapping unit squares
+            vec![
+                Some(Geometry::from(polygon![
+                    (x: 1.0, y: 1.0),
+                    (x: 2.0, y: 1.0),
+                    (x: 2.0, y: 2.0),
+                    (x: 1.0, y: 2.0)
+                ])),
+                Some(Geometry::from(polygon![
+                    (x: 1.5, y: 1.5),
+                    (x: 2.5, y: 1.5),
+                    (x: 2.5, y: 2.5),
+                    (x: 1.5, y: 2.5)
+                ]))
+            ],
+            // Pair 2: Should not intersect, separated squares
+            vec![
+                Some(Geometry::from(polygon![
+                    (x: 1.0, y: 1.0),
+                    (x: 2.0, y: 1.0),
+                    (x: 2.0, y: 2.0),
+                    (x: 1.0, y: 2.0)
+                ])),
+                Some(Geometry::from(polygon![
+                    (x: 3.0, y: 3.0),
+                    (x: 4.0, y: 3.0),
+                    (x: 4.0, y: 4.0),
+                    (x: 3.0, y: 4.0)
+                ]))
+            ],
+            // Pair 3: Should intersect, touching at corner
+            vec![
+                Some(Geometry::from(polygon![
+                    (x: 2.0, y: 2.0),
+                    (x: 3.0, y: 2.0),
+                    (x: 3.0, y: 3.0),
+                    (x: 2.0, y: 3.0)
+                ])),
+                Some(Geometry::from(polygon![
+                    (x: 3.0, y: 3.0),
+                    (x: 4.0, y: 3.0),
+                    (x: 4.0, y: 4.0),
+                    (x: 3.0, y: 4.0)
+                ]))
+            ],
+
+            // Pair 4: Mixed geometry types, should intersect
+            vec![
+                Some(Geometry::from(line_string! [
+                    (x: 1.0, y: 1.0),
+                    (x: 2.0, y: 2.0)
+                ])),
+                Some(Geometry::from(polygon![
+                    (x: 1.5, y: 1.5),
+                    (x: 2.5, y: 1.5),
+                    (x: 2.5, y: 2.5),
+                    (x: 1.5, y: 2.5)
+                ]))
+            ],
+            // Pair 5: Null geometries, should return null
+            vec![None, None],
+        ];
+
+        let geoms_left: Vec<_> = test_pairs.iter().map(|pair| pair[0].clone()).collect();
+        let geoms_right: Vec<_> = test_pairs.iter().map(|pair| pair[1].clone()).collect();
+
+        let typ = GeometryType::new(Default::default()).with_coord_type(CoordType::Interleaved);
+        let left_array = GeometryBuilder::from_nullable_geometries(&geoms_left, typ.clone()).unwrap().finish();
+        let right_array = GeometryBuilder::from_nullable_geometries(&geoms_right, typ).unwrap().finish();
+        
+        let result = intersects(&left_array, &right_array).unwrap();
+
+        let expected = BooleanArray::from(vec![
+            Some(true), 
+            Some(false), 
+            Some(true), 
+            Some(true),
+            None        
+        ]);
+
+        assert_eq!(result, expected);
+    }
+}
