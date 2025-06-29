@@ -35,9 +35,8 @@ pub fn intersects<'a>(
 mod tests {
     use super::*;
     use geo::{line_string, polygon, Geometry};
-    use geoarrow_array::{array::GeometryArray, builder::PolygonBuilder};
     use geoarrow_array::builder::GeometryBuilder;
-    use geoarrow_schema::{BoxType, CoordType, Dimension, GeometryType, PolygonType};
+    use geoarrow_schema::{CoordType, GeometryType};
 
     #[test]
     fn test_intersects() {
