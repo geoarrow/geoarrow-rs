@@ -125,4 +125,28 @@ mod tests {
 
         assert_eq!(result, expected);
     }
+
+    #[test]
+    #[should_panic(expected = "Input arrays must have the same length")]
+    fn test_intersects_length_mismatch() {
+        let left_geom = vec![Some(Geometry::from(polygon![(x: 0.0, y: 0.0), (x: 1.0, y: 0.0), (x: 1.0, y: 1.0), (x: 0.0, y: 1.0)]))];
+        let right_geom: Vec<Option<Geometry>> = vec![];
+
+        let typ = GeometryType::new(Default::default()).with_coord_type(CoordType::Interleaved);
+        let left_array = GeometryBuilder::from_nullable_geometries(&left_geom, typ.clone()).unwrap().finish();
+        let right_array = GeometryBuilder::from_nullable_geometries(&right_geom, typ).unwrap().finish();
+        
+        intersects(&left_array, &right_array).unwrap();
+    }
+
+    #[test]
+    fn test_intersects_empty_arrays() {
+        let typ = GeometryType::new(Default::default()).with_coord_type(CoordType::Interleaved);
+        let left_array = GeometryBuilder::from_nullable_geometries(&Vec::<Option<Geometry>>::new(), typ.clone()).unwrap().finish();
+        let right_array = GeometryBuilder::from_nullable_geometries(&Vec::<Option<Geometry>>::new(), typ).unwrap().finish();
+        
+        let result = intersects(&left_array, &right_array).unwrap();
+        assert_eq!(result.len(), 0);
+    }
 }
+
