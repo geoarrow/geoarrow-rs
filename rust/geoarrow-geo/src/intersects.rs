@@ -36,7 +36,7 @@ pub fn intersects<'a>(
 
 #[cfg(test)]
 mod tests {
-    use geo::{line_string, polygon, Geometry};
+    use geo::{Geometry, line_string, polygon};
     use geoarrow_array::builder::GeometryBuilder;
     use geoarrow_schema::{CoordType, GeometryType};
 
