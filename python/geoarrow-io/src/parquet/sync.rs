@@ -116,9 +116,9 @@ impl<'a> FromPyObject<'a> for GeoParquetEncoding {
         let s: String = ob.extract()?;
         match s.to_lowercase().as_str() {
             "wkb" => Ok(Self::WKB),
-            "native" => Ok(Self::Native),
+            "geoarrow" => Ok(Self::Native),
             _ => Err(PyValueError::new_err(
-                "Unexpected encoding. Should be one of 'WKB' or 'native'.",
+                "Unexpected encoding. Should be one of 'WKB' or 'geoarrow'.",
             )),
         }
     }
