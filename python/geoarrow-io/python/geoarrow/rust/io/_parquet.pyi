@@ -171,7 +171,7 @@ class GeoParquetDataset:
     @classmethod
     def open(
         cls, paths: Sequence[str] | Sequence[PathInput], store: ObjectStore
-    ) -> None:
+    ) -> GeoParquetDataset:
         """
         Construct a new ParquetDataset
 
@@ -263,7 +263,8 @@ class GeoParquetWriter:
         schema: ArrowSchemaExportable,
         *,
         encoding: GeoParquetEncoding | GeoParquetEncodingT = GeoParquetEncoding.WKB,
-        compression: Literal["uncompressed", "snappy", "lzo", "lz4", "lz4_raw"] | str,
+        compression: Literal["uncompressed", "snappy", "lzo", "lz4", "lz4_raw"]
+        | str = "zstd(1)",
         writer_version: Literal["parquet_1_0", "parquet_2_0"] = "parquet_2_0",
     ) -> None:
         """
@@ -281,7 +282,7 @@ class GeoParquetWriter:
             compression: the compression algorithm to use. This can be either one of the strings in the `Literal` type, or a string that contains the compression level, like `gzip(9)` or `brotli(11)` or `zstd(22)`. The default is `zstd(1)`.
             writer_version: the Parquet writer version to use. Defaults to `"parquet_2_0"`.
         """
-    def __enter__(self): ...
+    def __enter__(self) -> GeoParquetWriter: ...
     def __exit__(self, type, value, traceback): ...
     def close(self) -> None:
         """Close this file.

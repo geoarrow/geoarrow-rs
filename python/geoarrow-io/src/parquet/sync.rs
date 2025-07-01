@@ -244,7 +244,13 @@ impl PyGeoParquetWriter {
         })
     }
 
-    pub fn __enter__(&self) {}
+    pub fn __enter__(slf: PyRef<Self>) -> PyResult<PyRef<Self>> {
+        if slf.is_closed() {
+            Err(PyValueError::new_err("File is already closed."))
+        } else {
+            Ok(slf)
+        }
+    }
 
     pub fn write_batch(&self, batch: PyRecordBatch) -> PyGeoArrowResult<()> {
         if let Some(file) = self.file.lock().unwrap().as_mut() {
