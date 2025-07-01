@@ -49,10 +49,10 @@ nav:
           # - api/io/postgis.md
           # - api/io/shapefile.md
   - Ecosystem:
-      - ecosystem/geopandas.md
+      # - ecosystem/geopandas.md
       - ecosystem/lonboard.md
-      - ecosystem/pyogrio.md
-      - ecosystem/shapely.md
+      - ecosystem/gdal.md
+      # - ecosystem/shapely.md
   - Changelog: CHANGELOG.md
   - Developing: DEVELOP.md
 

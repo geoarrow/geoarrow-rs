@@ -19,7 +19,7 @@ class GeoParquetEncoding(StrEnum):
     [specification reference]: https://github.com/opengeospatial/geoparquet/blob/v1.1.0%2Bp1/format-specs/geoparquet.md#wkb
     """
 
-    GeoArrow = "geoarrow"
+    GEOARROW = "geoarrow"
     """Use native GeoArrow-based geometry types when writing GeoParquet files.
 
     !!! note
@@ -29,7 +29,7 @@ class GeoParquetEncoding(StrEnum):
 
     [geoarrow_spec_reference]: https://github.com/opengeospatial/geoparquet/blob/v1.1.0%2Bp1/format-specs/geoparquet.md#native-encodings-based-on-geoarrow
 
-    Using this encoding may provide better performance. Performance is most likely to be improved is when writing points. Writing points _plus_ an external bounding-box column requires storing each x-y coordinate pair 3 times instead of one, so this could provide significant file size savings. There has not yet been widespread testing for other geometry types.
+    Using this encoding may provide better performance. Performance is most likely to be improved when writing points. Writing points _plus_ an external bounding-box column requires storing each x-y coordinate pair 3 times instead of one, so this could provide significant file size savings. There has not yet been widespread testing for other geometry types.
 
     These encodings correspond to the [separated (struct) representation of coordinates](https://geoarrow.org/format.html#coordinate-separated) for single-geometry type encodings. This encoding results in useful column statistics when row groups and/or files contain related features.
     """
