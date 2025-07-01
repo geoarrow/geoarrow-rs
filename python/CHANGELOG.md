@@ -2,9 +2,15 @@
 
 ## Unreleased
 
-### Breaking changes
+## [0.4.0] - 2025-07-01
 
-- Split `GeometryArray` into `NativeArray` and `SerializedArray`. `NativeArray` encompasses any "native" GeoArrow array types, which are efficient to compute on, while `SerializedArray` encompasses any "serialized" GeoArrow types, like WKB and WKT, which must be parsed before they can be passed to any compute functions.
+This release contains the Python bindings for more or less a **full rewrite** of the GeoArrow Rust library.
+
+### New Features :magic_wand:
+
+- Full support for the GeoArrow 0.2 specification, including all geometry array types and dimensions.
+- See documentation for `GeoArray`, `GeoChunkedArray`, `GeoScalar`, and `GeometryType` for more details.
+- Support for reading and writing GeoParquet 1.1 files, including spatial filtering, including support for reading from remote files.
 
 ## [0.3.0] - 2024-09-07
 
