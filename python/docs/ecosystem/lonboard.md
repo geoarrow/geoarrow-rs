@@ -4,22 +4,30 @@
 
 [![](https://raw.githubusercontent.com/developmentseed/lonboard/main/assets/hero-image.jpg)][lonboard_docs]
 
-Lonboard was designed from the ground up to be used with GeoArrow and is the reason why Lonboard is fast.
+Lonboard was designed from the ground up to be used with GeoArrow, and GeoArrow is the reason why Lonboard is fast.
 
-As of Lonboard version 0.6 or later, just pass a GeoTable as the `table` parameter of a layer.
+You can pass a GeoArrow array, chunked array, or table object to Lonboard's [`viz`][lonboard.viz] and it should just work. Or, alternatively, pass a GeoArrow table as the `table` parameter of a layer's constructor, like in [`ScatterplotLayer.__init__`][lonboard.ScatterplotLayer.__init__].
+
+!!! note
+    Lonboard does not yet support the new Geometry and GeometryCollection array types introduced in GeoArrow specification version 0.2. It likely will soon. For now, use [`downcast`][geoarrow.rust.core.GeoArray.downcast] to simplify geometry types.
+
+    Lonboard does also support the WKB array type, so you can use [`to_wkb`][geoarrow.rust.core.to_wkb] on a Geometry or GeometryCollection array.
 
 ## Examples
 
+Passing a GeoArrow table to [`viz`][lonboard.viz]:
+
 ```py
-from geoarrow.rust.core import read_geojson
-from lonboard import Map, PathLayer
+from geoarrow.rust.io import read_geojson
+from lonboard import viz
 
-path = "/path/to/file.geojson"
-geo_table = read_geojson(path)
-geo_table.geometry
+store = HTTPStore.from_url(
+    "https://raw.githubusercontent.com/opengeospatial/geoparquet/v1.0.0/examples"
+)
+file = GeoParquetFile.open("example.parquet", store=store)
+table = file.read()
 
-layer = PathLayer(table=geo_table)
-m = Map(layer)
+m = viz(table)
 m
 ```
 

@@ -31,7 +31,7 @@ nav:
           # - api/core/geometry/scalar.md
           # - api/core/geometry/type.md
           # - api/core/constructors.md
-          # - api/core/functions.md
+          - api/core/functions.md
           - api/core/enums.md
           - api/core/types.md
       # - geoarrow.rust.compute:
