@@ -27,4 +27,5 @@ dev-dependencies = [
     "obstore>=0.6.0",
     "lonboard>=0.10.4",
     "geoarrow-types>=0.3.0",
+    "pytest-asyncio>=1.0.0",
 ]

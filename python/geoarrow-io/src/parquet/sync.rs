@@ -162,10 +162,10 @@ impl<'py> FromPyObject<'py> for PyCompression {
         file,
         *,
         encoding = GeoParquetEncoding::WKB,
-        compression = None,
-        writer_version = None
+        compression = PyCompression(Compression::ZSTD(Default::default())),
+        writer_version = PyWriterVersion(WriterVersion::PARQUET_2_0),
     ),
-    text_signature = "(table, file, *, encoding = 'WKB', compression = None, writer_version = None)")
+    text_signature = "(table, file, *, encoding = 'WKB', compression = 'zstd(1)', writer_version = 'parquet_2_0')")
 ]
 pub fn write_parquet(
     table: AnyRecordBatch,
@@ -201,11 +201,41 @@ pub struct PyGeoParquetWriter {
 
 #[pymethods]
 impl PyGeoParquetWriter {
+    #[pyo3(
+        signature = (
+            file,
+            schema,
+            *,
+            encoding = GeoParquetEncoding::WKB,
+            compression = PyCompression(Compression::ZSTD(Default::default())),
+            writer_version = PyWriterVersion(WriterVersion::PARQUET_2_0),
+        ),
+        text_signature = "(file, schema, *, encoding='WKB', compression='zstd(1)', writer_version='parquet_2_0')")
+    ]
     #[new]
-    pub fn new(py: Python, file: PyObject, schema: PySchema) -> PyGeoArrowResult<Self> {
+    pub fn new(
+        py: Python,
+        file: PyObject,
+        schema: PySchema,
+        encoding: GeoParquetEncoding,
+        compression: Option<PyCompression>,
+        writer_version: Option<PyWriterVersion>,
+    ) -> PyGeoArrowResult<Self> {
+        let mut writer_properties = WriterProperties::builder();
+
+        if let Some(writer_version) = writer_version {
+            writer_properties = writer_properties.set_writer_version(writer_version.0);
+        }
+
+        if let Some(compression) = compression {
+            writer_properties = writer_properties.set_compression(compression.0);
+        }
+
         let file_writer = file.extract::<FileWriter>(py)?;
         let options = GeoParquetWriterOptions {
             crs_transform: Some(Box::new(PyprojCRSTransform::new())),
+            encoding: encoding.into(),
+            writer_properties: Some(writer_properties.build()),
             ..Default::default()
         };
         let geoparquet_writer = GeoParquetWriter::try_new(file_writer, schema.as_ref(), &options)?;

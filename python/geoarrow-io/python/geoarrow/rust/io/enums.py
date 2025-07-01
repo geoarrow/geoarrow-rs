@@ -32,8 +32,4 @@ class GeoParquetEncoding(StrEnum):
     Using this encoding may provide better performance. Performance is most likely to be improved is when writing points. Writing points _plus_ an external bounding-box column requires storing each x-y coordinate pair 3 times instead of one, so this could provide significant file size savings. There has not yet been widespread testing for other geometry types.
 
     These encodings correspond to the [separated (struct) representation of coordinates](https://geoarrow.org/format.html#coordinate-separated) for single-geometry type encodings. This encoding results in useful column statistics when row groups and/or files contain related features.
-
-
-    This option provides for better read and write performance and for inferring spatial
-    partitioning from remote files. But it does not yet have widespread support.
     """

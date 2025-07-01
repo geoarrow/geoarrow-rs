@@ -10,9 +10,17 @@
 from ._parquet import GeoParquetDataset as GeoParquetDataset
 from ._parquet import GeoParquetFile as GeoParquetFile
 from ._parquet import GeoParquetWriter as GeoParquetWriter
-from ._parquet import read_parquet as read_parquet
-from ._parquet import read_parquet_async as read_parquet_async
-from ._parquet import write_parquet as write_parquet
+from ._parquet import PathInput as PathInput
+# from ._parquet import read_parquet as read_parquet
+# from ._parquet import read_parquet_async as read_parquet_async
+# from ._parquet import write_parquet as write_parquet
 # from ._postgis import read_postgis as read_postgis
 # from ._postgis import read_postgis_async as read_postgis_async
 # from ._shapefile import read_shapefile as read_shapefile
+
+__all__ = [
+    "GeoParquetDataset",
+    "GeoParquetFile",
+    "GeoParquetWriter",
+    "PathInput",
+]

@@ -168,7 +168,7 @@ impl GeoParquetFile {
         self.geoparquet_meta.num_row_groups()
     }
 
-    #[pyo3(signature = (parse_to_native=true, coord_type=None))]
+    #[pyo3(signature = (*, parse_to_native=true, coord_type=None))]
     fn schema_arrow(
         &self,
         parse_to_native: bool,
@@ -460,8 +460,13 @@ impl<'py> FromPyObject<'py> for PathInput {
 
 #[pymethods]
 impl GeoParquetDataset {
-    #[new]
-    pub fn new(py: Python, paths: Vec<PathInput>, store: AnyObjectStore) -> PyGeoArrowResult<Self> {
+    #[classmethod]
+    pub fn open(
+        _cls: &Bound<PyType>,
+        py: Python,
+        paths: Vec<PathInput>,
+        store: AnyObjectStore,
+    ) -> PyGeoArrowResult<Self> {
         let runtime = get_runtime(py)?;
         let store = store.into_dyn();
         let cloned_store = store.clone();
@@ -487,7 +492,7 @@ impl GeoParquetDataset {
         self.meta.num_row_groups()
     }
 
-    #[pyo3(signature = (parse_to_native=true, coord_type=None))]
+    #[pyo3(signature = (*, parse_to_native=true, coord_type=None))]
     fn schema_arrow(
         &self,
         parse_to_native: bool,
