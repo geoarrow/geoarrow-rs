@@ -18,7 +18,8 @@ You can pass a GeoArrow array, chunked array, or table object to Lonboard's [`vi
 Passing a GeoArrow table to [`viz`][lonboard.viz]:
 
 ```py
-from geoarrow.rust.io import read_geojson
+from geoarrow.rust.io import GeoParquetFile
+from obstore.store import HTTPStore
 from lonboard import viz
 
 store = HTTPStore.from_url(
