@@ -11,8 +11,8 @@ use geoarrow_schema::{CoordType, Edges, GeoArrowType, Metadata, WkbType};
 use serde_json::Value;
 
 use crate::metadata::{
-    GeoParquetColumnEncoding, GeoParquetColumnMetadata, GeoParquetGeometryType,
-    GeoParquetGeometryTypeAndDimension, GeoParquetMetadata,
+    GeoParquetBboxCovering, GeoParquetColumnEncoding, GeoParquetColumnMetadata, GeoParquetCovering,
+    GeoParquetGeometryType, GeoParquetGeometryTypeAndDimension, GeoParquetMetadata,
 };
 use crate::total_bounds::BoundingRect;
 use crate::writer::options::{GeoParquetWriterEncoding, GeoParquetWriterOptions};
@@ -40,6 +40,10 @@ pub(crate) struct ColumnInfo {
     /// If present, instructs consumers that edges follow a spherical path rather than a planar
     /// one. If this value is omitted, edges will be interpreted as planar.
     pub(crate) edges: Option<Edges>,
+
+    /// If `None`, no covering is desired for this column. If `Some(s)`, then `s` is the prefix to
+    /// the `xmin`, `ymin`, `xmax`, `ymax` columns.
+    pub(crate) covering_name: Option<String>,
 }
 
 impl ColumnInfo {
@@ -50,6 +54,7 @@ impl ColumnInfo {
         data_type: &GeoArrowType,
         metadata: &Metadata,
         crs_transform: Option<&Box<dyn CrsTransform>>,
+        covering_name: Option<String>,
     ) -> GeoArrowResult<Self> {
         let encoding = GeoParquetColumnEncoding::try_new(writer_encoding, data_type)?;
         let geometry_types = get_geometry_types(data_type);
@@ -68,6 +73,7 @@ impl ColumnInfo {
             bbox: None,
             crs,
             edges,
+            covering_name,
         })
     }
 
@@ -154,6 +160,22 @@ impl ColumnInfo {
         } else {
             None
         };
+        let covering = if let Some(covering_name) = self.covering_name {
+            let bbox_covering = GeoParquetBboxCovering {
+                xmin: vec![covering_name.clone(), "xmin".to_string()],
+                ymin: vec![covering_name.clone(), "ymin".to_string()],
+                zmin: None,
+                xmax: vec![covering_name.clone(), "xmax".to_string()],
+                ymax: vec![covering_name.clone(), "xmax".to_string()],
+                zmax: None,
+            };
+            Some(GeoParquetCovering {
+                bbox: bbox_covering,
+            })
+        } else {
+            None
+        };
+
         let column_meta = GeoParquetColumnMetadata {
             encoding: self.encoding,
             geometry_types: self.geometry_types.into_iter().collect(),
@@ -162,7 +184,7 @@ impl ColumnInfo {
             edges,
             orientation: None,
             epoch: None,
-            covering: None,
+            covering,
         };
         (self.name, column_meta)
     }
@@ -190,12 +212,48 @@ impl GeoParquetMetadataBuilder {
                 let column_name = schema.field(col_idx).name().clone();
                 let geo_data_type = field.as_ref().try_into()?;
 
+                let column_encoding = options
+                    .column_properties
+                    .get(&column_name)
+                    .map_or(options.default_column_properties.encoding, |props| {
+                        props.encoding
+                    })
+                    .unwrap_or_default();
+
+                let generate_covering = options
+                    .column_properties
+                    .get(&column_name)
+                    .map_or(
+                        options.default_column_properties.generate_covering,
+                        |props| props.generate_covering,
+                    )
+                    .unwrap_or(false);
+
+                let covering_name = if generate_covering {
+                    let covering_name = options
+                        .column_properties
+                        .get(&column_name)
+                        .and_then(|props| props.covering_name.as_ref())
+                        .or(options.default_column_properties.covering_name.as_ref())
+                        .cloned();
+                    if let Some(covering_name) = covering_name {
+                        Some(covering_name)
+                    } else if INFERRED_PRIMARY_COLUMN_NAMES.contains(&column_name.as_str()) {
+                        Some("bbox".to_string())
+                    } else {
+                        Some(format!("{column_name}_bbox"))
+                    }
+                } else {
+                    None
+                };
+
                 let column_info = ColumnInfo::try_new(
                     column_name,
-                    options.encoding,
+                    column_encoding,
                     &geo_data_type,
                     geo_data_type.metadata(),
                     options.crs_transform.as_ref(),
+                    covering_name,
                 )?;
 
                 columns.insert(col_idx, column_info);

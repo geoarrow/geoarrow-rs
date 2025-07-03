@@ -25,7 +25,7 @@ pub enum GeoParquetWriterEncoding {
 pub(crate) struct ColumnOptions {
     pub(crate) encoding: Option<GeoParquetWriterEncoding>,
     pub(crate) generate_covering: Option<bool>,
-    pub(crate) covering_prefix: Option<String>,
+    pub(crate) covering_name: Option<String>,
 }
 
 impl ColumnOptions {
@@ -37,8 +37,8 @@ impl ColumnOptions {
         self.generate_covering = Some(value);
     }
 
-    fn set_covering_prefix(&mut self, value: String) {
-        self.covering_prefix = Some(value);
+    fn set_covering_name(&mut self, value: String) {
+        self.covering_name = Some(value);
     }
 }
 
@@ -93,10 +93,10 @@ impl GeoParquetWriterOptionsBuilder {
 
     /// Set the string prefix that will be used for the covering column name.
     ///
-    /// If not set, the default is `"bbox_"` for a column named `"geometry"` or `"geography"`. For
-    /// any other column, the default is `format!("{column_name}_bbox_")`.
-    pub fn set_column_covering_prefix(mut self, col: String, value: String) -> Self {
-        self.get_mut_props(col).set_covering_prefix(value);
+    /// If not set, the default is `"bbox"` for a column named `"geometry"` or `"geography"`. For
+    /// any other column, the default is `format!("{column_name}_bbox")`.
+    pub fn set_column_covering_name(mut self, col: String, value: String) -> Self {
+        self.get_mut_props(col).set_covering_name(value);
         self
     }
 
