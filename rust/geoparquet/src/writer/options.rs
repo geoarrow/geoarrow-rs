@@ -1,5 +1,4 @@
 use geoarrow_schema::crs::CrsTransform;
-use parquet::file::properties::WriterProperties;
 
 /// Allowed encodings when writing to GeoParquet
 #[derive(Copy, Clone, Default)]
@@ -24,9 +23,6 @@ pub struct GeoParquetWriterOptions {
 
     /// Set the primary geometry column name.
     pub primary_column: Option<String>,
-
-    /// The parquet [WriterProperties] to use for writing to file
-    pub writer_properties: Option<WriterProperties>,
 
     /// A transformer for converting CRS from the GeoArrow representation to PROJJSON.
     pub crs_transform: Option<Box<dyn CrsTransform>>,
