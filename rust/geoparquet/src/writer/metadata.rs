@@ -44,6 +44,9 @@ pub(crate) struct ColumnInfo {
     /// If `None`, no covering is desired for this column. If `Some(s)`, then `s` is the prefix to
     /// the `xmin`, `ymin`, `xmax`, `ymax` columns.
     pub(crate) covering_name: Option<String>,
+
+    /// This gets set in `create_output_schema`
+    pub(crate) covering_field_idx: Option<usize>,
 }
 
 impl ColumnInfo {
@@ -74,6 +77,7 @@ impl ColumnInfo {
             crs,
             edges,
             covering_name,
+            covering_field_idx: None,
         })
     }
 
@@ -166,7 +170,7 @@ impl ColumnInfo {
                 ymin: vec![covering_name.clone(), "ymin".to_string()],
                 zmin: None,
                 xmax: vec![covering_name.clone(), "xmax".to_string()],
-                ymax: vec![covering_name.clone(), "xmax".to_string()],
+                ymax: vec![covering_name.clone(), "ymax".to_string()],
                 zmax: None,
             };
             Some(GeoParquetCovering {
@@ -296,7 +300,7 @@ impl GeoParquetMetadataBuilder {
                 .to_string()
         };
 
-        let output_schema = create_output_schema(schema, &columns);
+        let output_schema = create_output_schema(schema, &mut columns);
         Ok(Self {
             primary_column,
             columns,
@@ -385,9 +389,12 @@ pub(crate) fn get_geometry_types(
     geometry_types
 }
 
-fn create_output_schema(input_schema: &Schema, columns: &HashMap<usize, ColumnInfo>) -> SchemaRef {
+fn create_output_schema(
+    input_schema: &Schema,
+    columns: &mut HashMap<usize, ColumnInfo>,
+) -> SchemaRef {
     let mut fields = input_schema.fields().to_vec();
-    for (column_idx, column_info) in columns.iter() {
+    for (column_idx, column_info) in columns.iter_mut() {
         let existing_field = input_schema.field(*column_idx);
         let output_field = create_output_field(
             column_info,
@@ -396,6 +403,12 @@ fn create_output_schema(input_schema: &Schema, columns: &HashMap<usize, ColumnIn
             true,
         );
         fields[*column_idx] = output_field.into();
+
+        if let Some(covering_name) = column_info.covering_name.as_deref() {
+            let covering_field = create_covering_field(covering_name);
+            column_info.covering_field_idx = Some(fields.len());
+            fields.push(covering_field.into());
+        }
     }
 
     Arc::new(Schema::new_with_metadata(
@@ -418,6 +431,16 @@ fn create_output_field(column_info: &ColumnInfo, name: String, nullable: bool) -
             ga_type.to_field(name, nullable)
         }
     }
+}
+
+fn create_covering_field(covering_name: &str) -> Field {
+    let struct_fields = vec![
+        Field::new("xmin", DataType::Float64, false),
+        Field::new("ymin", DataType::Float64, false),
+        Field::new("xmax", DataType::Float64, false),
+        Field::new("ymax", DataType::Float64, false),
+    ];
+    Field::new(covering_name, DataType::Struct(struct_fields.into()), true)
 }
 
 #[cfg(test)]
