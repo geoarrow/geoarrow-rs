@@ -13,7 +13,7 @@ pub enum GeoParquetWriterEncoding {
     WKB,
 
     /// GeoArrow-native encoding. This is supported as of GeoParquet version 1.1.
-    Native,
+    GeoArrow,
 }
 
 /// Options for writing GeoParquet
