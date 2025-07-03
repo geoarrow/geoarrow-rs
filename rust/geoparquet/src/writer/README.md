@@ -4,10 +4,10 @@ This module provides the ability to write GeoParquet files from
 [`RecordBatch`][arrow_array::RecordBatch]es with GeoArrow metadata.
 
 The primary writing API is [`GeoParquetRecordBatchEncoder`], which prepares
-GeoArrow [`RecordBatch`]es to be written via the upstream [`parquet`] writer
-APIs. The [`GeoParquetRecordBatchEncoder`] does not handle the actual writing;
-it only transforms the `RecordBatch` and manages the construction of GeoParquet
-metadata.
+GeoArrow [`RecordBatch`][arrow_array::RecordBatch]es to be written via the
+upstream [`parquet`] writer APIs. The [`GeoParquetRecordBatchEncoder`] does not
+handle the actual writing; it only transforms the `RecordBatch` and manages the
+construction of GeoParquet metadata.
 
 ## Overview
 
