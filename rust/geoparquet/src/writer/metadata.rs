@@ -231,7 +231,7 @@ impl GeoParquetMetadataBuilder {
             // We already checked for empty columns
             assert!(!keys.is_empty());
             keys.sort();
-            keys.get(0)
+            keys.first()
                 .expect("No geometry columns when finishing GeoParquetMetadataBuilder")
                 .to_string()
         };

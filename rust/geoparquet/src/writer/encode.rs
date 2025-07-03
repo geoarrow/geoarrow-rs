@@ -1,14 +1,74 @@
 use arrow_array::{Array, ArrayRef, RecordBatch};
-use arrow_schema::Field;
+use arrow_schema::{Field, Schema};
 use geoarrow_array::GeoArrowArray;
 use geoarrow_array::array::from_arrow_array;
 use geoarrow_array::cast::{AsGeoArrowArray, to_wkb};
-use geoarrow_schema::error::GeoArrowResult;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, GeoArrowType};
+use parquet::format::KeyValue;
 
-use crate::metadata::GeoParquetColumnEncoding;
+use crate::metadata::{GeoParquetColumnEncoding, GeoParquetMetadata};
 use crate::total_bounds::{BoundingRect, total_bounds};
+use crate::writer::GeoParquetWriterOptions;
 use crate::writer::metadata::{ColumnInfo, GeoParquetMetadataBuilder};
+
+/// An encoder for converting GeoArrow data (in an Arrow [`RecordBatch`]) into a format that can be
+/// written into the upstream [`parquet`] writer APIs.
+///
+/// Each encoder should represent one output GeoParquet file. The encoder also keeps track of
+/// unioning the bounding boxes for each encoded GeoArrow batch, so that the output GeoParquet
+/// metadata can be accurate.
+pub struct GeoParquetEncoder {
+    metadata_builder: GeoParquetMetadataBuilder,
+}
+
+impl GeoParquetEncoder {
+    /// Create a new encoder with the given schema and options.
+    ///
+    /// All record batches must have this same [`Schema`].
+    pub fn try_new(schema: &Schema, options: &GeoParquetWriterOptions) -> GeoArrowResult<Self> {
+        let metadata_builder = GeoParquetMetadataBuilder::try_new(schema, options)?;
+        Ok(Self { metadata_builder })
+    }
+
+    /// Encode a record batch into a GeoParquet-compatible format.
+    ///
+    /// This also updates the internal bounding box tracking
+    ///
+    /// This [`RecordBatch`] must have the same schema as the [`Schema`] passed into
+    /// [`GeoParquetEncoder::try_new`].
+    pub fn encode_record_batch(&mut self, batch: &RecordBatch) -> GeoArrowResult<RecordBatch> {
+        encode_record_batch(batch, &mut self.metadata_builder)
+    }
+
+    /// Convert this encoder into a [`GeoParquetMetadata`] object.
+    ///
+    /// Call this before closing the Parquet file, so that you can write the GeoParquet metadata
+    /// with
+    /// [`ArrowWriter::append_key_value_metadata`][parquet::arrow::arrow_writer::ArrowWriter::append_key_value_metadata].
+    ///
+    /// Usually you'll want to use [`into_keyvalue`][Self::into_keyvalue] instead, unless you have
+    /// a need to access information out of the finalized metadata. If you use this method, you'll
+    /// need to manually encode the [`GeoParquetMetadata`] to JSON and then create a [`KeyValue`]
+    /// with a key named `"geo"`.
+    pub fn into_geoparquet_metadata(self) -> GeoParquetMetadata {
+        self.metadata_builder.finish()
+    }
+
+    /// Convert this encoder in to a [`KeyValue`] that can be added to the Parquet file's metadata.
+    ///
+    /// Call this before closing the Parquet file, so that you can write the GeoParquet metadata
+    /// with
+    /// [`ArrowWriter::append_key_value_metadata`][parquet::arrow::arrow_writer::ArrowWriter::append_key_value_metadata].
+    pub fn into_keyvalue(self) -> GeoArrowResult<KeyValue> {
+        let geo_meta = self.into_geoparquet_metadata();
+        Ok(KeyValue::new(
+            "geo".to_string(),
+            serde_json::to_string(&geo_meta)
+                .map_err(|err| GeoArrowError::GeoParquet(err.to_string()))?,
+        ))
+    }
+}
 
 pub(super) fn encode_record_batch(
     batch: &RecordBatch,
