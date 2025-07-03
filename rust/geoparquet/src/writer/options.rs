@@ -111,6 +111,16 @@ impl GeoParquetWriterOptionsBuilder {
         self.get_mut_props(col).set_encoding(value);
         self
     }
+
+    /// Finalizes the configuration and returns immutable writer options struct.
+    pub fn build(self) -> GeoParquetWriterOptions {
+        GeoParquetWriterOptions {
+            primary_column: self.primary_column,
+            crs_transform: self.crs_transform,
+            default_column_properties: self.default_column_properties,
+            column_properties: self.column_properties,
+        }
+    }
 }
 
 /// Options for writing GeoParquet
