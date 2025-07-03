@@ -1,4 +1,4 @@
-//! Write GeoArrow data to GeoParquet.
+#![doc = include_str!("README.md")]
 
 mod encode;
 mod metadata;
