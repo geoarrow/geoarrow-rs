@@ -92,6 +92,53 @@ def test_write_wkb():
     )
 
 
+def test_write_wkb_covering():
+    geoms = shapely.points([1, 2, 3], [4, 5, 6])
+    arr = GeoArray.from_arrow(gpd.GeoSeries(geoms).to_arrow("geoarrow"))
+    table = Table.from_arrays([arr], names=["geometry"])
+    with GeoParquetWriter(
+        "points.parquet", table.schema, generate_covering=True
+    ) as writer:
+        writer.write_table(table)
+
+    gpq_meta = json.loads(pq.read_metadata("points.parquet").metadata[b"geo"])
+    assert gpq_meta["version"] == "1.1.0"
+    assert gpq_meta["primary_column"] == "geometry"
+    assert gpq_meta["columns"]["geometry"] == {
+        "encoding": "WKB",
+        "geometry_types": ["Point"],
+        "bbox": [1.0, 4.0, 3.0, 6.0],
+        "covering": {
+            "bbox": {
+                "xmin": ["bbox", "xmin"],
+                "ymin": ["bbox", "ymin"],
+                "xmax": ["bbox", "xmax"],
+                "ymax": ["bbox", "ymax"],
+            }
+        },
+    }
+
+    table_back = read_parquet("points.parquet").read_all()
+    batch_back = table_back.to_batches()[0]
+    np_coords = np.column_stack(
+        [struct_field(batch_back["bbox"], 0), struct_field(batch_back["bbox"], 1)]
+    )
+    shapely.testing.assert_geometries_equal(
+        geoms, shapely.from_ragged_array(shapely.GeometryType.POINT, np_coords)
+    )
+
+    np_coords = np.column_stack(
+        [struct_field(batch_back["bbox"], 2), struct_field(batch_back["bbox"], 3)]
+    )
+    shapely.testing.assert_geometries_equal(
+        geoms, shapely.from_ragged_array(shapely.GeometryType.POINT, np_coords)
+    )
+
+    shapely.testing.assert_geometries_equal(
+        geoms, shapely.from_wkb(read_parquet("points.parquet").read_all()["geometry"])
+    )
+
+
 def test_write_geoarrow():
     geoms = shapely.points([1, 2, 3], [4, 5, 6])
     arr = GeoArray.from_arrow(gpd.GeoSeries(geoms).to_arrow("geoarrow"))

@@ -266,6 +266,7 @@ class GeoParquetWriter:
         compression: Literal["uncompressed", "snappy", "lzo", "lz4", "lz4_raw"]
         | str = "zstd(1)",
         writer_version: Literal["parquet_1_0", "parquet_2_0"] = "parquet_2_0",
+        generate_covering: bool = False,
     ) -> None:
         """
         Create a new GeoParquetWriter.

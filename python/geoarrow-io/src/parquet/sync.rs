@@ -7,7 +7,7 @@ use crate::input::{AnyFileReader, construct_reader};
 
 use arrow::datatypes::SchemaRef;
 use geoparquet::reader::{GeoParquetReaderBuilder, GeoParquetRecordBatchReader};
-use geoparquet::writer::{GeoParquetRecordBatchEncoder, GeoParquetWriterOptions};
+use geoparquet::writer::{GeoParquetRecordBatchEncoder, GeoParquetWriterOptionsBuilder};
 use parquet::arrow::ArrowWriter;
 use parquet::arrow::arrow_reader::{ArrowReaderOptions, ParquetRecordBatchReaderBuilder};
 use parquet::basic::Compression;
@@ -164,8 +164,9 @@ impl<'py> FromPyObject<'py> for PyCompression {
         encoding = GeoParquetEncoding::WKB,
         compression = PyCompression(Compression::ZSTD(Default::default())),
         writer_version = PyWriterVersion(WriterVersion::PARQUET_2_0),
+        generate_covering = false,
     ),
-    text_signature = "(table, file, *, encoding = 'WKB', compression = 'zstd(1)', writer_version = 'parquet_2_0')")
+    text_signature = "(table, file, *, encoding = 'WKB', compression = 'zstd(1)', writer_version = 'parquet_2_0', generate_covering = False)")
 ]
 pub fn write_parquet(
     table: AnyRecordBatch,
@@ -173,9 +174,16 @@ pub fn write_parquet(
     encoding: GeoParquetEncoding,
     compression: Option<PyCompression>,
     writer_version: Option<PyWriterVersion>,
+    generate_covering: bool,
 ) -> PyGeoArrowResult<()> {
-    let writer =
-        PyGeoParquetWriter::new(file, table.schema()?, encoding, compression, writer_version)?;
+    let writer = PyGeoParquetWriter::new(
+        file,
+        table.schema()?,
+        encoding,
+        compression,
+        writer_version,
+        generate_covering,
+    )?;
     let reader = table.into_reader()?;
     for batch in reader {
         writer.write_batch(PyRecordBatch::new(batch?))?;
@@ -197,6 +205,7 @@ impl PyGeoParquetWriter {
         encoding: GeoParquetEncoding,
         compression: Option<PyCompression>,
         writer_version: Option<PyWriterVersion>,
+        generate_covering: bool,
     ) -> PyGeoArrowResult<Self> {
         let mut writer_properties = WriterProperties::builder();
 
@@ -208,12 +217,13 @@ impl PyGeoParquetWriter {
             writer_properties = writer_properties.set_compression(compression.0);
         }
 
-        let options = GeoParquetWriterOptions {
-            crs_transform: Some(Box::new(PyprojCRSTransform::new())),
-            encoding: encoding.into(),
-            ..Default::default()
-        };
-        let gpq_encoder = GeoParquetRecordBatchEncoder::try_new(schema.as_ref(), &options)?;
+        let options_builder = GeoParquetWriterOptionsBuilder::default()
+            .set_crs_transform(Box::new(PyprojCRSTransform::new()))
+            .set_encoding(encoding.into())
+            .set_generate_covering(generate_covering);
+
+        let gpq_encoder =
+            GeoParquetRecordBatchEncoder::try_new(schema.as_ref(), &options_builder.build())?;
         let parquet_writer = ArrowWriter::try_new(
             file,
             gpq_encoder.target_schema(),
@@ -236,8 +246,9 @@ impl PyGeoParquetWriter {
             encoding = GeoParquetEncoding::WKB,
             compression = PyCompression(Compression::ZSTD(Default::default())),
             writer_version = PyWriterVersion(WriterVersion::PARQUET_2_0),
+            generate_covering = false,
         ),
-        text_signature = "(file, schema, *, encoding='WKB', compression='zstd(1)', writer_version='parquet_2_0')")
+        text_signature = "(file, schema, *, encoding='WKB', compression='zstd(1)', writer_version='parquet_2_0', generate_covering=False)")
     ]
     #[new]
     pub fn py_new(
@@ -247,6 +258,7 @@ impl PyGeoParquetWriter {
         encoding: GeoParquetEncoding,
         compression: Option<PyCompression>,
         writer_version: Option<PyWriterVersion>,
+        generate_covering: bool,
     ) -> PyGeoArrowResult<Self> {
         Self::new(
             file.extract(py)?,
@@ -254,6 +266,7 @@ impl PyGeoParquetWriter {
             encoding,
             compression,
             writer_version,
+            generate_covering,
         )
     }
 
