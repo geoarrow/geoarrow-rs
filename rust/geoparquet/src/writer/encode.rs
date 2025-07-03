@@ -1,5 +1,5 @@
 use arrow_array::{Array, ArrayRef, RecordBatch};
-use arrow_schema::{Field, Schema};
+use arrow_schema::{Field, Schema, SchemaRef};
 use geoarrow_array::GeoArrowArray;
 use geoarrow_array::array::from_arrow_array;
 use geoarrow_array::cast::{AsGeoArrowArray, to_wkb};
@@ -29,6 +29,16 @@ impl GeoParquetRecordBatchEncoder {
     pub fn try_new(schema: &Schema, options: &GeoParquetWriterOptions) -> GeoArrowResult<Self> {
         let metadata_builder = GeoParquetMetadataBuilder::try_new(schema, options)?;
         Ok(Self { metadata_builder })
+    }
+
+    /// Infer the output Arrow schema.
+    ///
+    /// This is the schema that must be used when constructing the upstream Parquet writer.
+    ///
+    /// This schema returned by this function matches the schema of the RecordBatches returned by
+    /// [`Self::encode_record_batch`].
+    pub fn target_schema(&self) -> SchemaRef {
+        self.metadata_builder.output_schema.clone()
     }
 
     /// Encode a record batch into a GeoParquet-compatible format.

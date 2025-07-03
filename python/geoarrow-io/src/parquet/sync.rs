@@ -214,7 +214,11 @@ impl PyGeoParquetWriter {
             ..Default::default()
         };
         let gpq_encoder = GeoParquetRecordBatchEncoder::try_new(schema.as_ref(), &options)?;
-        let parquet_writer = ArrowWriter::try_new(file, schema, Some(writer_properties.build()))?;
+        let parquet_writer = ArrowWriter::try_new(
+            file,
+            gpq_encoder.target_schema(),
+            Some(writer_properties.build()),
+        )?;
         Ok(Self {
             writer: Mutex::new(Some(parquet_writer)),
             gpq_encoder: Mutex::new(Some(gpq_encoder)),
