@@ -226,12 +226,14 @@ impl GeoParquetMetadataBuilder {
             column_info.name.clone()
         } else {
             // Make it deterministic which key we use.
-            let mut keys: Vec<_> = columns.keys().collect();
+            let mut geom_column_names: Vec<_> =
+                columns.values().map(|col| col.name.as_str()).collect();
 
             // We already checked for empty columns
-            assert!(!keys.is_empty());
-            keys.sort();
-            keys.first()
+            assert!(!geom_column_names.is_empty());
+            geom_column_names.sort();
+            geom_column_names
+                .first()
                 .expect("No geometry columns when finishing GeoParquetMetadataBuilder")
                 .to_string()
         };
