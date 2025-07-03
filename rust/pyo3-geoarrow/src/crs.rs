@@ -67,22 +67,37 @@ impl PyCrs {
                     let args = PyTuple::new(py, vec![authority, code])?;
                     crs_class.call_method1(intern!(py, "from_authority"), args)?
                 }
-                _ => panic!("Expected string value"),
+                _ => return Err(PyValueError::new_err(
+                    "Invalid GeoArrow metadata: Expected string CRS value with CRS type Authority Code",
+                ).into()),
             },
             Some(CrsType::Wkt2_2019) => match self.0.crs_value().as_ref().unwrap() {
                 Value::String(value) => {
                     let args = PyTuple::new(py, vec![value])?;
                     crs_class.call_method1(intern!(py, "from_wkt"), args)?
                 }
-                _ => panic!("Expected string value"),
+                _ => return Err(PyValueError::new_err(
+                    "Invalid GeoArrow metadata: Expected string CRS value with CRS type WKT2:2019",
+                ).into()),
             },
             _ => match self.0.crs_value().as_ref() {
                 None => py.None().into_bound(py),
+                Some(Value::Object(_)) => {
+                    let args = PyTuple::new(
+                        py,
+                        vec![serde_json::to_string(
+                            &self.0.crs_value().as_ref().unwrap(),
+                        )?],
+                    )?;
+                    crs_class.call_method1(intern!(py, "from_json"), args)?
+                }
                 Some(Value::String(value)) => {
                     let args = PyTuple::new(py, vec![value])?;
                     crs_class.call_method1(intern!(py, "from_user_input"), args)?
                 }
-                _ => panic!("Expected missing CRS or string value"),
+                _ => return Err(PyValueError::new_err(
+                    "Invalid GeoArrow metadata: Expected missing CRS or string or object value with unknown CRS type",
+                ).into()),
             },
         };
         Ok(crs_obj.into())
