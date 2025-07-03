@@ -57,7 +57,7 @@ impl GeoParquetColumnEncoding {
     ) -> GeoArrowResult<Self> {
         let new_encoding = match writer_encoding {
             GeoParquetWriterEncoding::WKB => Self::WKB,
-            GeoParquetWriterEncoding::Native => match data_type {
+            GeoParquetWriterEncoding::GeoArrow => match data_type {
                 GeoArrowType::Point(_) => Self::Point,
                 GeoArrowType::LineString(_) => Self::LineString,
                 GeoArrowType::Polygon(_) => Self::Polygon,

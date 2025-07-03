@@ -5,10 +5,10 @@ use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::input::sync::FileWriter;
 use crate::input::{AnyFileReader, construct_reader};
 
+use arrow::datatypes::SchemaRef;
 use geoparquet::reader::{GeoParquetReaderBuilder, GeoParquetRecordBatchReader};
-use geoparquet::writer::{
-    GeoParquetWriter, GeoParquetWriterOptions, write_geoparquet as _write_geoparquet,
-};
+use geoparquet::writer::{GeoParquetRecordBatchEncoder, GeoParquetWriterOptions};
+use parquet::arrow::ArrowWriter;
 use parquet::arrow::arrow_reader::{ArrowReaderOptions, ParquetRecordBatchReaderBuilder};
 use parquet::basic::Compression;
 use parquet::file::properties::{WriterProperties, WriterVersion};
@@ -108,7 +108,7 @@ pub fn read_parquet(
 #[allow(clippy::upper_case_acronyms)]
 pub enum GeoParquetEncoding {
     WKB,
-    Native,
+    GeoArrow,
 }
 
 impl<'a> FromPyObject<'a> for GeoParquetEncoding {
@@ -116,7 +116,7 @@ impl<'a> FromPyObject<'a> for GeoParquetEncoding {
         let s: String = ob.extract()?;
         match s.to_lowercase().as_str() {
             "wkb" => Ok(Self::WKB),
-            "geoarrow" => Ok(Self::Native),
+            "geoarrow" => Ok(Self::GeoArrow),
             _ => Err(PyValueError::new_err(
                 "Unexpected encoding. Should be one of 'WKB' or 'geoarrow'.",
             )),
@@ -128,7 +128,7 @@ impl From<GeoParquetEncoding> for geoparquet::writer::GeoParquetWriterEncoding {
     fn from(value: GeoParquetEncoding) -> Self {
         match value {
             GeoParquetEncoding::WKB => Self::WKB,
-            GeoParquetEncoding::Native => Self::Native,
+            GeoParquetEncoding::GeoArrow => Self::GeoArrow,
         }
     }
 }
@@ -174,29 +174,56 @@ pub fn write_parquet(
     compression: Option<PyCompression>,
     writer_version: Option<PyWriterVersion>,
 ) -> PyGeoArrowResult<()> {
-    let mut props = WriterProperties::builder();
-
-    if let Some(writer_version) = writer_version {
-        props = props.set_writer_version(writer_version.0);
+    let writer =
+        PyGeoParquetWriter::new(file, table.schema()?, encoding, compression, writer_version)?;
+    let reader = table.into_reader()?;
+    for batch in reader {
+        writer.write_batch(PyRecordBatch::new(batch?))?;
     }
-
-    if let Some(compression) = compression {
-        props = props.set_compression(compression.0);
-    }
-
-    let options = GeoParquetWriterOptions {
-        encoding: encoding.into(),
-        primary_column: None,
-        crs_transform: Some(Box::new(PyprojCRSTransform::new())),
-        writer_properties: Some(props.build()),
-    };
-    _write_geoparquet(table.into_reader()?, file, &options)?;
+    writer.close()?;
     Ok(())
 }
 
 #[pyclass(module = "geoarrow.rust.io", name = "GeoParquetWriter", frozen)]
 pub struct PyGeoParquetWriter {
-    file: Mutex<Option<GeoParquetWriter<FileWriter>>>,
+    writer: Mutex<Option<ArrowWriter<FileWriter>>>,
+    gpq_encoder: Mutex<Option<GeoParquetRecordBatchEncoder>>,
+}
+
+impl PyGeoParquetWriter {
+    fn new(
+        file: FileWriter,
+        schema: SchemaRef,
+        encoding: GeoParquetEncoding,
+        compression: Option<PyCompression>,
+        writer_version: Option<PyWriterVersion>,
+    ) -> PyGeoArrowResult<Self> {
+        let mut writer_properties = WriterProperties::builder();
+
+        if let Some(writer_version) = writer_version {
+            writer_properties = writer_properties.set_writer_version(writer_version.0);
+        }
+
+        if let Some(compression) = compression {
+            writer_properties = writer_properties.set_compression(compression.0);
+        }
+
+        let options = GeoParquetWriterOptions {
+            crs_transform: Some(Box::new(PyprojCRSTransform::new())),
+            encoding: encoding.into(),
+            ..Default::default()
+        };
+        let gpq_encoder = GeoParquetRecordBatchEncoder::try_new(schema.as_ref(), &options)?;
+        let parquet_writer = ArrowWriter::try_new(
+            file,
+            gpq_encoder.target_schema(),
+            Some(writer_properties.build()),
+        )?;
+        Ok(Self {
+            writer: Mutex::new(Some(parquet_writer)),
+            gpq_encoder: Mutex::new(Some(gpq_encoder)),
+        })
+    }
 }
 
 #[pymethods]
@@ -213,7 +240,7 @@ impl PyGeoParquetWriter {
         text_signature = "(file, schema, *, encoding='WKB', compression='zstd(1)', writer_version='parquet_2_0')")
     ]
     #[new]
-    pub fn new(
+    pub fn py_new(
         py: Python,
         file: PyObject,
         schema: PySchema,
@@ -221,27 +248,13 @@ impl PyGeoParquetWriter {
         compression: Option<PyCompression>,
         writer_version: Option<PyWriterVersion>,
     ) -> PyGeoArrowResult<Self> {
-        let mut writer_properties = WriterProperties::builder();
-
-        if let Some(writer_version) = writer_version {
-            writer_properties = writer_properties.set_writer_version(writer_version.0);
-        }
-
-        if let Some(compression) = compression {
-            writer_properties = writer_properties.set_compression(compression.0);
-        }
-
-        let file_writer = file.extract::<FileWriter>(py)?;
-        let options = GeoParquetWriterOptions {
-            crs_transform: Some(Box::new(PyprojCRSTransform::new())),
-            encoding: encoding.into(),
-            writer_properties: Some(writer_properties.build()),
-            ..Default::default()
-        };
-        let geoparquet_writer = GeoParquetWriter::try_new(file_writer, schema.as_ref(), &options)?;
-        Ok(Self {
-            file: Mutex::new(Some(geoparquet_writer)),
-        })
+        Self::new(
+            file.extract(py)?,
+            schema.into_inner(),
+            encoding,
+            compression,
+            writer_version,
+        )
     }
 
     pub fn __enter__(slf: PyRef<Self>) -> PyResult<PyRef<Self>> {
@@ -253,8 +266,12 @@ impl PyGeoParquetWriter {
     }
 
     pub fn write_batch(&self, batch: PyRecordBatch) -> PyGeoArrowResult<()> {
-        if let Some(file) = self.file.lock().unwrap().as_mut() {
-            file.write_batch(batch.as_ref())?;
+        if let (Some(writer), Some(gpq_encoder)) = (
+            self.writer.lock().unwrap().as_mut(),
+            self.gpq_encoder.lock().unwrap().as_mut(),
+        ) {
+            let encoded_batch = gpq_encoder.encode_record_batch(batch.as_ref())?;
+            writer.write(&encoded_batch)?;
             Ok(())
         } else {
             Err(PyValueError::new_err("File is already closed.").into())
@@ -262,9 +279,13 @@ impl PyGeoParquetWriter {
     }
 
     pub fn write_table(&self, table: AnyRecordBatch) -> PyGeoArrowResult<()> {
-        if let Some(file) = self.file.lock().unwrap().as_mut() {
+        if let (Some(writer), Some(gpq_encoder)) = (
+            self.writer.lock().unwrap().as_mut(),
+            self.gpq_encoder.lock().unwrap().as_mut(),
+        ) {
             for batch in table.into_reader()? {
-                file.write_batch(&batch?)?;
+                let encoded_batch = gpq_encoder.encode_record_batch(&batch?)?;
+                writer.write(&encoded_batch)?;
             }
             Ok(())
         } else {
@@ -273,8 +294,13 @@ impl PyGeoParquetWriter {
     }
 
     pub fn close(&self) -> PyGeoArrowResult<()> {
-        if let Some(file) = self.file.lock().unwrap().take() {
-            file.finish()?;
+        if let (Some(mut writer), Some(gpq_encoder)) = (
+            self.writer.lock().unwrap().take(),
+            self.gpq_encoder.lock().unwrap().take(),
+        ) {
+            let kv_metadata = gpq_encoder.into_keyvalue()?;
+            writer.append_key_value_metadata(kv_metadata);
+            writer.finish()?;
             Ok(())
         } else {
             Err(PyValueError::new_err("File has already been closed").into())
@@ -282,7 +308,7 @@ impl PyGeoParquetWriter {
     }
 
     pub fn is_closed(&self) -> bool {
-        self.file.lock().unwrap().is_none()
+        self.writer.lock().unwrap().is_none()
     }
 
     /// Exit the context manager
