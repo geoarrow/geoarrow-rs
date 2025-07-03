@@ -18,11 +18,11 @@ use crate::writer::metadata::{ColumnInfo, GeoParquetMetadataBuilder};
 /// Each encoder should represent one output GeoParquet file. The encoder also keeps track of
 /// unioning the bounding boxes for each encoded GeoArrow batch, so that the output GeoParquet
 /// metadata can be accurate.
-pub struct GeoParquetEncoder {
+pub struct GeoParquetRecordBatchEncoder {
     metadata_builder: GeoParquetMetadataBuilder,
 }
 
-impl GeoParquetEncoder {
+impl GeoParquetRecordBatchEncoder {
     /// Create a new encoder with the given schema and options.
     ///
     /// All record batches must have this same [`Schema`].
@@ -36,7 +36,7 @@ impl GeoParquetEncoder {
     /// This also updates the internal bounding box tracking
     ///
     /// This [`RecordBatch`] must have the same schema as the [`Schema`] passed into
-    /// [`GeoParquetEncoder::try_new`].
+    /// [`GeoParquetRecordBatchEncoder::try_new`].
     pub fn encode_record_batch(&mut self, batch: &RecordBatch) -> GeoArrowResult<RecordBatch> {
         encode_record_batch(batch, &mut self.metadata_builder)
     }
