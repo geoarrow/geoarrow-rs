@@ -820,6 +820,948 @@ macro_rules! downcast_geoarrow_array {
     };
 }
 
+#[macro_export]
+macro_rules! downcast_geoarrow_array_two_args {
+    ($array1:ident, $array2:ident, $fn:expr) => {
+        match $array1.data_type() {
+            $crate::cast::__private::GeoArrowType::Point(_) => match $array2.data_type() {
+                $crate::cast::__private::GeoArrowType::Point(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Polygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPoint(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiLineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPolygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Geometry(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::GeometryCollection(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry_collection($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Rect(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_rect($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WkbView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WktView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array2),
+                ),
+            },
+            $crate::cast::__private::GeoArrowType::LineString(_) => match $array2.data_type() {
+                $crate::cast::__private::GeoArrowType::Point(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_line_string($array1),
+                    $crate::cast::AsGeoArrowArray::as_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_line_string($array1),
+                    $crate::cast::AsGeoArrowArray::as_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Polygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_line_string($array1),
+                    $crate::cast::AsGeoArrowArray::as_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPoint(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_line_string($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiLineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_line_string($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPolygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_line_string($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Geometry(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_line_string($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::GeometryCollection(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_line_string($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry_collection($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Rect(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_line_string($array1),
+                    $crate::cast::AsGeoArrowArray::as_rect($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_line_string($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_line_string($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WkbView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_line_string($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_line_string($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_line_string($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WktView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_line_string($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array2),
+                ),
+            },
+            $crate::cast::__private::GeoArrowType::Polygon(_) => match $array2.data_type() {
+                $crate::cast::__private::GeoArrowType::Point(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Polygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPoint(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiLineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPolygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Geometry(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::GeometryCollection(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry_collection($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Rect(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_rect($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WkbView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WktView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array2),
+                ),
+            },
+            $crate::cast::__private::GeoArrowType::MultiPoint(_) => match $array2.data_type() {
+                $crate::cast::__private::GeoArrowType::Point(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Polygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPoint(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiLineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPolygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Geometry(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::GeometryCollection(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry_collection($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Rect(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_rect($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WkbView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WktView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array2),
+                ),
+            },
+            $crate::cast::__private::GeoArrowType::MultiLineString(_) => {
+                match $array2.data_type() {
+                    $crate::cast::__private::GeoArrowType::Point(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_multi_line_string($array1),
+                        $crate::cast::AsGeoArrowArray::as_point($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::LineString(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_multi_line_string($array1),
+                        $crate::cast::AsGeoArrowArray::as_line_string($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::Polygon(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_multi_line_string($array1),
+                        $crate::cast::AsGeoArrowArray::as_polygon($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::MultiPoint(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_multi_line_string($array1),
+                        $crate::cast::AsGeoArrowArray::as_multi_point($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::MultiLineString(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_multi_line_string($array1),
+                        $crate::cast::AsGeoArrowArray::as_multi_line_string($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::MultiPolygon(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_multi_line_string($array1),
+                        $crate::cast::AsGeoArrowArray::as_multi_polygon($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::Geometry(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_multi_line_string($array1),
+                        $crate::cast::AsGeoArrowArray::as_geometry($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::GeometryCollection(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_multi_line_string($array1),
+                        $crate::cast::AsGeoArrowArray::as_geometry_collection($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::Rect(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_multi_line_string($array1),
+                        $crate::cast::AsGeoArrowArray::as_rect($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::Wkb(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_multi_line_string($array1),
+                        $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::LargeWkb(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_multi_line_string($array1),
+                        $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::WkbView(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_multi_line_string($array1),
+                        $crate::cast::AsGeoArrowArray::as_wkb_view($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::Wkt(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_multi_line_string($array1),
+                        $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::LargeWkt(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_multi_line_string($array1),
+                        $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::WktView(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_multi_line_string($array1),
+                        $crate::cast::AsGeoArrowArray::as_wkt_view($array2),
+                    ),
+                }
+            }
+            $crate::cast::__private::GeoArrowType::MultiPolygon(_) => match $array2.data_type() {
+                $crate::cast::__private::GeoArrowType::Point(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Polygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPoint(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiLineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPolygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Geometry(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::GeometryCollection(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry_collection($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Rect(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_rect($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WkbView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WktView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array2),
+                ),
+            },
+            $crate::cast::__private::GeoArrowType::Geometry(_) => match $array2.data_type() {
+                $crate::cast::__private::GeoArrowType::Point(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_geometry($array1),
+                    $crate::cast::AsGeoArrowArray::as_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_geometry($array1),
+                    $crate::cast::AsGeoArrowArray::as_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Polygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_geometry($array1),
+                    $crate::cast::AsGeoArrowArray::as_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPoint(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_geometry($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiLineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_geometry($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPolygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_geometry($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Geometry(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_geometry($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::GeometryCollection(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_geometry($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry_collection($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Rect(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_geometry($array1),
+                    $crate::cast::AsGeoArrowArray::as_rect($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_geometry($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_geometry($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WkbView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_geometry($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_geometry($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_geometry($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WktView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_geometry($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array2),
+                ),
+            },
+            $crate::cast::__private::GeoArrowType::GeometryCollection(_) => {
+                match $array2.data_type() {
+                    $crate::cast::__private::GeoArrowType::Point(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_geometry_collection($array1),
+                        $crate::cast::AsGeoArrowArray::as_point($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::LineString(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_geometry_collection($array1),
+                        $crate::cast::AsGeoArrowArray::as_line_string($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::Polygon(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_geometry_collection($array1),
+                        $crate::cast::AsGeoArrowArray::as_polygon($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::MultiPoint(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_geometry_collection($array1),
+                        $crate::cast::AsGeoArrowArray::as_multi_point($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::MultiLineString(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_geometry_collection($array1),
+                        $crate::cast::AsGeoArrowArray::as_multi_line_string($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::MultiPolygon(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_geometry_collection($array1),
+                        $crate::cast::AsGeoArrowArray::as_multi_polygon($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::Geometry(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_geometry_collection($array1),
+                        $crate::cast::AsGeoArrowArray::as_geometry($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::GeometryCollection(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_geometry_collection($array1),
+                        $crate::cast::AsGeoArrowArray::as_geometry_collection($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::Rect(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_geometry_collection($array1),
+                        $crate::cast::AsGeoArrowArray::as_rect($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::Wkb(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_geometry_collection($array1),
+                        $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::LargeWkb(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_geometry_collection($array1),
+                        $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::WkbView(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_geometry_collection($array1),
+                        $crate::cast::AsGeoArrowArray::as_wkb_view($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::Wkt(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_geometry_collection($array1),
+                        $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::LargeWkt(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_geometry_collection($array1),
+                        $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array2),
+                    ),
+                    $crate::cast::__private::GeoArrowType::WktView(_) => $fn(
+                        $crate::cast::AsGeoArrowArray::as_geometry_collection($array1),
+                        $crate::cast::AsGeoArrowArray::as_wkt_view($array2),
+                    ),
+                }
+            }
+            $crate::cast::__private::GeoArrowType::Rect(_) => match $array2.data_type() {
+                $crate::cast::__private::GeoArrowType::Point(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_rect($array1),
+                    $crate::cast::AsGeoArrowArray::as_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_rect($array1),
+                    $crate::cast::AsGeoArrowArray::as_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Polygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_rect($array1),
+                    $crate::cast::AsGeoArrowArray::as_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPoint(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_rect($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiLineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_rect($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPolygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_rect($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Geometry(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_rect($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::GeometryCollection(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_rect($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry_collection($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Rect(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_rect($array1),
+                    $crate::cast::AsGeoArrowArray::as_rect($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_rect($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_rect($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WkbView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_rect($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_rect($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_rect($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WktView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_rect($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array2),
+                ),
+            },
+            $crate::cast::__private::GeoArrowType::Wkb(_) => match $array2.data_type() {
+                $crate::cast::__private::GeoArrowType::Point(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Polygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPoint(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiLineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPolygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Geometry(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::GeometryCollection(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry_collection($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Rect(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_rect($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WkbView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WktView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array2),
+                ),
+            },
+            $crate::cast::__private::GeoArrowType::LargeWkb(_) => match $array2.data_type() {
+                $crate::cast::__private::GeoArrowType::Point(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Polygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPoint(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiLineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPolygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Geometry(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::GeometryCollection(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry_collection($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Rect(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_rect($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WkbView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WktView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array2),
+                ),
+            },
+            $crate::cast::__private::GeoArrowType::WkbView(_) => match $array2.data_type() {
+                $crate::cast::__private::GeoArrowType::Point(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Polygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPoint(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiLineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPolygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Geometry(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::GeometryCollection(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry_collection($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Rect(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_rect($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WkbView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WktView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array2),
+                ),
+            },
+            $crate::cast::__private::GeoArrowType::Wkt(_) => match $array2.data_type() {
+                $crate::cast::__private::GeoArrowType::Point(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Polygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPoint(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiLineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPolygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Geometry(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::GeometryCollection(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry_collection($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Rect(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_rect($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WkbView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WktView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array2),
+                ),
+            },
+            $crate::cast::__private::GeoArrowType::LargeWkt(_) => match $array2.data_type() {
+                $crate::cast::__private::GeoArrowType::Point(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Polygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPoint(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiLineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPolygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Geometry(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::GeometryCollection(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry_collection($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Rect(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_rect($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WkbView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WktView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array2),
+                ),
+            },
+            $crate::cast::__private::GeoArrowType::WktView(_) => match $array2.data_type() {
+                $crate::cast::__private::GeoArrowType::Point(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Polygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPoint(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_point($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiLineString(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_line_string($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::MultiPolygon(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_multi_polygon($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Geometry(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::GeometryCollection(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_geometry_collection($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Rect(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_rect($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkb(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WkbView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkb_view($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::Wkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i32>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::LargeWkt(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt::<i64>($array2),
+                ),
+                $crate::cast::__private::GeoArrowType::WktView(_) => $fn(
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array1),
+                    $crate::cast::AsGeoArrowArray::as_wkt_view($array2),
+                ),
+            },
+        }
+    };
+}
+
 #[cfg(test)]
 mod test {
     use geoarrow_schema::{CoordType, Dimension, WkbType};
@@ -1207,5 +2149,14 @@ mod test {
             .unwrap();
         let wkb_type = WkbType::new(geo_arr.data_type().metadata().clone());
         Ok(WkbBuilder::from_nullable_geometries(geoms.as_slice(), wkb_type).finish())
+    }
+
+    // Ensure macro gets called, so an error will appear to ensure exhaustiveness
+    #[allow(dead_code)]
+    fn _test_two_args_macro_exhaustiveness(
+        arr1: &dyn GeoArrowArray,
+        arr2: &dyn GeoArrowArray,
+    ) -> GeoArrowResult<()> {
+        downcast_geoarrow_array_two_args!(arr1, arr2, |_a1, _a2| Ok(()))
     }
 }
