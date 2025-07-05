@@ -1,19 +1,26 @@
 use arrow_array::BooleanArray;
 use geo::intersects::Intersects;
 use geo_traits::to_geo::ToGeoGeometry;
-use geoarrow_array::GeoArrowArrayAccessor;
-use geoarrow_schema::error::GeoArrowResult;
+use geoarrow_array::{downcast_geoarrow_array_two_args, GeoArrowArray, GeoArrowArrayAccessor};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
-pub fn intersects<'a>(
+pub fn intersects(
+    left_array: &dyn GeoArrowArray,
+    right_array: &dyn GeoArrowArray,
+) -> GeoArrowResult<BooleanArray> {
+    if left_array.len() != right_array.len() {
+        Err(GeoArrowError::InvalidGeoArrow(
+            "Input arrays must have the same length".to_string(),
+        ))
+    } else {
+        downcast_geoarrow_array_two_args!(left_array, right_array, _intersects_impl)
+    }
+}
+
+fn _intersects_impl<'a>(
     left_array: &'a impl GeoArrowArrayAccessor<'a>,
     right_array: &'a impl GeoArrowArrayAccessor<'a>,
 ) -> GeoArrowResult<BooleanArray> {
-    assert_eq!(
-        left_array.len(),
-        right_array.len(),
-        "Input arrays must have the same length"
-    );
-
     let mut builder = BooleanArray::builder(left_array.len());
 
     for (maybe_left, maybe_right) in left_array.iter().zip(right_array.iter()) {
