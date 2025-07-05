@@ -820,6 +820,9 @@ macro_rules! downcast_geoarrow_array {
     };
 }
 
+/// Two argument version of the `downcast_geoarrow_array!` macro.
+/// Downcast any combination of two [GeoArrowArray] to a concrete-typed array based on its [`GeoArrowType`].
+
 #[macro_export]
 macro_rules! downcast_geoarrow_array_two_args {
     ($array1:ident, $array2:ident, $fn:expr) => {
