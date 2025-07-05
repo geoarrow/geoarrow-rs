@@ -1,7 +1,7 @@
 use arrow_array::BooleanArray;
 use geo::intersects::Intersects;
 use geo_traits::to_geo::ToGeoGeometry;
-use geoarrow_array::{downcast_geoarrow_array_two_args, GeoArrowArray, GeoArrowArrayAccessor};
+use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, downcast_geoarrow_array_two_args};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 pub fn intersects(
