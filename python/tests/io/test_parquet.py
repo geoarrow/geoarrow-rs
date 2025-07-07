@@ -9,9 +9,9 @@ import pytest
 import requests
 import shapely
 import shapely.testing
-from arro3.core import Table, struct_field
+from arro3.core import Array, DataType, Table, struct_field
 from arro3.io import read_parquet
-from geoarrow.rust.core import GeoArray
+from geoarrow.rust.core import GeoArray, from_wkt
 from geoarrow.rust.io import GeoParquetDataset, GeoParquetFile, GeoParquetWriter
 from obstore.store import AzureStore, HTTPStore, LocalStore
 from pyproj import CRS
@@ -170,3 +170,57 @@ def test_write_crs():
     store = LocalStore(Path())
     file = GeoParquetFile.open("points.parquet", store=store)
     assert file.crs() == crs
+
+
+def test_write_geometry_correct_geometry_types():
+    geoms = [
+        "POINT (30. 10.)",
+        "LINESTRING (30. 10., 10. 30., 40. 40.)",
+        "POLYGON ((30. 10., 40. 40., 20. 40., 10. 20., 30. 10.))",
+        "MULTIPOINT (30. 10.)",
+        "MULTILINESTRING ((30. 10., 10. 30., 40. 40.))",
+        "MULTIPOLYGON (((30. 10., 40. 40., 20. 40., 10. 20., 30. 10.)))",
+        "GEOMETRYCOLLECTION (POINT (30. 10.), LINESTRING (30. 10., 10. 30., 40. 40.), POLYGON ((30. 10., 40. 40., 20. 40., 10. 20., 30. 10.)), MULTIPOINT (30. 10.), MULTILINESTRING ((30. 10., 10. 30., 40. 40.)), MULTIPOLYGON (((30. 10., 40. 40., 20. 40., 10. 20., 30. 10.))))",
+    ]
+    geo_array = from_wkt(Array(geoms, type=DataType.string()))
+    table = Table.from_arrays([geo_array], names=["geometry"])
+    with GeoParquetWriter("geoms.parquet", table.schema) as writer:
+        writer.write_table(table)
+
+    gpq_meta = json.loads(pq.read_metadata("geoms.parquet").metadata[b"geo"])
+    assert set(gpq_meta["columns"]["geometry"]["geometry_types"]) == {
+        "GeometryCollection",
+        "LineString",
+        "MultiLineString",
+        "MultiPoint",
+        "MultiPolygon",
+        "Point",
+        "Polygon",
+    }
+
+
+def test_write_geometry_correct_geometry_types_z():
+    geoms = [
+        "POINT Z (30. 10. 40.)",
+        "LINESTRING Z (30. 10. 40., 10. 30. 40., 40. 40. 80.)",
+        "POLYGON Z ((30. 10. 40., 40. 40. 80., 20. 40. 60., 10. 20. 30., 30. 10. 40.))",
+        "MULTIPOINT Z (30. 10. 40.)",
+        "MULTILINESTRING Z ((30. 10. 40., 10. 30. 40., 40. 40. 80.))",
+        "MULTIPOLYGON Z (((30. 10. 40., 40. 40. 80., 20. 40. 60., 10. 20. 30., 30. 10. 40.)))",
+        "GEOMETRYCOLLECTION Z (POINT Z (30. 10. 40.), LINESTRING Z (30. 10. 40., 10. 30. 40., 40. 40. 80.), POLYGON Z ((30. 10. 40., 40. 40. 80., 20. 40. 60., 10. 20. 30., 30. 10. 40.)), MULTIPOINT Z (30. 10. 40.), MULTILINESTRING Z ((30. 10. 40., 10. 30. 40., 40. 40. 80.)), MULTIPOLYGON Z (((30. 10. 40., 40. 40. 80., 20. 40. 60., 10. 20. 30., 30. 10. 40.))))",
+    ]
+    geo_array = from_wkt(Array(geoms, type=DataType.string()))
+    table = Table.from_arrays([geo_array], names=["geometry"])
+    with GeoParquetWriter("geoms.parquet", table.schema) as writer:
+        writer.write_table(table)
+
+    gpq_meta = json.loads(pq.read_metadata("geoms.parquet").metadata[b"geo"])
+    assert set(gpq_meta["columns"]["geometry"]["geometry_types"]) == {
+        "GeometryCollection Z",
+        "LineString Z",
+        "MultiLineString Z",
+        "MultiPoint Z",
+        "MultiPolygon Z",
+        "Point Z",
+        "Polygon Z",
+    }
