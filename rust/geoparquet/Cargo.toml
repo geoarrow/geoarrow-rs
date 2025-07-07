@@ -37,6 +37,7 @@ parquet = { workspace = true, features = ["arrow"] }
 serde = { workspace = true, features = ["derive"] }
 serde_with = { workspace = true }
 serde_json = { workspace = true }
+wkt = { workspace = true }
 
 [dev-dependencies]
 tokio = { version = "1.9", features = ["macros", "fs", "rt-multi-thread"] }
