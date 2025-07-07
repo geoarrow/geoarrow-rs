@@ -194,57 +194,47 @@ fn get_type_ids(array: &dyn GeoArrowArray) -> GeoArrowResult<HashSet<NativeTypeA
         )]
         .into_iter()
         .collect(),
-        Geometry(_) => array
-            .as_geometry()
-            .type_ids()
+        Geometry(_) => {
+            let type_ids: HashSet<i8> =
+                HashSet::from_iter(array.as_geometry().type_ids().iter().copied());
+            type_ids
+                .into_iter()
+                .map(NativeTypeAndDimension::from_type_id)
+                .collect()
+        }
+        Wkb(_) => array
+            .as_wkb::<i32>()
             .iter()
-            .map(|type_id| NativeTypeAndDimension::from_type_id(*type_id))
-            .collect(),
-        Wkb(_) => {
-            let wkb_scalars = array
-                .as_wkb::<i32>()
-                .iter()
-                .flatten()
-                .collect::<GeoArrowResult<Vec<_>>>()?;
-            wkb_scalars
-                .iter()
-                .map(|wkb| {
-                    let dim = wkb.dim().try_into()?;
-                    let geom_type = NativeType::from_geometry_trait(wkb);
-                    Ok(NativeTypeAndDimension::new(geom_type, dim))
-                })
-                .collect::<GeoArrowResult<HashSet<NativeTypeAndDimension>>>()?
-        }
-        LargeWkb(_) => {
-            let wkb_scalars = array
-                .as_wkb::<i64>()
-                .iter()
-                .flatten()
-                .collect::<GeoArrowResult<Vec<_>>>()?;
-            wkb_scalars
-                .iter()
-                .map(|wkb| {
-                    let dim = wkb.dim().try_into()?;
-                    let geom_type = NativeType::from_geometry_trait(wkb);
-                    Ok(NativeTypeAndDimension::new(geom_type, dim))
-                })
-                .collect::<GeoArrowResult<HashSet<NativeTypeAndDimension>>>()?
-        }
-        WkbView(_) => {
-            let wkb_scalars = array
-                .as_wkb_view()
-                .iter()
-                .flatten()
-                .collect::<GeoArrowResult<Vec<_>>>()?;
-            wkb_scalars
-                .iter()
-                .map(|wkb| {
-                    let dim = wkb.dim().try_into()?;
-                    let geom_type = NativeType::from_geometry_trait(wkb);
-                    Ok(NativeTypeAndDimension::new(geom_type, dim))
-                })
-                .collect::<GeoArrowResult<HashSet<NativeTypeAndDimension>>>()?
-        }
+            .flatten()
+            .map(|wkb| {
+                let wkb = wkb?;
+                let dim = wkb.dim().try_into()?;
+                let geom_type = NativeType::from_geometry_trait(&wkb);
+                Ok(NativeTypeAndDimension::new(geom_type, dim))
+            })
+            .collect::<GeoArrowResult<HashSet<NativeTypeAndDimension>>>()?,
+        LargeWkb(_) => array
+            .as_wkb::<i64>()
+            .iter()
+            .flatten()
+            .map(|wkb| {
+                let wkb = wkb?;
+                let dim = wkb.dim().try_into()?;
+                let geom_type = NativeType::from_geometry_trait(&wkb);
+                Ok(NativeTypeAndDimension::new(geom_type, dim))
+            })
+            .collect::<GeoArrowResult<HashSet<NativeTypeAndDimension>>>()?,
+        WkbView(_) => array
+            .as_wkb_view()
+            .iter()
+            .flatten()
+            .map(|wkb| {
+                let wkb = wkb?;
+                let dim = wkb.dim().try_into()?;
+                let geom_type = NativeType::from_geometry_trait(&wkb);
+                Ok(NativeTypeAndDimension::new(geom_type, dim))
+            })
+            .collect::<GeoArrowResult<HashSet<NativeTypeAndDimension>>>()?,
         Wkt(_) => array
             .as_wkt::<i32>()
             .inner()
