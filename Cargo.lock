@@ -1811,6 +1811,7 @@ dependencies = [
  "serde_with",
  "tokio",
  "tokio-test",
+ "wkt 0.14.0",
 ]
 
 [[package]]
