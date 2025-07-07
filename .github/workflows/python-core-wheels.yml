@@ -151,45 +151,45 @@ jobs:
           name: wheels-macos-${{ matrix.platform.target }}-${{ matrix.module }}
           path: dist
 
-  emscripten:
-    runs-on: ${{ matrix.platform.runner }}
-    strategy:
-      matrix:
-        platform:
-          - runner: ubuntu-latest
-            target: wasm32-unknown-emscripten
-        module:
-          - geoarrow-core
-          - geoarrow-compute
-    steps:
-      - uses: actions/checkout@v4
-      - run: pip install pyodide-build
-      - name: Get Emscripten and Python version info
-        shell: bash
-        run: |
-          echo EMSCRIPTEN_VERSION=$(pyodide config get emscripten_version) >> $GITHUB_ENV
-          echo PYTHON_VERSION=$(pyodide config get python_version | cut -d '.' -f 1-2) >> $GITHUB_ENV
-          pip uninstall -y pyodide-build
-      - uses: mymindstorm/setup-emsdk@v14
-        with:
-          version: ${{ env.EMSCRIPTEN_VERSION }}
-          actions-cache-folder: emsdk-cache
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - run: pip install pyodide-build
-      - name: Build wheels
-        uses: PyO3/maturin-action@v1
-        with:
-          rust-toolchain: nightly
-          target: ${{ matrix.platform.target }}
-          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 --no-default-features --manifest-path python/${{ matrix.module }}/Cargo.toml
-          sccache: "true"
-      - name: Upload wheels
-        uses: actions/upload-artifact@v4
-        with:
-          name: wasm-wheels-${{ matrix.module }}
-          path: dist
+  # emscripten:
+  #   runs-on: ${{ matrix.platform.runner }}
+  #   strategy:
+  #     matrix:
+  #       platform:
+  #         - runner: ubuntu-latest
+  #           target: wasm32-unknown-emscripten
+  #       module:
+  #         - geoarrow-core
+  #         - geoarrow-compute
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - run: pip install pyodide-build
+  #     - name: Get Emscripten and Python version info
+  #       shell: bash
+  #       run: |
+  #         echo EMSCRIPTEN_VERSION=$(pyodide config get emscripten_version) >> $GITHUB_ENV
+  #         echo PYTHON_VERSION=$(pyodide config get python_version | cut -d '.' -f 1-2) >> $GITHUB_ENV
+  #         pip uninstall -y pyodide-build
+  #     - uses: mymindstorm/setup-emsdk@v14
+  #       with:
+  #         version: ${{ env.EMSCRIPTEN_VERSION }}
+  #         actions-cache-folder: emsdk-cache
+  #     - uses: actions/setup-python@v5
+  #       with:
+  #         python-version: ${{ env.PYTHON_VERSION }}
+  #     - run: pip install pyodide-build
+  #     - name: Build wheels
+  #       uses: PyO3/maturin-action@v1
+  #       with:
+  #         rust-toolchain: nightly
+  #         target: ${{ matrix.platform.target }}
+  #         args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 --no-default-features --manifest-path python/${{ matrix.module }}/Cargo.toml
+  #         sccache: "true"
+  #     - name: Upload wheels
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: wasm-wheels-${{ matrix.module }}
+  #         path: dist
 
   # sdist:
   #   runs-on: ubuntu-latest
@@ -209,7 +209,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    if: "startsWith(github.ref, 'refs/tags/')"
+    if: startsWith(github.ref, 'refs/tags/')
     needs: [linux, windows, macos]
     permissions:
       # Used to upload release artifacts

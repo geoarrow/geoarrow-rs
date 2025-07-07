@@ -67,9 +67,11 @@ jobs:
           # Note the `cut` index is 1-ordered
           if echo $VERSION | cut -c 2- | grep -q "[A-Za-z]"; then
             echo "Is beta version"
+            echo "Version is $VERSION"
             # For beta versions publish but don't set as latest
-            uv run mike deploy $VERSION --update-aliases --push
+            uv run mike deploy $VERSION --update-aliases --push --deploy-prefix python/
           else
             echo "Is NOT beta version"
-            uv run mike deploy $VERSION latest --update-aliases --push
+            echo "Version is $VERSION"
+            uv run mike deploy $VERSION latest --update-aliases --push --deploy-prefix python/
           fi
