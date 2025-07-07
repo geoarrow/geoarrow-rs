@@ -3,11 +3,14 @@ use std::sync::Arc;
 
 use arrow_array::ArrayRef;
 use arrow_schema::extension::EXTENSION_TYPE_NAME_KEY;
-use arrow_schema::{DataType, Field, Schema, SchemaRef};
+use arrow_schema::{ArrowError, DataType, Field, Schema, SchemaRef};
+use geo_traits::GeometryTrait;
+use geoarrow_array::GeoArrowArrayAccessor;
 use geoarrow_array::array::from_arrow_array;
+use geoarrow_array::cast::AsGeoArrowArray;
 use geoarrow_schema::crs::{CrsTransform, DefaultCrsTransform};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geoarrow_schema::{CoordType, Edges, GeoArrowType, Metadata, WkbType};
+use geoarrow_schema::{CoordType, Dimension, Edges, GeoArrowType, Metadata, WkbType};
 use serde_json::Value;
 
 use crate::metadata::{
@@ -79,55 +82,130 @@ impl ColumnInfo {
         }
     }
 
-    /// Update the geometry types in the encoder for mixed arrays
+    /// Update the geometry types in the encoder for arrays that do not have a statically-known
+    /// type.
     // TODO: for multi columns, should we do a check to see if there are non-multi geometries in
     // the file? E.g. check if the diff in geom_offsets is 1 for any row, in which case we should
-    // write, e.g. Polygon in addition to MultiPolygon
+    // write, e.g. Polygon in addition to MultiPolygon. Perhaps we should in conjunction write a
+    // MultiPoint with a single item as a WKB Point?
     //
-    // Note: for these multi columns, we should first check the geometry_types HashSet, because we
-    // shouldn't compute that for every array if we see in the first that the data is both multi
-    // and single polygons.
+    // Note: This has overlap with the non-public helper `get_type_ids` in `geoarrow-cast`. We may
+    // want to stabilize some upstream APIs in the future to avoid this duplication.
     pub(crate) fn update_geometry_types(
         &mut self,
         array: &ArrayRef,
         field: &Field,
     ) -> GeoArrowResult<()> {
         let array = from_arrow_array(array, field)?;
-        let array_ref = array.as_ref();
 
-        // We only have to do this for geometry arrays because other arrays are statically known
-        if let GeoArrowType::Geometry(_) = array_ref.data_type() {
-            // TODO: restore writing `geometry_types`.
-            // The spec says "The geometry types of all geometries, or an empty array if they are
-            // not known.". So it's valid for us to write an empty array, but in the future we
-            // should restore writing known types.
-
-            // let arr = array_ref.as_geometry();
-            // if arr.has_points(Dimension::XY) || arr.has_points(Dimension::XYZ) {
-            //     self.geometry_types.insert(GeoParquetGeometryType::Point);
-            // }
-            // if arr.has_line_strings(Dimension::XY) || arr.has_line_strings(Dimension::XYZ) {
-            //     self.geometry_types
-            //         .insert(GeoParquetGeometryType::LineString);
-            // }
-            // if arr.has_polygons(Dimension::XY) || arr.has_polygons(Dimension::XYZ) {
-            //     self.geometry_types.insert(GeoParquetGeometryType::Polygon);
-            // }
-            // if arr.has_multi_points(Dimension::XY) || arr.has_multi_points(Dimension::XYZ) {
-            //     self.geometry_types
-            //         .insert(GeoParquetGeometryType::MultiPoint);
-            // }
-            // if arr.has_multi_line_strings(Dimension::XY)
-            //     || arr.has_multi_line_strings(Dimension::XYZ)
-            // {
-            //     self.geometry_types
-            //         .insert(GeoParquetGeometryType::MultiLineString);
-            // }
-            // if arr.has_multi_polygons(Dimension::XY) || arr.has_multi_polygons(Dimension::XYZ) {
-            //     self.geometry_types
-            //         .insert(GeoParquetGeometryType::MultiPolygon);
-            // }
-        }
+        match array.data_type() {
+            GeoArrowType::Geometry(_) => {
+                let type_ids: HashSet<i8> =
+                    HashSet::from_iter(array.as_geometry().type_ids().iter().copied());
+                self.geometry_types.extend(
+                    type_ids
+                        .into_iter()
+                        .map(GeoParquetGeometryTypeAndDimension::from_type_id),
+                )
+            }
+            GeoArrowType::Wkb(_) => {
+                let types = array
+                    .as_wkb::<i32>()
+                    .iter()
+                    .flatten()
+                    .map(|wkb| {
+                        let wkb = wkb?;
+                        let dim = wkb.dim().try_into()?;
+                        let geom_type = GeoParquetGeometryType::from_geometry_trait(&wkb);
+                        Ok(GeoParquetGeometryTypeAndDimension::new(geom_type, dim))
+                    })
+                    .collect::<GeoArrowResult<HashSet<GeoParquetGeometryTypeAndDimension>>>()?;
+                self.geometry_types.extend(types);
+            }
+            GeoArrowType::LargeWkb(_) => {
+                let types = array
+                    .as_wkb::<i64>()
+                    .iter()
+                    .flatten()
+                    .map(|wkb| {
+                        let wkb = wkb?;
+                        let dim = wkb.dim().try_into()?;
+                        let geom_type = GeoParquetGeometryType::from_geometry_trait(&wkb);
+                        Ok(GeoParquetGeometryTypeAndDimension::new(geom_type, dim))
+                    })
+                    .collect::<GeoArrowResult<HashSet<GeoParquetGeometryTypeAndDimension>>>()?;
+                self.geometry_types.extend(types);
+            }
+            GeoArrowType::WkbView(_) => {
+                let types = array
+                    .as_wkb_view()
+                    .iter()
+                    .flatten()
+                    .map(|wkb| {
+                        let wkb = wkb?;
+                        let dim = wkb.dim().try_into()?;
+                        let geom_type = GeoParquetGeometryType::from_geometry_trait(&wkb);
+                        Ok(GeoParquetGeometryTypeAndDimension::new(geom_type, dim))
+                    })
+                    .collect::<GeoArrowResult<HashSet<GeoParquetGeometryTypeAndDimension>>>()?;
+                self.geometry_types.extend(types);
+            }
+            GeoArrowType::Wkt(_) => {
+                let types = array
+                    .as_wkt::<i32>()
+                    .inner()
+                    .iter()
+                    .flatten()
+                    .map(|s| {
+                        let (wkt_type, wkt_dim) =
+                            wkt::infer_type(s).map_err(ArrowError::CastError)?;
+                        let geom_type = GeoParquetGeometryTypeAndDimension::new(
+                            wkt_type_to_geoparquet_type(wkt_type),
+                            wkt_dim_to_geoarrow_dim(wkt_dim),
+                        );
+                        Ok(geom_type)
+                    })
+                    .collect::<GeoArrowResult<HashSet<GeoParquetGeometryTypeAndDimension>>>()?;
+                self.geometry_types.extend(types);
+            }
+            GeoArrowType::LargeWkt(_) => {
+                let types = array
+                    .as_wkt::<i64>()
+                    .inner()
+                    .iter()
+                    .flatten()
+                    .map(|s| {
+                        let (wkt_type, wkt_dim) =
+                            wkt::infer_type(s).map_err(ArrowError::CastError)?;
+                        let geom_type = GeoParquetGeometryTypeAndDimension::new(
+                            wkt_type_to_geoparquet_type(wkt_type),
+                            wkt_dim_to_geoarrow_dim(wkt_dim),
+                        );
+                        Ok(geom_type)
+                    })
+                    .collect::<GeoArrowResult<HashSet<GeoParquetGeometryTypeAndDimension>>>()?;
+                self.geometry_types.extend(types);
+            }
+            GeoArrowType::WktView(_) => {
+                let types = array
+                    .as_wkt_view()
+                    .inner()
+                    .iter()
+                    .flatten()
+                    .map(|s| {
+                        let (wkt_type, wkt_dim) =
+                            wkt::infer_type(s).map_err(ArrowError::CastError)?;
+                        let geom_type = GeoParquetGeometryTypeAndDimension::new(
+                            wkt_type_to_geoparquet_type(wkt_type),
+                            wkt_dim_to_geoarrow_dim(wkt_dim),
+                        );
+                        Ok(geom_type)
+                    })
+                    .collect::<GeoArrowResult<HashSet<GeoParquetGeometryTypeAndDimension>>>()?;
+                self.geometry_types.extend(types);
+            }
+            _ => {}
+        };
 
         Ok(())
     }
@@ -165,6 +243,27 @@ impl ColumnInfo {
             covering: None,
         };
         (self.name, column_meta)
+    }
+}
+
+fn wkt_type_to_geoparquet_type(wkt_type: wkt::types::GeometryType) -> GeoParquetGeometryType {
+    match wkt_type {
+        wkt::types::GeometryType::Point => GeoParquetGeometryType::Point,
+        wkt::types::GeometryType::LineString => GeoParquetGeometryType::LineString,
+        wkt::types::GeometryType::Polygon => GeoParquetGeometryType::Polygon,
+        wkt::types::GeometryType::MultiPoint => GeoParquetGeometryType::MultiPoint,
+        wkt::types::GeometryType::MultiLineString => GeoParquetGeometryType::MultiLineString,
+        wkt::types::GeometryType::MultiPolygon => GeoParquetGeometryType::MultiPolygon,
+        wkt::types::GeometryType::GeometryCollection => GeoParquetGeometryType::GeometryCollection,
+    }
+}
+
+fn wkt_dim_to_geoarrow_dim(wkt_dim: wkt::types::Dimension) -> Dimension {
+    match wkt_dim {
+        wkt::types::Dimension::XY => Dimension::XY,
+        wkt::types::Dimension::XYZ => Dimension::XYZ,
+        wkt::types::Dimension::XYM => Dimension::XYM,
+        wkt::types::Dimension::XYZM => Dimension::XYZM,
     }
 }
 
