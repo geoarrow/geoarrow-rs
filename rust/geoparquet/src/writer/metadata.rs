@@ -53,13 +53,12 @@ pub(crate) struct ColumnInfo {
 }
 
 impl ColumnInfo {
-    #[allow(clippy::borrowed_box)]
     pub(crate) fn try_new(
         name: String,
         writer_encoding: GeoParquetWriterEncoding,
         data_type: &GeoArrowType,
         metadata: &Metadata,
-        crs_transform: Option<&Box<dyn CrsTransform>>,
+        crs_transform: Option<&dyn CrsTransform>,
         covering_name: Option<String>,
     ) -> GeoArrowResult<Self> {
         let encoding = GeoParquetColumnEncoding::try_new(writer_encoding, data_type)?;
@@ -355,7 +354,7 @@ impl GeoParquetMetadataBuilder {
                     column_encoding,
                     &geo_data_type,
                     geo_data_type.metadata(),
-                    options.crs_transform.as_ref(),
+                    options.crs_transform.as_deref(),
                     covering_name,
                 )?;
 
