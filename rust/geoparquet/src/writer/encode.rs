@@ -101,7 +101,7 @@ pub(super) fn encode_record_batch(
         output_columns[*column_idx] = Some(encoded_column);
 
         if let Some(covering_field_idx) = column_info.covering_field_idx {
-            let covering = bounding_rect(&from_arrow_array(array, field)?)?;
+            let covering = bounding_rect(from_arrow_array(array, field)?.as_ref())?;
             output_columns[covering_field_idx] = Some(covering.into_array_ref());
         }
 
