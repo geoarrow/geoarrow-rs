@@ -1057,6 +1057,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with",
+ "wkt 0.14.0",
 ]
 
 [[package]]

@@ -1,4 +1,3 @@
-#[cfg(feature = "compression")]
 mod geoarrow_data;
 
 use std::path::PathBuf;

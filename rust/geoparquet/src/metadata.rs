@@ -7,6 +7,7 @@ use std::fmt::Display;
 use std::str::FromStr;
 use std::sync::Arc;
 
+use geo_traits::GeometryTrait;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{
     CoordType, Crs, Dimension, Edges, GeoArrowType, GeometryCollectionType, GeometryType,
@@ -153,6 +154,19 @@ impl GeoParquetGeometryType {
             Self::GeometryCollection => "GeometryCollection",
         }
     }
+
+    pub(crate) fn from_geometry_trait(geometry: &impl GeometryTrait) -> Self {
+        match geometry.as_type() {
+            geo_traits::GeometryType::Point(_) => Self::Point,
+            geo_traits::GeometryType::LineString(_) => Self::LineString,
+            geo_traits::GeometryType::Polygon(_) => Self::Polygon,
+            geo_traits::GeometryType::MultiPoint(_) => Self::MultiPoint,
+            geo_traits::GeometryType::MultiLineString(_) => Self::MultiLineString,
+            geo_traits::GeometryType::MultiPolygon(_) => Self::MultiPolygon,
+            geo_traits::GeometryType::GeometryCollection(_) => Self::GeometryCollection,
+            _ => panic!("Unsupported geometry type"),
+        }
+    }
 }
 
 /// Geometry type and dimension
@@ -213,6 +227,30 @@ impl GeoParquetGeometryTypeAndDimension {
             GeoParquetGeometryType::GeometryCollection => GeoArrowType::GeometryCollection(
                 GeometryCollectionType::new(self.dimension, metadata).with_coord_type(coord_type),
             ),
+        }
+    }
+
+    pub(crate) fn from_type_id(type_id: i8) -> Self {
+        let dimension = match type_id / 10 {
+            0 => Dimension::XY,
+            1 => Dimension::XYZ,
+            2 => Dimension::XYM,
+            3 => Dimension::XYZM,
+            _ => panic!("unsupported type_id: {type_id}"),
+        };
+        let geometry_type = match type_id % 10 {
+            1 => GeoParquetGeometryType::Point,
+            2 => GeoParquetGeometryType::LineString,
+            3 => GeoParquetGeometryType::Polygon,
+            4 => GeoParquetGeometryType::MultiPoint,
+            5 => GeoParquetGeometryType::MultiLineString,
+            6 => GeoParquetGeometryType::MultiPolygon,
+            7 => GeoParquetGeometryType::GeometryCollection,
+            _ => panic!("unsupported type_id: {type_id}"),
+        };
+        Self {
+            geometry_type,
+            dimension,
         }
     }
 }
