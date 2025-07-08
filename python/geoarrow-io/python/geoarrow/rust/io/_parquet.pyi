@@ -266,6 +266,7 @@ class GeoParquetWriter:
         compression: Literal["uncompressed", "snappy", "lzo", "lz4", "lz4_raw"]
         | str = "zstd(1)",
         writer_version: Literal["parquet_1_0", "parquet_2_0"] = "parquet_2_0",
+        generate_covering: bool = False,
     ) -> None:
         """
         Create a new GeoParquetWriter.
@@ -281,6 +282,7 @@ class GeoParquetWriter:
             encoding: the geometry encoding to use. See [GeoParquetEncoding][geoarrow.rust.io.enums.GeoParquetEncoding] for more details on supported geometry encodings.
             compression: the compression algorithm to use. This can be either one of the strings in the `Literal` type, or a string that contains the compression level, like `gzip(9)` or `brotli(11)` or `zstd(22)`. The default is `zstd(1)`.
             writer_version: the Parquet writer version to use. Defaults to `"parquet_2_0"`.
+            generate_covering: If True, the writer will generate a bounding box column ([covering](https://github.com/opengeospatial/geoparquet/blob/v1.1.0%2Bp1/format-specs/geoparquet.md#covering)) for the geometries in the file. This is useful for spatially-indexed reads. Defaults to False.
         """
     def __enter__(self) -> GeoParquetWriter: ...
     def __exit__(self, type, value, traceback): ...
