@@ -87,7 +87,7 @@ pub(super) fn encode_record_batch(
     output_schema: SchemaRef,
 ) -> GeoArrowResult<RecordBatch> {
     // This is a vec of Option<ArrayRef> so that we can insert the new covering columns at the
-    // right indices, even we iterate in a different order as before
+    // right indices, even if we iterate in a different order as before
     let mut output_columns: Vec<Option<ArrayRef>> =
         batch.columns().iter().map(|x| Some(x.clone())).collect();
 

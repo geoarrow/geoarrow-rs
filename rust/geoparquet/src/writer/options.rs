@@ -91,7 +91,7 @@ impl GeoParquetWriterOptionsBuilder {
         self
     }
 
-    /// Set the string prefix that will be used for the covering column name.
+    /// Set the string that will be used for the covering column name.
     ///
     /// If not set, the default is `"bbox"` for a column named `"geometry"` or `"geography"`. For
     /// any other column, the default is `format!("{column_name}_bbox")`.

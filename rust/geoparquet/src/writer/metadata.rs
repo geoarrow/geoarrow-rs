@@ -44,8 +44,8 @@ pub(crate) struct ColumnInfo {
     /// one. If this value is omitted, edges will be interpreted as planar.
     pub(crate) edges: Option<Edges>,
 
-    /// If `None`, no covering is desired for this column. If `Some(s)`, then `s` is the prefix to
-    /// the `xmin`, `ymin`, `xmax`, `ymax` columns.
+    /// If `None`, no covering is desired for this column. If `Some(s)`, then `s` is the top-level
+    /// column name, stored as a struct, with child `xmin`, `ymin`, `xmax`, `ymax` columns.
     pub(crate) covering_name: Option<String>,
 
     /// This gets set in `create_output_schema`
