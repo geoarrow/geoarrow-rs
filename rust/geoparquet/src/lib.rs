@@ -1,5 +1,4 @@
-//! Read and write the [GeoParquet](https://github.com/opengeospatial/geoparquet) format.
-
+#![doc = include_str!("../README.md")]
 #![cfg_attr(not(test), warn(unused_crate_dependencies))]
 #![warn(missing_docs)]
 

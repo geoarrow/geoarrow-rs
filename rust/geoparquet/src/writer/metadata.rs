@@ -3,16 +3,19 @@ use std::sync::Arc;
 
 use arrow_array::ArrayRef;
 use arrow_schema::extension::EXTENSION_TYPE_NAME_KEY;
-use arrow_schema::{DataType, Field, Schema, SchemaRef};
+use arrow_schema::{ArrowError, DataType, Field, Schema, SchemaRef};
+use geo_traits::GeometryTrait;
+use geoarrow_array::GeoArrowArrayAccessor;
 use geoarrow_array::array::from_arrow_array;
+use geoarrow_array::cast::AsGeoArrowArray;
 use geoarrow_schema::crs::{CrsTransform, DefaultCrsTransform};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geoarrow_schema::{CoordType, Edges, GeoArrowType, Metadata, WkbType};
+use geoarrow_schema::{CoordType, Dimension, Edges, GeoArrowType, Metadata, WkbType};
 use serde_json::Value;
 
 use crate::metadata::{
-    GeoParquetColumnEncoding, GeoParquetColumnMetadata, GeoParquetGeometryType,
-    GeoParquetGeometryTypeAndDimension, GeoParquetMetadata,
+    GeoParquetBboxCovering, GeoParquetColumnEncoding, GeoParquetColumnMetadata, GeoParquetCovering,
+    GeoParquetGeometryType, GeoParquetGeometryTypeAndDimension, GeoParquetMetadata,
 };
 use crate::total_bounds::BoundingRect;
 use crate::writer::options::{GeoParquetWriterEncoding, GeoParquetWriterOptions};
@@ -40,16 +43,23 @@ pub(crate) struct ColumnInfo {
     /// If present, instructs consumers that edges follow a spherical path rather than a planar
     /// one. If this value is omitted, edges will be interpreted as planar.
     pub(crate) edges: Option<Edges>,
+
+    /// If `None`, no covering is desired for this column. If `Some(s)`, then `s` is the top-level
+    /// column name, stored as a struct, with child `xmin`, `ymin`, `xmax`, `ymax` columns.
+    pub(crate) covering_name: Option<String>,
+
+    /// This gets set in `create_output_schema`
+    pub(crate) covering_field_idx: Option<usize>,
 }
 
 impl ColumnInfo {
-    #[allow(clippy::borrowed_box)]
     pub(crate) fn try_new(
         name: String,
         writer_encoding: GeoParquetWriterEncoding,
         data_type: &GeoArrowType,
         metadata: &Metadata,
-        crs_transform: Option<&Box<dyn CrsTransform>>,
+        crs_transform: Option<&dyn CrsTransform>,
+        covering_name: Option<String>,
     ) -> GeoArrowResult<Self> {
         let encoding = GeoParquetColumnEncoding::try_new(writer_encoding, data_type)?;
         let geometry_types = get_geometry_types(data_type);
@@ -68,6 +78,8 @@ impl ColumnInfo {
             bbox: None,
             crs,
             edges,
+            covering_name,
+            covering_field_idx: None,
         })
     }
 
@@ -79,55 +91,130 @@ impl ColumnInfo {
         }
     }
 
-    /// Update the geometry types in the encoder for mixed arrays
+    /// Update the geometry types in the encoder for arrays that do not have a statically-known
+    /// type.
     // TODO: for multi columns, should we do a check to see if there are non-multi geometries in
     // the file? E.g. check if the diff in geom_offsets is 1 for any row, in which case we should
-    // write, e.g. Polygon in addition to MultiPolygon
+    // write, e.g. Polygon in addition to MultiPolygon. Perhaps we should in conjunction write a
+    // MultiPoint with a single item as a WKB Point?
     //
-    // Note: for these multi columns, we should first check the geometry_types HashSet, because we
-    // shouldn't compute that for every array if we see in the first that the data is both multi
-    // and single polygons.
+    // Note: This has overlap with the non-public helper `get_type_ids` in `geoarrow-cast`. We may
+    // want to stabilize some upstream APIs in the future to avoid this duplication.
     pub(crate) fn update_geometry_types(
         &mut self,
         array: &ArrayRef,
         field: &Field,
     ) -> GeoArrowResult<()> {
         let array = from_arrow_array(array, field)?;
-        let array_ref = array.as_ref();
 
-        // We only have to do this for geometry arrays because other arrays are statically known
-        if let GeoArrowType::Geometry(_) = array_ref.data_type() {
-            // TODO: restore writing `geometry_types`.
-            // The spec says "The geometry types of all geometries, or an empty array if they are
-            // not known.". So it's valid for us to write an empty array, but in the future we
-            // should restore writing known types.
-
-            // let arr = array_ref.as_geometry();
-            // if arr.has_points(Dimension::XY) || arr.has_points(Dimension::XYZ) {
-            //     self.geometry_types.insert(GeoParquetGeometryType::Point);
-            // }
-            // if arr.has_line_strings(Dimension::XY) || arr.has_line_strings(Dimension::XYZ) {
-            //     self.geometry_types
-            //         .insert(GeoParquetGeometryType::LineString);
-            // }
-            // if arr.has_polygons(Dimension::XY) || arr.has_polygons(Dimension::XYZ) {
-            //     self.geometry_types.insert(GeoParquetGeometryType::Polygon);
-            // }
-            // if arr.has_multi_points(Dimension::XY) || arr.has_multi_points(Dimension::XYZ) {
-            //     self.geometry_types
-            //         .insert(GeoParquetGeometryType::MultiPoint);
-            // }
-            // if arr.has_multi_line_strings(Dimension::XY)
-            //     || arr.has_multi_line_strings(Dimension::XYZ)
-            // {
-            //     self.geometry_types
-            //         .insert(GeoParquetGeometryType::MultiLineString);
-            // }
-            // if arr.has_multi_polygons(Dimension::XY) || arr.has_multi_polygons(Dimension::XYZ) {
-            //     self.geometry_types
-            //         .insert(GeoParquetGeometryType::MultiPolygon);
-            // }
-        }
+        match array.data_type() {
+            GeoArrowType::Geometry(_) => {
+                let type_ids: HashSet<i8> =
+                    HashSet::from_iter(array.as_geometry().type_ids().iter().copied());
+                self.geometry_types.extend(
+                    type_ids
+                        .into_iter()
+                        .map(GeoParquetGeometryTypeAndDimension::from_type_id),
+                )
+            }
+            GeoArrowType::Wkb(_) => {
+                let types = array
+                    .as_wkb::<i32>()
+                    .iter()
+                    .flatten()
+                    .map(|wkb| {
+                        let wkb = wkb?;
+                        let dim = wkb.dim().try_into()?;
+                        let geom_type = GeoParquetGeometryType::from_geometry_trait(&wkb);
+                        Ok(GeoParquetGeometryTypeAndDimension::new(geom_type, dim))
+                    })
+                    .collect::<GeoArrowResult<HashSet<GeoParquetGeometryTypeAndDimension>>>()?;
+                self.geometry_types.extend(types);
+            }
+            GeoArrowType::LargeWkb(_) => {
+                let types = array
+                    .as_wkb::<i64>()
+                    .iter()
+                    .flatten()
+                    .map(|wkb| {
+                        let wkb = wkb?;
+                        let dim = wkb.dim().try_into()?;
+                        let geom_type = GeoParquetGeometryType::from_geometry_trait(&wkb);
+                        Ok(GeoParquetGeometryTypeAndDimension::new(geom_type, dim))
+                    })
+                    .collect::<GeoArrowResult<HashSet<GeoParquetGeometryTypeAndDimension>>>()?;
+                self.geometry_types.extend(types);
+            }
+            GeoArrowType::WkbView(_) => {
+                let types = array
+                    .as_wkb_view()
+                    .iter()
+                    .flatten()
+                    .map(|wkb| {
+                        let wkb = wkb?;
+                        let dim = wkb.dim().try_into()?;
+                        let geom_type = GeoParquetGeometryType::from_geometry_trait(&wkb);
+                        Ok(GeoParquetGeometryTypeAndDimension::new(geom_type, dim))
+                    })
+                    .collect::<GeoArrowResult<HashSet<GeoParquetGeometryTypeAndDimension>>>()?;
+                self.geometry_types.extend(types);
+            }
+            GeoArrowType::Wkt(_) => {
+                let types = array
+                    .as_wkt::<i32>()
+                    .inner()
+                    .iter()
+                    .flatten()
+                    .map(|s| {
+                        let (wkt_type, wkt_dim) =
+                            wkt::infer_type(s).map_err(ArrowError::CastError)?;
+                        let geom_type = GeoParquetGeometryTypeAndDimension::new(
+                            wkt_type_to_geoparquet_type(wkt_type),
+                            wkt_dim_to_geoarrow_dim(wkt_dim),
+                        );
+                        Ok(geom_type)
+                    })
+                    .collect::<GeoArrowResult<HashSet<GeoParquetGeometryTypeAndDimension>>>()?;
+                self.geometry_types.extend(types);
+            }
+            GeoArrowType::LargeWkt(_) => {
+                let types = array
+                    .as_wkt::<i64>()
+                    .inner()
+                    .iter()
+                    .flatten()
+                    .map(|s| {
+                        let (wkt_type, wkt_dim) =
+                            wkt::infer_type(s).map_err(ArrowError::CastError)?;
+                        let geom_type = GeoParquetGeometryTypeAndDimension::new(
+                            wkt_type_to_geoparquet_type(wkt_type),
+                            wkt_dim_to_geoarrow_dim(wkt_dim),
+                        );
+                        Ok(geom_type)
+                    })
+                    .collect::<GeoArrowResult<HashSet<GeoParquetGeometryTypeAndDimension>>>()?;
+                self.geometry_types.extend(types);
+            }
+            GeoArrowType::WktView(_) => {
+                let types = array
+                    .as_wkt_view()
+                    .inner()
+                    .iter()
+                    .flatten()
+                    .map(|s| {
+                        let (wkt_type, wkt_dim) =
+                            wkt::infer_type(s).map_err(ArrowError::CastError)?;
+                        let geom_type = GeoParquetGeometryTypeAndDimension::new(
+                            wkt_type_to_geoparquet_type(wkt_type),
+                            wkt_dim_to_geoarrow_dim(wkt_dim),
+                        );
+                        Ok(geom_type)
+                    })
+                    .collect::<GeoArrowResult<HashSet<GeoParquetGeometryTypeAndDimension>>>()?;
+                self.geometry_types.extend(types);
+            }
+            _ => {}
+        };
 
         Ok(())
     }
@@ -154,6 +241,22 @@ impl ColumnInfo {
         } else {
             None
         };
+        let covering = if let Some(covering_name) = self.covering_name {
+            let bbox_covering = GeoParquetBboxCovering {
+                xmin: vec![covering_name.clone(), "xmin".to_string()],
+                ymin: vec![covering_name.clone(), "ymin".to_string()],
+                zmin: None,
+                xmax: vec![covering_name.clone(), "xmax".to_string()],
+                ymax: vec![covering_name.clone(), "ymax".to_string()],
+                zmax: None,
+            };
+            Some(GeoParquetCovering {
+                bbox: bbox_covering,
+            })
+        } else {
+            None
+        };
+
         let column_meta = GeoParquetColumnMetadata {
             encoding: self.encoding,
             geometry_types: self.geometry_types.into_iter().collect(),
@@ -162,9 +265,30 @@ impl ColumnInfo {
             edges,
             orientation: None,
             epoch: None,
-            covering: None,
+            covering,
         };
         (self.name, column_meta)
+    }
+}
+
+fn wkt_type_to_geoparquet_type(wkt_type: wkt::types::GeometryType) -> GeoParquetGeometryType {
+    match wkt_type {
+        wkt::types::GeometryType::Point => GeoParquetGeometryType::Point,
+        wkt::types::GeometryType::LineString => GeoParquetGeometryType::LineString,
+        wkt::types::GeometryType::Polygon => GeoParquetGeometryType::Polygon,
+        wkt::types::GeometryType::MultiPoint => GeoParquetGeometryType::MultiPoint,
+        wkt::types::GeometryType::MultiLineString => GeoParquetGeometryType::MultiLineString,
+        wkt::types::GeometryType::MultiPolygon => GeoParquetGeometryType::MultiPolygon,
+        wkt::types::GeometryType::GeometryCollection => GeoParquetGeometryType::GeometryCollection,
+    }
+}
+
+fn wkt_dim_to_geoarrow_dim(wkt_dim: wkt::types::Dimension) -> Dimension {
+    match wkt_dim {
+        wkt::types::Dimension::XY => Dimension::XY,
+        wkt::types::Dimension::XYZ => Dimension::XYZ,
+        wkt::types::Dimension::XYM => Dimension::XYM,
+        wkt::types::Dimension::XYZM => Dimension::XYZM,
     }
 }
 
@@ -190,12 +314,48 @@ impl GeoParquetMetadataBuilder {
                 let column_name = schema.field(col_idx).name().clone();
                 let geo_data_type = field.as_ref().try_into()?;
 
+                let column_encoding = options
+                    .column_properties
+                    .get(&column_name)
+                    .map_or(options.default_column_properties.encoding, |props| {
+                        props.encoding
+                    })
+                    .unwrap_or_default();
+
+                let generate_covering = options
+                    .column_properties
+                    .get(&column_name)
+                    .map_or(
+                        options.default_column_properties.generate_covering,
+                        |props| props.generate_covering,
+                    )
+                    .unwrap_or(false);
+
+                let covering_name = if generate_covering {
+                    let covering_name = options
+                        .column_properties
+                        .get(&column_name)
+                        .and_then(|props| props.covering_name.as_ref())
+                        .or(options.default_column_properties.covering_name.as_ref())
+                        .cloned();
+                    if let Some(covering_name) = covering_name {
+                        Some(covering_name)
+                    } else if INFERRED_PRIMARY_COLUMN_NAMES.contains(&column_name.as_str()) {
+                        Some("bbox".to_string())
+                    } else {
+                        Some(format!("{column_name}_bbox"))
+                    }
+                } else {
+                    None
+                };
+
                 let column_info = ColumnInfo::try_new(
                     column_name,
-                    options.encoding,
+                    column_encoding,
                     &geo_data_type,
                     geo_data_type.metadata(),
-                    options.crs_transform.as_ref(),
+                    options.crs_transform.as_deref(),
+                    covering_name,
                 )?;
 
                 columns.insert(col_idx, column_info);
@@ -238,7 +398,7 @@ impl GeoParquetMetadataBuilder {
                 .to_string()
         };
 
-        let output_schema = create_output_schema(schema, &columns);
+        let output_schema = create_output_schema(schema, &mut columns);
         Ok(Self {
             primary_column,
             columns,
@@ -327,9 +487,12 @@ pub(crate) fn get_geometry_types(
     geometry_types
 }
 
-fn create_output_schema(input_schema: &Schema, columns: &HashMap<usize, ColumnInfo>) -> SchemaRef {
+fn create_output_schema(
+    input_schema: &Schema,
+    columns: &mut HashMap<usize, ColumnInfo>,
+) -> SchemaRef {
     let mut fields = input_schema.fields().to_vec();
-    for (column_idx, column_info) in columns.iter() {
+    for (column_idx, column_info) in columns.iter_mut() {
         let existing_field = input_schema.field(*column_idx);
         let output_field = create_output_field(
             column_info,
@@ -338,6 +501,12 @@ fn create_output_schema(input_schema: &Schema, columns: &HashMap<usize, ColumnIn
             true,
         );
         fields[*column_idx] = output_field.into();
+
+        if let Some(covering_name) = column_info.covering_name.as_deref() {
+            let covering_field = create_covering_field(covering_name);
+            column_info.covering_field_idx = Some(fields.len());
+            fields.push(covering_field.into());
+        }
     }
 
     Arc::new(Schema::new_with_metadata(
@@ -360,6 +529,16 @@ fn create_output_field(column_info: &ColumnInfo, name: String, nullable: bool) -
             ga_type.to_field(name, nullable)
         }
     }
+}
+
+fn create_covering_field(covering_name: &str) -> Field {
+    let struct_fields = vec![
+        Field::new("xmin", DataType::Float64, false),
+        Field::new("ymin", DataType::Float64, false),
+        Field::new("xmax", DataType::Float64, false),
+        Field::new("ymax", DataType::Float64, false),
+    ];
+    Field::new(covering_name, DataType::Struct(struct_fields.into()), true)
 }
 
 #[cfg(test)]

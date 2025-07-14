@@ -8,7 +8,7 @@ use geoarrow_schema::{CoordType, GeoArrowType};
 use parquet::format::KeyValue;
 
 use crate::metadata::{GeoParquetColumnEncoding, GeoParquetMetadata};
-use crate::total_bounds::{BoundingRect, total_bounds};
+use crate::total_bounds::{BoundingRect, bounding_rect, total_bounds};
 use crate::writer::GeoParquetWriterOptions;
 use crate::writer::metadata::{ColumnInfo, GeoParquetMetadataBuilder};
 
@@ -48,7 +48,8 @@ impl GeoParquetRecordBatchEncoder {
     /// This [`RecordBatch`] must have the same schema as the [`Schema`] passed into
     /// [`GeoParquetRecordBatchEncoder::try_new`].
     pub fn encode_record_batch(&mut self, batch: &RecordBatch) -> GeoArrowResult<RecordBatch> {
-        encode_record_batch(batch, &mut self.metadata_builder)
+        let output_schema = self.target_schema();
+        encode_record_batch(batch, &mut self.metadata_builder, output_schema)
     }
 
     /// Convert this encoder into a [`GeoParquetMetadata`] object.
@@ -83,22 +84,36 @@ impl GeoParquetRecordBatchEncoder {
 pub(super) fn encode_record_batch(
     batch: &RecordBatch,
     metadata_builder: &mut GeoParquetMetadataBuilder,
+    output_schema: SchemaRef,
 ) -> GeoArrowResult<RecordBatch> {
-    let mut new_columns = batch.columns().to_vec();
+    // This is a vec of Option<ArrayRef> so that we can insert the new covering columns at the
+    // right indices, even if we iterate in a different order as before
+    let mut output_columns: Vec<Option<ArrayRef>> =
+        batch.columns().iter().map(|x| Some(x.clone())).collect();
+
+    output_columns.resize(output_schema.fields().len(), None);
     for (column_idx, column_info) in metadata_builder.columns.iter_mut() {
         let array = batch.column(*column_idx);
         let field = batch.schema_ref().field(*column_idx);
         column_info.update_geometry_types(array, field)?;
 
         let (encoded_column, array_bounds) = encode_column(array, field, column_info)?;
-        new_columns[*column_idx] = encoded_column;
+        output_columns[*column_idx] = Some(encoded_column);
+
+        if let Some(covering_field_idx) = column_info.covering_field_idx {
+            let covering = bounding_rect(from_arrow_array(array, field)?.as_ref())?;
+            output_columns[covering_field_idx] = Some(covering.into_array_ref());
+        }
 
         column_info.update_bbox(&array_bounds);
     }
 
     Ok(RecordBatch::try_new(
         metadata_builder.output_schema.clone(),
-        new_columns,
+        output_columns
+            .into_iter()
+            .map(|x| x.expect("Should have set all columns"))
+            .collect(),
     )?)
 }
 
