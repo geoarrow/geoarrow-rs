@@ -28,8 +28,18 @@ fn _intersects_impl<'a>(
     for (maybe_left, maybe_right) in left_array.iter().zip(right_array.iter()) {
         match (maybe_left, maybe_right) {
             (Some(left), Some(right)) => {
-                let left_geom = left?.to_geometry();
-                let right_geom = right?.to_geometry();
+                let left_geom =
+                    left?
+                        .try_to_geometry()
+                        .ok_or(GeoArrowError::IncorrectGeometryType(
+                            "geo crate does not support empty points.".to_string(),
+                        ))?;
+                let right_geom =
+                    right?
+                        .try_to_geometry()
+                        .ok_or(GeoArrowError::IncorrectGeometryType(
+                            "geo crate does not support empty points.".to_string(),
+                        ))?;
                 let intersects = left_geom.intersects(&right_geom);
                 builder.append_value(intersects);
             }
