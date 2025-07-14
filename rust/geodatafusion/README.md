@@ -216,7 +216,7 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 
 | Name                    | Implemented | Description                                                                                                                    |
 | ----------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| ST_Area                 |             | Returns the area of a polygonal geometry.                                                                                      |
+| ST_Area                 | ✅          | Returns the area of a polygonal geometry.                                                                                      |
 | ST_Azimuth              |             | Returns the north-based azimuth of a line between two points.                                                                  |
 | ST_Angle                |             | Returns the angle between two vectors defined by 3 or 4 points, or 2 lines.                                                    |
 | ST_ClosestPoint         |             | Returns the 2D point on g1 that is closest to g2. This is the first point of the shortest line from one geometry to the other. |
