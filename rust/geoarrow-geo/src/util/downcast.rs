@@ -1,5 +1,5 @@
 /// Two argument version of the `downcast_geoarrow_array!` macro.
-/// Downcast any combination of two [GeoArrowArray] to a concrete-typed array based on its [`GeoArrowType`].
+/// Downcast any combination of two [GeoArrowArray][geoarrow_array::GeoArrowArray] to a concrete-typed array based on its [`GeoArrowType`][geoarrow_schema::GeoArrowType].
 ///
 /// This is in private utils in geoarrow-geo because we don't yet have a stable API for this macro.
 macro_rules! downcast_geoarrow_array_two_args {
