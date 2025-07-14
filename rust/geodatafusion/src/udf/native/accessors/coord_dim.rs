@@ -15,7 +15,7 @@ use geoarrow_array::cast::AsGeoArrowArray;
 use geoarrow_schema::{Dimension, GeoArrowType};
 
 use crate::data_types::any_single_geometry_type_input;
-use crate::error::{GeoDataFusionError, GeoDataFusionResult};
+use crate::error::GeoDataFusionResult;
 
 #[derive(Debug)]
 pub struct CoordDim {
@@ -87,7 +87,7 @@ fn coord_dim_impl(args: ScalarFunctionArgs) -> GeoDataFusionResult<ColumnarValue
         .next()
         .unwrap();
     let field = &args.arg_fields[0];
-    let geo_array = from_arrow_array(&array, field).map_err(GeoDataFusionError::GeoArrow)?;
+    let geo_array = from_arrow_array(&array, field)?;
 
     macro_rules! iter_geom {
         ($cast_function:ident) => {{

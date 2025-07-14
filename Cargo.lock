@@ -1760,6 +1760,7 @@ dependencies = [
  "datafusion",
  "geo-traits 0.3.0",
  "geoarrow-array",
+ "geoarrow-geo",
  "geoarrow-schema",
  "geohash",
  "thiserror 1.0.69",
