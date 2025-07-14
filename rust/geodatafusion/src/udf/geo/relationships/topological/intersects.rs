@@ -172,9 +172,8 @@ mod test {
     use geoarrow_array::builder::PointBuilder;
     use geoarrow_schema::{Dimension, PointType};
 
-    use crate::udf::native::io::GeomFromText;
-
     use super::*;
+    use crate::udf::native::io::GeomFromText;
 
     #[tokio::test]
     async fn test_intersects_scalars_true() {
