@@ -58,7 +58,7 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_IsSimple         |             | Tests if a geometry has no points of self-intersection or self-tangency.                                                  |
 | ST_M                |             | Returns the M coordinate of a Point.                                                                                      |
 | ST_MemSize          |             | Returns the amount of memory space a geometry takes.                                                                      |
-| ST_NDims            |             | Returns the coordinate dimension of a geometry.                                                                           |
+| ST_NDims            | ✅          | Returns the coordinate dimension of a geometry.                                                                           |
 | ST_NPoints          |             | Returns the number of points (vertices) in a geometry.                                                                    |
 | ST_NRings           |             | Returns the number of rings in a polygonal geometry.                                                                      |
 | ST_NumGeometries    |             | Returns the number of elements in a geometry collection.                                                                  |
@@ -131,21 +131,21 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 
 #### Well-Known Text (WKT)
 
-| Name                 | Implemented | Description                                                                                                                                           |
-| -------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ST_BdPolyFromText    |             | Construct a Polygon given an arbitrary collection of closed linestrings as a MultiLineString Well-Known text representation.                          |
-| ST_BdMPolyFromText   |             | Construct a MultiPolygon given an arbitrary collection of closed linestrings as a MultiLineString text representation Well-Known text representation. |
-| ST_GeomCollFromText  |             | Makes a collection Geometry from collection WKT with the given SRID. If SRID is not given, it defaults to 0.                                          |
-| ST_GeomFromEWKT      |             | Return a specified ST_Geometry value from Extended Well-Known Text representation (EWKT).                                                             |
-| ST_GeometryFromText  |             | Return a specified ST_Geometry value from Well-Known Text representation (WKT). This is an alias name for ST_GeomFromText                             |
-| ST_GeomFromText      | ✅          | Return a specified ST_Geometry value from Well-Known Text representation (WKT).                                                                       |
-| ST_LineFromText      |             | Makes a Geometry from WKT representation with the given SRID. If SRID is not given, it defaults to 0.                                                 |
-| ST_MLineFromText     |             | Return a specified ST_MultiLineString value from WKT representation.                                                                                  |
-| ST_MPointFromText    |             | Makes a Geometry from WKT with the given SRID. If SRID is not given, it defaults to 0.                                                                |
-| ST_MPolyFromText     |             | Makes a MultiPolygon Geometry from WKT with the given SRID. If SRID is not given, it defaults to 0.                                                   |
-| ST_PointFromText     |             | Makes a point Geometry from WKT with the given SRID. If SRID is not given, it defaults to unknown.                                                    |
-| ST_PolygonFromText   |             | Makes a Geometry from WKT with the given SRID. If SRID is not given, it defaults to 0.                                                                |
-| ST_WKTToSQL          |             | Return a specified ST_Geometry value from Well-Known Text representation (WKT). This is an alias name for ST_GeomFromText                             |
+| Name                | Implemented | Description                                                                                                                                           |
+| ------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ST_BdPolyFromText   |             | Construct a Polygon given an arbitrary collection of closed linestrings as a MultiLineString Well-Known text representation.                          |
+| ST_BdMPolyFromText  |             | Construct a MultiPolygon given an arbitrary collection of closed linestrings as a MultiLineString text representation Well-Known text representation. |
+| ST_GeomCollFromText |             | Makes a collection Geometry from collection WKT with the given SRID. If SRID is not given, it defaults to 0.                                          |
+| ST_GeomFromEWKT     |             | Return a specified ST_Geometry value from Extended Well-Known Text representation (EWKT).                                                             |
+| ST_GeometryFromText |             | Return a specified ST_Geometry value from Well-Known Text representation (WKT). This is an alias name for ST_GeomFromText                             |
+| ST_GeomFromText     | ✅          | Return a specified ST_Geometry value from Well-Known Text representation (WKT).                                                                       |
+| ST_LineFromText     |             | Makes a Geometry from WKT representation with the given SRID. If SRID is not given, it defaults to 0.                                                 |
+| ST_MLineFromText    |             | Return a specified ST_MultiLineString value from WKT representation.                                                                                  |
+| ST_MPointFromText   |             | Makes a Geometry from WKT with the given SRID. If SRID is not given, it defaults to 0.                                                                |
+| ST_MPolyFromText    |             | Makes a MultiPolygon Geometry from WKT with the given SRID. If SRID is not given, it defaults to 0.                                                   |
+| ST_PointFromText    |             | Makes a point Geometry from WKT with the given SRID. If SRID is not given, it defaults to unknown.                                                    |
+| ST_PolygonFromText  |             | Makes a Geometry from WKT with the given SRID. If SRID is not given, it defaults to 0.                                                                |
+| ST_WKTToSQL         |             | Return a specified ST_Geometry value from Well-Known Text representation (WKT). This is an alias name for ST_GeomFromText                             |
 
 #### Well-Known Binary (WKB)
 
@@ -193,20 +193,20 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 
 #### Other Formats
 
-| Name                 | Implemented | Description                                                                           |
-| -------------------- | ----------- | ------------------------------------------------------------------------------------- |
-| ST_AsEncodedPolyline |             | Returns an Encoded Polyline from a LineString geometry.                               |
-| ST_AsFlatGeobuf      |             | Return a FlatGeobuf representation of a set of rows.                                  |
-| ST_AsGeobuf          |             | Return a Geobuf representation of a set of rows.                                      |
-| ST_AsGeoJSON         |             | Return a geometry or feature in GeoJSON format.                                       |
-| ST_AsGML             |             | Return the geometry as a GML version 2 or 3 element.                                  |
-| ST_AsKML             |             | Return the geometry as a KML element.                                                 |
-| ST_AsLatLonText      |             | Return the Degrees, Minutes, Seconds representation of the given point.               |
-| ST_AsMVTGeom         |             | Transforms a geometry into the coordinate space of a MVT tile.                        |
-| ST_AsMVT             |             | Aggregate function returning a MVT representation of a set of rows.                   |
-| ST_AsSVG             |             | Returns SVG path data for a geometry.                                                 |
-| ST_AsTWKB            |             | Returns the geometry as TWKB, aka "Tiny Well-Known Binary"                            |
-| ST_GeoHash           | ✅          | Return a GeoHash representation of the geometry.                                      |
+| Name                 | Implemented | Description                                                             |
+| -------------------- | ----------- | ----------------------------------------------------------------------- |
+| ST_AsEncodedPolyline |             | Returns an Encoded Polyline from a LineString geometry.                 |
+| ST_AsFlatGeobuf      |             | Return a FlatGeobuf representation of a set of rows.                    |
+| ST_AsGeobuf          |             | Return a Geobuf representation of a set of rows.                        |
+| ST_AsGeoJSON         |             | Return a geometry or feature in GeoJSON format.                         |
+| ST_AsGML             |             | Return the geometry as a GML version 2 or 3 element.                    |
+| ST_AsKML             |             | Return the geometry as a KML element.                                   |
+| ST_AsLatLonText      |             | Return the Degrees, Minutes, Seconds representation of the given point. |
+| ST_AsMVTGeom         |             | Transforms a geometry into the coordinate space of a MVT tile.          |
+| ST_AsMVT             |             | Aggregate function returning a MVT representation of a set of rows.     |
+| ST_AsSVG             |             | Returns SVG path data for a geometry.                                   |
+| ST_AsTWKB            |             | Returns the geometry as TWKB, aka "Tiny Well-Known Binary"              |
+| ST_GeoHash           | ✅          | Return a GeoHash representation of the geometry.                        |
 
 ### Operators
 
