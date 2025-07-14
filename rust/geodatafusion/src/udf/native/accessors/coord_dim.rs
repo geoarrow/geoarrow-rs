@@ -195,9 +195,8 @@ mod test {
     use arrow_array::types::UInt8Type;
     use datafusion::prelude::SessionContext;
 
-    use crate::udf::native::io::GeomFromText;
-
     use super::*;
+    use crate::udf::native::io::GeomFromText;
 
     #[tokio::test]
     async fn test_coord_dim() {
