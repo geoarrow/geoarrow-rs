@@ -1,4 +1,3 @@
-
 [package]
 name = "geoarrow-array"
 version = { workspace = true }

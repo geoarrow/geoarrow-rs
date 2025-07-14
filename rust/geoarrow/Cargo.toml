@@ -1,0 +1,14 @@
+[package]
+name = "geoarrow"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+description = "GeoArrow amalgamation crate."
+categories = { workspace = true }
+rust-version = { workspace = true }
+
+[dependencies]
+geoarrow-array = { workspace = true }
+geoarrow-schema = { workspace = true }
