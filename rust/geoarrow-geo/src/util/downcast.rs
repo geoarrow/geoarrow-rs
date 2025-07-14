@@ -943,10 +943,10 @@ pub(crate) use downcast_geoarrow_array_two_args;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     use geoarrow_array::GeoArrowArray;
     use geoarrow_schema::error::GeoArrowResult;
+
+    use super::*;
 
     // Ensure macro gets called, so an error will appear to ensure exhaustiveness
     #[allow(dead_code)]
