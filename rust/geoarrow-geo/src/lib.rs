@@ -4,6 +4,7 @@ mod area;
 mod convex_hull;
 mod intersects;
 mod simplify;
+pub(crate) mod util;
 
 pub use area::{signed_area, unsigned_area};
 pub use convex_hull::convex_hull;
