@@ -1,6 +1,6 @@
 //! User-defined functions that wrap native Rust implementations.
 
-// mod accessors;
+pub mod accessors;
 // mod bounding_box;
 pub mod constructors;
 pub mod io;
