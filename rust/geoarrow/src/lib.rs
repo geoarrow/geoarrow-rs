@@ -6,7 +6,7 @@
 //! with a more well-defined scope. Users may want to depend on the subcrates manually:
 //!
 //! - [`geoarrow_array`]: GeoArrow array definitions.
-//! - [`geoarrow_cast`]: Functions for converting from one GeoArrow geometry type to another.
+//! - [`geoarrow_cast`](https://docs.rs/geoarrow-cast/latest/geoarrow_cast/): Functions for converting from one GeoArrow geometry type to another.
 //! - [`geoarrow_schema`]: GeoArrow geometry type and metadata definitions.
 //!
 //! This crate is an "amalgam" crate, which just re-exports types from the underlying sub-crates.
