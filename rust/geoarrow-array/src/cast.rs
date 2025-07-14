@@ -769,52 +769,52 @@ pub mod __private {
 /// PR.
 #[macro_export]
 macro_rules! downcast_geoarrow_array {
-    ($array:ident, $fn:expr) => {
+    ($array:ident, $fn:expr $(, $args:expr )* $(,)?) => {
         match $array.data_type() {
             $crate::cast::__private::GeoArrowType::Point(_) => {
-                $fn($crate::cast::AsGeoArrowArray::as_point($array))
+                $fn($crate::cast::AsGeoArrowArray::as_point($array) $(, $args )*)
             }
             $crate::cast::__private::GeoArrowType::LineString(_) => {
-                $fn($crate::cast::AsGeoArrowArray::as_line_string($array))
+                $fn($crate::cast::AsGeoArrowArray::as_line_string($array) $(, $args )*)
             }
             $crate::cast::__private::GeoArrowType::Polygon(_) => {
-                $fn($crate::cast::AsGeoArrowArray::as_polygon($array))
+                $fn($crate::cast::AsGeoArrowArray::as_polygon($array) $(, $args )*)
             }
             $crate::cast::__private::GeoArrowType::MultiPoint(_) => {
-                $fn($crate::cast::AsGeoArrowArray::as_multi_point($array))
+                $fn($crate::cast::AsGeoArrowArray::as_multi_point($array) $(, $args )*)
             }
             $crate::cast::__private::GeoArrowType::MultiLineString(_) => {
-                $fn($crate::cast::AsGeoArrowArray::as_multi_line_string($array))
+                $fn($crate::cast::AsGeoArrowArray::as_multi_line_string($array) $(, $args )*)
             }
             $crate::cast::__private::GeoArrowType::MultiPolygon(_) => {
-                $fn($crate::cast::AsGeoArrowArray::as_multi_polygon($array))
+                $fn($crate::cast::AsGeoArrowArray::as_multi_polygon($array) $(, $args )*)
             }
             $crate::cast::__private::GeoArrowType::Geometry(_) => {
-                $fn($crate::cast::AsGeoArrowArray::as_geometry($array))
+                $fn($crate::cast::AsGeoArrowArray::as_geometry($array) $(, $args )*)
             }
             $crate::cast::__private::GeoArrowType::GeometryCollection(_) => $fn(
-                $crate::cast::AsGeoArrowArray::as_geometry_collection($array),
+                $crate::cast::AsGeoArrowArray::as_geometry_collection($array) $(, $args )*
             ),
             $crate::cast::__private::GeoArrowType::Rect(_) => {
-                $fn($crate::cast::AsGeoArrowArray::as_rect($array))
+                $fn($crate::cast::AsGeoArrowArray::as_rect($array) $(, $args )*)
             }
             $crate::cast::__private::GeoArrowType::Wkb(_) => {
-                $fn($crate::cast::AsGeoArrowArray::as_wkb::<i32>($array))
+                $fn($crate::cast::AsGeoArrowArray::as_wkb::<i32>($array) $(, $args )*)
             }
             $crate::cast::__private::GeoArrowType::LargeWkb(_) => {
-                $fn($crate::cast::AsGeoArrowArray::as_wkb::<i64>($array))
+                $fn($crate::cast::AsGeoArrowArray::as_wkb::<i64>($array) $(, $args )*)
             }
             $crate::cast::__private::GeoArrowType::WkbView(_) => {
-                $fn($crate::cast::AsGeoArrowArray::as_wkb_view($array))
+                $fn($crate::cast::AsGeoArrowArray::as_wkb_view($array) $(, $args )*)
             }
             $crate::cast::__private::GeoArrowType::Wkt(_) => {
-                $fn($crate::cast::AsGeoArrowArray::as_wkt::<i32>($array))
+                $fn($crate::cast::AsGeoArrowArray::as_wkt::<i32>($array) $(, $args )*)
             }
             $crate::cast::__private::GeoArrowType::LargeWkt(_) => {
-                $fn($crate::cast::AsGeoArrowArray::as_wkt::<i64>($array))
+                $fn($crate::cast::AsGeoArrowArray::as_wkt::<i64>($array) $(, $args )*)
             }
             $crate::cast::__private::GeoArrowType::WktView(_) => {
-                $fn($crate::cast::AsGeoArrowArray::as_wkt_view($array))
+                $fn($crate::cast::AsGeoArrowArray::as_wkt_view($array) $(, $args )*)
             }
         }
     };
@@ -822,6 +822,8 @@ macro_rules! downcast_geoarrow_array {
 
 #[cfg(test)]
 mod test {
+    use std::sync::Arc;
+
     use geoarrow_schema::{CoordType, Dimension, WkbType};
 
     use super::*;
@@ -1207,5 +1209,22 @@ mod test {
             .unwrap();
         let wkb_type = WkbType::new(geo_arr.data_type().metadata().clone());
         Ok(WkbBuilder::from_nullable_geometries(geoms.as_slice(), wkb_type).finish())
+    }
+
+    // Verify that this compiles with the macro
+    #[test]
+    fn test_downcast_macro_with_param() {
+        let arr =
+            Arc::new(test::geometry::array(Default::default(), false)) as Arc<dyn GeoArrowArray>;
+        let arr_ref = arr.as_ref();
+        let x = downcast_geoarrow_array!(arr_ref, impl_inner_function_with_param, 1.0).unwrap();
+        assert_eq!(x, 1.0);
+    }
+
+    fn impl_inner_function_with_param<'a>(
+        _geo_arr: &'a impl GeoArrowArrayAccessor<'a>,
+        param: f64,
+    ) -> GeoArrowResult<f64> {
+        Ok(param)
     }
 }
