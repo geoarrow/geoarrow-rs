@@ -85,9 +85,8 @@ mod test {
     use arrow_array::types::Float64Type;
     use datafusion::prelude::SessionContext;
 
-    use crate::udf::native::io::GeomFromText;
-
     use super::*;
+    use crate::udf::native::io::GeomFromText;
 
     #[tokio::test]
     async fn test() {
