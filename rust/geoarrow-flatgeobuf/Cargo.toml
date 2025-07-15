@@ -10,22 +10,34 @@ categories = { workspace = true }
 rust-version = { workspace = true }
 
 [features]
-# async = ["dep:futures", "dep:http-range-client"]
+async = [
+    "dep:futures",
+    "dep:http-range-client",
+    "flatgeobuf/http",
+    "dep:async-stream",
+]
+object_store = ["async", "dep:async-trait", "dep:bytes", "dep:object_store"]
 
 [dependencies]
 arrow-array = { workspace = true }
 arrow-cast = { workspace = true }
 arrow-schema = { workspace = true, features = ["canonical_extension_types"] }
+async-stream = { workspace = true, optional = true }
+async-trait = { workspace = true, optional = true }
+bytes = { workspace = true, optional = true }
 chrono = { workspace = true }
 flatgeobuf = { workspace = true }
-# futures = { workspace = true, optional = true }
+futures = { workspace = true, optional = true }
 geo-traits = { workspace = true }
 geoarrow-array = { workspace = true, features = ["geozero"] }
 geoarrow-schema = { workspace = true }
 geozero = { workspace = true }
-# http-range-client = { workspace = true, optional = true, default-features = false }
+http-range-client = { workspace = true, optional = true, default-features = false }
+object_store = { workspace = true, optional = true }
 
 [dev-dependencies]
 arrow-array = { workspace = true }
 arrow-cast = { workspace = true, features = ["prettyprint"] }
+object_store = { workspace = true }
+tokio = { workspace = true, features = ["macros", "fs", "rt-multi-thread"] }
 wkt = { workspace = true }

@@ -116,7 +116,7 @@ pub struct FlatGeobufRecordBatchIterator<R, S> {
 }
 
 impl<R, S> FlatGeobufRecordBatchIterator<R, S> {
-    pub fn output_schema(&self) -> SchemaRef {
+    fn output_schema(&self) -> SchemaRef {
         let mut fields = self.properties_schema.fields().to_vec();
         fields.push(self.geometry_type.to_field("geometry", true).into());
         Arc::new(Schema::new_with_metadata(
@@ -137,7 +137,6 @@ impl<R: Read> FlatGeobufRecordBatchIterator<R, NotSeekable> {
             batch_size,
         );
 
-        // self.selection.skip(n)
         let mut row_count = 0;
         loop {
             if row_count >= self.batch_size {
