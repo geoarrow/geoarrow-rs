@@ -131,7 +131,7 @@ pub(super) fn parse_header(
     prefer_view_types: bool,
 ) -> GeoArrowResult<(GeoArrowType, SchemaRef)> {
     if header.has_t() | header.has_tm() {
-        return Err(GeoArrowError::General(
+        return Err(GeoArrowError::FlatGeobuf(
             "FlatGeobuf t dimension is not supported".to_string(),
         ));
     }
@@ -171,9 +171,11 @@ pub(super) fn parse_header(
         flatgeobuf::GeometryType::Unknown => GeometryType::new(metadata)
             .with_coord_type(coord_type)
             .into(),
-        _ => GeoArrowError::FlatGeobuf(format!(
-            "Unsupported FlatGeobuf geometry type: {geometry_type:?}",
-        )),
+        _ => {
+            return Err(GeoArrowError::FlatGeobuf(format!(
+                "Unsupported FlatGeobuf geometry type: {geometry_type:?}",
+            )));
+        }
     };
     Ok((data_type, properties_schema))
 }
