@@ -19,7 +19,7 @@ def read_shapefile(
     The returned Arrow table will have geometry information in native GeoArrow encoding.
 
     Args:
-        shp_file: the path to the `.shp` file
+        shp_path: the path to the `.shp` file
 
     Other args:
         batch_size: the number of rows to include in each internal batch of the table.

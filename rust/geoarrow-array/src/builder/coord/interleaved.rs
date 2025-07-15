@@ -2,9 +2,9 @@ use core::f64;
 
 use geo_traits::{CoordTrait, PointTrait};
 use geoarrow_schema::Dimension;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 use crate::array::InterleavedCoordBuffer;
-use crate::error::{GeoArrowError, Result};
 
 /// The GeoArrow equivalent to `Vec<Coord>`: a mutable collection of coordinates.
 ///
@@ -31,10 +31,10 @@ impl InterleavedCoordBufferBuilder {
         }
     }
 
-    /// Initialize a buffer of a given length with all coordinates set to 0.0
-    pub fn initialize(len: usize, dim: Dimension) -> Self {
+    /// Initialize a buffer of a given length with all coordinates set to the given value
+    pub fn initialize(len: usize, dim: Dimension, value: f64) -> Self {
         Self {
-            coords: vec![0.0f64; len * dim.size()],
+            coords: vec![value; len * dim.size()],
             dim,
         }
     }
@@ -92,13 +92,13 @@ impl InterleavedCoordBufferBuilder {
     /// ## Errors
     ///
     /// - If the added coordinate does not have the same dimension as the coordinate buffer.
-    pub fn try_push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+    pub fn try_push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> GeoArrowResult<()> {
         // Note duplicated across buffer types; consider refactoring
         match self.dim {
             Dimension::XY => match coord.dim() {
                 geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => {}
                 d => {
-                    return Err(GeoArrowError::General(format!(
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
                         "coord dimension must be XY for this buffer; got {d:?}."
                     )));
                 }
@@ -106,7 +106,7 @@ impl InterleavedCoordBufferBuilder {
             Dimension::XYZ => match coord.dim() {
                 geo_traits::Dimensions::Xyz | geo_traits::Dimensions::Unknown(3) => {}
                 d => {
-                    return Err(GeoArrowError::General(format!(
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
                         "coord dimension must be XYZ for this buffer; got {d:?}."
                     )));
                 }
@@ -114,7 +114,7 @@ impl InterleavedCoordBufferBuilder {
             Dimension::XYM => match coord.dim() {
                 geo_traits::Dimensions::Xym | geo_traits::Dimensions::Unknown(3) => {}
                 d => {
-                    return Err(GeoArrowError::General(format!(
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
                         "coord dimension must be XYM for this buffer; got {d:?}."
                     )));
                 }
@@ -122,7 +122,7 @@ impl InterleavedCoordBufferBuilder {
             Dimension::XYZM => match coord.dim() {
                 geo_traits::Dimensions::Xyzm | geo_traits::Dimensions::Unknown(4) => {}
                 d => {
-                    return Err(GeoArrowError::General(format!(
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
                         "coord dimension must be XYZM for this buffer; got {d:?}."
                     )));
                 }
@@ -140,13 +140,13 @@ impl InterleavedCoordBufferBuilder {
         Ok(())
     }
 
-    /// Push a valid coordinate with NaN values
+    /// Push a valid coordinate with the given constant value
     ///
     /// Used in the case of point and rect arrays, where a `null` array value still needs to have
     /// space allocated for it.
-    pub fn push_nan_coord(&mut self) {
+    pub(crate) fn push_constant(&mut self, value: f64) {
         for _ in 0..self.dim.size() {
-            self.coords.push(f64::NAN);
+            self.coords.push(value);
         }
     }
 
@@ -155,7 +155,7 @@ impl InterleavedCoordBufferBuilder {
     /// ## Panics
     ///
     /// - If the added point does not have the same dimension as the coordinate buffer.
-    pub fn push_point(&mut self, point: &impl PointTrait<T = f64>) {
+    pub(crate) fn push_point(&mut self, point: &impl PointTrait<T = f64>) {
         self.try_push_point(point).unwrap()
     }
 
@@ -164,11 +164,14 @@ impl InterleavedCoordBufferBuilder {
     /// ## Errors
     ///
     /// - If the added point does not have the same dimension as the coordinate buffer.
-    pub fn try_push_point(&mut self, point: &impl PointTrait<T = f64>) -> Result<()> {
+    pub(crate) fn try_push_point(
+        &mut self,
+        point: &impl PointTrait<T = f64>,
+    ) -> GeoArrowResult<()> {
         if let Some(coord) = point.coord() {
             self.try_push_coord(&coord)?;
         } else {
-            self.push_nan_coord();
+            self.push_constant(f64::NAN);
         };
         Ok(())
     }
@@ -177,18 +180,17 @@ impl InterleavedCoordBufferBuilder {
     pub fn from_coords<'a>(
         coords: impl ExactSizeIterator<Item = &'a (impl CoordTrait<T = f64> + 'a)>,
         dim: Dimension,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let mut buffer = InterleavedCoordBufferBuilder::with_capacity(coords.len(), dim);
         for coord in coords {
             buffer.push_coord(coord);
         }
         Ok(buffer)
     }
-}
 
-impl From<InterleavedCoordBufferBuilder> for InterleavedCoordBuffer {
-    fn from(value: InterleavedCoordBufferBuilder) -> Self {
-        InterleavedCoordBuffer::new(value.coords.into(), value.dim)
+    /// Consume the builder and convert to an immutable [`InterleavedCoordBuffer`]
+    pub fn finish(self) -> InterleavedCoordBuffer {
+        InterleavedCoordBuffer::new(self.coords.into(), self.dim)
     }
 }
 

@@ -13,12 +13,12 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_MakeEnvelope       |             | Creates a rectangular Polygon from minimum and maximum coordinates.                                                        |
 | ST_MakeLine           |             | Creates a LineString from Point, MultiPoint, or LineString geometries.                                                     |
 | ST_MakePoint          | ✅          | Creates a 2D, 3DZ or 4D Point.                                                                                             |
-| ST_MakePointM         |             | Creates a Point from X, Y and M values.                                                                                    |
+| ST_MakePointM         | ✅          | Creates a Point from X, Y and M values.                                                                                    |
 | ST_MakePolygon        |             | Creates a Polygon from a shell and optional list of holes.                                                                 |
 | ST_Point              | ✅          | Creates a Point with X, Y and SRID values.                                                                                 |
-| ST_PointZ             |             | Creates a Point with X, Y, Z and SRID values.                                                                              |
-| ST_PointM             |             | Creates a Point with X, Y, M and SRID values.                                                                              |
-| ST_PointZM            |             | Creates a Point with X, Y, Z, M and SRID values.                                                                           |
+| ST_PointZ             | ✅          | Creates a Point with X, Y, Z and SRID values.                                                                              |
+| ST_PointM             | ✅          | Creates a Point with X, Y, M and SRID values.                                                                              |
+| ST_PointZM            | ✅          | Creates a Point with X, Y, Z, M and SRID values.                                                                           |
 | ST_Polygon            |             | Creates a Polygon from a LineString with a specified SRID.                                                                 |
 | ST_TileEnvelope       |             | Creates a rectangular Polygon in Web Mercator (SRID:3857) using the XYZ tile system.                                       |
 | ST_HexagonGrid        |             | Returns a set of hexagons and cell indices that completely cover the bounds of the geometry argument.                      |
@@ -56,9 +56,9 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_IsPolygonCW      |             | Tests if Polygons have exterior rings oriented clockwise and interior rings oriented counter-clockwise.                   |
 | ST_IsRing           |             | Tests if a LineString is closed and simple.                                                                               |
 | ST_IsSimple         |             | Tests if a geometry has no points of self-intersection or self-tangency.                                                  |
-| ST_M                |             | Returns the M coordinate of a Point.                                                                                      |
+| ST_M                | ✅          | Returns the M coordinate of a Point.                                                                                      |
 | ST_MemSize          |             | Returns the amount of memory space a geometry takes.                                                                      |
-| ST_NDims            |             | Returns the coordinate dimension of a geometry.                                                                           |
+| ST_NDims            | ✅          | Returns the coordinate dimension of a geometry.                                                                           |
 | ST_NPoints          |             | Returns the number of points (vertices) in a geometry.                                                                    |
 | ST_NRings           |             | Returns the number of rings in a polygonal geometry.                                                                      |
 | ST_NumGeometries    |             | Returns the number of elements in a geometry collection.                                                                  |
@@ -71,9 +71,9 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_Points           |             | Returns a MultiPoint containing the coordinates of a geometry.                                                            |
 | ST_StartPoint       | ✅          | Returns the first point of a LineString.                                                                                  |
 | ST_Summary          |             | Returns a text summary of the contents of a geometry.                                                                     |
-| ST_X                |             | Returns the X coordinate of a Point.                                                                                      |
-| ST_Y                |             | Returns the Y coordinate of a Point.                                                                                      |
-| ST_Z                |             | Returns the Z coordinate of a Point.                                                                                      |
+| ST_X                | ✅          | Returns the X coordinate of a Point.                                                                                      |
+| ST_Y                | ✅          | Returns the Y coordinate of a Point.                                                                                      |
+| ST_Z                | ✅          | Returns the Z coordinate of a Point.                                                                                      |
 | ST_Zmflag           |             | Returns a code indicating the ZM coordinate dimension of a geometry.                                                      |
 | ST_HasZ             |             | Checks if a geometry has a Z dimension.                                                                                   |
 | ST_HasM             |             | Checks if a geometry has an M (measure) dimension.                                                                        |
@@ -131,21 +131,21 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 
 #### Well-Known Text (WKT)
 
-| Name                 | Implemented | Description                                                                                                                                           |
-| -------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ST_BdPolyFromText    |             | Construct a Polygon given an arbitrary collection of closed linestrings as a MultiLineString Well-Known text representation.                          |
-| ST_BdMPolyFromText   |             | Construct a MultiPolygon given an arbitrary collection of closed linestrings as a MultiLineString text representation Well-Known text representation. |
-| ST_GeomCollFromText  |             | Makes a collection Geometry from collection WKT with the given SRID. If SRID is not given, it defaults to 0.                                          |
-| ST_GeomFromEWKT      |             | Return a specified ST_Geometry value from Extended Well-Known Text representation (EWKT).                                                             |
-| ST_GeometryFromText  |             | Return a specified ST_Geometry value from Well-Known Text representation (WKT). This is an alias name for ST_GeomFromText                             |
-| ST_GeomFromText      | ✅          | Return a specified ST_Geometry value from Well-Known Text representation (WKT).                                                                       |
-| ST_LineFromText      |             | Makes a Geometry from WKT representation with the given SRID. If SRID is not given, it defaults to 0.                                                 |
-| ST_MLineFromText     |             | Return a specified ST_MultiLineString value from WKT representation.                                                                                  |
-| ST_MPointFromText    |             | Makes a Geometry from WKT with the given SRID. If SRID is not given, it defaults to 0.                                                                |
-| ST_MPolyFromText     |             | Makes a MultiPolygon Geometry from WKT with the given SRID. If SRID is not given, it defaults to 0.                                                   |
-| ST_PointFromText     |             | Makes a point Geometry from WKT with the given SRID. If SRID is not given, it defaults to unknown.                                                    |
-| ST_PolygonFromText   |             | Makes a Geometry from WKT with the given SRID. If SRID is not given, it defaults to 0.                                                                |
-| ST_WKTToSQL          |             | Return a specified ST_Geometry value from Well-Known Text representation (WKT). This is an alias name for ST_GeomFromText                             |
+| Name                | Implemented | Description                                                                                                                                           |
+| ------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ST_BdPolyFromText   |             | Construct a Polygon given an arbitrary collection of closed linestrings as a MultiLineString Well-Known text representation.                          |
+| ST_BdMPolyFromText  |             | Construct a MultiPolygon given an arbitrary collection of closed linestrings as a MultiLineString text representation Well-Known text representation. |
+| ST_GeomCollFromText |             | Makes a collection Geometry from collection WKT with the given SRID. If SRID is not given, it defaults to 0.                                          |
+| ST_GeomFromEWKT     |             | Return a specified ST_Geometry value from Extended Well-Known Text representation (EWKT).                                                             |
+| ST_GeometryFromText |             | Return a specified ST_Geometry value from Well-Known Text representation (WKT). This is an alias name for ST_GeomFromText                             |
+| ST_GeomFromText     | ✅          | Return a specified ST_Geometry value from Well-Known Text representation (WKT).                                                                       |
+| ST_LineFromText     |             | Makes a Geometry from WKT representation with the given SRID. If SRID is not given, it defaults to 0.                                                 |
+| ST_MLineFromText    |             | Return a specified ST_MultiLineString value from WKT representation.                                                                                  |
+| ST_MPointFromText   |             | Makes a Geometry from WKT with the given SRID. If SRID is not given, it defaults to 0.                                                                |
+| ST_MPolyFromText    |             | Makes a MultiPolygon Geometry from WKT with the given SRID. If SRID is not given, it defaults to 0.                                                   |
+| ST_PointFromText    |             | Makes a point Geometry from WKT with the given SRID. If SRID is not given, it defaults to unknown.                                                    |
+| ST_PolygonFromText  |             | Makes a Geometry from WKT with the given SRID. If SRID is not given, it defaults to 0.                                                                |
+| ST_WKTToSQL         |             | Return a specified ST_Geometry value from Well-Known Text representation (WKT). This is an alias name for ST_GeomFromText                             |
 
 #### Well-Known Binary (WKB)
 
@@ -193,30 +193,51 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 
 #### Other Formats
 
-| Name                 | Implemented | Description                                                                           |
-| -------------------- | ----------- | ------------------------------------------------------------------------------------- |
-| ST_AsEncodedPolyline |             | Returns an Encoded Polyline from a LineString geometry.                               |
-| ST_AsFlatGeobuf      |             | Return a FlatGeobuf representation of a set of rows.                                  |
-| ST_AsGeobuf          |             | Return a Geobuf representation of a set of rows.                                      |
-| ST_AsGeoJSON         |             | Return a geometry or feature in GeoJSON format.                                       |
-| ST_AsGML             |             | Return the geometry as a GML version 2 or 3 element.                                  |
-| ST_AsKML             |             | Return the geometry as a KML element.                                                 |
-| ST_AsLatLonText      |             | Return the Degrees, Minutes, Seconds representation of the given point.               |
-| ST_AsMVTGeom         |             | Transforms a geometry into the coordinate space of a MVT tile.                        |
-| ST_AsMVT             |             | Aggregate function returning a MVT representation of a set of rows.                   |
-| ST_AsSVG             |             | Returns SVG path data for a geometry.                                                 |
-| ST_AsTWKB            |             | Returns the geometry as TWKB, aka "Tiny Well-Known Binary"                            |
-| ST_GeoHash           | ✅          | Return a GeoHash representation of the geometry.                                      |
+| Name                 | Implemented | Description                                                             |
+| -------------------- | ----------- | ----------------------------------------------------------------------- |
+| ST_AsEncodedPolyline |             | Returns an Encoded Polyline from a LineString geometry.                 |
+| ST_AsFlatGeobuf      |             | Return a FlatGeobuf representation of a set of rows.                    |
+| ST_AsGeobuf          |             | Return a Geobuf representation of a set of rows.                        |
+| ST_AsGeoJSON         |             | Return a geometry or feature in GeoJSON format.                         |
+| ST_AsGML             |             | Return the geometry as a GML version 2 or 3 element.                    |
+| ST_AsKML             |             | Return the geometry as a KML element.                                   |
+| ST_AsLatLonText      |             | Return the Degrees, Minutes, Seconds representation of the given point. |
+| ST_AsMVTGeom         |             | Transforms a geometry into the coordinate space of a MVT tile.          |
+| ST_AsMVT             |             | Aggregate function returning a MVT representation of a set of rows.     |
+| ST_AsSVG             |             | Returns SVG path data for a geometry.                                   |
+| ST_AsTWKB            |             | Returns the geometry as TWKB, aka "Tiny Well-Known Binary"              |
+| ST_GeoHash           | ✅          | Return a GeoHash representation of the geometry.                        |
 
 ### Operators
 
 ### Spatial Relationships
 
+#### Topological Relationships
+
+| Name                     | Implemented | Description                                                                                                                             |
+| ------------------------ | ----------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| ST_3DIntersects          |             | Tests if two geometries spatially intersect in 3D - only for points, linestrings, polygons, polyhedral surface (area).                  |
+| ST_Contains              | ✅          | Tests if every point of B lies in A, and their interiors have a point in common.                                                        |
+| ST_ContainsProperly      |             | Tests if every point of B lies in the interior of A.                                                                                    |
+| ST_CoveredBy             | ✅          | Tests if every point of A lies in B.                                                                                                    |
+| ST_Covers                | ✅          | Tests if every point of B lies in A.                                                                                                    |
+| ST_Crosses               | ✅          | Tests if two geometries have some, but not all, interior points in common.                                                              |
+| ST_Disjoint              | ✅          | Tests if two geometries have no points in common.                                                                                       |
+| ST_Equals                | ✅          | Tests if two geometries include the same set of points.                                                                                 |
+| ST_Intersects            | ✅          | Tests if two geometries intersect (they have at least one point in common).                                                             |
+| ST_LineCrossingDirection |             | Returns a number indicating the crossing behavior of two LineStrings.                                                                   |
+| ST_OrderingEquals        |             | Tests if two geometries represent the same geometry and have points in the same directional order.                                      |
+| ST_Overlaps              | ✅          | Tests if two geometries have the same dimension and intersect, but each has at least one point not in the other.                        |
+| ST_Relate                |             | Tests if two geometries have a topological relationship matching an Intersection Matrix pattern, or computes their Intersection Matrix. |
+| ST_RelateMatch           |             | Tests if a DE-9IM Intersection Matrix matches an Intersection Matrix pattern.                                                           |
+| ST_Touches               | ✅          | Tests if two geometries have at least one point in common, but their interiors do not intersect.                                        |
+| ST_Within                | ✅          | Tests if every point of A lies in B, and their interiors have a point in common.                                                        |
+
 ### Measurement Functions
 
 | Name                    | Implemented | Description                                                                                                                    |
 | ----------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| ST_Area                 |             | Returns the area of a polygonal geometry.                                                                                      |
+| ST_Area                 | ✅          | Returns the area of a polygonal geometry.                                                                                      |
 | ST_Azimuth              |             | Returns the north-based azimuth of a line between two points.                                                                  |
 | ST_Angle                |             | Returns the angle between two vectors defined by 3 or 4 points, or 2 lines.                                                    |
 | ST_ClosestPoint         |             | Returns the 2D point on g1 that is closest to g2. This is the first point of the shortest line from one geometry to the other. |

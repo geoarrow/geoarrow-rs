@@ -2,7 +2,8 @@ use pyo3::exceptions::{PyException, PyIOError, PyTypeError, PyValueError};
 use pyo3::prelude::*;
 
 pub enum PyGeoArrowError {
-    GeoArrowError(geoarrow::error::GeoArrowError),
+    ParquetError(parquet::errors::ParquetError),
+    GeoArrowError(geoarrow_schema::error::GeoArrowError),
     IOError(std::io::Error),
     PyArrowError(pyo3_arrow::error::PyArrowError),
     PyErr(PyErr),
@@ -17,6 +18,7 @@ pub enum PyGeoArrowError {
 impl From<PyGeoArrowError> for PyErr {
     fn from(error: PyGeoArrowError) -> Self {
         match error {
+            PyGeoArrowError::ParquetError(err) => PyException::new_err(err.to_string()),
             PyGeoArrowError::GeoArrowError(err) => PyException::new_err(err.to_string()),
             PyGeoArrowError::IOError(err) => PyIOError::new_err(err.to_string()),
             PyGeoArrowError::PyErr(err) => err,
@@ -31,8 +33,14 @@ impl From<PyGeoArrowError> for PyErr {
     }
 }
 
-impl From<geoarrow::error::GeoArrowError> for PyGeoArrowError {
-    fn from(other: geoarrow::error::GeoArrowError) -> Self {
+impl From<parquet::errors::ParquetError> for PyGeoArrowError {
+    fn from(value: parquet::errors::ParquetError) -> Self {
+        Self::ParquetError(value)
+    }
+}
+
+impl From<geoarrow_schema::error::GeoArrowError> for PyGeoArrowError {
+    fn from(other: geoarrow_schema::error::GeoArrowError) -> Self {
         Self::GeoArrowError(other)
     }
 }

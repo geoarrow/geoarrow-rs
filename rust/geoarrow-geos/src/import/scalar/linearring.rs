@@ -1,5 +1,5 @@
 use geo_traits::LineStringTrait;
-use geoarrow_array::error::{GeoArrowError, Result};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geos::{Geom, GeometryTypes};
 
 use crate::import::scalar::coord::GEOSConstCoord;
@@ -12,31 +12,30 @@ impl<'a> GEOSConstLinearRing<'a> {
     }
 
     #[allow(dead_code)]
-    pub fn try_new(geom: geos::ConstGeometry<'a>) -> Result<Self> {
+    pub fn try_new(geom: geos::ConstGeometry<'a>) -> GeoArrowResult<Self> {
         if matches!(geom.geometry_type(), GeometryTypes::LinearRing) {
             Ok(Self(geom))
         } else {
-            Err(GeoArrowError::General(
+            Err(GeoArrowError::IncorrectGeometryType(
                 "Geometry type must be linear ring".to_string(),
             ))
         }
     }
-}
 
-impl LineStringTrait for GEOSConstLinearRing<'_> {
-    type T = f64;
-    type CoordType<'c>
-        = GEOSConstCoord
-    where
-        Self: 'c;
-
-    fn dim(&self) -> geo_traits::Dimensions {
+    pub(crate) fn dimension(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
             geos::Dimensions::TwoD => geo_traits::Dimensions::Xy,
             geos::Dimensions::ThreeD => geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
+}
+
+impl LineStringTrait for GEOSConstLinearRing<'_> {
+    type CoordType<'c>
+        = GEOSConstCoord
+    where
+        Self: 'c;
 
     fn num_coords(&self) -> usize {
         self.0.get_num_coordinates().unwrap()
@@ -47,7 +46,7 @@ impl LineStringTrait for GEOSConstLinearRing<'_> {
         GEOSConstCoord {
             coords: seq,
             geom_index: i,
-            dim: self.dim(),
+            dim: self.dimension(),
         }
     }
 }

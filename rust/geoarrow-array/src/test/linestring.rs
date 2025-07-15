@@ -21,12 +21,12 @@ pub(crate) fn ls1() -> LineString {
 
 pub(crate) fn ls_array(coord_type: CoordType) -> LineStringArray {
     let geoms = vec![Some(ls0()), None, Some(ls1()), None];
-    let typ = LineStringType::new(coord_type, Dimension::XY, Default::default());
+    let typ = LineStringType::new(Dimension::XY, Default::default()).with_coord_type(coord_type);
     LineStringBuilder::from_nullable_line_strings(&geoms, typ).finish()
 }
 
 pub fn array(coord_type: CoordType, dim: Dimension) -> LineStringArray {
-    let typ = LineStringType::new(coord_type, dim, Default::default());
+    let typ = LineStringType::new(dim, Default::default()).with_coord_type(coord_type);
     let geoms = match dim {
         Dimension::XY => raw::linestring::xy::geoms(),
         Dimension::XYZ => raw::linestring::xyz::geoms(),

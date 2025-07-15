@@ -1,8 +1,8 @@
-use arrow_array::RecordBatchIterator;
+use arrow_array::{RecordBatchIterator, RecordBatchReader};
 use arrow_wasm::Table;
 // use parquet_wasm::utils::assert_parquet_file_not_empty;
 use bytes::Bytes;
-use geoarrow::io::parquet::{
+use geoparquet::{
     GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder,
     write_geoparquet as _write_geoparquet,
 };
@@ -37,8 +37,8 @@ pub fn read_geoparquet(file: Vec<u8>) -> WasmResult<Table> {
         geo_options,
     )?
     .build()?;
-    let geo_table = reader.read_table()?;
-    let (batches, schema) = geo_table.into_inner();
+    let schema = reader.schema();
+    let batches = reader.collect::<Result<Vec<_>, _>>()?;
     Ok(Table::new(schema, batches))
 }
 

@@ -1,13 +1,16 @@
 use std::ops::AddAssign;
 
 use geo_traits::*;
+use geoarrow_schema::Dimension;
+use geoarrow_schema::error::GeoArrowResult;
+use wkt::WktNum;
 
 use crate::array::DimensionIndex;
+use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
 use crate::capacity::{
     GeometryCollectionCapacity, LineStringCapacity, MultiLineStringCapacity, MultiPointCapacity,
     MultiPolygonCapacity, PolygonCapacity,
 };
-use crate::error::Result;
 
 /// A counter for the buffer sizes of a [`GeometryArray`][crate::array::GeometryArray].
 ///
@@ -19,14 +22,14 @@ pub struct GeometryCapacity {
     nulls: usize,
 
     /// Simple: just the total number of points, nulls included
-    points: [usize; 4],
+    pub(crate) points: [usize; 4],
     /// An array of [LineStringCapacity], ordered XY, XYZ, XYM, XYZM
-    line_strings: [LineStringCapacity; 4],
-    polygons: [PolygonCapacity; 4],
-    mpoints: [MultiPointCapacity; 4],
-    mline_strings: [MultiLineStringCapacity; 4],
-    mpolygons: [MultiPolygonCapacity; 4],
-    gcs: [GeometryCollectionCapacity; 4],
+    pub(crate) line_strings: [LineStringCapacity; 4],
+    pub(crate) polygons: [PolygonCapacity; 4],
+    pub(crate) mpoints: [MultiPointCapacity; 4],
+    pub(crate) mline_strings: [MultiLineStringCapacity; 4],
+    pub(crate) mpolygons: [MultiPolygonCapacity; 4],
+    pub(crate) gcs: [GeometryCollectionCapacity; 4],
 
     /// Whether to prefer multi or single arrays for new geometries.
     prefer_multi: bool,
@@ -34,6 +37,8 @@ pub struct GeometryCapacity {
 
 impl GeometryCapacity {
     /// Create a new capacity with known sizes.
+    ///
+    /// Note that the ordering within each array must be XY, XYZ, XYM, XYZM.
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         nulls: usize,
@@ -44,7 +49,6 @@ impl GeometryCapacity {
         mline_strings: [MultiLineStringCapacity; 4],
         mpolygons: [MultiPolygonCapacity; 4],
         gcs: [GeometryCollectionCapacity; 4],
-        prefer_multi: bool,
     ) -> Self {
         Self {
             nulls,
@@ -55,16 +59,13 @@ impl GeometryCapacity {
             mline_strings,
             mpolygons,
             gcs,
-            prefer_multi,
+            prefer_multi: false,
         }
     }
 
     /// Create a new empty capacity.
-    pub fn new_empty(prefer_multi: bool) -> Self {
-        Self {
-            prefer_multi,
-            ..Default::default()
-        }
+    pub fn new_empty() -> Self {
+        Default::default()
     }
 
     /// Set whether this capacity counter should prefer allocating "single-type" geometries like
@@ -136,190 +137,158 @@ impl GeometryCapacity {
         total
     }
 
-    /// Access point capacities
-    ///
-    /// Values are represent dimensions in the order: XY, XYZ, XYM, XYZM.
-    pub fn points(&self) -> [usize; 4] {
-        self.points
+    /// Access point capacity
+    pub fn point(&self, dim: Dimension) -> usize {
+        self.points[dim.order()]
     }
 
-    /// Access LineString capacities
-    ///
-    /// Values are represent dimensions in the order: XY, XYZ, XYM, XYZM.
-    pub fn line_strings(&self) -> [LineStringCapacity; 4] {
-        self.line_strings
+    /// Access LineString capacity
+    pub fn line_string(&self, dim: Dimension) -> LineStringCapacity {
+        self.line_strings[dim.order()]
     }
 
-    /// Access Polygon capacities
-    ///
-    /// Values are represent dimensions in the order: XY, XYZ, XYM, XYZM.
-    pub fn polygons(&self) -> [PolygonCapacity; 4] {
-        self.polygons
+    /// Access Polygon capacity
+    pub fn polygon(&self, dim: Dimension) -> PolygonCapacity {
+        self.polygons[dim.order()]
     }
 
-    /// Access MultiPoint capacities
-    ///
-    /// Values are represent dimensions in the order: XY, XYZ, XYM, XYZM.
-    pub fn multi_points(&self) -> [MultiPointCapacity; 4] {
-        self.mpoints
+    /// Access MultiPoint capacity
+    pub fn multi_point(&self, dim: Dimension) -> MultiPointCapacity {
+        self.mpoints[dim.order()]
     }
 
-    /// Access point capacities
-    ///
-    /// Values are represent dimensions in the order: XY, XYZ, XYM, XYZM.
-    pub fn multi_line_strings(&self) -> [MultiLineStringCapacity; 4] {
-        self.mline_strings
+    /// Access point capacity
+    pub fn multi_line_string(&self, dim: Dimension) -> MultiLineStringCapacity {
+        self.mline_strings[dim.order()]
     }
 
-    /// Access point capacities
-    ///
-    /// Values are represent dimensions in the order: XY, XYZ, XYM, XYZM.
-    pub fn multi_polygons(&self) -> [MultiPolygonCapacity; 4] {
-        self.mpolygons
+    /// Access point capacity
+    pub fn multi_polygon(&self, dim: Dimension) -> MultiPolygonCapacity {
+        self.mpolygons[dim.order()]
     }
 
-    /// Access GeometryCollection capacities
-    ///
-    /// Values are represent dimensions in the order: XY, XYZ, XYM, XYZM.
-    pub fn gcs(&self) -> [GeometryCollectionCapacity; 4] {
-        self.gcs
+    /// Access GeometryCollection capacity
+    pub fn geometry_collection(&self, dim: Dimension) -> GeometryCollectionCapacity {
+        self.gcs[dim.order()]
     }
-
-    // pub fn point_compatible(&self) -> bool {
-    //     self.line_string.is_empty()
-    //         && self.polygon.is_empty()
-    //         && self.multi_point.is_empty()
-    //         && self.multi_line_string.is_empty()
-    //         && self.multi_polygon.is_empty()
-    // }
-
-    // pub fn line_string_compatible(&self) -> bool {
-    //     self.point == 0
-    //         && self.polygon.is_empty()
-    //         && self.multi_point.is_empty()
-    //         && self.multi_line_string.is_empty()
-    //         && self.multi_polygon.is_empty()
-    // }
-
-    // pub fn polygon_compatible(&self) -> bool {
-    //     self.point == 0
-    //         && self.line_string.is_empty()
-    //         && self.multi_point.is_empty()
-    //         && self.multi_line_string.is_empty()
-    //         && self.multi_polygon.is_empty()
-    // }
-
-    // pub fn multi_point_compatible(&self) -> bool {
-    //     self.line_string.is_empty()
-    //         && self.polygon.is_empty()
-    //         && self.multi_line_string.is_empty()
-    //         && self.multi_polygon.is_empty()
-    // }
-
-    // pub fn multi_line_string_compatible(&self) -> bool {
-    //     self.point == 0
-    //         && self.polygon.is_empty()
-    //         && self.multi_point.is_empty()
-    //         && self.multi_polygon.is_empty()
-    // }
-
-    // pub fn multi_polygon_compatible(&self) -> bool {
-    //     self.point == 0
-    //         && self.line_string.is_empty()
-    //         && self.multi_point.is_empty()
-    //         && self.multi_line_string.is_empty()
-    // }
 
     /// Add the capacity of the given Point
     #[inline]
-    pub fn add_point(&mut self, point: Option<&impl PointTrait>) {
+    fn add_point(&mut self, point: Option<&impl PointTrait>) -> GeoArrowResult<()> {
         if let Some(point) = point {
+            let dim = Dimension::try_from(point.dim())?;
             if self.prefer_multi {
-                self.mpoints[point.dim().order()].add_point(Some(point));
+                self.mpoints[dim.order()].add_point(Some(point));
             } else {
-                self.points[point.dim().order()] += 1;
+                self.points[dim.order()] += 1;
             }
         } else {
             self.nulls += 1;
         }
+        Ok(())
     }
 
     /// Add the capacity of the given LineString
     #[inline]
-    pub fn add_line_string(&mut self, line_string: Option<&impl LineStringTrait>) {
+    fn add_line_string(
+        &mut self,
+        line_string: Option<&impl LineStringTrait>,
+    ) -> GeoArrowResult<()> {
         if let Some(line_string) = line_string {
+            let dim = Dimension::try_from(line_string.dim())?;
             if self.prefer_multi {
-                self.mline_strings[line_string.dim().order()].add_line_string(Some(line_string));
+                self.mline_strings[dim.order()].add_line_string(Some(line_string));
             } else {
-                self.line_strings[line_string.dim().order()].add_line_string(Some(line_string));
+                self.line_strings[dim.order()].add_line_string(Some(line_string));
             }
         } else {
             self.nulls += 1;
         }
+        Ok(())
     }
 
     /// Add the capacity of the given Polygon
     #[inline]
-    pub fn add_polygon(&mut self, polygon: Option<&impl PolygonTrait>) {
+    fn add_polygon(&mut self, polygon: Option<&impl PolygonTrait>) -> GeoArrowResult<()> {
         if let Some(polygon) = polygon {
+            let dim = Dimension::try_from(polygon.dim())?;
             if self.prefer_multi {
-                self.mpolygons[polygon.dim().order()].add_polygon(Some(polygon));
+                self.mpolygons[dim.order()].add_polygon(Some(polygon));
             } else {
-                self.polygons[polygon.dim().order()].add_polygon(Some(polygon));
+                self.polygons[dim.order()].add_polygon(Some(polygon));
             }
         } else {
             self.nulls += 1;
         }
+        Ok(())
     }
 
     /// Add the capacity of the given MultiPoint
     #[inline]
-    pub fn add_multi_point(&mut self, multi_point: Option<&impl MultiPointTrait>) {
+    fn add_multi_point(
+        &mut self,
+        multi_point: Option<&impl MultiPointTrait>,
+    ) -> GeoArrowResult<()> {
         if let Some(multi_point) = multi_point {
-            self.multi_points()[multi_point.dim().order()].add_multi_point(Some(multi_point));
+            self.multi_point(multi_point.dim().try_into()?)
+                .add_multi_point(Some(multi_point));
         } else {
             self.nulls += 1;
         }
+        Ok(())
     }
 
     /// Add the capacity of the given MultiLineString
     #[inline]
-    pub fn add_multi_line_string(&mut self, multi_line_string: Option<&impl MultiLineStringTrait>) {
+    fn add_multi_line_string(
+        &mut self,
+        multi_line_string: Option<&impl MultiLineStringTrait>,
+    ) -> GeoArrowResult<()> {
         if let Some(multi_line_string) = multi_line_string {
-            self.multi_line_strings()[multi_line_string.dim().order()]
+            self.multi_line_string(multi_line_string.dim().try_into()?)
                 .add_multi_line_string(Some(multi_line_string));
         } else {
             self.nulls += 1;
         }
+        Ok(())
     }
 
     /// Add the capacity of the given MultiPolygon
     #[inline]
-    pub fn add_multi_polygon(&mut self, multi_polygon: Option<&impl MultiPolygonTrait>) {
+    fn add_multi_polygon(
+        &mut self,
+        multi_polygon: Option<&impl MultiPolygonTrait>,
+    ) -> GeoArrowResult<()> {
         if let Some(multi_polygon) = multi_polygon {
-            self.multi_polygons()[multi_polygon.dim().order()]
+            self.multi_polygon(multi_polygon.dim().try_into()?)
                 .add_multi_polygon(Some(multi_polygon));
         } else {
             self.nulls += 1;
         }
+        Ok(())
     }
 
     /// Add the capacity of the given Geometry
     #[inline]
-    pub fn add_geometry(&mut self, geom: Option<&impl GeometryTrait>) -> Result<()> {
+    pub fn add_geometry<T: WktNum>(
+        &mut self,
+        geom: Option<&impl GeometryTrait<T = T>>,
+    ) -> GeoArrowResult<()> {
+        use geo_traits::GeometryType;
+
         if let Some(geom) = geom {
             match geom.as_type() {
-                geo_traits::GeometryType::Point(g) => self.add_point(Some(g)),
-                geo_traits::GeometryType::LineString(g) => self.add_line_string(Some(g)),
-                geo_traits::GeometryType::Polygon(g) => self.add_polygon(Some(g)),
-                geo_traits::GeometryType::MultiPoint(p) => self.add_multi_point(Some(p)),
-                geo_traits::GeometryType::MultiLineString(p) => self.add_multi_line_string(Some(p)),
-                geo_traits::GeometryType::MultiPolygon(p) => self.add_multi_polygon(Some(p)),
-                geo_traits::GeometryType::GeometryCollection(p) => {
-                    self.add_geometry_collection(Some(p))?
-                }
-                _ => todo!(),
-            };
+                GeometryType::Point(g) => self.add_point(Some(g)),
+                GeometryType::LineString(g) => self.add_line_string(Some(g)),
+                GeometryType::Polygon(g) => self.add_polygon(Some(g)),
+                GeometryType::MultiPoint(p) => self.add_multi_point(Some(p)),
+                GeometryType::MultiLineString(p) => self.add_multi_line_string(Some(p)),
+                GeometryType::MultiPolygon(p) => self.add_multi_polygon(Some(p)),
+                GeometryType::GeometryCollection(p) => self.add_geometry_collection(Some(p)),
+                GeometryType::Rect(r) => self.add_polygon(Some(&RectWrapper::try_new(r)?)),
+                GeometryType::Triangle(tri) => self.add_polygon(Some(&TriangleWrapper(tri))),
+                GeometryType::Line(l) => self.add_line_string(Some(&LineWrapper(l))),
+            }?;
         } else {
             self.nulls += 1;
         }
@@ -328,12 +297,12 @@ impl GeometryCapacity {
 
     /// Add the capacity of the given GeometryCollection
     #[inline]
-    pub fn add_geometry_collection(
+    fn add_geometry_collection<T: WktNum>(
         &mut self,
-        gc: Option<&impl GeometryCollectionTrait>,
-    ) -> Result<()> {
+        gc: Option<&impl GeometryCollectionTrait<T = T>>,
+    ) -> GeoArrowResult<()> {
         if let Some(gc) = gc {
-            self.gcs[gc.dim().order()].add_geometry_collection(Some(gc))?;
+            self.gcs[Dimension::try_from(gc.dim())?.order()].add_geometry_collection(Some(gc))?;
         } else {
             self.nulls += 1;
         };
@@ -341,25 +310,12 @@ impl GeometryCapacity {
     }
 
     /// Construct a new counter pre-filled with the given geometries
-    pub fn from_geometries<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
-        prefer_multi: bool,
-    ) -> Result<Self> {
-        let mut counter = Self::new_empty(prefer_multi);
+    pub fn from_geometries<'a, T: WktNum>(
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = T> + 'a)>>,
+    ) -> GeoArrowResult<Self> {
+        let mut counter = Self::new_empty();
         for maybe_geom in geoms.into_iter() {
             counter.add_geometry(maybe_geom)?;
-        }
-        Ok(counter)
-    }
-
-    /// Construct a new counter pre-filled with the given geometries
-    pub fn from_owned_geometries<'a>(
-        geoms: impl Iterator<Item = Option<(impl GeometryTrait + 'a)>>,
-        prefer_multi: bool,
-    ) -> Result<Self> {
-        let mut counter = Self::new_empty(prefer_multi);
-        for maybe_geom in geoms.into_iter() {
-            counter.add_geometry(maybe_geom.as_ref())?;
         }
         Ok(counter)
     }

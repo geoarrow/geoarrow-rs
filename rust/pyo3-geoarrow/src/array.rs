@@ -1,31 +1,29 @@
 use std::sync::Arc;
 
-use geoarrow_array::array::from_arrow_array;
-// use geoarrow::ArrayBase;
-// use geoarrow::NativeArray;
-// use geoarrow::error::GeoArrowError;
-// use geoarrow::scalar::GeometryScalar;
-// use geoarrow::trait_::NativeArrayRef;
 use geoarrow_array::GeoArrowArray;
-// use geozero::ProcessToJson;
+use geoarrow_array::array::from_arrow_array;
+use geoarrow_cast::downcast::NativeType;
+use geoarrow_schema::{
+    BoxType, GeometryCollectionType, LineStringType, MultiLineStringType, MultiPointType,
+    MultiPolygonType, PointType, PolygonType,
+};
+use pyo3::exceptions::PyIndexError;
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyTuple, PyType};
 use pyo3_arrow::PyArray;
 use pyo3_arrow::ffi::to_array_pycapsules;
 
-use crate::PyGeoArrowType;
+use crate::PyCoordType;
+use crate::data_type::PyGeoType;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
+use crate::scalar::PyGeoScalar;
+use crate::utils::text_repr::text_repr;
 
-#[pyclass(
-    module = "geoarrow.rust.core",
-    name = "GeoArrowArray",
-    subclass,
-    frozen
-)]
-pub struct PyGeoArrowArray(Arc<dyn GeoArrowArray>);
+#[pyclass(module = "geoarrow.rust.core", name = "GeoArray", subclass, frozen)]
+pub struct PyGeoArray(Arc<dyn GeoArrowArray>);
 
-impl PyGeoArrowArray {
+impl PyGeoArray {
     pub fn new(array: Arc<dyn GeoArrowArray>) -> Self {
         Self(array)
     }
@@ -38,17 +36,21 @@ impl PyGeoArrowArray {
         PyArray::from_arrow_pycapsule(schema_capsule, array_capsule)?.try_into()
     }
 
+    pub fn inner(&self) -> &Arc<dyn GeoArrowArray> {
+        &self.0
+    }
+
     pub fn into_inner(self) -> Arc<dyn GeoArrowArray> {
         self.0
     }
 
-    /// Export to a geoarrow.rust.core.NativeArray.
+    /// Export to a geoarrow.rust.core.GeoArrowArray.
     ///
     /// This requires that you depend on geoarrow-rust-core from your Python package.
     pub fn to_geoarrow<'py>(&'py self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let geoarrow_mod = py.import(intern!(py, "geoarrow.rust.core"))?;
         geoarrow_mod
-            .getattr(intern!(py, "NativeArray"))?
+            .getattr(intern!(py, "GeoArrowArray"))?
             .call_method1(
                 intern!(py, "from_arrow_pycapsule"),
                 self.__arrow_c_array__(py, None)?,
@@ -57,7 +59,7 @@ impl PyGeoArrowArray {
 }
 
 #[pymethods]
-impl PyGeoArrowArray {
+impl PyGeoArray {
     #[new]
     fn py_new(data: &Bound<PyAny>) -> PyResult<Self> {
         data.extract()
@@ -74,10 +76,15 @@ impl PyGeoArrowArray {
         Ok(to_array_pycapsules(py, field, &array, requested_schema)?)
     }
 
-    // /// Check for equality with other object.
-    // fn __eq__(&self, other: &PyGeoArrowArray) -> bool {
-    //     self.0 == other.0
-    // }
+    fn __eq__(&self, other: &Bound<PyAny>) -> bool {
+        // Do extraction within body because `__eq__` should never raise an exception.
+        if let Ok(other) = other.extract::<Self>() {
+            self.0.data_type() == other.0.data_type()
+                && self.0.to_array_ref() == other.0.to_array_ref()
+        } else {
+            false
+        }
+    }
 
     // #[getter]
     // fn __geo_interface__<'py>(&'py self, py: Python<'py>) -> PyGeoArrowResult<Bound<'py, PyAny>> {
@@ -97,32 +104,30 @@ impl PyGeoArrowArray {
     //     Ok(json_mod.call_method1(intern!(py, "loads"), args)?)
     // }
 
-    // fn __getitem__(&self, i: isize) -> PyGeoArrowResult<Option<PyGeometry>> {
-    //     // Handle negative indexes from the end
-    //     let i = if i < 0 {
-    //         let i = self.0.len() as isize + i;
-    //         if i < 0 {
-    //             return Err(PyIndexError::new_err("Index out of range").into());
-    //         }
-    //         i as usize
-    //     } else {
-    //         i as usize
-    //     };
-    //     if i >= self.0.len() {
-    //         return Err(PyIndexError::new_err("Index out of range").into());
-    //     }
+    fn __getitem__(&self, i: isize) -> PyGeoArrowResult<PyGeoScalar> {
+        // Handle negative indexes from the end
+        let i = if i < 0 {
+            let i = self.0.len() as isize + i;
+            if i < 0 {
+                return Err(PyIndexError::new_err("Index out of range").into());
+            }
+            i as usize
+        } else {
+            i as usize
+        };
+        if i >= self.0.len() {
+            return Err(PyIndexError::new_err("Index out of range").into());
+        }
 
-    //     Ok(Some(PyGeometry(
-    //         GeometryScalar::try_new(self.0.slice(i, 1)).unwrap(),
-    //     )))
-    // }
+        PyGeoScalar::try_new(self.0.slice(i, 1))
+    }
 
     fn __len__(&self) -> usize {
         self.0.len()
     }
 
     fn __repr__(&self) -> String {
-        "geoarrow.rust.core.NativeArray".to_string()
+        format!("GeoArray({})", text_repr(&self.0.data_type()))
     }
 
     #[classmethod]
@@ -142,34 +147,80 @@ impl PyGeoArrowArray {
 
     #[getter]
     fn null_count(&self) -> usize {
-        self.0.null_count()
+        self.0.logical_null_count()
+    }
+
+    #[pyo3(signature = (to_type, /))]
+    fn cast(&self, to_type: PyGeoType) -> PyGeoArrowResult<Self> {
+        let casted = geoarrow_cast::cast::cast(self.0.as_ref(), &to_type.into_inner())?;
+        Ok(Self(casted))
+    }
+
+    #[pyo3(
+        signature = (*, coord_type = PyCoordType::Separated),
+        text_signature = "(*, coord_type='separated')"
+    )]
+    fn downcast(&self, coord_type: PyCoordType) -> PyGeoArrowResult<Self> {
+        if let Some((native_type, dim)) =
+            geoarrow_cast::downcast::infer_downcast_type(std::iter::once(self.0.as_ref()))?
+        {
+            let metadata = self.0.data_type().metadata().clone();
+            let coord_type = coord_type.into();
+            let to_type = match native_type {
+                NativeType::Point => PointType::new(dim, metadata)
+                    .with_coord_type(coord_type)
+                    .into(),
+                NativeType::LineString => LineStringType::new(dim, metadata)
+                    .with_coord_type(coord_type)
+                    .into(),
+                NativeType::Polygon => PolygonType::new(dim, metadata)
+                    .with_coord_type(coord_type)
+                    .into(),
+                NativeType::MultiPoint => MultiPointType::new(dim, metadata)
+                    .with_coord_type(coord_type)
+                    .into(),
+                NativeType::MultiLineString => MultiLineStringType::new(dim, metadata)
+                    .with_coord_type(coord_type)
+                    .into(),
+                NativeType::MultiPolygon => MultiPolygonType::new(dim, metadata)
+                    .with_coord_type(coord_type)
+                    .into(),
+                NativeType::GeometryCollection => GeometryCollectionType::new(dim, metadata)
+                    .with_coord_type(coord_type)
+                    .into(),
+                NativeType::Rect => BoxType::new(dim, metadata).into(),
+            };
+            self.cast(PyGeoType::new(to_type))
+        } else {
+            Ok(Self::new(self.0.clone()))
+        }
     }
 
     #[getter]
-    fn r#type(&self) -> PyGeoArrowType {
+    fn r#type(&self) -> PyGeoType {
         self.0.data_type().into()
     }
 }
 
-impl From<Arc<dyn GeoArrowArray>> for PyGeoArrowArray {
+impl From<Arc<dyn GeoArrowArray>> for PyGeoArray {
     fn from(value: Arc<dyn GeoArrowArray>) -> Self {
         Self(value)
     }
 }
 
-impl From<PyGeoArrowArray> for Arc<dyn GeoArrowArray> {
-    fn from(value: PyGeoArrowArray) -> Self {
+impl From<PyGeoArray> for Arc<dyn GeoArrowArray> {
+    fn from(value: PyGeoArray) -> Self {
         value.0
     }
 }
 
-impl<'a> FromPyObject<'a> for PyGeoArrowArray {
+impl<'a> FromPyObject<'a> for PyGeoArray {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         Ok(ob.extract::<PyArray>()?.try_into()?)
     }
 }
 
-impl TryFrom<PyArray> for PyGeoArrowArray {
+impl TryFrom<PyArray> for PyGeoArray {
     type Error = PyGeoArrowError;
 
     fn try_from(value: PyArray) -> Result<Self, Self::Error> {

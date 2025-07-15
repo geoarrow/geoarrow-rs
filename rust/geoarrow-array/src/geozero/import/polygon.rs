@@ -43,7 +43,8 @@ impl GeomProcessor for PolygonBuilder {
         // # Safety:
         // This upholds invariants because we call try_push_length in polygon_begin to ensure
         // offset arrays are correct.
-        unsafe { self.push_coord(&from_xy(x, y).expect("valid coord")) }.unwrap();
+        self.push_coord(&from_xy(x, y).expect("valid coord"))
+            .unwrap();
         Ok(())
     }
 
@@ -60,7 +61,8 @@ impl GeomProcessor for PolygonBuilder {
         // # Safety:
         // This upholds invariants because we call try_push_length in polygon_begin to ensure
         // offset arrays are correct.
-        unsafe { self.push_coord(&from_xyzm(x, y, z, m).expect("valid coord")) }.unwrap();
+        self.push_coord(&from_xyzm(x, y, z, m).expect("valid coord"))
+            .unwrap();
         Ok(())
     }
 
@@ -78,7 +80,7 @@ impl GeomProcessor for PolygonBuilder {
         // # Safety:
         // This upholds invariants because we separately update the ring offsets in
         // linestring_begin
-        unsafe { self.try_push_geom_offset(size).unwrap() }
+        self.try_push_geom_offset(size).unwrap();
         Ok(())
     }
 
@@ -95,7 +97,7 @@ impl GeomProcessor for PolygonBuilder {
         // # Safety:
         // This upholds invariants because we separately update the geometry offsets in
         // polygon_begin
-        unsafe { self.try_push_ring_offset(size).unwrap() }
+        self.try_push_ring_offset(size).unwrap();
         Ok(())
     }
 }
@@ -103,7 +105,7 @@ impl GeomProcessor for PolygonBuilder {
 #[cfg(test)]
 mod test {
     use geo_types::Geometry;
-    use geoarrow_schema::{CoordType, Dimension};
+    use geoarrow_schema::Dimension;
     use geozero::error::Result;
 
     use super::*;
@@ -119,7 +121,7 @@ mod test {
                 .map(Geometry::Polygon)
                 .collect(),
         );
-        let typ = PolygonType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let typ = PolygonType::new(Dimension::XY, Default::default());
         let geo_arr = gc.to_polygon_array(typ.clone()).unwrap();
 
         let geo_arr2 = PolygonBuilder::from_polygons(&geo_geoms, typ).finish();

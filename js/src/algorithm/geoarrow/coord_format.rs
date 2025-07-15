@@ -61,9 +61,9 @@ macro_rules! impl_coord_type {
     };
 }
 
-impl_coord_type!(PointData);
-impl_coord_type!(LineStringData);
-impl_coord_type!(PolygonData);
-impl_coord_type!(MultiPointData);
-impl_coord_type!(MultiLineStringData);
-impl_coord_type!(MultiPolygonData);
+// impl_coord_type!(PointData);
+// impl_coord_type!(LineStringData);
+// impl_coord_type!(PolygonData);
+// impl_coord_type!(MultiPointData);
+// impl_coord_type!(MultiLineStringData);
+// impl_coord_type!(MultiPolygonData);

@@ -1,4 +1,3 @@
-
 [package]
 name = "geoarrow-array"
 version = { workspace = true }
@@ -6,7 +5,7 @@ authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
 repository = { workspace = true }
-description = "Rust implementation of GeoArrow"
+description = "GeoArrow array definitions."
 categories = { workspace = true }
 rust-version = { workspace = true }
 
@@ -27,8 +26,6 @@ geoarrow-schema = { workspace = true }
 geoarrow-test = { workspace = true, optional = true }
 geozero = { workspace = true, optional = true }
 num-traits = { workspace = true }
-serde_json = { workspace = true }
-thiserror = { workspace = true }
 wkb = { workspace = true }
 wkt = { workspace = true }
 

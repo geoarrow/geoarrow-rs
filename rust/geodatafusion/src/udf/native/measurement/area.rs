@@ -2,15 +2,19 @@ use std::any::Any;
 use std::sync::{Arc, OnceLock};
 
 use arrow_schema::DataType;
+use datafusion::error::Result;
 use datafusion::logical_expr::scalar_doc_sections::DOC_SECTION_OTHER;
-use datafusion::logical_expr::{ColumnarValue, Documentation, ScalarUDFImpl, Signature};
-use geoarrow::algorithm::geo::Area as _Area;
+use datafusion::logical_expr::{
+    ColumnarValue, Documentation, ScalarFunctionArgs, ScalarUDFImpl, Signature,
+};
+use geoarrow_array::array::from_arrow_array;
+use geoarrow_geo::unsigned_area;
 
-use crate::data_types::{any_single_geometry_type_input, parse_to_native_array};
+use crate::data_types::any_single_geometry_type_input;
 use crate::error::GeoDataFusionResult;
 
 #[derive(Debug)]
-pub(super) struct Area {
+pub struct Area {
     signature: Signature,
 }
 
@@ -19,6 +23,12 @@ impl Area {
         Self {
             signature: any_single_geometry_type_input(),
         }
+    }
+}
+
+impl Default for Area {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -37,11 +47,11 @@ impl ScalarUDFImpl for Area {
         &self.signature
     }
 
-    fn return_type(&self, _arg_types: &[DataType]) -> datafusion::error::Result<DataType> {
+    fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType> {
         Ok(DataType::Float64)
     }
 
-    fn invoke(&self, args: &[ColumnarValue]) -> datafusion::error::Result<ColumnarValue> {
+    fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
         Ok(area_impl(args)?)
     }
 
@@ -58,75 +68,43 @@ impl ScalarUDFImpl for Area {
     }
 }
 
-fn area_impl(args: &[ColumnarValue]) -> GeoDataFusionResult<ColumnarValue> {
-    let array = ColumnarValue::values_to_arrays(args)?
+fn area_impl(args: ScalarFunctionArgs) -> GeoDataFusionResult<ColumnarValue> {
+    let array = ColumnarValue::values_to_arrays(&args.args)?
         .into_iter()
         .next()
         .unwrap();
-    let native_array = parse_to_native_array(array)?;
-    let area = native_array.as_ref().unsigned_area()?;
-    Ok(ColumnarValue::Array(Arc::new(area)))
+    let field = &args.arg_fields[0];
+    let geo_array = from_arrow_array(&array, field)?;
+    let result = unsigned_area(&geo_array)?;
+    Ok(ColumnarValue::Array(Arc::new(result)))
 }
 
 #[cfg(test)]
 mod test {
-    use arrow_array::RecordBatch;
-    use arrow_schema::Schema;
-    use datafusion::error::Result;
+    use arrow_array::cast::AsArray;
+    use arrow_array::types::Float64Type;
     use datafusion::prelude::SessionContext;
-    use geoarrow::algorithm::native::Cast;
-    use geoarrow::datatypes::NativeType;
-    use geoarrow::io::flatgeobuf::{FlatGeobufReaderBuilder, FlatGeobufReaderOptions};
-    use geoarrow::table::Table;
-    use geoarrow_schema::{CoordType, GeometryType};
-    use std::fs::File;
-    use std::sync::Arc;
 
     use super::*;
+    use crate::udf::native::io::GeomFromText;
 
-    fn load_file() -> RecordBatch {
-        let file = File::open("../../fixtures/flatgeobuf/countries.fgb").unwrap();
-        let reader_builder = FlatGeobufReaderBuilder::open(file).unwrap();
-        let options = FlatGeobufReaderOptions {
-            coord_type: CoordType::Separated,
-            ..Default::default()
-        };
-        let reader = reader_builder.read(options).unwrap();
-        let table =
-            Table::try_from(Box::new(reader) as Box<dyn arrow_array::RecordBatchReader>).unwrap();
-
-        let geometry = table.geometry_column(None).unwrap();
-        let geometry = geometry
-            .as_ref()
-            .cast(NativeType::Geometry(GeometryType::new(
-                CoordType::Separated,
-                Default::default(),
-            )))
-            .unwrap();
-        let field = geometry.extension_field();
-        let chunk = geometry.array_refs()[0].clone();
-        RecordBatch::try_new(Arc::new(Schema::new(vec![field])), vec![chunk]).unwrap()
-    }
-
-    fn create_context() -> Result<SessionContext> {
+    #[tokio::test]
+    async fn test() {
         let ctx = SessionContext::new();
 
-        let batch = load_file();
-
-        ctx.register_batch("t", batch).unwrap();
-        Ok(ctx)
-    }
-
-    #[ignore = "Union fields length must match child arrays length"]
-    #[tokio::test]
-    async fn test() -> Result<()> {
-        let ctx = create_context()?;
         ctx.register_udf(Area::new().into());
+        ctx.register_udf(GeomFromText::new(Default::default()).into());
 
-        let sql_df = ctx.sql("SELECT ST_Area(geometry) FROM t;").await?;
-        // print the results
-        sql_df.show().await?;
-
-        Ok(())
+        let df = ctx
+            .sql(
+                "select ST_Area(ST_GeomFromText('POLYGON((743238 2967416,743238 2967450,
+				 743265 2967450,743265.625 2967416,743238 2967416))'));",
+            )
+            .await
+            .unwrap();
+        let batch = df.collect().await.unwrap().into_iter().next().unwrap();
+        let col = batch.column(0);
+        let val = col.as_primitive::<Float64Type>().value(0);
+        assert_eq!(val, 928.625);
     }
 }

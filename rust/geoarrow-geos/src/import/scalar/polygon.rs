@@ -1,5 +1,5 @@
 use geo_traits::PolygonTrait;
-use geoarrow_array::error::{GeoArrowError, Result};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geos::{Geom, GeometryTypes};
 
 use crate::import::scalar::linearring::GEOSConstLinearRing;
@@ -12,11 +12,11 @@ impl GEOSPolygon {
     }
 
     #[allow(dead_code)]
-    pub fn try_new(geom: geos::Geometry) -> Result<Self> {
+    pub fn try_new(geom: geos::Geometry) -> GeoArrowResult<Self> {
         if matches!(geom.geometry_type(), GeometryTypes::Polygon) {
             Ok(Self(geom))
         } else {
-            Err(GeoArrowError::General(
+            Err(GeoArrowError::IncorrectGeometryType(
                 "Geometry type must be polygon".to_string(),
             ))
         }
@@ -49,22 +49,21 @@ impl GEOSPolygon {
             self.0.get_interior_ring_n(i.try_into().unwrap()).unwrap(),
         ))
     }
-}
 
-impl PolygonTrait for GEOSPolygon {
-    type T = f64;
-    type RingType<'a>
-        = GEOSConstLinearRing<'a>
-    where
-        Self: 'a;
-
-    fn dim(&self) -> geo_traits::Dimensions {
+    pub(crate) fn dimension(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
             geos::Dimensions::TwoD => geo_traits::Dimensions::Xy,
             geos::Dimensions::ThreeD => geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
+}
+
+impl PolygonTrait for GEOSPolygon {
+    type RingType<'a>
+        = GEOSConstLinearRing<'a>
+    where
+        Self: 'a;
 
     fn num_interiors(&self) -> usize {
         self.0.get_num_interior_rings().unwrap()
@@ -95,31 +94,30 @@ impl<'a> GEOSConstPolygon<'a> {
     }
 
     #[allow(dead_code)]
-    pub fn try_new(geom: geos::ConstGeometry<'a>) -> Result<Self> {
+    pub fn try_new(geom: geos::ConstGeometry<'a>) -> GeoArrowResult<Self> {
         if matches!(geom.geometry_type(), GeometryTypes::Polygon) {
             Ok(Self(geom))
         } else {
-            Err(GeoArrowError::General(
+            Err(GeoArrowError::IncorrectGeometryType(
                 "Geometry type must be polygon".to_string(),
             ))
         }
     }
-}
 
-impl PolygonTrait for GEOSConstPolygon<'_> {
-    type T = f64;
-    type RingType<'c>
-        = GEOSConstLinearRing<'c>
-    where
-        Self: 'c;
-
-    fn dim(&self) -> geo_traits::Dimensions {
+    pub(crate) fn dimension(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
             geos::Dimensions::TwoD => geo_traits::Dimensions::Xy,
             geos::Dimensions::ThreeD => geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
+}
+
+impl PolygonTrait for GEOSConstPolygon<'_> {
+    type RingType<'c>
+        = GEOSConstLinearRing<'c>
+    where
+        Self: 'c;
 
     fn num_interiors(&self) -> usize {
         self.0.get_num_interior_rings().unwrap()

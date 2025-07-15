@@ -1,0 +1,42 @@
+[package]
+name = "geoparquet"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+description = "GeoParquet reader and writer."
+categories = { workspace = true }
+rust-version = { workspace = true }
+
+[features]
+async = ["parquet/async", "dep:futures"]
+
+[dependencies]
+arrow-arith = { workspace = true }
+arrow-array = { workspace = true }
+arrow-buffer = { workspace = true }
+arrow-ord = { workspace = true }
+arrow-schema = { workspace = true }
+futures = { workspace = true, optional = true }
+geo-traits = { workspace = true }
+geo-types = { workspace = true }
+geoarrow-array = { workspace = true }
+geoarrow-schema = { workspace = true }
+indexmap = { workspace = true }
+parquet = { workspace = true, features = ["arrow"] }
+serde = { workspace = true, features = ["derive"] }
+serde_with = { workspace = true }
+serde_json = { workspace = true }
+wkt = { workspace = true }
+
+[dev-dependencies]
+parquet = { workspace = true, features = [
+    "snap",
+    "brotli",
+    "flate2",
+    "lz4",
+    "zstd",
+] }
+tokio = { version = "1.9", features = ["macros", "fs", "rt-multi-thread"] }
+tokio-test = "0.4"

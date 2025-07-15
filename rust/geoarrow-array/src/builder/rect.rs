@@ -1,10 +1,10 @@
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, RectTrait};
 use geoarrow_schema::BoxType;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 use crate::array::RectArray;
 use crate::builder::SeparatedCoordBufferBuilder;
-use crate::error::GeoArrowError;
 use crate::scalar::Rect;
 
 /// The GeoArrow equivalent to `Vec<Option<Rect>>`: a mutable collection of Rects.
@@ -76,9 +76,9 @@ impl RectBuilder {
         upper: SeparatedCoordBufferBuilder,
         validity: NullBufferBuilder,
         data_type: BoxType,
-    ) -> Result<Self, GeoArrowError> {
+    ) -> GeoArrowResult<Self> {
         if lower.len() != upper.len() {
-            return Err(GeoArrowError::General(
+            return Err(GeoArrowError::InvalidGeoArrow(
                 "Lower and upper lengths must match".to_string(),
             ));
         }
@@ -93,8 +93,8 @@ impl RectBuilder {
     /// Consume the builder and convert to an immutable [`RectArray`]
     pub fn finish(mut self) -> RectArray {
         RectArray::new(
-            self.lower.into(),
-            self.upper.into(),
+            self.lower.finish(),
+            self.upper.finish(),
             self.validity.finish(),
             self.data_type.metadata().clone(),
         )
@@ -112,8 +112,8 @@ impl RectBuilder {
             self.validity.append_non_null()
         } else {
             // Since it's a struct, we still need to push coords when null
-            self.lower.push_nan_coord();
-            self.upper.push_nan_coord();
+            self.lower.push_constant(f64::NAN);
+            self.upper.push_constant(f64::NAN);
             self.validity.append_null();
         }
     }

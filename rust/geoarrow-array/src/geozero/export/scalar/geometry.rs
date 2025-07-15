@@ -3,8 +3,9 @@ use geozero::{GeomProcessor, GeozeroGeometry};
 
 use super::{
     process_geometry_collection, process_line_string, process_multi_line_string,
-    process_multi_point, process_multi_polygon, process_point, process_polygon,
+    process_multi_point, process_multi_polygon, process_point, process_polygon, process_rect,
 };
+use crate::builder::geo_trait_wrappers::{LineWrapper, TriangleWrapper};
 use crate::scalar::Geometry;
 
 pub(crate) fn process_geometry<P: GeomProcessor>(
@@ -22,8 +23,9 @@ pub(crate) fn process_geometry<P: GeomProcessor>(
         MultiLineString(g) => process_multi_line_string(g, geom_idx, processor)?,
         MultiPolygon(g) => process_multi_polygon(g, geom_idx, processor)?,
         GeometryCollection(g) => process_geometry_collection(g, geom_idx, processor)?,
-        Rect(_g) => todo!(),
-        Triangle(_) | Line(_) => todo!(),
+        Rect(r) => process_rect(r, geom_idx, processor)?,
+        Triangle(tri) => process_polygon(&TriangleWrapper(tri), true, geom_idx, processor)?,
+        Line(l) => process_line_string(&LineWrapper(l), geom_idx, processor)?,
     };
 
     Ok(())

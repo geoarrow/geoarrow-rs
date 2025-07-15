@@ -22,3 +22,7 @@ geoarrow-array = { workspace = true, features = ["geozero"] }
 geoarrow-schema = { workspace = true }
 geozero = { workspace = true }
 http-range-client = { workspace = true, optional = true, default-features = false }
+
+[dev-dependencies]
+arrow-array = { workspace = true }
+wkt = { workspace = true }

@@ -1,2 +1,2 @@
-pub mod geos;
+pub mod geo;
 pub mod native;

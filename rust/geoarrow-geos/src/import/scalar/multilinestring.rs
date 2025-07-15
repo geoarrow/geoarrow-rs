@@ -1,5 +1,5 @@
 use geo_traits::MultiLineStringTrait;
-use geoarrow_array::error::{GeoArrowError, Result};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geos::{Geom, GeometryTypes};
 
 use crate::import::scalar::linestring::GEOSConstLineString;
@@ -13,11 +13,11 @@ impl GEOSMultiLineString {
     }
 
     #[allow(dead_code)]
-    pub fn try_new(geom: geos::Geometry) -> Result<Self> {
+    pub fn try_new(geom: geos::Geometry) -> GeoArrowResult<Self> {
         if matches!(geom.geometry_type(), GeometryTypes::MultiLineString) {
             Ok(Self(geom))
         } else {
-            Err(GeoArrowError::General(
+            Err(GeoArrowError::IncorrectGeometryType(
                 "Geometry type must be multi line string".to_string(),
             ))
         }
@@ -37,28 +37,27 @@ impl GEOSMultiLineString {
             self.0.get_geometry_n(i).unwrap(),
         ))
     }
-}
 
-impl MultiLineStringTrait for GEOSMultiLineString {
-    type T = f64;
-    type LineStringType<'a>
-        = GEOSConstLineString<'a>
-    where
-        Self: 'a;
-
-    fn dim(&self) -> geo_traits::Dimensions {
+    pub(crate) fn dimension(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
             geos::Dimensions::TwoD => geo_traits::Dimensions::Xy,
             geos::Dimensions::ThreeD => geo_traits::Dimensions::Xyz,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
     }
+}
+
+impl MultiLineStringTrait for GEOSMultiLineString {
+    type InnerLineStringType<'a>
+        = GEOSConstLineString<'a>
+    where
+        Self: 'a;
 
     fn num_line_strings(&self) -> usize {
         self.0.get_num_geometries().unwrap()
     }
 
-    unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::InnerLineStringType<'_> {
         GEOSConstLineString::new_unchecked(self.0.get_geometry_n(i).unwrap())
     }
 }

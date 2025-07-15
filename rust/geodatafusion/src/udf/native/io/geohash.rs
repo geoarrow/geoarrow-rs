@@ -1,11 +1,12 @@
 use std::any::Any;
 use std::sync::{Arc, OnceLock};
 
-use arrow::array::{AsArray, StringBuilder};
+use arrow_array::builder::StringBuilder;
+use arrow_array::cast::AsArray;
 use arrow_schema::DataType;
 use datafusion::logical_expr::scalar_doc_sections::DOC_SECTION_OTHER;
 use datafusion::logical_expr::{
-    ColumnarValue, Documentation, ScalarUDFImpl, Signature, Volatility,
+    ColumnarValue, Documentation, ScalarFunctionArgs, ScalarUDFImpl, Signature, Volatility,
 };
 use geo_traits::PointTrait;
 use geoarrow::ArrayBase;
@@ -48,7 +49,10 @@ impl ScalarUDFImpl for Box2DFromGeoHash {
         Ok(BOX2D_TYPE().into())
     }
 
-    fn invoke(&self, args: &[ColumnarValue]) -> datafusion::error::Result<ColumnarValue> {
+    fn invoke_with_args(
+        &self,
+        args: ScalarFunctionArgs,
+    ) -> datafusion::error::Result<ColumnarValue> {
         Ok(box_from_geohash_impl(args)?)
     }
 
@@ -65,7 +69,7 @@ impl ScalarUDFImpl for Box2DFromGeoHash {
     }
 }
 
-fn box_from_geohash_impl(args: &[ColumnarValue]) -> GeoDataFusionResult<ColumnarValue> {
+fn box_from_geohash_impl(args: ScalarFunctionArgs) -> GeoDataFusionResult<ColumnarValue> {
     let array = ColumnarValue::values_to_arrays(args)?
         .into_iter()
         .next()
@@ -234,7 +238,7 @@ fn geohash_impl(args: &[ColumnarValue]) -> GeoDataFusionResult<ColumnarValue> {
 #[cfg(test)]
 mod test {
     use approx::relative_eq;
-    use arrow::array::AsArray;
+    use arrow_array::cast::AsArray;
     use datafusion::prelude::*;
     use geo_traits::{CoordTrait, PointTrait, RectTrait};
     use geoarrow::array::{PointArray, RectArray};
