@@ -13,11 +13,13 @@ rust-version = { workspace = true }
 async = ["dep:futures", "dep:http-range-client"]
 
 [dependencies]
-# geo-traits = { workspace = true }
 arrow-array = { workspace = true }
+arrow-cast = { workspace = true }
 arrow-schema = { workspace = true }
+chrono = { workspace = true }
 flatgeobuf = { workspace = true }
 futures = { workspace = true, optional = true }
+geo-traits = { workspace = true }
 geoarrow-array = { workspace = true, features = ["geozero"] }
 geoarrow-schema = { workspace = true }
 geozero = { workspace = true }

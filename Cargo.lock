@@ -1690,9 +1690,12 @@ name = "geoarrow-flatgeobuf"
 version = "0.4.0"
 dependencies = [
  "arrow-array",
+ "arrow-cast",
  "arrow-schema",
+ "chrono",
  "flatgeobuf",
  "futures",
+ "geo-traits",
  "geoarrow-array",
  "geoarrow-schema",
  "geozero",
