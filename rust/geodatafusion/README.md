@@ -13,12 +13,12 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_MakeEnvelope       |             | Creates a rectangular Polygon from minimum and maximum coordinates.                                                        |
 | ST_MakeLine           |             | Creates a LineString from Point, MultiPoint, or LineString geometries.                                                     |
 | ST_MakePoint          | ✅          | Creates a 2D, 3DZ or 4D Point.                                                                                             |
-| ST_MakePointM         |             | Creates a Point from X, Y and M values.                                                                                    |
+| ST_MakePointM         | ✅          | Creates a Point from X, Y and M values.                                                                                    |
 | ST_MakePolygon        |             | Creates a Polygon from a shell and optional list of holes.                                                                 |
 | ST_Point              | ✅          | Creates a Point with X, Y and SRID values.                                                                                 |
-| ST_PointZ             |             | Creates a Point with X, Y, Z and SRID values.                                                                              |
-| ST_PointM             |             | Creates a Point with X, Y, M and SRID values.                                                                              |
-| ST_PointZM            |             | Creates a Point with X, Y, Z, M and SRID values.                                                                           |
+| ST_PointZ             | ✅          | Creates a Point with X, Y, Z and SRID values.                                                                              |
+| ST_PointM             | ✅          | Creates a Point with X, Y, M and SRID values.                                                                              |
+| ST_PointZM            | ✅          | Creates a Point with X, Y, Z, M and SRID values.                                                                           |
 | ST_Polygon            |             | Creates a Polygon from a LineString with a specified SRID.                                                                 |
 | ST_TileEnvelope       |             | Creates a rectangular Polygon in Web Mercator (SRID:3857) using the XYZ tile system.                                       |
 | ST_HexagonGrid        |             | Returns a set of hexagons and cell indices that completely cover the bounds of the geometry argument.                      |
@@ -56,7 +56,7 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_IsPolygonCW      |             | Tests if Polygons have exterior rings oriented clockwise and interior rings oriented counter-clockwise.                   |
 | ST_IsRing           |             | Tests if a LineString is closed and simple.                                                                               |
 | ST_IsSimple         |             | Tests if a geometry has no points of self-intersection or self-tangency.                                                  |
-| ST_M                |             | Returns the M coordinate of a Point.                                                                                      |
+| ST_M                | ✅          | Returns the M coordinate of a Point.                                                                                      |
 | ST_MemSize          |             | Returns the amount of memory space a geometry takes.                                                                      |
 | ST_NDims            | ✅          | Returns the coordinate dimension of a geometry.                                                                           |
 | ST_NPoints          |             | Returns the number of points (vertices) in a geometry.                                                                    |
@@ -71,9 +71,9 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_Points           |             | Returns a MultiPoint containing the coordinates of a geometry.                                                            |
 | ST_StartPoint       | ✅          | Returns the first point of a LineString.                                                                                  |
 | ST_Summary          |             | Returns a text summary of the contents of a geometry.                                                                     |
-| ST_X                |             | Returns the X coordinate of a Point.                                                                                      |
-| ST_Y                |             | Returns the Y coordinate of a Point.                                                                                      |
-| ST_Z                |             | Returns the Z coordinate of a Point.                                                                                      |
+| ST_X                | ✅          | Returns the X coordinate of a Point.                                                                                      |
+| ST_Y                | ✅          | Returns the Y coordinate of a Point.                                                                                      |
+| ST_Z                | ✅          | Returns the Z coordinate of a Point.                                                                                      |
 | ST_Zmflag           |             | Returns a code indicating the ZM coordinate dimension of a geometry.                                                      |
 | ST_HasZ             |             | Checks if a geometry has a Z dimension.                                                                                   |
 | ST_HasM             |             | Checks if a geometry has an M (measure) dimension.                                                                        |

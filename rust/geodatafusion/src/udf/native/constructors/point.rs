@@ -341,7 +341,7 @@ impl ScalarUDFImpl for PointZM {
 
     fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<Arc<Field>> {
         let mut typ =
-            PointType::new(Dimension::XY, Default::default()).with_coord_type(self.coord_type);
+            PointType::new(Dimension::XYZM, Default::default()).with_coord_type(self.coord_type);
 
         if let Some(srid) = args.scalar_arguments.get(4) {
             if let Some(ScalarValue::Int64(srid_val)) = srid {
