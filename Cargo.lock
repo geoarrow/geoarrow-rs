@@ -1469,13 +1469,12 @@ dependencies = [
 [[package]]
 name = "flatgeobuf"
 version = "4.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9aa0c2132e1c646a8d636ac582a09dfb593d25c62c4263ed021e0af56f4db7b"
+source = "git+https://github.com/kylebarron/flatgeobuf?rev=ea7749d5b209972389f73f9a93dd1d860f3467a1#ea7749d5b209972389f73f9a93dd1d860f3467a1"
 dependencies = [
  "byteorder",
  "fallible-streaming-iterator",
  "flatbuffers 24.12.23",
- "geo-traits 0.2.0",
+ "geo-traits",
  "geozero",
  "log",
  "tempfile",
@@ -1627,15 +1626,6 @@ dependencies = [
 
 [[package]]
 name = "geo-traits"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b018fc19fa58202b03f1c809aebe654f7d70fd3887dace34c3d05c11aeb474b5"
-dependencies = [
- "geo-types",
-]
-
-[[package]]
-name = "geo-traits"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2e7c353d12a704ccfab1ba8bfb1a7fe6cb18b665bf89d37f4f7890edcd260206"
@@ -1673,7 +1663,7 @@ dependencies = [
  "arrow-json",
  "arrow-schema",
  "geo",
- "geo-traits 0.3.0",
+ "geo-traits",
  "geo-types",
  "geoarrow-schema",
  "geoarrow-test",
@@ -1688,7 +1678,7 @@ name = "geoarrow-cast"
 version = "0.4.0"
 dependencies = [
  "arrow-schema",
- "geo-traits 0.3.0",
+ "geo-traits",
  "geoarrow-array",
  "geoarrow-schema",
  "geoarrow-test",
@@ -1717,7 +1707,7 @@ dependencies = [
  "arrow-array",
  "arrow-buffer",
  "geo",
- "geo-traits 0.3.0",
+ "geo-traits",
  "geoarrow-array",
  "geoarrow-schema",
 ]
@@ -1728,7 +1718,7 @@ version = "0.4.0"
 dependencies = [
  "arrow-array",
  "arrow-schema",
- "geo-traits 0.3.0",
+ "geo-traits",
  "geoarrow-array",
  "geoarrow-schema",
  "geos",
@@ -1739,7 +1729,7 @@ name = "geoarrow-schema"
 version = "0.4.0"
 dependencies = [
  "arrow-schema",
- "geo-traits 0.3.0",
+ "geo-traits",
  "serde",
  "serde_json",
  "thiserror 1.0.69",
@@ -1761,7 +1751,7 @@ dependencies = [
  "arrow-schema",
  "datafusion",
  "geo",
- "geo-traits 0.3.0",
+ "geo-traits",
  "geoarrow-array",
  "geoarrow-geo",
  "geoarrow-schema",
@@ -1812,7 +1802,7 @@ dependencies = [
  "arrow-ord",
  "arrow-schema",
  "futures",
- "geo-traits 0.3.0",
+ "geo-traits",
  "geo-types",
  "geoarrow-array",
  "geoarrow-schema",
@@ -2915,7 +2905,7 @@ dependencies = [
  "arrow-buffer",
  "arrow-cast",
  "arrow-schema",
- "geo-traits 0.3.0",
+ "geo-traits",
  "geo-types",
  "geoarrow-array",
  "geoarrow-cast",
@@ -4082,7 +4072,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ff9eff6aebac4c64f9c7c057a68f6359284e2a80acf102dffe041fe219b3a082"
 dependencies = [
  "byteorder",
- "geo-traits 0.3.0",
+ "geo-traits",
  "num_enum",
  "thiserror 1.0.69",
 ]
@@ -4105,7 +4095,7 @@ version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "efb2b923ccc882312e559ffaa832a055ba9d1ac0cc8e86b3e25453247e4b81d7"
 dependencies = [
- "geo-traits 0.3.0",
+ "geo-traits",
  "geo-types",
  "log",
  "num-traits",
