@@ -58,11 +58,12 @@ impl ScalarUDFImpl for Intersects {
 
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
         let mut arrays = args.args.into_iter();
-        Ok(intersects_impl(
+        Ok(relate_impl(
             arrays.next().unwrap(),
             &args.arg_fields[0],
             arrays.next().unwrap(),
             &args.arg_fields[1],
+            |matrix| matrix.is_intersects(),
         )?)
     }
 
@@ -80,11 +81,12 @@ impl ScalarUDFImpl for Intersects {
     }
 }
 
-fn intersects_impl(
+fn relate_impl(
     left: ColumnarValue,
     left_field: &Field,
     right: ColumnarValue,
     right_field: &Field,
+    relate_cb: impl Fn(IntersectionMatrix) -> bool,
 ) -> GeoDataFusionResult<ColumnarValue> {
     match (left, right) {
         (ColumnarValue::Scalar(left_scalar), ColumnarValue::Scalar(right_scalar)) => {
@@ -93,14 +95,12 @@ fn intersects_impl(
                     .into_iter();
             let left_array = ColumnarValue::Array(arrays.next().unwrap());
             let right_array = ColumnarValue::Array(arrays.next().unwrap());
-            intersects_impl(left_array, left_field, right_array, right_field)
+            relate_impl(left_array, left_field, right_array, right_field, relate_cb)
         }
         (ColumnarValue::Array(left_arr), ColumnarValue::Array(right_arr)) => {
             let left_arr = from_arrow_array(&left_arr, left_field)?;
             let right_arr = from_arrow_array(&right_arr, right_field)?;
-            let result = geoarrow_geo::relate_boolean(&left_arr, &right_arr, |matrix| {
-                matrix.is_intersects()
-            })?;
+            let result = geoarrow_geo::relate_boolean(&left_arr, &right_arr, relate_cb)?;
             Ok(ColumnarValue::Array(Arc::new(result)))
         }
         (ColumnarValue::Scalar(left_scalar), ColumnarValue::Array(right_array)) => {
@@ -112,19 +112,17 @@ fn intersects_impl(
             let left_prepared_geometry = PreparedGeometry::from(left_geo_scalar);
 
             let right_geo_array = from_arrow_array(&right_array, right_field)?;
-            let result = intersects_prepared_geometry(
-                &right_geo_array,
-                &left_prepared_geometry,
-                |matrix| matrix.is_intersects(),
-            )?;
+            let result =
+                intersects_prepared_geometry(&right_geo_array, &left_prepared_geometry, relate_cb)?;
             Ok(ColumnarValue::Array(Arc::new(result)))
         }
         // Reflexive
-        (ColumnarValue::Array(left_array), ColumnarValue::Scalar(right_scalar)) => intersects_impl(
+        (ColumnarValue::Array(left_array), ColumnarValue::Scalar(right_scalar)) => relate_impl(
             right_scalar.into(),
             right_field,
             left_array.into(),
             left_field,
+            relate_cb,
         ),
     }
 }
