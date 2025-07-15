@@ -108,6 +108,7 @@ impl GeoArrowRecordBatchBuilder {
         let mut columns = Vec::new();
         for field in properties_schema.fields() {
             let capacity = batch_size.unwrap_or(0);
+            // Workaround for https://github.com/apache/arrow-rs/pull/7931
             let builder = if field.data_type() == &DataType::Utf8View {
                 Box::new(StringViewBuilder::with_capacity(capacity))
             } else if field.data_type() == &DataType::BinaryView {
