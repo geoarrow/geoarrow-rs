@@ -23,6 +23,9 @@ pub struct FlatGeobufReaderOptions {
     ///
     /// If set to `None`, no spatial filtering will be performed.
     pub bbox: Option<(f64, f64, f64, f64)>,
+
+    /// Whether to prefer view types for string and binary columns.
+    pub prefer_view_types: bool,
 }
 
 impl Default for FlatGeobufReaderOptions {
@@ -31,6 +34,7 @@ impl Default for FlatGeobufReaderOptions {
             coord_type: CoordType::Interleaved,
             batch_size: Some(65_536),
             bbox: None,
+            prefer_view_types: true,
         }
     }
 }

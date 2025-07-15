@@ -103,21 +103,28 @@ impl GeoArrowRecordBatchBuilder {
     pub fn new(
         properties_schema: SchemaRef,
         geometry_type: GeoArrowType,
-        num_rows: Option<usize>,
-    ) -> GeoArrowResult<Self> {
+        batch_size: Option<usize>,
+    ) -> Self {
         let mut columns = Vec::new();
         for field in properties_schema.fields() {
-            let builder = make_builder(field.data_type(), num_rows.unwrap_or(0));
+            let builder = make_builder(field.data_type(), batch_size.unwrap_or(0));
             columns.push(builder);
         }
 
         let geometry_builder = GeoArrowArrayBuilder::new(geometry_type);
 
-        Ok(Self {
+        Self {
             properties_schema,
             columns,
             geometry_builder,
-        })
+        }
+    }
+
+    pub(crate) fn push_geometry(
+        &mut self,
+        geometry: Option<&impl GeometryTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
+        self.geometry_builder.push_geometry(geometry)
     }
 
     pub fn finish(self) -> GeoArrowResult<RecordBatch> {
