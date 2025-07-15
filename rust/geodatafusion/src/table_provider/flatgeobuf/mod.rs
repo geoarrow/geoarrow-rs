@@ -12,6 +12,7 @@ mod tests {
     };
     use datafusion::error::Result;
     use datafusion::execution::SessionStateBuilder;
+    use datafusion::execution::object_store::ObjectStoreUrl;
     use datafusion::prelude::SessionContext;
 
     use crate::udf::native::measurement::Centroid;
@@ -34,9 +35,19 @@ mod tests {
         // Create a new context with the custom file format
         let ctx = SessionContext::new_with_state(state);
 
+        let object_store_url = ObjectStoreUrl::parse("https://flatgeobuf.org").unwrap();
+        let object_store = Arc::new(
+            object_store::http::HttpBuilder::new()
+                .with_url(object_store_url.as_str())
+                .build()
+                .unwrap(),
+        );
+
+        ctx.register_object_store(object_store_url.as_ref(), object_store);
+
         // Create the ListingTableConfig
         let config = ListingTableConfig::new(ListingTableUrl::parse(
-            "../../fixtures/flatgeobuf/countries.fgb",
+            "https://flatgeobuf.org/test/data/countries.fgb",
         )?)
         .with_listing_options(ListingOptions::new(Arc::new(FlatGeobufFormat::default())))
         .infer_schema(&ctx.state())
@@ -51,7 +62,7 @@ mod tests {
         ctx.register_udf(Centroid::new(Default::default()).into());
 
         let df = ctx
-            .sql("SELECT * FROM countries WHERE name = 'Zambia'")
+            .sql("SELECT ST_Centroid(geometry) as centroid, * FROM countries WHERE name = 'Zambia'")
             .await?;
         // .collect()
         // .await?;
