@@ -31,7 +31,7 @@ pub struct FlatGeobufReaderOptions {
 impl Default for FlatGeobufReaderOptions {
     fn default() -> Self {
         Self {
-            coord_type: CoordType::Interleaved,
+            coord_type: Default::default(),
             batch_size: Some(65_536),
             bbox: None,
             prefer_view_types: true,

@@ -163,7 +163,9 @@ impl<R: Read> FlatGeobufRecordBatchIterator<R, NotSeekable> {
                 )?;
 
                 // $builder.feature_end(0)?;
-                // row_count += 1;
+                row_count += 1;
+            } else if row_count > 0 {
+                return Ok(Some(record_batch_builder.finish()?));
             } else {
                 return Ok(None);
             }
@@ -185,6 +187,51 @@ impl<R: Read> RecordBatchReader for FlatGeobufRecordBatchIterator<R, NotSeekable
     }
 }
 
+impl<R: Read + Seek> FlatGeobufRecordBatchIterator<R, Seekable> {
+    fn process_batch(&mut self) -> GeoArrowResult<Option<RecordBatch>> {
+        let batch_size = self
+            .num_rows_remaining
+            .map(|num_rows_remaining| num_rows_remaining.min(self.batch_size));
+        let mut record_batch_builder = GeoArrowRecordBatchBuilder::new(
+            self.properties_schema.clone(),
+            self.geometry_type.clone(),
+            batch_size,
+        );
+
+        let mut row_count = 0;
+        loop {
+            if row_count >= self.batch_size {
+                return Ok(Some(record_batch_builder.finish()?));
+            }
+
+            if let Some(feature) = self
+                .selection
+                .next()
+                .map_err(|err| GeoArrowError::External(Box::new(err)))?
+            {
+                feature
+                    .process_properties(&mut record_batch_builder)
+                    .map_err(|err| GeoArrowError::External(Box::new(err)))?;
+                // record_batch_builder.properties_end()?;
+
+                record_batch_builder.push_geometry(
+                    feature
+                        .geometry_trait()
+                        .map_err(|err| GeoArrowError::External(Box::new(err)))?
+                        .as_ref(),
+                )?;
+
+                // $builder.feature_end(0)?;
+                row_count += 1;
+            } else if row_count > 0 {
+                return Ok(Some(record_batch_builder.finish()?));
+            } else {
+                return Ok(None);
+            }
+        }
+    }
+}
+
 impl<R: Read + Seek> Iterator for FlatGeobufRecordBatchIterator<R, Seekable> {
     type Item = std::result::Result<RecordBatch, ArrowError>;
 
@@ -199,101 +246,99 @@ impl<R: Read + Seek> RecordBatchReader for FlatGeobufRecordBatchIterator<R, Seek
     }
 }
 
-// #[cfg(test)]
-// mod test {
-//     use std::fs::File;
-//     use std::io::BufReader;
+#[cfg(test)]
+mod test {
+    use std::fs::File;
+    use std::io::BufReader;
 
-//     use arrow_schema::DataType;
+    use arrow_schema::DataType;
 
-//     use crate::datatypes::NativeType;
-//     use crate::table::Table;
+    use super::*;
 
-//     use super::*;
+    #[test]
+    fn test_countries() {
+        let filein = BufReader::new(File::open("../../fixtures/flatgeobuf/countries.fgb").unwrap());
+        let reader_builder = FlatGeobufReaderBuilder::open(filein).unwrap();
+        let record_batch_reader = reader_builder.read(Default::default()).unwrap();
+        let _batches = record_batch_reader.collect::<Result<Vec<_>, _>>().unwrap();
+        // println!("{}", pretty_format_batches(&batches).unwrap());
+        // print!(format!(pretty_format_batches(&batches).unwrap()));
+        // dbg!(_batches.len());
+    }
 
-//     #[test]
-//     fn test_countries() {
-//         let filein = BufReader::new(File::open("fixtures/flatgeobuf/countries.fgb").unwrap());
-//         let reader_builder = FlatGeobufReaderBuilder::open(filein).unwrap();
-//         let record_batch_reader = reader_builder.read(Default::default()).unwrap();
-//         let _batches = record_batch_reader
-//             .collect::<std::result::Result<Vec<_>, _>>()
-//             .unwrap();
-//     }
+    #[test]
+    fn test_nz_buildings() {
+        let filein = BufReader::new(
+            File::open("../../fixtures/flatgeobuf/nz-building-outlines-small.fgb").unwrap(),
+        );
+        let reader_builder = FlatGeobufReaderBuilder::open(filein).unwrap();
+        let record_batch_reader = reader_builder.read(Default::default()).unwrap();
+        let _batches = record_batch_reader
+            .collect::<std::result::Result<Vec<_>, _>>()
+            .unwrap();
+    }
 
-//     #[test]
-//     fn test_nz_buildings() {
-//         let filein = BufReader::new(
-//             File::open("fixtures/flatgeobuf/nz-building-outlines-small.fgb").unwrap(),
-//         );
-//         let reader_builder = FlatGeobufReaderBuilder::open(filein).unwrap();
-//         let record_batch_reader = reader_builder.read(Default::default()).unwrap();
-//         let _batches = record_batch_reader
-//             .collect::<std::result::Result<Vec<_>, _>>()
-//             .unwrap();
-//     }
+    #[test]
+    fn test_poly() {
+        let filein = BufReader::new(File::open("../../fixtures/flatgeobuf/poly00.fgb").unwrap());
 
-//     #[test]
-//     fn test_poly() {
-//         let filein = BufReader::new(File::open("fixtures/flatgeobuf/poly00.fgb").unwrap());
+        let reader_builder = FlatGeobufReaderBuilder::open(filein).unwrap();
+        let record_batch_reader = reader_builder.read(Default::default()).unwrap();
 
-//         let reader_builder = FlatGeobufReaderBuilder::open(filein).unwrap();
-//         let record_batch_reader = reader_builder.read(Default::default()).unwrap();
-//         let table = Table::try_from(
-//             Box::new(record_batch_reader) as Box<dyn arrow_array::RecordBatchReader>
-//         )
-//         .unwrap();
+        let schema = record_batch_reader.schema();
+        let field = schema.field_with_name("geometry").unwrap();
+        assert!(matches!(
+            GeoArrowType::try_from(field).unwrap(),
+            GeoArrowType::Polygon(_)
+        ));
+        assert!(matches!(
+            schema.field_with_name("AREA").unwrap().data_type(),
+            DataType::Float64
+        ));
+        assert!(matches!(
+            schema.field_with_name("EAS_ID").unwrap().data_type(),
+            DataType::Int64
+        ));
+        assert!(matches!(
+            schema.field_with_name("PRFEDEA").unwrap().data_type(),
+            DataType::Utf8View
+        ));
 
-//         let geom_col = table.geometry_column(None).unwrap();
-//         assert!(matches!(geom_col.data_type(), NativeType::Polygon(_)));
+        let batches = record_batch_reader.collect::<Result<Vec<_>, _>>().unwrap();
+        assert_eq!(batches[0].num_rows(), 10);
+    }
 
-//         let (batches, schema) = table.into_inner();
-//         assert_eq!(batches[0].num_rows(), 10);
-//         assert!(matches!(
-//             schema.field_with_name("AREA").unwrap().data_type(),
-//             DataType::Float64
-//         ));
-//         assert!(matches!(
-//             schema.field_with_name("EAS_ID").unwrap().data_type(),
-//             DataType::Int64
-//         ));
-//         assert!(matches!(
-//             schema.field_with_name("PRFEDEA").unwrap().data_type(),
-//             DataType::Utf8
-//         ));
-//     }
+    #[test]
+    fn test_all_datatypes() {
+        let filein =
+            BufReader::new(File::open("../../fixtures/flatgeobuf/alldatatypes.fgb").unwrap());
+        let reader_builder = FlatGeobufReaderBuilder::open(filein).unwrap();
+        let record_batch_reader = reader_builder.read(Default::default()).unwrap();
 
-//     #[ignore = "Union fields length must match child arrays length"]
-//     #[test]
-//     fn test_all_datatypes() {
-//         let filein = BufReader::new(File::open("fixtures/flatgeobuf/alldatatypes.fgb").unwrap());
-//         let reader_builder = FlatGeobufReaderBuilder::open(filein).unwrap();
-//         let record_batch_reader = reader_builder.read(Default::default()).unwrap();
-//         let table = Table::try_from(
-//             Box::new(record_batch_reader) as Box<dyn arrow_array::RecordBatchReader>
-//         )
-//         .unwrap();
+        let schema = record_batch_reader.schema();
+        let field = schema.field_with_name("geometry").unwrap();
+        assert!(matches!(
+            GeoArrowType::try_from(field).unwrap(),
+            GeoArrowType::Geometry(_)
+        ));
 
-//         let geom_col = table.geometry_column(None).unwrap();
-//         assert!(matches!(geom_col.data_type(), NativeType::Geometry(_)));
-
-//         let (batches, schema) = table.into_inner();
-//         assert_eq!(batches[0].num_rows(), 1);
-//         assert!(matches!(
-//             schema.field_with_name("byte").unwrap().data_type(),
-//             DataType::Int8
-//         ));
-//         assert!(matches!(
-//             schema.field_with_name("float").unwrap().data_type(),
-//             DataType::Float32
-//         ));
-//         assert!(matches!(
-//             schema.field_with_name("json").unwrap().data_type(),
-//             DataType::Utf8
-//         ));
-//         assert!(matches!(
-//             schema.field_with_name("binary").unwrap().data_type(),
-//             DataType::Binary
-//         ));
-//     }
-// }
+        let batches = record_batch_reader.collect::<Result<Vec<_>, _>>().unwrap();
+        assert_eq!(batches[0].num_rows(), 1);
+        assert!(matches!(
+            schema.field_with_name("byte").unwrap().data_type(),
+            DataType::Int8
+        ));
+        assert!(matches!(
+            schema.field_with_name("float").unwrap().data_type(),
+            DataType::Float32
+        ));
+        assert!(matches!(
+            schema.field_with_name("json").unwrap().data_type(),
+            DataType::Utf8View
+        ));
+        assert!(matches!(
+            schema.field_with_name("binary").unwrap().data_type(),
+            DataType::BinaryView
+        ));
+    }
+}

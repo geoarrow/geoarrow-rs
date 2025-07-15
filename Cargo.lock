@@ -1694,12 +1694,10 @@ dependencies = [
  "arrow-schema",
  "chrono",
  "flatgeobuf",
- "futures",
  "geo-traits",
  "geoarrow-array",
  "geoarrow-schema",
  "geozero",
- "http-range-client",
  "wkt 0.14.0",
 ]
 
@@ -1980,19 +1978,6 @@ dependencies = [
  "bytes",
  "fnv",
  "itoa",
-]
-
-[[package]]
-name = "http-range-client"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3b0cb8b2a6444be75e1bb3bfa79911cae70865df20a36d7c70945273b13b641"
-dependencies = [
- "async-trait",
- "byteorder",
- "bytes",
- "read-logger",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -3028,15 +3013,6 @@ checksum = "1465873a3dfdaa8ae7cb14b4383657caab0b3e8a0aa9ae8e04b044854c8dfce2"
 dependencies = [
  "crossbeam-deque",
  "crossbeam-utils",
-]
-
-[[package]]
-name = "read-logger"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c7f715a23c7db804b71eb9162a9cf210b89e99db9c3649a2a038d13b7594a99"
-dependencies = [
- "log",
 ]
 
 [[package]]

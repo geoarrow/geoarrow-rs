@@ -107,7 +107,14 @@ impl GeoArrowRecordBatchBuilder {
     ) -> Self {
         let mut columns = Vec::new();
         for field in properties_schema.fields() {
-            let builder = make_builder(field.data_type(), batch_size.unwrap_or(0));
+            let capacity = batch_size.unwrap_or(0);
+            let builder = if field.data_type() == &DataType::Utf8View {
+                Box::new(StringViewBuilder::with_capacity(capacity))
+            } else if field.data_type() == &DataType::BinaryView {
+                Box::new(BinaryViewBuilder::with_capacity(capacity))
+            } else {
+                make_builder(field.data_type(), capacity)
+            };
             columns.push(builder);
         }
 
@@ -125,6 +132,11 @@ impl GeoArrowRecordBatchBuilder {
         geometry: Option<&impl GeometryTrait<T = f64>>,
     ) -> GeoArrowResult<()> {
         self.geometry_builder.push_geometry(geometry)
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn num_rows(&self) -> usize {
+        self.columns.first().map_or(0, |col| col.len())
     }
 
     pub fn finish(self) -> GeoArrowResult<RecordBatch> {

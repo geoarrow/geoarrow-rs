@@ -10,21 +10,22 @@ categories = { workspace = true }
 rust-version = { workspace = true }
 
 [features]
-async = ["dep:futures", "dep:http-range-client"]
+# async = ["dep:futures", "dep:http-range-client"]
 
 [dependencies]
 arrow-array = { workspace = true }
 arrow-cast = { workspace = true }
-arrow-schema = { workspace = true }
+arrow-schema = { workspace = true, features = ["canonical_extension_types"] }
 chrono = { workspace = true }
 flatgeobuf = { workspace = true }
-futures = { workspace = true, optional = true }
+# futures = { workspace = true, optional = true }
 geo-traits = { workspace = true }
 geoarrow-array = { workspace = true, features = ["geozero"] }
 geoarrow-schema = { workspace = true }
 geozero = { workspace = true }
-http-range-client = { workspace = true, optional = true, default-features = false }
+# http-range-client = { workspace = true, optional = true, default-features = false }
 
 [dev-dependencies]
 arrow-array = { workspace = true }
+arrow-cast = { workspace = true, features = ["prettyprint"] }
 wkt = { workspace = true }
