@@ -3,6 +3,7 @@ use geo::contains::Contains;
 use geo_traits::to_geo::ToGeoGeometry;
 use geoarrow_array::GeoArrowArrayAccessor;
 use geoarrow_schema::error::GeoArrowResult;
+
 pub fn contains<'a>(
     left_array: &'a impl GeoArrowArrayAccessor<'a>,
     right_array: &'a impl GeoArrowArrayAccessor<'a>,
@@ -32,8 +33,7 @@ pub fn contains<'a>(
 
 #[cfg(test)]
 mod tests {
-    use geo::point;
-    use geo::{Geometry, line_string, polygon};
+    use geo::{Geometry, line_string, polygon, point};
     use geoarrow_array::builder::GeometryBuilder;
     use geoarrow_schema::{CoordType, GeometryType};
 
@@ -106,5 +106,29 @@ mod tests {
         let expected = BooleanArray::from(vec![Some(true), Some(false), Some(true)]);
 
         assert_eq!(result, expected, "Contains test failed");
+    }
+
+    #[test]
+    #[should_panic(expected = "Arrays must have the same length")]
+    fn test_contains_length_mismatch() {
+        let geoms_left = vec![
+            Some(Geometry::from(polygon![
+                (x: 1.0, y: 1.0),
+                (x: 2.0, y: 1.0),
+                (x: 2.0, y: 2.0),
+                (x: 1.0, y: 2.0)
+            ])),
+        ];
+        let geoms_right: Vec<Option<Geometry>>  = vec![];
+
+        let typ = GeometryType::new(Default::default()).with_coord_type(CoordType::Interleaved);
+        let left_array = GeometryBuilder::from_nullable_geometries(&geoms_left, typ.clone())
+            .unwrap()
+            .finish();
+        let right_array = GeometryBuilder::from_nullable_geometries(&geoms_right, typ)
+            .unwrap()
+            .finish();
+
+        contains(&left_array, &right_array).unwrap();
     }
 }
