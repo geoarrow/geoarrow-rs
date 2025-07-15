@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use arrow_array::ArrayRef;
+use arrow_schema::DataType;
 use datafusion::error::DataFusionError;
 use datafusion::logical_expr::{Signature, Volatility};
 use geoarrow_array::GeoArrowArray;
@@ -106,6 +107,43 @@ pub(crate) fn any_single_geometry_type_input() -> Signature {
         Dimension::XYZM,
     ] {
         valid_types.push(BoxType::new(dim, Default::default()).data_type());
+    }
+
+    // Wkb
+    valid_types.push(DataType::Binary);
+    valid_types.push(DataType::LargeBinary);
+    valid_types.push(DataType::BinaryView);
+
+    // Wkt
+    valid_types.push(DataType::Utf8);
+    valid_types.push(DataType::LargeUtf8);
+    valid_types.push(DataType::Utf8View);
+
+    Signature::uniform(1, valid_types, Volatility::Immutable)
+}
+
+pub(crate) fn any_single_point_type_input() -> Signature {
+    let mut valid_types = vec![];
+
+    for coord_type in [CoordType::Separated, CoordType::Interleaved] {
+        for dim in [
+            Dimension::XY,
+            Dimension::XYZ,
+            Dimension::XYM,
+            Dimension::XYZM,
+        ] {
+            valid_types.push(
+                PointType::new(dim, Default::default())
+                    .with_coord_type(coord_type)
+                    .data_type(),
+            );
+        }
+
+        valid_types.push(
+            GeometryType::new(Default::default())
+                .with_coord_type(coord_type)
+                .data_type(),
+        );
     }
 
     Signature::uniform(1, valid_types, Volatility::Immutable)
