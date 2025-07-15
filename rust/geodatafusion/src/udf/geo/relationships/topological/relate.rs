@@ -9,6 +9,7 @@ use datafusion::logical_expr::scalar_doc_sections::DOC_SECTION_OTHER;
 use datafusion::logical_expr::{
     ColumnarValue, Documentation, ScalarFunctionArgs, ScalarUDFImpl, Signature, Volatility,
 };
+use geo::relate::IntersectionMatrix;
 use geo::{PreparedGeometry, Relate};
 use geo_traits::to_geo::ToGeoGeometry;
 use geoarrow_array::array::from_arrow_array;
@@ -97,7 +98,9 @@ fn intersects_impl(
         (ColumnarValue::Array(left_arr), ColumnarValue::Array(right_arr)) => {
             let left_arr = from_arrow_array(&left_arr, left_field)?;
             let right_arr = from_arrow_array(&right_arr, right_field)?;
-            let result = geoarrow_geo::intersects(&left_arr, &right_arr)?;
+            let result = geoarrow_geo::relate_boolean(&left_arr, &right_arr, |matrix| {
+                matrix.is_intersects()
+            })?;
             Ok(ColumnarValue::Array(Arc::new(result)))
         }
         (ColumnarValue::Scalar(left_scalar), ColumnarValue::Array(right_array)) => {
@@ -109,7 +112,11 @@ fn intersects_impl(
             let left_prepared_geometry = PreparedGeometry::from(left_geo_scalar);
 
             let right_geo_array = from_arrow_array(&right_array, right_field)?;
-            let result = intersects_prepared_geometry(&right_geo_array, &left_prepared_geometry)?;
+            let result = intersects_prepared_geometry(
+                &right_geo_array,
+                &left_prepared_geometry,
+                |matrix| matrix.is_intersects(),
+            )?;
             Ok(ColumnarValue::Array(Arc::new(result)))
         }
         // Reflexive
@@ -141,20 +148,27 @@ fn _to_geo_scalar_impl<'a>(
 fn intersects_prepared_geometry(
     array: &dyn GeoArrowArray,
     prepared: &PreparedGeometry<geo::Geometry>,
+    relate_cb: impl Fn(IntersectionMatrix) -> bool,
 ) -> GeoDataFusionResult<BooleanArray> {
-    downcast_geoarrow_array!(array, _intersects_prepared_geometry_impl, prepared)
+    downcast_geoarrow_array!(
+        array,
+        _intersects_prepared_geometry_impl,
+        prepared,
+        relate_cb
+    )
 }
 
 fn _intersects_prepared_geometry_impl<'a>(
     arr: &'a impl GeoArrowArrayAccessor<'a>,
     prepared: &PreparedGeometry<geo::Geometry>,
+    relate_cb: impl Fn(IntersectionMatrix) -> bool,
 ) -> GeoDataFusionResult<BooleanArray> {
     let mut builder = BooleanBuilder::with_capacity(arr.len());
 
     for item in arr.iter() {
         if let Some(geom) = item {
             let geo_geom = geom?.to_geometry();
-            builder.append_value(geo_geom.relate(prepared).is_intersects());
+            builder.append_value(relate_cb(geo_geom.relate(prepared)));
         } else {
             builder.append_null();
         }
