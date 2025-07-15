@@ -1,6 +1,5 @@
 use arrow_array::BooleanArray;
 use geo::contains::Contains;
-use geo::point;
 use geo_traits::to_geo::ToGeoGeometry;
 use geoarrow_array::GeoArrowArrayAccessor;
 use geoarrow_schema::error::GeoArrowResult;
@@ -33,10 +32,12 @@ pub fn contains<'a>(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use geo::point;
     use geo::{Geometry, line_string, polygon};
     use geoarrow_array::builder::GeometryBuilder;
     use geoarrow_schema::{CoordType, GeometryType};
+
+    use super::*;
 
     #[test]
     fn test_contains() {
