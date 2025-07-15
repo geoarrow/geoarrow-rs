@@ -17,7 +17,7 @@ use crate::reader::FlatGeobufReaderOptions;
 use crate::reader::common::parse_header;
 use crate::reader::table_builder::GeoArrowRecordBatchBuilder;
 
-/// A builder for [FlatGeobufReader]
+/// The primary async entry point for reading FlatGeobuf files as a stream of record batches.
 pub struct FlatGeobufStreamBuilder<T: AsyncHttpRangeClient + Unpin + Send + 'static> {
     reader: HttpFgbReader<T>,
 }
@@ -67,7 +67,7 @@ impl<T: AsyncHttpRangeClient + Unpin + Send + 'static> FlatGeobufStreamBuilder<T
 
 #[cfg(feature = "object_store")]
 impl FlatGeobufStreamBuilder<super::object_store_reader::ObjectStoreWrapper> {
-    /// Create a [FlatGeobufStreamBuilder] from an [ObjectStore] instance.
+    /// Create a [FlatGeobufStreamBuilder] from an ObjectStore instance.
     pub async fn new_from_store(
         store: Arc<dyn object_store::ObjectStore>,
         location: object_store::path::Path,
