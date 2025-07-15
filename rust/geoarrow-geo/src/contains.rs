@@ -33,7 +33,7 @@ pub fn contains<'a>(
 
 #[cfg(test)]
 mod tests {
-    use geo::{Geometry, line_string, polygon, point};
+    use geo::{Geometry, line_string, point, polygon};
     use geoarrow_array::builder::GeometryBuilder;
     use geoarrow_schema::{CoordType, GeometryType};
 
@@ -111,15 +111,13 @@ mod tests {
     #[test]
     #[should_panic(expected = "Arrays must have the same length")]
     fn test_contains_length_mismatch() {
-        let geoms_left = vec![
-            Some(Geometry::from(polygon![
-                (x: 1.0, y: 1.0),
-                (x: 2.0, y: 1.0),
-                (x: 2.0, y: 2.0),
-                (x: 1.0, y: 2.0)
-            ])),
-        ];
-        let geoms_right: Vec<Option<Geometry>>  = vec![];
+        let geoms_left = vec![Some(Geometry::from(polygon![
+            (x: 1.0, y: 1.0),
+            (x: 2.0, y: 1.0),
+            (x: 2.0, y: 2.0),
+            (x: 1.0, y: 2.0)
+        ]))];
+        let geoms_right: Vec<Option<Geometry>> = vec![];
 
         let typ = GeometryType::new(Default::default()).with_coord_type(CoordType::Interleaved);
         let left_array = GeometryBuilder::from_nullable_geometries(&geoms_left, typ.clone())
