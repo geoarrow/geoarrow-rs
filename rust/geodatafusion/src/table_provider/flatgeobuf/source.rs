@@ -17,37 +17,6 @@
 
 //! Execution plan for reading FlatGeobuf files
 
-// use datafusion_datasource::schema_adapter::SchemaAdapterFactory;
-// use std::any::Any;
-// use std::fmt;
-// use std::io::{Read, Seek, SeekFrom};
-// use std::sync::Arc;
-// use std::task::Poll;
-
-// use datafusion_datasource::decoder::{DecoderDeserializer, deserialize_stream};
-// use datafusion_datasource::file_compression_type::FileCompressionType;
-// use datafusion_datasource::file_meta::FileMeta;
-// use datafusion_datasource::file_stream::{FileOpenFuture, FileOpener};
-// use datafusion_datasource::{
-//     FileRange, ListingTableUrl, RangeCalculation, as_file_source, calculate_range,
-// };
-
-// use arrow::csv;
-// use arrow::datatypes::SchemaRef;
-// use datafusion_common::{DataFusionError, Result, Statistics};
-// use datafusion_common_runtime::JoinSet;
-// use datafusion_datasource::file::FileSource;
-// use datafusion_datasource::file_scan_config::FileScanConfig;
-// use datafusion_execution::TaskContext;
-// use datafusion_physical_plan::metrics::ExecutionPlanMetricsSet;
-// use datafusion_physical_plan::{DisplayFormatType, ExecutionPlan, ExecutionPlanProperties};
-
-// use crate::file_format::CsvDecoder;
-// use futures::{StreamExt, TryStreamExt};
-// use object_store::buffered::BufWriter;
-// use object_store::{GetOptions, GetResultPayload, ObjectStore};
-// use tokio::io::AsyncWriteExt;
-
 use std::any::Any;
 use std::sync::Arc;
 
@@ -62,13 +31,40 @@ use futures::StreamExt;
 use geoarrow_flatgeobuf::reader::FlatGeobufStreamBuilder;
 use object_store::ObjectStore;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct FlatGeobufSource {
     batch_size: Option<usize>,
     file_schema: Option<SchemaRef>,
     file_projection: Option<Vec<usize>>,
     metrics: ExecutionPlanMetricsSet,
     projected_statistics: Option<Statistics>,
+}
+
+impl FlatGeobufSource {
+    pub fn new() -> Self {
+        Self {
+            batch_size: None,
+            file_schema: None,
+            file_projection: None,
+            metrics: ExecutionPlanMetricsSet::new(),
+            projected_statistics: None,
+        }
+    }
+
+    // pub fn with_batch_size(mut self, batch_size: usize) -> Self {
+    //     self.batch_size = Some(batch_size);
+    //     self
+    // }
+
+    // pub fn with_file_schema(mut self, schema: SchemaRef) -> Self {
+    //     self.file_schema = Some(schema);
+    //     self
+    // }
+
+    // pub fn with_projected_statistics(mut self, statistics: Statistics) -> Self {
+    //     self.projected_statistics = Some(statistics);
+    //     self
+    // }
 }
 
 impl From<FlatGeobufSource> for Arc<dyn FileSource> {
@@ -85,7 +81,7 @@ impl FileSource for FlatGeobufSource {
     fn create_file_opener(
         &self,
         object_store: Arc<dyn ObjectStore>,
-        base_config: &FileScanConfig,
+        _base_config: &FileScanConfig,
         _partition: usize,
     ) -> Arc<dyn FileOpener> {
         Arc::new(FlatGeobufOpener::new(Arc::new(self.clone()), object_store))

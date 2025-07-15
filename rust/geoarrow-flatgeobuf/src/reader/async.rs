@@ -8,8 +8,8 @@ use flatgeobuf::{AsyncFeatureIter, HttpFgbReader};
 use futures::Stream;
 use futures::stream::BoxStream;
 use futures::task::{Context, Poll};
-use geoarrow_schema::GeoArrowType;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
+use geoarrow_schema::{CoordType, GeoArrowType};
 use geozero::FeatureProperties;
 use http_range_client::{AsyncBufferedHttpRangeClient, AsyncHttpRangeClient};
 
@@ -33,6 +33,23 @@ impl<T: AsyncHttpRangeClient + Unpin + Send + 'static> FlatGeobufStreamBuilder<T
     pub async fn new_from_client(reader: T, url: &str) -> GeoArrowResult<Self> {
         let client = AsyncBufferedHttpRangeClient::with(reader, url);
         Self::open(client).await
+    }
+
+    // TODO: deduplicate with `output_schema`
+    pub fn output_schema(
+        &self,
+        coord_type: CoordType,
+        prefer_view_types: bool,
+    ) -> GeoArrowResult<Schema> {
+        let (geometry_type, properties_schema) =
+            parse_header(self.reader.header(), coord_type, prefer_view_types)?;
+
+        let mut fields = properties_schema.fields().to_vec();
+        fields.push(geometry_type.to_field("geometry", true).into());
+        Ok(Schema::new_with_metadata(
+            fields,
+            properties_schema.metadata().clone(),
+        ))
     }
 
     /// Read from the FlatGeobuf file
