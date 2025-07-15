@@ -2,13 +2,11 @@ use std::sync::Arc;
 
 use arrow_schema::{DataType, Field, SchemaBuilder, SchemaRef, TimeUnit};
 use flatgeobuf::{ColumnType, Crs, Header};
-use geoarrow_schema::{
-    CoordType, Dimension, GeometryCollectionType, GeometryType, LineStringType, Metadata,
-    MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType,
-};
-
-use geoarrow_schema::GeoArrowType;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
+use geoarrow_schema::{
+    CoordType, Dimension, GeoArrowType, GeometryCollectionType, GeometryType, LineStringType,
+    Metadata, MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType,
+};
 
 /// Options for the FlatGeobuf reader
 #[derive(Debug, Clone)]

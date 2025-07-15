@@ -192,10 +192,11 @@ impl FlatGeobufRecordBatchStream {
 mod test {
     use std::env::current_dir;
 
-    use super::*;
     use futures::TryStreamExt;
     use object_store::ObjectStore;
     use object_store::local::LocalFileSystem;
+
+    use super::*;
 
     fn fixtures_dir() -> Arc<dyn ObjectStore> {
         Arc::new(
