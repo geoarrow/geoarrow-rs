@@ -212,6 +212,27 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 
 ### Spatial Relationships
 
+#### Topological Relationships
+
+| Name                     | Implemented | Description                                                                                                                             |
+| ------------------------ | ----------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| ST_3DIntersects          |             | Tests if two geometries spatially intersect in 3D - only for points, linestrings, polygons, polyhedral surface (area).                  |
+| ST_Contains              | ✅          | Tests if every point of B lies in A, and their interiors have a point in common.                                                        |
+| ST_ContainsProperly      |             | Tests if every point of B lies in the interior of A.                                                                                    |
+| ST_CoveredBy             | ✅          | Tests if every point of A lies in B.                                                                                                    |
+| ST_Covers                | ✅          | Tests if every point of B lies in A.                                                                                                    |
+| ST_Crosses               | ✅          | Tests if two geometries have some, but not all, interior points in common.                                                              |
+| ST_Disjoint              | ✅          | Tests if two geometries have no points in common.                                                                                       |
+| ST_Equals                | ✅          | Tests if two geometries include the same set of points.                                                                                 |
+| ST_Intersects            | ✅          | Tests if two geometries intersect (they have at least one point in common).                                                             |
+| ST_LineCrossingDirection |             | Returns a number indicating the crossing behavior of two LineStrings.                                                                   |
+| ST_OrderingEquals        |             | Tests if two geometries represent the same geometry and have points in the same directional order.                                      |
+| ST_Overlaps              | ✅          | Tests if two geometries have the same dimension and intersect, but each has at least one point not in the other.                        |
+| ST_Relate                |             | Tests if two geometries have a topological relationship matching an Intersection Matrix pattern, or computes their Intersection Matrix. |
+| ST_RelateMatch           |             | Tests if a DE-9IM Intersection Matrix matches an Intersection Matrix pattern.                                                           |
+| ST_Touches               | ✅          | Tests if two geometries have at least one point in common, but their interiors do not intersect.                                        |
+| ST_Within                | ✅          | Tests if every point of A lies in B, and their interiors have a point in common.                                                        |
+
 ### Measurement Functions
 
 | Name                    | Implemented | Description                                                                                                                    |

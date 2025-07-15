@@ -1,1 +1,1 @@
-mod relationships;
+pub mod relationships;
