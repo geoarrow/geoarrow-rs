@@ -1469,15 +1469,17 @@ dependencies = [
 [[package]]
 name = "flatgeobuf"
 version = "4.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9aa0c2132e1c646a8d636ac582a09dfb593d25c62c4263ed021e0af56f4db7b"
+source = "git+https://github.com/kylebarron/flatgeobuf?rev=ea7749d5b209972389f73f9a93dd1d860f3467a1#ea7749d5b209972389f73f9a93dd1d860f3467a1"
 dependencies = [
  "byteorder",
+ "bytes",
  "fallible-streaming-iterator",
  "flatbuffers 24.12.23",
- "geo-traits 0.2.0",
+ "geo-traits",
  "geozero",
+ "http-range-client",
  "log",
+ "reqwest",
  "tempfile",
 ]
 
@@ -1627,15 +1629,6 @@ dependencies = [
 
 [[package]]
 name = "geo-traits"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b018fc19fa58202b03f1c809aebe654f7d70fd3887dace34c3d05c11aeb474b5"
-dependencies = [
- "geo-types",
-]
-
-[[package]]
-name = "geo-traits"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2e7c353d12a704ccfab1ba8bfb1a7fe6cb18b665bf89d37f4f7890edcd260206"
@@ -1673,7 +1666,7 @@ dependencies = [
  "arrow-json",
  "arrow-schema",
  "geo",
- "geo-traits 0.3.0",
+ "geo-traits",
  "geo-types",
  "geoarrow-schema",
  "geoarrow-test",
@@ -1688,7 +1681,7 @@ name = "geoarrow-cast"
 version = "0.4.0"
 dependencies = [
  "arrow-schema",
- "geo-traits 0.3.0",
+ "geo-traits",
  "geoarrow-array",
  "geoarrow-schema",
  "geoarrow-test",
@@ -1700,11 +1693,21 @@ name = "geoarrow-flatgeobuf"
 version = "0.4.0"
 dependencies = [
  "arrow-array",
+ "arrow-cast",
  "arrow-schema",
+ "async-stream",
+ "async-trait",
+ "bytes",
+ "chrono",
  "flatgeobuf",
+ "futures",
+ "geo-traits",
  "geoarrow-array",
  "geoarrow-schema",
  "geozero",
+ "http-range-client",
+ "object_store",
+ "tokio",
  "wkt 0.14.0",
 ]
 
@@ -1715,7 +1718,7 @@ dependencies = [
  "arrow-array",
  "arrow-buffer",
  "geo",
- "geo-traits 0.3.0",
+ "geo-traits",
  "geoarrow-array",
  "geoarrow-schema",
 ]
@@ -1726,7 +1729,7 @@ version = "0.4.0"
 dependencies = [
  "arrow-array",
  "arrow-schema",
- "geo-traits 0.3.0",
+ "geo-traits",
  "geoarrow-array",
  "geoarrow-schema",
  "geos",
@@ -1737,7 +1740,7 @@ name = "geoarrow-schema"
 version = "0.4.0"
 dependencies = [
  "arrow-schema",
- "geo-traits 0.3.0",
+ "geo-traits",
  "serde",
  "serde_json",
  "thiserror 1.0.69",
@@ -1759,7 +1762,7 @@ dependencies = [
  "arrow-schema",
  "datafusion",
  "geo",
- "geo-traits 0.3.0",
+ "geo-traits",
  "geoarrow-array",
  "geoarrow-geo",
  "geoarrow-schema",
@@ -1810,7 +1813,7 @@ dependencies = [
  "arrow-ord",
  "arrow-schema",
  "futures",
- "geo-traits 0.3.0",
+ "geo-traits",
  "geo-types",
  "geoarrow-array",
  "geoarrow-schema",
@@ -1988,10 +1991,96 @@ dependencies = [
 ]
 
 [[package]]
+name = "http-body"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1efedce1fb8e6913f23e0c92de8e62cd5b772a67e7b3946df930a62566c93184"
+dependencies = [
+ "bytes",
+ "http",
+]
+
+[[package]]
+name = "http-body-util"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b021d93e26becf5dc7e1b75b1bed1fd93124b374ceb73f43d4d4eafec896a64a"
+dependencies = [
+ "bytes",
+ "futures-core",
+ "http",
+ "http-body",
+ "pin-project-lite",
+]
+
+[[package]]
+name = "http-range-client"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3b0cb8b2a6444be75e1bb3bfa79911cae70865df20a36d7c70945273b13b641"
+dependencies = [
+ "async-trait",
+ "byteorder",
+ "bytes",
+ "read-logger",
+ "reqwest",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "httparse"
+version = "1.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87"
+
+[[package]]
 name = "humantime"
 version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b112acc8b3adf4b107a8ec20977da0273a8c386765a3ec0229bd500a1443f9f"
+
+[[package]]
+name = "hyper"
+version = "1.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cc2b571658e38e0c01b1fdca3bbbe93c00d3d71693ff2770043f8c29bc7d6f80"
+dependencies = [
+ "bytes",
+ "futures-channel",
+ "futures-util",
+ "http",
+ "http-body",
+ "httparse",
+ "itoa",
+ "pin-project-lite",
+ "smallvec",
+ "tokio",
+ "want",
+]
+
+[[package]]
+name = "hyper-util"
+version = "0.1.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f66d5bd4c6f02bf0542fad85d626775bab9258cf795a4256dcaf3161114d1df"
+dependencies = [
+ "base64",
+ "bytes",
+ "futures-channel",
+ "futures-core",
+ "futures-util",
+ "http",
+ "http-body",
+ "hyper",
+ "ipnet",
+ "libc",
+ "percent-encoding",
+ "pin-project-lite",
+ "socket2",
+ "tokio",
+ "tower-service",
+ "tracing",
+]
 
 [[package]]
 name = "i_float"
@@ -2207,6 +2296,22 @@ name = "integer-encoding"
 version = "3.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8bb03732005da905c88227371639bf1ad885cc712789c011c31c5fb3ab3ccf02"
+
+[[package]]
+name = "ipnet"
+version = "2.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "469fb0b9cefa57e3ef31275ee7cacb78f2fdca44e4765491884a2b119d4eb130"
+
+[[package]]
+name = "iri-string"
+version = "0.7.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dbc5ebe9c3a1a7a5127f920a418f7585e9e758e911d0466ed004f393b0e380b2"
+dependencies = [
+ "memchr",
+ "serde",
+]
 
 [[package]]
 name = "itertools"
@@ -2436,6 +2541,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1fa76a2c86f704bdb222d66965fb3d63269ce38518b83cb0575fca855ebb6316"
 dependencies = [
  "adler2",
+]
+
+[[package]]
+name = "mio"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "78bed444cc8a2160f01cbcf811ef18cac863ad68ae8ca62092e8db51d51c761c"
+dependencies = [
+ "libc",
+ "wasi 0.11.1+wasi-snapshot-preview1",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -2900,7 +3016,7 @@ dependencies = [
  "arrow-buffer",
  "arrow-cast",
  "arrow-schema",
- "geo-traits 0.3.0",
+ "geo-traits",
  "geo-types",
  "geoarrow-array",
  "geoarrow-cast",
@@ -3023,6 +3139,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "read-logger"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c7f715a23c7db804b71eb9162a9cf210b89e99db9c3649a2a038d13b7594a99"
+dependencies = [
+ "log",
+]
+
+[[package]]
 name = "recursive"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3099,6 +3224,38 @@ name = "regex-syntax"
 version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
+
+[[package]]
+name = "reqwest"
+version = "0.12.22"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cbc931937e6ca3a06e3b6c0aa7841849b160a90351d6ab467a8b9b9959767531"
+dependencies = [
+ "base64",
+ "bytes",
+ "futures-core",
+ "http",
+ "http-body",
+ "http-body-util",
+ "hyper",
+ "hyper-util",
+ "js-sys",
+ "log",
+ "percent-encoding",
+ "pin-project-lite",
+ "serde",
+ "serde_json",
+ "serde_urlencoded",
+ "sync_wrapper",
+ "tokio",
+ "tower",
+ "tower-http",
+ "tower-service",
+ "url",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
 
 [[package]]
 name = "robust"
@@ -3235,6 +3392,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_urlencoded"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3491c14715ca2294c4d6a88f15e84739788c1d030eed8c110436aafdaa2f3fd"
+dependencies = [
+ "form_urlencoded",
+ "itoa",
+ "ryu",
+ "serde",
+]
+
+[[package]]
 name = "serde_with"
 version = "3.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3311,6 +3480,16 @@ name = "snap"
 version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1b6b67fb9a61334225b5b790716f609cd58395f895b3fe8b328786812a40bc3b"
+
+[[package]]
+name = "socket2"
+version = "0.5.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e22376abed350d73dd1cd119b57ffccad95b4e585a7cda43e286245ce23c0678"
+dependencies = [
+ "libc",
+ "windows-sys 0.52.0",
+]
 
 [[package]]
 name = "spade"
@@ -3392,6 +3571,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "sync_wrapper"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0bf256ce5efdfa370213c1dabab5935a12e49f2c58d15e9eac2870d3b4f27263"
+dependencies = [
+ "futures-core",
 ]
 
 [[package]]
@@ -3533,8 +3721,12 @@ checksum = "75ef51a33ef1da925cea3e4eb122833cb377c61439ca401b770f54902b806779"
 dependencies = [
  "backtrace",
  "bytes",
+ "libc",
+ "mio",
  "pin-project-lite",
+ "socket2",
  "tokio-macros",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -3603,6 +3795,51 @@ dependencies = [
 ]
 
 [[package]]
+name = "tower"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d039ad9159c98b70ecfd540b2573b97f7f52c3e8d9f8ad57a24b916a536975f9"
+dependencies = [
+ "futures-core",
+ "futures-util",
+ "pin-project-lite",
+ "sync_wrapper",
+ "tokio",
+ "tower-layer",
+ "tower-service",
+]
+
+[[package]]
+name = "tower-http"
+version = "0.6.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "adc82fd73de2a9722ac5da747f12383d2bfdb93591ee6c58486e0097890f05f2"
+dependencies = [
+ "bitflags 2.9.1",
+ "bytes",
+ "futures-util",
+ "http",
+ "http-body",
+ "iri-string",
+ "pin-project-lite",
+ "tower",
+ "tower-layer",
+ "tower-service",
+]
+
+[[package]]
+name = "tower-layer"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "121c2a6cda46980bb0fcd1647ffaf6cd3fc79a013de288782836f6df9c48780e"
+
+[[package]]
+name = "tower-service"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8df9b6e13f2d32c91b9bd719c00d1958837bc7dec474d94952798cc8e69eeec3"
+
+[[package]]
 name = "tracing"
 version = "0.1.41"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3632,6 +3869,12 @@ checksum = "b9d12581f227e93f094d3af2ae690a574abb8a2b9b7a96e7cfe9647b2b617678"
 dependencies = [
  "once_cell",
 ]
+
+[[package]]
+name = "try-lock"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "twox-hash"
@@ -3711,6 +3954,15 @@ checksum = "29790946404f91d9c5d06f9874efddea1dc06c5efe94541a7d6863108e3a5e4b"
 dependencies = [
  "same-file",
  "winapi-util",
+]
+
+[[package]]
+name = "want"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bfa7760aed19e106de2c7c0b581b509f2f25d3dacaf737cb82ac61bc6d760b0e"
+dependencies = [
+ "try-lock",
 ]
 
 [[package]]
@@ -3889,6 +4141,15 @@ dependencies = [
 
 [[package]]
 name = "windows-sys"
+version = "0.52.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "282be5f36a8ce781fad8c8ae18fa3f9beff57ec1b52cb3de0789201425d9a33d"
+dependencies = [
+ "windows-targets 0.52.6",
+]
+
+[[package]]
+name = "windows-sys"
 version = "0.59.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e38bc4d79ed67fd075bcc251a1c39b32a1776bbe92e5bef1f0bf1f8c531853b"
@@ -4058,7 +4319,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ff9eff6aebac4c64f9c7c057a68f6359284e2a80acf102dffe041fe219b3a082"
 dependencies = [
  "byteorder",
- "geo-traits 0.3.0",
+ "geo-traits",
  "num_enum",
  "thiserror 1.0.69",
 ]
@@ -4081,7 +4342,7 @@ version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "efb2b923ccc882312e559ffaa832a055ba9d1ac0cc8e86b3e25453247e4b81d7"
 dependencies = [
- "geo-traits 0.3.0",
+ "geo-traits",
  "geo-types",
  "log",
  "num-traits",

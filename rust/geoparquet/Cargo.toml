@@ -38,5 +38,5 @@ parquet = { workspace = true, features = [
     "lz4",
     "zstd",
 ] }
-tokio = { version = "1.9", features = ["macros", "fs", "rt-multi-thread"] }
+tokio = { workspace = true, features = ["macros", "fs", "rt-multi-thread"] }
 tokio-test = "0.4"

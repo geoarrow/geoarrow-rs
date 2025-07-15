@@ -41,7 +41,7 @@ async-trait = "0.1"
 bytes = "1.10.0"
 chrono = { version = "0.4.41", default-features = false }
 datafusion = { version = "48.0.0" }
-flatgeobuf = { version = "4.6", default-features = false }
+flatgeobuf = { git = "https://github.com/kylebarron/flatgeobuf", rev = "ea7749d5b209972389f73f9a93dd1d860f3467a1", default-features = false }
 futures = "0.3"
 geo = "0.30.0"
 geo-traits = "0.3.0"
@@ -55,6 +55,7 @@ geohash = "0.13.1"
 geoparquet = { path = "rust/geoparquet", version = "0.4" }
 geos = { version = "10", features = ["v3_10_0"] }
 geozero = "0.14"
+http-range-client = { version = "0.9", default-features = false }
 indexmap = "2.5.0"
 num-traits = "0.2.19"
 numpy = "0.25"
