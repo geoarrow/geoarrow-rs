@@ -2,10 +2,11 @@ use arrow_array::Float64Array;
 use arrow_array::builder::Float64Builder;
 use arrow_buffer::NullBuffer;
 use geo::Area;
-use geo_traits::to_geo::ToGeoGeometry;
 use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, downcast_geoarrow_array};
 use geoarrow_schema::GeoArrowType;
 use geoarrow_schema::error::GeoArrowResult;
+
+use crate::util::to_geo::geometry_to_geo;
 
 pub fn unsigned_area(array: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
     downcast_geoarrow_array!(array, _unsigned_area_impl)
@@ -52,7 +53,7 @@ fn _area_impl<'a, F: Fn(&geo::Geometry) -> f64>(
 
     for item in array.iter() {
         if let Some(geom) = item {
-            let geo_geom = geom?.to_geometry();
+            let geo_geom = geometry_to_geo(&geom?)?;
             builder.append_value(area_fn(&geo_geom));
         } else {
             builder.append_null();
