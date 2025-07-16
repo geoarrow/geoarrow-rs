@@ -1,18 +1,28 @@
 use arrow_array::BooleanArray;
 use geo::contains::Contains;
 use geo_traits::to_geo::ToGeoGeometry;
-use geoarrow_array::GeoArrowArrayAccessor;
-use geoarrow_schema::error::GeoArrowResult;
+use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor};
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
-pub fn contains<'a>(
+use crate::util::downcast::downcast_geoarrow_array_two_args;
+
+pub fn contains(
+    left_array: &dyn GeoArrowArray,
+    right_array: &dyn GeoArrowArray,
+) -> GeoArrowResult<BooleanArray> {
+    if left_array.len() != right_array.len() {
+        Err(GeoArrowError::InvalidGeoArrow(
+            "Arrays must have the same length".to_string(),
+        ))
+    } else {
+        downcast_geoarrow_array_two_args!(left_array, right_array, _contains_impl)
+    }
+}
+
+fn _contains_impl<'a>(
     left_array: &'a impl GeoArrowArrayAccessor<'a>,
     right_array: &'a impl GeoArrowArrayAccessor<'a>,
 ) -> GeoArrowResult<BooleanArray> {
-    assert_eq!(
-        left_array.len(),
-        right_array.len(),
-        "Arrays must have the same length"
-    );
     let mut builder = BooleanArray::builder(left_array.len());
 
     for (canidate_left, canidate_right) in left_array.iter().zip(right_array.iter()) {
