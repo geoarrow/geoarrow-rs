@@ -2,6 +2,7 @@
 
 mod area;
 mod centroid;
+mod contains;
 mod convex_hull;
 mod intersects;
 mod relate;
@@ -10,6 +11,7 @@ pub(crate) mod util;
 
 pub use area::{signed_area, unsigned_area};
 pub use centroid::centroid;
+pub use contains::contains;
 pub use convex_hull::convex_hull;
 pub use intersects::intersects;
 pub use relate::relate_boolean;
