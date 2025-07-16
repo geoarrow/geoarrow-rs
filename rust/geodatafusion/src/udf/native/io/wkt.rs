@@ -9,7 +9,7 @@ use datafusion::logical_expr::{
     Volatility,
 };
 use geoarrow_array::GeoArrowArray;
-use geoarrow_array::array::{LargeWktArray, WktArray, from_arrow_array};
+use geoarrow_array::array::{LargeWktArray, WktArray, WktViewArray, from_arrow_array};
 use geoarrow_array::cast::{from_wkt, to_wkt};
 use geoarrow_schema::{CoordType, GeoArrowType, GeometryType, WktType};
 
@@ -104,7 +104,7 @@ impl GeomFromText {
         Self {
             signature: Signature::uniform(
                 1,
-                vec![DataType::Utf8, DataType::LargeUtf8],
+                vec![DataType::Utf8, DataType::LargeUtf8, DataType::Utf8View],
                 Volatility::Immutable,
             ),
             coord_type,
@@ -122,6 +122,10 @@ impl GeomFromText {
             ),
             DataType::LargeUtf8 => from_wkt(
                 &LargeWktArray::try_from((array.as_ref(), field.as_ref()))?,
+                to_type,
+            ),
+            DataType::Utf8View => from_wkt(
+                &WktViewArray::try_from((array.as_ref(), field.as_ref()))?,
                 to_type,
             ),
             _ => unreachable!(),
