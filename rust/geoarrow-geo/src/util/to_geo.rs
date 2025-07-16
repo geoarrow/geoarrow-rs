@@ -12,7 +12,6 @@
 //! Other traits can use the upstream impls.
 
 use geo::{CoordNum, Geometry, GeometryCollection};
-
 use geo_traits::to_geo::{
     ToGeoLine, ToGeoLineString, ToGeoMultiLineString, ToGeoMultiPoint, ToGeoMultiPolygon,
     ToGeoPoint, ToGeoPolygon, ToGeoRect, ToGeoTriangle,
