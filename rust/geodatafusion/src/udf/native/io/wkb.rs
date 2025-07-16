@@ -9,7 +9,7 @@ use datafusion::logical_expr::{
     Volatility,
 };
 use geoarrow_array::GeoArrowArray;
-use geoarrow_array::array::{LargeWkbArray, WkbArray, from_arrow_array, WkbViewArray};
+use geoarrow_array::array::{LargeWkbArray, WkbArray, WkbViewArray, from_arrow_array};
 use geoarrow_array::cast::{from_wkb, to_wkb};
 use geoarrow_schema::{CoordType, GeoArrowType, GeometryType, WkbType};
 
@@ -100,7 +100,11 @@ impl GeomFromWKB {
         Self {
             signature: Signature::uniform(
                 1,
-                vec![DataType::Binary, DataType::LargeBinary, DataType::BinaryView],
+                vec![
+                    DataType::Binary,
+                    DataType::LargeBinary,
+                    DataType::BinaryView,
+                ],
                 Volatility::Immutable,
             ),
             coord_type,
