@@ -33,7 +33,7 @@ fn _contains_impl<'a>(
                 let result = left_geom.contains(&right_geom);
                 builder.append_value(result);
             }
-            ( _, _) => {
+            (_, _) => {
                 builder.append_null();
             }
         }
