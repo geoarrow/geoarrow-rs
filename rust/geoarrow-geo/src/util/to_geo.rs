@@ -1,4 +1,4 @@
-//! Convert structs that implement geo-traits to [geo] objects.
+//! Convert structs that implement [geo_traits] to [geo] objects.
 //!
 //! Note that this is the same underlying implementation as upstream [geo] in
 //! <https://github.com/georust/geo/pull/1255>. However, the trait-based implementation hits this
@@ -20,7 +20,7 @@ use geo_traits::to_geo::{
 use geo_traits::{GeometryCollectionTrait, GeometryTrait, GeometryType};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
-/// Convert any [geo-traits] Geometry to a [`geo::Geometry`].
+/// Convert any [geo_traits] Geometry to a [`geo::Geometry`].
 ///
 /// Only the first two dimensions will be kept.
 pub fn geometry_to_geo<T: CoordNum>(
