@@ -40,7 +40,7 @@ async-stream = "0.3"
 async-trait = "0.1"
 bytes = "1.10.0"
 chrono = { version = "0.4.41", default-features = false }
-datafusion = { version = "48.0.0" }
+datafusion = { version = "48.0.1" }
 flatgeobuf = { git = "https://github.com/kylebarron/flatgeobuf", rev = "ea7749d5b209972389f73f9a93dd1d860f3467a1", default-features = false }
 futures = "0.3"
 geo = "0.30.0"

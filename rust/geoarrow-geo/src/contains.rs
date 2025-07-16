@@ -1,10 +1,10 @@
 use arrow_array::BooleanArray;
 use geo::contains::Contains;
-use geo_traits::to_geo::ToGeoGeometry;
 use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 use crate::util::downcast::downcast_geoarrow_array_two_args;
+use crate::util::to_geo::geometry_to_geo;
 
 pub fn contains(
     left_array: &dyn GeoArrowArray,
@@ -28,8 +28,8 @@ fn _contains_impl<'a>(
     for (canidate_left, canidate_right) in left_array.iter().zip(right_array.iter()) {
         match (canidate_left, canidate_right) {
             (Some(left), Some(right)) => {
-                let left_geom = left?.to_geometry();
-                let right_geom = right?.to_geometry();
+                let left_geom = geometry_to_geo(&left?)?;
+                let right_geom = geometry_to_geo(&right?)?;
                 let result = left_geom.contains(&right_geom);
                 builder.append_value(result);
             }
