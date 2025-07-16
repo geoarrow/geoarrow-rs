@@ -1,2 +1,2 @@
 pub(crate) mod downcast;
-pub(crate) mod to_geo;
+pub mod to_geo;

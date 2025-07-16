@@ -7,7 +7,7 @@ mod convex_hull;
 mod intersects;
 mod relate;
 mod simplify;
-pub(crate) mod util;
+pub mod util;
 
 pub use area::{signed_area, unsigned_area};
 pub use centroid::centroid;
