@@ -168,6 +168,11 @@ impl GeoParquetFile {
         self.geoparquet_meta.num_row_groups()
     }
 
+    #[getter]
+    fn path(&self) -> String {
+        self.path.to_string()
+    }
+
     #[pyo3(signature = (*, parse_to_native=true, coord_type=None))]
     fn schema_arrow(
         &self,
