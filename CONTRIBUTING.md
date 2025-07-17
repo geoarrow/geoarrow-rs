@@ -12,6 +12,13 @@ cargo test --all-features
 Use Github [pull requests](https://github.com/geoarrow/geoarrow-rs/pulls) to provide code and documentation.
 Use [issues](https://github.com/geoarrow/geoarrow-rs/issues) to report bugs or request features.
 
+## Conventional commits
+
+We require all PRs to follow [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/).
+We squash merge, so only the PR title needs to follow the standard.
+You'll get the idea by looking at a list of recent commits.
+You can find our allowed task types [here](.github/workflows/conventional-commits.yml).
+
 ## Build issues
 
 If you get the following error:
