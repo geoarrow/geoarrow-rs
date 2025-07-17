@@ -12,28 +12,28 @@
         <meta name="author" content="Kyle Barron">
       
       
-        <link rel="canonical" href="https://geoarrow.org/geoarrow-rs/python/latest/CHANGELOG/">
+        <link rel="canonical" href="https://geoarrow.org/geoarrow-rs/python/latest/api/core/types/">
       
       
-        <link rel="prev" href="../ecosystem/gdal/">
+        <link rel="prev" href="../enums/">
       
       
-        <link rel="next" href="../DEVELOP/">
+        <link rel="next" href="../../io/">
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
     
     
       
-        <title>Changelog - geoarrow-rust</title>
+        <title>Types - geoarrow-rust</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.342714a4.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.342714a4.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
       
       
 
@@ -52,11 +52,11 @@
       
     
     
-      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -65,11 +65,11 @@
       
         <meta  property="og:type"  content="website" >
       
-        <meta  property="og:title"  content="Changelog - geoarrow-rust" >
+        <meta  property="og:title"  content="Types - geoarrow-rust" >
       
         <meta  property="og:description"  content="Python bindings to Rust implementation of GeoArrow" >
       
-        <meta  property="og:image"  content="https://geoarrow.org/geoarrow-rs/python/latest/assets/images/social/CHANGELOG.png" >
+        <meta  property="og:image"  content="https://geoarrow.org/geoarrow-rs/python/latest/assets/images/social/api/core/types.png" >
       
         <meta  property="og:image:type"  content="image/png" >
       
@@ -77,15 +77,15 @@
       
         <meta  property="og:image:height"  content="630" >
       
-        <meta  property="og:url"  content="https://geoarrow.org/geoarrow-rs/python/latest/CHANGELOG/" >
+        <meta  property="og:url"  content="https://geoarrow.org/geoarrow-rs/python/latest/api/core/types/" >
       
         <meta  name="twitter:card"  content="summary_large_image" >
       
-        <meta  name="twitter:title"  content="Changelog - geoarrow-rust" >
+        <meta  name="twitter:title"  content="Types - geoarrow-rust" >
       
         <meta  name="twitter:description"  content="Python bindings to Rust implementation of GeoArrow" >
       
-        <meta  name="twitter:image"  content="https://geoarrow.org/geoarrow-rs/python/latest/assets/images/social/CHANGELOG.png" >
+        <meta  name="twitter:image"  content="https://geoarrow.org/geoarrow-rs/python/latest/assets/images/social/api/core/types.png" >
       
     
     
@@ -108,7 +108,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#changelog" class="md-skip">
+        <a href="#types" class="md-skip">
           Skip to content
         </a>
       
@@ -128,7 +128,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="geoarrow-rust" class="md-header__button md-logo" aria-label="geoarrow-rust" data-md-component="logo">
+    <a href="../../.." title="geoarrow-rust" class="md-header__button md-logo" aria-label="geoarrow-rust" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17.9 17.39c-.26-.8-1.01-1.39-1.9-1.39h-1v-3a1 1 0 0 0-1-1H8v-2h2a1 1 0 0 0 1-1V7h2a2 2 0 0 0 2-2v-.41a7.984 7.984 0 0 1 2.9 12.8M11 19.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.22.21-1.79L9 15v1a2 2 0 0 0 2 2m1-16A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg>
@@ -148,7 +148,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Changelog
+              Types
             
           </span>
         </div>
@@ -281,7 +281,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="geoarrow-rust" class="md-nav__button md-logo" aria-label="geoarrow-rust" data-md-component="logo">
+    <a href="../../.." title="geoarrow-rust" class="md-nav__button md-logo" aria-label="geoarrow-rust" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17.9 17.39c-.26-.8-1.01-1.39-1.9-1.39h-1v-3a1 1 0 0 0-1-1H8v-2h2a1 1 0 0 0 1-1V7h2a2 2 0 0 0 2-2v-.41a7.984 7.984 0 0 1 2.9 12.8M11 19.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.22.21-1.79L9 15v1a2 2 0 0 0 2 2m1-16A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg>
@@ -311,7 +311,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../../.." class="md-nav__link">
         
   
   
@@ -330,8 +330,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -343,11 +345,11 @@
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
         
           
           <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
@@ -363,7 +365,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             API Reference
@@ -374,6 +376,8 @@
                 
   
   
+    
+  
   
   
     
@@ -401,15 +405,15 @@
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" checked>
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../api/core/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   
@@ -428,7 +432,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2_1">
             <span class="md-nav__icon md-icon"></span>
             geoarrow.rust.core
@@ -444,7 +448,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/core/array/" class="md-nav__link">
+      <a href="../array/" class="md-nav__link">
         
   
   
@@ -467,7 +471,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/core/chunked_array/" class="md-nav__link">
+      <a href="../chunked_array/" class="md-nav__link">
         
   
   
@@ -490,7 +494,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/core/geometry_type/" class="md-nav__link">
+      <a href="../geometry_type/" class="md-nav__link">
         
   
   
@@ -513,7 +517,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/core/geometry/scalar/" class="md-nav__link">
+      <a href="../geometry/scalar/" class="md-nav__link">
         
   
   
@@ -536,7 +540,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/core/functions/" class="md-nav__link">
+      <a href="../functions/" class="md-nav__link">
         
   
   
@@ -559,7 +563,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/core/enums/" class="md-nav__link">
+      <a href="../enums/" class="md-nav__link">
         
   
   
@@ -579,10 +583,32 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../api/core/types/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Types
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -593,6 +619,104 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.types" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-module"></code>&nbsp;types
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.types.CRSInput" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;CRSInput
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.types.CoordTypeInput" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;CoordTypeInput
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.types.CoordTypeT" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;CoordTypeT
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.types.DimensionInput" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;DimensionInput
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.types.DimensionT" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;DimensionT
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.types.EdgesInput" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;EdgesInput
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.types.EdgesT" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;EdgesT
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -635,7 +759,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../api/io/" class="md-nav__link ">
+            <a href="../../io/" class="md-nav__link ">
               
   
   
@@ -670,7 +794,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/io/arrow_ipc/" class="md-nav__link">
+      <a href="../../io/arrow_ipc/" class="md-nav__link">
         
   
   
@@ -693,7 +817,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/io/geoparquet/" class="md-nav__link">
+      <a href="../../io/geoparquet/" class="md-nav__link">
         
   
   
@@ -775,7 +899,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ecosystem/lonboard/" class="md-nav__link">
+      <a href="../../../ecosystem/lonboard/" class="md-nav__link">
         
   
   
@@ -798,7 +922,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ecosystem/gdal/" class="md-nav__link">
+      <a href="../../../ecosystem/gdal/" class="md-nav__link">
         
   
   
@@ -825,32 +949,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    Changelog
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../../CHANGELOG/" class="md-nav__link">
         
   
   
@@ -861,194 +963,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#unreleased" class="md-nav__link">
-    <span class="md-ellipsis">
-      Unreleased
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#041-2025-07-17" class="md-nav__link">
-    <span class="md-ellipsis">
-      [0.4.1] - 2025-07-17
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#040-2025-07-01" class="md-nav__link">
-    <span class="md-ellipsis">
-      [0.4.0] - 2025-07-01
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="[0.4.0] - 2025-07-01">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#new-features-magic_wand" class="md-nav__link">
-    <span class="md-ellipsis">
-      New Features :magic_wand:
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#030-2024-09-07" class="md-nav__link">
-    <span class="md-ellipsis">
-      [0.3.0] - 2024-09-07
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="[0.3.0] - 2024-09-07">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#new-features-magic_wand_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      New Features :magic_wand:
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#bug-fixes" class="md-nav__link">
-    <span class="md-ellipsis">
-      Bug fixes
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#020-2024-03-22" class="md-nav__link">
-    <span class="md-ellipsis">
-      [0.2.0] - 2024-03-22
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="[0.2.0] - 2024-03-22">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#new" class="md-nav__link">
-    <span class="md-ellipsis">
-      New!
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="New!">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#new-io-support-for-reading-and-writing-to-geospatial-formats" class="md-nav__link">
-    <span class="md-ellipsis">
-      New I/O support for reading and writing to geospatial formats
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#better-interoperability-with-the-python-geospatial-ecosystem" class="md-nav__link">
-    <span class="md-ellipsis">
-      Better interoperability with the Python geospatial ecosystem.
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#new-algorithms" class="md-nav__link">
-    <span class="md-ellipsis">
-      New algorithms!
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#improved-display-of-python-objects" class="md-nav__link">
-    <span class="md-ellipsis">
-      Improved display of Python objects:
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#improved-usability" class="md-nav__link">
-    <span class="md-ellipsis">
-      Improved usability:
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#new-contributors" class="md-nav__link">
-    <span class="md-ellipsis">
-      New Contributors
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#010-2024-01-08" class="md-nav__link">
-    <span class="md-ellipsis">
-      [0.1.0] - 2024-01-08
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1060,7 +974,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../DEVELOP/" class="md-nav__link">
+      <a href="../../../DEVELOP/" class="md-nav__link">
         
   
   
@@ -1102,37 +1016,73 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#unreleased" class="md-nav__link">
+  <a href="#geoarrow.rust.core.types" class="md-nav__link">
     <span class="md-ellipsis">
-      Unreleased
+      <code class="doc-symbol doc-symbol-toc doc-symbol-module"></code>&nbsp;types
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#041-2025-07-17" class="md-nav__link">
-    <span class="md-ellipsis">
-      [0.4.1] - 2025-07-17
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#040-2025-07-01" class="md-nav__link">
-    <span class="md-ellipsis">
-      [0.4.0] - 2025-07-01
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="[0.4.0] - 2025-07-01">
+    <nav class="md-nav" aria-label=" types">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#new-features-magic_wand" class="md-nav__link">
+  <a href="#geoarrow.rust.core.types.CRSInput" class="md-nav__link">
     <span class="md-ellipsis">
-      New Features :magic_wand:
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;CRSInput
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.types.CoordTypeInput" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;CoordTypeInput
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.types.CoordTypeT" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;CoordTypeT
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.types.DimensionInput" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;DimensionInput
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.types.DimensionT" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;DimensionT
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.types.EdgesInput" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;EdgesInput
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.types.EdgesT" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;EdgesT
     </span>
   </a>
   
@@ -1140,132 +1090,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#030-2024-09-07" class="md-nav__link">
-    <span class="md-ellipsis">
-      [0.3.0] - 2024-09-07
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="[0.3.0] - 2024-09-07">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#new-features-magic_wand_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      New Features :magic_wand:
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#bug-fixes" class="md-nav__link">
-    <span class="md-ellipsis">
-      Bug fixes
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#020-2024-03-22" class="md-nav__link">
-    <span class="md-ellipsis">
-      [0.2.0] - 2024-03-22
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="[0.2.0] - 2024-03-22">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#new" class="md-nav__link">
-    <span class="md-ellipsis">
-      New!
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="New!">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#new-io-support-for-reading-and-writing-to-geospatial-formats" class="md-nav__link">
-    <span class="md-ellipsis">
-      New I/O support for reading and writing to geospatial formats
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#better-interoperability-with-the-python-geospatial-ecosystem" class="md-nav__link">
-    <span class="md-ellipsis">
-      Better interoperability with the Python geospatial ecosystem.
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#new-algorithms" class="md-nav__link">
-    <span class="md-ellipsis">
-      New algorithms!
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#improved-display-of-python-objects" class="md-nav__link">
-    <span class="md-ellipsis">
-      Improved display of Python objects:
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#improved-usability" class="md-nav__link">
-    <span class="md-ellipsis">
-      Improved usability:
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#new-contributors" class="md-nav__link">
-    <span class="md-ellipsis">
-      New Contributors
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#010-2024-01-08" class="md-nav__link">
-    <span class="md-ellipsis">
-      [0.1.0] - 2024-01-08
-    </span>
-  </a>
   
 </li>
       
@@ -1288,90 +1112,231 @@
   
 
 
-<h1 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">&para;</a></h1>
-<h2 id="unreleased">Unreleased<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
-<h2 id="041-2025-07-17">[0.4.1] - 2025-07-17<a class="headerlink" href="#041-2025-07-17" title="Permanent link">&para;</a></h2>
-<ul>
-<li>Added <code>path</code> property to <code>GeoParquetFile</code> class so information about each fragment of a <code>GeoParquetDataset</code> can be associated back to the original file.</li>
-</ul>
-<h2 id="040-2025-07-01">[0.4.0] - 2025-07-01<a class="headerlink" href="#040-2025-07-01" title="Permanent link">&para;</a></h2>
-<p>This release contains the Python bindings for more or less a <strong>full rewrite</strong> of the GeoArrow Rust library.</p>
-<h3 id="new-features-magic_wand">New Features :magic_wand:<a class="headerlink" href="#new-features-magic_wand" title="Permanent link">&para;</a></h3>
-<ul>
-<li>Full support for the GeoArrow 0.2 specification, including all geometry array types and dimensions.</li>
-<li>See documentation for <code>GeoArray</code>, <code>GeoChunkedArray</code>, <code>GeoScalar</code>, and <code>GeometryType</code> for more details.</li>
-<li>Support for reading and writing GeoParquet 1.1 files, including spatial filtering, including support for reading from remote files.</li>
-</ul>
-<h2 id="030-2024-09-07">[0.3.0] - 2024-09-07<a class="headerlink" href="#030-2024-09-07" title="Permanent link">&para;</a></h2>
-<h3 id="new-features-magic_wand_1">New Features :magic_wand:<a class="headerlink" href="#new-features-magic_wand_1" title="Permanent link">&para;</a></h3>
-<ul>
-<li>Remove geometry class specializations. Instead of <code>PointArray</code>, <code>LineStringArray</code>, etc, there's now just <code>GeometryArray</code>, <code>ChunkedGeometryArray</code>, and <code>Geometry</code> (a scalar).</li>
-<li>Remove GeoTable class, in favor of external, generic arrow Table implementations, such as <code>arro3.core.Table</code>.</li>
-<li>Move to slimmer, functional API. No more geometry methods on classes.</li>
-<li>Don't materialize input data when writing to a file.</li>
-<li>New <code>GeometryType</code> class for understanding the geometry type of an array or chunked array.</li>
-<li>Split Python code into three modules: <code>geoarrow-rust-core</code>, <code>geoarrow-rust-compute</code> and <code>geoarrow-rust-io</code>.</li>
-<li>Support for Pyodide Python environment</li>
-<li>Support Python file objects for reading and writing GeoParquet</li>
-</ul>
-<h3 id="bug-fixes">Bug fixes <img alt="🐛" class="emojione" src="https://cdnjs.cloudflare.com/ajax/libs/emojione/2.2.7/assets/png/1f41b.png" title=":bug:" /><a class="headerlink" href="#bug-fixes" title="Permanent link">&para;</a></h3>
-<ul>
-<li>Fix array indexing with negative integers by @kylebarron in <a class="magiclink magiclink-github magiclink-pull" href="https://github.com/geoarrow/geoarrow-rs/pull/724" title="GitHub Pull Request: geoarrow/geoarrow-rs #724">geoarrow/geoarrow-rs!724</a></li>
-</ul>
-<h2 id="020-2024-03-22">[0.2.0] - 2024-03-22<a class="headerlink" href="#020-2024-03-22" title="Permanent link">&para;</a></h2>
-<h3 id="new">New! <img alt="✨" class="emojione" src="https://cdnjs.cloudflare.com/ajax/libs/emojione/2.2.7/assets/png/2728.png" title=":sparkles:" /><a class="headerlink" href="#new" title="Permanent link">&para;</a></h3>
-<h4 id="new-io-support-for-reading-and-writing-to-geospatial-formats">New I/O support for reading and writing to geospatial formats<a class="headerlink" href="#new-io-support-for-reading-and-writing-to-geospatial-formats" title="Permanent link">&para;</a></h4>
-<ul>
-<li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/io/#geoarrow.rust.core.read_flatgeobuf_async">Asynchronous FlatGeobuf reader</a>. This also supports passing a spatial filter.</li>
-<li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/io/#geoarrow.rust.core.read_postgis">Initial support for reading from PostGIS</a>. Note that not all Postgres data types are supported yet. Create an issue if your query fails.</li>
-<li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/io/#geoarrow.rust.core.read_geojson_lines">Reading</a> and <a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/io/#geoarrow.rust.core.write_geojson_lines">writing</a> <a href="https://stevage.github.io/ndgeojson/">newline-delimited GeoJSON</a>.</li>
-<li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/io/#geoarrow.rust.core.read_pyogrio">Pyogrio integration</a> for reading from OGR/GDAL.</li>
-<li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/io/#geoarrow.rust.core.read_parquet_async">Asynchronous GeoParquet reader</a> for reading from remote files. By @weiji14 in <a class="magiclink magiclink-github magiclink-pull" href="https://github.com/geoarrow/geoarrow-rs/pull/493" title="GitHub Pull Request: geoarrow/geoarrow-rs #493">geoarrow/geoarrow-rs!493</a></li>
-<li>Also new support for writing GeoParquet files.</li>
-<li>Most I/O readers and writers support Python file-like objects (in binary mode).</li>
-<li>Support for <a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/io/#geoarrow.rust.core.read_ipc">reading</a> and <a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/io/#geoarrow.rust.core.write_ipc">writing</a> Arrow IPC files.</li>
-</ul>
-<h4 id="better-interoperability-with-the-python-geospatial-ecosystem">Better interoperability with the Python geospatial ecosystem.<a class="headerlink" href="#better-interoperability-with-the-python-geospatial-ecosystem" title="Permanent link">&para;</a></h4>
-<ul>
-<li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/interop/#geoarrow.rust.core.from_geopandas">Import from</a> and <a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/interop/#geoarrow.rust.core.to_geopandas">export to</a> GeoPandas GeoDataFrames. Refer to the <a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/ecosystem/geopandas/">GeoPandas interoperability documentation</a>.</li>
-<li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/interop/#geoarrow.rust.core.from_shapely">Import from</a> and <a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/interop/#geoarrow.rust.core.to_shapely">export to</a> Shapely arrays. Refer to the <a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/ecosystem/shapely/">Shapely interoperability documentation</a>.</li>
-<li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/ecosystem/lonboard/">Better integration with Lonboard</a> for fast visualization in Jupyter.</li>
-<li>All scalars, arrays, chunked arrays, and table objects implement <a href="https://gist.github.com/sgillies/2217756"><code>__geo_interface__</code></a> for interoperability with existing tools.</li>
-<li>Numpy interoperability for float array output from algorithms. Pass any <code>Float64Array</code> or <code>BooleanArray</code> to <code>numpy.asarray</code>. You can also pass a numpy array as vectorized input into a function like <a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/functions/#geoarrow.rust.core.line_interpolate_point"><code>line_interpolate_point</code></a>.</li>
-</ul>
-<h4 id="new-algorithms">New algorithms!<a class="headerlink" href="#new-algorithms" title="Permanent link">&para;</a></h4>
-<ul>
-<li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/functions/#geoarrow.rust.core.explode">Explode a Table</a> where each multi-geometry expands into multiple rows of single geometries.</li>
-<li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/functions/#geoarrow.rust.core.total_bounds"><code>total_bounds</code></a></li>
-<li>Unified <a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/functions/#geoarrow.rust.core.area"><code>area</code> function</a> for planar and geodesic area.</li>
-<li>Unified <a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/functions/#geoarrow.rust.core.simplify"><code>simplify</code> function</a> for multiple simplification methods. Also new support for <a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/enums/#geoarrow.rust.core.enums.SimplifyMethod.VW_Preserve">topology-preserving simplification</a>.</li>
-<li>Unified <a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/functions/#geoarrow.rust.core.length"><code>length</code> function</a> for euclidean and geodesic length calculations.</li>
-<li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/functions/#geoarrow.rust.core.frechet_distance"><code>frechet_distance</code></a> for LineString similarity.</li>
-<li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/functions/#geoarrow.rust.core.affine_transform"><code>affine_transform</code></a>, which integrates with the Python <a href="https://github.com/rasterio/affine"><code>affine</code></a> library.</li>
-<li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/functions/#geoarrow.rust.core.line_interpolate_point"><code>line_interpolate_point</code></a> and <a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/functions/#geoarrow.rust.core.line_locate_point"><code>line_locate_point</code></a> for linear referencing.</li>
-<li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/functions/#geoarrow.rust.core.polylabel"><code>polylabel</code></a> for polygon labeling.</li>
-</ul>
-<h4 id="improved-display-of-python-objects">Improved display of Python objects:<a class="headerlink" href="#improved-display-of-python-objects" title="Permanent link">&para;</a></h4>
-<ul>
-<li>Scalars now display as SVG geometries inside Jupyter environments.</li>
-<li>Tables, arrays, and chunked arrays implement <code>__repr__</code> so that you can inspect data easily.</li>
-</ul>
-<h4 id="improved-usability">Improved usability:<a class="headerlink" href="#improved-usability" title="Permanent link">&para;</a></h4>
-<ul>
-<li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/geometry/array/#geoarrow.rust.core.PointArray.from_xy"><code>PointArray.from_xy</code></a> to simplify creating a point array from numpy arrays of coordinates.</li>
-<li>Index into arrays and chunked arrays with square brackets. E.g. <code>point_array[0]</code> will access the first point in the array. Negative indexing is also supported, so <code>point_array[-1]</code> will get the last item in the array.</li>
-<li>New <a href="https://geoarrow.org/geoarrow-rs/">top-level docs website</a>.</li>
-</ul>
-<h2 id="new-contributors">New Contributors<a class="headerlink" href="#new-contributors" title="Permanent link">&para;</a></h2>
-<ul>
-<li>@Robinlovelace made their first contribution in <a class="magiclink magiclink-github magiclink-pull" href="https://github.com/geoarrow/geoarrow-rs/pull/484" title="GitHub Pull Request: geoarrow/geoarrow-rs #484">geoarrow/geoarrow-rs!484</a></li>
-<li>@weiji14 made their first contribution in <a class="magiclink magiclink-github magiclink-pull" href="https://github.com/geoarrow/geoarrow-rs/pull/493" title="GitHub Pull Request: geoarrow/geoarrow-rs #493">geoarrow/geoarrow-rs!493</a></li>
-</ul>
-<p><strong>Full Changelog</strong>: <a href="https://github.com/geoarrow/geoarrow-rs/compare/py-v0.1.0...py-v0.2.0">github.com/geoarrow/geoarrow-rs/compare/py-v0.1.0...py-v0.2.0</a></p>
-<h2 id="010-2024-01-08">[0.1.0] - 2024-01-08<a class="headerlink" href="#010-2024-01-08" title="Permanent link">&para;</a></h2>
-<ul>
-<li>Initial public release.</li>
-</ul>
+<h1 id="types">Types<a class="headerlink" href="#types" title="Permanent link">&para;</a></h1>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<h2 id="geoarrow.rust.core.types" class="doc doc-heading">
+            <span class="doc doc-object-name doc-module-name">geoarrow.rust.core.types</span>
+
+
+<a href="#geoarrow.rust.core.types" class="headerlink" title="Permanent link">&para;</a></h2>
+
+    <div class="doc doc-contents first">
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="geoarrow.rust.core.types.CRSInput" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">CRSInput</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.types.CRSInput" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">CRSInput</span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" title="pyproj.crs.crs.CRS" href="https://pyproj4.github.io/pyproj/stable/api/crs/crs.html#pyproj.crs.CRS">CRS</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#dict">dict</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Acceptable input for the CRS parameter.</p>
+<p>This can be a <code>pyproj.CRS</code> object or anything that can be passed to
+<code>pyproj.CRS.from_user_input()</code>.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="geoarrow.rust.core.types.CoordTypeInput" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">CoordTypeInput</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.types.CoordTypeInput" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">CoordTypeInput</span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="CoordType (geoarrow.rust.core.enums.CoordType)" href="../enums/#geoarrow.rust.core.enums.CoordType">CoordType</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="CoordTypeT
+
+
+  
+      module-attribute
+   (geoarrow.rust.core.types.CoordTypeT)" href="#geoarrow.rust.core.types.CoordTypeT">CoordTypeT</a></span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Acceptable coord_type input.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="geoarrow.rust.core.types.CoordTypeT" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">CoordTypeT</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.types.CoordTypeT" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">CoordTypeT</span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Literal" href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a></span><span class="p">[</span><span class="s1">&#39;interleaved&#39;</span><span class="p">,</span> <span class="s1">&#39;separated&#39;</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Acceptable coord_type strings.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="geoarrow.rust.core.types.DimensionInput" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">DimensionInput</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.types.DimensionInput" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">DimensionInput</span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="Dimension (geoarrow.rust.core.enums.Dimension)" href="../enums/#geoarrow.rust.core.enums.Dimension">Dimension</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="DimensionT
+
+
+  
+      module-attribute
+   (geoarrow.rust.core.types.DimensionT)" href="#geoarrow.rust.core.types.DimensionT">DimensionT</a></span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Acceptable dimension input.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="geoarrow.rust.core.types.DimensionT" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">DimensionT</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.types.DimensionT" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">DimensionT</span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Literal" href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a></span><span class="p">[</span><span class="s1">&#39;XY&#39;</span><span class="p">,</span> <span class="s1">&#39;XYZ&#39;</span><span class="p">,</span> <span class="s1">&#39;XYM&#39;</span><span class="p">,</span> <span class="s1">&#39;XYZM&#39;</span><span class="p">,</span> <span class="s1">&#39;xy&#39;</span><span class="p">,</span> <span class="s1">&#39;xyz&#39;</span><span class="p">,</span> <span class="s1">&#39;xym&#39;</span><span class="p">,</span> <span class="s1">&#39;xyzm&#39;</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Acceptable dimension strings.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="geoarrow.rust.core.types.EdgesInput" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">EdgesInput</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.types.EdgesInput" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">EdgesInput</span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="Edges (geoarrow.rust.core.enums.Edges)" href="../enums/#geoarrow.rust.core.enums.Edges">Edges</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="EdgesT
+
+
+  
+      module-attribute
+   (geoarrow.rust.core.types.EdgesT)" href="#geoarrow.rust.core.types.EdgesT">EdgesT</a></span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Acceptable edges input.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="geoarrow.rust.core.types.EdgesT" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">EdgesT</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.types.EdgesT" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">EdgesT</span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Literal" href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a></span><span class="p">[</span><span class="s1">&#39;andoyer&#39;</span><span class="p">,</span> <span class="s1">&#39;karney&#39;</span><span class="p">,</span> <span class="s1">&#39;spherical&#39;</span><span class="p">,</span> <span class="s1">&#39;thomas&#39;</span><span class="p">,</span> <span class="s1">&#39;vincenty&#39;</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Acceptable edges strings.</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
 
 
 
@@ -1438,10 +1403,10 @@
     
     
       
-      <script id="__config" type="application/json">{"base": "..", "features": ["content.code.annotate", "content.code.copy", "navigation.indexes", "navigation.instant", "navigation.tracking", "search.suggest", "search.share"], "search": "../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.annotate", "content.code.copy", "navigation.indexes", "navigation.instant", "navigation.tracking", "search.suggest", "search.share"], "search": "../../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.13a4f30d.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.13a4f30d.min.js"></script>
       
     
   </body>
