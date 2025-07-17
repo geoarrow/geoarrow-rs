@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## [0.4.1] - 2025-07-17
+
+- Added `path` property to `GeoParquetFile` class so information about each fragment of a `GeoParquetDataset` can be associated back to the original file.
+
 ## [0.4.0] - 2025-07-01
 
 This release contains the Python bindings for more or less a **full rewrite** of the GeoArrow Rust library.
