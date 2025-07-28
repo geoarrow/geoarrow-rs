@@ -29,7 +29,7 @@ pub(crate) type GeoDataFusionResult<T> = std::result::Result<T, GeoDataFusionErr
 impl From<GeoDataFusionError> for DataFusionError {
     fn from(value: GeoDataFusionError) -> Self {
         match value {
-            GeoDataFusionError::Arrow(err) => DataFusionError::ArrowError(err, None),
+            GeoDataFusionError::Arrow(err) => DataFusionError::ArrowError(Box::new(err), None),
             GeoDataFusionError::DataFusion(err) => err,
             GeoDataFusionError::GeoArrow(err) => DataFusionError::External(Box::new(err)),
             GeoDataFusionError::GeoHash(err) => DataFusionError::External(Box::new(err)),
