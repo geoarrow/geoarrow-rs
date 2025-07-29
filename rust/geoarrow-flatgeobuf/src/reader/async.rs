@@ -164,9 +164,8 @@ mod test {
     use object_store::ObjectStore;
     use object_store::local::LocalFileSystem;
 
-    use crate::reader::object_store::ObjectStoreWrapper;
-
     use super::*;
+    use crate::reader::object_store::ObjectStoreWrapper;
 
     fn fixtures_dir() -> Arc<dyn ObjectStore> {
         Arc::new(
