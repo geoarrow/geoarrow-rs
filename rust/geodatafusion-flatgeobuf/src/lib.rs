@@ -161,24 +161,4 @@ mod tests {
         let id_column = batch.column_by_name("id").unwrap();
         assert_eq!(id_column.as_string_view().value(0), "ZMB");
     }
-
-    // // create a simple mem table
-    // fn create_mem_table() -> Arc<MemTable> {
-    //     let fields = vec![
-    //         Field::new("id", DataType::UInt8, false),
-    //         Field::new("data", DataType::Utf8, false),
-    //     ];
-    //     let schema = Arc::new(Schema::new(fields));
-
-    //     let partitions = RecordBatch::try_new(
-    //         schema.clone(),
-    //         vec![
-    //             Arc::new(UInt8Array::from(vec![1, 2])),
-    //             Arc::new(StringArray::from(vec!["foo", "bar"])),
-    //         ],
-    //     )
-    //     .unwrap();
-
-    //     Arc::new(MemTable::try_new(schema, vec![vec![partitions]]).unwrap())
-    // }
 }
