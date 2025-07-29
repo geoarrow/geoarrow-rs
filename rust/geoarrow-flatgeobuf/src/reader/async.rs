@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::pin::Pin;
 use std::sync::Arc;
 
@@ -15,7 +16,7 @@ use http_range_client::{AsyncBufferedHttpRangeClient, AsyncHttpRangeClient};
 
 use crate::reader::FlatGeobufReaderOptions;
 use crate::reader::common::parse_header;
-use crate::reader::table_builder::GeoArrowRecordBatchBuilder;
+use crate::reader::table_builder::{GeoArrowRecordBatchBuilder, GeoArrowRecordBatchBuilderOptions};
 
 /// The primary async entry point for reading FlatGeobuf files as a stream of record batches.
 pub struct FlatGeobufStreamBuilder<T: AsyncHttpRangeClient + Unpin + Send + 'static> {
@@ -40,9 +41,14 @@ impl<T: AsyncHttpRangeClient + Unpin + Send + 'static> FlatGeobufStreamBuilder<T
         &self,
         coord_type: CoordType,
         prefer_view_types: bool,
+        projection: Option<&HashSet<String>>,
     ) -> GeoArrowResult<Schema> {
-        let (geometry_type, properties_schema) =
-            parse_header(self.reader.header(), coord_type, prefer_view_types)?;
+        let (geometry_type, properties_schema) = parse_header(
+            self.reader.header(),
+            coord_type,
+            prefer_view_types,
+            projection,
+        )?;
 
         let mut fields = properties_schema.fields().to_vec();
         fields.push(geometry_type.to_field("geometry", true).into());
@@ -61,6 +67,7 @@ impl<T: AsyncHttpRangeClient + Unpin + Send + 'static> FlatGeobufStreamBuilder<T
             self.reader.header(),
             options.coord_type,
             options.prefer_view_types,
+            options.columns.as_ref(),
         )?;
         let selection = if let Some((min_x, min_y, max_x, max_y)) = options.bbox {
             self.reader.select_bbox(min_x, min_y, max_x, max_y).await
@@ -77,6 +84,7 @@ impl<T: AsyncHttpRangeClient + Unpin + Send + 'static> FlatGeobufStreamBuilder<T
             batch_size: options.batch_size,
             properties_schema,
             num_rows_remaining: num_rows,
+            read_geometry: options.read_geometry,
         };
         Ok(inner_stream.into_stream())
     }
@@ -109,13 +117,16 @@ struct FlatGeobufRecordBatchStreamInner<T: AsyncHttpRangeClient> {
     batch_size: usize,
     properties_schema: SchemaRef,
     num_rows_remaining: Option<usize>,
+    read_geometry: bool,
     // pending_fut: Option<BoxFuture<'static, GeoArrowResult<Option<RecordBatch>>>>,
 }
 
 impl<T: AsyncHttpRangeClient + Unpin + Send + 'static> FlatGeobufRecordBatchStreamInner<T> {
     fn output_schema(&self) -> SchemaRef {
         let mut fields = self.properties_schema.fields().to_vec();
-        fields.push(self.geometry_type.to_field("geometry", true).into());
+        if self.read_geometry {
+            fields.push(self.geometry_type.to_field("geometry", true).into());
+        }
         Arc::new(Schema::new_with_metadata(
             fields,
             self.properties_schema.metadata().clone(),
@@ -123,13 +134,17 @@ impl<T: AsyncHttpRangeClient + Unpin + Send + 'static> FlatGeobufRecordBatchStre
     }
 
     async fn process_batch(&mut self) -> GeoArrowResult<Option<RecordBatch>> {
-        let batch_size = self
-            .num_rows_remaining
-            .map(|num_rows_remaining| num_rows_remaining.min(self.batch_size));
+        let options = GeoArrowRecordBatchBuilderOptions {
+            batch_size: self
+                .num_rows_remaining
+                .map(|num_rows_remaining| num_rows_remaining.min(self.batch_size)),
+            error_on_extra_columns: false,
+            read_geometry: self.read_geometry,
+        };
         let mut record_batch_builder = GeoArrowRecordBatchBuilder::new(
             self.properties_schema.clone(),
             self.geometry_type.clone(),
-            batch_size,
+            &options,
         );
 
         let mut row_count = 0;
