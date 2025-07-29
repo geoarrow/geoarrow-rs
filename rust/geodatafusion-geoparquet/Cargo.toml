@@ -1,0 +1,29 @@
+[package]
+name = "geodatafusion-geoparquet"
+version = "0.1.0-dev"
+authors = ["Kyle Barron <kylebarron2@gmail.com>"]
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+description = "FlatGeobuf TableProvider for DataFusion"
+categories = { workspace = true }
+rust-version = { workspace = true }
+
+
+[dependencies]
+arrow-schema = { workspace = true }
+async-trait = { workspace = true }
+datafusion = { workspace = true }
+datafusion-datasource-parquet = { workspace = true }
+futures = { workspace = true }
+geoarrow-schema = { workspace = true }
+geoparquet = { workspace = true }
+object_store = { workspace = true }
+
+[dev-dependencies]
+approx = { workspace = true }
+geo-traits = { workspace = true }
+geoarrow-array = { workspace = true, features = ["test-data"] }
+geodatafusion = { workspace = true }
+object_store = { workspace = true, features = ["http"] }
+tokio = { workspace = true, features = ["macros", "fs", "rt-multi-thread"] }
