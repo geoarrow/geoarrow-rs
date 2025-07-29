@@ -1,6 +1,6 @@
 use std::any::Any;
 use std::collections::HashMap;
-use std::fmt::{self, Debug};
+use std::fmt::Debug;
 use std::sync::Arc;
 
 use arrow_schema::{Schema, SchemaRef};
@@ -22,7 +22,7 @@ use object_store::{ObjectMeta, ObjectStore};
 
 use crate::source::FlatGeobufSource;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 /// Factory used to create [`FlatGeobufFormat`]
 pub struct FlatGeobufFormatFactory {
     // the options for FlatGeobuf file read
@@ -33,21 +33,6 @@ impl FlatGeobufFormatFactory {
     /// Creates an instance of [`FlatGeobufFormatFactory`]
     pub fn new() -> Self {
         Self {}
-    }
-
-    // /// Creates an instance of [`FlatGeobufFormatFactory`] with customized default options
-    // pub fn new_with_options(options: FlatGeobufOptions) -> Self {
-    //     Self {
-    //         options: Some(options),
-    //     }
-    // }
-}
-
-impl Debug for FlatGeobufFormatFactory {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("FlatGeobufFormatFactory")
-            // .field("options", &self.options)
-            .finish()
     }
 }
 
@@ -127,7 +112,9 @@ impl FileFormat for FlatGeobufFormat {
                 FlatGeobufStreamBuilder::new_from_store(store.clone(), object.location.clone())
                     .await
                     .unwrap();
-            let schema = builder.output_schema(CoordType::Separated, true).unwrap();
+            let schema = builder
+                .output_schema(CoordType::Separated, true, None)
+                .unwrap();
             schemas.push(schema);
         }
 

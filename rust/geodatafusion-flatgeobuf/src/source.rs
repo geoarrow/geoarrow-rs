@@ -18,6 +18,7 @@
 //! Execution plan for reading FlatGeobuf files
 
 use std::any::Any;
+use std::collections::HashSet;
 use std::sync::Arc;
 
 use arrow_schema::SchemaRef;
@@ -29,14 +30,18 @@ use datafusion::datasource::physical_plan::{
 use datafusion::error::Result;
 use datafusion::physical_plan::metrics::ExecutionPlanMetricsSet;
 use futures::StreamExt;
-use geoarrow_flatgeobuf::reader::FlatGeobufStreamBuilder;
+use geoarrow_flatgeobuf::reader::{FlatGeobufReaderOptions, FlatGeobufStreamBuilder};
+use geoarrow_schema::{CoordType, GeoArrowType};
 use object_store::ObjectStore;
 
 #[derive(Debug, Clone, Default)]
 pub struct FlatGeobufSource {
     batch_size: Option<usize>,
+    coord_type: CoordType,
     file_schema: Option<SchemaRef>,
-    file_projection: Option<Vec<usize>>,
+    projection: Option<Vec<usize>>,
+    // columns: Option<HashSet<String>>,
+    // read_geometry: bool,
     metrics: ExecutionPlanMetricsSet,
     projected_statistics: Option<Statistics>,
 }
@@ -45,17 +50,15 @@ impl FlatGeobufSource {
     pub fn new() -> Self {
         Self {
             batch_size: None,
+            coord_type: CoordType::default(),
             file_schema: None,
-            file_projection: None,
+            projection: None,
+            // columns: None,
+            // read_geometry: true,
             metrics: ExecutionPlanMetricsSet::new(),
             projected_statistics: None,
         }
     }
-
-    // pub fn with_batch_size(mut self, batch_size: usize) -> Self {
-    //     self.batch_size = Some(batch_size);
-    //     self
-    // }
 
     // pub fn with_file_schema(mut self, schema: SchemaRef) -> Self {
     //     self.file_schema = Some(schema);
@@ -108,7 +111,7 @@ impl FileSource for FlatGeobufSource {
 
     fn with_projection(&self, config: &FileScanConfig) -> Arc<dyn FileSource> {
         let mut conf = self.clone();
-        conf.file_projection = config.file_column_projection_indices();
+        conf.projection = config.projection.clone();
         Arc::new(conf)
     }
 
@@ -160,12 +163,38 @@ impl FileOpener for FlatGeobufOpener {
     fn open(&self, file_meta: FileMeta, _file: PartitionedFile) -> Result<FileOpenFuture> {
         let store = Arc::clone(&self.object_store);
 
+        let mut options = FlatGeobufReaderOptions {
+            batch_size: self.config.batch_size.unwrap_or(1024),
+            coord_type: self.config.coord_type,
+            ..Default::default()
+        };
+
+        let file_schema = self.config.file_schema.as_ref().unwrap();
+        if let Some(projection) = &self.config.projection {
+            options.read_geometry = false;
+            let mut columns = HashSet::new();
+            for projection_idx in projection {
+                let field = file_schema.field(*projection_idx);
+                if field
+                    .extension_type_name()
+                    .is_some_and(|name| name.starts_with("geoarrow") || name.starts_with("ogc"))
+                    && GeoArrowType::try_from(field).is_ok()
+                {
+                    options.read_geometry = true;
+                } else {
+                    columns.insert(field.name().clone());
+                }
+            }
+
+            options.columns = Some(columns);
+        }
+
         Ok(Box::pin(async move {
             let reader =
                 FlatGeobufStreamBuilder::new_from_store(store, file_meta.location().clone())
                     .await
                     .unwrap();
-            let stream = reader.read(Default::default()).await.unwrap();
+            let stream = reader.read(options).await.unwrap();
             Ok(stream.boxed())
         }))
     }
