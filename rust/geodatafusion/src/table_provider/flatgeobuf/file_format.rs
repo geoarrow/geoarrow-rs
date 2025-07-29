@@ -169,6 +169,11 @@ impl FileFormat for FlatGeobufFormat {
     fn file_source(&self) -> Arc<dyn FileSource> {
         Arc::new(FlatGeobufSource::default())
     }
+
+    /// Returns whether this instance uses compression if applicable
+    fn compression_type(&self) -> Option<FileCompressionType> {
+        Some(FileCompressionType::UNCOMPRESSED)
+    }
 }
 
 /// Factory for creating FlatGeobuf file formats

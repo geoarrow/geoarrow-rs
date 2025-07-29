@@ -22,6 +22,7 @@ use std::sync::Arc;
 
 use arrow_schema::SchemaRef;
 use datafusion::common::Statistics;
+use datafusion::datasource::listing::PartitionedFile;
 use datafusion::datasource::physical_plan::{
     FileMeta, FileOpenFuture, FileOpener, FileScanConfig, FileSource,
 };
@@ -156,7 +157,7 @@ impl FlatGeobufOpener {
 }
 
 impl FileOpener for FlatGeobufOpener {
-    fn open(&self, file_meta: FileMeta) -> Result<FileOpenFuture> {
+    fn open(&self, file_meta: FileMeta, _file: PartitionedFile) -> Result<FileOpenFuture> {
         let store = Arc::clone(&self.object_store);
 
         Ok(Box::pin(async move {
