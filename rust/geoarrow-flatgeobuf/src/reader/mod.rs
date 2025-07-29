@@ -2,11 +2,11 @@
 mod r#async;
 mod common;
 #[cfg(feature = "object_store")]
-mod object_store_reader;
+pub mod object_store;
 mod sync;
 mod table_builder;
 
 #[cfg(feature = "async")]
 pub use r#async::FlatGeobufRecordBatchStream;
-pub use common::FlatGeobufReaderOptions;
+pub use common::{FlatGeobufReaderOptions, parse_header};
 pub use sync::FlatGeobufRecordBatchIterator;

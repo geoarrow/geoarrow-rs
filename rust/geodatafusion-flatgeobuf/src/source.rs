@@ -27,11 +27,14 @@ use datafusion::datasource::listing::PartitionedFile;
 use datafusion::datasource::physical_plan::{
     FileMeta, FileOpenFuture, FileOpener, FileScanConfig, FileSource,
 };
-use datafusion::error::Result;
+use datafusion::error::{DataFusionError, Result};
 use datafusion::physical_plan::metrics::ExecutionPlanMetricsSet;
+use flatgeobuf::HttpFgbReader;
 use futures::StreamExt;
-use geoarrow_flatgeobuf::reader::{FlatGeobufReaderOptions, FlatGeobufStreamBuilder};
+use geoarrow_flatgeobuf::reader::object_store::ObjectStoreWrapper;
+use geoarrow_flatgeobuf::reader::{FlatGeobufReaderOptions, FlatGeobufRecordBatchStream};
 use geoarrow_schema::{CoordType, GeoArrowType};
+use http_range_client::AsyncBufferedHttpRangeClient;
 use object_store::ObjectStore;
 
 #[derive(Debug, Clone, Default)]
@@ -162,11 +165,17 @@ impl FileOpener for FlatGeobufOpener {
         }
 
         Ok(Box::pin(async move {
-            let reader =
-                FlatGeobufStreamBuilder::new_from_store(store, file_meta.location().clone())
-                    .await
-                    .unwrap();
-            let stream = reader.read(options).await.unwrap();
+            let object_store_wrapper = ObjectStoreWrapper::new(store, file_meta.location().clone());
+            let async_client = AsyncBufferedHttpRangeClient::with(object_store_wrapper, "");
+            let fgb_reader = HttpFgbReader::new(async_client)
+                .await
+                .map_err(|err| DataFusionError::External(Box::new(err)))?;
+            let selection = fgb_reader
+                .select_all()
+                .await
+                .map_err(|err| DataFusionError::External(Box::new(err)))?;
+            let stream = FlatGeobufRecordBatchStream::try_new(selection, options)
+                .map_err(|err| DataFusionError::External(Box::new(err)))?;
             Ok(stream.boxed())
         }))
     }

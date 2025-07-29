@@ -7,8 +7,14 @@ use object_store::ObjectStore;
 use object_store::path::Path;
 
 pub struct ObjectStoreWrapper {
-    pub location: Path,
-    pub reader: Arc<dyn ObjectStore>,
+    store: Arc<dyn ObjectStore>,
+    location: Path,
+}
+
+impl ObjectStoreWrapper {
+    pub fn new(store: Arc<dyn ObjectStore>, location: Path) -> Self {
+        Self { store, location }
+    }
 }
 
 #[async_trait]
@@ -24,7 +30,7 @@ impl AsyncHttpRangeClient for ObjectStoreWrapper {
         let end_range = split_range[1].parse::<u64>().unwrap() + 1;
 
         let bytes = self
-            .reader
+            .store
             .get_range(&self.location, start_range..end_range)
             .await
             .unwrap();
@@ -39,7 +45,7 @@ impl AsyncHttpRangeClient for ObjectStoreWrapper {
     ) -> HTTPRangeClientResult<Option<String>> {
         // This is a massive hack to align APIs
         if header == "content-length" {
-            let meta = self.reader.head(&self.location).await.unwrap();
+            let meta = self.store.head(&self.location).await.unwrap();
             Ok(Some(meta.size.to_string()))
         } else {
             Ok(None)

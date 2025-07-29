@@ -89,7 +89,6 @@ impl<T: AsyncHttpRangeClient + Unpin + Send + 'static> FlatGeobufRecordBatchStre
                 feature
                     .process_properties(&mut record_batch_builder)
                     .map_err(|err| GeoArrowError::External(Box::new(err)))?;
-                // record_batch_builder.properties_end()?;
 
                 record_batch_builder.push_geometry(
                     feature
@@ -98,7 +97,6 @@ impl<T: AsyncHttpRangeClient + Unpin + Send + 'static> FlatGeobufRecordBatchStre
                         .as_ref(),
                 )?;
 
-                // $builder.feature_end(0)?;
                 row_count += 1;
             } else if row_count > 0 {
                 return Ok(Some(record_batch_builder.finish()?));
@@ -166,7 +164,7 @@ mod test {
     use object_store::ObjectStore;
     use object_store::local::LocalFileSystem;
 
-    use crate::reader::object_store_reader::ObjectStoreWrapper;
+    use crate::reader::object_store::ObjectStoreWrapper;
 
     use super::*;
 
@@ -183,10 +181,7 @@ mod test {
         store: Arc<dyn ObjectStore>,
         location: object_store::path::Path,
     ) -> flatgeobuf::Result<HttpFgbReader<ObjectStoreWrapper>> {
-        let object_store_wrapper = ObjectStoreWrapper {
-            reader: store,
-            location,
-        };
+        let object_store_wrapper = ObjectStoreWrapper::new(store, location);
         let async_client = AsyncBufferedHttpRangeClient::with(object_store_wrapper, "");
         HttpFgbReader::new(async_client).await
     }
@@ -221,16 +216,21 @@ mod test {
         assert_eq!(num_rows, 133);
     }
 
-    // #[tokio::test]
-    // async fn test_nz_buildings() {
-    //     let fs = Arc::new(LocalFileSystem::new_with_prefix(current_dir().unwrap()).unwrap());
-    //     let options = FlatGeobufReaderOptions::default();
-    //     let _table = read_flatgeobuf_async(
-    //         fs,
-    //         Path::from("fixtures/flatgeobuf/nz-building-outlines-small.fgb"),
-    //         options,
-    //     )
-    //     .await
-    //     .unwrap();
-    // }
+    #[tokio::test]
+    async fn test_nz_buildings() {
+        let store = fixtures_dir();
+        let fgb_reader = new_from_store(
+            store,
+            "fixtures/flatgeobuf/nz-building-outlines-small.fgb".into(),
+        )
+        .await
+        .unwrap();
+        let selection = fgb_reader.select_all().await.unwrap();
+        let stream = FlatGeobufRecordBatchStream::try_new(selection, Default::default()).unwrap();
+        let _schema = stream.schema();
+        let batches = stream.try_collect::<Vec<_>>().await.unwrap();
+
+        let num_rows: usize = batches.iter().map(|batch| batch.num_rows()).sum();
+        assert_eq!(num_rows, 2000);
+    }
 }
