@@ -15,9 +15,8 @@ mod tests {
     use datafusion::execution::object_store::ObjectStoreUrl;
     use datafusion::prelude::SessionContext;
 
-    use crate::udf::native::measurement::Centroid;
-
     use super::*;
+    use crate::udf::native::measurement::Centroid;
 
     #[tokio::test]
     async fn test_flatgeobuf_format() {
