@@ -30,7 +30,7 @@ use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geozero::FeatureProperties;
 
 use crate::reader::common::{FlatGeobufReaderOptions, parse_header};
-use crate::reader::table_builder::GeoArrowRecordBatchBuilder;
+use crate::reader::table_builder::{GeoArrowRecordBatchBuilder, GeoArrowRecordBatchBuilderOptions};
 
 /// A builder for [FlatGeobufRecordBatchIterator]
 pub struct FlatGeobufReaderBuilder<R> {
@@ -54,6 +54,7 @@ impl<R: Read> FlatGeobufReaderBuilder<R> {
             self.reader.header(),
             options.coord_type,
             options.prefer_view_types,
+            options.columns.as_ref(),
         )?;
 
         let selection = if let Some((min_x, min_y, max_x, max_y)) = options.bbox {
@@ -67,9 +68,10 @@ impl<R: Read> FlatGeobufReaderBuilder<R> {
         Ok(FlatGeobufRecordBatchIterator {
             selection,
             geometry_type,
-            batch_size: options.batch_size.unwrap_or(65_536),
+            batch_size: options.batch_size,
             properties_schema,
             num_rows_remaining: num_rows,
+            read_geometry: options.read_geometry,
         })
     }
 }
@@ -84,6 +86,7 @@ impl<R: Read + Seek> FlatGeobufReaderBuilder<R> {
             self.reader.header(),
             options.coord_type,
             options.prefer_view_types,
+            options.columns.as_ref(),
         )?;
 
         let selection = if let Some((min_x, min_y, max_x, max_y)) = options.bbox {
@@ -97,9 +100,10 @@ impl<R: Read + Seek> FlatGeobufReaderBuilder<R> {
         Ok(FlatGeobufRecordBatchIterator {
             selection,
             geometry_type,
-            batch_size: options.batch_size.unwrap_or(65_536),
+            batch_size: options.batch_size,
             properties_schema,
             num_rows_remaining: num_rows,
+            read_geometry: options.read_geometry,
         })
     }
 }
@@ -113,12 +117,15 @@ pub struct FlatGeobufRecordBatchIterator<R, S> {
     batch_size: usize,
     properties_schema: SchemaRef,
     num_rows_remaining: Option<usize>,
+    read_geometry: bool,
 }
 
 impl<R, S> FlatGeobufRecordBatchIterator<R, S> {
     fn output_schema(&self) -> SchemaRef {
         let mut fields = self.properties_schema.fields().to_vec();
-        fields.push(self.geometry_type.to_field("geometry", true).into());
+        if self.read_geometry {
+            fields.push(self.geometry_type.to_field("geometry", true).into());
+        }
         Arc::new(Schema::new_with_metadata(
             fields,
             self.properties_schema.metadata().clone(),
@@ -128,13 +135,17 @@ impl<R, S> FlatGeobufRecordBatchIterator<R, S> {
 
 impl<R: Read> FlatGeobufRecordBatchIterator<R, NotSeekable> {
     fn process_batch(&mut self) -> GeoArrowResult<Option<RecordBatch>> {
-        let batch_size = self
-            .num_rows_remaining
-            .map(|num_rows_remaining| num_rows_remaining.min(self.batch_size));
+        let options = GeoArrowRecordBatchBuilderOptions {
+            batch_size: self
+                .num_rows_remaining
+                .map(|num_rows_remaining| num_rows_remaining.min(self.batch_size)),
+            error_on_extra_columns: false,
+            read_geometry: self.read_geometry,
+        };
         let mut record_batch_builder = GeoArrowRecordBatchBuilder::new(
             self.properties_schema.clone(),
             self.geometry_type.clone(),
-            batch_size,
+            &options,
         );
 
         let mut row_count = 0;
@@ -188,13 +199,17 @@ impl<R: Read> RecordBatchReader for FlatGeobufRecordBatchIterator<R, NotSeekable
 
 impl<R: Read + Seek> FlatGeobufRecordBatchIterator<R, Seekable> {
     fn process_batch(&mut self) -> GeoArrowResult<Option<RecordBatch>> {
-        let batch_size = self
-            .num_rows_remaining
-            .map(|num_rows_remaining| num_rows_remaining.min(self.batch_size));
+        let options = GeoArrowRecordBatchBuilderOptions {
+            batch_size: self
+                .num_rows_remaining
+                .map(|num_rows_remaining| num_rows_remaining.min(self.batch_size)),
+            error_on_extra_columns: false,
+            read_geometry: self.read_geometry,
+        };
         let mut record_batch_builder = GeoArrowRecordBatchBuilder::new(
             self.properties_schema.clone(),
             self.geometry_type.clone(),
-            batch_size,
+            &options,
         );
 
         let mut row_count = 0;

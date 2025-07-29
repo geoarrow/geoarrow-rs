@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::sync::Arc;
 
 use arrow_schema::{DataType, Field, SchemaBuilder, SchemaRef, TimeUnit};
@@ -15,7 +16,7 @@ pub struct FlatGeobufReaderOptions {
     pub coord_type: CoordType,
 
     /// The number of rows in each batch.
-    pub batch_size: Option<usize>,
+    pub batch_size: usize,
 
     /// A spatial filter for reading rows.
     ///
@@ -24,15 +25,26 @@ pub struct FlatGeobufReaderOptions {
 
     /// Whether to prefer view types for string and binary columns.
     pub prefer_view_types: bool,
+
+    /// The names of property columns to read from the FlatGeobuf file. If `None`, all property
+    /// columns will be read.
+    ///
+    /// The geometry column is always included.
+    pub columns: Option<HashSet<String>>,
+
+    /// If `true`, read the geometry column.
+    pub read_geometry: bool,
 }
 
 impl Default for FlatGeobufReaderOptions {
     fn default() -> Self {
         Self {
             coord_type: Default::default(),
-            batch_size: Some(65_536),
+            batch_size: 65_536,
             bbox: None,
             prefer_view_types: true,
+            columns: Default::default(),
+            read_geometry: true,
         }
     }
 }
@@ -40,11 +52,22 @@ impl Default for FlatGeobufReaderOptions {
 /// Parse the FlatGeobuf header to infer the [SchemaRef] of the property columns.
 ///
 /// Note that this does not include the geometry column, which is handled separately.
-pub(super) fn infer_properties_schema(header: Header<'_>, prefer_view_types: bool) -> SchemaRef {
+pub(super) fn infer_properties_schema(
+    header: Header<'_>,
+    prefer_view_types: bool,
+    projection: Option<&HashSet<String>>,
+) -> SchemaRef {
     let columns = header.columns().unwrap();
-    let mut schema = SchemaBuilder::with_capacity(columns.len());
+    let mut schema =
+        SchemaBuilder::with_capacity(projection.map(|p| p.len()).unwrap_or(columns.len()));
 
     for col in columns.into_iter() {
+        if let Some(projection) = projection.as_ref() {
+            if !projection.contains(col.name()) {
+                continue;
+            }
+        }
+
         let field = match col.type_() {
             ColumnType::Bool => Field::new(col.name(), DataType::Boolean, col.nullable()),
             ColumnType::Byte => Field::new(col.name(), DataType::Int8, col.nullable()),
@@ -131,6 +154,7 @@ pub(super) fn parse_header(
     header: Header<'_>,
     coord_type: CoordType,
     prefer_view_types: bool,
+    projection: Option<&HashSet<String>>,
 ) -> GeoArrowResult<(GeoArrowType, SchemaRef)> {
     if header.has_t() | header.has_tm() {
         return Err(GeoArrowError::FlatGeobuf(
@@ -144,7 +168,7 @@ pub(super) fn parse_header(
         (true, true) => Dimension::XYZM,
     };
 
-    let properties_schema = infer_properties_schema(header, prefer_view_types);
+    let properties_schema = infer_properties_schema(header, prefer_view_types, projection);
     let geometry_type = header.geometry_type();
     let metadata = parse_crs(header.crs());
 

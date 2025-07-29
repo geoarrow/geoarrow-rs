@@ -1,31 +1,28 @@
 [package]
-name = "geodatafusion"
+name = "geodatafusion-flatgeobuf"
 version = "0.1.0-dev"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = { workspace = true }
 license = { workspace = true }
 repository = { workspace = true }
-description = "Rust implementation of GeoArrow"
+description = "FlatGeobuf TableProvider for DataFusion"
 categories = { workspace = true }
 rust-version = { workspace = true }
 
 
 [dependencies]
-arrow-array = { workspace = true }
 arrow-schema = { workspace = true }
+async-trait = { workspace = true }
 datafusion = { workspace = true }
-geo = { workspace = true }
-geo-traits = { workspace = true }
-geoarrow-array = { workspace = true }
-geoarrow-geo = { workspace = true }
+futures = { workspace = true }
+geoarrow-flatgeobuf = { workspace = true, features = ["object_store"] }
 geoarrow-schema = { workspace = true }
-geohash = { workspace = true }
-thiserror = { workspace = true }
-wkt = { workspace = true }
+object_store = { workspace = true }
 
 [dev-dependencies]
 approx = { workspace = true }
 geo-traits = { workspace = true }
 geoarrow-array = { workspace = true, features = ["test-data"] }
+geodatafusion = { workspace = true }
 object_store = { workspace = true, features = ["http"] }
 tokio = { workspace = true, features = ["macros", "fs", "rt-multi-thread"] }

@@ -9,6 +9,7 @@ members = [
     "rust/geoarrow-schema",
     "rust/geoarrow-test",
     "rust/geodatafusion",
+    "rust/geodatafusion-flatgeobuf",
     "rust/geoparquet",
     "rust/pyo3-geoarrow",
 ]
@@ -41,6 +42,7 @@ async-trait = "0.1"
 bytes = "1.10.0"
 chrono = { version = "0.4.41", default-features = false }
 datafusion = { version = "49.0.0" }
+datafusion-datasource = { version = "49.0.0" }
 flatgeobuf = { git = "https://github.com/kylebarron/flatgeobuf", rev = "ea7749d5b209972389f73f9a93dd1d860f3467a1", default-features = false }
 futures = "0.3"
 geo = "0.30.0"
@@ -48,9 +50,11 @@ geo-traits = "0.3.0"
 geo-types = "0.7.16"
 geoarrow-array = { path = "rust/geoarrow-array", version = "0.4" }
 geoarrow-cast = { path = "rust/geoarrow-cast", version = "0.4" }
+geoarrow-flatgeobuf = { path = "rust/geoarrow-flatgeobuf", version = "0.4" }
 geoarrow-geo = { path = "rust/geoarrow-geo", version = "0.4" }
 geoarrow-schema = { path = "rust/geoarrow-schema", version = "0.4" }
 geoarrow-test = { path = "rust/geoarrow-test", version = "0.4" }
+geodatafusion = { path = "rust/geodatafusion" }
 geohash = "0.13.1"
 geoparquet = { path = "rust/geoparquet", version = "0.4" }
 geos = { version = "10", features = ["v3_10_0"] }
