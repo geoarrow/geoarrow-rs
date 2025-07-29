@@ -15,7 +15,7 @@ pub struct FlatGeobufReaderOptions {
     pub coord_type: CoordType,
 
     /// The number of rows in each batch.
-    pub batch_size: Option<usize>,
+    pub batch_size: usize,
 
     /// A spatial filter for reading rows.
     ///
@@ -30,7 +30,7 @@ impl Default for FlatGeobufReaderOptions {
     fn default() -> Self {
         Self {
             coord_type: Default::default(),
-            batch_size: Some(65_536),
+            batch_size: 65_536,
             bbox: None,
             prefer_view_types: true,
         }

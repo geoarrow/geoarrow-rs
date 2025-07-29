@@ -67,7 +67,7 @@ impl<R: Read> FlatGeobufReaderBuilder<R> {
         Ok(FlatGeobufRecordBatchIterator {
             selection,
             geometry_type,
-            batch_size: options.batch_size.unwrap_or(65_536),
+            batch_size: options.batch_size,
             properties_schema,
             num_rows_remaining: num_rows,
         })
@@ -97,7 +97,7 @@ impl<R: Read + Seek> FlatGeobufReaderBuilder<R> {
         Ok(FlatGeobufRecordBatchIterator {
             selection,
             geometry_type,
-            batch_size: options.batch_size.unwrap_or(65_536),
+            batch_size: options.batch_size,
             properties_schema,
             num_rows_remaining: num_rows,
         })
