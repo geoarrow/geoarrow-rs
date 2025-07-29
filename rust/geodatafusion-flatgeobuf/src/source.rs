@@ -40,8 +40,6 @@ pub struct FlatGeobufSource {
     coord_type: CoordType,
     file_schema: Option<SchemaRef>,
     projection: Option<Vec<usize>>,
-    // columns: Option<HashSet<String>>,
-    // read_geometry: bool,
     metrics: ExecutionPlanMetricsSet,
     projected_statistics: Option<Statistics>,
 }
@@ -53,22 +51,10 @@ impl FlatGeobufSource {
             coord_type: CoordType::default(),
             file_schema: None,
             projection: None,
-            // columns: None,
-            // read_geometry: true,
             metrics: ExecutionPlanMetricsSet::new(),
             projected_statistics: None,
         }
     }
-
-    // pub fn with_file_schema(mut self, schema: SchemaRef) -> Self {
-    //     self.file_schema = Some(schema);
-    //     self
-    // }
-
-    // pub fn with_projected_statistics(mut self, statistics: Statistics) -> Self {
-    //     self.projected_statistics = Some(statistics);
-    //     self
-    // }
 }
 
 impl From<FlatGeobufSource> for Arc<dyn FileSource> {
