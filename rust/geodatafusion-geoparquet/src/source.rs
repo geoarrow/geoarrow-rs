@@ -18,7 +18,7 @@ pub struct GeoParquetSource {
     inner: ParquetSource,
 }
 
-/// Allows easy conversion from ParquetSource to Arc<dyn FileSource>;
+/// Allows easy conversion from ParquetSource to Arc\<dyn FileSource\>;
 impl From<GeoParquetSource> for Arc<dyn FileSource> {
     fn from(source: GeoParquetSource) -> Self {
         Arc::new(source)
