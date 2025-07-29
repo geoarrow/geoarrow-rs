@@ -13,26 +13,30 @@ use datafusion::datasource::file_format::{FileFormat, FileFormatFactory};
 use datafusion::datasource::physical_plan::{
     FileScanConfig, FileScanConfigBuilder, FileSinkConfig, FileSource,
 };
-use datafusion::error::Result;
+use datafusion::error::{DataFusionError, Result};
 use datafusion::physical_expr::LexRequirement;
 use datafusion::physical_plan::ExecutionPlan;
-use geoarrow_flatgeobuf::reader::FlatGeobufStreamBuilder;
+use flatgeobuf::HttpFgbReader;
+use geoarrow_flatgeobuf::reader::object_store::ObjectStoreWrapper;
+use geoarrow_flatgeobuf::reader::parse_header;
 use geoarrow_schema::CoordType;
+use http_range_client::AsyncBufferedHttpRangeClient;
 use object_store::{ObjectMeta, ObjectStore};
 
 use crate::source::FlatGeobufSource;
 
-#[derive(Default, Debug)]
 /// Factory used to create [`FlatGeobufFormat`]
+#[derive(Default, Debug)]
 pub struct FlatGeobufFormatFactory {
-    // the options for FlatGeobuf file read
-    // pub options: Option<CsvOptions>,
+    coord_type: CoordType,
 }
 
 impl FlatGeobufFormatFactory {
     /// Creates an instance of [`FlatGeobufFormatFactory`]
     pub fn new() -> Self {
-        Self {}
+        Self {
+            coord_type: CoordType::default(),
+        }
     }
 }
 
@@ -42,29 +46,15 @@ impl FileFormatFactory for FlatGeobufFormatFactory {
         _state: &dyn Session,
         _format_options: &HashMap<String, String>,
     ) -> Result<Arc<dyn FileFormat>> {
-        Ok(Arc::new(FlatGeobufFormat::default()))
-
-        // let csv_options = match &self.options {
-        //     None => {
-        //         let mut table_options = state.default_table_options();
-        //         table_options.set_config_format(ConfigFileType::CSV);
-        //         table_options.alter_with_string_hash_map(format_options)?;
-        //         table_options.csv
-        //     }
-        //     Some(csv_options) => {
-        //         let mut csv_options = csv_options.clone();
-        //         for (k, v) in format_options {
-        //             csv_options.set(k, v)?;
-        //         }
-        //         csv_options
-        //     }
-        // };
-
-        // Ok(Arc::new(CsvFormat::default().with_options(csv_options)))
+        Ok(Arc::new(FlatGeobufFormat {
+            coord_type: self.coord_type,
+        }))
     }
 
     fn default(&self) -> Arc<dyn FileFormat> {
-        Arc::new(FlatGeobufFormat::default())
+        Arc::new(FlatGeobufFormat {
+            coord_type: self.coord_type,
+        })
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -79,7 +69,9 @@ impl GetExt for FlatGeobufFormatFactory {
 }
 
 #[derive(Debug, Default)]
-pub struct FlatGeobufFormat {}
+pub struct FlatGeobufFormat {
+    coord_type: CoordType,
+}
 
 #[async_trait]
 impl FileFormat for FlatGeobufFormat {
@@ -108,13 +100,20 @@ impl FileFormat for FlatGeobufFormat {
         let mut schemas = vec![];
 
         for object in objects {
-            let builder =
-                FlatGeobufStreamBuilder::new_from_store(store.clone(), object.location.clone())
-                    .await
-                    .unwrap();
-            let schema = builder
-                .output_schema(CoordType::Separated, true, None)
-                .unwrap();
+            let object_store_wrapper =
+                ObjectStoreWrapper::new(store.clone(), object.location.clone());
+            let async_client = AsyncBufferedHttpRangeClient::with(object_store_wrapper, "");
+            let reader = HttpFgbReader::new(async_client)
+                .await
+                .map_err(|err| DataFusionError::External(Box::new(err)))?;
+            let (geo_type, properties_schema) =
+                parse_header(reader.header(), self.coord_type, true, None)
+                    .map_err(|err| DataFusionError::External(Box::new(err)))?;
+
+            let mut fields = properties_schema.fields().to_vec();
+            fields.push(Arc::new(geo_type.to_field("geometry", true)));
+            let schema = Schema::new(fields);
+
             schemas.push(schema);
         }
 

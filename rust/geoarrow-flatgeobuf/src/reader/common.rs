@@ -18,11 +18,6 @@ pub struct FlatGeobufReaderOptions {
     /// The number of rows in each batch.
     pub batch_size: usize,
 
-    /// A spatial filter for reading rows.
-    ///
-    /// If set to `None`, no spatial filtering will be performed.
-    pub bbox: Option<(f64, f64, f64, f64)>,
-
     /// Whether to prefer view types for string and binary columns.
     pub prefer_view_types: bool,
 
@@ -41,7 +36,6 @@ impl Default for FlatGeobufReaderOptions {
         Self {
             coord_type: Default::default(),
             batch_size: 65_536,
-            bbox: None,
             prefer_view_types: true,
             columns: Default::default(),
             read_geometry: true,
@@ -52,7 +46,7 @@ impl Default for FlatGeobufReaderOptions {
 /// Parse the FlatGeobuf header to infer the [SchemaRef] of the property columns.
 ///
 /// Note that this does not include the geometry column, which is handled separately.
-pub(super) fn infer_properties_schema(
+fn infer_properties_schema(
     header: Header<'_>,
     prefer_view_types: bool,
     projection: Option<&HashSet<String>>,
@@ -123,7 +117,7 @@ pub(super) fn infer_properties_schema(
 /// Parse CRS information provided by FlatGeobuf into a [Metadata].
 ///
 /// WKT is preferred if it exists. Otherwise, authority code will be used as a fallback.
-pub(super) fn parse_crs(crs: Option<Crs<'_>>) -> Arc<Metadata> {
+fn parse_crs(crs: Option<Crs<'_>>) -> Arc<Metadata> {
     if let Some(crs) = crs {
         if let Some(wkt) = crs.wkt() {
             // We use unknown CRS because we don't know for sure it's WKT 2019
@@ -150,7 +144,7 @@ pub(super) fn parse_crs(crs: Option<Crs<'_>>) -> Arc<Metadata> {
 
 /// Parse the FlatGeobuf header to infer the [GeoArrowType] of the geometry column and [SchemaRef]
 /// of the properties.
-pub(super) fn parse_header(
+pub fn parse_header(
     header: Header<'_>,
     coord_type: CoordType,
     prefer_view_types: bool,

@@ -14,9 +14,11 @@ rust-version = { workspace = true }
 arrow-schema = { workspace = true }
 async-trait = { workspace = true }
 datafusion = { workspace = true }
+flatgeobuf = { workspace = true }
 futures = { workspace = true }
 geoarrow-flatgeobuf = { workspace = true, features = ["object_store"] }
 geoarrow-schema = { workspace = true }
+http-range-client = { workspace = true, optional = true, default-features = false }
 object_store = { workspace = true }
 
 [dev-dependencies]
