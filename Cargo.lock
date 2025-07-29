@@ -1860,14 +1860,15 @@ dependencies = [
  "arrow-schema",
  "async-trait",
  "datafusion",
+ "datafusion-datasource",
  "datafusion-datasource-parquet",
- "futures",
  "geo-traits",
  "geoarrow-array",
  "geoarrow-schema",
  "geodatafusion",
  "geoparquet",
  "object_store",
+ "serde_json",
  "tokio",
 ]
 
