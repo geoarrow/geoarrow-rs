@@ -1,3 +1,5 @@
+#![cfg_attr(not(test), warn(unused_crate_dependencies))]
+
 pub mod file_format;
 pub mod source;
 
@@ -14,9 +16,9 @@ mod tests {
     use datafusion::execution::SessionStateBuilder;
     use datafusion::execution::object_store::ObjectStoreUrl;
     use datafusion::prelude::SessionContext;
+    use geodatafusion::udf::native::measurement::Centroid;
 
     use super::*;
-    use crate::udf::native::measurement::Centroid;
 
     #[tokio::test]
     async fn test_flatgeobuf_format() {

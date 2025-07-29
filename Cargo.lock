@@ -1819,13 +1819,10 @@ dependencies = [
  "approx",
  "arrow-array",
  "arrow-schema",
- "async-trait",
  "datafusion",
- "futures",
  "geo",
  "geo-traits",
  "geoarrow-array",
- "geoarrow-flatgeobuf",
  "geoarrow-geo",
  "geoarrow-schema",
  "geohash",
@@ -1833,6 +1830,24 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "wkt 0.14.0",
+]
+
+[[package]]
+name = "geodatafusion-flatgeobuf"
+version = "0.1.0-dev"
+dependencies = [
+ "approx",
+ "arrow-schema",
+ "async-trait",
+ "datafusion",
+ "futures",
+ "geo-traits",
+ "geoarrow-array",
+ "geoarrow-flatgeobuf",
+ "geoarrow-schema",
+ "geodatafusion",
+ "object_store",
+ "tokio",
 ]
 
 [[package]]

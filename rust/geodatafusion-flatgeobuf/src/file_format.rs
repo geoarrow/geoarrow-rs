@@ -20,7 +20,7 @@ use geoarrow_flatgeobuf::reader::FlatGeobufStreamBuilder;
 use geoarrow_schema::CoordType;
 use object_store::{ObjectMeta, ObjectStore};
 
-use crate::table_provider::flatgeobuf::source::FlatGeobufSource;
+use crate::source::FlatGeobufSource;
 
 #[derive(Default)]
 /// Factory used to create [`FlatGeobufFormat`]
