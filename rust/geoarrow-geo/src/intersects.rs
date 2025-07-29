@@ -1,10 +1,10 @@
 use arrow_array::BooleanArray;
 use geo::intersects::Intersects;
-use geo_traits::to_geo::ToGeoGeometry;
 use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 use crate::util::downcast::downcast_geoarrow_array_two_args;
+use crate::util::to_geo::geometry_to_geo;
 
 pub fn intersects(
     left_array: &dyn GeoArrowArray,
@@ -28,18 +28,8 @@ fn _intersects_impl<'a>(
     for (maybe_left, maybe_right) in left_array.iter().zip(right_array.iter()) {
         match (maybe_left, maybe_right) {
             (Some(left), Some(right)) => {
-                let left_geom =
-                    left?
-                        .try_to_geometry()
-                        .ok_or(GeoArrowError::IncorrectGeometryType(
-                            "geo crate does not support empty points.".to_string(),
-                        ))?;
-                let right_geom =
-                    right?
-                        .try_to_geometry()
-                        .ok_or(GeoArrowError::IncorrectGeometryType(
-                            "geo crate does not support empty points.".to_string(),
-                        ))?;
+                let left_geom = geometry_to_geo(&left?)?;
+                let right_geom = geometry_to_geo(&right?)?;
                 let intersects = left_geom.intersects(&right_geom);
                 builder.append_value(intersects);
             }

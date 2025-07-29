@@ -63,6 +63,9 @@ class GeoParquetFile:
     @property
     def num_row_groups(self) -> int:
         """The number of row groups in this file."""
+    @property
+    def path(self) -> str:
+        """The path to the file within the provided object store."""
     def schema_arrow(
         self,
         *,

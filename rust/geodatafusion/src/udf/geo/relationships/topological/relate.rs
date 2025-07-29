@@ -11,9 +11,9 @@ use datafusion::logical_expr::{
 };
 use geo::relate::IntersectionMatrix;
 use geo::{PreparedGeometry, Relate};
-use geo_traits::to_geo::ToGeoGeometry;
 use geoarrow_array::array::from_arrow_array;
 use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, downcast_geoarrow_array};
+use geoarrow_geo::util::to_geo::geometry_to_geo;
 use geoarrow_schema::error::GeoArrowResult;
 
 use crate::error::GeoDataFusionResult;
@@ -223,8 +223,7 @@ fn _to_geo_scalar_impl<'a>(
     arr: &'a impl GeoArrowArrayAccessor<'a>,
 ) -> GeoArrowResult<Option<geo::Geometry>> {
     if let Some(geom) = arr.iter().next().unwrap() {
-        let geom = geom?;
-        Ok(geom.try_to_geometry())
+        Some(geometry_to_geo(&geom?)).transpose()
     } else {
         Ok(None)
     }
@@ -247,7 +246,7 @@ fn _relate_prepared_geometry_impl<'a>(
 
     for item in arr.iter() {
         if let Some(geom) = item {
-            let geo_geom = geom?.to_geometry();
+            let geo_geom = geometry_to_geo(&geom?)?;
             builder.append_value(relate_cb(geo_geom.relate(prepared)));
         } else {
             builder.append_null();

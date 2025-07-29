@@ -35,6 +35,7 @@ async def test_parquet_file():
         .metadata_str["ARROW:extension:name"]
         == "geoarrow.wkb"
     )
+    assert file.path == "example.parquet"
 
     table = await file.read_async()
     assert table.num_rows == 5

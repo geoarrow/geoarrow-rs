@@ -242,7 +242,7 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_Angle                |             | Returns the angle between two vectors defined by 3 or 4 points, or 2 lines.                                                    |
 | ST_ClosestPoint         |             | Returns the 2D point on g1 that is closest to g2. This is the first point of the shortest line from one geometry to the other. |
 | ST_3DClosestPoint       |             | Returns the 3D point on g1 that is closest to g2. This is the first point of the 3D shortest line.                             |
-| ST_Distance             |             | Returns the distance between two geometry or geography values.                                                                 |
+| ST_Distance             | ✅          | Returns the distance between two geometry or geography values.                                                                 |
 | ST_3DDistance           |             | Returns the 3D cartesian minimum distance (based on spatial ref) between two geometries in projected units.                    |
 | ST_DistanceSphere       |             | Returns minimum distance in meters between two lon/lat geometries using a spherical earth model.                               |
 | ST_DistanceSpheroid     |             | Returns the minimum distance between two lon/lat geometries using a spheroidal earth model.                                    |
