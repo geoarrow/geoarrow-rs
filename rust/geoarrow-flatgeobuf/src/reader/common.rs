@@ -18,11 +18,6 @@ pub struct FlatGeobufReaderOptions {
     /// The number of rows in each batch.
     pub batch_size: usize,
 
-    /// A spatial filter for reading rows.
-    ///
-    /// If set to `None`, no spatial filtering will be performed.
-    pub bbox: Option<(f64, f64, f64, f64)>,
-
     /// Whether to prefer view types for string and binary columns.
     pub prefer_view_types: bool,
 
@@ -41,7 +36,6 @@ impl Default for FlatGeobufReaderOptions {
         Self {
             coord_type: Default::default(),
             batch_size: 65_536,
-            bbox: None,
             prefer_view_types: true,
             columns: Default::default(),
             read_geometry: true,

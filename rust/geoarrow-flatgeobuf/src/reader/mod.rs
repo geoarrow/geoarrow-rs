@@ -7,6 +7,6 @@ mod sync;
 mod table_builder;
 
 #[cfg(feature = "async")]
-pub use r#async::{FlatGeobufRecordBatchStream, FlatGeobufStreamBuilder};
+pub use r#async::FlatGeobufRecordBatchStream;
 pub use common::FlatGeobufReaderOptions;
-pub use sync::{FlatGeobufReaderBuilder, FlatGeobufRecordBatchIterator};
+pub use sync::FlatGeobufRecordBatchIterator;

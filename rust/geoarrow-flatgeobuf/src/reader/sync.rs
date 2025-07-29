@@ -24,7 +24,7 @@ use std::sync::Arc;
 
 use arrow_array::{RecordBatch, RecordBatchReader};
 use arrow_schema::{ArrowError, Schema, SchemaRef};
-use flatgeobuf::{FallibleStreamingIterator, FeatureIter, FgbReader, NotSeekable, Seekable};
+use flatgeobuf::{FallibleStreamingIterator, FeatureIter, NotSeekable, Seekable};
 use geoarrow_schema::GeoArrowType;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geozero::FeatureProperties;
@@ -32,86 +32,10 @@ use geozero::FeatureProperties;
 use crate::reader::common::{FlatGeobufReaderOptions, parse_header};
 use crate::reader::table_builder::{GeoArrowRecordBatchBuilder, GeoArrowRecordBatchBuilderOptions};
 
-/// A builder for [FlatGeobufRecordBatchIterator]
-pub struct FlatGeobufReaderBuilder<R> {
-    reader: FgbReader<R>,
-}
-
-impl<R: Read> FlatGeobufReaderBuilder<R> {
-    /// Open a new FlatGeobuf reader
-    pub fn open(reader: R) -> GeoArrowResult<Self> {
-        let reader =
-            FgbReader::open(reader).map_err(|err| GeoArrowError::External(Box::new(err)))?;
-        Ok(Self { reader })
-    }
-
-    /// Read features sequentially, without using `Seek`
-    pub fn read_seq(
-        self,
-        options: FlatGeobufReaderOptions,
-    ) -> GeoArrowResult<FlatGeobufRecordBatchIterator<R, NotSeekable>> {
-        let (geometry_type, properties_schema) = parse_header(
-            self.reader.header(),
-            options.coord_type,
-            options.prefer_view_types,
-            options.columns.as_ref(),
-        )?;
-
-        let selection = if let Some((min_x, min_y, max_x, max_y)) = options.bbox {
-            self.reader.select_bbox_seq(min_x, min_y, max_x, max_y)
-        } else {
-            self.reader.select_all_seq()
-        }
-        .map_err(|err| GeoArrowError::External(Box::new(err)))?;
-
-        let num_rows = selection.features_count();
-        Ok(FlatGeobufRecordBatchIterator {
-            selection,
-            geometry_type,
-            batch_size: options.batch_size,
-            properties_schema,
-            num_rows_remaining: num_rows,
-            read_geometry: options.read_geometry,
-        })
-    }
-}
-
-impl<R: Read + Seek> FlatGeobufReaderBuilder<R> {
-    /// Read features
-    pub fn read(
-        self,
-        options: FlatGeobufReaderOptions,
-    ) -> GeoArrowResult<FlatGeobufRecordBatchIterator<R, Seekable>> {
-        let (geometry_type, properties_schema) = parse_header(
-            self.reader.header(),
-            options.coord_type,
-            options.prefer_view_types,
-            options.columns.as_ref(),
-        )?;
-
-        let selection = if let Some((min_x, min_y, max_x, max_y)) = options.bbox {
-            self.reader.select_bbox(min_x, min_y, max_x, max_y)
-        } else {
-            self.reader.select_all()
-        }
-        .map_err(|err| GeoArrowError::External(Box::new(err)))?;
-
-        let num_rows = selection.features_count();
-        Ok(FlatGeobufRecordBatchIterator {
-            selection,
-            geometry_type,
-            batch_size: options.batch_size,
-            properties_schema,
-            num_rows_remaining: num_rows,
-            read_geometry: options.read_geometry,
-        })
-    }
-}
-
 /// An iterator over record batches from a FlatGeobuf file.
 ///
 /// This implements [arrow_array::RecordBatchReader], which you can use to access data.
-pub struct FlatGeobufRecordBatchIterator<R, S> {
+pub struct FlatGeobufRecordBatchIterator<R: Read, S> {
     selection: FeatureIter<R, S>,
     geometry_type: GeoArrowType,
     batch_size: usize,
@@ -120,7 +44,28 @@ pub struct FlatGeobufRecordBatchIterator<R, S> {
     read_geometry: bool,
 }
 
-impl<R, S> FlatGeobufRecordBatchIterator<R, S> {
+impl<R: Read, S> FlatGeobufRecordBatchIterator<R, S> {
+    pub fn try_new(
+        selection: FeatureIter<R, S>,
+        options: FlatGeobufReaderOptions,
+    ) -> GeoArrowResult<Self> {
+        let (geometry_type, properties_schema) = parse_header(
+            selection.header(),
+            options.coord_type,
+            options.prefer_view_types,
+            options.columns.as_ref(),
+        )?;
+        let num_rows_remaining = selection.features_count();
+        Ok(Self {
+            selection,
+            geometry_type,
+            batch_size: options.batch_size,
+            properties_schema,
+            num_rows_remaining,
+            read_geometry: options.read_geometry,
+        })
+    }
+
     fn output_schema(&self) -> SchemaRef {
         let mut fields = self.properties_schema.fields().to_vec();
         if self.read_geometry {
@@ -266,16 +211,19 @@ mod test {
     use std::io::BufReader;
 
     use arrow_schema::DataType;
+    use flatgeobuf::FgbReader;
 
     use super::*;
 
     #[test]
     fn test_countries() {
         let filein = BufReader::new(File::open("../../fixtures/flatgeobuf/countries.fgb").unwrap());
-        let reader_builder = FlatGeobufReaderBuilder::open(filein).unwrap();
-        let record_batch_reader = reader_builder.read(Default::default()).unwrap();
+        let fgb_reader = FgbReader::open(filein).unwrap();
+        let selection = fgb_reader.select_all_seq().unwrap();
+        let record_batch_reader =
+            FlatGeobufRecordBatchIterator::try_new(selection, Default::default()).unwrap();
         let _batches = record_batch_reader.collect::<Result<Vec<_>, _>>().unwrap();
-        // println!("{}", pretty_format_batches(&batches).unwrap());
+        // println!("{}", pretty_format_batches(&_batches).unwrap());
         // print!(format!(pretty_format_batches(&batches).unwrap()));
         // dbg!(_batches.len());
     }
@@ -285,19 +233,20 @@ mod test {
         let filein = BufReader::new(
             File::open("../../fixtures/flatgeobuf/nz-building-outlines-small.fgb").unwrap(),
         );
-        let reader_builder = FlatGeobufReaderBuilder::open(filein).unwrap();
-        let record_batch_reader = reader_builder.read(Default::default()).unwrap();
-        let _batches = record_batch_reader
-            .collect::<std::result::Result<Vec<_>, _>>()
-            .unwrap();
+        let fgb_reader = FgbReader::open(filein).unwrap();
+        let selection = fgb_reader.select_all().unwrap();
+        let record_batch_reader =
+            FlatGeobufRecordBatchIterator::try_new(selection, Default::default()).unwrap();
+        let _batches = record_batch_reader.collect::<Result<Vec<_>, _>>().unwrap();
     }
 
     #[test]
     fn test_poly() {
         let filein = BufReader::new(File::open("../../fixtures/flatgeobuf/poly00.fgb").unwrap());
-
-        let reader_builder = FlatGeobufReaderBuilder::open(filein).unwrap();
-        let record_batch_reader = reader_builder.read(Default::default()).unwrap();
+        let fgb_reader = FgbReader::open(filein).unwrap();
+        let selection = fgb_reader.select_all().unwrap();
+        let record_batch_reader =
+            FlatGeobufRecordBatchIterator::try_new(selection, Default::default()).unwrap();
 
         let schema = record_batch_reader.schema();
         let field = schema.field_with_name("geometry").unwrap();
@@ -326,8 +275,10 @@ mod test {
     fn test_all_datatypes() {
         let filein =
             BufReader::new(File::open("../../fixtures/flatgeobuf/alldatatypes.fgb").unwrap());
-        let reader_builder = FlatGeobufReaderBuilder::open(filein).unwrap();
-        let record_batch_reader = reader_builder.read(Default::default()).unwrap();
+        let fgb_reader = FgbReader::open(filein).unwrap();
+        let selection = fgb_reader.select_all_seq().unwrap();
+        let record_batch_reader =
+            FlatGeobufRecordBatchIterator::try_new(selection, Default::default()).unwrap();
 
         let schema = record_batch_reader.schema();
         let field = schema.field_with_name("geometry").unwrap();

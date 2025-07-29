@@ -9,7 +9,6 @@ use object_store::path::Path;
 pub struct ObjectStoreWrapper {
     pub location: Path,
     pub reader: Arc<dyn ObjectStore>,
-    pub size: u64,
 }
 
 #[async_trait]
@@ -23,11 +22,6 @@ impl AsyncHttpRangeClient for ObjectStoreWrapper {
 
         // Add one to the range because HTTP range strings are end-inclusive (I think)
         let end_range = split_range[1].parse::<u64>().unwrap() + 1;
-
-        // Flatgeobuf will sometimes overfetch, but not all object store backends support
-        // overfetches (e.g. this errors on a LocalFileSystem)
-        // See https://github.com/flatgeobuf/flatgeobuf/issues/338
-        let end_range = end_range.min(self.size);
 
         let bytes = self
             .reader
