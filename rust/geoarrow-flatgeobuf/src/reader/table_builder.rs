@@ -93,21 +93,45 @@ impl GeoArrowArrayBuilder {
     }
 }
 
+#[derive(Debug, Clone, Default)]
+pub(crate) struct GeoArrowRecordBatchBuilderOptions {
+    pub(crate) batch_size: Option<usize>,
+    /// If true, the builder will error if it encounters a column whose name does not match one in
+    /// the properties schema.
+    ///
+    /// If false, the builder will ignore any extra columns in the input data.
+    ///
+    /// This can be used to provide a projection, by passing in a `properties_schema` that only
+    /// contains the fields you want.
+    pub(crate) error_on_extra_columns: bool,
+
+    pub(crate) read_geometry: bool,
+}
+
 pub(crate) struct GeoArrowRecordBatchBuilder {
     properties_schema: SchemaRef,
     columns: Vec<Box<dyn ArrayBuilder>>,
     geometry_builder: GeoArrowArrayBuilder,
+    /// If true, the builder will error if it encounters a column whose name does not match one in
+    /// the properties schema.
+    ///
+    /// If false, the builder will ignore any extra columns in the input data.
+    ///
+    /// This can be used to provide a projection, by passing in a `properties_schema` that only
+    /// contains the fields you want.
+    error_on_extra_columns: bool,
+    read_geometry: bool,
 }
 
 impl GeoArrowRecordBatchBuilder {
     pub fn new(
         properties_schema: SchemaRef,
         geometry_type: GeoArrowType,
-        batch_size: Option<usize>,
+        options: &GeoArrowRecordBatchBuilderOptions,
     ) -> Self {
         let mut columns = Vec::new();
         for field in properties_schema.fields() {
-            let capacity = batch_size.unwrap_or(0);
+            let capacity = options.batch_size.unwrap_or(0);
             // Workaround for https://github.com/apache/arrow-rs/pull/7931
             let builder = if field.data_type() == &DataType::Utf8View {
                 Box::new(StringViewBuilder::with_capacity(capacity))
@@ -125,14 +149,22 @@ impl GeoArrowRecordBatchBuilder {
             properties_schema,
             columns,
             geometry_builder,
+            error_on_extra_columns: options.error_on_extra_columns,
+            read_geometry: options.read_geometry,
         }
     }
 
+    /// Add a geometry to the builder.
+    ///
+    /// If self.read_geometry is false, this will not add the geometry to the batch.
     pub(crate) fn push_geometry(
         &mut self,
         geometry: Option<&impl GeometryTrait<T = f64>>,
     ) -> GeoArrowResult<()> {
-        self.geometry_builder.push_geometry(geometry)
+        if self.read_geometry {
+            self.geometry_builder.push_geometry(geometry)?;
+        }
+        Ok(())
     }
 
     #[allow(dead_code)]
@@ -143,21 +175,22 @@ impl GeoArrowRecordBatchBuilder {
     pub fn finish(self) -> GeoArrowResult<RecordBatch> {
         let geometry = self.geometry_builder.finish();
 
-        // Add geometry to the schema
         let mut fields = self.properties_schema.fields.to_vec();
-        fields.push(geometry.data_type().to_field("geometry", true).into());
-        let schema = Arc::new(Schema::new_with_metadata(
-            fields,
-            self.properties_schema.metadata().clone(),
-        ));
-
-        // Add geometry to the columns
         let mut columns = self
             .columns
             .into_iter()
             .map(|mut col| col.finish())
             .collect::<Vec<_>>();
-        columns.push(geometry.into_array_ref());
+
+        if self.read_geometry {
+            fields.push(geometry.data_type().to_field("geometry", true).into());
+            columns.push(geometry.into_array_ref());
+        }
+
+        let schema = Arc::new(Schema::new_with_metadata(
+            fields,
+            self.properties_schema.metadata().clone(),
+        ));
 
         Ok(RecordBatch::try_new(schema, columns)?)
     }
@@ -170,10 +203,17 @@ impl PropertyProcessor for GeoArrowRecordBatchBuilder {
         name: &str,
         value: &geozero::ColumnValue,
     ) -> geozero::error::Result<bool> {
-        let column_index = self
+        let column_index = match self
             .properties_schema
             .index_of(name)
-            .map_err(|_| GeozeroError::Property(format!("{name} not in properties schema")))?;
+            .map_err(|_| GeozeroError::Property(format!("{name} not in properties schema")))
+        {
+            Ok(index) => index,
+            Err(e) if self.error_on_extra_columns => {
+                return Err(e);
+            }
+            _ => return Ok(false),
+        };
         let field = self.properties_schema.field(column_index);
         let column = self.columns.get_mut(column_index).unwrap();
         push_property(column, field, value)?;
