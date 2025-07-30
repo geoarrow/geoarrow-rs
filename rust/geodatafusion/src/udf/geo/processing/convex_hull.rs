@@ -29,6 +29,12 @@ impl ConvexHull {
     }
 }
 
+impl Default for ConvexHull {
+    fn default() -> Self {
+        Self::new(Default::default())
+    }
+}
+
 static DOCUMENTATION: OnceLock<Documentation> = OnceLock::new();
 
 impl ScalarUDFImpl for ConvexHull {
