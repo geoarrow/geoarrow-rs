@@ -298,7 +298,7 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_LargestEmptyCircle       |             | Computes the largest circle not overlapping a geometry.                                           |
 | ST_MinimumBoundingCircle    |             | Returns the smallest circle polygon that contains a geometry.                                     |
 | ST_MinimumBoundingRadius    |             | Returns the center point and radius of the smallest circle that contains a geometry.              |
-| ST_OrientedEnvelope         |             | Returns a minimum-area rectangle containing a geometry.                                           |
+| ST_OrientedEnvelope         | ✅          | Returns a minimum-area rectangle containing a geometry.                                           |
 | ST_OffsetCurve              |             | Returns an offset line at a given distance and side from an input line.                           |
 | ST_PointOnSurface           | ✅          | Computes a point guaranteed to lie in a polygon, or on a geometry.                                |
 | ST_Polygonize               |             | Computes a collection of polygons formed from the linework of a set of geometries.                |
