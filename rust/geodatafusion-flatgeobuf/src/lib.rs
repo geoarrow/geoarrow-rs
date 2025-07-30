@@ -18,7 +18,7 @@ mod tests {
     use datafusion::prelude::SessionContext;
     use geoarrow_array::GeoArrowArrayAccessor;
     use geoarrow_array::array::MultiPolygonArray;
-    use geodatafusion::udf::native::measurement::Centroid;
+    use geodatafusion::udf::geo::processing::Centroid;
 
     use super::*;
 

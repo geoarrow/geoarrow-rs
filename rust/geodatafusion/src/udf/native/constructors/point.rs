@@ -46,6 +46,12 @@ impl Point {
     }
 }
 
+impl Default for Point {
+    fn default() -> Self {
+        Self::new(Default::default())
+    }
+}
+
 static POINT_DOC: OnceLock<Documentation> = OnceLock::new();
 
 impl ScalarUDFImpl for Point {
@@ -133,6 +139,12 @@ impl PointZ {
             ),
             coord_type,
         }
+    }
+}
+
+impl Default for PointZ {
+    fn default() -> Self {
+        Self::new(Default::default())
     }
 }
 
@@ -224,6 +236,12 @@ impl PointM {
             ),
             coord_type,
         }
+    }
+}
+
+impl Default for PointM {
+    fn default() -> Self {
+        Self::new(Default::default())
     }
 }
 
@@ -320,6 +338,12 @@ impl PointZM {
     }
 }
 
+impl Default for PointZM {
+    fn default() -> Self {
+        Self::new(Default::default())
+    }
+}
+
 static POINT_ZM_DOC: OnceLock<Documentation> = OnceLock::new();
 
 impl ScalarUDFImpl for PointZM {
@@ -412,6 +436,12 @@ impl MakePoint {
     }
 }
 
+impl Default for MakePoint {
+    fn default() -> Self {
+        Self::new(Default::default())
+    }
+}
+
 static MAKE_POINT_DOC: OnceLock<Documentation> = OnceLock::new();
 
 impl ScalarUDFImpl for MakePoint {
@@ -483,6 +513,12 @@ impl MakePointM {
             ),
             coord_type,
         }
+    }
+}
+
+impl Default for MakePointM {
+    fn default() -> Self {
+        Self::new(Default::default())
     }
 }
 
