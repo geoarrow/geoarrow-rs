@@ -108,9 +108,8 @@ mod test {
     use arrow_array::cast::AsArray;
     use datafusion::prelude::SessionContext;
 
-    use crate::udf::native::constructors::Point;
-
     use super::*;
+    use crate::udf::native::constructors::Point;
 
     #[tokio::test]
     async fn test_geohash() {
