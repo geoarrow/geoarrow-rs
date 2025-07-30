@@ -94,3 +94,36 @@ fn centroid_impl(
     let result = geoarrow_geo::centroid(&geo_array, coord_type)?;
     Ok(ColumnarValue::Array(result.into_array_ref()))
 }
+
+#[cfg(test)]
+mod test {
+    use approx::relative_eq;
+    use datafusion::prelude::SessionContext;
+    use geo_traits::{CoordTrait, PointTrait};
+    use geoarrow_array::GeoArrowArrayAccessor;
+    use geoarrow_array::array::PointArray;
+
+    use super::*;
+    use crate::udf::native::io::GeomFromText;
+
+    #[tokio::test]
+    async fn test_centroid() {
+        let ctx = SessionContext::new();
+
+        ctx.register_udf(Centroid::default().into());
+        ctx.register_udf(GeomFromText::new(Default::default()).into());
+
+        let df = ctx
+            .sql(
+                "select ST_Centroid(ST_GeomFromText('MULTIPOINT ( -1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6 )'));",
+            )
+            .await
+            .unwrap();
+        let batch = df.collect().await.unwrap().into_iter().next().unwrap();
+        let geo_arr =
+            PointArray::try_from((batch.column(0).as_ref(), batch.schema().field(0))).unwrap();
+        let point = geo_arr.value(0).unwrap();
+        assert!(relative_eq!(point.coord().unwrap().x(), 2.3076923076923075));
+        assert!(relative_eq!(point.coord().unwrap().y(), 3.3076923076923075));
+    }
+}
