@@ -1,14 +1,19 @@
 use std::any::Any;
-use std::sync::OnceLock;
+use std::sync::{Arc, OnceLock};
 
-use arrow_schema::DataType;
+use arrow_schema::{DataType, FieldRef};
+use datafusion::error::{DataFusionError, Result};
 use datafusion::logical_expr::scalar_doc_sections::DOC_SECTION_OTHER;
-use datafusion::logical_expr::{ColumnarValue, Documentation, ScalarUDFImpl, Signature};
-use geoarrow::algorithm::native::BoundingRectArray;
+use datafusion::logical_expr::{
+    ColumnarValue, Documentation, ReturnFieldArgs, ScalarFunctionArgs, ScalarUDFImpl, Signature,
+};
 use geoarrow_array::GeoArrowArray;
+use geoarrow_array::array::from_arrow_array;
+use geoarrow_schema::{BoxType, Dimension, GeoArrowType};
 
-use crate::data_types::{BOX2D_TYPE, any_single_geometry_type_input, parse_to_native_array};
+use crate::data_types::any_single_geometry_type_input;
 use crate::error::GeoDataFusionResult;
+use crate::udf::native::bounding_box::util::bounds::bounding_rect;
 
 #[derive(Debug)]
 pub(super) struct Box2D {
@@ -31,7 +36,7 @@ impl ScalarUDFImpl for Box2D {
     }
 
     fn name(&self) -> &str {
-        "st_box2d"
+        "box2d"
     }
 
     fn signature(&self) -> &Signature {
@@ -39,10 +44,14 @@ impl ScalarUDFImpl for Box2D {
     }
 
     fn return_type(&self, _arg_types: &[DataType]) -> datafusion::error::Result<DataType> {
-        Ok(BOX2D_TYPE().into())
+        Err(DataFusionError::Internal("return_type".to_string()))
     }
 
-    fn invoke(&self, args: &[ColumnarValue]) -> datafusion::error::Result<ColumnarValue> {
+    fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<FieldRef> {
+        Ok(return_field_impl(args)?)
+    }
+
+    fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
         Ok(box2d_impl(args)?)
     }
 
@@ -51,7 +60,7 @@ impl ScalarUDFImpl for Box2D {
             Documentation::builder(
                 DOC_SECTION_OTHER,
                 "Returns a box2d representing the 2D extent of the geometry.",
-                "ST_Box2D(geometry)",
+                "Box2D(geometry)",
             )
             .with_argument("geom", "geometry")
             .build()
@@ -59,13 +68,16 @@ impl ScalarUDFImpl for Box2D {
     }
 }
 
+fn return_field_impl(args: ReturnFieldArgs) -> GeoDataFusionResult<FieldRef> {
+    let input_type = GeoArrowType::try_from(args.arg_fields[0].as_ref())?;
+    let output_type = BoxType::new(Dimension::XY, input_type.metadata().clone());
+    Ok(Arc::new(output_type.to_field("", true)))
+}
+
 // Note: this is exactly the same impl as ST_Envelope. Perhaps we should use an alias instead
-fn box2d_impl(args: &[ColumnarValue]) -> GeoDataFusionResult<ColumnarValue> {
-    let array = ColumnarValue::values_to_arrays(args)?
-        .into_iter()
-        .next()
-        .unwrap();
-    let native_array = parse_to_native_array(array)?;
-    let output = native_array.as_ref().bounding_rect()?;
-    Ok(output.into_array_ref().into())
+fn box2d_impl(args: ScalarFunctionArgs) -> GeoDataFusionResult<ColumnarValue> {
+    let arrays = ColumnarValue::values_to_arrays(&args.args)?;
+    let geo_array = from_arrow_array(&arrays[0], &args.arg_fields[0])?;
+    let rect_array = bounding_rect(&geo_array)?;
+    Ok(ColumnarValue::Array(rect_array.into_array_ref()))
 }
