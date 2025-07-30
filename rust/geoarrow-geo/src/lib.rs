@@ -9,6 +9,7 @@ mod intersects;
 mod relate;
 mod simplify;
 pub mod util;
+pub mod validation;
 
 pub use area::{signed_area, unsigned_area};
 pub use centroid::centroid;
