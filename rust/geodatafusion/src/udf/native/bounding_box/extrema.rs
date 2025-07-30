@@ -1,23 +1,19 @@
 use std::any::Any;
 use std::sync::{Arc, OnceLock};
 
-use arrow::array::Float64Builder;
-use arrow_array::ArrayRef;
 use arrow_schema::DataType;
+use datafusion::error::Result;
 use datafusion::logical_expr::scalar_doc_sections::DOC_SECTION_OTHER;
-use datafusion::logical_expr::{ColumnarValue, Documentation, ScalarUDFImpl, Signature};
+use datafusion::logical_expr::{
+    ColumnarValue, Documentation, ScalarFunctionArgs, ScalarUDFImpl, Signature,
+};
 use geo_traits::{CoordTrait, RectTrait};
-use geoarrow::algorithm::native::BoundingRectArray;
-use geoarrow::array::RectArray;
-use geoarrow::trait_::ArrayAccessor;
+use geoarrow_array::array::from_arrow_array;
+use geoarrow_array::scalar::Rect;
 
-use crate::data_types::{any_single_geometry_type_input, parse_to_native_array};
+use crate::data_types::any_single_geometry_type_input;
 use crate::error::GeoDataFusionResult;
-
-fn rect_array_from_array_ref(array: ArrayRef) -> GeoDataFusionResult<RectArray> {
-    let native_arr = parse_to_native_array(array)?;
-    Ok(native_arr.as_ref().bounding_rect()?)
-}
+use crate::udf::native::bounding_box::util::bounds::impl_extrema;
 
 #[derive(Debug)]
 pub(super) struct XMin {
@@ -47,25 +43,12 @@ impl ScalarUDFImpl for XMin {
         &self.signature
     }
 
-    fn return_type(&self, _arg_types: &[DataType]) -> datafusion::error::Result<DataType> {
+    fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType> {
         Ok(DataType::Float64)
     }
 
-    fn invoke(&self, args: &[ColumnarValue]) -> datafusion::error::Result<ColumnarValue> {
-        let arg = ColumnarValue::values_to_arrays(args)?
-            .into_iter()
-            .next()
-            .unwrap();
-        let mut output_array = Float64Builder::with_capacity(arg.len());
-
-        let rect_array = rect_array_from_array_ref(arg)?;
-
-        for rect in rect_array.iter() {
-            output_array.append_option(rect.map(|r| r.min().x()));
-        }
-        Ok(ColumnarValue::from(
-            Arc::new(output_array.finish()) as ArrayRef
-        ))
+    fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
+        Ok(extrema_impl(args, |rect| rect.min().x())?)
     }
 
     fn documentation(&self) -> Option<&Documentation> {
@@ -115,25 +98,12 @@ impl ScalarUDFImpl for YMin {
         &self.signature
     }
 
-    fn return_type(&self, _arg_types: &[DataType]) -> datafusion::error::Result<DataType> {
+    fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType> {
         Ok(DataType::Float64)
     }
 
-    fn invoke(&self, args: &[ColumnarValue]) -> datafusion::error::Result<ColumnarValue> {
-        let arg = ColumnarValue::values_to_arrays(args)?
-            .into_iter()
-            .next()
-            .unwrap();
-        let mut output_array = Float64Builder::with_capacity(arg.len());
-
-        let rect_array = rect_array_from_array_ref(arg)?;
-
-        for rect in rect_array.iter() {
-            output_array.append_option(rect.map(|r| r.min().y()));
-        }
-        Ok(ColumnarValue::from(
-            Arc::new(output_array.finish()) as ArrayRef
-        ))
+    fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
+        Ok(extrema_impl(args, |rect| rect.min().y())?)
     }
 
     fn documentation(&self) -> Option<&Documentation> {
@@ -183,23 +153,12 @@ impl ScalarUDFImpl for XMax {
         &self.signature
     }
 
-    fn return_type(&self, _arg_types: &[DataType]) -> datafusion::error::Result<DataType> {
+    fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType> {
         Ok(DataType::Float64)
     }
 
-    fn invoke(&self, args: &[ColumnarValue]) -> datafusion::error::Result<ColumnarValue> {
-        let arg = ColumnarValue::values_to_arrays(args)?
-            .into_iter()
-            .next()
-            .unwrap();
-        let mut output_array = Float64Builder::with_capacity(arg.len());
-        let rect_array = rect_array_from_array_ref(arg)?;
-        for rect in rect_array.iter() {
-            output_array.append_option(rect.map(|r| r.max().x()));
-        }
-        Ok(ColumnarValue::from(
-            Arc::new(output_array.finish()) as ArrayRef
-        ))
+    fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
+        Ok(extrema_impl(args, |rect| rect.max().x())?)
     }
 
     fn documentation(&self) -> Option<&Documentation> {
@@ -249,23 +208,12 @@ impl ScalarUDFImpl for YMax {
         &self.signature
     }
 
-    fn return_type(&self, _arg_types: &[DataType]) -> datafusion::error::Result<DataType> {
+    fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType> {
         Ok(DataType::Float64)
     }
 
-    fn invoke(&self, args: &[ColumnarValue]) -> datafusion::error::Result<ColumnarValue> {
-        let arg = ColumnarValue::values_to_arrays(args)?
-            .into_iter()
-            .next()
-            .unwrap();
-        let mut output_array = Float64Builder::with_capacity(arg.len());
-        let rect_array = rect_array_from_array_ref(arg)?;
-        for rect in rect_array.iter() {
-            output_array.append_option(rect.map(|r| r.max().y()));
-        }
-        Ok(ColumnarValue::from(
-            Arc::new(output_array.finish()) as ArrayRef
-        ))
+    fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
+        Ok(extrema_impl(args, |rect| rect.max().y())?)
     }
 
     fn documentation(&self) -> Option<&Documentation> {
@@ -285,4 +233,14 @@ impl ScalarUDFImpl for YMax {
             .build()
         }))
     }
+}
+
+fn extrema_impl(
+    args: ScalarFunctionArgs,
+    cb: impl Fn(Rect) -> f64,
+) -> GeoDataFusionResult<ColumnarValue> {
+    let arrays = ColumnarValue::values_to_arrays(&args.args)?;
+    let geo_array = from_arrow_array(&arrays[0], &args.arg_fields[0])?;
+    let result = impl_extrema(&geo_array, cb)?;
+    Ok(ColumnarValue::Array(Arc::new(result)))
 }

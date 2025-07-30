@@ -1,5 +1,10 @@
+//! Note: This is copied
+
 use std::ops::Add;
 
+use arrow_array::Float64Array;
+use arrow_array::builder::Float64Builder;
+use geo::Coord;
 use geo_traits::{
     CoordTrait, GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait,
     MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
@@ -7,15 +12,16 @@ use geo_traits::{
     UnimplementedMultiLineString, UnimplementedMultiPoint, UnimplementedMultiPolygon,
     UnimplementedPoint, UnimplementedPolygon, UnimplementedTriangle,
 };
-use geo_types::Coord;
 use geoarrow_array::array::RectArray;
 use geoarrow_array::builder::RectBuilder;
+use geoarrow_array::cast::AsGeoArrowArray;
+use geoarrow_array::scalar::Rect;
 use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, downcast_geoarrow_array};
 use geoarrow_schema::error::GeoArrowResult;
 use geoarrow_schema::{BoxType, Dimension, GeoArrowType};
 
 #[derive(Debug, Clone, Copy)]
-pub struct BoundingRect {
+pub(crate) struct BoundingRect {
     minx: f64,
     miny: f64,
     minz: f64,
@@ -69,7 +75,7 @@ impl BoundingRect {
         }
     }
 
-    pub fn add_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
+    fn add_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
         let x = coord.x();
         let y = coord.y();
         let z = coord.nth(2);
@@ -99,19 +105,19 @@ impl BoundingRect {
         }
     }
 
-    pub fn add_point(&mut self, point: &impl PointTrait<T = f64>) {
+    fn add_point(&mut self, point: &impl PointTrait<T = f64>) {
         if let Some(coord) = point.coord() {
             self.add_coord(&coord);
         }
     }
 
-    pub fn add_line_string(&mut self, line_string: &impl LineStringTrait<T = f64>) {
+    fn add_line_string(&mut self, line_string: &impl LineStringTrait<T = f64>) {
         for coord in line_string.coords() {
             self.add_coord(&coord);
         }
     }
 
-    pub fn add_polygon(&mut self, polygon: &impl PolygonTrait<T = f64>) {
+    fn add_polygon(&mut self, polygon: &impl PolygonTrait<T = f64>) {
         if let Some(exterior_ring) = polygon.exterior() {
             self.add_line_string(&exterior_ring);
         }
@@ -121,28 +127,25 @@ impl BoundingRect {
         }
     }
 
-    pub fn add_multi_point(&mut self, multi_point: &impl MultiPointTrait<T = f64>) {
+    fn add_multi_point(&mut self, multi_point: &impl MultiPointTrait<T = f64>) {
         for point in multi_point.points() {
             self.add_point(&point);
         }
     }
 
-    pub fn add_multi_line_string(
-        &mut self,
-        multi_line_string: &impl MultiLineStringTrait<T = f64>,
-    ) {
+    fn add_multi_line_string(&mut self, multi_line_string: &impl MultiLineStringTrait<T = f64>) {
         for linestring in multi_line_string.line_strings() {
             self.add_line_string(&linestring);
         }
     }
 
-    pub fn add_multi_polygon(&mut self, multi_polygon: &impl MultiPolygonTrait<T = f64>) {
+    fn add_multi_polygon(&mut self, multi_polygon: &impl MultiPolygonTrait<T = f64>) {
         for polygon in multi_polygon.polygons() {
             self.add_polygon(&polygon);
         }
     }
 
-    pub fn add_geometry(&mut self, geometry: &impl GeometryTrait<T = f64>) {
+    fn add_geometry(&mut self, geometry: &impl GeometryTrait<T = f64>) {
         use GeometryType::*;
 
         match geometry.as_type() {
@@ -154,11 +157,11 @@ impl BoundingRect {
             MultiPolygon(g) => self.add_multi_polygon(g),
             GeometryCollection(g) => self.add_geometry_collection(g),
             Rect(g) => self.add_rect(g),
-            Triangle(_) | Line(_) => todo!(),
+            Triangle(_) | Line(_) => unreachable!(),
         }
     }
 
-    pub fn add_geometry_collection(
+    fn add_geometry_collection(
         &mut self,
         geometry_collection: &impl GeometryCollectionTrait<T = f64>,
     ) {
@@ -167,7 +170,7 @@ impl BoundingRect {
         }
     }
 
-    pub fn add_rect(&mut self, rect: &impl RectTrait<T = f64>) {
+    fn add_rect(&mut self, rect: &impl RectTrait<T = f64>) {
         self.add_coord(&rect.min());
         self.add_coord(&rect.max());
     }
@@ -288,15 +291,19 @@ impl GeometryTrait for BoundingRect {
 
 /// Create a new RectArray using the bounding box of each geometry.
 ///
-/// Note that this **does not** currently correctly handle the antimeridian
+/// Note that this is fully planar and **does not** handle the antimeridian for geographic
+/// coordinates.
 pub(crate) fn bounding_rect(arr: &dyn GeoArrowArray) -> GeoArrowResult<RectArray> {
-    downcast_geoarrow_array!(arr, impl_array_accessor)
+    if let Some(rect_arr) = arr.as_rect_opt() {
+        Ok(rect_arr.clone())
+    } else {
+        downcast_geoarrow_array!(arr, impl_array_accessor)
+    }
 }
 
 /// The actual implementation of computing the bounding rect
 fn impl_array_accessor<'a>(arr: &'a impl GeoArrowArrayAccessor<'a>) -> GeoArrowResult<RectArray> {
     match arr.data_type() {
-        // Note: the implementation in geodatafusion handles this
         GeoArrowType::Rect(_) => unreachable!(),
         _ => {
             let mut builder = RectBuilder::with_capacity(
@@ -331,4 +338,47 @@ fn impl_total_bounds<'a>(arr: &'a impl GeoArrowArrayAccessor<'a>) -> GeoArrowRes
     }
 
     Ok(rect)
+}
+
+pub(crate) fn min_x(arr: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
+    impl_extrema(arr, |rect| rect.min().x())
+}
+
+pub(crate) fn min_y(arr: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
+    impl_extrema(arr, |rect| rect.min().y())
+}
+
+pub(crate) fn min_z(arr: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
+    impl_extrema(arr, |rect| rect.min().nth(2).unwrap_or(f64::NAN))
+}
+
+pub(crate) fn max_x(arr: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
+    impl_extrema(arr, |rect| rect.max().x())
+}
+
+pub(crate) fn max_y(arr: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
+    impl_extrema(arr, |rect| rect.max().y())
+}
+
+pub(crate) fn max_z(arr: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
+    impl_extrema(arr, |rect| rect.max().nth(2).unwrap_or(f64::NAN))
+}
+
+/// The actual implementation of computing the bounding rect
+pub(crate) fn impl_extrema(
+    arr: &dyn GeoArrowArray,
+    cb: impl Fn(Rect) -> f64,
+) -> GeoArrowResult<Float64Array> {
+    let rect_array = bounding_rect(arr)?;
+
+    let mut output_array = Float64Builder::with_capacity(arr.len());
+    for rect in rect_array.iter() {
+        if let Some(rect) = rect {
+            output_array.append_value(cb(rect?));
+        } else {
+            output_array.append_null();
+        }
+    }
+
+    Ok(output_array.finish())
 }
