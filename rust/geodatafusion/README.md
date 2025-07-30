@@ -122,9 +122,9 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 
 | Name             | Implemented | Description                                                                                  |
 | ---------------- | ----------- | -------------------------------------------------------------------------------------------- |
-| ST_IsValid       |             | Tests if a geometry is well-formed in 2D.                                                    |
+| ST_IsValid       | ✅          | Tests if a geometry is well-formed in 2D.                                                    |
 | ST_IsValidDetail |             | Returns a valid_detail row stating if a geometry is valid or if not a reason and a location. |
-| ST_IsValidReason |             | Returns text stating if a geometry is valid, or a reason for invalidity.                     |
+| ST_IsValidReason | ✅          | Returns text stating if a geometry is valid, or a reason for invalidity.                     |
 | ST_MakeValid     |             | Attempts to make an invalid geometry valid without losing vertices.                          |
 
 ### Geometry Input
