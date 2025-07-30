@@ -3,16 +3,21 @@ use geoarrow_array::array::PolygonArray;
 use geoarrow_array::builder::PolygonBuilder;
 use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, downcast_geoarrow_array};
 use geoarrow_schema::error::GeoArrowResult;
-use geoarrow_schema::{Dimension, PolygonType};
+use geoarrow_schema::{CoordType, Dimension, PolygonType};
 
 use crate::util::to_geo::geometry_to_geo;
 
-pub fn convex_hull(array: &dyn GeoArrowArray) -> GeoArrowResult<PolygonArray> {
-    downcast_geoarrow_array!(array, convex_hull_impl)
+pub fn convex_hull(
+    array: &dyn GeoArrowArray,
+    coord_type: CoordType,
+) -> GeoArrowResult<PolygonArray> {
+    downcast_geoarrow_array!(array, convex_hull_impl, coord_type)
 }
 
-fn convex_hull_impl<'a>(array: &'a impl GeoArrowArrayAccessor<'a>) -> GeoArrowResult<PolygonArray> {
-    let coord_type = array.data_type().coord_type().unwrap_or_default();
+fn convex_hull_impl<'a>(
+    array: &'a impl GeoArrowArrayAccessor<'a>,
+    coord_type: CoordType,
+) -> GeoArrowResult<PolygonArray> {
     let typ = PolygonType::new(Dimension::XY, array.data_type().metadata().clone())
         .with_coord_type(coord_type);
     let mut builder = PolygonBuilder::new(typ);
