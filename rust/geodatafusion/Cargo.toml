@@ -11,6 +11,7 @@ rust-version = { workspace = true }
 
 
 [dependencies]
+arrow-arith = { workspace = true }
 arrow-array = { workspace = true }
 arrow-schema = { workspace = true }
 datafusion = { workspace = true }

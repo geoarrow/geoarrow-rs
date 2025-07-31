@@ -1,4 +1,4 @@
-//! Note: This is copied
+//! Note: This is copied and updated from the geoparquet crate.
 
 use std::ops::Add;
 
@@ -22,12 +22,12 @@ use geoarrow_schema::{BoxType, Dimension, GeoArrowType};
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct BoundingRect {
-    minx: f64,
-    miny: f64,
-    minz: f64,
-    maxx: f64,
-    maxy: f64,
-    maxz: f64,
+    pub(crate) minx: f64,
+    pub(crate) miny: f64,
+    pub(crate) minz: f64,
+    pub(crate) maxx: f64,
+    pub(crate) maxy: f64,
+    pub(crate) maxz: f64,
 }
 
 impl BoundingRect {

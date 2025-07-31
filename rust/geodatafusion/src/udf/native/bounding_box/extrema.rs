@@ -16,15 +16,21 @@ use crate::error::GeoDataFusionResult;
 use crate::udf::native::bounding_box::util::bounds::impl_extrema;
 
 #[derive(Debug)]
-pub(super) struct XMin {
+pub struct XMin {
     signature: Signature,
 }
 
 impl XMin {
-    pub(super) fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             signature: any_single_geometry_type_input(),
         }
+    }
+}
+
+impl Default for XMin {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -71,15 +77,21 @@ impl ScalarUDFImpl for XMin {
 }
 
 #[derive(Debug)]
-pub(super) struct YMin {
+pub struct YMin {
     signature: Signature,
 }
 
 impl YMin {
-    pub(super) fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             signature: any_single_geometry_type_input(),
         }
+    }
+}
+
+impl Default for YMin {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -126,15 +138,21 @@ impl ScalarUDFImpl for YMin {
 }
 
 #[derive(Debug)]
-pub(super) struct XMax {
+pub struct XMax {
     signature: Signature,
 }
 
 impl XMax {
-    pub(super) fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             signature: any_single_geometry_type_input(),
         }
+    }
+}
+
+impl Default for XMax {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -181,15 +199,21 @@ impl ScalarUDFImpl for XMax {
 }
 
 #[derive(Debug)]
-pub(super) struct YMax {
+pub struct YMax {
     signature: Signature,
 }
 
 impl YMax {
-    pub(super) fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             signature: any_single_geometry_type_input(),
         }
+    }
+}
+
+impl Default for YMax {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

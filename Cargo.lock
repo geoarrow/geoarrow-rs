@@ -1817,6 +1817,7 @@ name = "geodatafusion"
 version = "0.1.0-dev"
 dependencies = [
  "approx",
+ "arrow-arith",
  "arrow-array",
  "arrow-schema",
  "datafusion",
