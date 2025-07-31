@@ -353,7 +353,7 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | Box3D              |             | Returns a BOX3D representing the 3D extent of a geometry.                |
 | ST_EstimatedExtent |             | Returns the estimated extent of a spatial table.                         |
 | ST_Expand          | ✅          | Returns a bounding box expanded from another bounding box or a geometry. |
-| ST_Extent          |             | Aggregate function that returns the bounding box of geometries.          |
+| ST_Extent          | ✅          | Aggregate function that returns the bounding box of geometries.          |
 | ST_3DExtent        |             | Aggregate function that returns the 3D bounding box of geometries.       |
 | ST_MakeBox2D       | ✅          | Creates a BOX2D defined by two 2D point geometries.                      |
 | ST_3DMakeBox       |             | Creates a BOX3D defined by two 3D point geometries.                      |

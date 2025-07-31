@@ -16,7 +16,7 @@ use crate::error::GeoDataFusionResult;
 use crate::udf::native::bounding_box::util::bounds::bounding_rect;
 
 #[derive(Debug)]
-pub(super) struct Box2D {
+pub struct Box2D {
     signature: Signature,
 }
 
@@ -25,6 +25,12 @@ impl Box2D {
         Self {
             signature: any_single_geometry_type_input(),
         }
+    }
+}
+
+impl Default for Box2D {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -43,7 +49,7 @@ impl ScalarUDFImpl for Box2D {
         &self.signature
     }
 
-    fn return_type(&self, _arg_types: &[DataType]) -> datafusion::error::Result<DataType> {
+    fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType> {
         Err(DataFusionError::Internal("return_type".to_string()))
     }
 
