@@ -113,19 +113,19 @@ impl Accumulator for ExtentAccumulator {
         ScalarStructBuilder::new()
             .with_scalar(
                 Field::new("xmin", DataType::Float64, false),
-                ScalarValue::Float64(Some(self.inner.minx())),
+                self.inner.minx().into(),
             )
             .with_scalar(
                 Field::new("ymin", DataType::Float64, false),
-                ScalarValue::Float64(Some(self.inner.miny())),
+                self.inner.miny().into(),
             )
             .with_scalar(
                 Field::new("xmax", DataType::Float64, false),
-                ScalarValue::Float64(Some(self.inner.maxx())),
+                self.inner.maxx().into(),
             )
             .with_scalar(
                 Field::new("ymax", DataType::Float64, false),
-                ScalarValue::Float64(Some(self.inner.maxy())),
+                self.inner.maxy().into(),
             )
             .build()
     }
