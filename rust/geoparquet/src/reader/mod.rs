@@ -12,4 +12,5 @@ mod sync;
 pub use r#async::GeoParquetRecordBatchStream;
 pub use geo_ext::GeoParquetReaderBuilder;
 pub use metadata::{GeoParquetDatasetMetadata, GeoParquetReaderMetadata};
+pub use parse::infer_geoarrow_schema;
 pub use sync::GeoParquetRecordBatchReader;
