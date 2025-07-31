@@ -11,7 +11,7 @@ use datafusion::logical_expr::function::AccumulatorArgs;
 use datafusion::logical_expr::{Accumulator, AggregateUDFImpl, Signature};
 use datafusion::scalar::ScalarValue;
 use geoarrow_array::array::from_arrow_array;
-use geoarrow_schema::{BoxType, Dimension, GeoArrowType, GeometryType};
+use geoarrow_schema::{BoxType, Dimension, GeoArrowType};
 
 use crate::data_types::any_single_geometry_type_input;
 use crate::error::GeoDataFusionResult;
@@ -54,25 +54,12 @@ impl AggregateUDFImpl for Extent {
     }
 
     fn return_field(&self, arg_fields: &[FieldRef]) -> Result<FieldRef> {
-        dbg!(&arg_fields[0].name());
         Ok(return_field_impl(arg_fields)?)
     }
 
     fn accumulator(&self, acc_args: AccumulatorArgs) -> Result<Box<dyn Accumulator>> {
-        dbg!(&acc_args.return_field);
-        dbg!(&acc_args.schema);
-        dbg!(&acc_args.name);
-        dbg!(&acc_args.ignore_nulls);
-        dbg!(&acc_args.is_reversed);
-        dbg!(&acc_args.is_distinct);
-        dbg!(&acc_args.order_bys);
-        // dbg!(&acc_args.exprs);
-        // let field = acc_args.schema.fields[0].clone();
-
-        // HACK: unclear if there's a way to pass down the input field
-        let input_type = GeometryType::new(Default::default());
-        let field = Arc::new(input_type.to_field("", true));
-        Ok(Box::new(ExtentAccumulator::new(field)))
+        let input_field = acc_args.exprs[0].return_field(acc_args.schema)?;
+        Ok(Box::new(ExtentAccumulator::new(input_field)))
     }
 }
 
@@ -183,10 +170,24 @@ mod test {
             )
             .await
             .unwrap();
-        df.show().await.unwrap();
-        // let batch = df.collect().await.unwrap().into_iter().next().unwrap();
-        // let col = batch.column(0);
-        // let val = col.as_primitive::<Float64Type>().value(0);
-        // assert_eq!(val, 928.625);
+        let batch = df.collect().await.unwrap().into_iter().next().unwrap();
+        let col = batch.column(0);
+        let struct_arr = col.as_struct();
+        assert_eq!(
+            struct_arr.column(0).as_primitive::<Float64Type>().value(0),
+            743238.0
+        );
+        assert_eq!(
+            struct_arr.column(1).as_primitive::<Float64Type>().value(0),
+            2967416.0
+        );
+        assert_eq!(
+            struct_arr.column(2).as_primitive::<Float64Type>().value(0),
+            743265.625
+        );
+        assert_eq!(
+            struct_arr.column(3).as_primitive::<Float64Type>().value(0),
+            2967450.0
+        );
     }
 }
