@@ -8,5 +8,5 @@ mod table_builder;
 
 #[cfg(feature = "async")]
 pub use r#async::FlatGeobufRecordBatchStream;
-pub use common::{FlatGeobufReaderOptions, parse_header};
+pub use common::{Envelope, FlatGeobufReaderOptions, HeaderInfo, parse_header};
 pub use sync::FlatGeobufRecordBatchIterator;
