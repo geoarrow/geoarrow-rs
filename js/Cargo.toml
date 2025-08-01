@@ -82,7 +82,7 @@ wasm-bindgen-futures = "0.4.42"
 # code size when deploying.
 arrow-array = "56"
 arrow-buffer = "56"
-arrow-wasm = { git = "https://github.com/kylebarron/arrow-wasm", rev = "6b615b654098a89fba09bf24f51e78d6a1c2b89c" }
+arrow-wasm = { git = "https://github.com/kylebarron/arrow-wasm", rev = "6da94ef0a1522a244984a7d3d58a0339d0851d96" }
 async-stream = { version = "0.3.5", optional = true }
 async-trait = { version = "0.1.77", optional = true }
 bytes = { version = "1", optional = true }
