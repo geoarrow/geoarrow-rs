@@ -125,7 +125,11 @@ impl FileFormat for FlatGeobufFormat {
             )
             .await?;
 
-            let mut fields = header.properties_schema().fields().to_vec();
+            let mut fields = header
+                .properties_schema()
+                .expect("todo: handle inferring schema")
+                .fields()
+                .to_vec();
             fields.push(Arc::new(header.geometry_type().to_field("geometry", true)));
             let schema = Schema::new(fields);
 
