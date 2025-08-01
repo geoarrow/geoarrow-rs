@@ -40,7 +40,7 @@ pub struct FlatGeobufRecordBatchIterator<R: Read, S> {
     geometry_type: GeoArrowType,
     batch_size: usize,
     properties_schema: SchemaRef,
-    num_rows_remaining: Option<usize>,
+    num_rows_remaining: usize,
     read_geometry: bool,
 }
 
@@ -49,18 +49,18 @@ impl<R: Read, S> FlatGeobufRecordBatchIterator<R, S> {
         selection: FeatureIter<R, S>,
         options: FlatGeobufReaderOptions,
     ) -> GeoArrowResult<Self> {
-        let (geometry_type, properties_schema) = parse_header(
+        let header = parse_header(
             selection.header(),
             options.coord_type,
             options.prefer_view_types,
             options.columns.as_ref(),
         )?;
-        let num_rows_remaining = selection.features_count();
+        let num_rows_remaining = header.features_count().try_into().unwrap();
         Ok(Self {
             selection,
-            geometry_type,
+            geometry_type: header.geometry_type().clone(),
             batch_size: options.batch_size,
-            properties_schema,
+            properties_schema: header.properties_schema().clone(),
             num_rows_remaining,
             read_geometry: options.read_geometry,
         })
@@ -81,9 +81,7 @@ impl<R: Read, S> FlatGeobufRecordBatchIterator<R, S> {
 impl<R: Read> FlatGeobufRecordBatchIterator<R, NotSeekable> {
     fn process_batch(&mut self) -> GeoArrowResult<Option<RecordBatch>> {
         let options = GeoArrowRecordBatchBuilderOptions {
-            batch_size: self
-                .num_rows_remaining
-                .map(|num_rows_remaining| num_rows_remaining.min(self.batch_size)),
+            batch_size: Some(self.num_rows_remaining.min(self.batch_size)),
             error_on_extra_columns: false,
             read_geometry: self.read_geometry,
         };
@@ -145,9 +143,7 @@ impl<R: Read> RecordBatchReader for FlatGeobufRecordBatchIterator<R, NotSeekable
 impl<R: Read + Seek> FlatGeobufRecordBatchIterator<R, Seekable> {
     fn process_batch(&mut self) -> GeoArrowResult<Option<RecordBatch>> {
         let options = GeoArrowRecordBatchBuilderOptions {
-            batch_size: self
-                .num_rows_remaining
-                .map(|num_rows_remaining| num_rows_remaining.min(self.batch_size)),
+            batch_size: Some(self.num_rows_remaining.min(self.batch_size)),
             error_on_extra_columns: false,
             read_geometry: self.read_geometry,
         };

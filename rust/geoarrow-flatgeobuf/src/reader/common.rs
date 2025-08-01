@@ -142,6 +142,76 @@ fn parse_crs(crs: Option<Crs<'_>>) -> Arc<Metadata> {
     Default::default()
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct Envelope {
+    min_x: f64,
+    min_y: f64,
+    max_x: f64,
+    max_y: f64,
+}
+
+impl Envelope {
+    pub fn min_x(&self) -> f64 {
+        self.min_x
+    }
+    pub fn min_y(&self) -> f64 {
+        self.min_y
+    }
+    pub fn max_x(&self) -> f64 {
+        self.max_x
+    }
+    pub fn max_y(&self) -> f64 {
+        self.max_y
+    }
+}
+
+/// Parsed information about FlatGeobuf header.
+#[derive(Debug, Clone)]
+pub struct HeaderInfo {
+    geometry_type: GeoArrowType,
+    properties_schema: SchemaRef,
+    envelope: Option<Envelope>,
+    features_count: u64,
+    index_node_size: u16,
+    title: Option<String>,
+    description: Option<String>,
+    metadata: Option<String>,
+}
+
+impl HeaderInfo {
+    pub fn geometry_type(&self) -> &GeoArrowType {
+        &self.geometry_type
+    }
+
+    pub fn properties_schema(&self) -> &SchemaRef {
+        &self.properties_schema
+    }
+
+    pub fn envelope(&self) -> Option<&Envelope> {
+        self.envelope.as_ref()
+    }
+
+    pub fn features_count(&self) -> u64 {
+        self.features_count
+    }
+
+    pub fn index_node_size(&self) -> u16 {
+        self.index_node_size
+    }
+
+    pub fn title(&self) -> Option<&str> {
+        self.title.as_deref()
+    }
+
+    pub fn description(&self) -> Option<&str> {
+        self.description.as_deref()
+    }
+
+    pub fn metadata(&self) -> Option<&str> {
+        self.metadata.as_deref()
+    }
+}
+
 /// Parse the FlatGeobuf header to infer the [GeoArrowType] of the geometry column and [SchemaRef]
 /// of the properties.
 pub fn parse_header(
@@ -149,7 +219,7 @@ pub fn parse_header(
     coord_type: CoordType,
     prefer_view_types: bool,
     projection: Option<&HashSet<String>>,
-) -> GeoArrowResult<(GeoArrowType, SchemaRef)> {
+) -> GeoArrowResult<HeaderInfo> {
     if header.has_t() | header.has_tm() {
         return Err(GeoArrowError::FlatGeobuf(
             "FlatGeobuf t dimension is not supported".to_string(),
@@ -197,5 +267,20 @@ pub fn parse_header(
             )));
         }
     };
-    Ok((data_type, properties_schema))
+
+    Ok(HeaderInfo {
+        geometry_type: data_type,
+        properties_schema,
+        envelope: header.envelope().map(|bbox| Envelope {
+            min_x: bbox.get(0),
+            min_y: bbox.get(1),
+            max_x: bbox.get(2),
+            max_y: bbox.get(3),
+        }),
+        features_count: header.features_count(),
+        index_node_size: header.index_node_size(),
+        title: header.title().map(|s| s.to_string()),
+        description: header.description().map(|s| s.to_string()),
+        metadata: header.metadata().map(|s| s.to_string()),
+    })
 }
