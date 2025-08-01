@@ -47,7 +47,10 @@ impl<T: AsyncHttpRangeClient + Unpin + Send + 'static> FlatGeobufRecordBatchStre
             selection,
             geometry_type: header.geometry_type().clone(),
             batch_size: options.batch_size,
-            properties_schema: header.properties_schema().clone(),
+            properties_schema: header
+                .properties_schema()
+                .expect("todo: handle unknown properties schema")
+                .clone(),
             num_rows_remaining,
             read_geometry: options.read_geometry,
         })
