@@ -43,7 +43,7 @@ bytes = "1.10.0"
 chrono = { version = "0.4.41", default-features = false }
 datafusion = { version = "49.0.0" }
 datafusion-datasource = { version = "49.0.0" }
-flatgeobuf = { git = "https://github.com/kylebarron/flatgeobuf", rev = "ea7749d5b209972389f73f9a93dd1d860f3467a1", default-features = false }
+flatgeobuf = { version = "5.0", default-features = false }
 futures = "0.3"
 geo = "0.30.0"
 geo-traits = "0.3.0"
