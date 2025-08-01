@@ -33,6 +33,7 @@ geoarrow-array = { workspace = true, features = ["geozero"] }
 geoarrow-schema = { workspace = true }
 geozero = { workspace = true }
 http-range-client = { workspace = true, optional = true, default-features = false }
+indexmap = { workspace = true }
 object_store = { workspace = true, optional = true }
 
 [dev-dependencies]

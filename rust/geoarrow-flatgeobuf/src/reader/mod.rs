@@ -3,6 +3,7 @@ mod r#async;
 mod common;
 #[cfg(feature = "object_store")]
 pub mod object_store;
+pub mod schema;
 mod sync;
 mod table_builder;
 
