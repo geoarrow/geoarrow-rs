@@ -1,3 +1,5 @@
+//! Helpers for inferring a schema from FlatGeobuf files.
+
 use std::io::{Read, Seek};
 use std::sync::Arc;
 
@@ -21,6 +23,9 @@ use indexmap::IndexMap;
 /// This currently only infers the properties schema, not the geometry schema. For FlatGeobuf files
 /// with unknown geometry, we currently always use the `Geometry` GeoArrow type, which allows for
 /// all geometry types.
+///
+/// This can be used to infer a joint schema for multiple FlatGeobuf files by passing successive
+/// files' data into the `process` method.
 #[derive(Debug, Clone)]
 pub struct FlatGeobufSchemaBuilder {
     fields: IndexMap<String, FieldRef>,
@@ -120,6 +125,7 @@ impl FlatGeobufSchemaBuilder {
 }
 
 impl FlatGeobufSchemaBuilder {
+    /// Finish the schema building process and return the resulting schema.
     pub fn finish(self) -> SchemaRef {
         Arc::new(Schema::new(self.fields.into_values().collect::<Vec<_>>()))
     }

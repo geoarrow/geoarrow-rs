@@ -46,12 +46,14 @@ impl Default for FlatGeobufReaderOptions {
 /// Parse the FlatGeobuf header to infer the [SchemaRef] of the property columns.
 ///
 /// Note that this does not include the geometry column, which is handled separately.
+///
+/// This will return `None` if information about property columns is missing from the header.
 fn infer_properties_schema(
     header: Header<'_>,
     prefer_view_types: bool,
     projection: Option<&HashSet<String>>,
-) -> SchemaRef {
-    let columns = header.columns().unwrap();
+) -> Option<SchemaRef> {
+    let columns = header.columns()?;
     let mut schema =
         SchemaBuilder::with_capacity(projection.map(|p| p.len()).unwrap_or(columns.len()));
 
@@ -111,7 +113,7 @@ fn infer_properties_schema(
         schema.push(field);
     }
 
-    Arc::new(schema.finish())
+    Some(Arc::new(schema.finish()))
 }
 
 /// Parse CRS information provided by FlatGeobuf into a [Metadata].
@@ -142,6 +144,10 @@ fn parse_crs(crs: Option<Crs<'_>>) -> Arc<Metadata> {
     Default::default()
 }
 
+/// The bounding box of a FlatGeobuf file.
+///
+/// This is read from the FlatGeobuf header and represents the full extent of all geometries in the
+/// file.
 #[derive(Debug, Clone, Copy)]
 pub struct Envelope {
     min_x: f64,
@@ -151,15 +157,22 @@ pub struct Envelope {
 }
 
 impl Envelope {
+    /// The minimum X coordinate of the bounding box.
     pub fn min_x(&self) -> f64 {
         self.min_x
     }
+
+    /// The minimum Y coordinate of the bounding box.
     pub fn min_y(&self) -> f64 {
         self.min_y
     }
+
+    /// The maximum X coordinate of the bounding box.
     pub fn max_x(&self) -> f64 {
         self.max_x
     }
+
+    /// The maximum Y coordinate of the bounding box.
     pub fn max_y(&self) -> f64 {
         self.max_y
     }
@@ -168,8 +181,9 @@ impl Envelope {
 /// Parsed information about FlatGeobuf header.
 #[derive(Debug, Clone)]
 pub struct HeaderInfo {
+    name: Option<String>,
     geometry_type: GeoArrowType,
-    properties_schema: SchemaRef,
+    properties_schema: Option<SchemaRef>,
     envelope: Option<Envelope>,
     features_count: u64,
     index_node_size: u16,
@@ -179,34 +193,58 @@ pub struct HeaderInfo {
 }
 
 impl HeaderInfo {
+    /// Arbitrary name given to your file.
+    ///
+    /// Many implementations will include this as a FeatureCollection-level property when
+    /// converting to GeoJSON
+    pub fn name(&self) -> Option<&str> {
+        self.name.as_deref()
+    }
+
+    /// The GeoArrow type of the geometry column.
     pub fn geometry_type(&self) -> &GeoArrowType {
         &self.geometry_type
     }
 
-    pub fn properties_schema(&self) -> &SchemaRef {
-        &self.properties_schema
+    /// The schema of the properties columns, if known.
+    ///
+    /// If the FlatGeobuf file header does not contain information about property columns, this
+    /// will be `None`.
+    pub fn properties_schema(&self) -> Option<&SchemaRef> {
+        self.properties_schema.as_ref()
     }
 
+    /// The bounding box of the geometries in the FlatGeobuf file, if known.
     pub fn envelope(&self) -> Option<&Envelope> {
         self.envelope.as_ref()
     }
 
+    /// The number of features in the FlatGeobuf file.
     pub fn features_count(&self) -> u64 {
         self.features_count
     }
 
+    /// This represents the branching factor of the RTree used for the flatgeobuf spatial index,
+    /// i.e. the number of child nodes under each interior node in the tree. Higher branching
+    /// factor = wider, shorter tree. Obviously this can impact the size of your tree and the
+    /// performance of your index lookups but the exact characteristics will depend on your
+    /// dataset.
     pub fn index_node_size(&self) -> u16 {
         self.index_node_size
     }
 
+    /// Arbitrary strings for dataset description
     pub fn title(&self) -> Option<&str> {
         self.title.as_deref()
     }
 
+    /// Arbitrary strings for dataset description
     pub fn description(&self) -> Option<&str> {
         self.description.as_deref()
     }
 
+    /// String, but expected to encode an arbitrary JSON object containing key/value metadata about
+    /// the dataset
     pub fn metadata(&self) -> Option<&str> {
         self.metadata.as_deref()
     }
@@ -269,6 +307,7 @@ pub fn parse_header(
     };
 
     Ok(HeaderInfo {
+        name: header.name().map(|s| s.to_string()),
         geometry_type: data_type,
         properties_schema,
         envelope: header.envelope().map(|bbox| Envelope {

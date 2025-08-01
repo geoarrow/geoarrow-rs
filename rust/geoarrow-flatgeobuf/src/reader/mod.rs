@@ -1,3 +1,5 @@
+//! Read from [FlatGeobuf](https://flatgeobuf.org/) files.
+
 #[cfg(feature = "async")]
 mod r#async;
 mod common;

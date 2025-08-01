@@ -45,6 +45,8 @@ pub struct FlatGeobufRecordBatchIterator<R: Read, S> {
 }
 
 impl<R: Read, S> FlatGeobufRecordBatchIterator<R, S> {
+    /// Create a new FlatGeobuf record batch iterator from a feature iterator from the
+    /// [`flatgeobuf`] crate.
     pub fn try_new(
         selection: FeatureIter<R, S>,
         options: FlatGeobufReaderOptions,

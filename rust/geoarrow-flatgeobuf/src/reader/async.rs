@@ -17,6 +17,11 @@ use crate::reader::FlatGeobufReaderOptions;
 use crate::reader::common::parse_header;
 use crate::reader::table_builder::{GeoArrowRecordBatchBuilder, GeoArrowRecordBatchBuilderOptions};
 
+/// Inner structure for the FlatGeobuf record batch stream.
+///
+/// This is separate from the top-level `FlatGeobufRecordBatchStream` because we use
+/// `async_stream::try_stream` to create the stream. This means we need a method to convert into
+/// the opaque stream type, see `[Self::into_stream]`.
 struct FlatGeobufRecordBatchStreamInner<T: AsyncHttpRangeClient> {
     selection: AsyncFeatureIter<T>,
     geometry_type: GeoArrowType,
@@ -48,6 +53,7 @@ impl<T: AsyncHttpRangeClient + Unpin + Send + 'static> FlatGeobufRecordBatchStre
         })
     }
 
+    /// The output schema including the geometry column.
     fn output_schema(&self) -> SchemaRef {
         let mut fields = self.properties_schema.fields().to_vec();
         if self.read_geometry {
@@ -123,12 +129,21 @@ impl<T: AsyncHttpRangeClient + Unpin + Send + 'static> FlatGeobufRecordBatchStre
     }
 }
 
+/// An async stream of FlatGeobuf record batches.
+///
+/// This implements the `Stream` trait, emitting [`RecordBatch`]es as they are read from the
+/// FlatGeobuf file. This implementation is modeled to be used with the DataFusion
+/// [`RecordBatchStream`] trait.
+///
+/// [`RecordBatchStream`]: https://docs.rs/datafusion/latest/datafusion/execution/trait.RecordBatchStream.html
 pub struct FlatGeobufRecordBatchStream {
     stream: BoxStream<'static, Result<RecordBatch, ArrowError>>,
     schema: SchemaRef,
 }
 
 impl FlatGeobufRecordBatchStream {
+    /// Creates a new FlatGeobuf record batch stream from an async feature iterator from the
+    /// [`flatgeobuf`] crate.
     pub fn try_new(
         selection: AsyncFeatureIter<impl AsyncHttpRangeClient + Unpin + Send + 'static>,
         options: FlatGeobufReaderOptions,
@@ -147,6 +162,7 @@ impl Stream for FlatGeobufRecordBatchStream {
 }
 
 impl FlatGeobufRecordBatchStream {
+    /// Returns the schema of the record batches produced by this stream.
     pub fn schema(&self) -> SchemaRef {
         self.schema.clone()
     }
