@@ -1,3 +1,5 @@
+//! Write to [FlatGeobuf](https://flatgeobuf.org/) files.
+
 use std::io::Write;
 
 use arrow_schema::Schema;

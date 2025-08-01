@@ -1,5 +1,5 @@
 use std::any::Any;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::sync::Arc;
 
@@ -7,20 +7,19 @@ use arrow_schema::{Schema, SchemaRef};
 use async_trait::async_trait;
 use datafusion::catalog::Session;
 use datafusion::catalog::memory::DataSourceExec;
+use datafusion::common::stats::Precision;
 use datafusion::common::{GetExt, Statistics};
 use datafusion::datasource::file_format::file_compression_type::FileCompressionType;
 use datafusion::datasource::file_format::{FileFormat, FileFormatFactory};
-use datafusion::datasource::physical_plan::{
-    FileScanConfig, FileScanConfigBuilder, FileSinkConfig, FileSource,
-};
+use datafusion::datasource::physical_plan::{FileScanConfig, FileScanConfigBuilder, FileSource};
 use datafusion::error::{DataFusionError, Result};
-use datafusion::physical_expr::LexRequirement;
 use datafusion::physical_plan::ExecutionPlan;
 use flatgeobuf::HttpFgbReader;
 use geoarrow_flatgeobuf::reader::object_store::ObjectStoreWrapper;
-use geoarrow_flatgeobuf::reader::parse_header;
+use geoarrow_flatgeobuf::reader::{HeaderInfo, parse_header};
 use geoarrow_schema::CoordType;
 use http_range_client::AsyncBufferedHttpRangeClient;
+use object_store::path::Path;
 use object_store::{ObjectMeta, ObjectStore};
 
 use crate::source::FlatGeobufSource;
@@ -73,6 +72,23 @@ pub struct FlatGeobufFormat {
     coord_type: CoordType,
 }
 
+async fn read_flatgeobuf_header(
+    store: Arc<dyn ObjectStore>,
+    location: Path,
+    coord_type: CoordType,
+    prefer_view_types: bool,
+    projection: Option<&HashSet<String>>,
+) -> Result<HeaderInfo> {
+    let object_store_wrapper = ObjectStoreWrapper::new(store, location);
+    let async_client = AsyncBufferedHttpRangeClient::with(object_store_wrapper, "");
+    let reader = HttpFgbReader::new(async_client)
+        .await
+        .map_err(|err| DataFusionError::External(Box::new(err)))?;
+    let header = parse_header(reader.header(), coord_type, prefer_view_types, projection)
+        .map_err(|err| DataFusionError::External(Box::new(err)))?;
+    Ok(header)
+}
+
 #[async_trait]
 impl FileFormat for FlatGeobufFormat {
     fn as_any(&self) -> &dyn Any {
@@ -100,18 +116,21 @@ impl FileFormat for FlatGeobufFormat {
         let mut schemas = vec![];
 
         for object in objects {
-            let object_store_wrapper =
-                ObjectStoreWrapper::new(store.clone(), object.location.clone());
-            let async_client = AsyncBufferedHttpRangeClient::with(object_store_wrapper, "");
-            let reader = HttpFgbReader::new(async_client)
-                .await
-                .map_err(|err| DataFusionError::External(Box::new(err)))?;
-            let (geo_type, properties_schema) =
-                parse_header(reader.header(), self.coord_type, true, None)
-                    .map_err(|err| DataFusionError::External(Box::new(err)))?;
+            let header = read_flatgeobuf_header(
+                store.clone(),
+                object.location.clone(),
+                self.coord_type,
+                true,
+                None,
+            )
+            .await?;
 
-            let mut fields = properties_schema.fields().to_vec();
-            fields.push(Arc::new(geo_type.to_field("geometry", true)));
+            let mut fields = header
+                .properties_schema()
+                .expect("todo: handle inferring schema")
+                .fields()
+                .to_vec();
+            fields.push(Arc::new(header.geometry_type().to_field("geometry", true)));
             let schema = Schema::new(fields);
 
             schemas.push(schema);
@@ -124,11 +143,24 @@ impl FileFormat for FlatGeobufFormat {
     async fn infer_stats(
         &self,
         _state: &dyn Session,
-        _store: &Arc<dyn ObjectStore>,
+        store: &Arc<dyn ObjectStore>,
         table_schema: SchemaRef,
-        _object: &ObjectMeta,
+        object: &ObjectMeta,
     ) -> Result<Statistics> {
-        Ok(Statistics::new_unknown(&table_schema))
+        let header = read_flatgeobuf_header(
+            store.clone(),
+            object.location.clone(),
+            self.coord_type,
+            true,
+            None,
+        )
+        .await?;
+
+        Ok(
+            Statistics::new_unknown(&table_schema).with_num_rows(Precision::Exact(
+                header.features_count().try_into().unwrap(),
+            )),
+        )
     }
 
     async fn create_physical_plan(
@@ -139,17 +171,8 @@ impl FileFormat for FlatGeobufFormat {
         let conf_builder = FileScanConfigBuilder::from(conf);
         let source = Arc::new(FlatGeobufSource::new());
         let config = conf_builder.with_source(source).build();
+        dbg!(&config);
         Ok(DataSourceExec::from_data_source(config))
-    }
-
-    async fn create_writer_physical_plan(
-        &self,
-        _input: Arc<dyn ExecutionPlan>,
-        _state: &dyn Session,
-        _conf: FileSinkConfig,
-        _order_requirements: Option<LexRequirement>,
-    ) -> Result<Arc<dyn ExecutionPlan>> {
-        todo!()
     }
 
     fn file_source(&self) -> Arc<dyn FileSource> {

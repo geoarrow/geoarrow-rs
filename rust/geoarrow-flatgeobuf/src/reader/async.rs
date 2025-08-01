@@ -17,12 +17,17 @@ use crate::reader::FlatGeobufReaderOptions;
 use crate::reader::common::parse_header;
 use crate::reader::table_builder::{GeoArrowRecordBatchBuilder, GeoArrowRecordBatchBuilderOptions};
 
+/// Inner structure for the FlatGeobuf record batch stream.
+///
+/// This is separate from the top-level `FlatGeobufRecordBatchStream` because we use
+/// `async_stream::try_stream` to create the stream. This means we need a method to convert into
+/// the opaque stream type, see `[Self::into_stream]`.
 struct FlatGeobufRecordBatchStreamInner<T: AsyncHttpRangeClient> {
     selection: AsyncFeatureIter<T>,
     geometry_type: GeoArrowType,
     batch_size: usize,
     properties_schema: SchemaRef,
-    num_rows_remaining: Option<usize>,
+    num_rows_remaining: usize,
     read_geometry: bool,
 }
 
@@ -31,23 +36,27 @@ impl<T: AsyncHttpRangeClient + Unpin + Send + 'static> FlatGeobufRecordBatchStre
         selection: AsyncFeatureIter<T>,
         options: FlatGeobufReaderOptions,
     ) -> GeoArrowResult<Self> {
-        let (geometry_type, properties_schema) = parse_header(
+        let header = parse_header(
             selection.header(),
             options.coord_type,
             options.prefer_view_types,
             options.columns.as_ref(),
         )?;
-        let num_rows_remaining = selection.features_count();
+        let num_rows_remaining = header.features_count().try_into().unwrap();
         Ok(Self {
             selection,
-            geometry_type,
+            geometry_type: header.geometry_type().clone(),
             batch_size: options.batch_size,
-            properties_schema,
+            properties_schema: header
+                .properties_schema()
+                .expect("todo: handle unknown properties schema")
+                .clone(),
             num_rows_remaining,
             read_geometry: options.read_geometry,
         })
     }
 
+    /// The output schema including the geometry column.
     fn output_schema(&self) -> SchemaRef {
         let mut fields = self.properties_schema.fields().to_vec();
         if self.read_geometry {
@@ -61,9 +70,7 @@ impl<T: AsyncHttpRangeClient + Unpin + Send + 'static> FlatGeobufRecordBatchStre
 
     async fn process_batch(&mut self) -> GeoArrowResult<Option<RecordBatch>> {
         let options = GeoArrowRecordBatchBuilderOptions {
-            batch_size: self
-                .num_rows_remaining
-                .map(|num_rows_remaining| num_rows_remaining.min(self.batch_size)),
+            batch_size: Some(self.num_rows_remaining.min(self.batch_size)),
             error_on_extra_columns: false,
             read_geometry: self.read_geometry,
         };
@@ -125,12 +132,21 @@ impl<T: AsyncHttpRangeClient + Unpin + Send + 'static> FlatGeobufRecordBatchStre
     }
 }
 
+/// An async stream of FlatGeobuf record batches.
+///
+/// This implements the `Stream` trait, emitting [`RecordBatch`]es as they are read from the
+/// FlatGeobuf file. This implementation is modeled to be used with the DataFusion
+/// [`RecordBatchStream`] trait.
+///
+/// [`RecordBatchStream`]: https://docs.rs/datafusion/latest/datafusion/execution/trait.RecordBatchStream.html
 pub struct FlatGeobufRecordBatchStream {
     stream: BoxStream<'static, Result<RecordBatch, ArrowError>>,
     schema: SchemaRef,
 }
 
 impl FlatGeobufRecordBatchStream {
+    /// Creates a new FlatGeobuf record batch stream from an async feature iterator from the
+    /// [`flatgeobuf`] crate.
     pub fn try_new(
         selection: AsyncFeatureIter<impl AsyncHttpRangeClient + Unpin + Send + 'static>,
         options: FlatGeobufReaderOptions,
@@ -149,6 +165,7 @@ impl Stream for FlatGeobufRecordBatchStream {
 }
 
 impl FlatGeobufRecordBatchStream {
+    /// Returns the schema of the record batches produced by this stream.
     pub fn schema(&self) -> SchemaRef {
         self.schema.clone()
     }
