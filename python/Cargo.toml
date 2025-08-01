@@ -14,10 +14,10 @@ categories = ["wasm", "science::geo"]
 rust-version = "1.85"
 
 [workspace.dependencies]
-arrow = "55"
-arrow-array = "55"
-arrow-buffer = "55"
-arrow-schema = "55"
+arrow = "56"
+arrow-array = "56"
+arrow-buffer = "56"
+arrow-schema = "56"
 geo-traits = "0.3"
 geoarrow-array = { path = "../rust/geoarrow-array" }
 geoarrow-cast = { path = "../rust/geoarrow-cast" }
@@ -28,9 +28,9 @@ geozero = "0.14"
 indexmap = "2.5.0"
 numpy = "0.25"
 object_store = "0.12"
-parquet = "55"
+parquet = "56"
 pyo3 = { version = "0.25", features = ["hashbrown", "serde", "anyhow"] }
-pyo3-arrow = "0.10.1"
+pyo3-arrow = "0.11"
 pyo3-geoarrow = { path = "../rust/pyo3-geoarrow" }
 serde_json = "1"
 thiserror = "1"
