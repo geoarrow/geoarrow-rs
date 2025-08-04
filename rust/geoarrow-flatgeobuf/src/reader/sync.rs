@@ -212,9 +212,8 @@ mod test {
     use arrow_schema::DataType;
     use flatgeobuf::FgbReader;
 
-    use crate::reader::common::FlatGeobufHeaderExt;
-
     use super::*;
+    use crate::reader::common::FlatGeobufHeaderExt;
 
     #[test]
     fn test_countries() {
