@@ -353,7 +353,7 @@ pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> GeoArrowResult<Gen
             let metadata = wkb_view_arr.data_type().metadata().clone();
             let array = wkb_view_arr.clone().into_arrow();
 
-            let mut builder = GenericByteBuilder::new();
+            let mut builder = GenericByteBuilder::with_capacity(arr.len(), 0);
             array.iter().for_each(|value| builder.append_option(value));
             Ok(GenericWkbArray::new(builder.finish(), metadata))
         }
@@ -569,7 +569,7 @@ pub fn to_wkt<O: OffsetSizeTrait>(arr: &dyn GeoArrowArray) -> GeoArrowResult<Gen
             let metadata = wkt_view_arr.data_type().metadata().clone();
             let array = wkt_view_arr.clone().into_arrow();
 
-            let mut builder = GenericStringBuilder::new();
+            let mut builder = GenericStringBuilder::with_capacity(arr.len(), 0);
             array.iter().for_each(|value| builder.append_option(value));
             Ok(GenericWktArray::new(builder.finish(), metadata))
         }
@@ -580,7 +580,7 @@ fn impl_to_wkt<'a, O: OffsetSizeTrait>(
     geo_arr: &'a impl GeoArrowArrayAccessor<'a>,
 ) -> GeoArrowResult<GenericWktArray<O>> {
     let metadata = geo_arr.data_type().metadata().clone();
-    let mut builder = GenericStringBuilder::new();
+    let mut builder = GenericStringBuilder::with_capacity(geo_arr.len(), 0);
 
     for maybe_geom in geo_arr.iter() {
         if let Some(geom) = maybe_geom {
