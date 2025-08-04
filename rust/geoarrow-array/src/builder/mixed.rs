@@ -129,6 +129,18 @@ impl MixedGeometryBuilder {
         self.multi_polygons.reserve_exact(capacity.multi_polygon);
     }
 
+    /// Shrinks the capacity of self to fit.
+    pub(crate) fn shrink_to_fit(&mut self) {
+        self.types.shrink_to_fit();
+        self.offsets.shrink_to_fit();
+        self.points.shrink_to_fit();
+        self.line_strings.shrink_to_fit();
+        self.polygons.shrink_to_fit();
+        self.multi_points.shrink_to_fit();
+        self.multi_line_strings.shrink_to_fit();
+        self.multi_polygons.shrink_to_fit();
+    }
+
     pub(crate) fn finish(self) -> MixedGeometryArray {
         MixedGeometryArray::new(
             self.types.into(),

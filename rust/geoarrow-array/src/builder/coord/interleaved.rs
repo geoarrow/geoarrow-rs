@@ -63,6 +63,11 @@ impl InterleavedCoordBufferBuilder {
         self.coords.reserve_exact(additional * self.dim.size());
     }
 
+    /// Shrinks the capacity of self to fit.
+    pub fn shrink_to_fit(&mut self) {
+        self.coords.shrink_to_fit();
+    }
+
     /// Returns the total number of coordinates the vector can hold without reallocating.
     pub fn capacity(&self) -> usize {
         self.coords.capacity() / self.dim.size()
