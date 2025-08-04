@@ -242,7 +242,7 @@ mod test {
             geo_traits::Dimensions::Unknown(0).try_into();
         assert_eq!(
             dims_err.unwrap_err().to_string(),
-            "Schema error: Unsupported dimension Unknown(0)"
+            "Data not conforming to GeoArrow specification: Unsupported dimension Unknown(0)"
         );
     }
 }
