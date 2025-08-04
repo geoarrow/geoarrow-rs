@@ -300,9 +300,9 @@ mod test {
 
     fn wkb_data<O: OffsetSizeTrait>() -> GenericWkbArray<O> {
         let mut builder = WkbBuilder::new(WkbType::new(Default::default()));
-        builder.push_geometry(Some(&point::p0()));
-        builder.push_geometry(Some(&point::p1()));
-        builder.push_geometry(Some(&point::p2()));
+        builder.push_geometry(Some(&point::p0())).unwrap();
+        builder.push_geometry(Some(&point::p1())).unwrap();
+        builder.push_geometry(Some(&point::p2())).unwrap();
         builder.finish()
     }
 

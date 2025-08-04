@@ -18,7 +18,7 @@ impl<O: OffsetSizeTrait> FromGEOS for WkbBuilder<O> {
             .into_iter()
             .map(|geom| geom.map(GEOSGeometry::new))
             .collect::<Vec<_>>();
-        Ok(Self::from_nullable_geometries(&geoms, typ))
+        Self::from_nullable_geometries(&geoms, typ)
     }
 }
 
