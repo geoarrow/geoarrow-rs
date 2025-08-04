@@ -10,8 +10,6 @@ pub(crate) fn offsets_buffer_i32_to_i64(offsets: &OffsetBuffer<i32>) -> OffsetBu
 pub(crate) fn offsets_buffer_i64_to_i32(
     offsets: &OffsetBuffer<i64>,
 ) -> GeoArrowResult<OffsetBuffer<i32>> {
-    // TODO: raise nicer error. Ref:
-    // https://github.com/jorgecarleitao/arrow2/blob/6a4b53169a48cbd234cecde6ab6a98f84146fca2/src/offset.rs#L492
     i32::try_from(*offsets.last()).map_err(|_| GeoArrowError::Overflow)?;
 
     let i32_offsets = offsets.iter().map(|x| *x as i32).collect::<Vec<_>>();
