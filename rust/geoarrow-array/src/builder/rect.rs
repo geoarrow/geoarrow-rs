@@ -60,6 +60,13 @@ impl RectBuilder {
         self.upper.reserve_exact(additional);
     }
 
+    /// Shrinks the capacity of self to fit.
+    pub fn shrink_to_fit(&mut self) {
+        self.lower.shrink_to_fit();
+        self.upper.shrink_to_fit();
+        // self.validity.shrink_to_fit();
+    }
+
     /// The canonical method to create a [`RectBuilder`] out of its internal components.
     ///
     /// # Implementation

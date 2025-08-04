@@ -77,6 +77,13 @@ impl SeparatedCoordBufferBuilder {
             .for_each(|buffer| buffer.reserve_exact(additional))
     }
 
+    /// Shrinks the capacity of self to fit.
+    pub fn shrink_to_fit(&mut self) {
+        self.buffers
+            .iter_mut()
+            .for_each(|buffer| buffer.shrink_to_fit());
+    }
+
     /// Returns the total number of coordinates the vector can hold without reallocating.
     pub fn capacity(&self) -> usize {
         self.buffers[0].capacity()

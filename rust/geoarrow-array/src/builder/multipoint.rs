@@ -75,14 +75,16 @@ impl MultiPointBuilder {
         self.geom_offsets.reserve_exact(capacity.geom_capacity);
     }
 
+    /// Shrinks the capacity of self to fit.
+    pub fn shrink_to_fit(&mut self) {
+        self.coords.shrink_to_fit();
+        self.geom_offsets.shrink_to_fit();
+        // self.validity.shrink_to_fit();
+    }
+
     /// Consume the builder and convert to an immutable [`MultiPointArray`]
     pub fn finish(mut self) -> MultiPointArray {
         let validity = self.validity.finish();
-
-        // TODO: impl shrink_to_fit for all mutable -> * impls
-        // self.coords.shrink_to_fit();
-        self.geom_offsets.shrink_to_fit();
-
         MultiPointArray::new(
             self.coords.finish(),
             self.geom_offsets.finish(),

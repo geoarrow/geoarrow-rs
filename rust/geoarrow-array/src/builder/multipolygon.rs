@@ -91,6 +91,15 @@ impl MultiPolygonBuilder {
         self.geom_offsets.reserve_exact(additional.geom_capacity);
     }
 
+    /// Shrinks the capacity of self to fit.
+    pub fn shrink_to_fit(&mut self) {
+        self.coords.shrink_to_fit();
+        self.ring_offsets.shrink_to_fit();
+        self.polygon_offsets.shrink_to_fit();
+        self.geom_offsets.shrink_to_fit();
+        // self.validity.shrink_to_fit();
+    }
+
     /// Consume the builder and convert to an immutable [`MultiPolygonArray`]
     pub fn finish(mut self) -> MultiPolygonArray {
         let validity = self.validity.finish();

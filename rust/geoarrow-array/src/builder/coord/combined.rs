@@ -73,6 +73,14 @@ impl CoordBufferBuilder {
         }
     }
 
+    /// Shrinks the capacity of self to fit.
+    pub fn shrink_to_fit(&mut self) {
+        match self {
+            CoordBufferBuilder::Interleaved(cb) => cb.shrink_to_fit(),
+            CoordBufferBuilder::Separated(cb) => cb.shrink_to_fit(),
+        }
+    }
+
     /// Returns the total number of coordinates the vector can hold without reallocating.
     pub fn capacity(&self) -> usize {
         match self {
