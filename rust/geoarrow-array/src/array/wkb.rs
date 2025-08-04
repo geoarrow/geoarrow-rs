@@ -43,6 +43,11 @@ impl<O: OffsetSizeTrait> GenericWkbArray<O> {
         self.len() == 0
     }
 
+    /// Access the underlying binary array.
+    pub fn inner(&self) -> &GenericBinaryArray<O> {
+        &self.array
+    }
+
     /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> WkbCapacity {
         WkbCapacity::new(
