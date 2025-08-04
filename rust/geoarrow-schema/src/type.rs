@@ -4,6 +4,7 @@ use std::sync::Arc;
 use arrow_schema::extension::ExtensionType;
 use arrow_schema::{ArrowError, DataType, Field, UnionFields, UnionMode};
 
+use crate::error::GeoArrowError;
 use crate::metadata::Metadata;
 use crate::{CoordType, Dimension};
 
@@ -186,11 +187,19 @@ impl ExtensionType for PointType {
 
 fn parse_point(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowError> {
     match data_type {
-        // TODO: use list_size for dimension when 2, or 4
-        DataType::FixedSizeList(inner_field, _list_size) => Ok((
-            CoordType::Interleaved,
-            Dimension::from_interleaved_field(inner_field)?,
-        )),
+        DataType::FixedSizeList(inner_field, list_size) => {
+            let dim_parsed_from_field = Dimension::from_interleaved_field(inner_field)?;
+            if dim_parsed_from_field.size() != *list_size as usize {
+                Err(GeoArrowError::InvalidGeoArrow(format!(
+                    "Field metadata suggests list of size {}, but list size is {}",
+                    dim_parsed_from_field.size(),
+                    list_size
+                ))
+                .into())
+            } else {
+                Ok((CoordType::Interleaved, dim_parsed_from_field))
+            }
+        }
         DataType::Struct(struct_fields) => Ok((
             CoordType::Separated,
             Dimension::from_separated_field(struct_fields)?,
