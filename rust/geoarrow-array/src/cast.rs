@@ -371,7 +371,7 @@ fn impl_to_wkb<'a, O: OffsetSizeTrait>(
         .map(|x| x.transpose())
         .collect::<GeoArrowResult<Vec<_>>>()?;
     let wkb_type = WkbType::new(geo_arr.data_type().metadata().clone());
-    Ok(WkbBuilder::from_nullable_geometries(geoms.as_slice(), wkb_type).finish())
+    Ok(WkbBuilder::from_nullable_geometries(geoms.as_slice(), wkb_type)?.finish())
 }
 
 /// Convert a [GeoArrowArray] to a [`WkbViewArray`].
@@ -1256,7 +1256,7 @@ mod test {
             .collect::<std::result::Result<Vec<_>, _>>()
             .unwrap();
         let wkb_type = WkbType::new(geo_arr.data_type().metadata().clone());
-        Ok(WkbBuilder::from_nullable_geometries(geoms.as_slice(), wkb_type).finish())
+        Ok(WkbBuilder::from_nullable_geometries(geoms.as_slice(), wkb_type)?.finish())
     }
 
     // Verify that this compiles with the macro
