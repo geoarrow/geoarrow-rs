@@ -269,22 +269,21 @@ impl PartialEq for PointArray {
             return false;
         }
 
-        // If the coords are already true, don't check for NaNs
-        // TODO: maybe only iterate once for perf?
-        if self.coords == other.coords {
-            return true;
-        }
-
         if self.coords.len() != other.coords.len() {
             return false;
         }
 
-        // TODO: this should check for point equal.
         for point_idx in 0..self.len() {
-            let c1 = self.value(point_idx).unwrap();
-            let c2 = other.value(point_idx).unwrap();
-            if !point_eq(&c1, &c2) {
-                return false;
+            let p1 = self.get(point_idx).unwrap();
+            let p2 = other.get(point_idx).unwrap();
+            match (p1, p2) {
+                (Some(p1), Some(p2)) => {
+                    if !point_eq(&p1, &p2) {
+                        return false;
+                    }
+                }
+                (None, None) => continue,
+                _ => return false,
             }
         }
 

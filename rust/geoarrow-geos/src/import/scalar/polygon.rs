@@ -22,34 +22,6 @@ impl GEOSPolygon {
         }
     }
 
-    // TODO: delete these
-    #[allow(dead_code)]
-    pub fn num_interiors(&self) -> usize {
-        self.0.get_num_interior_rings().unwrap()
-    }
-
-    #[allow(dead_code)]
-    pub fn exterior(&self) -> Option<GEOSConstLinearRing<'_>> {
-        if self.0.is_empty().unwrap() {
-            return None;
-        }
-
-        Some(GEOSConstLinearRing::new_unchecked(
-            self.0.get_exterior_ring().unwrap(),
-        ))
-    }
-
-    #[allow(dead_code)]
-    pub fn interior(&self, i: usize) -> Option<GEOSConstLinearRing<'_>> {
-        if i > self.num_interiors() {
-            return None;
-        }
-
-        Some(GEOSConstLinearRing::new_unchecked(
-            self.0.get_interior_ring_n(i.try_into().unwrap()).unwrap(),
-        ))
-    }
-
     pub(crate) fn dimension(&self) -> geo_traits::Dimensions {
         match self.0.get_coordinate_dimension().unwrap() {
             geos::Dimensions::TwoD => geo_traits::Dimensions::Xy,
