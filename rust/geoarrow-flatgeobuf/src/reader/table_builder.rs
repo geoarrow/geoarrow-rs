@@ -28,6 +28,8 @@ pub(crate) enum GeoArrowArrayBuilder {
     MultiPolygon(MultiPolygonBuilder),
     GeometryCollection(Box<GeometryCollectionBuilder>),
     Geometry(Box<GeometryBuilder>),
+    Wkb(WkbBuilder<i32>),
+    LargeWkb(WkbBuilder<i64>),
 }
 
 impl GeoArrowArrayBuilder {
@@ -49,11 +51,13 @@ impl GeoArrowArrayBuilder {
                 typ.metadata().clone(),
             ))),
             GeoArrowType::Geometry(typ) => Self::Geometry(Box::new(GeometryBuilder::new(typ))),
-            GeoArrowType::Wkb(typ) | GeoArrowType::LargeWkb(typ) | GeoArrowType::WkbView(typ) => {
-                Self::Geometry(Box::new(GeometryBuilder::new(GeometryType::new(
-                    typ.metadata().clone(),
-                ))))
-            }
+            GeoArrowType::Wkb(typ) => Self::Wkb(WkbBuilder::new(typ)),
+            GeoArrowType::LargeWkb(typ) => Self::LargeWkb(WkbBuilder::new(typ)),
+            // For now, fall back to GeometryBuilder for WkbView and Wkt types
+            // We don't have builders for these types yet
+            GeoArrowType::WkbView(typ) => Self::Geometry(Box::new(GeometryBuilder::new(
+                GeometryType::new(typ.metadata().clone()),
+            ))),
             GeoArrowType::Wkt(typ) | GeoArrowType::LargeWkt(typ) | GeoArrowType::WktView(typ) => {
                 Self::Geometry(Box::new(GeometryBuilder::new(GeometryType::new(
                     typ.metadata().clone(),
@@ -76,6 +80,8 @@ impl GeoArrowArrayBuilder {
             Self::MultiPolygon(builder) => builder.push_geometry(geometry),
             Self::GeometryCollection(builder) => builder.push_geometry(geometry),
             Self::Geometry(builder) => builder.push_geometry(geometry),
+            Self::Wkb(builder) => builder.push_geometry(geometry),
+            Self::LargeWkb(builder) => builder.push_geometry(geometry),
         }
     }
 
@@ -89,6 +95,8 @@ impl GeoArrowArrayBuilder {
             Self::MultiPolygon(builder) => Arc::new(builder.finish()),
             Self::GeometryCollection(builder) => Arc::new(builder.finish()),
             Self::Geometry(builder) => Arc::new(builder.finish()),
+            Self::Wkb(builder) => Arc::new(builder.finish()),
+            Self::LargeWkb(builder) => Arc::new(builder.finish()),
         }
     }
 }
@@ -132,14 +140,7 @@ impl GeoArrowRecordBatchBuilder {
         let mut columns = Vec::new();
         for field in properties_schema.fields() {
             let capacity = options.batch_size.unwrap_or(0);
-            // Workaround for https://github.com/apache/arrow-rs/pull/7931
-            let builder = if field.data_type() == &DataType::Utf8View {
-                Box::new(StringViewBuilder::with_capacity(capacity))
-            } else if field.data_type() == &DataType::BinaryView {
-                Box::new(BinaryViewBuilder::with_capacity(capacity))
-            } else {
-                make_builder(field.data_type(), capacity)
-            };
+            let builder = make_builder(field.data_type(), capacity);
             columns.push(builder);
         }
 
