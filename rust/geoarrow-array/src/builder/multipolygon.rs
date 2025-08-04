@@ -10,6 +10,7 @@ use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, MultiPolygonArray};
+use crate::builder::geo_trait_wrappers::RectWrapper;
 use crate::builder::{CoordBufferBuilder, OffsetsBuilder};
 use crate::capacity::MultiPolygonCapacity;
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
@@ -221,7 +222,7 @@ impl MultiPolygonBuilder {
             match value.as_type() {
                 GeometryType::Polygon(g) => self.push_polygon(Some(g))?,
                 GeometryType::MultiPolygon(g) => self.push_multi_polygon(Some(g))?,
-                // TODO: support rect
+                GeometryType::Rect(g) => self.push_polygon(Some(&RectWrapper::try_new(g)?))?,
                 gt => {
                     return Err(GeoArrowError::IncorrectGeometryType(format!(
                         "Expected MultiPolygon compatible geometry, got {}",
