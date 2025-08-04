@@ -175,9 +175,7 @@ impl MultiLineStringBuilder {
             // - Add ring's # of coords to self.ring_offsets
             // - Push ring's coords to self.coords
 
-            self.ring_offsets
-                .try_push_usize(line_string.num_coords())
-                .unwrap();
+            self.ring_offsets.try_push_usize(line_string.num_coords())?;
 
             for coord in line_string.coords() {
                 self.coords.push_coord(&coord);
@@ -212,9 +210,7 @@ impl MultiLineStringBuilder {
 
             // Number of coords for each ring
             for line_string in multi_line_string.line_strings() {
-                self.ring_offsets
-                    .try_push_usize(line_string.num_coords())
-                    .unwrap();
+                self.ring_offsets.try_push_usize(line_string.num_coords())?;
 
                 for coord in line_string.coords() {
                     self.coords.push_coord(&coord);

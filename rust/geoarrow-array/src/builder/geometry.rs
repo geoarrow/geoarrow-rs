@@ -677,9 +677,6 @@ impl<'a> GeometryBuilder {
     /// We handle that by pushing nulls to the first non-empty child we find. If no underlying
     /// arrays are non-empty, we add to an internal counter instead. Once the first non-empty
     /// geometry is pushed, then we flush all the "deferred nulls" to that child.
-    ///
-    // TODO: test building an array of all nulls. Make sure we flush deferred nulls if we've never
-    // added any valid geometries.
     #[inline]
     pub fn push_null(&mut self) {
         // Iterate through each dimension, then iterate through each child type. If a child exists,

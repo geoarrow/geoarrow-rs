@@ -118,38 +118,36 @@ impl MultiPolygonBuilder {
         if let Some(polygon) = value {
             let exterior_ring = polygon.exterior();
             if exterior_ring.is_none() {
-                self.push_empty();
+                self.push_empty()?;
                 return Ok(());
             }
 
-            // Total number of polygons in this MultiPolygon
-            let num_polygons = 1;
-            self.geom_offsets.try_push_usize(num_polygons).unwrap();
+            if let Some(ext_ring) = polygon.exterior() {
+                // Total number of polygons in this MultiPolygon
+                let num_polygons = 1;
+                self.geom_offsets.try_push_usize(num_polygons)?;
 
-            // TODO: support empty polygons
-            let ext_ring = polygon.exterior().unwrap();
-            for coord in ext_ring.coords() {
-                self.coords.push_coord(&coord);
-            }
-
-            // Total number of rings in this Multipolygon
-            self.polygon_offsets
-                .try_push_usize(polygon.num_interiors() + 1)
-                .unwrap();
-
-            // Number of coords for each ring
-            self.ring_offsets
-                .try_push_usize(ext_ring.num_coords())
-                .unwrap();
-
-            for int_ring in polygon.interiors() {
-                self.ring_offsets
-                    .try_push_usize(int_ring.num_coords())
-                    .unwrap();
-
-                for coord in int_ring.coords() {
+                for coord in ext_ring.coords() {
                     self.coords.push_coord(&coord);
                 }
+
+                // Total number of rings in this Multipolygon
+                self.polygon_offsets
+                    .try_push_usize(polygon.num_interiors() + 1)?;
+
+                // Number of coords for each ring
+                self.ring_offsets.try_push_usize(ext_ring.num_coords())?;
+
+                for int_ring in polygon.interiors() {
+                    self.ring_offsets.try_push_usize(int_ring.num_coords())?;
+
+                    for coord in int_ring.coords() {
+                        self.coords.push_coord(&coord);
+                    }
+                }
+            } else {
+                let num_polygons = 0;
+                self.geom_offsets.try_push_usize(num_polygons)?;
             }
         } else {
             self.push_null();
@@ -183,18 +181,13 @@ impl MultiPolygonBuilder {
 
                 // Total number of rings in this Multipolygon
                 self.polygon_offsets
-                    .try_push_usize(polygon.num_interiors() + 1)
-                    .unwrap();
+                    .try_push_usize(polygon.num_interiors() + 1)?;
 
                 // Number of coords for each ring
-                self.ring_offsets
-                    .try_push_usize(ext_ring.num_coords())
-                    .unwrap();
+                self.ring_offsets.try_push_usize(ext_ring.num_coords())?;
 
                 for int_ring in polygon.interiors() {
-                    self.ring_offsets
-                        .try_push_usize(int_ring.num_coords())
-                        .unwrap();
+                    self.ring_offsets.try_push_usize(int_ring.num_coords())?;
 
                     for coord in int_ring.coords() {
                         self.coords.push_coord(&coord);
@@ -303,9 +296,10 @@ impl MultiPolygonBuilder {
     }
 
     #[inline]
-    pub(crate) fn push_empty(&mut self) {
-        self.geom_offsets.try_push_usize(0).unwrap();
+    pub(crate) fn push_empty(&mut self) -> GeoArrowResult<()> {
+        self.geom_offsets.try_push_usize(0)?;
         self.validity.append(true);
+        Ok(())
     }
 
     #[inline]
