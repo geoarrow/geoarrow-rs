@@ -3,6 +3,7 @@
 use std::ops::Add;
 
 use geo_traits::{GeometryTrait, GeometryType, PointTrait};
+use geoarrow_schema::Dimension;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 /// A counter for the buffer sizes of a [`PointArray`][crate::array::PointArray].
@@ -55,8 +56,8 @@ impl PointCapacity {
     }
 
     /// The number of bytes an array with this capacity would occupy.
-    pub fn num_bytes(&self) -> usize {
-        self.geom_capacity * 2 * 8
+    pub fn num_bytes(&self, dim: Dimension) -> usize {
+        self.geom_capacity * dim.size() * 8
     }
 }
 

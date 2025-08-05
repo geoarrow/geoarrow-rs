@@ -1,6 +1,7 @@
 use std::ops::Add;
 
 use geo_traits::{GeometryTrait, GeometryType, LineStringTrait};
+use geoarrow_schema::Dimension;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 use crate::util::GeometryTypeName;
@@ -103,10 +104,10 @@ impl LineStringCapacity {
     }
 
     /// The number of bytes an array with this capacity would occupy.
-    pub fn num_bytes(&self) -> usize {
+    pub fn num_bytes(&self, dim: Dimension) -> usize {
         let offsets_byte_width = 4;
         let num_offsets = self.geom_capacity;
-        (offsets_byte_width * num_offsets) + (self.coord_capacity * 2 * 8)
+        (offsets_byte_width * num_offsets) + (self.coord_capacity * dim.size() * 8)
     }
 }
 

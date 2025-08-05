@@ -4,6 +4,7 @@ use geo_traits::{
     GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
     MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait,
 };
+use geoarrow_schema::Dimension;
 use geoarrow_schema::error::GeoArrowResult;
 use wkt::WktNum;
 
@@ -145,10 +146,10 @@ impl GeometryCollectionCapacity {
     }
 
     /// The number of bytes an array with this capacity would occupy.
-    pub fn num_bytes(&self) -> usize {
+    pub fn num_bytes(&self, dim: Dimension) -> usize {
         let offsets_byte_width = 4;
         let num_offsets = self.geom_capacity;
-        (offsets_byte_width * num_offsets) + self.mixed_capacity.num_bytes()
+        (offsets_byte_width * num_offsets) + self.mixed_capacity.num_bytes(dim)
     }
 }
 
