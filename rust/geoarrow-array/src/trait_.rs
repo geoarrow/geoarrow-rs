@@ -630,7 +630,8 @@ mod test {
         for (list_size, dim) in test_cases.into_iter() {
             let array = FixedSizeListBuilder::new(Float64Builder::new(), list_size).finish();
             let t =
-                GeoArrowType::try_from(&Field::new("", array.data_type().clone(), true)).unwrap();
+                GeoArrowType::from_arrow_field(&Field::new("", array.data_type().clone(), true))
+                    .unwrap();
             assert_eq!(
                 t,
                 GeoArrowType::Point(
@@ -686,7 +687,8 @@ mod test {
         for (fields, builders, dim) in test_cases.into_iter() {
             let array = StructBuilder::new(fields, builders).finish();
             let t =
-                GeoArrowType::try_from(&Field::new("", array.data_type().clone(), true)).unwrap();
+                GeoArrowType::from_arrow_field(&Field::new("", array.data_type().clone(), true))
+                    .unwrap();
             assert_eq!(
                 t,
                 GeoArrowType::Point(

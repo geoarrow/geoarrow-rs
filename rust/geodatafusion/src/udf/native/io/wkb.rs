@@ -11,7 +11,7 @@ use datafusion::logical_expr::{
 use geoarrow_array::GeoArrowArray;
 use geoarrow_array::array::{LargeWkbArray, WkbArray, WkbViewArray, from_arrow_array};
 use geoarrow_array::cast::{from_wkb, to_wkb};
-use geoarrow_schema::{CoordType, GeoArrowType, GeometryType, WkbType};
+use geoarrow_schema::{CoordType, GeoArrowType, GeometryType, Metadata, WkbType};
 
 use crate::data_types::any_single_geometry_type_input;
 use crate::error::{GeoDataFusionError, GeoDataFusionResult};
@@ -56,9 +56,8 @@ impl ScalarUDFImpl for AsBinary {
 
     fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<Arc<Field>> {
         let input_field = &args.arg_fields[0];
-        let data_type =
-            GeoArrowType::try_from(input_field.as_ref()).map_err(GeoDataFusionError::GeoArrow)?;
-        let wkb_type = WkbType::new(data_type.metadata().clone());
+        let metadata = Arc::new(Metadata::try_from(input_field.as_ref()).unwrap_or_default());
+        let wkb_type = WkbType::new(metadata);
         Ok(Field::new(
             input_field.name(),
             DataType::Binary,
@@ -114,7 +113,7 @@ impl GeomFromWKB {
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> GeoDataFusionResult<ColumnarValue> {
         let array = &ColumnarValue::values_to_arrays(&args.args)?[0];
         let field = &args.arg_fields[0];
-        let to_type = GeoArrowType::try_from(args.return_field.as_ref())?;
+        let to_type = GeoArrowType::from_arrow_field(args.return_field.as_ref())?;
         let geom_arr = match field.data_type() {
             DataType::Binary => from_wkb(
                 &WkbArray::try_from((array.as_ref(), field.as_ref()))?,
@@ -155,10 +154,8 @@ impl ScalarUDFImpl for GeomFromWKB {
 
     fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<Arc<Field>> {
         let input_field = &args.arg_fields[0];
-        let data_type =
-            GeoArrowType::try_from(input_field.as_ref()).map_err(GeoDataFusionError::GeoArrow)?;
-        let geom_type =
-            GeometryType::new(data_type.metadata().clone()).with_coord_type(self.coord_type);
+        let metadata = Arc::new(Metadata::try_from(input_field.as_ref())?);
+        let geom_type = GeometryType::new(metadata).with_coord_type(self.coord_type);
         Ok(geom_type
             .to_field(input_field.name(), input_field.is_nullable())
             .into())

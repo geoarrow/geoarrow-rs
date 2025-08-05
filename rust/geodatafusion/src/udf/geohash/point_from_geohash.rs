@@ -13,7 +13,7 @@ use datafusion::logical_expr::{
 use geoarrow_array::GeoArrowArray;
 use geoarrow_array::array::PointArray;
 use geoarrow_array::builder::PointBuilder;
-use geoarrow_schema::{CoordType, Dimension, GeoArrowType, PointType};
+use geoarrow_schema::{CoordType, Dimension, Metadata, PointType};
 
 use crate::error::GeoDataFusionResult;
 
@@ -86,9 +86,8 @@ fn return_field_impl(
     args: ReturnFieldArgs,
     coord_type: CoordType,
 ) -> GeoDataFusionResult<FieldRef> {
-    let input_type = GeoArrowType::try_from(args.arg_fields[0].as_ref())?;
-    let output_type =
-        PointType::new(Dimension::XY, input_type.metadata().clone()).with_coord_type(coord_type);
+    let metadata = Arc::new(Metadata::try_from(args.arg_fields[0].as_ref()).unwrap_or_default());
+    let output_type = PointType::new(Dimension::XY, metadata).with_coord_type(coord_type);
     Ok(Arc::new(output_type.to_field("", true)))
 }
 
