@@ -44,7 +44,7 @@ impl FlatGeobufReaderOptions {
     /// Create a new FlatGeobuf reader options from a combined schema of properties and geometry.
     ///
     /// If there is no geometry field in the schema, it will not be read (see
-    /// [`Self::read_geometry`]).
+    /// [`Self::with_read_geometry`]).
     pub fn from_combined_schema(schema: SchemaRef) -> GeoArrowResult<Self> {
         let mut properties_schema = SchemaBuilder::new();
         let mut outer_geometry_type = None;
