@@ -9,7 +9,7 @@ use datafusion::logical_expr::{
 };
 use geoarrow_array::GeoArrowArray;
 use geoarrow_array::array::from_arrow_array;
-use geoarrow_schema::{BoxType, Dimension, GeoArrowType};
+use geoarrow_schema::{BoxType, Dimension, Metadata};
 
 use crate::data_types::any_single_geometry_type_input;
 use crate::error::GeoDataFusionResult;
@@ -75,8 +75,8 @@ impl ScalarUDFImpl for Box2D {
 }
 
 fn return_field_impl(args: ReturnFieldArgs) -> GeoDataFusionResult<FieldRef> {
-    let input_type = GeoArrowType::try_from(args.arg_fields[0].as_ref())?;
-    let output_type = BoxType::new(Dimension::XY, input_type.metadata().clone());
+    let metadata = Arc::new(Metadata::try_from(args.arg_fields[0].as_ref()).unwrap_or_default());
+    let output_type = BoxType::new(Dimension::XY, metadata);
     Ok(Arc::new(output_type.to_field("", true)))
 }
 

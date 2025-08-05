@@ -11,7 +11,7 @@ use datafusion::logical_expr::function::AccumulatorArgs;
 use datafusion::logical_expr::{Accumulator, AggregateUDFImpl, Signature};
 use datafusion::scalar::ScalarValue;
 use geoarrow_array::array::from_arrow_array;
-use geoarrow_schema::{BoxType, Dimension, GeoArrowType};
+use geoarrow_schema::{BoxType, Dimension, Metadata};
 
 use crate::data_types::any_single_geometry_type_input;
 use crate::error::GeoDataFusionResult;
@@ -64,8 +64,8 @@ impl AggregateUDFImpl for Extent {
 }
 
 fn return_field_impl(args: &[FieldRef]) -> GeoDataFusionResult<FieldRef> {
-    let input_type = GeoArrowType::try_from(args[0].as_ref())?;
-    let output_type = BoxType::new(Dimension::XY, input_type.metadata().clone());
+    let metadata = Arc::new(Metadata::try_from(args[0].as_ref()).unwrap_or_default());
+    let output_type = BoxType::new(Dimension::XY, metadata);
     Ok(Arc::new(output_type.to_field("", true)))
 }
 
