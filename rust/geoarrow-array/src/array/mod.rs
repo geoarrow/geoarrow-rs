@@ -50,7 +50,7 @@ pub fn from_arrow_array(
 ) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
     use GeoArrowType::*;
 
-    let result: Arc<dyn GeoArrowArray> = match GeoArrowType::try_from(field)? {
+    let result: Arc<dyn GeoArrowArray> = match GeoArrowType::from_arrow_field(field)? {
         Point(_) => Arc::new(PointArray::try_from((array, field))?),
         LineString(_) => Arc::new(LineStringArray::try_from((array, field))?),
         Polygon(_) => Arc::new(PolygonArray::try_from((array, field))?),

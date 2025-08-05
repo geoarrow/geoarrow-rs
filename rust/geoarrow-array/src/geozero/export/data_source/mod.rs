@@ -414,13 +414,8 @@ fn process_geometry_n<P: GeomProcessor>(
 fn geometry_columns(schema: &Schema) -> Vec<usize> {
     let mut geom_indices = vec![];
     for (field_idx, field) in schema.fields().iter().enumerate() {
-        // We first check that an extension type name is set and then check that we can coerce to a
-        // GeoArrowType so that we don't accept columns that are _compatible_ with geoarrow storage
-        // but aren't set as geoarrow extension types.
-        if let Some(_ext_name) = field.extension_type_name() {
-            if let Ok(_geoarrow_type) = GeoArrowType::try_from(field.as_ref()) {
-                geom_indices.push(field_idx);
-            }
+        if GeoArrowType::from_extension_field(field.as_ref()).is_ok() {
+            geom_indices.push(field_idx);
         }
     }
     geom_indices
