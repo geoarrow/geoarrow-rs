@@ -394,7 +394,7 @@ impl MixedGeometryArray {
 
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
-        self.buffer_lengths().num_bytes()
+        self.buffer_lengths().num_bytes(self.dim)
     }
 
     /// Slice this [`MixedGeometryArray`].

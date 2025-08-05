@@ -324,17 +324,34 @@ impl GeometryCapacity {
     pub fn num_bytes(&self) -> usize {
         let mut count = 0;
 
-        self.points.iter().for_each(|c| count += c * 2 * 8);
+        self.points
+            .iter()
+            .enumerate()
+            .for_each(|(idx, c)| count += c * Dimension::from_order(idx).unwrap().size() * 8);
         self.line_strings
             .iter()
-            .for_each(|c| count += c.num_bytes());
-        self.polygons.iter().for_each(|c| count += c.num_bytes());
-        self.mpoints.iter().for_each(|c| count += c.num_bytes());
+            .enumerate()
+            .for_each(|(idx, c)| count += c.num_bytes(Dimension::from_order(idx).unwrap()));
+        self.polygons
+            .iter()
+            .enumerate()
+            .for_each(|(idx, c)| count += c.num_bytes(Dimension::from_order(idx).unwrap()));
+        self.mpoints
+            .iter()
+            .enumerate()
+            .for_each(|(idx, c)| count += c.num_bytes(Dimension::from_order(idx).unwrap()));
         self.mline_strings
             .iter()
-            .for_each(|c| count += c.num_bytes());
-        self.mpolygons.iter().for_each(|c| count += c.num_bytes());
-        self.gcs.iter().for_each(|c| count += c.num_bytes());
+            .enumerate()
+            .for_each(|(idx, c)| count += c.num_bytes(Dimension::from_order(idx).unwrap()));
+        self.mpolygons
+            .iter()
+            .enumerate()
+            .for_each(|(idx, c)| count += c.num_bytes(Dimension::from_order(idx).unwrap()));
+        self.gcs
+            .iter()
+            .enumerate()
+            .for_each(|(idx, c)| count += c.num_bytes(Dimension::from_order(idx).unwrap()));
 
         count
     }
