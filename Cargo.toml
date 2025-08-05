@@ -41,8 +41,9 @@ async-stream = "0.3"
 async-trait = "0.1"
 bytes = "1.10.0"
 chrono = { version = "0.4.41", default-features = false }
-datafusion = { git = "https://github.com/alamb/datafusion", rev = "51e3640a1b5a3c29ac3640418c5a2aa4bbd240a8" }
-datafusion-datasource = { git = "https://github.com/alamb/datafusion", rev = "51e3640a1b5a3c29ac3640418c5a2aa4bbd240a8" }
+# Arrow 56
+datafusion = { git = "https://github.com/apache/datafusion", rev = "fa1f8c192dd531d3f2fca61885eafa3e9002f0dd" }
+datafusion-datasource = { git = "https://github.com/apache/datafusion", rev = "fa1f8c192dd531d3f2fca61885eafa3e9002f0dd" }
 flatgeobuf = { version = "5.0", default-features = false }
 futures = "0.3"
 geo = "0.30.0"
