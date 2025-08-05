@@ -32,7 +32,7 @@ use geoarrow_flatgeobuf::reader::{
     FlatGeobufHeaderExt, FlatGeobufReaderOptions, FlatGeobufRecordBatchIterator,
 };
 
-let path = "fixtures/flatgeobuf/countries.fgb";
+let path = "../../fixtures/flatgeobuf/countries.fgb";
 let filein = BufReader::new(File::open(path).unwrap());
 let fgb_reader = FgbReader::open(filein).unwrap();
 let fgb_header = fgb_reader.header();
