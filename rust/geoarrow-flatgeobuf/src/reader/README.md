@@ -87,7 +87,9 @@ use http_range_client::AsyncBufferedHttpRangeClient;
 use object_store::local::LocalFileSystem;
 
 # tokio_test::block_on(async {
-let store = Arc::new(LocalFileSystem::new_with_prefix(current_dir().unwrap()).unwrap());
+let store = Arc::new(
+    LocalFileSystem::new_with_prefix(current_dir().unwrap().parent().unwrap().parent().unwrap()).unwrap()
+);
 let location = "fixtures/flatgeobuf/countries.fgb".into();
 let object_store_wrapper = ObjectStoreWrapper::new(store, location);
 let async_client = AsyncBufferedHttpRangeClient::with(object_store_wrapper, "");
