@@ -1,4 +1,4 @@
-//! Read from [FlatGeobuf](https://flatgeobuf.org/) files.
+#![doc = include_str!("README.md")]
 
 #[cfg(feature = "async")]
 mod r#async;

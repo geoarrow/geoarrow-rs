@@ -331,7 +331,6 @@ impl FlatGeobufHeaderExt for Header<'_> {
     /// If the FlatGeobuf file header does not contain information about property columns, this
     /// will be `None`.
     fn properties_schema(&self, prefer_view_types: bool) -> Option<SchemaRef> {
-        dbg!(prefer_view_types);
         let columns = self.columns()?;
         let mut schema = SchemaBuilder::with_capacity(columns.len());
 
@@ -354,7 +353,6 @@ impl FlatGeobufHeaderExt for Header<'_> {
                     } else {
                         DataType::Utf8
                     };
-                    dbg!(&data_type);
                     Field::new(col.name(), data_type, col.nullable())
                 }
                 ColumnType::Json => {
