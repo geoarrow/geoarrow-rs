@@ -1740,6 +1740,7 @@ dependencies = [
  "indexmap 2.10.0",
  "object_store",
  "tokio",
+ "tokio-test",
  "wkt 0.14.0",
 ]
 

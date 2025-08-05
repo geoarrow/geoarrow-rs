@@ -18,7 +18,6 @@
 //! Execution plan for reading FlatGeobuf files
 
 use std::any::Any;
-use std::collections::HashSet;
 use std::sync::Arc;
 
 use arrow_schema::SchemaRef;
@@ -29,18 +28,15 @@ use datafusion::datasource::physical_plan::{
 };
 use datafusion::error::{DataFusionError, Result};
 use datafusion::physical_plan::metrics::ExecutionPlanMetricsSet;
-use flatgeobuf::HttpFgbReader;
 use futures::StreamExt;
-use geoarrow_flatgeobuf::reader::object_store::ObjectStoreWrapper;
 use geoarrow_flatgeobuf::reader::{FlatGeobufReaderOptions, FlatGeobufRecordBatchStream};
-use geoarrow_schema::{CoordType, GeoArrowType};
-use http_range_client::AsyncBufferedHttpRangeClient;
 use object_store::ObjectStore;
+
+use crate::utils::open_flatgeobuf_reader;
 
 #[derive(Debug, Clone, Default)]
 pub struct FlatGeobufSource {
     batch_size: Option<usize>,
-    coord_type: CoordType,
     file_schema: Option<SchemaRef>,
     projection: Option<Vec<usize>>,
     metrics: ExecutionPlanMetricsSet,
@@ -51,7 +47,6 @@ impl FlatGeobufSource {
     pub fn new() -> Self {
         Self {
             batch_size: None,
-            coord_type: CoordType::default(),
             file_schema: None,
             projection: None,
             metrics: ExecutionPlanMetricsSet::new(),
@@ -137,39 +132,22 @@ impl FlatGeobufOpener {
 impl FileOpener for FlatGeobufOpener {
     fn open(&self, file_meta: FileMeta, _file: PartitionedFile) -> Result<FileOpenFuture> {
         let store = Arc::clone(&self.object_store);
-
-        let mut options = FlatGeobufReaderOptions {
-            batch_size: self.config.batch_size.unwrap_or(1024),
-            coord_type: self.config.coord_type,
-            ..Default::default()
-        };
-
-        let file_schema = self.config.file_schema.as_ref().unwrap();
-        if let Some(projection) = &self.config.projection {
-            options.read_geometry = false;
-            let mut columns = HashSet::new();
-            for projection_idx in projection {
-                let field = file_schema.field(*projection_idx);
-                if field
-                    .extension_type_name()
-                    .is_some_and(|name| name.starts_with("geoarrow") || name.starts_with("ogc"))
-                    && GeoArrowType::try_from(field).is_ok()
-                {
-                    options.read_geometry = true;
-                } else {
-                    columns.insert(field.name().clone());
-                }
-            }
-
-            options.columns = Some(columns);
-        }
+        let config = self.config.clone();
 
         Ok(Box::pin(async move {
-            let object_store_wrapper = ObjectStoreWrapper::new(store, file_meta.location().clone());
-            let async_client = AsyncBufferedHttpRangeClient::with(object_store_wrapper, "");
-            let fgb_reader = HttpFgbReader::new(async_client)
-                .await
-                .map_err(|err| DataFusionError::External(Box::new(err)))?;
+            let mut file_schema = config
+                .file_schema
+                .clone()
+                .expect("Expected file schema to be set");
+            if let Some(projection) = config.projection.clone() {
+                file_schema = Arc::new(file_schema.project(&projection)?);
+            }
+
+            let options = FlatGeobufReaderOptions::from_combined_schema(file_schema)
+                .map_err(|err| DataFusionError::External(Box::new(err)))?
+                .with_batch_size(config.batch_size.unwrap_or(1024));
+
+            let fgb_reader = open_flatgeobuf_reader(store, file_meta.location().clone()).await?;
             let selection = fgb_reader
                 .select_all()
                 .await

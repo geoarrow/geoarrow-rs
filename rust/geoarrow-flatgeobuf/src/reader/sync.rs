@@ -29,7 +29,7 @@ use geoarrow_schema::GeoArrowType;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geozero::FeatureProperties;
 
-use crate::reader::common::{FlatGeobufReaderOptions, parse_header};
+use crate::reader::common::FlatGeobufReaderOptions;
 use crate::reader::table_builder::{GeoArrowRecordBatchBuilder, GeoArrowRecordBatchBuilderOptions};
 
 /// An iterator over record batches from a FlatGeobuf file.
@@ -40,7 +40,7 @@ pub struct FlatGeobufRecordBatchIterator<R: Read, S> {
     geometry_type: GeoArrowType,
     batch_size: usize,
     properties_schema: SchemaRef,
-    num_rows_remaining: usize,
+    num_rows_remaining: Option<usize>,
     read_geometry: bool,
 }
 
@@ -51,21 +51,15 @@ impl<R: Read, S> FlatGeobufRecordBatchIterator<R, S> {
         selection: FeatureIter<R, S>,
         options: FlatGeobufReaderOptions,
     ) -> GeoArrowResult<Self> {
-        let header = parse_header(
-            selection.header(),
-            options.coord_type,
-            options.prefer_view_types,
-            options.columns.as_ref(),
-        )?;
-        let num_rows_remaining = header.features_count().try_into().unwrap();
+        let header = selection.header();
+        options.validate_against_header(&header)?;
+
+        let num_rows_remaining = selection.features_count();
         Ok(Self {
             selection,
-            geometry_type: header.geometry_type().clone(),
+            geometry_type: options.geometry_type,
             batch_size: options.batch_size,
-            properties_schema: header
-                .properties_schema()
-                .expect("todo: handle unknown properties schema")
-                .clone(),
+            properties_schema: options.properties_schema,
             num_rows_remaining,
             read_geometry: options.read_geometry,
         })
@@ -86,7 +80,9 @@ impl<R: Read, S> FlatGeobufRecordBatchIterator<R, S> {
 impl<R: Read> FlatGeobufRecordBatchIterator<R, NotSeekable> {
     fn process_batch(&mut self) -> GeoArrowResult<Option<RecordBatch>> {
         let options = GeoArrowRecordBatchBuilderOptions {
-            batch_size: Some(self.num_rows_remaining.min(self.batch_size)),
+            batch_size: self
+                .num_rows_remaining
+                .map(|num_rows_remaining| num_rows_remaining.min(self.batch_size)),
             error_on_extra_columns: false,
             read_geometry: self.read_geometry,
         };
@@ -148,7 +144,9 @@ impl<R: Read> RecordBatchReader for FlatGeobufRecordBatchIterator<R, NotSeekable
 impl<R: Read + Seek> FlatGeobufRecordBatchIterator<R, Seekable> {
     fn process_batch(&mut self) -> GeoArrowResult<Option<RecordBatch>> {
         let options = GeoArrowRecordBatchBuilderOptions {
-            batch_size: Some(self.num_rows_remaining.min(self.batch_size)),
+            batch_size: self
+                .num_rows_remaining
+                .map(|num_rows_remaining| num_rows_remaining.min(self.batch_size)),
             error_on_extra_columns: false,
             read_geometry: self.read_geometry,
         };
@@ -215,14 +213,23 @@ mod test {
     use flatgeobuf::FgbReader;
 
     use super::*;
+    use crate::reader::common::FlatGeobufHeaderExt;
 
     #[test]
     fn test_countries() {
         let filein = BufReader::new(File::open("../../fixtures/flatgeobuf/countries.fgb").unwrap());
         let fgb_reader = FgbReader::open(filein).unwrap();
+        let fgb_header = fgb_reader.header();
+
+        let properties_schema = fgb_header
+            .properties_schema(true)
+            .expect("file contains column information in metadata.");
+        let geometry_type = fgb_header.geoarrow_type(Default::default()).unwrap();
         let selection = fgb_reader.select_all_seq().unwrap();
+
+        let options = FlatGeobufReaderOptions::new(properties_schema, geometry_type);
         let record_batch_reader =
-            FlatGeobufRecordBatchIterator::try_new(selection, Default::default()).unwrap();
+            FlatGeobufRecordBatchIterator::try_new(selection, options).unwrap();
         let _batches = record_batch_reader.collect::<Result<Vec<_>, _>>().unwrap();
         // println!("{}", pretty_format_batches(&_batches).unwrap());
         // print!(format!(pretty_format_batches(&batches).unwrap()));
@@ -235,9 +242,17 @@ mod test {
             File::open("../../fixtures/flatgeobuf/nz-building-outlines-small.fgb").unwrap(),
         );
         let fgb_reader = FgbReader::open(filein).unwrap();
+        let fgb_header = fgb_reader.header();
+
+        let properties_schema = fgb_header
+            .properties_schema(true)
+            .expect("file contains column information in metadata.");
+        let geometry_type = fgb_header.geoarrow_type(Default::default()).unwrap();
+
+        let options = FlatGeobufReaderOptions::new(properties_schema, geometry_type);
         let selection = fgb_reader.select_all().unwrap();
         let record_batch_reader =
-            FlatGeobufRecordBatchIterator::try_new(selection, Default::default()).unwrap();
+            FlatGeobufRecordBatchIterator::try_new(selection, options).unwrap();
         let _batches = record_batch_reader.collect::<Result<Vec<_>, _>>().unwrap();
     }
 
@@ -245,9 +260,17 @@ mod test {
     fn test_poly() {
         let filein = BufReader::new(File::open("../../fixtures/flatgeobuf/poly00.fgb").unwrap());
         let fgb_reader = FgbReader::open(filein).unwrap();
+        let fgb_header = fgb_reader.header();
+
+        let properties_schema = fgb_header
+            .properties_schema(true)
+            .expect("file contains column information in metadata.");
+        let geometry_type = fgb_header.geoarrow_type(Default::default()).unwrap();
+
+        let options = FlatGeobufReaderOptions::new(properties_schema, geometry_type);
         let selection = fgb_reader.select_all().unwrap();
         let record_batch_reader =
-            FlatGeobufRecordBatchIterator::try_new(selection, Default::default()).unwrap();
+            FlatGeobufRecordBatchIterator::try_new(selection, options).unwrap();
 
         let schema = record_batch_reader.schema();
         let field = schema.field_with_name("geometry").unwrap();
@@ -277,9 +300,17 @@ mod test {
         let filein =
             BufReader::new(File::open("../../fixtures/flatgeobuf/alldatatypes.fgb").unwrap());
         let fgb_reader = FgbReader::open(filein).unwrap();
+        let fgb_header = fgb_reader.header();
+
+        let properties_schema = fgb_header
+            .properties_schema(true)
+            .expect("file contains column information in metadata.");
+        let geometry_type = fgb_header.geoarrow_type(Default::default()).unwrap();
+
+        let options = FlatGeobufReaderOptions::new(properties_schema, geometry_type);
         let selection = fgb_reader.select_all_seq().unwrap();
         let record_batch_reader =
-            FlatGeobufRecordBatchIterator::try_new(selection, Default::default()).unwrap();
+            FlatGeobufRecordBatchIterator::try_new(selection, options).unwrap();
 
         let schema = record_batch_reader.schema();
         let field = schema.field_with_name("geometry").unwrap();

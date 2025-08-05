@@ -2,6 +2,7 @@
 
 pub mod file_format;
 pub mod source;
+mod utils;
 
 pub use file_format::{FlatGeobufFileFactory, FlatGeobufFormat, FlatGeobufFormatFactory};
 

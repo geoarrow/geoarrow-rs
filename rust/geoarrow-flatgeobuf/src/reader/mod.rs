@@ -1,4 +1,4 @@
-//! Read from [FlatGeobuf](https://flatgeobuf.org/) files.
+#![doc = include_str!("README.md")]
 
 #[cfg(feature = "async")]
 mod r#async;
@@ -11,5 +11,5 @@ mod table_builder;
 
 #[cfg(feature = "async")]
 pub use r#async::FlatGeobufRecordBatchStream;
-pub use common::{Envelope, FlatGeobufReaderOptions, HeaderInfo, parse_header};
+pub use common::{FlatGeobufHeaderExt, FlatGeobufReaderOptions};
 pub use sync::FlatGeobufRecordBatchIterator;

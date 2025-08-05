@@ -27,12 +27,12 @@ use indexmap::IndexMap;
 /// This can be used to infer a joint schema for multiple FlatGeobuf files by passing successive
 /// files' data into the `process` method.
 #[derive(Debug, Clone)]
-pub struct FlatGeobufSchemaBuilder {
+pub struct FlatGeobufSchemaScanner {
     fields: IndexMap<String, FieldRef>,
     prefer_view_types: bool,
 }
 
-impl FlatGeobufSchemaBuilder {
+impl FlatGeobufSchemaScanner {
     /// Create a new FlatGeobuf schema builder.
     pub fn new(prefer_view_types: bool) -> Self {
         Self {
@@ -42,13 +42,13 @@ impl FlatGeobufSchemaBuilder {
     }
 }
 
-impl Default for FlatGeobufSchemaBuilder {
+impl Default for FlatGeobufSchemaScanner {
     fn default() -> Self {
         Self::new(true)
     }
 }
 
-impl FlatGeobufSchemaBuilder {
+impl FlatGeobufSchemaScanner {
     /// Process the properties of a FlatGeobuf feature to build the schema.
     pub fn process<R: Read + Seek>(
         &mut self,
@@ -124,14 +124,14 @@ impl FlatGeobufSchemaBuilder {
     }
 }
 
-impl FlatGeobufSchemaBuilder {
+impl FlatGeobufSchemaScanner {
     /// Finish the schema building process and return the resulting schema.
     pub fn finish(self) -> SchemaRef {
         Arc::new(Schema::new(self.fields.into_values().collect::<Vec<_>>()))
     }
 }
 
-impl PropertyProcessor for FlatGeobufSchemaBuilder {
+impl PropertyProcessor for FlatGeobufSchemaScanner {
     fn property(
         &mut self,
         _idx: usize,
