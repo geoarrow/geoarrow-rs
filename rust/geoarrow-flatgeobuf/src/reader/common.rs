@@ -41,6 +41,39 @@ impl FlatGeobufReaderOptions {
         }
     }
 
+    /// Create a new FlatGeobuf reader options from a combined schema of properties and geometry.
+    ///
+    /// If there is no geometry field in the schema, it will not be read (see
+    /// [`Self::read_geometry`]).
+    pub fn from_combined_schema(schema: SchemaRef) -> GeoArrowResult<Self> {
+        let mut properties_schema = SchemaBuilder::new();
+        let mut outer_geometry_type = None;
+
+        for field in schema.fields() {
+            if let Ok(_geometry_type) = GeoArrowType::from_extension_field(field) {
+                if outer_geometry_type.is_some() {
+                    return Err(GeoArrowError::FlatGeobuf(
+                        "Multiple geometry fields found in schema".to_string(),
+                    ));
+                }
+                outer_geometry_type = Some(_geometry_type);
+            } else {
+                properties_schema.push(field.clone());
+            }
+        }
+
+        let properties_schema = Arc::new(properties_schema.finish());
+        if let Some(outer_geometry_type) = outer_geometry_type {
+            Ok(Self::new(properties_schema, outer_geometry_type))
+        } else {
+            Ok(Self::new(
+                properties_schema,
+                GeoArrowType::Geometry(Default::default()),
+            )
+            .with_read_geometry(false))
+        }
+    }
+
     /// Set the batch size.
     pub fn with_batch_size(mut self, batch_size: usize) -> Self {
         self.batch_size = batch_size;
@@ -298,6 +331,7 @@ impl FlatGeobufHeaderExt for Header<'_> {
     /// If the FlatGeobuf file header does not contain information about property columns, this
     /// will be `None`.
     fn properties_schema(&self, prefer_view_types: bool) -> Option<SchemaRef> {
+        dbg!(prefer_view_types);
         let columns = self.columns()?;
         let mut schema = SchemaBuilder::with_capacity(columns.len());
 
@@ -320,6 +354,7 @@ impl FlatGeobufHeaderExt for Header<'_> {
                     } else {
                         DataType::Utf8
                     };
+                    dbg!(&data_type);
                     Field::new(col.name(), data_type, col.nullable())
                 }
                 ColumnType::Json => {

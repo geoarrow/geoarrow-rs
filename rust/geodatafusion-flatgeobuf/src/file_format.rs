@@ -74,11 +74,21 @@ impl GetExt for FlatGeobufFormatFactory {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct FlatGeobufFormat {
     coord_type: CoordType,
     prefer_view_types: bool,
     max_read_records: Option<usize>,
+}
+
+impl Default for FlatGeobufFormat {
+    fn default() -> Self {
+        Self {
+            coord_type: CoordType::default(),
+            prefer_view_types: true,
+            max_read_records: Some(1000),
+        }
+    }
 }
 
 /// FlatGeobuf allows for **but does not require** schemas to exist in the file metadata.
@@ -184,7 +194,6 @@ impl FileFormat for FlatGeobufFormat {
         let conf_builder = FileScanConfigBuilder::from(conf);
         let source = Arc::new(FlatGeobufSource::new());
         let config = conf_builder.with_source(source).build();
-        dbg!(&config);
         Ok(DataSourceExec::from_data_source(config))
     }
 
