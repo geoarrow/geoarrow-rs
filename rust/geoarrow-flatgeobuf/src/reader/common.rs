@@ -45,6 +45,10 @@ impl FlatGeobufReaderOptions {
     ///
     /// If there is no geometry field in the schema, it will not be read (see
     /// [`Self::with_read_geometry`]).
+    ///
+    /// Note that the name of the geometry field is not currently tracked. The geometry field in
+    /// the output schema will always be called `geometry`. File a bug if you need to preserve the
+    /// original name.
     pub fn from_combined_schema(schema: SchemaRef) -> GeoArrowResult<Self> {
         let mut properties_schema = SchemaBuilder::new();
         let mut outer_geometry_type = None;
