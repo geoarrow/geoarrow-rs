@@ -22,7 +22,7 @@ use pyo3_geoarrow::{PyCoordType, PyprojCRSTransform};
 
 #[pyfunction]
 #[allow(clippy::too_many_arguments)]
-#[pyo3(signature = (path, *, store=None, batch_size=65536, bbox=None, coord_type=None, prefer_view_types=true, max_read_records=Some(1000), read_geometry=true))]
+#[pyo3(signature = (path, *, store=None, batch_size=65536, bbox=None, coord_type=None, use_view_types=true, max_scan_records=Some(1000), read_geometry=true))]
 pub fn read_flatgeobuf(
     py: Python,
     path: Bound<PyAny>,
@@ -30,8 +30,8 @@ pub fn read_flatgeobuf(
     batch_size: usize,
     bbox: Option<(f64, f64, f64, f64)>,
     coord_type: Option<PyCoordType>,
-    prefer_view_types: bool,
-    max_read_records: Option<usize>,
+    use_view_types: bool,
+    max_scan_records: Option<usize>,
     read_geometry: bool,
 ) -> PyGeoArrowResult<Arro3Table> {
     let reader = construct_reader(path, store)?;
@@ -57,20 +57,19 @@ pub fn read_flatgeobuf(
                 let fgb_reader = HttpFgbReader::new(async_client).await?;
                 let fgb_header = fgb_reader.header();
 
-                let properties_schema = if let Some(properties_schema) =
-                    fgb_header.properties_schema(prefer_view_types)
-                {
-                    properties_schema
-                } else {
-                    let async_scan_client =
-                        AsyncBufferedHttpRangeClient::with(object_store_wrapper, "");
-                    let fgb_reader_scan = HttpFgbReader::new(async_scan_client).await?;
-                    let mut scanner = FlatGeobufSchemaScanner::new(prefer_view_types);
-                    scanner
-                        .process_async(fgb_reader_scan.select_all().await?, max_read_records)
-                        .await?;
-                    scanner.finish()
-                };
+                let properties_schema =
+                    if let Some(properties_schema) = fgb_header.properties_schema(use_view_types) {
+                        properties_schema
+                    } else {
+                        let async_scan_client =
+                            AsyncBufferedHttpRangeClient::with(object_store_wrapper, "");
+                        let fgb_reader_scan = HttpFgbReader::new(async_scan_client).await?;
+                        let mut scanner = FlatGeobufSchemaScanner::new(use_view_types);
+                        scanner
+                            .process_async(fgb_reader_scan.select_all().await?, max_scan_records)
+                            .await?;
+                        scanner.finish()
+                    };
 
                 let geometry_type = fgb_header.geoarrow_type(coord_type)?;
                 let selection = if let Some(bbox) = bbox {
@@ -97,15 +96,15 @@ pub fn read_flatgeobuf(
             let fgb_header = fgb_reader.header();
 
             let properties_schema =
-                if let Some(properties_schema) = fgb_header.properties_schema(prefer_view_types) {
+                if let Some(properties_schema) = fgb_header.properties_schema(use_view_types) {
                     properties_schema
                 } else {
                     // try_clone doesn't fully clone the file handle. We need to seek back to the
                     // original position after reading the schema.
                     let pos = sync_reader.stream_position()?;
                     let fgb_reader_scan = FgbReader::open(sync_reader.try_clone()?)?;
-                    let mut scanner = FlatGeobufSchemaScanner::new(prefer_view_types);
-                    scanner.process(fgb_reader_scan.select_all()?, max_read_records)?;
+                    let mut scanner = FlatGeobufSchemaScanner::new(use_view_types);
+                    scanner.process(fgb_reader_scan.select_all()?, max_scan_records)?;
 
                     sync_reader.seek(SeekFrom::Start(pos))?;
                     scanner.finish()

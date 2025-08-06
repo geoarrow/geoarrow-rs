@@ -46,9 +46,9 @@ let properties_schema = if let Some(properties_schema) = fgb_header.properties_s
     let fgb_reader_scan = FgbReader::open(filein_for_scan).unwrap();
 
     let mut scanner = FlatGeobufSchemaScanner::new(true);
-    let max_read_records = Some(1000);
+    let max_scan_records = Some(1000);
     scanner
-        .process(fgb_reader_scan.select_all().unwrap(), max_read_records)
+        .process(fgb_reader_scan.select_all().unwrap(), max_scan_records)
         .unwrap();
     scanner.finish()
 };

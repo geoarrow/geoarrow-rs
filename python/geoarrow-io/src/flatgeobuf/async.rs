@@ -18,7 +18,7 @@ use pyo3_geoarrow::PyCoordType;
 
 #[pyfunction]
 #[allow(clippy::too_many_arguments)]
-#[pyo3(signature = (path, *, store=None, batch_size=65536, bbox=None, coord_type=None, prefer_view_types=true, max_read_records=Some(1000), read_geometry=true))]
+#[pyo3(signature = (path, *, store=None, batch_size=65536, bbox=None, coord_type=None, use_view_types=true, max_scan_records=Some(1000), read_geometry=true))]
 pub fn read_flatgeobuf_async<'py>(
     py: Python<'py>,
     path: Bound<'py, PyAny>,
@@ -26,8 +26,8 @@ pub fn read_flatgeobuf_async<'py>(
     batch_size: usize,
     bbox: Option<(f64, f64, f64, f64)>,
     coord_type: Option<PyCoordType>,
-    prefer_view_types: bool,
-    max_read_records: Option<usize>,
+    use_view_types: bool,
+    max_scan_records: Option<usize>,
     read_geometry: bool,
 ) -> PyResult<Bound<'py, PyAny>> {
     let async_reader = construct_async_reader(path, store)?;
@@ -38,8 +38,8 @@ pub fn read_flatgeobuf_async<'py>(
             batch_size,
             bbox,
             coord_type,
-            prefer_view_types,
-            max_read_records,
+            use_view_types,
+            max_scan_records,
             read_geometry,
         )
         .await?)
@@ -51,8 +51,8 @@ async fn read_flatgeobuf_async_inner(
     batch_size: usize,
     bbox: Option<(f64, f64, f64, f64)>,
     coord_type: CoordType,
-    prefer_view_types: bool,
-    max_read_records: Option<usize>,
+    use_view_types: bool,
+    max_scan_records: Option<usize>,
     read_geometry: bool,
 ) -> PyGeoArrowResult<Arro3Table> {
     let object_store_wrapper = ObjectStoreWrapper::new(async_reader.store, async_reader.path);
@@ -61,14 +61,14 @@ async fn read_flatgeobuf_async_inner(
     let fgb_header = fgb_reader.header();
 
     let properties_schema =
-        if let Some(properties_schema) = fgb_header.properties_schema(prefer_view_types) {
+        if let Some(properties_schema) = fgb_header.properties_schema(use_view_types) {
             properties_schema
         } else {
             let async_scan_client = AsyncBufferedHttpRangeClient::with(object_store_wrapper, "");
             let fgb_reader_scan = HttpFgbReader::new(async_scan_client).await?;
-            let mut scanner = FlatGeobufSchemaScanner::new(prefer_view_types);
+            let mut scanner = FlatGeobufSchemaScanner::new(use_view_types);
             scanner
-                .process_async(fgb_reader_scan.select_all().await?, max_read_records)
+                .process_async(fgb_reader_scan.select_all().await?, max_scan_records)
                 .await?;
             scanner.finish()
         };

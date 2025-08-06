@@ -24,20 +24,30 @@ use crate::source::FlatGeobufSource;
 use crate::utils::open_flatgeobuf_reader;
 
 /// Factory used to create [`FlatGeobufFormat`]
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct FlatGeobufFormatFactory {
     coord_type: CoordType,
-    prefer_view_types: bool,
-    max_read_records: Option<usize>,
+    use_view_types: bool,
+    max_scan_records: Option<usize>,
 }
 
 impl FlatGeobufFormatFactory {
     /// Creates an instance of [`FlatGeobufFormatFactory`]
-    pub fn new() -> Self {
+    pub fn new(coord_type: CoordType, use_view_types: bool) -> Self {
+        Self {
+            coord_type,
+            use_view_types,
+            max_scan_records: Some(1000),
+        }
+    }
+}
+
+impl Default for FlatGeobufFormatFactory {
+    fn default() -> Self {
         Self {
             coord_type: CoordType::default(),
-            prefer_view_types: true,
-            max_read_records: Some(1000),
+            use_view_types: true,
+            max_scan_records: Some(1000),
         }
     }
 }
@@ -50,16 +60,16 @@ impl FileFormatFactory for FlatGeobufFormatFactory {
     ) -> Result<Arc<dyn FileFormat>> {
         Ok(Arc::new(FlatGeobufFormat {
             coord_type: self.coord_type,
-            prefer_view_types: self.prefer_view_types,
-            max_read_records: self.max_read_records,
+            use_view_types: self.use_view_types,
+            max_scan_records: self.max_scan_records,
         }))
     }
 
     fn default(&self) -> Arc<dyn FileFormat> {
         Arc::new(FlatGeobufFormat {
             coord_type: self.coord_type,
-            prefer_view_types: self.prefer_view_types,
-            max_read_records: self.max_read_records,
+            use_view_types: self.use_view_types,
+            max_scan_records: self.max_scan_records,
         })
     }
 
@@ -77,16 +87,17 @@ impl GetExt for FlatGeobufFormatFactory {
 #[derive(Debug)]
 pub struct FlatGeobufFormat {
     coord_type: CoordType,
-    prefer_view_types: bool,
-    max_read_records: Option<usize>,
+    use_view_types: bool,
+    max_scan_records: Option<usize>,
 }
 
 impl Default for FlatGeobufFormat {
     fn default() -> Self {
+        dbg!("default impl on FlatGeobufFormat");
         Self {
             coord_type: CoordType::default(),
-            prefer_view_types: true,
-            max_read_records: Some(1000),
+            use_view_types: true,
+            max_scan_records: Some(1000),
         }
     }
 }
@@ -98,25 +109,25 @@ async fn infer_flatgeobuf_schema(
     store: Arc<dyn ObjectStore>,
     location: Path,
     coord_type: CoordType,
-    prefer_view_types: bool,
-    max_read_records: Option<usize>,
+    use_view_types: bool,
+    max_scan_records: Option<usize>,
 ) -> Result<(SchemaRef, GeoArrowType)> {
     let reader = open_flatgeobuf_reader(store, location).await?;
     let header = reader.header();
     let geometry_type = header
         .geoarrow_type(coord_type)
         .map_err(|err| DataFusionError::External(Box::new(err)))?;
-    if let Some(schema) = reader.header().properties_schema(prefer_view_types) {
+    if let Some(schema) = reader.header().properties_schema(use_view_types) {
         Ok((schema, geometry_type))
     } else {
         // Scan to infer schema
-        let mut schema_builder = FlatGeobufSchemaScanner::new(prefer_view_types);
+        let mut schema_builder = FlatGeobufSchemaScanner::new(use_view_types);
         let selection = reader
             .select_all()
             .await
             .map_err(|err| DataFusionError::External(Box::new(err)))?;
         schema_builder
-            .process_async(selection, max_read_records)
+            .process_async(selection, max_scan_records)
             .await
             .map_err(|err| DataFusionError::External(Box::new(err)))?;
         Ok((schema_builder.finish(), geometry_type))
@@ -130,7 +141,7 @@ impl FileFormat for FlatGeobufFormat {
     }
 
     fn get_ext(&self) -> String {
-        FlatGeobufFormatFactory::new().get_ext()
+        FlatGeobufFormatFactory::new(Default::default(), Default::default()).get_ext()
     }
 
     fn get_ext_with_compression(
@@ -154,8 +165,8 @@ impl FileFormat for FlatGeobufFormat {
                 store.clone(),
                 object.location.clone(),
                 self.coord_type,
-                self.prefer_view_types,
-                self.max_read_records,
+                self.use_view_types,
+                self.max_scan_records,
             )
             .await?;
 
@@ -214,9 +225,9 @@ pub struct FlatGeobufFileFactory {
 }
 
 impl FlatGeobufFileFactory {
-    pub fn new() -> Self {
+    pub fn new(coord_type: CoordType, use_view_types: bool) -> Self {
         Self {
-            file_factory: FlatGeobufFormatFactory::new(),
+            file_factory: FlatGeobufFormatFactory::new(coord_type, use_view_types),
         }
     }
 }

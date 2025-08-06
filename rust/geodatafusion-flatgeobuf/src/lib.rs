@@ -19,13 +19,14 @@ mod tests {
     use datafusion::prelude::SessionContext;
     use geoarrow_array::GeoArrowArrayAccessor;
     use geoarrow_array::array::MultiPolygonArray;
+    use geoarrow_schema::CoordType;
     use geodatafusion::udf::geo::processing::Centroid;
 
     use super::*;
 
     #[tokio::test]
     async fn test_flatgeobuf_format() {
-        let file_format = Arc::new(FlatGeobufFileFactory::new());
+        let file_format = Arc::new(FlatGeobufFileFactory::new(CoordType::default(), true));
         let state = SessionStateBuilder::new()
             .with_file_formats(vec![file_format])
             .build();
@@ -45,8 +46,9 @@ mod tests {
         let config = ListingTableConfig::new(
             ListingTableUrl::parse("https://flatgeobuf.org/test/data/countries.fgb").unwrap(),
         )
-        .with_listing_options(ListingOptions::new(Arc::new(FlatGeobufFormat::default())))
-        .infer_schema(&ctx.state())
+        // .with_listing_options(ListingOptions::new(Arc::new(FlatGeobufFormat::default())))
+        .infer(&ctx.state())
+        // .infer_schema(&ctx.state())
         .await
         .unwrap();
 
@@ -69,7 +71,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_column_projection_with_geometry() {
-        let file_format = Arc::new(FlatGeobufFileFactory::new());
+        let file_format = Arc::new(FlatGeobufFileFactory::default());
         let state = SessionStateBuilder::new()
             .with_file_formats(vec![file_format])
             .build();
@@ -120,7 +122,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_column_projection_without_geometry() {
-        let file_format = Arc::new(FlatGeobufFileFactory::new());
+        let file_format = Arc::new(FlatGeobufFileFactory::default());
         let state = SessionStateBuilder::new()
             .with_file_formats(vec![file_format])
             .build();
