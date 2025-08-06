@@ -1085,9 +1085,12 @@ dependencies = [
 name = "geoarrow-rust-core"
 version = "0.4.1"
 dependencies = [
+ "arrow-array",
+ "geo-traits",
  "geoarrow-array",
  "geoarrow-schema",
  "pyo3",
+ "pyo3-arrow 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "pyo3-geoarrow",
 ]
 

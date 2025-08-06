@@ -2,6 +2,7 @@
 
 mod constructors;
 mod interop;
+mod operations;
 // pub mod ffi;
 // pub mod table;
 
@@ -109,6 +110,12 @@ fn _rust(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(crate::interop::to_wkb, m)?)?;
     m.add_function(wrap_pyfunction!(crate::interop::from_wkt, m)?)?;
     m.add_function(wrap_pyfunction!(crate::interop::to_wkt, m)?)?;
+
+    // Operations
+    m.add_function(wrap_pyfunction!(
+        crate::operations::type_id::get_type_id,
+        m
+    )?)?;
 
     // Exceptions
     // create_exception!(m, GeoArrowException, pyo3::exceptions::PyException);
