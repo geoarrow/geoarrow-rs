@@ -73,10 +73,7 @@ fn _io(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<crate::parquet::PyGeoParquetWriter>()?;
 
     // m.add_function(wrap_pyfunction!(crate::csv::write_csv, m)?)?;
-    // m.add_function(wrap_pyfunction!(
-    //     crate::flatgeobuf::write_flatgeobuf,
-    //     m
-    // )?)?;
+    m.add_function(wrap_pyfunction!(crate::flatgeobuf::write_flatgeobuf, m)?)?;
     // m.add_function(wrap_pyfunction!(crate::geojson::write_geojson, m)?)?;
     // m.add_function(wrap_pyfunction!(
     //     crate::geojson_lines::write_geojson_lines,
