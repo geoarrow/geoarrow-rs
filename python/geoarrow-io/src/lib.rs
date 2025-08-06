@@ -49,10 +49,10 @@ fn _io(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
         m.add_class::<crate::parquet::GeoParquetFile>()?;
         m.add_class::<crate::parquet::GeoParquetDataset>()?;
 
-        // m.add_function(wrap_pyfunction!(
-        //     crate::flatgeobuf::read_flatgeobuf_async,
-        //     m
-        // )?)?;
+        m.add_function(wrap_pyfunction!(
+            crate::flatgeobuf::read_flatgeobuf_async,
+            m
+        )?)?;
         m.add_function(wrap_pyfunction!(crate::parquet::read_parquet_async, m)?)?;
 
         // m.add_function(wrap_pyfunction!(crate::postgis::read_postgis, m)?)?;
