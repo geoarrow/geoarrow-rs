@@ -6,14 +6,19 @@ from typing import BinaryIO, Optional, Tuple, Union
 from arro3.core import Table
 from arro3.core.types import ArrowStreamExportable
 from geoarrow.rust.core.enums import CoordType
-from geoarrow.rust.core.types import CoordTypeT
+from geoarrow.rust.core.types import CoordTypeInput, CoordTypeT
+from obstore.store import ObjectStore
 
 def read_flatgeobuf(
-    file: Union[str, Path, BinaryIO],
+    path: Union[str, Path, BinaryIO],
     *,
     store: Optional[ObjectStore] = None,
     batch_size: int = 65536,
-    bbox: Tuple[float, float, float, float] | None = None,
+    bbox: Tuple[int | float, int | float, int | float, int | float] | None = None,
+    coord_type: CoordTypeInput | None = None,
+    prefer_view_types: bool = True,
+    max_read_records: int | None = 1000,
+    read_geometry: bool = True,
 ) -> Table:
     """
     Read a FlatGeobuf file from a path on disk or a remote location into an Arrow Table.

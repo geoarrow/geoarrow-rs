@@ -16,6 +16,7 @@ use pyo3::prelude::*;
 use url::Url;
 
 #[cfg(feature = "async")]
+#[derive(Debug, Clone)]
 pub struct AsyncFileReader {
     pub store: Arc<dyn ObjectStore>,
     pub path: Path,

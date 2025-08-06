@@ -71,6 +71,8 @@ To read with a spatial filter, just call [`select_bbox`][flatgeobuf::FgbReader::
 
 ## Asynchronous reader
 
+This example uses the additional `object_store` feature, which exposes the `ObjectStoreWrapper`, allowing you to read from `ObjectStore`-compatible backends like S3, GCS, Azure, or local filesystems. However the code will work with any input allowed by `HttpFgbReader`.
+
 ```rust
 # #[cfg(all(feature = "async", feature = "object_store"))]
 # {

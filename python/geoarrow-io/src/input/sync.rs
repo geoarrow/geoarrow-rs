@@ -21,7 +21,7 @@ pub enum FileReader {
 }
 
 impl FileReader {
-    fn try_clone(&self) -> std::io::Result<Self> {
+    pub(crate) fn try_clone(&self) -> std::io::Result<Self> {
         match self {
             Self::File(path, f) => Ok(Self::File(
                 path.clone(),
