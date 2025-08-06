@@ -1,24 +1,41 @@
 use std::sync::Arc;
 
+use arrow_schema::{ArrowError, DataType, Field};
 use pyo3::prelude::*;
 
-use arrow_array::Int8Array;
 use arrow_array::builder::Int8Builder;
+use arrow_array::{ArrayRef, Int8Array};
 use geo_traits::{GeometryTrait, GeometryType};
 use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, downcast_geoarrow_array};
 use geoarrow_schema::error::GeoArrowResult;
 use geoarrow_schema::{Dimension, GeoArrowType};
-use pyo3_arrow::PyArray;
-use pyo3_arrow::export::Arro3Array;
-use pyo3_geoarrow::{PyGeoArray, PyGeoArrowResult};
+use pyo3::IntoPyObjectExt;
+use pyo3_arrow::export::{Arro3Array, Arro3ArrayReader};
+use pyo3_arrow::ffi::ArrayIterator;
+use pyo3_arrow::{PyArray, PyArrayReader};
+use pyo3_geoarrow::PyGeoArrowResult;
+use pyo3_geoarrow::input::AnyGeoArray;
 
 #[pyfunction]
-pub(crate) fn get_type_id(input: PyGeoArray) -> PyGeoArrowResult<Arro3Array> {
-    let out = Arc::new(get_type_id_impl(input.inner())?);
-    Ok(PyArray::from_array_ref(out).into())
+pub(crate) fn get_type_id(py: Python, input: AnyGeoArray) -> PyGeoArrowResult<PyObject> {
+    match input {
+        AnyGeoArray::Array(arr) => {
+            let out = Arc::new(get_type_id_impl(arr.inner())?);
+            Ok(Arro3Array::from(PyArray::from_array_ref(out)).into_py_any(py)?)
+        }
+        AnyGeoArray::Stream(stream) => {
+            let reader = stream.into_reader()?;
+            let output_field = Arc::new(Field::new("", DataType::Int8, true));
+            let iter = reader
+                .into_iter()
+                .map(move |array| get_type_id_impl(&array?));
+            let output_reader = Box::new(ArrayIterator::new(iter, output_field));
+            Ok(Arro3ArrayReader::from(PyArrayReader::new(output_reader)).into_py_any(py)?)
+        }
+    }
 }
 
-fn get_type_id_impl(array: &dyn GeoArrowArray) -> GeoArrowResult<Int8Array> {
+fn get_type_id_impl(array: &dyn GeoArrowArray) -> Result<ArrayRef, ArrowError> {
     let nulls = array.logical_nulls();
     let result = match array.data_type() {
         GeoArrowType::Point(typ) => match typ.dimension() {
@@ -71,7 +88,7 @@ fn get_type_id_impl(array: &dyn GeoArrowArray) -> GeoArrowResult<Int8Array> {
         },
         _ => downcast_geoarrow_array!(array, _get_type_id_impl)?,
     };
-    Ok(result)
+    Ok(Arc::new(result))
 }
 
 fn _get_type_id_impl<'a>(array: &'a impl GeoArrowArrayAccessor<'a>) -> GeoArrowResult<Int8Array> {

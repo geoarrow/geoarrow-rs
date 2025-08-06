@@ -1,7 +1,8 @@
 import geopandas as gpd
 import numpy as np
 import shapely
-from geoarrow.rust.core import GeoArray, get_type_id
+from arro3.core import ChunkedArray
+from geoarrow.rust.core import GeoArray, GeoChunkedArray, get_type_id
 
 
 def test_points():
@@ -83,3 +84,13 @@ def test_multipoints():
     arr = GeoArray.from_arrow(gpd.GeoSeries(geoms).to_arrow("geoarrow"))
     out = get_type_id(arr)
     assert (np.asarray(out) == 4).all()
+
+
+def test_points_chunked():
+    geoms1 = shapely.points([1, 2, 3], [4, 5, 6])
+    geoms2 = shapely.points([10, 20, 30], [40, 50, 60])
+    arr1 = GeoArray.from_arrow(gpd.GeoSeries(geoms1).to_arrow("geoarrow"))
+    arr2 = GeoArray.from_arrow(gpd.GeoSeries(geoms2).to_arrow("geoarrow"))
+    ca = GeoChunkedArray.from_arrow(ChunkedArray([arr1, arr2]))
+    out = get_type_id(ca).read_all()
+    assert (np.asarray(out) == 1).all()
