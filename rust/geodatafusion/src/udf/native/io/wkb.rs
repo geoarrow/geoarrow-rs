@@ -92,6 +92,7 @@ impl ScalarUDFImpl for AsBinary {
 pub struct GeomFromWKB {
     signature: Signature,
     coord_type: CoordType,
+    aliases: Vec<String>,
 }
 
 impl GeomFromWKB {
@@ -107,6 +108,7 @@ impl GeomFromWKB {
                 Volatility::Immutable,
             ),
             coord_type,
+            aliases: vec!["st_wkbtosql".to_string()],
         }
     }
 
@@ -142,6 +144,10 @@ impl ScalarUDFImpl for GeomFromWKB {
 
     fn name(&self) -> &str {
         "st_geomfromwkb"
+    }
+
+    fn aliases(&self) -> &[String] {
+        &self.aliases
     }
 
     fn signature(&self) -> &Signature {
