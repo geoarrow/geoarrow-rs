@@ -1,6 +1,7 @@
 use std::io::{Seek, SeekFrom};
 
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
+use crate::flatgeobuf::utils::apply_projection;
 #[cfg(feature = "async")]
 use crate::input::AnyFileReader;
 use crate::input::construct_reader;
@@ -22,7 +23,7 @@ use pyo3_geoarrow::{PyCoordType, PyprojCRSTransform};
 
 #[pyfunction]
 #[allow(clippy::too_many_arguments)]
-#[pyo3(signature = (path, *, store=None, batch_size=65536, bbox=None, coord_type=None, use_view_types=true, max_scan_records=Some(1000), read_geometry=true))]
+#[pyo3(signature = (path, *, store=None, batch_size=65536, bbox=None, coord_type=None, use_view_types=true, max_scan_records=Some(1000), read_geometry=true, columns=None))]
 pub fn read_flatgeobuf(
     py: Python,
     path: Bound<PyAny>,
@@ -33,6 +34,7 @@ pub fn read_flatgeobuf(
     use_view_types: bool,
     max_scan_records: Option<usize>,
     read_geometry: bool,
+    columns: Option<Vec<String>>,
 ) -> PyGeoArrowResult<Arro3Table> {
     let reader = construct_reader(path, store)?;
     let coord_type = coord_type.map(|x| x.into()).unwrap_or_default();
@@ -70,6 +72,7 @@ pub fn read_flatgeobuf(
                             .await?;
                         scanner.finish()
                     };
+                let properties_schema = apply_projection(properties_schema, &columns);
 
                 let geometry_type = fgb_header.geoarrow_type(coord_type)?;
                 let selection = if let Some(bbox) = bbox {
@@ -109,6 +112,7 @@ pub fn read_flatgeobuf(
                     sync_reader.seek(SeekFrom::Start(pos))?;
                     scanner.finish()
                 };
+            let properties_schema = apply_projection(properties_schema, &columns);
 
             let geometry_type = fgb_header.geoarrow_type(coord_type)?;
             let selection = if let Some(bbox) = bbox {

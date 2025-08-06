@@ -2,6 +2,8 @@ from tempfile import TemporaryDirectory
 
 import pyogrio
 import pytest
+from arro3.core import DataType
+from geoarrow.rust.core import GeoType
 from geoarrow.rust.io import read_flatgeobuf, read_flatgeobuf_async, write_flatgeobuf
 from obstore.store import LocalStore
 
@@ -18,6 +20,36 @@ def test_read_flatgeobuf():
         table.schema.field("geometry").metadata_str["ARROW:extension:name"]
         == "geoarrow.multipolygon"
     )
+
+
+def test_read_flatgeobuf_no_geometry():
+    path = FIXTURES_DIR / "flatgeobuf" / "countries.fgb"
+    table = read_flatgeobuf(path, read_geometry=False)
+    assert table.column_names == ["id", "name"]
+
+
+def test_read_flatgeobuf_columns():
+    path = FIXTURES_DIR / "flatgeobuf" / "countries.fgb"
+    table = read_flatgeobuf(path, columns=["id"])
+    assert table.column_names == ["id", "geometry"]
+
+
+def test_read_flatgeobuf_batch_size():
+    path = FIXTURES_DIR / "flatgeobuf" / "countries.fgb"
+    table = read_flatgeobuf(path, batch_size=5)
+    assert table.to_batches()[0].num_rows == 5
+
+
+def test_read_flatgeobuf_coord_type():
+    path = FIXTURES_DIR / "flatgeobuf" / "countries.fgb"
+    table = read_flatgeobuf(path, coord_type="interleaved")
+    assert GeoType.from_arrow(table["geometry"].field).coord_type == "interleaved"
+
+
+def test_read_flatgeobuf_view_types():
+    path = FIXTURES_DIR / "flatgeobuf" / "countries.fgb"
+    table = read_flatgeobuf(path, use_view_types=False)
+    assert DataType.is_string(table["id"].type)
 
 
 @pytest.mark.asyncio

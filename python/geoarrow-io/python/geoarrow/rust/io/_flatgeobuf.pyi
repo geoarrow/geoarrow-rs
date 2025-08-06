@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import BinaryIO, Optional, Tuple, Union
+from typing import BinaryIO, Optional, Sequence, Tuple, Union
 
 from arro3.core import Table
 from arro3.core.types import ArrowStreamExportable
@@ -18,6 +18,7 @@ def read_flatgeobuf(
     use_view_types: bool = True,
     max_scan_records: int | None = 1000,
     read_geometry: bool = True,
+    columns: Optional[Sequence[str]] = None,
 ) -> Table:
     """
     Read a FlatGeobuf file from a path on disk or a remote location into an Arrow Table.
@@ -43,6 +44,10 @@ def read_flatgeobuf(
             is found that was not in the schema. Thus, scanning fewer records will be
             faster, but could fail later if the inferred schema was not complete.
         read_geometry: If `True`, read the geometry column. If `False`, the geometry column will be omitted from the result. Defaults to `True`.
+        columns: An optional list of property column names to include in the result.
+            This is separate from the geometry column, which you can turn on/off with
+            `read_geometry`. If `None`, all columns will be included. Defaults to
+            `None`.
 
     Examples:
         Reading from a local path:
@@ -103,6 +108,7 @@ async def read_flatgeobuf_async(
     use_view_types: bool = True,
     max_scan_records: int | None = 1000,
     read_geometry: bool = True,
+    columns: Optional[Sequence[str]] = None,
 ) -> Table:
     """
     Read a FlatGeobuf file from a url into an Arrow Table.
@@ -128,6 +134,10 @@ async def read_flatgeobuf_async(
             is found that was not in the schema. Thus, scanning fewer records will be
             faster, but could fail later if the inferred schema was not complete.
         read_geometry: If `True`, read the geometry column. If `False`, the geometry column will be omitted from the result. Defaults to `True`.
+        columns: An optional list of property column names to include in the result.
+            This is separate from the geometry column, which you can turn on/off with
+            `read_geometry`. If `None`, all columns will be included. Defaults to
+            `None`.
 
     Examples:
         Reading from an HTTP(S) url:
