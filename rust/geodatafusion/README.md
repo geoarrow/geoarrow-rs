@@ -47,8 +47,6 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_GeometryType     |             | Returns the SQL-MM type of a geometry as text.                                                                            |
 | ST_HasArc           |             | Tests if a geometry contains a circular arc                                                                               |
 | ST_InteriorRingN    |             | Returns the Nth interior ring (hole) of a Polygon.                                                                        |
-| ST_NumCurves        |             | Return the number of component curves in a CompoundCurve.                                                                 |
-| ST_CurveN           |             | Returns the Nth component curve geometry of a CompoundCurve.                                                              |
 | ST_IsClosed         |             | Tests if a LineStrings's start and end points are coincident. For a PolyhedralSurface tests if it is closed (volumetric). |
 | ST_IsCollection     |             | Tests if a geometry is a geometry collection type.                                                                        |
 | ST_IsEmpty          |             | Tests if a geometry is empty.                                                                                             |
@@ -85,7 +83,6 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_AddPoint                      |             | Add a point to a LineString.                                                                        |
 | ST_CollectionExtract             |             | Given a geometry collection, returns a multi-geometry containing only elements of a specified type. |
 | ST_CollectionHomogenize          |             | Returns the simplest representation of a geometry collection.                                       |
-| ST_CurveToLine                   |             | Converts a geometry containing curves to a linear geometry.                                         |
 | ST_Scroll                        |             | Change start point of a closed LineString.                                                          |
 | ST_FlipCoordinates               |             | Returns a version of a geometry with X and Y axis flipped.                                          |
 | ST_Force2D                       |             | Force the geometries into a "2-dimensional mode".                                                   |
@@ -94,13 +91,11 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_Force3DM                      |             | Force the geometries into XYM mode.                                                                 |
 | ST_Force4D                       |             | Force the geometries into XYZM mode.                                                                |
 | ST_ForceCollection               |             | Convert the geometry into a GEOMETRYCOLLECTION.                                                     |
-| ST_ForceCurve                    |             | Upcast a geometry into its curved type, if applicable.                                              |
 | ST_ForcePolygonCCW               |             | Orients all exterior rings counter-clockwise and all interior rings clockwise.                      |
 | ST_ForcePolygonCW                |             | Orients all exterior rings clockwise and all interior rings counter-clockwise.                      |
 | ST_ForceSFS                      |             | Force the geometries to use SFS 1.1 geometry types only.                                            |
 | ST_ForceRHR                      |             | Force the orientation of the vertices in a polygon to follow the Right-Hand-Rule.                   |
 | ST_LineExtend                    |             | Returns a line extended forwards and backwards by specified distances.                              |
-| ST_LineToCurve                   |             | Converts a linear geometry to a curved geometry.                                                    |
 | ST_Multi                         |             | Return the geometry as a MULTI\* geometry.                                                          |
 | ST_Normalize                     |             | Return the geometry in its canonical form.                                                          |
 | ST_Project                       |             | Returns a point projected from a start point by a distance and bearing (azimuth).                   |
@@ -137,7 +132,7 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_BdMPolyFromText  |             | Construct a MultiPolygon given an arbitrary collection of closed linestrings as a MultiLineString text representation Well-Known text representation. |
 | ST_GeomCollFromText |             | Makes a collection Geometry from collection WKT with the given SRID. If SRID is not given, it defaults to 0.                                          |
 | ST_GeomFromEWKT     |             | Return a specified ST_Geometry value from Extended Well-Known Text representation (EWKT).                                                             |
-| ST_GeometryFromText |             | Return a specified ST_Geometry value from Well-Known Text representation (WKT). This is an alias name for ST_GeomFromText                             |
+| ST_GeometryFromText | ✅          | Return a specified ST_Geometry value from Well-Known Text representation (WKT). This is an alias name for ST_GeomFromText                             |
 | ST_GeomFromText     | ✅          | Return a specified ST_Geometry value from Well-Known Text representation (WKT).                                                                       |
 | ST_LineFromText     |             | Makes a Geometry from WKT representation with the given SRID. If SRID is not given, it defaults to 0.                                                 |
 | ST_MLineFromText    |             | Return a specified ST_MultiLineString value from WKT representation.                                                                                  |
@@ -145,7 +140,7 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_MPolyFromText    |             | Makes a MultiPolygon Geometry from WKT with the given SRID. If SRID is not given, it defaults to 0.                                                   |
 | ST_PointFromText    |             | Makes a point Geometry from WKT with the given SRID. If SRID is not given, it defaults to unknown.                                                    |
 | ST_PolygonFromText  |             | Makes a Geometry from WKT with the given SRID. If SRID is not given, it defaults to 0.                                                                |
-| ST_WKTToSQL         |             | Return a specified ST_Geometry value from Well-Known Text representation (WKT). This is an alias name for ST_GeomFromText                             |
+| ST_WKTToSQL         | ✅          | Return a specified ST_Geometry value from Well-Known Text representation (WKT). This is an alias name for ST_GeomFromText                             |
 
 #### Well-Known Binary (WKB)
 
@@ -156,7 +151,7 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_LineFromWKB       |             | Makes a LINESTRING from WKB with the given SRID                                                                                               |
 | ST_LinestringFromWKB |             | Makes a geometry from WKB with the given SRID.                                                                                                |
 | ST_PointFromWKB      |             | Makes a geometry from WKB with the given SRID                                                                                                 |
-| ST_WKBToSQL          |             | Return a specified ST_Geometry value from Well-Known Binary representation (WKB). This is an alias name for ST_GeomFromWKB that takes no srid |
+| ST_WKBToSQL          | ✅          | Return a specified ST_Geometry value from Well-Known Binary representation (WKB). This is an alias name for ST_GeomFromWKB that takes no srid |
 
 #### Other Formats
 

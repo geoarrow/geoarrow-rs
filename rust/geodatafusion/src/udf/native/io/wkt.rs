@@ -96,6 +96,7 @@ impl ScalarUDFImpl for AsText {
 pub struct GeomFromText {
     signature: Signature,
     coord_type: CoordType,
+    aliases: Vec<String>,
 }
 
 impl GeomFromText {
@@ -107,6 +108,7 @@ impl GeomFromText {
                 Volatility::Immutable,
             ),
             coord_type,
+            aliases: vec!["st_geometryfromtext".to_string(), "st_wkttosql".to_string()],
         }
     }
 
@@ -143,6 +145,10 @@ impl ScalarUDFImpl for GeomFromText {
 
     fn name(&self) -> &str {
         "st_geomfromtext"
+    }
+
+    fn aliases(&self) -> &[String] {
+        &self.aliases
     }
 
     fn signature(&self) -> &Signature {
