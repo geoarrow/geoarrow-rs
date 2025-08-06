@@ -9,6 +9,7 @@ use object_store::ObjectStore;
 use object_store::path::Path;
 
 /// A wrapper around an [`ObjectStore`] that implements the [`AsyncHttpRangeClient`] trait.
+#[derive(Debug, Clone)]
 pub struct ObjectStoreWrapper {
     store: Arc<dyn ObjectStore>,
     location: Path,

@@ -46,9 +46,9 @@ let properties_schema = if let Some(properties_schema) = fgb_header.properties_s
     let fgb_reader_scan = FgbReader::open(filein_for_scan).unwrap();
 
     let mut scanner = FlatGeobufSchemaScanner::new(true);
-    let max_read_records = Some(1000);
+    let max_scan_records = Some(1000);
     scanner
-        .process(fgb_reader_scan.select_all().unwrap(), max_read_records)
+        .process(fgb_reader_scan.select_all().unwrap(), max_scan_records)
         .unwrap();
     scanner.finish()
 };
@@ -70,6 +70,8 @@ println!("Num batches: {}", batches.len());
 To read with a spatial filter, just call [`select_bbox`][flatgeobuf::FgbReader::select_bbox] or [`select_bbox_seq`][flatgeobuf::FgbReader::select_bbox_seq] instead of `select_all`/`select_all_seq`. (Note that `select_bbox` should be faster than `select_bbox_seq`, and should be preferred when the underlying reader supports `Seek`.)
 
 ## Asynchronous reader
+
+This example uses the additional `object_store` feature, which exposes the `ObjectStoreWrapper`, allowing you to read from `ObjectStore`-compatible backends like S3, GCS, Azure, or local filesystems. However the code will work with any input allowed by `HttpFgbReader`.
 
 ```rust
 # #[cfg(all(feature = "async", feature = "object_store"))]

@@ -273,7 +273,7 @@ pub trait FlatGeobufHeaderExt {
     /// schema by scanning the first `N`` features.
     ///
     /// Pass the resulting schema to [FlatGeobufReaderOptions::new] when creating reader options.
-    fn properties_schema(&self, prefer_view_types: bool) -> Option<SchemaRef>;
+    fn properties_schema(&self, use_view_types: bool) -> Option<SchemaRef>;
 }
 
 impl FlatGeobufHeaderExt for Header<'_> {
@@ -334,7 +334,7 @@ impl FlatGeobufHeaderExt for Header<'_> {
     ///
     /// If the FlatGeobuf file header does not contain information about property columns, this
     /// will be `None`.
-    fn properties_schema(&self, prefer_view_types: bool) -> Option<SchemaRef> {
+    fn properties_schema(&self, use_view_types: bool) -> Option<SchemaRef> {
         let columns = self.columns()?;
         let mut schema = SchemaBuilder::with_capacity(columns.len());
 
@@ -352,7 +352,7 @@ impl FlatGeobufHeaderExt for Header<'_> {
                 ColumnType::Float => Field::new(col.name(), DataType::Float32, col.nullable()),
                 ColumnType::Double => Field::new(col.name(), DataType::Float64, col.nullable()),
                 ColumnType::String => {
-                    let data_type = if prefer_view_types {
+                    let data_type = if use_view_types {
                         DataType::Utf8View
                     } else {
                         DataType::Utf8
@@ -360,7 +360,7 @@ impl FlatGeobufHeaderExt for Header<'_> {
                     Field::new(col.name(), data_type, col.nullable())
                 }
                 ColumnType::Json => {
-                    let data_type = if prefer_view_types {
+                    let data_type = if use_view_types {
                         DataType::Utf8View
                     } else {
                         DataType::Utf8
@@ -374,7 +374,7 @@ impl FlatGeobufHeaderExt for Header<'_> {
                     col.nullable(),
                 ),
                 ColumnType::Binary => {
-                    let data_type = if prefer_view_types {
+                    let data_type = if use_view_types {
                         DataType::BinaryView
                     } else {
                         DataType::Binary

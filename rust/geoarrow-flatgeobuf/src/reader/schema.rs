@@ -29,15 +29,15 @@ use indexmap::IndexMap;
 #[derive(Debug, Clone)]
 pub struct FlatGeobufSchemaScanner {
     fields: IndexMap<String, FieldRef>,
-    prefer_view_types: bool,
+    use_view_types: bool,
 }
 
 impl FlatGeobufSchemaScanner {
     /// Create a new FlatGeobuf schema builder.
-    pub fn new(prefer_view_types: bool) -> Self {
+    pub fn new(use_view_types: bool) -> Self {
         Self {
             fields: IndexMap::new(),
-            prefer_view_types,
+            use_view_types,
         }
     }
 }
@@ -53,9 +53,9 @@ impl FlatGeobufSchemaScanner {
     pub fn process<R: Read + Seek>(
         &mut self,
         selection: FeatureIter<R, Seekable>,
-        max_read_records: Option<usize>,
+        max_scan_records: Option<usize>,
     ) -> GeoArrowResult<()> {
-        let mut selection = selection.take(max_read_records.unwrap_or(usize::MAX));
+        let mut selection = selection.take(max_scan_records.unwrap_or(usize::MAX));
 
         loop {
             if let Some(feature) = selection
@@ -75,9 +75,9 @@ impl FlatGeobufSchemaScanner {
     pub fn process_seq<R: Read>(
         &mut self,
         selection: FeatureIter<R, NotSeekable>,
-        max_read_records: Option<usize>,
+        max_scan_records: Option<usize>,
     ) -> GeoArrowResult<()> {
-        let mut selection = selection.take(max_read_records.unwrap_or(usize::MAX));
+        let mut selection = selection.take(max_scan_records.unwrap_or(usize::MAX));
 
         loop {
             if let Some(feature) = selection
@@ -100,7 +100,7 @@ impl FlatGeobufSchemaScanner {
     >(
         &mut self,
         mut selection: flatgeobuf::AsyncFeatureIter<T>,
-        max_read_records: Option<usize>,
+        max_scan_records: Option<usize>,
     ) -> GeoArrowResult<()> {
         let mut num_features_processed = 0;
 
@@ -114,8 +114,8 @@ impl FlatGeobufSchemaScanner {
                 .map_err(|err| GeoArrowError::External(Box::new(err)))?;
 
             num_features_processed += 1;
-            if let Some(max_read_records) = max_read_records {
-                if num_features_processed >= max_read_records {
+            if let Some(max_scan_records) = max_scan_records {
+                if num_features_processed >= max_scan_records {
                     return Ok(());
                 }
             }
@@ -140,17 +140,17 @@ impl PropertyProcessor for FlatGeobufSchemaScanner {
     ) -> geozero::error::Result<bool> {
         if let Some(field) = self.fields.get(name) {
             // We have already seen this field, so we skip it.
-            if field != &column_value_to_field(name, value, self.prefer_view_types) {
+            if field != &column_value_to_field(name, value, self.use_view_types) {
                 return Err(geozero::error::GeozeroError::Property(format!(
                     "Inconsistent field for property '{}': expected {:?}, found {:?}",
                     name,
                     field,
-                    column_value_to_field(name, value, self.prefer_view_types),
+                    column_value_to_field(name, value, self.use_view_types),
                 )));
             }
         } else {
             // We haven't seen this field yet, so we add it to the schema.
-            let field = column_value_to_field(name, value, self.prefer_view_types);
+            let field = column_value_to_field(name, value, self.use_view_types);
             self.fields.insert(name.to_string(), field);
         }
 
@@ -161,7 +161,7 @@ impl PropertyProcessor for FlatGeobufSchemaScanner {
 fn column_value_to_field(
     name: &str,
     value: &geozero::ColumnValue,
-    prefer_view_types: bool,
+    use_view_types: bool,
 ) -> FieldRef {
     let data_type = match value {
         geozero::ColumnValue::Bool(_) => DataType::Boolean,
@@ -176,21 +176,21 @@ fn column_value_to_field(
         geozero::ColumnValue::Float(_) => DataType::Float32,
         geozero::ColumnValue::Double(_) => DataType::Float64,
         geozero::ColumnValue::String(_) => {
-            if prefer_view_types {
+            if use_view_types {
                 DataType::Utf8View
             } else {
                 DataType::Utf8
             }
         }
         geozero::ColumnValue::Binary(_) => {
-            if prefer_view_types {
+            if use_view_types {
                 DataType::BinaryView
             } else {
                 DataType::Binary
             }
         }
         geozero::ColumnValue::Json(_) => {
-            let data_type = if prefer_view_types {
+            let data_type = if use_view_types {
                 DataType::Utf8View
             } else {
                 DataType::Utf8
