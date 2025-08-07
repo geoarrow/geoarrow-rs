@@ -14,7 +14,7 @@ use geoarrow_flatgeobuf::reader::{
     FlatGeobufHeaderExt, FlatGeobufReaderOptions, FlatGeobufRecordBatchIterator,
 };
 use geoarrow_flatgeobuf::writer::FlatGeobufWriterOptions;
-use geoarrow_flatgeobuf::writer::write_flatgeobuf_with_options as _write_flatgeobuf;
+use geoarrow_flatgeobuf::writer::write_flatgeobuf as _write_flatgeobuf;
 use pyo3::prelude::*;
 use pyo3_arrow::PyTable;
 use pyo3_arrow::export::Arro3Table;
@@ -160,14 +160,19 @@ pub fn write_flatgeobuf(
     name: Option<String>,
 ) -> PyGeoArrowResult<()> {
     let name = name.unwrap_or_else(|| file.file_stem(py).unwrap_or("".to_string()));
-    let options = FlatGeobufWriterOptions {
-        write_index,
-        title,
-        description,
-        metadata,
-        crs_transform: Some(Box::new(PyprojCRSTransform::new())),
-        ..Default::default()
-    };
-    _write_flatgeobuf(table.into_reader()?, file, &name, options)?;
+    let mut options = FlatGeobufWriterOptions::new(name)
+        .with_write_index(write_index)
+        .with_crs_transform(Box::new(PyprojCRSTransform::new()));
+    if let Some(title) = title {
+        options = options.with_title(title);
+    }
+    if let Some(description) = description {
+        options = options.with_description(description);
+    }
+    if let Some(metadata) = metadata {
+        options = options.with_metadata(metadata);
+    }
+
+    _write_flatgeobuf(table.into_reader()?, file, options)?;
     Ok(())
 }

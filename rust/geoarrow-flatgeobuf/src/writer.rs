@@ -13,29 +13,21 @@ use geozero::GeozeroDatasource;
 /// Options for the FlatGeobuf writer
 #[derive(Debug)]
 pub struct FlatGeobufWriterOptions {
-    /// Write index and sort features accordingly.
-    pub write_index: bool,
-    /// Detect geometry type when `geometry_type` is Unknown.
-    pub detect_type: bool,
-    /// Convert single to multi geometries, if `geometry_type` is multi type or Unknown
-    pub promote_to_multi: bool,
-    /// Dataset title
-    pub title: Option<String>,
-    /// Dataset description (intended for free form long text)
-    pub description: Option<String>,
-    /// Dataset metadata (intended to be application specific and
-    pub metadata: Option<String>,
-    /// A method for transforming CRS to WKT
-    ///
-    /// This is implemented as an external trait so that external libraries can inject the method
-    /// for CRS conversions. For example, the Python API uses the `pyproj` Python library to
-    /// perform the conversion rather than linking into PROJ from Rust.
-    pub crs_transform: Option<Box<dyn CrsTransform>>,
+    name: String,
+    write_index: bool,
+    detect_type: bool,
+    promote_to_multi: bool,
+    title: Option<String>,
+    description: Option<String>,
+    metadata: Option<String>,
+    crs_transform: Option<Box<dyn CrsTransform>>,
 }
 
-impl Default for FlatGeobufWriterOptions {
-    fn default() -> Self {
+impl FlatGeobufWriterOptions {
+    /// Create a new FlatGeobufWriterOptions with the given name and default options.
+    pub fn new(name: String) -> Self {
         Self {
+            name,
             write_index: true,
             detect_type: true,
             promote_to_multi: true,
@@ -43,6 +35,67 @@ impl Default for FlatGeobufWriterOptions {
             title: None,
             description: None,
             metadata: None,
+        }
+    }
+
+    /// Set whether to write an index to the file.
+    pub fn with_write_index(self, write_index: bool) -> Self {
+        Self {
+            write_index,
+            ..self
+        }
+    }
+
+    /// Set whether to detect geometry type when `geometry_type` is Unknown.
+    pub fn with_detect_type(self, detect_type: bool) -> Self {
+        Self {
+            detect_type,
+            ..self
+        }
+    }
+
+    /// Set whether to convert single to multi geometries, if `geometry_type` is multi type or
+    /// Unknown
+    pub fn with_promote_to_multi(self, promote_to_multi: bool) -> Self {
+        Self {
+            promote_to_multi,
+            ..self
+        }
+    }
+
+    /// Set the dataset title
+    pub fn with_title(self, title: String) -> Self {
+        Self {
+            title: Some(title),
+            ..self
+        }
+    }
+
+    /// Set the dataset description (intended for free form long text)
+    pub fn with_description(self, description: String) -> Self {
+        Self {
+            description: Some(description),
+            ..self
+        }
+    }
+
+    /// Set the dataset metadata (intended to be application specific)
+    pub fn with_metadata(self, metadata: String) -> Self {
+        Self {
+            metadata: Some(metadata),
+            ..self
+        }
+    }
+
+    /// Set the method for transforming CRS to WKT
+    ///
+    /// This is implemented as an external trait so that external libraries can inject the method
+    /// for CRS conversions. For example, the Python API uses the `pyproj` Python library to
+    /// perform the conversion rather than linking into PROJ from Rust.
+    pub fn with_crs_transform(self, crs_transform: Box<dyn CrsTransform>) -> Self {
+        Self {
+            crs_transform: Some(crs_transform),
+            ..self
         }
     }
 }
@@ -104,19 +157,6 @@ impl FlatGeobufWriterOptions {
 pub fn write_flatgeobuf<W: Write, S: Into<GeozeroRecordBatchReader>>(
     stream: S,
     writer: W,
-    name: &str,
-) -> GeoArrowResult<()> {
-    write_flatgeobuf_with_options(stream, writer, name, Default::default())
-}
-
-/// Write a Table to a FlatGeobuf file with specific writer options.
-///
-/// `name` is the string passed to [`FgbWriter::create`] and is what OGR observes as the layer name
-/// of the file.
-pub fn write_flatgeobuf_with_options<W: Write, S: Into<GeozeroRecordBatchReader>>(
-    stream: S,
-    writer: W,
-    name: &str,
     options: FlatGeobufWriterOptions,
 ) -> GeoArrowResult<()> {
     let mut stream: GeozeroRecordBatchReader = stream.into();
@@ -138,7 +178,7 @@ pub fn write_flatgeobuf_with_options<W: Write, S: Into<GeozeroRecordBatchReader>
 
     let geometry_type = infer_flatgeobuf_geometry_type(stream.as_ref().schema().as_ref())?;
 
-    let mut fgb = FgbWriter::create_with_options(name, geometry_type, fgb_options)
+    let mut fgb = FgbWriter::create_with_options(&options.name, geometry_type, fgb_options)
         .map_err(|err| GeoArrowError::External(Box::new(err)))?;
     stream
         .process(&mut fgb)
@@ -164,12 +204,13 @@ fn infer_flatgeobuf_geometry_type(schema: &Schema) -> GeoArrowResult<flatgeobuf:
     let geometry_type = match geo_data_type {
         Point(_) => flatgeobuf::GeometryType::Point,
         LineString(_) => flatgeobuf::GeometryType::LineString,
-        Polygon(_) => flatgeobuf::GeometryType::Polygon,
+        Rect(_) | Polygon(_) => flatgeobuf::GeometryType::Polygon,
         MultiPoint(_) => flatgeobuf::GeometryType::MultiPoint,
         MultiLineString(_) => flatgeobuf::GeometryType::MultiLineString,
         MultiPolygon(_) => flatgeobuf::GeometryType::MultiPolygon,
-        Rect(_) | Geometry(_) | Wkb(_) | LargeWkb(_) | WkbView(_) | Wkt(_) | LargeWkt(_)
-        | WktView(_) => flatgeobuf::GeometryType::Unknown,
+        Geometry(_) | Wkb(_) | LargeWkb(_) | WkbView(_) | Wkt(_) | LargeWkt(_) | WktView(_) => {
+            flatgeobuf::GeometryType::Unknown
+        }
         GeometryCollection(_) => flatgeobuf::GeometryType::GeometryCollection,
     };
     Ok(geometry_type)
@@ -179,13 +220,8 @@ fn infer_flatgeobuf_geometry_type(schema: &Schema) -> GeoArrowResult<flatgeobuf:
 fn geometry_columns(schema: &Schema) -> Vec<usize> {
     let mut geom_indices = vec![];
     for (field_idx, field) in schema.fields().iter().enumerate() {
-        // We first check that an extension type name is set and then check that we can coerce to a
-        // GeoArrowType so that we don't accept columns that are _compatible_ with geoarrow storage
-        // but aren't set as geoarrow extension types.
-        if let Some(_ext_name) = field.extension_type_name() {
-            if let Ok(_geoarrow_type) = GeoArrowType::try_from(field.as_ref()) {
-                geom_indices.push(field_idx);
-            }
+        if GeoArrowType::from_extension_field(field.as_ref()).is_ok() {
+            geom_indices.push(field_idx);
         }
     }
     geom_indices
@@ -193,11 +229,12 @@ fn geometry_columns(schema: &Schema) -> Vec<usize> {
 
 #[cfg(test)]
 mod test {
-    use std::io::BufWriter;
+    use std::io::{BufWriter, Cursor};
     use std::sync::Arc;
 
-    use arrow_array::{RecordBatch, RecordBatchIterator, create_array};
+    use arrow_array::{RecordBatch, RecordBatchIterator, RecordBatchReader, create_array};
     use arrow_schema::{DataType, Field};
+    use flatgeobuf::FgbReader;
     use geoarrow_array::GeoArrowArray;
     use geoarrow_array::array::PointArray;
     use geoarrow_array::builder::PointBuilder;
@@ -205,35 +242,57 @@ mod test {
     use wkt::wkt;
 
     use super::*;
+    use crate::reader::{
+        FlatGeobufHeaderExt, FlatGeobufReaderOptions, FlatGeobufRecordBatchIterator,
+    };
 
     // FlatGeobuf, or at least the FlatGeobuf rust library, doesn't support writing null or empty
     // points.
-    fn non_empty_point_array() -> PointArray {
-        let geoms = vec![
-            Some(wkt! { POINT (30. 10.) }),
-            Some(wkt! { POINT (40. 20.) }),
-            Some(wkt! { POINT (1. 2.) }),
-            Some(wkt! { POINT (1. 2.) }),
-        ];
-        let typ = PointType::new(Dimension::XY, Default::default());
+    fn non_empty_point_array(dim: Dimension) -> PointArray {
+        let geoms = match dim {
+            Dimension::XY => vec![
+                Some(wkt! { POINT (30. 10.) }),
+                Some(wkt! { POINT (40. 20.) }),
+                Some(wkt! { POINT (1. 2.) }),
+                Some(wkt! { POINT (1. 2.) }),
+            ],
+            Dimension::XYZ => vec![
+                Some(wkt! { POINT Z (30. 10. 5.) }),
+                Some(wkt! { POINT Z (40. 20. 2.) }),
+                Some(wkt! { POINT Z (1. 2. 1.) }),
+                Some(wkt! { POINT Z (1. 2. 1.) }),
+            ],
+            Dimension::XYM => vec![
+                Some(wkt! { POINT M (30. 10. 5.) }),
+                Some(wkt! { POINT M (40. 20. 2.) }),
+                Some(wkt! { POINT M (1. 2. 1.) }),
+                Some(wkt! { POINT M (1. 2. 1.) }),
+            ],
+            Dimension::XYZM => vec![
+                Some(wkt! { POINT ZM (30. 10. 5. 1.) }),
+                Some(wkt! { POINT ZM (40. 20. 2. 2.) }),
+                Some(wkt! { POINT ZM (1. 2. 1. 3.) }),
+                Some(wkt! { POINT ZM (1. 2. 1. 4.) }),
+            ],
+        };
+        let typ = PointType::new(dim, Default::default());
         PointBuilder::from_nullable_points(geoms.iter().map(|x| x.as_ref()), typ).finish()
     }
 
-    fn table() -> (Vec<RecordBatch>, Arc<Schema>) {
-        let point_array = non_empty_point_array();
+    fn table(geometry: Arc<dyn GeoArrowArray>) -> (Vec<RecordBatch>, Arc<Schema>) {
         let u8_array = create_array!(UInt8, [1, 2, 3, 4]);
         let string_array = create_array!(Utf8, ["1", "2", "3", "4"]);
 
         let fields = vec![
             Arc::new(Field::new("u8", DataType::UInt8, true)),
             Arc::new(Field::new("string", DataType::Utf8, true)),
-            Arc::new(point_array.data_type().to_field("geometry", true)),
+            Arc::new(geometry.data_type().to_field("geometry", true)),
         ];
         let schema = Arc::new(Schema::new(fields));
 
         let batch = RecordBatch::try_new(
             schema.clone(),
-            vec![u8_array, string_array, point_array.into_array_ref()],
+            vec![u8_array, string_array, geometry.into_array_ref()],
         )
         .unwrap();
 
@@ -242,78 +301,103 @@ mod test {
 
     #[test]
     fn test_write() {
-        let (batches, schema) = table();
-        let reader = Box::new(RecordBatchIterator::new(
-            batches.into_iter().map(Ok),
-            schema,
-        ));
-        let geozero_reader = GeozeroRecordBatchReader::new(Box::new(reader));
+        for dim in [
+            Dimension::XY,
+            Dimension::XYZ,
+            Dimension::XYM,
+            Dimension::XYZM,
+        ] {
+            let (orig_batches, orig_schema) = table(Arc::new(non_empty_point_array(dim)));
+            let source_iterator = Box::new(RecordBatchIterator::new(
+                orig_batches.clone().into_iter().map(Ok),
+                orig_schema.clone(),
+            ));
+            let geozero_reader = GeozeroRecordBatchReader::new(Box::new(source_iterator));
 
-        let mut output_buffer = Vec::new();
-        let writer = BufWriter::new(&mut output_buffer);
-        write_flatgeobuf(geozero_reader, writer, "name").unwrap();
+            // Write to buffer
+            let mut output_buffer = Vec::new();
+            let writer = BufWriter::new(&mut output_buffer);
+            write_flatgeobuf(
+                geozero_reader,
+                writer,
+                FlatGeobufWriterOptions::new("name".to_string()),
+            )
+            .unwrap();
 
-        // let reader = Cursor::new(output_buffer);
-        // let reader_builder = FlatGeobufReaderBuilder::open(reader).unwrap();
-        // let record_batch_reader = reader_builder.read(Default::default()).unwrap();
-        // let new_table = Table::try_from(
-        //     Box::new(record_batch_reader) as Box<dyn arrow_array::RecordBatchReader>
-        // )
-        // .unwrap();
+            // Read back from buffer
+            let reader = Cursor::new(output_buffer);
+            let fgb_reader = FgbReader::open(reader).unwrap();
+            let fgb_header = fgb_reader.header();
 
-        // // Note: backwards row order is due to the reordering during the spatial index
-        // let batch = &new_table.batches()[0];
-        // let arr = batch.column(0);
-        // dbg!(arr);
-        // dbg!(new_table);
-        // dbg!(output_buffer);
+            let properties_schema = fgb_header
+                .properties_schema(false)
+                .expect("file contains column information in metadata.");
+            let geometry_type = fgb_header.geoarrow_type(Default::default()).unwrap();
+
+            let options = FlatGeobufReaderOptions::new(properties_schema, geometry_type);
+            let selection = fgb_reader.select_all_seq().unwrap();
+            let record_batch_reader =
+                FlatGeobufRecordBatchIterator::try_new(selection, options).unwrap();
+
+            let schema = record_batch_reader.schema();
+            let field = schema.field_with_name("geometry").unwrap();
+            assert!(matches!(
+                GeoArrowType::try_from(field).unwrap(),
+                GeoArrowType::Point(_)
+            ));
+            assert_eq!(schema, orig_schema);
+
+            let batches = record_batch_reader.collect::<Result<Vec<_>, _>>().unwrap();
+            assert_eq!(batches, orig_batches);
+        }
     }
 
     #[test]
     fn test_write_no_index() {
-        let (batches, schema) = table();
-        let reader = Box::new(RecordBatchIterator::new(
-            batches.into_iter().map(Ok),
-            schema,
-        ));
-        let geozero_reader = GeozeroRecordBatchReader::new(Box::new(reader));
+        for dim in [
+            Dimension::XY,
+            Dimension::XYZ,
+            Dimension::XYM,
+            Dimension::XYZM,
+        ] {
+            let (orig_batches, orig_schema) = table(Arc::new(non_empty_point_array(dim)));
+            let reader = Box::new(RecordBatchIterator::new(
+                orig_batches.clone().into_iter().map(Ok),
+                orig_schema.clone(),
+            ));
+            let geozero_reader = GeozeroRecordBatchReader::new(Box::new(reader));
 
-        let mut output_buffer = Vec::new();
-        let writer = BufWriter::new(&mut output_buffer);
-        let options = FlatGeobufWriterOptions {
-            write_index: false,
-            ..Default::default()
-        };
-        write_flatgeobuf_with_options(geozero_reader, writer, "name", options).unwrap();
+            // Write to buffer
+            let mut output_buffer = Vec::new();
+            let writer = BufWriter::new(&mut output_buffer);
+            let options = FlatGeobufWriterOptions::new("name".to_string()).with_write_index(false);
+            write_flatgeobuf(geozero_reader, writer, options).unwrap();
 
-        // let reader = Cursor::new(output_buffer);
-        // let reader_builder = FlatGeobufReaderBuilder::open(reader).unwrap();
-        // let record_batch_reader = reader_builder.read(Default::default()).unwrap();
-        // let new_table = Table::try_from(
-        //     Box::new(record_batch_reader) as Box<dyn arrow_array::RecordBatchReader>
-        // )
-        // .unwrap();
-        // assert_eq!(table, new_table);
+            // Read back from buffer
+            let reader = Cursor::new(output_buffer);
+            let fgb_reader = FgbReader::open(reader).unwrap();
+            let fgb_header = fgb_reader.header();
+
+            let properties_schema = fgb_header
+                .properties_schema(false)
+                .expect("file contains column information in metadata.");
+            let geometry_type = fgb_header.geoarrow_type(Default::default()).unwrap();
+
+            let options = FlatGeobufReaderOptions::new(properties_schema, geometry_type);
+            let selection = fgb_reader.select_all_seq().unwrap();
+            let record_batch_reader =
+                FlatGeobufRecordBatchIterator::try_new(selection, options).unwrap();
+
+            let schema = record_batch_reader.schema();
+            let field = schema.field_with_name("geometry").unwrap();
+            assert!(matches!(
+                GeoArrowType::try_from(field).unwrap(),
+                GeoArrowType::Point(_)
+            ));
+            assert_eq!(schema, orig_schema);
+
+            let batches = record_batch_reader.collect::<Result<Vec<_>, _>>().unwrap();
+            assert_eq!(batches, orig_batches);
+        }
     }
-
-    // #[test]
-    // fn test_write_z() {
-    //     let table = point::table_z();
-
-    //     let mut output_buffer = Vec::new();
-    //     let writer = BufWriter::new(&mut output_buffer);
-    //     write_flatgeobuf(&table, writer, "name").unwrap();
-
-    //     let reader = Cursor::new(output_buffer);
-    //     let reader_builder = FlatGeobufReaderBuilder::open(reader).unwrap();
-    //     let record_batch_reader = reader_builder.read(Default::default()).unwrap();
-    //     let new_table = Table::try_from(
-    //         Box::new(record_batch_reader) as Box<dyn arrow_array::RecordBatchReader>
-    //     )
-    //     .unwrap();
-
-    //     // Note: backwards row order is due to the reordering during the spatial index
-    //     let batch = &new_table.batches()[0];
-    //     let _arr = batch.column(0);
-    // }
 }
