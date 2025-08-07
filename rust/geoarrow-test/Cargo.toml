@@ -11,3 +11,6 @@ rust-version = { workspace = true }
 
 [dependencies]
 wkt = { workspace = true }
+
+[package.metadata.docs.rs]
+all-features = true

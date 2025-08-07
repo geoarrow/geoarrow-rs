@@ -1,4 +1,3 @@
-
 [package]
 name = "geoarrow-schema"
 version = { workspace = true }
@@ -10,10 +9,12 @@ description = "GeoArrow geometry type and metadata definitions."
 categories = { workspace = true }
 rust-version = { workspace = true }
 
-
 [dependencies]
 arrow-schema = { workspace = true }
 geo-traits = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
+
+[package.metadata.docs.rs]
+all-features = true
