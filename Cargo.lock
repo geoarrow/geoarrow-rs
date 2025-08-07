@@ -1682,7 +1682,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "geoarrow-array",
  "geoarrow-schema",
@@ -1690,7 +1690,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-array"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
@@ -1709,7 +1709,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-cast"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "arrow-schema",
  "geo-traits",
@@ -1721,7 +1721,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-flatgeobuf"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "arrow-array",
  "arrow-cast",
@@ -1746,7 +1746,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-geo"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
@@ -1758,7 +1758,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-geos"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "arrow-array",
  "arrow-schema",
@@ -1770,7 +1770,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-schema"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "arrow-schema",
  "geo-traits",
@@ -1781,7 +1781,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-test"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "wkt 0.14.0",
 ]
@@ -1860,7 +1860,7 @@ dependencies = [
 
 [[package]]
 name = "geoparquet"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "arrow-arith",
  "arrow-array",
@@ -3147,7 +3147,7 @@ dependencies = [
 
 [[package]]
 name = "pyo3-geoarrow"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
