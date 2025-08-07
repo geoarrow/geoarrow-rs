@@ -10,6 +10,7 @@ categories = { workspace = true }
 rust-version = { workspace = true }
 
 [dependencies]
+arrow-array = { workspace = true }
 arrow-schema = { workspace = true }
 async-trait = { workspace = true }
 datafusion = { workspace = true }

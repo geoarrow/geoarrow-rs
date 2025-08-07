@@ -3,14 +3,19 @@
 use std::any::Any;
 use std::sync::Arc;
 
-use arrow_schema::SchemaRef;
+use arrow_array::{Array, Float64Array, RecordBatch, StructArray};
+use arrow_schema::{Schema, SchemaRef};
 use datafusion::common::Statistics;
 use datafusion::datasource::listing::PartitionedFile;
 use datafusion::datasource::physical_plan::{
     FileMeta, FileOpenFuture, FileOpener, FileScanConfig, FileSource,
 };
 use datafusion::error::{DataFusionError, Result};
-use datafusion::physical_plan::metrics::ExecutionPlanMetricsSet;
+use datafusion::physical_expr::{PhysicalExpr, ScalarFunctionExpr};
+use datafusion::physical_plan::filter_pushdown::{
+    FilterPushdownPropagation, PushedDown,
+};
+use datafusion::physical_plan::{ColumnarValue, metrics::ExecutionPlanMetricsSet};
 use futures::StreamExt;
 use geoarrow_flatgeobuf::reader::{FlatGeobufReaderOptions, FlatGeobufRecordBatchStream};
 use object_store::ObjectStore;
@@ -24,6 +29,7 @@ pub struct FlatGeobufSource {
     projection: Option<Vec<usize>>,
     metrics: ExecutionPlanMetricsSet,
     projected_statistics: Option<Statistics>,
+    bbox: Option<[f64; 4]>,
 }
 
 impl FlatGeobufSource {
@@ -34,6 +40,7 @@ impl FlatGeobufSource {
             projection: None,
             metrics: ExecutionPlanMetricsSet::new(),
             projected_statistics: None,
+            bbox: None,
         }
     }
 }
@@ -96,6 +103,37 @@ impl FileSource for FlatGeobufSource {
     fn file_type(&self) -> &str {
         "flatgeobuf"
     }
+
+    fn try_pushdown_filters(
+        &self,
+        filters: Vec<Arc<dyn PhysicalExpr>>,
+        _config: &datafusion::common::config::ConfigOptions,
+    ) -> Result<FilterPushdownPropagation<Arc<dyn FileSource>>> {
+        let mut pushdown_flags = vec![];
+        let mut bbox = self.bbox;
+        for filter in filters.iter() {
+            if bbox.is_none() {
+                if let Some(extracted) = extract_bbox(filter)? {
+                    bbox = Some(extracted);
+                    pushdown_flags.push(PushedDown::Yes);
+                    continue;
+                }
+            }
+            pushdown_flags.push(PushedDown::No);
+        }
+        if let Some(b) = bbox {
+            let mut new_self = self.clone();
+            new_self.bbox = Some(b);
+            Ok(
+                FilterPushdownPropagation::with_parent_pushdown_result(pushdown_flags)
+                    .with_updated_node(Arc::new(new_self) as _),
+            )
+        } else {
+            Ok(FilterPushdownPropagation::with_parent_pushdown_result(
+                pushdown_flags,
+            ))
+        }
+    }
 }
 
 pub struct FlatGeobufOpener {
@@ -131,13 +169,53 @@ impl FileOpener for FlatGeobufOpener {
                 .with_batch_size(config.batch_size.unwrap_or(1024));
 
             let fgb_reader = open_flatgeobuf_reader(store, file_meta.location().clone()).await?;
-            let selection = fgb_reader
-                .select_all()
-                .await
-                .map_err(|err| DataFusionError::External(Box::new(err)))?;
+            let selection = if let Some([minx, miny, maxx, maxy]) = config.bbox {
+                fgb_reader
+                    .select_bbox(minx, miny, maxx, maxy)
+                    .await
+                    .map_err(|err| DataFusionError::External(Box::new(err)))?
+            } else {
+                fgb_reader
+                    .select_all()
+                    .await
+                    .map_err(|err| DataFusionError::External(Box::new(err)))?
+            };
             let stream = FlatGeobufRecordBatchStream::try_new(selection, options)
                 .map_err(|err| DataFusionError::External(Box::new(err)))?;
             Ok(stream.boxed())
         }))
     }
+}
+
+fn columnar_to_bbox(value: ColumnarValue) -> Result<Option<[f64; 4]>> {
+    if let ColumnarValue::Array(arr) = value {
+        if let Some(struct_arr) = arr.as_any().downcast_ref::<StructArray>() {
+            if struct_arr.len() > 0 && struct_arr.num_columns() >= 4 {
+                let col0 = struct_arr.column(0).as_any().downcast_ref::<Float64Array>();
+                let col1 = struct_arr.column(1).as_any().downcast_ref::<Float64Array>();
+                let col2 = struct_arr.column(2).as_any().downcast_ref::<Float64Array>();
+                let col3 = struct_arr.column(3).as_any().downcast_ref::<Float64Array>();
+                if let (Some(c0), Some(c1), Some(c2), Some(c3)) = (col0, col1, col2, col3) {
+                    let xmin = c0.value(0);
+                    let ymin = c1.value(0);
+                    let xmax = c2.value(0);
+                    let ymax = c3.value(0);
+                    return Ok(Some([xmin, ymin, xmax, ymax]));
+                }
+            }
+        }
+    }
+    Ok(None)
+}
+
+fn extract_bbox(expr: &Arc<dyn PhysicalExpr>) -> Result<Option<[f64; 4]>> {
+    if let Some(func) = expr.as_any().downcast_ref::<ScalarFunctionExpr>() {
+        if func.fun().name().eq_ignore_ascii_case("st_intersects") && func.args().len() == 2 {
+            let bbox_expr = func.args()[1].clone();
+            let empty = RecordBatch::new_empty(Arc::new(Schema::empty()));
+            let value = bbox_expr.evaluate(&empty)?;
+            return columnar_to_bbox(value);
+        }
+    }
+    Ok(None)
 }
