@@ -15,6 +15,8 @@
         <link rel="canonical" href="https://geoarrow.github.io/geoarrow-rs/rust/">
       
       
+        <link rel="prev" href="..">
+      
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -311,6 +313,93 @@
   
 
     
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    GeoArrow Rust crates
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    GeoArrow Rust crates
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#crates" class="md-nav__link">
+    <span class="md-ellipsis">
+      Crates
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#versioning" class="md-nav__link">
+    <span class="md-ellipsis">
+      Versioning
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      Version compatibility
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -355,6 +444,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#version-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      Version compatibility
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -377,60 +475,83 @@
 <p><a href="https://github.com/geoarrow/geoarrow-rs/actions/workflows/ci.yml"><img alt="GitHub Workflow Status (CI)" src="https://img.shields.io/github/actions/workflow/status/geoarrow/geoarrow-rs/ci.yml?branch=main" /></a>
 <img alt="Crates.io" src="https://img.shields.io/crates/l/geoarrow" /></p>
 <p>A Rust implementation of the <a href="https://github.com/geoarrow/geoarrow">GeoArrow</a> specification.</p>
-<!-- and bindings to [GeoRust algorithms](https://github.com/georust/geo) for efficient spatial operations on GeoArrow memory. -->
-
 <h2 id="crates">Crates<a class="headerlink" href="#crates" title="Permanent link">&para;</a></h2>
-<p>The <code>geoarrow-rs</code> repo is currently undergoing a large refactor from a single crate (<code>geoarrow</code>) to a monorepo of smaller crates, each with a more well-defined scope. As of May 2025, avoid using the <code>geoarrow</code> crate and instead use the newer crates with a smaller scope, like <code>geoarrow-array</code> and <code>geoarrow-schema</code>.</p>
 <table>
 <thead>
 <tr>
 <th>Name</th>
 <th>Description</th>
-<th>Stability</th>
 <th>Version</th>
 <th>Docs</th>
 </tr>
 </thead>
 <tbody>
 <tr>
+<td><code>geoarrow</code></td>
+<td>Amalgam crate which re-exports items from <code>geoarrow-array</code>, <code>geoarrow-cast</code>, and <code>geoarrow-schema</code>.</td>
+<td><a href="https://crates.io/crates/geoarrow"><img alt="Crates.io" src="https://img.shields.io/crates/v/geoarrow" /></a></td>
+<td><a href="https://docs.rs/geoarrow"><img alt="docs.rs" src="https://img.shields.io/docsrs/geoarrow?label=docs.rs" /></a></td>
+</tr>
+<tr>
 <td><code>geoarrow-array</code></td>
 <td>GeoArrow array definitions.</td>
-<td>Pretty stable</td>
 <td><a href="https://crates.io/crates/geoarrow-array"><img alt="Crates.io" src="https://img.shields.io/crates/v/geoarrow-array" /></a></td>
 <td><a href="https://docs.rs/geoarrow-array"><img alt="docs.rs" src="https://img.shields.io/docsrs/geoarrow-array?label=docs.rs" /></a></td>
 </tr>
 <tr>
 <td><code>geoarrow-cast</code></td>
 <td>Functions for converting from one GeoArrow geometry type to another.</td>
-<td>Pretty stable</td>
 <td><a href="https://crates.io/crates/geoarrow-cast"><img alt="Crates.io" src="https://img.shields.io/crates/v/geoarrow-cast" /></a></td>
 <td><a href="https://docs.rs/geoarrow-cast"><img alt="docs.rs" src="https://img.shields.io/docsrs/geoarrow-cast?label=docs.rs" /></a></td>
 </tr>
 <tr>
 <td><code>geoarrow-flatgeobuf</code></td>
 <td>Reader and writer for FlatGeobuf files to GeoArrow memory.</td>
-<td>Somewhat stable</td>
 <td><a href="https://crates.io/crates/geoarrow-flatgeobuf"><img alt="Crates.io" src="https://img.shields.io/crates/v/geoarrow-flatgeobuf" /></a></td>
 <td><a href="https://docs.rs/geoarrow-flatgeobuf"><img alt="docs.rs" src="https://img.shields.io/docsrs/geoarrow-flatgeobuf?label=docs.rs" /></a></td>
 </tr>
 <tr>
 <td><code>geoarrow-schema</code></td>
 <td>GeoArrow geometry type and metadata definitions.</td>
-<td>Pretty stable</td>
 <td><a href="https://crates.io/crates/geoarrow-schema"><img alt="Crates.io" src="https://img.shields.io/crates/v/geoarrow-schema" /></a></td>
 <td><a href="https://docs.rs/geoarrow-schema"><img alt="docs.rs" src="https://img.shields.io/docsrs/geoarrow-schema?label=docs.rs" /></a></td>
 </tr>
 <tr>
 <td><code>geoparquet</code></td>
 <td>GeoParquet reader and writer.</td>
-<td>Unstable (a refactor is expected soon)</td>
 <td><a href="https://crates.io/crates/geoparquet"><img alt="Crates.io" src="https://img.shields.io/crates/v/geoparquet" /></a></td>
 <td><a href="https://docs.rs/geoparquet"><img alt="docs.rs" src="https://img.shields.io/docsrs/geoparquet?label=docs.rs" /></a></td>
 </tr>
 </tbody>
 </table>
+<p>Additionally we are working on a few other crates that are not yet distributed on crates.io:</p>
+<ul>
+<li><code>geoarrow-geo</code>: Integration with <code>geo</code> crate for spatial algorithms.</li>
+<li><code>geoarrow-geos</code>: Integration with <code>geos</code> crate for spatial algorithms.</li>
+<li><code>geodatafusion</code>: Integration with DataFusion.</li>
+<li><code>geodatafusion-flatgeobuf</code>: FlatGeobuf TableProvider for DataFusion.</li>
+</ul>
 <h2 id="versioning">Versioning<a class="headerlink" href="#versioning" title="Permanent link">&para;</a></h2>
-<p>These crates may diverge in versioning to allow for some sub-crates to receive breaking changes while not forcing a breaking version change to all crates. However, all crates will receive a new breaking version at least every 3 months, as the upstream <code>arrow-rs</code> crates currently publish a breaking version every 3 months.</p>
+<p>These crates may possibly diverge in versioning in the future to allow for some sub-crates to receive breaking changes while not forcing a breaking version change to all crates. However, all crates will receive a new breaking version <em>at least</em> every 3 months, as the upstream <code>arrow</code> crates currently publish a breaking version every 3 months.</p>
+<h2 id="version-compatibility">Version compatibility<a class="headerlink" href="#version-compatibility" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>geoarrow</th>
+<th>arrow-rs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.4.x</td>
+<td>55</td>
+</tr>
+<tr>
+<td>0.5.x</td>
+<td>56</td>
+</tr>
+</tbody>
+</table>
 
 
 
