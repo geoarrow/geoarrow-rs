@@ -112,16 +112,18 @@ impl GeoParquetFile {
         let runtime = get_runtime(py)?;
         let store = store.into_dyn();
         let cloned_store = store.clone();
-        let (path, geoparquet_meta) = runtime.block_on(async move {
-            let mut reader = ParquetObjectReader::new(cloned_store.clone(), path.path());
-            if let Some(size) = path.size() {
-                reader = reader.with_file_size(size);
-            }
-            let arrow_meta = ArrowReaderMetadata::load_async(&mut reader, Default::default())
-                .await
-                .map_err(|err| GeoArrowError::External(Box::new(err)))?;
-            let geoparquet_meta = GeoParquetReaderMetadata::from_arrow_meta(arrow_meta)?;
-            Ok::<_, PyGeoArrowError>((path, geoparquet_meta))
+        let (path, geoparquet_meta) = py.allow_threads(|| {
+            runtime.block_on(async move {
+                let mut reader = ParquetObjectReader::new(cloned_store.clone(), path.path());
+                if let Some(size) = path.size() {
+                    reader = reader.with_file_size(size);
+                }
+                let arrow_meta = ArrowReaderMetadata::load_async(&mut reader, Default::default())
+                    .await
+                    .map_err(|err| GeoArrowError::External(Box::new(err)))?;
+                let geoparquet_meta = GeoParquetReaderMetadata::from_arrow_meta(arrow_meta)?;
+                Ok::<_, PyGeoArrowError>((path, geoparquet_meta))
+            })
         })?;
         Ok(Self {
             path: path.path(),
@@ -299,13 +301,15 @@ impl GeoParquetFile {
             parse_to_native,
             coord_type,
         )?;
-        runtime.block_on(async move {
-            let schema = stream.schema().clone();
-            let batches = stream
-                .try_collect()
-                .await
-                .map_err(|err| PyGeoArrowError::GeoArrowError(err.into()))?;
-            Ok(Arro3Table::from(PyTable::try_new(batches, schema)?))
+        py.allow_threads(|| {
+            runtime.block_on(async move {
+                let schema = stream.schema().clone();
+                let batches = stream
+                    .try_collect()
+                    .await
+                    .map_err(|err| PyGeoArrowError::GeoArrowError(err.into()))?;
+                Ok(Arro3Table::from(PyTable::try_new(batches, schema)?))
+            })
         })
     }
 }
@@ -476,9 +480,11 @@ impl GeoParquetDataset {
         let store = store.into_dyn();
         let cloned_store = store.clone();
 
-        let meta = runtime.block_on(async move {
-            let meta = fetch_arrow_metadata_objects(paths, store.clone()).await?;
-            Ok::<_, PyGeoArrowError>(meta)
+        let meta = py.allow_threads(|| {
+            runtime.block_on(async move {
+                let meta = fetch_arrow_metadata_objects(paths, store.clone()).await?;
+                Ok::<_, PyGeoArrowError>(meta)
+            })
         })?;
 
         Ok(Self {
@@ -584,6 +590,6 @@ impl GeoParquetDataset {
             }),
         };
         let readers = self.to_readers(options, parse_to_native, coord_type)?;
-        runtime.block_on(Self::read_inner(readers))
+        py.allow_threads(|| runtime.block_on(Self::read_inner(readers)))
     }
 }

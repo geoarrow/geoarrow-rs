@@ -48,19 +48,21 @@ pub fn read_flatgeobuf(
 
             let runtime = get_runtime(py)?;
 
-            runtime.block_on(async move {
-                use futures::TryStreamExt;
-                use geoarrow_flatgeobuf::reader::FlatGeobufRecordBatchStream;
+            py.allow_threads(|| {
+                runtime.block_on(async move {
+                    use futures::TryStreamExt;
+                    use geoarrow_flatgeobuf::reader::FlatGeobufRecordBatchStream;
 
-                let object_store_wrapper =
-                    ObjectStoreWrapper::new(async_reader.store, async_reader.path);
-                let async_client =
-                    AsyncBufferedHttpRangeClient::with(object_store_wrapper.clone(), "");
-                let fgb_reader = HttpFgbReader::new(async_client).await?;
-                let fgb_header = fgb_reader.header();
+                    let object_store_wrapper =
+                        ObjectStoreWrapper::new(async_reader.store, async_reader.path);
+                    let async_client =
+                        AsyncBufferedHttpRangeClient::with(object_store_wrapper.clone(), "");
+                    let fgb_reader = HttpFgbReader::new(async_client).await?;
+                    let fgb_header = fgb_reader.header();
 
-                let properties_schema =
-                    if let Some(properties_schema) = fgb_header.properties_schema(use_view_types) {
+                    let properties_schema = if let Some(properties_schema) =
+                        fgb_header.properties_schema(use_view_types)
+                    {
                         properties_schema
                     } else {
                         let async_scan_client =
@@ -72,26 +74,28 @@ pub fn read_flatgeobuf(
                             .await?;
                         scanner.finish()
                     };
-                let properties_schema = apply_projection(properties_schema, &columns);
+                    let properties_schema = apply_projection(properties_schema, &columns);
 
-                let geometry_type = fgb_header.geoarrow_type(coord_type)?;
-                let selection = if let Some(bbox) = bbox {
-                    fgb_reader
-                        .select_bbox(bbox.0, bbox.1, bbox.2, bbox.3)
-                        .await?
-                } else {
-                    fgb_reader.select_all().await?
-                };
+                    let geometry_type = fgb_header.geoarrow_type(coord_type)?;
+                    let selection = if let Some(bbox) = bbox {
+                        fgb_reader
+                            .select_bbox(bbox.0, bbox.1, bbox.2, bbox.3)
+                            .await?
+                    } else {
+                        fgb_reader.select_all().await?
+                    };
 
-                let options = FlatGeobufReaderOptions::new(properties_schema, geometry_type)
-                    .with_batch_size(batch_size)
-                    .with_read_geometry(read_geometry);
-                let record_batch_stream = FlatGeobufRecordBatchStream::try_new(selection, options)?;
-                let schema = record_batch_stream.schema();
-                let batches = record_batch_stream.try_collect::<Vec<_>>().await?;
+                    let options = FlatGeobufReaderOptions::new(properties_schema, geometry_type)
+                        .with_batch_size(batch_size)
+                        .with_read_geometry(read_geometry);
+                    let record_batch_stream =
+                        FlatGeobufRecordBatchStream::try_new(selection, options)?;
+                    let schema = record_batch_stream.schema();
+                    let batches = record_batch_stream.try_collect::<Vec<_>>().await?;
 
-                let table = Arro3Table::from(PyTable::try_new(batches, schema)?);
-                Ok::<_, PyGeoArrowError>(table)
+                    let table = Arro3Table::from(PyTable::try_new(batches, schema)?);
+                    Ok::<_, PyGeoArrowError>(table)
+                })
             })
         }
         AnyFileReader::Sync(mut sync_reader) => {
