@@ -9,10 +9,10 @@ def get_type_id(input: ArrowStreamExportable) -> ArrayReader: ...
 def get_type_id(
     input: ArrowArrayExportable | ArrowStreamExportable,
 ) -> Array | ArrayReader:
-    """
+    """Returns integer type ids for each geometry in the input.
 
     The returned integers match the internal ids of the GeoArrow [Geometry
-    type](https://geoarrow.org/format.html#geometry).
+    type](https://geoarrow.org/format.html#geometry):
 
     | Type ID | Geometry type         |
     | ------- | --------------------- |
@@ -50,9 +50,8 @@ def get_type_id(
         not distinguish between dimensions. Also the ids differ for `Point` and
         `LineString` compared to here.
 
-
     Args:
-        input: _description_
+        input: Input geometry array, chunked array, or stream.
 
     Returns:
         An int8 Array of type ids.
