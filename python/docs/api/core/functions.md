@@ -2,25 +2,9 @@
 
 Interoperability with other Python geospatial libraries (Shapely, GeoPandas) and in-memory geospatial formats (WKB, WKT).
 
-::: geoarrow.rust.core
-    options:
-      filters:
-        - "!^_"
-      members:
-        - from_wkb
-        - from_wkt
-        - to_wkb
-        - to_wkt
-
-<!-- ## Table functions
-
-::: geoarrow.rust.core
-    options:
-      filters:
-        - "!^_"
-      members:
-        - geometry_col -->
-
-## CRS Access
-
+::: geoarrow.rust.core.from_wkb
+::: geoarrow.rust.core.from_wkt
+::: geoarrow.rust.core.to_wkb
+::: geoarrow.rust.core.to_wkt
 ::: geoarrow.rust.core.get_crs
+::: geoarrow.rust.core.get_type_id

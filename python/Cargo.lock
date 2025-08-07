@@ -1077,7 +1077,7 @@ dependencies = [
  "geo",
  "numpy",
  "pyo3",
- "pyo3-arrow 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pyo3-arrow",
  "pyo3-geoarrow",
 ]
 
@@ -1085,9 +1085,13 @@ dependencies = [
 name = "geoarrow-rust-core"
 version = "0.5.0-beta.1"
 dependencies = [
+ "arrow-array",
+ "arrow-schema",
+ "geo-traits",
  "geoarrow-array",
  "geoarrow-schema",
  "pyo3",
+ "pyo3-arrow",
  "pyo3-geoarrow",
 ]
 
@@ -1110,7 +1114,7 @@ dependencies = [
  "object_store",
  "parquet",
  "pyo3",
- "pyo3-arrow 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pyo3-arrow",
  "pyo3-async-runtimes",
  "pyo3-file",
  "pyo3-geoarrow",
@@ -2387,25 +2391,6 @@ dependencies = [
 [[package]]
 name = "pyo3-arrow"
 version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8454903e6b8406a98c9210e828f85af167aef1816208a1c04e837185a49eee5b"
-dependencies = [
- "arrow-array",
- "arrow-buffer",
- "arrow-cast",
- "arrow-data",
- "arrow-schema",
- "arrow-select",
- "half",
- "indexmap 2.10.0",
- "numpy",
- "pyo3",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "pyo3-arrow"
-version = "0.11.0"
 source = "git+https://github.com/kylebarron/arro3?rev=fda03cebe9cfbf8ad292f8070ea21c22b32af1a3#fda03cebe9cfbf8ad292f8070ea21c22b32af1a3"
 dependencies = [
  "arrow-array",
@@ -2479,7 +2464,7 @@ dependencies = [
  "geoarrow-schema",
  "geozero",
  "pyo3",
- "pyo3-arrow 0.11.0 (git+https://github.com/kylebarron/arro3?rev=fda03cebe9cfbf8ad292f8070ea21c22b32af1a3)",
+ "pyo3-arrow",
  "serde_json",
  "url",
 ]
