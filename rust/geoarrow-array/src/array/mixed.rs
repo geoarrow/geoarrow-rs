@@ -486,7 +486,7 @@ impl MixedGeometryArray {
 
     // Note: this is copied from ArrayAccessor because MixedGeometryArray doesn't implement
     // GeoArrowArray
-    pub(crate) unsafe fn value_unchecked(&self, index: usize) -> Geometry {
+    pub(crate) unsafe fn value_unchecked(&self, index: usize) -> Geometry<'_> {
         let type_id = self.type_ids[index];
         let offset = self.offsets[index] as usize;
 
