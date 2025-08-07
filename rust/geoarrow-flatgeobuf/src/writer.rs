@@ -64,21 +64,27 @@ impl FlatGeobufWriterOptions {
     }
 
     /// Set the dataset title
-    pub fn with_title(self, title: Option<String>) -> Self {
-        Self { title, ..self }
+    pub fn with_title(self, title: String) -> Self {
+        Self {
+            title: Some(title),
+            ..self
+        }
     }
 
     /// Set the dataset description (intended for free form long text)
-    pub fn with_description(self, description: Option<String>) -> Self {
+    pub fn with_description(self, description: String) -> Self {
         Self {
-            description,
+            description: Some(description),
             ..self
         }
     }
 
     /// Set the dataset metadata (intended to be application specific)
-    pub fn with_metadata(self, metadata: Option<String>) -> Self {
-        Self { metadata, ..self }
+    pub fn with_metadata(self, metadata: String) -> Self {
+        Self {
+            metadata: Some(metadata),
+            ..self
+        }
     }
 
     /// Set the method for transforming CRS to WKT
@@ -86,9 +92,9 @@ impl FlatGeobufWriterOptions {
     /// This is implemented as an external trait so that external libraries can inject the method
     /// for CRS conversions. For example, the Python API uses the `pyproj` Python library to
     /// perform the conversion rather than linking into PROJ from Rust.
-    pub fn with_crs_transform(self, crs_transform: Option<Box<dyn CrsTransform>>) -> Self {
+    pub fn with_crs_transform(self, crs_transform: Box<dyn CrsTransform>) -> Self {
         Self {
-            crs_transform,
+            crs_transform: Some(crs_transform),
             ..self
         }
     }
