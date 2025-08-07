@@ -45,6 +45,12 @@ def get_type_id(
     | 36      | MultiPolygon ZM       |
     | 37      | GeometryCollection ZM |
 
+    !!! warning
+        These ids do not exactly match the result of `shapely.get_type_id`. Shapely does
+        not distinguish between dimensions. Also the ids differ for `Point` and
+        `LineString` compared to here.
+
+
     Args:
         input: _description_
 
