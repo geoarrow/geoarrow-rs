@@ -241,11 +241,10 @@ mod test {
     use geoarrow_schema::PointType;
     use wkt::wkt;
 
+    use super::*;
     use crate::reader::{
         FlatGeobufHeaderExt, FlatGeobufReaderOptions, FlatGeobufRecordBatchIterator,
     };
-
-    use super::*;
 
     // FlatGeobuf, or at least the FlatGeobuf rust library, doesn't support writing null or empty
     // points.
