@@ -549,12 +549,13 @@ fn force_geometry_collection_dim(
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use geo_traits::to_geo::{ToGeoPoint, ToGeoPolygon};
     use geoarrow_array::cast::to_wkb;
     use geoarrow_array::test::{point, polygon};
     use geoarrow_geo::util::to_geo::geometry_to_geo;
     use geoarrow_schema::CoordType;
+
+    use super::*;
 
     #[test]
     fn test_force_2d_point() {
