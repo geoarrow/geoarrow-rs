@@ -11,6 +11,10 @@
 //!
 //! This crate is an "amalgam" crate, which just re-exports types from the underlying sub-crates.
 
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(not(test), warn(unused_crate_dependencies))]
+#![warn(missing_docs)]
+
 pub mod array;
 pub mod datatypes;
 pub mod error;
