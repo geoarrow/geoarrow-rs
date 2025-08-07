@@ -18,7 +18,7 @@ arrow = "56"
 arrow-array = "56"
 arrow-buffer = "56"
 arrow-schema = "56"
-flatgeobuf = "5.0"
+flatgeobuf = { version = "5.0", default-features = false }
 geo-traits = "0.3"
 geoarrow-array = { path = "../rust/geoarrow-array" }
 geoarrow-cast = { path = "../rust/geoarrow-cast" }

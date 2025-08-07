@@ -34,7 +34,7 @@ async = [
 [dependencies]
 arrow = { workspace = true }
 bytes = "1"
-flatgeobuf = { workspace = true }
+flatgeobuf = { workspace = true, default-features = false }
 futures = { version = "0.3", optional = true }
 http-range-client = { workspace = true, default-features = false }
 indexmap = { workspace = true }
