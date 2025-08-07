@@ -17,7 +17,7 @@ exclude = ["js"]
 resolver = "2"
 
 [workspace.package]
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
@@ -49,15 +49,15 @@ futures = "0.3"
 geo = "0.30.0"
 geo-traits = "0.3.0"
 geo-types = "0.7.16"
-geoarrow-array = { path = "rust/geoarrow-array", version = "0.4" }
-geoarrow-cast = { path = "rust/geoarrow-cast", version = "0.4" }
-geoarrow-flatgeobuf = { path = "rust/geoarrow-flatgeobuf", version = "0.4" }
-geoarrow-geo = { path = "rust/geoarrow-geo", version = "0.4" }
-geoarrow-schema = { path = "rust/geoarrow-schema", version = "0.4" }
-geoarrow-test = { path = "rust/geoarrow-test", version = "0.4" }
+geoarrow-array = { path = "rust/geoarrow-array", version = "0.5" }
+geoarrow-cast = { path = "rust/geoarrow-cast", version = "0.5" }
+geoarrow-flatgeobuf = { path = "rust/geoarrow-flatgeobuf", version = "0.5" }
+geoarrow-geo = { path = "rust/geoarrow-geo", version = "0.5" }
+geoarrow-schema = { path = "rust/geoarrow-schema", version = "0.5" }
+geoarrow-test = { path = "rust/geoarrow-test", version = "0.5" }
 geodatafusion = { path = "rust/geodatafusion" }
 geohash = "0.13.1"
-geoparquet = { path = "rust/geoparquet", version = "0.4" }
+geoparquet = { path = "rust/geoparquet", version = "0.5" }
 geos = { version = "10", features = ["v3_10_0"] }
 geozero = "0.14"
 http-range-client = { version = "0.9", default-features = false }

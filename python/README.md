@@ -9,11 +9,10 @@ Python bindings to the [GeoArrow Rust implementation](https://github.com/geoarro
 This library contains Python bindings to the [GeoArrow Rust implementation](https://github.com/geoarrow/geoarrow-rs).
 
 - **Fast**: Connects to algorithms implemented in [GeoRust](https://georust.org/), which compile to native code.
-- **Parallel**: Multi-threading is enabled out-of-the-box for all operations on chunked data structures.
 - **Self-contained**: `pyproj` is the only Python dependency.
 - **Easy to install**: Distributed as static binary wheels with zero C dependencies.
 - **Static typing**: type hints for all operations.
-- **Interoperable ecosystem**: Efficient data exchange with other libraries in the Python Arrow and GeoArrow ecosystems. , such as [geoarrow-c](https://github.com/geoarrow/geoarrow-c/tree/main/python) or [lightning-fast map rendering](https://github.com/developmentseed/lonboard).
+- **Interoperable ecosystem**: Efficient data exchange with other libraries in the Python Arrow and GeoArrow ecosystems, such as [geoarrow-c](https://github.com/geoarrow/geoarrow-c/tree/main/python) or [lightning-fast map rendering](https://github.com/developmentseed/lonboard).
 
 ## Documentation
 
@@ -34,10 +33,4 @@ In order to obtain relevant modules, you should install them from PyPI directly,
 ```
 pip install geoarrow-rust-core geoarrow-rust-compute geoarrow-rust-io
 ```
-
-Future potential modules:
-
-- `geoarrow-rust-geos`: [GEOS](https://libgeos.org/)-based algorithms on GeoArrow memory.
-- `geoarrow-rust-proj`: [PROJ](https://proj.org/en/9.3/)-based coordinate reprojection on GeoArrow memory.
-
 See [DEVELOP.md](DEVELOP.md) for more information on developing and building the Python bindings.
