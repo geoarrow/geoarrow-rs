@@ -17,7 +17,7 @@ flatgeobuf = { workspace = true }
 futures = { workspace = true }
 geoarrow-flatgeobuf = { workspace = true, features = ["object_store"] }
 geoarrow-schema = { workspace = true }
-http-range-client = { workspace = true, optional = true, default-features = false }
+http-range-client = { workspace = true, default-features = false }
 object_store = { workspace = true }
 
 [dev-dependencies]
