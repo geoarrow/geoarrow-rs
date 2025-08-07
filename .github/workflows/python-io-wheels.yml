@@ -29,9 +29,6 @@ jobs:
             target: armv7
             manylinux: auto
           - runner: ubuntu-latest
-            target: s390x
-            manylinux: auto
-          - runner: ubuntu-latest
             target: ppc64le
             manylinux: auto
         module:
