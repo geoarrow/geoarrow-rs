@@ -95,8 +95,10 @@ impl<R: Read> FlatGeobufRecordBatchIterator<R, NotSeekable> {
         let mut row_count = 0;
         loop {
             if row_count >= self.batch_size {
-                let batch = record_batch_builder.finish()?;
-                return Ok(Some(batch));
+                if let Some(num_rows_remaining) = self.num_rows_remaining {
+                    self.num_rows_remaining = Some(num_rows_remaining.saturating_sub(row_count));
+                }
+                return Ok(Some(record_batch_builder.finish()?));
             }
 
             if let Some(feature) = self
@@ -107,16 +109,12 @@ impl<R: Read> FlatGeobufRecordBatchIterator<R, NotSeekable> {
                 feature
                     .process_properties(&mut record_batch_builder)
                     .map_err(|err| GeoArrowError::External(Box::new(err)))?;
-                // record_batch_builder.properties_end()?;
-
                 record_batch_builder.push_geometry(
                     feature
                         .geometry_trait()
                         .map_err(|err| GeoArrowError::External(Box::new(err)))?
                         .as_ref(),
                 )?;
-
-                // $builder.feature_end(0)?;
                 row_count += 1;
             } else if row_count > 0 {
                 return Ok(Some(record_batch_builder.finish()?));
@@ -159,6 +157,9 @@ impl<R: Read + Seek> FlatGeobufRecordBatchIterator<R, Seekable> {
         let mut row_count = 0;
         loop {
             if row_count >= self.batch_size {
+                if let Some(num_rows_remaining) = self.num_rows_remaining {
+                    self.num_rows_remaining = Some(num_rows_remaining.saturating_sub(row_count));
+                }
                 return Ok(Some(record_batch_builder.finish()?));
             }
 
@@ -170,16 +171,12 @@ impl<R: Read + Seek> FlatGeobufRecordBatchIterator<R, Seekable> {
                 feature
                     .process_properties(&mut record_batch_builder)
                     .map_err(|err| GeoArrowError::External(Box::new(err)))?;
-                // record_batch_builder.properties_end()?;
-
                 record_batch_builder.push_geometry(
                     feature
                         .geometry_trait()
                         .map_err(|err| GeoArrowError::External(Box::new(err)))?
                         .as_ref(),
                 )?;
-
-                // $builder.feature_end(0)?;
                 row_count += 1;
             } else if row_count > 0 {
                 return Ok(Some(record_batch_builder.finish()?));

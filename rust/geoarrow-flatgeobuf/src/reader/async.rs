@@ -78,8 +78,10 @@ impl<T: AsyncHttpRangeClient + Unpin + Send + 'static> FlatGeobufRecordBatchStre
         let mut row_count = 0;
         loop {
             if row_count >= self.batch_size {
-                let batch = record_batch_builder.finish()?;
-                return Ok(Some(batch));
+                if let Some(num_rows_remaining) = self.num_rows_remaining {
+                    self.num_rows_remaining = Some(num_rows_remaining.saturating_sub(row_count));
+                }
+                return Ok(Some(record_batch_builder.finish()?));
             }
 
             if let Some(feature) = self
