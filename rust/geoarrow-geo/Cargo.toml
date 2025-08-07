@@ -21,3 +21,6 @@ geoarrow-schema = { workspace = true }
 [dev-dependencies]
 geo = { workspace = true }
 geoarrow-array = { workspace = true, features = ["test-data"] }
+
+[package.metadata.docs.rs]
+all-features = true
