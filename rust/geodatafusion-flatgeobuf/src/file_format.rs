@@ -1,24 +1,35 @@
 use std::any::Any;
 use std::collections::HashMap;
-use std::fmt::Debug;
+use std::fmt::{self, Debug};
 use std::sync::Arc;
 
+use arrow_array::{RecordBatch, RecordBatchIterator, RecordBatchReader};
 use arrow_schema::{Schema, SchemaRef};
 use async_trait::async_trait;
 use datafusion::catalog::Session;
 use datafusion::catalog::memory::DataSourceExec;
+use datafusion::common::runtime::SpawnedTask;
 use datafusion::common::stats::Precision;
 use datafusion::common::{GetExt, Statistics};
 use datafusion::datasource::file_format::file_compression_type::FileCompressionType;
 use datafusion::datasource::file_format::{FileFormat, FileFormatFactory};
 use datafusion::datasource::physical_plan::{FileScanConfig, FileScanConfigBuilder, FileSource};
 use datafusion::error::{DataFusionError, Result};
-use datafusion::physical_plan::ExecutionPlan;
+use datafusion::execution::{SendableRecordBatchStream, TaskContext};
+use datafusion::physical_expr::LexRequirement;
+use datafusion::physical_plan::{DisplayAs, DisplayFormatType, ExecutionPlan};
+use datafusion_datasource::display::FileGroupDisplay;
+use datafusion_datasource::file_sink_config::{FileSink, FileSinkConfig};
+use datafusion_datasource::sink::{DataSink, DataSinkExec};
+use datafusion_datasource::write::ObjectWriterBuilder;
+use datafusion_datasource::write::demux::DemuxedStreamReceiver;
 use geoarrow_flatgeobuf::reader::FlatGeobufHeaderExt;
 use geoarrow_flatgeobuf::reader::schema::FlatGeobufSchemaScanner;
+use geoarrow_flatgeobuf::writer::{FlatGeobufWriterOptions, write_flatgeobuf};
 use geoarrow_schema::{CoordType, GeoArrowType};
 use object_store::path::Path;
 use object_store::{ObjectMeta, ObjectStore};
+use tokio::io::AsyncWriteExt;
 
 use crate::source::FlatGeobufSource;
 use crate::utils::open_flatgeobuf_reader;
@@ -208,6 +219,17 @@ impl FileFormat for FlatGeobufFormat {
         Ok(DataSourceExec::from_data_source(config))
     }
 
+    async fn create_writer_physical_plan(
+        &self,
+        input: Arc<dyn ExecutionPlan>,
+        _state: &dyn Session,
+        conf: FileSinkConfig,
+        order_requirements: Option<LexRequirement>,
+    ) -> Result<Arc<dyn ExecutionPlan>> {
+        let sink = Arc::new(FlatGeobufSink::new(conf));
+        Ok(Arc::new(DataSinkExec::new(input, sink, order_requirements)) as _)
+    }
+
     fn file_source(&self) -> Arc<dyn FileSource> {
         Arc::new(FlatGeobufSource::default())
     }
@@ -215,6 +237,105 @@ impl FileFormat for FlatGeobufFormat {
     /// Returns whether this instance uses compression if applicable
     fn compression_type(&self) -> Option<FileCompressionType> {
         Some(FileCompressionType::UNCOMPRESSED)
+    }
+}
+
+#[derive(Debug)]
+pub struct FlatGeobufSink {
+    config: FileSinkConfig,
+}
+
+impl FlatGeobufSink {
+    pub fn new(config: FileSinkConfig) -> Self {
+        Self { config }
+    }
+}
+
+impl DisplayAs for FlatGeobufSink {
+    fn fmt_as(&self, t: DisplayFormatType, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match t {
+            DisplayFormatType::Default | DisplayFormatType::Verbose => {
+                write!(f, "FlatGeobufSink(file_groups=")?;
+                FileGroupDisplay(&self.config.file_group).fmt_as(t, f)?;
+                write!(f, ")")
+            }
+            DisplayFormatType::TreeRender => {
+                writeln!(f, "format: flatgeobuf")?;
+                write!(f, "file={}", &self.config.original_url)
+            }
+        }
+    }
+}
+
+#[async_trait]
+impl FileSink for FlatGeobufSink {
+    fn config(&self) -> &FileSinkConfig {
+        &self.config
+    }
+
+    async fn spawn_writer_tasks_and_join(
+        &self,
+        _context: &Arc<TaskContext>,
+        demux_task: SpawnedTask<Result<()>>,
+        mut file_stream_rx: DemuxedStreamReceiver,
+        object_store: Arc<dyn ObjectStore>,
+    ) -> Result<u64> {
+        let mut total_rows: u64 = 0;
+        while let Some((path, mut rb_rx)) = file_stream_rx.recv().await {
+            let mut batches: Vec<RecordBatch> = Vec::new();
+            while let Some(batch) = rb_rx.recv().await {
+                total_rows += batch.num_rows() as u64;
+                batches.push(batch);
+            }
+
+            if batches.is_empty() {
+                continue;
+            }
+
+            let schema = self.config.output_schema().clone();
+            let iter = RecordBatchIterator::new(batches.into_iter().map(Ok), schema);
+            let reader: Box<dyn RecordBatchReader> = Box::new(iter);
+            let name = path
+                .filename()
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| "layer".to_string());
+            let options = FlatGeobufWriterOptions::new(name);
+            let mut buffer = Vec::new();
+            write_flatgeobuf(reader, &mut buffer, options)
+                .map_err(|e| DataFusionError::External(Box::new(e)))?;
+            let mut writer = ObjectWriterBuilder::new(
+                FileCompressionType::UNCOMPRESSED,
+                &path,
+                object_store.clone(),
+            )
+            .build()?;
+            writer.write_all(&buffer).await?;
+            writer.shutdown().await?;
+        }
+        demux_task
+            .join()
+            .await
+            .map_err(|e| DataFusionError::Execution(e.to_string()))??;
+        Ok(total_rows)
+    }
+}
+
+#[async_trait]
+impl DataSink for FlatGeobufSink {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn schema(&self) -> &SchemaRef {
+        self.config.output_schema()
+    }
+
+    async fn write_all(
+        &self,
+        data: SendableRecordBatchStream,
+        context: &Arc<TaskContext>,
+    ) -> Result<u64> {
+        FileSink::write_all(self, data, context).await
     }
 }
 
