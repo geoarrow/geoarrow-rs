@@ -54,7 +54,7 @@ impl ScalarUDFImpl for XMin {
     }
 
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
-        Ok(extrema_impl(args, |rect| rect.min().x())?)
+        Ok(extrema_impl(args, false, |rect| rect.min().x())?)
     }
 
     fn documentation(&self) -> Option<&Documentation> {
@@ -115,7 +115,7 @@ impl ScalarUDFImpl for YMin {
     }
 
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
-        Ok(extrema_impl(args, |rect| rect.min().y())?)
+        Ok(extrema_impl(args, false, |rect| rect.min().y())?)
     }
 
     fn documentation(&self) -> Option<&Documentation> {
@@ -124,6 +124,69 @@ impl ScalarUDFImpl for YMin {
                 DOC_SECTION_OTHER,
                 "Returns Y minima of a bounding box 2d or 3d or a geometry",
                 "ST_YMin(geometry)",
+            )
+            .with_argument("box", "The geometry or box input")
+            .with_related_udf("st_xmin")
+            .with_related_udf("st_ymin")
+            .with_related_udf("st_zmin")
+            .with_related_udf("st_xmax")
+            .with_related_udf("st_ymax")
+            .with_related_udf("st_zmax")
+            .build()
+        }))
+    }
+}
+
+#[derive(Debug)]
+pub struct ZMin {
+    signature: Signature,
+}
+
+impl ZMin {
+    pub fn new() -> Self {
+        Self {
+            signature: any_single_geometry_type_input(),
+        }
+    }
+}
+
+impl Default for ZMin {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+static ZMIN_DOC: OnceLock<Documentation> = OnceLock::new();
+
+impl ScalarUDFImpl for ZMin {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn name(&self) -> &str {
+        "st_zmin"
+    }
+
+    fn signature(&self) -> &Signature {
+        &self.signature
+    }
+
+    fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType> {
+        Ok(DataType::Float64)
+    }
+
+    fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
+        Ok(extrema_impl(args, true, |rect| {
+            rect.min().nth(2).unwrap_or(f64::MIN)
+        })?)
+    }
+
+    fn documentation(&self) -> Option<&Documentation> {
+        Some(ZMIN_DOC.get_or_init(|| {
+            Documentation::builder(
+                DOC_SECTION_OTHER,
+                "Returns the Z minima of a 2D or 3D bounding box or a geometry",
+                "ST_ZMin(geometry)",
             )
             .with_argument("box", "The geometry or box input")
             .with_related_udf("st_xmin")
@@ -176,7 +239,7 @@ impl ScalarUDFImpl for XMax {
     }
 
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
-        Ok(extrema_impl(args, |rect| rect.max().x())?)
+        Ok(extrema_impl(args, false, |rect| rect.max().x())?)
     }
 
     fn documentation(&self) -> Option<&Documentation> {
@@ -237,7 +300,7 @@ impl ScalarUDFImpl for YMax {
     }
 
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
-        Ok(extrema_impl(args, |rect| rect.max().y())?)
+        Ok(extrema_impl(args, false, |rect| rect.max().y())?)
     }
 
     fn documentation(&self) -> Option<&Documentation> {
@@ -259,12 +322,120 @@ impl ScalarUDFImpl for YMax {
     }
 }
 
+#[derive(Debug)]
+pub struct ZMax {
+    signature: Signature,
+}
+
+impl ZMax {
+    pub fn new() -> Self {
+        Self {
+            signature: any_single_geometry_type_input(),
+        }
+    }
+}
+
+impl Default for ZMax {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+static ZMAX_DOC: OnceLock<Documentation> = OnceLock::new();
+
+impl ScalarUDFImpl for ZMax {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn name(&self) -> &str {
+        "st_zmax"
+    }
+
+    fn signature(&self) -> &Signature {
+        &self.signature
+    }
+
+    fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType> {
+        Ok(DataType::Float64)
+    }
+
+    fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
+        Ok(extrema_impl(args, true, |rect| {
+            rect.max().nth(2).unwrap_or(f64::MAX)
+        })?)
+    }
+
+    fn documentation(&self) -> Option<&Documentation> {
+        Some(ZMAX_DOC.get_or_init(|| {
+            Documentation::builder(
+                DOC_SECTION_OTHER,
+                "Returns Z maxima of a bounding box 2d or 3d or a geometry",
+                "ST_ZMax(geometry)",
+            )
+            .with_argument("box", "The geometry or box input")
+            .with_related_udf("st_xmin")
+            .with_related_udf("st_ymin")
+            .with_related_udf("st_zmin")
+            .with_related_udf("st_xmax")
+            .with_related_udf("st_ymax")
+            .with_related_udf("st_zmax")
+            .build()
+        }))
+    }
+}
+
 fn extrema_impl(
     args: ScalarFunctionArgs,
+    include_z: bool,
     cb: impl Fn(Rect) -> f64,
 ) -> GeoDataFusionResult<ColumnarValue> {
     let arrays = ColumnarValue::values_to_arrays(&args.args)?;
     let geo_array = from_arrow_array(&arrays[0], &args.arg_fields[0])?;
-    let result = impl_extrema(&geo_array, cb)?;
+    let result = impl_extrema(&geo_array, include_z, cb)?;
     Ok(ColumnarValue::Array(Arc::new(result)))
+}
+
+#[cfg(test)]
+mod test {
+    use approx::relative_eq;
+    use arrow_array::cast::AsArray;
+    use arrow_array::types::Float64Type;
+    use datafusion::prelude::*;
+
+    use super::*;
+    use crate::udf::native::io::GeomFromText;
+
+    async fn extrema_test(udf: &str, expected: f64) {
+        let ctx = SessionContext::new();
+
+        ctx.register_udf(XMin::new().into());
+        ctx.register_udf(YMin::new().into());
+        ctx.register_udf(ZMin::new().into());
+        ctx.register_udf(XMax::new().into());
+        ctx.register_udf(YMax::new().into());
+        ctx.register_udf(ZMax::new().into());
+        ctx.register_udf(GeomFromText::default().into());
+
+        let out = ctx
+            .sql(&format!(
+                "SELECT {udf}(ST_GeomFromText('LINESTRING Z(1 2 3, 3 4 5, 5 6 7)'));"
+            ))
+            .await
+            .unwrap();
+        let batch = out.collect().await.unwrap().into_iter().next().unwrap();
+        let col = batch.column(0);
+        let arr = col.as_primitive::<Float64Type>();
+        assert!(relative_eq!(arr.value(0), expected));
+    }
+
+    #[tokio::test]
+    async fn test_2d() {
+        extrema_test("ST_XMin", 1.0).await;
+        extrema_test("ST_YMin", 2.0).await;
+        extrema_test("ST_ZMin", 3.0).await;
+        extrema_test("ST_XMax", 5.0).await;
+        extrema_test("ST_YMax", 6.0).await;
+        extrema_test("ST_ZMax", 7.0).await;
+    }
 }
