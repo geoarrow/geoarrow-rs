@@ -3,7 +3,9 @@
 use std::any::Any;
 use std::sync::Arc;
 
-use arrow_array::{Array, Float64Array, RecordBatch, StructArray};
+use arrow_array::cast::AsArray;
+use arrow_array::types::Float64Type;
+use arrow_array::{Array, RecordBatch, StructArray};
 use arrow_schema::{Schema, SchemaRef};
 use datafusion::common::Statistics;
 use datafusion::datasource::listing::PartitionedFile;
@@ -40,6 +42,13 @@ impl FlatGeobufSource {
             metrics: ExecutionPlanMetricsSet::new(),
             projected_statistics: None,
             bbox: None,
+        }
+    }
+
+    fn with_bbox(self, bbox: [f64; 4]) -> Self {
+        Self {
+            bbox: Some(bbox),
+            ..self
         }
     }
 }
@@ -120,12 +129,11 @@ impl FileSource for FlatGeobufSource {
             }
             pushdown_flags.push(PushedDown::No);
         }
-        if let Some(b) = bbox {
-            let mut new_self = self.clone();
-            new_self.bbox = Some(b);
+
+        if let Some(bbox) = bbox {
             Ok(
                 FilterPushdownPropagation::with_parent_pushdown_result(pushdown_flags)
-                    .with_updated_node(Arc::new(new_self) as _),
+                    .with_updated_node(Arc::new(self.clone().with_bbox(bbox))),
             )
         } else {
             Ok(FilterPushdownPropagation::with_parent_pushdown_result(
@@ -190,10 +198,10 @@ fn columnar_to_bbox(value: ColumnarValue) -> Result<Option<[f64; 4]>> {
     if let ColumnarValue::Array(arr) = value {
         if let Some(struct_arr) = arr.as_any().downcast_ref::<StructArray>() {
             if struct_arr.len() > 0 && struct_arr.num_columns() >= 4 {
-                let col0 = struct_arr.column(0).as_any().downcast_ref::<Float64Array>();
-                let col1 = struct_arr.column(1).as_any().downcast_ref::<Float64Array>();
-                let col2 = struct_arr.column(2).as_any().downcast_ref::<Float64Array>();
-                let col3 = struct_arr.column(3).as_any().downcast_ref::<Float64Array>();
+                let col0 = struct_arr.column(0).as_primitive_opt::<Float64Type>();
+                let col1 = struct_arr.column(1).as_primitive_opt::<Float64Type>();
+                let col2 = struct_arr.column(2).as_primitive_opt::<Float64Type>();
+                let col3 = struct_arr.column(3).as_primitive_opt::<Float64Type>();
                 if let (Some(c0), Some(c1), Some(c2), Some(c3)) = (col0, col1, col2, col3) {
                     let xmin = c0.value(0);
                     let ymin = c1.value(0);
