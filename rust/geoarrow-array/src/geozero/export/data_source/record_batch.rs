@@ -6,10 +6,10 @@ use arrow_array::timezone::Tz;
 use arrow_array::types::*;
 use arrow_array::{Array, RecordBatch};
 use arrow_json::writer::make_encoder;
-use arrow_schema::{DataType, Schema, TimeUnit};
+use arrow_schema::{DataType, Schema, SchemaRef, TimeUnit};
 use geoarrow_schema::GeoArrowType;
 use geozero::error::GeozeroError;
-use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, GeozeroDatasource, PropertyProcessor};
+use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, PropertyProcessor};
 
 use crate::GeoArrowArray;
 use crate::array::from_arrow_array;
@@ -21,39 +21,22 @@ use crate::geozero::export::scalar::{
 };
 use crate::trait_::GeoArrowArrayAccessor;
 
-/// A newtype wrapper around a [`RecordBatch`] so that we can implement the
-/// [`geozero::GeozeroDatasource`] trait on it.
-///
-/// This allows for exporting Arrow data to a geozero-based consumer.
-pub struct GeozeroRecordBatch(RecordBatch);
-
-impl GeozeroRecordBatch {
-    /// Create a new GeozeroRecordBatch from a [`RecordBatch`].
-    pub fn new(reader: RecordBatch) -> Self {
-        Self(reader)
-    }
-
-    /// Access the underlying [`RecordBatch`].
-    pub fn into_inner(self) -> RecordBatch {
-        self.0
-    }
+/// A push-based writer for creating geozero-based outputs.
+pub struct GeozeroRecordBatchWriter<P: FeatureProcessor> {
+    schema: SchemaRef,
+    overall_row_idx: usize,
+    geometry_column_index: usize,
+    processor: P,
 }
 
-impl AsRef<RecordBatch> for GeozeroRecordBatch {
-    fn as_ref(&self) -> &RecordBatch {
-        &self.0
-    }
-}
-
-impl From<RecordBatch> for GeozeroRecordBatch {
-    fn from(value: RecordBatch) -> Self {
-        Self(value)
-    }
-}
-
-impl GeozeroDatasource for GeozeroRecordBatch {
-    fn process<P: FeatureProcessor>(&mut self, processor: &mut P) -> Result<(), GeozeroError> {
-        let geom_indices = geometry_columns(self.0.schema_ref());
+impl<P: FeatureProcessor> GeozeroRecordBatchWriter<P> {
+    /// Create a new GeozeroRecordBatchWriter from a schema
+    pub fn try_new(
+        schema: SchemaRef,
+        mut processor: P,
+        name: Option<&str>,
+    ) -> Result<Self, GeozeroError> {
+        let geom_indices = geometry_columns(&schema);
         let geometry_column_index = if geom_indices.len() != 1 {
             Err(GeozeroError::Dataset(
                 "Writing through geozero not supported with multiple geometries".to_string(),
@@ -62,17 +45,41 @@ impl GeozeroDatasource for GeozeroRecordBatch {
             geom_indices[0]
         };
 
-        processor.dataset_begin(None)?;
-        process_batch(
-            &self.0,
-            self.0.schema_ref(),
+        processor.dataset_begin(name)?;
+
+        Ok(Self {
+            schema,
             geometry_column_index,
-            0,
+            overall_row_idx: 0,
             processor,
+        })
+    }
+
+    /// Write a [`RecordBatch`], processing it with the given [`FeatureProcessor`].
+    pub fn write(&mut self, batch: &RecordBatch) -> Result<(), GeozeroError> {
+        if *batch.schema_ref() != self.schema {
+            return Err(GeozeroError::Dataset(
+                "Batch schema does not match writer schema".to_string(),
+            ));
+        }
+
+        let num_rows = batch.num_rows();
+        process_batch(
+            batch,
+            batch.schema_ref(),
+            self.geometry_column_index,
+            self.overall_row_idx,
+            &mut self.processor,
         )?;
-        processor.dataset_end()?;
+        self.overall_row_idx += num_rows;
 
         Ok(())
+    }
+
+    /// Finish the dataset processing and return the processor.
+    pub fn finish(mut self) -> Result<P, GeozeroError> {
+        self.processor.dataset_end()?;
+        Ok(self.processor)
     }
 }
 
