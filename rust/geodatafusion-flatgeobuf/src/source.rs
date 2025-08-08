@@ -12,10 +12,9 @@ use datafusion::datasource::physical_plan::{
 };
 use datafusion::error::{DataFusionError, Result};
 use datafusion::physical_expr::{PhysicalExpr, ScalarFunctionExpr};
-use datafusion::physical_plan::filter_pushdown::{
-    FilterPushdownPropagation, PushedDown,
-};
-use datafusion::physical_plan::{ColumnarValue, metrics::ExecutionPlanMetricsSet};
+use datafusion::physical_plan::ColumnarValue;
+use datafusion::physical_plan::filter_pushdown::{FilterPushdownPropagation, PushedDown};
+use datafusion::physical_plan::metrics::ExecutionPlanMetricsSet;
 use futures::StreamExt;
 use geoarrow_flatgeobuf::reader::{FlatGeobufReaderOptions, FlatGeobufRecordBatchStream};
 use object_store::ObjectStore;
