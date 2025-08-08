@@ -200,9 +200,8 @@ mod test {
     use geo_traits::{CoordTrait, RectTrait};
     use geoarrow_array::GeoArrowArrayAccessor;
 
-    use crate::udf::native::constructors::{Point, PointZ};
-
     use super::*;
+    use crate::udf::native::constructors::{Point, PointZ};
 
     #[tokio::test]
     async fn test_2d() {
