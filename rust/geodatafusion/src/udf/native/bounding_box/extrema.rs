@@ -361,7 +361,7 @@ impl ScalarUDFImpl for ZMax {
     }
 
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
-        Ok(extrema_impl(args, false, |rect| {
+        Ok(extrema_impl(args, true, |rect| {
             rect.max().nth(2).unwrap_or(f64::MAX)
         })?)
     }
@@ -394,4 +394,48 @@ fn extrema_impl(
     let geo_array = from_arrow_array(&arrays[0], &args.arg_fields[0])?;
     let result = impl_extrema(&geo_array, include_z, cb)?;
     Ok(ColumnarValue::Array(Arc::new(result)))
+}
+
+#[cfg(test)]
+mod test {
+    use approx::relative_eq;
+    use arrow_array::cast::AsArray;
+    use arrow_array::types::Float64Type;
+    use datafusion::prelude::*;
+
+    use super::*;
+    use crate::udf::native::io::GeomFromText;
+
+    async fn extrema_test(udf: &str, expected: f64) {
+        let ctx = SessionContext::new();
+
+        ctx.register_udf(XMin::new().into());
+        ctx.register_udf(YMin::new().into());
+        ctx.register_udf(ZMin::new().into());
+        ctx.register_udf(XMax::new().into());
+        ctx.register_udf(YMax::new().into());
+        ctx.register_udf(ZMax::new().into());
+        ctx.register_udf(GeomFromText::default().into());
+
+        let out = ctx
+            .sql(&format!(
+                "SELECT {udf}(ST_GeomFromText('LINESTRING Z(1 2 3, 3 4 5, 5 6 7)'));"
+            ))
+            .await
+            .unwrap();
+        let batch = out.collect().await.unwrap().into_iter().next().unwrap();
+        let col = batch.column(0);
+        let arr = col.as_primitive::<Float64Type>();
+        assert!(relative_eq!(arr.value(0), expected));
+    }
+
+    #[tokio::test]
+    async fn test_2d() {
+        extrema_test("ST_XMin", 1.0).await;
+        extrema_test("ST_YMin", 2.0).await;
+        extrema_test("ST_ZMin", 3.0).await;
+        extrema_test("ST_XMax", 5.0).await;
+        extrema_test("ST_YMax", 6.0).await;
+        extrema_test("ST_ZMax", 7.0).await;
+    }
 }
