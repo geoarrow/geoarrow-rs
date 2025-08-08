@@ -1,5 +1,10 @@
 use arrow_array::RecordBatchReader;
 
+use geozero::error::GeozeroError;
+use geozero::{FeatureProcessor, GeozeroDatasource};
+
+use crate::geozero::export::data_source::record_batch::{geometry_columns, process_batch};
+
 /// A newtype wrapper around an [`arrow_array::RecordBatchReader`] so that we can implement the
 /// [`geozero::GeozeroDatasource`] trait on it.
 ///
@@ -40,5 +45,39 @@ impl From<Box<dyn RecordBatchReader>> for GeozeroRecordBatchReader {
 impl From<Box<dyn RecordBatchReader + Send>> for GeozeroRecordBatchReader {
     fn from(value: Box<dyn RecordBatchReader + Send>) -> Self {
         Self(value)
+    }
+}
+
+impl GeozeroDatasource for GeozeroRecordBatchReader {
+    fn process<P: FeatureProcessor>(&mut self, processor: &mut P) -> Result<(), GeozeroError> {
+        let reader = self.as_mut();
+        let schema = reader.schema();
+        let geom_indices = geometry_columns(&schema);
+        let geometry_column_index = if geom_indices.len() != 1 {
+            Err(GeozeroError::Dataset(
+                "Writing through geozero not supported with multiple geometries".to_string(),
+            ))?
+        } else {
+            geom_indices[0]
+        };
+
+        processor.dataset_begin(None)?;
+
+        let mut overall_row_idx = 0;
+        for batch in reader.into_iter() {
+            let batch = batch.map_err(|err| GeozeroError::Dataset(err.to_string()))?;
+            process_batch(
+                &batch,
+                &schema,
+                geometry_column_index,
+                overall_row_idx,
+                processor,
+            )?;
+            overall_row_idx += batch.num_rows();
+        }
+
+        processor.dataset_end()?;
+
+        Ok(())
     }
 }
