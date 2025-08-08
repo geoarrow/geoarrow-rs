@@ -293,21 +293,29 @@ impl GeometryTrait for BoundingRect {
 ///
 /// Note that this is fully planar and **does not** handle the antimeridian for geographic
 /// coordinates.
-pub(crate) fn bounding_rect(arr: &dyn GeoArrowArray) -> GeoArrowResult<RectArray> {
+pub(crate) fn bounding_rect(arr: &dyn GeoArrowArray, include_z: bool) -> GeoArrowResult<RectArray> {
     if let Some(rect_arr) = arr.as_rect_opt() {
         Ok(rect_arr.clone())
     } else {
-        downcast_geoarrow_array!(arr, impl_array_accessor)
+        downcast_geoarrow_array!(arr, impl_array_accessor, include_z)
     }
 }
 
 /// The actual implementation of computing the bounding rect
-fn impl_array_accessor<'a>(arr: &'a impl GeoArrowArrayAccessor<'a>) -> GeoArrowResult<RectArray> {
+fn impl_array_accessor<'a>(
+    arr: &'a impl GeoArrowArrayAccessor<'a>,
+    include_z: bool,
+) -> GeoArrowResult<RectArray> {
     match arr.data_type() {
         GeoArrowType::Rect(_) => unreachable!(),
         _ => {
+            let dim = if include_z {
+                Dimension::XYZ
+            } else {
+                Dimension::XY
+            };
             let mut builder = RectBuilder::with_capacity(
-                BoxType::new(Dimension::XY, arr.data_type().metadata().clone()),
+                BoxType::new(dim, arr.data_type().metadata().clone()),
                 arr.len(),
             );
             for item in arr.iter() {
@@ -340,36 +348,15 @@ fn impl_total_bounds<'a>(arr: &'a impl GeoArrowArrayAccessor<'a>) -> GeoArrowRes
     Ok(rect)
 }
 
-pub(crate) fn min_x(arr: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
-    impl_extrema(arr, |rect| rect.min().x())
-}
-
-pub(crate) fn min_y(arr: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
-    impl_extrema(arr, |rect| rect.min().y())
-}
-
-pub(crate) fn min_z(arr: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
-    impl_extrema(arr, |rect| rect.min().nth(2).unwrap_or(f64::NAN))
-}
-
-pub(crate) fn max_x(arr: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
-    impl_extrema(arr, |rect| rect.max().x())
-}
-
-pub(crate) fn max_y(arr: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
-    impl_extrema(arr, |rect| rect.max().y())
-}
-
-pub(crate) fn max_z(arr: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
-    impl_extrema(arr, |rect| rect.max().nth(2).unwrap_or(f64::NAN))
-}
-
 /// The actual implementation of computing the bounding rect
+///
+/// include_z: If true, the Z dimension is included in the initial bounding box calculations.
 pub(crate) fn impl_extrema(
     arr: &dyn GeoArrowArray,
+    include_z: bool,
     cb: impl Fn(Rect) -> f64,
 ) -> GeoArrowResult<Float64Array> {
-    let rect_array = bounding_rect(arr)?;
+    let rect_array = bounding_rect(arr, include_z)?;
 
     let mut output_array = Float64Builder::with_capacity(arr.len());
     for rect in rect_array.iter() {

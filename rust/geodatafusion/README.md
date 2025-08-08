@@ -345,7 +345,7 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | Name               | Implemented | Description                                                              |
 | ------------------ | ----------- | ------------------------------------------------------------------------ |
 | Box2D              | ✅          | Returns a BOX2D representing the 2D extent of a geometry.                |
-| Box3D              |             | Returns a BOX3D representing the 3D extent of a geometry.                |
+| Box3D              | ✅          | Returns a BOX3D representing the 3D extent of a geometry.                |
 | ST_EstimatedExtent |             | Returns the estimated extent of a spatial table.                         |
 | ST_Expand          | ✅          | Returns a bounding box expanded from another bounding box or a geometry. |
 | ST_Extent          | ✅          | Aggregate function that returns the bounding box of geometries.          |
@@ -356,8 +356,8 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_XMin            | ✅          | Returns the X minima of a 2D or 3D bounding box or a geometry.           |
 | ST_YMax            | ✅          | Returns the Y maxima of a 2D or 3D bounding box or a geometry.           |
 | ST_YMin            | ✅          | Returns the Y minima of a 2D or 3D bounding box or a geometry.           |
-| ST_ZMax            |             | Returns the Z maxima of a 2D or 3D bounding box or a geometry.           |
-| ST_ZMin            |             | Returns the Z minima of a 2D or 3D bounding box or a geometry.           |
+| ST_ZMax            | ✅          | Returns the Z maxima of a 2D or 3D bounding box or a geometry.           |
+| ST_ZMin            | ✅          | Returns the Z minima of a 2D or 3D bounding box or a geometry.           |
 
 ### Linear Referencing
 
