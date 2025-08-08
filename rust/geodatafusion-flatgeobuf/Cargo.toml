@@ -30,6 +30,7 @@ geoarrow-array = { workspace = true, features = ["test-data"] }
 geodatafusion = { workspace = true }
 object_store = { workspace = true, features = ["http"] }
 tokio = { workspace = true, features = ["macros", "fs", "rt-multi-thread"] }
+wkt = { workspace = true }
 
 [package.metadata.docs.rs]
 all-features = true

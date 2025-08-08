@@ -1827,6 +1827,7 @@ dependencies = [
  "http-range-client",
  "object_store",
  "tokio",
+ "wkt 0.14.0",
 ]
 
 [[package]]
