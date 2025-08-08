@@ -1812,12 +1812,16 @@ name = "geodatafusion-flatgeobuf"
 version = "0.1.0-dev"
 dependencies = [
  "approx",
+ "arrow-array",
  "arrow-schema",
  "async-trait",
+ "bytes",
  "datafusion",
+ "datafusion-datasource",
  "flatgeobuf",
  "futures",
  "geo-traits",
+ "geo-types",
  "geoarrow-array",
  "geoarrow-flatgeobuf",
  "geoarrow-schema",

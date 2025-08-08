@@ -8,18 +8,23 @@ use async_trait::async_trait;
 use datafusion::catalog::Session;
 use datafusion::catalog::memory::DataSourceExec;
 use datafusion::common::stats::Precision;
-use datafusion::common::{GetExt, Statistics};
+use datafusion::common::{not_impl_err, GetExt, Statistics};
 use datafusion::datasource::file_format::file_compression_type::FileCompressionType;
 use datafusion::datasource::file_format::{FileFormat, FileFormatFactory};
 use datafusion::datasource::physical_plan::{FileScanConfig, FileScanConfigBuilder, FileSource};
 use datafusion::error::{DataFusionError, Result};
+use datafusion::physical_expr_common::sort_expr::LexRequirement;
 use datafusion::physical_plan::ExecutionPlan;
+use datafusion_datasource::file_sink_config::FileSinkConfig;
+use datafusion_datasource::sink::DataSinkExec;
+use datafusion::logical_expr::dml::InsertOp;
 use geoarrow_flatgeobuf::reader::FlatGeobufHeaderExt;
 use geoarrow_flatgeobuf::reader::schema::FlatGeobufSchemaScanner;
 use geoarrow_schema::{CoordType, GeoArrowType};
 use object_store::path::Path;
 use object_store::{ObjectMeta, ObjectStore};
 
+use crate::sink::FlatGeobufSink;
 use crate::source::FlatGeobufSource;
 use crate::utils::open_flatgeobuf_reader;
 
@@ -206,6 +211,21 @@ impl FileFormat for FlatGeobufFormat {
         let source = Arc::new(FlatGeobufSource::new());
         let config = conf_builder.with_source(source).build();
         Ok(DataSourceExec::from_data_source(config))
+    }
+
+    async fn create_writer_physical_plan(
+        &self,
+        input: Arc<dyn ExecutionPlan>,
+        _state: &dyn Session,
+        conf: FileSinkConfig,
+        order_requirements: Option<LexRequirement>,
+    ) -> Result<Arc<dyn ExecutionPlan>> {
+        if conf.insert_op != InsertOp::Append {
+            return not_impl_err!("Overwrites are not implemented yet for FlatGeobuf");
+        }
+
+        let sink = Arc::new(FlatGeobufSink::new(conf));
+        Ok(Arc::new(DataSinkExec::new(input, sink, order_requirements)) as _)
     }
 
     fn file_source(&self) -> Arc<dyn FileSource> {
