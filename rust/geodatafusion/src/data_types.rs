@@ -83,7 +83,7 @@ pub(crate) fn any_single_geometry_type_input() -> Signature {
     Signature::uniform(1, valid_types, Volatility::Immutable)
 }
 
-pub(crate) fn any_single_point_type_input() -> Signature {
+pub(crate) fn any_point_type_input(arg_count: usize) -> Signature {
     let mut valid_types = vec![];
 
     for coord_type in [CoordType::Separated, CoordType::Interleaved] {
@@ -107,5 +107,5 @@ pub(crate) fn any_single_point_type_input() -> Signature {
         );
     }
 
-    Signature::uniform(1, valid_types, Volatility::Immutable)
+    Signature::uniform(arg_count, valid_types, Volatility::Immutable)
 }
