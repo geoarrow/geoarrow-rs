@@ -4,7 +4,6 @@ use std::ops::Add;
 
 use arrow_array::Float64Array;
 use arrow_array::builder::Float64Builder;
-use geo::Coord;
 use geo_traits::{
     CoordTrait, GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait,
     MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
@@ -19,6 +18,7 @@ use geoarrow_array::scalar::Rect;
 use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, downcast_geoarrow_array};
 use geoarrow_schema::error::GeoArrowResult;
 use geoarrow_schema::{BoxType, Dimension, GeoArrowType};
+use wkt::types::Coord;
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct BoundingRect {
@@ -202,20 +202,32 @@ impl Add for BoundingRect {
 }
 
 impl RectTrait for BoundingRect {
-    type CoordType<'a> = Coord;
+    type CoordType<'a> = wkt::types::Coord;
 
     fn min(&self) -> Self::CoordType<'_> {
-        Coord {
+        let mut c = Coord {
             x: self.minx,
             y: self.miny,
+            z: None,
+            m: None,
+        };
+        if self.minz != f64::INFINITY {
+            c.z = Some(self.minz);
         }
+        c
     }
 
     fn max(&self) -> Self::CoordType<'_> {
-        Coord {
+        let mut c = Coord {
             x: self.maxx,
             y: self.maxy,
+            z: None,
+            m: None,
+        };
+        if self.maxz != -f64::INFINITY {
+            c.z = Some(self.maxz);
         }
+        c
     }
 }
 
