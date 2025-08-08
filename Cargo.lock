@@ -1826,6 +1826,7 @@ dependencies = [
  "geodatafusion",
  "http-range-client",
  "object_store",
+ "tempfile",
  "tokio",
  "wkt 0.14.0",
 ]

@@ -2,9 +2,10 @@
 
 use std::io::Write;
 
-use arrow_schema::Schema;
+use arrow_array::RecordBatch;
+use arrow_schema::{Schema, SchemaRef};
 use flatgeobuf::{FgbCrs, FgbWriter, FgbWriterOptions};
-use geoarrow_array::geozero::export::GeozeroRecordBatchReader;
+use geoarrow_array::geozero::export::{GeozeroRecordBatch, GeozeroRecordBatchReader};
 use geoarrow_schema::crs::{CrsTransform, DefaultCrsTransform};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{Dimension, GeoArrowType, Metadata};
@@ -150,6 +151,75 @@ impl FlatGeobufWriterOptions {
     }
 }
 
+/// A FlatGeobuf writer.
+///
+/// This differs from `write_flatgeobuf` in that it allows for **push-based** instead of
+/// **pull-based** iteration. The `stream` parameter of `write_flatgeobuf` only allows for
+/// `write_flatgeobuf` to pull data; whereas some environments may find it easier to use a
+/// push-based writer.
+pub struct FlatGeobufWriter<'a, W: Write> {
+    file: W,
+    schema: SchemaRef,
+    writer: FgbWriter<'a>,
+}
+
+impl<W: Write> FlatGeobufWriter<'_, W> {
+    /// Create a new FlatGeobufWriter with the given options.
+    pub fn try_new(
+        file: W,
+        schema: SchemaRef,
+        options: FlatGeobufWriterOptions,
+    ) -> GeoArrowResult<Self> {
+        let fields = &schema.fields;
+        let geom_col_idxs = geometry_columns(schema.as_ref());
+        if geom_col_idxs.len() != 1 {
+            return Err(GeoArrowError::FlatGeobuf(
+                "Only one geometry column currently supported in FlatGeobuf writer".to_string(),
+            ));
+        }
+
+        let geometry_field = &fields[geom_col_idxs[0]];
+        let geo_data_type = GeoArrowType::try_from(geometry_field.as_ref())?;
+
+        let wkt_crs_str = options.create_wkt_crs(geo_data_type.metadata())?;
+        let fgb_options = options.create_fgb_options(geo_data_type, wkt_crs_str.as_deref());
+
+        let geometry_type = infer_flatgeobuf_geometry_type(schema.as_ref())?;
+        let writer = FgbWriter::create_with_options(&options.name, geometry_type, fgb_options)
+            .map_err(|err| GeoArrowError::External(Box::new(err)))?;
+
+        Ok(Self {
+            file,
+            schema,
+            writer,
+        })
+    }
+
+    /// Write a [`RecordBatch`] to the FlatGeobuf file.
+    ///
+    /// This will error if the schema of the `RecordBatch` does not match the schema originally
+    /// passed to [`FlatGeobufWriter::new`].
+    pub fn write(&mut self, batch: RecordBatch) -> GeoArrowResult<()> {
+        if *batch.schema_ref() != self.schema {
+            return Err(GeoArrowError::FlatGeobuf(
+                "RecordBatch schema does not match FlatGeobuf writer schema".to_string(),
+            ));
+        }
+
+        GeozeroRecordBatch::from(batch)
+            .process(&mut self.writer)
+            .map_err(|err| GeoArrowError::External(Box::new(err)))
+    }
+
+    /// Finish writing the FlatGeobuf file and return the underlying writer.
+    pub fn finish(mut self) -> GeoArrowResult<W> {
+        self.writer
+            .write(&mut self.file)
+            .map_err(|err| GeoArrowError::External(Box::new(err)))?;
+        Ok(self.file)
+    }
+}
+
 /// Write an iterator of GeoArrow RecordBatches to a FlatGeobuf file.
 ///
 /// `name` is the string passed to [`FgbWriter::create`] and is what OGR observes as the layer name
@@ -160,30 +230,12 @@ pub fn write_flatgeobuf<W: Write, S: Into<GeozeroRecordBatchReader>>(
     options: FlatGeobufWriterOptions,
 ) -> GeoArrowResult<()> {
     let mut stream: GeozeroRecordBatchReader = stream.into();
-
-    let schema = stream.as_ref().schema();
-    let fields = &schema.fields;
-    let geom_col_idxs = geometry_columns(schema.as_ref());
-    if geom_col_idxs.len() != 1 {
-        return Err(GeoArrowError::FlatGeobuf(
-            "Only one geometry column currently supported in FlatGeobuf writer".to_string(),
-        ));
-    }
-
-    let geometry_field = &fields[geom_col_idxs[0]];
-    let geo_data_type = GeoArrowType::try_from(geometry_field.as_ref())?;
-
-    let wkt_crs_str = options.create_wkt_crs(geo_data_type.metadata())?;
-    let fgb_options = options.create_fgb_options(geo_data_type, wkt_crs_str.as_deref());
-
-    let geometry_type = infer_flatgeobuf_geometry_type(stream.as_ref().schema().as_ref())?;
-
-    let mut fgb = FgbWriter::create_with_options(&options.name, geometry_type, fgb_options)
-        .map_err(|err| GeoArrowError::External(Box::new(err)))?;
+    let mut writer = FlatGeobufWriter::try_new(writer, stream.as_ref().schema(), options)?;
     stream
-        .process(&mut fgb)
+        .process(&mut writer.writer)
         .map_err(|err| GeoArrowError::External(Box::new(err)))?;
-    fgb.write(writer)
+    writer
+        .finish()
         .map_err(|err| GeoArrowError::External(Box::new(err)))?;
     Ok(())
 }

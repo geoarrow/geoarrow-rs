@@ -1,9 +1,9 @@
 use std::any::Any;
 use std::collections::HashMap;
-use std::fmt::{self, Debug};
+use std::fmt::{self, Debug, Formatter};
+use std::io::{BufReader, BufWriter, Cursor, Read};
 use std::sync::Arc;
 
-use arrow_array::{RecordBatch, RecordBatchIterator, RecordBatchReader};
 use arrow_schema::{Schema, SchemaRef};
 use async_trait::async_trait;
 use datafusion::catalog::Session;
@@ -25,10 +25,11 @@ use datafusion_datasource::write::ObjectWriterBuilder;
 use datafusion_datasource::write::demux::DemuxedStreamReceiver;
 use geoarrow_flatgeobuf::reader::FlatGeobufHeaderExt;
 use geoarrow_flatgeobuf::reader::schema::FlatGeobufSchemaScanner;
-use geoarrow_flatgeobuf::writer::{FlatGeobufWriterOptions, write_flatgeobuf};
+use geoarrow_flatgeobuf::writer::{FlatGeobufWriter, FlatGeobufWriterOptions};
 use geoarrow_schema::{CoordType, GeoArrowType};
 use object_store::path::Path;
 use object_store::{ObjectMeta, ObjectStore};
+use tempfile::NamedTempFile;
 use tokio::io::AsyncWriteExt;
 
 use crate::source::FlatGeobufSource;
@@ -227,7 +228,7 @@ impl FileFormat for FlatGeobufFormat {
         order_requirements: Option<LexRequirement>,
     ) -> Result<Arc<dyn ExecutionPlan>> {
         let sink = Arc::new(FlatGeobufSink::new(conf));
-        Ok(Arc::new(DataSinkExec::new(input, sink, order_requirements)) as _)
+        Ok(Arc::new(DataSinkExec::new(input, sink, order_requirements)))
     }
 
     fn file_source(&self) -> Arc<dyn FileSource> {
@@ -252,7 +253,7 @@ impl FlatGeobufSink {
 }
 
 impl DisplayAs for FlatGeobufSink {
-    fn fmt_as(&self, t: DisplayFormatType, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt_as(&self, t: DisplayFormatType, f: &mut Formatter<'_>) -> fmt::Result {
         match t {
             DisplayFormatType::Default | DisplayFormatType::Verbose => {
                 write!(f, "FlatGeobufSink(file_groups=")?;
@@ -282,35 +283,59 @@ impl FileSink for FlatGeobufSink {
     ) -> Result<u64> {
         let mut total_rows: u64 = 0;
         while let Some((path, mut rb_rx)) = file_stream_rx.recv().await {
-            let mut batches: Vec<RecordBatch> = Vec::new();
-            while let Some(batch) = rb_rx.recv().await {
-                total_rows += batch.num_rows() as u64;
-                batches.push(batch);
-            }
+            // We create a tempfile on disk because the FlatGeobufWriter is sync only. So we write
+            // to a temp file and then upload it to the object store.
 
-            if batches.is_empty() {
-                continue;
-            }
+            // let output_file = BufWriter::new(NamedTempFile::new()?);
+            let output_file = Vec::new();
 
-            let schema = self.config.output_schema().clone();
-            let iter = RecordBatchIterator::new(batches.into_iter().map(Ok), schema);
-            let reader: Box<dyn RecordBatchReader> = Box::new(iter);
+            // Create FlatGeobufWriter
             let name = path
                 .filename()
-                .map(|s| s.to_string())
-                .unwrap_or_else(|| "layer".to_string());
+                .map(|s| s.to_string().rsplit_once(".").unwrap().0.to_string())
+                .unwrap_or_else(|| "file".to_string());
             let options = FlatGeobufWriterOptions::new(name);
-            let mut buffer = Vec::new();
-            write_flatgeobuf(reader, &mut buffer, options)
-                .map_err(|e| DataFusionError::External(Box::new(e)))?;
-            let mut writer = ObjectWriterBuilder::new(
+            let mut fgb_writer = FlatGeobufWriter::try_new(
+                output_file,
+                self.config.output_schema().clone(),
+                options,
+            )
+            .map_err(|err| DataFusionError::External(Box::new(err)))?;
+
+            // For each record batch received, write it to the FlatGeobufWriter
+            while let Some(batch) = rb_rx.recv().await {
+                total_rows += batch.num_rows() as u64;
+                fgb_writer
+                    .write(batch)
+                    .map_err(|err| DataFusionError::External(Box::new(err)))?;
+            }
+
+            // Finalize the FlatGeobufWriter to the temp file
+            let output_file = fgb_writer
+                .finish()
+                .map_err(|err| DataFusionError::External(Box::new(err)))?;
+            // let named_temp_file = output_file
+            //     .into_inner()
+            //     .map_err(|err| DataFusionError::External(Box::new(err)))?;
+
+            // Create a BufReader to read the temp file
+            let mut buf_reader = Cursor::new(output_file);
+
+            let mut object_writer = ObjectWriterBuilder::new(
                 FileCompressionType::UNCOMPRESSED,
                 &path,
                 object_store.clone(),
             )
+            .with_buffer_size(Some(20 * 1024 * 1024))
             .build()?;
-            writer.write_all(&buffer).await?;
-            writer.shutdown().await?;
+
+            // Iterate over 20mb chunks of the output_file
+            let mut buf = Vec::with_capacity(20 * 1024 * 1024);
+            while let Ok(size) = buf_reader.read(&mut buf) {
+                object_writer.write_all(&buf[..size]).await?;
+            }
+
+            object_writer.shutdown().await?;
         }
         demux_task
             .join()

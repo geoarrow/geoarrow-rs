@@ -21,6 +21,7 @@ geoarrow-flatgeobuf = { workspace = true, features = ["object_store"] }
 geoarrow-schema = { workspace = true }
 http-range-client = { workspace = true, default-features = false }
 object_store = { workspace = true }
+tempfile = { workspace = true }
 tokio = { workspace = true, features = ["io-util"] }
 
 [dev-dependencies]
