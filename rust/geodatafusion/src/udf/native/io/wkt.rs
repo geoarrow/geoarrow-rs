@@ -136,6 +136,12 @@ impl GeomFromText {
     }
 }
 
+impl Default for GeomFromText {
+    fn default() -> Self {
+        Self::new(CoordType::Separated)
+    }
+}
+
 static GEOM_FROM_TEXT_DOC: OnceLock<Documentation> = OnceLock::new();
 
 impl ScalarUDFImpl for GeomFromText {
