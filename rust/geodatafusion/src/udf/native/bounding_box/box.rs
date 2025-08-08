@@ -146,3 +146,63 @@ fn box_impl(args: ScalarFunctionArgs, include_z: bool) -> GeoDataFusionResult<Co
     let rect_array = bounding_rect(&geo_array, include_z)?;
     Ok(ColumnarValue::Array(rect_array.into_array_ref()))
 }
+
+#[cfg(test)]
+mod test {
+    use approx::relative_eq;
+    use datafusion::prelude::*;
+    use geo_traits::{CoordTrait, RectTrait};
+    use geoarrow_array::GeoArrowArrayAccessor;
+    use geoarrow_array::array::RectArray;
+
+    use super::*;
+    use crate::udf::native::io::GeomFromText;
+
+    #[tokio::test]
+    async fn test_2d() {
+        let ctx = SessionContext::new();
+
+        ctx.register_udf(Box2D::new().into());
+        ctx.register_udf(GeomFromText::default().into());
+
+        let out = ctx
+            .sql("SELECT Box2D(ST_GeomFromText('LINESTRING(1 2, 3 4, 5 6)'));")
+            .await
+            .unwrap();
+        let batch = out.collect().await.unwrap().into_iter().next().unwrap();
+        let schema = batch.schema();
+        let rect_array =
+            RectArray::try_from((batch.columns()[0].as_ref(), schema.field(0))).unwrap();
+        let rect = rect_array.value(0).unwrap();
+
+        assert!(relative_eq!(rect.min().x(), 1.0));
+        assert!(relative_eq!(rect.min().y(), 2.0));
+        assert!(relative_eq!(rect.max().x(), 5.0));
+        assert!(relative_eq!(rect.max().y(), 6.0));
+    }
+
+    #[tokio::test]
+    async fn test_3d() {
+        let ctx = SessionContext::new();
+
+        ctx.register_udf(Box3D::new().into());
+        ctx.register_udf(GeomFromText::default().into());
+
+        let out = ctx
+            .sql("SELECT Box3D(ST_GeomFromText('LINESTRING Z(1 2 3, 3 4 5, 5 6 7)'));")
+            .await
+            .unwrap();
+        let batch = out.collect().await.unwrap().into_iter().next().unwrap();
+        let schema = batch.schema();
+        let rect_array =
+            RectArray::try_from((batch.columns()[0].as_ref(), schema.field(0))).unwrap();
+        let rect = rect_array.value(0).unwrap();
+
+        assert!(relative_eq!(rect.min().x(), 1.0));
+        assert!(relative_eq!(rect.min().y(), 2.0));
+        assert!(relative_eq!(rect.min().nth_or_panic(2), 3.0));
+        assert!(relative_eq!(rect.max().x(), 5.0));
+        assert!(relative_eq!(rect.max().y(), 6.0));
+        assert!(relative_eq!(rect.max().nth_or_panic(2), 7.0));
+    }
+}
