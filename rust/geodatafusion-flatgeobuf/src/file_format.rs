@@ -306,7 +306,7 @@ impl FileSink for FlatGeobufSink {
             while let Some(batch) = rb_rx.recv().await {
                 total_rows += batch.num_rows() as u64;
                 fgb_writer
-                    .write(batch)
+                    .write(&batch)
                     .map_err(|err| DataFusionError::External(Box::new(err)))?;
             }
 

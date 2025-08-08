@@ -5,7 +5,7 @@ use std::io::Write;
 use arrow_array::RecordBatch;
 use arrow_schema::{Schema, SchemaRef};
 use flatgeobuf::{FgbCrs, FgbWriter, FgbWriterOptions};
-use geoarrow_array::geozero::export::{GeozeroRecordBatch, GeozeroRecordBatchReader};
+use geoarrow_array::geozero::export::{GeozeroRecordBatchReader, GeozeroRecordBatchWriter};
 use geoarrow_schema::crs::{CrsTransform, DefaultCrsTransform};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{Dimension, GeoArrowType, Metadata};
@@ -159,8 +159,7 @@ impl FlatGeobufWriterOptions {
 /// push-based writer.
 pub struct FlatGeobufWriter<'a, W: Write> {
     file: W,
-    schema: SchemaRef,
-    writer: FgbWriter<'a>,
+    geozero_writer: GeozeroRecordBatchWriter<FgbWriter<'a>>,
 }
 
 impl<W: Write> FlatGeobufWriter<'_, W> {
@@ -185,13 +184,13 @@ impl<W: Write> FlatGeobufWriter<'_, W> {
         let fgb_options = options.create_fgb_options(geo_data_type, wkt_crs_str.as_deref());
 
         let geometry_type = infer_flatgeobuf_geometry_type(schema.as_ref())?;
-        let writer = FgbWriter::create_with_options(&options.name, geometry_type, fgb_options)
+        let fgb_writer = FgbWriter::create_with_options(&options.name, geometry_type, fgb_options)
             .map_err(|err| GeoArrowError::External(Box::new(err)))?;
+        let geozero_writer = GeozeroRecordBatchWriter::try_new(schema, fgb_writer, None).unwrap();
 
         Ok(Self {
             file,
-            schema,
-            writer,
+            geozero_writer,
         })
     }
 
@@ -199,21 +198,21 @@ impl<W: Write> FlatGeobufWriter<'_, W> {
     ///
     /// This will error if the schema of the `RecordBatch` does not match the schema originally
     /// passed to [`FlatGeobufWriter::new`].
-    pub fn write(&mut self, batch: RecordBatch) -> GeoArrowResult<()> {
-        if *batch.schema_ref() != self.schema {
-            return Err(GeoArrowError::FlatGeobuf(
-                "RecordBatch schema does not match FlatGeobuf writer schema".to_string(),
-            ));
-        }
+    pub fn write(&mut self, batch: &RecordBatch) -> GeoArrowResult<()> {
+        self.geozero_writer
+            .write(batch)
+            .map_err(|err| GeoArrowError::External(Box::new(err)))?;
 
-        GeozeroRecordBatch::from(batch)
-            .process(&mut self.writer)
-            .map_err(|err| GeoArrowError::External(Box::new(err)))
+        Ok(())
     }
 
     /// Finish writing the FlatGeobuf file and return the underlying writer.
     pub fn finish(mut self) -> GeoArrowResult<W> {
-        self.writer
+        let fgb_writer = self
+            .geozero_writer
+            .finish()
+            .map_err(|err| GeoArrowError::External(Box::new(err)))?;
+        fgb_writer
             .write(&mut self.file)
             .map_err(|err| GeoArrowError::External(Box::new(err)))?;
         Ok(self.file)
@@ -230,12 +229,30 @@ pub fn write_flatgeobuf<W: Write, S: Into<GeozeroRecordBatchReader>>(
     options: FlatGeobufWriterOptions,
 ) -> GeoArrowResult<()> {
     let mut stream: GeozeroRecordBatchReader = stream.into();
-    let mut writer = FlatGeobufWriter::try_new(writer, stream.as_ref().schema(), options)?;
-    stream
-        .process(&mut writer.writer)
+
+    let schema = stream.as_ref().schema();
+    let fields = &schema.fields;
+    let geom_col_idxs = geometry_columns(schema.as_ref());
+    if geom_col_idxs.len() != 1 {
+        return Err(GeoArrowError::FlatGeobuf(
+            "Only one geometry column currently supported in FlatGeobuf writer".to_string(),
+        ));
+    }
+
+    let geometry_field = &fields[geom_col_idxs[0]];
+    let geo_data_type = GeoArrowType::try_from(geometry_field.as_ref())?;
+
+    let wkt_crs_str = options.create_wkt_crs(geo_data_type.metadata())?;
+    let fgb_options = options.create_fgb_options(geo_data_type, wkt_crs_str.as_deref());
+
+    let geometry_type = infer_flatgeobuf_geometry_type(stream.as_ref().schema().as_ref())?;
+
+    let mut fgb = FgbWriter::create_with_options(&options.name, geometry_type, fgb_options)
         .map_err(|err| GeoArrowError::External(Box::new(err)))?;
-    writer
-        .finish()
+    stream
+        .process(&mut fgb)
+        .map_err(|err| GeoArrowError::External(Box::new(err)))?;
+    fgb.write(writer)
         .map_err(|err| GeoArrowError::External(Box::new(err)))?;
     Ok(())
 }
