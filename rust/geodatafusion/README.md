@@ -351,7 +351,7 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_Extent          | ✅          | Aggregate function that returns the bounding box of geometries.          |
 | ST_3DExtent        |             | Aggregate function that returns the 3D bounding box of geometries.       |
 | ST_MakeBox2D       | ✅          | Creates a BOX2D defined by two 2D point geometries.                      |
-| ST_3DMakeBox       |             | Creates a BOX3D defined by two 3D point geometries.                      |
+| ST_3DMakeBox       | ✅          | Creates a BOX3D defined by two 3D point geometries.                      |
 | ST_XMax            | ✅          | Returns the X maxima of a 2D or 3D bounding box or a geometry.           |
 | ST_XMin            | ✅          | Returns the X minima of a 2D or 3D bounding box or a geometry.           |
 | ST_YMax            | ✅          | Returns the Y maxima of a 2D or 3D bounding box or a geometry.           |
