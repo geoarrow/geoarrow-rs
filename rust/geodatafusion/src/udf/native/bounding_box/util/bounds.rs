@@ -31,7 +31,7 @@ pub(crate) struct BoundingRect {
     /// If `True`, expose itself as a 3D bounding box through geo-traits APIs, otherwise 2D. This
     /// is needed because the coord builders currently require that the declare dimension of the
     /// added coordinate matches the stated dimension when the builder is created.
-    /// See https://github.com/geoarrow/geoarrow-rs/issues/1300
+    /// See <https://github.com/geoarrow/geoarrow-rs/issues/1300>
     include_z: bool,
 }
 
