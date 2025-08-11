@@ -40,7 +40,7 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
-          version: "0.4.x"
+          version: "0.8.x"
 
       - name: Install Python versions
         run: uv python install 3.9 3.10 3.11 3.12 3.13 pypy3.10
