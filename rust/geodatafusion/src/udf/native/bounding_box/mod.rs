@@ -1,17 +1,10 @@
-mod box_2d;
-mod expand;
+mod r#box;
+// mod expand;
+mod extent;
 mod extrema;
-mod make_box_2d;
+mod make_box;
+pub mod util;
 
-use datafusion::prelude::SessionContext;
-
-/// Register all provided bounding box functions
-pub fn register_udfs(ctx: &SessionContext) {
-    ctx.register_udf(box_2d::Box2D::new().into());
-    ctx.register_udf(expand::Expand::new().into());
-    ctx.register_udf(extrema::XMax::new().into());
-    ctx.register_udf(extrema::XMin::new().into());
-    ctx.register_udf(extrema::YMax::new().into());
-    ctx.register_udf(extrema::YMin::new().into());
-    ctx.register_udf(make_box_2d::MakeBox2D::new().into());
-}
+pub use r#box::{Box2D, Box3D};
+pub use extrema::{XMax, XMin, YMax, YMin, ZMax, ZMin};
+pub use make_box::{MakeBox2D, MakeBox3D};

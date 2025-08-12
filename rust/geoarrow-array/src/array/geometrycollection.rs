@@ -44,9 +44,9 @@ impl GeometryCollectionArray {
         nulls: Option<NullBuffer>,
         metadata: Arc<Metadata>,
     ) -> Self {
-        let coord_type = array.coord_type;
         Self {
-            data_type: GeometryCollectionType::new(coord_type, array.dim, metadata),
+            data_type: GeometryCollectionType::new(array.dim, metadata)
+                .with_coord_type(array.coord_type),
             array,
             geom_offsets,
             nulls,
@@ -68,7 +68,7 @@ impl GeometryCollectionArray {
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
         let validity_len = self.nulls.as_ref().map(|v| v.buffer().len()).unwrap_or(0);
-        validity_len + self.buffer_lengths().num_bytes()
+        validity_len + self.buffer_lengths().num_bytes(self.data_type.dimension())
     }
 
     /// Slice this [`GeometryCollectionArray`].
@@ -237,8 +237,7 @@ impl TryFrom<(&dyn Array, GeometryCollectionType)> for GeometryCollectionArray {
             DataType::List(_) => (value.as_list::<i32>(), typ).try_into(),
             DataType::LargeList(_) => (value.as_list::<i64>(), typ).try_into(),
             dt => Err(GeoArrowError::InvalidGeoArrow(format!(
-                "Unexpected GeometryCollection Arrow DataType: {:?}",
-                dt
+                "Unexpected GeometryCollection Arrow DataType: {dt:?}"
             ))),
         }
     }
@@ -318,8 +317,7 @@ mod test {
             .filter_map(|(i, geom)| if geom.is_none() { Some(i) } else { None })
             .collect::<Vec<_>>();
 
-        let typ =
-            GeometryCollectionType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let typ = GeometryCollectionType::new(Dimension::XY, Default::default());
         let geo_arr = GeometryCollectionBuilder::from_nullable_geometry_collections(&geoms, typ)
             .unwrap()
             .finish();
@@ -334,8 +332,7 @@ mod test {
         let geoms = raw::geometrycollection::xy::geoms();
         let expected_nulls = NullBuffer::from_iter(geoms.iter().map(|g| g.is_some()));
 
-        let typ =
-            GeometryCollectionType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let typ = GeometryCollectionType::new(Dimension::XY, Default::default());
         let geo_arr = GeometryCollectionBuilder::from_nullable_geometry_collections(&geoms, typ)
             .unwrap()
             .finish();

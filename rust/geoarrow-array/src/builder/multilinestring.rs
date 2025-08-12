@@ -3,14 +3,12 @@ use std::sync::Arc;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
+use geoarrow_schema::MultiLineStringType;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geoarrow_schema::{CoordType, MultiLineStringType};
 
 use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, MultiLineStringArray};
-use crate::builder::{
-    CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
-};
+use crate::builder::{CoordBufferBuilder, OffsetsBuilder};
 use crate::capacity::MultiLineStringCapacity;
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
 use crate::util::GeometryTypeName;
@@ -43,20 +41,11 @@ impl MultiLineStringBuilder {
 
     /// Creates a new [`MultiLineStringBuilder`] with a capacity.
     pub fn with_capacity(typ: MultiLineStringType, capacity: MultiLineStringCapacity) -> Self {
-        let coords = match typ.coord_type() {
-            CoordType::Interleaved => {
-                CoordBufferBuilder::Interleaved(InterleavedCoordBufferBuilder::with_capacity(
-                    capacity.coord_capacity,
-                    typ.dimension(),
-                ))
-            }
-            CoordType::Separated => {
-                CoordBufferBuilder::Separated(SeparatedCoordBufferBuilder::with_capacity(
-                    capacity.coord_capacity,
-                    typ.dimension(),
-                ))
-            }
-        };
+        let coords = CoordBufferBuilder::with_capacity(
+            capacity.coord_capacity,
+            typ.coord_type(),
+            typ.dimension(),
+        );
         Self {
             coords,
             geom_offsets: OffsetsBuilder::with_capacity(capacity.geom_capacity),
@@ -92,6 +81,14 @@ impl MultiLineStringBuilder {
         self.coords.reserve_exact(additional.coord_capacity);
         self.ring_offsets.reserve_exact(additional.ring_capacity);
         self.geom_offsets.reserve_exact(additional.geom_capacity);
+    }
+
+    /// Shrinks the capacity of self to fit.
+    pub fn shrink_to_fit(&mut self) {
+        self.coords.shrink_to_fit();
+        self.ring_offsets.shrink_to_fit();
+        self.geom_offsets.shrink_to_fit();
+        // self.validity.shrink_to_fit();
     }
 
     /// The canonical method to create a [`MultiLineStringBuilder`] out of its internal
@@ -135,6 +132,7 @@ impl MultiLineStringBuilder {
     /// Care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
     #[inline]
+    #[allow(dead_code)]
     pub(crate) fn try_push_geom_offset(&mut self, offsets_length: usize) -> GeoArrowResult<()> {
         self.geom_offsets.try_push_usize(offsets_length)?;
         self.validity.append(true);
@@ -186,9 +184,7 @@ impl MultiLineStringBuilder {
             // - Add ring's # of coords to self.ring_offsets
             // - Push ring's coords to self.coords
 
-            self.ring_offsets
-                .try_push_usize(line_string.num_coords())
-                .unwrap();
+            self.ring_offsets.try_push_usize(line_string.num_coords())?;
 
             for coord in line_string.coords() {
                 self.coords.push_coord(&coord);
@@ -223,9 +219,7 @@ impl MultiLineStringBuilder {
 
             // Number of coords for each ring
             for line_string in multi_line_string.line_strings() {
-                self.ring_offsets
-                    .try_push_usize(line_string.num_coords())
-                    .unwrap();
+                self.ring_offsets.try_push_usize(line_string.num_coords())?;
 
                 for coord in line_string.coords() {
                     self.coords.push_coord(&coord);

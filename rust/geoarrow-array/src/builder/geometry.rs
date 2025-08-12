@@ -86,62 +86,61 @@ impl<'a> GeometryBuilder {
 
     /// Creates a new [`GeometryBuilder`] with given capacity and no validity.
     pub fn with_capacity(typ: GeometryType, capacity: GeometryCapacity) -> Self {
-        let metadata = typ.metadata().clone();
         let coord_type = typ.coord_type();
 
         let points = core::array::from_fn(|i| {
             let dim = Dimension::from_order(i).unwrap();
             PointBuilder::with_capacity(
-                PointType::new(coord_type, dim, Default::default()),
+                PointType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.point(dim),
             )
         });
         let line_strings = core::array::from_fn(|i| {
             let dim = Dimension::from_order(i).unwrap();
             LineStringBuilder::with_capacity(
-                LineStringType::new(coord_type, dim, Default::default()),
+                LineStringType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.line_string(dim),
             )
         });
         let polygons = core::array::from_fn(|i| {
             let dim = Dimension::from_order(i).unwrap();
             PolygonBuilder::with_capacity(
-                PolygonType::new(coord_type, dim, Default::default()),
+                PolygonType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.polygon(dim),
             )
         });
         let mpoints = core::array::from_fn(|i| {
             let dim = Dimension::from_order(i).unwrap();
             MultiPointBuilder::with_capacity(
-                MultiPointType::new(coord_type, dim, Default::default()),
+                MultiPointType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.multi_point(dim),
             )
         });
         let mline_strings = core::array::from_fn(|i| {
             let dim = Dimension::from_order(i).unwrap();
             MultiLineStringBuilder::with_capacity(
-                MultiLineStringType::new(coord_type, dim, Default::default()),
+                MultiLineStringType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.multi_line_string(dim),
             )
         });
         let mpolygons = core::array::from_fn(|i| {
             let dim = Dimension::from_order(i).unwrap();
             MultiPolygonBuilder::with_capacity(
-                MultiPolygonType::new(coord_type, dim, Default::default()),
+                MultiPolygonType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.multi_polygon(dim),
             )
         });
         let gcs = core::array::from_fn(|i| {
             let dim = Dimension::from_order(i).unwrap();
             GeometryCollectionBuilder::with_capacity(
-                GeometryCollectionType::new(coord_type, dim, Default::default()),
+                GeometryCollectionType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.geometry_collection(dim),
             )
         });
 
         // Don't store array metadata on child arrays
         Self {
-            metadata,
+            metadata: typ.metadata().clone(),
             types: vec![],
             points,
             line_strings,
@@ -262,6 +261,32 @@ impl<'a> GeometryBuilder {
         capacity.gcs.iter().enumerate().for_each(|(i, cap)| {
             self.gcs[i].reserve_exact(*cap);
         });
+    }
+
+    /// Shrinks the capacity of self to fit.
+    pub fn shrink_to_fit(&mut self) {
+        self.points.iter_mut().for_each(PointBuilder::shrink_to_fit);
+        self.line_strings
+            .iter_mut()
+            .for_each(LineStringBuilder::shrink_to_fit);
+        self.polygons
+            .iter_mut()
+            .for_each(PolygonBuilder::shrink_to_fit);
+        self.mpoints
+            .iter_mut()
+            .for_each(MultiPointBuilder::shrink_to_fit);
+        self.mline_strings
+            .iter_mut()
+            .for_each(MultiLineStringBuilder::shrink_to_fit);
+        self.mpolygons
+            .iter_mut()
+            .for_each(MultiPolygonBuilder::shrink_to_fit);
+        self.gcs
+            .iter_mut()
+            .for_each(GeometryCollectionBuilder::shrink_to_fit);
+
+        self.offsets.shrink_to_fit();
+        self.types.shrink_to_fit();
     }
 
     /// Consume the builder and convert to an immutable [`GeometryArray`]
@@ -678,9 +703,6 @@ impl<'a> GeometryBuilder {
     /// We handle that by pushing nulls to the first non-empty child we find. If no underlying
     /// arrays are non-empty, we add to an internal counter instead. Once the first non-empty
     /// geometry is pushed, then we flush all the "deferred nulls" to that child.
-    ///
-    // TODO: test building an array of all nulls. Make sure we flush deferred nulls if we've never
-    // added any valid geometries.
     #[inline]
     pub fn push_null(&mut self) {
         // Iterate through each dimension, then iterate through each child type. If a child exists,
@@ -854,7 +876,7 @@ mod test {
     #[test]
     fn all_items_null() {
         // Testing the behavior of deferred nulls when there are no valid geometries.
-        let typ = GeometryType::new(CoordType::Interleaved, Default::default());
+        let typ = GeometryType::new(Default::default());
         let mut builder = GeometryBuilder::new(typ);
 
         builder.push_null();
@@ -871,7 +893,7 @@ mod test {
     #[test]
     fn deferred_nulls() {
         let coord_type = CoordType::Interleaved;
-        let typ = GeometryType::new(coord_type, Default::default());
+        let typ = GeometryType::new(Default::default()).with_coord_type(coord_type);
 
         let mut builder = GeometryBuilder::new(typ);
         builder.push_null();
@@ -903,7 +925,7 @@ mod test {
     #[test]
     fn later_nulls_after_deferred_nulls_pushed_directly() {
         let coord_type = CoordType::Interleaved;
-        let typ = GeometryType::new(coord_type, Default::default());
+        let typ = GeometryType::new(Default::default()).with_coord_type(coord_type);
 
         let mut builder = GeometryBuilder::new(typ);
         builder.push_null();
@@ -943,7 +965,7 @@ mod test {
     #[test]
     fn nulls_no_deferred() {
         let coord_type = CoordType::Interleaved;
-        let typ = GeometryType::new(coord_type, Default::default());
+        let typ = GeometryType::new(Default::default()).with_coord_type(coord_type);
 
         let mut builder = GeometryBuilder::new(typ);
         let point = wkt! { POINT Z (30. 10. 40.) };

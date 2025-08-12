@@ -1,8 +1,9 @@
 #![cfg_attr(not(test), deny(unused_crate_dependencies))]
 
 mod constructors;
+mod interop;
+mod operations;
 // pub mod ffi;
-// pub mod interop;
 // pub mod table;
 
 use pyo3::exceptions::PyRuntimeWarning;
@@ -38,24 +39,36 @@ fn _rust(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     check_debug_build(py)?;
     m.add_wrapped(wrap_pyfunction!(___version))?;
 
-    m.add_class::<pyo3_geoarrow::PyGeoArrowArray>()?;
-    m.add_class::<pyo3_geoarrow::PyChunkedGeoArrowArray>()?;
-    m.add_class::<pyo3_geoarrow::PyGeoArrowType>()?;
+    m.add_class::<pyo3_geoarrow::PyGeoChunkedArray>()?;
+    m.add_class::<pyo3_geoarrow::PyGeoArray>()?;
+    m.add_class::<pyo3_geoarrow::PyGeoArrayReader>()?;
+    m.add_class::<pyo3_geoarrow::PyGeoScalar>()?;
+    m.add_class::<pyo3_geoarrow::data_type::PyGeoType>()?;
 
     // Type constructors
 
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::point, m)?)?;
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::geometry, m)?)?;
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::geometrycollection, m)?)?;
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::linestring, m)?)?;
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::multilinestring, m)?)?;
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::multipoint, m)?)?;
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::multipolygon, m)?)?;
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::point, m)?)?;
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::polygon, m)?)?;
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::wkb, m)?)?;
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::wkt, m)?)?;
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::r#box, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::point, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::geometry, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        pyo3_geoarrow::data_type::geometrycollection,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::linestring, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        pyo3_geoarrow::data_type::multilinestring,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::multipoint, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::multipolygon, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::point, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::polygon, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::wkb, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::large_wkb, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::wkb_view, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::wkt, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::large_wkt, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::wkt_view, m)?)?;
+    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::r#box, m)?)?;
 
     // Constructors
 
@@ -93,10 +106,16 @@ fn _rust(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     //     crate::interop::shapely::to_shapely::to_shapely,
     //     m
     // )?)?;
-    // m.add_function(wrap_pyfunction!(crate::interop::wkb::from_wkb, m)?)?;
-    // m.add_function(wrap_pyfunction!(crate::interop::wkb::to_wkb, m)?)?;
-    // m.add_function(wrap_pyfunction!(crate::interop::wkt::from_wkt, m)?)?;
-    // m.add_function(wrap_pyfunction!(crate::interop::wkt::to_wkt, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::interop::from_wkb, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::interop::to_wkb, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::interop::from_wkt, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::interop::to_wkt, m)?)?;
+
+    // Operations
+    m.add_function(wrap_pyfunction!(
+        crate::operations::type_id::get_type_id,
+        m
+    )?)?;
 
     // Exceptions
     // create_exception!(m, GeoArrowException, pyo3::exceptions::PyException);

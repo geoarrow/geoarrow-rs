@@ -23,7 +23,7 @@ impl GeozeroGeometry for MultiPointArray {
 
 #[cfg(test)]
 mod test {
-    use geoarrow_schema::{CoordType, Dimension, MultiPointType};
+    use geoarrow_schema::{Dimension, MultiPointType};
     use geozero::ToWkt;
     use geozero::error::Result;
 
@@ -32,7 +32,7 @@ mod test {
 
     #[test]
     fn geozero_process_geom() -> Result<()> {
-        let typ = MultiPointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let typ = MultiPointType::new(Dimension::XY, Default::default());
         let geo_arr = MultiPointBuilder::from_multi_points(&[&mp0(), &mp1()], typ).finish();
         let wkt = ToWkt::to_wkt(&geo_arr)?;
         let expected = "GEOMETRYCOLLECTION(MULTIPOINT(0 1,1 2),MULTIPOINT(3 4,5 6))";

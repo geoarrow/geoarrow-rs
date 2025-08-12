@@ -90,7 +90,8 @@ impl LineStringArray {
     ) -> GeoArrowResult<Self> {
         check(&coords, nulls.as_ref().map(|v| v.len()), &geom_offsets)?;
         Ok(Self {
-            data_type: LineStringType::new(coords.coord_type(), coords.dim(), metadata),
+            data_type: LineStringType::new(coords.dim(), metadata)
+                .with_coord_type(coords.coord_type()),
             coords,
             geom_offsets,
             nulls,
@@ -115,7 +116,7 @@ impl LineStringArray {
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
         let validity_len = self.nulls.as_ref().map(|v| v.buffer().len()).unwrap_or(0);
-        validity_len + self.buffer_lengths().num_bytes()
+        validity_len + self.buffer_lengths().num_bytes(self.data_type.dimension())
     }
 
     /// Slice this [`LineStringArray`].
@@ -277,8 +278,7 @@ impl TryFrom<(&dyn Array, LineStringType)> for LineStringArray {
             DataType::List(_) => (value.as_list::<i32>(), typ).try_into(),
             DataType::LargeList(_) => (value.as_list::<i64>(), typ).try_into(),
             dt => Err(GeoArrowError::InvalidGeoArrow(format!(
-                "Unexpected LineString DataType: {:?}",
-                dt
+                "Unexpected LineString DataType: {dt:?}",
             ))),
         }
     }
@@ -322,7 +322,8 @@ mod test {
     fn geo_round_trip() {
         for coord_type in [CoordType::Interleaved, CoordType::Separated] {
             let geoms = [Some(linestring::ls0()), None, Some(linestring::ls1()), None];
-            let typ = LineStringType::new(coord_type, Dimension::XY, Default::default());
+            let typ =
+                LineStringType::new(Dimension::XY, Default::default()).with_coord_type(coord_type);
             let geo_arr = LineStringBuilder::from_nullable_line_strings(&geoms, typ).finish();
 
             for (i, g) in geo_arr.iter().enumerate() {
@@ -348,7 +349,8 @@ mod test {
                 .map(|x| x.transpose().unwrap().map(|g| g.to_line_string()))
                 .collect::<Vec<_>>();
 
-            let typ = LineStringType::new(coord_type, Dimension::XY, Default::default());
+            let typ =
+                LineStringType::new(Dimension::XY, Default::default()).with_coord_type(coord_type);
             let geo_arr2 = LineStringBuilder::from_nullable_line_strings(&geo_geoms, typ).finish();
             assert_eq!(geo_arr, geo_arr2);
         }

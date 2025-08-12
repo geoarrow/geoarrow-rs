@@ -2,12 +2,9 @@
 
 Read and write [GeoParquet](https://geoparquet.org/) files.
 
-::: geoarrow.rust.io.read_parquet
-::: geoarrow.rust.io.read_parquet_async
-::: geoarrow.rust.io.write_parquet
-::: geoarrow.rust.io.ParquetDataset
-::: geoarrow.rust.io.ParquetFile
-::: geoarrow.rust.io.ParquetWriter
-::: geoarrow.rust.io.types.BboxCovering
+::: geoarrow.rust.io.GeoParquetDataset
+::: geoarrow.rust.io.GeoParquetFile
+::: geoarrow.rust.io.GeoParquetWriter
 ::: geoarrow.rust.io.enums.GeoParquetEncoding
 ::: geoarrow.rust.io.types.GeoParquetEncodingT
+::: geoarrow.rust.io.PathInput

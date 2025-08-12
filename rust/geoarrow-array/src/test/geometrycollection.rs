@@ -9,7 +9,7 @@ pub fn array(
     dim: Dimension,
     _prefer_multi: bool,
 ) -> GeometryCollectionArray {
-    let typ = GeometryCollectionType::new(coord_type, dim, Default::default());
+    let typ = GeometryCollectionType::new(dim, Default::default()).with_coord_type(coord_type);
     let geoms = match dim {
         Dimension::XY => raw::geometrycollection::xy::geoms(),
         Dimension::XYZ => raw::geometrycollection::xyz::geoms(),

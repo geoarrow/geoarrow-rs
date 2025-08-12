@@ -3,15 +3,13 @@ use std::sync::Arc;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
+use geoarrow_schema::LineStringType;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geoarrow_schema::{CoordType, LineStringType};
 
 use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, LineStringArray};
 use crate::builder::geo_trait_wrappers::LineWrapper;
-use crate::builder::{
-    CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
-};
+use crate::builder::{CoordBufferBuilder, OffsetsBuilder};
 use crate::capacity::LineStringCapacity;
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
 use crate::util::GeometryTypeName;
@@ -40,20 +38,11 @@ impl LineStringBuilder {
 
     /// Creates a new [`LineStringBuilder`] with a capacity.
     pub fn with_capacity(typ: LineStringType, capacity: LineStringCapacity) -> Self {
-        let coords = match typ.coord_type() {
-            CoordType::Interleaved => {
-                CoordBufferBuilder::Interleaved(InterleavedCoordBufferBuilder::with_capacity(
-                    capacity.coord_capacity(),
-                    typ.dimension(),
-                ))
-            }
-            CoordType::Separated => {
-                CoordBufferBuilder::Separated(SeparatedCoordBufferBuilder::with_capacity(
-                    capacity.coord_capacity(),
-                    typ.dimension(),
-                ))
-            }
-        };
+        let coords = CoordBufferBuilder::with_capacity(
+            capacity.coord_capacity,
+            typ.coord_type(),
+            typ.dimension(),
+        );
         Self {
             coords,
             geom_offsets: OffsetsBuilder::with_capacity(capacity.geom_capacity()),
@@ -86,6 +75,13 @@ impl LineStringBuilder {
     pub fn reserve_exact(&mut self, additional: LineStringCapacity) {
         self.coords.reserve_exact(additional.coord_capacity());
         self.geom_offsets.reserve_exact(additional.geom_capacity());
+    }
+
+    /// Shrinks the capacity of self to fit.
+    pub fn shrink_to_fit(&mut self) {
+        self.coords.shrink_to_fit();
+        self.geom_offsets.shrink_to_fit();
+        // self.validity.shrink_to_fit();
     }
 
     /// Needs to be called when a valid value was extended to this array.
@@ -190,6 +186,7 @@ impl LineStringBuilder {
     /// Care must be taken to ensure that pushing raw coordinates to the array upholds the
     /// necessary invariants of the array.
     #[inline]
+    #[allow(dead_code)]
     pub(crate) fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> GeoArrowResult<()> {
         self.coords.try_push_coord(coord)
     }
@@ -213,8 +210,7 @@ impl LineStringBuilder {
                         self.push_line_string(Some(&ml.line_string(0).unwrap()))?
                     } else {
                         return Err(GeoArrowError::IncorrectGeometryType(format!(
-                            "Expected MultiLineString with only one LineString in LineStringBuilder, got {} line strings",
-                            num_line_strings
+                            "Expected MultiLineString with only one LineString in LineStringBuilder, got {num_line_strings} line strings",
                         )));
                     }
                 }

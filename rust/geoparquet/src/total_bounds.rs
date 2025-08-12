@@ -10,8 +10,7 @@ use geo_traits::{
 use geo_types::Coord;
 use geoarrow_array::array::RectArray;
 use geoarrow_array::builder::RectBuilder;
-use geoarrow_array::cast::AsGeoArrowArray;
-use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor};
+use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, downcast_geoarrow_array};
 use geoarrow_schema::error::GeoArrowResult;
 use geoarrow_schema::{BoxType, Dimension, GeoArrowType};
 
@@ -291,33 +290,17 @@ impl GeometryTrait for BoundingRect {
 ///
 /// Note that this **does not** currently correctly handle the antimeridian
 pub(crate) fn bounding_rect(arr: &dyn GeoArrowArray) -> GeoArrowResult<RectArray> {
-    use GeoArrowType::*;
-    match arr.data_type() {
-        Point(_) => impl_array_accessor(arr.as_point()),
-        LineString(_) => impl_array_accessor(arr.as_line_string()),
-        Polygon(_) => impl_array_accessor(arr.as_polygon()),
-        MultiPoint(_) => impl_array_accessor(arr.as_multi_point()),
-        MultiLineString(_) => impl_array_accessor(arr.as_multi_line_string()),
-        MultiPolygon(_) => impl_array_accessor(arr.as_multi_polygon()),
-        Geometry(_) => impl_array_accessor(arr.as_geometry()),
-        GeometryCollection(_) => impl_array_accessor(arr.as_geometry_collection()),
-        Rect(_) => Ok(arr.as_rect().clone()),
-        Wkb(_) => impl_array_accessor(arr.as_wkb::<i32>()),
-        LargeWkb(_) => impl_array_accessor(arr.as_wkb::<i64>()),
-        WkbView(_) => impl_array_accessor(arr.as_wkb_view()),
-        Wkt(_) => impl_array_accessor(arr.as_wkt::<i32>()),
-        LargeWkt(_) => impl_array_accessor(arr.as_wkt::<i64>()),
-        WktView(_) => impl_array_accessor(arr.as_wkt_view()),
-    }
+    downcast_geoarrow_array!(arr, impl_array_accessor)
 }
 
 /// The actual implementation of computing the bounding rect
 fn impl_array_accessor<'a>(arr: &'a impl GeoArrowArrayAccessor<'a>) -> GeoArrowResult<RectArray> {
     match arr.data_type() {
+        // Note: the implementation in geodatafusion handles this
         GeoArrowType::Rect(_) => unreachable!(),
         _ => {
             let mut builder = RectBuilder::with_capacity(
-                BoxType::new(Dimension::XY, Default::default()),
+                BoxType::new(Dimension::XY, arr.data_type().metadata().clone()),
                 arr.len(),
             );
             for item in arr.iter() {
@@ -336,24 +319,7 @@ fn impl_array_accessor<'a>(arr: &'a impl GeoArrowArrayAccessor<'a>) -> GeoArrowR
 
 /// Get the total bounds (i.e. minx, miny, maxx, maxy) of the entire geoarrow array.
 pub(crate) fn total_bounds(arr: &dyn GeoArrowArray) -> GeoArrowResult<BoundingRect> {
-    use GeoArrowType::*;
-    match arr.data_type() {
-        Point(_) => impl_total_bounds(arr.as_point()),
-        LineString(_) => impl_total_bounds(arr.as_line_string()),
-        Polygon(_) => impl_total_bounds(arr.as_polygon()),
-        MultiPoint(_) => impl_total_bounds(arr.as_multi_point()),
-        MultiLineString(_) => impl_total_bounds(arr.as_multi_line_string()),
-        MultiPolygon(_) => impl_total_bounds(arr.as_multi_polygon()),
-        Geometry(_) => impl_total_bounds(arr.as_geometry()),
-        GeometryCollection(_) => impl_total_bounds(arr.as_geometry_collection()),
-        Rect(_) => impl_total_bounds(arr.as_rect()),
-        Wkb(_) => impl_total_bounds(arr.as_wkb::<i32>()),
-        LargeWkb(_) => impl_total_bounds(arr.as_wkb::<i64>()),
-        WkbView(_) => impl_total_bounds(arr.as_wkb_view()),
-        Wkt(_) => impl_total_bounds(arr.as_wkt::<i32>()),
-        LargeWkt(_) => impl_total_bounds(arr.as_wkt::<i64>()),
-        WktView(_) => impl_total_bounds(arr.as_wkt_view()),
-    }
+    downcast_geoarrow_array!(arr, impl_total_bounds)
 }
 
 /// The actual implementation of computing the total bounds

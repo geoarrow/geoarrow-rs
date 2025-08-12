@@ -109,7 +109,8 @@ impl MultiLineStringArray {
             nulls.as_ref().map(|v| v.len()),
         )?;
         Ok(Self {
-            data_type: MultiLineStringType::new(coords.coord_type(), coords.dim(), metadata),
+            data_type: MultiLineStringType::new(coords.dim(), metadata)
+                .with_coord_type(coords.coord_type()),
             coords,
             geom_offsets,
             ring_offsets,
@@ -152,7 +153,7 @@ impl MultiLineStringArray {
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
         let validity_len = self.nulls.as_ref().map(|v| v.buffer().len()).unwrap_or(0);
-        validity_len + self.buffer_lengths().num_bytes()
+        validity_len + self.buffer_lengths().num_bytes(self.data_type.dimension())
     }
 
     /// Slice this [`MultiLineStringArray`].
@@ -338,8 +339,7 @@ impl TryFrom<(&dyn Array, MultiLineStringType)> for MultiLineStringArray {
             DataType::List(_) => (value.as_list::<i32>(), typ).try_into(),
             DataType::LargeList(_) => (value.as_list::<i64>(), typ).try_into(),
             dt => Err(GeoArrowError::InvalidGeoArrow(format!(
-                "Unexpected MultiLineString DataType: {:?}",
-                dt
+                "Unexpected MultiLineString DataType: {dt:?}",
             ))),
         }
     }
@@ -368,7 +368,7 @@ impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, MultiLineStringType)>
 impl From<LineStringArray> for MultiLineStringArray {
     fn from(value: LineStringArray) -> Self {
         let (coord_type, dimension, metadata) = value.data_type.into_inner();
-        let new_type = MultiLineStringType::new(coord_type, dimension, metadata);
+        let new_type = MultiLineStringType::new(dimension, metadata).with_coord_type(coord_type);
 
         let coords = value.coords;
         let geom_offsets = OffsetBuffer::from_lengths(vec![1; coords.len()]);
@@ -410,7 +410,8 @@ mod test {
                 Some(multilinestring::ml1()),
                 None,
             ];
-            let typ = MultiLineStringType::new(coord_type, Dimension::XY, Default::default());
+            let typ = MultiLineStringType::new(Dimension::XY, Default::default())
+                .with_coord_type(coord_type);
             let geo_arr =
                 MultiLineStringBuilder::from_nullable_multi_line_strings(&geoms, typ).finish();
 
@@ -440,7 +441,8 @@ mod test {
                 .map(|x| x.transpose().unwrap().map(|g| g.to_multi_line_string()))
                 .collect::<Vec<_>>();
 
-            let typ = MultiLineStringType::new(coord_type, Dimension::XY, Default::default());
+            let typ = MultiLineStringType::new(Dimension::XY, Default::default())
+                .with_coord_type(coord_type);
             let geo_arr2 =
                 MultiLineStringBuilder::from_nullable_multi_line_strings(&geo_geoms, typ).finish();
             assert_eq!(geo_arr, geo_arr2);

@@ -3,14 +3,12 @@ use std::sync::Arc;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
+use geoarrow_schema::MultiPointType;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geoarrow_schema::{CoordType, MultiPointType};
 
 use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, MultiPointArray};
-use crate::builder::{
-    CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
-};
+use crate::builder::{CoordBufferBuilder, OffsetsBuilder};
 use crate::capacity::MultiPointCapacity;
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
 use crate::util::GeometryTypeName;
@@ -38,20 +36,11 @@ impl MultiPointBuilder {
 
     /// Creates a new [`MultiPointBuilder`] with a capacity.
     pub fn with_capacity(typ: MultiPointType, capacity: MultiPointCapacity) -> Self {
-        let coords = match typ.coord_type() {
-            CoordType::Interleaved => {
-                CoordBufferBuilder::Interleaved(InterleavedCoordBufferBuilder::with_capacity(
-                    capacity.coord_capacity,
-                    typ.dimension(),
-                ))
-            }
-            CoordType::Separated => {
-                CoordBufferBuilder::Separated(SeparatedCoordBufferBuilder::with_capacity(
-                    capacity.coord_capacity,
-                    typ.dimension(),
-                ))
-            }
-        };
+        let coords = CoordBufferBuilder::with_capacity(
+            capacity.coord_capacity,
+            typ.coord_type(),
+            typ.dimension(),
+        );
         Self {
             coords,
             geom_offsets: OffsetsBuilder::with_capacity(capacity.geom_capacity),
@@ -86,14 +75,16 @@ impl MultiPointBuilder {
         self.geom_offsets.reserve_exact(capacity.geom_capacity);
     }
 
+    /// Shrinks the capacity of self to fit.
+    pub fn shrink_to_fit(&mut self) {
+        self.coords.shrink_to_fit();
+        self.geom_offsets.shrink_to_fit();
+        // self.validity.shrink_to_fit();
+    }
+
     /// Consume the builder and convert to an immutable [`MultiPointArray`]
     pub fn finish(mut self) -> MultiPointArray {
         let validity = self.validity.finish();
-
-        // TODO: impl shrink_to_fit for all mutable -> * impls
-        // self.coords.shrink_to_fit();
-        self.geom_offsets.shrink_to_fit();
-
         MultiPointArray::new(
             self.coords.finish(),
             self.geom_offsets.finish(),
@@ -193,6 +184,7 @@ impl MultiPointBuilder {
     /// Care must be taken to ensure that pushing raw coordinates to the array upholds the
     /// necessary invariants of the array.
     #[inline]
+    #[allow(dead_code)]
     pub(crate) fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> GeoArrowResult<()> {
         self.coords.try_push_coord(coord)
     }

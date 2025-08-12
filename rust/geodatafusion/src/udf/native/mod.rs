@@ -1,10 +1,9 @@
 //! User-defined functions that wrap native Rust implementations.
 
-// mod accessors;
-// mod bounding_box;
+pub mod accessors;
+pub mod bounding_box;
 pub mod constructors;
 pub mod io;
-// mod measurement;
 // mod processing;
 
 // use datafusion::prelude::SessionContext;

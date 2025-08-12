@@ -6,15 +6,13 @@ use geo_traits::{
     CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait,
     RectTrait,
 };
+use geoarrow_schema::PolygonType;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geoarrow_schema::{CoordType, PolygonType};
 
 use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, PolygonArray};
 use crate::builder::geo_trait_wrappers::{RectWrapper, TriangleWrapper};
-use crate::builder::{
-    CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
-};
+use crate::builder::{CoordBufferBuilder, OffsetsBuilder};
 use crate::capacity::PolygonCapacity;
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
 use crate::util::GeometryTypeName;
@@ -46,20 +44,11 @@ impl PolygonBuilder {
 
     /// Creates a new [`PolygonBuilder`] with given capacity and no validity.
     pub fn with_capacity(typ: PolygonType, capacity: PolygonCapacity) -> Self {
-        let coords = match typ.coord_type() {
-            CoordType::Interleaved => {
-                CoordBufferBuilder::Interleaved(InterleavedCoordBufferBuilder::with_capacity(
-                    capacity.coord_capacity,
-                    typ.dimension(),
-                ))
-            }
-            CoordType::Separated => {
-                CoordBufferBuilder::Separated(SeparatedCoordBufferBuilder::with_capacity(
-                    capacity.coord_capacity,
-                    typ.dimension(),
-                ))
-            }
-        };
+        let coords = CoordBufferBuilder::with_capacity(
+            capacity.coord_capacity,
+            typ.coord_type(),
+            typ.dimension(),
+        );
         Self {
             coords,
             geom_offsets: OffsetsBuilder::with_capacity(capacity.geom_capacity),
@@ -97,6 +86,14 @@ impl PolygonBuilder {
         self.geom_offsets.reserve_exact(capacity.geom_capacity);
     }
 
+    /// Shrinks the capacity of self to fit.
+    pub fn shrink_to_fit(&mut self) {
+        self.coords.shrink_to_fit();
+        self.ring_offsets.shrink_to_fit();
+        self.geom_offsets.shrink_to_fit();
+        // self.validity.shrink_to_fit();
+    }
+
     /// Push a raw offset to the underlying geometry offsets buffer.
     ///
     /// # Invariants
@@ -104,6 +101,7 @@ impl PolygonBuilder {
     /// Care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
     #[inline]
+    #[allow(dead_code)]
     pub(crate) fn try_push_geom_offset(&mut self, offsets_length: usize) -> GeoArrowResult<()> {
         self.geom_offsets.try_push_usize(offsets_length)?;
         self.validity.append(true);
@@ -214,8 +212,7 @@ impl PolygonBuilder {
                         self.push_polygon(Some(&mp.polygon(0).unwrap()))?
                     } else {
                         return Err(GeoArrowError::IncorrectGeometryType(format!(
-                            "Expected MultiPolygon with only one polygon in PolygonBuilder, got {} polygons",
-                            num_polygons
+                            "Expected MultiPolygon with only one polygon in PolygonBuilder, got {num_polygons} polygons",
                         )));
                     }
                 }
@@ -349,18 +346,14 @@ mod test {
     use geo::BoundingRect;
     use geo_traits::to_geo::ToGeoPolygon;
     use geo_types::{Rect, coord};
-    use geoarrow_schema::{CoordType, Dimension, PolygonType};
+    use geoarrow_schema::{Dimension, PolygonType};
 
     use crate::GeoArrowArrayAccessor;
     use crate::builder::PolygonBuilder;
 
     #[test]
     fn test_push_rect() {
-        let mut builder = PolygonBuilder::new(PolygonType::new(
-            CoordType::Separated,
-            Dimension::XY,
-            Default::default(),
-        ));
+        let mut builder = PolygonBuilder::new(PolygonType::new(Dimension::XY, Default::default()));
 
         let rect = Rect::new(coord! { x: 10., y: 20. }, coord! { x: 30., y: 10. });
         builder.push_rect(Some(&rect)).unwrap();

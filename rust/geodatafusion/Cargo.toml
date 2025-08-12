@@ -11,11 +11,14 @@ rust-version = { workspace = true }
 
 
 [dependencies]
+arrow-arith = { workspace = true }
 arrow-array = { workspace = true }
 arrow-schema = { workspace = true }
 datafusion = { workspace = true }
 geo = { workspace = true }
+geo-traits = { workspace = true }
 geoarrow-array = { workspace = true }
+geoarrow-geo = { workspace = true }
 geoarrow-schema = { workspace = true }
 geohash = { workspace = true }
 thiserror = { workspace = true }
@@ -25,4 +28,8 @@ wkt = { workspace = true }
 approx = { workspace = true }
 geo-traits = { workspace = true }
 geoarrow-array = { workspace = true, features = ["test-data"] }
+object_store = { workspace = true, features = ["http"] }
 tokio = { workspace = true, features = ["macros", "fs", "rt-multi-thread"] }
+
+[package.metadata.docs.rs]
+all-features = true

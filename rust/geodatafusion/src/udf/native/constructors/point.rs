@@ -46,6 +46,12 @@ impl Point {
     }
 }
 
+impl Default for Point {
+    fn default() -> Self {
+        Self::new(Default::default())
+    }
+}
+
 static POINT_DOC: OnceLock<Documentation> = OnceLock::new();
 
 impl ScalarUDFImpl for Point {
@@ -65,8 +71,9 @@ impl ScalarUDFImpl for Point {
         Err(DataFusionError::Internal("return_type".to_string()))
     }
 
-    fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<Field> {
-        let mut typ = PointType::new(self.coord_type, Dimension::XY, Default::default());
+    fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<Arc<Field>> {
+        let mut typ =
+            PointType::new(Dimension::XY, Default::default()).with_coord_type(self.coord_type);
 
         if let Some(srid) = args.scalar_arguments.get(2) {
             if let Some(ScalarValue::Int64(srid_val)) = srid {
@@ -79,12 +86,12 @@ impl ScalarUDFImpl for Point {
             }
         };
 
-        Ok(typ.to_field("", true))
+        Ok(typ.to_field("", true).into())
     }
 
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
         let arrays = ColumnarValue::values_to_arrays(&args.args[..2])?;
-        let point_arr = create_point_array(arrays, args.return_field)?;
+        let point_arr = create_point_array(arrays, &args.return_field)?;
         Ok(point_arr.into_array_ref().into())
     }
 
@@ -135,6 +142,12 @@ impl PointZ {
     }
 }
 
+impl Default for PointZ {
+    fn default() -> Self {
+        Self::new(Default::default())
+    }
+}
+
 static POINT_Z_DOC: OnceLock<Documentation> = OnceLock::new();
 
 impl ScalarUDFImpl for PointZ {
@@ -154,8 +167,9 @@ impl ScalarUDFImpl for PointZ {
         Err(DataFusionError::Internal("return_type".to_string()))
     }
 
-    fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<Field> {
-        let mut typ = PointType::new(self.coord_type, Dimension::XYZ, Default::default());
+    fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<Arc<Field>> {
+        let mut typ =
+            PointType::new(Dimension::XYZ, Default::default()).with_coord_type(self.coord_type);
 
         if let Some(srid) = args.scalar_arguments.get(3) {
             if let Some(ScalarValue::Int64(srid_val)) = srid {
@@ -168,12 +182,12 @@ impl ScalarUDFImpl for PointZ {
             }
         };
 
-        Ok(typ.to_field("", true))
+        Ok(typ.to_field("", true).into())
     }
 
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
         let arrays = ColumnarValue::values_to_arrays(&args.args[..3])?;
-        let point_arr = create_point_array(arrays, args.return_field)?;
+        let point_arr = create_point_array(arrays, &args.return_field)?;
         Ok(point_arr.into_array_ref().into())
     }
 
@@ -225,6 +239,12 @@ impl PointM {
     }
 }
 
+impl Default for PointM {
+    fn default() -> Self {
+        Self::new(Default::default())
+    }
+}
+
 static POINT_M_DOC: OnceLock<Documentation> = OnceLock::new();
 
 impl ScalarUDFImpl for PointM {
@@ -244,8 +264,9 @@ impl ScalarUDFImpl for PointM {
         Err(DataFusionError::Internal("return_type".to_string()))
     }
 
-    fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<Field> {
-        let mut typ = PointType::new(self.coord_type, Dimension::XYM, Default::default());
+    fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<Arc<Field>> {
+        let mut typ =
+            PointType::new(Dimension::XYM, Default::default()).with_coord_type(self.coord_type);
 
         if let Some(srid) = args.scalar_arguments.get(3) {
             if let Some(ScalarValue::Int64(srid_val)) = srid {
@@ -258,12 +279,12 @@ impl ScalarUDFImpl for PointM {
             }
         };
 
-        Ok(typ.to_field("", true))
+        Ok(typ.to_field("", true).into())
     }
 
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
         let arrays = ColumnarValue::values_to_arrays(&args.args[..3])?;
-        let point_arr = create_point_array(arrays, args.return_field)?;
+        let point_arr = create_point_array(arrays, &args.return_field)?;
         Ok(point_arr.into_array_ref().into())
     }
 
@@ -317,6 +338,12 @@ impl PointZM {
     }
 }
 
+impl Default for PointZM {
+    fn default() -> Self {
+        Self::new(Default::default())
+    }
+}
+
 static POINT_ZM_DOC: OnceLock<Documentation> = OnceLock::new();
 
 impl ScalarUDFImpl for PointZM {
@@ -336,8 +363,9 @@ impl ScalarUDFImpl for PointZM {
         Err(DataFusionError::Internal("return_type".to_string()))
     }
 
-    fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<Field> {
-        let mut typ = PointType::new(self.coord_type, Dimension::XY, Default::default());
+    fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<Arc<Field>> {
+        let mut typ =
+            PointType::new(Dimension::XYZM, Default::default()).with_coord_type(self.coord_type);
 
         if let Some(srid) = args.scalar_arguments.get(4) {
             if let Some(ScalarValue::Int64(srid_val)) = srid {
@@ -350,12 +378,12 @@ impl ScalarUDFImpl for PointZM {
             }
         };
 
-        Ok(typ.to_field("", true))
+        Ok(typ.to_field("", true).into())
     }
 
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
         let arrays = ColumnarValue::values_to_arrays(&args.args[..4])?;
-        let point_arr = create_point_array(arrays, args.return_field)?;
+        let point_arr = create_point_array(arrays, &args.return_field)?;
         Ok(point_arr.into_array_ref().into())
     }
 
@@ -408,6 +436,12 @@ impl MakePoint {
     }
 }
 
+impl Default for MakePoint {
+    fn default() -> Self {
+        Self::new(Default::default())
+    }
+}
+
 static MAKE_POINT_DOC: OnceLock<Documentation> = OnceLock::new();
 
 impl ScalarUDFImpl for MakePoint {
@@ -427,7 +461,7 @@ impl ScalarUDFImpl for MakePoint {
         Err(DataFusionError::Internal("return_type".to_string()))
     }
 
-    fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<Field> {
+    fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<Arc<Field>> {
         let dim = match args.arg_fields.len() {
             2 => Dimension::XY,
             3 => Dimension::XYZ,
@@ -435,13 +469,13 @@ impl ScalarUDFImpl for MakePoint {
             _ => unreachable!(),
         };
 
-        let typ = PointType::new(self.coord_type, dim, Default::default());
-        Ok(typ.to_field("", true))
+        let typ = PointType::new(dim, Default::default()).with_coord_type(self.coord_type);
+        Ok(typ.to_field("", true).into())
     }
 
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
         let arrays = ColumnarValue::values_to_arrays(&args.args)?;
-        let point_arr = create_point_array(arrays, args.return_field)?;
+        let point_arr = create_point_array(arrays, &args.return_field)?;
         Ok(point_arr.into_array_ref().into())
     }
 
@@ -482,6 +516,12 @@ impl MakePointM {
     }
 }
 
+impl Default for MakePointM {
+    fn default() -> Self {
+        Self::new(Default::default())
+    }
+}
+
 static MAKE_POINT_M_DOC: OnceLock<Documentation> = OnceLock::new();
 
 impl ScalarUDFImpl for MakePointM {
@@ -501,14 +541,15 @@ impl ScalarUDFImpl for MakePointM {
         Err(DataFusionError::Internal("return_type".to_string()))
     }
 
-    fn return_field_from_args(&self, _args: ReturnFieldArgs) -> Result<Field> {
-        let typ = PointType::new(self.coord_type, Dimension::XYM, Default::default());
-        Ok(typ.to_field("", true))
+    fn return_field_from_args(&self, _args: ReturnFieldArgs) -> Result<Arc<Field>> {
+        let typ =
+            PointType::new(Dimension::XYM, Default::default()).with_coord_type(self.coord_type);
+        Ok(typ.to_field("", true).into())
     }
 
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
         let arrays = ColumnarValue::values_to_arrays(&args.args)?;
-        let point_arr = create_point_array(arrays, args.return_field)?;
+        let point_arr = create_point_array(arrays, &args.return_field)?;
         Ok(point_arr.into_array_ref().into())
     }
 
@@ -640,7 +681,6 @@ mod test {
 
     use super::*;
 
-    #[ignore = "UDFs on scalar input not yet supported (see https://github.com/geoarrow/geoarrow-rs/pull/1106#issuecomment-2866322000)"]
     #[tokio::test]
     async fn test_st_point() {
         let ctx = SessionContext::new();
@@ -657,19 +697,15 @@ mod test {
         let output_batch = &output_batches[0];
         let output_schema = output_batch.schema();
         let output_field = output_schema.field(0);
-        dbg!(output_field);
 
-        // This fails
-        assert_eq!(output_field.extension_type_name(), Some("geoarrow.point"));
+        let output_column = output_batch.column(0);
+        let point_arr = PointArray::try_from((output_column.as_ref(), output_field)).unwrap();
 
-        // let output_column = output_batch.column(0);
-        // let point_arr = PointArray::try_from((output_column.as_ref(), output_field)).unwrap();
+        assert_eq!(point_arr.len(), 1);
+        let (x, y) = point_arr.value(0).unwrap().coord().unwrap().x_y();
 
-        // assert_eq!(point_arr.len(), 1);
-        // let (x, y) = point_arr.value(0).unwrap().coord().unwrap().x_y();
-
-        // assert!(relative_eq!(x, -71.104));
-        // assert!(relative_eq!(y, 42.315));
+        assert!(relative_eq!(x, -71.104));
+        assert!(relative_eq!(y, 42.315));
     }
 
     #[tokio::test]

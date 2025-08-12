@@ -3,7 +3,7 @@ use std::fmt::Display;
 
 use arrow_schema::{ArrowError, Field, Fields};
 
-use crate::error::GeoArrowResult;
+use crate::error::{GeoArrowError, GeoArrowResult};
 
 /// The dimension of the geometry array.
 ///
@@ -56,8 +56,8 @@ impl Dimension {
                 Self::XYZ
             } else {
                 return Err(ArrowError::SchemaError(format!(
-                    "Invalid field names for separated coordinates with 3 dimensions: {:?}",
-                    field_names
+                    "Invalid field names for separated coordinates with 3 dimensions: {field_names:?}",
+
                 ))
                 .into());
             }
@@ -65,8 +65,7 @@ impl Dimension {
             Self::XYZM
         } else {
             return Err(ArrowError::SchemaError(format!(
-                "Invalid fields for separated coordinates: {:?}",
-                fields
+                "Invalid fields for separated coordinates: {fields:?}",
             ))
             .into());
         };
@@ -96,8 +95,7 @@ impl From<Dimension> for geo_traits::Dimensions {
 }
 
 impl TryFrom<geo_traits::Dimensions> for Dimension {
-    // TODO: switch to our own error
-    type Error = ArrowError;
+    type Error = GeoArrowError;
 
     fn try_from(value: geo_traits::Dimensions) -> std::result::Result<Self, Self::Error> {
         match value {
@@ -107,9 +105,8 @@ impl TryFrom<geo_traits::Dimensions> for Dimension {
             geo_traits::Dimensions::Xyzm | geo_traits::Dimensions::Unknown(4) => {
                 Ok(Dimension::XYZM)
             }
-            _ => Err(ArrowError::SchemaError(format!(
-                "Unsupported dimension {:?}",
-                value
+            _ => Err(GeoArrowError::InvalidGeoArrow(format!(
+                "Unsupported dimension {value:?}"
             ))),
         }
     }
@@ -241,10 +238,11 @@ mod test {
         let dims4: Dimension = geo_traits::Dimensions::Unknown(4).try_into().unwrap();
         assert_eq!(dims4, Dimension::XYZM);
 
-        let dims_err: Result<Dimension, ArrowError> = geo_traits::Dimensions::Unknown(0).try_into();
+        let dims_err: Result<Dimension, GeoArrowError> =
+            geo_traits::Dimensions::Unknown(0).try_into();
         assert_eq!(
             dims_err.unwrap_err().to_string(),
-            "Schema error: Unsupported dimension Unknown(0)"
+            "Data not conforming to GeoArrow specification: Unsupported dimension Unknown(0)"
         );
     }
 }

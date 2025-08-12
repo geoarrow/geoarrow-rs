@@ -23,7 +23,7 @@ impl GeozeroGeometry for PolygonArray {
 
 #[cfg(test)]
 mod test {
-    use geoarrow_schema::{CoordType, Dimension, PolygonType};
+    use geoarrow_schema::{Dimension, PolygonType};
     use geozero::ToWkt;
 
     use crate::builder::PolygonBuilder;
@@ -31,7 +31,7 @@ mod test {
 
     #[test]
     fn geozero_process_geom() -> geozero::error::Result<()> {
-        let typ = PolygonType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let typ = PolygonType::new(Dimension::XY, Default::default());
         let geo_arr = PolygonBuilder::from_polygons(&[&p0(), &p1()], typ).finish();
         let wkt = ToWkt::to_wkt(&geo_arr)?;
         let expected = "GEOMETRYCOLLECTION(POLYGON((-111 45,-111 41,-104 41,-104 45,-111 45)),POLYGON((-111 45,-111 41,-104 41,-104 45,-111 45),(-110 44,-110 42,-105 42,-105 44,-110 44)))";

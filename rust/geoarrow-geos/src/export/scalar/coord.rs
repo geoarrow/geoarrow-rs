@@ -25,7 +25,18 @@ fn separated_coords_to_geos(coords: &SeparatedCoordBuffer) -> Result<geos::Coord
             Some(&coords.raw_buffers()[2]),
             None,
         ),
-        _ => todo!("XYM and XYZM not supported yet"),
+        Dimension::XYM => CoordSeq::new_from_arrays(
+            &coords.raw_buffers()[0],
+            &coords.raw_buffers()[1],
+            None,
+            Some(&coords.raw_buffers()[2]),
+        ),
+        Dimension::XYZM => CoordSeq::new_from_arrays(
+            &coords.raw_buffers()[0],
+            &coords.raw_buffers()[1],
+            Some(&coords.raw_buffers()[2]),
+            Some(&coords.raw_buffers()[3]),
+        ),
     }
 }
 
@@ -35,7 +46,8 @@ fn interleaved_coords_to_geos(
     match coords.dim() {
         Dimension::XY => CoordSeq::new_from_buffer(coords.coords(), coords.len(), false, false),
         Dimension::XYZ => CoordSeq::new_from_buffer(coords.coords(), coords.len(), true, false),
-        _ => todo!("XYM and XYZM not supported yet"),
+        Dimension::XYM => CoordSeq::new_from_buffer(coords.coords(), coords.len(), false, true),
+        Dimension::XYZM => CoordSeq::new_from_buffer(coords.coords(), coords.len(), true, true),
     }
 }
 
@@ -47,7 +59,7 @@ pub(crate) fn dims_to_geos(dim: geo_traits::Dimensions) -> geos::CoordDimensions
         geo_traits::Dimensions::Xyz | geo_traits::Dimensions::Unknown(3) => {
             geos::CoordDimensions::ThreeD
         }
-        _ => panic!("Invalid coord dimension for GEOS: {:?}", dim),
+        _ => panic!("Invalid coord dimension for GEOS: {dim:?}",),
     }
 }
 

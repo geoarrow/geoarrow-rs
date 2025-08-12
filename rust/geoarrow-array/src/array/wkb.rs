@@ -43,6 +43,11 @@ impl<O: OffsetSizeTrait> GenericWkbArray<O> {
         self.len() == 0
     }
 
+    /// Access the underlying binary array.
+    pub fn inner(&self) -> &GenericBinaryArray<O> {
+        &self.array
+    }
+
     /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> WkbCapacity {
         WkbCapacity::new(
@@ -179,8 +184,7 @@ impl TryFrom<(&dyn Array, WkbType)> for GenericWkbArray<i32> {
                 geom_array.try_into()
             }
             dt => Err(GeoArrowError::InvalidGeoArrow(format!(
-                "Unexpected GenericWkbArray DataType: {:?}",
-                dt
+                "Unexpected GenericWkbArray DataType: {dt:?}",
             ))),
         }
     }
@@ -197,8 +201,7 @@ impl TryFrom<(&dyn Array, WkbType)> for GenericWkbArray<i64> {
             }
             DataType::LargeBinary => Ok((value.as_binary::<i64>().clone(), typ).into()),
             dt => Err(GeoArrowError::InvalidGeoArrow(format!(
-                "Unexpected GenericWkbArray DataType: {:?}",
-                dt
+                "Unexpected GenericWkbArray DataType: {dt:?}",
             ))),
         }
     }
@@ -297,9 +300,9 @@ mod test {
 
     fn wkb_data<O: OffsetSizeTrait>() -> GenericWkbArray<O> {
         let mut builder = WkbBuilder::new(WkbType::new(Default::default()));
-        builder.push_geometry(Some(&point::p0()));
-        builder.push_geometry(Some(&point::p1()));
-        builder.push_geometry(Some(&point::p2()));
+        builder.push_geometry(Some(&point::p0())).unwrap();
+        builder.push_geometry(Some(&point::p1())).unwrap();
+        builder.push_geometry(Some(&point::p2())).unwrap();
         builder.finish()
     }
 

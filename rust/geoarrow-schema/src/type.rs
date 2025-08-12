@@ -4,6 +4,7 @@ use std::sync::Arc;
 use arrow_schema::extension::ExtensionType;
 use arrow_schema::{ArrowError, DataType, Field, UnionFields, UnionMode};
 
+use crate::error::GeoArrowError;
 use crate::metadata::Metadata;
 use crate::{CoordType, Dimension};
 
@@ -22,9 +23,9 @@ macro_rules! define_basic_type {
 
         impl $struct_name {
             /// Construct a new type from parts.
-            pub fn new(coord_type: CoordType, dim: Dimension, metadata: Arc<Metadata>) -> Self {
+            pub fn new(dim: Dimension, metadata: Arc<Metadata>) -> Self {
                 Self {
-                    coord_type,
+                    coord_type: Default::default(),
                     dim,
                     metadata,
                 }
@@ -130,7 +131,7 @@ impl PointType {
     /// use arrow_schema::{DataType, Field};
     /// use geoarrow_schema::{CoordType, Dimension, PointType};
     ///
-    /// let geom_type = PointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+    /// let geom_type = PointType::new(Dimension::XY, Default::default()).with_coord_type(CoordType::Interleaved);
     /// let expected_type =
     ///     DataType::FixedSizeList(Field::new("xy", DataType::Float64, false).into(), 2);
     /// assert_eq!(geom_type.data_type(), expected_type);
@@ -186,11 +187,19 @@ impl ExtensionType for PointType {
 
 fn parse_point(data_type: &DataType) -> Result<(CoordType, Dimension), ArrowError> {
     match data_type {
-        // TODO: use list_size for dimension when 2, or 4
-        DataType::FixedSizeList(inner_field, _list_size) => Ok((
-            CoordType::Interleaved,
-            Dimension::from_interleaved_field(inner_field)?,
-        )),
+        DataType::FixedSizeList(inner_field, list_size) => {
+            let dim_parsed_from_field = Dimension::from_interleaved_field(inner_field)?;
+            if dim_parsed_from_field.size() != *list_size as usize {
+                Err(GeoArrowError::InvalidGeoArrow(format!(
+                    "Field metadata suggests list of size {}, but list size is {}",
+                    dim_parsed_from_field.size(),
+                    list_size
+                ))
+                .into())
+            } else {
+                Ok((CoordType::Interleaved, dim_parsed_from_field))
+            }
+        }
         DataType::Struct(struct_fields) => Ok((
             CoordType::Separated,
             Dimension::from_separated_field(struct_fields)?,
@@ -206,9 +215,9 @@ impl LineStringType {
     ///
     /// ```
     /// use arrow_schema::{DataType, Field};
-    /// use geoarrow_schema::{CoordType, Dimension, LineStringType};
+    /// use geoarrow_schema::{Dimension, LineStringType};
     ///
-    /// let geom_type = LineStringType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let geom_type = LineStringType::new(Dimension::XY, Default::default());
     /// let expected_coord_type = DataType::Struct(
     ///     vec![
     ///         Field::new("x", DataType::Float64, false),
@@ -286,9 +295,9 @@ impl PolygonType {
     ///
     /// ```
     /// use arrow_schema::{DataType, Field};
-    /// use geoarrow_schema::{CoordType, Dimension, PolygonType};
+    /// use geoarrow_schema::{Dimension, PolygonType};
     ///
-    /// let geom_type = PolygonType::new(CoordType::Separated, Dimension::XYZ, Default::default());
+    /// let geom_type = PolygonType::new(Dimension::XYZ, Default::default());
     ///
     /// let expected_coord_type = DataType::Struct(
     ///     vec![
@@ -380,9 +389,9 @@ impl MultiPointType {
     ///
     /// ```
     /// use arrow_schema::{DataType, Field};
-    /// use geoarrow_schema::{CoordType, Dimension, MultiPointType};
+    /// use geoarrow_schema::{Dimension, MultiPointType};
     ///
-    /// let geom_type = MultiPointType::new(CoordType::Separated, Dimension::XYZ, Default::default());
+    /// let geom_type = MultiPointType::new(Dimension::XYZ, Default::default());
     ///
     /// let expected_coord_type = DataType::Struct(
     ///     vec![
@@ -462,10 +471,10 @@ impl MultiLineStringType {
     ///
     /// ```
     /// use arrow_schema::{DataType, Field};
-    /// use geoarrow_schema::{CoordType, Dimension, MultiLineStringType};
+    /// use geoarrow_schema::{Dimension, MultiLineStringType};
     ///
     /// let geom_type =
-    ///     MultiLineStringType::new(CoordType::Separated, Dimension::XYZ, Default::default());
+    ///     MultiLineStringType::new(Dimension::XYZ, Default::default());
     ///
     /// let expected_coord_type = DataType::Struct(
     ///     vec![
@@ -557,9 +566,9 @@ impl MultiPolygonType {
     ///
     /// ```
     /// use arrow_schema::{DataType, Field};
-    /// use geoarrow_schema::{CoordType, Dimension, MultiPolygonType};
+    /// use geoarrow_schema::{Dimension, MultiPolygonType};
     ///
-    /// let geom_type = MultiPolygonType::new(CoordType::Separated, Dimension::XYM, Default::default());
+    /// let geom_type = MultiPolygonType::new(Dimension::XYM, Default::default());
     ///
     /// let expected_coord_type = DataType::Struct(
     ///     vec![
@@ -666,44 +675,43 @@ impl GeometryCollectionType {
     ///
     /// use arrow_schema::{DataType, Field, UnionFields, UnionMode};
     /// use geoarrow_schema::{
-    ///     CoordType, Dimension, GeometryCollectionType, LineStringType, Metadata, MultiLineStringType,
+    ///     Dimension, GeometryCollectionType, LineStringType, Metadata, MultiLineStringType,
     ///     MultiPointType, MultiPolygonType, PointType, PolygonType,
     /// };
     ///
-    /// let coord_type = CoordType::Interleaved;
     /// let dim = Dimension::XY;
     /// let metadata = Arc::new(Metadata::default());
-    /// let geom_type = GeometryCollectionType::new(coord_type, dim, metadata.clone());
+    /// let geom_type = GeometryCollectionType::new(dim, metadata.clone());
     ///
     /// let fields = vec![
     ///     Field::new(
     ///         "Point",
-    ///         PointType::new(coord_type, dim, metadata.clone()).data_type(),
+    ///         PointType::new(dim, metadata.clone()).data_type(),
     ///         true,
     ///     ),
     ///     Field::new(
     ///         "LineString",
-    ///         LineStringType::new(coord_type, dim, metadata.clone()).data_type(),
+    ///         LineStringType::new(dim, metadata.clone()).data_type(),
     ///         true,
     ///     ),
     ///     Field::new(
     ///         "Polygon",
-    ///         PolygonType::new(coord_type, dim, metadata.clone()).data_type(),
+    ///         PolygonType::new(dim, metadata.clone()).data_type(),
     ///         true,
     ///     ),
     ///     Field::new(
     ///         "MultiPoint",
-    ///         MultiPointType::new(coord_type, dim, metadata.clone()).data_type(),
+    ///         MultiPointType::new(dim, metadata.clone()).data_type(),
     ///         true,
     ///     ),
     ///     Field::new(
     ///         "MultiLineString",
-    ///         MultiLineStringType::new(coord_type, dim, metadata.clone()).data_type(),
+    ///         MultiLineStringType::new(dim, metadata.clone()).data_type(),
     ///         true,
     ///     ),
     ///     Field::new(
     ///         "MultiPolygon",
-    ///         MultiPolygonType::new(coord_type, dim, metadata.clone()).data_type(),
+    ///         MultiPolygonType::new(dim, metadata.clone()).data_type(),
     ///         true,
     ///     ),
     /// ];
@@ -928,7 +936,7 @@ fn parse_geometry_collection(data_type: &DataType) -> Result<(CoordType, Dimensi
 ///
 /// Refer to the [GeoArrow
 /// specification](https://github.com/geoarrow/geoarrow/blob/main/format.md#geometry).
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct GeometryType {
     coord_type: CoordType,
     metadata: Arc<Metadata>,
@@ -936,9 +944,9 @@ pub struct GeometryType {
 
 impl GeometryType {
     /// Construct a new type from parts.
-    pub fn new(coord_type: CoordType, metadata: Arc<Metadata>) -> Self {
+    pub fn new(metadata: Arc<Metadata>) -> Self {
         Self {
-            coord_type,
+            coord_type: Default::default(),
             metadata,
         }
     }
@@ -1302,20 +1310,17 @@ fn parse_box(data_type: &DataType) -> Result<Dimension, ArrowError> {
                     Ok(Dimension::XYZ)
                 } else {
                     Err(ArrowError::SchemaError(format!(
-                        "unexpected either mmin and mmax or zmin and zmax for struct with 6 fields. Got names: {:?}",
-                        names
+                        "unexpected either mmin and mmax or zmin and zmax for struct with 6 fields. Got names: {names:?}",
                     )))
                 }
             }
             8 => Ok(Dimension::XYZM),
             num_fields => Err(ArrowError::SchemaError(format!(
-                "unexpected number of struct fields: {}",
-                num_fields
+                "unexpected number of struct fields: {num_fields}",
             ))),
         },
         dt => Err(ArrowError::SchemaError(format!(
-            "unexpected data type parsing box: {:?}",
-            dt
+            "unexpected data type parsing box: {dt:?}",
         ))),
     }
 }
@@ -1545,8 +1550,7 @@ mod test {
 
     #[test]
     fn geometry_data_type() {
-        let typ =
-            GeometryCollectionType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let typ = GeometryCollectionType::new(Dimension::XY, Default::default());
         dbg!(typ.data_type());
     }
 }

@@ -1,5 +1,7 @@
 # geoarrow-array
 
+GeoArrow array definitions.
+
 The central type in Apache Arrow are arrays, which are a known-length sequence of values all having the same type. This crate provides concrete implementations of each type defined in the [GeoArrow specification], as well as a [GeoArrowArray] trait that can be used for type-erasure.
 
 [GeoArrow specification]: https://github.com/geoarrow/geoarrow
@@ -16,9 +18,9 @@ Use [builders][builder] to construct GeoArrow arrays. These builders offer a pus
 # use geoarrow_array::builder::PointBuilder;
 # use geoarrow_array::scalar::Point;
 # use geoarrow_array::GeoArrowArrayAccessor;
-# use geoarrow_schema::{CoordType, Dimension, PointType};
+# use geoarrow_schema::{Dimension, PointType};
 #
-let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+let point_type = PointType::new(Dimension::XY, Default::default());
 let mut builder = PointBuilder::new(point_type);
 
 builder.push_point(Some(&geo_types::point!(x: 0., y: 1.)));

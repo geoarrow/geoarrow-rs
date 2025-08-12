@@ -67,7 +67,7 @@ impl PointArray {
     ) -> GeoArrowResult<Self> {
         check(&coords, nulls.as_ref().map(|v| v.len()))?;
         Ok(Self {
-            data_type: PointType::new(coords.coord_type(), coords.dim(), metadata),
+            data_type: PointType::new(coords.dim(), metadata).with_coord_type(coords.coord_type()),
             coords,
             nulls,
         })
@@ -246,8 +246,7 @@ impl TryFrom<(&dyn Array, PointType)> for PointArray {
             DataType::FixedSizeList(_, _) => (value.as_fixed_size_list(), typ).try_into(),
             DataType::Struct(_) => (value.as_struct(), typ).try_into(),
             dt => Err(GeoArrowError::InvalidGeoArrow(format!(
-                "Unexpected Point DataType: {:?}",
-                dt
+                "Unexpected Point DataType: {dt:?}",
             ))),
         }
     }
@@ -270,22 +269,21 @@ impl PartialEq for PointArray {
             return false;
         }
 
-        // If the coords are already true, don't check for NaNs
-        // TODO: maybe only iterate once for perf?
-        if self.coords == other.coords {
-            return true;
-        }
-
         if self.coords.len() != other.coords.len() {
             return false;
         }
 
-        // TODO: this should check for point equal.
         for point_idx in 0..self.len() {
-            let c1 = self.value(point_idx).unwrap();
-            let c2 = other.value(point_idx).unwrap();
-            if !point_eq(&c1, &c2) {
-                return false;
+            let p1 = self.get(point_idx).unwrap();
+            let p2 = other.get(point_idx).unwrap();
+            match (p1, p2) {
+                (Some(p1), Some(p2)) => {
+                    if !point_eq(&p1, &p2) {
+                        return false;
+                    }
+                }
+                (None, None) => continue,
+                _ => return false,
             }
         }
 
@@ -311,7 +309,7 @@ mod test {
                 None,
                 Some(point::p2()),
             ];
-            let typ = PointType::new(coord_type, Dimension::XY, Default::default());
+            let typ = PointType::new(Dimension::XY, Default::default()).with_coord_type(coord_type);
             let geo_arr =
                 PointBuilder::from_nullable_points(geoms.iter().map(|x| x.as_ref()), typ).finish();
 

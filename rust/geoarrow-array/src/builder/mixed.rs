@@ -69,27 +69,27 @@ impl MixedGeometryBuilder {
             dim,
             types: vec![],
             points: PointBuilder::with_capacity(
-                PointType::new(coord_type, dim, Default::default()),
+                PointType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.point,
             ),
             line_strings: LineStringBuilder::with_capacity(
-                LineStringType::new(coord_type, dim, Default::default()),
+                LineStringType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.line_string,
             ),
             polygons: PolygonBuilder::with_capacity(
-                PolygonType::new(coord_type, dim, Default::default()),
+                PolygonType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.polygon,
             ),
             multi_points: MultiPointBuilder::with_capacity(
-                MultiPointType::new(coord_type, dim, Default::default()),
+                MultiPointType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.multi_point,
             ),
             multi_line_strings: MultiLineStringBuilder::with_capacity(
-                MultiLineStringType::new(coord_type, dim, Default::default()),
+                MultiLineStringType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.multi_line_string,
             ),
             multi_polygons: MultiPolygonBuilder::with_capacity(
-                MultiPolygonType::new(coord_type, dim, Default::default()),
+                MultiPolygonType::new(dim, Default::default()).with_coord_type(coord_type),
                 capacity.multi_polygon,
             ),
             offsets: vec![],
@@ -127,6 +127,18 @@ impl MixedGeometryBuilder {
         self.multi_line_strings
             .reserve_exact(capacity.multi_line_string);
         self.multi_polygons.reserve_exact(capacity.multi_polygon);
+    }
+
+    /// Shrinks the capacity of self to fit.
+    pub(crate) fn shrink_to_fit(&mut self) {
+        self.types.shrink_to_fit();
+        self.offsets.shrink_to_fit();
+        self.points.shrink_to_fit();
+        self.line_strings.shrink_to_fit();
+        self.polygons.shrink_to_fit();
+        self.multi_points.shrink_to_fit();
+        self.multi_line_strings.shrink_to_fit();
+        self.multi_polygons.shrink_to_fit();
     }
 
     pub(crate) fn finish(self) -> MixedGeometryArray {

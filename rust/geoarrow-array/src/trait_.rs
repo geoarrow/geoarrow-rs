@@ -9,6 +9,8 @@ use geo_traits::GeometryTrait;
 use geoarrow_schema::error::GeoArrowResult;
 use geoarrow_schema::{GeoArrowType, Metadata};
 
+use crate::array::from_arrow_array;
+
 /// Convert GeoArrow arrays into their respective [arrow][arrow_array] arrays.
 pub trait IntoArrow {
     /// The type of arrow array that this geoarrow array can be converted into.
@@ -47,10 +49,10 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// ```
     /// # use geoarrow_array::builder::PointBuilder;
     /// # use geoarrow_array::GeoArrowArray;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType, GeoArrowType};
+    /// # use geoarrow_schema::{Dimension, PointType, GeoArrowType};
     /// #
     /// let point = geo_types::point!(x: 1., y: 2.);
-    /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let point_array = PointBuilder::from_points([point].iter(), point_type.clone()).finish();
     /// assert_eq!(point_array.data_type(), GeoArrowType::Point(point_type));
     /// ```
@@ -71,10 +73,10 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// # use arrow_array::ArrayRef;
     /// # use geoarrow_array::builder::PointBuilder;
     /// # use geoarrow_array::GeoArrowArray;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{Dimension, PointType};
     /// #
     /// let point = geo_types::point!(x: 1., y: 2.);
-    /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let point_array = PointBuilder::from_points([point].iter(), point_type.clone()).finish();
     /// let array_ref: ArrayRef = point_array.into_array_ref();
     /// ```
@@ -95,10 +97,10 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// # use arrow_array::ArrayRef;
     /// # use geoarrow_array::builder::PointBuilder;
     /// # use geoarrow_array::GeoArrowArray;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{Dimension, PointType};
     /// #
     /// let point = geo_types::point!(x: 1., y: 2.);
-    /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let point_array = PointBuilder::from_points([point].iter(), point_type.clone()).finish();
     /// let array_ref: ArrayRef = point_array.to_array_ref();
     /// ```
@@ -113,10 +115,10 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// # use arrow_array::ArrayRef;
     /// # use geoarrow_array::builder::PointBuilder;
     /// # use geoarrow_array::GeoArrowArray;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{Dimension, PointType};
     /// #
     /// let point = geo_types::point!(x: 1., y: 2.);
-    /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let point_array = PointBuilder::from_points([point].iter(), point_type.clone()).finish();
     /// assert_eq!(point_array.len(), 1);
     /// ```
@@ -130,10 +132,10 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// # use arrow_array::ArrayRef;
     /// # use geoarrow_array::builder::PointBuilder;
     /// # use geoarrow_array::GeoArrowArray;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{Dimension, PointType};
     /// #
     /// let point = geo_types::point!(x: 1., y: 2.);
-    /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let point_array = PointBuilder::from_points([point].iter(), point_type.clone()).finish();
     /// assert!(!point_array.is_empty());
     /// ```
@@ -163,10 +165,10 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// ```
     /// # use geoarrow_array::GeoArrowArray;
     /// # use geoarrow_array::builder::PointBuilder;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{Dimension, PointType};
     /// #
     /// let point = geo_types::point!(x: 1., y: 2.);
-    /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let point_array =
     ///     PointBuilder::from_nullable_points([Some(&point), None].into_iter(), point_type.clone()).finish();
     /// assert_eq!(point_array.logical_null_count(), 1);
@@ -180,11 +182,11 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// ```
     /// # use geoarrow_array::GeoArrowArray;
     /// # use geoarrow_array::builder::PointBuilder;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{Dimension, PointType};
     /// #
     /// let point = geo_types::point!(x: 1., y: 2.);
     ///
-    /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let point_array =
     ///     PointBuilder::from_nullable_points([Some(&point), None].into_iter(), point_type.clone()).finish();
     /// assert!(point_array.is_null(1));
@@ -202,11 +204,11 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// ```
     /// # use geoarrow_array::GeoArrowArray;
     /// # use geoarrow_array::builder::PointBuilder;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{Dimension, PointType};
     /// #
     /// let point = geo_types::point!(x: 1., y: 2.);
     ///
-    /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let point_array =
     ///     PointBuilder::from_nullable_points([Some(&point), None].into_iter(), point_type.clone()).finish();
     /// assert!(point_array.is_valid(0));
@@ -229,12 +231,12 @@ pub trait GeoArrowArray: Debug + Send + Sync {
     /// #
     /// # use geoarrow_array::GeoArrowArray;
     /// # use geoarrow_array::builder::PointBuilder;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{Dimension, PointType};
     /// #
     /// let point1 = geo_types::point!(x: 1., y: 2.);
     /// let point2 = geo_types::point!(x: 3., y: 4.);
     ///
-    /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let point_array =
     ///     Arc::new(PointBuilder::from_points([point1, point2].iter(), point_type.clone()).finish())
     ///         as Arc<dyn GeoArrowArray>;
@@ -250,6 +252,99 @@ pub trait GeoArrowArray: Debug + Send + Sync {
 
     /// Change the [`Metadata`] of this array.
     fn with_metadata(self, metadata: Arc<Metadata>) -> Arc<dyn GeoArrowArray>;
+}
+
+/// Ergonomics: Allow use of an `Arc<dyn GeoArrowArray>` as an `&dyn GeoArrowArray`
+impl GeoArrowArray for Arc<dyn GeoArrowArray> {
+    fn as_any(&self) -> &dyn Any {
+        self.as_ref().as_any()
+    }
+
+    fn data_type(&self) -> GeoArrowType {
+        self.as_ref().data_type()
+    }
+
+    fn into_array_ref(self) -> ArrayRef {
+        self.as_ref().to_array_ref()
+    }
+
+    fn to_array_ref(&self) -> ArrayRef {
+        self.as_ref().to_array_ref()
+    }
+
+    fn len(&self) -> usize {
+        self.as_ref().len()
+    }
+
+    fn logical_nulls(&self) -> Option<NullBuffer> {
+        self.as_ref().logical_nulls()
+    }
+
+    fn logical_null_count(&self) -> usize {
+        self.as_ref().logical_null_count()
+    }
+
+    fn is_null(&self, i: usize) -> bool {
+        self.as_ref().is_null(i)
+    }
+
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray> {
+        self.as_ref().slice(offset, length)
+    }
+
+    fn with_metadata(self, metadata: Arc<Metadata>) -> Arc<dyn GeoArrowArray> {
+        // This is a hack to allow consuming self
+        let field = self.data_type().with_metadata(metadata).to_field("", true);
+        let array = self.as_ref().to_array_ref();
+        // This unwrap should be fine because we know we start with a GeoArrow array
+        from_arrow_array(array.as_ref(), &field).unwrap()
+    }
+}
+
+impl<T: GeoArrowArray> GeoArrowArray for &T {
+    fn as_any(&self) -> &dyn Any {
+        T::as_any(self)
+    }
+
+    fn data_type(&self) -> GeoArrowType {
+        T::data_type(self)
+    }
+
+    fn into_array_ref(self) -> ArrayRef {
+        T::to_array_ref(self)
+    }
+
+    fn to_array_ref(&self) -> ArrayRef {
+        T::to_array_ref(self)
+    }
+
+    fn len(&self) -> usize {
+        T::len(self)
+    }
+
+    fn logical_nulls(&self) -> Option<NullBuffer> {
+        T::logical_nulls(self)
+    }
+
+    fn logical_null_count(&self) -> usize {
+        T::logical_null_count(self)
+    }
+
+    fn is_null(&self, i: usize) -> bool {
+        T::is_null(self, i)
+    }
+
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeoArrowArray> {
+        T::slice(self, offset, length)
+    }
+
+    fn with_metadata(self, metadata: Arc<Metadata>) -> Arc<dyn GeoArrowArray> {
+        // This is a hack to allow consuming self
+        let field = self.data_type().with_metadata(metadata).to_field("", true);
+        let array = T::to_array_ref(self);
+        // This unwrap should be fine because we know we start with a GeoArrow array
+        from_arrow_array(array.as_ref(), &field).unwrap()
+    }
 }
 
 /// A trait for accessing the values of a [`GeoArrowArray`].
@@ -287,11 +382,11 @@ pub trait GeoArrowArrayAccessor<'a>: GeoArrowArray {
     /// use geo_traits::{CoordTrait, PointTrait};
     /// # use geoarrow_array::GeoArrowArrayAccessor;
     /// # use geoarrow_array::builder::PointBuilder;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{Dimension, PointType};
     ///
     /// let point1 = geo_types::point!(x: 1., y: 2.);
     ///
-    /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let point_array =
     ///     PointBuilder::from_nullable_points([Some(&point1), None].into_iter(), point_type.clone())
     ///         .finish();
@@ -309,7 +404,7 @@ pub trait GeoArrowArrayAccessor<'a>: GeoArrowArray {
     ///
     /// Panics if the value is outside the bounds of the array.
     fn value(&'a self, index: usize) -> GeoArrowResult<Self::Item> {
-        assert!(index <= self.len());
+        assert!(index < self.len());
         unsafe { self.value_unchecked(index) }
     }
 
@@ -321,11 +416,11 @@ pub trait GeoArrowArrayAccessor<'a>: GeoArrowArray {
     /// use geo_traits::{CoordTrait, PointTrait};
     /// # use geoarrow_array::GeoArrowArrayAccessor;
     /// # use geoarrow_array::builder::PointBuilder;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{Dimension, PointType};
     ///
     /// let point1 = geo_types::point!(x: 1., y: 2.);
     ///
-    /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let point_array =
     ///     PointBuilder::from_nullable_points([Some(&point1), None].into_iter(), point_type.clone())
     ///         .finish();
@@ -354,11 +449,11 @@ pub trait GeoArrowArrayAccessor<'a>: GeoArrowArray {
     /// ```
     /// # use geoarrow_array::GeoArrowArrayAccessor;
     /// # use geoarrow_array::builder::PointBuilder;
-    /// # use geoarrow_schema::{CoordType, Dimension, PointType};
+    /// # use geoarrow_schema::{Dimension, PointType};
     /// #
     /// let point1 = geo_types::point!(x: 1., y: 2.);
     ///
-    /// let point_type = PointType::new(CoordType::Separated, Dimension::XY, Default::default());
+    /// let point_type = PointType::new(Dimension::XY, Default::default());
     /// let point_array =
     ///     PointBuilder::from_nullable_points([Some(&point1), None].into_iter(), point_type.clone())
     ///         .finish();
@@ -442,6 +537,76 @@ pub(crate) trait GeoArrowArrayBuilder: Debug + Send + Sync {
     fn finish(self) -> Arc<dyn GeoArrowArray>;
 }
 
+/// Trait for types that can read `Arc<dyn GeoArrowArray>`'s.
+///
+/// There is no direct parallel to this in the upstream [arrow-array] crate. The closest is
+/// [RecordBatchReader][arrow_array::RecordBatchReader], which has the same implementation over an
+/// iterator of `RecordBatch`es. However, it is useful to have an iterator of GeoArrow arrays with
+/// a known [`GeoArrowType`].
+///
+/// To create from an iterator, see [GeoArrowArrayIterator].
+pub trait GeoArrowArrayReader: Iterator<Item = GeoArrowResult<Arc<dyn GeoArrowArray>>> {
+    /// Returns the field of this `GeoArrowArrayReader`.
+    ///
+    /// Implementation of this trait should guarantee that all `Arc<dyn GeoArrowArray>`'s returned
+    /// by this reader should have the same [`GeoArrowType`] as returned from this method.
+    fn data_type(&self) -> GeoArrowType;
+}
+
+impl<R: GeoArrowArrayReader + ?Sized> GeoArrowArrayReader for Box<R> {
+    fn data_type(&self) -> GeoArrowType {
+        self.as_ref().data_type()
+    }
+}
+
+/// An iterator of [`Arc<dyn GeoArrowArray>`] with an attached [`GeoArrowType`]
+pub struct GeoArrowArrayIterator<I>
+where
+    I: IntoIterator<Item = GeoArrowResult<Arc<dyn GeoArrowArray>>>,
+{
+    inner: I::IntoIter,
+    inner_type: GeoArrowType,
+}
+
+impl<I> GeoArrowArrayIterator<I>
+where
+    I: IntoIterator<Item = GeoArrowResult<Arc<dyn GeoArrowArray>>>,
+{
+    /// Create a new [GeoArrowArrayIterator].
+    ///
+    /// If `iter` is an infallible iterator, use `.map(Ok)`.
+    pub fn new(iter: I, data_type: GeoArrowType) -> Self {
+        Self {
+            inner: iter.into_iter(),
+            inner_type: data_type,
+        }
+    }
+}
+
+impl<I> Iterator for GeoArrowArrayIterator<I>
+where
+    I: IntoIterator<Item = GeoArrowResult<Arc<dyn GeoArrowArray>>>,
+{
+    type Item = I::Item;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next()
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.inner.size_hint()
+    }
+}
+
+impl<I> GeoArrowArrayReader for GeoArrowArrayIterator<I>
+where
+    I: IntoIterator<Item = GeoArrowResult<Arc<dyn GeoArrowArray>>>,
+{
+    fn data_type(&self) -> GeoArrowType {
+        self.inner_type.clone()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use std::sync::Arc;
@@ -465,14 +630,13 @@ mod test {
         for (list_size, dim) in test_cases.into_iter() {
             let array = FixedSizeListBuilder::new(Float64Builder::new(), list_size).finish();
             let t =
-                GeoArrowType::try_from(&Field::new("", array.data_type().clone(), true)).unwrap();
+                GeoArrowType::from_arrow_field(&Field::new("", array.data_type().clone(), true))
+                    .unwrap();
             assert_eq!(
                 t,
-                GeoArrowType::Point(PointType::new(
-                    CoordType::Interleaved,
-                    dim,
-                    Default::default()
-                ))
+                GeoArrowType::Point(
+                    PointType::new(dim, Default::default()).with_coord_type(CoordType::Interleaved)
+                )
             );
         }
     }
@@ -523,14 +687,13 @@ mod test {
         for (fields, builders, dim) in test_cases.into_iter() {
             let array = StructBuilder::new(fields, builders).finish();
             let t =
-                GeoArrowType::try_from(&Field::new("", array.data_type().clone(), true)).unwrap();
+                GeoArrowType::from_arrow_field(&Field::new("", array.data_type().clone(), true))
+                    .unwrap();
             assert_eq!(
                 t,
-                GeoArrowType::Point(PointType::new(
-                    CoordType::Separated,
-                    dim,
-                    Default::default()
-                ))
+                GeoArrowType::Point(
+                    PointType::new(dim, Default::default()).with_coord_type(CoordType::Separated)
+                )
             );
         }
     }
@@ -547,10 +710,9 @@ mod test {
         let data_type: GeoArrowType = (&field).try_into().unwrap();
         assert_eq!(ml_array.data_type(), data_type);
 
-        let mut builder = GeometryBuilder::new(GeometryType::new(
-            CoordType::Interleaved,
-            Default::default(),
-        ));
+        let mut builder = GeometryBuilder::new(
+            GeometryType::new(Default::default()).with_coord_type(CoordType::Interleaved),
+        );
         builder
             .push_geometry(Some(&crate::test::point::p0()))
             .unwrap();
