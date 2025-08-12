@@ -59,6 +59,7 @@ geoarrow-schema = { path = "rust/geoarrow-schema", version = "0.5" }
 geoarrow-test = { path = "rust/geoarrow-test", version = "0.5" }
 geodatafusion = { path = "rust/geodatafusion" }
 geohash = "0.13.1"
+geojson = "0.24"
 geoparquet = { path = "rust/geoparquet", version = "0.5" }
 geos = { version = "10", features = ["v3_10_0"] }
 geozero = "0.14"

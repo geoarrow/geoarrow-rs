@@ -294,7 +294,6 @@ mod test {
         let point_arr = point_arr.slice(0, 2);
         let geometry_field = point_arr.extension_type().to_field("geometry", true);
         let geometry_array = point_arr.to_array_ref();
-        dbg!(&geometry_field);
 
         // Create various property types
         let str_array = Arc::new(StringArray::from(vec!["A", "B"]));
@@ -327,9 +326,8 @@ mod test {
 
         assert_eq!(geojson_string, expected);
 
-        // Also validate it's parseable JSON
-        let _ = serde_json::Value::from_str(&geojson_string)
-            .expect("Generated GeoJSON should be valid JSON");
+        // Also validate it's GeoJSON
+        geojson::FeatureCollection::from_str(expected).expect("Expected GeoJSON to be valid");
     }
 
     #[test]
@@ -372,9 +370,8 @@ mod test {
 
         assert_eq!(geojson_string, expected);
 
-        // Also validate it's parseable JSON
-        let _ = serde_json::Value::from_str(&geojson_string)
-            .expect("Generated GeoJSON should be valid JSON");
+        // Also validate it's GeoJSON
+        geojson::FeatureCollection::from_str(expected).expect("Expected GeoJSON to be valid");
     }
 
     #[test]
@@ -401,8 +398,7 @@ mod test {
 
         assert_eq!(geojson_string, expected);
 
-        // Also validate it's parseable JSON
-        let _ = serde_json::Value::from_str(&geojson_string)
-            .expect("Generated GeoJSON should be valid JSON");
+        // Also validate it's GeoJSON
+        geojson::FeatureCollection::from_str(expected).expect("Expected GeoJSON to be valid");
     }
 }
