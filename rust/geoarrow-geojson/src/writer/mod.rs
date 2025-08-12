@@ -243,9 +243,6 @@ mod test {
 
     #[test]
     fn test_transform_batch_with_properties() {
-        use arrow_array::{Int32Array, StringArray};
-        use arrow_schema::{DataType, Field};
-
         // Create a point array
         let point_arr = point::array(CoordType::Interleaved, Dimension::XY);
         let point_arr = point_arr.slice(0, 2);
@@ -332,9 +329,6 @@ mod test {
 
     #[test]
     fn test_geojson_writer_with_id_column() {
-        use arrow_array::Int32Array;
-        use arrow_schema::{DataType, Field};
-
         // Create a point array with id column
         let point_arr = point::array(CoordType::Interleaved, Dimension::XY);
         let point_arr = point_arr.slice(0, 2);
@@ -400,5 +394,103 @@ mod test {
 
         // Also validate it's GeoJSON
         geojson::FeatureCollection::from_str(expected).expect("Expected GeoJSON to be valid");
+    }
+
+    #[test]
+    fn test_geojsonlines_writer_with_properties() {
+        // Create a point array with two points
+        let point_arr = point::array(CoordType::default(), Dimension::XY);
+        let point_arr = point_arr.slice(0, 2);
+        let geometry_field = point_arr.extension_type().to_field("geometry", true);
+        let geometry_array = point_arr.to_array_ref();
+
+        // Create various property types
+        let str_array = Arc::new(StringArray::from(vec!["A", "B"]));
+        let count_array = Arc::new(Int32Array::from(vec![100, 200]));
+        let value_array = Arc::new(Float64Array::from(vec![3.10, 2.71]));
+
+        let schema = Schema::new(vec![
+            Arc::new(geometry_field),
+            Arc::new(Field::new("name", DataType::Utf8, false)),
+            Arc::new(Field::new("count", DataType::Int32, false)),
+            Arc::new(Field::new("value", DataType::Float64, false)),
+        ]);
+
+        let batch = RecordBatch::try_new(
+            Arc::new(schema),
+            vec![geometry_array, str_array, count_array, value_array],
+        )
+        .unwrap();
+
+        // Write to GeoJSON Lines
+        let mut buffer = Vec::new();
+        let mut writer = GeoJsonLinesWriter::new(&mut buffer);
+        writer.write(&batch).unwrap();
+        writer.finish().unwrap();
+
+        let geojsonlines_string = String::from_utf8(buffer).unwrap();
+
+        // Test against expected GeoJSON Lines string (one feature per line)
+        let expected = r#"{"type":"Feature","geometry":{"type":"Point","coordinates":[30,10]},"properties":{"name":"A","count":100,"value":3.1}}
+{"type":"Feature","geometry":{"type":"Point","coordinates":[40,20]},"properties":{"name":"B","count":200,"value":2.71}}
+"#;
+
+        assert_eq!(geojsonlines_string, expected);
+
+        // Also validate each line is valid GeoJSON
+        for line in geojsonlines_string.lines() {
+            if !line.trim().is_empty() {
+                geojson::Feature::from_str(line)
+                    .expect("Expected each line to be a valid GeoJSON Feature");
+            }
+        }
+    }
+
+    #[test]
+    fn test_geojsonlines_writer_with_id_column() {
+        // Create a point array with id column
+        let point_arr = point::array(CoordType::Interleaved, Dimension::XY);
+        let point_arr = point_arr.slice(0, 2);
+        let geometry_field = point_arr.extension_type().to_field("geom", true);
+        let geometry_array = point_arr.to_array_ref();
+
+        // Create id and property arrays
+        let id_array = Arc::new(Int32Array::from(vec![101, 102]));
+        let count_array = Arc::new(Int32Array::from(vec![10, 20]));
+
+        let schema = Schema::new(vec![
+            Arc::new(Field::new("id", DataType::Int32, false)),
+            Arc::new(geometry_field),
+            Arc::new(Field::new("count", DataType::Int32, false)),
+        ]);
+
+        let batch = RecordBatch::try_new(
+            Arc::new(schema),
+            vec![id_array, geometry_array, count_array],
+        )
+        .unwrap();
+
+        // Write to GeoJSON Lines
+        let mut buffer = Vec::new();
+        let mut writer = GeoJsonLinesWriter::new(&mut buffer);
+        writer.write(&batch).unwrap();
+        writer.finish().unwrap();
+
+        let geojsonlines_string = String::from_utf8(buffer).unwrap();
+
+        // Test against expected GeoJSON Lines string with id field (one feature per line)
+        let expected = r#"{"type":"Feature","id":101,"geometry":{"type":"Point","coordinates":[30,10]},"properties":{"count":10}}
+{"type":"Feature","id":102,"geometry":{"type":"Point","coordinates":[40,20]},"properties":{"count":20}}
+"#;
+
+        assert_eq!(geojsonlines_string, expected);
+
+        // Also validate each line is valid GeoJSON
+        for line in geojsonlines_string.lines() {
+            if !line.trim().is_empty() {
+                geojson::Feature::from_str(line)
+                    .expect("Expected each line to be a valid GeoJSON Feature");
+            }
+        }
     }
 }
