@@ -5,19 +5,22 @@ authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = { workspace = true }
 license = { workspace = true }
 repository = { workspace = true }
-description = "Rust implementation of GeoArrow"
+description = "Write GeoArrow arrays to GeoJSON."
 categories = ["science::geo"]
 rust-version = { workspace = true }
-
 
 [dependencies]
 arrow-array = { workspace = true }
 arrow-json = { workspace = true }
 arrow-schema = { workspace = true }
 geo-traits = { workspace = true }
-geoarrow-array = { workspace = true, features = ["test-data"] }
+geoarrow-array = { workspace = true }
 geoarrow-schema = { workspace = true }
 
 [dev-dependencies]
+geoarrow-array = { workspace = true, features = ["test-data"] }
 geo-types = { workspace = true }
 geo = { workspace = true }
+
+[package.metadata.docs.rs]
+all-features = true
