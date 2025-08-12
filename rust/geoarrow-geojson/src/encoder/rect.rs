@@ -21,7 +21,7 @@ impl Encoder for RectEncoder {
     }
 }
 
-fn encode_rect(rect: &impl RectTrait<T = f64>, out: &mut Vec<u8>) {
+pub(crate) fn encode_rect(rect: &impl RectTrait<T = f64>, out: &mut Vec<u8>) {
     out.extend(br#"{"type":"Polygon","coordinates":["#);
 
     // Get the min and max coordinates

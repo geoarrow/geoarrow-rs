@@ -10,6 +10,7 @@ use crate::encoder::multipoint::encode_multi_point;
 use crate::encoder::multipolygon::encode_multi_polygon;
 use crate::encoder::point::encode_point;
 use crate::encoder::polygon::encode_polygon;
+use crate::encoder::rect::encode_rect;
 
 // An [Encoder] for [GeometryArray].
 pub struct GeometryEncoder(GeometryArray);
@@ -41,7 +42,8 @@ pub(crate) fn encode_geometry(geom: &impl GeometryTrait<T = f64>, out: &mut Vec<
         MultiLineString(geom) => encode_multi_line_string(geom, out),
         MultiPolygon(geom) => encode_multi_polygon(geom, out),
         GeometryCollection(geom) => encode_geometry_collection(geom, out),
-        _ => todo!(),
+        Rect(geom) => encode_rect(geom, out),
+        Triangle(_) | Line(_) => unreachable!(),
     }
 }
 
