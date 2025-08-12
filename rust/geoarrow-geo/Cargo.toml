@@ -17,6 +17,7 @@ geo = { workspace = true }
 geo-traits = { workspace = true }
 geoarrow-array = { workspace = true }
 geoarrow-schema = { workspace = true }
+geo-types = { workspace = true }
 
 [dev-dependencies]
 geo = { workspace = true }
