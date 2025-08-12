@@ -3,12 +3,13 @@ use geo_traits::{MultiPointTrait, PointTrait};
 use geoarrow_array::GeoArrowArrayAccessor;
 use geoarrow_array::array::MultiPointArray;
 
-use crate::encoders::point::encode_coord;
+use crate::encoder::point::encode_coord;
 
-pub(crate) struct MultiPointEncoder(MultiPointArray);
+// An [Encoder] for [MultiPointArray].
+pub struct MultiPointEncoder(MultiPointArray);
 
 impl MultiPointEncoder {
-    pub(crate) fn new(array: MultiPointArray) -> Self {
+    pub fn new(array: MultiPointArray) -> Self {
         Self(array)
     }
 }

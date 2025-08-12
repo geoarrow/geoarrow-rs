@@ -3,18 +3,19 @@ use geo_traits::GeometryTrait;
 use geoarrow_array::GeoArrowArrayAccessor;
 use geoarrow_array::array::GeometryArray;
 
-use crate::encoders::geometrycollection::encode_geometry_collection;
-use crate::encoders::linestring::encode_line_string;
-use crate::encoders::multilinestring::encode_multi_line_string;
-use crate::encoders::multipoint::encode_multi_point;
-use crate::encoders::multipolygon::encode_multi_polygon;
-use crate::encoders::point::encode_point;
-use crate::encoders::polygon::encode_polygon;
+use crate::encoder::geometrycollection::encode_geometry_collection;
+use crate::encoder::linestring::encode_line_string;
+use crate::encoder::multilinestring::encode_multi_line_string;
+use crate::encoder::multipoint::encode_multi_point;
+use crate::encoder::multipolygon::encode_multi_polygon;
+use crate::encoder::point::encode_point;
+use crate::encoder::polygon::encode_polygon;
 
-pub(crate) struct GeometryEncoder(GeometryArray);
+// An [Encoder] for [GeometryArray].
+pub struct GeometryEncoder(GeometryArray);
 
 impl GeometryEncoder {
-    pub(crate) fn new(array: GeometryArray) -> Self {
+    pub fn new(array: GeometryArray) -> Self {
         Self(array)
     }
 }

@@ -3,12 +3,13 @@ use geo_traits::MultiPolygonTrait;
 use geoarrow_array::GeoArrowArrayAccessor;
 use geoarrow_array::array::MultiPolygonArray;
 
-use crate::encoders::polygon::encode_polygon_rings;
+use crate::encoder::polygon::encode_polygon_rings;
 
-pub(crate) struct MultiPolygonEncoder(MultiPolygonArray);
+// An [Encoder] for [MultiPolygonArray].
+pub struct MultiPolygonEncoder(MultiPolygonArray);
 
 impl MultiPolygonEncoder {
-    pub(crate) fn new(array: MultiPolygonArray) -> Self {
+    pub fn new(array: MultiPolygonArray) -> Self {
         Self(array)
     }
 }

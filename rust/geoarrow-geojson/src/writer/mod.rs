@@ -5,7 +5,7 @@ use arrow_array::RecordBatch;
 use arrow_json::{ArrayWriter, LineDelimitedWriter, WriterBuilder};
 use arrow_schema::ArrowError;
 
-use crate::encoders::GeoArrowEncoderFactory;
+use crate::encoder::GeoArrowEncoderFactory;
 
 pub struct GeoJsonWriter<W: Write> {
     /// Underlying writer to use to write bytes

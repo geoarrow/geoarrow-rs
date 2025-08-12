@@ -3,12 +3,13 @@ use geo_traits::{LineStringTrait, MultiLineStringTrait};
 use geoarrow_array::GeoArrowArrayAccessor;
 use geoarrow_array::array::MultiLineStringArray;
 
-use crate::encoders::linestring::encode_coords;
+use crate::encoder::linestring::encode_coords;
 
-pub(crate) struct MultiLineStringEncoder(MultiLineStringArray);
+// An [Encoder] for [MultiLineStringArray].
+pub struct MultiLineStringEncoder(MultiLineStringArray);
 
 impl MultiLineStringEncoder {
-    pub(crate) fn new(array: MultiLineStringArray) -> Self {
+    pub fn new(array: MultiLineStringArray) -> Self {
         Self(array)
     }
 }

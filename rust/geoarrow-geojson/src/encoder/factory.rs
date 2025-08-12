@@ -6,17 +6,17 @@ use geoarrow_array::array::from_arrow_array;
 use geoarrow_array::cast::AsGeoArrowArray;
 use geoarrow_schema::GeoArrowType;
 
-use crate::encoders::geometry::GeometryEncoder;
-use crate::encoders::geometrycollection::GeometryCollectionEncoder;
-use crate::encoders::linestring::LineStringEncoder;
-use crate::encoders::multilinestring::MultiLineStringEncoder;
-use crate::encoders::multipoint::MultiPointEncoder;
-use crate::encoders::multipolygon::MultiPolygonEncoder;
-use crate::encoders::point::PointEncoder;
-use crate::encoders::polygon::PolygonEncoder;
-use crate::encoders::rect::RectEncoder;
-use crate::encoders::wkb::{GenericWkbEncoder, WkbViewEncoder};
-use crate::encoders::wkt::{GenericWktEncoder, WktViewEncoder};
+use crate::encoder::geometry::GeometryEncoder;
+use crate::encoder::geometrycollection::GeometryCollectionEncoder;
+use crate::encoder::linestring::LineStringEncoder;
+use crate::encoder::multilinestring::MultiLineStringEncoder;
+use crate::encoder::multipoint::MultiPointEncoder;
+use crate::encoder::multipolygon::MultiPolygonEncoder;
+use crate::encoder::point::PointEncoder;
+use crate::encoder::polygon::PolygonEncoder;
+use crate::encoder::rect::RectEncoder;
+use crate::encoder::wkb::{GenericWkbEncoder, WkbViewEncoder};
+use crate::encoder::wkt::{GenericWktEncoder, WktViewEncoder};
 
 /// A [EncoderFactory] for writing GeoArrow arrays.
 ///

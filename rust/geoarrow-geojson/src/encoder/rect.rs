@@ -5,10 +5,11 @@ use geo_traits::{CoordTrait, RectTrait};
 use geoarrow_array::GeoArrowArrayAccessor;
 use geoarrow_array::array::RectArray;
 
-pub(crate) struct RectEncoder(RectArray);
+// An [Encoder] for [RectArray].
+pub struct RectEncoder(RectArray);
 
 impl RectEncoder {
-    pub(crate) fn new(array: RectArray) -> Self {
+    pub fn new(array: RectArray) -> Self {
         Self(array)
     }
 }
@@ -20,7 +21,7 @@ impl Encoder for RectEncoder {
     }
 }
 
-pub(crate) fn encode_rect(rect: &impl RectTrait<T = f64>, out: &mut Vec<u8>) {
+fn encode_rect(rect: &impl RectTrait<T = f64>, out: &mut Vec<u8>) {
     out.extend(br#"{"type":"Polygon","coordinates":["#);
 
     // Get the min and max coordinates

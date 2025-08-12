@@ -3,12 +3,13 @@ use arrow_json::Encoder;
 use geoarrow_array::GeoArrowArrayAccessor;
 use geoarrow_array::array::{GenericWktArray, WktViewArray};
 
-use crate::encoders::geometry::encode_geometry;
+use crate::encoder::geometry::encode_geometry;
 
-pub(crate) struct GenericWktEncoder<O: OffsetSizeTrait>(GenericWktArray<O>);
+// An [Encoder] for [GenericWktArray].
+pub struct GenericWktEncoder<O: OffsetSizeTrait>(GenericWktArray<O>);
 
 impl<O: OffsetSizeTrait> GenericWktEncoder<O> {
-    pub(crate) fn new(array: GenericWktArray<O>) -> Self {
+    pub fn new(array: GenericWktArray<O>) -> Self {
         Self(array)
     }
 }
@@ -20,10 +21,11 @@ impl<O: OffsetSizeTrait> Encoder for GenericWktEncoder<O> {
     }
 }
 
-pub(crate) struct WktViewEncoder(WktViewArray);
+// An [Encoder] for [WktViewArray].
+pub struct WktViewEncoder(WktViewArray);
 
 impl WktViewEncoder {
-    pub(crate) fn new(array: WktViewArray) -> Self {
+    pub fn new(array: WktViewArray) -> Self {
         Self(array)
     }
 }

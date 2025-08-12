@@ -3,12 +3,13 @@ use geo_traits::GeometryCollectionTrait;
 use geoarrow_array::GeoArrowArrayAccessor;
 use geoarrow_array::array::GeometryCollectionArray;
 
-use crate::encoders::geometry::encode_geometry;
+use crate::encoder::geometry::encode_geometry;
 
-pub(crate) struct GeometryCollectionEncoder(GeometryCollectionArray);
+// An [Encoder] for [GeometryCollectionArray].
+pub struct GeometryCollectionEncoder(GeometryCollectionArray);
 
 impl GeometryCollectionEncoder {
-    pub(crate) fn new(array: GeometryCollectionArray) -> Self {
+    pub fn new(array: GeometryCollectionArray) -> Self {
         Self(array)
     }
 }

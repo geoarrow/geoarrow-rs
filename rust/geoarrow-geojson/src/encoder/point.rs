@@ -5,10 +5,11 @@ use geo_traits::{CoordTrait, PointTrait};
 use geoarrow_array::GeoArrowArrayAccessor;
 use geoarrow_array::array::PointArray;
 
-pub(crate) struct PointEncoder(PointArray);
+// An [Encoder] for [PointArray].
+pub struct PointEncoder(PointArray);
 
 impl PointEncoder {
-    pub(crate) fn new(array: PointArray) -> Self {
+    pub fn new(array: PointArray) -> Self {
         Self(array)
     }
 }

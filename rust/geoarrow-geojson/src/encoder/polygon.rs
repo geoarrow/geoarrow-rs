@@ -3,12 +3,13 @@ use geo_traits::{LineStringTrait, PolygonTrait};
 use geoarrow_array::GeoArrowArrayAccessor;
 use geoarrow_array::array::PolygonArray;
 
-use crate::encoders::linestring::encode_coords;
+use crate::encoder::linestring::encode_coords;
 
-pub(crate) struct PolygonEncoder(PolygonArray);
+// An [Encoder] for [PolygonArray].
+pub struct PolygonEncoder(PolygonArray);
 
 impl PolygonEncoder {
-    pub(crate) fn new(array: PolygonArray) -> Self {
+    pub fn new(array: PolygonArray) -> Self {
         Self(array)
     }
 }
