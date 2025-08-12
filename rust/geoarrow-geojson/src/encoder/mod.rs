@@ -12,7 +12,6 @@ mod wkb;
 mod wkt;
 
 pub use factory::GeoArrowEncoderFactory;
-
 pub use geometry::GeometryEncoder;
 pub use geometrycollection::GeometryCollectionEncoder;
 pub use linestring::LineStringEncoder;
