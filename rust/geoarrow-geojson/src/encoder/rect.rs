@@ -77,6 +77,8 @@ fn encode_rect(rect: &impl RectTrait<T = f64>, out: &mut Vec<u8>) {
 
 #[cfg(test)]
 mod test {
+    use std::str::FromStr;
+
     use geo_types::{Rect, coord};
     use geoarrow_array::builder::RectBuilder;
     use geoarrow_schema::{BoxType, Dimension};
@@ -102,5 +104,7 @@ mod test {
         let expected =
             r#"{"type":"Polygon","coordinates":[[[10,10],[10,20],[30,20],[30,10],[10,10]]]}"#;
         assert_eq!(s, expected);
+
+        geojson::Geometry::from_str(expected).expect("Should be valid GeoJSON");
     }
 }

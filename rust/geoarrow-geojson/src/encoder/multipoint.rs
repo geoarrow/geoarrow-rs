@@ -46,6 +46,8 @@ fn encode_points(
 
 #[cfg(test)]
 mod test {
+    use std::str::FromStr;
+
     use geoarrow_array::test::multipoint::array;
     use geoarrow_schema::{CoordType, Dimension};
 
@@ -60,5 +62,7 @@ mod test {
         let s = String::from_utf8(out).unwrap();
         let expected = r#"{"type":"MultiPoint","coordinates":[[30,10]]}"#;
         assert_eq!(s, expected);
+
+        geojson::Geometry::from_str(expected).expect("Should be valid GeoJSON");
     }
 }

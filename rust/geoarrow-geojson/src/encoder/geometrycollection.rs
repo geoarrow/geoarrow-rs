@@ -46,6 +46,8 @@ fn encode_geometries(gc: &impl GeometryCollectionTrait<T = f64>, out: &mut Vec<u
 
 #[cfg(test)]
 mod test {
+    use std::str::FromStr;
+
     use geoarrow_array::test::geometrycollection::array;
     use geoarrow_schema::{CoordType, Dimension};
 
@@ -62,5 +64,7 @@ mod test {
         let expected = r#"{"type":"GeometryCollection","geometries":[{"type":"Point","coordinates":[30,10]}]}"#;
         assert_eq!(s, expected);
         // println!("{}", s);
+
+        geojson::Geometry::from_str(expected).expect("Should be valid GeoJSON");
     }
 }

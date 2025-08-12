@@ -46,6 +46,8 @@ pub(crate) fn encode_coords(
 
 #[cfg(test)]
 mod test {
+    use std::str::FromStr;
+
     use geoarrow_array::test::linestring::array;
     use geoarrow_schema::{CoordType, Dimension};
 
@@ -60,5 +62,7 @@ mod test {
         let s = String::from_utf8(out).unwrap();
         let expected = r#"{"type":"LineString","coordinates":[[30,10],[10,30],[40,40]]}"#;
         assert_eq!(s, expected);
+
+        geojson::Geometry::from_str(expected).expect("Should be valid GeoJSON");
     }
 }

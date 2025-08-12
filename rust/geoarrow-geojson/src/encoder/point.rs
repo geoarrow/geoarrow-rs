@@ -44,6 +44,8 @@ pub(crate) fn encode_coord(coord: &impl CoordTrait<T = f64>, out: &mut Vec<u8>) 
 
 #[cfg(test)]
 mod test {
+    use std::str::FromStr;
+
     use geoarrow_array::test::point::array;
     use geoarrow_schema::{CoordType, Dimension};
 
@@ -58,6 +60,8 @@ mod test {
         let s = String::from_utf8(out).unwrap();
         let expected = r#"{"type":"Point","coordinates":[30,10]}"#;
         assert_eq!(s, expected);
+
+        geojson::Geometry::from_str(expected).expect("Should be valid GeoJSON");
     }
 
     #[test]
@@ -69,5 +73,7 @@ mod test {
         let s = String::from_utf8(out).unwrap();
         let expected = r#"{"type":"Point","coordinates":[30,10,40]}"#;
         assert_eq!(s, expected);
+
+        geojson::Geometry::from_str(expected).expect("Should be valid GeoJSON");
     }
 }

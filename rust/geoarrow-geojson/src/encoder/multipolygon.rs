@@ -42,6 +42,8 @@ fn encode_multi_polygon_inner(geom: &impl MultiPolygonTrait<T = f64>, out: &mut 
 
 #[cfg(test)]
 mod test {
+    use std::str::FromStr;
+
     use geoarrow_array::test::multipolygon::array;
     use geoarrow_schema::{CoordType, Dimension};
 
@@ -56,5 +58,7 @@ mod test {
         let s = String::from_utf8(out).unwrap();
         let expected = r#"{"type":"MultiPolygon","coordinates":[[[[30,10],[40,40],[20,40],[10,20],[30,10]]]]}"#;
         assert_eq!(s, expected);
+
+        geojson::Geometry::from_str(expected).expect("Should be valid GeoJSON");
     }
 }
