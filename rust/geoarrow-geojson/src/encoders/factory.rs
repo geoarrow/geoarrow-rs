@@ -14,6 +14,7 @@ use crate::encoders::multipoint::MultiPointEncoder;
 use crate::encoders::multipolygon::MultiPolygonEncoder;
 use crate::encoders::point::PointEncoder;
 use crate::encoders::polygon::PolygonEncoder;
+use crate::encoders::rect::RectEncoder;
 use crate::encoders::wkb::{GenericWkbEncoder, WkbViewEncoder};
 use crate::encoders::wkt::{GenericWktEncoder, WktViewEncoder};
 
@@ -77,7 +78,9 @@ impl EncoderFactory for GeoArrowEncoderFactory {
                 GeoArrowType::WktView(_) => {
                     Box::new(WktViewEncoder::new(geometry_array.as_wkt_view().clone()))
                 }
-                GeoArrowType::Rect(_) => todo!(),
+                GeoArrowType::Rect(_) => {
+                    Box::new(RectEncoder::new(geometry_array.as_rect().clone()))
+                }
             };
             Ok(Some(NullableEncoder::new(encoder, nulls)))
         } else {
