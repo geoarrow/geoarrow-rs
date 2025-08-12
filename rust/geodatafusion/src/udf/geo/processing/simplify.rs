@@ -258,9 +258,8 @@ mod test {
     use geoarrow_array::array::GeometryArray;
     use geoarrow_geo::util::to_geo::geometry_to_geo;
 
-    use crate::udf::native::io::{AsText, GeomFromText};
-
     use super::*;
+    use crate::udf::native::io::{AsText, GeomFromText};
 
     #[tokio::test]
     async fn test_simplify() {
