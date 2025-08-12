@@ -11,6 +11,7 @@ members = [
     "rust/geoarrow-test",
     "rust/geodatafusion",
     "rust/geodatafusion-flatgeobuf",
+    "rust/geodatafusion-geojson",
     "rust/geoparquet",
     "rust/pyo3-geoarrow",
 ]
@@ -54,7 +55,7 @@ geoarrow-array = { path = "rust/geoarrow-array", version = "0.5" }
 geoarrow-cast = { path = "rust/geoarrow-cast", version = "0.5" }
 geoarrow-flatgeobuf = { path = "rust/geoarrow-flatgeobuf", version = "0.5" }
 geoarrow-geo = { path = "rust/geoarrow-geo", version = "0.5" }
-geoarrow-geojson = { path = "rust/geoarrow-geojson", version = "0.5" }
+geoarrow-geojson = { path = "rust/geoarrow-geojson" }
 geoarrow-schema = { path = "rust/geoarrow-schema", version = "0.5" }
 geoarrow-test = { path = "rust/geoarrow-test", version = "0.5" }
 geodatafusion = { path = "rust/geodatafusion" }

@@ -1848,6 +1848,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "geodatafusion-geojson"
+version = "0.1.0-dev"
+dependencies = [
+ "arrow-array",
+ "arrow-schema",
+ "async-trait",
+ "datafusion",
+ "datafusion-datasource",
+ "geo-traits",
+ "geoarrow-array",
+ "geoarrow-geojson",
+ "geoarrow-schema",
+ "geodatafusion",
+ "geojson",
+ "object_store",
+ "serde_json",
+ "tempfile",
+ "tokio",
+ "wkt 0.14.0",
+]
+
+[[package]]
 name = "geographiclib-rs"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
