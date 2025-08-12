@@ -1757,6 +1757,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "geoarrow-geojson"
+version = "0.1.0-dev"
+dependencies = [
+ "arrow-array",
+ "arrow-json",
+ "arrow-schema",
+ "geo",
+ "geo-traits",
+ "geo-types",
+ "geoarrow-array",
+ "geoarrow-schema",
+ "geojson",
+ "serde_json",
+]
+
+[[package]]
 name = "geoarrow-geos"
 version = "0.5.0"
 dependencies = [
@@ -1856,6 +1872,7 @@ version = "0.24.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e26f3c45b36fccc9cf2805e61d4da6bc4bbd5a3a9589b01afa3a40eff703bd79"
 dependencies = [
+ "geo-types",
  "log",
  "serde",
  "serde_json",
