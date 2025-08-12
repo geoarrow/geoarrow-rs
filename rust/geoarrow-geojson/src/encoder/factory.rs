@@ -2,8 +2,6 @@ use arrow_array::Array;
 use arrow_json::writer::NullableEncoder;
 use arrow_json::{Encoder, EncoderFactory, EncoderOptions};
 use arrow_schema::{ArrowError, FieldRef};
-use geoarrow_array::array::from_arrow_array;
-use geoarrow_array::cast::AsGeoArrowArray;
 use geoarrow_schema::GeoArrowType;
 
 use crate::encoder::geometry::GeometryEncoder;
@@ -29,55 +27,50 @@ impl EncoderFactory for GeoArrowEncoderFactory {
         array: &'a dyn Array,
         _options: &'a EncoderOptions,
     ) -> Result<Option<NullableEncoder<'a>>, ArrowError> {
-        if let Ok(geometry_array) = from_arrow_array(array, field) {
+        if let Ok(geoarrow_type) = GeoArrowType::from_extension_field(field) {
             let nulls = array.logical_nulls();
-
-            let encoder: Box<dyn Encoder> = match geometry_array.data_type() {
-                GeoArrowType::Point(_) => {
-                    Box::new(PointEncoder::new(geometry_array.as_point().clone()))
+            let encoder: Box<dyn Encoder> = match geoarrow_type {
+                GeoArrowType::Point(typ) => Box::new(PointEncoder::new((array, typ).try_into()?)),
+                GeoArrowType::LineString(typ) => {
+                    Box::new(LineStringEncoder::new((array, typ).try_into()?))
                 }
-                GeoArrowType::LineString(_) => Box::new(LineStringEncoder::new(
-                    geometry_array.as_line_string().clone(),
-                )),
-                GeoArrowType::Polygon(_) => {
-                    Box::new(PolygonEncoder::new(geometry_array.as_polygon().clone()))
+                GeoArrowType::Polygon(typ) => {
+                    Box::new(PolygonEncoder::new((array, typ).try_into()?))
                 }
-                GeoArrowType::MultiPoint(_) => Box::new(MultiPointEncoder::new(
-                    geometry_array.as_multi_point().clone(),
-                )),
-                GeoArrowType::MultiLineString(_) => Box::new(MultiLineStringEncoder::new(
-                    geometry_array.as_multi_line_string().clone(),
-                )),
-                GeoArrowType::MultiPolygon(_) => Box::new(MultiPolygonEncoder::new(
-                    geometry_array.as_multi_polygon().clone(),
-                )),
-                GeoArrowType::Geometry(_) => {
-                    Box::new(GeometryEncoder::new(geometry_array.as_geometry().clone()))
+                GeoArrowType::MultiPoint(typ) => {
+                    Box::new(MultiPointEncoder::new((array, typ).try_into()?))
                 }
-                GeoArrowType::GeometryCollection(_) => Box::new(GeometryCollectionEncoder::new(
-                    geometry_array.as_geometry_collection().clone(),
-                )),
-                GeoArrowType::Wkb(_) => Box::new(GenericWkbEncoder::new(
-                    geometry_array.as_wkb::<i32>().clone(),
-                )),
-                GeoArrowType::LargeWkb(_) => Box::new(GenericWkbEncoder::new(
-                    geometry_array.as_wkb::<i64>().clone(),
-                )),
-                GeoArrowType::WkbView(_) => {
-                    Box::new(WkbViewEncoder::new(geometry_array.as_wkb_view().clone()))
+                GeoArrowType::MultiLineString(typ) => {
+                    Box::new(MultiLineStringEncoder::new((array, typ).try_into()?))
                 }
-                GeoArrowType::Wkt(_) => Box::new(GenericWktEncoder::new(
-                    geometry_array.as_wkt::<i32>().clone(),
-                )),
-                GeoArrowType::LargeWkt(_) => Box::new(GenericWktEncoder::new(
-                    geometry_array.as_wkt::<i64>().clone(),
-                )),
-                GeoArrowType::WktView(_) => {
-                    Box::new(WktViewEncoder::new(geometry_array.as_wkt_view().clone()))
+                GeoArrowType::MultiPolygon(typ) => {
+                    Box::new(MultiPolygonEncoder::new((array, typ).try_into()?))
                 }
-                GeoArrowType::Rect(_) => {
-                    Box::new(RectEncoder::new(geometry_array.as_rect().clone()))
+                GeoArrowType::Geometry(typ) => {
+                    Box::new(GeometryEncoder::new((array, typ).try_into()?))
                 }
+                GeoArrowType::GeometryCollection(typ) => {
+                    Box::new(GeometryCollectionEncoder::new((array, typ).try_into()?))
+                }
+                GeoArrowType::Wkb(typ) => {
+                    Box::new(GenericWkbEncoder::<i32>::new((array, typ).try_into()?))
+                }
+                GeoArrowType::LargeWkb(typ) => {
+                    Box::new(GenericWkbEncoder::<i64>::new((array, typ).try_into()?))
+                }
+                GeoArrowType::WkbView(typ) => {
+                    Box::new(WkbViewEncoder::new((array, typ).try_into()?))
+                }
+                GeoArrowType::Wkt(typ) => {
+                    Box::new(GenericWktEncoder::<i32>::new((array, typ).try_into()?))
+                }
+                GeoArrowType::LargeWkt(typ) => {
+                    Box::new(GenericWktEncoder::<i64>::new((array, typ).try_into()?))
+                }
+                GeoArrowType::WktView(typ) => {
+                    Box::new(WktViewEncoder::new((array, typ).try_into()?))
+                }
+                GeoArrowType::Rect(typ) => Box::new(RectEncoder::new((array, typ).try_into()?)),
             };
             Ok(Some(NullableEncoder::new(encoder, nulls)))
         } else {

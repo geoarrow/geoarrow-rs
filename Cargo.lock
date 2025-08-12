@@ -1768,6 +1768,7 @@ dependencies = [
  "geo-types",
  "geoarrow-array",
  "geoarrow-schema",
+ "serde_json",
 ]
 
 [[package]]
