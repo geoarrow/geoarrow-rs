@@ -197,7 +197,7 @@ impl<W: Write> FlatGeobufWriter<'_, W> {
     /// Write a [`RecordBatch`] to the FlatGeobuf file.
     ///
     /// This will error if the schema of the `RecordBatch` does not match the schema originally
-    /// passed to [`FlatGeobufWriter::new`].
+    /// passed to [`FlatGeobufWriter::try_new`].
     pub fn write(&mut self, batch: &RecordBatch) -> GeoArrowResult<()> {
         self.geozero_writer
             .write(batch)
