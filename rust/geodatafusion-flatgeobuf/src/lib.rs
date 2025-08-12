@@ -33,6 +33,9 @@ mod tests {
     use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor};
     use geoarrow_schema::{CoordType, Dimension, PointType};
     use geodatafusion::udf::geo::processing::Centroid;
+    use geodatafusion::udf::geo::relationships::Intersects;
+    use geodatafusion::udf::native::bounding_box::Box2D;
+    use geodatafusion::udf::native::io::GeomFromText;
     use wkt::wkt;
 
     use super::*;
@@ -176,6 +179,60 @@ mod tests {
         let batch = batches.into_iter().next().unwrap();
         let id_column = batch.column_by_name("id").unwrap();
         assert_eq!(id_column.as_string_view().value(0), "ZMB");
+    }
+
+    #[tokio::test]
+    async fn test_bbox_pushdown() {
+        let file_format = Arc::new(FlatGeobufFileFactory::default());
+        let state = SessionStateBuilder::new()
+            .with_file_formats(vec![file_format])
+            .build();
+        let ctx = SessionContext::new_with_state(state);
+
+        let object_store_url = ObjectStoreUrl::parse("https://flatgeobuf.org").unwrap();
+        let object_store = Arc::new(
+            object_store::http::HttpBuilder::new()
+                .with_url(object_store_url.as_str())
+                .build()
+                .unwrap(),
+        );
+        ctx.register_object_store(object_store_url.as_ref(), object_store);
+
+        let config = ListingTableConfig::new(
+            ListingTableUrl::parse("https://flatgeobuf.org/test/data/countries.fgb").unwrap(),
+        )
+        .with_listing_options(ListingOptions::new(Arc::new(FlatGeobufFormat::default())))
+        .infer_schema(&ctx.state())
+        .await
+        .unwrap();
+        let table = ListingTable::try_new(config).unwrap();
+        ctx.register_table("countries", Arc::new(table)).unwrap();
+
+        ctx.register_udf(Intersects::new().into());
+        ctx.register_udf(GeomFromText::new(Default::default()).into());
+        ctx.register_udf(Box2D::new().into());
+
+        // Test with box2d input
+        let df = ctx
+            .sql(
+                "SELECT * FROM countries WHERE ST_Intersects(geometry, Box2D(ST_GeomFromText('POLYGON((0 -90, 180 -90, 180 90, 0 90, 0 -90))')))",
+            )
+            .await
+            .unwrap();
+        let batches = df.collect().await.unwrap();
+        let rows: usize = batches.iter().map(|b| b.num_rows()).sum();
+        assert_eq!(rows, 133);
+
+        // Test with geometry input
+        let df = ctx
+            .sql(
+                "SELECT * FROM countries WHERE ST_Intersects(geometry, ST_GeomFromText('POLYGON((0 -90, 180 -90, 180 90, 0 90, 0 -90))'))",
+            )
+            .await
+            .unwrap();
+        let batches = df.collect().await.unwrap();
+        let rows: usize = batches.iter().map(|b| b.num_rows()).sum();
+        assert_eq!(rows, 133);
     }
 
     fn sample_table() -> (Vec<RecordBatch>, Arc<Schema>) {

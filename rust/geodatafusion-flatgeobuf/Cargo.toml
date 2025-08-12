@@ -10,14 +10,17 @@ categories = { workspace = true }
 rust-version = { workspace = true }
 
 [dependencies]
+arrow-array = { workspace = true }
 arrow-schema = { workspace = true }
 async-trait = { workspace = true }
 datafusion = { workspace = true }
 datafusion-datasource = { workspace = true }
 flatgeobuf = { workspace = true }
 futures = { workspace = true }
+geoarrow-array = { workspace = true }
 geoarrow-flatgeobuf = { workspace = true, features = ["object_store"] }
 geoarrow-schema = { workspace = true }
+geodatafusion = { workspace = true }
 http-range-client = { workspace = true, default-features = false }
 object_store = { workspace = true }
 tempfile = { workspace = true }
