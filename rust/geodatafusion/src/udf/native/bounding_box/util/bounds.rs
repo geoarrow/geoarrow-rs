@@ -21,7 +21,7 @@ use geoarrow_schema::{BoxType, Dimension, GeoArrowType};
 use wkt::types::Coord;
 
 #[derive(Debug, Clone, Copy)]
-pub(crate) struct BoundingRect {
+pub struct BoundingRect {
     pub(crate) minx: f64,
     pub(crate) miny: f64,
     pub(crate) minz: f64,
@@ -347,7 +347,7 @@ fn impl_array_accessor<'a>(
 }
 
 /// Get the total bounds (i.e. minx, miny, maxx, maxy) of the entire geoarrow array.
-pub(crate) fn total_bounds(arr: &dyn GeoArrowArray) -> GeoArrowResult<BoundingRect> {
+pub fn total_bounds(arr: &dyn GeoArrowArray) -> GeoArrowResult<BoundingRect> {
     downcast_geoarrow_array!(arr, impl_total_bounds)
 }
 

@@ -3,10 +3,8 @@
 use std::any::Any;
 use std::sync::Arc;
 
-use arrow_array::cast::AsArray;
-use arrow_array::types::Float64Type;
-use arrow_array::{Array, RecordBatch, StructArray};
-use arrow_schema::{Schema, SchemaRef};
+use arrow_array::RecordBatch;
+use arrow_schema::{Field, Schema, SchemaRef};
 use datafusion::common::Statistics;
 use datafusion::datasource::listing::PartitionedFile;
 use datafusion::datasource::physical_plan::{
@@ -18,7 +16,9 @@ use datafusion::physical_plan::ColumnarValue;
 use datafusion::physical_plan::filter_pushdown::{FilterPushdownPropagation, PushedDown};
 use datafusion::physical_plan::metrics::ExecutionPlanMetricsSet;
 use futures::StreamExt;
+use geoarrow_array::array::from_arrow_array;
 use geoarrow_flatgeobuf::reader::{FlatGeobufReaderOptions, FlatGeobufRecordBatchStream};
+use geodatafusion::udf::native::bounding_box::util::total_bounds;
 use object_store::ObjectStore;
 
 use crate::utils::open_flatgeobuf_reader;
@@ -194,25 +194,20 @@ impl FileOpener for FlatGeobufOpener {
     }
 }
 
-fn columnar_to_bbox(value: ColumnarValue) -> Result<Option<[f64; 4]>> {
-    if let ColumnarValue::Array(arr) = value {
-        if let Some(struct_arr) = arr.as_any().downcast_ref::<StructArray>() {
-            if struct_arr.len() > 0 && struct_arr.num_columns() >= 4 {
-                let col0 = struct_arr.column(0).as_primitive_opt::<Float64Type>();
-                let col1 = struct_arr.column(1).as_primitive_opt::<Float64Type>();
-                let col2 = struct_arr.column(2).as_primitive_opt::<Float64Type>();
-                let col3 = struct_arr.column(3).as_primitive_opt::<Float64Type>();
-                if let (Some(c0), Some(c1), Some(c2), Some(c3)) = (col0, col1, col2, col3) {
-                    let xmin = c0.value(0);
-                    let ymin = c1.value(0);
-                    let xmax = c2.value(0);
-                    let ymax = c3.value(0);
-                    return Ok(Some([xmin, ymin, xmax, ymax]));
-                }
-            }
-        }
+fn columnar_value_to_bbox(value: ColumnarValue, field: &Field) -> Result<Option<[f64; 4]>> {
+    let arrays = ColumnarValue::values_to_arrays(&[value])?;
+    if let Ok(geo_arr) = from_arrow_array(&arrays[0], field) {
+        let bounds =
+            total_bounds(&geo_arr).map_err(|err| DataFusionError::External(Box::new(err)))?;
+        Ok(Some([
+            bounds.minx(),
+            bounds.miny(),
+            bounds.maxx(),
+            bounds.maxy(),
+        ]))
+    } else {
+        Ok(None)
     }
-    Ok(None)
 }
 
 fn extract_bbox(expr: &Arc<dyn PhysicalExpr>) -> Result<Option<[f64; 4]>> {
@@ -221,7 +216,8 @@ fn extract_bbox(expr: &Arc<dyn PhysicalExpr>) -> Result<Option<[f64; 4]>> {
             let bbox_expr = func.args()[1].clone();
             let empty = RecordBatch::new_empty(Arc::new(Schema::empty()));
             let value = bbox_expr.evaluate(&empty)?;
-            return columnar_to_bbox(value);
+            let return_field = bbox_expr.return_field(empty.schema_ref())?;
+            return columnar_value_to_bbox(value, &return_field);
         }
     }
     Ok(None)

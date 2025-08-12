@@ -212,9 +212,21 @@ mod tests {
         ctx.register_udf(GeomFromText::new(Default::default()).into());
         ctx.register_udf(Box2D::new().into());
 
+        // Test with box2d input
         let df = ctx
             .sql(
                 "SELECT * FROM countries WHERE ST_Intersects(geometry, Box2D(ST_GeomFromText('POLYGON((0 -90, 180 -90, 180 90, 0 90, 0 -90))')))",
+            )
+            .await
+            .unwrap();
+        let batches = df.collect().await.unwrap();
+        let rows: usize = batches.iter().map(|b| b.num_rows()).sum();
+        assert_eq!(rows, 133);
+
+        // Test with geometry input
+        let df = ctx
+            .sql(
+                "SELECT * FROM countries WHERE ST_Intersects(geometry, ST_GeomFromText('POLYGON((0 -90, 180 -90, 180 90, 0 90, 0 -90))'))",
             )
             .await
             .unwrap();
