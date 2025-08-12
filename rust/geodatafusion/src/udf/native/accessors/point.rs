@@ -13,7 +13,7 @@ use geo_traits::{CoordTrait, GeometryTrait, PointTrait};
 use geoarrow_array::array::from_arrow_array;
 use geoarrow_array::{GeoArrowArrayAccessor, downcast_geoarrow_array};
 
-use crate::data_types::any_single_point_type_input;
+use crate::data_types::any_point_type_input;
 use crate::error::GeoDataFusionResult;
 
 #[derive(Debug)]
@@ -24,7 +24,7 @@ pub struct X {
 impl X {
     pub fn new() -> Self {
         Self {
-            signature: any_single_point_type_input(),
+            signature: any_point_type_input(1),
         }
     }
 }
@@ -79,7 +79,7 @@ pub struct Y {
 impl Y {
     pub fn new() -> Self {
         Self {
-            signature: any_single_point_type_input(),
+            signature: any_point_type_input(1),
         }
     }
 }
@@ -167,7 +167,7 @@ pub struct Z {
 impl Z {
     pub fn new() -> Self {
         Self {
-            signature: any_single_point_type_input(),
+            signature: any_point_type_input(1),
         }
     }
 }
@@ -222,7 +222,7 @@ pub struct M {
 impl M {
     pub fn new() -> Self {
         Self {
-            signature: any_single_point_type_input(),
+            signature: any_point_type_input(1),
         }
     }
 }

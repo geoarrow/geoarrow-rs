@@ -78,7 +78,7 @@ struct ExtentAccumulator {
 impl ExtentAccumulator {
     pub fn new(field: FieldRef) -> Self {
         Self {
-            inner: BoundingRect::new(),
+            inner: BoundingRect::new(false),
             field,
         }
     }

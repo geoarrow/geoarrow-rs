@@ -17,6 +17,7 @@ extra:
 
 nav:
   - index.md
+  - rust.md
 
 watch:
   - source
