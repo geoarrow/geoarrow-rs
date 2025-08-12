@@ -13,19 +13,27 @@ pub use file_format::{FlatGeobufFileFactory, FlatGeobufFormat, FlatGeobufFormatF
 
 #[cfg(test)]
 mod tests {
+    use std::env::temp_dir;
+    use std::fs::File;
+    use std::io::BufReader;
     use std::sync::Arc;
 
+    use arrow_array::{Int32Array, RecordBatch};
+    use arrow_schema::{DataType, Field, Schema};
     use datafusion::arrow::array::AsArray;
+    use datafusion::catalog::MemTable;
     use datafusion::datasource::listing::{
         ListingOptions, ListingTable, ListingTableConfig, ListingTableUrl,
     };
     use datafusion::execution::SessionStateBuilder;
     use datafusion::execution::object_store::ObjectStoreUrl;
     use datafusion::prelude::SessionContext;
-    use geoarrow_array::GeoArrowArrayAccessor;
     use geoarrow_array::array::MultiPolygonArray;
-    use geoarrow_schema::CoordType;
+    use geoarrow_array::builder::PointBuilder;
+    use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor};
+    use geoarrow_schema::{CoordType, Dimension, PointType};
     use geodatafusion::udf::geo::processing::Centroid;
+    use wkt::wkt;
 
     use super::*;
 
@@ -168,5 +176,57 @@ mod tests {
         let batch = batches.into_iter().next().unwrap();
         let id_column = batch.column_by_name("id").unwrap();
         assert_eq!(id_column.as_string_view().value(0), "ZMB");
+    }
+
+    fn sample_table() -> (Vec<RecordBatch>, Arc<Schema>) {
+        let mut builder = PointBuilder::new(PointType::new(Dimension::XY, Default::default()));
+        builder.push_point(Some(&wkt!( POINT(1.0 2.0) )));
+        builder.push_point(Some(&wkt!( POINT(2.0 3.0) )));
+        let geometry = builder.finish();
+
+        let fields = vec![
+            Arc::new(Field::new("id", DataType::Int32, true)),
+            Arc::new(geometry.data_type().to_field("geometry", true)),
+        ];
+        let schema = Arc::new(Schema::new(fields));
+        let batch = RecordBatch::try_new(
+            schema.clone(),
+            vec![
+                Arc::new(Int32Array::from(vec![1, 2])) as _,
+                geometry.into_array_ref(),
+            ],
+        )
+        .unwrap();
+
+        (vec![batch], schema)
+    }
+
+    #[tokio::test]
+    async fn test_write_flatgeobuf_sink() {
+        let file_format = Arc::new(FlatGeobufFileFactory::default());
+        let state = SessionStateBuilder::new()
+            .with_file_formats(vec![file_format])
+            .build();
+        let ctx = SessionContext::new_with_state(state);
+
+        let (batches, schema) = sample_table();
+        let mem_table = Arc::new(MemTable::try_new(schema.clone(), vec![batches]).unwrap());
+        ctx.register_table("mem_table", mem_table).unwrap();
+
+        let file_path = temp_dir().join("test_fgb_sink.fgb");
+
+        ctx.sql(&format!("COPY mem_table TO '{}';", file_path.display(),))
+            .await
+            .unwrap()
+            .collect()
+            .await
+            .unwrap();
+
+        let file = File::open(&file_path).unwrap();
+        let reader = BufReader::new(file);
+        let fgb_reader = flatgeobuf::FgbReader::open(reader).unwrap();
+        assert_eq!(fgb_reader.header().features_count(), 2);
+
+        std::fs::remove_file(&file_path).unwrap();
     }
 }

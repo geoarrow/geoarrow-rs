@@ -2,6 +2,10 @@
 
 **This is the changelog for the core Rust library**. There's a [separate changelog](./python/CHANGELOG.md) for the Python bindings, and there will be another for the JS bindings.
 
+## Unreleased
+
+- New `FlatGeobufWriter`: an iterative push-based API for writing to FlatGeobuf files.
+
 ## 0.5.0 - 2025-08-07
 
 - feat(flatgeobuf): Restore the `FlatGeobuf` reader by @kylebarron in https://github.com/geoarrow/geoarrow-rs/pull/1057

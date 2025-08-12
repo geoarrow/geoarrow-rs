@@ -1812,9 +1812,11 @@ name = "geodatafusion-flatgeobuf"
 version = "0.1.0-dev"
 dependencies = [
  "approx",
+ "arrow-array",
  "arrow-schema",
  "async-trait",
  "datafusion",
+ "datafusion-datasource",
  "flatgeobuf",
  "futures",
  "geo-traits",
@@ -1824,7 +1826,9 @@ dependencies = [
  "geodatafusion",
  "http-range-client",
  "object_store",
+ "tempfile",
  "tokio",
+ "wkt 0.14.0",
 ]
 
 [[package]]

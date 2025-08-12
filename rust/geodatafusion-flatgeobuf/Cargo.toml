@@ -13,20 +13,25 @@ rust-version = { workspace = true }
 arrow-schema = { workspace = true }
 async-trait = { workspace = true }
 datafusion = { workspace = true }
+datafusion-datasource = { workspace = true }
 flatgeobuf = { workspace = true }
 futures = { workspace = true }
 geoarrow-flatgeobuf = { workspace = true, features = ["object_store"] }
 geoarrow-schema = { workspace = true }
 http-range-client = { workspace = true, default-features = false }
 object_store = { workspace = true }
+tempfile = { workspace = true }
+tokio = { workspace = true, features = ["io-util"] }
 
 [dev-dependencies]
 approx = { workspace = true }
+arrow-array = { workspace = true }
 geo-traits = { workspace = true }
 geoarrow-array = { workspace = true, features = ["test-data"] }
 geodatafusion = { workspace = true }
 object_store = { workspace = true, features = ["http"] }
 tokio = { workspace = true, features = ["macros", "fs", "rt-multi-thread"] }
+wkt = { workspace = true }
 
 [package.metadata.docs.rs]
 all-features = true
