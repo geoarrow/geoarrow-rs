@@ -14,6 +14,7 @@ pub use file_format::{FlatGeobufFileFactory, FlatGeobufFormat, FlatGeobufFormatF
 #[cfg(test)]
 mod tests {
     use std::env::temp_dir;
+    use std::fs::File;
     use std::io::BufReader;
     use std::sync::Arc;
 
@@ -27,14 +28,11 @@ mod tests {
     use datafusion::execution::SessionStateBuilder;
     use datafusion::execution::object_store::ObjectStoreUrl;
     use datafusion::prelude::SessionContext;
-    use geoarrow_array::GeoArrowArray;
-    use geoarrow_array::GeoArrowArrayAccessor;
     use geoarrow_array::array::MultiPolygonArray;
     use geoarrow_array::builder::PointBuilder;
-    use geoarrow_schema::CoordType;
-    use geoarrow_schema::{Dimension, PointType};
+    use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor};
+    use geoarrow_schema::{CoordType, Dimension, PointType};
     use geodatafusion::udf::geo::processing::Centroid;
-    use std::fs::File;
     use wkt::wkt;
 
     use super::*;

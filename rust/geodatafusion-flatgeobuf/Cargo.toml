@@ -20,6 +20,7 @@ geoarrow-flatgeobuf = { workspace = true, features = ["object_store"] }
 geoarrow-schema = { workspace = true }
 http-range-client = { workspace = true, default-features = false }
 object_store = { workspace = true }
+tempfile = { workspace = true }
 tokio = { workspace = true, features = ["io-util"] }
 
 [dev-dependencies]
@@ -29,7 +30,6 @@ geo-traits = { workspace = true }
 geoarrow-array = { workspace = true, features = ["test-data"] }
 geodatafusion = { workspace = true }
 object_store = { workspace = true, features = ["http"] }
-tempfile = { workspace = true }
 tokio = { workspace = true, features = ["macros", "fs", "rt-multi-thread"] }
 wkt = { workspace = true }
 

@@ -1,7 +1,8 @@
 use std::any::Any;
 use std::collections::HashMap;
 use std::fmt::{self, Debug, Formatter};
-use std::io::{Cursor, Read};
+use std::fs::File;
+use std::io::{BufReader, BufWriter, Read, Write};
 use std::sync::Arc;
 
 use arrow_schema::{Schema, SchemaRef};
@@ -29,6 +30,7 @@ use geoarrow_flatgeobuf::writer::{FlatGeobufWriter, FlatGeobufWriterOptions};
 use geoarrow_schema::{CoordType, GeoArrowType};
 use object_store::path::Path;
 use object_store::{ObjectMeta, ObjectStore};
+use tempfile::NamedTempFile;
 use tokio::io::AsyncWriteExt;
 
 use crate::source::FlatGeobufSource;
@@ -284,9 +286,8 @@ impl FileSink for FlatGeobufSink {
         while let Some((path, mut rb_rx)) = file_stream_rx.recv().await {
             // We create a tempfile on disk because the FlatGeobufWriter is sync only. So we write
             // to a temp file and then upload it to the object store.
-
-            // let output_file = BufWriter::new(NamedTempFile::new()?);
-            let output_file = Vec::new();
+            let named_temp_file = NamedTempFile::new()?;
+            let output_file = BufWriter::new(named_temp_file);
 
             // Create FlatGeobufWriter
             let name = path
@@ -310,15 +311,17 @@ impl FileSink for FlatGeobufSink {
             }
 
             // Finalize the FlatGeobufWriter to the temp file
-            let output_file = fgb_writer
+            let mut output_file = fgb_writer
                 .finish()
                 .map_err(|err| DataFusionError::External(Box::new(err)))?;
-            // let named_temp_file = output_file
-            //     .into_inner()
-            //     .map_err(|err| DataFusionError::External(Box::new(err)))?;
+            output_file.flush()?;
 
-            // Create a BufReader to read the temp file
-            let mut buf_reader = Cursor::new(output_file);
+            let named_temp_file = output_file
+                .into_inner()
+                .map_err(|err| DataFusionError::External(Box::new(err)))?;
+
+            // Reopen the temp file for reading
+            let mut buf_reader = BufReader::new(File::open(named_temp_file.path())?);
 
             let mut object_writer = ObjectWriterBuilder::new(
                 FileCompressionType::UNCOMPRESSED,

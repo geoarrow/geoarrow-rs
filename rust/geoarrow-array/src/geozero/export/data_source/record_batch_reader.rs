@@ -1,5 +1,4 @@
 use arrow_array::RecordBatchReader;
-
 use geozero::error::GeozeroError;
 use geozero::{FeatureProcessor, GeozeroDatasource};
 
