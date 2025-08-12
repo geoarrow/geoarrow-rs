@@ -19,11 +19,8 @@ use crate::encoder::wkb::{GenericWkbEncoder, WkbViewEncoder};
 use crate::encoder::wkt::{GenericWktEncoder, WktViewEncoder};
 
 /// A [EncoderFactory] for writing GeoArrow arrays.
-///
-/// This is internal because its use is encapsulated within the constructors for GeoJsonWriter and
-/// GeoJsonLinesWriter.
 #[derive(Debug)]
-pub(crate) struct GeoArrowEncoderFactory;
+pub struct GeoArrowEncoderFactory;
 
 impl EncoderFactory for GeoArrowEncoderFactory {
     fn make_default_encoder<'a>(

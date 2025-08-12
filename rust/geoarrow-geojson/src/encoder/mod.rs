@@ -11,7 +11,7 @@ mod rect;
 mod wkb;
 mod wkt;
 
-pub(crate) use factory::GeoArrowEncoderFactory;
+pub use factory::GeoArrowEncoderFactory;
 
 pub use geometry::GeometryEncoder;
 pub use geometrycollection::GeometryCollectionEncoder;
