@@ -18,7 +18,7 @@ use crate::util::to_geo::geometry_to_geo;
 
 pub fn simplify_vw_preserve(
     array: &dyn GeoArrowArray,
-    epsilon: &f64,
+    epsilon: f64,
 ) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
     use GeoArrowType::*;
     match array.data_type() {
@@ -37,14 +37,14 @@ pub fn simplify_vw_preserve(
 
 fn simplify_vw_preserve_linestring(
     array: &LineStringArray,
-    epsilon: &f64,
+    epsilon: f64,
 ) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
     let mut builder = LineStringBuilder::new(array.extension_type().clone());
 
     for item in array.iter() {
         if let Some(geom) = item {
             let geo_geom = geom?.to_line_string();
-            builder.push_line_string(Some(&geo_geom.simplify_vw_preserve(epsilon)))?;
+            builder.push_line_string(Some(&geo_geom.simplify_vw_preserve(&epsilon)))?;
         } else {
             builder.push_line_string(None::<&geo::LineString>.as_ref())?;
         }
@@ -55,14 +55,14 @@ fn simplify_vw_preserve_linestring(
 
 fn simplify_vw_preserve_polygon(
     array: &PolygonArray,
-    epsilon: &f64,
+    epsilon: f64,
 ) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
     let mut builder = PolygonBuilder::new(array.extension_type().clone());
 
     for item in array.iter() {
         if let Some(geom) = item {
             let geo_geom = geom?.to_polygon();
-            builder.push_polygon(Some(&geo_geom.simplify_vw_preserve(epsilon)))?;
+            builder.push_polygon(Some(&geo_geom.simplify_vw_preserve(&epsilon)))?;
         } else {
             builder.push_polygon(None::<&geo::Polygon>.as_ref())?;
         }
@@ -73,14 +73,14 @@ fn simplify_vw_preserve_polygon(
 
 fn simplify_vw_preserve_multi_linestring(
     array: &MultiLineStringArray,
-    epsilon: &f64,
+    epsilon: f64,
 ) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
     let mut builder = MultiLineStringBuilder::new(array.extension_type().clone());
 
     for item in array.iter() {
         if let Some(geom) = item {
             let geo_geom = geom?.to_multi_line_string();
-            builder.push_multi_line_string(Some(&geo_geom.simplify_vw_preserve(epsilon)))?;
+            builder.push_multi_line_string(Some(&geo_geom.simplify_vw_preserve(&epsilon)))?;
         } else {
             builder.push_multi_line_string(None::<&geo::MultiLineString>.as_ref())?;
         }
@@ -91,14 +91,14 @@ fn simplify_vw_preserve_multi_linestring(
 
 fn simplify_vw_preserve_multi_polygon(
     array: &MultiPolygonArray,
-    epsilon: &f64,
+    epsilon: f64,
 ) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
     let mut builder = MultiPolygonBuilder::new(array.extension_type().clone());
 
     for item in array.iter() {
         if let Some(geom) = item {
             let geo_geom = geom?.to_multi_polygon();
-            builder.push_multi_polygon(Some(&geo_geom.simplify_vw_preserve(epsilon)))?;
+            builder.push_multi_polygon(Some(&geo_geom.simplify_vw_preserve(&epsilon)))?;
         } else {
             builder.push_multi_polygon(None::<&geo::MultiPolygon>.as_ref())?;
         }
@@ -109,7 +109,7 @@ fn simplify_vw_preserve_multi_polygon(
 
 fn simplify_vw_preserve_geometry_impl<'a>(
     array: &'a impl GeoArrowArrayAccessor<'a>,
-    epsilon: &f64,
+    epsilon: f64,
 ) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
     let geom_typ = GeometryType::new(array.data_type().metadata().clone());
     let mut builder = GeometryBuilder::new(geom_typ);
@@ -117,7 +117,7 @@ fn simplify_vw_preserve_geometry_impl<'a>(
     for item in array.iter() {
         if let Some(geom) = item {
             let geo_geom = geometry_to_geo(&geom?)?;
-            let simplified_geom = simplify_vw_preserve_geometry(&geo_geom, epsilon);
+            let simplified_geom = simplify_vw_preserve_geometry(&geo_geom, &epsilon);
             builder.push_geometry(Some(&simplified_geom))?;
         } else {
             builder.push_geometry(None::<&geo::Geometry>.as_ref())?;

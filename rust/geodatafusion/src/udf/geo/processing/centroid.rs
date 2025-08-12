@@ -110,7 +110,7 @@ mod test {
         let ctx = SessionContext::new();
 
         ctx.register_udf(Centroid::default().into());
-        ctx.register_udf(GeomFromText::new(Default::default()).into());
+        ctx.register_udf(GeomFromText::default().into());
 
         let df = ctx
             .sql(

@@ -5,7 +5,7 @@ use geoarrow_schema::{
     MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType,
 };
 
-pub(crate) fn any_single_geometry_type_input() -> Signature {
+pub(crate) fn any_geometry_type() -> Vec<DataType> {
     let mut valid_types = vec![];
 
     for coord_type in [CoordType::Separated, CoordType::Interleaved] {
@@ -80,7 +80,11 @@ pub(crate) fn any_single_geometry_type_input() -> Signature {
     valid_types.push(DataType::LargeUtf8);
     valid_types.push(DataType::Utf8View);
 
-    Signature::uniform(1, valid_types, Volatility::Immutable)
+    valid_types
+}
+
+pub(crate) fn any_single_geometry_type_input() -> Signature {
+    Signature::uniform(1, any_geometry_type(), Volatility::Immutable)
 }
 
 pub(crate) fn any_point_type_input(arg_count: usize) -> Signature {
