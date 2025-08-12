@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## [0.5.1] - 2025-08-11
+
+- Build Python 3.13 wheels for Windows https://github.com/geoarrow/geoarrow-rs/pull/1305
+
 ## [0.5.0] - 2025-08-07
 
 - Add `get_type_id` to infer geometry types from array #1280

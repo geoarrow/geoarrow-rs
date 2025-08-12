@@ -40,7 +40,7 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
-          version: "0.4.x"
+          version: "0.8.x"
 
       - name: Install Python versions
         run: uv python install 3.9 3.10 3.11 3.12 3.13 pypy3.10
@@ -117,7 +117,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -m python/geoarrow-io/Cargo.toml
+          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -m python/geoarrow-io/Cargo.toml
 
       - name: Install built wheel
         run: |

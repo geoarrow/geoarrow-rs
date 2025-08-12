@@ -40,7 +40,7 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
-          version: "0.4.x"
+          version: "0.8.x"
 
       - name: Build python package
         run: |
