@@ -1,7 +1,7 @@
 use std::any::Any;
 use std::collections::HashMap;
 use std::fmt::{self, Debug, Formatter};
-use std::io::{BufReader, BufWriter, Cursor, Read};
+use std::io::{Cursor, Read};
 use std::sync::Arc;
 
 use arrow_schema::{Schema, SchemaRef};
@@ -29,7 +29,6 @@ use geoarrow_flatgeobuf::writer::{FlatGeobufWriter, FlatGeobufWriterOptions};
 use geoarrow_schema::{CoordType, GeoArrowType};
 use object_store::path::Path;
 use object_store::{ObjectMeta, ObjectStore};
-use tempfile::NamedTempFile;
 use tokio::io::AsyncWriteExt;
 
 use crate::source::FlatGeobufSource;
@@ -330,9 +329,15 @@ impl FileSink for FlatGeobufSink {
             .build()?;
 
             // Iterate over 20mb chunks of the output_file
-            let mut buf = Vec::with_capacity(20 * 1024 * 1024);
-            while let Ok(size) = buf_reader.read(&mut buf) {
-                object_writer.write_all(&buf[..size]).await?;
+            let mut buf = vec![0u8; 20 * 1024 * 1024];
+            loop {
+                match buf_reader.read(&mut buf) {
+                    Ok(0) => break, // End of file
+                    Ok(size) => {
+                        object_writer.write_all(&buf[..size]).await?;
+                    }
+                    Err(e) => return Err(DataFusionError::External(Box::new(e))),
+                }
             }
 
             object_writer.shutdown().await?;
