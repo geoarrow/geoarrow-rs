@@ -17,7 +17,7 @@ uv run mkdocs build
 git checkout gh-pages
 cd ..
 git pull
-rm -rf 404.html assets index.html sitemap.xml sitemap.xml.gz search stylesheets
+rm -rf 404.html assets index.html sitemap.xml sitemap.xml.gz search stylesheets rust
 mv -f docs/site/* ./
 git add 404.html assets index.html sitemap.xml sitemap.xml.gz search stylesheets rust
 git commit -m "New revision of top-level docs site"

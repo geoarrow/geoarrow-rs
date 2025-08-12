@@ -4,7 +4,7 @@ resolver = "2"
 
 [workspace.package]
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
-version = "0.4.1"
+version = "0.5.1"
 edition = "2024"
 homepage = "https://geoarrow.org/geoarrow-rs/"
 repository = "https://github.com/geoarrow/geoarrow-rs"
@@ -18,6 +18,7 @@ arrow = "56"
 arrow-array = "56"
 arrow-buffer = "56"
 arrow-schema = "56"
+flatgeobuf = { version = "5.0", default-features = false }
 geo-traits = "0.3"
 geoarrow-array = { path = "../rust/geoarrow-array" }
 geoarrow-cast = { path = "../rust/geoarrow-cast" }
@@ -25,12 +26,14 @@ geoarrow-flatgeobuf = { path = "../rust/geoarrow-flatgeobuf" }
 geoarrow-schema = { path = "../rust/geoarrow-schema" }
 geoparquet = { path = "../rust/geoparquet" }
 geozero = "0.14"
+http-range-client = { version = "0.9.0", default-features = false }
 indexmap = "2.5.0"
 numpy = "0.25"
 object_store = "0.12"
 parquet = "56"
 pyo3 = { version = "0.25", features = ["hashbrown", "serde", "anyhow"] }
-pyo3-arrow = "0.11"
+# https://github.com/kylebarron/arro3/pull/354
+pyo3-arrow = { git = "https://github.com/kylebarron/arro3", rev = "fda03cebe9cfbf8ad292f8070ea21c22b32af1a3" }
 pyo3-geoarrow = { path = "../rust/pyo3-geoarrow" }
 serde_json = "1"
 thiserror = "1"

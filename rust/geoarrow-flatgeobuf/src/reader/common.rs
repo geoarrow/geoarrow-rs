@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use arrow_schema::{DataType, Field, SchemaBuilder, SchemaRef, TimeUnit};
@@ -9,317 +9,385 @@ use geoarrow_schema::{
     Metadata, MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType,
 };
 
-/// Options for the FlatGeobuf reader
+/// Parameters for the FlatGeobuf reader
 #[derive(Debug, Clone)]
 pub struct FlatGeobufReaderOptions {
-    /// The GeoArrow coordinate type to use in the geometry arrays.
-    pub coord_type: CoordType,
+    // Schema can either be inferred from the file or scanned.
+    // The user can customize view types themeselves
+    pub(crate) properties_schema: SchemaRef,
+
+    // User can specify whether to read in to WKB, WKT
+    // TODO: allow reading in to GeoArrowArray WKB/WKT
+    pub(crate) geometry_type: GeoArrowType,
 
     /// The number of rows in each batch.
-    pub batch_size: usize,
-
-    /// Whether to prefer view types for string and binary columns.
-    pub prefer_view_types: bool,
-
-    /// The names of property columns to read from the FlatGeobuf file. If `None`, all property
-    /// columns will be read.
-    ///
-    /// The geometry column is always included.
-    pub columns: Option<HashSet<String>>,
+    pub(crate) batch_size: usize,
 
     /// If `true`, read the geometry column.
-    pub read_geometry: bool,
+    pub(crate) read_geometry: bool,
 }
 
-impl Default for FlatGeobufReaderOptions {
-    fn default() -> Self {
+impl FlatGeobufReaderOptions {
+    /// Create a new FlatGeobuf reader options.
+    ///
+    /// The properties schema and geometry type are **required**. Refer to [`FlatGeobufHeaderExt`]
+    /// for methods to obtain these from a FlatGeobuf file header.
+    pub fn new(properties_schema: SchemaRef, geometry_type: GeoArrowType) -> Self {
         Self {
-            coord_type: Default::default(),
-            batch_size: 65_536,
-            prefer_view_types: true,
-            columns: Default::default(),
+            batch_size: 1024,
             read_geometry: true,
+            properties_schema,
+            geometry_type,
         }
     }
-}
 
-/// Parse the FlatGeobuf header to infer the [SchemaRef] of the property columns.
-///
-/// Note that this does not include the geometry column, which is handled separately.
-///
-/// This will return `None` if information about property columns is missing from the header.
-fn infer_properties_schema(
-    header: Header<'_>,
-    prefer_view_types: bool,
-    projection: Option<&HashSet<String>>,
-) -> Option<SchemaRef> {
-    let columns = header.columns()?;
-    let mut schema =
-        SchemaBuilder::with_capacity(projection.map(|p| p.len()).unwrap_or(columns.len()));
+    /// Create a new FlatGeobuf reader options from a combined schema of properties and geometry.
+    ///
+    /// If there is no geometry field in the schema, it will not be read (see
+    /// [`Self::with_read_geometry`]).
+    ///
+    /// Note that the name of the geometry field is not currently tracked. The geometry field in
+    /// the output schema will always be called `geometry`. File a bug if you need to preserve the
+    /// original name.
+    pub fn from_combined_schema(schema: SchemaRef) -> GeoArrowResult<Self> {
+        let mut properties_schema = SchemaBuilder::new();
+        let mut outer_geometry_type = None;
 
-    for col in columns.into_iter() {
-        if let Some(projection) = projection.as_ref() {
-            if !projection.contains(col.name()) {
-                continue;
+        for field in schema.fields() {
+            if let Ok(_geometry_type) = GeoArrowType::from_extension_field(field) {
+                if outer_geometry_type.is_some() {
+                    return Err(GeoArrowError::FlatGeobuf(
+                        "Multiple geometry fields found in schema".to_string(),
+                    ));
+                }
+                outer_geometry_type = Some(_geometry_type);
+            } else {
+                properties_schema.push(field.clone());
             }
         }
 
-        let field = match col.type_() {
-            ColumnType::Bool => Field::new(col.name(), DataType::Boolean, col.nullable()),
-            ColumnType::Byte => Field::new(col.name(), DataType::Int8, col.nullable()),
-            ColumnType::UByte => Field::new(col.name(), DataType::UInt8, col.nullable()),
-            ColumnType::Short => Field::new(col.name(), DataType::Int16, col.nullable()),
-            ColumnType::UShort => Field::new(col.name(), DataType::UInt16, col.nullable()),
-            ColumnType::Int => Field::new(col.name(), DataType::Int32, col.nullable()),
-            ColumnType::UInt => Field::new(col.name(), DataType::UInt32, col.nullable()),
-            ColumnType::Long => Field::new(col.name(), DataType::Int64, col.nullable()),
-            ColumnType::ULong => Field::new(col.name(), DataType::UInt64, col.nullable()),
-            ColumnType::Float => Field::new(col.name(), DataType::Float32, col.nullable()),
-            ColumnType::Double => Field::new(col.name(), DataType::Float64, col.nullable()),
-            ColumnType::String => {
-                let data_type = if prefer_view_types {
-                    DataType::Utf8View
-                } else {
-                    DataType::Utf8
+        let properties_schema = Arc::new(properties_schema.finish());
+        if let Some(outer_geometry_type) = outer_geometry_type {
+            Ok(Self::new(properties_schema, outer_geometry_type))
+        } else {
+            Ok(Self::new(
+                properties_schema,
+                GeoArrowType::Geometry(Default::default()),
+            )
+            .with_read_geometry(false))
+        }
+    }
+
+    /// Set the batch size.
+    pub fn with_batch_size(mut self, batch_size: usize) -> Self {
+        self.batch_size = batch_size;
+        self
+    }
+
+    /// Set whether to read the geometry column.
+    pub fn with_read_geometry(mut self, read_geometry: bool) -> Self {
+        self.read_geometry = read_geometry;
+        self
+    }
+
+    pub(crate) fn validate_against_header(&self, header: &Header<'_>) -> GeoArrowResult<()> {
+        self.validate_properties_schema(header)?;
+        self.validate_geometry_type(header)?;
+        Ok(())
+    }
+
+    fn validate_properties_schema(&self, header: &Header<'_>) -> GeoArrowResult<()> {
+        if let Some(columns) = header.columns() {
+            let column_map: HashMap<_, _> =
+                HashMap::from_iter(columns.iter().map(|col| (col.name(), col)));
+            for field in self.properties_schema.fields() {
+                let fgb_col =
+                    column_map
+                        .get(field.name().as_str())
+                        .ok_or(GeoArrowError::FlatGeobuf(format!(
+                            "Column '{}' provided in schema but not found in FlatGeobuf header",
+                            field.name()
+                        )))?;
+
+                if fgb_col.nullable() != field.is_nullable() {
+                    return Err(GeoArrowError::FlatGeobuf(format!(
+                        "Column '{}' provided in schema has nullable = {}, but FlatGeobuf header has nullable = {}",
+                        field.name(),
+                        field.is_nullable(),
+                        fgb_col.nullable()
+                    )));
+                }
+
+                match (fgb_col.type_(), field.data_type()) {
+                    (ColumnType::Bool, DataType::Boolean)
+                    | (ColumnType::Byte, DataType::Int8)
+                    | (ColumnType::UByte, DataType::UInt8)
+                    | (ColumnType::Short, DataType::Int16)
+                    | (ColumnType::UShort, DataType::UInt16)
+                    | (ColumnType::Int, DataType::Int32)
+                    | (ColumnType::UInt, DataType::UInt32)
+                    | (ColumnType::Long, DataType::Int64)
+                    | (ColumnType::ULong, DataType::UInt64)
+                    | (ColumnType::Float, DataType::Float32)
+                    | (ColumnType::Double, DataType::Float64)
+                    | (
+                        ColumnType::String | ColumnType::Json,
+                        DataType::Utf8 | DataType::LargeUtf8 | DataType::Utf8View,
+                    )
+                    | (
+                        ColumnType::Binary,
+                        DataType::Binary | DataType::LargeBinary | DataType::BinaryView,
+                    ) => {}
+                    (ColumnType::DateTime, DataType::Timestamp(_, _)) => {}
+                    (col_type, data_type) => {
+                        return Err(GeoArrowError::FlatGeobuf(format!(
+                            "Column '{}' provided in schema has incompatible type: FlatGeobuf column type is '{col_type:?}', but schema has '{data_type:?}'",
+                            field.name(),
+                        )));
+                    }
                 };
-                Field::new(col.name(), data_type, col.nullable())
             }
-            ColumnType::Json => {
-                let data_type = if prefer_view_types {
-                    DataType::Utf8View
-                } else {
-                    DataType::Utf8
-                };
-                Field::new(col.name(), data_type, col.nullable())
-                    .with_extension_type(arrow_schema::extension::Json::default())
+
+            Ok(())
+        } else {
+            // Nothing to validate if the metadata doesn't contain column info
+            Ok(())
+        }
+    }
+
+    fn validate_geometry_type(&self, header: &Header<'_>) -> GeoArrowResult<()> {
+        if let Some(expected_dim) = self.geometry_type.dimension() {
+            match expected_dim {
+                Dimension::XY => {
+                    if header.has_z() || header.has_m() {
+                        return Err(GeoArrowError::FlatGeobuf(
+                            "Expected 2D geometry, but FlatGeobuf has Z or M dimension".to_string(),
+                        ));
+                    }
+                }
+                Dimension::XYZ => {
+                    if !header.has_z() || header.has_m() {
+                        return Err(GeoArrowError::FlatGeobuf(
+                            "Expected 3D geometry with Z dimension, but FlatGeobuf does not have Z"
+                                .to_string(),
+                        ));
+                    }
+                }
+                Dimension::XYM => {
+                    if header.has_z() || !header.has_m() {
+                        return Err(GeoArrowError::FlatGeobuf(
+                            "Expected 3D geometry with M dimension, but FlatGeobuf does not have M"
+                                .to_string(),
+                        ));
+                    }
+                }
+                Dimension::XYZM => {
+                    if !header.has_z() || !header.has_m() {
+                        return Err(GeoArrowError::FlatGeobuf(
+                            "Expected 4D geometry with Z and M dimensions, but FlatGeobuf does not have both"
+                                .to_string(),
+                        ));
+                    }
+                }
             }
-            ColumnType::DateTime => Field::new(
-                col.name(),
-                DataType::Timestamp(TimeUnit::Microsecond, None),
-                col.nullable(),
-            ),
-            ColumnType::Binary => {
-                let data_type = if prefer_view_types {
-                    DataType::BinaryView
-                } else {
-                    DataType::Binary
-                };
-                Field::new(col.name(), data_type, col.nullable())
-            }
-            // ColumnType is actually a struct, not an enum, so the rust compiler doesn't know
-            // we've matched all types
-            _ => unreachable!(),
         };
-        schema.push(field);
-    }
 
-    Some(Arc::new(schema.finish()))
+        match (&self.geometry_type, header.geometry_type()) {
+            (GeoArrowType::Point(_), flatgeobuf::GeometryType::Point)
+            | (GeoArrowType::LineString(_), flatgeobuf::GeometryType::LineString)
+            | (GeoArrowType::Polygon(_), flatgeobuf::GeometryType::Polygon)
+            | (
+                GeoArrowType::MultiPoint(_),
+                flatgeobuf::GeometryType::Point | flatgeobuf::GeometryType::MultiPoint,
+            )
+            | (
+                GeoArrowType::MultiLineString(_),
+                flatgeobuf::GeometryType::LineString | flatgeobuf::GeometryType::MultiLineString,
+            )
+            | (
+                GeoArrowType::MultiPolygon(_),
+                flatgeobuf::GeometryType::Polygon | flatgeobuf::GeometryType::MultiPolygon,
+            )
+            | (GeoArrowType::GeometryCollection(_), flatgeobuf::GeometryType::GeometryCollection)
+            | (
+                GeoArrowType::Geometry(_) | GeoArrowType::Wkb(_) | GeoArrowType::LargeWkb(_),
+                // We don't currently have builders for these types
+                // | GeoArrowType::WkbView(_),
+                // | GeoArrowType::Wkt(_)
+                // | GeoArrowType::LargeWkt(_)
+                // | GeoArrowType::WktView(_),
+                flatgeobuf::GeometryType::Point
+                | flatgeobuf::GeometryType::LineString
+                | flatgeobuf::GeometryType::Polygon
+                | flatgeobuf::GeometryType::MultiPoint
+                | flatgeobuf::GeometryType::MultiLineString
+                | flatgeobuf::GeometryType::MultiPolygon
+                | flatgeobuf::GeometryType::GeometryCollection
+                | flatgeobuf::GeometryType::Unknown,
+            ) => Ok(()),
+            (expected, actual) => Err(GeoArrowError::FlatGeobuf(format!(
+                "FlatGeobuf geometry type '{actual:?}' does not support expected geometry type '{expected:?}'",
+            ))),
+        }
+    }
 }
 
 /// Parse CRS information provided by FlatGeobuf into a [Metadata].
 ///
 /// WKT is preferred if it exists. Otherwise, authority code will be used as a fallback.
-fn parse_crs(crs: Option<Crs<'_>>) -> Arc<Metadata> {
-    if let Some(crs) = crs {
-        if let Some(wkt) = crs.wkt() {
-            // We use unknown CRS because we don't know for sure it's WKT 2019
-            let crs = geoarrow_schema::Crs::from_unknown_crs_type(wkt.to_string());
+fn parse_crs(crs: Crs<'_>) -> Arc<Metadata> {
+    if let Some(wkt) = crs.wkt() {
+        // We use unknown CRS because we don't know for sure it's WKT 2019
+        let crs = geoarrow_schema::Crs::from_unknown_crs_type(wkt.to_string());
+        return Arc::new(Metadata::new(crs, None));
+    }
+
+    if let Some(org) = crs.org() {
+        let code = crs.code();
+        if code != 0 {
+            let crs = geoarrow_schema::Crs::from_authority_code(format!("{org}:{code}"));
             return Arc::new(Metadata::new(crs, None));
         }
 
-        if let Some(org) = crs.org() {
-            let code = crs.code();
-            if code != 0 {
-                let crs = geoarrow_schema::Crs::from_authority_code(format!("{org}:{code}"));
-                return Arc::new(Metadata::new(crs, None));
-            }
-
-            if let Some(code) = crs.code_string() {
-                let crs = geoarrow_schema::Crs::from_authority_code(format!("{org}:{code}"));
-                return Arc::new(Metadata::new(crs, None));
-            }
-        };
+        if let Some(code) = crs.code_string() {
+            let crs = geoarrow_schema::Crs::from_authority_code(format!("{org}:{code}"));
+            return Arc::new(Metadata::new(crs, None));
+        }
     };
 
     Default::default()
 }
 
-/// The bounding box of a FlatGeobuf file.
-///
-/// This is read from the FlatGeobuf header and represents the full extent of all geometries in the
-/// file.
-#[derive(Debug, Clone, Copy)]
-pub struct Envelope {
-    min_x: f64,
-    min_y: f64,
-    max_x: f64,
-    max_y: f64,
-}
-
-impl Envelope {
-    /// The minimum X coordinate of the bounding box.
-    pub fn min_x(&self) -> f64 {
-        self.min_x
-    }
-
-    /// The minimum Y coordinate of the bounding box.
-    pub fn min_y(&self) -> f64 {
-        self.min_y
-    }
-
-    /// The maximum X coordinate of the bounding box.
-    pub fn max_x(&self) -> f64 {
-        self.max_x
-    }
-
-    /// The maximum Y coordinate of the bounding box.
-    pub fn max_y(&self) -> f64 {
-        self.max_y
-    }
-}
-
-/// Parsed information about FlatGeobuf header.
-#[derive(Debug, Clone)]
-pub struct HeaderInfo {
-    name: Option<String>,
-    geometry_type: GeoArrowType,
-    properties_schema: Option<SchemaRef>,
-    envelope: Option<Envelope>,
-    features_count: u64,
-    index_node_size: u16,
-    title: Option<String>,
-    description: Option<String>,
-    metadata: Option<String>,
-}
-
-impl HeaderInfo {
-    /// Arbitrary name given to your file.
+/// Extension trait to add convenience methods to FlatGeobuf's [Header].
+pub trait FlatGeobufHeaderExt {
+    /// Returns the GeoArrow geometry type for the geometry type encoded in the FlatGeobuf header.
     ///
-    /// Many implementations will include this as a FeatureCollection-level property when
-    /// converting to GeoJSON
-    pub fn name(&self) -> Option<&str> {
-        self.name.as_deref()
+    /// Pass this geometry type to [FlatGeobufReaderOptions::new] when creating reader options.
+    fn geoarrow_type(&self, coord_type: CoordType) -> GeoArrowResult<GeoArrowType>;
+
+    /// Returns the schema of the properties columns, if known.
+    ///
+    /// If the FlatGeobuf file header does not contain information about property columns, this
+    /// will be `None`. In that case, you should use
+    /// [`FlatGeobufSchemaScanner`][crate::reader::schema::FlatGeobufSchemaScanner] to infer the
+    /// schema by scanning the first `N`` features.
+    ///
+    /// Pass the resulting schema to [FlatGeobufReaderOptions::new] when creating reader options.
+    fn properties_schema(&self, use_view_types: bool) -> Option<SchemaRef>;
+}
+
+impl FlatGeobufHeaderExt for Header<'_> {
+    fn geoarrow_type(&self, coord_type: CoordType) -> GeoArrowResult<GeoArrowType> {
+        if self.has_t() | self.has_tm() {
+            return Err(GeoArrowError::FlatGeobuf(
+                "FlatGeobuf t dimension is not supported".to_string(),
+            ));
+        }
+
+        let fgb_geometry_type = self.geometry_type();
+        let metadata = self.crs().map(parse_crs).unwrap_or_default();
+
+        let dim = match (self.has_z(), self.has_m()) {
+            (false, false) => Dimension::XY,
+            (true, false) => Dimension::XYZ,
+            (false, true) => Dimension::XYM,
+            (true, true) => Dimension::XYZM,
+        };
+
+        let data_type = match fgb_geometry_type {
+            flatgeobuf::GeometryType::Point => PointType::new(dim, metadata)
+                .with_coord_type(coord_type)
+                .into(),
+            flatgeobuf::GeometryType::LineString => LineStringType::new(dim, metadata)
+                .with_coord_type(coord_type)
+                .into(),
+            flatgeobuf::GeometryType::Polygon => PolygonType::new(dim, metadata)
+                .with_coord_type(coord_type)
+                .into(),
+            flatgeobuf::GeometryType::MultiPoint => MultiPointType::new(dim, metadata)
+                .with_coord_type(coord_type)
+                .into(),
+            flatgeobuf::GeometryType::MultiLineString => MultiLineStringType::new(dim, metadata)
+                .with_coord_type(coord_type)
+                .into(),
+            flatgeobuf::GeometryType::MultiPolygon => MultiPolygonType::new(dim, metadata)
+                .with_coord_type(coord_type)
+                .into(),
+            flatgeobuf::GeometryType::GeometryCollection => {
+                GeometryCollectionType::new(dim, metadata)
+                    .with_coord_type(coord_type)
+                    .into()
+            }
+            flatgeobuf::GeometryType::Unknown => GeometryType::new(metadata)
+                .with_coord_type(coord_type)
+                .into(),
+            _ => {
+                return Err(GeoArrowError::FlatGeobuf(format!(
+                    "Unsupported FlatGeobuf geometry type: {fgb_geometry_type:?}",
+                )));
+            }
+        };
+        Ok(data_type)
     }
 
-    /// The GeoArrow type of the geometry column.
-    pub fn geometry_type(&self) -> &GeoArrowType {
-        &self.geometry_type
-    }
-
-    /// The schema of the properties columns, if known.
+    /// Returns the schema of the properties columns, if known.
     ///
     /// If the FlatGeobuf file header does not contain information about property columns, this
     /// will be `None`.
-    pub fn properties_schema(&self) -> Option<&SchemaRef> {
-        self.properties_schema.as_ref()
-    }
+    fn properties_schema(&self, use_view_types: bool) -> Option<SchemaRef> {
+        let columns = self.columns()?;
+        let mut schema = SchemaBuilder::with_capacity(columns.len());
 
-    /// The bounding box of the geometries in the FlatGeobuf file, if known.
-    pub fn envelope(&self) -> Option<&Envelope> {
-        self.envelope.as_ref()
-    }
-
-    /// The number of features in the FlatGeobuf file.
-    pub fn features_count(&self) -> u64 {
-        self.features_count
-    }
-
-    /// This represents the branching factor of the RTree used for the flatgeobuf spatial index,
-    /// i.e. the number of child nodes under each interior node in the tree. Higher branching
-    /// factor = wider, shorter tree. Obviously this can impact the size of your tree and the
-    /// performance of your index lookups but the exact characteristics will depend on your
-    /// dataset.
-    pub fn index_node_size(&self) -> u16 {
-        self.index_node_size
-    }
-
-    /// Arbitrary strings for dataset description
-    pub fn title(&self) -> Option<&str> {
-        self.title.as_deref()
-    }
-
-    /// Arbitrary strings for dataset description
-    pub fn description(&self) -> Option<&str> {
-        self.description.as_deref()
-    }
-
-    /// String, but expected to encode an arbitrary JSON object containing key/value metadata about
-    /// the dataset
-    pub fn metadata(&self) -> Option<&str> {
-        self.metadata.as_deref()
-    }
-}
-
-/// Parse the FlatGeobuf header to infer the [GeoArrowType] of the geometry column and [SchemaRef]
-/// of the properties.
-pub fn parse_header(
-    header: Header<'_>,
-    coord_type: CoordType,
-    prefer_view_types: bool,
-    projection: Option<&HashSet<String>>,
-) -> GeoArrowResult<HeaderInfo> {
-    if header.has_t() | header.has_tm() {
-        return Err(GeoArrowError::FlatGeobuf(
-            "FlatGeobuf t dimension is not supported".to_string(),
-        ));
-    }
-    let dim = match (header.has_z(), header.has_m()) {
-        (false, false) => Dimension::XY,
-        (true, false) => Dimension::XYZ,
-        (false, true) => Dimension::XYM,
-        (true, true) => Dimension::XYZM,
-    };
-
-    let properties_schema = infer_properties_schema(header, prefer_view_types, projection);
-    let geometry_type = header.geometry_type();
-    let metadata = parse_crs(header.crs());
-
-    let data_type = match geometry_type {
-        flatgeobuf::GeometryType::Point => PointType::new(dim, metadata)
-            .with_coord_type(coord_type)
-            .into(),
-        flatgeobuf::GeometryType::LineString => LineStringType::new(dim, metadata)
-            .with_coord_type(coord_type)
-            .into(),
-        flatgeobuf::GeometryType::Polygon => PolygonType::new(dim, metadata)
-            .with_coord_type(coord_type)
-            .into(),
-        flatgeobuf::GeometryType::MultiPoint => MultiPointType::new(dim, metadata)
-            .with_coord_type(coord_type)
-            .into(),
-        flatgeobuf::GeometryType::MultiLineString => MultiLineStringType::new(dim, metadata)
-            .with_coord_type(coord_type)
-            .into(),
-        flatgeobuf::GeometryType::MultiPolygon => MultiPolygonType::new(dim, metadata)
-            .with_coord_type(coord_type)
-            .into(),
-        flatgeobuf::GeometryType::GeometryCollection => GeometryCollectionType::new(dim, metadata)
-            .with_coord_type(coord_type)
-            .into(),
-        flatgeobuf::GeometryType::Unknown => GeometryType::new(metadata)
-            .with_coord_type(coord_type)
-            .into(),
-        _ => {
-            return Err(GeoArrowError::FlatGeobuf(format!(
-                "Unsupported FlatGeobuf geometry type: {geometry_type:?}",
-            )));
+        for col in columns.into_iter() {
+            let field = match col.type_() {
+                ColumnType::Bool => Field::new(col.name(), DataType::Boolean, col.nullable()),
+                ColumnType::Byte => Field::new(col.name(), DataType::Int8, col.nullable()),
+                ColumnType::UByte => Field::new(col.name(), DataType::UInt8, col.nullable()),
+                ColumnType::Short => Field::new(col.name(), DataType::Int16, col.nullable()),
+                ColumnType::UShort => Field::new(col.name(), DataType::UInt16, col.nullable()),
+                ColumnType::Int => Field::new(col.name(), DataType::Int32, col.nullable()),
+                ColumnType::UInt => Field::new(col.name(), DataType::UInt32, col.nullable()),
+                ColumnType::Long => Field::new(col.name(), DataType::Int64, col.nullable()),
+                ColumnType::ULong => Field::new(col.name(), DataType::UInt64, col.nullable()),
+                ColumnType::Float => Field::new(col.name(), DataType::Float32, col.nullable()),
+                ColumnType::Double => Field::new(col.name(), DataType::Float64, col.nullable()),
+                ColumnType::String => {
+                    let data_type = if use_view_types {
+                        DataType::Utf8View
+                    } else {
+                        DataType::Utf8
+                    };
+                    Field::new(col.name(), data_type, col.nullable())
+                }
+                ColumnType::Json => {
+                    let data_type = if use_view_types {
+                        DataType::Utf8View
+                    } else {
+                        DataType::Utf8
+                    };
+                    Field::new(col.name(), data_type, col.nullable())
+                        .with_extension_type(arrow_schema::extension::Json::default())
+                }
+                ColumnType::DateTime => Field::new(
+                    col.name(),
+                    DataType::Timestamp(TimeUnit::Microsecond, None),
+                    col.nullable(),
+                ),
+                ColumnType::Binary => {
+                    let data_type = if use_view_types {
+                        DataType::BinaryView
+                    } else {
+                        DataType::Binary
+                    };
+                    Field::new(col.name(), data_type, col.nullable())
+                }
+                // ColumnType is actually a struct, not an enum, so the rust compiler doesn't know
+                // we've matched all types
+                _ => unreachable!(),
+            };
+            schema.push(field);
         }
-    };
 
-    Ok(HeaderInfo {
-        name: header.name().map(|s| s.to_string()),
-        geometry_type: data_type,
-        properties_schema,
-        envelope: header.envelope().map(|bbox| Envelope {
-            min_x: bbox.get(0),
-            min_y: bbox.get(1),
-            max_x: bbox.get(2),
-            max_y: bbox.get(3),
-        }),
-        features_count: header.features_count(),
-        index_node_size: header.index_node_size(),
-        title: header.title().map(|s| s.to_string()),
-        description: header.description().map(|s| s.to_string()),
-        metadata: header.metadata().map(|s| s.to_string()),
-    })
+        Some(Arc::new(schema.finish()))
+    }
 }

@@ -5,6 +5,7 @@ use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::PyTuple;
 pub mod error;
+pub mod flatgeobuf;
 pub(crate) mod input;
 pub mod parquet;
 #[cfg(feature = "async")]
@@ -48,10 +49,10 @@ fn _io(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
         m.add_class::<crate::parquet::GeoParquetFile>()?;
         m.add_class::<crate::parquet::GeoParquetDataset>()?;
 
-        // m.add_function(wrap_pyfunction!(
-        //     crate::flatgeobuf::read_flatgeobuf_async,
-        //     m
-        // )?)?;
+        m.add_function(wrap_pyfunction!(
+            crate::flatgeobuf::read_flatgeobuf_async,
+            m
+        )?)?;
         m.add_function(wrap_pyfunction!(crate::parquet::read_parquet_async, m)?)?;
 
         // m.add_function(wrap_pyfunction!(crate::postgis::read_postgis, m)?)?;
@@ -61,7 +62,7 @@ fn _io(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     // IO
 
     // m.add_function(wrap_pyfunction!(crate::csv::read_csv, m)?)?;
-    // m.add_function(wrap_pyfunction!(crate::flatgeobuf::read_flatgeobuf, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::flatgeobuf::read_flatgeobuf, m)?)?;
     // m.add_function(wrap_pyfunction!(crate::geojson::read_geojson, m)?)?;
     // m.add_function(wrap_pyfunction!(
     //     crate::geojson_lines::read_geojson_lines,
@@ -72,10 +73,7 @@ fn _io(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<crate::parquet::PyGeoParquetWriter>()?;
 
     // m.add_function(wrap_pyfunction!(crate::csv::write_csv, m)?)?;
-    // m.add_function(wrap_pyfunction!(
-    //     crate::flatgeobuf::write_flatgeobuf,
-    //     m
-    // )?)?;
+    m.add_function(wrap_pyfunction!(crate::flatgeobuf::write_flatgeobuf, m)?)?;
     // m.add_function(wrap_pyfunction!(crate::geojson::write_geojson, m)?)?;
     // m.add_function(wrap_pyfunction!(
     //     crate::geojson_lines::write_geojson_lines,

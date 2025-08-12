@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## [0.5.1] - 2025-08-11
+
+- Build Python 3.13 wheels for Windows https://github.com/geoarrow/geoarrow-rs/pull/1305
+
+## [0.5.0] - 2025-08-07
+
+- Add `get_type_id` to infer geometry types from array #1280
+- Release GIL when blocking tokio runtime https://github.com/geoarrow/geoarrow-rs/pull/1281
+- Add `read_flatgeobuf`, `read_flatgeobuf_async`, `write_flatgeobuf` https://github.com/geoarrow/geoarrow-rs/pull/1279
+
 ## [0.4.1] - 2025-07-17
 
 - Added `path` property to `GeoParquetFile` class so information about each fragment of a `GeoParquetDataset` can be associated back to the original file.

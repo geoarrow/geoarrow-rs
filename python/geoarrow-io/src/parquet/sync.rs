@@ -44,37 +44,41 @@ pub fn read_parquet(
 
             let runtime = get_runtime(py)?;
 
-            let table = runtime.block_on(async move {
-                let object_reader = ParquetObjectReader::new(async_reader.store, async_reader.path);
-                let mut builder = ParquetRecordBatchStreamBuilder::new_with_options(
-                    object_reader,
-                    ArrowReaderOptions::new().with_page_index(true),
-                )
-                .await?;
+            py.allow_threads(|| {
+                let table = runtime.block_on(async move {
+                    let object_reader =
+                        ParquetObjectReader::new(async_reader.store, async_reader.path);
+                    let mut builder = ParquetRecordBatchStreamBuilder::new_with_options(
+                        object_reader,
+                        ArrowReaderOptions::new().with_page_index(true),
+                    )
+                    .await?;
 
-                if let Some(batch_size) = batch_size {
-                    builder = builder.with_batch_size(batch_size);
-                }
+                    if let Some(batch_size) = batch_size {
+                        builder = builder.with_batch_size(batch_size);
+                    }
 
-                let gpq_meta = builder.geoparquet_metadata().ok_or(PyValueError::new_err(
-                    "Not a GeoParquet file; no GeoParquet metadata.",
-                ))??;
-                let geoarrow_schema = builder.geoarrow_schema(
-                    &gpq_meta,
-                    parse_to_native,
-                    coord_type.unwrap_or_default().into(),
-                )?;
+                    let gpq_meta = builder.geoparquet_metadata().ok_or(
+                        PyValueError::new_err("Not a GeoParquet file; no GeoParquet metadata."),
+                    )??;
+                    let geoarrow_schema = builder.geoarrow_schema(
+                        &gpq_meta,
+                        parse_to_native,
+                        coord_type.unwrap_or_default().into(),
+                    )?;
 
-                let stream = GeoParquetRecordBatchStream::try_new(
-                    builder.build()?,
-                    geoarrow_schema.clone(),
-                )?;
-                let batches = stream.try_collect().await?;
+                    let stream = GeoParquetRecordBatchStream::try_new(
+                        builder.build()?,
+                        geoarrow_schema.clone(),
+                    )?;
+                    let batches = stream.try_collect().await?;
 
-                let table = Arro3Table::from(PyTable::try_new(batches, geoarrow_schema).unwrap());
-                Ok::<_, PyGeoArrowError>(table)
-            })?;
-            Ok(table)
+                    let table =
+                        Arro3Table::from(PyTable::try_new(batches, geoarrow_schema).unwrap());
+                    Ok::<_, PyGeoArrowError>(table)
+                })?;
+                Ok(table)
+            })
         }
         AnyFileReader::Sync(sync_reader) => {
             let mut builder = ParquetRecordBatchReaderBuilder::try_new_with_options(

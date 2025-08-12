@@ -32,3 +32,6 @@ url = { workspace = true }
 
 [lib]
 crate-type = ["rlib"]
+
+[package.metadata.docs.rs]
+all-features = true

@@ -20,3 +20,6 @@ wkt = { workspace = true }
 [dev-dependencies]
 geoarrow-array = { workspace = true, features = ["test-data"] }
 geoarrow-test = { workspace = true }
+
+[package.metadata.docs.rs]
+all-features = true

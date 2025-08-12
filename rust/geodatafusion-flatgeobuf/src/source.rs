@@ -1,61 +1,54 @@
-// Licensed to the Apache Software Foundation (ASF) under one
-// or more contributor license agreements.  See the NOTICE file
-// distributed with this work for additional information
-// regarding copyright ownership.  The ASF licenses this file
-// to you under the Apache License, Version 2.0 (the
-// "License"); you may not use this file except in compliance
-// with the License.  You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
 //! Execution plan for reading FlatGeobuf files
 
 use std::any::Any;
-use std::collections::HashSet;
 use std::sync::Arc;
 
-use arrow_schema::SchemaRef;
+use arrow_array::RecordBatch;
+use arrow_schema::{Field, Schema, SchemaRef};
 use datafusion::common::Statistics;
 use datafusion::datasource::listing::PartitionedFile;
 use datafusion::datasource::physical_plan::{
     FileMeta, FileOpenFuture, FileOpener, FileScanConfig, FileSource,
 };
 use datafusion::error::{DataFusionError, Result};
+use datafusion::physical_expr::{PhysicalExpr, ScalarFunctionExpr};
+use datafusion::physical_plan::ColumnarValue;
+use datafusion::physical_plan::filter_pushdown::{FilterPushdownPropagation, PushedDown};
 use datafusion::physical_plan::metrics::ExecutionPlanMetricsSet;
-use flatgeobuf::HttpFgbReader;
 use futures::StreamExt;
-use geoarrow_flatgeobuf::reader::object_store::ObjectStoreWrapper;
+use geoarrow_array::array::from_arrow_array;
 use geoarrow_flatgeobuf::reader::{FlatGeobufReaderOptions, FlatGeobufRecordBatchStream};
-use geoarrow_schema::{CoordType, GeoArrowType};
-use http_range_client::AsyncBufferedHttpRangeClient;
+use geodatafusion::udf::native::bounding_box::util::total_bounds;
 use object_store::ObjectStore;
+
+use crate::utils::open_flatgeobuf_reader;
 
 #[derive(Debug, Clone, Default)]
 pub struct FlatGeobufSource {
     batch_size: Option<usize>,
-    coord_type: CoordType,
     file_schema: Option<SchemaRef>,
     projection: Option<Vec<usize>>,
     metrics: ExecutionPlanMetricsSet,
     projected_statistics: Option<Statistics>,
+    bbox: Option<[f64; 4]>,
 }
 
 impl FlatGeobufSource {
     pub fn new() -> Self {
         Self {
             batch_size: None,
-            coord_type: CoordType::default(),
             file_schema: None,
             projection: None,
             metrics: ExecutionPlanMetricsSet::new(),
             projected_statistics: None,
+            bbox: None,
+        }
+    }
+
+    fn with_bbox(self, bbox: [f64; 4]) -> Self {
+        Self {
+            bbox: Some(bbox),
+            ..self
         }
     }
 }
@@ -118,6 +111,36 @@ impl FileSource for FlatGeobufSource {
     fn file_type(&self) -> &str {
         "flatgeobuf"
     }
+
+    fn try_pushdown_filters(
+        &self,
+        filters: Vec<Arc<dyn PhysicalExpr>>,
+        _config: &datafusion::common::config::ConfigOptions,
+    ) -> Result<FilterPushdownPropagation<Arc<dyn FileSource>>> {
+        let mut pushdown_flags = vec![];
+        let mut bbox = self.bbox;
+        for filter in filters.iter() {
+            if bbox.is_none() {
+                if let Some(extracted) = extract_bbox(filter)? {
+                    bbox = Some(extracted);
+                    pushdown_flags.push(PushedDown::Yes);
+                    continue;
+                }
+            }
+            pushdown_flags.push(PushedDown::No);
+        }
+
+        if let Some(bbox) = bbox {
+            Ok(
+                FilterPushdownPropagation::with_parent_pushdown_result(pushdown_flags)
+                    .with_updated_node(Arc::new(self.clone().with_bbox(bbox))),
+            )
+        } else {
+            Ok(FilterPushdownPropagation::with_parent_pushdown_result(
+                pushdown_flags,
+            ))
+        }
+    }
 }
 
 pub struct FlatGeobufOpener {
@@ -137,46 +160,65 @@ impl FlatGeobufOpener {
 impl FileOpener for FlatGeobufOpener {
     fn open(&self, file_meta: FileMeta, _file: PartitionedFile) -> Result<FileOpenFuture> {
         let store = Arc::clone(&self.object_store);
-
-        let mut options = FlatGeobufReaderOptions {
-            batch_size: self.config.batch_size.unwrap_or(1024),
-            coord_type: self.config.coord_type,
-            ..Default::default()
-        };
-
-        let file_schema = self.config.file_schema.as_ref().unwrap();
-        if let Some(projection) = &self.config.projection {
-            options.read_geometry = false;
-            let mut columns = HashSet::new();
-            for projection_idx in projection {
-                let field = file_schema.field(*projection_idx);
-                if field
-                    .extension_type_name()
-                    .is_some_and(|name| name.starts_with("geoarrow") || name.starts_with("ogc"))
-                    && GeoArrowType::try_from(field).is_ok()
-                {
-                    options.read_geometry = true;
-                } else {
-                    columns.insert(field.name().clone());
-                }
-            }
-
-            options.columns = Some(columns);
-        }
+        let config = self.config.clone();
 
         Ok(Box::pin(async move {
-            let object_store_wrapper = ObjectStoreWrapper::new(store, file_meta.location().clone());
-            let async_client = AsyncBufferedHttpRangeClient::with(object_store_wrapper, "");
-            let fgb_reader = HttpFgbReader::new(async_client)
-                .await
-                .map_err(|err| DataFusionError::External(Box::new(err)))?;
-            let selection = fgb_reader
-                .select_all()
-                .await
-                .map_err(|err| DataFusionError::External(Box::new(err)))?;
+            let mut file_schema = config
+                .file_schema
+                .clone()
+                .expect("Expected file schema to be set");
+            if let Some(projection) = config.projection.clone() {
+                file_schema = Arc::new(file_schema.project(&projection)?);
+            }
+
+            let options = FlatGeobufReaderOptions::from_combined_schema(file_schema)
+                .map_err(|err| DataFusionError::External(Box::new(err)))?
+                .with_batch_size(config.batch_size.unwrap_or(1024));
+
+            let fgb_reader = open_flatgeobuf_reader(store, file_meta.location().clone()).await?;
+            let selection = if let Some([minx, miny, maxx, maxy]) = config.bbox {
+                fgb_reader
+                    .select_bbox(minx, miny, maxx, maxy)
+                    .await
+                    .map_err(|err| DataFusionError::External(Box::new(err)))?
+            } else {
+                fgb_reader
+                    .select_all()
+                    .await
+                    .map_err(|err| DataFusionError::External(Box::new(err)))?
+            };
             let stream = FlatGeobufRecordBatchStream::try_new(selection, options)
                 .map_err(|err| DataFusionError::External(Box::new(err)))?;
             Ok(stream.boxed())
         }))
     }
+}
+
+fn columnar_value_to_bbox(value: ColumnarValue, field: &Field) -> Result<Option<[f64; 4]>> {
+    let arrays = ColumnarValue::values_to_arrays(&[value])?;
+    if let Ok(geo_arr) = from_arrow_array(&arrays[0], field) {
+        let bounds =
+            total_bounds(&geo_arr).map_err(|err| DataFusionError::External(Box::new(err)))?;
+        Ok(Some([
+            bounds.minx(),
+            bounds.miny(),
+            bounds.maxx(),
+            bounds.maxy(),
+        ]))
+    } else {
+        Ok(None)
+    }
+}
+
+fn extract_bbox(expr: &Arc<dyn PhysicalExpr>) -> Result<Option<[f64; 4]>> {
+    if let Some(func) = expr.as_any().downcast_ref::<ScalarFunctionExpr>() {
+        if func.fun().name().eq_ignore_ascii_case("st_intersects") && func.args().len() == 2 {
+            let bbox_expr = func.args()[1].clone();
+            let empty = RecordBatch::new_empty(Arc::new(Schema::empty()));
+            let value = bbox_expr.evaluate(&empty)?;
+            let return_field = bbox_expr.return_field(empty.schema_ref())?;
+            return columnar_value_to_bbox(value, &return_field);
+        }
+    }
+    Ok(None)
 }

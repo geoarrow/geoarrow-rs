@@ -40,3 +40,6 @@ parquet = { workspace = true, features = [
 ] }
 tokio = { workspace = true, features = ["macros", "fs", "rt-multi-thread"] }
 tokio-test = "0.4"
+
+[package.metadata.docs.rs]
+all-features = true

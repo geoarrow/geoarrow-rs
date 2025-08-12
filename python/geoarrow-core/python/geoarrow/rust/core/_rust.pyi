@@ -27,10 +27,10 @@ from ._constructors import multipoints as multipoints
 from ._constructors import multipolygons as multipolygons
 from ._constructors import points as points
 from ._constructors import polygons as polygons
-from ._data_type import GeoType as GeoType
 from ._data_type import box as box
 from ._data_type import geometry as geometry
 from ._data_type import geometrycollection as geometrycollection
+from ._data_type import GeoType as GeoType
 from ._data_type import large_wkb as large_wkb
 from ._data_type import large_wkt as large_wkt
 from ._data_type import linestring as linestring
@@ -47,6 +47,7 @@ from ._interop import from_wkb as from_wkb
 from ._interop import from_wkt as from_wkt
 from ._interop import to_wkb as to_wkb
 from ._interop import to_wkt as to_wkt
+from ._operations import get_type_id as get_type_id
 from ._scalar import GeoScalar as GeoScalar
 
 # @overload

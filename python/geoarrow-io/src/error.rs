@@ -13,6 +13,7 @@ pub enum PyGeoArrowError {
     ObjectStorePathError(object_store::path::Error),
     SerdeJsonError(serde_json::Error),
     UrlParseError(url::ParseError),
+    FlatGeobufError(flatgeobuf::Error),
 }
 
 impl From<PyGeoArrowError> for PyErr {
@@ -29,6 +30,7 @@ impl From<PyGeoArrowError> for PyErr {
             PyGeoArrowError::ObjectStorePathError(err) => PyException::new_err(err.to_string()),
             PyGeoArrowError::SerdeJsonError(err) => PyException::new_err(err.to_string()),
             PyGeoArrowError::UrlParseError(err) => PyException::new_err(err.to_string()),
+            PyGeoArrowError::FlatGeobufError(err) => PyException::new_err(err.to_string()),
         }
     }
 }
@@ -104,6 +106,12 @@ impl From<PyErr> for PyGeoArrowError {
 impl From<arrow::error::ArrowError> for PyGeoArrowError {
     fn from(value: arrow::error::ArrowError) -> Self {
         PyGeoArrowError::GeoArrowError(value.into())
+    }
+}
+
+impl From<flatgeobuf::Error> for PyGeoArrowError {
+    fn from(value: flatgeobuf::Error) -> Self {
+        PyGeoArrowError::FlatGeobufError(value)
     }
 }
 

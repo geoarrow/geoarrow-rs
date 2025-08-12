@@ -41,7 +41,7 @@ nav:
           - api/io/index.md
           - api/io/arrow_ipc.md
           # - api/io/csv.md
-          # - api/io/flatgeobuf.md
+          - api/io/flatgeobuf.md
           # - api/io/gdal.md
           # - api/io/geojson.md
           - api/io/geoparquet.md

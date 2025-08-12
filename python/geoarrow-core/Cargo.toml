@@ -20,7 +20,11 @@ crate-type = ["cdylib"]
 [features]
 
 [dependencies]
+arrow-array = { workspace = true }
+arrow-schema = { workspace = true }
 pyo3 = { workspace = true }
+pyo3-arrow = { workspace = true }
 pyo3-geoarrow = { workspace = true, features = ["geozero"] }
 geoarrow-array = { workspace = true }
 geoarrow-schema = { workspace = true }
+geo-traits = { workspace = true }

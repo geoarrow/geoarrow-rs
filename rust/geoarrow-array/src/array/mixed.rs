@@ -394,7 +394,7 @@ impl MixedGeometryArray {
 
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
-        self.buffer_lengths().num_bytes()
+        self.buffer_lengths().num_bytes(self.dim)
     }
 
     /// Slice this [`MixedGeometryArray`].
@@ -486,7 +486,7 @@ impl MixedGeometryArray {
 
     // Note: this is copied from ArrayAccessor because MixedGeometryArray doesn't implement
     // GeoArrowArray
-    pub(crate) unsafe fn value_unchecked(&self, index: usize) -> Geometry {
+    pub(crate) unsafe fn value_unchecked(&self, index: usize) -> Geometry<'_> {
         let type_id = self.type_ids[index];
         let offset = self.offsets[index] as usize;
 

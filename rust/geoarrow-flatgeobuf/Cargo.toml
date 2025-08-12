@@ -41,4 +41,8 @@ arrow-array = { workspace = true }
 arrow-cast = { workspace = true, features = ["prettyprint"] }
 object_store = { workspace = true }
 tokio = { workspace = true, features = ["macros", "fs", "rt-multi-thread"] }
+tokio-test = "0.4"
 wkt = { workspace = true }
+
+[package.metadata.docs.rs]
+all-features = true
