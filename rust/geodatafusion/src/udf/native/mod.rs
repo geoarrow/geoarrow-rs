@@ -3,6 +3,7 @@
 pub mod accessors;
 pub mod bounding_box;
 pub mod constructors;
+pub mod editors;
 pub mod io;
 // mod processing;
 

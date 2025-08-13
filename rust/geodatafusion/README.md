@@ -29,52 +29,50 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 
 ### Geometry Accessors
 
-| Name                | Implemented | Description                                                                                                               |
-| ------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------- |
-| GeometryType        |             | Returns the type of a geometry as text.                                                                                   |
-| ST_Boundary         |             | Returns the boundary of a geometry.                                                                                       |
-| ST_BoundingDiagonal |             | Returns the diagonal of a geometry's bounding box.                                                                        |
-| ST_CoordDim         | ✅          | Return the coordinate dimension of a geometry.                                                                            |
-| ST_Dimension        |             | Returns the topological dimension of a geometry.                                                                          |
-| ST_Dump             |             | Returns a set of geometry_dump rows for the components of a geometry.                                                     |
-| ST_DumpPoints       |             | Returns a set of geometry_dump rows for the coordinates in a geometry.                                                    |
-| ST_DumpSegments     |             | Returns a set of geometry_dump rows for the segments in a geometry.                                                       |
-| ST_DumpRings        |             | Returns a set of geometry_dump rows for the exterior and interior rings of a Polygon.                                     |
-| ST_EndPoint         |             | Returns the last point of a LineString or CircularLineString.                                                             |
-| ST_Envelope         | ✅          | Returns a geometry representing the bounding box of a geometry.                                                           |
-| ST_ExteriorRing     |             | Returns a LineString representing the exterior ring of a Polygon.                                                         |
-| ST_GeometryN        |             | Return an element of a geometry collection.                                                                               |
-| ST_GeometryType     |             | Returns the SQL-MM type of a geometry as text.                                                                            |
-| ST_HasArc           |             | Tests if a geometry contains a circular arc                                                                               |
-| ST_InteriorRingN    |             | Returns the Nth interior ring (hole) of a Polygon.                                                                        |
-| ST_IsClosed         |             | Tests if a LineStrings's start and end points are coincident. For a PolyhedralSurface tests if it is closed (volumetric). |
-| ST_IsCollection     |             | Tests if a geometry is a geometry collection type.                                                                        |
-| ST_IsEmpty          |             | Tests if a geometry is empty.                                                                                             |
-| ST_IsPolygonCCW     |             | Tests if Polygons have exterior rings oriented counter-clockwise and interior rings oriented clockwise.                   |
-| ST_IsPolygonCW      |             | Tests if Polygons have exterior rings oriented clockwise and interior rings oriented counter-clockwise.                   |
-| ST_IsRing           |             | Tests if a LineString is closed and simple.                                                                               |
-| ST_IsSimple         |             | Tests if a geometry has no points of self-intersection or self-tangency.                                                  |
-| ST_M                | ✅          | Returns the M coordinate of a Point.                                                                                      |
-| ST_MemSize          |             | Returns the amount of memory space a geometry takes.                                                                      |
-| ST_NDims            | ✅          | Returns the coordinate dimension of a geometry.                                                                           |
-| ST_NPoints          |             | Returns the number of points (vertices) in a geometry.                                                                    |
-| ST_NRings           |             | Returns the number of rings in a polygonal geometry.                                                                      |
-| ST_NumGeometries    |             | Returns the number of elements in a geometry collection.                                                                  |
-| ST_NumInteriorRings |             | Returns the number of interior rings (holes) of a Polygon.                                                                |
-| ST_NumInteriorRing  |             | Returns the number of interior rings (holes) of a Polygon. Aias for ST_NumInteriorRings                                   |
-| ST_NumPatches       |             | Return the number of faces on a Polyhedral Surface. Will return null for non-polyhedral geometries.                       |
-| ST_NumPoints        |             | Returns the number of points in a LineString or CircularString.                                                           |
-| ST_PatchN           |             | Returns the Nth geometry (face) of a PolyhedralSurface.                                                                   |
-| ST_PointN           |             | Returns the Nth point in the first LineString or circular LineString in a geometry.                                       |
-| ST_Points           |             | Returns a MultiPoint containing the coordinates of a geometry.                                                            |
-| ST_StartPoint       | ✅          | Returns the first point of a LineString.                                                                                  |
-| ST_Summary          |             | Returns a text summary of the contents of a geometry.                                                                     |
-| ST_X                | ✅          | Returns the X coordinate of a Point.                                                                                      |
-| ST_Y                | ✅          | Returns the Y coordinate of a Point.                                                                                      |
-| ST_Z                | ✅          | Returns the Z coordinate of a Point.                                                                                      |
-| ST_Zmflag           |             | Returns a code indicating the ZM coordinate dimension of a geometry.                                                      |
-| ST_HasZ             |             | Checks if a geometry has a Z dimension.                                                                                   |
-| ST_HasM             |             | Checks if a geometry has an M (measure) dimension.                                                                        |
+| Name                | Implemented | Description                                                                                             |
+| ------------------- | ----------- | ------------------------------------------------------------------------------------------------------- |
+| GeometryType        |             | Returns the type of a geometry as text.                                                                 |
+| ST_Boundary         |             | Returns the boundary of a geometry.                                                                     |
+| ST_BoundingDiagonal |             | Returns the diagonal of a geometry's bounding box.                                                      |
+| ST_CoordDim         | ✅          | Return the coordinate dimension of a geometry.                                                          |
+| ST_Dimension        |             | Returns the topological dimension of a geometry.                                                        |
+| ST_Dump             |             | Returns a set of geometry_dump rows for the components of a geometry.                                   |
+| ST_DumpPoints       |             | Returns a set of geometry_dump rows for the coordinates in a geometry.                                  |
+| ST_DumpSegments     |             | Returns a set of geometry_dump rows for the segments in a geometry.                                     |
+| ST_DumpRings        |             | Returns a set of geometry_dump rows for the exterior and interior rings of a Polygon.                   |
+| ST_EndPoint         |             | Returns the last point of a LineString or CircularLineString.                                           |
+| ST_Envelope         | ✅          | Returns a geometry representing the bounding box of a geometry.                                         |
+| ST_ExteriorRing     |             | Returns a LineString representing the exterior ring of a Polygon.                                       |
+| ST_GeometryN        |             | Return an element of a geometry collection.                                                             |
+| ST_GeometryType     |             | Returns the SQL-MM type of a geometry as text.                                                          |
+| ST_HasArc           |             | Tests if a geometry contains a circular arc                                                             |
+| ST_InteriorRingN    |             | Returns the Nth interior ring (hole) of a Polygon.                                                      |
+| ST_IsClosed         |             | Tests if a LineStrings's start and end points are coincident.                                           |
+| ST_IsCollection     |             | Tests if a geometry is a geometry collection type.                                                      |
+| ST_IsEmpty          |             | Tests if a geometry is empty.                                                                           |
+| ST_IsPolygonCCW     |             | Tests if Polygons have exterior rings oriented counter-clockwise and interior rings oriented clockwise. |
+| ST_IsPolygonCW      |             | Tests if Polygons have exterior rings oriented clockwise and interior rings oriented counter-clockwise. |
+| ST_IsRing           |             | Tests if a LineString is closed and simple.                                                             |
+| ST_IsSimple         |             | Tests if a geometry has no points of self-intersection or self-tangency.                                |
+| ST_M                | ✅          | Returns the M coordinate of a Point.                                                                    |
+| ST_MemSize          |             | Returns the amount of memory space a geometry takes.                                                    |
+| ST_NDims            | ✅          | Returns the coordinate dimension of a geometry.                                                         |
+| ST_NPoints          |             | Returns the number of points (vertices) in a geometry.                                                  |
+| ST_NRings           |             | Returns the number of rings in a polygonal geometry.                                                    |
+| ST_NumGeometries    |             | Returns the number of elements in a geometry collection.                                                |
+| ST_NumInteriorRings |             | Returns the number of interior rings (holes) of a Polygon.                                              |
+| ST_NumInteriorRing  |             | Returns the number of interior rings (holes) of a Polygon. Aias for ST_NumInteriorRings                 |
+| ST_NumPoints        |             | Returns the number of points in a LineString or CircularString.                                         |
+| ST_PointN           |             | Returns the Nth point in the first LineString or circular LineString in a geometry.                     |
+| ST_Points           |             | Returns a MultiPoint containing the coordinates of a geometry.                                          |
+| ST_StartPoint       | ✅          | Returns the first point of a LineString.                                                                |
+| ST_Summary          |             | Returns a text summary of the contents of a geometry.                                                   |
+| ST_X                | ✅          | Returns the X coordinate of a Point.                                                                    |
+| ST_Y                | ✅          | Returns the Y coordinate of a Point.                                                                    |
+| ST_Z                | ✅          | Returns the Z coordinate of a Point.                                                                    |
+| ST_Zmflag           |             | Returns a code indicating the ZM coordinate dimension of a geometry.                                    |
+| ST_HasZ             |             | Checks if a geometry has a Z dimension.                                                                 |
+| ST_HasM             |             | Checks if a geometry has an M (measure) dimension.                                                      |
 
 ### Geometry Editors
 
@@ -85,11 +83,11 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_CollectionHomogenize          |             | Returns the simplest representation of a geometry collection.                                       |
 | ST_Scroll                        |             | Change start point of a closed LineString.                                                          |
 | ST_FlipCoordinates               |             | Returns a version of a geometry with X and Y axis flipped.                                          |
-| ST_Force2D                       |             | Force the geometries into a "2-dimensional mode".                                                   |
-| ST_Force3D                       |             | Force the geometries into XYZ mode. This is an alias for ST_Force3DZ.                               |
-| ST_Force3DZ                      |             | Force the geometries into XYZ mode.                                                                 |
-| ST_Force3DM                      |             | Force the geometries into XYM mode.                                                                 |
-| ST_Force4D                       |             | Force the geometries into XYZM mode.                                                                |
+| ST_Force2D                       | ✅          | Force the geometries into a "2-dimensional mode".                                                   |
+| ST_Force3D                       | ✅          | Force the geometries into XYZ mode. This is an alias for ST_Force3DZ.                               |
+| ST_Force3DZ                      | ✅          | Force the geometries into XYZ mode.                                                                 |
+| ST_Force3DM                      | ✅          | Force the geometries into XYM mode.                                                                 |
+| ST_Force4D                       | ✅          | Force the geometries into XYZM mode.                                                                |
 | ST_ForceCollection               |             | Convert the geometry into a GEOMETRYCOLLECTION.                                                     |
 | ST_ForcePolygonCCW               |             | Orients all exterior rings counter-clockwise and all interior rings clockwise.                      |
 | ST_ForcePolygonCW                |             | Orients all exterior rings clockwise and all interior rings counter-clockwise.                      |
