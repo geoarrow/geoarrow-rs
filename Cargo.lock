@@ -1870,6 +1870,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "geodatafusion-geoparquet"
+version = "0.1.0-dev"
+dependencies = [
+ "approx",
+ "arrow-schema",
+ "async-trait",
+ "datafusion",
+ "datafusion-datasource",
+ "datafusion-datasource-parquet",
+ "geo-traits",
+ "geoarrow-array",
+ "geoarrow-schema",
+ "geodatafusion",
+ "geoparquet",
+ "object_store",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "geographiclib-rs"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"

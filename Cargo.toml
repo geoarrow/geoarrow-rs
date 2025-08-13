@@ -9,9 +9,10 @@ members = [
     "rust/geoarrow-geos",
     "rust/geoarrow-schema",
     "rust/geoarrow-test",
-    "rust/geodatafusion",
     "rust/geodatafusion-flatgeobuf",
     "rust/geodatafusion-geojson",
+    "rust/geodatafusion-geoparquet",
+    "rust/geodatafusion",
     "rust/geoparquet",
     "rust/pyo3-geoarrow",
 ]
@@ -46,6 +47,7 @@ chrono = { version = "0.4.41", default-features = false }
 # Arrow 56
 datafusion = { git = "https://github.com/apache/datafusion", rev = "fa1f8c192dd531d3f2fca61885eafa3e9002f0dd" }
 datafusion-datasource = { git = "https://github.com/apache/datafusion", rev = "fa1f8c192dd531d3f2fca61885eafa3e9002f0dd" }
+datafusion-datasource-parquet = { git = "https://github.com/apache/datafusion", rev = "fa1f8c192dd531d3f2fca61885eafa3e9002f0dd" }
 flatgeobuf = { version = "5.0", default-features = false }
 futures = "0.3"
 geo = "0.30.0"

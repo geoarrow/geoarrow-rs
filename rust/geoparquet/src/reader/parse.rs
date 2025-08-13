@@ -27,7 +27,7 @@ use crate::metadata::{
 ///
 /// If `parse_to_native` is `false`, WKB geometries will be left alone (not parsed to a GeoArrow
 /// native representation) but tagged with the `geoarrow.wkb` extension metadata.
-pub(crate) fn infer_geoarrow_schema(
+pub fn infer_geoarrow_schema(
     existing_schema: &Schema,
     geo_meta: &GeoParquetMetadata,
     parse_to_native: bool,
