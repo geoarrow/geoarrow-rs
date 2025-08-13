@@ -116,7 +116,7 @@ impl LineStringArray {
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
         let validity_len = self.nulls.as_ref().map(|v| v.buffer().len()).unwrap_or(0);
-        validity_len + self.buffer_lengths().num_bytes()
+        validity_len + self.buffer_lengths().num_bytes(self.data_type.dimension())
     }
 
     /// Slice this [`LineStringArray`].

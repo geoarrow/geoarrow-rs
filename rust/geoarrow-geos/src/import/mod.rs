@@ -1,2 +1,2 @@
-mod array;
+pub mod array;
 pub mod scalar;

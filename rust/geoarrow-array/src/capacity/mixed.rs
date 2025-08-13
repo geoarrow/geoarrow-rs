@@ -1,6 +1,7 @@
 use std::ops::Add;
 
 use geo_traits::*;
+use geoarrow_schema::Dimension;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use wkt::WktNum;
 
@@ -133,13 +134,13 @@ impl MixedCapacity {
     }
 
     /// The number of bytes an array with this capacity would occupy.
-    pub(crate) fn num_bytes(&self) -> usize {
-        let mut count = self.point * 2 * 8;
-        count += self.line_string.num_bytes();
-        count += self.polygon.num_bytes();
-        count += self.multi_point.num_bytes();
-        count += self.multi_line_string.num_bytes();
-        count += self.multi_polygon.num_bytes();
+    pub(crate) fn num_bytes(&self, dim: Dimension) -> usize {
+        let mut count = self.point * dim.size() * 8;
+        count += self.line_string.num_bytes(dim);
+        count += self.polygon.num_bytes(dim);
+        count += self.multi_point.num_bytes(dim);
+        count += self.multi_line_string.num_bytes(dim);
+        count += self.multi_polygon.num_bytes(dim);
         count
     }
 }

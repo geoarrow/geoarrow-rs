@@ -20,3 +20,6 @@ geos = { workspace = true }
 
 [dev-dependencies]
 geos = { workspace = true, features = ["static"] }
+
+[package.metadata.docs.rs]
+all-features = true

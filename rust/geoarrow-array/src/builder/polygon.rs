@@ -86,6 +86,14 @@ impl PolygonBuilder {
         self.geom_offsets.reserve_exact(capacity.geom_capacity);
     }
 
+    /// Shrinks the capacity of self to fit.
+    pub fn shrink_to_fit(&mut self) {
+        self.coords.shrink_to_fit();
+        self.ring_offsets.shrink_to_fit();
+        self.geom_offsets.shrink_to_fit();
+        // self.validity.shrink_to_fit();
+    }
+
     /// Push a raw offset to the underlying geometry offsets buffer.
     ///
     /// # Invariants
@@ -93,6 +101,7 @@ impl PolygonBuilder {
     /// Care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
     #[inline]
+    #[allow(dead_code)]
     pub(crate) fn try_push_geom_offset(&mut self, offsets_length: usize) -> GeoArrowResult<()> {
         self.geom_offsets.try_push_usize(offsets_length)?;
         self.validity.append(true);
@@ -106,6 +115,7 @@ impl PolygonBuilder {
     /// Care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
     #[inline]
+    #[allow(dead_code)]
     pub(crate) fn try_push_ring_offset(&mut self, offsets_length: usize) -> GeoArrowResult<()> {
         self.ring_offsets.try_push_usize(offsets_length)?;
         Ok(())

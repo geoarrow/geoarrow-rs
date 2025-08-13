@@ -14,9 +14,13 @@ use geozero::FeatureProperties;
 use http_range_client::AsyncHttpRangeClient;
 
 use crate::reader::FlatGeobufReaderOptions;
-use crate::reader::common::parse_header;
 use crate::reader::table_builder::{GeoArrowRecordBatchBuilder, GeoArrowRecordBatchBuilderOptions};
 
+/// Inner structure for the FlatGeobuf record batch stream.
+///
+/// This is separate from the top-level `FlatGeobufRecordBatchStream` because we use
+/// `async_stream::try_stream` to create the stream. This means we need a method to convert into
+/// the opaque stream type, see `[Self::into_stream]`.
 struct FlatGeobufRecordBatchStreamInner<T: AsyncHttpRangeClient> {
     selection: AsyncFeatureIter<T>,
     geometry_type: GeoArrowType,
@@ -31,23 +35,21 @@ impl<T: AsyncHttpRangeClient + Unpin + Send + 'static> FlatGeobufRecordBatchStre
         selection: AsyncFeatureIter<T>,
         options: FlatGeobufReaderOptions,
     ) -> GeoArrowResult<Self> {
-        let (geometry_type, properties_schema) = parse_header(
-            selection.header(),
-            options.coord_type,
-            options.prefer_view_types,
-            options.columns.as_ref(),
-        )?;
+        let header = selection.header();
+        options.validate_against_header(&header)?;
+
         let num_rows_remaining = selection.features_count();
         Ok(Self {
             selection,
-            geometry_type,
+            geometry_type: options.geometry_type,
             batch_size: options.batch_size,
-            properties_schema,
+            properties_schema: options.properties_schema,
             num_rows_remaining,
             read_geometry: options.read_geometry,
         })
     }
 
+    /// The output schema including the geometry column.
     fn output_schema(&self) -> SchemaRef {
         let mut fields = self.properties_schema.fields().to_vec();
         if self.read_geometry {
@@ -76,8 +78,10 @@ impl<T: AsyncHttpRangeClient + Unpin + Send + 'static> FlatGeobufRecordBatchStre
         let mut row_count = 0;
         loop {
             if row_count >= self.batch_size {
-                let batch = record_batch_builder.finish()?;
-                return Ok(Some(batch));
+                if let Some(num_rows_remaining) = self.num_rows_remaining {
+                    self.num_rows_remaining = Some(num_rows_remaining.saturating_sub(row_count));
+                }
+                return Ok(Some(record_batch_builder.finish()?));
             }
 
             if let Some(feature) = self
@@ -125,12 +129,21 @@ impl<T: AsyncHttpRangeClient + Unpin + Send + 'static> FlatGeobufRecordBatchStre
     }
 }
 
+/// An async stream of FlatGeobuf record batches.
+///
+/// This implements the `Stream` trait, emitting [`RecordBatch`]es as they are read from the
+/// FlatGeobuf file. This implementation is modeled to be used with the DataFusion
+/// [`RecordBatchStream`] trait.
+///
+/// [`RecordBatchStream`]: https://docs.rs/datafusion/latest/datafusion/execution/trait.RecordBatchStream.html
 pub struct FlatGeobufRecordBatchStream {
     stream: BoxStream<'static, Result<RecordBatch, ArrowError>>,
     schema: SchemaRef,
 }
 
 impl FlatGeobufRecordBatchStream {
+    /// Creates a new FlatGeobuf record batch stream from an async feature iterator from the
+    /// [`flatgeobuf`] crate.
     pub fn try_new(
         selection: AsyncFeatureIter<impl AsyncHttpRangeClient + Unpin + Send + 'static>,
         options: FlatGeobufReaderOptions,
@@ -149,6 +162,7 @@ impl Stream for FlatGeobufRecordBatchStream {
 }
 
 impl FlatGeobufRecordBatchStream {
+    /// Returns the schema of the record batches produced by this stream.
     pub fn schema(&self) -> SchemaRef {
         self.schema.clone()
     }
@@ -165,6 +179,7 @@ mod test {
     use object_store::local::LocalFileSystem;
 
     use super::*;
+    use crate::reader::FlatGeobufHeaderExt;
     use crate::reader::object_store::ObjectStoreWrapper;
 
     fn fixtures_dir() -> Arc<dyn ObjectStore> {
@@ -191,8 +206,16 @@ mod test {
         let fgb_reader = new_from_store(store, "fixtures/flatgeobuf/countries.fgb".into())
             .await
             .unwrap();
+        let fgb_header = fgb_reader.header();
+
+        let properties_schema = fgb_header
+            .properties_schema(true)
+            .expect("file contains column information in metadata.");
+        let geometry_type = fgb_header.geoarrow_type(Default::default()).unwrap();
+
+        let options = FlatGeobufReaderOptions::new(properties_schema, geometry_type);
         let selection = fgb_reader.select_all().await.unwrap();
-        let stream = FlatGeobufRecordBatchStream::try_new(selection, Default::default()).unwrap();
+        let stream = FlatGeobufRecordBatchStream::try_new(selection, options).unwrap();
         let _schema = stream.schema();
         let batches = stream.try_collect::<Vec<_>>().await.unwrap();
 
@@ -206,8 +229,16 @@ mod test {
         let fgb_reader = new_from_store(store, "fixtures/flatgeobuf/countries.fgb".into())
             .await
             .unwrap();
+        let fgb_header = fgb_reader.header();
+
+        let properties_schema = fgb_header
+            .properties_schema(true)
+            .expect("file contains column information in metadata.");
+        let geometry_type = fgb_header.geoarrow_type(Default::default()).unwrap();
+
+        let options = FlatGeobufReaderOptions::new(properties_schema, geometry_type);
         let selection = fgb_reader.select_bbox(0., -90., 180., 90.).await.unwrap();
-        let stream = FlatGeobufRecordBatchStream::try_new(selection, Default::default()).unwrap();
+        let stream = FlatGeobufRecordBatchStream::try_new(selection, options).unwrap();
         let _schema = stream.schema();
         let batches = stream.try_collect::<Vec<_>>().await.unwrap();
 
@@ -224,8 +255,16 @@ mod test {
         )
         .await
         .unwrap();
+        let fgb_header = fgb_reader.header();
+
+        let properties_schema = fgb_header
+            .properties_schema(true)
+            .expect("file contains column information in metadata.");
+        let geometry_type = fgb_header.geoarrow_type(Default::default()).unwrap();
+
+        let options = FlatGeobufReaderOptions::new(properties_schema, geometry_type);
         let selection = fgb_reader.select_all().await.unwrap();
-        let stream = FlatGeobufRecordBatchStream::try_new(selection, Default::default()).unwrap();
+        let stream = FlatGeobufRecordBatchStream::try_new(selection, options).unwrap();
         let _schema = stream.schema();
         let batches = stream.try_collect::<Vec<_>>().await.unwrap();
 

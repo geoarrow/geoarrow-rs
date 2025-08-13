@@ -12,3 +12,6 @@ rust-version = { workspace = true }
 [dependencies]
 geoarrow-array = { workspace = true }
 geoarrow-schema = { workspace = true }
+
+[package.metadata.docs.rs]
+all-features = true

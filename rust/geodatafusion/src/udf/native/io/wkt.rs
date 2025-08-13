@@ -11,10 +11,10 @@ use datafusion::logical_expr::{
 use geoarrow_array::GeoArrowArray;
 use geoarrow_array::array::{LargeWktArray, WktArray, WktViewArray, from_arrow_array};
 use geoarrow_array::cast::{from_wkt, to_wkt};
-use geoarrow_schema::{CoordType, GeoArrowType, GeometryType, WktType};
+use geoarrow_schema::{CoordType, GeoArrowType, GeometryType, Metadata, WktType};
 
 use crate::data_types::any_single_geometry_type_input;
-use crate::error::{GeoDataFusionError, GeoDataFusionResult};
+use crate::error::GeoDataFusionResult;
 
 #[derive(Debug)]
 pub struct AsText {
@@ -64,9 +64,8 @@ impl ScalarUDFImpl for AsText {
 
     fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<Arc<Field>> {
         let input_field = &args.arg_fields[0];
-        let data_type =
-            GeoArrowType::try_from(input_field.as_ref()).map_err(GeoDataFusionError::GeoArrow)?;
-        let wkb_type = WktType::new(data_type.metadata().clone());
+        let metadata = Arc::new(Metadata::try_from(input_field.as_ref())?);
+        let wkb_type = WktType::new(metadata);
         Ok(Field::new(
             input_field.name(),
             DataType::Utf8,
@@ -97,6 +96,7 @@ impl ScalarUDFImpl for AsText {
 pub struct GeomFromText {
     signature: Signature,
     coord_type: CoordType,
+    aliases: Vec<String>,
 }
 
 impl GeomFromText {
@@ -108,13 +108,14 @@ impl GeomFromText {
                 Volatility::Immutable,
             ),
             coord_type,
+            aliases: vec!["st_geometryfromtext".to_string(), "st_wkttosql".to_string()],
         }
     }
 
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> GeoDataFusionResult<ColumnarValue> {
         let array = &ColumnarValue::values_to_arrays(&args.args)?[0];
         let field = &args.arg_fields[0];
-        let to_type = GeoArrowType::try_from(args.return_field.as_ref())?;
+        let to_type = GeoArrowType::from_arrow_field(args.return_field.as_ref())?;
         let geom_arr = match field.data_type() {
             DataType::Utf8 => from_wkt(
                 &WktArray::try_from((array.as_ref(), field.as_ref()))?,
@@ -135,6 +136,12 @@ impl GeomFromText {
     }
 }
 
+impl Default for GeomFromText {
+    fn default() -> Self {
+        Self::new(CoordType::Separated)
+    }
+}
+
 static GEOM_FROM_TEXT_DOC: OnceLock<Documentation> = OnceLock::new();
 
 impl ScalarUDFImpl for GeomFromText {
@@ -144,6 +151,10 @@ impl ScalarUDFImpl for GeomFromText {
 
     fn name(&self) -> &str {
         "st_geomfromtext"
+    }
+
+    fn aliases(&self) -> &[String] {
+        &self.aliases
     }
 
     fn signature(&self) -> &Signature {
@@ -156,10 +167,8 @@ impl ScalarUDFImpl for GeomFromText {
 
     fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<Arc<Field>> {
         let input_field = &args.arg_fields[0];
-        let data_type =
-            GeoArrowType::try_from(input_field.as_ref()).map_err(GeoDataFusionError::GeoArrow)?;
-        let geom_type =
-            GeometryType::new(data_type.metadata().clone()).with_coord_type(self.coord_type);
+        let metadata = Arc::new(Metadata::try_from(input_field.as_ref())?);
+        let geom_type = GeometryType::new(metadata).with_coord_type(self.coord_type);
         Ok(geom_type
             .to_field(input_field.name(), input_field.is_nullable())
             .into())

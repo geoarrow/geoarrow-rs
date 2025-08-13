@@ -83,6 +83,14 @@ impl MultiLineStringBuilder {
         self.geom_offsets.reserve_exact(additional.geom_capacity);
     }
 
+    /// Shrinks the capacity of self to fit.
+    pub fn shrink_to_fit(&mut self) {
+        self.coords.shrink_to_fit();
+        self.ring_offsets.shrink_to_fit();
+        self.geom_offsets.shrink_to_fit();
+        // self.validity.shrink_to_fit();
+    }
+
     /// The canonical method to create a [`MultiLineStringBuilder`] out of its internal
     /// components.
     ///
@@ -124,6 +132,7 @@ impl MultiLineStringBuilder {
     /// Care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
     #[inline]
+    #[allow(dead_code)]
     pub(crate) fn try_push_geom_offset(&mut self, offsets_length: usize) -> GeoArrowResult<()> {
         self.geom_offsets.try_push_usize(offsets_length)?;
         self.validity.append(true);
@@ -137,6 +146,7 @@ impl MultiLineStringBuilder {
     /// Care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
     #[inline]
+    #[allow(dead_code)]
     pub(crate) fn try_push_ring_offset(&mut self, offsets_length: usize) -> GeoArrowResult<()> {
         self.ring_offsets.try_push_usize(offsets_length)?;
         Ok(())
@@ -175,9 +185,7 @@ impl MultiLineStringBuilder {
             // - Add ring's # of coords to self.ring_offsets
             // - Push ring's coords to self.coords
 
-            self.ring_offsets
-                .try_push_usize(line_string.num_coords())
-                .unwrap();
+            self.ring_offsets.try_push_usize(line_string.num_coords())?;
 
             for coord in line_string.coords() {
                 self.coords.push_coord(&coord);
@@ -212,9 +220,7 @@ impl MultiLineStringBuilder {
 
             // Number of coords for each ring
             for line_string in multi_line_string.line_strings() {
-                self.ring_offsets
-                    .try_push_usize(line_string.num_coords())
-                    .unwrap();
+                self.ring_offsets.try_push_usize(line_string.num_coords())?;
 
                 for coord in line_string.coords() {
                     self.coords.push_coord(&coord);

@@ -62,6 +62,12 @@ impl PointBuilder {
         self.coords.reserve_exact(additional);
     }
 
+    /// Shrinks the capacity of self to fit.
+    pub fn shrink_to_fit(&mut self) {
+        self.coords.shrink_to_fit();
+        // self.validity.shrink_to_fit();
+    }
+
     /// Consume the builder and convert to an immutable [`PointArray`]
     pub fn finish(mut self) -> PointArray {
         let validity = self.validity.finish();

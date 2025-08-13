@@ -3,9 +3,6 @@ mod chaikin_smoothing;
 mod concave_hull;
 mod convex_hull;
 mod point_on_surface;
-mod simplify;
-mod simplify_preserve_topology;
-mod simplify_vw;
 
 use datafusion::prelude::SessionContext;
 

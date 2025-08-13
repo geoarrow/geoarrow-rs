@@ -77,6 +77,13 @@ impl LineStringBuilder {
         self.geom_offsets.reserve_exact(additional.geom_capacity());
     }
 
+    /// Shrinks the capacity of self to fit.
+    pub fn shrink_to_fit(&mut self) {
+        self.coords.shrink_to_fit();
+        self.geom_offsets.shrink_to_fit();
+        // self.validity.shrink_to_fit();
+    }
+
     /// Needs to be called when a valid value was extended to this array.
     /// This is a relatively low level function, prefer `try_push` when you can.
     #[inline]
@@ -179,6 +186,7 @@ impl LineStringBuilder {
     /// Care must be taken to ensure that pushing raw coordinates to the array upholds the
     /// necessary invariants of the array.
     #[inline]
+    #[allow(dead_code)]
     pub(crate) fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> GeoArrowResult<()> {
         self.coords.try_push_coord(coord)
     }

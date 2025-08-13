@@ -1,3 +1,5 @@
+//! Integration with the [`object_store`] crate.
+
 use std::sync::Arc;
 
 use async_trait::async_trait;
@@ -6,12 +8,15 @@ use http_range_client::{AsyncHttpRangeClient, Result as HTTPRangeClientResult};
 use object_store::ObjectStore;
 use object_store::path::Path;
 
+/// A wrapper around an [`ObjectStore`] that implements the [`AsyncHttpRangeClient`] trait.
+#[derive(Debug, Clone)]
 pub struct ObjectStoreWrapper {
     store: Arc<dyn ObjectStore>,
     location: Path,
 }
 
 impl ObjectStoreWrapper {
+    /// Creates a new [`ObjectStoreWrapper`] with the given store and location.
     pub fn new(store: Arc<dyn ObjectStore>, location: Path) -> Self {
         Self { store, location }
     }

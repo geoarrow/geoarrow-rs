@@ -263,6 +263,32 @@ impl<'a> GeometryBuilder {
         });
     }
 
+    /// Shrinks the capacity of self to fit.
+    pub fn shrink_to_fit(&mut self) {
+        self.points.iter_mut().for_each(PointBuilder::shrink_to_fit);
+        self.line_strings
+            .iter_mut()
+            .for_each(LineStringBuilder::shrink_to_fit);
+        self.polygons
+            .iter_mut()
+            .for_each(PolygonBuilder::shrink_to_fit);
+        self.mpoints
+            .iter_mut()
+            .for_each(MultiPointBuilder::shrink_to_fit);
+        self.mline_strings
+            .iter_mut()
+            .for_each(MultiLineStringBuilder::shrink_to_fit);
+        self.mpolygons
+            .iter_mut()
+            .for_each(MultiPolygonBuilder::shrink_to_fit);
+        self.gcs
+            .iter_mut()
+            .for_each(GeometryCollectionBuilder::shrink_to_fit);
+
+        self.offsets.shrink_to_fit();
+        self.types.shrink_to_fit();
+    }
+
     /// Consume the builder and convert to an immutable [`GeometryArray`]
     pub fn finish(mut self) -> GeometryArray {
         // If there are still deferred nulls to be written, then there aren't any valid geometries
@@ -677,9 +703,6 @@ impl<'a> GeometryBuilder {
     /// We handle that by pushing nulls to the first non-empty child we find. If no underlying
     /// arrays are non-empty, we add to an internal counter instead. Once the first non-empty
     /// geometry is pushed, then we flush all the "deferred nulls" to that child.
-    ///
-    // TODO: test building an array of all nulls. Make sure we flush deferred nulls if we've never
-    // added any valid geometries.
     #[inline]
     pub fn push_null(&mut self) {
         // Iterate through each dimension, then iterate through each child type. If a child exists,
