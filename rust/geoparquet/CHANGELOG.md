@@ -2,6 +2,10 @@
 
 **This is the changelog for the core Rust library**. There's a [separate changelog](./python/CHANGELOG.md) for the Python bindings, and there will be another for the JS bindings.
 
+## Unreleased
+
+- Make `infer_geoarrow_schema` public. #1251
+
 ## 0.5.0 - 2025-08-07
 
 No changes.
