@@ -39,7 +39,7 @@ pub fn _length_impl<'a>(array: &'a impl GeoArrowArrayAccessor<'a>) -> GeoArrowRe
 #[cfg(test)]
 mod test {
 
-    use geo::{Euclidean, Length};
+    use geo::{Euclidean, Length, LineString, MultiLineString, Point};
     use geoarrow_array::{
         array::PointArray,
         builder::{LineStringBuilder, MultiLineStringBuilder, PointBuilder, WkbBuilder},
@@ -54,9 +54,9 @@ mod test {
         let point_type = PointType::new(Dimension::XY, Default::default());
         let mut builder = PointBuilder::new(point_type);
 
-        builder.push_point(Some(&geo_types::point!(x: 0., y: 1.)));
-        builder.push_point(Some(&geo_types::point!(x: 2., y: 3.)));
-        builder.push_point(Some(&geo_types::point!(x: 4., y: 5.)));
+        builder.push_point(Some(&Point::new(0., 1.)));
+        builder.push_point(Some(&Point::new(2., 3.)));
+        builder.push_point(Some(&Point::new(4., 5.)));
 
         let point_array: PointArray = builder.finish();
         let result = length(&point_array).unwrap();
@@ -73,16 +73,11 @@ mod test {
             geoarrow_schema::LineStringType::new(Dimension::XY, Default::default())
                 .with_coord_type(CoordType::Separated),
         );
-        let linestring_1 = geo_types::LineString(vec![
-            geo_types::Coord { x: 0.0, y: 0.0 },
-            geo_types::Coord { x: 3.0, y: 9.0 },
-        ]);
-        linestring_builder.push_geometry(Some(&linestring_1));
-        let linestring_2 = geo_types::LineString(vec![
-            geo_types::Coord { x: 0.0, y: 0.0 },
-            geo_types::Coord { x: 4.0, y: 5.0 },
-        ]);
-        linestring_builder.push_geometry(Some(&linestring_2));
+        let linestring_1 = LineString::from(vec![(0.0, 0.0), (3.0, 9.0)]);
+        let linestring_2 = LineString::from(vec![(0.0, 0.0), (4.0, 5.0)]);
+
+        let _ = linestring_builder.push_geometry(Some(&linestring_1));
+        let _ = linestring_builder.push_geometry(Some(&linestring_2));
         let linestring_array = linestring_builder.finish();
 
         let result = length(&linestring_array).unwrap();
@@ -98,21 +93,12 @@ mod test {
             geoarrow_schema::MultiLineStringType::new(Dimension::XY, Default::default())
                 .with_coord_type(CoordType::Separated),
         );
-        let linestring_1 = geo_types::LineString(vec![
-            geo_types::Coord { x: 0.0, y: 9.0 },
-            geo_types::Coord { x: 3.0, y: 4.0 },
-        ]);
-        let linestring_2 = geo_types::LineString(vec![
-            geo_types::Coord { x: 0.0, y: 0.0 },
-            geo_types::Coord { x: 4.0, y: 3.0 },
-        ]);
+        let linestring_1 = LineString::from(vec![(0.0, 9.0), (3.0, 4.0)]);
+        let linestring_2 = LineString::from(vec![(0.0, 0.0), (4.0, 3.0)]);
         let multi_linestring_1 =
-            geo_types::MultiLineString(vec![linestring_1.clone(), linestring_2.clone()]);
-        let linestring_3 = geo_types::LineString(vec![
-            geo_types::Coord { x: 1.0, y: 5.0 },
-            geo_types::Coord { x: 5.0, y: 6.0 },
-        ]);
-        let multi_linestring_2 = geo_types::MultiLineString(vec![linestring_3.clone()]);
+            MultiLineString::new(vec![linestring_1.clone(), linestring_2.clone()]);
+        let linestring_3 = LineString::from(vec![(1.0, 5.0), (5.0, 6.0)]);
+        let multi_linestring_2 = MultiLineString::new(vec![linestring_3.clone()]);
 
         let _ = multi_linestring_builder.push_geometry(Some(&multi_linestring_1));
         let _ = multi_linestring_builder.push_geometry(Some(&multi_linestring_2));
@@ -132,14 +118,8 @@ mod test {
     fn test_wkb_linestring() {
         let mut wkb_builder: WkbBuilder<i32> =
             geoarrow_array::builder::WkbBuilder::new(WkbType::new(Default::default()));
-        let linestring_1 = geo_types::LineString(vec![
-            geo_types::Coord { x: 0.0, y: 0.0 },
-            geo_types::Coord { x: 3.0, y: 4.0 },
-        ]);
-        let linestring_2 = geo_types::LineString(vec![
-            geo_types::Coord { x: 0.0, y: 0.0 },
-            geo_types::Coord { x: 4.0, y: 5.0 },
-        ]);
+        let linestring_1 = LineString::from(vec![(0.0, 0.0), (3.0, 4.0)]);
+        let linestring_2 = LineString::from(vec![(0.0, 0.0), (4.0, 5.0)]);
         let _ = wkb_builder.push_geometry(Some(&linestring_1));
         let _ = wkb_builder.push_geometry(Some(&linestring_2));
         let wkb_array = wkb_builder.finish();
@@ -154,8 +134,8 @@ mod test {
     fn test_wkb_point() {
         let mut wkb_builder: WkbBuilder<i32> =
             geoarrow_array::builder::WkbBuilder::new(WkbType::new(Default::default()));
-        let point_1 = geo_types::Point::new(1.0, 2.0);
-        let point_2 = geo_types::Point::new(3.0, 4.0);
+        let point_1 = Point::new(1.0, 2.0);
+        let point_2 = Point::new(3.0, 4.0);
         let _ = wkb_builder.push_geometry(Some(&point_1));
         let _ = wkb_builder.push_geometry(Some(&point_2));
         let wkb_array = wkb_builder.finish();
