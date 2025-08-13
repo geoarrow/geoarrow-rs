@@ -243,8 +243,8 @@ Spatial extensions for [Apache DataFusion](https://datafusion.apache.org/), an e
 | ST_DistanceSpheroid     |             | Returns the minimum distance between two lon/lat geometries using a spheroidal earth model.                                    |
 | ST_FrechetDistance      |             | Returns the Fréchet distance between two geometries.                                                                           |
 | ST_HausdorffDistance    |             | Returns the Hausdorff distance between two geometries.                                                                         |
-| ST_Length               |             | Returns the 2D length of a linear geometry.                                                                                    |
-| ST_Length2D             |             | Returns the 2D length of a linear geometry. Alias for ST_Length                                                                |
+| ST_Length               | ✅          | Returns the 2D length of a linear geometry.                                                                                    |
+| ST_Length2D             | ✅          | Returns the 2D length of a linear geometry. Alias for ST_Length                                                                |
 | ST_3DLength             |             | Returns the 3D length of a linear geometry.                                                                                    |
 | ST_LengthSpheroid       |             | Returns the 2D or 3D length/perimeter of a lon/lat geometry on a spheroid.                                                     |
 | ST_LongestLine          |             | Returns the 2D longest line between two geometries.                                                                            |
