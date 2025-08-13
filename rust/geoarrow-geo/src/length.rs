@@ -1,10 +1,9 @@
 use arrow_array::Float64Array;
-use geo::{Euclidean, Geometry, Length};
+use geo::{Euclidean, Length};
+use geo_traits::GeometryTrait;
 use geo_traits::to_geo::{ToGeoLine, ToGeoLineString, ToGeoMultiLineString};
 use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, downcast_geoarrow_array};
 use geoarrow_schema::error::GeoArrowResult;
-
-use crate::util::to_geo::geometry_to_geo;
 
 pub fn length(array: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
     downcast_geoarrow_array!(array, _length_impl)
@@ -14,20 +13,17 @@ pub fn _length_impl<'a>(array: &'a impl GeoArrowArrayAccessor<'a>) -> GeoArrowRe
     let mut result = Float64Array::builder(array.len());
     for geom in array.iter() {
         if let Some(geom) = geom {
-            let geom = geometry_to_geo(&geom?)?;
-            match geom {
-                Geometry::Line(l) => {
-                    result.append_value(Euclidean.length(&l.to_line()));
+            match geom?.as_type() {
+                geo_traits::GeometryType::Line(l) => {
+                    result.append_value(Euclidean.length(&l.to_line()))
                 }
-                Geometry::LineString(ls) => {
-                    result.append_value(Euclidean.length(&ls.to_line_string()));
+                geo_traits::GeometryType::LineString(ls) => {
+                    result.append_value(Euclidean.length(&ls.to_line_string()))
                 }
-                Geometry::MultiLineString(mls) => {
-                    result.append_value(Euclidean.length(&mls.to_multi_line_string()));
+                geo_traits::GeometryType::MultiLineString(mls) => {
+                    result.append_value(Euclidean.length(&mls.to_multi_line_string()))
                 }
-                _ => {
-                    result.append_value(0.0);
-                }
+                _ => result.append_value(0.0),
             }
         } else {
             result.append_null();
