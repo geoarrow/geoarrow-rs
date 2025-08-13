@@ -5,7 +5,7 @@ use geo_traits::to_geo::{ToGeoLine, ToGeoLineString, ToGeoMultiLineString};
 use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, downcast_geoarrow_array};
 use geoarrow_schema::error::GeoArrowResult;
 
-/// Compute the length of linear geometries in a GeoArrowArray.
+/// Compute the euclidean length of linear geometries in a GeoArrowArray.
 ///
 /// Only LineString and MultiLineString geometries will have non-zero lengths.
 /// Other geometry types (including polygons) will return a length of 0.0.
