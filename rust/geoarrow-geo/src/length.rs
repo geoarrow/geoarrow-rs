@@ -40,12 +40,11 @@ pub fn _length_impl<'a>(array: &'a impl GeoArrowArrayAccessor<'a>) -> GeoArrowRe
 mod test {
 
     use geo::{Euclidean, Length, LineString, MultiLineString, Point};
-    use geoarrow_array::{
-        array::PointArray,
-        builder::{LineStringBuilder, MultiLineStringBuilder, PointBuilder, WkbBuilder},
+    use geoarrow_array::array::PointArray;
+    use geoarrow_array::builder::{
+        LineStringBuilder, MultiLineStringBuilder, PointBuilder, WkbBuilder,
     };
-    use geoarrow_schema::{CoordType, WkbType};
-    use geoarrow_schema::{Dimension, PointType};
+    use geoarrow_schema::{CoordType, Dimension, PointType, WkbType};
 
     use super::*;
 
