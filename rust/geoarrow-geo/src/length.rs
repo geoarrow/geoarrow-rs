@@ -9,7 +9,7 @@ use geoarrow_schema::error::GeoArrowResult;
 ///
 /// Only LineString and MultiLineString geometries will have non-zero lengths.
 /// Other geometry types (including polygons) will return a length of 0.0.
-pub fn length(array: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
+pub fn euclidean_length(array: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
     downcast_geoarrow_array!(array, _length_impl)
 }
 
@@ -58,7 +58,7 @@ mod test {
         builder.push_point(Some(&Point::new(4., 5.)));
 
         let point_array: PointArray = builder.finish();
-        let result = length(&point_array).unwrap();
+        let result = euclidean_length(&point_array).unwrap();
 
         assert_eq!(result.len(), 3);
         assert_eq!(result.value(0), 0.0);
@@ -79,7 +79,7 @@ mod test {
         let _ = linestring_builder.push_geometry(Some(&linestring_2));
         let linestring_array = linestring_builder.finish();
 
-        let result = length(&linestring_array).unwrap();
+        let result = euclidean_length(&linestring_array).unwrap();
 
         assert_eq!(result.len(), 2);
         assert_eq!(result.value(0), Euclidean.length(&linestring_1));
@@ -103,7 +103,7 @@ mod test {
         let _ = multi_linestring_builder.push_geometry(Some(&multi_linestring_2));
 
         let multi_linestring_array = multi_linestring_builder.finish();
-        let result = length(&multi_linestring_array).unwrap();
+        let result = euclidean_length(&multi_linestring_array).unwrap();
 
         assert_eq!(result.len(), 2);
         assert_eq!(
@@ -123,7 +123,7 @@ mod test {
         let _ = wkb_builder.push_geometry(Some(&linestring_2));
         let wkb_array = wkb_builder.finish();
 
-        let result = length(&wkb_array).unwrap();
+        let result = euclidean_length(&wkb_array).unwrap();
         assert_eq!(2, result.len());
         assert_eq!(result.value(0), Euclidean.length(&linestring_1));
         assert_eq!(result.value(1), Euclidean.length(&linestring_2));
@@ -139,7 +139,7 @@ mod test {
         let _ = wkb_builder.push_geometry(Some(&point_2));
         let wkb_array = wkb_builder.finish();
 
-        let result = length(&wkb_array).unwrap();
+        let result = euclidean_length(&wkb_array).unwrap();
         assert_eq!(2, result.len());
         assert_eq!(result.value(0), 0.0);
         assert_eq!(result.value(1), 0.0);

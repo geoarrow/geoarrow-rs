@@ -28,7 +28,7 @@ pub use convex_hull::convex_hull;
 pub use distance::euclidean_distance;
 pub use interior_point::interior_point;
 pub use intersects::intersects;
-pub use length::length;
+pub use length::euclidean_length;
 pub use minimum_rotated_rect::minimum_rotated_rect;
 pub use relate::relate_boolean;
 pub use simplify::simplify;
