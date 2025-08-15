@@ -1726,6 +1726,7 @@ dependencies = [
  "arrow-array",
  "arrow-csv",
  "arrow-schema",
+ "geo-traits",
  "geoarrow-array",
  "geoarrow-schema",
 ]
