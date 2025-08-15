@@ -1,3 +1,10 @@
+//! Read from CSV files with a geometry column encoded as Well-Known Text.
+//!
+//! The CSV reader implements [`RecordBatchReader`], so you can iterate over the batches of the CSV
+//! without materializing the entire file in memory.
+//!
+//! [`RecordBatchReader`]: arrow_array::RecordBatchReader
+
 use std::io::Read;
 use std::sync::Arc;
 
@@ -7,14 +14,11 @@ use geoarrow_array::GeoArrowArray;
 use geoarrow_array::array::{LargeWktArray, WktArray, WktViewArray};
 use geoarrow_array::cast::from_wkt;
 use geoarrow_schema::error::GeoArrowResult;
-use geoarrow_schema::{CoordType, GeoArrowType, WktType};
+use geoarrow_schema::{GeoArrowType, WktType};
 
 /// Options for the CSV reader.
 #[derive(Debug, Clone)]
 pub struct CsvReaderOptions {
-    /// The GeoArrow coordinate type to use in the geometry arrays.
-    pub coord_type: CoordType,
-
     /// The name of the geometry column in the CSV
     ///
     /// Defaults to `"geometry"`
@@ -154,5 +158,66 @@ fn find_geometry_column(
             )
             .into(),
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use std::io::Cursor;
+
+    use arrow_csv::ReaderBuilder;
+    use arrow_csv::reader::Format;
+    use geo_traits::{CoordTrait, PointTrait};
+    use geoarrow_array::GeoArrowArrayAccessor;
+    use geoarrow_array::array::PointArray;
+    use geoarrow_schema::{Dimension, PointType};
+
+    use super::*;
+
+    #[test]
+    fn read_csv() {
+        let s = r#"
+address,type,datetime,report location,incident number
+904 7th Av,Car Fire,05/22/2019 12:55:00 PM,POINT (-122.329051 47.6069),F190051945
+9610 53rd Av S,Aid Response,05/22/2019 12:55:00 PM,POINT (-122.266529 47.515984),F190051946"#;
+
+        let format = Format::default().with_header(true);
+        let (schema, _num_read_records) = format.infer_schema(Cursor::new(s), None).unwrap();
+        let reader = ReaderBuilder::new(schema.into())
+            .with_format(format)
+            .build(Cursor::new(s))
+            .unwrap();
+
+        let point_type = PointType::new(Dimension::XY, Default::default());
+        let to_type = GeoArrowType::Point(point_type.clone());
+        let geo_options = CsvReaderOptions {
+            geometry_column_name: Some("report location".to_string()),
+            to_type: to_type.clone(),
+        };
+        let geo_reader = CsvReader::try_new(reader, geo_options).unwrap();
+
+        let batches: Vec<_> = geo_reader.collect::<Result<Vec<_>, _>>().unwrap();
+        let batch = batches.into_iter().next().unwrap();
+        let schema = batch.schema();
+        assert_eq!(schema.fields().len(), 5);
+
+        let geom_field = schema.field(3);
+        let actual = GeoArrowType::from_extension_field(geom_field).unwrap();
+        assert_eq!(actual, to_type);
+
+        let geom_array = batch.column(3);
+        let point_arr = PointArray::try_from((geom_array.as_ref(), point_type)).unwrap();
+        assert_eq!(point_arr.len(), 2);
+        let point1 = point_arr.value(0).unwrap();
+        assert_eq!(point1.coord().unwrap().x(), -122.329051);
+        assert_eq!(point1.coord().unwrap().y(), 47.6069);
+
+        let point2 = point_arr.value(1).unwrap();
+        assert_eq!(point2.coord().unwrap().x(), -122.266529);
+        assert_eq!(point2.coord().unwrap().y(), 47.515984);
+
+        // arrow_csv::reader::infer_schema_from_files(files, delimiter, max_read_records, has_header)
+        //         infer_schema_from_files(files, delimiter, max_read_records, has_header)
     }
 }

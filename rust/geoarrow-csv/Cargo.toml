@@ -16,3 +16,6 @@ arrow-csv = { workspace = true }
 arrow-schema = { workspace = true }
 geoarrow-array = { workspace = true }
 geoarrow-schema = { workspace = true }
+
+[dev-dependencies]
+geo-traits = { workspace = true }
