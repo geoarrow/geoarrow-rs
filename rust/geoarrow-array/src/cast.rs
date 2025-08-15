@@ -458,36 +458,43 @@ pub fn from_wkb<'a, A: GenericWkbArrayType<'a>>(
     arr: &'a A,
     to_type: GeoArrowType,
 ) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
-    let geoms = arr
-        .iter()
-        .map(|g| g.transpose())
-        .collect::<GeoArrowResult<Vec<_>>>()?;
+    // Make this a callback so that we don't actually generate this vec when converting from WKB to
+    // WKT or WKB
+    let geoms_fn = || {
+        arr.iter()
+            .map(|g| g.transpose())
+            .collect::<GeoArrowResult<Vec<_>>>()
+    };
 
     use GeoArrowType::*;
     let result: Arc<dyn GeoArrowArray> = match to_type {
-        Point(typ) => Arc::new(PointBuilder::from_nullable_geometries(&geoms, typ)?.finish()),
+        Point(typ) => Arc::new(PointBuilder::from_nullable_geometries(&geoms_fn()?, typ)?.finish()),
         LineString(typ) => {
-            Arc::new(LineStringBuilder::from_nullable_geometries(&geoms, typ)?.finish())
+            Arc::new(LineStringBuilder::from_nullable_geometries(&geoms_fn()?, typ)?.finish())
         }
-        Polygon(typ) => Arc::new(PolygonBuilder::from_nullable_geometries(&geoms, typ)?.finish()),
+        Polygon(typ) => {
+            Arc::new(PolygonBuilder::from_nullable_geometries(&geoms_fn()?, typ)?.finish())
+        }
         MultiPoint(typ) => {
-            Arc::new(MultiPointBuilder::from_nullable_geometries(&geoms, typ)?.finish())
+            Arc::new(MultiPointBuilder::from_nullable_geometries(&geoms_fn()?, typ)?.finish())
         }
         MultiLineString(typ) => {
-            Arc::new(MultiLineStringBuilder::from_nullable_geometries(&geoms, typ)?.finish())
+            Arc::new(MultiLineStringBuilder::from_nullable_geometries(&geoms_fn()?, typ)?.finish())
         }
         MultiPolygon(typ) => {
-            Arc::new(MultiPolygonBuilder::from_nullable_geometries(&geoms, typ)?.finish())
+            Arc::new(MultiPolygonBuilder::from_nullable_geometries(&geoms_fn()?, typ)?.finish())
         }
-        GeometryCollection(typ) => {
-            Arc::new(GeometryCollectionBuilder::from_nullable_geometries(&geoms, typ)?.finish())
-        }
+        GeometryCollection(typ) => Arc::new(
+            GeometryCollectionBuilder::from_nullable_geometries(&geoms_fn()?, typ)?.finish(),
+        ),
         Rect(_) => {
             return Err(GeoArrowError::IncorrectGeometryType(format!(
                 "Cannot decode WKB geometries to Rect geometry type in from_wkb {to_type:?}",
             )));
         }
-        Geometry(typ) => Arc::new(GeometryBuilder::from_nullable_geometries(&geoms, typ)?.finish()),
+        Geometry(typ) => {
+            Arc::new(GeometryBuilder::from_nullable_geometries(&geoms_fn()?, typ)?.finish())
+        }
         Wkb(typ) => {
             let mut wkb_arr = to_wkb::<i32>(arr)?;
             wkb_arr.data_type = typ;
@@ -667,36 +674,43 @@ pub fn from_wkt<A: GenericWktArrayType>(
     arr: &A,
     to_type: GeoArrowType,
 ) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
-    let geoms = arr
-        .iter()
-        .map(|g| g.transpose())
-        .collect::<GeoArrowResult<Vec<_>>>()?;
+    // Make this a callback so that we don't actually generate this vec when converting from WKT to
+    // WKT or WKB
+    let geoms_fn = || {
+        arr.iter()
+            .map(|g| g.transpose())
+            .collect::<GeoArrowResult<Vec<_>>>()
+    };
 
     use GeoArrowType::*;
     let result: Arc<dyn GeoArrowArray> = match to_type {
-        Point(typ) => Arc::new(PointBuilder::from_nullable_geometries(&geoms, typ)?.finish()),
+        Point(typ) => Arc::new(PointBuilder::from_nullable_geometries(&geoms_fn()?, typ)?.finish()),
         LineString(typ) => {
-            Arc::new(LineStringBuilder::from_nullable_geometries(&geoms, typ)?.finish())
+            Arc::new(LineStringBuilder::from_nullable_geometries(&geoms_fn()?, typ)?.finish())
         }
-        Polygon(typ) => Arc::new(PolygonBuilder::from_nullable_geometries(&geoms, typ)?.finish()),
+        Polygon(typ) => {
+            Arc::new(PolygonBuilder::from_nullable_geometries(&geoms_fn()?, typ)?.finish())
+        }
         MultiPoint(typ) => {
-            Arc::new(MultiPointBuilder::from_nullable_geometries(&geoms, typ)?.finish())
+            Arc::new(MultiPointBuilder::from_nullable_geometries(&geoms_fn()?, typ)?.finish())
         }
         MultiLineString(typ) => {
-            Arc::new(MultiLineStringBuilder::from_nullable_geometries(&geoms, typ)?.finish())
+            Arc::new(MultiLineStringBuilder::from_nullable_geometries(&geoms_fn()?, typ)?.finish())
         }
         MultiPolygon(typ) => {
-            Arc::new(MultiPolygonBuilder::from_nullable_geometries(&geoms, typ)?.finish())
+            Arc::new(MultiPolygonBuilder::from_nullable_geometries(&geoms_fn()?, typ)?.finish())
         }
-        GeometryCollection(typ) => {
-            Arc::new(GeometryCollectionBuilder::from_nullable_geometries(&geoms, typ)?.finish())
-        }
+        GeometryCollection(typ) => Arc::new(
+            GeometryCollectionBuilder::from_nullable_geometries(&geoms_fn()?, typ)?.finish(),
+        ),
         Rect(_) => {
             return Err(GeoArrowError::IncorrectGeometryType(format!(
                 "Cannot decode WKT geometries to Rect geometry type in from_wkt {to_type:?}",
             )));
         }
-        Geometry(typ) => Arc::new(GeometryBuilder::from_nullable_geometries(&geoms, typ)?.finish()),
+        Geometry(typ) => {
+            Arc::new(GeometryBuilder::from_nullable_geometries(&geoms_fn()?, typ)?.finish())
+        }
         Wkb(typ) => {
             let mut wkb_arr = to_wkb::<i32>(arr)?;
             wkb_arr.data_type = typ;
