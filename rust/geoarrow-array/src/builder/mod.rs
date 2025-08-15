@@ -1,6 +1,7 @@
 //! Push-based APIs for constructing arrays.
 
 mod coord;
+pub(crate) mod geo_trait_wrappers;
 mod geometry;
 mod geometrycollection;
 mod linestring;
@@ -16,6 +17,7 @@ mod wkb;
 
 pub use coord::{CoordBufferBuilder, InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder};
 pub use geometry::GeometryBuilder;
+pub(crate) use geometry::TypeId;
 pub use geometrycollection::GeometryCollectionBuilder;
 pub use linestring::LineStringBuilder;
 pub(crate) use mixed::MixedGeometryBuilder;

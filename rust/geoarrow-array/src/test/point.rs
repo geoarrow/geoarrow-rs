@@ -1,6 +1,4 @@
-use geo::wkt;
 use geo_types::{Point, point};
-
 use geoarrow_schema::{CoordType, Dimension, PointType};
 use geoarrow_test::raw;
 
@@ -25,20 +23,14 @@ pub(crate) fn p2() -> Point {
     )
 }
 
-pub(crate) fn p3() -> Point {
-    wkt! {
-        POINT (30.0 10.0)
-    }
-}
-
 pub(crate) fn point_array(coord_type: CoordType) -> PointArray {
     let geoms = [Some(p0()), Some(p1()), None, Some(p2())];
-    let typ = PointType::new(coord_type, Dimension::XY, Default::default());
+    let typ = PointType::new(Dimension::XY, Default::default()).with_coord_type(coord_type);
     PointBuilder::from_nullable_points(geoms.iter().map(|x| x.as_ref()), typ).finish()
 }
 
 pub fn array(coord_type: CoordType, dim: Dimension) -> PointArray {
-    let typ = PointType::new(coord_type, dim, Default::default());
+    let typ = PointType::new(dim, Default::default()).with_coord_type(coord_type);
     let geoms = match dim {
         Dimension::XY => raw::point::xy::geoms(),
         Dimension::XYZ => raw::point::xyz::geoms(),

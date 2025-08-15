@@ -1,8 +1,11 @@
 use std::ops::{Add, AddAssign};
 
-use crate::capacity::LineStringCapacity;
-use crate::error::{GeoArrowError, Result};
 use geo_traits::{GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
+use geoarrow_schema::Dimension;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
+
+use crate::capacity::LineStringCapacity;
+use crate::util::GeometryTypeName;
 
 /// A counter for the buffer sizes of a
 /// [`MultiLineStringArray`][crate::array::MultiLineStringArray].
@@ -80,12 +83,17 @@ impl MultiLineStringCapacity {
     ///
     /// The type of the geometry must be either LineString or MultiLineString
     #[inline]
-    pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait>) -> Result<()> {
+    pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait>) -> GeoArrowResult<()> {
         if let Some(geom) = value {
             match geom.as_type() {
                 GeometryType::LineString(g) => self.add_line_string(Some(g)),
                 GeometryType::MultiLineString(g) => self.add_multi_line_string(Some(g)),
-                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+                gt => {
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
+                        "Expected LineString or MultiLineString, got {}",
+                        gt.name()
+                    )));
+                }
             }
         } else {
             self.geom_capacity += 1;
@@ -107,7 +115,7 @@ impl MultiLineStringCapacity {
     /// Construct a new counter pre-filled with the given geometries
     pub fn from_geometries<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let mut counter = Self::new_empty();
         for g in geoms.into_iter() {
             counter.add_geometry(g)?;
@@ -116,10 +124,10 @@ impl MultiLineStringCapacity {
     }
 
     /// The number of bytes an array with this capacity would occupy.
-    pub fn num_bytes(&self) -> usize {
+    pub fn num_bytes(&self, dim: Dimension) -> usize {
         let offsets_byte_width = 4;
         let num_offsets = self.geom_capacity + self.ring_capacity;
-        (offsets_byte_width * num_offsets) + (self.coord_capacity * 2 * 8)
+        (offsets_byte_width * num_offsets) + (self.coord_capacity * dim.size() * 8)
     }
 }
 

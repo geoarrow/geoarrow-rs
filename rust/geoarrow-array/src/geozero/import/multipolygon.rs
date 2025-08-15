@@ -86,7 +86,7 @@ impl GeomProcessor for MultiPolygonBuilder {
         // # Safety:
         // This upholds invariants because we separately update the ring offsets in
         // linestring_begin
-        unsafe { self.try_push_geom_offset(size).unwrap() }
+        self.try_push_geom_offset(size).unwrap();
         Ok(())
     }
 
@@ -105,7 +105,7 @@ impl GeomProcessor for MultiPolygonBuilder {
             // # Safety:
             // This upholds invariants because we separately update the ring offsets in
             // linestring_begin
-            unsafe { self.try_push_geom_offset(1).unwrap() }
+            self.try_push_geom_offset(1).unwrap();
         }
 
         // reserve `size` rings
@@ -115,7 +115,7 @@ impl GeomProcessor for MultiPolygonBuilder {
         // # Safety:
         // This upholds invariants because we separately update the geometry offsets in
         // polygon_begin
-        unsafe { self.try_push_polygon_offset(size).unwrap() }
+        self.try_push_polygon_offset(size).unwrap();
         Ok(())
     }
 
@@ -134,7 +134,7 @@ impl GeomProcessor for MultiPolygonBuilder {
         // # Safety:
         // This upholds invariants because we separately update the ring offsets in
         // linestring_begin
-        unsafe { self.try_push_ring_offset(size).unwrap() }
+        self.try_push_ring_offset(size).unwrap();
         Ok(())
     }
 }
@@ -142,7 +142,7 @@ impl GeomProcessor for MultiPolygonBuilder {
 #[cfg(test)]
 mod test {
     use geo_types::Geometry;
-    use geoarrow_schema::{CoordType, Dimension};
+    use geoarrow_schema::Dimension;
     use geozero::error::Result;
 
     use super::*;
@@ -159,7 +159,7 @@ mod test {
                 .map(Geometry::MultiPolygon)
                 .collect(),
         );
-        let typ = MultiPolygonType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let typ = MultiPolygonType::new(Dimension::XY, Default::default());
         let geo_arr = geo.to_multi_polygon_array(typ.clone()).unwrap();
 
         let geo_arr2 = MultiPolygonBuilder::from_multi_polygons(&geo_geoms, typ).finish();

@@ -1,6 +1,9 @@
 use std::collections::HashSet;
+use std::fmt::Display;
 
 use arrow_schema::{ArrowError, Field, Fields};
+
+use crate::error::{GeoArrowError, GeoArrowResult};
 
 /// The dimension of the geometry array.
 ///
@@ -21,35 +24,52 @@ pub enum Dimension {
 }
 
 impl Dimension {
-    pub(crate) fn from_interleaved_field(field: &Field) -> Self {
-        match field.name().as_str() {
+    pub(crate) fn from_interleaved_field(field: &Field) -> GeoArrowResult<Self> {
+        let dim = match field.name().as_str() {
             "xy" => Dimension::XY,
             "xyz" => Dimension::XYZ,
             "xym" => Dimension::XYM,
             "xyzm" => Dimension::XYZM,
-            _ => panic!("Invalid interleaved field name: {}", field.name()),
-        }
+            _ => {
+                return Err(ArrowError::SchemaError(format!(
+                    "Invalid interleaved field name: {}",
+                    field.name()
+                ))
+                .into());
+            }
+        };
+        Ok(dim)
     }
 
-    pub(crate) fn from_separated_field(fields: &Fields) -> Self {
-        if fields.len() == 2 {
+    pub(crate) fn from_separated_field(fields: &Fields) -> GeoArrowResult<Self> {
+        let dim = if fields.len() == 2 {
             Self::XY
         } else if fields.len() == 3 {
             let field_names: HashSet<&str> =
                 HashSet::from_iter(fields.iter().map(|f| f.name().as_str()));
-            if field_names.contains("m") {
+            let xym_field_names = HashSet::<&str>::from_iter(["x", "y", "m"]);
+            let xyz_field_names = HashSet::<&str>::from_iter(["x", "y", "z"]);
+
+            if field_names.eq(&xym_field_names) {
                 Self::XYM
-            } else {
+            } else if field_names.eq(&xyz_field_names) {
                 Self::XYZ
+            } else {
+                return Err(ArrowError::SchemaError(format!(
+                    "Invalid field names for separated coordinates with 3 dimensions: {field_names:?}",
+
+                ))
+                .into());
             }
         } else if fields.len() == 4 {
             Self::XYZM
         } else {
-            panic!(
-                "Invalid number of fields for separated coordinates: {}",
-                fields.len()
-            );
-        }
+            return Err(ArrowError::SchemaError(format!(
+                "Invalid fields for separated coordinates: {fields:?}",
+            ))
+            .into());
+        };
+        Ok(dim)
     }
 
     /// Returns the number of dimensions.
@@ -75,8 +95,7 @@ impl From<Dimension> for geo_traits::Dimensions {
 }
 
 impl TryFrom<geo_traits::Dimensions> for Dimension {
-    // TODO: switch to our own error
-    type Error = ArrowError;
+    type Error = GeoArrowError;
 
     fn try_from(value: geo_traits::Dimensions) -> std::result::Result<Self, Self::Error> {
         match value {
@@ -86,10 +105,20 @@ impl TryFrom<geo_traits::Dimensions> for Dimension {
             geo_traits::Dimensions::Xyzm | geo_traits::Dimensions::Unknown(4) => {
                 Ok(Dimension::XYZM)
             }
-            _ => Err(ArrowError::SchemaError(format!(
-                "Unsupported dimension {:?}",
-                value
+            _ => Err(GeoArrowError::InvalidGeoArrow(format!(
+                "Unsupported dimension {value:?}"
             ))),
+        }
+    }
+}
+
+impl Display for Dimension {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Dimension::XY => write!(f, "XY"),
+            Dimension::XYZ => write!(f, "XYZ"),
+            Dimension::XYM => write!(f, "XYM"),
+            Dimension::XYZM => write!(f, "XYZM"),
         }
     }
 }
@@ -105,30 +134,38 @@ mod test {
     #[test]
     fn from_interleaved() {
         assert!(matches!(
-            Dimension::from_interleaved_field(&Field::new("xy", DataType::Null, false)),
+            Dimension::from_interleaved_field(&Field::new("xy", DataType::Null, false)).unwrap(),
             Dimension::XY
         ));
 
         assert!(matches!(
-            Dimension::from_interleaved_field(&Field::new("xyz", DataType::Null, false)),
+            Dimension::from_interleaved_field(&Field::new("xyz", DataType::Null, false)).unwrap(),
             Dimension::XYZ
         ));
 
         assert!(matches!(
-            Dimension::from_interleaved_field(&Field::new("xym", DataType::Null, false)),
+            Dimension::from_interleaved_field(&Field::new("xym", DataType::Null, false)).unwrap(),
             Dimension::XYM
         ));
 
         assert!(matches!(
-            Dimension::from_interleaved_field(&Field::new("xyzm", DataType::Null, false)),
+            Dimension::from_interleaved_field(&Field::new("xyzm", DataType::Null, false)).unwrap(),
             Dimension::XYZM
         ));
     }
 
     #[test]
-    #[should_panic(expected = "Invalid interleaved field name: banana")]
     fn from_bad_interleaved() {
-        Dimension::from_interleaved_field(&Field::new("banana", DataType::Null, false));
+        assert!(
+            Dimension::from_interleaved_field(&Field::new("banana", DataType::Null, false))
+                .is_err()
+        );
+        assert!(
+            Dimension::from_interleaved_field(&Field::new("x", DataType::Null, false)).is_err()
+        );
+        assert!(
+            Dimension::from_interleaved_field(&Field::new("xyzmt", DataType::Null, false)).is_err()
+        );
     }
 
     fn test_fields(dims: &[&str]) -> Fields {
@@ -140,30 +177,31 @@ mod test {
     #[test]
     fn from_separated() {
         assert!(matches!(
-            Dimension::from_separated_field(&test_fields(&["x", "y"])),
+            Dimension::from_separated_field(&test_fields(&["x", "y"])).unwrap(),
             Dimension::XY
         ));
 
         assert!(matches!(
-            Dimension::from_separated_field(&test_fields(&["x", "y", "z"])),
+            Dimension::from_separated_field(&test_fields(&["x", "y", "z"])).unwrap(),
             Dimension::XYZ
         ));
 
         assert!(matches!(
-            Dimension::from_separated_field(&test_fields(&["x", "y", "m"])),
+            Dimension::from_separated_field(&test_fields(&["x", "y", "m"])).unwrap(),
             Dimension::XYM
         ));
 
         assert!(matches!(
-            Dimension::from_separated_field(&test_fields(&["x", "y", "z", "m"])),
+            Dimension::from_separated_field(&test_fields(&["x", "y", "z", "m"])).unwrap(),
             Dimension::XYZM
         ));
     }
 
     #[test]
-    #[should_panic(expected = "Invalid number of fields for separated coordinates: 1")]
     fn from_bad_separated() {
-        Dimension::from_separated_field(&test_fields(&["x"]));
+        assert!(Dimension::from_separated_field(&test_fields(&["x"])).is_err());
+        assert!(Dimension::from_separated_field(&test_fields(&["x", "y", "a"])).is_err());
+        assert!(Dimension::from_separated_field(&test_fields(&["x", "y", "z", "m", "t"])).is_err());
     }
 
     #[test]
@@ -200,10 +238,11 @@ mod test {
         let dims4: Dimension = geo_traits::Dimensions::Unknown(4).try_into().unwrap();
         assert_eq!(dims4, Dimension::XYZM);
 
-        let dims_err: Result<Dimension, ArrowError> = geo_traits::Dimensions::Unknown(0).try_into();
+        let dims_err: Result<Dimension, GeoArrowError> =
+            geo_traits::Dimensions::Unknown(0).try_into();
         assert_eq!(
             dims_err.unwrap_err().to_string(),
-            "Schema error: Unsupported dimension Unknown(0)"
+            "Data not conforming to GeoArrow specification: Unsupported dimension Unknown(0)"
         );
     }
 }

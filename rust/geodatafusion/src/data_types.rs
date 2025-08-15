@@ -1,80 +1,115 @@
-use std::sync::Arc;
-
-use arrow_array::ArrayRef;
-use datafusion::error::DataFusionError;
+use arrow_schema::DataType;
 use datafusion::logical_expr::{Signature, Volatility};
-use geoarrow::NativeArray;
-use geoarrow::array::{GeometryArray, PointArray, RectArray};
-use geoarrow::datatypes::NativeType;
-use geoarrow_schema::{BoxType, CoordType, Dimension, GeometryType, PointType};
+use geoarrow_schema::{
+    BoxType, CoordType, Dimension, GeometryCollectionType, GeometryType, LineStringType,
+    MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType,
+};
 
-use crate::error::GeoDataFusionResult;
+pub(crate) fn any_geometry_type() -> Vec<DataType> {
+    let mut valid_types = vec![];
 
-#[allow(non_snake_case)]
-pub fn POINT2D_TYPE() -> NativeType {
-    NativeType::Point(PointType::new(
-        CoordType::Separated,
+    for coord_type in [CoordType::Separated, CoordType::Interleaved] {
+        for dim in [
+            Dimension::XY,
+            Dimension::XYZ,
+            Dimension::XYM,
+            Dimension::XYZM,
+        ] {
+            valid_types.push(
+                PointType::new(dim, Default::default())
+                    .with_coord_type(coord_type)
+                    .data_type(),
+            );
+            valid_types.push(
+                LineStringType::new(dim, Default::default())
+                    .with_coord_type(coord_type)
+                    .data_type(),
+            );
+            valid_types.push(
+                PolygonType::new(dim, Default::default())
+                    .with_coord_type(coord_type)
+                    .data_type(),
+            );
+            valid_types.push(
+                MultiPointType::new(dim, Default::default())
+                    .with_coord_type(coord_type)
+                    .data_type(),
+            );
+            valid_types.push(
+                MultiLineStringType::new(dim, Default::default())
+                    .with_coord_type(coord_type)
+                    .data_type(),
+            );
+            valid_types.push(
+                MultiPolygonType::new(dim, Default::default())
+                    .with_coord_type(coord_type)
+                    .data_type(),
+            );
+            valid_types.push(
+                GeometryCollectionType::new(dim, Default::default())
+                    .with_coord_type(coord_type)
+                    .data_type(),
+            );
+        }
+    }
+
+    for coord_type in [CoordType::Separated, CoordType::Interleaved] {
+        valid_types.push(
+            GeometryType::new(Default::default())
+                .with_coord_type(coord_type)
+                .data_type(),
+        );
+    }
+
+    for dim in [
         Dimension::XY,
-        Default::default(),
-    ))
-}
-
-#[allow(non_snake_case)]
-pub fn POINT3D_TYPE() -> NativeType {
-    NativeType::Point(PointType::new(
-        CoordType::Separated,
         Dimension::XYZ,
-        Default::default(),
-    ))
-}
+        Dimension::XYM,
+        Dimension::XYZM,
+    ] {
+        valid_types.push(BoxType::new(dim, Default::default()).data_type());
+    }
 
-#[allow(non_snake_case)]
-pub fn BOX2D_TYPE() -> NativeType {
-    NativeType::Rect(BoxType::new(Dimension::XY, Default::default()))
-}
+    // Wkb
+    valid_types.push(DataType::Binary);
+    valid_types.push(DataType::LargeBinary);
+    valid_types.push(DataType::BinaryView);
 
-#[allow(non_snake_case)]
-pub fn BOX3D_TYPE() -> NativeType {
-    NativeType::Rect(BoxType::new(Dimension::XYZ, Default::default()))
-}
+    // Wkt
+    valid_types.push(DataType::Utf8);
+    valid_types.push(DataType::LargeUtf8);
+    valid_types.push(DataType::Utf8View);
 
-#[allow(non_snake_case)]
-pub fn GEOMETRY_TYPE() -> NativeType {
-    NativeType::Geometry(GeometryType::new(CoordType::Separated, Default::default()))
+    valid_types
 }
 
 pub(crate) fn any_single_geometry_type_input() -> Signature {
-    Signature::uniform(
-        1,
-        vec![
-            POINT2D_TYPE().into(),
-            POINT3D_TYPE().into(),
-            BOX2D_TYPE().into(),
-            BOX3D_TYPE().into(),
-            GEOMETRY_TYPE().into(),
-        ],
-        Volatility::Immutable,
-    )
+    Signature::uniform(1, any_geometry_type(), Volatility::Immutable)
 }
 
-/// This will not cast a PointArray to a GeometryArray
-pub(crate) fn parse_to_native_array(array: ArrayRef) -> GeoDataFusionResult<Arc<dyn NativeArray>> {
-    let data_type = array.data_type();
-    if data_type.equals_datatype(&POINT2D_TYPE().into()) {
-        let point_array = PointArray::try_from((array.as_ref(), Dimension::XY))?;
-        Ok(Arc::new(point_array))
-    } else if data_type.equals_datatype(&POINT3D_TYPE().into()) {
-        let point_array = PointArray::try_from((array.as_ref(), Dimension::XYZ))?;
-        Ok(Arc::new(point_array))
-    } else if data_type.equals_datatype(&BOX2D_TYPE().into()) {
-        let rect_array = RectArray::try_from((array.as_ref(), Dimension::XY))?;
-        Ok(Arc::new(rect_array))
-    } else if data_type.equals_datatype(&BOX3D_TYPE().into()) {
-        let rect_array = RectArray::try_from((array.as_ref(), Dimension::XYZ))?;
-        Ok(Arc::new(rect_array))
-    } else if data_type.equals_datatype(&GEOMETRY_TYPE().into()) {
-        Ok(Arc::new(GeometryArray::try_from(array.as_ref())?))
-    } else {
-        Err(DataFusionError::Execution(format!("Unexpected input data type: {}", data_type)).into())
+pub(crate) fn any_point_type_input(arg_count: usize) -> Signature {
+    let mut valid_types = vec![];
+
+    for coord_type in [CoordType::Separated, CoordType::Interleaved] {
+        for dim in [
+            Dimension::XY,
+            Dimension::XYZ,
+            Dimension::XYM,
+            Dimension::XYZM,
+        ] {
+            valid_types.push(
+                PointType::new(dim, Default::default())
+                    .with_coord_type(coord_type)
+                    .data_type(),
+            );
+        }
+
+        valid_types.push(
+            GeometryType::new(Default::default())
+                .with_coord_type(coord_type)
+                .data_type(),
+        );
     }
+
+    Signature::uniform(arg_count, valid_types, Volatility::Immutable)
 }

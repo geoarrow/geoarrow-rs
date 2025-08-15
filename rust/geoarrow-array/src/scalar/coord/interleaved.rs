@@ -78,10 +78,9 @@ impl CoordTrait for &InterleavedCoord<'_> {
 
 #[cfg(test)]
 mod test {
-    use arrow_buffer::ScalarBuffer;
+    use geoarrow_schema::Dimension;
 
     use crate::array::{InterleavedCoordBuffer, SeparatedCoordBuffer};
-    use geoarrow_schema::Dimension;
 
     /// Test Eq where the current index is true but another index is false
     #[test]
@@ -105,15 +104,7 @@ mod test {
 
         let x = vec![0.];
         let y = vec![3.];
-        let buf2 = SeparatedCoordBuffer::new(
-            [
-                x.into(),
-                y.into(),
-                ScalarBuffer::from(vec![]),
-                ScalarBuffer::from(vec![]),
-            ],
-            Dimension::XY,
-        );
+        let buf2 = SeparatedCoordBuffer::from_vec(vec![x.into(), y.into()], Dimension::XY).unwrap();
         let coord2 = buf2.value(0);
 
         assert_eq!(coord1, coord2);

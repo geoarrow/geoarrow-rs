@@ -1,10 +1,10 @@
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, RectTrait};
 use geoarrow_schema::BoxType;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 use crate::array::RectArray;
 use crate::builder::SeparatedCoordBufferBuilder;
-use crate::error::GeoArrowError;
 use crate::scalar::Rect;
 
 /// The GeoArrow equivalent to `Vec<Option<Rect>>`: a mutable collection of Rects.
@@ -60,6 +60,13 @@ impl RectBuilder {
         self.upper.reserve_exact(additional);
     }
 
+    /// Shrinks the capacity of self to fit.
+    pub fn shrink_to_fit(&mut self) {
+        self.lower.shrink_to_fit();
+        self.upper.shrink_to_fit();
+        // self.validity.shrink_to_fit();
+    }
+
     /// The canonical method to create a [`RectBuilder`] out of its internal components.
     ///
     /// # Implementation
@@ -76,9 +83,9 @@ impl RectBuilder {
         upper: SeparatedCoordBufferBuilder,
         validity: NullBufferBuilder,
         data_type: BoxType,
-    ) -> Result<Self, GeoArrowError> {
+    ) -> GeoArrowResult<Self> {
         if lower.len() != upper.len() {
-            return Err(GeoArrowError::General(
+            return Err(GeoArrowError::InvalidGeoArrow(
                 "Lower and upper lengths must match".to_string(),
             ));
         }
@@ -93,8 +100,8 @@ impl RectBuilder {
     /// Consume the builder and convert to an immutable [`RectArray`]
     pub fn finish(mut self) -> RectArray {
         RectArray::new(
-            self.lower.into(),
-            self.upper.into(),
+            self.lower.finish(),
+            self.upper.finish(),
             self.validity.finish(),
             self.data_type.metadata().clone(),
         )
@@ -112,8 +119,8 @@ impl RectBuilder {
             self.validity.append_non_null()
         } else {
             // Since it's a struct, we still need to push coords when null
-            self.lower.push_nan_coord();
-            self.upper.push_nan_coord();
+            self.lower.push_constant(f64::NAN);
+            self.upper.push_constant(f64::NAN);
             self.validity.append_null();
         }
     }
@@ -122,26 +129,6 @@ impl RectBuilder {
     #[inline]
     pub fn push_null(&mut self) {
         self.push_rect(None::<&Rect>);
-    }
-
-    /// Push a 2D box to the builder.
-    ///
-    /// The array should be `[minx, miny, maxx, maxy]`.
-    #[inline]
-    pub fn push_box2d(&mut self, _value: Option<[f64; 4]>) {
-        todo!("re enable, need our own lightweight coord type");
-        // if let Some(value) = value {
-        //     self.lower
-        //         .push_coord(&geo::coord! { x: value[0], y: value[1] });
-        //     self.upper
-        //         .push_coord(&geo::coord! { x: value[2], y: value[3] });
-        //     self.validity.append_non_null()
-        // } else {
-        //     // Since it's a struct, we still need to push coords when null
-        //     self.lower.push_nan_coord();
-        //     self.upper.push_nan_coord();
-        //     self.validity.append_null();
-        // }
     }
 
     /// Push min and max coordinates of a rect to the builder.

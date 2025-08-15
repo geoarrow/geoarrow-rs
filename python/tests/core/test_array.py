@@ -1,19 +1,32 @@
 import geodatasets
 import geopandas as gpd
+import pyarrow as pa
 import shapely
-import shapely.testing
-from geoarrow.rust.core import from_geopandas, geometry_col
-
-nybb_path = geodatasets.get_path("nybb")
+from geoarrow.rust.core import GeoArray
+from geoarrow.types.type_pyarrow import registered_extension_types
 
 
-def test_indexing():
-    gdf = gpd.read_file(nybb_path)
-    table = from_geopandas(gdf)
-    geometry = geometry_col(table)
+def test_eq():
+    geoms = shapely.points([1, 2, 3], [4, 5, 6])
+    arr = GeoArray.from_arrow(gpd.GeoSeries(geoms).to_arrow("geoarrow"))
+    assert arr == arr
 
-    shapely_scalar = shapely.geometry.shape(geometry[0])
-    assert gdf.geometry[0] == shapely_scalar
+    with registered_extension_types():
+        pa_arr = pa.array(arr)
+        assert arr == pa_arr
+        assert arr == GeoArray.from_arrow(pa_arr)
 
-    shapely_scalar = shapely.geometry.shape(geometry[-1])
-    assert gdf.geometry.iloc[-1] == shapely_scalar
+
+def test_getitem():
+    # Tests both the __getitem__ method and the scalar geo interface in round trip
+    # conversion to shapely.
+    gdf = gpd.read_file(geodatasets.get_path("ny.bb"))
+    arr = GeoArray.from_arrow(gdf.geometry.to_arrow("geoarrow"))
+    for i in range(len(arr)):
+        assert shapely.geometry.shape(arr[i]).equals(gdf.geometry.iloc[i])  # type: ignore
+
+
+def test_repr():
+    geoms = shapely.points([1, 2, 3], [4, 5, 6])
+    arr = GeoArray.from_arrow(gpd.GeoSeries(geoms).to_arrow("geoarrow"))
+    assert repr(arr) == 'GeoArray(Point(dimension="XY", coord_type="interleaved"))'

@@ -1,10 +1,5 @@
 # Geometry
 
-::: geoarrow.rust.core
+::: geoarrow.rust.core.GeoScalar
     options:
-      filters:
-        - "!^_"
-        - "^__arrow"
-        - "^__geo"
-      members:
-        - Geometry
+      show_if_no_docstring: true

@@ -9,13 +9,13 @@ class StrEnum(str, Enum):
 class CoordType(StrEnum):
     """Available GeoArrow coordinate types."""
 
-    Interleaved = "interleaved"
+    INTERLEAVED = "interleaved"
     """Interleaved coordinate layout.
 
     All coordinates are stored in a single buffer, as `XYXYXY`.
     """
 
-    Separated = "separated"
+    SEPARATED = "separated"
     """Separated coordinate layout.
 
     Coordinates are stored in a separate buffer per dimension, e.g. `XXXX` and `YYYY`.
@@ -40,6 +40,20 @@ class Dimension(StrEnum):
     XYZM = "xyzm"
     """Four dimensions, X, Y, Z, and M
     """
+
+
+class Edges(StrEnum):
+    """Edges."""
+
+    ANDOYER = "andoyer"
+
+    KARNEY = "karney"
+
+    SPHERICAL = "spherical"
+
+    THOMAS = "thomas"
+
+    VINCENTY = "vincenty"
 
 
 class GeometryType(IntEnum):

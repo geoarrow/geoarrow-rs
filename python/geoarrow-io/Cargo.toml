@@ -25,52 +25,53 @@ async = [
     "dep:pyo3-object_store",
     "parquet/object_store",
     "dep:pyo3-async-runtimes",
-    "geoarrow/flatgeobuf_async",
-    "geoarrow/parquet_async",
-    "geoarrow/postgis",
-    "dep:sqlx",
+    "geoparquet/async",
+    # "geoarrow/postgis",
+    # "dep:sqlx",
     "dep:tokio",
 ]
 
 [dependencies]
 arrow = { workspace = true }
 bytes = "1"
+flatgeobuf = { workspace = true, default-features = false }
 futures = { version = "0.3", optional = true }
+http-range-client = { workspace = true, default-features = false }
+indexmap = { workspace = true }
 object_store = { workspace = true, features = [
     "aws",
     "azure",
     "gcp",
     "http",
 ], optional = true }
-parquet = { workspace = true }
+parquet = { workspace = true, features = [
+    "snap",
+    "brotli",
+    "flate2",
+    "lz4",
+    "zstd",
+] }
 pyo3 = { workspace = true }
 pyo3-arrow = { workspace = true }
-# pyo3-file = "0.11"
-# https://github.com/omerbenamram/pyo3-file/pull/28
-pyo3-file = { git = "https://github.com/kylebarron/pyo3-file", rev = "bf4f282d8dbd50c659ff8c91487440e425f58e6e" }
+pyo3-file = "0.13"
 pyo3-geoarrow = { workspace = true }
-pyo3-async-runtimes = { version = "0.24", features = [
+pyo3-async-runtimes = { version = "0.25", features = [
     "tokio-runtime",
 ], optional = true }
-pyo3-object_store = { version = "0.2", optional = true }
 geo = "0.30"
 geo-traits = { workspace = true }
-geoarrow = { workspace = true, features = [
-    "csv",
-    "flatgeobuf",
-    "ipc_compression",
-    "parquet_compression",
-    "parquet",
-] }
+geoarrow-array = { workspace = true }
+geoarrow-flatgeobuf = { workspace = true, features = ["object_store"] }
 geoarrow-schema = { workspace = true }
+geoparquet = { workspace = true }
+pyo3-object_store = { version = "0.5", optional = true }
 serde_json = { workspace = true }
-sqlx = { version = "0.7", default-features = false, features = [
-    "postgres",
-], optional = true }
-thiserror = { workspace = true }
+# sqlx = { version = "0.7", default-features = false, features = [
+#     "postgres",
+# ], optional = true }
 tokio = { version = "1.9", features = ["rt"], optional = true }
 url = "2.5"
 
 # Pin to fix strange pyodide compilation errors.
 # See https://github.com/geoarrow/geoarrow-rs/issues/868
-cc = "1.1, <1.2"
+# cc = "1.1, <1.2"

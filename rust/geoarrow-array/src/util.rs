@@ -1,47 +1,18 @@
-//! Note: This entire mod is a candidate to upstream into arrow-rs.
-
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
-
-use crate::error::Result;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 pub(crate) fn offsets_buffer_i32_to_i64(offsets: &OffsetBuffer<i32>) -> OffsetBuffer<i64> {
     let i64_offsets = offsets.iter().map(|x| *x as i64).collect::<Vec<_>>();
     unsafe { OffsetBuffer::new_unchecked(i64_offsets.into()) }
 }
 
-pub(crate) fn offsets_buffer_i64_to_i32(offsets: &OffsetBuffer<i64>) -> Result<OffsetBuffer<i32>> {
-    // TODO: raise nicer error. Ref:
-    // https://github.com/jorgecarleitao/arrow2/blob/6a4b53169a48cbd234cecde6ab6a98f84146fca2/src/offset.rs#L492
-    i32::try_from(*offsets.last()).unwrap();
+pub(crate) fn offsets_buffer_i64_to_i32(
+    offsets: &OffsetBuffer<i64>,
+) -> GeoArrowResult<OffsetBuffer<i32>> {
+    i32::try_from(*offsets.last()).map_err(|_| GeoArrowError::Overflow)?;
 
     let i32_offsets = offsets.iter().map(|x| *x as i32).collect::<Vec<_>>();
-    Ok(unsafe { OffsetBuffer::new_unchecked(i32_offsets.into()) })
-}
-
-#[allow(dead_code)]
-pub(crate) fn offsets_buffer_to_i64<O: OffsetSizeTrait>(
-    offsets: &OffsetBuffer<O>,
-) -> OffsetBuffer<i64> {
-    let i64_offsets = offsets
-        .iter()
-        .map(|x| x.to_i64().unwrap())
-        .collect::<Vec<_>>();
-    unsafe { OffsetBuffer::new_unchecked(i64_offsets.into()) }
-}
-
-#[allow(dead_code)]
-pub(crate) fn offsets_buffer_to_i32<O: OffsetSizeTrait>(
-    offsets: &OffsetBuffer<O>,
-) -> Result<OffsetBuffer<i32>> {
-    // TODO: raise nicer error. Ref:
-    // https://github.com/jorgecarleitao/arrow2/blob/6a4b53169a48cbd234cecde6ab6a98f84146fca2/src/offset.rs#L492
-    i32::try_from(offsets.last().as_usize()).unwrap();
-
-    let i32_offsets = offsets
-        .iter()
-        .map(|x| x.to_usize().unwrap() as i32)
-        .collect::<Vec<_>>();
     Ok(unsafe { OffsetBuffer::new_unchecked(i32_offsets.into()) })
 }
 
@@ -83,5 +54,40 @@ impl<O: OffsetSizeTrait> OffsetBufferUtils<O> for OffsetBuffer<O> {
     #[inline]
     fn last(&self) -> &O {
         self.as_ref().last().unwrap()
+    }
+}
+
+pub(crate) trait GeometryTypeName {
+    /// Returns the name of the geometry type.
+    fn name(&self) -> String;
+}
+
+impl<P, LS, Y, MP, ML, MY, GC, R, T, L> GeometryTypeName
+    for geo_traits::GeometryType<'_, P, LS, Y, MP, ML, MY, GC, R, T, L>
+where
+    P: geo_traits::PointTrait,
+    LS: geo_traits::LineStringTrait,
+    Y: geo_traits::PolygonTrait,
+    MP: geo_traits::MultiPointTrait,
+    ML: geo_traits::MultiLineStringTrait,
+    MY: geo_traits::MultiPolygonTrait,
+    GC: geo_traits::GeometryCollectionTrait,
+    R: geo_traits::RectTrait,
+    T: geo_traits::TriangleTrait,
+    L: geo_traits::LineTrait,
+{
+    fn name(&self) -> String {
+        match self {
+            Self::Point(_) => "Point".to_string(),
+            Self::LineString(_) => "LineString".to_string(),
+            Self::Polygon(_) => "Polygon".to_string(),
+            Self::MultiPoint(_) => "MultiPoint".to_string(),
+            Self::MultiLineString(_) => "MultiLineString".to_string(),
+            Self::MultiPolygon(_) => "MultiPolygon".to_string(),
+            Self::GeometryCollection(_) => "GeometryCollection".to_string(),
+            Self::Rect(_) => "Rect".to_string(),
+            Self::Triangle(_) => "Triangle".to_string(),
+            Self::Line(_) => "Line".to_string(),
+        }
     }
 }

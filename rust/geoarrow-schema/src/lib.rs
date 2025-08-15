@@ -1,16 +1,24 @@
-//! GeoArrow geometry type and metadata definitions.
-
+#![doc = include_str!("../README.md")]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(not(test), warn(unused_crate_dependencies))]
 #![warn(missing_docs)]
+#![doc(
+    html_logo_url = "https://github.com/geoarrow.png",
+    html_favicon_url = "https://github.com/geoarrow.png?size=32"
+)]
 
 mod coord_type;
-mod crs;
+pub mod crs;
+mod datatype;
 mod dimension;
 mod edges;
+pub mod error;
 mod metadata;
 mod r#type;
 
 pub use coord_type::CoordType;
 pub use crs::{Crs, CrsType};
+pub use datatype::GeoArrowType;
 pub use dimension::Dimension;
 pub use edges::Edges;
 pub use metadata::Metadata;

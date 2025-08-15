@@ -8,9 +8,9 @@ The geoarrow-rs repository contains a Rust implementation, Python bindings, and 
 
     ---
 
-    Create your own Rust library or application on top of the `geoarrow` Rust crate.
+    Create your own Rust library or application on top of the `geoarrow-*` Rust crates.
 
-    [:octicons-arrow-right-24: Documentation](https://docs.rs/geoarrow/latest/geoarrow/)
+    [:octicons-arrow-right-24: Documentation](./rust.md)
 
 -   :material-language-python:{ .lg .middle } **Python bindings**
 

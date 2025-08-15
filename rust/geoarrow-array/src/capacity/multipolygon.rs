@@ -1,8 +1,11 @@
 use std::ops::{Add, AddAssign};
 
-use crate::capacity::PolygonCapacity;
-use crate::error::{GeoArrowError, Result};
 use geo_traits::{GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait};
+use geoarrow_schema::Dimension;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
+
+use crate::capacity::PolygonCapacity;
+use crate::util::GeometryTypeName;
 
 /// A counter for the buffer sizes of a [`MultiPolygonArray`][crate::array::MultiPolygonArray].
 ///
@@ -120,12 +123,17 @@ impl MultiPolygonCapacity {
     ///
     /// The type of the geometry must be either Polygon or MultiPolygon
     #[inline]
-    pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait>) -> Result<()> {
+    pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait>) -> GeoArrowResult<()> {
         if let Some(geom) = value {
             match geom.as_type() {
                 GeometryType::Polygon(g) => self.add_polygon(Some(g)),
                 GeometryType::MultiPolygon(g) => self.add_multi_polygon(Some(g)),
-                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+                gt => {
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
+                        "Expected MultiPolygon, got {}",
+                        gt.name()
+                    )));
+                }
             }
         } else {
             self.geom_capacity += 1;
@@ -147,7 +155,7 @@ impl MultiPolygonCapacity {
     /// Construct a new counter pre-filled with the given geometries
     pub fn from_geometries<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let mut counter = Self::new_empty();
         for g in geoms.into_iter() {
             counter.add_geometry(g)?;
@@ -156,10 +164,10 @@ impl MultiPolygonCapacity {
     }
 
     /// The number of bytes an array with this capacity would occupy.
-    pub fn num_bytes(&self) -> usize {
+    pub fn num_bytes(&self, dim: Dimension) -> usize {
         let offsets_byte_width = 4;
         let num_offsets = self.geom_capacity + self.polygon_capacity + self.ring_capacity;
-        (offsets_byte_width * num_offsets) + (self.coord_capacity * 2 * 8)
+        (offsets_byte_width * num_offsets) + (self.coord_capacity * dim.size() * 8)
     }
 }
 

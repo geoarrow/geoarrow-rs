@@ -2,9 +2,29 @@
 
 ## Unreleased
 
-### Breaking changes
+## [0.5.1] - 2025-08-11
 
-- Split `GeometryArray` into `NativeArray` and `SerializedArray`. `NativeArray` encompasses any "native" GeoArrow array types, which are efficient to compute on, while `SerializedArray` encompasses any "serialized" GeoArrow types, like WKB and WKT, which must be parsed before they can be passed to any compute functions.
+- Build Python 3.13 wheels for Windows https://github.com/geoarrow/geoarrow-rs/pull/1305
+
+## [0.5.0] - 2025-08-07
+
+- Add `get_type_id` to infer geometry types from array #1280
+- Release GIL when blocking tokio runtime https://github.com/geoarrow/geoarrow-rs/pull/1281
+- Add `read_flatgeobuf`, `read_flatgeobuf_async`, `write_flatgeobuf` https://github.com/geoarrow/geoarrow-rs/pull/1279
+
+## [0.4.1] - 2025-07-17
+
+- Added `path` property to `GeoParquetFile` class so information about each fragment of a `GeoParquetDataset` can be associated back to the original file.
+
+## [0.4.0] - 2025-07-01
+
+This release contains the Python bindings for more or less a **full rewrite** of the GeoArrow Rust library.
+
+### New Features :magic_wand:
+
+- Full support for the GeoArrow 0.2 specification, including all geometry array types and dimensions.
+- See documentation for `GeoArray`, `GeoChunkedArray`, `GeoScalar`, and `GeometryType` for more details.
+- Support for reading and writing GeoParquet 1.1 files, including spatial filtering, including support for reading from remote files.
 
 ## [0.3.0] - 2024-09-07
 

@@ -1,16 +1,17 @@
+use std::sync::Arc;
+
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
-use geoarrow_schema::{CoordType, MultiPointType};
+use geoarrow_schema::MultiPointType;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
+use crate::GeoArrowArray;
+use crate::array::{GenericWkbArray, MultiPointArray};
+use crate::builder::{CoordBufferBuilder, OffsetsBuilder};
 use crate::capacity::MultiPointCapacity;
-// use super::array::check;
-use crate::array::{MultiPointArray, WkbArray};
-use crate::builder::{
-    CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
-};
-use crate::error::{GeoArrowError, Result};
-use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
+use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
+use crate::util::GeometryTypeName;
 
 /// The GeoArrow equivalent to `Vec<Option<MultiPoint>>`: a mutable collection of MultiPoints.
 ///
@@ -35,20 +36,11 @@ impl MultiPointBuilder {
 
     /// Creates a new [`MultiPointBuilder`] with a capacity.
     pub fn with_capacity(typ: MultiPointType, capacity: MultiPointCapacity) -> Self {
-        let coords = match typ.coord_type() {
-            CoordType::Interleaved => {
-                CoordBufferBuilder::Interleaved(InterleavedCoordBufferBuilder::with_capacity(
-                    capacity.coord_capacity,
-                    typ.dimension(),
-                ))
-            }
-            CoordType::Separated => {
-                CoordBufferBuilder::Separated(SeparatedCoordBufferBuilder::with_capacity(
-                    capacity.coord_capacity,
-                    typ.dimension(),
-                ))
-            }
-        };
+        let coords = CoordBufferBuilder::with_capacity(
+            capacity.coord_capacity,
+            typ.coord_type(),
+            typ.dimension(),
+        );
         Self {
             coords,
             geom_offsets: OffsetsBuilder::with_capacity(capacity.geom_capacity),
@@ -83,49 +75,22 @@ impl MultiPointBuilder {
         self.geom_offsets.reserve_exact(capacity.geom_capacity);
     }
 
+    /// Shrinks the capacity of self to fit.
+    pub fn shrink_to_fit(&mut self) {
+        self.coords.shrink_to_fit();
+        self.geom_offsets.shrink_to_fit();
+        // self.validity.shrink_to_fit();
+    }
+
     /// Consume the builder and convert to an immutable [`MultiPointArray`]
     pub fn finish(mut self) -> MultiPointArray {
         let validity = self.validity.finish();
-
-        // TODO: impl shrink_to_fit for all mutable -> * impls
-        // self.coords.shrink_to_fit();
-        self.geom_offsets.shrink_to_fit();
-
         MultiPointArray::new(
-            self.coords.into(),
-            self.geom_offsets.into(),
+            self.coords.finish(),
+            self.geom_offsets.finish(),
             validity,
             self.data_type.metadata().clone(),
         )
-    }
-
-    /// Creates a new builder with a capacity inferred by the provided iterator.
-    pub fn with_capacity_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
-        typ: MultiPointType,
-    ) -> Self {
-        let counter = MultiPointCapacity::from_multi_points(geoms);
-        Self::with_capacity(typ, counter)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
-    ) {
-        let counter = MultiPointCapacity::from_multi_points(geoms);
-        self.reserve(counter)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_exact_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
-    ) {
-        let counter = MultiPointCapacity::from_multi_points(geoms);
-        self.reserve_exact(counter)
     }
 
     /// Extend this builder with the given geometries
@@ -143,7 +108,7 @@ impl MultiPointBuilder {
     pub fn extend_from_geometry_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         geoms.into_iter().try_for_each(|g| self.push_geometry(g))?;
         Ok(())
     }
@@ -154,7 +119,7 @@ impl MultiPointBuilder {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) -> Result<()> {
+    pub fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) -> GeoArrowResult<()> {
         if let Some(point) = value {
             self.coords.push_point(point);
             self.try_push_length(1)?;
@@ -174,7 +139,7 @@ impl MultiPointBuilder {
     pub fn push_multi_point(
         &mut self,
         value: Option<&impl MultiPointTrait<T = f64>>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         if let Some(multi_point) = value {
             let num_points = multi_point.num_points();
             for point in multi_point.points() {
@@ -191,12 +156,20 @@ impl MultiPointBuilder {
     ///
     /// This will error if the geometry type is not Point or MultiPoint.
     #[inline]
-    pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+    pub fn push_geometry(
+        &mut self,
+        value: Option<&impl GeometryTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
         if let Some(value) = value {
             match value.as_type() {
                 GeometryType::Point(g) => self.push_point(Some(g))?,
                 GeometryType::MultiPoint(g) => self.push_multi_point(Some(g))?,
-                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+                gt => {
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
+                        "Expected MultiPoint compatible geometry, got {}",
+                        gt.name()
+                    )));
+                }
             }
         } else {
             self.push_null();
@@ -206,35 +179,20 @@ impl MultiPointBuilder {
 
     /// Push a raw coordinate to the underlying coordinate array.
     ///
-    /// # Safety
+    /// # Invariant
     ///
-    /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
-    /// to the array upholds the necessary invariants of the array.
+    /// Care must be taken to ensure that pushing raw coordinates to the array upholds the
+    /// necessary invariants of the array.
     #[inline]
-    pub unsafe fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+    #[allow(dead_code)]
+    pub(crate) fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> GeoArrowResult<()> {
         self.coords.try_push_coord(coord)
     }
 
-    fn calculate_added_length(&self) -> Result<usize> {
-        let total_length = self.coords.len();
-        let offset = *self.geom_offsets.last() as usize;
-        total_length
-            .checked_sub(offset)
-            .ok_or(GeoArrowError::Overflow)
-    }
-
     /// Needs to be called when a valid value was extended to this array.
     /// This is a relatively low level function, prefer `try_push` when you can.
     #[inline]
-    pub fn try_push_valid(&mut self) -> Result<()> {
-        let length = self.calculate_added_length()?;
-        self.try_push_length(length)
-    }
-
-    /// Needs to be called when a valid value was extended to this array.
-    /// This is a relatively low level function, prefer `try_push` when you can.
-    #[inline]
-    pub(crate) fn try_push_length(&mut self, geom_offsets_length: usize) -> Result<()> {
+    pub(crate) fn try_push_length(&mut self, geom_offsets_length: usize) -> GeoArrowResult<()> {
         self.geom_offsets.try_push_usize(geom_offsets_length)?;
         self.validity.append(true);
         Ok(())
@@ -248,7 +206,8 @@ impl MultiPointBuilder {
 
     /// Construct a new builder, pre-filling it with the provided geometries
     pub fn from_multi_points(geoms: &[impl MultiPointTrait<T = f64>], typ: MultiPointType) -> Self {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(Some), typ);
+        let capacity = MultiPointCapacity::from_multi_points(geoms.iter().map(Some));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(Some));
         array
     }
@@ -258,7 +217,8 @@ impl MultiPointBuilder {
         geoms: &[Option<impl MultiPointTrait<T = f64>>],
         typ: MultiPointType,
     ) -> Self {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(|x| x.as_ref()), typ);
+        let capacity = MultiPointCapacity::from_multi_points(geoms.iter().map(|x| x.as_ref()));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         array
     }
@@ -267,7 +227,7 @@ impl MultiPointBuilder {
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         typ: MultiPointType,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let capacity = MultiPointCapacity::from_geometries(geoms.iter().map(|x| x.as_ref()))?;
         let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_geometry_iter(geoms.iter().map(|x| x.as_ref()))?;
@@ -275,24 +235,35 @@ impl MultiPointBuilder {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiPointType)> for MultiPointBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, MultiPointType)> for MultiPointBuilder {
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (WkbArray<O>, MultiPointType)) -> Result<Self> {
+    fn try_from((value, typ): (GenericWkbArray<O>, MultiPointType)) -> GeoArrowResult<Self> {
         let wkb_objects = value
             .iter()
             .map(|x| x.transpose())
-            .collect::<Result<Vec<_>>>()?;
+            .collect::<GeoArrowResult<Vec<_>>>()?;
         Self::from_nullable_geometries(&wkb_objects, typ)
     }
 }
 
-impl GeometryArrayBuilder for MultiPointBuilder {
+impl GeoArrowArrayBuilder for MultiPointBuilder {
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
     }
 
     fn push_null(&mut self) {
         self.push_null();
+    }
+
+    fn push_geometry(
+        &mut self,
+        geometry: Option<&impl GeometryTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
+        self.push_geometry(geometry)
+    }
+
+    fn finish(self) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.finish())
     }
 }

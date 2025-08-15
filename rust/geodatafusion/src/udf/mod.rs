@@ -1,2 +1,3 @@
-pub mod geos;
+pub mod geo;
+pub mod geohash;
 pub mod native;

@@ -43,7 +43,8 @@ impl GeomProcessor for MultiPointBuilder {
         // # Safety:
         // This upholds invariants because we call try_push_length in multipoint_begin to ensure
         // offset arrays are correct.
-        unsafe { self.push_coord(&from_xy(x, y).expect("valid coord")) }.unwrap();
+        self.push_coord(&from_xy(x, y).expect("valid coord"))
+            .unwrap();
         Ok(())
     }
 
@@ -60,7 +61,8 @@ impl GeomProcessor for MultiPointBuilder {
         // # Safety:
         // This upholds invariants because we call try_push_length in multipoint_begin to ensure
         // offset arrays are correct.
-        unsafe { self.push_coord(&from_xyzm(x, y, z, m).expect("valid coord")) }.unwrap();
+        self.push_coord(&from_xyzm(x, y, z, m).expect("valid coord"))
+            .unwrap();
         Ok(())
     }
 
@@ -90,7 +92,7 @@ impl GeomProcessor for MultiPointBuilder {
 #[cfg(test)]
 mod test {
     use geo_types::{Geometry, MultiPoint};
-    use geoarrow_schema::{CoordType, Dimension};
+    use geoarrow_schema::Dimension;
     use geozero::error::Result;
 
     use super::*;
@@ -107,7 +109,7 @@ mod test {
                 .map(Geometry::MultiPoint)
                 .collect(),
         );
-        let typ = MultiPointType::new(CoordType::Interleaved, Dimension::XY, Default::default());
+        let typ = MultiPointType::new(Dimension::XY, Default::default());
         let geo_arr = geo.to_multi_point_array(typ.clone()).unwrap();
 
         let geo_arr2 = MultiPointBuilder::from_multi_points(&geo_geoms, typ).finish();

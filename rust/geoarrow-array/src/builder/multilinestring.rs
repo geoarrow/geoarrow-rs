@@ -1,16 +1,17 @@
-use arrow_array::OffsetSizeTrait;
-use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
-use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
-use geoarrow_schema::{CoordType, MultiLineStringType};
-// use super::array::check;
+use std::sync::Arc;
 
-use crate::array::{MultiLineStringArray, WkbArray};
-use crate::builder::{
-    CoordBufferBuilder, InterleavedCoordBufferBuilder, OffsetsBuilder, SeparatedCoordBufferBuilder,
-};
+use arrow_array::OffsetSizeTrait;
+use arrow_buffer::NullBufferBuilder;
+use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
+use geoarrow_schema::MultiLineStringType;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
+
+use crate::GeoArrowArray;
+use crate::array::{GenericWkbArray, MultiLineStringArray};
+use crate::builder::{CoordBufferBuilder, OffsetsBuilder};
 use crate::capacity::MultiLineStringCapacity;
-use crate::error::{GeoArrowError, Result};
-use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
+use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
+use crate::util::GeometryTypeName;
 
 /// The GeoArrow equivalent to `Vec<Option<MultiLineString>>`: a mutable collection of
 /// MultiLineStrings.
@@ -40,20 +41,11 @@ impl MultiLineStringBuilder {
 
     /// Creates a new [`MultiLineStringBuilder`] with a capacity.
     pub fn with_capacity(typ: MultiLineStringType, capacity: MultiLineStringCapacity) -> Self {
-        let coords = match typ.coord_type() {
-            CoordType::Interleaved => {
-                CoordBufferBuilder::Interleaved(InterleavedCoordBufferBuilder::with_capacity(
-                    capacity.coord_capacity,
-                    typ.dimension(),
-                ))
-            }
-            CoordType::Separated => {
-                CoordBufferBuilder::Separated(SeparatedCoordBufferBuilder::with_capacity(
-                    capacity.coord_capacity,
-                    typ.dimension(),
-                ))
-            }
-        };
+        let coords = CoordBufferBuilder::with_capacity(
+            capacity.coord_capacity,
+            typ.coord_type(),
+            typ.dimension(),
+        );
         Self {
             coords,
             geom_offsets: OffsetsBuilder::with_capacity(capacity.geom_capacity),
@@ -91,6 +83,14 @@ impl MultiLineStringBuilder {
         self.geom_offsets.reserve_exact(additional.geom_capacity);
     }
 
+    /// Shrinks the capacity of self to fit.
+    pub fn shrink_to_fit(&mut self) {
+        self.coords.shrink_to_fit();
+        self.ring_offsets.shrink_to_fit();
+        self.geom_offsets.shrink_to_fit();
+        // self.validity.shrink_to_fit();
+    }
+
     /// The canonical method to create a [`MultiLineStringBuilder`] out of its internal
     /// components.
     ///
@@ -109,7 +109,7 @@ impl MultiLineStringBuilder {
         ring_offsets: OffsetsBuilder<i32>,
         validity: NullBufferBuilder,
         data_type: MultiLineStringType,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         // check(
         //     &coords.clone().into(),
         //     &geom_offsets.clone().into(),
@@ -127,12 +127,13 @@ impl MultiLineStringBuilder {
 
     /// Push a raw offset to the underlying geometry offsets buffer.
     ///
-    /// # Safety
+    /// # Invariants
     ///
-    /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
+    /// Care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
     #[inline]
-    pub unsafe fn try_push_geom_offset(&mut self, offsets_length: usize) -> Result<()> {
+    #[allow(dead_code)]
+    pub(crate) fn try_push_geom_offset(&mut self, offsets_length: usize) -> GeoArrowResult<()> {
         self.geom_offsets.try_push_usize(offsets_length)?;
         self.validity.append(true);
         Ok(())
@@ -140,12 +141,13 @@ impl MultiLineStringBuilder {
 
     /// Push a raw offset to the underlying ring offsets buffer.
     ///
-    /// # Safety
+    /// # Invariants
     ///
-    /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
+    /// Care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
     #[inline]
-    pub unsafe fn try_push_ring_offset(&mut self, offsets_length: usize) -> Result<()> {
+    #[allow(dead_code)]
+    pub(crate) fn try_push_ring_offset(&mut self, offsets_length: usize) -> GeoArrowResult<()> {
         self.ring_offsets.try_push_usize(offsets_length)?;
         Ok(())
     }
@@ -154,45 +156,13 @@ impl MultiLineStringBuilder {
     pub fn finish(mut self) -> MultiLineStringArray {
         let validity = self.validity.finish();
 
-        let geom_offsets: OffsetBuffer<i32> = self.geom_offsets.into();
-        let ring_offsets: OffsetBuffer<i32> = self.ring_offsets.into();
-
         MultiLineStringArray::new(
-            self.coords.into(),
-            geom_offsets,
-            ring_offsets,
+            self.coords.finish(),
+            self.geom_offsets.finish(),
+            self.ring_offsets.finish(),
             validity,
             self.data_type.metadata().clone(),
         )
-    }
-
-    /// Creates a new builder with a capacity inferred by the provided iterator.
-    pub fn with_capacity_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
-        typ: MultiLineStringType,
-    ) -> Self {
-        let counter = MultiLineStringCapacity::from_multi_line_strings(geoms);
-        Self::with_capacity(typ, counter)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
-    ) {
-        let counter = MultiLineStringCapacity::from_multi_line_strings(geoms);
-        self.reserve(counter)
-    }
-
-    /// Reserve more space in the underlying buffers with the capacity inferred from the provided
-    /// geometries.
-    pub fn reserve_exact_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
-    ) {
-        let counter = MultiLineStringCapacity::from_multi_line_strings(geoms);
-        self.reserve_exact(counter)
     }
 
     /// Add a new LineString to the end of this array.
@@ -204,7 +174,7 @@ impl MultiLineStringBuilder {
     pub fn push_line_string(
         &mut self,
         value: Option<&impl LineStringTrait<T = f64>>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         if let Some(line_string) = value {
             // Total number of linestrings in this multilinestring
             let num_line_strings = 1;
@@ -215,9 +185,7 @@ impl MultiLineStringBuilder {
             // - Add ring's # of coords to self.ring_offsets
             // - Push ring's coords to self.coords
 
-            self.ring_offsets
-                .try_push_usize(line_string.num_coords())
-                .unwrap();
+            self.ring_offsets.try_push_usize(line_string.num_coords())?;
 
             for coord in line_string.coords() {
                 self.coords.push_coord(&coord);
@@ -239,7 +207,7 @@ impl MultiLineStringBuilder {
     pub fn push_multi_line_string(
         &mut self,
         value: Option<&impl MultiLineStringTrait<T = f64>>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         if let Some(multi_line_string) = value {
             // Total number of linestrings in this multilinestring
             let num_line_strings = multi_line_string.num_line_strings();
@@ -252,9 +220,7 @@ impl MultiLineStringBuilder {
 
             // Number of coords for each ring
             for line_string in multi_line_string.line_strings() {
-                self.ring_offsets
-                    .try_push_usize(line_string.num_coords())
-                    .unwrap();
+                self.ring_offsets.try_push_usize(line_string.num_coords())?;
 
                 for coord in line_string.coords() {
                     self.coords.push_coord(&coord);
@@ -272,12 +238,20 @@ impl MultiLineStringBuilder {
     ///
     /// This will error if the geometry type is not LineString or MultiLineString.
     #[inline]
-    pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+    pub fn push_geometry(
+        &mut self,
+        value: Option<&impl GeometryTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
         if let Some(value) = value {
             match value.as_type() {
                 GeometryType::LineString(g) => self.push_line_string(Some(g))?,
                 GeometryType::MultiLineString(g) => self.push_multi_line_string(Some(g))?,
-                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+                gt => {
+                    return Err(GeoArrowError::IncorrectGeometryType(format!(
+                        "Expected MultiLineString compatible geometry, got {}",
+                        gt.name()
+                    )));
+                }
             }
         } else {
             self.push_null();
@@ -300,19 +274,19 @@ impl MultiLineStringBuilder {
     pub fn extend_from_geometry_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
-    ) -> Result<()> {
+    ) -> GeoArrowResult<()> {
         geoms.into_iter().try_for_each(|g| self.push_geometry(g))?;
         Ok(())
     }
 
     /// Push a raw coordinate to the underlying coordinate array.
     ///
-    /// # Safety
+    /// # Invariants
     ///
-    /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
+    /// Care must be taken to ensure that pushing raw coordinates
     /// to the array upholds the necessary invariants of the array.
     #[inline]
-    pub unsafe fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+    pub(crate) fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> GeoArrowResult<()> {
         self.coords.push_coord(coord);
         Ok(())
     }
@@ -330,7 +304,8 @@ impl MultiLineStringBuilder {
         geoms: &[impl MultiLineStringTrait<T = f64>],
         typ: MultiLineStringType,
     ) -> Self {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(Some), typ);
+        let capacity = MultiLineStringCapacity::from_multi_line_strings(geoms.iter().map(Some));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(Some));
         array
     }
@@ -340,7 +315,9 @@ impl MultiLineStringBuilder {
         geoms: &[Option<impl MultiLineStringTrait<T = f64>>],
         typ: MultiLineStringType,
     ) -> Self {
-        let mut array = Self::with_capacity_from_iter(geoms.iter().map(|x| x.as_ref()), typ);
+        let capacity =
+            MultiLineStringCapacity::from_multi_line_strings(geoms.iter().map(|x| x.as_ref()));
+        let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         array
     }
@@ -349,7 +326,7 @@ impl MultiLineStringBuilder {
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         typ: MultiLineStringType,
-    ) -> Result<Self> {
+    ) -> GeoArrowResult<Self> {
         let capacity = MultiLineStringCapacity::from_geometries(geoms.iter().map(|x| x.as_ref()))?;
         let mut array = Self::with_capacity(typ, capacity);
         array.extend_from_geometry_iter(geoms.iter().map(|x| x.as_ref()))?;
@@ -357,24 +334,37 @@ impl MultiLineStringBuilder {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<(WkbArray<O>, MultiLineStringType)> for MultiLineStringBuilder {
+impl<O: OffsetSizeTrait> TryFrom<(GenericWkbArray<O>, MultiLineStringType)>
+    for MultiLineStringBuilder
+{
     type Error = GeoArrowError;
 
-    fn try_from((value, typ): (WkbArray<O>, MultiLineStringType)) -> Result<Self> {
+    fn try_from((value, typ): (GenericWkbArray<O>, MultiLineStringType)) -> GeoArrowResult<Self> {
         let wkb_objects = value
             .iter()
             .map(|x| x.transpose())
-            .collect::<Result<Vec<_>>>()?;
+            .collect::<GeoArrowResult<Vec<_>>>()?;
         Self::from_nullable_geometries(&wkb_objects, typ)
     }
 }
 
-impl GeometryArrayBuilder for MultiLineStringBuilder {
+impl GeoArrowArrayBuilder for MultiLineStringBuilder {
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
     }
 
     fn push_null(&mut self) {
         self.push_null();
+    }
+
+    fn push_geometry(
+        &mut self,
+        geometry: Option<&impl GeometryTrait<T = f64>>,
+    ) -> GeoArrowResult<()> {
+        self.push_geometry(geometry)
+    }
+
+    fn finish(self) -> Arc<dyn GeoArrowArray> {
+        Arc::new(self.finish())
     }
 }

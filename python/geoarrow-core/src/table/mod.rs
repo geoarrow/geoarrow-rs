@@ -1,5 +1,3 @@
-mod geo_interface;
-
 use crate::ffi::to_python::{chunked_native_array_to_pyobject, native_array_to_pyobject};
 use crate::interop::util::pytable_to_table;
 use geoarrow::array::NativeArrayDyn;

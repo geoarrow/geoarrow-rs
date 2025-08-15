@@ -3,9 +3,10 @@ use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy)]
 pub enum PyCoordType {
     Interleaved,
+    #[default]
     Separated,
 }
 
@@ -47,8 +48,8 @@ impl<'py> IntoPyObject<'py> for PyCoordType {
         let enums_mod = py.import(intern!(py, "geoarrow.rust.core.enums"))?;
         let enum_cls = enums_mod.getattr(intern!(py, "CoordType"))?;
         match self {
-            Self::Interleaved => enum_cls.getattr(intern!(py, "Interleaved")),
-            Self::Separated => enum_cls.getattr(intern!(py, "Separated")),
+            Self::Interleaved => enum_cls.getattr(intern!(py, "INTERLEAVED")),
+            Self::Separated => enum_cls.getattr(intern!(py, "SEPARATED")),
         }
     }
 }
