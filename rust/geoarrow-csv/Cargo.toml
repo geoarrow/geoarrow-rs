@@ -1,0 +1,21 @@
+[package]
+name = "geoarrow-csv"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+description = "CSV reader and writer for GeoArrow"
+categories = { workspace = true }
+rust-version = { workspace = true }
+
+
+[dependencies]
+arrow-array = { workspace = true }
+arrow-csv = { workspace = true }
+arrow-schema = { workspace = true }
+geoarrow-array = { workspace = true }
+geoarrow-schema = { workspace = true }
+
+[dev-dependencies]
+geo-traits = { workspace = true }

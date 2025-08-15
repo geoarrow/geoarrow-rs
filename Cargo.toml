@@ -3,6 +3,7 @@ members = [
     "rust/geoarrow",
     "rust/geoarrow-array",
     "rust/geoarrow-cast",
+    "rust/geoarrow-csv",
     "rust/geoarrow-flatgeobuf",
     "rust/geoarrow-geo",
     "rust/geoarrow-geojson",

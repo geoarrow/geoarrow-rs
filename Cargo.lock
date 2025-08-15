@@ -1720,6 +1720,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "geoarrow-csv"
+version = "0.5.0"
+dependencies = [
+ "arrow-array",
+ "arrow-csv",
+ "arrow-schema",
+ "geoarrow-array",
+ "geoarrow-schema",
+]
+
+[[package]]
 name = "geoarrow-flatgeobuf"
 version = "0.5.0"
 dependencies = [
