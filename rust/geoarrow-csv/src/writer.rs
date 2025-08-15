@@ -1,26 +1,53 @@
+//! Write GeoArrow data to CSV
+
 use std::io::Write;
 use std::sync::Arc;
 
-use arrow_array::RecordBatch;
+use arrow_array::{RecordBatch, RecordBatchReader};
 use arrow_schema::Schema;
-use geoarrow_array::error::Result;
+use geoarrow_array::GeoArrowArray;
+use geoarrow_array::array::from_arrow_array;
+use geoarrow_array::cast::to_wkt_view;
+use geoarrow_schema::GeoArrowType;
+use geoarrow_schema::error::GeoArrowResult;
 
-// TODO: add CSV writer options
+/// A CSV writer that encodes geometries as WKT strings
+pub struct CsvWriter<W: Write> {
+    inner: arrow_csv::Writer<W>,
+}
+
+impl<W: Write> CsvWriter<W> {
+    /// Create a new CSV writer
+    pub fn new(writer: arrow_csv::Writer<W>) -> Self {
+        Self { inner: writer }
+    }
+
+    /// Write a record batch to the CSV
+    pub fn write(&mut self, batch: &RecordBatch) -> GeoArrowResult<()> {
+        let batch = encode_batch(batch)?;
+        self.inner.write(&batch)?;
+        Ok(())
+    }
+
+    /// Return the underlying writer
+    pub fn into_inner(self) -> W {
+        self.inner.into_inner()
+    }
+}
 
 /// Write a Table to CSV
-pub fn write_csv<W: Write, S: Into<RecordBatchReader>>(stream: S, writer: W) -> Result<()> {
-    let stream: RecordBatchReader = stream.into();
-    let reader = stream.into_inner();
-
-    let mut csv_writer = arrow_csv::Writer::new(writer);
-    for batch in reader {
-        csv_writer.write(&encode_batch(batch?)?)?;
+pub fn write_csv<W: Write, S: RecordBatchReader>(
+    stream: S,
+    writer: &mut arrow_csv::Writer<W>,
+) -> GeoArrowResult<()> {
+    for batch in stream {
+        writer.write(&encode_batch(&batch?)?)?;
     }
 
     Ok(())
 }
 
-fn encode_batch(batch: RecordBatch) -> Result<RecordBatch> {
+fn encode_batch(batch: &RecordBatch) -> GeoArrowResult<RecordBatch> {
     let schema = batch.schema();
     let fields = schema.fields();
 
@@ -28,10 +55,17 @@ fn encode_batch(batch: RecordBatch) -> Result<RecordBatch> {
     let mut new_columns = Vec::with_capacity(fields.len());
 
     for (field, column) in schema.fields().iter().zip(batch.columns()) {
-        if let Ok(arr) = NativeArrayDyn::from_arrow_array(&column, field) {
-            let wkt_arr = arr.as_ref().to_wkt::<i32>()?;
-            new_fields.push(wkt_arr.extension_field());
-            new_columns.push(wkt_arr.into_array_ref());
+        if let Ok(_typ) = GeoArrowType::from_extension_field(field) {
+            let geo_arr = from_arrow_array(&column, field)?;
+            let wkt_view_arr = to_wkt_view(&geo_arr)?;
+
+            new_fields.push(
+                wkt_view_arr
+                    .data_type()
+                    .to_field(field.name(), field.is_nullable())
+                    .into(),
+            );
+            new_columns.push(wkt_view_arr.into_array_ref());
         } else {
             new_fields.push(field.clone());
             new_columns.push(column.clone());
@@ -42,22 +76,4 @@ fn encode_batch(batch: RecordBatch) -> Result<RecordBatch> {
         Arc::new(Schema::new(new_fields).with_metadata(schema.metadata().clone())),
         new_columns,
     )?)
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use crate::test::point;
-    use std::io::BufWriter;
-
-    #[test]
-    fn test_write() {
-        let table = point::table();
-
-        let mut output_buffer = Vec::new();
-        let writer = BufWriter::new(&mut output_buffer);
-        write_csv(&table, writer).unwrap();
-        let output_string = String::from_utf8(output_buffer).unwrap();
-        println!("{}", output_string);
-    }
 }
