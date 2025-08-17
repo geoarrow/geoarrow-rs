@@ -272,8 +272,9 @@ impl<'a> GeometryCollectionBuilder {
         Ok(())
     }
 
+    /// Push a null to this builder.
     #[inline]
-    pub(crate) fn push_null(&mut self) {
+    pub fn push_null(&mut self) {
         self.geom_offsets.extend_constant(1);
         self.validity.append(false);
     }
