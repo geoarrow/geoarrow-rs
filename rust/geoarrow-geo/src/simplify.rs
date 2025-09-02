@@ -39,7 +39,7 @@ fn simplify_linestring(
     for item in array.iter() {
         if let Some(geom) = item {
             let geo_geom = geom?.to_line_string();
-            builder.push_line_string(Some(&geo_geom.simplify(&epsilon)))?;
+            builder.push_line_string(Some(&geo_geom.simplify(epsilon)))?;
         } else {
             builder.push_line_string(None::<&geo::LineString>.as_ref())?;
         }
@@ -54,7 +54,7 @@ fn simplify_polygon(array: &PolygonArray, epsilon: f64) -> GeoArrowResult<Arc<dy
     for item in array.iter() {
         if let Some(geom) = item {
             let geo_geom = geom?.to_polygon();
-            builder.push_polygon(Some(&geo_geom.simplify(&epsilon)))?;
+            builder.push_polygon(Some(&geo_geom.simplify(epsilon)))?;
         } else {
             builder.push_polygon(None::<&geo::Polygon>.as_ref())?;
         }
@@ -72,7 +72,7 @@ fn simplify_multi_linestring(
     for item in array.iter() {
         if let Some(geom) = item {
             let geo_geom = geom?.to_multi_line_string();
-            builder.push_multi_line_string(Some(&geo_geom.simplify(&epsilon)))?;
+            builder.push_multi_line_string(Some(&geo_geom.simplify(epsilon)))?;
         } else {
             builder.push_multi_line_string(None::<&geo::MultiLineString>.as_ref())?;
         }
@@ -90,7 +90,7 @@ fn simplify_multi_polygon(
     for item in array.iter() {
         if let Some(geom) = item {
             let geo_geom = geom?.to_multi_polygon();
-            builder.push_multi_polygon(Some(&geo_geom.simplify(&epsilon)))?;
+            builder.push_multi_polygon(Some(&geo_geom.simplify(epsilon)))?;
         } else {
             builder.push_multi_polygon(None::<&geo::MultiPolygon>.as_ref())?;
         }
@@ -121,10 +121,10 @@ fn simplify_geometry_impl<'a>(
 
 fn simplify_geometry(geom: &geo::Geometry, epsilon: f64) -> geo::Geometry {
     match geom {
-        geo::Geometry::LineString(g) => geo::Geometry::LineString(g.simplify(&epsilon)),
-        geo::Geometry::Polygon(g) => geo::Geometry::Polygon(g.simplify(&epsilon)),
-        geo::Geometry::MultiLineString(g) => geo::Geometry::MultiLineString(g.simplify(&epsilon)),
-        geo::Geometry::MultiPolygon(g) => geo::Geometry::MultiPolygon(g.simplify(&epsilon)),
+        geo::Geometry::LineString(g) => geo::Geometry::LineString(g.simplify(epsilon)),
+        geo::Geometry::Polygon(g) => geo::Geometry::Polygon(g.simplify(epsilon)),
+        geo::Geometry::MultiLineString(g) => geo::Geometry::MultiLineString(g.simplify(epsilon)),
+        geo::Geometry::MultiPolygon(g) => geo::Geometry::MultiPolygon(g.simplify(epsilon)),
         _ => geom.clone(),
     }
 }

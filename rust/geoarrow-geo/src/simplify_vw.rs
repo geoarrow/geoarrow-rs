@@ -42,7 +42,7 @@ fn simplify_vw_linestring(
     for item in array.iter() {
         if let Some(geom) = item {
             let geo_geom = geom?.to_line_string();
-            builder.push_line_string(Some(&geo_geom.simplify_vw(&epsilon)))?;
+            builder.push_line_string(Some(&geo_geom.simplify_vw(epsilon)))?;
         } else {
             builder.push_line_string(None::<&geo::LineString>.as_ref())?;
         }
@@ -60,7 +60,7 @@ fn simplify_vw_polygon(
     for item in array.iter() {
         if let Some(geom) = item {
             let geo_geom = geom?.to_polygon();
-            builder.push_polygon(Some(&geo_geom.simplify_vw(&epsilon)))?;
+            builder.push_polygon(Some(&geo_geom.simplify_vw(epsilon)))?;
         } else {
             builder.push_polygon(None::<&geo::Polygon>.as_ref())?;
         }
@@ -78,7 +78,7 @@ fn simplify_vw_multi_linestring(
     for item in array.iter() {
         if let Some(geom) = item {
             let geo_geom = geom?.to_multi_line_string();
-            builder.push_multi_line_string(Some(&geo_geom.simplify_vw(&epsilon)))?;
+            builder.push_multi_line_string(Some(&geo_geom.simplify_vw(epsilon)))?;
         } else {
             builder.push_multi_line_string(None::<&geo::MultiLineString>.as_ref())?;
         }
@@ -96,7 +96,7 @@ fn simplify_vw_multi_polygon(
     for item in array.iter() {
         if let Some(geom) = item {
             let geo_geom = geom?.to_multi_polygon();
-            builder.push_multi_polygon(Some(&geo_geom.simplify_vw(&epsilon)))?;
+            builder.push_multi_polygon(Some(&geo_geom.simplify_vw(epsilon)))?;
         } else {
             builder.push_multi_polygon(None::<&geo::MultiPolygon>.as_ref())?;
         }
@@ -127,12 +127,10 @@ fn simplify_vw_geometry_impl<'a>(
 
 fn simplify_vw_geometry(geom: &geo::Geometry, epsilon: f64) -> geo::Geometry {
     match geom {
-        geo::Geometry::LineString(g) => geo::Geometry::LineString(g.simplify_vw(&epsilon)),
-        geo::Geometry::Polygon(g) => geo::Geometry::Polygon(g.simplify_vw(&epsilon)),
-        geo::Geometry::MultiLineString(g) => {
-            geo::Geometry::MultiLineString(g.simplify_vw(&epsilon))
-        }
-        geo::Geometry::MultiPolygon(g) => geo::Geometry::MultiPolygon(g.simplify_vw(&epsilon)),
+        geo::Geometry::LineString(g) => geo::Geometry::LineString(g.simplify_vw(epsilon)),
+        geo::Geometry::Polygon(g) => geo::Geometry::Polygon(g.simplify_vw(epsilon)),
+        geo::Geometry::MultiLineString(g) => geo::Geometry::MultiLineString(g.simplify_vw(epsilon)),
+        geo::Geometry::MultiPolygon(g) => geo::Geometry::MultiPolygon(g.simplify_vw(epsilon)),
         _ => geom.clone(),
     }
 }

@@ -58,7 +58,7 @@ pyo3-geoarrow = { workspace = true }
 pyo3-async-runtimes = { version = "0.25", features = [
     "tokio-runtime",
 ], optional = true }
-geo = "0.30"
+geo = "0.31"
 geo-traits = { workspace = true }
 geoarrow-array = { workspace = true }
 geoarrow-flatgeobuf = { workspace = true, features = ["object_store"] }

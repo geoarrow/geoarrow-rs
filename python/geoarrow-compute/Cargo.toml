@@ -24,5 +24,5 @@ arrow-buffer = { workspace = true }
 pyo3 = { workspace = true }
 pyo3-arrow = { workspace = true }
 pyo3-geoarrow = { workspace = true }
-geo = "0.30"
+geo = "0.31"
 numpy = { workspace = true }
