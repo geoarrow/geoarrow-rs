@@ -18,6 +18,7 @@ A Rust implementation of the [GeoArrow](https://github.com/geoarrow/geoarrow) sp
 
 Additionally we are working on a few other crates that are not yet distributed on crates.io:
 
+- `geoarrow-csv`: Reader and writer for CSV files to GeoArrow memory
 - `geoarrow-geo`: Integration with `geo` crate for spatial algorithms.
 - `geoarrow-geos`: Integration with `geos` crate for spatial algorithms.
 - `geodatafusion`: Integration with DataFusion.
