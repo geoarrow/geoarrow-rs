@@ -36,6 +36,7 @@ pub(crate) struct PyGeomFromWKB(Arc<GeomFromWKB>);
 #[pymethods]
 impl PyGeomFromWKB {
     #[new]
+    #[pyo3(signature = (*, coord_type=None))]
     fn new(coord_type: Option<PyCoordType>) -> Self {
         let coord_type = coord_type.map(|c| c.into()).unwrap_or_default();
         Self(Arc::new(GeomFromWKB::new(coord_type)))
@@ -79,6 +80,7 @@ pub(crate) struct PyGeomFromText(Arc<GeomFromText>);
 #[pymethods]
 impl PyGeomFromText {
     #[new]
+    #[pyo3(signature = (*, coord_type=None))]
     fn new(coord_type: Option<PyCoordType>) -> Self {
         let coord_type = coord_type.map(|c| c.into()).unwrap_or_default();
         Self(Arc::new(GeomFromText::new(coord_type)))

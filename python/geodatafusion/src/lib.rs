@@ -4,9 +4,9 @@ pub(crate) mod constants;
 mod udf;
 
 use pyo3::exceptions::PyRuntimeWarning;
-use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::PyTuple;
+use pyo3::{intern, wrap_pymodule};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -35,6 +35,12 @@ fn check_debug_build(py: Python) -> PyResult<()> {
 fn _rust(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     check_debug_build(py)?;
     m.add_wrapped(wrap_pyfunction!(___version))?;
+
+    let native_mod = wrap_pymodule!(udf::native::native)(py);
+    m.add_submodule(native_mod.bind(py))?;
+    py.import(intern!(py, "sys"))?
+        .getattr(intern!(py, "modules"))?
+        .set_item("geodatafusion.native", native_mod)?;
 
     Ok(())
 }

@@ -17,6 +17,7 @@ pub(crate) struct PyPoint(Arc<Point>);
 #[pymethods]
 impl PyPoint {
     #[new]
+    #[pyo3(signature = (*, coord_type=None))]
     fn new(coord_type: Option<PyCoordType>) -> Self {
         let coord_type = coord_type.map(|c| c.into()).unwrap_or_default();
         Self(Arc::new(Point::new(coord_type)))
@@ -39,6 +40,7 @@ pub(crate) struct PyPointZ(Arc<PointZ>);
 #[pymethods]
 impl PyPointZ {
     #[new]
+    #[pyo3(signature = (*, coord_type=None))]
     fn new(coord_type: Option<PyCoordType>) -> Self {
         let coord_type = coord_type.map(|c| c.into()).unwrap_or_default();
         Self(Arc::new(PointZ::new(coord_type)))
@@ -61,6 +63,7 @@ pub(crate) struct PyPointM(Arc<PointM>);
 #[pymethods]
 impl PyPointM {
     #[new]
+    #[pyo3(signature = (*, coord_type=None))]
     fn new(coord_type: Option<PyCoordType>) -> Self {
         let coord_type = coord_type.map(|c| c.into()).unwrap_or_default();
         Self(Arc::new(PointM::new(coord_type)))
@@ -83,6 +86,7 @@ pub(crate) struct PyPointZM(Arc<PointZM>);
 #[pymethods]
 impl PyPointZM {
     #[new]
+    #[pyo3(signature = (*, coord_type=None))]
     fn new(coord_type: Option<PyCoordType>) -> Self {
         let coord_type = coord_type.map(|c| c.into()).unwrap_or_default();
         Self(Arc::new(PointZM::new(coord_type)))
@@ -105,6 +109,7 @@ pub(crate) struct PyMakePoint(Arc<MakePoint>);
 #[pymethods]
 impl PyMakePoint {
     #[new]
+    #[pyo3(signature = (*, coord_type=None))]
     fn new(coord_type: Option<PyCoordType>) -> Self {
         let coord_type = coord_type.map(|c| c.into()).unwrap_or_default();
         Self(Arc::new(MakePoint::new(coord_type)))
@@ -127,6 +132,7 @@ pub(crate) struct PyMakePointM(Arc<MakePointM>);
 #[pymethods]
 impl PyMakePointM {
     #[new]
+    #[pyo3(signature = (*, coord_type=None))]
     fn new(coord_type: Option<PyCoordType>) -> Self {
         let coord_type = coord_type.map(|c| c.into()).unwrap_or_default();
         Self(Arc::new(MakePointM::new(coord_type)))

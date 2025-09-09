@@ -1,1 +1,1 @@
-mod native;
+pub(crate) mod native;
