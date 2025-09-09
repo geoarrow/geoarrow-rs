@@ -2027,16 +2027,10 @@ dependencies = [
 name = "geodatafusion"
 version = "0.5.1"
 dependencies = [
- "arrow-array",
- "arrow-schema",
  "datafusion",
  "datafusion-ffi",
- "geo-traits",
- "geoarrow-array",
- "geoarrow-schema",
  "geodatafusion 0.1.0-dev",
  "pyo3",
- "pyo3-arrow",
  "pyo3-geoarrow",
 ]
 

@@ -1,4 +1,4 @@
-// #![cfg_attr(not(test), deny(unused_crate_dependencies))]
+#![cfg_attr(not(test), warn(unused_crate_dependencies))]
 
 mod udf;
 
