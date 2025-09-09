@@ -1,5 +1,6 @@
 #![cfg_attr(not(test), warn(unused_crate_dependencies))]
 
+pub(crate) mod constants;
 mod udf;
 
 use pyo3::exceptions::PyRuntimeWarning;
