@@ -1,6 +1,7 @@
-pub(crate) mod bounding_box;
-pub(crate) mod constructors;
-pub(crate) mod io;
+mod accessors;
+mod bounding_box;
+mod constructors;
+mod io;
 
 use pyo3::prelude::*;
 
