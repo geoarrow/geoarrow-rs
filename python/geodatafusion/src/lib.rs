@@ -2,6 +2,7 @@
 
 pub(crate) mod constants;
 mod udf;
+mod utils;
 
 use pyo3::exceptions::PyRuntimeWarning;
 use pyo3::prelude::*;
