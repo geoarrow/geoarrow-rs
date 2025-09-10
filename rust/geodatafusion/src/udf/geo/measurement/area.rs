@@ -13,7 +13,7 @@ use geoarrow_geo::unsigned_area;
 use crate::data_types::any_single_geometry_type_input;
 use crate::error::GeoDataFusionResult;
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct Area {
     signature: Signature,
 }

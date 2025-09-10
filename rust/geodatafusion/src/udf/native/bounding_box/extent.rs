@@ -17,7 +17,7 @@ use crate::data_types::any_single_geometry_type_input;
 use crate::error::GeoDataFusionResult;
 use crate::udf::native::bounding_box::util::bounds::{BoundingRect, total_bounds};
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct Extent {
     signature: Signature,
 }

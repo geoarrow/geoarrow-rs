@@ -18,8 +18,8 @@ arrow = "56"
 arrow-array = "56"
 arrow-buffer = "56"
 arrow-schema = "56"
-datafusion = { git = "https://github.com/apache/datafusion", rev = "fa1f8c192dd531d3f2fca61885eafa3e9002f0dd" }
-datafusion-ffi = { git = "https://github.com/apache/datafusion", rev = "fa1f8c192dd531d3f2fca61885eafa3e9002f0dd" }
+datafusion = { git = "https://github.com/apache/datafusion", rev = "9e7141f36ddbb0ad9c79ed3c95e332f495c1b078" }
+datafusion-ffi = { git = "https://github.com/apache/datafusion", rev = "9e7141f36ddbb0ad9c79ed3c95e332f495c1b078" }
 flatgeobuf = { version = "5.0", default-features = false }
 geo-traits = "0.3"
 geoarrow-array = { path = "../rust/geoarrow-array" }

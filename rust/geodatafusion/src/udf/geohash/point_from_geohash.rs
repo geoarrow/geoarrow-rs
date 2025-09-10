@@ -17,7 +17,7 @@ use geoarrow_schema::{CoordType, Dimension, Metadata, PointType};
 
 use crate::error::GeoDataFusionResult;
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct PointFromGeoHash {
     signature: Signature,
     coord_type: CoordType,

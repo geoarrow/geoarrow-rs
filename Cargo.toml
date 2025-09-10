@@ -46,9 +46,9 @@ async-trait = "0.1"
 bytes = "1.10.0"
 chrono = { version = "0.4.41", default-features = false }
 # Arrow 56
-datafusion = { git = "https://github.com/apache/datafusion", rev = "fa1f8c192dd531d3f2fca61885eafa3e9002f0dd" }
-datafusion-datasource = { git = "https://github.com/apache/datafusion", rev = "fa1f8c192dd531d3f2fca61885eafa3e9002f0dd" }
-datafusion-datasource-parquet = { git = "https://github.com/apache/datafusion", rev = "fa1f8c192dd531d3f2fca61885eafa3e9002f0dd" }
+datafusion = { git = "https://github.com/apache/datafusion", rev = "9e7141f36ddbb0ad9c79ed3c95e332f495c1b078" }
+datafusion-datasource = { git = "https://github.com/apache/datafusion", rev = "9e7141f36ddbb0ad9c79ed3c95e332f495c1b078" }
+datafusion-datasource-parquet = { git = "https://github.com/apache/datafusion", rev = "9e7141f36ddbb0ad9c79ed3c95e332f495c1b078" }
 flatgeobuf = { version = "5.0", default-features = false }
 futures = "0.3"
 geo = "0.31.0"

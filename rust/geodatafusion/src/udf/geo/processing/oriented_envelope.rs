@@ -14,7 +14,7 @@ use geoarrow_schema::{CoordType, Dimension, Metadata, PolygonType};
 use crate::data_types::any_single_geometry_type_input;
 use crate::error::GeoDataFusionResult;
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct OrientedEnvelope {
     signature: Signature,
     coord_type: CoordType,

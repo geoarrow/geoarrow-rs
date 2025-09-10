@@ -16,7 +16,7 @@ use geoarrow_schema::{CoordType, Dimension, GeoArrowType, GeometryType};
 
 use crate::error::GeoDataFusionResult;
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct Simplify {
     signature: Signature,
     coord_type: CoordType,
@@ -79,7 +79,7 @@ impl ScalarUDFImpl for Simplify {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct SimplifyVW {
     signature: Signature,
     coord_type: CoordType,
@@ -142,7 +142,7 @@ impl ScalarUDFImpl for SimplifyVW {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct SimplifyPreserveTopology {
     signature: Signature,
     coord_type: CoordType,

@@ -15,7 +15,7 @@ use datafusion::physical_expr::{PhysicalExpr, ScalarFunctionExpr};
 use datafusion::physical_plan::ColumnarValue;
 use datafusion::physical_plan::filter_pushdown::{FilterPushdownPropagation, PushedDown};
 use datafusion::physical_plan::metrics::ExecutionPlanMetricsSet;
-use futures::StreamExt;
+use futures::{StreamExt, TryStreamExt};
 use geoarrow_array::array::from_arrow_array;
 use geoarrow_flatgeobuf::reader::{FlatGeobufReaderOptions, FlatGeobufRecordBatchStream};
 use geodatafusion::udf::native::bounding_box::util::total_bounds;
@@ -188,7 +188,9 @@ impl FileOpener for FlatGeobufOpener {
                     .map_err(|err| DataFusionError::External(Box::new(err)))?
             };
             let stream = FlatGeobufRecordBatchStream::try_new(selection, options)
-                .map_err(|err| DataFusionError::External(Box::new(err)))?;
+                .map_err(|err| DataFusionError::External(Box::new(err)))?
+                .err_into::<DataFusionError>();
+
             Ok(stream.boxed())
         }))
     }

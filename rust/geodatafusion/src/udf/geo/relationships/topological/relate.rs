@@ -20,7 +20,7 @@ use crate::error::GeoDataFusionResult;
 
 macro_rules! impl_relate_udf {
     ($struct_name:ident, $udf_name:expr, $documentation_name:ident, $callback:expr, $doc_text:expr, $doc_example:expr) => {
-        #[derive(Debug)]
+        #[derive(Debug, Eq, PartialEq, Hash)]
         pub struct $struct_name {
             signature: Signature,
         }

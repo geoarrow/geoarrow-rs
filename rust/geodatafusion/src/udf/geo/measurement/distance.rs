@@ -11,7 +11,7 @@ use geoarrow_array::array::from_arrow_array;
 
 use crate::error::GeoDataFusionResult;
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct Distance {
     signature: Signature,
 }

@@ -17,7 +17,7 @@ use geoarrow_schema::{Dimension, GeoArrowType};
 use crate::data_types::any_single_geometry_type_input;
 use crate::error::GeoDataFusionResult;
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct CoordDim {
     signature: Signature,
 }
@@ -134,7 +134,7 @@ fn coord_dim_impl(args: ScalarFunctionArgs) -> GeoDataFusionResult<ColumnarValue
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct NDims {
     signature: Signature,
 }

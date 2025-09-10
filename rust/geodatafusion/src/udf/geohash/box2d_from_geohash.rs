@@ -17,7 +17,7 @@ use geoarrow_schema::{BoxType, Dimension, Metadata};
 
 use crate::error::GeoDataFusionResult;
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct Box2DFromGeoHash {
     signature: Signature,
 }
