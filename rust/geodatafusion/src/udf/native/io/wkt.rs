@@ -16,7 +16,7 @@ use geoarrow_schema::{CoordType, GeoArrowType, GeometryType, Metadata, WktType};
 use crate::data_types::any_single_geometry_type_input;
 use crate::error::GeoDataFusionResult;
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct AsText {
     signature: Signature,
 }
@@ -92,7 +92,7 @@ impl ScalarUDFImpl for AsText {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct GeomFromText {
     signature: Signature,
     coord_type: CoordType,

@@ -21,7 +21,7 @@ use geoarrow_schema::{CoordType, Crs, Dimension, Metadata, PointType};
 
 use crate::error::GeoDataFusionResult;
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct Point {
     signature: Signature,
     coord_type: CoordType,
@@ -112,7 +112,7 @@ impl ScalarUDFImpl for Point {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct PointZ {
     signature: Signature,
     coord_type: CoordType,
@@ -209,7 +209,7 @@ impl ScalarUDFImpl for PointZ {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct PointM {
     signature: Signature,
     coord_type: CoordType,
@@ -306,7 +306,7 @@ impl ScalarUDFImpl for PointM {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct PointZM {
     signature: Signature,
     coord_type: CoordType,
@@ -405,7 +405,7 @@ impl ScalarUDFImpl for PointZM {
         }))
     }
 }
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct MakePoint {
     signature: Signature,
     coord_type: CoordType,
@@ -498,7 +498,7 @@ impl ScalarUDFImpl for MakePoint {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct MakePointM {
     signature: Signature,
     coord_type: CoordType,

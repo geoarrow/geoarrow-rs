@@ -16,7 +16,7 @@ use geoarrow_array::{GeoArrowArrayAccessor, downcast_geoarrow_array};
 use crate::data_types::any_point_type_input;
 use crate::error::GeoDataFusionResult;
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct X {
     signature: Signature,
 }
@@ -71,7 +71,7 @@ impl ScalarUDFImpl for X {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct Y {
     signature: Signature,
 }
@@ -159,7 +159,7 @@ fn _nth_impl<'a>(
     Ok(builder.finish())
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct Z {
     signature: Signature,
 }
@@ -214,7 +214,7 @@ impl ScalarUDFImpl for Z {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct M {
     signature: Signature,
 }

@@ -15,7 +15,7 @@ use geoarrow_schema::{BoxType, CoordType, Dimension, Metadata, PointType};
 
 use crate::error::GeoDataFusionResult;
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct MakeBox2D {
     signature: Signature,
 }
@@ -86,7 +86,7 @@ impl ScalarUDFImpl for MakeBox2D {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct MakeBox3D {
     signature: Signature,
 }

@@ -16,7 +16,7 @@ use geoarrow_schema::{CoordType, Dimension, PointType};
 
 use crate::error::GeoDataFusionResult;
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct GeoHash {
     signature: Signature,
 }

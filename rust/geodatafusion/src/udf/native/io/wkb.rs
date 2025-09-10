@@ -16,7 +16,7 @@ use geoarrow_schema::{CoordType, GeoArrowType, GeometryType, Metadata, WkbType};
 use crate::data_types::any_single_geometry_type_input;
 use crate::error::{GeoDataFusionError, GeoDataFusionResult};
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct AsBinary {
     signature: Signature,
 }
@@ -88,7 +88,7 @@ impl ScalarUDFImpl for AsBinary {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct GeomFromWKB {
     signature: Signature,
     coord_type: CoordType,

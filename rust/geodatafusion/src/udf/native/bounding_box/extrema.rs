@@ -15,7 +15,7 @@ use crate::data_types::any_single_geometry_type_input;
 use crate::error::GeoDataFusionResult;
 use crate::udf::native::bounding_box::util::bounds::impl_extrema;
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct XMin {
     signature: Signature,
 }
@@ -76,7 +76,7 @@ impl ScalarUDFImpl for XMin {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct YMin {
     signature: Signature,
 }
@@ -137,7 +137,7 @@ impl ScalarUDFImpl for YMin {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct ZMin {
     signature: Signature,
 }
@@ -200,7 +200,7 @@ impl ScalarUDFImpl for ZMin {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct XMax {
     signature: Signature,
 }
@@ -261,7 +261,7 @@ impl ScalarUDFImpl for XMax {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct YMax {
     signature: Signature,
 }
@@ -322,7 +322,7 @@ impl ScalarUDFImpl for YMax {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct ZMax {
     signature: Signature,
 }

@@ -12,7 +12,7 @@ use geoarrow_array::array::from_arrow_array;
 use crate::data_types::any_single_geometry_type_input;
 use crate::error::GeoDataFusionResult;
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct IsValidReason {
     signature: Signature,
 }

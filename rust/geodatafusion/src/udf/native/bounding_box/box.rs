@@ -15,7 +15,7 @@ use crate::data_types::any_single_geometry_type_input;
 use crate::error::GeoDataFusionResult;
 use crate::udf::native::bounding_box::util::bounds::bounding_rect;
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct Box2D {
     signature: Signature,
 }
@@ -74,7 +74,7 @@ impl ScalarUDFImpl for Box2D {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct Box3D {
     signature: Signature,
 }
