@@ -35,7 +35,6 @@ class PointOnSurface:
 class Simplify:
     def __init__(
         self,
-        tolerance: float,
         *,
         coord_type: Literal["interleaved", "separated"] | None = None,
     ) -> None: ...
@@ -44,7 +43,6 @@ class Simplify:
 class SimplifyPreserveTopology:
     def __init__(
         self,
-        tolerance: float,
         *,
         coord_type: Literal["interleaved", "separated"] | None = None,
     ) -> None: ...
@@ -53,7 +51,6 @@ class SimplifyPreserveTopology:
 class SimplifyVW:
     def __init__(
         self,
-        tolerance: float,
         *,
         coord_type: Literal["interleaved", "separated"] | None = None,
     ) -> None: ...
