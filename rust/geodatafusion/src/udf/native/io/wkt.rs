@@ -138,7 +138,7 @@ impl GeomFromText {
 
 impl Default for GeomFromText {
     fn default() -> Self {
-        Self::new(CoordType::Separated)
+        Self::new(Default::default())
     }
 }
 

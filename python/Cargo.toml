@@ -1,5 +1,5 @@
 [workspace]
-members = ["geoarrow-compute", "geoarrow-core", "geoarrow-io"]
+members = ["geoarrow-compute", "geoarrow-core", "geoarrow-io", "geodatafusion"]
 resolver = "2"
 
 [workspace.package]
@@ -18,12 +18,15 @@ arrow = "56"
 arrow-array = "56"
 arrow-buffer = "56"
 arrow-schema = "56"
+datafusion = { git = "https://github.com/apache/datafusion", rev = "fa1f8c192dd531d3f2fca61885eafa3e9002f0dd" }
+datafusion-ffi = { git = "https://github.com/apache/datafusion", rev = "fa1f8c192dd531d3f2fca61885eafa3e9002f0dd" }
 flatgeobuf = { version = "5.0", default-features = false }
 geo-traits = "0.3"
 geoarrow-array = { path = "../rust/geoarrow-array" }
 geoarrow-cast = { path = "../rust/geoarrow-cast" }
 geoarrow-flatgeobuf = { path = "../rust/geoarrow-flatgeobuf" }
 geoarrow-schema = { path = "../rust/geoarrow-schema" }
+geodatafusion = { path = "../rust/geodatafusion" }
 geoparquet = { path = "../rust/geoparquet" }
 geozero = "0.14"
 http-range-client = { version = "0.9.0", default-features = false }

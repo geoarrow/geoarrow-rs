@@ -1,0 +1,27 @@
+[package]
+name = "geodatafusion"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+description = "Python bindings for geodatafusion, a geospatial extension to DataFusion"
+readme = "README.md"
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+keywords = { workspace = true }
+categories = { workspace = true }
+rust-version = { workspace = true }
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "_rust"
+crate-type = ["cdylib"]
+
+[features]
+
+[dependencies]
+datafusion = { workspace = true }
+datafusion-ffi = { workspace = true }
+geodatafusion = { workspace = true }
+pyo3 = { workspace = true }
+pyo3-geoarrow = { workspace = true, features = ["geozero"] }

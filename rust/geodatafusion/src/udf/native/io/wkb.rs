@@ -135,6 +135,12 @@ impl GeomFromWKB {
     }
 }
 
+impl Default for GeomFromWKB {
+    fn default() -> Self {
+        Self::new(Default::default())
+    }
+}
+
 static GEOM_FROM_WKB_DOC: OnceLock<Documentation> = OnceLock::new();
 
 impl ScalarUDFImpl for GeomFromWKB {
