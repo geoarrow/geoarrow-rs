@@ -1,1 +1,1 @@
-from . import native, geohash
+from . import geo, geohash, native

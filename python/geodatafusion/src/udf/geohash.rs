@@ -1,6 +1,5 @@
 use geodatafusion::udf::geohash::{Box2DFromGeoHash, GeoHash, PointFromGeoHash};
 use pyo3::prelude::*;
-use pyo3_geoarrow::PyCoordType;
 
 use crate::{impl_udf, impl_udf_coord_type_arg};
 

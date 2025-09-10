@@ -1,5 +1,4 @@
 use geodatafusion::udf::native::io::{AsBinary, AsText, GeomFromText, GeomFromWKB};
-use pyo3_geoarrow::PyCoordType;
 
 use crate::{impl_udf, impl_udf_coord_type_arg};
 

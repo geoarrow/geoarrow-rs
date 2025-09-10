@@ -1,7 +1,6 @@
 use geodatafusion::udf::native::constructors::{
     MakePoint, MakePointM, Point, PointM, PointZ, PointZM,
 };
-use pyo3_geoarrow::PyCoordType;
 
 use crate::impl_udf_coord_type_arg;
 
