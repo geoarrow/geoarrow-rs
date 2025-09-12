@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## [0.5.2] - 2025-09-12
+
+- fix(geoarrow-array): Fix persisting CRS when creating GeometryArray from Field #1326. This also fixes an internal error when downcasting a GeometryArray with a CRS.
+
 ## [0.5.1] - 2025-08-11
 
 - Build Python 3.13 wheels for Windows https://github.com/geoarrow/geoarrow-rs/pull/1305
