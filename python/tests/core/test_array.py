@@ -1,9 +1,11 @@
 import geodatasets
 import geopandas as gpd
+import numpy as np
 import pyarrow as pa
 import shapely
 from geoarrow.rust.core import GeoArray
 from geoarrow.types.type_pyarrow import registered_extension_types
+from geoarrow.rust.core import points, geometry
 
 
 def test_eq():
@@ -30,3 +32,22 @@ def test_repr():
     geoms = shapely.points([1, 2, 3], [4, 5, 6])
     arr = GeoArray.from_arrow(gpd.GeoSeries(geoms).to_arrow("geoarrow"))
     assert repr(arr) == 'GeoArray(Point(dimension="XY", coord_type="interleaved"))'
+
+
+def test_downcast():
+    coords = np.array([[1, 4], [2, 5], [3, 6]], dtype=np.float64)
+
+    point_arr = points(coords)
+    geometry_array = point_arr.cast(geometry())
+    point_arr2 = geometry_array.downcast(coord_type="interleaved")
+    assert point_arr == point_arr2
+
+
+def test_downcast_with_crs():
+    coords = np.array([[1, 4], [2, 5], [3, 6]], dtype=np.float64)
+
+    crs = "EPSG:4326"
+    point_arr = points(coords, crs=crs)
+    geometry_array = point_arr.cast(geometry(crs=crs))
+    point_arr2 = geometry_array.downcast(coord_type="interleaved")
+    assert point_arr == point_arr2
