@@ -459,7 +459,12 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
         let mut gcs: [Option<GeometryCollectionArray>; 4] = Default::default();
 
         let coord_type = typ.coord_type();
+        let metadata = typ.metadata().clone();
 
+        // Note: From the spec:
+        //
+        // The child arrays should not themselves contain GeoArrow metadata. Only the top-level
+        // geometry array should contain GeoArrow metadata.
         match value.data_type() {
             DataType::Union(fields, mode) => {
                 if !matches!(mode, UnionMode::Dense) {
@@ -665,7 +670,7 @@ impl TryFrom<(&UnionArray, GeometryType)> for GeometryArray {
             mline_strings.map(|x| x.unwrap()),
             mpolygons.map(|x| x.unwrap()),
             gcs.map(|x| x.unwrap()),
-            Default::default(),
+            metadata,
         ))
     }
 }
@@ -877,6 +882,7 @@ impl_primitive_cast!(GeometryCollectionArray, 6);
 #[cfg(test)]
 mod test {
     use geo_traits::to_geo::ToGeoGeometry;
+    use geoarrow_schema::Crs;
     use geoarrow_test::raw;
 
     use super::*;
@@ -1016,6 +1022,21 @@ mod test {
 
             assert_ne!(arr1, arr2.slice(0, 2));
         }
+    }
+
+    #[test]
+    fn should_persist_crs() {
+        let geo_arr = crate::test::geometry::array(CoordType::Interleaved, false);
+        let crs = Crs::from_authority_code("EPSG:4326".to_string());
+        let geo_arr = geo_arr.with_metadata(Arc::new(Metadata::new(crs.clone(), None)));
+
+        let arrow_arr = geo_arr.to_array_ref();
+        let field = geo_arr.data_type().to_field("geometry", true);
+
+        let geo_arr2: GeometryArray = (arrow_arr.as_ref(), &field).try_into().unwrap();
+
+        assert_eq!(geo_arr, geo_arr2);
+        assert_eq!(geo_arr2.data_type.metadata().crs().clone(), crs);
     }
 }
 
