@@ -5,6 +5,7 @@
 ## [0.5.2] - 2025-09-12
 
 - fix(geoarrow-array): Fix persisting CRS when creating GeometryArray from Field #1326. This also fixes an internal error when downcasting a GeometryArray with a CRS.
+- ci(Python): Remove Windows x86 build #1329
 
 ## [0.5.1] - 2025-08-11
 
