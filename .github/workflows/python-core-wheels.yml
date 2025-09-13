@@ -98,8 +98,6 @@ jobs:
         platform:
           - runner: windows-latest
             target: x64
-          - runner: windows-latest
-            target: x86
         module:
           - geoarrow-core
           - geoarrow-compute
