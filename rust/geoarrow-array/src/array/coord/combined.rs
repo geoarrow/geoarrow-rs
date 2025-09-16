@@ -67,10 +67,65 @@ impl CoordBuffer {
         self.len() == 0
     }
 
-    pub(crate) fn value(&self, index: usize) -> Coord<'_> {
+    /// Returns the element at index `i`, not considering validity.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use geo_traits::CoordTrait;
+    /// use geoarrow_array::array::{CoordBuffer, SeparatedCoordBuffer};
+    /// use geoarrow_schema::Dimension;
+    ///
+    /// let coords = [
+    ///     geo_types::coord! { x: 1.0, y: 2.0 },
+    ///     geo_types::coord! { x: 3.0, y: 4.0 },
+    /// ];
+    /// let coord_buffer = CoordBuffer::from(
+    ///     SeparatedCoordBuffer::from_coords(coords.iter(), Dimension::XY).unwrap()
+    /// );
+    /// let coord = coord_buffer.value(0);
+    /// assert_eq!(coord.x(), 1.0);
+    /// assert_eq!(coord.y(), 2.0);
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if the value is outside the bounds of the buffer.
+    pub fn value(&self, index: usize) -> Coord<'_> {
         match self {
             CoordBuffer::Interleaved(c) => Coord::Interleaved(c.value(index)),
             CoordBuffer::Separated(c) => Coord::Separated(c.value(index)),
+        }
+    }
+
+    /// Returns the element at index `i`, not considering validity.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use geo_traits::CoordTrait;
+    /// use geoarrow_array::array::{CoordBuffer, SeparatedCoordBuffer};
+    /// use geoarrow_schema::Dimension;
+    ///
+    /// let coords = [
+    ///     geo_types::coord! { x: 1.0, y: 2.0 },
+    ///     geo_types::coord! { x: 3.0, y: 4.0 },
+    /// ];
+    /// let coord_buffer = CoordBuffer::from(
+    ///     SeparatedCoordBuffer::from_coords(coords.iter(), Dimension::XY).unwrap()
+    /// );
+    /// let coord = unsafe { coord_buffer.value_unchecked(0) };
+    /// assert_eq!(coord.x(), 1.0);
+    /// assert_eq!(coord.y(), 2.0);
+    /// ```
+    ///
+    /// # Safety
+    ///
+    /// Caller is responsible for ensuring that the index is within the bounds of the buffer.
+    pub unsafe fn value_unchecked(&self, index: usize) -> Coord<'_> {
+        match self {
+            CoordBuffer::Interleaved(c) => Coord::Interleaved(unsafe { c.value_unchecked(index) }),
+            CoordBuffer::Separated(c) => Coord::Separated(unsafe { c.value_unchecked(index) }),
         }
     }
 
