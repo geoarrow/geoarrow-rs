@@ -5,9 +5,8 @@ use std::sync::Arc;
 
 use arrow_array::{RecordBatch, RecordBatchReader};
 use arrow_schema::Schema;
-use geoarrow_array::GeoArrowArray;
-use geoarrow_array::array::from_arrow_array;
 use geoarrow_array::cast::to_wkt_view;
+use geoarrow_array::{GeoArrowArray, WrapArray};
 use geoarrow_schema::GeoArrowType;
 use geoarrow_schema::error::GeoArrowResult;
 
@@ -55,8 +54,8 @@ fn encode_batch(batch: &RecordBatch) -> GeoArrowResult<RecordBatch> {
     let mut new_columns = Vec::with_capacity(fields.len());
 
     for (field, column) in schema.fields().iter().zip(batch.columns()) {
-        if let Ok(_typ) = GeoArrowType::from_extension_field(field) {
-            let geo_arr = from_arrow_array(&column, field)?;
+        if let Ok(typ) = GeoArrowType::from_extension_field(field) {
+            let geo_arr = typ.wrap_array(&column)?;
             let wkt_view_arr = to_wkt_view(&geo_arr)?;
 
             new_fields.push(
