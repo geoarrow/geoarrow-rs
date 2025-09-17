@@ -2,16 +2,29 @@ use std::sync::Arc;
 
 use crate::GeoArrowArray;
 use crate::array::*;
+use arrow_array::cast::AsArray;
 use arrow_array::{
     Array, BinaryArray, BinaryViewArray, FixedSizeListArray, LargeBinaryArray, LargeStringArray,
     ListArray, StringArray, StringViewArray, StructArray, UnionArray,
 };
-use geoarrow_schema::error::GeoArrowResult;
+use arrow_schema::DataType;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::*;
 
+/// Using a GeoArrow geometry type, wrap the provided storage array as a GeoArrow array.
+///
+/// This is a convenient way to convert from an Arrow array to a GeoArrow array when you have an
+/// extension type. You can also use the `TryFrom` implementations on each GeoArrow array type, but
+/// this may be easier to remember and find.
 pub trait WrapArray<Input> {
+    /// The output GeoArrow array type.
     type Output: GeoArrowArray;
 
+    /// Wrap the given storage array as an GeoArrow array.
+    ///
+    /// This terminology comes from pyarrow/Arrow C++, where extension types similarly have a
+    /// [`wrap_array`](https://arrow.apache.org/docs/python/generated/pyarrow.ExtensionType.html#pyarrow.ExtensionType.wrap_array)
+    /// method.
     fn wrap_array(&self, input: Input) -> GeoArrowResult<Self::Output>;
 }
 
@@ -19,7 +32,7 @@ impl WrapArray<&StructArray> for PointType {
     type Output = PointArray;
 
     fn wrap_array(&self, input: &StructArray) -> GeoArrowResult<Self::Output> {
-        PointArray::try_from((input, self))
+        PointArray::try_from((input, self.clone()))
     }
 }
 
@@ -27,7 +40,7 @@ impl WrapArray<&FixedSizeListArray> for PointType {
     type Output = PointArray;
 
     fn wrap_array(&self, input: &FixedSizeListArray) -> GeoArrowResult<Self::Output> {
-        PointArray::try_from((input, self))
+        PointArray::try_from((input, self.clone()))
     }
 }
 
@@ -35,7 +48,7 @@ impl WrapArray<&dyn Array> for PointType {
     type Output = PointArray;
 
     fn wrap_array(&self, input: &dyn Array) -> GeoArrowResult<Self::Output> {
-        PointArray::try_from((input, self))
+        PointArray::try_from((input, self.clone()))
     }
 }
 
@@ -59,7 +72,7 @@ impl WrapArray<&ListArray> for PolygonType {
     type Output = PolygonArray;
 
     fn wrap_array(&self, input: &ListArray) -> GeoArrowResult<Self::Output> {
-        PolygonArray::try_from((input, self))
+        PolygonArray::try_from((input, self.clone()))
     }
 }
 
@@ -67,7 +80,7 @@ impl WrapArray<&dyn Array> for PolygonType {
     type Output = PolygonArray;
 
     fn wrap_array(&self, input: &dyn Array) -> GeoArrowResult<Self::Output> {
-        PolygonArray::try_from((input, self))
+        PolygonArray::try_from((input, self.clone()))
     }
 }
 
@@ -123,7 +136,7 @@ impl WrapArray<&StructArray> for BoxType {
     type Output = RectArray;
 
     fn wrap_array(&self, input: &StructArray) -> GeoArrowResult<Self::Output> {
-        RectArray::try_from((input, self))
+        RectArray::try_from((input, self.clone()))
     }
 }
 
@@ -131,7 +144,7 @@ impl WrapArray<&dyn Array> for BoxType {
     type Output = RectArray;
 
     fn wrap_array(&self, input: &dyn Array) -> GeoArrowResult<Self::Output> {
-        RectArray::try_from((input, self))
+        RectArray::try_from((input, self.clone()))
     }
 }
 
@@ -171,7 +184,7 @@ impl WrapArray<&BinaryViewArray> for WkbType {
     type Output = WkbViewArray;
 
     fn wrap_array(&self, input: &BinaryViewArray) -> GeoArrowResult<Self::Output> {
-        Ok(WkbViewArray::from((input.clone(), self)))
+        Ok(WkbViewArray::from((input.clone(), self.clone())))
     }
 }
 
@@ -199,6 +212,30 @@ impl WrapArray<&StringViewArray> for WktType {
     }
 }
 
+impl WrapArray<&dyn Array> for WkbType {
+    type Output = Arc<dyn GeoArrowArray>;
+
+    fn wrap_array(&self, input: &dyn Array) -> GeoArrowResult<Self::Output> {
+        match input.data_type() {
+            DataType::BinaryView => Ok(Arc::new(WkbViewArray::from((
+                input.as_binary_view().clone(),
+                self.clone(),
+            )))),
+            DataType::Binary => Ok(Arc::new(WkbArray::from((
+                input.as_binary().clone(),
+                self.clone(),
+            )))),
+            DataType::LargeBinary => Ok(Arc::new(LargeWkbArray::from((
+                input.as_binary().clone(),
+                self.clone(),
+            )))),
+            dt => Err(GeoArrowError::InvalidGeoArrow(format!(
+                "Unexpected DataType for WkbType: {dt:?}",
+            ))),
+        }
+    }
+}
+
 impl WrapArray<&StringArray> for WktType {
     type Output = WktArray;
 
@@ -212,6 +249,30 @@ impl WrapArray<&LargeStringArray> for WktType {
 
     fn wrap_array(&self, input: &LargeStringArray) -> GeoArrowResult<Self::Output> {
         Ok(LargeWktArray::from((input.clone(), self.clone())))
+    }
+}
+
+impl WrapArray<&dyn Array> for WktType {
+    type Output = Arc<dyn GeoArrowArray>;
+
+    fn wrap_array(&self, input: &dyn Array) -> GeoArrowResult<Self::Output> {
+        match input.data_type() {
+            DataType::Utf8View => Ok(Arc::new(WktViewArray::from((
+                input.as_string_view().clone(),
+                self.clone(),
+            )))),
+            DataType::Utf8 => Ok(Arc::new(WktArray::from((
+                input.as_string().clone(),
+                self.clone(),
+            )))),
+            DataType::LargeUtf8 => Ok(Arc::new(LargeWktArray::from((
+                input.as_string().clone(),
+                self.clone(),
+            )))),
+            dt => Err(GeoArrowError::InvalidGeoArrow(format!(
+                "Unexpected DataType for WktType: {dt:?}",
+            ))),
+        }
     }
 }
 
@@ -239,8 +300,5 @@ impl WrapArray<&dyn Array> for GeoArrowType {
             WktView(t) => Arc::new(WktViewArray::try_from((input, t.clone()))?),
         };
         Ok(result)
-
-        // from_arrow_array(array, field)
-        // Arc<dyn GeoArrowArray>::try_from((input, self.clone()))
     }
 }
