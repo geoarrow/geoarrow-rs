@@ -1,7 +1,5 @@
 use std::sync::Arc;
 
-use crate::GeoArrowArray;
-use crate::array::*;
 use arrow_array::cast::AsArray;
 use arrow_array::{
     Array, BinaryArray, BinaryViewArray, FixedSizeListArray, LargeBinaryArray, LargeStringArray,
@@ -10,6 +8,9 @@ use arrow_array::{
 use arrow_schema::DataType;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::*;
+
+use crate::GeoArrowArray;
+use crate::array::*;
 
 /// Using a GeoArrow geometry type, wrap the provided storage array as a GeoArrow array.
 ///
