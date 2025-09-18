@@ -2030,8 +2030,31 @@ dependencies = [
  "datafusion",
  "datafusion-ffi",
  "geodatafusion 0.1.0-dev",
+ "geodatafusion-flatgeobuf",
  "pyo3",
+ "pyo3-async-runtimes",
  "pyo3-geoarrow",
+]
+
+[[package]]
+name = "geodatafusion-flatgeobuf"
+version = "0.1.0-dev"
+dependencies = [
+ "arrow-array",
+ "arrow-schema",
+ "async-trait",
+ "datafusion",
+ "datafusion-datasource",
+ "flatgeobuf",
+ "futures",
+ "geoarrow-array",
+ "geoarrow-flatgeobuf",
+ "geoarrow-schema",
+ "geodatafusion 0.1.0-dev",
+ "http-range-client",
+ "object_store",
+ "tempfile",
+ "tokio",
 ]
 
 [[package]]

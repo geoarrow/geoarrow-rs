@@ -27,6 +27,7 @@ geoarrow-cast = { path = "../rust/geoarrow-cast" }
 geoarrow-flatgeobuf = { path = "../rust/geoarrow-flatgeobuf" }
 geoarrow-schema = { path = "../rust/geoarrow-schema" }
 geodatafusion = { path = "../rust/geodatafusion" }
+geodatafusion-flatgeobuf = { path = "../rust/geodatafusion-flatgeobuf" }
 geoparquet = { path = "../rust/geoparquet" }
 geozero = "0.14"
 http-range-client = { version = "0.9.0", default-features = false }
@@ -35,6 +36,7 @@ numpy = "0.25"
 object_store = "0.12"
 parquet = "56"
 pyo3 = { version = "0.25", features = ["hashbrown", "serde", "anyhow"] }
+pyo3-async-runtimes = { version = "0.25", features = ["tokio-runtime"] }
 # https://github.com/kylebarron/arro3/pull/354
 pyo3-arrow = { git = "https://github.com/kylebarron/arro3", rev = "fda03cebe9cfbf8ad292f8070ea21c22b32af1a3" }
 pyo3-geoarrow = { path = "../rust/pyo3-geoarrow" }

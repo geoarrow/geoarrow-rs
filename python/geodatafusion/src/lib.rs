@@ -1,6 +1,7 @@
 #![cfg_attr(not(test), warn(unused_crate_dependencies))]
 
 pub(crate) mod constants;
+mod table_provider;
 mod udf;
 mod utils;
 
@@ -54,6 +55,11 @@ fn _rust(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     py.import(intern!(py, "sys"))?
         .getattr(intern!(py, "modules"))?
         .set_item("geodatafusion.geo", geo_mod)?;
+
+    m.add_function(wrap_pyfunction!(
+        table_provider::flatgeobuf::new_flatgeobuf,
+        m
+    )?)?;
 
     Ok(())
 }
