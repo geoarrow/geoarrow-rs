@@ -20,8 +20,6 @@ Additionally we are working on a few other crates that are not yet distributed o
 
 - `geoarrow-geo`: Integration with `geo` crate for spatial algorithms.
 - `geoarrow-geos`: Integration with `geos` crate for spatial algorithms.
-- `geodatafusion`: Integration with DataFusion.
-- `geodatafusion-flatgeobuf`: FlatGeobuf TableProvider for DataFusion.
 
 ## Versioning
 

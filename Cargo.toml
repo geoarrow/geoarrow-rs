@@ -10,10 +10,6 @@ members = [
     "rust/geoarrow-geos",
     "rust/geoarrow-schema",
     "rust/geoarrow-test",
-    "rust/geodatafusion-flatgeobuf",
-    "rust/geodatafusion-geojson",
-    "rust/geodatafusion-geoparquet",
-    "rust/geodatafusion",
     "rust/geoparquet",
     "rust/pyo3-geoarrow",
 ]
@@ -45,10 +41,6 @@ async-stream = "0.3"
 async-trait = "0.1"
 bytes = "1.10.0"
 chrono = { version = "0.4.41", default-features = false }
-# Arrow 56
-datafusion = { git = "https://github.com/apache/datafusion", rev = "fa1f8c192dd531d3f2fca61885eafa3e9002f0dd" }
-datafusion-datasource = { git = "https://github.com/apache/datafusion", rev = "fa1f8c192dd531d3f2fca61885eafa3e9002f0dd" }
-datafusion-datasource-parquet = { git = "https://github.com/apache/datafusion", rev = "fa1f8c192dd531d3f2fca61885eafa3e9002f0dd" }
 flatgeobuf = { version = "5.0", default-features = false }
 futures = "0.3"
 geo = "0.31.0"
@@ -61,7 +53,6 @@ geoarrow-geo = { path = "rust/geoarrow-geo", version = "0.5" }
 geoarrow-geojson = { path = "rust/geoarrow-geojson" }
 geoarrow-schema = { path = "rust/geoarrow-schema", version = "0.5" }
 geoarrow-test = { path = "rust/geoarrow-test", version = "0.5" }
-geodatafusion = { path = "rust/geodatafusion" }
 geohash = "0.13.1"
 geojson = "0.24"
 geoparquet = { path = "rust/geoparquet", version = "0.5" }

@@ -32,10 +32,11 @@ wkt = { workspace = true }
 
 [dev-dependencies]
 parquet = { workspace = true, features = [
-    "snap",
     "brotli",
+    "flate2-zlib-rs",
     "flate2",
     "lz4",
+    "snap",
     "zstd",
 ] }
 tokio = { workspace = true, features = ["macros", "fs", "rt-multi-thread"] }

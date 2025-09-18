@@ -13,11 +13,10 @@ The repository is organized as a multi-language monorepo:
 - `rust/` - Core Rust crates organized as a workspace:
   - `geoarrow-*` crates for core functionality (array, cast, schema, etc.)
   - `geoparquet/` - GeoParquet format support
-  - `geodatafusion/` - DataFusion integration
   - `pyo3-geoarrow/` - Python FFI bindings
 - `python/` - Python bindings with separate modules:
   - `geoarrow-core/` - Core data structures
-  - `geoarrow-compute/` - Compute operations  
+  - `geoarrow-compute/` - Compute operations
   - `geoarrow-io/` - File format I/O
 - `js/` - JavaScript/WebAssembly bindings
 - `fixtures/` - Test data and examples
