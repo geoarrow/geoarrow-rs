@@ -220,4 +220,19 @@ address,type,datetime,report location,incident number
         // arrow_csv::reader::infer_schema_from_files(files, delimiter, max_read_records, has_header)
         //         infer_schema_from_files(files, delimiter, max_read_records, has_header)
     }
+
+    #[test]
+    fn read_csv_file() {
+
+        let mut buf = String::new();
+        let file = std::fs::File::open("./test.csv").unwrap().read_to_string(&mut buf).unwrap();
+        let format = Format::default().with_header(true);
+        let (schema, _num_read_records) = format.infer_schema(Cursor::new(buf.clone()), None).unwrap();
+        let reader = ReaderBuilder::new(schema.into())
+            .with_format(format)
+            .build(Cursor::new(buf))
+            .unwrap();
+
+
+    }
 }
