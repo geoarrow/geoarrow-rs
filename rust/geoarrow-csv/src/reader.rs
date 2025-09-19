@@ -220,5 +220,4 @@ address,type,datetime,report location,incident number
         // arrow_csv::reader::infer_schema_from_files(files, delimiter, max_read_records, has_header)
         //         infer_schema_from_files(files, delimiter, max_read_records, has_header)
     }
-
 }
