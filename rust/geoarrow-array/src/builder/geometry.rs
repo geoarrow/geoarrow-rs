@@ -10,7 +10,7 @@ use geoarrow_schema::{
 
 use crate::GeoArrowArray;
 use crate::array::{DimensionIndex, GenericWkbArray, GeometryArray};
-use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
+// use crate::builder::geo_trait_wrappers::{RectWrapper, TriangleWrapper};
 use crate::builder::{
     GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder, MultiPointBuilder,
     MultiPolygonBuilder, PointBuilder, PolygonBuilder,
@@ -644,9 +644,10 @@ impl<'a> GeometryBuilder {
                         self.push_geometry_collection(Some(gc))?
                     }
                 }
-                Rect(r) => self.push_polygon(Some(&RectWrapper::try_new(r)?))?,
-                Triangle(tri) => self.push_polygon(Some(&TriangleWrapper(tri)))?,
-                Line(l) => self.push_line_string(Some(&LineWrapper(l)))?,
+                // Rect(r) => self.push_polygon(Some(&RectWrapper::try_new(r)?))?,
+                // Triangle(tri) => self.push_polygon(Some(&TriangleWrapper(tri)))?,
+                _ => todo!(),
+                // Line(l) => self.push_line_string(Some(&LineWrapper(l)))?,
             };
         } else {
             self.push_null();

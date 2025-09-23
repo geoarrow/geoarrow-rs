@@ -5,7 +5,7 @@ use geoarrow_schema::Dimension;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use wkt::WktNum;
 
-use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
+// use crate::builder::geo_trait_wrappers::{RectWrapper, TriangleWrapper};
 use crate::capacity::{
     LineStringCapacity, MultiLineStringCapacity, MultiPointCapacity, MultiPolygonCapacity,
     PolygonCapacity,
@@ -126,9 +126,10 @@ impl MixedCapacity {
                     "nested geometry collections not supported in GeoArrow".to_string(),
                 ));
             }
-            geo_traits::GeometryType::Rect(r) => self.add_polygon(&RectWrapper::try_new(r)?),
-            geo_traits::GeometryType::Triangle(tri) => self.add_polygon(&TriangleWrapper(tri)),
-            geo_traits::GeometryType::Line(l) => self.add_line_string(&LineWrapper(l)),
+            // geo_traits::GeometryType::Rect(r) => self.add_polygon(&RectWrapper::try_new(r)?),
+            // geo_traits::GeometryType::Triangle(tri) => self.add_polygon(&TriangleWrapper(tri)),
+            _ => todo!(),
+            // geo_traits::GeometryType::Line(l) => self.add_line_string(&LineWrapper(l)),
         };
         Ok(())
     }

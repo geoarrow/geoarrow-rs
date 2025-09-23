@@ -8,7 +8,6 @@ use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, LineStringArray};
-use crate::builder::geo_trait_wrappers::LineWrapper;
 use crate::builder::{CoordBufferBuilder, OffsetsBuilder};
 use crate::capacity::LineStringCapacity;
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
@@ -214,7 +213,7 @@ impl LineStringBuilder {
                         )));
                     }
                 }
-                GeometryType::Line(l) => self.push_line_string(Some(&LineWrapper(l)))?,
+                // GeometryType::Line(l) => self.push_line_string(Some(&LineWrapper(l)))?,
                 gt => {
                     return Err(GeoArrowError::IncorrectGeometryType(format!(
                         "Expected LineString, got {}",

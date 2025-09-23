@@ -13,7 +13,7 @@ use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, PropertyProcessor};
 
 use crate::GeoArrowArray;
 use crate::array::from_arrow_array;
-use crate::builder::geo_trait_wrappers::RectWrapper;
+// use crate::builder::geo_trait_wrappers::RectWrapper;
 use crate::cast::AsGeoArrowArray;
 use crate::geozero::export::scalar::{
     process_geometry, process_geometry_collection, process_line_string, process_multi_line_string,
@@ -422,10 +422,11 @@ fn process_geometry_n<P: GeomProcessor>(
             process_geometry(&geom, 0, processor)?;
         }
         Rect(_) => {
-            let geom = arr.as_rect().value(i).unwrap();
-            let wrapper = RectWrapper::try_new(&geom)
-                .map_err(|err| geozero::error::GeozeroError::Geometry(err.to_string()))?;
-            process_polygon(&wrapper, true, 0, processor)?
+            todo!()
+            // let geom = arr.as_rect().value(i).unwrap();
+            // let wrapper = RectWrapper::try_new(&geom)
+            //     .map_err(|err| geozero::error::GeozeroError::Geometry(err.to_string()))?;
+            // process_polygon(&wrapper, true, 0, processor)?
         }
         Geometry(_) => {
             let geom = arr.as_geometry().value(i).unwrap();

@@ -11,7 +11,7 @@ use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, PolygonArray};
-use crate::builder::geo_trait_wrappers::{RectWrapper, TriangleWrapper};
+// use crate::builder::geo_trait_wrappers::{RectWrapper, TriangleWrapper};
 use crate::builder::{CoordBufferBuilder, OffsetsBuilder};
 use crate::capacity::PolygonCapacity;
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
@@ -185,13 +185,14 @@ impl PolygonBuilder {
     /// Add a new Rect to this builder
     #[inline]
     pub fn push_rect(&mut self, value: Option<&impl RectTrait<T = f64>>) -> GeoArrowResult<()> {
-        if let Some(rect) = value {
-            let rect_wrapper = RectWrapper::try_new(rect)?;
-            self.push_polygon(Some(&rect_wrapper))?;
-        } else {
-            self.push_null();
-        }
-        Ok(())
+        todo!()
+        // if let Some(rect) = value {
+        //     let rect_wrapper = RectWrapper::try_new(rect)?;
+        //     self.push_polygon(Some(&rect_wrapper))?;
+        // } else {
+        //     self.push_null();
+        // }
+        // Ok(())
     }
 
     /// Add a new geometry to this builder
@@ -217,8 +218,8 @@ impl PolygonBuilder {
                         )));
                     }
                 }
-                GeometryType::Rect(g) => self.push_rect(Some(g))?,
-                GeometryType::Triangle(tri) => self.push_polygon(Some(&TriangleWrapper(tri)))?,
+                // GeometryType::Rect(g) => self.push_rect(Some(g))?,
+                // GeometryType::Triangle(tri) => self.push_polygon(Some(&TriangleWrapper(tri)))?,
                 gt => {
                     return Err(GeoArrowError::IncorrectGeometryType(format!(
                         "Expected Polygon compatible geometry, got {}",

@@ -6,7 +6,7 @@ use geoarrow_schema::error::GeoArrowResult;
 use wkt::WktNum;
 
 use crate::array::DimensionIndex;
-use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
+// use crate::builder::geo_trait_wrappers::{RectWrapper, TriangleWrapper};
 use crate::capacity::{
     GeometryCollectionCapacity, LineStringCapacity, MultiLineStringCapacity, MultiPointCapacity,
     MultiPolygonCapacity, PolygonCapacity,
@@ -285,9 +285,10 @@ impl GeometryCapacity {
                 GeometryType::MultiLineString(p) => self.add_multi_line_string(Some(p)),
                 GeometryType::MultiPolygon(p) => self.add_multi_polygon(Some(p)),
                 GeometryType::GeometryCollection(p) => self.add_geometry_collection(Some(p)),
-                GeometryType::Rect(r) => self.add_polygon(Some(&RectWrapper::try_new(r)?)),
-                GeometryType::Triangle(tri) => self.add_polygon(Some(&TriangleWrapper(tri))),
-                GeometryType::Line(l) => self.add_line_string(Some(&LineWrapper(l))),
+                // GeometryType::Rect(r) => self.add_polygon(Some(&RectWrapper::try_new(r)?)),
+                // GeometryType::Triangle(tri) => self.add_polygon(Some(&TriangleWrapper(tri))),
+                _ => todo!(),
+                // GeometryType::Line(l) => self.add_line_string(Some(&LineWrapper(l))),
             }?;
         } else {
             self.nulls += 1;

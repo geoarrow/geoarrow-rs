@@ -421,89 +421,90 @@ impl<'a, T, Tri: TriangleTrait<T = T>> GeometryTrait for &'a TriangleWrapper<'a,
     }
 }
 
-pub(crate) struct LineWrapper<'a, T, L: LineTrait<T = T>>(pub(crate) &'a L);
+// pub(crate) struct LineWrapper<'a, T, L: LineTrait<T = T>>(pub(crate) &'a L);
 
-impl<T, L: LineTrait<T = T>> LineStringTrait for LineWrapper<'_, T, L> {
-    type CoordType<'b>
-        = <L as LineTrait>::CoordType<'b>
-    where
-        Self: 'b;
+// impl<T, L: LineTrait<T = T>> LineStringTrait for LineWrapper<'_, T, L> {
+//     type CoordType<'b>
+//         = <L as LineTrait>::CoordType<'b>
+//     where
+//         Self: 'b;
 
-    fn num_coords(&self) -> usize {
-        2
-    }
+//     fn num_coords(&self) -> usize {
+//         2
+//     }
 
-    unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
-        match i {
-            0 => self.0.start(),
-            1 => self.0.end(),
-            _ => unreachable!("out of range for line coord: {i}"),
-        }
-    }
-}
+//     unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
+//         match i {
+//             0 => self.0.start(),
+//             1 => self.0.end(),
+//             _ => unreachable!("out of range for line coord: {i}"),
+//         }
+//     }
+// }
 
-impl<T, L: LineTrait<T = T>> GeometryTrait for LineWrapper<'_, T, L> {
-    type T = T;
-    type PointType<'a>
-        = UnimplementedPoint<T>
-    where
-        Self: 'a;
-    type LineStringType<'a>
-        = LineWrapper<'a, T, L>
-    where
-        Self: 'a;
-    type PolygonType<'a>
-        = UnimplementedPolygon<T>
-    where
-        Self: 'a;
-    type MultiPointType<'a>
-        = UnimplementedMultiPoint<T>
-    where
-        Self: 'a;
-    type MultiLineStringType<'a>
-        = UnimplementedMultiLineString<T>
-    where
-        Self: 'a;
-    type MultiPolygonType<'a>
-        = UnimplementedMultiPolygon<T>
-    where
-        Self: 'a;
-    type GeometryCollectionType<'a>
-        = UnimplementedGeometryCollection<T>
-    where
-        Self: 'a;
-    type RectType<'a>
-        = UnimplementedRect<T>
-    where
-        Self: 'a;
-    type TriangleType<'a>
-        = UnimplementedTriangle<T>
-    where
-        Self: 'a;
-    type LineType<'a>
-        = UnimplementedLine<T>
-    where
-        Self: 'a;
+// impl<T, L: LineTrait<T = T>> GeometryTrait for LineWrapper<'_, T, L> {
+//     type T = T;
+//     type PointType<'a>
+//         = UnimplementedPoint<T>
+//     where
+//         Self: 'a;
+//     type LineStringType<'a>
+//         = UnimplementedLineString<T>
+//     where
+//         Self: 'a;
+//     type PolygonType<'a>
+//         = UnimplementedPolygon<T>
+//     where
+//         Self: 'a;
+//     type MultiPointType<'a>
+//         = UnimplementedMultiPoint<T>
+//     where
+//         Self: 'a;
+//     type MultiLineStringType<'a>
+//         = UnimplementedMultiLineString<T>
+//     where
+//         Self: 'a;
+//     type MultiPolygonType<'a>
+//         = UnimplementedMultiPolygon<T>
+//     where
+//         Self: 'a;
+//     type GeometryCollectionType<'a>
+//         = UnimplementedGeometryCollection<T>
+//     where
+//         Self: 'a;
+//     type RectType<'a>
+//         = UnimplementedRect<T>
+//     where
+//         Self: 'a;
+//     type TriangleType<'a>
+//         = UnimplementedTriangle<T>
+//     where
+//         Self: 'a;
+//     type LineType<'a>
+//         = UnimplementedLine<T>
+//     where
+//         Self: 'a;
 
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.0.dim()
-    }
+//     fn dim(&self) -> geo_traits::Dimensions {
+//         self.0.dim()
+//     }
 
-    fn as_type(
-        &self,
-    ) -> geo_traits::GeometryType<
-        '_,
-        Self::PointType<'_>,
-        Self::LineStringType<'_>,
-        Self::PolygonType<'_>,
-        Self::MultiPointType<'_>,
-        Self::MultiLineStringType<'_>,
-        Self::MultiPolygonType<'_>,
-        Self::GeometryCollectionType<'_>,
-        Self::RectType<'_>,
-        Self::TriangleType<'_>,
-        Self::LineType<'_>,
-    > {
-        geo_traits::GeometryType::LineString(self)
-    }
-}
+//     fn as_type(
+//         &self,
+//     ) -> geo_traits::GeometryType<
+//         '_,
+//         Self::PointType<'_>,
+//         Self::LineStringType<'_>,
+//         Self::PolygonType<'_>,
+//         Self::MultiPointType<'_>,
+//         Self::MultiLineStringType<'_>,
+//         Self::MultiPolygonType<'_>,
+//         Self::GeometryCollectionType<'_>,
+//         Self::RectType<'_>,
+//         Self::TriangleType<'_>,
+//         Self::LineType<'_>,
+//     > {
+//         todo!()
+//         // geo_traits::GeometryType::LineString(self)
+//     }
+// }

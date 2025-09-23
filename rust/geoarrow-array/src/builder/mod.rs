@@ -1,7 +1,7 @@
 //! Push-based APIs for constructing arrays.
 
 mod coord;
-pub(crate) mod geo_trait_wrappers;
+// pub(crate) mod geo_trait_wrappers;
 mod geometry;
 mod geometrycollection;
 mod linestring;

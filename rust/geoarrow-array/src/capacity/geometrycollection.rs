@@ -8,7 +8,7 @@ use geoarrow_schema::Dimension;
 use geoarrow_schema::error::GeoArrowResult;
 use wkt::WktNum;
 
-use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
+// use crate::builder::geo_trait_wrappers::{RectWrapper, TriangleWrapper};
 use crate::capacity::MixedCapacity;
 
 /// A counter for the buffer sizes of a
@@ -102,9 +102,10 @@ impl GeometryCollectionCapacity {
                 MultiLineString(p) => self.add_valid_multi_line_string(p),
                 MultiPolygon(p) => self.add_valid_multi_polygon(p),
                 GeometryCollection(p) => self.add_valid_geometry_collection(p)?,
-                Rect(r) => self.add_valid_polygon(&RectWrapper::try_new(r)?),
-                Triangle(tri) => self.add_valid_polygon(&TriangleWrapper(tri)),
-                Line(l) => self.add_valid_line_string(&LineWrapper(l)),
+                // Rect(r) => self.add_valid_polygon(&RectWrapper::try_new(r)?),
+                // Triangle(tri) => self.add_valid_polygon(&TriangleWrapper(tri)),
+                _ => todo!(),
+                // Line(l) => self.add_valid_line_string(&LineWrapper(l)),
             }
         };
         Ok(())

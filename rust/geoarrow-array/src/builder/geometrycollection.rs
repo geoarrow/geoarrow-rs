@@ -11,7 +11,7 @@ use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 
 use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, GeometryCollectionArray};
-use crate::builder::geo_trait_wrappers::{LineWrapper, RectWrapper, TriangleWrapper};
+// use crate::builder::geo_trait_wrappers::{RectWrapper, TriangleWrapper};
 use crate::builder::{MixedGeometryBuilder, OffsetsBuilder};
 use crate::capacity::GeometryCollectionCapacity;
 use crate::trait_::{GeoArrowArrayAccessor, GeoArrowArrayBuilder};
@@ -226,9 +226,10 @@ impl<'a> GeometryCollectionBuilder {
                 MultiLineString(p) => self.push_multi_line_string(Some(p))?,
                 MultiPolygon(p) => self.push_multi_polygon(Some(p))?,
                 GeometryCollection(p) => self.push_geometry_collection(Some(p))?,
-                Rect(r) => self.push_polygon(Some(&RectWrapper::try_new(r)?))?,
-                Triangle(tri) => self.push_polygon(Some(&TriangleWrapper(tri)))?,
-                Line(l) => self.push_line_string(Some(&LineWrapper(l)))?,
+                // Rect(r) => self.push_polygon(Some(&RectWrapper::try_new(r)?))?,
+                // Triangle(tri) => self.push_polygon(Some(&TriangleWrapper(tri)))?,
+                _ => todo!(),
+                // Line(l) => self.push_line_string(Some(&LineWrapper(l)))?,
             }
         } else {
             self.push_null();
