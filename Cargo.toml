@@ -78,3 +78,8 @@ tokio = { version = "1.9", default-features = false }
 url = "2.5"
 wkb = "0.9"
 wkt = "0.14"
+
+
+[patch.crates-io]
+# tree/kyle/remove-trait-wrappers
+wkb = { git = "https://github.com/georust/wkb", rev = "e6c9cc74018209eab01d5e780a4ce388d918b6a5" }
