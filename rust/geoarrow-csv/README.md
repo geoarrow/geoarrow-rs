@@ -10,7 +10,7 @@ Use `CsvReader` to read CSV files with WKT-encoded geometry columns. The reader 
 
 ### Example
 
-`test.csv` contains sample data:
+`example.csv` contains sample data:
 ```csv
 address,type,datetime,report location,incident number
 904 7th Ave,Car Fire,05/22/19,POINT (-122.329051 47.6069),F190051945
@@ -24,7 +24,7 @@ use arrow_csv::ReaderBuilder;
 use geoarrow_csv::reader::{CsvReader, CsvReaderOptions};
 use geoarrow_schema::{GeoArrowType, PointType, Dimension};
 
-let file = File::open("test.csv").unwrap();
+let file = File::open("example.csv").unwrap();
 let mut buf_reader = BufReader::new(file);
 
 // Create Arrow CSV reader with schema inference
@@ -65,7 +65,7 @@ use geoarrow_csv::writer::CsvWriter;
 use geoarrow_csv::reader::{CsvReader, CsvReaderOptions};
 use geoarrow_schema::{PointType, Dimension, GeoArrowType};
 
-let in_file = File::open("test.csv").unwrap();
+let in_file = File::open("example.csv").unwrap();
 let out_file = File::create("output.csv").unwrap();
 
 // Setting up a Reader for in_file to read batches to write to out_file
