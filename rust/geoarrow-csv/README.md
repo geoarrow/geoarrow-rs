@@ -57,17 +57,40 @@ Use `CsvWriter` to export GeoArrow data to CSV format with WKT-encoded geometrie
 
 ```rust
 use std::fs::File;
+use std::io::BufReader;
+
 use arrow_csv::WriterBuilder;
+use arrow_csv::ReaderBuilder;
 use geoarrow_csv::writer::CsvWriter;
-let file = File::create("output.csv").unwrap();
-let arrow_writer = WriterBuilder::new().with_header(true).build(file);
+use geoarrow_csv::reader::{CsvReader, CsvReaderOptions};
+use geoarrow_schema::{PointType, Dimension, GeoArrowType};
+
+let in_file = File::open("test.csv").unwrap();
+let out_file = File::create("output.csv").unwrap();
+
+// Setting up a Reader for in_file to read batches to write to out_file
+let mut buf_reader = BufReader::new(in_file);
+let format = arrow_csv::reader::Format::default().with_header(true);
+let (schema, _) = format.infer_schema(&mut buf_reader, None).unwrap();
+let arrow_reader = ReaderBuilder::new(schema.into())
+    .with_format(format)
+    .build(buf_reader).unwrap();
+let point_type = PointType::new(Dimension::XY, Default::default());
+let options = CsvReaderOptions {
+    geometry_column_name: Some("report location".to_string()), 
+    to_type: GeoArrowType::Point(point_type),
+};
+let mut geo_reader = CsvReader::try_new(arrow_reader, options).unwrap();
+
+// Setting up our Writer
+let arrow_writer = WriterBuilder::new().with_header(true).build(out_file);
 let mut csv_writer = CsvWriter::new(arrow_writer);
 
-
-csv_writer.write(&dummy_batch)?;
-
-let _file = csv_writer.into_inner();
-Ok(())
+for batch_result in geo_reader {
+    let batch = batch_result.unwrap();
+    csv_writer.write(&batch).unwrap();
+    println!("Wrote {} rows ", batch.num_rows())
+}
 ```
 
 
