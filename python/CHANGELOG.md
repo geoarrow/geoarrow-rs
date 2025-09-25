@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## [0.5.3] - 2025-09-25
+
+- chore: Bump lockfiles to update wkb dependency #1342
+
 ## [0.5.2] - 2025-09-12
 
 - fix(geoarrow-array): Fix persisting CRS when creating GeometryArray from Field #1326. This also fixes an internal error when downcasting a GeometryArray with a CRS.
