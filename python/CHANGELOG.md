@@ -4,7 +4,7 @@
 
 ## [0.5.3] - 2025-09-25
 
-- chore: Bump lockfiles to update wkb dependency
+- chore: Bump lockfiles to update wkb dependency #1342
 
 ## [0.5.2] - 2025-09-12
 
