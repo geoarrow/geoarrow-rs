@@ -24,5 +24,5 @@ pub use edges::Edges;
 pub use metadata::Metadata;
 pub use r#type::{
     BoxType, GeometryCollectionType, GeometryType, LineStringType, MultiLineStringType,
-    MultiPointType, MultiPolygonType, PointType, PolygonType, WkbType, WktType,
+    MultiPointType, MultiPolygonType, PointType, PolygonType, RectType, WkbType, WktType,
 };
