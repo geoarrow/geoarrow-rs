@@ -4,11 +4,11 @@ use crate::interop::numpy::to_numpy::wkb_array_to_numpy;
 use crate::interop::shapely::utils::import_shapely;
 use arrow_buffer::NullBuffer;
 use geoarrow::NativeArray;
-use geoarrow::array::{
+use geoarrow_array::array::{
     AsNativeArray, AsSerializedArray, CoordBuffer, NativeArrayDyn, SerializedArrayDyn,
 };
-use geoarrow::datatypes::{AnyType, NativeType, SerializedType};
-use geoarrow::io::wkb::to_wkb;
+use geoarrow::datatypes::{AnyType, SerializedType};
+use geoarrow_array::cast::to_wkb;
 use numpy::PyArrayMethods;
 use numpy::ToPyArray;
 use pyo3::PyAny;
@@ -91,7 +91,7 @@ fn pyarray_to_shapely(py: Python, input: PyArray) -> PyGeoArrowResult<Bound<PyAn
         AnyType::Native(typ) => {
             let array = NativeArrayDyn::from_arrow_array(&array, &field)?.into_inner();
 
-            use NativeType::*;
+            use geoarrow_schema::GeoArrowType::*;
             match typ {
                 Point(_) => point_arr(py, array.as_ref().as_point().clone()),
                 LineString(_) => linestring_arr(py, array.as_ref().as_line_string().clone()),
@@ -116,7 +116,7 @@ fn pyarray_to_shapely(py: Python, input: PyArray) -> PyGeoArrowResult<Bound<PyAn
     }
 }
 
-fn point_arr(py: Python, arr: geoarrow::array::PointArray) -> PyGeoArrowResult<Bound<PyAny>> {
+fn point_arr(py: Python, arr: geoarrow_array::array::PointArray) -> PyGeoArrowResult<Bound<PyAny>> {
     let shapely_mod = import_shapely(py)?;
     let shapely_geom_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
 
@@ -130,7 +130,7 @@ fn point_arr(py: Python, arr: geoarrow::array::PointArray) -> PyGeoArrowResult<B
 
 fn linestring_arr(
     py: Python,
-    arr: geoarrow::array::LineStringArray,
+    arr: geoarrow_array::array::LineStringArray,
 ) -> PyGeoArrowResult<Bound<PyAny>> {
     let shapely_mod = import_shapely(py)?;
     let shapely_geom_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
@@ -146,7 +146,7 @@ fn linestring_arr(
     Ok(shapely_mod.call_method1(intern!(py, "from_ragged_array"), args)?)
 }
 
-fn polygon_arr(py: Python, arr: geoarrow::array::PolygonArray) -> PyGeoArrowResult<Bound<PyAny>> {
+fn polygon_arr(py: Python, arr: geoarrow_array::array::PolygonArray) -> PyGeoArrowResult<Bound<PyAny>> {
     let shapely_mod = import_shapely(py)?;
     let shapely_geom_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
 
@@ -166,7 +166,7 @@ fn polygon_arr(py: Python, arr: geoarrow::array::PolygonArray) -> PyGeoArrowResu
 
 fn multipoint_arr(
     py: Python,
-    arr: geoarrow::array::MultiPointArray,
+    arr: geoarrow_array::array::MultiPointArray,
 ) -> PyGeoArrowResult<Bound<PyAny>> {
     let shapely_mod = import_shapely(py)?;
     let shapely_geom_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
@@ -184,7 +184,7 @@ fn multipoint_arr(
 
 fn multilinestring_arr(
     py: Python,
-    arr: geoarrow::array::MultiLineStringArray,
+    arr: geoarrow_array::array::MultiLineStringArray,
 ) -> PyGeoArrowResult<Bound<PyAny>> {
     let shapely_mod = import_shapely(py)?;
     let shapely_geom_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
@@ -205,7 +205,7 @@ fn multilinestring_arr(
 
 fn multipolygon_arr(
     py: Python,
-    arr: geoarrow::array::MultiPolygonArray,
+    arr: geoarrow_array::array::MultiPolygonArray,
 ) -> PyGeoArrowResult<Bound<PyAny>> {
     let shapely_mod = import_shapely(py)?;
     let shapely_geom_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
@@ -225,7 +225,7 @@ fn multipolygon_arr(
     Ok(shapely_mod.call_method1(intern!(py, "from_ragged_array"), args)?)
 }
 
-fn rect_arr(py: Python, arr: geoarrow::array::RectArray) -> PyGeoArrowResult<Bound<PyAny>> {
+fn rect_arr(py: Python, arr: geoarrow_array::array::RectArray) -> PyGeoArrowResult<Bound<PyAny>> {
     let shapely_mod = import_shapely(py)?;
 
     let lower = arr.lower();
@@ -244,7 +244,7 @@ fn via_wkb(py: Python, arr: Arc<dyn NativeArray>) -> PyGeoArrowResult<Bound<PyAn
     wkb_arr(py, to_wkb(arr.as_ref()))
 }
 
-fn wkb_arr(py: Python, arr: geoarrow::array::WKBArray<i32>) -> PyGeoArrowResult<Bound<PyAny>> {
+fn wkb_arr(py: Python, arr: geoarrow_array::array::WkbArray) -> PyGeoArrowResult<Bound<PyAny>> {
     let shapely_mod = import_shapely(py)?;
     let args = (wkb_array_to_numpy(py, &arr)?,);
     Ok(shapely_mod.call_method1(intern!(py, "from_wkb"), args)?)

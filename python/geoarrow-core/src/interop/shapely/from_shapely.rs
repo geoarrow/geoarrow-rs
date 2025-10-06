@@ -93,7 +93,7 @@ pub fn from_shapely(
 
             // TODO: support 3d WKB
             let wkb_arr = make_wkb_arr(py, input, metadata)?;
-            let geom_arr = geoarrow::io::wkb::from_wkb(
+            let geom_arr = geoarrow_array::cast::from_wkb(
                 &wkb_arr,
                 NativeType::GeometryCollection(GeometryCollectionType::new(
                     CoordType::default_interleaved(),
@@ -184,7 +184,7 @@ fn make_wkb_arr(
     py: Python,
     input: &Bound<PyAny>,
     metadata: Arc<Metadata>,
-) -> PyGeoArrowResult<geoarrow::array::WKBArray<i32>> {
+) -> PyGeoArrowResult<geoarrow_array::array::WkbArray> {
     let shapely_mod = import_shapely(py)?;
     let wkb_result = call_to_wkb(py, &shapely_mod, input)?;
 
@@ -195,7 +195,7 @@ fn make_wkb_arr(
         builder.append_value(buf.as_ref());
     }
 
-    Ok(geoarrow::array::WKBArray::new(builder.finish(), metadata))
+    Ok(geoarrow_array::array::WkbArray::new(builder.finish(), metadata))
 }
 
 // TODO: add chunk_size param to from_shapely
@@ -230,7 +230,7 @@ macro_rules! impl_chunked_from_shapely {
                     );
                 }
 
-                Ok(geoarrow::chunked_array::PyChunkedNativeArray::new(chunks).into())
+                Ok(geoarrow_array::chunked_array::PyChunkedNativeArray::new(chunks).into())
             }
         }
     };
