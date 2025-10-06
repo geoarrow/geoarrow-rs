@@ -222,7 +222,10 @@ fn make_wkb_arr(
         builder.append_value(buf.as_ref());
     }
 
-    Ok(geoarrow_array::array::WkbArray::new(builder.finish(), metadata))
+    Ok(geoarrow_array::array::WkbArray::new(
+        builder.finish(),
+        metadata,
+    ))
 }
 
 // TODO: add chunk_size param to from_shapely

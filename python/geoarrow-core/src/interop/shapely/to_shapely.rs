@@ -4,10 +4,10 @@ use crate::interop::numpy::to_numpy::wkb_array_to_numpy;
 use crate::interop::shapely::utils::import_shapely;
 use arrow_buffer::NullBuffer;
 use geoarrow::NativeArray;
+use geoarrow::datatypes::{AnyType, SerializedType};
 use geoarrow_array::array::{
     AsNativeArray, AsSerializedArray, CoordBuffer, NativeArrayDyn, SerializedArrayDyn,
 };
-use geoarrow::datatypes::{AnyType, SerializedType};
 use geoarrow_array::cast::to_wkb;
 use numpy::PyArrayMethods;
 use numpy::ToPyArray;
@@ -146,7 +146,10 @@ fn linestring_arr(
     Ok(shapely_mod.call_method1(intern!(py, "from_ragged_array"), args)?)
 }
 
-fn polygon_arr(py: Python, arr: geoarrow_array::array::PolygonArray) -> PyGeoArrowResult<Bound<PyAny>> {
+fn polygon_arr(
+    py: Python,
+    arr: geoarrow_array::array::PolygonArray,
+) -> PyGeoArrowResult<Bound<PyAny>> {
     let shapely_mod = import_shapely(py)?;
     let shapely_geom_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
 
