@@ -93,6 +93,106 @@ fn call_to_wkb<'a>(
     Ok(shapely_mod.call_method(intern!(py, "to_wkb"), args, Some(&kwargs))?)
 }
 
+fn from_shapely_via_wkb(
+    py: Python,
+    input: &Bound<PyAny>,
+    crs: Option<PyCrs>,
+) -> PyGeoArrowResult<PyObject> {
+    let metadata = Arc::new(crs.map(|inner| inner.into_inner()).unwrap_or_default());
+
+    // TODO: support 3d WKB
+    let wkb_arr = make_wkb_arr(py, input, metadata)?;
+    let geom_arr = geoarrow_array::cast::from_wkb(
+        &wkb_arr,
+        NativeType::GeometryCollection(GeometryCollectionType::new(
+            CoordType::default_interleaved(),
+            Dimension::XY,
+            Default::default(),
+        )),
+        false,
+    )?;
+    native_array_to_pyobject(py, geom_arr)
+}
+
+fn from_shapely_via_ragged(
+    py: Python,
+    input: &Bound<PyAny>,
+    crs: Option<PyCrs>,
+) -> PyGeoArrowResult<PyObject> {
+    let numpy_mod = py.import(intern!(py, "numpy"))?;
+    let shapely_mod = import_shapely(py)?;
+    let kwargs = PyDict::new(py);
+    let (geom_type, coords, offsets) = shapely_mod
+        .call_method(intern!(py, "to_ragged_array"), (input,), Some(&kwargs))?
+        .extract::<(Bound<PyAny>, Bound<PyAny>, PyObject)>()?;
+
+    let coords = numpy_mod.call_method1(
+        intern!(py, "ascontiguousarray"),
+        PyTuple::new(py, vec![coords])?,
+    )?;
+
+    let geometry_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
+
+    let arr = if geom_type.eq(geometry_type_enum.getattr(intern!(py, "POINT"))?)? {
+        points(coords.extract()?, crs)?.into_inner().into_inner()
+    } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "LINESTRING"))?)? {
+        let (geom_offsets,) = offsets.extract::<(Bound<PyAny>,)>(py)?;
+
+        linestrings(coords.extract()?, geom_offsets.extract()?, crs)?
+            .into_inner()
+            .into_inner()
+    } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "POLYGON"))?)? {
+        let (ring_offsets, geom_offsets) = offsets.extract::<(Bound<PyAny>, Bound<PyAny>)>(py)?;
+
+        polygons(
+            coords.extract()?,
+            geom_offsets.extract()?,
+            ring_offsets.extract()?,
+            crs,
+        )?
+        .into_inner()
+        .into_inner()
+    } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "MULTIPOINT"))?)? {
+        let (geom_offsets,) = offsets.extract::<(Bound<PyAny>,)>(py)?;
+
+        multipoints(coords.extract()?, geom_offsets.extract()?, crs)?
+            .into_inner()
+            .into_inner()
+    } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "MULTILINESTRING"))?)? {
+        let (ring_offsets, geom_offsets) = offsets.extract::<(Bound<PyAny>, Bound<PyAny>)>(py)?;
+
+        multilinestrings(
+            coords.extract()?,
+            geom_offsets.extract()?,
+            ring_offsets.extract()?,
+            crs,
+        )?
+        .into_inner()
+        .into_inner()
+    } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "MULTIPOLYGON"))?)? {
+        let (ring_offsets, polygon_offsets, geom_offsets) =
+            offsets.extract::<(Bound<PyAny>, Bound<PyAny>, Bound<PyAny>)>(py)?;
+
+        multipolygons(
+            coords.extract()?,
+            geom_offsets.extract()?,
+            polygon_offsets.extract()?,
+            ring_offsets.extract()?,
+            crs,
+        )?
+        .into_inner()
+        .into_inner()
+    } else {
+        return Err(PyValueError::new_err(format!(
+            "unexpected geometry type from to_ragged_array {}",
+            geom_type
+        ))
+        .into());
+    };
+
+    native_array_to_pyobject(py, arr)
+}
+
 #[pyfunction]
 #[pyo3(signature = (input, *, crs = None, method = "wkb"))]
 pub fn from_shapely(
@@ -101,100 +201,9 @@ pub fn from_shapely(
     crs: Option<PyCrs>,
     method: PyConversionMethod,
 ) -> PyGeoArrowResult<PyObject> {
-    let numpy_mod = py.import(intern!(py, "numpy"))?;
-    let shapely_mod = import_shapely(py)?;
-
-    let kwargs = PyDict::new(py);
     match method {
-        PyConversionMethod::Wkb => {
-            let metadata = Arc::new(crs.map(|inner| inner.into_inner()).unwrap_or_default());
-
-            // TODO: support 3d WKB
-            let wkb_arr = make_wkb_arr(py, input, metadata)?;
-            let geom_arr = geoarrow_array::cast::from_wkb(
-                &wkb_arr,
-                NativeType::GeometryCollection(GeometryCollectionType::new(
-                    CoordType::default_interleaved(),
-                    Dimension::XY,
-                    Default::default(),
-                )),
-                false,
-            )?;
-            native_array_to_pyobject(py, geom_arr)
-        }
-        PyConversionMethod::Ragged => {
-            let (geom_type, coords, offsets) = shapely_mod
-                .call_method(intern!(py, "to_ragged_array"), (input,), Some(&kwargs))?
-                .extract::<(Bound<PyAny>, Bound<PyAny>, PyObject)>()?;
-
-            let coords = numpy_mod.call_method1(
-                intern!(py, "ascontiguousarray"),
-                PyTuple::new(py, vec![coords])?,
-            )?;
-
-            let geometry_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
-
-            let arr = if geom_type.eq(geometry_type_enum.getattr(intern!(py, "POINT"))?)? {
-                points(coords.extract()?, crs)?.into_inner().into_inner()
-            } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "LINESTRING"))?)? {
-                let (geom_offsets,) = offsets.extract::<(Bound<PyAny>,)>(py)?;
-
-                linestrings(coords.extract()?, geom_offsets.extract()?, crs)?
-                    .into_inner()
-                    .into_inner()
-            } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "POLYGON"))?)? {
-                let (ring_offsets, geom_offsets) =
-                    offsets.extract::<(Bound<PyAny>, Bound<PyAny>)>(py)?;
-
-                polygons(
-                    coords.extract()?,
-                    geom_offsets.extract()?,
-                    ring_offsets.extract()?,
-                    crs,
-                )?
-                .into_inner()
-                .into_inner()
-            } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "MULTIPOINT"))?)? {
-                let (geom_offsets,) = offsets.extract::<(Bound<PyAny>,)>(py)?;
-
-                multipoints(coords.extract()?, geom_offsets.extract()?, crs)?
-                    .into_inner()
-                    .into_inner()
-            } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "MULTILINESTRING"))?)? {
-                let (ring_offsets, geom_offsets) =
-                    offsets.extract::<(Bound<PyAny>, Bound<PyAny>)>(py)?;
-
-                multilinestrings(
-                    coords.extract()?,
-                    geom_offsets.extract()?,
-                    ring_offsets.extract()?,
-                    crs,
-                )?
-                .into_inner()
-                .into_inner()
-            } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "MULTIPOLYGON"))?)? {
-                let (ring_offsets, polygon_offsets, geom_offsets) =
-                    offsets.extract::<(Bound<PyAny>, Bound<PyAny>, Bound<PyAny>)>(py)?;
-
-                multipolygons(
-                    coords.extract()?,
-                    geom_offsets.extract()?,
-                    polygon_offsets.extract()?,
-                    ring_offsets.extract()?,
-                    crs,
-                )?
-                .into_inner()
-                .into_inner()
-            } else {
-                return Err(PyValueError::new_err(format!(
-                    "unexpected geometry type from to_ragged_array {}",
-                    geom_type
-                ))
-                .into());
-            };
-
-            native_array_to_pyobject(py, arr)
-        }
+        PyConversionMethod::Wkb => from_shapely_via_wkb(py, input, crs),
+        PyConversionMethod::Ragged => from_shapely_via_ragged(py, input, crs),
     }
 }
 
