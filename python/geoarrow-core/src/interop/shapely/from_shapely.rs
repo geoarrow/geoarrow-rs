@@ -16,6 +16,24 @@ use pyo3::pybacked::PyBackedBytes;
 use pyo3::types::{PyDict, PyString, PyTuple};
 use pyo3_geoarrow::{PyCrs, PyGeoArrowResult};
 
+#[derive(Debug, Default, Clone, Copy)]
+enum PyConversionMethod {
+    Ragged,
+    #[default]
+    Wkb,
+}
+
+impl<'a> FromPyObject<'a> for PyConversionMethod {
+    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
+        let s: String = ob.extract()?;
+        match s.to_lowercase().as_str() {
+            "wkb" => Ok(Self::Wkb),
+            "ragged" => Ok(Self::Ragged),
+            _ => Err(PyValueError::new_err("Unexpected conversion method")),
+        }
+    }
+}
+
 /// Check that the value of the GeometryType enum returned from shapely.to_ragged_array matches the
 /// expected variant for this geometry array.
 #[allow(dead_code)]
@@ -81,14 +99,14 @@ pub fn from_shapely(
     py: Python,
     input: &Bound<PyAny>,
     crs: Option<PyCrs>,
-    method: String,
+    method: PyConversionMethod,
 ) -> PyGeoArrowResult<PyObject> {
     let numpy_mod = py.import(intern!(py, "numpy"))?;
     let shapely_mod = import_shapely(py)?;
 
     let kwargs = PyDict::new(py);
     match method {
-        "wkb" => {
+        PyConversionMethod::Wkb => {
             let metadata = Arc::new(crs.map(|inner| inner.into_inner()).unwrap_or_default());
 
             // TODO: support 3d WKB
@@ -104,7 +122,7 @@ pub fn from_shapely(
             )?;
             native_array_to_pyobject(py, geom_arr)
         }
-        "ragged" => {
+        PyConversionMethod::Ragged => {
             let (geom_type, coords, offsets) = shapely_mod
                 .call_method(intern!(py, "to_ragged_array"), (input,), Some(&kwargs))?
                 .extract::<(Bound<PyAny>, Bound<PyAny>, PyObject)>()?;
