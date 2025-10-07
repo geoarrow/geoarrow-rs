@@ -3,78 +3,91 @@ use std::sync::Arc;
 use crate::constructors::{
     linestrings, multilinestrings, multipoints, multipolygons, points, polygons,
 };
-use crate::ffi::to_python::native_array_to_pyobject;
 use crate::interop::shapely::utils::import_shapely;
+use crate::interop::utils::new_metadata;
 use arrow_array::builder::BinaryBuilder;
-use geoarrow::datatypes::NativeType;
-use geoarrow_schema::{CoordType, Dimension, GeometryCollectionType, Metadata};
+use geoarrow_array::array::WkbArray;
+use geoarrow_schema::{GeometryType, Metadata};
 use pyo3::PyAny;
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::pybacked::PyBackedBytes;
-use pyo3::types::{PyDict, PyString, PyTuple};
-use pyo3_geoarrow::{PyCrs, PyGeoArrowResult};
+use pyo3::types::{PyDict, PyTuple};
+use pyo3_geoarrow::{PyCoordType, PyCrs, PyEdges, PyGeoArray, PyGeoArrowResult};
 
 #[derive(Debug, Default, Clone, Copy)]
-enum PyConversionMethod {
+pub(crate) enum ShapelyConversionMethod {
     Ragged,
     #[default]
     Wkb,
 }
 
-impl<'a> FromPyObject<'a> for PyConversionMethod {
+impl<'a> FromPyObject<'a> for ShapelyConversionMethod {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         let s: String = ob.extract()?;
         match s.to_lowercase().as_str() {
             "wkb" => Ok(Self::Wkb),
-            "ragged" => Ok(Self::Ragged),
+            "ragged" | "native" => Ok(Self::Ragged),
             _ => Err(PyValueError::new_err("Unexpected conversion method")),
         }
     }
 }
 
-/// Check that the value of the GeometryType enum returned from shapely.to_ragged_array matches the
-/// expected variant for this geometry array.
-#[allow(dead_code)]
-fn check_geometry_type(
+// TODO: support chunk_size parameter to create chunked arrays
+#[pyfunction]
+#[pyo3(
+    signature = (input, *, crs = None, edges = None, method = ShapelyConversionMethod::Wkb, coord_type = None),
+    text_signature = "(input, *, crs = None, edges = None, method = 'wkb', coord_type = None)")
+]
+pub(crate) fn from_shapely(
     py: Python,
-    shapely_mod: &Bound<PyModule>,
-    geom_type: &Bound<PyAny>,
-    expected_geom_type: &Bound<PyString>,
-) -> PyGeoArrowResult<()> {
-    let shapely_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
-    if !geom_type.eq(shapely_enum.getattr(expected_geom_type)?)? {
-        Err(PyValueError::new_err(format!(
-            "Unexpected geometry type {}",
-            geom_type.getattr(intern!(py, "name"))?,
-        ))
-        .into())
-    } else {
-        Ok(())
+    input: &Bound<PyAny>,
+    crs: Option<PyCrs>,
+    edges: Option<PyEdges>,
+    method: ShapelyConversionMethod,
+    coord_type: Option<PyCoordType>,
+) -> PyGeoArrowResult<PyGeoArray> {
+    match method {
+        ShapelyConversionMethod::Wkb => from_shapely_via_wkb(py, input, crs, edges, coord_type),
+        ShapelyConversionMethod::Ragged => from_shapely_via_ragged(py, input, crs, edges),
     }
 }
 
-/// Call shapely.to_ragged_array and validate expected geometry type.
-#[allow(dead_code)]
-fn call_to_ragged_array(
+fn from_shapely_via_wkb(
     py: Python,
-    shapely_mod: &Bound<PyModule>,
     input: &Bound<PyAny>,
-    expected_geom_type: &Bound<PyString>,
-) -> PyGeoArrowResult<(PyObject, PyObject)> {
-    let args = (input,);
+    crs: Option<PyCrs>,
+    edges: Option<PyEdges>,
+    coord_type: Option<PyCoordType>,
+) -> PyGeoArrowResult<PyGeoArray> {
+    let metadata = new_metadata(crs, edges);
 
-    let kwargs = PyDict::new(py);
-    kwargs.set_item("include_z", false)?;
-    let ragged_array_output =
-        shapely_mod.call_method(intern!(py, "to_ragged_array"), args, Some(&kwargs))?;
+    let wkb_arr = make_wkb_arr(py, input, metadata.clone())?;
+    let to_type = GeometryType::new(metadata)
+        .with_coord_type(coord_type.map(|c| c.into()).unwrap_or_default());
+    let geom_arr = geoarrow_array::cast::from_wkb(&wkb_arr, to_type.into())?;
+    Ok(PyGeoArray::new(geom_arr))
+}
 
-    let (geom_type, coords, offsets) =
-        ragged_array_output.extract::<(PyObject, PyObject, PyObject)>()?;
-    check_geometry_type(py, shapely_mod, geom_type.bind(py), expected_geom_type)?;
+fn make_wkb_arr(
+    py: Python,
+    input: &Bound<PyAny>,
+    metadata: Arc<Metadata>,
+) -> PyGeoArrowResult<WkbArray> {
+    let shapely_mod = import_shapely(py)?;
+    let wkb_result = call_to_wkb(py, &shapely_mod, input)?;
 
-    Ok((coords, offsets))
+    // TODO: use new WKB/WKT direct builder APIs
+    // https://github.com/geoarrow/geoarrow-rs/issues/1349
+    let mut builder = BinaryBuilder::with_capacity(wkb_result.len()?, 0);
+
+    for item in wkb_result.try_iter()? {
+        let buf = item?.extract::<PyBackedBytes>()?;
+        builder.append_value(buf.as_ref());
+    }
+
+    Ok(WkbArray::new(builder.finish(), metadata))
 }
 
 /// Call shapely.to_wkb
@@ -93,175 +106,97 @@ fn call_to_wkb<'a>(
     Ok(shapely_mod.call_method(intern!(py, "to_wkb"), args, Some(&kwargs))?)
 }
 
-fn from_shapely_via_wkb(
-    py: Python,
-    input: &Bound<PyAny>,
-    crs: Option<PyCrs>,
-) -> PyGeoArrowResult<PyObject> {
-    let metadata = Arc::new(crs.map(|inner| inner.into_inner()).unwrap_or_default());
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum ShapelyGeometryType {
+    Point,
+    LineString,
+    Polygon,
+    MultiPoint,
+    MultiLineString,
+    MultiPolygon,
+}
 
-    // TODO: support 3d WKB
-    let wkb_arr = make_wkb_arr(py, input, metadata)?;
-    let geom_arr = geoarrow_array::cast::from_wkb(
-        &wkb_arr,
-        NativeType::GeometryCollection(GeometryCollectionType::new(
-            CoordType::default_interleaved(),
-            Dimension::XY,
-            Default::default(),
-        )),
-        false,
-    )?;
-    native_array_to_pyobject(py, geom_arr)
+impl<'a> FromPyObject<'a> for ShapelyGeometryType {
+    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
+        match ob.extract::<isize>()? {
+            0 => Ok(Self::Point),
+            1 => Ok(Self::LineString),
+            3 => Ok(Self::Polygon),
+            4 => Ok(Self::MultiPoint),
+            5 => Ok(Self::MultiLineString),
+            6 => Ok(Self::MultiPolygon),
+            _ => Err(PyValueError::new_err(format!(
+                "Unexpected or unsupported geometry type: {}",
+                ob
+            ))),
+        }
+    }
 }
 
 fn from_shapely_via_ragged(
     py: Python,
     input: &Bound<PyAny>,
     crs: Option<PyCrs>,
-) -> PyGeoArrowResult<PyObject> {
+    edges: Option<PyEdges>,
+) -> PyGeoArrowResult<PyGeoArray> {
     let numpy_mod = py.import(intern!(py, "numpy"))?;
     let shapely_mod = import_shapely(py)?;
     let kwargs = PyDict::new(py);
+
     let (geom_type, coords, offsets) = shapely_mod
         .call_method(intern!(py, "to_ragged_array"), (input,), Some(&kwargs))?
-        .extract::<(Bound<PyAny>, Bound<PyAny>, PyObject)>()?;
+        .extract::<(ShapelyGeometryType, Bound<PyAny>, PyObject)>()?;
 
     let coords = numpy_mod.call_method1(
         intern!(py, "ascontiguousarray"),
         PyTuple::new(py, vec![coords])?,
     )?;
 
-    let geometry_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
-
-    let arr = if geom_type.eq(geometry_type_enum.getattr(intern!(py, "POINT"))?)? {
-        points(coords.extract()?, crs)?.into_inner().into_inner()
-    } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "LINESTRING"))?)? {
-        let (geom_offsets,) = offsets.extract::<(Bound<PyAny>,)>(py)?;
-
-        linestrings(coords.extract()?, geom_offsets.extract()?, crs)?
-            .into_inner()
-            .into_inner()
-    } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "POLYGON"))?)? {
-        let (ring_offsets, geom_offsets) = offsets.extract::<(Bound<PyAny>, Bound<PyAny>)>(py)?;
-
-        polygons(
-            coords.extract()?,
-            geom_offsets.extract()?,
-            ring_offsets.extract()?,
-            crs,
-        )?
-        .into_inner()
-        .into_inner()
-    } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "MULTIPOINT"))?)? {
-        let (geom_offsets,) = offsets.extract::<(Bound<PyAny>,)>(py)?;
-
-        multipoints(coords.extract()?, geom_offsets.extract()?, crs)?
-            .into_inner()
-            .into_inner()
-    } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "MULTILINESTRING"))?)? {
-        let (ring_offsets, geom_offsets) = offsets.extract::<(Bound<PyAny>, Bound<PyAny>)>(py)?;
-
-        multilinestrings(
-            coords.extract()?,
-            geom_offsets.extract()?,
-            ring_offsets.extract()?,
-            crs,
-        )?
-        .into_inner()
-        .into_inner()
-    } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "MULTIPOLYGON"))?)? {
-        let (ring_offsets, polygon_offsets, geom_offsets) =
-            offsets.extract::<(Bound<PyAny>, Bound<PyAny>, Bound<PyAny>)>(py)?;
-
-        multipolygons(
-            coords.extract()?,
-            geom_offsets.extract()?,
-            polygon_offsets.extract()?,
-            ring_offsets.extract()?,
-            crs,
-        )?
-        .into_inner()
-        .into_inner()
-    } else {
-        return Err(PyValueError::new_err(format!(
-            "unexpected geometry type from to_ragged_array {}",
-            geom_type
-        ))
-        .into());
-    };
-
-    native_array_to_pyobject(py, arr)
-}
-
-#[pyfunction]
-#[pyo3(signature = (input, *, crs = None, method = "wkb"))]
-pub fn from_shapely(
-    py: Python,
-    input: &Bound<PyAny>,
-    crs: Option<PyCrs>,
-    method: PyConversionMethod,
-) -> PyGeoArrowResult<PyObject> {
-    match method {
-        PyConversionMethod::Wkb => from_shapely_via_wkb(py, input, crs),
-        PyConversionMethod::Ragged => from_shapely_via_ragged(py, input, crs),
-    }
-}
-
-fn make_wkb_arr(
-    py: Python,
-    input: &Bound<PyAny>,
-    metadata: Arc<Metadata>,
-) -> PyGeoArrowResult<geoarrow_array::array::WkbArray> {
-    let shapely_mod = import_shapely(py)?;
-    let wkb_result = call_to_wkb(py, &shapely_mod, input)?;
-
-    let mut builder = BinaryBuilder::with_capacity(wkb_result.len()?, 0);
-
-    for item in wkb_result.try_iter()? {
-        let buf = item?.extract::<PyBackedBytes>()?;
-        builder.append_value(buf.as_ref());
-    }
-
-    Ok(geoarrow_array::array::WkbArray::new(
-        builder.finish(),
-        metadata,
-    ))
-}
-
-// TODO: add chunk_size param to from_shapely
-#[allow(unused_macros)]
-macro_rules! impl_chunked_from_shapely {
-    ($py_chunked_struct:ty, $py_array_struct:ty) => {
-        #[pymethods]
-        impl $py_chunked_struct {
-            #[classmethod]
-            #[pyo3(signature = (input, *, chunk_size=65536, crs=None))]
-            fn from_shapely(
-                _cls: &Bound<PyType>,
-                py: Python,
-                input: &Bound<PyAny>,
-                chunk_size: usize,
-                crs: Option<PyCrs>,
-            ) -> PyGeoArrowResult<Self> {
-                let len = input.len()?;
-                let num_chunks = (len as f64 / chunk_size as f64).ceil() as usize;
-                let mut chunks = Vec::with_capacity(num_chunks);
-
-                for chunk_idx in 0..num_chunks {
-                    let slice = PySlice::new_bound(
-                        py,
-                        (chunk_idx * chunk_size).try_into().unwrap(),
-                        ((chunk_idx + 1) * chunk_size).try_into().unwrap(),
-                        1,
-                    );
-                    let input_slice = input.get_item(slice)?;
-                    chunks.push(
-                        <$py_array_struct>::from_shapely(_cls, py, &input_slice, crs.clone())?.0,
-                    );
-                }
-
-                Ok(geoarrow_array::chunked_array::PyChunkedNativeArray::new(chunks).into())
-            }
+    match geom_type {
+        ShapelyGeometryType::Point => points(coords.extract()?, crs, edges),
+        ShapelyGeometryType::LineString => {
+            let (geom_offsets,) = offsets.extract::<(Bound<PyAny>,)>(py)?;
+            linestrings(coords.extract()?, geom_offsets.extract()?, crs, edges)
         }
-    };
+        ShapelyGeometryType::Polygon => {
+            let (ring_offsets, geom_offsets) =
+                offsets.extract::<(Bound<PyAny>, Bound<PyAny>)>(py)?;
+
+            polygons(
+                coords.extract()?,
+                geom_offsets.extract()?,
+                ring_offsets.extract()?,
+                crs,
+                edges,
+            )
+        }
+        ShapelyGeometryType::MultiPoint => {
+            let (geom_offsets,) = offsets.extract::<(Bound<PyAny>,)>(py)?;
+            multipoints(coords.extract()?, geom_offsets.extract()?, crs, edges)
+        }
+        ShapelyGeometryType::MultiLineString => {
+            let (ring_offsets, geom_offsets) =
+                offsets.extract::<(Bound<PyAny>, Bound<PyAny>)>(py)?;
+            multilinestrings(
+                coords.extract()?,
+                geom_offsets.extract()?,
+                ring_offsets.extract()?,
+                crs,
+                edges,
+            )
+        }
+        ShapelyGeometryType::MultiPolygon => {
+            let (ring_offsets, polygon_offsets, geom_offsets) =
+                offsets.extract::<(Bound<PyAny>, Bound<PyAny>, Bound<PyAny>)>(py)?;
+
+            multipolygons(
+                coords.extract()?,
+                geom_offsets.extract()?,
+                polygon_offsets.extract()?,
+                ring_offsets.extract()?,
+                crs,
+                edges,
+            )
+        }
+    }
 }
