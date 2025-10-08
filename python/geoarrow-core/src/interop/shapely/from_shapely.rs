@@ -8,12 +8,12 @@ use crate::interop::utils::new_metadata;
 use arrow_array::builder::BinaryBuilder;
 use geoarrow_array::array::WkbArray;
 use geoarrow_schema::{GeometryType, Metadata};
-use pyo3::PyAny;
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::pybacked::PyBackedBytes;
 use pyo3::types::{PyDict, PyTuple};
+use pyo3::{IntoPyObjectExt, PyAny};
 use pyo3_geoarrow::{PyCoordType, PyCrs, PyEdges, PyGeoArray, PyGeoArrowResult};
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -67,7 +67,11 @@ fn from_shapely_via_wkb(
     let to_type = GeometryType::new(metadata)
         .with_coord_type(coord_type.map(|c| c.into()).unwrap_or_default());
     let geom_arr = geoarrow_array::cast::from_wkb(&wkb_arr, to_type.into())?;
-    Ok(PyGeoArray::new(geom_arr))
+    let py_geo_arr = PyGeoArray::new(geom_arr).into_bound_py_any(py)?;
+    // Use the Python-exposed downcast method
+    Ok(py_geo_arr
+        .call_method1(intern!(py, "downcast"), (coord_type,))?
+        .extract()?)
 }
 
 fn make_wkb_arr(
