@@ -68,9 +68,15 @@ fn from_shapely_via_wkb(
         .with_coord_type(coord_type.map(|c| c.into()).unwrap_or_default());
     let geom_arr = geoarrow_array::cast::from_wkb(&wkb_arr, to_type.into())?;
     let py_geo_arr = PyGeoArray::new(geom_arr).into_bound_py_any(py)?;
+
     // Use the Python-exposed downcast method
+    let kwargs = PyDict::new(py);
+    if let Some(ctype) = coord_type {
+        kwargs.set_item("coord_type", ctype)?;
+    }
+
     Ok(py_geo_arr
-        .call_method1(intern!(py, "downcast"), (coord_type,))?
+        .call_method(intern!(py, "downcast"), (), Some(&kwargs))?
         .extract()?)
 }
 
