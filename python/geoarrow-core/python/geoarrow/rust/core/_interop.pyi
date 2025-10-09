@@ -1,5 +1,7 @@
 from typing import Literal, overload
 
+from geoarrow.rust.core.types import CRSInput, CoordTypeInput, EdgesInput
+from numpy.typing import NDArray
 from arro3.core.types import (
     ArrowArrayExportable,
     ArrowSchemaExportable,
@@ -7,6 +9,27 @@ from arro3.core.types import (
 )
 from ._array import GeoArray
 from ._array_reader import GeoArrayReader
+
+def from_shapely(
+    input: NDArray,
+    *,
+    crs: CRSInput | None = None,
+    edges: EdgesInput | None = None,
+    method: Literal["wkb", "ragged"] = "wkb",
+    coord_type: CoordTypeInput | None = None,
+) -> GeoArray:
+    """Convert the Shapely input into a native-typed GeoArrow array.
+
+    Args:
+        input: An input array of Shapely geometries.
+        crs: The coordinate reference system to assign to the output array.
+        edges: The edge interpretation to assign to the output array.
+        method: The method to use for conversion. Can be one of "wkb" (Well-Known Binary) or "ragged" (direct conversion to native GeoArrow types).
+        coord_type: The coordinate type to assign to the output array. Defaults to "separated".
+
+    Returns:
+        A GeoArrow array.
+    """
 
 @overload
 def from_wkb(

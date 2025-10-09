@@ -11,11 +11,14 @@ import geoarrow.rust.core as geoarrow
 def test_from_points(method):
     coords = np.array([[1, 4], [2, 5]], dtype="float64")
     geoms = shapely.points(coords)
+    assert isinstance(geoms, np.ndarray)
+
     expected = geoarrow.points(coords)
 
-    actual = geoarrow.from_shapely(geoms, method=method)
+    actual = geoarrow.from_shapely(geoms, method=method, coord_type="interleaved")
 
     assert actual == expected
+
 
 @pytest.mark.parametrize("method", ["wkb", "ragged"])
 def test_from_polygons(method):
@@ -31,13 +34,13 @@ def test_from_polygons(method):
     geom_offsets = np.array([0, 1, 2])
 
     geoms = shapely.polygons(coords_)
+    assert isinstance(geoms, np.ndarray)
+
     expected = geoarrow.polygons(
-        coords,
-        geom_offsets=geom_offsets,
-        ring_offsets=ring_offsets
+        coords, geom_offsets=geom_offsets, ring_offsets=ring_offsets
     )
 
-    actual = geoarrow.from_shapely(geoms, method=method)
+    actual = geoarrow.from_shapely(geoms, method=method, coord_type="interleaved")
     assert actual == expected
 
 
