@@ -1,5 +1,5 @@
 [package]
-name = "geoarrow-geo"
+name = "geoarrow-expr-geos"
 version = { workspace = true }
 authors = { workspace = true }
 edition = { workspace = true }
@@ -11,16 +11,15 @@ rust-version = { workspace = true }
 
 
 [dependencies]
-arrow-buffer = { workspace = true }
 arrow-array = { workspace = true }
-geo = { workspace = true }
+arrow-schema = { workspace = true }
 geo-traits = { workspace = true }
-geoarrow-array = { workspace = true }
+geoarrow-array = { workspace = true, features = ["test-data"] }
 geoarrow-schema = { workspace = true }
+geos = { workspace = true }
 
 [dev-dependencies]
-geo = { workspace = true }
-geoarrow-array = { workspace = true, features = ["test-data"] }
+geos = { workspace = true, features = ["static"] }
 
 [package.metadata.docs.rs]
 all-features = true
