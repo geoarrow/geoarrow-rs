@@ -891,6 +891,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "geoarrow-expr-geo"
+version = "0.5.0"
+dependencies = [
+ "arrow-array",
+ "arrow-buffer",
+ "geo",
+ "geo-traits",
+ "geoarrow-array",
+ "geoarrow-schema",
+]
+
+[[package]]
 name = "geoarrow-flatgeobuf"
 version = "0.5.0"
 dependencies = [
@@ -913,18 +925,6 @@ dependencies = [
  "tokio",
  "tokio-test",
  "wkt 0.14.0",
-]
-
-[[package]]
-name = "geoarrow-geo"
-version = "0.5.0"
-dependencies = [
- "arrow-array",
- "arrow-buffer",
- "geo",
- "geo-traits",
- "geoarrow-array",
- "geoarrow-schema",
 ]
 
 [[package]]
