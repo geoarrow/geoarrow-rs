@@ -92,6 +92,7 @@ impl<O: OffsetSizeTrait> WkbBuilder<O> {
     ///
     /// ```
     /// use geoarrow_array::builder::WkbBuilder;
+    /// use geoarrow_array::GeoArrowArray;
     /// use geoarrow_schema::WkbType;
     ///
     /// let mut builder = WkbBuilder::<i32>::new(WkbType::default());
@@ -143,6 +144,7 @@ impl<O: OffsetSizeTrait> WkbBuilder<O> {
     ///
     /// ```
     /// use geoarrow_array::builder::WkbBuilder;
+    /// use geoarrow_array::GeoArrowArray;
     /// use geoarrow_schema::WkbType;
     ///
     /// let mut builder = WkbBuilder::<i32>::new(WkbType::default());
