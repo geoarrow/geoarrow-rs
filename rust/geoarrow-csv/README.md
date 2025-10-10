@@ -11,6 +11,7 @@ Use `CsvReader` to read CSV files with WKT-encoded geometry columns. The reader 
 ### Example
 
 `example.csv` contains sample data:
+
 ```csv
 address,type,datetime,report location,incident number
 904 7th Ave,Car Fire,05/22/19,POINT (-122.329051 47.6069),F190051945
@@ -36,7 +37,7 @@ let arrow_reader = ReaderBuilder::new(schema.into())
 
 let point_type = PointType::new(Dimension::XY, Default::default());
 let options = CsvReaderOptions {
-    geometry_column_name: Some("report location".to_string()), 
+    geometry_column_name: Some("report location".to_string()),
     to_type: GeoArrowType::Point(point_type),
 };
 
@@ -77,7 +78,7 @@ let arrow_reader = ReaderBuilder::new(schema.into())
     .build(buf_reader).unwrap();
 let point_type = PointType::new(Dimension::XY, Default::default());
 let options = CsvReaderOptions {
-    geometry_column_name: Some("report location".to_string()), 
+    geometry_column_name: Some("report location".to_string()),
     to_type: GeoArrowType::Point(point_type),
 };
 let mut geo_reader = CsvReader::try_new(arrow_reader, options).unwrap();
@@ -93,12 +94,6 @@ for batch_result in geo_reader {
 }
 ```
 
-
-
 ## Supported WKT Geometries
-- `POINT`, `MULTIPOINT`
-- `LINESTRING`, `MULTILINESTRING`
-- `POLYGON`, `MULTIPOLYGON`
-- `GEOMETRYCOLLECTION`
-- Both 2D (XY) and 3D (XYZ) coordinates
 
+All geometry types allowed by the GeoArrow WKT specification are supported. This includes 2D, 3D, and 4D geometries, but does not include extended types like curves.
