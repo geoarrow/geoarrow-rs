@@ -1325,6 +1325,13 @@ fn parse_box(data_type: &DataType) -> Result<Dimension, ArrowError> {
     }
 }
 
+/// A type alias for [`BoxType`].
+///
+/// The official GeoArrow specification refers to this type as "geoarrow.box", but `Box` is a
+/// reserved keyword in Rust and has its own meaning. In line with GeoRust, GeoArrow Rust calls
+/// this type `Rect`.
+pub type RectType = BoxType;
+
 /// A GeoArrow WKB type.
 ///
 /// This extension type support multiple physical data types, including [`DataType::Binary`],
