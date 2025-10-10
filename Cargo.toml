@@ -17,7 +17,7 @@ exclude = ["js"]
 resolver = "2"
 
 [workspace.package]
-version = "0.5.0"
+version = "0.6.0-beta.1"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
@@ -46,13 +46,13 @@ futures = "0.3"
 geo = "0.31.0"
 geo-traits = "0.3.0"
 geo-types = "0.7.16"
-geoarrow-array = { path = "rust/geoarrow-array", version = "0.5" }
-geoarrow-cast = { path = "rust/geoarrow-cast", version = "0.5" }
-geoarrow-expr-geo = { path = "rust/geoarrow-expr-geo", version = "0.5" }
-geoarrow-flatgeobuf = { path = "rust/geoarrow-flatgeobuf", version = "0.5" }
-geoarrow-geojson = { path = "rust/geoarrow-geojson" }
-geoarrow-schema = { path = "rust/geoarrow-schema", version = "0.5" }
-geoarrow-test = { path = "rust/geoarrow-test", version = "0.5" }
+geoarrow-array = { path = "rust/geoarrow-array", version = "0.6.0-beta.1" }
+geoarrow-cast = { path = "rust/geoarrow-cast", version = "0.6.0-beta.1" }
+geoarrow-expr-geo = { path = "rust/geoarrow-expr-geo", version = "0.6.0-beta.1" }
+geoarrow-flatgeobuf = { path = "rust/geoarrow-flatgeobuf", version = "0.6.0-beta.1" }
+geoarrow-geojson = { path = "rust/geoarrow-geojson", version = "0.6.0-beta.1" }
+geoarrow-schema = { path = "rust/geoarrow-schema", version = "0.6.0-beta.1" }
+geoarrow-test = { path = "rust/geoarrow-test", version = "0.6.0-beta.1" }
 geohash = "0.13.1"
 geojson = "0.24"
 geoparquet = { path = "rust/geoparquet", version = "0.5" }
@@ -61,12 +61,12 @@ geozero = "0.14"
 http-range-client = { version = "0.9", default-features = false }
 indexmap = "2.5.0"
 num-traits = "0.2.19"
-numpy = "0.25"
+numpy = "0.26"
 object_store = "0.12"
 parquet = { version = "56", default-features = false }
-pyo3 = "0.25"
+pyo3 = "0.26"
 # https://github.com/kylebarron/arro3/pull/354
-pyo3-arrow = { git = "https://github.com/kylebarron/arro3", rev = "fda03cebe9cfbf8ad292f8070ea21c22b32af1a3" }
+pyo3-arrow = "0.12"
 pyo3-geoarrow = { path = "rust/pyo3-geoarrow" }
 rstar = "0.12.2"
 serde = "1"
