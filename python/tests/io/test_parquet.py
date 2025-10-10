@@ -49,9 +49,10 @@ async def test_parquet_file():
         _table2 = file.read()
 
 
+@pytest.mark.skip(reason="No files found anymore?")
 @pytest.mark.asyncio
 async def test_parquet_dataset():
-    manifest_url = "https://raw.githubusercontent.com/OvertureMaps/explore-site/refs/heads/main/site/src/manifests/2025-04-23.json"
+    manifest_url = "https://github.com/OvertureMaps/explore-site/raw/339ecb1e02abe0133b31eb8e03b5d42303ebefc0/site/src/manifests/2025-04-23.json"
     manifest = requests.get(manifest_url).json()
 
     store = AzureStore(

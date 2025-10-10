@@ -98,10 +98,10 @@ fn _rust(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     //     m
     // )?)?;
 
-    // m.add_function(wrap_pyfunction!(
-    //     crate::interop::shapely::from_shapely::from_shapely,
-    //     m
-    // )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::interop::from_shapely::from_shapely,
+        m
+    )?)?;
     // m.add_function(wrap_pyfunction!(
     //     crate::interop::shapely::to_shapely::to_shapely,
     //     m

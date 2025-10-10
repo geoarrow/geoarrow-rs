@@ -43,6 +43,7 @@ from ._data_type import wkb as wkb
 from ._data_type import wkb_view as wkb_view
 from ._data_type import wkt as wkt
 from ._data_type import wkt_view as wkt_view
+from ._interop import from_shapely as from_shapely
 from ._interop import from_wkb as from_wkb
 from ._interop import from_wkt as from_wkt
 from ._interop import to_wkb as to_wkb

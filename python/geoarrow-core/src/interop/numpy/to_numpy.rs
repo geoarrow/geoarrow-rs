@@ -5,7 +5,7 @@ use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict};
 
-pub fn wkb_array_to_numpy(py: Python, arr: &geoarrow::array::WKBArray<i32>) -> PyResult<PyObject> {
+pub fn wkb_array_to_numpy(py: Python, arr: &geoarrow_array::array::WkbArray) -> PyResult<PyObject> {
     if arr.null_count() > 0 {
         return Err(PyValueError::new_err(
             "Cannot create numpy array from pyarrow array with nulls.",
@@ -28,7 +28,7 @@ pub fn wkb_array_to_numpy(py: Python, arr: &geoarrow::array::WKBArray<i32>) -> P
 
 pub fn chunked_wkb_array_to_numpy(
     py: Python,
-    arr: geoarrow::chunked_array::ChunkedWKBArray<i32>,
+    arr: geoarrow_array::chunked_array::ChunkedWkbArray,
 ) -> PyResult<PyObject> {
     let numpy_mod = py.import(intern!(py, "numpy"))?;
     let shapely_chunks = arr
