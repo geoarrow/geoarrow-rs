@@ -10,7 +10,7 @@ use futures::stream::BoxStream;
 use futures::task::{Context, Poll};
 use geoarrow_schema::GeoArrowType;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geozero::FeatureProperties;
+use geozero::{FeatureProcessor, FeatureProperties};
 use http_range_client::AsyncHttpRangeClient;
 
 use crate::reader::FlatGeobufReaderOptions;
@@ -100,6 +100,10 @@ impl<T: AsyncHttpRangeClient + Unpin + Send + 'static> FlatGeobufRecordBatchStre
                         .map_err(|err| GeoArrowError::External(Box::new(err)))?
                         .as_ref(),
                 )?;
+
+                record_batch_builder
+                    .feature_end(row_count as u64)
+                    .map_err(|err| GeoArrowError::External(Box::new(err)))?;
 
                 row_count += 1;
             } else if row_count > 0 {

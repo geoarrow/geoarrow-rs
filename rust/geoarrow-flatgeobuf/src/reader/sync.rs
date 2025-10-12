@@ -27,7 +27,7 @@ use arrow_schema::{ArrowError, Schema, SchemaRef};
 use flatgeobuf::{FallibleStreamingIterator, FeatureIter, NotSeekable, Seekable};
 use geoarrow_schema::GeoArrowType;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geozero::FeatureProperties;
+use geozero::{FeatureProcessor, FeatureProperties};
 
 use crate::reader::common::FlatGeobufReaderOptions;
 use crate::reader::table_builder::{GeoArrowRecordBatchBuilder, GeoArrowRecordBatchBuilderOptions};
@@ -115,6 +115,9 @@ impl<R: Read> FlatGeobufRecordBatchIterator<R, NotSeekable> {
                         .map_err(|err| GeoArrowError::External(Box::new(err)))?
                         .as_ref(),
                 )?;
+                record_batch_builder
+                    .feature_end(row_count as u64)
+                    .map_err(|err| GeoArrowError::External(Box::new(err)))?;
                 row_count += 1;
             } else if row_count > 0 {
                 return Ok(Some(record_batch_builder.finish()?));
@@ -177,6 +180,9 @@ impl<R: Read + Seek> FlatGeobufRecordBatchIterator<R, Seekable> {
                         .map_err(|err| GeoArrowError::External(Box::new(err)))?
                         .as_ref(),
                 )?;
+                record_batch_builder
+                    .feature_end(row_count as u64)
+                    .map_err(|err| GeoArrowError::External(Box::new(err)))?;
                 row_count += 1;
             } else if row_count > 0 {
                 return Ok(Some(record_batch_builder.finish()?));
