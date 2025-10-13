@@ -41,7 +41,7 @@ pub fn read_parquet_async(
     batch_size: Option<usize>,
     parse_to_native: bool,
     coord_type: Option<PyCoordType>,
-) -> PyGeoArrowResult<PyObject> {
+) -> PyGeoArrowResult<Py<PyAny>> {
     let reader = construct_reader(path, store)?;
     match reader {
         AnyFileReader::Async(async_reader) => {
@@ -112,7 +112,7 @@ impl GeoParquetFile {
         let runtime = get_runtime(py)?;
         let store = store.into_dyn();
         let cloned_store = store.clone();
-        let (path, geoparquet_meta) = py.allow_threads(|| {
+        let (path, geoparquet_meta) = py.detach(|| {
             runtime.block_on(async move {
                 let mut reader = ParquetObjectReader::new(cloned_store.clone(), path.path());
                 if let Some(size) = path.size() {
@@ -242,7 +242,7 @@ impl GeoParquetFile {
         bbox: Option<PyRect>,
         parse_to_native: bool,
         coord_type: Option<PyCoordType>,
-    ) -> PyGeoArrowResult<PyObject> {
+    ) -> PyGeoArrowResult<Py<PyAny>> {
         let options = PyGeoParquetReadOptions {
             batch_size,
             limit,
@@ -301,7 +301,7 @@ impl GeoParquetFile {
             parse_to_native,
             coord_type,
         )?;
-        py.allow_threads(|| {
+        py.detach(|| {
             runtime.block_on(async move {
                 let schema = stream.schema().clone();
                 let batches = stream
@@ -480,7 +480,7 @@ impl GeoParquetDataset {
         let store = store.into_dyn();
         let cloned_store = store.clone();
 
-        let meta = py.allow_threads(|| {
+        let meta = py.detach(|| {
             runtime.block_on(async move {
                 let meta = fetch_arrow_metadata_objects(paths, store.clone()).await?;
                 Ok::<_, PyGeoArrowError>(meta)
@@ -590,6 +590,6 @@ impl GeoParquetDataset {
             }),
         };
         let readers = self.to_readers(options, parse_to_native, coord_type)?;
-        py.allow_threads(|| runtime.block_on(Self::read_inner(readers)))
+        py.detach(|| runtime.block_on(Self::read_inner(readers)))
     }
 }

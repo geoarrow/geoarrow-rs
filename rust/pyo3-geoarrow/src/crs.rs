@@ -46,7 +46,7 @@ impl PyCrs {
     }
 
     /// Export the embedded CRS to a `pyproj.CRS` or None
-    pub fn to_pyproj(&self, py: Python) -> PyGeoArrowResult<PyObject> {
+    pub fn to_pyproj(&self, py: Python) -> PyGeoArrowResult<Py<PyAny>> {
         let pyproj = py.import(intern!(py, "pyproj"))?;
         let crs_class = pyproj.getattr(intern!(py, "CRS"))?;
 
@@ -174,14 +174,14 @@ impl Default for PyprojCRSTransform {
 impl CrsTransform for PyprojCRSTransform {
     fn _convert_to_projjson(&self, crs: &Crs) -> GeoArrowResult<Option<Value>> {
         let crs = PyCrs::from(crs.clone());
-        let projjson = Python::with_gil(|py| crs.to_projjson(py))
+        let projjson = Python::attach(|py| crs.to_projjson(py))
             .map_err(|err| GeoArrowError::Crs(err.to_string()))?;
         Ok(projjson)
     }
 
     fn _convert_to_wkt(&self, crs: &Crs) -> GeoArrowResult<Option<String>> {
         let crs = PyCrs::from(crs.clone());
-        let wkt = Python::with_gil(|py| crs.to_wkt(py))
+        let wkt = Python::attach(|py| crs.to_wkt(py))
             .map_err(|err| GeoArrowError::Crs(err.to_string()))?;
         Ok(wkt)
     }
