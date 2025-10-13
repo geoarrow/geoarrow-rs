@@ -4,7 +4,7 @@ import shapely
 import pyarrow as pa
 import numpy as np
 
-import geoarrow.rust.core as geoarrow
+from geoarrow.rust.core import from_shapely, points, polygons, from_wkb
 
 
 @pytest.mark.parametrize("method", ["wkb", "ragged"])
@@ -13,9 +13,9 @@ def test_from_points(method):
     geoms = shapely.points(coords)
     assert isinstance(geoms, np.ndarray)
 
-    expected = geoarrow.points(coords)
+    expected = points(coords)
 
-    actual = geoarrow.from_shapely(geoms, method=method, coord_type="interleaved")
+    actual = from_shapely(geoms, method=method, coord_type="interleaved")
 
     assert actual == expected
 
@@ -36,11 +36,9 @@ def test_from_polygons(method):
     geoms = shapely.polygons(coords_)
     assert isinstance(geoms, np.ndarray)
 
-    expected = geoarrow.polygons(
-        coords, geom_offsets=geom_offsets, ring_offsets=ring_offsets
-    )
+    expected = polygons(coords, geom_offsets=geom_offsets, ring_offsets=ring_offsets)
 
-    actual = geoarrow.from_shapely(geoms, method=method, coord_type="interleaved")
+    actual = from_shapely(geoms, method=method, coord_type="interleaved")
     assert actual == expected
 
 
@@ -53,8 +51,8 @@ def test_from_geometry(method):
         "wkb": contextlib.nullcontext(),
     }
 
-    expected = geoarrow.from_wkb(pa.array(shapely.to_wkb(geoms)))
+    expected = from_wkb(pa.array(shapely.to_wkb(geoms)))
 
     with responses[method]:
-        actual = geoarrow.from_shapely(geoms, method=method)
+        actual = from_shapely(geoms, method=method)
         assert actual == expected
