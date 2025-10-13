@@ -539,10 +539,11 @@ pub(crate) trait GeoArrowArrayBuilder: Debug + Send + Sync {
 
 /// Trait for types that can read `Arc<dyn GeoArrowArray>`'s.
 ///
-/// There is no direct parallel to this in the upstream [arrow-array] crate. The closest is
-/// [RecordBatchReader][arrow_array::RecordBatchReader], which has the same implementation over an
-/// iterator of `RecordBatch`es. However, it is useful to have an iterator of GeoArrow arrays with
-/// a known [`GeoArrowType`].
+/// This is similar to an upstream [RecordBatchReader][arrow_array::RecordBatchReader], but for
+/// GeoArrow arrays instead of RecordBatches.
+///
+/// This will always yield an `Arc<dyn GeoArrowArray>` with the same [`GeoArrowType`], which is
+/// known in advance (see [`Self::data_type`]).
 ///
 /// To create from an iterator, see [GeoArrowArrayIterator].
 pub trait GeoArrowArrayReader: Iterator<Item = GeoArrowResult<Arc<dyn GeoArrowArray>>> {
