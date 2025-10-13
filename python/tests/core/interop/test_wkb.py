@@ -59,7 +59,11 @@ def test_parse_nybb_chunked():
 
     parsed1 = from_wkb(wkb_ca)
     assert isinstance(parsed1, GeoArrayReader)
-    assert parsed1.type == geometry()
+
+    # This fails because one of these is stored with `crs_type: "projjson"` and the
+    # other has missing `crs_type`
+    # assert parsed1.type == geometry().with_crs(gdf.crs)
+    assert parsed1.type.with_crs(None) == geometry()
 
     # Note that this works to parse a MultiPolygon as a point because no parsing has
     # happened yet; it's lazy

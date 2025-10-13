@@ -2,10 +2,10 @@ use std::sync::Arc;
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::sync::GILOnceCell;
+use pyo3::sync::PyOnceLock;
 use tokio::runtime::Runtime;
 
-static RUNTIME: GILOnceCell<Arc<Runtime>> = GILOnceCell::new();
+static RUNTIME: PyOnceLock<Arc<Runtime>> = PyOnceLock::new();
 
 /// Get the tokio runtime for sync requests
 pub(crate) fn get_runtime(py: Python<'_>) -> PyResult<Arc<Runtime>> {

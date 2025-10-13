@@ -44,7 +44,7 @@ pub fn read_parquet(
 
             let runtime = get_runtime(py)?;
 
-            py.allow_threads(|| {
+            py.detach(|| {
                 let table = runtime.block_on(async move {
                     let object_reader =
                         ParquetObjectReader::new(async_reader.store, async_reader.path);
@@ -257,7 +257,7 @@ impl PyGeoParquetWriter {
     #[new]
     pub fn py_new(
         py: Python,
-        file: PyObject,
+        file: Py<PyAny>,
         schema: PySchema,
         encoding: GeoParquetEncoding,
         compression: Option<PyCompression>,
@@ -332,9 +332,9 @@ impl PyGeoParquetWriter {
     #[allow(unused_variables)]
     pub fn __exit__(
         &self,
-        r#type: PyObject,
-        value: PyObject,
-        traceback: PyObject,
+        r#type: Py<PyAny>,
+        value: Py<PyAny>,
+        traceback: Py<PyAny>,
     ) -> PyGeoArrowResult<()> {
         self.close()
     }

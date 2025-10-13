@@ -21,7 +21,7 @@ pub fn from_wkt(
     py: Python,
     input: AnyGeoArray,
     to_type: Option<PyGeoType>,
-) -> PyGeoArrowResult<PyObject> {
+) -> PyGeoArrowResult<Py<PyAny>> {
     let input_metadata = input.data_type().metadata().clone();
     let to_type = to_type
         .map(|x| x.into_inner())
@@ -88,7 +88,7 @@ pub(crate) fn to_wkt(
     py: Python,
     input: AnyGeoArray,
     wkt_type: Option<ToWktType>,
-) -> PyGeoArrowResult<PyObject> {
+) -> PyGeoArrowResult<Py<PyAny>> {
     let wkt_type = wkt_type.unwrap_or_default();
     match input {
         AnyGeoArray::Array(array) => {
