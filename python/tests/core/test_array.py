@@ -2,6 +2,7 @@ import geodatasets
 import geopandas as gpd
 import numpy as np
 import pyarrow as pa
+import pytest
 import shapely
 from geoarrow.rust.core import GeoArray
 from geoarrow.types.type_pyarrow import registered_extension_types
@@ -51,3 +52,20 @@ def test_downcast_with_crs():
     geometry_array = point_arr.cast(geometry(crs=crs))
     point_arr2 = geometry_array.downcast(coord_type="interleaved")
     assert point_arr == point_arr2
+
+
+class CustomException(Exception):
+    pass
+
+
+class ArrowCArrayFails:
+    def __arrow_c_array__(self, requested_schema=None):
+        raise CustomException
+
+
+def test_array_import_preserve_exception():
+    """https://github.com/kylebarron/arro3/issues/325"""
+
+    c_stream_obj = ArrowCArrayFails()
+    with pytest.raises(CustomException):
+        GeoArray.from_arrow(c_stream_obj)

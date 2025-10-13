@@ -2,6 +2,7 @@ import geodatasets
 import geopandas as gpd
 import numpy as np
 import pyarrow as pa
+import pytest
 import shapely
 from arro3.core import ChunkedArray
 from geoarrow.rust.core import GeoArray, GeoChunkedArray, geometry, points
