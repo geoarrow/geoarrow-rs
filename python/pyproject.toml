@@ -27,4 +27,5 @@ dev-dependencies = [
     "obstore>=0.6.0",
     "geoarrow-types>=0.3.0",
     "pytest-asyncio>=1.0.0",
+    "arro3-io>=0.6.4",
 ]
