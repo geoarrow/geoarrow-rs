@@ -155,7 +155,7 @@ fn from_shapely_via_ragged(
 
     let (geom_type, coords, offsets) = shapely_mod
         .call_method(intern!(py, "to_ragged_array"), (input,), Some(&kwargs))?
-        .extract::<(ShapelyGeometryType, Bound<PyAny>, PyObject)>()?;
+        .extract::<(ShapelyGeometryType, Bound<PyAny>, Py<PyAny>)>()?;
 
     let coords = numpy_mod.call_method1(
         intern!(py, "ascontiguousarray"),
