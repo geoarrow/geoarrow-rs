@@ -28,12 +28,11 @@ geoparquet = { path = "../rust/geoparquet" }
 geozero = "0.14"
 http-range-client = { version = "0.9.0", default-features = false }
 indexmap = "2.5.0"
-numpy = "0.25"
+numpy = "0.26"
 object_store = "0.12"
 parquet = "56"
-pyo3 = { version = "0.25", features = ["hashbrown", "serde", "anyhow"] }
-# https://github.com/kylebarron/arro3/pull/354
-pyo3-arrow = { git = "https://github.com/kylebarron/arro3", rev = "fda03cebe9cfbf8ad292f8070ea21c22b32af1a3" }
+pyo3 = { version = "0.26", features = ["hashbrown", "serde", "anyhow"] }
+pyo3-arrow = "0.12"
 pyo3-geoarrow = { path = "../rust/pyo3-geoarrow" }
 serde_json = "1"
 thiserror = "1"
