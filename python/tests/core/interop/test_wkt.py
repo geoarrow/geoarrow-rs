@@ -73,8 +73,21 @@ def test_parse_nybb_chunked():
     geo_chunked_array = parsed3.read_all()
     assert geo_chunked_array.type == multipolygon("xy")
 
-    assert wkt_ca == to_wkt(from_wkt(wkt_ca)).read_all()
-    assert wkt_ca == to_wkt(from_wkt(wkt_ca, multipolygon("xy"))).read_all()
+    # There's slightly different string representation of WKT, vs `MULTIPOLYGON (((` and
+    # `MULTIPOLYGON(((`
+    generated_wkt_arr = pa.chunked_array(to_wkt(from_wkt(wkt_ca)))
+
+    shapely.testing.assert_geometries_equal(
+        gdf.geometry[0], shapely.from_wkt(generated_wkt_arr)[0], tolerance=1e-6
+    )
+
+    generated_wkt_arr_via_mp = pa.chunked_array(
+        to_wkt(from_wkt(wkt_ca, multipolygon("xy")))
+    )
+
+    shapely.testing.assert_geometries_equal(
+        gdf.geometry[0], shapely.from_wkt(generated_wkt_arr_via_mp)[0], tolerance=1e-6
+    )
 
 
 def remove_initial_whitespace(arr: pa.Array) -> pa.Array:
