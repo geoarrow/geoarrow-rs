@@ -16,8 +16,8 @@ use geoarrow_array::GeoArrowArray;
 use geoarrow_array::builder::*;
 use geoarrow_schema::error::GeoArrowResult;
 use geoarrow_schema::{GeoArrowType, GeometryType, PolygonType};
-use geozero::PropertyProcessor;
 use geozero::error::GeozeroError;
+use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
 
 pub(crate) enum GeoArrowArrayBuilder {
     Point(PointBuilder),
@@ -116,6 +116,8 @@ pub(crate) struct GeoArrowRecordBatchBuilderOptions {
     pub(crate) read_geometry: bool,
 }
 
+/// Note: If using geozero-based APIs to push properties, make sure to call `feature_end` after
+/// each feature to ensure that nulls are added for any missing properties.
 pub(crate) struct GeoArrowRecordBatchBuilder {
     properties_schema: SchemaRef,
     columns: Vec<Box<dyn ArrayBuilder>>,
@@ -222,6 +224,37 @@ impl PropertyProcessor for GeoArrowRecordBatchBuilder {
     }
 }
 
+// Note: We only implement this GeomProcessor here so that we can override some methods on the
+// FeatureProcessor impl, which requires GeomProcessor.
+impl GeomProcessor for GeoArrowRecordBatchBuilder {}
+
+// It's useful to impl FeatureProcessor for PropertiesBatchBuilder even though the latter doesn't
+// handle geometries so that we can manage adding null values to columns that weren't touched in
+// this row.
+impl FeatureProcessor for GeoArrowRecordBatchBuilder {
+    /// End of feature processing
+    ///
+    /// - `idx`: the positional row index in the dataset. For the `n`th row, `idx` will be
+    ///   `n`.
+    /// - `feature_end` will be called after both `properties_end` and `geometry_end`.
+    fn feature_end(&mut self, idx: u64) -> geozero::error::Result<()> {
+        for (col, field) in self.columns.iter_mut().zip(self.properties_schema.fields()) {
+            match col.len() {
+                // This is _expected_ when all columns were visited
+                len if len == idx as usize + 1 => continue,
+                // This can happen if `property` was not called for a column in this row. This can
+                // happen in FlatGeobuf reader, since null properties are not required to be
+                // written to the file. It can also happen in a GeoJSON reader if the schema is not
+                // the same in every row.
+                len if len == idx as usize => push_null(col, field),
+                _ => panic!("unexpected length"),
+            }
+        }
+
+        Ok(())
+    }
+}
+
 fn push_property(
     column: &mut Box<dyn ArrayBuilder>,
     field: &Field,
@@ -301,4 +334,43 @@ fn push_property(
         }
     }
     Ok(())
+}
+
+fn push_null(column: &mut Box<dyn ArrayBuilder>, field: &Field) {
+    macro_rules! impl_push_null {
+        ($downcast_type:ident) => {{
+            column
+                .as_any_mut()
+                .downcast_mut::<$downcast_type>()
+                .unwrap()
+                .append_null();
+        }};
+    }
+
+    match field.data_type() {
+        DataType::Boolean => impl_push_null!(BooleanBuilder),
+        DataType::Int8 => impl_push_null!(Int8Builder),
+        DataType::Int16 => impl_push_null!(Int16Builder),
+        DataType::Int32 => impl_push_null!(Int32Builder),
+        DataType::Int64 => impl_push_null!(Int64Builder),
+        DataType::UInt8 => impl_push_null!(UInt8Builder),
+        DataType::UInt16 => impl_push_null!(UInt16Builder),
+        DataType::UInt32 => impl_push_null!(UInt32Builder),
+        DataType::UInt64 => impl_push_null!(UInt64Builder),
+        DataType::Float32 => impl_push_null!(Float32Builder),
+        DataType::Float64 => impl_push_null!(Float64Builder),
+        DataType::Utf8 => impl_push_null!(StringBuilder),
+        DataType::LargeUtf8 => impl_push_null!(LargeStringBuilder),
+        DataType::Utf8View => impl_push_null!(StringViewBuilder),
+        DataType::Binary => impl_push_null!(BinaryBuilder),
+        DataType::LargeBinary => impl_push_null!(LargeBinaryBuilder),
+        DataType::BinaryView => impl_push_null!(BinaryViewBuilder),
+        DataType::Timestamp(time_unit, _tz) => match time_unit {
+            TimeUnit::Second => impl_push_null!(TimestampSecondBuilder),
+            TimeUnit::Millisecond => impl_push_null!(TimestampMillisecondBuilder),
+            TimeUnit::Microsecond => impl_push_null!(TimestampMicrosecondBuilder),
+            TimeUnit::Nanosecond => impl_push_null!(TimestampNanosecondBuilder),
+        },
+        _ => todo!("push_null for {:?} not implemented", field.data_type()),
+    }
 }

@@ -27,7 +27,7 @@ use arrow_schema::{ArrowError, Schema, SchemaRef};
 use flatgeobuf::{FallibleStreamingIterator, FeatureIter, NotSeekable, Seekable};
 use geoarrow_schema::GeoArrowType;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geozero::FeatureProperties;
+use geozero::{FeatureProcessor, FeatureProperties};
 
 use crate::reader::common::FlatGeobufReaderOptions;
 use crate::reader::table_builder::{GeoArrowRecordBatchBuilder, GeoArrowRecordBatchBuilderOptions};
@@ -115,6 +115,9 @@ impl<R: Read> FlatGeobufRecordBatchIterator<R, NotSeekable> {
                         .map_err(|err| GeoArrowError::External(Box::new(err)))?
                         .as_ref(),
                 )?;
+                record_batch_builder
+                    .feature_end(row_count as u64)
+                    .map_err(|err| GeoArrowError::External(Box::new(err)))?;
                 row_count += 1;
             } else if row_count > 0 {
                 return Ok(Some(record_batch_builder.finish()?));
@@ -177,6 +180,9 @@ impl<R: Read + Seek> FlatGeobufRecordBatchIterator<R, Seekable> {
                         .map_err(|err| GeoArrowError::External(Box::new(err)))?
                         .as_ref(),
                 )?;
+                record_batch_builder
+                    .feature_end(row_count as u64)
+                    .map_err(|err| GeoArrowError::External(Box::new(err)))?;
                 row_count += 1;
             } else if row_count > 0 {
                 return Ok(Some(record_batch_builder.finish()?));
@@ -334,5 +340,53 @@ mod test {
             schema.field_with_name("binary").unwrap().data_type(),
             DataType::BinaryView
         ));
+    }
+
+    /// This file doesn't store every property for every row, so it tests that we can handle null
+    /// properties correctly.
+    /// https://github.com/geoarrow/geoarrow-rs/pull/1356
+    #[test]
+    fn test_ns_water_line() {
+        let filein = BufReader::new(
+            File::open("../../fixtures/flatgeobuf/ns-water_water-line_small.fgb").unwrap(),
+        );
+
+        let fgb_reader = FgbReader::open(filein).unwrap();
+        let fgb_header = fgb_reader.header();
+
+        let properties_schema = fgb_header.properties_schema(true).unwrap();
+
+        let geometry_type = fgb_header.geoarrow_type(Default::default()).unwrap();
+        let selection = fgb_reader.select_all().unwrap();
+
+        let options = FlatGeobufReaderOptions::new(properties_schema, geometry_type);
+        let mut record_batch_reader =
+            FlatGeobufRecordBatchIterator::try_new(selection, options).unwrap();
+
+        let batch = record_batch_reader.next().unwrap().unwrap();
+        assert_eq!(batch.num_rows(), 10);
+    }
+
+    /// Same test as above but using the sequential iterator
+    #[test]
+    fn test_ns_water_line_not_seekable() {
+        let filein = BufReader::new(
+            File::open("../../fixtures/flatgeobuf/ns-water_water-line_small.fgb").unwrap(),
+        );
+
+        let fgb_reader = FgbReader::open(filein).unwrap();
+        let fgb_header = fgb_reader.header();
+
+        let properties_schema = fgb_header.properties_schema(true).unwrap();
+
+        let geometry_type = fgb_header.geoarrow_type(Default::default()).unwrap();
+        let selection = fgb_reader.select_all_seq().unwrap();
+
+        let options = FlatGeobufReaderOptions::new(properties_schema, geometry_type);
+        let mut record_batch_reader =
+            FlatGeobufRecordBatchIterator::try_new(selection, options).unwrap();
+
+        let batch = record_batch_reader.next().unwrap().unwrap();
+        assert_eq!(batch.num_rows(), 10);
     }
 }

@@ -10,7 +10,7 @@ use futures::stream::BoxStream;
 use futures::task::{Context, Poll};
 use geoarrow_schema::GeoArrowType;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geozero::FeatureProperties;
+use geozero::{FeatureProcessor, FeatureProperties};
 use http_range_client::AsyncHttpRangeClient;
 
 use crate::reader::FlatGeobufReaderOptions;
@@ -100,6 +100,10 @@ impl<T: AsyncHttpRangeClient + Unpin + Send + 'static> FlatGeobufRecordBatchStre
                         .map_err(|err| GeoArrowError::External(Box::new(err)))?
                         .as_ref(),
                 )?;
+
+                record_batch_builder
+                    .feature_end(row_count as u64)
+                    .map_err(|err| GeoArrowError::External(Box::new(err)))?;
 
                 row_count += 1;
             } else if row_count > 0 {
@@ -270,5 +274,32 @@ mod test {
 
         let num_rows: usize = batches.iter().map(|batch| batch.num_rows()).sum();
         assert_eq!(num_rows, 2000);
+    }
+
+    /// This file doesn't store every property for every row, so it tests that we can handle null
+    /// properties correctly.
+    /// https://github.com/geoarrow/geoarrow-rs/pull/1356
+    #[tokio::test]
+    async fn test_ns_water_line() {
+        let store = fixtures_dir();
+        let fgb_reader = new_from_store(
+            store,
+            "fixtures/flatgeobuf/ns-water_water-line_small.fgb".into(),
+        )
+        .await
+        .unwrap();
+        let fgb_header = fgb_reader.header();
+
+        let properties_schema = fgb_header.properties_schema(true).unwrap();
+        let geometry_type = fgb_header.geoarrow_type(Default::default()).unwrap();
+
+        let options = FlatGeobufReaderOptions::new(properties_schema, geometry_type);
+        let selection = fgb_reader.select_all().await.unwrap();
+        let stream = FlatGeobufRecordBatchStream::try_new(selection, options).unwrap();
+        let _schema = stream.schema();
+        let batches = stream.try_collect::<Vec<_>>().await.unwrap();
+
+        let num_rows: usize = batches.iter().map(|batch| batch.num_rows()).sum();
+        assert_eq!(num_rows, 10);
     }
 }
