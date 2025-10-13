@@ -1,6 +1,8 @@
 import geodatasets
 import geopandas as gpd
+from arro3.core import ChunkedArray
 import pyarrow as pa
+from arro3.core import Array, ChunkedArray
 import pytest
 import shapely
 from geoarrow.rust.core import (
@@ -53,8 +55,8 @@ def test_parse_nybb():
 
 def test_parse_nybb_chunked():
     gdf = gpd.read_file(geodatasets.get_path("ny.bb"))
-    wkb_geoms = pa.array(gdf.geometry.to_wkb())
-    wkb_ca = pa.chunked_array([wkb_geoms, wkb_geoms])
+    wkb_geoms = Array.from_arrow(gdf.geometry.to_arrow())
+    wkb_ca = ChunkedArray([wkb_geoms, wkb_geoms], type=wkb())
 
     parsed1 = from_wkb(wkb_ca)
     assert isinstance(parsed1, GeoArrayReader)
@@ -76,5 +78,7 @@ def test_parse_nybb_chunked():
     geo_chunked_array = parsed3.read_all()
     assert geo_chunked_array.type == multipolygon("xy")
 
-    assert wkb_ca == to_wkb(from_wkb(wkb_ca)).read_all()
-    assert wkb_ca == to_wkb(from_wkb(wkb_ca, multipolygon("xy"))).read_all()
+    assert pa.chunked_array(wkb_ca) == pa.chunked_array(to_wkb(from_wkb(wkb_ca)))
+    assert pa.chunked_array(wkb_ca) == pa.chunked_array(
+        to_wkb(from_wkb(wkb_ca, multipolygon("xy")))
+    )

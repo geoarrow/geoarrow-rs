@@ -121,7 +121,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install a specific version of uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
           version: "0.8.x"
@@ -139,6 +139,6 @@ jobs:
         if: "${{ matrix.python-version == 3.12 }}"
         run: uv run mkdocs build --strict
 
-      # - name: Run python tests
-      #   run: |
-      #     uv run pytest tests
+      - name: Run python tests
+        run: |
+          uv run pytest tests

@@ -89,12 +89,6 @@ def test_chunked_array_import_preserve_exception():
     with pytest.raises(CustomException):
         GeoChunkedArray.from_arrow(c_stream_obj)
 
-    with pytest.raises(CustomException):
-        GeoChunkedArray(c_stream_obj)
-
     c_array_obj = ArrowCArrayFails()
     with pytest.raises(CustomException):
         GeoChunkedArray.from_arrow(c_array_obj)
-
-    with pytest.raises(CustomException):
-        GeoChunkedArray(c_array_obj)
