@@ -2,6 +2,7 @@ import geodatasets
 import geopandas as gpd
 import numpy as np
 import pyarrow as pa
+import pytest
 import shapely
 from arro3.core import ChunkedArray
 from geoarrow.rust.core import GeoArray, GeoChunkedArray, geometry, points
@@ -65,3 +66,35 @@ def test_downcast_with_crs():
     geometry_array = point_ca.cast(geometry(crs=crs))
     point_ca2 = geometry_array.downcast(coord_type="interleaved")
     assert point_ca == point_ca2
+
+
+class CustomException(Exception):
+    pass
+
+
+class ArrowCStreamFails:
+    def __arrow_c_stream__(self, requested_schema=None):
+        raise CustomException
+
+
+class ArrowCArrayFails:
+    def __arrow_c_array__(self, requested_schema=None):
+        raise CustomException
+
+
+def test_chunked_array_import_preserve_exception():
+    """https://github.com/kylebarron/arro3/issues/325"""
+
+    c_stream_obj = ArrowCStreamFails()
+    with pytest.raises(CustomException):
+        GeoChunkedArray.from_arrow(c_stream_obj)
+
+    with pytest.raises(CustomException):
+        GeoChunkedArray(c_stream_obj)
+
+    c_array_obj = ArrowCArrayFails()
+    with pytest.raises(CustomException):
+        GeoChunkedArray.from_arrow(c_array_obj)
+
+    with pytest.raises(CustomException):
+        GeoChunkedArray(c_array_obj)
