@@ -17,7 +17,7 @@ use pyo3_geoarrow::PyGeoArrowResult;
 use pyo3_geoarrow::input::AnyGeoArray;
 
 #[pyfunction]
-pub(crate) fn get_type_id(py: Python, input: AnyGeoArray) -> PyGeoArrowResult<PyObject> {
+pub(crate) fn get_type_id(py: Python, input: AnyGeoArray) -> PyGeoArrowResult<Py<PyAny>> {
     match input {
         AnyGeoArray::Array(arr) => {
             let out = Arc::new(get_type_id_impl(arr.inner())?);

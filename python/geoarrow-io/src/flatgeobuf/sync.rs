@@ -48,7 +48,7 @@ pub fn read_flatgeobuf(
 
             let runtime = get_runtime(py)?;
 
-            py.allow_threads(|| {
+            py.detach(|| {
                 runtime.block_on(async move {
                     use futures::TryStreamExt;
                     use geoarrow_flatgeobuf::reader::FlatGeobufRecordBatchStream;
