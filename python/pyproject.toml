@@ -13,7 +13,7 @@ dev-dependencies = [
     "geopandas>=1.0.1",
     "griffe-inherited-docstrings>=1.0.1",
     "ipykernel>=6.29.5",
-    "maturin>=1.7.4",
+    "maturin==1.9.6",
     "mkdocs>=1.6.1",
     "mkdocs-material[imaging]>=9.5.40",
     "pip>=24.2",
