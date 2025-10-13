@@ -341,4 +341,52 @@ mod test {
             DataType::BinaryView
         ));
     }
+
+    /// This file doesn't store every property for every row, so it tests that we can handle null
+    /// properties correctly.
+    /// https://github.com/geoarrow/geoarrow-rs/pull/1356
+    #[test]
+    fn test_ns_water_line() {
+        let filein = BufReader::new(
+            File::open("../../fixtures/flatgeobuf/ns-water_water-line_small.fgb").unwrap(),
+        );
+
+        let fgb_reader = FgbReader::open(filein).unwrap();
+        let fgb_header = fgb_reader.header();
+
+        let properties_schema = fgb_header.properties_schema(true).unwrap();
+
+        let geometry_type = fgb_header.geoarrow_type(Default::default()).unwrap();
+        let selection = fgb_reader.select_all().unwrap();
+
+        let options = FlatGeobufReaderOptions::new(properties_schema, geometry_type);
+        let mut record_batch_reader =
+            FlatGeobufRecordBatchIterator::try_new(selection, options).unwrap();
+
+        let batch = record_batch_reader.next().unwrap().unwrap();
+        assert_eq!(batch.num_rows(), 10);
+    }
+
+    /// Same test as above but using the sequential iterator
+    #[test]
+    fn test_ns_water_line_not_seekable() {
+        let filein = BufReader::new(
+            File::open("../../fixtures/flatgeobuf/ns-water_water-line_small.fgb").unwrap(),
+        );
+
+        let fgb_reader = FgbReader::open(filein).unwrap();
+        let fgb_header = fgb_reader.header();
+
+        let properties_schema = fgb_header.properties_schema(true).unwrap();
+
+        let geometry_type = fgb_header.geoarrow_type(Default::default()).unwrap();
+        let selection = fgb_reader.select_all_seq().unwrap();
+
+        let options = FlatGeobufReaderOptions::new(properties_schema, geometry_type);
+        let mut record_batch_reader =
+            FlatGeobufRecordBatchIterator::try_new(selection, options).unwrap();
+
+        let batch = record_batch_reader.next().unwrap().unwrap();
+        assert_eq!(batch.num_rows(), 10);
+    }
 }
