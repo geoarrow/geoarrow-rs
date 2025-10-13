@@ -941,7 +941,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-geojson"
-version = "0.1.0-dev"
+version = "0.6.0-beta.1"
 dependencies = [
  "arrow-array",
  "arrow-json",
