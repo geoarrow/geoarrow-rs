@@ -2,6 +2,7 @@ import geodatasets
 import geopandas as gpd
 from arro3.core import ChunkedArray
 import pyarrow as pa
+from arro3.core import Array, ChunkedArray
 import pytest
 import shapely
 from geoarrow.rust.core import (
@@ -52,10 +53,10 @@ def test_parse_nybb():
     assert wkb_geoms == to_wkb(parsed3)
 
 
-@pytest.mark.skip("debug why assert parsed1.type == geometry() is false")
 def test_parse_nybb_chunked():
     gdf = gpd.read_file(geodatasets.get_path("ny.bb"))
-    wkb_ca = ChunkedArray.from_arrow(gdf.geometry.to_arrow(geometry_encoding="wkb"))
+    wkb_geoms = Array.from_arrow(gdf.geometry.to_arrow())
+    wkb_ca = ChunkedArray([wkb_geoms, wkb_geoms], type=wkb())
 
     parsed1 = from_wkb(wkb_ca)
     assert isinstance(parsed1, GeoArrayReader)
