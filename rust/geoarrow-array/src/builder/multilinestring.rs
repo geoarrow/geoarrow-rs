@@ -3,8 +3,9 @@ use std::sync::Arc;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
-use geoarrow_schema::MultiLineStringType;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
+use geoarrow_schema::type_id::GeometryTypeId;
+use geoarrow_schema::{Dimension, MultiLineStringType};
 
 use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, MultiLineStringArray};
@@ -366,5 +367,13 @@ impl GeoArrowArrayBuilder for MultiLineStringBuilder {
 
     fn finish(self) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.finish())
+    }
+}
+
+impl GeometryTypeId for MultiLineStringBuilder {
+    const GEOMETRY_TYPE_OFFSET: i8 = 5;
+
+    fn dimension(&self) -> Dimension {
+        self.data_type.dimension()
     }
 }

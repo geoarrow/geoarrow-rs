@@ -5,7 +5,8 @@ use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geoarrow_schema::{CoordType, GeoArrowType, Metadata, MultiPointType};
+use geoarrow_schema::type_id::GeometryTypeId;
+use geoarrow_schema::{CoordType, Dimension, GeoArrowType, Metadata, MultiPointType};
 
 use crate::array::{CoordBuffer, GenericWkbArray, PointArray};
 use crate::builder::MultiPointBuilder;
@@ -327,6 +328,14 @@ impl PartialEq for MultiPointArray {
         self.nulls == other.nulls
             && offset_buffer_eq(&self.geom_offsets, &other.geom_offsets)
             && self.coords == other.coords
+    }
+}
+
+impl GeometryTypeId for MultiPointArray {
+    const GEOMETRY_TYPE_OFFSET: i8 = 4;
+
+    fn dimension(&self) -> Dimension {
+        self.data_type.dimension()
     }
 }
 
