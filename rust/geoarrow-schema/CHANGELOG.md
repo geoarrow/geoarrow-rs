@@ -5,6 +5,7 @@
 ## Unreleased
 
 - Add `RectType` as an alias for `BoxType`.
+- feat: `GeometryTypeId` trait to infer GeoArrow type id for a type #1372
 
 ## 0.5.0 - 2025-08-07
 
