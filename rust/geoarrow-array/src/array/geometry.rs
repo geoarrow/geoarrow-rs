@@ -994,13 +994,13 @@ impl_primitive_cast!(GeometryCollectionArray, 6);
 
 #[cfg(test)]
 mod test {
+    use ::wkt::{Wkt, wkt};
     use geo_traits::to_geo::ToGeoGeometry;
     use geoarrow_schema::Crs;
     use geoarrow_test::raw;
 
     use super::*;
     use crate::test::{linestring, multilinestring, multipoint, multipolygon, point, polygon};
-    use ::wkt::{Wkt, wkt};
 
     fn geoms() -> Vec<geo_types::Geometry> {
         vec![
