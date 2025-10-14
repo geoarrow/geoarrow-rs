@@ -6,6 +6,7 @@ use arrow_array::{Array, ArrayRef, OffsetSizeTrait, UnionArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{ArrowError, DataType, Field, UnionMode};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
+use geoarrow_schema::type_id::GeometryTypeId;
 use geoarrow_schema::{
     CoordType, Dimension, GeoArrowType, GeometryCollectionType, GeometryType, LineStringType,
     Metadata, MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType,
@@ -750,28 +751,6 @@ impl PartialEq for GeometryArray {
     }
 }
 
-impl TypeId for PointArray {
-    const ARRAY_TYPE_OFFSET: i8 = 1;
-}
-impl TypeId for LineStringArray {
-    const ARRAY_TYPE_OFFSET: i8 = 2;
-}
-impl TypeId for PolygonArray {
-    const ARRAY_TYPE_OFFSET: i8 = 3;
-}
-impl TypeId for MultiPointArray {
-    const ARRAY_TYPE_OFFSET: i8 = 4;
-}
-impl TypeId for MultiLineStringArray {
-    const ARRAY_TYPE_OFFSET: i8 = 5;
-}
-impl TypeId for MultiPolygonArray {
-    const ARRAY_TYPE_OFFSET: i8 = 6;
-}
-impl TypeId for GeometryCollectionArray {
-    const ARRAY_TYPE_OFFSET: i8 = 7;
-}
-
 type ChildrenArrays = (
     [PointArray; 4],
     [LineStringArray; 4],
@@ -848,7 +827,7 @@ macro_rules! impl_primitive_cast {
                 let dim = value.data_type.dimension();
                 let metadata = value.data_type.metadata().clone();
 
-                let type_ids = vec![value.type_id(dim); value.len()].into();
+                let type_ids = vec![value.geometry_type_id(); value.len()].into();
                 let offsets = ScalarBuffer::from_iter(0..value.len() as i32);
                 let data_type = GeometryType::new(metadata).with_coord_type(coord_type);
                 let mut children = empty_children(coord_type);
