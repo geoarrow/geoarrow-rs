@@ -6,6 +6,7 @@
 
 - New `GeozeroRecordBatchWriter` to allow for an iterative push-based API for writing to geozero-based data sinks.
 - perf(geoarrow-array): Improve perf of from_wkb/from_wkt when parsing to WKB/WKT output types https://github.com/geoarrow/geoarrow-rs/pull/1313
+- feat(geoarrow-array): Implement child array access from GeometryArray #1373
 
 ## 0.5.0 - 2025-08-07
 

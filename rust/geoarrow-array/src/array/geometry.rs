@@ -18,6 +18,50 @@ use crate::capacity::GeometryCapacity;
 use crate::scalar::Geometry;
 use crate::trait_::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow};
 
+/// Macro to implement child array accessor with proper slicing support
+///
+/// This macro generates code to access a child array from a GeometryArray,
+/// handling both sliced and non-sliced cases.
+///
+/// # Arguments
+/// * `$geom_arr` - The child geometry array
+///
+/// # Returns
+/// A cloned or sliced version of the child array
+macro_rules! impl_child_accessor {
+    ($self:expr, $geom_arr:expr) => {{
+        let geom_arr = $geom_arr;
+        if !$self.is_sliced() {
+            // Fast path: if not sliced, just clone the array
+            geom_arr.clone()
+        } else {
+            // Slow path: find the range of this geometry type in the sliced view
+            let target_type_id = geom_arr.geometry_type_id();
+            let first_index = $self.type_ids.iter().position(|id| *id == target_type_id);
+            let last_index = $self.type_ids.iter().rposition(|id| *id == target_type_id);
+
+            match (first_index, last_index) {
+                (Some(first), Some(last)) => {
+                    // Found both first and last occurrence
+                    let first_offset = $self.offsets[first] as usize;
+                    let last_offset = $self.offsets[last] as usize;
+                    geom_arr.slice(first_offset, last_offset - first_offset + 1)
+                }
+                (Some(first), None) => {
+                    unreachable!("Shouldn't happen: found first offset but not last: {first}");
+                }
+                (None, Some(last)) => {
+                    unreachable!("Shouldn't happen: found last offset but not first: {last}");
+                }
+                (None, None) => {
+                    // This geometry type is not present in the sliced view
+                    geom_arr.slice(0, 0)
+                }
+            }
+        }
+    }};
+}
+
 /// An immutable array of geometries of unknown geometry type and dimension.
 ///
 // # Invariants
@@ -158,6 +202,84 @@ impl GeometryArray {
     /// Returns the `offsets` buffer for this array
     pub fn offsets(&self) -> &ScalarBuffer<i32> {
         &self.offsets
+    }
+
+    /// Determine whether this array has been sliced.
+    ///
+    /// This array has been sliced iff the total number of geometries in the child arrays does not
+    /// equal the number of values in the type_ids array.
+    ///
+    /// Since the length of each child array is pre-computed, this operation is O(1).
+    fn is_sliced(&self) -> bool {
+        let mut physical_geom_len = 0;
+        physical_geom_len += self.points.iter().fold(0, |acc, arr| acc + arr.len());
+        physical_geom_len += self.line_strings.iter().fold(0, |acc, arr| acc + arr.len());
+        physical_geom_len += self.polygons.iter().fold(0, |acc, arr| acc + arr.len());
+        physical_geom_len += self.mpoints.iter().fold(0, |acc, arr| acc + arr.len());
+        physical_geom_len += self
+            .mline_strings
+            .iter()
+            .fold(0, |acc, arr| acc + arr.len());
+        physical_geom_len += self.mpolygons.iter().fold(0, |acc, arr| acc + arr.len());
+        physical_geom_len += self.gcs.iter().fold(0, |acc, arr| acc + arr.len());
+
+        physical_geom_len != self.type_ids.len()
+    }
+
+    /// Access the PointArray child for the given dimension.
+    ///
+    /// Note that ordering will be maintained within the child array, but there may have been other
+    /// geometries in between in the parent array.
+    pub fn point_child(&self, dim: Dimension) -> PointArray {
+        impl_child_accessor!(self, &self.points[dim.order()])
+    }
+
+    /// Access the LineStringArray child for the given dimension.
+    ///
+    /// Note that ordering will be maintained within the child array, but there may have been other
+    /// geometries in between in the parent array.
+    pub fn line_string_child(&self, dim: Dimension) -> LineStringArray {
+        impl_child_accessor!(self, &self.line_strings[dim.order()])
+    }
+
+    /// Access the PolygonArray child for the given dimension.
+    ///
+    /// Note that ordering will be maintained within the child array, but there may have been other
+    /// geometries in between in the parent array.
+    pub fn polygon_child(&self, dim: Dimension) -> PolygonArray {
+        impl_child_accessor!(self, &self.polygons[dim.order()])
+    }
+
+    /// Access the MultiPointArray child for the given dimension.
+    ///
+    /// Note that ordering will be maintained within the child array, but there may have been other
+    /// geometries in between in the parent array.
+    pub fn multi_point_child(&self, dim: Dimension) -> MultiPointArray {
+        impl_child_accessor!(self, &self.mpoints[dim.order()])
+    }
+
+    /// Access the MultiLineStringArray child for the given dimension.
+    ///
+    /// Note that ordering will be maintained within the child array, but there may have been other
+    /// geometries in between in the parent array.
+    pub fn multi_line_string_child(&self, dim: Dimension) -> MultiLineStringArray {
+        impl_child_accessor!(self, &self.mline_strings[dim.order()])
+    }
+
+    /// Access the MultiPolygonArray child for the given dimension.
+    ///
+    /// Note that ordering will be maintained within the child array, but there may have been other
+    /// geometries in between in the parent array.
+    pub fn multi_polygon_child(&self, dim: Dimension) -> MultiPolygonArray {
+        impl_child_accessor!(self, &self.mpolygons[dim.order()])
+    }
+
+    /// Access the GeometryCollectionArray child for the given dimension.
+    ///
+    /// Note that ordering will be maintained within the child array, but there may have been other
+    /// geometries in between in the parent array.
+    pub fn geometry_collection_child(&self, dim: Dimension) -> GeometryCollectionArray {
+        impl_child_accessor!(self, &self.gcs[dim.order()])
     }
 
     // TODO: handle slicing
@@ -872,6 +994,7 @@ impl_primitive_cast!(GeometryCollectionArray, 6);
 
 #[cfg(test)]
 mod test {
+    use ::wkt::{Wkt, wkt};
     use geo_traits::to_geo::ToGeoGeometry;
     use geoarrow_schema::Crs;
     use geoarrow_test::raw;
@@ -1041,5 +1164,93 @@ mod test {
 
         assert_eq!(sliced, geo_arr2);
         assert_eq!(sliced.value(0).unwrap(), geo_arr2.value(0).unwrap());
+    }
+
+    #[test]
+    fn determine_if_sliced() {
+        let geo_arr = crate::test::geometry::array(CoordType::Separated, false);
+        assert!(!geo_arr.is_sliced());
+
+        let sliced = geo_arr.slice(2, 4);
+        assert!(sliced.is_sliced());
+    }
+
+    #[test]
+    fn test_point_child_via_slicing() {
+        let point_array = crate::test::point::array(Default::default(), Dimension::XY);
+        let geometry_array = GeometryArray::from(point_array.clone());
+
+        let returned = geometry_array.point_child(Dimension::XY);
+        assert_eq!(returned, point_array);
+
+        // Sliced at beginning
+        let sliced_geometry_array = geometry_array.slice(0, 2);
+        let point_child = sliced_geometry_array.point_child(Dimension::XY);
+        assert_eq!(point_child, point_array.slice(0, 2));
+
+        // Sliced in middle
+        let sliced_geometry_array = geometry_array.slice(1, 2);
+        let point_child = sliced_geometry_array.point_child(Dimension::XY);
+        assert_eq!(point_child, point_array.slice(1, 2));
+
+        // Sliced at end
+        let sliced_geometry_array = geometry_array.slice(2, 2);
+        let point_child = sliced_geometry_array.point_child(Dimension::XY);
+        assert_eq!(point_child, point_array.slice(2, 2));
+    }
+
+    #[test]
+    fn test_point_child_mixed_geometries() {
+        let geoms: Vec<Option<Wkt>> = vec![
+            // 2D points
+            Some(wkt! { POINT (30. 10.) }.into()),
+            Some(wkt! { POINT (40. 20.) }.into()),
+            // 3D points
+            Some(wkt! { POINT Z (30. 10. 40.) }.into()),
+            Some(wkt! { POINT Z (40. 20. 60.) }.into()),
+            // More 2D points
+            Some(wkt! { POINT (30. 10.) }.into()),
+            Some(wkt! { POINT (40. 20.) }.into()),
+        ];
+
+        let mut full_xy_point_arr =
+            PointBuilder::new(PointType::new(Dimension::XY, Default::default()));
+        for idx in [0, 1, 4, 5] {
+            full_xy_point_arr
+                .push_geometry(geoms[idx].as_ref())
+                .unwrap();
+        }
+        let full_xy_point_arr = full_xy_point_arr.finish();
+
+        let geometry_array = GeometryBuilder::from_nullable_geometries(&geoms, Default::default())
+            .unwrap()
+            .finish();
+
+        let returned = geometry_array.point_child(Dimension::XY);
+        assert_eq!(returned, full_xy_point_arr);
+
+        // Sliced at beginning
+        let sliced_geometry_array = geometry_array.slice(0, 2);
+        let point_child = sliced_geometry_array.point_child(Dimension::XY);
+        assert_eq!(point_child, full_xy_point_arr.slice(0, 2));
+
+        // Sliced in middle
+        let sliced_geometry_array = geometry_array.slice(1, 2);
+        let point_child = sliced_geometry_array.point_child(Dimension::XY);
+        assert_eq!(point_child, full_xy_point_arr.slice(1, 1));
+
+        // Sliced in middle, removing all 2D points
+        let sliced_geometry_array = geometry_array.slice(2, 2);
+        let point_child = sliced_geometry_array.point_child(Dimension::XY);
+        assert_eq!(point_child, full_xy_point_arr.slice(1, 0));
+
+        let sliced_geometry_array = geometry_array.slice(3, 2);
+        let point_child = sliced_geometry_array.point_child(Dimension::XY);
+        assert_eq!(point_child, full_xy_point_arr.slice(2, 1));
+
+        // Sliced at end
+        let sliced_geometry_array = geometry_array.slice(4, 2);
+        let point_child = sliced_geometry_array.point_child(Dimension::XY);
+        assert_eq!(point_child, full_xy_point_arr.slice(2, 2));
     }
 }
