@@ -227,36 +227,57 @@ impl GeometryArray {
     }
 
     /// Access the PointArray child for the given dimension.
+    ///
+    /// Note that ordering will be maintained within the child array, but there may have been other
+    /// geometries in between in the parent array.
     pub fn point_child(&self, dim: Dimension) -> PointArray {
         impl_child_accessor!(self, &self.points[dim.order()])
     }
 
     /// Access the LineStringArray child for the given dimension.
+    ///
+    /// Note that ordering will be maintained within the child array, but there may have been other
+    /// geometries in between in the parent array.
     pub fn line_string_child(&self, dim: Dimension) -> LineStringArray {
         impl_child_accessor!(self, &self.line_strings[dim.order()])
     }
 
     /// Access the PolygonArray child for the given dimension.
+    ///
+    /// Note that ordering will be maintained within the child array, but there may have been other
+    /// geometries in between in the parent array.
     pub fn polygon_child(&self, dim: Dimension) -> PolygonArray {
         impl_child_accessor!(self, &self.polygons[dim.order()])
     }
 
     /// Access the MultiPointArray child for the given dimension.
+    ///
+    /// Note that ordering will be maintained within the child array, but there may have been other
+    /// geometries in between in the parent array.
     pub fn multi_point_child(&self, dim: Dimension) -> MultiPointArray {
         impl_child_accessor!(self, &self.mpoints[dim.order()])
     }
 
     /// Access the MultiLineStringArray child for the given dimension.
+    ///
+    /// Note that ordering will be maintained within the child array, but there may have been other
+    /// geometries in between in the parent array.
     pub fn multi_line_string_child(&self, dim: Dimension) -> MultiLineStringArray {
         impl_child_accessor!(self, &self.mline_strings[dim.order()])
     }
 
     /// Access the MultiPolygonArray child for the given dimension.
+    ///
+    /// Note that ordering will be maintained within the child array, but there may have been other
+    /// geometries in between in the parent array.
     pub fn multi_polygon_child(&self, dim: Dimension) -> MultiPolygonArray {
         impl_child_accessor!(self, &self.mpolygons[dim.order()])
     }
 
     /// Access the GeometryCollectionArray child for the given dimension.
+    ///
+    /// Note that ordering will be maintained within the child array, but there may have been other
+    /// geometries in between in the parent array.
     pub fn geometry_collection_child(&self, dim: Dimension) -> GeometryCollectionArray {
         impl_child_accessor!(self, &self.gcs[dim.order()])
     }
