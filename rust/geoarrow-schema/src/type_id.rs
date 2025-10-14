@@ -8,7 +8,7 @@ use crate::{
 /// Compute the Type ID for an array type-dimension combination.
 ///
 /// The GeoArrow specification defines a Type ID for each geometry type and dimension combination.
-/// https://geoarrow.org/format.html#geometry
+/// <https://geoarrow.org/format.html#geometry>
 pub trait GeometryTypeId {
     /// The integer offset for this geometry type.
     ///
