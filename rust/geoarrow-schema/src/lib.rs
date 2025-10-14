@@ -15,6 +15,7 @@ mod edges;
 pub mod error;
 mod metadata;
 mod r#type;
+pub mod type_id;
 
 pub use coord_type::CoordType;
 pub use crs::{Crs, CrsType};

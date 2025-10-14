@@ -832,39 +832,6 @@ impl GeoArrowArrayBuilder for GeometryBuilder {
     }
 }
 
-/// Access the type id for an array-dimension combo
-pub(crate) trait TypeId {
-    const ARRAY_TYPE_OFFSET: i8;
-
-    fn type_id(&self, dim: Dimension) -> i8 {
-        (dim.order() as i8 * 10) + Self::ARRAY_TYPE_OFFSET
-    }
-}
-
-impl TypeId for PointBuilder {
-    const ARRAY_TYPE_OFFSET: i8 = 1;
-}
-
-impl TypeId for LineStringBuilder {
-    const ARRAY_TYPE_OFFSET: i8 = 2;
-}
-
-impl TypeId for PolygonBuilder {
-    const ARRAY_TYPE_OFFSET: i8 = 3;
-}
-impl TypeId for MultiPointBuilder {
-    const ARRAY_TYPE_OFFSET: i8 = 4;
-}
-impl TypeId for MultiLineStringBuilder {
-    const ARRAY_TYPE_OFFSET: i8 = 5;
-}
-impl TypeId for MultiPolygonBuilder {
-    const ARRAY_TYPE_OFFSET: i8 = 6;
-}
-impl TypeId for GeometryCollectionBuilder {
-    const ARRAY_TYPE_OFFSET: i8 = 7;
-}
-
 #[cfg(test)]
 mod test {
     use geoarrow_schema::CoordType;
