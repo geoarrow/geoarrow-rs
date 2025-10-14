@@ -6,8 +6,9 @@ use geo_traits::{
     CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait,
     RectTrait,
 };
-use geoarrow_schema::PolygonType;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
+use geoarrow_schema::type_id::GeometryTypeId;
+use geoarrow_schema::{Dimension, PolygonType};
 
 use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, PolygonArray};
@@ -339,6 +340,14 @@ impl GeoArrowArrayBuilder for PolygonBuilder {
 
     fn finish(self) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.finish())
+    }
+}
+
+impl GeometryTypeId for PolygonBuilder {
+    const GEOMETRY_TYPE_OFFSET: i8 = 3;
+
+    fn dimension(&self) -> Dimension {
+        self.data_type.dimension()
     }
 }
 

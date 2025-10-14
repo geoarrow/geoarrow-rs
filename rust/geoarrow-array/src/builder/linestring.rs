@@ -3,8 +3,9 @@ use std::sync::Arc;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
-use geoarrow_schema::LineStringType;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
+use geoarrow_schema::type_id::GeometryTypeId;
+use geoarrow_schema::{Dimension, LineStringType};
 
 use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, LineStringArray};
@@ -270,5 +271,13 @@ impl GeoArrowArrayBuilder for LineStringBuilder {
 
     fn finish(self) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.finish())
+    }
+}
+
+impl GeometryTypeId for LineStringBuilder {
+    const GEOMETRY_TYPE_OFFSET: i8 = 2;
+
+    fn dimension(&self) -> Dimension {
+        self.data_type.dimension()
     }
 }

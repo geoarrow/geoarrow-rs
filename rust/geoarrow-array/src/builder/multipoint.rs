@@ -3,8 +3,9 @@ use std::sync::Arc;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBufferBuilder;
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
-use geoarrow_schema::MultiPointType;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
+use geoarrow_schema::type_id::GeometryTypeId;
+use geoarrow_schema::{Dimension, MultiPointType};
 
 use crate::GeoArrowArray;
 use crate::array::{GenericWkbArray, MultiPointArray};
@@ -265,5 +266,13 @@ impl GeoArrowArrayBuilder for MultiPointBuilder {
 
     fn finish(self) -> Arc<dyn GeoArrowArray> {
         Arc::new(self.finish())
+    }
+}
+
+impl GeometryTypeId for MultiPointBuilder {
+    const GEOMETRY_TYPE_OFFSET: i8 = 4;
+
+    fn dimension(&self) -> Dimension {
+        self.data_type.dimension()
     }
 }

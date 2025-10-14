@@ -5,7 +5,8 @@ use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geoarrow_schema::{CoordType, GeoArrowType, GeometryCollectionType, Metadata};
+use geoarrow_schema::type_id::GeometryTypeId;
+use geoarrow_schema::{CoordType, Dimension, GeoArrowType, GeometryCollectionType, Metadata};
 
 use crate::array::{GenericWkbArray, MixedGeometryArray};
 use crate::builder::GeometryCollectionBuilder;
@@ -268,6 +269,14 @@ impl PartialEq for GeometryCollectionArray {
         self.nulls == other.nulls
             && offset_buffer_eq(&self.geom_offsets, &other.geom_offsets)
             && self.array == other.array
+    }
+}
+
+impl GeometryTypeId for GeometryCollectionArray {
+    const GEOMETRY_TYPE_OFFSET: i8 = 7;
+
+    fn dimension(&self) -> Dimension {
+        self.data_type.dimension()
     }
 }
 

@@ -5,7 +5,8 @@ use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geoarrow_schema::{CoordType, GeoArrowType, Metadata, PolygonType};
+use geoarrow_schema::type_id::GeometryTypeId;
+use geoarrow_schema::{CoordType, Dimension, GeoArrowType, Metadata, PolygonType};
 
 use crate::array::{CoordBuffer, GenericWkbArray, RectArray};
 use crate::builder::PolygonBuilder;
@@ -397,6 +398,14 @@ impl PartialEq for PolygonArray {
             && offset_buffer_eq(&self.geom_offsets, &other.geom_offsets)
             && offset_buffer_eq(&self.ring_offsets, &other.ring_offsets)
             && self.coords == other.coords
+    }
+}
+
+impl GeometryTypeId for PolygonArray {
+    const GEOMETRY_TYPE_OFFSET: i8 = 3;
+
+    fn dimension(&self) -> Dimension {
+        self.data_type.dimension()
     }
 }
 

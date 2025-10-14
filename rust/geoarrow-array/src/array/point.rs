@@ -5,7 +5,8 @@ use arrow_array::{Array, ArrayRef, FixedSizeListArray, StructArray};
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geoarrow_schema::{CoordType, GeoArrowType, Metadata, PointType};
+use geoarrow_schema::type_id::GeometryTypeId;
+use geoarrow_schema::{CoordType, Dimension, GeoArrowType, Metadata, PointType};
 
 use crate::array::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
 use crate::eq::point_eq;
@@ -288,6 +289,14 @@ impl PartialEq for PointArray {
         }
 
         true
+    }
+}
+
+impl GeometryTypeId for PointArray {
+    const GEOMETRY_TYPE_OFFSET: i8 = 1;
+
+    fn dimension(&self) -> Dimension {
+        self.data_type.dimension()
     }
 }
 

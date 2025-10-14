@@ -5,7 +5,8 @@ use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
-use geoarrow_schema::{CoordType, GeoArrowType, LineStringType, Metadata};
+use geoarrow_schema::type_id::GeometryTypeId;
+use geoarrow_schema::{CoordType, Dimension, GeoArrowType, LineStringType, Metadata};
 
 use crate::array::{CoordBuffer, GenericWkbArray};
 use crate::builder::LineStringBuilder;
@@ -307,6 +308,14 @@ impl PartialEq for LineStringArray {
         self.nulls == other.nulls
             && offset_buffer_eq(&self.geom_offsets, &other.geom_offsets)
             && self.coords == other.coords
+    }
+}
+
+impl GeometryTypeId for LineStringArray {
+    const GEOMETRY_TYPE_OFFSET: i8 = 2;
+
+    fn dimension(&self) -> Dimension {
+        self.data_type.dimension()
     }
 }
 
