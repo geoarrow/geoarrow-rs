@@ -33,6 +33,7 @@ wkt = { workspace = true }
 geo = { workspace = true }
 geo-types = { workspace = true }
 geoarrow-test = { workspace = true }
+wkt = { workspace = true }
 
 [package.metadata.docs.rs]
 all-features = true
