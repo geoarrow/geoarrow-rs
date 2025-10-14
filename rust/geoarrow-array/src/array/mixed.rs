@@ -6,6 +6,7 @@ use arrow_array::{Array, ArrayRef, UnionArray};
 use arrow_buffer::ScalarBuffer;
 use arrow_schema::{DataType, UnionMode};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
+use geoarrow_schema::type_id::GeometryTypeId;
 use geoarrow_schema::{
     CoordType, Dimension, GeoArrowType, GeometryCollectionType, LineStringType,
     MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType,
@@ -232,7 +233,7 @@ impl MixedGeometryArray {
         // If the array has been sliced, check a point type id still exists
         if self.is_sliced() {
             for t in self.type_ids.iter() {
-                if *t % 10 == 1 {
+                if *t % 10 == PointType::GEOMETRY_TYPE_OFFSET {
                     return true;
                 }
             }
@@ -251,7 +252,7 @@ impl MixedGeometryArray {
         // If the array has been sliced, check a point type id still exists
         if self.is_sliced() {
             for t in self.type_ids.iter() {
-                if *t % 10 == 2 {
+                if *t % 10 == LineStringType::GEOMETRY_TYPE_OFFSET {
                     return true;
                 }
             }
@@ -270,7 +271,7 @@ impl MixedGeometryArray {
         // If the array has been sliced, check a point type id still exists
         if self.is_sliced() {
             for t in self.type_ids.iter() {
-                if *t % 10 == 3 {
+                if *t % 10 == PolygonType::GEOMETRY_TYPE_OFFSET {
                     return true;
                 }
             }
@@ -289,7 +290,7 @@ impl MixedGeometryArray {
         // If the array has been sliced, check a point type id still exists
         if self.is_sliced() {
             for t in self.type_ids.iter() {
-                if *t % 10 == 4 {
+                if *t % 10 == MultiPointType::GEOMETRY_TYPE_OFFSET {
                     return true;
                 }
             }
@@ -308,7 +309,7 @@ impl MixedGeometryArray {
         // If the array has been sliced, check a point type id still exists
         if self.is_sliced() {
             for t in self.type_ids.iter() {
-                if *t % 10 == 5 {
+                if *t % 10 == MultiLineStringType::GEOMETRY_TYPE_OFFSET {
                     return true;
                 }
             }
@@ -327,7 +328,7 @@ impl MixedGeometryArray {
         // If the array has been sliced, check a point type id still exists
         if self.is_sliced() {
             for t in self.type_ids.iter() {
-                if *t % 10 == 6 {
+                if *t % 10 == MultiPolygonType::GEOMETRY_TYPE_OFFSET {
                     return true;
                 }
             }
@@ -492,15 +493,25 @@ impl MixedGeometryArray {
 
         let expect_msg = "native geometry value access should never error";
         match type_id % 10 {
-            1 => Geometry::Point(self.points.value(offset).expect(expect_msg)),
-            2 => Geometry::LineString(self.line_strings.value(offset).expect(expect_msg)),
-            3 => Geometry::Polygon(self.polygons.value(offset).expect(expect_msg)),
-            4 => Geometry::MultiPoint(self.multi_points.value(offset).expect(expect_msg)),
-            5 => {
+            PointType::GEOMETRY_TYPE_OFFSET => {
+                Geometry::Point(self.points.value(offset).expect(expect_msg))
+            }
+            LineStringType::GEOMETRY_TYPE_OFFSET => {
+                Geometry::LineString(self.line_strings.value(offset).expect(expect_msg))
+            }
+            PolygonType::GEOMETRY_TYPE_OFFSET => {
+                Geometry::Polygon(self.polygons.value(offset).expect(expect_msg))
+            }
+            MultiPointType::GEOMETRY_TYPE_OFFSET => {
+                Geometry::MultiPoint(self.multi_points.value(offset).expect(expect_msg))
+            }
+            MultiLineStringType::GEOMETRY_TYPE_OFFSET => {
                 Geometry::MultiLineString(self.multi_line_strings.value(offset).expect(expect_msg))
             }
-            6 => Geometry::MultiPolygon(self.multi_polygons.value(offset).expect(expect_msg)),
-            7 => {
+            MultiPolygonType::GEOMETRY_TYPE_OFFSET => {
+                Geometry::MultiPolygon(self.multi_polygons.value(offset).expect(expect_msg))
+            }
+            GeometryCollectionType::GEOMETRY_TYPE_OFFSET => {
                 panic!("nested geometry collections not supported in GeoArrow")
             }
             _ => unreachable!("unknown type_id {}", type_id),
@@ -572,7 +583,7 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                     }
 
                     match type_id % 10 {
-                        1 => {
+                        PointType::GEOMETRY_TYPE_OFFSET => {
                             points = Some(
                                 (
                                     value.child(type_id).as_ref(),
@@ -583,7 +594,7 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                                     .unwrap(),
                             );
                         }
-                        2 => {
+                        LineStringType::GEOMETRY_TYPE_OFFSET => {
                             line_strings = Some(
                                 (
                                     value.child(type_id).as_ref(),
@@ -594,7 +605,7 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                                     .unwrap(),
                             );
                         }
-                        3 => {
+                        PolygonType::GEOMETRY_TYPE_OFFSET => {
                             polygons = Some(
                                 (
                                     value.child(type_id).as_ref(),
@@ -605,7 +616,7 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                                     .unwrap(),
                             );
                         }
-                        4 => {
+                        MultiPointType::GEOMETRY_TYPE_OFFSET => {
                             multi_points = Some(
                                 (
                                     value.child(type_id).as_ref(),
@@ -616,7 +627,7 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                                     .unwrap(),
                             );
                         }
-                        5 => {
+                        MultiLineStringType::GEOMETRY_TYPE_OFFSET => {
                             multi_line_strings = Some(
                                 (
                                     value.child(type_id).as_ref(),
@@ -627,7 +638,7 @@ impl TryFrom<(&UnionArray, Dimension, CoordType)> for MixedGeometryArray {
                                     .unwrap(),
                             );
                         }
-                        6 => {
+                        MultiPolygonType::GEOMETRY_TYPE_OFFSET => {
                             multi_polygons = Some(
                                 (
                                     value.child(type_id).as_ref(),

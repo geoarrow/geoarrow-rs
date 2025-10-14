@@ -352,13 +352,13 @@ impl GeoArrowArray for GeometryArray {
         let offset = self.offsets[i] as usize;
         let dim = (type_id / 10) as usize;
         match type_id % 10 {
-            1 => self.points[dim].is_null(offset),
-            2 => self.line_strings[dim].is_null(offset),
-            3 => self.polygons[dim].is_null(offset),
-            4 => self.mpoints[dim].is_null(offset),
-            5 => self.mline_strings[dim].is_null(offset),
-            6 => self.mpolygons[dim].is_null(offset),
-            7 => self.gcs[dim].is_null(offset),
+            PointType::GEOMETRY_TYPE_OFFSET => self.points[dim].is_null(offset),
+            LineStringType::GEOMETRY_TYPE_OFFSET => self.line_strings[dim].is_null(offset),
+            PolygonType::GEOMETRY_TYPE_OFFSET => self.polygons[dim].is_null(offset),
+            MultiPointType::GEOMETRY_TYPE_OFFSET => self.mpoints[dim].is_null(offset),
+            MultiLineStringType::GEOMETRY_TYPE_OFFSET => self.mline_strings[dim].is_null(offset),
+            MultiPolygonType::GEOMETRY_TYPE_OFFSET => self.mpolygons[dim].is_null(offset),
+            GeometryCollectionType::GEOMETRY_TYPE_OFFSET => self.gcs[dim].is_null(offset),
             _ => unreachable!("unknown type_id {}", type_id),
         }
     }
@@ -386,13 +386,25 @@ impl<'a> GeoArrowArrayAccessor<'a> for GeometryArray {
         let dim = (type_id / 10) as usize;
 
         let result = match type_id % 10 {
-            1 => Geometry::Point(self.points[dim].value(offset)?),
-            2 => Geometry::LineString(self.line_strings[dim].value(offset)?),
-            3 => Geometry::Polygon(self.polygons[dim].value(offset)?),
-            4 => Geometry::MultiPoint(self.mpoints[dim].value(offset)?),
-            5 => Geometry::MultiLineString(self.mline_strings[dim].value(offset)?),
-            6 => Geometry::MultiPolygon(self.mpolygons[dim].value(offset)?),
-            7 => Geometry::GeometryCollection(self.gcs[dim].value(offset)?),
+            PointType::GEOMETRY_TYPE_OFFSET => Geometry::Point(self.points[dim].value(offset)?),
+            LineStringType::GEOMETRY_TYPE_OFFSET => {
+                Geometry::LineString(self.line_strings[dim].value(offset)?)
+            }
+            PolygonType::GEOMETRY_TYPE_OFFSET => {
+                Geometry::Polygon(self.polygons[dim].value(offset)?)
+            }
+            MultiPointType::GEOMETRY_TYPE_OFFSET => {
+                Geometry::MultiPoint(self.mpoints[dim].value(offset)?)
+            }
+            MultiLineStringType::GEOMETRY_TYPE_OFFSET => {
+                Geometry::MultiLineString(self.mline_strings[dim].value(offset)?)
+            }
+            MultiPolygonType::GEOMETRY_TYPE_OFFSET => {
+                Geometry::MultiPolygon(self.mpolygons[dim].value(offset)?)
+            }
+            GeometryCollectionType::GEOMETRY_TYPE_OFFSET => {
+                Geometry::GeometryCollection(self.gcs[dim].value(offset)?)
+            }
             _ => unreachable!("unknown type_id {}", type_id),
         };
         Ok(result)
