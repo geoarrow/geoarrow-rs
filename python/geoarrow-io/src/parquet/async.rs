@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
-use crate::input::{AnyFileReader, AsyncFileReader, construct_reader};
+use crate::input::{AnyFileReader, AsyncReader, construct_reader};
 use crate::parquet::options::{
     PyGeoParquetBboxQuery, PyGeoParquetReadOptions, PyRect, apply_options,
 };
@@ -60,7 +60,7 @@ pub fn read_parquet_async(
 }
 
 async fn read_parquet_async_inner(
-    async_reader: AsyncFileReader,
+    async_reader: AsyncReader,
     batch_size: Option<usize>,
     parse_to_native: bool,
     coord_type: Option<PyCoordType>,

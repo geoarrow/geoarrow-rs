@@ -10,22 +10,22 @@ use object_store::{
 use pyo3::pybacked::PyBackedStr;
 #[cfg(feature = "async")]
 use pyo3_object_store::AnyObjectStore;
-use sync::FileReader;
+use sync::SyncReader;
 
 use pyo3::prelude::*;
 use url::Url;
 
 #[cfg(feature = "async")]
 #[derive(Debug, Clone)]
-pub struct AsyncFileReader {
+pub struct AsyncReader {
     pub store: Arc<dyn ObjectStore>,
     pub path: Path,
 }
 
 pub enum AnyFileReader {
-    Sync(FileReader),
+    Sync(SyncReader),
     #[cfg(feature = "async")]
-    Async(AsyncFileReader),
+    Async(AsyncReader),
 }
 
 /// Construct a reader for the user that will always be asynchronous
@@ -36,12 +36,12 @@ pub enum AnyFileReader {
 pub fn construct_async_reader(
     file: Bound<PyAny>,
     store: Option<Bound<PyAny>>,
-) -> PyGeoArrowResult<AsyncFileReader> {
+) -> PyGeoArrowResult<AsyncReader> {
     // If the user passed an object store instance, use that
 
     use pyo3_object_store::AnyObjectStore;
     if let Some(store) = store {
-        let async_reader = AsyncFileReader {
+        let async_reader = AsyncReader {
             store: store.extract::<AnyObjectStore>()?.into(),
             path: file.extract::<String>()?.into(),
         };
@@ -70,7 +70,7 @@ pub fn construct_reader(
     // If the user passed an object store instance, use that
     #[cfg(feature = "async")]
     if let Some(store) = store {
-        let async_reader = AsyncFileReader {
+        let async_reader = AsyncReader {
             store: store.extract::<AnyObjectStore>()?.into(),
             path: file.extract::<String>()?.into(),
         };
@@ -91,7 +91,7 @@ pub fn construct_reader(
 
 #[allow(dead_code)]
 #[cfg(feature = "async")]
-fn default_http_store(path_or_url: &str) -> PyGeoArrowResult<AsyncFileReader> {
+fn default_http_store(path_or_url: &str) -> PyGeoArrowResult<AsyncReader> {
     let url = Url::parse(path_or_url)?;
 
     let store_input = format!("{}://{}", url.scheme(), url.domain().unwrap());
@@ -103,7 +103,7 @@ fn default_http_store(path_or_url: &str) -> PyGeoArrowResult<AsyncFileReader> {
         .build()?;
     let path = url.path().trim_start_matches('/');
 
-    let async_reader = AsyncFileReader {
+    let async_reader = AsyncReader {
         store: Arc::new(store),
         path: path.into(),
     };
@@ -111,8 +111,8 @@ fn default_http_store(path_or_url: &str) -> PyGeoArrowResult<AsyncFileReader> {
 }
 
 #[cfg(feature = "async")]
-fn default_local_store(path: &str) -> PyGeoArrowResult<AsyncFileReader> {
-    let async_reader = AsyncFileReader {
+fn default_local_store(path: &str) -> PyGeoArrowResult<AsyncReader> {
+    let async_reader = AsyncReader {
         store: Arc::new(LocalFileSystem::new()),
         path: path.into(),
     };

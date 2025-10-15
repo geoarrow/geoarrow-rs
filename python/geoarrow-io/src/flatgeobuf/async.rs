@@ -1,6 +1,6 @@
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::flatgeobuf::utils::apply_projection;
-use crate::input::{AsyncFileReader, construct_async_reader};
+use crate::input::{AsyncReader, construct_async_reader};
 
 use flatgeobuf::HttpFgbReader;
 use futures::TryStreamExt;
@@ -51,7 +51,7 @@ pub fn read_flatgeobuf_async<'py>(
 
 #[allow(clippy::too_many_arguments)]
 async fn read_flatgeobuf_async_inner(
-    async_reader: AsyncFileReader,
+    async_reader: AsyncReader,
     batch_size: usize,
     bbox: Option<(f64, f64, f64, f64)>,
     coord_type: CoordType,
