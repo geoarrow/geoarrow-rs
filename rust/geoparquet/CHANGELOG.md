@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+## 0.6.0 - 2025-10-15
+
 - Make `infer_geoarrow_schema` public. #1251
 
 ## 0.5.0 - 2025-08-07

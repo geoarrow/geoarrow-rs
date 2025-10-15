@@ -15,12 +15,12 @@ use std::path::{Path, PathBuf};
 
 /// Implements Read + Seek
 #[derive(Debug)]
-pub enum FileReader {
+pub enum SyncReader {
     File(String, BufReader<File>),
     FileLike(BufReader<PyFileLikeObject>),
 }
 
-impl FileReader {
+impl SyncReader {
     pub(crate) fn try_clone(&self) -> std::io::Result<Self> {
         match self {
             Self::File(path, f) => Ok(Self::File(
@@ -32,7 +32,7 @@ impl FileReader {
     }
 }
 
-impl Read for FileReader {
+impl Read for SyncReader {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         match self {
             Self::File(_, reader) => reader.read(buf),
@@ -41,7 +41,7 @@ impl Read for FileReader {
     }
 }
 
-impl Seek for FileReader {
+impl Seek for SyncReader {
     fn seek(&mut self, pos: SeekFrom) -> Result<u64, io::Error> {
         match self {
             Self::File(_, reader) => reader.seek(pos),
@@ -50,7 +50,7 @@ impl Seek for FileReader {
     }
 }
 
-impl BufRead for FileReader {
+impl BufRead for SyncReader {
     fn fill_buf(&mut self) -> io::Result<&[u8]> {
         match self {
             Self::File(_, reader) => reader.fill_buf(),
@@ -66,7 +66,7 @@ impl BufRead for FileReader {
     }
 }
 
-impl Length for FileReader {
+impl Length for SyncReader {
     fn len(&self) -> u64 {
         match self {
             Self::File(_path, f) => f.get_ref().len(),
@@ -87,8 +87,8 @@ impl Length for FileReader {
     }
 }
 
-impl ChunkReader for FileReader {
-    type T = FileReader;
+impl ChunkReader for SyncReader {
+    type T = SyncReader;
 
     fn get_read(&self, start: u64) -> parquet::errors::Result<Self::T> {
         let mut reader = self.try_clone()?;
@@ -111,7 +111,7 @@ impl ChunkReader for FileReader {
     }
 }
 
-impl<'py> FromPyObject<'py> for FileReader {
+impl<'py> FromPyObject<'py> for SyncReader {
     fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
         if let Ok(path_buf) = ob.extract::<PathBuf>() {
             let path = path_buf.to_string_lossy().to_string();
