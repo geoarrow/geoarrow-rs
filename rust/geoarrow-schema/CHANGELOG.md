@@ -4,7 +4,9 @@
 
 ## Unreleased
 
-- Add `RectType` as an alias for `BoxType`.
+## 0.6.0 - 2025-10-15
+
+- feat(geoarrow-schema): add `RectType` as alias for `BoxType` by @kylebarron in https://github.com/geoarrow/geoarrow-rs/pull/1310
 - feat: `GeometryTypeId` trait to infer GeoArrow type id for a type #1372
 
 ## 0.5.0 - 2025-08-07

@@ -1,6 +1,6 @@
 # Changelog
 
-**This is the changelog for the core Rust library**. There's a [separate changelog](./python/CHANGELOG.md) for the Python bindings, and there will be another for the JS bindings.
+**Changelogs have been moved to per-crate changelogs**.
 
 ## 0.4.0 (`geoparquet` crate) - 2025-07-08
 
