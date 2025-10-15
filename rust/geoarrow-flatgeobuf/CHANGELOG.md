@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+## 0.6.0 - 2025-10-15
+
 - New `FlatGeobufWriter`: an iterative push-based API for writing to FlatGeobuf files.
 - fix(geoarrow-flatgeobuf): Fix FlatGeobuf reader with missing (null) properties #1356
 
