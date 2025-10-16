@@ -3,8 +3,6 @@
 mod constructors;
 mod interop;
 mod operations;
-// pub mod ffi;
-// pub mod table;
 
 use pyo3::exceptions::PyRuntimeWarning;
 use pyo3::intern;

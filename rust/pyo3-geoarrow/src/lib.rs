@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+#![warn(missing_docs)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![cfg_attr(not(test), warn(unused_crate_dependencies))]
 #![doc(
@@ -27,6 +29,7 @@ pub use chunked_array::PyGeoChunkedArray;
 pub use coord_buffer::PyCoordBuffer;
 pub use coord_type::PyCoordType;
 pub use crs::{PyCrs, PyprojCRSTransform};
+pub use data_type::PyGeoType;
 pub use dimension::PyDimension;
 pub use edges::PyEdges;
 pub use error::{PyGeoArrowError, PyGeoArrowResult};
