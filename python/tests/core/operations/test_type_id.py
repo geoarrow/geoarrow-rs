@@ -91,6 +91,6 @@ def test_points_chunked():
     geoms2 = shapely.points([10, 20, 30], [40, 50, 60])
     arr1 = GeoArray.from_arrow(gpd.GeoSeries(geoms1).to_arrow("geoarrow"))
     arr2 = GeoArray.from_arrow(gpd.GeoSeries(geoms2).to_arrow("geoarrow"))
-    ca = GeoChunkedArray.from_arrow(ChunkedArray([arr1, arr2]))
+    ca = GeoChunkedArray([arr1, arr2])
     out = get_type_id(ca).read_all()
     assert (np.asarray(out) == 1).all()

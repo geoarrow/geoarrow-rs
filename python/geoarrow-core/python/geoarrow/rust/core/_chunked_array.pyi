@@ -1,4 +1,9 @@
-from arro3.core.types import ArrowStreamExportable
+from typing import Sequence, overload
+from arro3.core.types import (
+    ArrowStreamExportable,
+    ArrowArrayExportable,
+    ArrowSchemaExportable,
+)
 from geoarrow.rust.core._scalar import GeoScalar
 
 from ._array import GeoArray
@@ -12,6 +17,29 @@ class GeoChunkedArray:
     This class is used to handle chunked arrays in GeoArrow, which can be
     composed of multiple chunks of data.
     """
+    @overload
+    def __init__(
+        self, arrays: ArrowArrayExportable | ArrowStreamExportable, type: None = None
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        arrays: Sequence[ArrowArrayExportable],
+        type: ArrowSchemaExportable | None = None,
+    ) -> None: ...
+    def __init__(
+        self,
+        arrays: ArrowArrayExportable
+        | ArrowStreamExportable
+        | Sequence[ArrowArrayExportable],
+        type: ArrowSchemaExportable | None = None,
+    ) -> None:
+        """Construct a new GeoChunkedArray.
+
+        Args:
+            arrays: _description_
+            type: _description_. Defaults to None.
+        """
 
     def __arrow_c_stream__(self, requested_schema: object | None = None) -> object:
         """

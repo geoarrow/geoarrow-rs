@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 import shapely
 from arro3.core import Table
-from geoarrow.rust.core import GeoArray, geometry_col
+from geoarrow.rust.core import GeoArray, GeoChunkedArray, geometry_col
 
 
 def geoarrow_array():
@@ -42,11 +42,10 @@ def test_geo_array_input():
     assert arr == geometry_col(arr)
 
 
-# TODO: implement once we have easy GeoChunkedArray constructor
-# def test_geo_chunked_array_input():
-#     arr = geoarrow_array()
-#     chunked = GeoChunkedArray.from_arrays([arr, arr])
-#     assert chunked == geometry_col(chunked)
+def test_geo_chunked_array_input():
+    arr = geoarrow_array()
+    chunked = GeoChunkedArray([arr, arr])
+    assert chunked == geometry_col(chunked)
 
 
 def test_table_no_geom_cols():
