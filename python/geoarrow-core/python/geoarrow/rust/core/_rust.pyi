@@ -1,21 +1,8 @@
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any, Sequence, Tuple, overload
+from typing import overload
 
-from arro3.core import Table
 from arro3.core.types import ArrowArrayExportable, ArrowStreamExportable
-
-try:
-    import numpy as np
-    from numpy.typing import NDArray
-except ImportError:
-    pass
-
-try:
-    import geopandas as gpd
-except ImportError:
-    pass
 
 from ._array import GeoArray as GeoArray
 from ._array_reader import GeoArrayReader as GeoArrayReader
@@ -51,21 +38,34 @@ from ._interop import to_wkt as to_wkt
 from ._operations import get_type_id as get_type_id
 from ._scalar import GeoScalar as GeoScalar
 
-# @overload
-# def geometry_col(input: ArrowArrayExportable) -> GeoArray: ...
-# @overload
-# def geometry_col(input: ArrowStreamExportable) -> GeoChunkedArray: ...
-# def geometry_col(
-#     input: ArrowArrayExportable | ArrowStreamExportable,
-# ) -> GeoArray | GeoChunkedArray:
-#     """Access the geometry column of a Table or RecordBatch
+@overload
+def geometry_col(
+    input: ArrowArrayExportable,
+    *,
+    name: str | None = None,
+) -> GeoArray: ...
+@overload
+def geometry_col(
+    input: ArrowStreamExportable,
+    *,
+    name: str | None = None,
+) -> GeoArrayReader: ...
+def geometry_col(
+    input: ArrowArrayExportable | ArrowStreamExportable,
+    *,
+    name: str | None = None,
+) -> GeoArray | GeoArrayReader:
+    """Access the geometry column of a Table or RecordBatch
 
-#     Args:
-#         input: The Arrow RecordBatch or Table to extract the geometry column from.
+    Args:
+        input: The Arrow RecordBatch or Table to extract the geometry column from.
 
-#     Returns:
-#         A geometry array or chunked array.
-#     """
+    Keyword Args:
+        name: The name of the geometry column to extract. If not provided, an error will be produced if there are multiple columns with GeoArrow metadata.
+
+    Returns:
+        A geometry array or chunked array.
+    """
 
 # Interop
 
