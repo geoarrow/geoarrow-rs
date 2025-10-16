@@ -18,6 +18,7 @@ use pyo3_arrow::{PyArrayReader, PyChunkedArray};
 
 use crate::data_type::PyGeoType;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
+use crate::input::AnyGeoArray;
 use crate::scalar::PyGeoScalar;
 use crate::utils::text_repr::text_repr;
 use crate::{PyCoordType, PyGeoArray};
@@ -93,6 +94,47 @@ impl PyGeoChunkedArray {
 
 #[pymethods]
 impl PyGeoChunkedArray {
+    #[new]
+    #[pyo3(signature = (arrays, r#type=None))]
+    fn init(
+        py: Python,
+        arrays: &Bound<PyAny>,
+        r#type: Option<PyGeoType>,
+    ) -> PyGeoArrowResult<Self> {
+        if arrays.hasattr(intern!(py, "__arrow_c_array__"))?
+            || arrays.hasattr(intern!(py, "__arrow_c_stream__"))?
+        {
+            Ok(arrays.extract::<AnyGeoArray>()?.into_chunked_array()?)
+        } else if let Ok(geo_arrays) = arrays.extract::<Vec<PyGeoArray>>() {
+            // TODO: move this into from_arrays?
+            let geo_arrays = geo_arrays
+                .into_iter()
+                .map(|arr| arr.into_inner())
+                .collect::<Vec<_>>();
+
+            if !geo_arrays
+                .windows(2)
+                .all(|w| w[0].data_type() == w[1].data_type())
+            {
+                return Err(PyTypeError::new_err(
+                    "Cannot create a ChunkedArray with differing data types.",
+                )
+                .into());
+            }
+
+            let geo_type = r#type
+                .map(|py_data_type| py_data_type.into_inner())
+                .unwrap_or_else(|| geo_arrays[0].data_type());
+
+            Ok(Self::try_new(geo_arrays, geo_type)?)
+        } else {
+            Err(
+                PyTypeError::new_err("Expected ChunkedArray-like input or sequence of arrays.")
+                    .into(),
+            )
+        }
+    }
+
     #[pyo3(signature = (requested_schema=None))]
     fn __arrow_c_stream__<'py>(
         &self,
