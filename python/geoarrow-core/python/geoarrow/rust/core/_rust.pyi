@@ -39,16 +39,29 @@ from ._operations import get_type_id as get_type_id
 from ._scalar import GeoScalar as GeoScalar
 
 @overload
-def geometry_col(input: ArrowArrayExportable) -> GeoArray: ...
+def geometry_col(
+    input: ArrowArrayExportable,
+    *,
+    name: str | None = None,
+) -> GeoArray: ...
 @overload
-def geometry_col(input: ArrowStreamExportable) -> GeoArrayReader: ...
+def geometry_col(
+    input: ArrowStreamExportable,
+    *,
+    name: str | None = None,
+) -> GeoArrayReader: ...
 def geometry_col(
     input: ArrowArrayExportable | ArrowStreamExportable,
+    *,
+    name: str | None = None,
 ) -> GeoArray | GeoArrayReader:
     """Access the geometry column of a Table or RecordBatch
 
     Args:
         input: The Arrow RecordBatch or Table to extract the geometry column from.
+
+    Keyword Args:
+        name: The name of the geometry column to extract. If not provided, an error will be produced if there are multiple columns with GeoArrow metadata.
 
     Returns:
         A geometry array or chunked array.
