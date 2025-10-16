@@ -1,20 +1,19 @@
 import geopandas as gpd
 import numpy as np
 import shapely
-from arro3.core import ChunkedArray
 from geoarrow.rust.core import GeoArray, GeoChunkedArray, get_type_id
 
 
 def test_points():
     geoms = shapely.points([1, 2, 3], [4, 5, 6])
-    arr = GeoArray.from_arrow(gpd.GeoSeries(geoms).to_arrow("geoarrow"))
+    arr = GeoArray(gpd.GeoSeries(geoms).to_arrow("geoarrow"))
     out = get_type_id(arr)
     assert (np.asarray(out) == 1).all()
 
 
 def test_points_wkb():
     geoms = shapely.points([1, 2, 3], [4, 5, 6])
-    arr = GeoArray.from_arrow(gpd.GeoSeries(geoms).to_arrow("wkb"))
+    arr = GeoArray(gpd.GeoSeries(geoms).to_arrow("wkb"))
     out = get_type_id(arr)
     assert (np.asarray(out) == 1).all()
 
@@ -41,7 +40,7 @@ def test_mixed_wkb():
             ]
         ),
     ]
-    arr = GeoArray.from_arrow(gpd.GeoSeries(geoms).to_arrow("wkb"))
+    arr = GeoArray(gpd.GeoSeries(geoms).to_arrow("wkb"))
     out = get_type_id(arr)
     assert (np.asarray(out) == np.array([1, 2, 3, 4, 5, 6, 7])).all()
 
@@ -68,7 +67,7 @@ def test_mixed_wkb_3d():
             ]
         ),
     ]
-    arr = GeoArray.from_arrow(gpd.GeoSeries(geoms).to_arrow("wkb"))
+    arr = GeoArray(gpd.GeoSeries(geoms).to_arrow("wkb"))
     out = get_type_id(arr)
     assert (np.asarray(out) == np.array([11, 12, 13, 14, 15, 16, 17])).all()
 
@@ -81,7 +80,7 @@ def test_multipoints():
             shapely.geometry.Point(3, 6),
         ]
     )
-    arr = GeoArray.from_arrow(gpd.GeoSeries(geoms).to_arrow("geoarrow"))
+    arr = GeoArray(gpd.GeoSeries(geoms).to_arrow("geoarrow"))
     out = get_type_id(arr)
     assert (np.asarray(out) == 4).all()
 
@@ -89,8 +88,8 @@ def test_multipoints():
 def test_points_chunked():
     geoms1 = shapely.points([1, 2, 3], [4, 5, 6])
     geoms2 = shapely.points([10, 20, 30], [40, 50, 60])
-    arr1 = GeoArray.from_arrow(gpd.GeoSeries(geoms1).to_arrow("geoarrow"))
-    arr2 = GeoArray.from_arrow(gpd.GeoSeries(geoms2).to_arrow("geoarrow"))
+    arr1 = GeoArray(gpd.GeoSeries(geoms1).to_arrow("geoarrow"))
+    arr2 = GeoArray(gpd.GeoSeries(geoms2).to_arrow("geoarrow"))
     ca = GeoChunkedArray([arr1, arr2])
     out = get_type_id(ca).read_all()
     assert (np.asarray(out) == 1).all()

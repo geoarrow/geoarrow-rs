@@ -8,7 +8,7 @@ from geoarrow.rust.core import GeoArray, GeoChunkedArray, geometry_col
 
 def geoarrow_array():
     geoms = shapely.points([1, 2, 3], [4, 5, 6])
-    return GeoArray.from_arrow(gpd.GeoSeries(geoms).to_arrow("geoarrow"))
+    return GeoArray(gpd.GeoSeries(geoms).to_arrow("geoarrow"))
 
 
 def test_batch_no_geom_cols():

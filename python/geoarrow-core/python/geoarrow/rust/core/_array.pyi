@@ -6,6 +6,11 @@ from .enums import CoordType
 from .types import CoordTypeInput
 
 class GeoArray:
+    def __init__(self, data: ArrowArrayExportable) -> None:
+        """Create a new GeoArray.
+
+        At the moment this is solely an alias for `from_arrow()`.
+        """
     def __arrow_c_array__(
         self, requested_schema: object | None = None
     ) -> tuple[object, object]:

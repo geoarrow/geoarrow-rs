@@ -82,8 +82,8 @@ impl PyGeoArray {
 #[pymethods]
 impl PyGeoArray {
     #[new]
-    fn py_new(data: &Bound<PyAny>) -> PyResult<Self> {
-        data.extract()
+    fn py_new(data: Self) -> Self {
+        data
     }
 
     #[pyo3(signature = (requested_schema=None))]
