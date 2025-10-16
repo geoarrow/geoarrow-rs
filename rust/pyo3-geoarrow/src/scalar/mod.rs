@@ -6,8 +6,9 @@ mod bounding_rect;
 use std::io::Write;
 use std::sync::Arc;
 
-use geoarrow_array::GeoArrowArray;
 use geoarrow_array::cast::AsGeoArrowArray;
+use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, downcast_geoarrow_array};
+use geoarrow_expr_geo::util::to_geo::geometry_to_geo;
 use geoarrow_schema::GeoArrowType;
 use geoarrow_schema::error::GeoArrowError;
 use pyo3::exceptions::{PyIOError, PyValueError};
@@ -82,12 +83,13 @@ impl PyGeoScalar {
         }
     }
 
-    #[cfg(feature = "geozero")]
+    #[cfg(feature = "geojson")]
     #[getter]
     fn __geo_interface__<'py>(&'py self, py: Python<'py>) -> PyGeoArrowResult<Bound<'py, PyAny>> {
-        let json_string = to_json(&self.0).map_err(|err| GeoArrowError::External(Box::new(err)))?;
+        let geojson_geometry = scalar_to_geojson(&self.0)?;
+        let geojson_string = serde_json::to_string(&geojson_geometry)?;
         let json_mod = py.import(intern!(py, "json"))?;
-        Ok(json_mod.call_method1(intern!(py, "loads"), (json_string,))?)
+        Ok(json_mod.call_method1(intern!(py, "loads"), (geojson_string,))?)
     }
 
     #[cfg(feature = "geozero")]
@@ -182,25 +184,15 @@ fn process_svg_geom<W: Write>(
     }
 }
 
-#[cfg(feature = "geozero")]
-fn to_json(arr: &dyn GeoArrowArray) -> geozero::error::Result<String> {
-    use GeoArrowType::*;
-    use geozero::ToJson;
-    match arr.data_type() {
-        Point(_) => arr.as_point().to_json(),
-        LineString(_) => arr.as_line_string().to_json(),
-        Polygon(_) => arr.as_polygon().to_json(),
-        MultiPoint(_) => arr.as_multi_point().to_json(),
-        MultiLineString(_) => arr.as_multi_line_string().to_json(),
-        MultiPolygon(_) => arr.as_multi_polygon().to_json(),
-        GeometryCollection(_) => arr.as_geometry_collection().to_json(),
-        Geometry(_) => arr.as_geometry().to_json(),
-        Rect(_) => arr.as_rect().to_json(),
-        Wkb(_) => arr.as_wkb::<i32>().to_json(),
-        LargeWkb(_) => arr.as_wkb::<i64>().to_json(),
-        WkbView(_) => arr.as_wkb_view().to_json(),
-        Wkt(_) => arr.as_wkt::<i32>().to_json(),
-        LargeWkt(_) => arr.as_wkt::<i64>().to_json(),
-        WktView(_) => arr.as_wkt_view().to_json(),
-    }
+#[cfg(feature = "geojson")]
+fn scalar_to_geojson(scalar: &dyn GeoArrowArray) -> PyGeoArrowResult<geojson::Geometry> {
+    downcast_geoarrow_array!(scalar, impl_to_geojson)
+}
+
+#[cfg(feature = "geojson")]
+fn impl_to_geojson<'a>(
+    array: &'a impl GeoArrowArrayAccessor<'a>,
+) -> PyGeoArrowResult<geojson::Geometry> {
+    let geo_geom = geometry_to_geo(&array.value(0)?)?;
+    Ok((&geo_geom).into())
 }

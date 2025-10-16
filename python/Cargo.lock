@@ -1012,6 +1012,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "geoarrow-expr-geo"
+version = "0.6.1"
+dependencies = [
+ "arrow-array",
+ "arrow-buffer",
+ "geo",
+ "geo-traits",
+ "geoarrow-array",
+ "geoarrow-schema",
+]
+
+[[package]]
 name = "geoarrow-flatgeobuf"
 version = "0.6.1"
 dependencies = [
@@ -1116,6 +1128,7 @@ version = "0.24.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e26f3c45b36fccc9cf2805e61d4da6bc4bbd5a3a9589b01afa3a40eff703bd79"
 dependencies = [
+ "geo-types",
  "log",
  "serde",
  "serde_json",
@@ -2340,7 +2353,9 @@ dependencies = [
  "geo-types",
  "geoarrow-array",
  "geoarrow-cast",
+ "geoarrow-expr-geo",
  "geoarrow-schema",
+ "geojson",
  "geozero",
  "pyo3",
  "pyo3-arrow",
