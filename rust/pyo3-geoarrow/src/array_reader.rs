@@ -5,8 +5,9 @@ use geoarrow_array::{GeoArrowArrayIterator, GeoArrowArrayReader};
 use geoarrow_schema::GeoArrowType;
 use geoarrow_schema::error::GeoArrowResult;
 use pyo3::exceptions::{PyIOError, PyStopIteration, PyValueError};
+use pyo3::intern;
 use pyo3::prelude::*;
-use pyo3::types::{PyCapsule, PyType};
+use pyo3::types::{PyCapsule, PyTuple, PyType};
 use pyo3_arrow::PyArrayReader;
 use pyo3_arrow::error::PyArrowResult;
 use pyo3_arrow::ffi::{ArrayIterator, ArrayReader, to_schema_pycapsule, to_stream_pycapsule};
@@ -79,6 +80,40 @@ impl PyGeoArrayReader {
     /// Consume this reader and create a [PyGeoChunkedArray] object
     pub fn into_chunked_array(self) -> PyGeoArrowResult<PyGeoChunkedArray> {
         self.read_all()
+    }
+
+    /// Export to a geoarrow.rust.core.GeoArrowArrayReader.
+    ///
+    /// This requires that you depend on geoarrow-rust-core from your Python package.
+    pub fn to_geoarrow_py<'py>(&'py self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let geoarrow_mod = py.import(intern!(py, "geoarrow.rust.core"))?;
+        geoarrow_mod
+            .getattr(intern!(py, "GeoArrowArrayReader"))?
+            .call_method1(
+                intern!(py, "from_arrow_pycapsule"),
+                PyTuple::new(py, vec![self.__arrow_c_stream__(py, None)?])?,
+            )
+    }
+
+    /// Export to a geoarrow.rust.core.GeoArrowArrayReader.
+    ///
+    /// This requires that you depend on geoarrow-rust-core from your Python package.
+    pub fn into_geoarrow_py(self, py: Python) -> PyResult<Bound<PyAny>> {
+        let geoarrow_mod = py.import(intern!(py, "geoarrow.rust.core"))?;
+        let geoarray_reader = self
+            .iter
+            .lock()
+            .unwrap()
+            .take()
+            .ok_or(PyIOError::new_err("Cannot read from closed stream"))?;
+        let array_reader = geoarrow_array_reader_to_array_reader(geoarray_reader)?;
+        let stream_pycapsule = to_stream_pycapsule(py, array_reader, None)?;
+        geoarrow_mod
+            .getattr(intern!(py, "ArrayReader"))?
+            .call_method1(
+                intern!(py, "from_arrow_pycapsule"),
+                PyTuple::new(py, vec![stream_pycapsule])?,
+            )
     }
 }
 

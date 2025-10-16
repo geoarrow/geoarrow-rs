@@ -3,6 +3,7 @@
 mod constructors;
 mod interop;
 mod operations;
+mod table;
 
 use pyo3::exceptions::PyRuntimeWarning;
 use pyo3::intern;
@@ -118,7 +119,7 @@ fn _rust(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
 
     // Top-level table functions
 
-    // m.add_function(wrap_pyfunction!(crate::table::geometry_col, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::table::geometry_col, m)?)?;
 
     // Interop
 

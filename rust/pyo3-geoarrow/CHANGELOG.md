@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Add `PyGeoArrowArrayReader::into_geoarrow_py`.
+
 ## 0.6.1 - 2025-10-16
 
 - docs(pyo3-geoarrow): Improve docs #1377
