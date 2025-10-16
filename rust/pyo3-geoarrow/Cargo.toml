@@ -12,6 +12,7 @@ categories = []
 rust-version = { workspace = true }
 
 [features]
+default = ["geozero", "geojson"]
 geozero = ["dep:geozero", "geoarrow-array/geozero"]
 
 [dependencies]
@@ -24,6 +25,8 @@ geo-types = { workspace = true }
 geoarrow-array = { workspace = true }
 geoarrow-cast = { workspace = true }
 geoarrow-schema = { workspace = true }
+geoarrow-expr-geo = { workspace = true }
+geojson = { workspace = true, optional = true }
 geozero = { workspace = true, optional = true }
 pyo3 = { workspace = true, features = ["chrono", "indexmap"] }
 pyo3-arrow = { workspace = true }
