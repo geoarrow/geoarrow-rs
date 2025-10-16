@@ -88,7 +88,7 @@ impl PyGeoArrayReader {
     pub fn to_geoarrow_py<'py>(&'py self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let geoarrow_mod = py.import(intern!(py, "geoarrow.rust.core"))?;
         geoarrow_mod
-            .getattr(intern!(py, "GeoArrowArrayReader"))?
+            .getattr(intern!(py, "GeoArrayReader"))?
             .call_method1(
                 intern!(py, "from_arrow_pycapsule"),
                 PyTuple::new(py, vec![self.__arrow_c_stream__(py, None)?])?,
@@ -109,7 +109,7 @@ impl PyGeoArrayReader {
         let array_reader = geoarrow_array_reader_to_array_reader(geoarray_reader)?;
         let stream_pycapsule = to_stream_pycapsule(py, array_reader, None)?;
         geoarrow_mod
-            .getattr(intern!(py, "ArrayReader"))?
+            .getattr(intern!(py, "GeoArrayReader"))?
             .call_method1(
                 intern!(py, "from_arrow_pycapsule"),
                 PyTuple::new(py, vec![stream_pycapsule])?,

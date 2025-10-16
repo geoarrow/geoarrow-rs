@@ -51,20 +51,18 @@ impl PyGeoArray {
         self.0
     }
 
-    /// Export to a geoarrow.rust.core.GeoArrowArray.
+    /// Export to a geoarrow.rust.core.GeoArray.
     ///
     /// This requires that you depend on geoarrow-rust-core from your Python package.
     pub fn to_geoarrow<'py>(&'py self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let geoarrow_mod = py.import(intern!(py, "geoarrow.rust.core"))?;
-        geoarrow_mod
-            .getattr(intern!(py, "GeoArrowArray"))?
-            .call_method1(
-                intern!(py, "from_arrow_pycapsule"),
-                self.__arrow_c_array__(py, None)?,
-            )
+        geoarrow_mod.getattr(intern!(py, "GeoArray"))?.call_method1(
+            intern!(py, "from_arrow_pycapsule"),
+            self.__arrow_c_array__(py, None)?,
+        )
     }
 
-    /// Export to a geoarrow.rust.core.GeoArrowArray.
+    /// Export to a geoarrow.rust.core.GeoArray.
     ///
     /// This requires that you depend on geoarrow-rust-core from your Python package.
     pub fn into_geoarrow_py(self, py: Python) -> PyResult<Bound<PyAny>> {
@@ -76,7 +74,7 @@ impl PyGeoArray {
             None,
         )?;
         geoarrow_mod
-            .getattr(intern!(py, "GeoArrowArray"))?
+            .getattr(intern!(py, "GeoArray"))?
             .call_method1(intern!(py, "from_arrow_pycapsule"), array_capsules)
     }
 }
