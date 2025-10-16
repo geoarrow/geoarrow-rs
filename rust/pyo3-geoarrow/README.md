@@ -28,6 +28,8 @@ This crate provides Python-compatible wrappers around GeoArrow data structures, 
 This crate is primarily intended for use by Python binding developers who need to interoperate with GeoArrow data in Python. It is also used internally by the `geoarrow-rust-*` Python packages.
 
 ```rust
+use std::sync::Arc;
+
 use pyo3::prelude::*;
 use pyo3_geoarrow::PyGeoArray;
 use geoarrow_array::GeoArrowArray;
@@ -35,11 +37,11 @@ use geoarrow_array::GeoArrowArray;
 #[pyfunction]
 fn process_geometry(py: Python, array: PyGeoArray) -> PyResult<PyGeoArray> {
     // Access the underlying GeoArrow array
-    let inner: &dyn GeoArrowArray = array.inner();
+    let inner: Arc<dyn GeoArrowArray> = array.into_inner();
 
     // Perform operations...
 
-    Ok(PyGeoArray::new(result))
+    Ok(PyGeoArray::new(inner))
 }
 ```
 
