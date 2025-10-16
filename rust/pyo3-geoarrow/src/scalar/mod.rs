@@ -1,3 +1,5 @@
+//! Python wrapper for GeoArrow scalar geometries.
+
 #[cfg(feature = "geozero")]
 mod bounding_rect;
 
@@ -19,11 +21,22 @@ use crate::data_type::PyGeoType;
 use crate::error::PyGeoArrowResult;
 use crate::utils::text_repr::text_repr;
 
-/// This is modeled as a geospatial array of length 1
+/// Python wrapper for a GeoArrow scalar geometry.
+///
+/// A scalar geometry represents a single geometry value. Internally, it is modeled as a
+/// GeoArrow array of length 1, allowing it to use the same zero-copy Arrow C Data Interface
+/// for interoperability.
 #[pyclass(module = "geoarrow.rust.core", name = "GeoScalar", subclass, frozen)]
 pub struct PyGeoScalar(Arc<dyn GeoArrowArray>);
 
 impl PyGeoScalar {
+    /// Create a new [`PyGeoScalar`] from a GeoArrow array.
+    ///
+    /// The array must have length 1.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `PyValueError` if the array length is not 1.
     pub fn try_new(array: Arc<dyn GeoArrowArray>) -> PyGeoArrowResult<Self> {
         if array.len() != 1 {
             Err(
@@ -35,10 +48,12 @@ impl PyGeoScalar {
         }
     }
 
+    /// Access a reference to the underlying GeoArrow array.
     pub fn inner(&self) -> &Arc<dyn GeoArrowArray> {
         &self.0
     }
 
+    /// Consume this wrapper and return the underlying GeoArrow array.
     pub fn into_inner(self) -> Arc<dyn GeoArrowArray> {
         self.0
     }

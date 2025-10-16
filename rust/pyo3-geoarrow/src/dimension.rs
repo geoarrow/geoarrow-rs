@@ -3,8 +3,16 @@ use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
 
+/// Python wrapper for GeoArrow coordinate dimension.
+///
+/// Specifies the dimensionality of coordinates:
+/// - `XY`: 2D coordinates (x, y)
+/// - `XYZ`: 3D coordinates (x, y, z)
+/// - `XYM`: 2D coordinates with measure (x, y, m)
+/// - `XYZM`: 3D coordinates with measure (x, y, z, m)
 #[derive(Debug, Clone, Copy)]
 #[allow(clippy::upper_case_acronyms)]
+#[allow(missing_docs)]
 pub enum PyDimension {
     XY,
     XYZ,

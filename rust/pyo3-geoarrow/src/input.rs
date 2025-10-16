@@ -1,3 +1,8 @@
+//! Input types for accepting GeoArrow data from Python.
+//!
+//! This module provides utilities for accepting GeoArrow data in various forms from Python,
+//! automatically handling both arrays and streams through the Arrow C Data Interface.
+
 use geoarrow_array::{GeoArrowArrayIterator, GeoArrowArrayReader};
 use geoarrow_schema::GeoArrowType;
 use geoarrow_schema::error::GeoArrowResult;
@@ -7,8 +12,13 @@ use pyo3::prelude::*;
 
 use crate::{PyGeoArray, PyGeoArrayReader, PyGeoArrowResult, PyGeoChunkedArray};
 
-/// An enum over [PyGeoArray] and [PyGeoArrayReader], used when a function accepts either
+/// An enum over [`PyGeoArray`] and [`PyGeoArrayReader`], used when a function accepts either
 /// Arrow object as input.
+///
+/// This type automatically extracts from Python objects that implement either:
+///
+/// - `__arrow_c_array__` (for single arrays)
+/// - `__arrow_c_stream__` (for array streams)
 pub enum AnyGeoArray {
     /// A single Array, held in a [PyGeoArray].
     Array(PyGeoArray),
@@ -27,6 +37,7 @@ impl AnyGeoArray {
         Ok(PyGeoChunkedArray::try_new(chunks, data_type)?)
     }
 
+    /// Convert this into a [GeoArrow array reader][GeoArrowArrayReader].
     pub fn into_reader(self) -> PyResult<Box<dyn GeoArrowArrayReader + Send>> {
         match self {
             Self::Array(array) => {
@@ -41,6 +52,7 @@ impl AnyGeoArray {
         }
     }
 
+    /// Get the GeoArrow data type of this array or stream.
     pub fn data_type(&self) -> GeoArrowType {
         match self {
             Self::Array(array) => array.inner().data_type(),

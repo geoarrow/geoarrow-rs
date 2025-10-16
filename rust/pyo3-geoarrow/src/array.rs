@@ -20,10 +20,15 @@ use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::scalar::PyGeoScalar;
 use crate::utils::text_repr::text_repr;
 
+/// Python wrapper for a GeoArrow geometry array.
+///
+/// This type wraps a Rust GeoArrow array and exposes it to Python through the Arrow C Data
+/// Interface. It supports zero-copy data exchange with Arrow-compatible Python libraries.
 #[pyclass(module = "geoarrow.rust.core", name = "GeoArray", subclass, frozen)]
 pub struct PyGeoArray(Arc<dyn GeoArrowArray>);
 
 impl PyGeoArray {
+    /// Create a new [`PyGeoArray`] from a GeoArrow array.
     pub fn new(array: Arc<dyn GeoArrowArray>) -> Self {
         Self(array)
     }
@@ -36,10 +41,12 @@ impl PyGeoArray {
         PyArray::from_arrow_pycapsule(schema_capsule, array_capsule)?.try_into()
     }
 
+    /// Access the underlying GeoArrow array.
     pub fn inner(&self) -> &Arc<dyn GeoArrowArray> {
         &self.0
     }
 
+    /// Consume this wrapper and return the underlying GeoArrow array.
     pub fn into_inner(self) -> Arc<dyn GeoArrowArray> {
         self.0
     }

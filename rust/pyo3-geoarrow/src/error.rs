@@ -1,6 +1,11 @@
 use pyo3::exceptions::{PyException, PyTypeError, PyValueError};
 use pyo3::prelude::*;
 
+/// Error type for GeoArrow operations in Python bindings.
+///
+/// This enum wraps various error types that can occur during GeoArrow operations,
+/// converting them to appropriate Python exceptions.
+#[allow(missing_docs)]
 pub enum PyGeoArrowError {
     GeoArrowError(geoarrow_schema::error::GeoArrowError),
     PyErr(PyErr),
@@ -69,4 +74,5 @@ impl From<arrow_schema::ArrowError> for PyGeoArrowError {
     }
 }
 
+/// Result type for GeoArrow operations that may fail.
 pub type PyGeoArrowResult<T> = Result<T, PyGeoArrowError>;

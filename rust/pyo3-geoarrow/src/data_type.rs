@@ -1,3 +1,13 @@
+//! GeoArrow data type definitions and constructors.
+//!
+//! This module provides Python bindings for GeoArrow geometry types, including:
+//! - Native geometry types (Point, LineString, Polygon, MultiPoint, etc.)
+//! - Well-Known Binary (WKB) and Well-Known Text (WKT) types
+//! - Type metadata (CRS, coordinate type, dimensions, edges)
+
+// TODO: remove when we move type constructors to geoarrow-rust-core
+#![allow(missing_docs)]
+
 use std::sync::Arc;
 
 use geoarrow_schema::{
@@ -14,10 +24,15 @@ use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::utils::text_repr::text_repr;
 use crate::{PyCoordType, PyCrs, PyDimension, PyEdges};
 
+/// Python wrapper for a GeoArrow data type.
+///
+/// This type represents the schema of a GeoArrow geometry array, including the geometry type,
+/// coordinate type, dimensions, coordinate reference system, and edge interpolation.
 #[pyclass(module = "geoarrow.rust.core", name = "GeoType", subclass, frozen)]
 pub struct PyGeoType(pub(crate) GeoArrowType);
 
 impl PyGeoType {
+    /// Create a new [`PyGeoType`] from a GeoArrow data type.
     pub fn new(data_type: GeoArrowType) -> Self {
         Self(data_type)
     }
@@ -27,6 +42,7 @@ impl PyGeoType {
         PyField::from_arrow_pycapsule(capsule)?.try_into()
     }
 
+    /// Consume this wrapper and return the underlying GeoArrow data type.
     pub fn into_inner(self) -> GeoArrowType {
         self.0
     }
@@ -154,6 +170,7 @@ impl_from_geoarrow_type!(BoxType, Rect);
 
 macro_rules! impl_native_type_constructor {
     ($fn_name:ident, $geoarrow_type:ty) => {
+        #[allow(missing_docs)]
         #[pyfunction]
         #[pyo3(
             signature = (dimension, *, coord_type = PyCoordType::Separated, crs=None, edges=None),
@@ -205,6 +222,7 @@ pub fn geometry(coord_type: PyCoordType, crs: Option<PyCrs>, edges: Option<PyEdg
 
 macro_rules! impl_wkb_wkt {
     ($method_name:ident, $type_constructor:ty, $variant:expr) => {
+        #[allow(missing_docs)]
         #[pyfunction]
         #[pyo3(signature = (*, crs=None, edges=None))]
         pub fn $method_name(crs: Option<PyCrs>, edges: Option<PyEdges>) -> PyGeoType {

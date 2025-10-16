@@ -22,6 +22,9 @@ use crate::scalar::PyGeoScalar;
 use crate::utils::text_repr::text_repr;
 use crate::{PyCoordType, PyGeoArray};
 
+/// Python wrapper for a chunked GeoArrow geometry array.
+///
+/// A chunked array is a collection of contiguous arrays of the same type.
 #[pyclass(
     module = "geoarrow.rust.core",
     name = "GeoChunkedArray",
@@ -82,6 +85,7 @@ impl PyGeoChunkedArray {
         Ok(Self::try_new(chunks, data_type)?)
     }
 
+    /// Consume this wrapper and return the underlying chunks and data type.
     pub fn into_inner(self) -> (Vec<Arc<dyn GeoArrowArray>>, GeoArrowType) {
         (self.chunks, self.data_type)
     }
@@ -155,7 +159,7 @@ impl PyGeoChunkedArray {
     }
 
     #[classmethod]
-    pub fn from_arrow(_cls: &Bound<PyType>, data: Self) -> Self {
+    fn from_arrow(_cls: &Bound<PyType>, data: Self) -> Self {
         data
     }
 

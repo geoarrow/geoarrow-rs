@@ -9,9 +9,17 @@ use pyo3_arrow::PyArray;
 
 use crate::PyGeoArrowError;
 
+/// Python wrapper for an Arrow offset buffer.
+///
+/// Offset buffers are used in variable-length array types (like lists and strings) to mark
+/// the start and end positions of each element. For GeoArrow, they're used to delineate
+/// multi-part geometries like LineStrings and Polygons.
+///
+/// In particular, PyOffsetBuffer is used in GeoArrow constructors in `geoarrow.rust.core`.
 pub struct PyOffsetBuffer(OffsetBuffer<i32>);
 
 impl PyOffsetBuffer {
+    /// Consume this wrapper and return the underlying offset buffer.
     pub fn into_inner(self) -> OffsetBuffer<i32> {
         self.0
     }

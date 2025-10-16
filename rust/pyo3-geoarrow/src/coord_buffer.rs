@@ -11,9 +11,15 @@ use pyo3_arrow::PyArray;
 
 use crate::PyGeoArrowError;
 
+/// Python wrapper for a GeoArrow coordinate buffer.
+///
+/// Coordinate buffers store the raw coordinate data for geometries. They can be in either
+/// separated format (separate arrays for x, y, z, m) or interleaved format (single array
+/// with coordinates interleaved).
 pub struct PyCoordBuffer(CoordBuffer);
 
 impl PyCoordBuffer {
+    /// Consume this wrapper and return the underlying coordinate buffer.
     pub fn into_inner(self) -> CoordBuffer {
         self.0
     }
