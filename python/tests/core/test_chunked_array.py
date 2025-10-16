@@ -4,6 +4,7 @@ import numpy as np
 import pyarrow as pa
 import pytest
 import shapely
+from arro3.core import ChunkedArray
 from geoarrow.rust.core import GeoArray, GeoChunkedArray, geometry, points
 from geoarrow.types.type_pyarrow import registered_extension_types
 
@@ -65,6 +66,16 @@ def test_downcast_with_crs():
     geometry_array = point_ca.cast(geometry(crs=crs))
     point_ca2 = geometry_array.downcast(coord_type="interleaved")
     assert point_ca == point_ca2
+
+
+def constructor_existing_chunked_array():
+    geoms1 = shapely.points([1, 2, 3], [4, 5, 6])
+    geoms2 = shapely.points([10, 20, 30], [40, 50, 60])
+    arr1 = GeoArray.from_arrow(gpd.GeoSeries(geoms1).to_arrow("geoarrow"))
+    arr2 = GeoArray.from_arrow(gpd.GeoSeries(geoms2).to_arrow("geoarrow"))
+    ca = ChunkedArray([arr1, arr2])
+    geo_ca = GeoChunkedArray(ca)
+    assert geo_ca.chunk(0) == arr1
 
 
 class CustomException(Exception):
