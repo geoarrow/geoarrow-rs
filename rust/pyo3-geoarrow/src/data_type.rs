@@ -5,6 +5,9 @@
 //! - Well-Known Binary (WKB) and Well-Known Text (WKT) types
 //! - Type metadata (CRS, coordinate type, dimensions, edges)
 
+// TODO: remove when we move type constructors to geoarrow-rust-core
+#![allow(missing_docs)]
+
 use std::sync::Arc;
 
 use geoarrow_schema::{
@@ -167,6 +170,7 @@ impl_from_geoarrow_type!(BoxType, Rect);
 
 macro_rules! impl_native_type_constructor {
     ($fn_name:ident, $geoarrow_type:ty) => {
+        #[allow(missing_docs)]
         #[pyfunction]
         #[pyo3(
             signature = (dimension, *, coord_type = PyCoordType::Separated, crs=None, edges=None),
@@ -218,6 +222,7 @@ pub fn geometry(coord_type: PyCoordType, crs: Option<PyCrs>, edges: Option<PyEdg
 
 macro_rules! impl_wkb_wkt {
     ($method_name:ident, $type_constructor:ty, $variant:expr) => {
+        #[allow(missing_docs)]
         #[pyfunction]
         #[pyo3(signature = (*, crs=None, edges=None))]
         pub fn $method_name(crs: Option<PyCrs>, edges: Option<PyEdges>) -> PyGeoType {
