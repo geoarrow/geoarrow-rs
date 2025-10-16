@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+## [0.6.0] - 2025-10-16
+
+## What's Changed
+
+- docs: include constructor docs in the table of contents by @keewis in https://github.com/geoarrow/geoarrow-rs/pull/1347
+- fix(geoarrow-flatgeobuf): Fix FlatGeobuf reader with missing (null) properties by @kylebarron in https://github.com/geoarrow/geoarrow-rs/pull/1356
+- test: Fix Python WKT and WKT tests by @kylebarron in https://github.com/geoarrow/geoarrow-rs/pull/1359
+- fix: Preserve import errors from Arrow C Stream by @kylebarron in https://github.com/geoarrow/geoarrow-rs/pull/1360
+- feat: conversion method parameter for `from_shapely` by @keewis in https://github.com/geoarrow/geoarrow-rs/pull/1348
+- feat(python, geoarrow-rust-core): Implement `geometry_col` by @kylebarron in https://github.com/geoarrow/geoarrow-rs/pull/1381
+- feat(python): Constructor for GeoChunkedArray by @kylebarron in https://github.com/geoarrow/geoarrow-rs/pull/1383
+- fix(python): Fix `__geo_interface__` export for GeoScalar by @kylebarron in https://github.com/geoarrow/geoarrow-rs/pull/1384
+- feat(python): Constuctor for GeoArray by @kylebarron in https://github.com/geoarrow/geoarrow-rs/pull/1385
+
+## New Contributors
+
+- @keewis made their first contribution in https://github.com/geoarrow/geoarrow-rs/pull/1347
+
+**Full Changelog**: https://github.com/geoarrow/geoarrow-rs/compare/py-v0.5.3...py-v0.6.0
+
 ## [0.5.3] - 2025-09-25
 
 - chore: Bump lockfiles to update wkb dependency #1342
