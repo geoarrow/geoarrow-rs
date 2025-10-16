@@ -16,9 +16,15 @@ use crate::data_type::PyGeoType;
 use crate::utils::text_repr::text_repr;
 use crate::{PyGeoArray, PyGeoArrowError, PyGeoArrowResult, PyGeoChunkedArray};
 
-/// A Python-facing GeoArrow array reader.
+/// Python wrapper for a GeoArrow array reader (stream).
 ///
-/// This is a wrapper around a [PyArrayReader].
+/// This type represents a stream of GeoArrow arrays that can be read incrementally. It implements
+/// the Arrow C Stream Interface, allowing zero-copy data exchange with Arrow-compatible Python
+/// libraries.
+///
+/// The reader can be iterated over to yield individual [`PyGeoArray`] chunks, or materialized
+/// into a [`PyGeoChunkedArray`] using the [`into_chunked_array()`][Self::into_chunked_array]
+/// method. For stream processing, prefer [`into_reader()`][Self::into_reader].
 #[pyclass(
     module = "geoarrow.rust.core",
     name = "GeoArrayReader",
@@ -31,6 +37,7 @@ pub struct PyGeoArrayReader {
 }
 
 impl PyGeoArrayReader {
+    /// Create a new [`PyGeoArrayReader`] from a GeoArrow array reader.
     pub fn new(reader: Box<dyn GeoArrowArrayReader + Send>) -> Self {
         let data_type = reader.data_type();
         Self {
@@ -51,6 +58,7 @@ impl PyGeoArrayReader {
     //     (self.iter, self.data_type)
     // }
 
+    /// Get the GeoArrow data type of arrays in this stream.
     pub fn data_type(&self) -> &GeoArrowType {
         &self.data_type
     }

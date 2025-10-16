@@ -1,3 +1,10 @@
+//! GeoArrow data type definitions and constructors.
+//!
+//! This module provides Python bindings for GeoArrow geometry types, including:
+//! - Native geometry types (Point, LineString, Polygon, MultiPoint, etc.)
+//! - Well-Known Binary (WKB) and Well-Known Text (WKT) types
+//! - Type metadata (CRS, coordinate type, dimensions, edges)
+
 use std::sync::Arc;
 
 use geoarrow_schema::{
@@ -14,10 +21,15 @@ use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::utils::text_repr::text_repr;
 use crate::{PyCoordType, PyCrs, PyDimension, PyEdges};
 
+/// Python wrapper for a GeoArrow data type.
+///
+/// This type represents the schema of a GeoArrow geometry array, including the geometry type,
+/// coordinate type, dimensions, coordinate reference system, and edge interpolation.
 #[pyclass(module = "geoarrow.rust.core", name = "GeoType", subclass, frozen)]
 pub struct PyGeoType(pub(crate) GeoArrowType);
 
 impl PyGeoType {
+    /// Create a new [`PyGeoType`] from a GeoArrow data type.
     pub fn new(data_type: GeoArrowType) -> Self {
         Self(data_type)
     }
@@ -27,6 +39,7 @@ impl PyGeoType {
         PyField::from_arrow_pycapsule(capsule)?.try_into()
     }
 
+    /// Consume this wrapper and return the underlying GeoArrow data type.
     pub fn into_inner(self) -> GeoArrowType {
         self.0
     }

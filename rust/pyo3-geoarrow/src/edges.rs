@@ -3,6 +3,10 @@ use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
 
+/// Python wrapper for GeoArrow edge interpolation type.
+///
+/// Specifies how edges between coordinates should be interpreted when working with
+/// geodesic (spherical/ellipsoidal) geometries.
 #[derive(Debug, Clone, Copy)]
 pub struct PyEdges(Edges);
 

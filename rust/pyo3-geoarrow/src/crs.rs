@@ -11,7 +11,11 @@ use serde_json::Value;
 use crate::PyGeoArrowError;
 use crate::error::PyGeoArrowResult;
 
-/// A wrapper around [`Crs`] to integrate with `pyproj` Python APIs.
+/// Python wrapper for a coordinate reference system (CRS).
+///
+/// This type integrates with the `pyproj` Python library, allowing CRS definitions to be
+/// passed between Rust and Python. It can accept any input that `pyproj.CRS.from_user_input`
+/// accepts, including EPSG codes, WKT strings, PROJ strings, and `pyproj.CRS` objects.
 #[derive(Clone, Debug, Default)]
 // TODO: should this be under an Arc?
 pub struct PyCrs(Crs);
@@ -41,6 +45,7 @@ impl<'py> FromPyObject<'py> for PyCrs {
 }
 
 impl PyCrs {
+    /// Create a [`PyCrs`] from a PROJJSON value.
     pub fn from_projjson(value: Value) -> Self {
         Self(Crs::from_projjson(value))
     }
@@ -103,6 +108,7 @@ impl PyCrs {
         Ok(crs_obj.into())
     }
 
+    /// Convert the CRS to a PROJJSON value.
     pub fn to_projjson(&self, py: Python) -> PyResult<Option<Value>> {
         let pyproj_crs = self.to_pyproj(py)?;
         if pyproj_crs.is_none(py) {
@@ -118,6 +124,7 @@ impl PyCrs {
         }
     }
 
+    /// Convert the CRS to a WKT string.
     pub fn to_wkt(&self, py: Python) -> PyResult<Option<String>> {
         let pyproj_crs = self.to_pyproj(py)?;
         if pyproj_crs.is_none(py) {
@@ -155,11 +162,15 @@ impl<'py> IntoPyObject<'py> for PyCrs {
     }
 }
 
-/// An implementation of [CrsTransform] using pyproj.
+/// An implementation of [`CrsTransform`] using pyproj.
+///
+/// This type enables CRS transformations by delegating to the pyproj Python library,
+/// allowing conversion between different CRS representations (PROJJSON, WKT, etc.).
 #[derive(Debug)]
 pub struct PyprojCRSTransform {}
 
 impl PyprojCRSTransform {
+    /// Create a new [`PyprojCRSTransform`].
     pub fn new() -> Self {
         Self {}
     }

@@ -3,9 +3,15 @@ use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
 
+/// Python wrapper for GeoArrow coordinate type.
+///
+/// Specifies whether coordinates are stored in an interleaved (XYZXYZ...) or
+/// separated (XXX..., YYY..., ZZZ...) layout in memory.
 #[derive(Debug, Default, Clone, Copy)]
 pub enum PyCoordType {
+    /// Interleaved coordinate layout (XYZXYZ...).
     Interleaved,
+    /// Separated coordinate layout (XXX..., YYY..., ZZZ...).
     #[default]
     Separated,
 }
