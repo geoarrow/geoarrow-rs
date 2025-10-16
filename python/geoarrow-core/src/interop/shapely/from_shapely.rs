@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::constructors::{
+use crate::constructors::array::{
     linestrings, multilinestrings, multipoints, multipolygons, points, polygons,
 };
 use crate::interop::shapely::utils::import_shapely;

@@ -43,39 +43,78 @@ fn _rust(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<pyo3_geoarrow::PyGeoScalar>()?;
     m.add_class::<pyo3_geoarrow::data_type::PyGeoType>()?;
 
-    // Type constructors
+    // DataType constructors
 
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::point, m)?)?;
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::geometry, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::constructors::data_type::point, m)?)?;
     m.add_function(wrap_pyfunction!(
-        pyo3_geoarrow::data_type::geometrycollection,
+        crate::constructors::data_type::geometry,
         m
     )?)?;
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::linestring, m)?)?;
     m.add_function(wrap_pyfunction!(
-        pyo3_geoarrow::data_type::multilinestring,
+        crate::constructors::data_type::geometrycollection,
         m
     )?)?;
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::multipoint, m)?)?;
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::multipolygon, m)?)?;
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::point, m)?)?;
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::polygon, m)?)?;
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::wkb, m)?)?;
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::large_wkb, m)?)?;
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::wkb_view, m)?)?;
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::wkt, m)?)?;
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::large_wkt, m)?)?;
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::wkt_view, m)?)?;
-    m.add_function(wrap_pyfunction!(pyo3_geoarrow::data_type::r#box, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::constructors::data_type::linestring,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::constructors::data_type::multilinestring,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::constructors::data_type::multipoint,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::constructors::data_type::multipolygon,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(crate::constructors::data_type::point, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::constructors::data_type::polygon,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(crate::constructors::data_type::wkb, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::constructors::data_type::large_wkb,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::constructors::data_type::wkb_view,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(crate::constructors::data_type::wkt, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::constructors::data_type::large_wkt,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::constructors::data_type::wkt_view,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(crate::constructors::data_type::r#box, m)?)?;
 
-    // Constructors
+    // Geometry Array Constructors
 
-    m.add_function(wrap_pyfunction!(crate::constructors::points, m)?)?;
-    m.add_function(wrap_pyfunction!(crate::constructors::linestrings, m)?)?;
-    m.add_function(wrap_pyfunction!(crate::constructors::polygons, m)?)?;
-    m.add_function(wrap_pyfunction!(crate::constructors::multipoints, m)?)?;
-    m.add_function(wrap_pyfunction!(crate::constructors::multilinestrings, m)?)?;
-    m.add_function(wrap_pyfunction!(crate::constructors::multipolygons, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::constructors::array::points, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::constructors::array::linestrings,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(crate::constructors::array::polygons, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::constructors::array::multipoints,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::constructors::array::multilinestrings,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::constructors::array::multipolygons,
+        m
+    )?)?;
 
     // Top-level table functions
 

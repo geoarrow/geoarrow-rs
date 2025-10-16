@@ -7,6 +7,8 @@
 
 // TODO: remove when we move type constructors to geoarrow-rust-core
 #![allow(missing_docs)]
+// Remove in v0.7
+#![allow(deprecated)]
 
 use std::sync::Arc;
 
@@ -171,6 +173,7 @@ impl_from_geoarrow_type!(BoxType, Rect);
 macro_rules! impl_native_type_constructor {
     ($fn_name:ident, $geoarrow_type:ty) => {
         #[allow(missing_docs)]
+        #[deprecated(note = "Not intended for public consumption and moved to geoarrow-rust-core")]
         #[pyfunction]
         #[pyo3(
             signature = (dimension, *, coord_type = PyCoordType::Separated, crs=None, edges=None),
@@ -199,6 +202,7 @@ impl_native_type_constructor!(multilinestring, MultiLineStringType);
 impl_native_type_constructor!(multipolygon, MultiPolygonType);
 impl_native_type_constructor!(geometrycollection, GeometryCollectionType);
 
+#[deprecated(note = "Not intended for public consumption and moved to geoarrow-rust-core")]
 #[pyfunction]
 #[pyo3(signature = (dimension, *, crs=None, edges=None))]
 pub fn r#box(dimension: PyDimension, crs: Option<PyCrs>, edges: Option<PyEdges>) -> PyGeoType {
@@ -207,6 +211,7 @@ pub fn r#box(dimension: PyDimension, crs: Option<PyCrs>, edges: Option<PyEdges>)
     BoxType::new(dimension.into(), metadata).into()
 }
 
+#[deprecated(note = "Not intended for public consumption and moved to geoarrow-rust-core")]
 #[pyfunction]
 #[pyo3(
     signature = (*, coord_type = PyCoordType::Separated, crs=None, edges=None),
@@ -222,6 +227,7 @@ pub fn geometry(coord_type: PyCoordType, crs: Option<PyCrs>, edges: Option<PyEdg
 
 macro_rules! impl_wkb_wkt {
     ($method_name:ident, $type_constructor:ty, $variant:expr) => {
+        #[deprecated(note = "Not intended for public consumption and moved to geoarrow-rust-core")]
         #[allow(missing_docs)]
         #[pyfunction]
         #[pyo3(signature = (*, crs=None, edges=None))]
