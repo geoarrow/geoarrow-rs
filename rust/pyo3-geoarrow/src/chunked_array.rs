@@ -106,7 +106,6 @@ impl PyGeoChunkedArray {
         {
             Ok(arrays.extract::<AnyGeoArray>()?.into_chunked_array()?)
         } else if let Ok(geo_arrays) = arrays.extract::<Vec<PyGeoArray>>() {
-            // TODO: move this into from_arrays?
             let geo_arrays = geo_arrays
                 .into_iter()
                 .map(|arr| arr.into_inner())
