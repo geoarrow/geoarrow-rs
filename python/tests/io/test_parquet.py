@@ -75,7 +75,7 @@ async def test_parquet_dataset():
 
 def test_write_wkb():
     geoms = shapely.points([1, 2, 3], [4, 5, 6])
-    arr = GeoArray.from_arrow(gpd.GeoSeries(geoms).to_arrow("geoarrow"))
+    arr = GeoArray(gpd.GeoSeries(geoms).to_arrow("geoarrow"))
     table = Table.from_arrays([arr], names=["geometry"])
     with GeoParquetWriter("points.parquet", table.schema) as writer:
         writer.write_table(table)
@@ -96,7 +96,7 @@ def test_write_wkb():
 
 def test_write_wkb_covering():
     geoms = shapely.points([1, 2, 3], [4, 5, 6])
-    arr = GeoArray.from_arrow(gpd.GeoSeries(geoms).to_arrow("geoarrow"))
+    arr = GeoArray(gpd.GeoSeries(geoms).to_arrow("geoarrow"))
     table = Table.from_arrays([arr], names=["geometry"])
     with GeoParquetWriter(
         "points.parquet", table.schema, generate_covering=True
@@ -143,7 +143,7 @@ def test_write_wkb_covering():
 
 def test_write_geoarrow():
     geoms = shapely.points([1, 2, 3], [4, 5, 6])
-    arr = GeoArray.from_arrow(gpd.GeoSeries(geoms).to_arrow("geoarrow"))
+    arr = GeoArray(gpd.GeoSeries(geoms).to_arrow("geoarrow"))
     table = Table.from_arrays([arr], names=["geometry"])
     with GeoParquetWriter(
         "points.parquet", table.schema, encoding="geoarrow"
@@ -170,7 +170,7 @@ def test_write_geoarrow():
 
 def test_write_geoarrow_xyz():
     geoms = shapely.points([1, 2, 3], [4, 5, 6], [7, 8, 9])
-    arr = GeoArray.from_arrow(gpd.GeoSeries(geoms).to_arrow("geoarrow"))
+    arr = GeoArray(gpd.GeoSeries(geoms).to_arrow("geoarrow"))
     table = Table.from_arrays([arr], names=["geometry"])
     with GeoParquetWriter(
         "points.parquet", table.schema, encoding="geoarrow"
@@ -203,7 +203,7 @@ def test_write_crs():
     geoms = shapely.points([1, 2, 3], [4, 5, 6])
     crs = CRS.from_user_input("EPSG:4326")
     series = gpd.GeoSeries(geoms, crs=crs)
-    arr = GeoArray.from_arrow(series.to_arrow("geoarrow"))
+    arr = GeoArray(series.to_arrow("geoarrow"))
     table = Table.from_arrays([arr], names=["geometry"])
     with GeoParquetWriter("points.parquet", table.schema) as writer:
         writer.write_table(table)

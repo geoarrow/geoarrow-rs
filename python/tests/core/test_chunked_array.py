@@ -12,8 +12,8 @@ from geoarrow.types.type_pyarrow import registered_extension_types
 def test_eq():
     geoms1 = shapely.points([1, 2, 3], [4, 5, 6])
     geoms2 = shapely.points([10, 20, 30], [40, 50, 60])
-    arr1 = GeoArray.from_arrow(gpd.GeoSeries(geoms1).to_arrow("geoarrow"))
-    arr2 = GeoArray.from_arrow(gpd.GeoSeries(geoms2).to_arrow("geoarrow"))
+    arr1 = GeoArray(gpd.GeoSeries(geoms1).to_arrow("geoarrow"))
+    arr2 = GeoArray(gpd.GeoSeries(geoms2).to_arrow("geoarrow"))
     ca = GeoChunkedArray([arr1, arr2])
 
     assert ca == ca
@@ -28,8 +28,8 @@ def test_getitem():
     # Tests both the __getitem__ method and the scalar geo interface in round trip
     # conversion to shapely.
     gdf = gpd.read_file(geodatasets.get_path("ny.bb"))
-    arr1 = GeoArray.from_arrow(gdf.geometry.iloc[:2].to_arrow("geoarrow"))
-    arr2 = GeoArray.from_arrow(gdf.geometry.iloc[2:].to_arrow("geoarrow"))
+    arr1 = GeoArray(gdf.geometry.iloc[:2].to_arrow("geoarrow"))
+    arr2 = GeoArray(gdf.geometry.iloc[2:].to_arrow("geoarrow"))
     ca = GeoChunkedArray([arr1, arr2])
 
     for i in range(len(ca)):
@@ -39,8 +39,8 @@ def test_getitem():
 def test_repr():
     geoms1 = shapely.points([1, 2, 3], [4, 5, 6])
     geoms2 = shapely.points([10, 20, 30], [40, 50, 60])
-    arr1 = GeoArray.from_arrow(gpd.GeoSeries(geoms1).to_arrow("geoarrow"))
-    arr2 = GeoArray.from_arrow(gpd.GeoSeries(geoms2).to_arrow("geoarrow"))
+    arr1 = GeoArray(gpd.GeoSeries(geoms1).to_arrow("geoarrow"))
+    arr2 = GeoArray(gpd.GeoSeries(geoms2).to_arrow("geoarrow"))
     ca = GeoChunkedArray([arr1, arr2])
     assert (
         repr(ca) == 'GeoChunkedArray(Point(dimension="XY", coord_type="interleaved"))'
@@ -71,8 +71,8 @@ def test_downcast_with_crs():
 def constructor_existing_chunked_array():
     geoms1 = shapely.points([1, 2, 3], [4, 5, 6])
     geoms2 = shapely.points([10, 20, 30], [40, 50, 60])
-    arr1 = GeoArray.from_arrow(gpd.GeoSeries(geoms1).to_arrow("geoarrow"))
-    arr2 = GeoArray.from_arrow(gpd.GeoSeries(geoms2).to_arrow("geoarrow"))
+    arr1 = GeoArray(gpd.GeoSeries(geoms1).to_arrow("geoarrow"))
+    arr2 = GeoArray(gpd.GeoSeries(geoms2).to_arrow("geoarrow"))
     ca = ChunkedArray([arr1, arr2])
     geo_ca = GeoChunkedArray(ca)
     assert geo_ca.chunk(0) == arr1
