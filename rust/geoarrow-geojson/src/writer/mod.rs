@@ -8,6 +8,46 @@ use geoarrow_schema::GeoArrowType;
 
 use crate::encoder::GeoArrowEncoderFactory;
 
+/// Writer that emits a GeoJSON FeatureCollection to an underlying `Write` implementor.
+///
+/// ```
+/// # use std::sync::Arc;
+/// #
+/// # use arrow_array::RecordBatch;
+/// # use arrow_schema::Schema;
+/// # use geoarrow_array::{GeoArrowArray, IntoArrow};
+/// # use geoarrow_schema::{CoordType, Dimension};
+/// # use geoarrow_geojson::writer::GeoJsonWriter;
+/// # fn try_example() -> Result<(), Box<dyn std::error::Error>> {
+/// use geoarrow_array::test::point; // This contains ponts data for testing
+///
+/// // Pick two points and convert it to the geometry field
+/// let point_arr = point::array(CoordType::Interleaved, Dimension::XY).slice(0, 2);
+/// let field = point_arr.extension_type().to_field("geometry", true);
+/// // Create a Record batch with the geometry data
+/// let batch = RecordBatch::try_new(
+///     Arc::new(Schema::new(vec![Arc::new(field)])),
+///     vec![point_arr.to_array_ref()],
+/// )?;
+///
+/// let mut buffer = Vec::new();
+/// let mut writer = GeoJsonWriter::new(&mut buffer)?;
+/// writer.write(&batch)?;
+/// writer.finish()?;
+///
+/// assert_eq!(
+///   String::from_utf8(buffer)?,
+///   concat!(
+///     r#"{"type":"FeatureCollection","features":["#,
+///     r#"{"type":"Feature","geometry":{"type":"Point","coordinates":[30,10]},"properties":{}},"#,
+///     r#"{"type":"Feature","geometry":{"type":"Point","coordinates":[40,20]},"properties":{}}"#,
+///     r#"]}"#
+///   )
+/// );
+/// # Ok(())
+/// # }
+/// # try_example().unwrap();
+/// ```
 pub struct GeoJsonWriter<W: Write> {
     /// Underlying writer to use to write bytes
     writer: ArrayWriter<W>,
@@ -26,6 +66,7 @@ impl<W: Write> GeoJsonWriter<W> {
         })
     }
 
+    /// Write the leading GeoJSON FeatureCollection bytes to the output sink.
     fn write_header(w: &mut W) -> std::io::Result<()> {
         // Don't include the initial `[` because the ArrayWriter will write the open brace
         let s = br#"{"type":"FeatureCollection","features":"#;
@@ -61,6 +102,42 @@ impl<W: Write> GeoJsonWriter<W> {
     }
 }
 
+/// Writer that emits newline-delimited GeoJSON features to an underlying `Write` implementor.
+///
+/// ```
+/// # use std::sync::Arc;
+/// #
+/// # use arrow_array::RecordBatch;
+/// # use arrow_schema::Schema;
+/// # use geoarrow_array::{GeoArrowArray, IntoArrow};
+/// # use geoarrow_schema::{CoordType, Dimension};
+/// # use geoarrow_geojson::writer::GeoJsonLinesWriter;
+/// # fn try_example() -> Result<(), Box<dyn std::error::Error>> {
+/// use geoarrow_array::test::point; // This contains points data for testing
+///
+/// // Pick two points and convert it to the geometry field
+/// let point_arr = point::array(CoordType::Interleaved, Dimension::XY).slice(0, 2);
+/// let field = point_arr.extension_type().to_field("geometry", true);
+/// let batch = RecordBatch::try_new(
+///     Arc::new(Schema::new(vec![Arc::new(field)])),
+///     vec![point_arr.to_array_ref()],
+/// )?;
+///
+/// let mut buffer = Vec::new();
+/// let mut writer = GeoJsonLinesWriter::new(&mut buffer);
+/// writer.write(&batch)?;
+/// writer.finish()?;
+///
+/// assert_eq!(
+///     String::from_utf8(buffer)?,
+///     r#"{"type":"Feature","geometry":{"type":"Point","coordinates":[30,10]},"properties":{}}
+/// {"type":"Feature","geometry":{"type":"Point","coordinates":[40,20]},"properties":{}}
+/// "#.to_string()
+/// );
+/// # Ok(())
+/// # }
+/// # try_example().unwrap();
+/// ```
 pub struct GeoJsonLinesWriter<W: Write> {
     /// Underlying writer to use to write bytes
     writer: LineDelimitedWriter<W>,
