@@ -1,1 +1,1 @@
-# geoarrow-geos
+# geoarrow-expr-geos
