@@ -4,7 +4,7 @@
 
 ## [0.6.0] - 2025-10-16
 
-## What's Changed
+### What's Changed
 
 - docs: include constructor docs in the table of contents by @keewis in https://github.com/geoarrow/geoarrow-rs/pull/1347
 - fix(geoarrow-flatgeobuf): Fix FlatGeobuf reader with missing (null) properties by @kylebarron in https://github.com/geoarrow/geoarrow-rs/pull/1356
@@ -16,7 +16,7 @@
 - fix(python): Fix `__geo_interface__` export for GeoScalar by @kylebarron in https://github.com/geoarrow/geoarrow-rs/pull/1384
 - feat(python): Constuctor for GeoArray by @kylebarron in https://github.com/geoarrow/geoarrow-rs/pull/1385
 
-## New Contributors
+### New Contributors
 
 - @keewis made their first contribution in https://github.com/geoarrow/geoarrow-rs/pull/1347
 

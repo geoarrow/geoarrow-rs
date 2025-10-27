@@ -44,9 +44,10 @@ pub(super) fn check(
         ));
     }
 
-    if *geom_offsets.last() as usize != coords.len() {
+    // Offset can be smaller than coords length if sliced
+    if *geom_offsets.last() as usize > coords.len() {
         return Err(GeoArrowError::InvalidGeoArrow(
-            "largest geometry offset must match coords length".to_string(),
+            "largest geometry offset must not be longer than coords length".to_string(),
         ));
     }
 
@@ -321,6 +322,8 @@ impl GeometryTypeId for LineStringArray {
 
 #[cfg(test)]
 mod test {
+    use arrow_array::RecordBatch;
+    use arrow_schema::Schema;
     use geo_traits::to_geo::ToGeoLineString;
     use geoarrow_schema::{CoordType, Dimension};
 
@@ -400,5 +403,71 @@ mod test {
         assert_eq!(arr1, arr2);
 
         assert_ne!(arr1, arr2.slice(0, 2));
+    }
+
+    #[test]
+    fn test_validation_with_sliced_array() {
+        let arr = linestring::array(CoordType::Interleaved, Dimension::XY);
+        let sliced = arr.slice(0, 1);
+
+        let back = LineStringArray::try_from((
+            sliced.to_array_ref().as_ref(),
+            arr.extension_type().clone(),
+        ))
+        .unwrap();
+        assert_eq!(back.len(), 1);
+    }
+
+    #[test]
+    fn slice_then_go_through_arrow() {
+        let arr = linestring::array(CoordType::Separated, Dimension::XY);
+        let sliced_array = arr.slice(0, 1);
+
+        let ls_array: LineStringArray = (
+            sliced_array.to_array_ref().as_ref(),
+            arr.extension_type().clone(),
+        )
+            .try_into()
+            .unwrap();
+        assert_eq!(ls_array.len(), 1);
+    }
+
+    #[test]
+    fn slice_back_from_arrow_rs_record_batch() {
+        let arr = linestring::array(CoordType::Separated, Dimension::XY);
+        let field = arr.extension_type().to_field("geometry", true);
+        let schema = Schema::new(vec![field]);
+
+        let batch = RecordBatch::try_new(Arc::new(schema), vec![arr.to_array_ref()]).unwrap();
+        let sliced_batch = batch.slice(0, 1);
+
+        let array = sliced_batch.column(0);
+        let field = sliced_batch.schema_ref().field(0);
+        let ls_array: LineStringArray = (array.as_ref(), field).try_into().unwrap();
+        assert_eq!(ls_array.len(), 1);
+    }
+
+    #[test]
+    fn slice_back_from_arrow_rs_array() {
+        let arr = linestring::array(CoordType::Separated, Dimension::XY);
+        let field = arr.extension_type().to_field("geometry", true);
+
+        let array = arr.to_array_ref();
+        let sliced_array = array.slice(0, 1);
+
+        let ls_array: LineStringArray = (sliced_array.as_ref(), &field).try_into().unwrap();
+        assert_eq!(ls_array.len(), 1);
+    }
+
+    #[test]
+    fn slice_back_from_arrow_rs_array_with_nulls() {
+        let arr = linestring::ls_array(CoordType::Separated);
+        let field = arr.extension_type().to_field("geometry", true);
+
+        let array = arr.to_array_ref();
+        let sliced_array = array.slice(0, 1);
+
+        let ls_array: LineStringArray = (sliced_array.as_ref(), &field).try_into().unwrap();
+        assert_eq!(ls_array.len(), 1);
     }
 }

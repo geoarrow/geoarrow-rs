@@ -51,6 +51,8 @@ pub(super) fn check(
             "nulls mask length must match the number of values".to_string(),
         ));
     }
+
+    // Offset can be smaller than coords length if sliced
     if *ring_offsets.last() as usize != coords.len() {
         return Err(GeoArrowError::InvalidGeoArrow(
             "largest ring offset must match coords length".to_string(),
@@ -63,9 +65,9 @@ pub(super) fn check(
         ));
     }
 
-    if *geom_offsets.last() as usize != polygon_offsets.len_proxy() {
+    if *geom_offsets.last() as usize > polygon_offsets.len_proxy() {
         return Err(GeoArrowError::InvalidGeoArrow(
-            "largest geometry offset must match polygon offsets length".to_string(),
+            "largest geometry offset must not be longer than polygon offsets length".to_string(),
         ));
     }
 
@@ -554,5 +556,28 @@ mod test {
 
             assert_ne!(arr1, arr2.slice(0, 2));
         }
+    }
+
+    #[test]
+    fn test_validation_with_sliced_array() {
+        let arr = multipolygon::array(CoordType::Interleaved, Dimension::XY);
+        let sliced = arr.slice(0, 1);
+
+        let back = MultiPolygonArray::try_from((
+            sliced.to_array_ref().as_ref(),
+            arr.extension_type().clone(),
+        ))
+        .unwrap();
+        assert_eq!(back.len(), 1);
+    }
+
+    #[test]
+    fn test_validation_with_array_sliced_by_arrow_rs() {
+        let arr = multipolygon::array(CoordType::Interleaved, Dimension::XY);
+        let sliced = arr.to_array_ref().slice(0, 1);
+
+        let back =
+            MultiPolygonArray::try_from((sliced.as_ref(), arr.extension_type().clone())).unwrap();
+        assert_eq!(back.len(), 1);
     }
 }
