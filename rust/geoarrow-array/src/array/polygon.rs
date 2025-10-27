@@ -50,15 +50,16 @@ pub(super) fn check(
         ));
     }
 
-    if *ring_offsets.last() as usize != coords.len() {
+    // Offset can be smaller than coords length if sliced
+    if *ring_offsets.last() as usize > coords.len() {
         return Err(GeoArrowError::InvalidGeoArrow(
-            "largest ring offset must match coords length".to_string(),
+            "largest ring offset must not be longer than coords length".to_string(),
         ));
     }
 
-    if *geom_offsets.last() as usize != ring_offsets.len_proxy() {
+    if *geom_offsets.last() as usize > ring_offsets.len_proxy() {
         return Err(GeoArrowError::InvalidGeoArrow(
-            "largest geometry offset must match ring offsets length".to_string(),
+            "largest geometry offset must not be longer than ring offsets length".to_string(),
         ));
     }
 

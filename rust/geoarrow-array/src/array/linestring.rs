@@ -44,9 +44,10 @@ pub(super) fn check(
         ));
     }
 
-    if *geom_offsets.last() as usize != coords.len() {
+    // Offset can be smaller than coords length if sliced
+    if *geom_offsets.last() as usize > coords.len() {
         return Err(GeoArrowError::InvalidGeoArrow(
-            "largest geometry offset must match coords length".to_string(),
+            "largest geometry offset must not be longer than coords length".to_string(),
         ));
     }
 
@@ -249,6 +250,7 @@ impl TryFrom<(&GenericListArray<i32>, LineStringType)> for LineStringArray {
 
         dbg!(&coords);
         dbg!(geom_offsets);
+        dbg!(&nulls);
 
         Ok(Self::new(
             coords,
@@ -410,6 +412,32 @@ mod test {
     }
 
     #[test]
+    fn slice_then_go_through_arrow() {
+        let linestring_type = LineStringType::new(Dimension::XY, Arc::new(Metadata::default()))
+            .with_coord_type(CoordType::Separated);
+        let geoms = [
+            line_string![
+                (x: 0., y: 1.),
+                (x: 1., y: 2.)
+            ],
+            line_string![
+                (x: 3., y: 4.),
+                (x: 5., y: 6.)
+            ],
+        ];
+        let linestring_array =
+            LineStringBuilder::from_line_strings(&geoms, linestring_type).finish();
+        let field = linestring_array.extension_type().to_field("geometry", true);
+
+        let sliced_array = linestring_array.slice(0, 1);
+
+        let ls_array: LineStringArray = (sliced_array.to_array_ref().as_ref(), &field)
+            .try_into()
+            .unwrap();
+        assert_eq!(ls_array.len(), 1);
+    }
+
+    #[test]
     fn slice_back_from_arrow_rs_record_batch() {
         let linestring_type = LineStringType::new(Dimension::XY, Arc::new(Metadata::default()))
             .with_coord_type(CoordType::Separated);
@@ -454,6 +482,32 @@ mod test {
         ];
         let linestring_array =
             LineStringBuilder::from_line_strings(&geoms, linestring_type).finish();
+        let field = linestring_array.extension_type().to_field("geometry", true);
+
+        let array = linestring_array.to_array_ref();
+        let sliced_array = array.slice(0, 1);
+
+        let ls_array: LineStringArray = (sliced_array.as_ref(), &field).try_into().unwrap();
+        assert_eq!(ls_array.len(), 1);
+    }
+
+    #[test]
+    fn slice_back_from_arrow_rs_array_with_nulls() {
+        let linestring_type = LineStringType::new(Dimension::XY, Arc::new(Metadata::default()))
+            .with_coord_type(CoordType::Separated);
+        let geoms = [
+            Some(line_string![
+                (x: 0., y: 1.),
+                (x: 1., y: 2.)
+            ]),
+            Some(line_string![
+                (x: 3., y: 4.),
+                (x: 5., y: 6.)
+            ]),
+            None,
+        ];
+        let linestring_array =
+            LineStringBuilder::from_nullable_line_strings(&geoms, linestring_type).finish();
         let field = linestring_array.extension_type().to_field("geometry", true);
 
         let array = linestring_array.to_array_ref();
