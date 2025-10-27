@@ -243,14 +243,9 @@ impl TryFrom<(&GenericListArray<i32>, LineStringType)> for LineStringArray {
     type Error = GeoArrowError;
 
     fn try_from((value, typ): (&GenericListArray<i32>, LineStringType)) -> GeoArrowResult<Self> {
-        dbg!("tryfrom ");
         let coords = CoordBuffer::from_arrow(value.values().as_ref(), typ.dimension())?;
         let geom_offsets = value.offsets();
         let nulls = value.nulls();
-
-        dbg!(&coords);
-        dbg!(geom_offsets);
-        dbg!(&nulls);
 
         Ok(Self::new(
             coords,
@@ -329,7 +324,6 @@ impl GeometryTypeId for LineStringArray {
 mod test {
     use arrow_array::RecordBatch;
     use arrow_schema::Schema;
-    use geo::line_string;
     use geo_traits::to_geo::ToGeoLineString;
     use geoarrow_schema::{CoordType, Dimension};
 
@@ -412,26 +406,27 @@ mod test {
     }
 
     #[test]
+    fn test_validation_with_sliced_array() {
+        let arr = linestring::array(CoordType::Interleaved, Dimension::XY);
+        let sliced = arr.slice(0, 1);
+
+        let back = LineStringArray::try_from((
+            sliced.to_array_ref().as_ref(),
+            arr.extension_type().clone(),
+        ))
+        .unwrap();
+        assert_eq!(back.len(), 1);
+    }
+
+    #[test]
     fn slice_then_go_through_arrow() {
-        let linestring_type = LineStringType::new(Dimension::XY, Arc::new(Metadata::default()))
-            .with_coord_type(CoordType::Separated);
-        let geoms = [
-            line_string![
-                (x: 0., y: 1.),
-                (x: 1., y: 2.)
-            ],
-            line_string![
-                (x: 3., y: 4.),
-                (x: 5., y: 6.)
-            ],
-        ];
-        let linestring_array =
-            LineStringBuilder::from_line_strings(&geoms, linestring_type).finish();
-        let field = linestring_array.extension_type().to_field("geometry", true);
+        let arr = linestring::array(CoordType::Separated, Dimension::XY);
+        let sliced_array = arr.slice(0, 1);
 
-        let sliced_array = linestring_array.slice(0, 1);
-
-        let ls_array: LineStringArray = (sliced_array.to_array_ref().as_ref(), &field)
+        let ls_array: LineStringArray = (
+            sliced_array.to_array_ref().as_ref(),
+            arr.extension_type().clone(),
+        )
             .try_into()
             .unwrap();
         assert_eq!(ls_array.len(), 1);
@@ -439,25 +434,11 @@ mod test {
 
     #[test]
     fn slice_back_from_arrow_rs_record_batch() {
-        let linestring_type = LineStringType::new(Dimension::XY, Arc::new(Metadata::default()))
-            .with_coord_type(CoordType::Separated);
-        let geoms = [
-            line_string![
-                (x: 0., y: 1.),
-                (x: 1., y: 2.)
-            ],
-            line_string![
-                (x: 3., y: 4.),
-                (x: 5., y: 6.)
-            ],
-        ];
-        let linestring_array =
-            LineStringBuilder::from_line_strings(&geoms, linestring_type).finish();
-        let field = linestring_array.extension_type().to_field("geometry", true);
+        let arr = linestring::array(CoordType::Separated, Dimension::XY);
+        let field = arr.extension_type().to_field("geometry", true);
         let schema = Schema::new(vec![field]);
 
-        let batch =
-            RecordBatch::try_new(Arc::new(schema), vec![linestring_array.to_array_ref()]).unwrap();
+        let batch = RecordBatch::try_new(Arc::new(schema), vec![arr.to_array_ref()]).unwrap();
         let sliced_batch = batch.slice(0, 1);
 
         let array = sliced_batch.column(0);
@@ -468,23 +449,10 @@ mod test {
 
     #[test]
     fn slice_back_from_arrow_rs_array() {
-        let linestring_type = LineStringType::new(Dimension::XY, Arc::new(Metadata::default()))
-            .with_coord_type(CoordType::Separated);
-        let geoms = [
-            line_string![
-                (x: 0., y: 1.),
-                (x: 1., y: 2.)
-            ],
-            line_string![
-                (x: 3., y: 4.),
-                (x: 5., y: 6.)
-            ],
-        ];
-        let linestring_array =
-            LineStringBuilder::from_line_strings(&geoms, linestring_type).finish();
-        let field = linestring_array.extension_type().to_field("geometry", true);
+        let arr = linestring::array(CoordType::Separated, Dimension::XY);
+        let field = arr.extension_type().to_field("geometry", true);
 
-        let array = linestring_array.to_array_ref();
+        let array = arr.to_array_ref();
         let sliced_array = array.slice(0, 1);
 
         let ls_array: LineStringArray = (sliced_array.as_ref(), &field).try_into().unwrap();
@@ -493,24 +461,10 @@ mod test {
 
     #[test]
     fn slice_back_from_arrow_rs_array_with_nulls() {
-        let linestring_type = LineStringType::new(Dimension::XY, Arc::new(Metadata::default()))
-            .with_coord_type(CoordType::Separated);
-        let geoms = [
-            Some(line_string![
-                (x: 0., y: 1.),
-                (x: 1., y: 2.)
-            ]),
-            Some(line_string![
-                (x: 3., y: 4.),
-                (x: 5., y: 6.)
-            ]),
-            None,
-        ];
-        let linestring_array =
-            LineStringBuilder::from_nullable_line_strings(&geoms, linestring_type).finish();
-        let field = linestring_array.extension_type().to_field("geometry", true);
+        let arr = linestring::ls_array(CoordType::Separated);
+        let field = arr.extension_type().to_field("geometry", true);
 
-        let array = linestring_array.to_array_ref();
+        let array = arr.to_array_ref();
         let sliced_array = array.slice(0, 1);
 
         let ls_array: LineStringArray = (sliced_array.as_ref(), &field).try_into().unwrap();
