@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+## 0.6.2 - 2025-10-27
+
+fix(geoarrow-array): Fix validation of sliced geometry arrays #1391
+
 ## 0.6.0 - 2025-10-15
 
 - fix(geoarrow-array): Fix persisting CRS when creating `GeometryArray` from `Field` by @kylebarron in https://github.com/geoarrow/geoarrow-rs/pull/1326
