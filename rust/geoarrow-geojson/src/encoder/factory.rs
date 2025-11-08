@@ -27,7 +27,9 @@ impl EncoderFactory for GeoArrowEncoderFactory {
         array: &'a dyn Array,
         _options: &'a EncoderOptions,
     ) -> Result<Option<NullableEncoder<'a>>, ArrowError> {
-        if let Ok(geoarrow_type) = GeoArrowType::from_extension_field(field) {
+        if let Some(geoarrow_type) = GeoArrowType::from_extension_field(field)
+            .map_err(|e| ArrowError::from_external_error(Box::new(e)))?
+        {
             let nulls = array.logical_nulls();
             let encoder: Box<dyn Encoder> = match geoarrow_type {
                 GeoArrowType::Point(typ) => Box::new(PointEncoder::new((array, typ).try_into()?)),

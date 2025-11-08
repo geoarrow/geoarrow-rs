@@ -297,7 +297,7 @@ impl GeoArrowArray for Arc<dyn GeoArrowArray> {
         let field = self.data_type().with_metadata(metadata).to_field("", true);
         let array = self.as_ref().to_array_ref();
         // This unwrap should be fine because we know we start with a GeoArrow array
-        from_arrow_array(array.as_ref(), &field).unwrap()
+        from_arrow_array(array.as_ref(), &field).unwrap().unwrap()
     }
 }
 
@@ -343,7 +343,7 @@ impl<T: GeoArrowArray> GeoArrowArray for &T {
         let field = self.data_type().with_metadata(metadata).to_field("", true);
         let array = T::to_array_ref(self);
         // This unwrap should be fine because we know we start with a GeoArrow array
-        from_arrow_array(array.as_ref(), &field).unwrap()
+        from_arrow_array(array.as_ref(), &field).unwrap().unwrap()
     }
 }
 
