@@ -294,51 +294,47 @@ impl GeoArrowType {
     /// If the field does not have at least a GeoArrow extension name, an error will be returned.
     ///
     /// See also [`GeoArrowType::from_arrow_field`].
-    pub fn from_extension_field(field: &Field) -> GeoArrowResult<Self> {
-        let extension_name = field.extension_type_name().ok_or(GeoArrowError::InvalidGeoArrow(
-                "Expected GeoArrow extension metadata, but found none, and `require_geoarrow_metadata` is `true`.".to_string(),
-            ))?;
-
-        use GeoArrowType::*;
-        let data_type = match extension_name {
-            PointType::NAME => Point(field.try_extension_type()?),
-            LineStringType::NAME => LineString(field.try_extension_type()?),
-            PolygonType::NAME => Polygon(field.try_extension_type()?),
-            MultiPointType::NAME => MultiPoint(field.try_extension_type()?),
-            MultiLineStringType::NAME => MultiLineString(field.try_extension_type()?),
-            MultiPolygonType::NAME => MultiPolygon(field.try_extension_type()?),
-            GeometryCollectionType::NAME => GeometryCollection(field.try_extension_type()?),
-            BoxType::NAME => Rect(field.try_extension_type()?),
-            GeometryType::NAME => Geometry(field.try_extension_type()?),
-            WkbType::NAME => match field.data_type() {
-                DataType::Binary => Wkb(field.try_extension_type()?),
-                DataType::LargeBinary => LargeWkb(field.try_extension_type()?),
-                DataType::BinaryView => WkbView(field.try_extension_type()?),
-                _ => {
-                    return Err(GeoArrowError::InvalidGeoArrow(format!(
-                        "Expected binary type for a field with extension name 'geoarrow.wkb', got '{}'",
-                        field.data_type()
-                    )));
-                }
-            },
-            WktType::NAME => match field.data_type() {
-                DataType::Utf8 => Wkt(field.try_extension_type()?),
-                DataType::LargeUtf8 => LargeWkt(field.try_extension_type()?),
-                DataType::Utf8View => WktView(field.try_extension_type()?),
-                _ => {
-                    return Err(GeoArrowError::InvalidGeoArrow(format!(
-                        "Expected string type for a field with extension name 'geoarrow.wkt', got '{}'",
-                        field.data_type()
-                    )));
-                }
-            },
-            name => {
-                return Err(GeoArrowError::InvalidGeoArrow(format!(
-                    "Expected a GeoArrow extension name, got an Arrow extension type with name: '{name}'.",
-                )));
-            }
-        };
-        Ok(data_type)
+    pub fn from_extension_field(field: &Field) -> GeoArrowResult<Option<Self>> {
+        if let Some(extension_name) = field.extension_type_name() {
+            use GeoArrowType::*;
+            let data_type = match extension_name {
+                PointType::NAME => Point(field.try_extension_type()?),
+                LineStringType::NAME => LineString(field.try_extension_type()?),
+                PolygonType::NAME => Polygon(field.try_extension_type()?),
+                MultiPointType::NAME => MultiPoint(field.try_extension_type()?),
+                MultiLineStringType::NAME => MultiLineString(field.try_extension_type()?),
+                MultiPolygonType::NAME => MultiPolygon(field.try_extension_type()?),
+                GeometryCollectionType::NAME => GeometryCollection(field.try_extension_type()?),
+                BoxType::NAME => Rect(field.try_extension_type()?),
+                GeometryType::NAME => Geometry(field.try_extension_type()?),
+                WkbType::NAME => match field.data_type() {
+                    DataType::Binary => Wkb(field.try_extension_type()?),
+                    DataType::LargeBinary => LargeWkb(field.try_extension_type()?),
+                    DataType::BinaryView => WkbView(field.try_extension_type()?),
+                    _ => {
+                        return Err(GeoArrowError::InvalidGeoArrow(format!(
+                            "Expected binary type for a field with extension name 'geoarrow.wkb', got '{}'",
+                            field.data_type()
+                        )));
+                    }
+                },
+                WktType::NAME => match field.data_type() {
+                    DataType::Utf8 => Wkt(field.try_extension_type()?),
+                    DataType::LargeUtf8 => LargeWkt(field.try_extension_type()?),
+                    DataType::Utf8View => WktView(field.try_extension_type()?),
+                    _ => {
+                        return Err(GeoArrowError::InvalidGeoArrow(format!(
+                            "Expected string type for a field with extension name 'geoarrow.wkt', got '{}'",
+                            field.data_type()
+                        )));
+                    }
+                },
+                _ => return Ok(None),
+            };
+            Ok(Some(data_type))
+        } else {
+            Ok(None)
+        }
     }
 
     /// Create a new [`GeoArrowType`] from an Arrow [`Field`], inferring the GeoArrow type if
@@ -348,10 +344,10 @@ impl GeoArrowType {
     /// infer the GeoArrow type from the field's [DataType]. This only works for Point, WKB, and
     /// WKT types, as those are the only types that can be unambiguously inferred from an Arrow
     /// [DataType].
-    pub fn from_arrow_field(field: &Field) -> GeoArrowResult<Self> {
+    pub fn from_arrow_field(field: &Field) -> GeoArrowResult<Option<Self>> {
         use GeoArrowType::*;
-        if let Ok(geo_type) = Self::from_extension_field(field) {
-            Ok(geo_type)
+        if let Some(geo_type) = Self::from_extension_field(field)? {
+            Ok(Some(geo_type))
         } else {
             let metadata = Arc::new(Metadata::try_from(field)?);
             let data_type = match field.data_type() {
@@ -388,7 +384,7 @@ impl GeoArrowType {
                 _ => return Err(GeoArrowError::InvalidGeoArrow("Only FixedSizeList, Struct, Binary, LargeBinary, BinaryView, String, LargeString, and StringView arrays are unambigously typed for a GeoArrow type and can be used without extension metadata.\nEnsure your array input has GeoArrow metadata.".to_string())),
             };
 
-            Ok(data_type)
+            Ok(Some(data_type))
         }
     }
 }
@@ -417,6 +413,13 @@ impl TryFrom<&Field> for GeoArrowType {
     type Error = GeoArrowError;
 
     fn try_from(field: &Field) -> GeoArrowResult<Self> {
-        Self::from_extension_field(field)
+        if let Some(geo_type) = Self::from_extension_field(field)? {
+            Ok(geo_type)
+        } else {
+            Err(GeoArrowError::InvalidGeoArrow(
+                "Expected GeoArrow extension metadata, found none or unsupported extension."
+                    .to_string(),
+            ))
+        }
     }
 }

@@ -105,7 +105,9 @@ impl ColumnInfo {
         array: &ArrayRef,
         field: &Field,
     ) -> GeoArrowResult<()> {
-        let array = from_arrow_array(array, field)?;
+        let array = from_arrow_array(array, field)?.ok_or(GeoArrowError::InvalidGeoArrow(
+            "Input data is not GeoArrow".to_string(),
+        ))?;
 
         match array.data_type() {
             GeoArrowType::Geometry(_) => {
@@ -311,7 +313,7 @@ impl GeoParquetMetadataBuilder {
                     continue;
                 }
 
-                let column_name = schema.field(col_idx).name().clone();
+                let column_name = field.name().clone();
                 let geo_data_type = field.as_ref().try_into()?;
 
                 let column_encoding = options

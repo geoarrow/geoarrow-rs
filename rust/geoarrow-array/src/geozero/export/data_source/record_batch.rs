@@ -94,7 +94,10 @@ pub(super) fn process_batch<P: FeatureProcessor>(
     let geometry_field = schema.field(geometry_column_index);
     let geometry_column_box = &batch.columns()[geometry_column_index];
     let geometry_column = from_arrow_array(&geometry_column_box, geometry_field)
-        .map_err(|err| GeozeroError::Dataset(err.to_string()))?;
+        .map_err(|err| GeozeroError::Dataset(err.to_string()))?
+        .ok_or(GeozeroError::Dataset(
+            "The column is not a geoarrow column".to_string(),
+        ))?;
 
     for within_batch_row_idx in 0..num_rows {
         processor.feature_begin((within_batch_row_idx + batch_start_idx) as u64)?;
