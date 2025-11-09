@@ -24,3 +24,5 @@ target/
 .vscode
 .envrc
 .direnv
+
+rust/geoarrow-csv/output.csv
