@@ -3,6 +3,7 @@ use std::sync::Arc;
 use geoarrow_array::GeoArrowArray;
 use geoarrow_array::array::from_arrow_array;
 use geoarrow_cast::downcast::NativeType;
+use geoarrow_schema::error::GeoArrowError;
 use geoarrow_schema::{
     BoxType, GeometryCollectionType, LineStringType, MultiLineStringType, MultiPointType,
     MultiPolygonType, PointType, PolygonType,
@@ -248,7 +249,7 @@ impl TryFrom<PyArray> for PyGeoArray {
 
     fn try_from(value: PyArray) -> Result<Self, Self::Error> {
         let (array, field) = value.into_inner();
-        let geo_arr = from_arrow_array(&array, &field)?;
+        let geo_arr = from_arrow_array(&array, &field)?.ok_or(GeoArrowError::NotGeoArrowArray)?;
         Ok(Self(geo_arr))
     }
 }

@@ -105,9 +105,7 @@ pub(super) fn encode_record_batch(
         if let Some(covering_field_idx) = column_info.covering_field_idx {
             let covering = bounding_rect(
                 from_arrow_array(array, field)?
-                    .ok_or(GeoArrowError::InvalidGeoArrow(
-                        "Input data is not GeoArrow".to_string(),
-                    ))?
+                    .ok_or(GeoArrowError::NotGeoArrowArray)?
                     .as_ref(),
             )?;
             output_columns[covering_field_idx] = Some(covering.into_array_ref());
@@ -130,9 +128,7 @@ fn encode_column(
     field: &Field,
     column_info: &mut ColumnInfo,
 ) -> GeoArrowResult<(ArrayRef, BoundingRect)> {
-    let geo_arr = from_arrow_array(array, field)?.ok_or(GeoArrowError::InvalidGeoArrow(
-        "Input data is not GeoArrow".to_string(),
-    ))?;
+    let geo_arr = from_arrow_array(array, field)?.ok_or(GeoArrowError::NotGeoArrowArray)?;
     let array_bounds = total_bounds(geo_arr.as_ref())?;
     let encoded_array = match column_info.encoding {
         GeoParquetColumnEncoding::WKB => encode_wkb_column(geo_arr.as_ref())?,

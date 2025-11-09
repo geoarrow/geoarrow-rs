@@ -203,7 +203,9 @@ address,type,datetime,report location,incident number
         assert_eq!(schema.fields().len(), 5);
 
         let geom_field = schema.field(3);
-        let actual = GeoArrowType::from_extension_field(geom_field).unwrap();
+        let actual = GeoArrowType::from_extension_field(geom_field)
+            .unwrap()
+            .unwrap();
         assert_eq!(actual, to_type);
 
         let geom_array = batch.column(3);

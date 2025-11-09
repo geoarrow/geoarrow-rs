@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 use geoarrow_array::array::from_arrow_array;
 use geoarrow_array::{GeoArrowArrayIterator, GeoArrowArrayReader};
 use geoarrow_schema::GeoArrowType;
-use geoarrow_schema::error::GeoArrowResult;
+use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use pyo3::exceptions::{PyIOError, PyStopIteration, PyValueError};
 use pyo3::intern;
 use pyo3::prelude::*;
@@ -269,9 +269,10 @@ fn array_reader_to_geoarrow_array_reader(
 ) -> PyGeoArrowResult<Box<dyn GeoArrowArrayReader + Send>> {
     let field = reader.field();
     let data_type = GeoArrowType::try_from(field.as_ref())?;
-    let iter = reader
-        .into_iter()
-        .map(move |array| from_arrow_array(array?.as_ref(), field.as_ref()));
+    let iter = reader.into_iter().map(move |array| {
+        from_arrow_array(array?.as_ref(), field.as_ref())
+            .and_then(|f| f.ok_or(GeoArrowError::NotGeoArrowArray))
+    });
     Ok(Box::new(GeoArrowArrayIterator::new(iter, data_type)))
 }
 

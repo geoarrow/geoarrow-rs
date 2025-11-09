@@ -26,7 +26,9 @@ fn read_gpq_file(path: impl AsRef<Path>) -> GeoArrowType {
 
     let batch = batches[0].clone();
 
-    let geo_arr = from_arrow_array(batch.column(0), geoarrow_schema.field(0)).unwrap();
+    let geo_arr = from_arrow_array(batch.column(0), geoarrow_schema.field(0))
+        .unwrap()
+        .unwrap();
 
     geo_arr.data_type().clone()
 }

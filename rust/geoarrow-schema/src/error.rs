@@ -55,6 +55,10 @@ pub enum GeoArrowError {
     /// WKT Error
     #[error("WKT error: {0}")]
     Wkt(String),
+
+    /// The given array is not GeoArrow array, or missing metadata
+    #[error("The given array is not GeoArrow or missing metadata")]
+    NotGeoArrowArray,
 }
 
 /// Crate-specific result type.
