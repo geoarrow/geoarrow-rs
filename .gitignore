@@ -22,3 +22,5 @@ target/
 *.arrow*
 *.parquet
 .vscode
+.envrc
+.direnv

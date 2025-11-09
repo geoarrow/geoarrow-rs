@@ -632,6 +632,7 @@ mod test {
             let array = FixedSizeListBuilder::new(Float64Builder::new(), list_size).finish();
             let t =
                 GeoArrowType::from_arrow_field(&Field::new("", array.data_type().clone(), true))
+                    .unwrap()
                     .unwrap();
             assert_eq!(
                 t,
@@ -689,6 +690,7 @@ mod test {
             let array = StructBuilder::new(fields, builders).finish();
             let t =
                 GeoArrowType::from_arrow_field(&Field::new("", array.data_type().clone(), true))
+                    .unwrap()
                     .unwrap();
             assert_eq!(
                 t,
