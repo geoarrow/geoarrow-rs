@@ -442,7 +442,7 @@ fn process_geometry_n<P: GeomProcessor>(
 pub(super) fn geometry_columns(schema: &Schema) -> Vec<usize> {
     let mut geom_indices = vec![];
     for (field_idx, field) in schema.fields().iter().enumerate() {
-        if GeoArrowType::from_extension_field(field.as_ref()).is_ok() {
+        if let Ok(Some(_)) = GeoArrowType::from_extension_field(field.as_ref()) {
             geom_indices.push(field_idx);
         }
     }
