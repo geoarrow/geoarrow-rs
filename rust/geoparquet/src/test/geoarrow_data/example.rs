@@ -339,7 +339,7 @@ mod async_tests {
             batch.column(0).as_string::<i32>().clone(),
             Default::default(),
         );
-        let geo_arr = from_arrow_array(batch.column(1), geoarrow_schema.field(1)).unwrap();
+        let geo_arr = from_arrow_array(batch.column(1), geoarrow_schema.field(1)).unwrap().unwrap();
 
         (wkt_arr, geo_arr)
     }
