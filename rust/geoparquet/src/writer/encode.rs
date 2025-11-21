@@ -5,7 +5,7 @@ use geoarrow_array::array::from_arrow_array;
 use geoarrow_array::cast::{AsGeoArrowArray, to_wkb};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, GeoArrowType};
-use parquet::format::KeyValue;
+use parquet::file::metadata::KeyValue;
 
 use crate::metadata::{GeoParquetColumnEncoding, GeoParquetMetadata};
 use crate::total_bounds::{BoundingRect, bounding_rect, total_bounds};
@@ -75,8 +75,10 @@ impl GeoParquetRecordBatchEncoder {
         let geo_meta = self.into_geoparquet_metadata();
         Ok(KeyValue::new(
             "geo".to_string(),
-            serde_json::to_string(&geo_meta)
-                .map_err(|err| GeoArrowError::GeoParquet(err.to_string()))?,
+            Some(
+                serde_json::to_string(&geo_meta)
+                    .map_err(|err| GeoArrowError::GeoParquet(err.to_string()))?,
+            ),
         ))
     }
 }

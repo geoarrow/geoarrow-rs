@@ -20,8 +20,10 @@ use crate::error::PyGeoArrowResult;
 // TODO: should this be under an Arc?
 pub struct PyCrs(Crs);
 
-impl<'py> FromPyObject<'py> for PyCrs {
-    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
+impl<'a, 'py> FromPyObject<'a, 'py> for PyCrs {
+    type Error = PyErr;
+    fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
+        let ob = ob.as_ref().bind(ob.py());
         let py = ob.py();
         let pyproj = py.import(intern!(py, "pyproj"))?;
         let crs_class = pyproj.getattr(intern!(py, "CRS"))?;

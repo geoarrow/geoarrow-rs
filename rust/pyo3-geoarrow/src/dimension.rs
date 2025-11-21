@@ -20,8 +20,10 @@ pub enum PyDimension {
     XYZM,
 }
 
-impl<'a> FromPyObject<'a> for PyDimension {
-    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
+impl<'a, 'py> FromPyObject<'a, 'py> for PyDimension {
+    type Error = PyErr;
+    fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
+        let ob = ob.as_ref().bind(ob.py());
         let s: String = ob.extract()?;
         match s.to_lowercase().as_str() {
             "xy" => Ok(Self::XY),
