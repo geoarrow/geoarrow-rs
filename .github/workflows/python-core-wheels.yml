@@ -47,7 +47,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 --manifest-path python/${{ matrix.module }}/Cargo.toml
+          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -i 3.14 --manifest-path python/${{ matrix.module }}/Cargo.toml
           sccache: "true"
           manylinux: auto
       - name: Upload wheels
@@ -82,7 +82,7 @@ jobs:
   #       uses: PyO3/maturin-action@v1
   #       with:
   #         target: ${{ matrix.platform.target }}
-  #         args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 --manifest-path python/${{ matrix.module }}/Cargo.toml
+  #         args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -i 3.14 --manifest-path python/${{ matrix.module }}/Cargo.toml
   #         sccache: "true"
   #         manylinux: musllinux_1_2
   #     - name: Upload wheels
@@ -111,7 +111,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 --manifest-path python/${{ matrix.module }}/Cargo.toml
+          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -i 3.14 --manifest-path python/${{ matrix.module }}/Cargo.toml
           sccache: "true"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
@@ -141,7 +141,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 --manifest-path python/${{ matrix.module }}/Cargo.toml
+          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -i 3.14 --manifest-path python/${{ matrix.module }}/Cargo.toml
           sccache: "true"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
@@ -181,7 +181,7 @@ jobs:
   #       with:
   #         rust-toolchain: nightly
   #         target: ${{ matrix.platform.target }}
-  #         args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 --no-default-features --manifest-path python/${{ matrix.module }}/Cargo.toml
+  #         args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -i 3.14 --no-default-features --manifest-path python/${{ matrix.module }}/Cargo.toml
   #         sccache: "true"
   #     - name: Upload wheels
   #       uses: actions/upload-artifact@v4
