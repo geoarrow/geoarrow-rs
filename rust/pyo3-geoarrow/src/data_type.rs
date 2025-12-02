@@ -136,8 +136,10 @@ impl From<PyGeoType> for GeoArrowType {
     }
 }
 
-impl<'a> FromPyObject<'a> for PyGeoType {
-    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
+impl<'a, 'py> FromPyObject<'a, 'py> for PyGeoType {
+    type Error = PyErr;
+    fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
+        let ob = ob.as_ref().bind(ob.py());
         Ok(ob.extract::<PyField>()?.try_into()?)
     }
 }

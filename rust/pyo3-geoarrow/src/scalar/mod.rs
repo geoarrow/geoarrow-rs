@@ -152,8 +152,10 @@ impl PyGeoScalar {
     }
 }
 
-impl<'a> FromPyObject<'a> for PyGeoScalar {
-    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
+impl<'a, 'py> FromPyObject<'a, 'py> for PyGeoScalar {
+    type Error = PyErr;
+    fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
+        let ob = ob.as_ref().bind(ob.py());
         Ok(Self::try_new(ob.extract::<PyGeoArray>()?.into_inner())?)
     }
 }

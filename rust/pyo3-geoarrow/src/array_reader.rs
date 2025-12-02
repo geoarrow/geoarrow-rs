@@ -253,8 +253,10 @@ impl PyGeoArrayReader {
     }
 }
 
-impl<'a> FromPyObject<'a> for PyGeoArrayReader {
-    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
+impl<'a, 'py> FromPyObject<'a, 'py> for PyGeoArrayReader {
+    type Error = PyErr;
+    fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
+        let ob = ob.as_ref().bind(ob.py());
         let reader = ob.extract::<PyArrayReader>()?;
         Ok(Self::new(array_reader_to_geoarrow_array_reader(
             reader.into_reader()?,
