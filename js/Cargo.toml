@@ -19,8 +19,6 @@ crate-type = ["cdylib", "rlib"]
 # to make debugging easier we'll include it as a default feature
 default = ["console_error_panic_hook"]
 
-# Include algorithms on geometry arrays
-algorithm = []
 # Include Data classes for contiguous GeoArrow memory (PointData, etc)
 data = []
 
@@ -91,6 +89,7 @@ futures = { version = "0.3.30", optional = true }
 geo = "0.31"
 geo-traits = "0.3"
 geoarrow-array = { path = "../rust/geoarrow-array" }
+geoarrow-cast = { path = "../rust/geoarrow-cast" }
 geoarrow-schema = { path = "../rust/geoarrow-schema" }
 geodesy = { version = "0.12", optional = true, features = ["js"] }
 geoparquet = { path = "../rust/geoparquet", optional = true }

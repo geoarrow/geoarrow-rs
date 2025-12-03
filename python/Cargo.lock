@@ -986,7 +986,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-array"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
@@ -1002,7 +1002,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-cast"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "arrow-schema",
  "geo-traits",
@@ -1013,7 +1013,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-expr-geo"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
@@ -1025,7 +1025,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-flatgeobuf"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "arrow-array",
  "arrow-cast",
@@ -1047,7 +1047,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-rust-compute"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "arrow",
  "arrow-array",
@@ -1061,7 +1061,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-rust-core"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "arrow-array",
  "arrow-schema",
@@ -1075,7 +1075,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-rust-io"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "arrow",
  "bytes",
@@ -1104,7 +1104,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-schema"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "arrow-schema",
  "geo-traits",
@@ -1137,7 +1137,7 @@ dependencies = [
 
 [[package]]
 name = "geoparquet"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "arrow-arith",
  "arrow-array",
@@ -2343,7 +2343,7 @@ dependencies = [
 
 [[package]]
 name = "pyo3-geoarrow"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
