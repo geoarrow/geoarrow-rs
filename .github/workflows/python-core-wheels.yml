@@ -124,10 +124,9 @@ jobs:
     strategy:
       matrix:
         platform:
-          # Commented out because rust 1.82 apparently isn't distributed yet (as of Nov 13, 2024) for x86_64-apple-darwin? See https://github.com/geoarrow/geoarrow-rs/pull/860
-          # - runner: macos-13
-          #   target: x86_64
-          - runner: macos-14
+          - runner: macos-15-intel
+            target: x86_64
+          - runner: macos-15
             target: aarch64
         module:
           - geoarrow-core
