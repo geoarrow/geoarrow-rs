@@ -1,0 +1,14 @@
+[data-md-color-scheme="rust-light"] {
+  --md-primary-fg-color: #dea584;
+  --md-primary-bg-color: #1f292d;
+  --md-primary-fg-color--light: #f9c6a9;
+  --md-primary-fg-color--dark:  #c28a6a;
+}
+
+/* Override just a couple colors from slate */
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #dea584;
+  --md-primary-bg-color: #1f292d;
+  --md-primary-fg-color--light: #f9c6a9;
+  --md-primary-fg-color--dark:  #c28a6a;
+}
