@@ -7,10 +7,12 @@ use wasm_bindgen::prelude::*;
 pub struct JsGeoArrowData(Arc<dyn GeoArrowArray>);
 
 impl JsGeoArrowData {
+    #[expect(dead_code)]
     pub(crate) fn inner(&self) -> &Arc<dyn GeoArrowArray> {
         &self.0
     }
 
+    #[expect(dead_code)]
     pub(crate) fn into_inner(self) -> Arc<dyn GeoArrowArray> {
         self.0
     }

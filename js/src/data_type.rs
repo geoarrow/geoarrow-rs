@@ -9,7 +9,7 @@ impl JsGeoArrowType {
         Self(geoarrow_type)
     }
 
-    pub(crate) fn inner(&self) -> &GeoArrowType {
+    pub fn inner(&self) -> &GeoArrowType {
         &self.0
     }
 }
