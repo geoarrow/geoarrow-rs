@@ -8,6 +8,10 @@ impl JsGeoArrowType {
     pub fn new(geoarrow_type: GeoArrowType) -> Self {
         Self(geoarrow_type)
     }
+
+    pub fn inner(&self) -> &GeoArrowType {
+        &self.0
+    }
 }
 
 impl From<JsGeoArrowType> for GeoArrowType {
