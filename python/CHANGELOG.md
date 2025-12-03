@@ -2,11 +2,15 @@
 
 ## Unreleased
 
-## [0.6.1] - 2025-12-03
+## [0.6.2] - 2025-12-03
 
 ### What's Changed
 
 - feat(Python): Update macOS runners in GitHub workflows; build intel wheels #1403
+
+## [0.6.1] - 2025-11-20
+
+Published from this provisional branch: https://github.com/geoarrow/geoarrow-rs/pull/1400
 
 ## [0.6.0] - 2025-10-16
 
