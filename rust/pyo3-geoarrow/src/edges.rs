@@ -10,10 +10,8 @@ use pyo3::prelude::*;
 #[derive(Debug, Clone, Copy)]
 pub struct PyEdges(Edges);
 
-impl<'a, 'py> FromPyObject<'a, 'py> for PyEdges {
-    type Error = PyErr;
-    fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
-        let ob = ob.as_ref().bind(ob.py());
+impl<'a> FromPyObject<'a> for PyEdges {
+    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         let s: String = ob.extract()?;
         match s.to_lowercase().as_str() {
             "andoyer" => Ok(Self(Edges::Andoyer)),

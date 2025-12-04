@@ -111,10 +111,8 @@ impl ChunkReader for SyncReader {
     }
 }
 
-impl<'a, 'py> FromPyObject<'a, 'py> for SyncReader {
-    type Error = PyErr;
-    fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
-        let ob = ob.as_ref().bind(ob.py());
+impl<'py> FromPyObject<'py> for SyncReader {
+    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
         if let Ok(path_buf) = ob.extract::<PathBuf>() {
             let path = path_buf.to_string_lossy().to_string();
             Ok(Self::File(path, BufReader::new(File::open(path_buf)?)))
@@ -184,10 +182,8 @@ impl FileWriter {
     }
 }
 
-impl<'a, 'py> FromPyObject<'a, 'py> for FileWriter {
-    type Error = PyErr;
-    fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
-        let ob = ob.as_ref().bind(ob.py());
+impl<'py> FromPyObject<'py> for FileWriter {
+    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
         if let Ok(path_buf) = ob.extract::<PathBuf>() {
             let path = path_buf.to_string_lossy().to_string();
             Ok(Self::File(path, BufWriter::new(File::create(path_buf)?)))

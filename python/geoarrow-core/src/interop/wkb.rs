@@ -68,10 +68,8 @@ pub(crate) enum ToWkbType {
     WkbView,
 }
 
-impl<'a, 'py> FromPyObject<'a, 'py> for ToWkbType {
-    type Error = PyErr;
-    fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
-        let ob = ob.as_ref().bind(ob.py());
+impl<'a> FromPyObject<'a> for ToWkbType {
+    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         let s: String = ob.extract()?;
         match s.to_lowercase().as_str() {
             "wkb" => Ok(Self::Wkb),
