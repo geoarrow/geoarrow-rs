@@ -54,7 +54,7 @@ impl FlatGeobufReaderOptions {
         let mut outer_geometry_type = None;
 
         for field in schema.fields() {
-            if let Ok(_geometry_type) = GeoArrowType::from_extension_field(field) {
+            if let Some(_geometry_type) = GeoArrowType::from_extension_field(field)? {
                 if outer_geometry_type.is_some() {
                     return Err(GeoArrowError::FlatGeobuf(
                         "Multiple geometry fields found in schema".to_string(),

@@ -297,7 +297,7 @@ impl GeoArrowArray for Arc<dyn GeoArrowArray> {
         let field = self.data_type().with_metadata(metadata).to_field("", true);
         let array = self.as_ref().to_array_ref();
         // This unwrap should be fine because we know we start with a GeoArrow array
-        from_arrow_array(array.as_ref(), &field).unwrap()
+        from_arrow_array(array.as_ref(), &field).unwrap().unwrap()
     }
 }
 
@@ -343,7 +343,7 @@ impl<T: GeoArrowArray> GeoArrowArray for &T {
         let field = self.data_type().with_metadata(metadata).to_field("", true);
         let array = T::to_array_ref(self);
         // This unwrap should be fine because we know we start with a GeoArrow array
-        from_arrow_array(array.as_ref(), &field).unwrap()
+        from_arrow_array(array.as_ref(), &field).unwrap().unwrap()
     }
 }
 
@@ -632,6 +632,7 @@ mod test {
             let array = FixedSizeListBuilder::new(Float64Builder::new(), list_size).finish();
             let t =
                 GeoArrowType::from_arrow_field(&Field::new("", array.data_type().clone(), true))
+                    .unwrap()
                     .unwrap();
             assert_eq!(
                 t,
@@ -689,6 +690,7 @@ mod test {
             let array = StructBuilder::new(fields, builders).finish();
             let t =
                 GeoArrowType::from_arrow_field(&Field::new("", array.data_type().clone(), true))
+                    .unwrap()
                     .unwrap();
             assert_eq!(
                 t,
