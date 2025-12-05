@@ -14,7 +14,7 @@ use pyo3::prelude::*;
 use pyo3::pybacked::PyBackedBytes;
 use pyo3::types::{PyDict, PyTuple};
 use pyo3::{IntoPyObjectExt, PyAny};
-use pyo3_geoarrow::{PyCoordType, PyCrs, PyEdges, PyGeoArray, PyGeoArrowError, PyGeoArrowResult};
+use pyo3_geoarrow::{PyCoordType, PyCrs, PyEdges, PyGeoArray, PyGeoArrowResult};
 
 #[derive(Debug, Default, Clone, Copy)]
 pub(crate) enum ShapelyConversionMethod {
@@ -26,7 +26,6 @@ pub(crate) enum ShapelyConversionMethod {
 impl<'a, 'py> FromPyObject<'a, 'py> for ShapelyConversionMethod {
     type Error = PyErr;
     fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
-        let ob = ob.as_ref().bind(ob.py());
         let s: String = ob.extract()?;
         match s.to_lowercase().as_str() {
             "wkb" => Ok(Self::Wkb),
@@ -95,10 +94,7 @@ fn make_wkb_arr(
     let mut builder = BinaryBuilder::with_capacity(wkb_result.len()?, 0);
 
     for item in wkb_result.try_iter()? {
-        let buf = item?
-            .extract::<PyBackedBytes>()
-            .map_err(PyErr::from)
-            .map_err(PyGeoArrowError::from)?;
+        let buf = item?.extract::<PyBackedBytes>()?;
         builder.append_value(buf.as_ref());
     }
 

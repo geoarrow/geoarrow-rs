@@ -13,7 +13,6 @@ pub struct PyEdges(Edges);
 impl<'a, 'py> FromPyObject<'a, 'py> for PyEdges {
     type Error = PyErr;
     fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
-        let ob = ob.as_ref().bind(ob.py());
         let s: String = ob.extract()?;
         match s.to_lowercase().as_str() {
             "andoyer" => Ok(Self(Edges::Andoyer)),

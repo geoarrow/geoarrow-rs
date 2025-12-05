@@ -19,7 +19,6 @@ pub enum PyCoordType {
 impl<'a, 'py> FromPyObject<'a, 'py> for PyCoordType {
     type Error = PyErr;
     fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
-        let ob = ob.as_ref().bind(ob.py());
         let s: String = ob.extract()?;
         match s.to_lowercase().as_str() {
             "interleaved" => Ok(Self::Interleaved),

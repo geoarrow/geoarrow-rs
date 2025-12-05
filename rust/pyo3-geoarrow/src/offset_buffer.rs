@@ -28,7 +28,6 @@ impl PyOffsetBuffer {
 impl<'a, 'py> FromPyObject<'a, 'py> for PyOffsetBuffer {
     type Error = PyErr;
     fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
-        let ob = ob.as_ref().bind(ob.py());
         let ob = ob.extract::<PyArray>()?;
         if ob.array().null_count() != 0 {
             return Err(PyValueError::new_err(format!(
