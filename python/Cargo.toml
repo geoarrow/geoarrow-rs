@@ -28,7 +28,7 @@ geoparquet = { path = "../rust/geoparquet" }
 geozero = "0.14"
 http-range-client = { version = "0.9.0", default-features = false }
 indexmap = "2.5.0"
-numpy = "0.26"
+numpy = "0.27"
 object_store = "0.12"
 parquet = "57"
 pyo3 = { version = "0.27", features = ["hashbrown", "serde", "anyhow"] }
