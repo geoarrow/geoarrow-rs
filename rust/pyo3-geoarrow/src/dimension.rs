@@ -2,6 +2,7 @@ use geoarrow_schema::Dimension;
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
+use pyo3::pybacked::PyBackedStr;
 
 /// Python wrapper for GeoArrow coordinate dimension.
 ///
@@ -20,15 +21,20 @@ pub enum PyDimension {
     XYZM,
 }
 
-impl<'a> FromPyObject<'a> for PyDimension {
-    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
-        let s: String = ob.extract()?;
-        match s.to_lowercase().as_str() {
+impl<'py> FromPyObject<'_, 'py> for PyDimension {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
+        let s = ob.extract::<PyBackedStr>()?.to_lowercase();
+        match s.as_str() {
             "xy" => Ok(Self::XY),
             "xyz" => Ok(Self::XYZ),
             "xym" => Ok(Self::XYM),
             "xyzm" => Ok(Self::XYZM),
-            _ => Err(PyValueError::new_err("Unexpected dimension")),
+            _ => Err(PyValueError::new_err(format!(
+                "Unexpected dimension, got {}",
+                ob.repr()?
+            ))),
         }
     }
 }

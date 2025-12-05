@@ -450,12 +450,14 @@ impl PathInput {
     }
 }
 
-impl<'py> FromPyObject<'py> for PathInput {
-    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
+impl<'a, 'py> FromPyObject<'a, 'py> for PathInput {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
         let py = ob.py();
         if let Ok(path) = ob.extract::<String>() {
             Ok(PathInput::Path(path))
-        } else if let Ok(mapping) = ob.downcast::<PyMapping>() {
+        } else if let Ok(mapping) = ob.cast::<PyMapping>() {
             let path = mapping.get_item(intern!(py, "path"))?.extract::<String>()?;
             let size = mapping.get_item(intern!(py, "size"))?.extract()?;
             Ok(PathInput::PathWithSize((path, size)))

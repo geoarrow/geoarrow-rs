@@ -61,8 +61,10 @@ impl AnyGeoArray {
     }
 }
 
-impl<'a> FromPyObject<'a> for AnyGeoArray {
-    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
+impl<'py> FromPyObject<'_, 'py> for AnyGeoArray {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
         // First extract infallibly if __arrow_c_array__ method is present, so that any exception
         // in that gets propagated. Also check if PyArray extract works so that Buffer Protocol
         // conversion still works.

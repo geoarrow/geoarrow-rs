@@ -9,8 +9,10 @@ use crate::error::PyGeoArrowResult;
 #[derive(Debug, Clone, Copy)]
 pub struct PyRect(Rect<f64>);
 
-impl<'py> FromPyObject<'py> for PyRect {
-    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
+impl<'a, 'py> FromPyObject<'a, 'py> for PyRect {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
         let bbox = ob.extract::<[f64; 4]>()?;
         Ok(Self(Rect::new(
             coord! {x: bbox[0], y: bbox[1]},

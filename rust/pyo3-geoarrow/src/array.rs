@@ -235,8 +235,10 @@ impl From<PyGeoArray> for Arc<dyn GeoArrowArray> {
     }
 }
 
-impl<'a> FromPyObject<'a> for PyGeoArray {
-    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
+impl<'py> FromPyObject<'_, 'py> for PyGeoArray {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
         Ok(ob.extract::<PyArray>()?.try_into()?)
     }
 }

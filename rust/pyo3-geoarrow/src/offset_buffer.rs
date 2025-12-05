@@ -25,8 +25,10 @@ impl PyOffsetBuffer {
     }
 }
 
-impl<'py> FromPyObject<'py> for PyOffsetBuffer {
-    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
+impl<'py> FromPyObject<'_, 'py> for PyOffsetBuffer {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
         let ob = ob.extract::<PyArray>()?;
         if ob.array().null_count() != 0 {
             return Err(PyValueError::new_err(format!(

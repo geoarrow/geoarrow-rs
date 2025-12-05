@@ -2,6 +2,7 @@ use geoarrow_schema::CoordType;
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
+use pyo3::pybacked::PyBackedStr;
 
 /// Python wrapper for GeoArrow coordinate type.
 ///
@@ -16,13 +17,18 @@ pub enum PyCoordType {
     Separated,
 }
 
-impl<'a> FromPyObject<'a> for PyCoordType {
-    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
-        let s: String = ob.extract()?;
-        match s.to_lowercase().as_str() {
+impl<'py> FromPyObject<'_, 'py> for PyCoordType {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
+        let s = ob.extract::<PyBackedStr>()?.to_lowercase();
+        match s.as_str() {
             "interleaved" => Ok(Self::Interleaved),
             "separated" => Ok(Self::Separated),
-            _ => Err(PyValueError::new_err("Unexpected coord type")),
+            _ => Err(PyValueError::new_err(format!(
+                "Unexpected coord type, should be 'interleaved' or 'separated', got {}",
+                ob.repr()?
+            ))),
         }
     }
 }

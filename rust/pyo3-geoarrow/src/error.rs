@@ -1,3 +1,4 @@
+use pyo3::CastError;
 use pyo3::exceptions::{PyException, PyTypeError, PyValueError};
 use pyo3::prelude::*;
 
@@ -71,6 +72,12 @@ impl From<PyErr> for PyGeoArrowError {
 impl From<arrow_schema::ArrowError> for PyGeoArrowError {
     fn from(value: arrow_schema::ArrowError) -> Self {
         PyGeoArrowError::GeoArrowError(value.into())
+    }
+}
+
+impl From<CastError<'_, '_>> for PyGeoArrowError {
+    fn from(other: CastError) -> Self {
+        Self::PyErr(other.into())
     }
 }
 

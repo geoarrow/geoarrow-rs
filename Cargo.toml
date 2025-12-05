@@ -61,11 +61,11 @@ geozero = "0.14"
 http-range-client = { version = "0.9", default-features = false }
 indexmap = "2.5.0"
 num-traits = "0.2.19"
-numpy = "0.26"
+numpy = "0.27"
 object_store = "0.12"
 parquet = { version = "57", default-features = false }
-pyo3 = "0.26"
-pyo3-arrow = "0.14"
+pyo3 = "0.27"
+pyo3-arrow = "0.15"
 pyo3-geoarrow = { path = "rust/pyo3-geoarrow" }
 rstar = "0.12.2"
 serde = "1"

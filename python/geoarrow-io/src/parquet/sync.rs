@@ -115,8 +115,10 @@ pub enum GeoParquetEncoding {
     GeoArrow,
 }
 
-impl<'a> FromPyObject<'a> for GeoParquetEncoding {
-    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
+impl<'a, 'py> FromPyObject<'a, 'py> for GeoParquetEncoding {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
         let s: String = ob.extract()?;
         match s.to_lowercase().as_str() {
             "wkb" => Ok(Self::WKB),
@@ -139,8 +141,10 @@ impl From<GeoParquetEncoding> for geoparquet::writer::GeoParquetWriterEncoding {
 
 pub struct PyWriterVersion(WriterVersion);
 
-impl<'py> FromPyObject<'py> for PyWriterVersion {
-    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
+impl<'a, 'py> FromPyObject<'a, 'py> for PyWriterVersion {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
         let s: String = ob.extract()?;
         Ok(Self(
             WriterVersion::from_str(&s).map_err(|err| PyValueError::new_err(err.to_string()))?,
@@ -150,8 +154,10 @@ impl<'py> FromPyObject<'py> for PyWriterVersion {
 
 pub struct PyCompression(Compression);
 
-impl<'py> FromPyObject<'py> for PyCompression {
-    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
+impl<'a, 'py> FromPyObject<'a, 'py> for PyCompression {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
         let s: String = ob.extract()?;
         Ok(Self(
             Compression::from_str(&s).map_err(|err| PyValueError::new_err(err.to_string()))?,

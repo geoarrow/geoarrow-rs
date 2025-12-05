@@ -9,6 +9,7 @@ use geoarrow_schema::{GeoArrowType, GeometryType, WktType};
 use pyo3::IntoPyObjectExt;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
+use pyo3::pybacked::PyBackedStr;
 use pyo3_geoarrow::data_type::PyGeoType;
 use pyo3_geoarrow::input::AnyGeoArray;
 use pyo3_geoarrow::{PyGeoArray, PyGeoArrayReader};
@@ -68,16 +69,19 @@ pub(crate) enum ToWktType {
     WktView,
 }
 
-impl<'a> FromPyObject<'a> for ToWktType {
-    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
-        let s: String = ob.extract()?;
-        match s.to_lowercase().as_str() {
+impl<'a, 'py> FromPyObject<'a, 'py> for ToWktType {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
+        let s = ob.extract::<PyBackedStr>()?.to_lowercase();
+        match s.as_str() {
             "wkt" => Ok(Self::Wkt),
             "largewkt" | "large_wkt" | "large-wkt" => Ok(Self::LargeWkt),
             "wktview" | "wkt_view" | "wkt-view" => Ok(Self::WktView),
-            _ => Err(PyValueError::new_err(
-                "Unexpected wkt output type: should be one of 'wkt', 'large_wkt', or 'wkt_view'",
-            )),
+            _ => Err(PyValueError::new_err(format!(
+                "Unexpected wkt output type: should be one of 'wkt', 'large_wkt', or 'wkt_view', got {}",
+                ob.repr()?
+            ))),
         }
     }
 }
