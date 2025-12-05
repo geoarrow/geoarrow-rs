@@ -25,9 +25,10 @@ impl PyCoordBuffer {
     }
 }
 
-impl<'a, 'py> FromPyObject<'a, 'py> for PyCoordBuffer {
+impl<'py> FromPyObject<'_, 'py> for PyCoordBuffer {
     type Error = PyErr;
-    fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
+
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
         if ob.is_instance_of::<PyTuple>() || ob.is_instance_of::<PyList>() {
             let arrays = ob.extract::<Vec<PyArray>>()?;
 

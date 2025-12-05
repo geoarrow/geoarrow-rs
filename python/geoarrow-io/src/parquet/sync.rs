@@ -117,6 +117,7 @@ pub enum GeoParquetEncoding {
 
 impl<'a, 'py> FromPyObject<'a, 'py> for GeoParquetEncoding {
     type Error = PyErr;
+
     fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
         let s: String = ob.extract()?;
         match s.to_lowercase().as_str() {
@@ -142,6 +143,7 @@ pub struct PyWriterVersion(WriterVersion);
 
 impl<'a, 'py> FromPyObject<'a, 'py> for PyWriterVersion {
     type Error = PyErr;
+
     fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
         let s: String = ob.extract()?;
         Ok(Self(
@@ -154,6 +156,7 @@ pub struct PyCompression(Compression);
 
 impl<'a, 'py> FromPyObject<'a, 'py> for PyCompression {
     type Error = PyErr;
+
     fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
         let s: String = ob.extract()?;
         Ok(Self(

@@ -2,6 +2,7 @@ use geoarrow_schema::Edges;
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
+use pyo3::pybacked::PyBackedStr;
 
 /// Python wrapper for GeoArrow edge interpolation type.
 ///
@@ -10,11 +11,12 @@ use pyo3::prelude::*;
 #[derive(Debug, Clone, Copy)]
 pub struct PyEdges(Edges);
 
-impl<'a, 'py> FromPyObject<'a, 'py> for PyEdges {
+impl<'py> FromPyObject<'_, 'py> for PyEdges {
     type Error = PyErr;
-    fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
-        let s: String = ob.extract()?;
-        match s.to_lowercase().as_str() {
+
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
+        let s = ob.extract::<PyBackedStr>()?.to_lowercase();
+        match s.as_str() {
             "andoyer" => Ok(Self(Edges::Andoyer)),
             "karney" => Ok(Self(Edges::Karney)),
             "spherical" => Ok(Self(Edges::Spherical)),

@@ -11,6 +11,7 @@ pub struct PyRect(Rect<f64>);
 
 impl<'a, 'py> FromPyObject<'a, 'py> for PyRect {
     type Error = PyErr;
+
     fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
         let bbox = ob.extract::<[f64; 4]>()?;
         Ok(Self(Rect::new(

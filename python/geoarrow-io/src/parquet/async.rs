@@ -452,6 +452,7 @@ impl PathInput {
 
 impl<'a, 'py> FromPyObject<'a, 'py> for PathInput {
     type Error = PyErr;
+
     fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
         let py = ob.py();
         if let Ok(path) = ob.extract::<String>() {

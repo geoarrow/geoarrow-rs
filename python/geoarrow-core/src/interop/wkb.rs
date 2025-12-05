@@ -9,6 +9,7 @@ use geoarrow_schema::{GeoArrowType, GeometryType, WkbType};
 use pyo3::IntoPyObjectExt;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
+use pyo3::pybacked::PyBackedStr;
 use pyo3_geoarrow::data_type::PyGeoType;
 use pyo3_geoarrow::input::AnyGeoArray;
 use pyo3_geoarrow::{PyGeoArray, PyGeoArrayReader};
@@ -70,15 +71,17 @@ pub(crate) enum ToWkbType {
 
 impl<'a, 'py> FromPyObject<'a, 'py> for ToWkbType {
     type Error = PyErr;
+
     fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
-        let s: String = ob.extract()?;
-        match s.to_lowercase().as_str() {
+        let s = ob.extract::<PyBackedStr>()?.to_lowercase();
+        match s.as_str() {
             "wkb" => Ok(Self::Wkb),
             "large_wkb" => Ok(Self::LargeWkb),
             "wkb_view" => Ok(Self::WkbView),
-            _ => Err(PyValueError::new_err(
-                "Unexpected wkb output type: should be one of 'wkb', 'large_wkb', or 'wkb_view'",
-            )),
+            _ => Err(PyValueError::new_err(format!(
+                "Unexpected wkb output type: should be one of 'wkb', 'large_wkb', or 'wkb_view', got {}",
+                ob.repr()?
+            ))),
         }
     }
 }

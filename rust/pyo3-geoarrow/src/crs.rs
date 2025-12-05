@@ -2,10 +2,10 @@ use geoarrow_schema::crs::CrsTransform;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{Crs, CrsType};
 use pyo3::exceptions::PyValueError;
-use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::pybacked::PyBackedStr;
 use pyo3::types::PyTuple;
+use pyo3::{BoundObject, intern};
 use serde_json::Value;
 
 use crate::PyGeoArrowError;
@@ -20,10 +20,11 @@ use crate::error::PyGeoArrowResult;
 // TODO: should this be under an Arc?
 pub struct PyCrs(Crs);
 
-impl<'a, 'py> FromPyObject<'a, 'py> for PyCrs {
+impl<'py> FromPyObject<'_, 'py> for PyCrs {
     type Error = PyErr;
-    fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
-        let ob = ob.as_ref().bind(ob.py());
+
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
+        let ob = ob.into_bound();
         let py = ob.py();
         let pyproj = py.import(intern!(py, "pyproj"))?;
         let crs_class = pyproj.getattr(intern!(py, "CRS"))?;

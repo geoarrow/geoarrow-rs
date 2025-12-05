@@ -294,9 +294,10 @@ impl PyGeoChunkedArray {
     }
 }
 
-impl<'a, 'py> FromPyObject<'a, 'py> for PyGeoChunkedArray {
+impl<'py> FromPyObject<'_, 'py> for PyGeoChunkedArray {
     type Error = PyErr;
-    fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
+
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
         let chunked_array = ob.extract::<AnyArray>()?.into_chunked_array()?;
         chunked_array.try_into().map_err(PyErr::from)
     }
