@@ -8,15 +8,15 @@
 use std::sync::Arc;
 
 use arrow_array::{self, ArrayRef, Int32Array, RecordBatch};
+use arrow_schema::DataType::Int32;
+use arrow_schema::{Field, SchemaBuilder};
 use geo_types::Geometry;
-use geoarrow_array::{GeoArrowArray, builder::GeometryBuilder};
-use geoarrow_schema::GeometryType;
-use wkt::TryFromWkt;
-
-use arrow_schema::{DataType::Int32, Field, SchemaBuilder};
-use geoarrow_schema::GeoArrowType;
+use geoarrow_array::GeoArrowArray;
+use geoarrow_array::builder::GeometryBuilder;
+use geoarrow_schema::{GeoArrowType, GeometryType};
 use geoparquet::writer::{GeoParquetRecordBatchEncoder, GeoParquetWriterOptionsBuilder};
 use parquet::arrow::ArrowWriter;
+use wkt::TryFromWkt;
 
 fn main() {
     const GEOMETRY_COLUMN_NAME: &str = "geometry";
