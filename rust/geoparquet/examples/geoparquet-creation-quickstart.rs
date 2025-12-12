@@ -1,7 +1,6 @@
 //! This example demonstrates how to create a GeoParquet file using
-//! arrow and geoarrow. It demonstrates how this crate interacts with
-//! others in the ecosystem to create the file.
-//!
+//! arrow and geoarrow. 
+//! 
 //! ```sh
 //! cargo run --example geoparquet-creation-quickstart
 //! ```
