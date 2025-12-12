@@ -78,7 +78,7 @@ fn main() {
     //The Nth item in the column vector must match the Nth item in the schema.
     // It is important that the schema is passed in properly to the `RecordBatch`.
     // For some functions like `RecordBatch::try_from_iter` the schema is inferred
-    // and as such may drop informaton about our geometry types
+    // and as such may drop information about our geometry types
     let batch = RecordBatch::try_new(Arc::new(schema), vec![geometry_column, id_column]).unwrap();
 
     for batch in [batch] {
