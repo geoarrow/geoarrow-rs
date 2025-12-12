@@ -1,5 +1,5 @@
 //! This example demonstrates how to create a GeoParquet file using
-//! arrow and geoarrow. It demonstrates how this crate interacts to
+//! arrow and geoarrow. It demonstrates how this crate interacts with
 //! others in the ecosystem to create the file.
 //!
 //! ```sh
