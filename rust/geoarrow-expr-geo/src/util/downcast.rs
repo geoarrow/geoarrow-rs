@@ -1171,8 +1171,6 @@ mod tests {
     use geoarrow_array::GeoArrowArray;
     use geoarrow_schema::error::GeoArrowResult;
 
-    use super::*;
-
     // Ensure macro gets called, so an error will appear to ensure exhaustiveness
     #[allow(dead_code)]
     fn _test_two_args_macro_exhaustiveness(
