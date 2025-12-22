@@ -17,7 +17,6 @@ Then enter into the `python` directory:
 
 ```
 cd python
-uv install
 uv run maturin develop -m geoarrow-core/Cargo.toml
 uv run maturin develop -m geoarrow-compute/Cargo.toml
 uv run maturin develop -m geoarrow-io/Cargo.toml
