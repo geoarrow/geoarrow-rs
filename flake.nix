@@ -67,9 +67,7 @@
               rust-analyzer
               # python
               uv
-              maturin
-              mkdocs
-              mike
+              cairosvg
               # js
               nodejs
               wasm-pack
