@@ -56,6 +56,7 @@
         {
           default = pkgs.mkShellNoCC {
             packages = with pkgs; [
+              # rust
               rustToolchain
               openssl
               pkg-config
@@ -63,10 +64,13 @@
               geos
               clang
               cmake
+              # python
               uv
               maturin
               mkdocs
               mike
+              # js
+              nodejs
               wasm-pack
               wasm-bindgen-cli
               binaryen
