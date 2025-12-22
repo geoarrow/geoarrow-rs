@@ -199,7 +199,7 @@ fn transform_batch(batch: &RecordBatch) -> Result<RecordBatch, ArrowError> {
         let array = batch.column(i);
 
         // Check if this is a geometry column by looking for GeoArrow extension metadata
-        if let Ok(Some(_)) = GeoArrowType::from_extension_field(field) {
+        if GeoArrowType::from_extension_field(field)?.is_some() {
             if let Some(geometry_field_index) = geometry_field_index {
                 return Err(ArrowError::InvalidArgumentError(format!(
                     "Multiple geometry columns found in positions {geometry_field_index} and {i}. GeoJSON requires exactly one geometry column."

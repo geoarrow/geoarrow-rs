@@ -633,7 +633,6 @@ mod test {
             let t =
                 GeoArrowType::from_arrow_field(&Field::new("", array.data_type().clone(), true))
                     .unwrap();
-
             assert_eq!(
                 t,
                 GeoArrowType::Point(
