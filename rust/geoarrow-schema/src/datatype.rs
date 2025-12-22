@@ -293,7 +293,16 @@ impl GeoArrowType {
     ///
     /// If the field does not have at least a GeoArrow extension name, an error will be returned.
     ///
-    /// See also [`GeoArrowType::from_arrow_field`].
+    /// Create a new [`GeoArrowType`] from an Arrow [`Field`].
+    ///
+    /// This method requires GeoArrow metadata to be correctly set. If you wish to allow data type
+    /// coercion without GeoArrow metadata, use [`GeoArrowType::from_arrow_field`] instead.
+    ///
+    /// - An `Ok(Some(_))` return value indicates that the field has valid GeoArrow extension metadata, and thus was able to match to a specific GeoArrow type.
+    /// - An `Ok(None)` return value indicates that the field either does not have any Arrow extension name or the extension name is not a GeoArrow extension name.
+    /// - An `Err` return value indicates that the field has a GeoArrow extension name, but it is
+    ///   invalid. This can happen if the field's [`DataType`] is not compatible with the allowed
+    ///   types for the given GeoArrow type, or if the GeoArrow metadata is malformed.
     pub fn from_extension_field(field: &Field) -> GeoArrowResult<Option<Self>> {
         if let Some(extension_name) = field.extension_type_name() {
             use GeoArrowType::*;
