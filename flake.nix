@@ -56,14 +56,15 @@
         {
           default = pkgs.mkShellNoCC {
             packages = with pkgs; [
+              pkg-config
+              cmake
+              geos
+              llvmPackages.clang-unwrapped
+              llvmPackages.libclang
+              zstd.dev
               # rust
               rustToolchain
-              openssl
-              pkg-config
               rust-analyzer
-              geos
-              clang
-              cmake
               # python
               uv
               maturin
@@ -82,6 +83,8 @@
               # Required by rust-analyzer
               RUST_SRC_PATH = "${pkgs.rustToolchain}/lib/rustlib/src/rust/library";
               CMAKE_POLICY_VERSION_MINIMUM = "3.5";
+              CFLAGS_wasm32_unknown_unknown = "-I${pkgs.pkgsCross.wasi32.stdenv.cc.libc}/include";
+              LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath [ pkgs.stdenv.cc.cc.lib ]}";
             };
           };
         }
