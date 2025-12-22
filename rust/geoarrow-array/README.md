@@ -56,7 +56,7 @@ If you have an [`Array`] and [`Field`] but don't know the geometry type of the a
 # use geoarrow_schema::GeoArrowType;
 #
 fn use_from_arrow_array(array: &dyn Array, field: &Field) {
-    let geoarrow_array: Arc<dyn GeoArrowArray> = from_arrow_array(array, field).unwrap().unwrap();
+    let geoarrow_array: Arc<dyn GeoArrowArray> = from_arrow_array(array, field).unwrap();
     match geoarrow_array.data_type() {
         GeoArrowType::Point(_) => {
             let array: &PointArray = geoarrow_array.as_point();

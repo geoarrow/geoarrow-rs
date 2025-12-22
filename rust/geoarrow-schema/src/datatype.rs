@@ -353,10 +353,10 @@ impl GeoArrowType {
     /// infer the GeoArrow type from the field's [DataType]. This only works for Point, WKB, and
     /// WKT types, as those are the only types that can be unambiguously inferred from an Arrow
     /// [DataType].
-    pub fn from_arrow_field(field: &Field) -> GeoArrowResult<Option<Self>> {
+    pub fn from_arrow_field(field: &Field) -> GeoArrowResult<Self> {
         use GeoArrowType::*;
         if let Some(geo_type) = Self::from_extension_field(field)? {
-            Ok(Some(geo_type))
+            Ok(geo_type)
         } else {
             let metadata = Arc::new(Metadata::try_from(field)?);
             let data_type = match field.data_type() {
@@ -393,7 +393,7 @@ impl GeoArrowType {
                 _ => return Err(GeoArrowError::InvalidGeoArrow("Only FixedSizeList, Struct, Binary, LargeBinary, BinaryView, String, LargeString, and StringView arrays are unambigously typed for a GeoArrow type and can be used without extension metadata.\nEnsure your array input has GeoArrow metadata.".to_string())),
             };
 
-            Ok(Some(data_type))
+            Ok(data_type)
         }
     }
 }

@@ -105,7 +105,7 @@ impl ColumnInfo {
         array: &ArrayRef,
         field: &Field,
     ) -> GeoArrowResult<()> {
-        let array = from_arrow_array(array, field)?.ok_or(GeoArrowError::NotGeoArrowArray)?;
+        let array = from_arrow_array(array, field)?;
 
         match array.data_type() {
             GeoArrowType::Geometry(_) => {

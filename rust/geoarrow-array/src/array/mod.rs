@@ -47,31 +47,28 @@ use crate::GeoArrowArray;
 pub fn from_arrow_array(
     array: &dyn Array,
     field: &Field,
-) -> GeoArrowResult<Option<Arc<dyn GeoArrowArray>>> {
+) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
     use GeoArrowType::*;
 
-    if let Some(geo_type) = GeoArrowType::from_arrow_field(field)? {
-        let result: Arc<dyn GeoArrowArray> = match geo_type {
-            Point(_) => Arc::new(PointArray::try_from((array, field))?),
-            LineString(_) => Arc::new(LineStringArray::try_from((array, field))?),
-            Polygon(_) => Arc::new(PolygonArray::try_from((array, field))?),
-            MultiPoint(_) => Arc::new(MultiPointArray::try_from((array, field))?),
-            MultiLineString(_) => Arc::new(MultiLineStringArray::try_from((array, field))?),
-            MultiPolygon(_) => Arc::new(MultiPolygonArray::try_from((array, field))?),
-            GeometryCollection(_) => Arc::new(GeometryCollectionArray::try_from((array, field))?),
-            Rect(_) => Arc::new(RectArray::try_from((array, field))?),
-            Geometry(_) => Arc::new(GeometryArray::try_from((array, field))?),
-            Wkb(_) => Arc::new(WkbArray::try_from((array, field))?),
-            LargeWkb(_) => Arc::new(LargeWkbArray::try_from((array, field))?),
-            WkbView(_) => Arc::new(WkbViewArray::try_from((array, field))?),
-            Wkt(_) => Arc::new(WktArray::try_from((array, field))?),
-            LargeWkt(_) => Arc::new(LargeWktArray::try_from((array, field))?),
-            WktView(_) => Arc::new(WktViewArray::try_from((array, field))?),
-        };
-        Ok(Some(result))
-    } else {
-        Ok(None)
-    }
+    let geo_type = GeoArrowType::from_arrow_field(field)?;
+    let result: Arc<dyn GeoArrowArray> = match geo_type {
+        Point(_) => Arc::new(PointArray::try_from((array, field))?),
+        LineString(_) => Arc::new(LineStringArray::try_from((array, field))?),
+        Polygon(_) => Arc::new(PolygonArray::try_from((array, field))?),
+        MultiPoint(_) => Arc::new(MultiPointArray::try_from((array, field))?),
+        MultiLineString(_) => Arc::new(MultiLineStringArray::try_from((array, field))?),
+        MultiPolygon(_) => Arc::new(MultiPolygonArray::try_from((array, field))?),
+        GeometryCollection(_) => Arc::new(GeometryCollectionArray::try_from((array, field))?),
+        Rect(_) => Arc::new(RectArray::try_from((array, field))?),
+        Geometry(_) => Arc::new(GeometryArray::try_from((array, field))?),
+        Wkb(_) => Arc::new(WkbArray::try_from((array, field))?),
+        LargeWkb(_) => Arc::new(LargeWkbArray::try_from((array, field))?),
+        WkbView(_) => Arc::new(WkbViewArray::try_from((array, field))?),
+        Wkt(_) => Arc::new(WktArray::try_from((array, field))?),
+        LargeWkt(_) => Arc::new(LargeWktArray::try_from((array, field))?),
+        WktView(_) => Arc::new(WktViewArray::try_from((array, field))?),
+    };
+    Ok(result)
 }
 
 // TODO: should we have an API to get the raw underlying string/&[u8] value?

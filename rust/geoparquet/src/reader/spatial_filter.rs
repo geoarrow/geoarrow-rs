@@ -222,7 +222,7 @@ fn construct_native_predicate(
         let array = batch.column(0);
         let field = batch.schema_ref().field(0);
         let nulls = array.nulls();
-        let geo_arr = from_arrow_array(array, field)?.ok_or(GeoArrowError::NotGeoArrowArray)?;
+        let geo_arr = from_arrow_array(array, field)?;
         let rect_arr = bounding_rect(geo_arr.as_ref())?;
 
         let xmin_col = Float64Array::new(rect_arr.lower().raw_buffers()[0].clone(), nulls.cloned());

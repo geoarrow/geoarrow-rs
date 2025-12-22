@@ -4,7 +4,6 @@ use arrow_schema::ArrowError;
 use geoarrow_array::GeoArrowArray;
 use geoarrow_array::array::from_arrow_array;
 use geoarrow_cast::downcast::NativeType;
-use geoarrow_schema::error::GeoArrowError;
 use geoarrow_schema::{
     BoxType, GeoArrowType, GeometryCollectionType, LineStringType, MultiLineStringType,
     MultiPointType, MultiPolygonType, PointType, PolygonType,
@@ -311,10 +310,7 @@ impl TryFrom<PyChunkedArray> for PyGeoChunkedArray {
         let (chunks, field) = value.into_inner();
         let geo_chunks = chunks
             .iter()
-            .map(|array| {
-                from_arrow_array(&array, &field)
-                    .and_then(|f| f.ok_or(GeoArrowError::NotGeoArrowArray))
-            })
+            .map(|array| from_arrow_array(&array, &field))
             .collect::<Result<Vec<_>, _>>()?;
         let geo_data_type = GeoArrowType::try_from(field.as_ref())?;
         Ok(Self {

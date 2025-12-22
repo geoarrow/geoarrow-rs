@@ -1,11 +1,11 @@
 use arrow_schema::Schema;
 use geoarrow_array::{GeoArrowArrayIterator, WrapArray};
-use geoarrow_schema::GeoArrowType;
 use geoarrow_schema::error::GeoArrowError;
-use pyo3::IntoPyObjectExt;
+use geoarrow_schema::GeoArrowType;
 use pyo3::exceptions::{PyIndexError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::pybacked::PyBackedStr;
+use pyo3::IntoPyObjectExt;
 use pyo3_arrow::input::AnyRecordBatch;
 use pyo3_geoarrow::input::AnyGeoArray;
 use pyo3_geoarrow::{PyGeoArray, PyGeoArrayReader, PyGeoArrowResult};
@@ -41,8 +41,7 @@ pub fn geometry_col<'py>(
                 "Column name {name} not found"
             )))?;
 
-        let geom_type = GeoArrowType::from_arrow_field(field)
-            .and_then(|f| f.ok_or(GeoArrowError::NotGeoArrowArray))?;
+        let geom_type = GeoArrowType::from_arrow_field(field)?;
         (idx, geom_type)
     } else {
         let geom_cols = geometry_columns(schema.as_ref());
