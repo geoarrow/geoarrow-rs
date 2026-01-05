@@ -17,7 +17,7 @@ exclude = ["js"]
 resolver = "2"
 
 [workspace.package]
-version = "0.6.2"
+version = "0.7.0"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
@@ -46,13 +46,13 @@ futures = "0.3"
 geo = "0.31.0"
 geo-traits = "0.3.0"
 geo-types = "0.7.16"
-geoarrow-array = { path = "rust/geoarrow-array", version = "0.6.0" }
-geoarrow-cast = { path = "rust/geoarrow-cast", version = "0.6.0" }
-geoarrow-expr-geo = { path = "rust/geoarrow-expr-geo", version = "0.6.0" }
-geoarrow-flatgeobuf = { path = "rust/geoarrow-flatgeobuf", version = "0.6.0" }
-geoarrow-geojson = { path = "rust/geoarrow-geojson", version = "0.6.0" }
-geoarrow-schema = { path = "rust/geoarrow-schema", version = "0.6.0" }
-geoarrow-test = { path = "rust/geoarrow-test", version = "0.6.0" }
+geoarrow-array = { path = "rust/geoarrow-array", version = "0.7.0" }
+geoarrow-cast = { path = "rust/geoarrow-cast", version = "0.7.0" }
+geoarrow-expr-geo = { path = "rust/geoarrow-expr-geo", version = "0.7.0" }
+geoarrow-flatgeobuf = { path = "rust/geoarrow-flatgeobuf", version = "0.7.0" }
+geoarrow-geojson = { path = "rust/geoarrow-geojson", version = "0.7.0" }
+geoarrow-schema = { path = "rust/geoarrow-schema", version = "0.7.0" }
+geoarrow-test = { path = "rust/geoarrow-test", version = "0.7.0" }
 geohash = "0.13.1"
 geojson = "0.24"
 geoparquet = { path = "rust/geoparquet", version = "0.5" }
