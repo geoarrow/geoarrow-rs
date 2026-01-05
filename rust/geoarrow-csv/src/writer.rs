@@ -54,7 +54,7 @@ fn encode_batch(batch: &RecordBatch) -> GeoArrowResult<RecordBatch> {
     let mut new_columns = Vec::with_capacity(fields.len());
 
     for (field, column) in schema.fields().iter().zip(batch.columns()) {
-        if let Ok(typ) = GeoArrowType::from_extension_field(field) {
+        if let Some(typ) = GeoArrowType::from_extension_field(field)? {
             let geo_arr = typ.wrap_array(&column)?;
             let wkt_view_arr = to_wkt_view(&geo_arr)?;
 
