@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+## 0.7.0 - 2026-01-04
+
+- chore: Bump to arrow 57 by @ddupg in https://github.com/geoarrow/geoarrow-rs/pull/1402
+- refactor: return Option for `from_extension_field` by @sunng87 in https://github.com/geoarrow/geoarrow-rs/pull/1394
+
 ## 0.6.2 - 2025-10-27
 
 fix(geoarrow-array): Fix validation of sliced geometry arrays #1391
