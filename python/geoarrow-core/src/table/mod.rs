@@ -80,7 +80,7 @@ fn geometry_columns(schema: &Schema) -> Vec<(usize, GeoArrowType)> {
         .iter()
         .enumerate()
         .filter_map(|(idx, field)| {
-            if let Ok(geom_type) = GeoArrowType::from_extension_field(field) {
+            if let Ok(Some(geom_type)) = GeoArrowType::from_extension_field(field) {
                 Some((idx, geom_type))
             } else {
                 None

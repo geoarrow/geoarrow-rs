@@ -22,6 +22,7 @@ target/
 *.arrow*
 *.parquet
 .vscode
-
-.direnv/
 .envrc
+.direnv
+
+rust/geoarrow-csv/output.csv
