@@ -44,3 +44,7 @@ tokio-test = "0.4"
 
 [package.metadata.docs.rs]
 all-features = true
+
+[[example]]
+name = "geoparquet-creation-quickstart"
+path = "./examples/geoparquet-creation-quickstart.rs"
