@@ -1,8 +1,8 @@
+use std::collections::HashSet;
+use std::sync::{Arc, LazyLock};
+
 use arrow_schema::extension::ExtensionType;
 use arrow_schema::{ArrowError, DataType, Field, UnionFields, UnionMode};
-use std::collections::HashSet;
-use std::sync::Arc;
-use std::sync::LazyLock;
 
 use crate::error::GeoArrowError;
 use crate::metadata::Metadata;
