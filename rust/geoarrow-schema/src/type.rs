@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 
 use arrow_schema::extension::ExtensionType;
 use arrow_schema::{ArrowError, DataType, Field, UnionFields, UnionMode};
@@ -932,6 +932,70 @@ fn parse_geometry_collection(data_type: &DataType) -> Result<(CoordType, Dimensi
     }
 }
 
+static INTERLEAVED_XY: LazyLock<DataType> = LazyLock::new(|| {
+    let values_field = Field::new("xy", DataType::Float64, false);
+    DataType::FixedSizeList(Arc::new(values_field), 2)
+});
+
+static INTERLEAVED_XYZ: LazyLock<DataType> = LazyLock::new(|| {
+    let values_field = Field::new("xyz", DataType::Float64, false);
+    DataType::FixedSizeList(Arc::new(values_field), 3)
+});
+
+static INTERLEAVED_XYM: LazyLock<DataType> = LazyLock::new(|| {
+    let values_field = Field::new("xym", DataType::Float64, false);
+    DataType::FixedSizeList(Arc::new(values_field), 3)
+});
+
+static INTERLEAVED_XYZM: LazyLock<DataType> = LazyLock::new(|| {
+    let values_field = Field::new("xyzm", DataType::Float64, false);
+    DataType::FixedSizeList(Arc::new(values_field), 4)
+});
+
+static SEPARATED_XY: LazyLock<DataType> = LazyLock::new(|| {
+    DataType::Struct(
+        vec![
+            Field::new("x", DataType::Float64, false),
+            Field::new("y", DataType::Float64, false),
+        ]
+        .into(),
+    )
+});
+
+static SEPARATED_XYZ: LazyLock<DataType> = LazyLock::new(|| {
+    DataType::Struct(
+        vec![
+            Field::new("x", DataType::Float64, false),
+            Field::new("y", DataType::Float64, false),
+            Field::new("z", DataType::Float64, false),
+        ]
+        .into(),
+    )
+});
+
+static SEPARATED_XYM: LazyLock<DataType> = LazyLock::new(|| {
+    DataType::Struct(
+        vec![
+            Field::new("x", DataType::Float64, false),
+            Field::new("y", DataType::Float64, false),
+            Field::new("m", DataType::Float64, false),
+        ]
+        .into(),
+    )
+});
+
+static SEPARATED_XYZM: LazyLock<DataType> = LazyLock::new(|| {
+    DataType::Struct(
+        vec![
+            Field::new("x", DataType::Float64, false),
+            Field::new("y", DataType::Float64, false),
+            Field::new("z", DataType::Float64, false),
+            Field::new("m", DataType::Float64, false),
+        ]
+        .into(),
+    )
+});
+
 /// A GeoArrow Geometry type.
 ///
 /// Refer to the [GeoArrow
@@ -1452,54 +1516,16 @@ impl ExtensionType for WktType {
 
 fn coord_type_to_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
     match (coord_type, dim) {
-        (CoordType::Interleaved, Dimension::XY) => {
-            let values_field = Field::new("xy", DataType::Float64, false);
-            DataType::FixedSizeList(Arc::new(values_field), 2)
-        }
-        (CoordType::Interleaved, Dimension::XYZ) => {
-            let values_field = Field::new("xyz", DataType::Float64, false);
-            DataType::FixedSizeList(Arc::new(values_field), 3)
-        }
-        (CoordType::Interleaved, Dimension::XYM) => {
-            let values_field = Field::new("xym", DataType::Float64, false);
-            DataType::FixedSizeList(Arc::new(values_field), 3)
-        }
-        (CoordType::Interleaved, Dimension::XYZM) => {
-            let values_field = Field::new("xyzm", DataType::Float64, false);
-            DataType::FixedSizeList(Arc::new(values_field), 4)
-        }
-        (CoordType::Separated, Dimension::XY) => {
-            let values_fields = vec![
-                Field::new("x", DataType::Float64, false),
-                Field::new("y", DataType::Float64, false),
-            ];
-            DataType::Struct(values_fields.into())
-        }
-        (CoordType::Separated, Dimension::XYZ) => {
-            let values_fields = vec![
-                Field::new("x", DataType::Float64, false),
-                Field::new("y", DataType::Float64, false),
-                Field::new("z", DataType::Float64, false),
-            ];
-            DataType::Struct(values_fields.into())
-        }
-        (CoordType::Separated, Dimension::XYM) => {
-            let values_fields = vec![
-                Field::new("x", DataType::Float64, false),
-                Field::new("y", DataType::Float64, false),
-                Field::new("m", DataType::Float64, false),
-            ];
-            DataType::Struct(values_fields.into())
-        }
-        (CoordType::Separated, Dimension::XYZM) => {
-            let values_fields = vec![
-                Field::new("x", DataType::Float64, false),
-                Field::new("y", DataType::Float64, false),
-                Field::new("z", DataType::Float64, false),
-                Field::new("m", DataType::Float64, false),
-            ];
-            DataType::Struct(values_fields.into())
-        }
+        (CoordType::Interleaved, Dimension::XY) => INTERLEAVED_XY.clone(),
+
+        (CoordType::Interleaved, Dimension::XYZ) => INTERLEAVED_XYZ.clone(),
+
+        (CoordType::Interleaved, Dimension::XYM) => INTERLEAVED_XYM.clone(),
+        (CoordType::Interleaved, Dimension::XYZM) => INTERLEAVED_XYZM.clone(),
+        (CoordType::Separated, Dimension::XY) => SEPARATED_XY.clone(),
+        (CoordType::Separated, Dimension::XYZ) => SEPARATED_XYZ.clone(),
+        (CoordType::Separated, Dimension::XYM) => SEPARATED_XYM.clone(),
+        (CoordType::Separated, Dimension::XYZM) => SEPARATED_XYZM.clone(),
     }
 }
 
