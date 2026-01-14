@@ -4,8 +4,8 @@ version = "0.1.0"
 requires-python = ">=3.9"
 dependencies = []
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "affine>=2.4.0",
     "arro3-core>=0.5.0",
     "black>=24.10.0",
