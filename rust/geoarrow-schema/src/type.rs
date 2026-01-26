@@ -737,6 +737,12 @@ impl GeometryCollectionType {
 }
 
 fn mixed_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
+    //idx calculated as (coord_type as usize) * 4 + (dim as usize)
+    let idx = (coord_type as usize) * 4 + (dim as usize);
+    MIXED_UNION_TYPES[idx].clone()
+}
+
+fn build_mixed_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
     let mut fields = vec![];
     let mut type_ids = vec![];
 
@@ -798,6 +804,78 @@ fn mixed_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
             push_field!("MultiPolygon ZM", MultiPolygonType);
         }
     }
+
+    let union_fields = UnionFields::new(type_ids, fields);
+    DataType::Union(union_fields, UnionMode::Dense)
+}
+
+fn build_geometry_data_type(coord_type: CoordType) -> DataType {
+    let mut fields = vec![];
+    let type_ids = vec![
+        1, 2, 3, 4, 5, 6, 7, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 25, 26, 27, 31, 32, 33,
+        34, 35, 36, 37,
+    ];
+
+    // Note: we manually construct the fields because these fields shouldn't have their own
+    // GeoArrow extension metadata
+    macro_rules! push_field {
+        ($field_name:literal, $geom_type:ident, $dim:path) => {{
+            fields.push(Field::new(
+                $field_name,
+                $geom_type {
+                    coord_type,
+                    dim: $dim,
+                    metadata: Metadata::default().into(),
+                }
+                .data_type(),
+                true,
+            ));
+        }};
+    }
+
+    push_field!("Point", PointType, Dimension::XY);
+    push_field!("LineString", LineStringType, Dimension::XY);
+    push_field!("Polygon", PolygonType, Dimension::XY);
+    push_field!("MultiPoint", MultiPointType, Dimension::XY);
+    push_field!("MultiLineString", MultiLineStringType, Dimension::XY);
+    push_field!("MultiPolygon", MultiPolygonType, Dimension::XY);
+    push_field!("GeometryCollection", GeometryCollectionType, Dimension::XY);
+
+    push_field!("Point Z", PointType, Dimension::XYZ);
+    push_field!("LineString Z", LineStringType, Dimension::XYZ);
+    push_field!("Polygon Z", PolygonType, Dimension::XYZ);
+    push_field!("MultiPoint Z", MultiPointType, Dimension::XYZ);
+    push_field!("MultiLineString Z", MultiLineStringType, Dimension::XYZ);
+    push_field!("MultiPolygon Z", MultiPolygonType, Dimension::XYZ);
+    push_field!(
+        "GeometryCollection Z",
+        GeometryCollectionType,
+        Dimension::XYZ
+    );
+
+    push_field!("Point M", PointType, Dimension::XYM);
+    push_field!("LineString M", LineStringType, Dimension::XYM);
+    push_field!("Polygon M", PolygonType, Dimension::XYM);
+    push_field!("MultiPoint M", MultiPointType, Dimension::XYM);
+    push_field!("MultiLineString M", MultiLineStringType, Dimension::XYM);
+    push_field!("MultiPolygon M", MultiPolygonType, Dimension::XYM);
+    push_field!(
+        "GeometryCollection M",
+        GeometryCollectionType,
+        Dimension::XYM
+    );
+
+    push_field!("Point ZM", PointType, Dimension::XYZM);
+    push_field!("LineString ZM", LineStringType, Dimension::XYZM);
+    push_field!("Polygon ZM", PolygonType, Dimension::XYZM);
+    push_field!("MultiPoint ZM", MultiPointType, Dimension::XYZM);
+    push_field!("MultiLineString ZM", MultiLineStringType, Dimension::XYZM);
+    push_field!("MultiPolygon ZM", MultiPolygonType, Dimension::XYZM);
+    push_field!(
+        "GeometryCollection ZM",
+        GeometryCollectionType,
+        Dimension::XYZM
+    );
 
     let union_fields = UnionFields::new(type_ids, fields);
     DataType::Union(union_fields, UnionMode::Dense)
@@ -996,153 +1074,22 @@ static SEPARATED_XYZM: LazyLock<DataType> = LazyLock::new(|| {
     )
 });
 
-/* TODO: see if these would actually help with mixed_data_type()
-static GEOMETRY_UNION_XY: LazyLock<Vec<Field>> = LazyLock::new(|| {
-    vec![
-        Field::new(
-            "point_xy",
-            PointType::new(Dimension::XY, Default::default()).data_type(),
-            true,
-        ),
-        Field::new(
-            "linestring_xy",
-            LineStringType::new(Dimension::XY, Default::default()).data_type(),
-            true,
-        ),
-        Field::new(
-            "polygon_xy",
-            PolygonType::new(Dimension::XY, Default::default()).data_type(),
-            true,
-        ),
-        Field::new(
-            "multipoint_xy",
-            MultiPointType::new(Dimension::XY, Default::default()).data_type(),
-            true,
-        ),
-        Field::new(
-            "multilinestring_xy",
-            MultiLineStringType::new(Dimension::XY, Default::default()).data_type(),
-            true,
-        ),
-        Field::new(
-            "multipolygon_xy",
-            MultiPolygonType::new(Dimension::XY, Default::default()).data_type(),
-            true,
-        ),
-    ]
-}
-);
+static MIXED_UNION_TYPES: [LazyLock<DataType>; 8] = [
+    LazyLock::new(|| build_mixed_data_type(CoordType::Interleaved, Dimension::XY)),
+    LazyLock::new(|| build_mixed_data_type(CoordType::Interleaved, Dimension::XYZ)),
+    LazyLock::new(|| build_mixed_data_type(CoordType::Interleaved, Dimension::XYM)),
+    LazyLock::new(|| build_mixed_data_type(CoordType::Interleaved, Dimension::XYZM)),
+    LazyLock::new(|| build_mixed_data_type(CoordType::Separated, Dimension::XY)),
+    LazyLock::new(|| build_mixed_data_type(CoordType::Separated, Dimension::XYZ)),
+    LazyLock::new(|| build_mixed_data_type(CoordType::Separated, Dimension::XYM)),
+    LazyLock::new(|| build_mixed_data_type(CoordType::Separated, Dimension::XYZM)),
+];
 
-static GEOMETRY_UNION_XYZ: LazyLock<Vec<Field>> = LazyLock::new(|| {
-    vec![
-        Field::new(
-            "point_xyz",
-            PointType::new(Dimension::XYZ, Default::default()).data_type(),
-            true,
-        ),
-        Field::new(
-            "linestring_xyz",
-            LineStringType::new(Dimension::XYZ, Default::default()).data_type(),
-            true,
-        ),
-        Field::new(
-            "polygon_xyz",
-            PolygonType::new(Dimension::XYZ, Default::default()).data_type(),
-            true,
-        ),
-        Field::new(
-            "multipoint_xyz",
-            MultiPointType::new(Dimension::XYZ, Default::default()).data_type(),
-            true,
-        ),
-        Field::new(
-            "multilinestring_xyz",
-            MultiLineStringType::new(Dimension::XYZ, Default::default()).data_type(),
-            true,
-        ),
-        Field::new(
-            "multipolygon_xyz",
-            MultiPolygonType::new(Dimension::XYZ, Default::default()).data_type(),
-            true,
-        ),
-    ]
-}
-);
-
-static GEOMETRY_UNION_XYM: LazyLock<Vec<Field>> = LazyLock::new(|| {
-    vec![
-        Field::new(
-            "point_xym",
-            PointType::new(Dimension::XYM, Default::default()).data_type(),
-            true,
-        ),
-        Field::new(
-            "linestring_xym",
-            LineStringType::new(Dimension::XYM, Default::default()).data_type(),
-            true,
-        ),
-        Field::new(
-            "polygon_xym",
-            PolygonType::new(Dimension::XYM, Default::default()).data_type(),
-            true,
-        ),
-        Field::new(
-            "multipoint_xym",
-            MultiPointType::new(Dimension::XYM, Default::default()).data_type(),
-            true,
-        ),
-        Field::new(
-            "multilinestring_xym",
-            MultiLineStringType::new(Dimension::XYM, Default::default()).data_type(),
-            true,
-        ),
-        Field::new(
-            "multipolygon_xym",
-            MultiPolygonType::new(Dimension::XYM, Default::default()).data_type(),
-            true,
-        ),
-    ]
-}
-);
-
-static GEOMETRY_UNION_XYZM : LazyLock<Vec<Field>> = LazyLock::new(|| {
-vec![
-        Field::new(
-            "point_xyzm",
-            PointType::new(Dimension::XYZM, Default::default()).data_type(),
-            true,
-        ),
-        Field::new(
-            "linestring_xyzm",
-LineStringType::new(Dimension::XYZM, Default::default()).data_type(),
-            true,
-        ),
-        Field::new(
-            "polygon_xyzm",
-            PolygonType::new(Dimension::XYZM, Default::default()).data_type(),
-            true,
-        ),
-        Field::new(
-            "multipoint_xyzm",
-            MultiPointType::new(Dimension::XYZM, Default::default()).data_type(),
-            true,
-        ),
-        Field::new(
-            "multilinestring_xyzm",
-            MultiLineStringType::new(Dimension::XYZM, Default::default()).data_type(),
-            true,
-        ),
-        Field::new(
-            "multipolygon_xyzm",
-            MultiPolygonType::new(Dimension::XYZM, Default::default()).data_type(),
-            true,
-        ),
-    ]
-}
-);
-*/
-
- 
+// Idx: coord_type as usize (0=Interleaved, 1=Separated)
+static GEOMETRY_UNION_TYPES: [LazyLock<DataType>; 2] = [
+    LazyLock::new(|| build_geometry_data_type(CoordType::Interleaved)),
+    LazyLock::new(|| build_geometry_data_type(CoordType::Separated)),
+];
 
 /// A GeoArrow Geometry type.
 ///
@@ -1185,75 +1132,7 @@ impl GeometryType {
 
     /// Convert to the corresponding [`DataType`].
     pub fn data_type(&self) -> DataType {
-        let mut fields = vec![];
-        let type_ids = vec![
-            1, 2, 3, 4, 5, 6, 7, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 25, 26, 27, 31, 32,
-            33, 34, 35, 36, 37,
-        ];
-
-        // Note: we manually construct the fields because these fields shouldn't have their own
-        // GeoArrow extension metadata
-        macro_rules! push_field {
-            ($field_name:literal, $geom_type:ident, $dim:path) => {{
-                fields.push(Field::new(
-                    $field_name,
-                    $geom_type {
-                        coord_type: self.coord_type,
-                        dim: $dim,
-                        metadata: Metadata::default().into(),
-                    }
-                    .data_type(),
-                    true,
-                ));
-            }};
-        }
-
-        push_field!("Point", PointType, Dimension::XY);
-        push_field!("LineString", LineStringType, Dimension::XY);
-        push_field!("Polygon", PolygonType, Dimension::XY);
-        push_field!("MultiPoint", MultiPointType, Dimension::XY);
-        push_field!("MultiLineString", MultiLineStringType, Dimension::XY);
-        push_field!("MultiPolygon", MultiPolygonType, Dimension::XY);
-        push_field!("GeometryCollection", GeometryCollectionType, Dimension::XY);
-
-        push_field!("Point Z", PointType, Dimension::XYZ);
-        push_field!("LineString Z", LineStringType, Dimension::XYZ);
-        push_field!("Polygon Z", PolygonType, Dimension::XYZ);
-        push_field!("MultiPoint Z", MultiPointType, Dimension::XYZ);
-        push_field!("MultiLineString Z", MultiLineStringType, Dimension::XYZ);
-        push_field!("MultiPolygon Z", MultiPolygonType, Dimension::XYZ);
-        push_field!(
-            "GeometryCollection Z",
-            GeometryCollectionType,
-            Dimension::XYZ
-        );
-
-        push_field!("Point M", PointType, Dimension::XYM);
-        push_field!("LineString M", LineStringType, Dimension::XYM);
-        push_field!("Polygon M", PolygonType, Dimension::XYM);
-        push_field!("MultiPoint M", MultiPointType, Dimension::XYM);
-        push_field!("MultiLineString M", MultiLineStringType, Dimension::XYM);
-        push_field!("MultiPolygon M", MultiPolygonType, Dimension::XYM);
-        push_field!(
-            "GeometryCollection M",
-            GeometryCollectionType,
-            Dimension::XYM
-        );
-
-        push_field!("Point ZM", PointType, Dimension::XYZM);
-        push_field!("LineString ZM", LineStringType, Dimension::XYZM);
-        push_field!("Polygon ZM", PolygonType, Dimension::XYZM);
-        push_field!("MultiPoint ZM", MultiPointType, Dimension::XYZM);
-        push_field!("MultiLineString ZM", MultiLineStringType, Dimension::XYZM);
-        push_field!("MultiPolygon ZM", MultiPolygonType, Dimension::XYZM);
-        push_field!(
-            "GeometryCollection ZM",
-            GeometryCollectionType,
-            Dimension::XYZM
-        );
-
-        let union_fields = UnionFields::new(type_ids, fields);
-        DataType::Union(union_fields, UnionMode::Dense)
+        GEOMETRY_UNION_TYPES[self.coord_type as usize].clone()
     }
 
     /// Convert this type to a [`Field`], retaining extension metadata.
