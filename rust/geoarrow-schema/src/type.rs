@@ -996,6 +996,154 @@ static SEPARATED_XYZM: LazyLock<DataType> = LazyLock::new(|| {
     )
 });
 
+/* TODO: see if these would actually help with mixed_data_type()
+static GEOMETRY_UNION_XY: LazyLock<Vec<Field>> = LazyLock::new(|| {
+    vec![
+        Field::new(
+            "point_xy",
+            PointType::new(Dimension::XY, Default::default()).data_type(),
+            true,
+        ),
+        Field::new(
+            "linestring_xy",
+            LineStringType::new(Dimension::XY, Default::default()).data_type(),
+            true,
+        ),
+        Field::new(
+            "polygon_xy",
+            PolygonType::new(Dimension::XY, Default::default()).data_type(),
+            true,
+        ),
+        Field::new(
+            "multipoint_xy",
+            MultiPointType::new(Dimension::XY, Default::default()).data_type(),
+            true,
+        ),
+        Field::new(
+            "multilinestring_xy",
+            MultiLineStringType::new(Dimension::XY, Default::default()).data_type(),
+            true,
+        ),
+        Field::new(
+            "multipolygon_xy",
+            MultiPolygonType::new(Dimension::XY, Default::default()).data_type(),
+            true,
+        ),
+    ]
+}
+);
+
+static GEOMETRY_UNION_XYZ: LazyLock<Vec<Field>> = LazyLock::new(|| {
+    vec![
+        Field::new(
+            "point_xyz",
+            PointType::new(Dimension::XYZ, Default::default()).data_type(),
+            true,
+        ),
+        Field::new(
+            "linestring_xyz",
+            LineStringType::new(Dimension::XYZ, Default::default()).data_type(),
+            true,
+        ),
+        Field::new(
+            "polygon_xyz",
+            PolygonType::new(Dimension::XYZ, Default::default()).data_type(),
+            true,
+        ),
+        Field::new(
+            "multipoint_xyz",
+            MultiPointType::new(Dimension::XYZ, Default::default()).data_type(),
+            true,
+        ),
+        Field::new(
+            "multilinestring_xyz",
+            MultiLineStringType::new(Dimension::XYZ, Default::default()).data_type(),
+            true,
+        ),
+        Field::new(
+            "multipolygon_xyz",
+            MultiPolygonType::new(Dimension::XYZ, Default::default()).data_type(),
+            true,
+        ),
+    ]
+}
+);
+
+static GEOMETRY_UNION_XYM: LazyLock<Vec<Field>> = LazyLock::new(|| {
+    vec![
+        Field::new(
+            "point_xym",
+            PointType::new(Dimension::XYM, Default::default()).data_type(),
+            true,
+        ),
+        Field::new(
+            "linestring_xym",
+            LineStringType::new(Dimension::XYM, Default::default()).data_type(),
+            true,
+        ),
+        Field::new(
+            "polygon_xym",
+            PolygonType::new(Dimension::XYM, Default::default()).data_type(),
+            true,
+        ),
+        Field::new(
+            "multipoint_xym",
+            MultiPointType::new(Dimension::XYM, Default::default()).data_type(),
+            true,
+        ),
+        Field::new(
+            "multilinestring_xym",
+            MultiLineStringType::new(Dimension::XYM, Default::default()).data_type(),
+            true,
+        ),
+        Field::new(
+            "multipolygon_xym",
+            MultiPolygonType::new(Dimension::XYM, Default::default()).data_type(),
+            true,
+        ),
+    ]
+}
+);
+
+static GEOMETRY_UNION_XYZM : LazyLock<Vec<Field>> = LazyLock::new(|| {
+vec![
+        Field::new(
+            "point_xyzm",
+            PointType::new(Dimension::XYZM, Default::default()).data_type(),
+            true,
+        ),
+        Field::new(
+            "linestring_xyzm",
+LineStringType::new(Dimension::XYZM, Default::default()).data_type(),
+            true,
+        ),
+        Field::new(
+            "polygon_xyzm",
+            PolygonType::new(Dimension::XYZM, Default::default()).data_type(),
+            true,
+        ),
+        Field::new(
+            "multipoint_xyzm",
+            MultiPointType::new(Dimension::XYZM, Default::default()).data_type(),
+            true,
+        ),
+        Field::new(
+            "multilinestring_xyzm",
+            MultiLineStringType::new(Dimension::XYZM, Default::default()).data_type(),
+            true,
+        ),
+        Field::new(
+            "multipolygon_xyzm",
+            MultiPolygonType::new(Dimension::XYZM, Default::default()).data_type(),
+            true,
+        ),
+    ]
+}
+);
+*/
+
+ 
+
 /// A GeoArrow Geometry type.
 ///
 /// Refer to the [GeoArrow
