@@ -32,6 +32,7 @@ wkt = { workspace = true }
 
 [dev-dependencies]
 parquet = { workspace = true, features = [
+    "async",
     "brotli",
     "flate2-zlib-rs",
     "flate2",
