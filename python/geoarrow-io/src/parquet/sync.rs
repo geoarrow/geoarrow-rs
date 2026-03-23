@@ -11,6 +11,7 @@ use geoparquet::writer::{GeoParquetRecordBatchEncoder, GeoParquetWriterOptionsBu
 use parquet::arrow::ArrowWriter;
 use parquet::arrow::arrow_reader::{ArrowReaderOptions, ParquetRecordBatchReaderBuilder};
 use parquet::basic::Compression;
+use parquet::file::metadata::PageIndexPolicy;
 use parquet::file::properties::{WriterProperties, WriterVersion};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -50,7 +51,7 @@ pub fn read_parquet(
                         ParquetObjectReader::new(async_reader.store, async_reader.path);
                     let mut builder = ParquetRecordBatchStreamBuilder::new_with_options(
                         object_reader,
-                        ArrowReaderOptions::new().with_page_index(true),
+                        ArrowReaderOptions::new().with_page_index_policy(PageIndexPolicy::Optional),
                     )
                     .await?;
 
@@ -83,7 +84,7 @@ pub fn read_parquet(
         AnyFileReader::Sync(sync_reader) => {
             let mut builder = ParquetRecordBatchReaderBuilder::try_new_with_options(
                 sync_reader,
-                ArrowReaderOptions::new().with_page_index(true),
+                ArrowReaderOptions::new().with_page_index_policy(PageIndexPolicy::Optional),
             )?;
 
             if let Some(batch_size) = batch_size {

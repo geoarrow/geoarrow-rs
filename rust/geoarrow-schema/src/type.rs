@@ -799,7 +799,8 @@ fn mixed_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
         }
     }
 
-    let union_fields = UnionFields::new(type_ids, fields);
+    let union_fields = UnionFields::try_new(type_ids, fields)
+        .expect("type_ids and fields should have the same length");
     DataType::Union(union_fields, UnionMode::Dense)
 }
 
@@ -1104,7 +1105,8 @@ impl GeometryType {
             Dimension::XYZM
         );
 
-        let union_fields = UnionFields::new(type_ids, fields);
+        let union_fields = UnionFields::try_new(type_ids, fields)
+            .expect("type_ids and fields should have the same length");
         DataType::Union(union_fields, UnionMode::Dense)
     }
 

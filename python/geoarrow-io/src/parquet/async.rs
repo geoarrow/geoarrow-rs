@@ -21,6 +21,7 @@ use object_store::ObjectStore;
 use parquet::arrow::ParquetRecordBatchStreamBuilder;
 use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::ParquetObjectReader;
+use parquet::file::metadata::PageIndexPolicy;
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
@@ -68,7 +69,7 @@ async fn read_parquet_async_inner(
     let object_reader = ParquetObjectReader::new(async_reader.store, async_reader.path);
     let mut builder = ParquetRecordBatchStreamBuilder::new_with_options(
         object_reader,
-        ArrowReaderOptions::new().with_page_index(true),
+        ArrowReaderOptions::new().with_page_index_policy(PageIndexPolicy::Optional),
     )
     .await?;
 

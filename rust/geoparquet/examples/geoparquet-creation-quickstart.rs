@@ -81,10 +81,8 @@ fn main() {
     // and as such may drop information about our geometry types
     let batch = RecordBatch::try_new(Arc::new(schema), vec![geometry_column, id_column]).unwrap();
 
-    for batch in [batch] {
-        let encoded_batch = gpq_encoder.encode_record_batch(&batch).unwrap();
-        parquet_writer.write(&encoded_batch).unwrap();
-    }
+    let encoded_batch = gpq_encoder.encode_record_batch(&batch).unwrap();
+    parquet_writer.write(&encoded_batch).unwrap();
 
     let kv_metadata = gpq_encoder.into_keyvalue().unwrap();
     parquet_writer.append_key_value_metadata(kv_metadata);
