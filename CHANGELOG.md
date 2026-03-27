@@ -1,6 +1,22 @@
 # Changelog
 
-**Changelogs have been moved to per-crate changelogs**.
+## 0.8.0 - 2025-07-08
+
+## What's Changed
+
+* docs: Add Geoparquet Example by @C-Loftus in https://github.com/geoarrow/geoarrow-rs/pull/1411
+* feat: Use `LazyLock` for constructing coordinate `DataType` instances by @nuts-rice in https://github.com/geoarrow/geoarrow-rs/pull/1420
+* chore: update to arrow v58 by @gadomski in https://github.com/geoarrow/geoarrow-rs/pull/1424
+* ci: Set up rust trusted publishing by @kylebarron in https://github.com/geoarrow/geoarrow-rs/pull/1426
+
+## New Contributors
+* @C-Loftus made their first contribution in https://github.com/geoarrow/geoarrow-rs/pull/1411
+
+**Full Changelog**: https://github.com/geoarrow/geoarrow-rs/compare/rust-v0.7.0...rust-v0.8.0
+
+---
+
+**(Previously, changelogs were per-crate, but exploring reverting to one global changelog).**
 
 ## 0.4.0 (`geoparquet` crate) - 2025-07-08
 

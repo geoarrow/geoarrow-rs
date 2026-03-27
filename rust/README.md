@@ -35,3 +35,4 @@ These crates may possibly diverge in versioning in the future to allow for some 
 | -------- | -------- |
 | 0.4.x    | 55       |
 | 0.5.x    | 56       |
+| 0.8.x    | 58       |
