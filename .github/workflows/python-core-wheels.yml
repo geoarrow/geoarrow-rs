@@ -40,7 +40,7 @@ jobs:
           - geoarrow-compute
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: 3.x
       - name: Build wheels
@@ -75,7 +75,7 @@ jobs:
   #         - geoarrow-compute
   #   steps:
   #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-python@v5
+  #     - uses: actions/setup-python@v6
   #       with:
   #         python-version: 3.x
   #     - name: Build wheels
@@ -103,7 +103,7 @@ jobs:
           - geoarrow-compute
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: 3.x
           architecture: ${{ matrix.platform.target }}
@@ -133,7 +133,7 @@ jobs:
           - geoarrow-compute
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: 3.x
       - name: Build wheels
@@ -171,7 +171,7 @@ jobs:
   #       with:
   #         version: ${{ env.EMSCRIPTEN_VERSION }}
   #         actions-cache-folder: emsdk-cache
-  #     - uses: actions/setup-python@v5
+  #     - uses: actions/setup-python@v6
   #       with:
   #         python-version: ${{ env.PYTHON_VERSION }}
   #     - run: pip install pyodide-build
