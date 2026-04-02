@@ -49,7 +49,7 @@ jobs:
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
       - uses: Swatinem/rust-cache@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v6
         with:
           node-version: "20"
       - name: Build bundle
