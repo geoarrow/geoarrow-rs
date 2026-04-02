@@ -23,7 +23,7 @@ jobs:
         with:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
-      - uses: prefix-dev/setup-pixi@v0.8.1
+      - uses: prefix-dev/setup-pixi@v0.9.5
         with:
           activate-environment: true
           cache: true
@@ -104,7 +104,7 @@ jobs:
   #         submodules: "recursive"
   #     - uses: dtolnay/rust-toolchain@stable
   #     - uses: Swatinem/rust-cache@v2
-  #     - uses: prefix-dev/setup-pixi@v0.8.1
+  #     - uses: prefix-dev/setup-pixi@v0.9.5
   #       with:
   #         activate-environment: true
   #         cache: true
@@ -126,7 +126,7 @@ jobs:
   #         submodules: "recursive"
   #     - uses: dtolnay/rust-toolchain@stable
   #     - uses: Swatinem/rust-cache@v2
-  #     - uses: prefix-dev/setup-pixi@v0.8.1
+  #     - uses: prefix-dev/setup-pixi@v0.9.5
   #       with:
   #         activate-environment: true
   #         cache: true
