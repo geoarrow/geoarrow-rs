@@ -74,7 +74,7 @@ jobs:
             target: aarch64
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v6
         with:
           python-version: 3.x
 
@@ -106,7 +106,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v6
         with:
           python-version: 3.11
           architecture: ${{ matrix.target }}
@@ -142,7 +142,7 @@ jobs:
   #         - i686-unknown-linux-musl
   #   steps:
   #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-python@v4
+  #     - uses: actions/setup-python@v6
   #       with:
   #         python-version: 3.x
   #         architecture: x64
@@ -185,7 +185,7 @@ jobs:
   #   steps:
   #     - uses: actions/checkout@v4
 
-  #     - uses: actions/setup-python@v4
+  #     - uses: actions/setup-python@v6
   #       with:
   #         python-version: 3.x
 
