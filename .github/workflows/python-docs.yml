@@ -20,7 +20,7 @@ jobs:
       run:
         working-directory: python
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         # We need to additionally fetch the gh-pages branch for mike deploy
         with:
           fetch-depth: 0
