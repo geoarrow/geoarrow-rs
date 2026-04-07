@@ -17,7 +17,6 @@ Then enter into the `python` directory:
 
 ```
 cd python
-uv install
 uv run maturin develop -m geoarrow-core/Cargo.toml
 uv run maturin develop -m geoarrow-compute/Cargo.toml
 uv run maturin develop -m geoarrow-io/Cargo.toml
@@ -93,3 +92,15 @@ maturin build \
     --target wasm32-unknown-emscripten \
     -i python3.11
 ```
+
+## Nix Flake Environment
+
+We have a pre-configured nix flake environment with all necessary
+dependencies. Enable it by:
+
+```
+nix develop
+```
+
+Or you can make it persist with `direnv` and `use flake` in `.envrc` file at top
+level of this repo.
