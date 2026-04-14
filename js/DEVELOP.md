@@ -16,3 +16,16 @@ wasm-pack test --headless --firefox
 ```
 wasm-pack publish
 ```
+
+
+## Nix Flake Environment
+
+We have a pre-configured nix flake environment with all necessary
+dependencies. Enable it by:
+
+```
+nix develop
+```
+
+Or you can make it persist with `direnv` and `use flake` in `.envrc` file at top
+level of this repo.
