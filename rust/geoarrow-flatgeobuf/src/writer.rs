@@ -3,8 +3,8 @@
 use std::io::Write;
 
 use arrow_array::RecordBatch;
-use arrow_schema::{Schema, SchemaRef};
-use flatgeobuf::{FgbCrs, FgbWriter, FgbWriterOptions};
+use arrow_schema::{DataType, Schema, SchemaRef};
+use flatgeobuf::{ColumnType, FgbCrs, FgbWriter, FgbWriterOptions};
 use geoarrow_array::geozero::export::{GeozeroRecordBatchReader, GeozeroRecordBatchWriter};
 use geoarrow_schema::crs::{CrsTransform, DefaultCrsTransform};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
@@ -184,8 +184,10 @@ impl<W: Write> FlatGeobufWriter<'_, W> {
         let fgb_options = options.create_fgb_options(geo_data_type, wkt_crs_str.as_deref());
 
         let geometry_type = infer_flatgeobuf_geometry_type(schema.as_ref())?;
-        let fgb_writer = FgbWriter::create_with_options(&options.name, geometry_type, fgb_options)
-            .map_err(|err| GeoArrowError::External(Box::new(err)))?;
+        let mut fgb_writer =
+            FgbWriter::create_with_options(&options.name, geometry_type, fgb_options)
+                .map_err(|err| GeoArrowError::External(Box::new(err)))?;
+        register_columns(&mut fgb_writer, schema.as_ref(), geom_col_idxs[0]);
         let geozero_writer = GeozeroRecordBatchWriter::try_new(schema, fgb_writer, None).unwrap();
 
         Ok(Self {
@@ -249,6 +251,7 @@ pub fn write_flatgeobuf<W: Write, S: Into<GeozeroRecordBatchReader>>(
 
     let mut fgb = FgbWriter::create_with_options(&options.name, geometry_type, fgb_options)
         .map_err(|err| GeoArrowError::External(Box::new(err)))?;
+    register_columns(&mut fgb, schema.as_ref(), geom_col_idxs[0]);
     stream
         .process(&mut fgb)
         .map_err(|err| GeoArrowError::External(Box::new(err)))?;
@@ -285,6 +288,46 @@ fn infer_flatgeobuf_geometry_type(schema: &Schema) -> GeoArrowResult<flatgeobuf:
     Ok(geometry_type)
 }
 
+/// Pre-register all non-geometry columns on the FgbWriter so that column indices in the
+/// FlatGeobuf header always match the Arrow schema, even when a column has 100% null values
+/// (which would never be passed to `property()` and thus never auto-registered).
+///
+/// Without this, FgbWriter silently drops any property whose index is more than one past the
+/// last registered column, corrupting all columns that follow a fully-null column.
+fn register_columns(fgb: &mut FgbWriter, schema: &Schema, geom_col_idx: usize) {
+    for (col_idx, field) in schema.fields().iter().enumerate() {
+        if col_idx == geom_col_idx {
+            continue;
+        }
+        let col_type = arrow_type_to_fgb_column_type(field.data_type());
+        let nullable = field.is_nullable();
+        fgb.add_column(field.name(), col_type, move |_fbb, col| {
+            col.nullable = nullable;
+        });
+    }
+}
+
+fn arrow_type_to_fgb_column_type(data_type: &DataType) -> ColumnType {
+    match data_type {
+        DataType::Boolean => ColumnType::Bool,
+        DataType::UInt8 => ColumnType::UByte,
+        DataType::Int8 => ColumnType::Byte,
+        DataType::UInt16 => ColumnType::UShort,
+        DataType::Int16 => ColumnType::Short,
+        DataType::UInt32 => ColumnType::UInt,
+        DataType::Int32 => ColumnType::Int,
+        DataType::UInt64 => ColumnType::ULong,
+        DataType::Int64 => ColumnType::Long,
+        DataType::Float16 | DataType::Float32 => ColumnType::Float,
+        DataType::Float64 => ColumnType::Double,
+        DataType::Utf8 | DataType::LargeUtf8 => ColumnType::String,
+        DataType::Binary | DataType::LargeBinary => ColumnType::Binary,
+        DataType::Date32 | DataType::Date64 | DataType::Timestamp(_, _) => ColumnType::DateTime,
+        // Struct, List, LargeList, Map are serialised as JSON
+        _ => ColumnType::Json,
+    }
+}
+
 // Note: this is duplicated from the `geoarrow-array` crate.
 fn geometry_columns(schema: &Schema) -> Vec<usize> {
     let mut geom_indices = vec![];
@@ -302,12 +345,13 @@ mod test {
     use std::sync::Arc;
 
     use arrow_array::{RecordBatch, RecordBatchIterator, RecordBatchReader, create_array};
-    use arrow_schema::{DataType, Field};
-    use flatgeobuf::FgbReader;
+    use arrow_schema::{DataType, Field, Schema};
+    use flatgeobuf::{FallibleStreamingIterator, FgbReader};
     use geoarrow_array::GeoArrowArray;
     use geoarrow_array::array::PointArray;
     use geoarrow_array::builder::PointBuilder;
     use geoarrow_schema::PointType;
+    use geozero::FeatureProperties;
     use wkt::wkt;
 
     use super::*;
@@ -468,5 +512,141 @@ mod test {
             let batches = record_batch_reader.collect::<Result<Vec<_>, _>>().unwrap();
             assert_eq!(batches, orig_batches);
         }
+    }
+
+    #[test]
+    fn test_sparse_fields() {
+        let typ = PointType::new(Dimension::XY, Default::default());
+        let example_geometry = PointBuilder::from_points(
+            vec![wkt! { POINT (0. 1.) }, wkt! { POINT (1. 2.) }].iter(),
+            typ.clone(),
+        )
+        .finish();
+        let fields = vec![
+            Arc::new(Field::new("u8", DataType::UInt8, true)),
+            Arc::new(Field::new("string1", DataType::Utf8, true)),
+            Arc::new(Field::new("string2", DataType::Utf8, true)),
+            Arc::new(example_geometry.data_type().to_field("geometry", true)),
+        ];
+        let schema = Arc::new(Schema::new(fields));
+
+        let batch1 = RecordBatch::try_new(
+            schema.clone(),
+            vec![
+                create_array!(UInt8, [1, 2]),
+                create_array!(Utf8, ["a", "b"]),
+                create_array!(Utf8, ["zzz", "zzz"]),
+                PointBuilder::from_points(
+                    vec![wkt! { POINT (0. 1.) }, wkt! { POINT (1. 2.) }].iter(),
+                    typ.clone(),
+                )
+                .finish()
+                .into_array_ref(),
+            ],
+        )
+        .unwrap();
+
+        let batch2 = RecordBatch::try_new(
+            schema.clone(),
+            vec![
+                create_array!(UInt8, [3, 4]),
+                create_array!(Utf8, [None::<String>, None]),
+                create_array!(Utf8, ["zzz", "zzz"]),
+                PointBuilder::from_points(
+                    vec![wkt! { POINT (3. 4.) }, wkt! { POINT (4. 5.) }].iter(),
+                    typ.clone(),
+                )
+                .finish()
+                .into_array_ref(),
+            ],
+        )
+        .unwrap();
+
+        let mut output_buffer = Vec::new();
+        {
+            let bw = BufWriter::new(&mut output_buffer);
+            let options = FlatGeobufWriterOptions::new("test".to_string());
+            let mut fgb_writer = FlatGeobufWriter::try_new(bw, schema, options).unwrap();
+            fgb_writer.write(&batch1).unwrap();
+            fgb_writer.write(&batch2).unwrap();
+            fgb_writer.finish().unwrap();
+        }
+
+        let reader = Cursor::new(output_buffer);
+        let mut fgb_reader = FgbReader::open(reader).unwrap().select_all().unwrap();
+
+        let mut results: Vec<(u8, Option<String>, String)> = vec![];
+        while let Some(feature) = fgb_reader.next().unwrap() {
+            let u8_val = feature.property::<u8>("u8").unwrap();
+            // string1 is null for batch2 features (u8=3,4); FlatGeobuf omits null properties
+            let string1 = feature.property::<String>("string1").ok();
+            // string2 must be present for all features, even those where string1 is null
+            let string2 = feature
+                .property::<String>("string2")
+                .expect("string2 must be present even when string1 is null");
+            results.push((u8_val, string1, string2));
+        }
+
+        results.sort_by_key(|(u, _, _)| *u);
+        assert_eq!(results.len(), 4);
+        assert_eq!(results[0], (1, Some("a".to_string()), "zzz".to_string()));
+        assert_eq!(results[1], (2, Some("b".to_string()), "zzz".to_string()));
+        assert_eq!(results[2], (3, None, "zzz".to_string()));
+        assert_eq!(results[3], (4, None, "zzz".to_string()));
+    }
+
+    /// Columns following a 100% null column must not be dropped from the output.
+    #[test]
+    fn test_all_null_column() {
+        let typ = PointType::new(Dimension::XY, Default::default());
+        let fields = vec![
+            Arc::new(Field::new("u8", DataType::UInt8, true)),
+            Arc::new(Field::new("all_null", DataType::Utf8, true)),
+            Arc::new(Field::new("after_null", DataType::Utf8, true)),
+            Arc::new(typ.to_field("geometry", true)),
+        ];
+        let schema = Arc::new(Schema::new(fields));
+
+        let batch = RecordBatch::try_new(
+            schema.clone(),
+            vec![
+                create_array!(UInt8, [1, 2]),
+                create_array!(Utf8, [None::<String>, None]),
+                create_array!(Utf8, ["hello", "world"]),
+                PointBuilder::from_points(
+                    vec![wkt! { POINT (0. 1.) }, wkt! { POINT (1. 2.) }].iter(),
+                    typ.clone(),
+                )
+                .finish()
+                .into_array_ref(),
+            ],
+        )
+        .unwrap();
+
+        let mut output_buffer = Vec::new();
+        {
+            let bw = BufWriter::new(&mut output_buffer);
+            let options = FlatGeobufWriterOptions::new("test".to_string());
+            let mut fgb_writer = FlatGeobufWriter::try_new(bw, schema, options).unwrap();
+            fgb_writer.write(&batch).unwrap();
+            fgb_writer.finish().unwrap();
+        }
+
+        let reader = Cursor::new(output_buffer);
+        let mut fgb_reader = FgbReader::open(reader).unwrap().select_all().unwrap();
+        let mut results: Vec<(u8, Option<String>, String)> = vec![];
+        while let Some(feature) = fgb_reader.next().unwrap() {
+            let u8_val = feature.property::<u8>("u8").unwrap();
+            let all_null = feature.property::<String>("all_null").ok();
+            let after_null = feature
+                .property::<String>("after_null")
+                .expect("after_null must be readable even though all_null is 100% null");
+            results.push((u8_val, all_null, after_null));
+        }
+
+        results.sort_by_key(|(u, _, _)| *u);
+        assert_eq!(results.len(), 2);
+        assert_eq!(results[0], (1, None, "hello".to_string()));
+        assert_eq!(results[1], (2, None, "world".to_string()));
     }
 }
