@@ -518,7 +518,7 @@ mod test {
     fn test_sparse_fields() {
         let typ = PointType::new(Dimension::XY, Default::default());
         let example_geometry = PointBuilder::from_points(
-            vec![wkt! { POINT (0. 1.) }, wkt! { POINT (1. 2.) }].iter(),
+            [wkt! { POINT (0. 1.) }, wkt! { POINT (1. 2.) }].iter(),
             typ.clone(),
         )
         .finish();
@@ -537,7 +537,7 @@ mod test {
                 create_array!(Utf8, ["a", "b"]),
                 create_array!(Utf8, ["zzz", "zzz"]),
                 PointBuilder::from_points(
-                    vec![wkt! { POINT (0. 1.) }, wkt! { POINT (1. 2.) }].iter(),
+                    [wkt! { POINT (0. 1.) }, wkt! { POINT (1. 2.) }].iter(),
                     typ.clone(),
                 )
                 .finish()
@@ -553,7 +553,7 @@ mod test {
                 create_array!(Utf8, [None::<String>, None]),
                 create_array!(Utf8, ["zzz", "zzz"]),
                 PointBuilder::from_points(
-                    vec![wkt! { POINT (3. 4.) }, wkt! { POINT (4. 5.) }].iter(),
+                    [wkt! { POINT (3. 4.) }, wkt! { POINT (4. 5.) }].iter(),
                     typ.clone(),
                 )
                 .finish()
@@ -614,7 +614,7 @@ mod test {
                 create_array!(Utf8, [None::<String>, None]),
                 create_array!(Utf8, ["hello", "world"]),
                 PointBuilder::from_points(
-                    vec![wkt! { POINT (0. 1.) }, wkt! { POINT (1. 2.) }].iter(),
+                    [wkt! { POINT (0. 1.) }, wkt! { POINT (1. 2.) }].iter(),
                     typ.clone(),
                 )
                 .finish()
