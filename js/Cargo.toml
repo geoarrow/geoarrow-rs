@@ -33,17 +33,18 @@ io_object_store = [
     "dep:object_store",
     "dep:reqwest",
     "dep:tokio",
-    "dep:object-store-wasm",
     "dep:url",
     "parquet/object_store",
 ]
 io_parquet = ["dep:geoparquet", "table", "data", "dep:bytes", "dep:parquet"]
 io_parquet_async = [
     "async-stream",
+    "dep:indexmap",
     "geoparquet/async",
     "io_http",
     "io_object_store",
     "io_parquet",
+    "parquet/async",
     "range-reader",
     "wasm-streams",
 ]
@@ -93,11 +94,10 @@ geoarrow-cast = { path = "../rust/geoarrow-cast" }
 geoarrow-schema = { path = "../rust/geoarrow-schema" }
 geodesy = { version = "0.12", optional = true, features = ["js"] }
 geoparquet = { path = "../rust/geoparquet", optional = true }
-object_store = { version = "0.13", optional = true }
-# Use released version when it supports object-store 0.12
-object-store-wasm = { git = "https://github.com/kylebarron/object-store-wasm", rev = "1b1c29c9915e1d099bdc19617ca59e9d80844478", optional = true, default-features = false, features = [
-    "http",
-] }
+indexmap = { version = "2", optional = true }
+object_store = { version = "0.13", optional = true, features = ["http"] }
+# object-store-wasm is left out on purpose: the HTTP store of object_store runs
+# under wasm already, and the 0.12 pin of the shim would clash with the 0.13 here.
 parquet = { version = "59", optional = true, features = ["arrow", "base64"] }
 range-reader = { version = "0.2", optional = true }
 reqwest = { version = "*", optional = true }
@@ -124,6 +124,13 @@ zstd-sys = { version = "=2.0.9", optional = true, default-features = false }
 [dependencies.web-sys]
 version = "0.3.4"
 features = ['console']
+
+# object_store's http feature pulls rand 0.10 -> getrandom 0.4, whose wasm32
+# backend is only compiled in when its wasm_js feature is enabled.
+[target.'cfg(target_arch = "wasm32")'.dependencies.getrandom_v04]
+package = "getrandom"
+version = "0.4"
+features = ["wasm_js"]
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.13"

@@ -6,5 +6,5 @@
 // pub mod object_store;
 // #[cfg(feature = "io_object_store")]
 // pub mod object_store_s3;
-// #[cfg(feature = "io_parquet")]
-// pub mod parquet;
+#[cfg(feature = "io_parquet")]
+pub mod parquet;

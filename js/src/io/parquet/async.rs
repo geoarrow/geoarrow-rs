@@ -1,41 +1,102 @@
-use crate::error::{GeoArrowWasmError, WasmResult};
-use crate::io::parquet::options::JsParquetReaderOptions;
-use arrow_wasm::{RecordBatch, Table};
-use futures::stream::StreamExt;
-use geo_traits::CoordTrait;
-use geoarrow_schema::CoordType;
-use geoparquet::metadata::GeoParquetBboxCovering;
-use geoparquet::{
-    GeoParquetDatasetMetadata, GeoParquetReaderMetadata, GeoParquetReaderOptions,
-    GeoParquetRecordBatchStream, GeoParquetRecordBatchStreamBuilder,
-};
-use object_store::ObjectStore;
-use object_store_wasm::http::HttpStore;
-use parquet::arrow::arrow_reader::ArrowReaderMetadata;
-use parquet::arrow::async_reader::ParquetObjectReader;
-use std::collections::HashMap;
+// parquet 59 deprecates ParquetObjectReader (arrow-rs#10308); it stays the
+// right reader over the wasm HTTP object store.
+#![allow(deprecated)]
+
 use std::sync::Arc;
+
+use arrow_wasm::Table;
+use futures::TryStreamExt;
+use futures::future::join_all;
+use geo::Rect;
+use geoarrow_schema::CoordType;
+use geoparquet::reader::{
+    GeoParquetDatasetMetadata, GeoParquetReaderBuilder, GeoParquetReaderMetadata,
+    GeoParquetRecordBatchStream,
+};
+use indexmap::IndexMap;
+use object_store::ObjectStore;
+use object_store::http::HttpBuilder;
+use object_store::path::Path;
+use parquet::arrow::arrow_reader::ArrowReaderMetadata;
+use parquet::arrow::async_reader::{ParquetObjectReader, ParquetRecordBatchStreamBuilder};
 use url::Url;
 use wasm_bindgen::prelude::*;
 
+use crate::error::WasmResult;
+
+/// The spec gives four values, or six for a 3D file. An inverted box errors:
+/// `geo::Rect::new` would swap its corners without a word and give the
+/// complement of the region asked for.
+fn bbox_rect(bbox: &Option<Vec<f64>>) -> WasmResult<Option<Rect>> {
+    let Some(b) = bbox.as_ref() else {
+        return Ok(None);
+    };
+    let (xmin, ymin, xmax, ymax) = match b.len() {
+        4 => (b[0], b[1], b[2], b[3]),
+        6 => (b[0], b[1], b[3], b[4]),
+        n => {
+            return Err(JsError::new(&format!(
+                "bbox must have 4 elements [xmin, ymin, xmax, ymax] or 6 elements \
+                 [xmin, ymin, zmin, xmax, ymax, zmax]; got {n}"
+            )));
+        }
+    };
+    if xmin > xmax || ymin > ymax {
+        return Err(JsError::new(
+            "inverted bbox (xmin > xmax or ymin > ymax) is not supported; \
+             antimeridian-crossing bboxes must be split into two queries by the caller",
+        ));
+    }
+    Ok(Some(Rect::new(
+        geo::coord! { x: xmin, y: ymin },
+        geo::coord! { x: xmax, y: ymax },
+    )))
+}
+
+/// Reject the parts of a URL that the HTTP store drops. It keeps the origin and
+/// the path only, thus a query parameter or a credential would go missing and
+/// every request would fail as an opaque 403 or 404.
+fn reject_unsupported_url_parts(url: &Url) -> WasmResult<()> {
+    if url.query().is_some_and(|q| !q.is_empty())
+        || !url.username().is_empty()
+        || url.password().is_some()
+    {
+        return Err(JsError::new(
+            "URL query parameters and credentials are not supported; the store fetches by \
+             origin + path only. Pass a plain URL (presigned URLs will not work).",
+        ));
+    }
+    Ok(())
+}
+
+/// A remote GeoParquet file, read over HTTP byte-range requests
+///
+/// The footer is fetched once and held, thus `read` pays for the row group bytes
+/// alone.
 #[wasm_bindgen]
 pub struct ParquetFile {
-    path: object_store::path::Path,
+    path: Path,
     geoparquet_meta: GeoParquetReaderMetadata,
     store: Arc<dyn ObjectStore>,
 }
 
 #[wasm_bindgen]
 impl ParquetFile {
-    #[wasm_bindgen(constructor)]
-    pub async fn new(url: String) -> WasmResult<ParquetFile> {
+    /// Open a remote GeoParquet file and hold its metadata
+    // Not a constructor: wasm-bindgen emits invalid TypeScript for an async one.
+    #[wasm_bindgen(js_name = open)]
+    pub async fn open(url: String) -> WasmResult<ParquetFile> {
         let parsed_url = Url::parse(&url)?;
-        let base_url = Url::parse(&parsed_url.origin().unicode_serialization())?;
-        let store = Arc::new(HttpStore::new(base_url));
-        let path = object_store::path::Path::parse(parsed_url.path())?;
+        reject_unsupported_url_parts(&parsed_url)?;
+        let base_url = parsed_url.origin().unicode_serialization();
+        let store: Arc<dyn ObjectStore> = Arc::new(HttpBuilder::new().with_url(base_url).build()?);
+        // `from_url_path` percent-decodes; `Path::parse` would leave the path
+        // encoded for the HTTP client to encode again, so `my%20file` would be
+        // fetched as `my%2520file`.
+        let path = Path::from_url_path(parsed_url.path())?;
         let mut reader = ParquetObjectReader::new(store.clone(), path.clone());
         let arrow_meta = ArrowReaderMetadata::load_async(&mut reader, Default::default()).await?;
-        let geoparquet_meta = GeoParquetReaderMetadata::new(arrow_meta);
+        let geoparquet_meta = GeoParquetReaderMetadata::from_arrow_meta(arrow_meta)?;
         Ok(Self {
             path,
             geoparquet_meta,
@@ -43,221 +104,143 @@ impl ParquetFile {
         })
     }
 
-    /// The number of rows in this file.
+    /// Note that a malformed footer that reports a negative count throws
     #[wasm_bindgen(getter, js_name = numRows)]
-    pub fn num_rows(&self) -> usize {
-        self.geoparquet_meta.num_rows()
+    pub fn num_rows(&self) -> WasmResult<usize> {
+        Ok(self.geoparquet_meta.num_rows()?)
     }
 
-    /// The number of row groups in this file.
     #[wasm_bindgen(getter, js_name = numRowGroups)]
     pub fn num_row_groups(&self) -> usize {
         self.geoparquet_meta.num_row_groups()
     }
 
-    /// Get the bounds of a single row group.
-    ///
-    /// This fetches bounds for the row group from the column statistics in the row group metadata.
-    #[wasm_bindgen(js_name = rowGroupBounds)]
-    pub fn row_group_bounds(
-        &self,
-        row_group_idx: usize,
-        bbox_paths: JsValue,
-    ) -> WasmResult<Option<Vec<f64>>> {
-        let paths: Option<GeoParquetBboxCovering> = serde_wasm_bindgen::from_value(bbox_paths)?;
-        if let Some(bounds) = self
-            .geoparquet_meta
-            .row_group_bounds(row_group_idx, paths.as_ref())?
-        {
-            Ok(Some(vec![
-                bounds.min().x(),
-                bounds.min().y(),
-                bounds.max().x(),
-                bounds.max().y(),
-            ]))
-        } else {
-            Ok(None)
-        }
-    }
-
-    // /// Get the bounds of all row groups.
-    // ///
-    // /// As of GeoParquet 1.1 you won't need to pass in these column names, as they'll be specified
-    // /// in the metadata.
-    // #[wasm_bindgen(js_name = rowGroupsBounds)]
-    // pub fn row_groups_bounds(&self, bbox_paths: JsValue) -> WasmResult<RectData> {
-    //     let paths: Option<GeoParquetBboxCovering> = serde_wasm_bindgen::from_value(bbox_paths)?;
-    //     let bounds = self.geoparquet_meta.row_groups_bounds(paths.as_ref())?;
-    //     Ok(bounds.into())
-    // }
-
-    /// Access the bounding box of the given column for the entire file
-    ///
-    /// If no column name is passed, retrieves the bbox from the primary geometry column.
-    ///
-    /// An Err will be returned if the column name does not exist in the dataset
-    /// None will be returned if the metadata does not contain bounding box information.
+    /// The bounding box of a column across the whole file, as
+    /// `[xmin, ymin, xmax, ymax]`. `None` takes the primary geometry column
     #[wasm_bindgen(js_name = fileBbox)]
     pub fn file_bbox(&self, column_name: Option<String>) -> WasmResult<Option<Vec<f64>>> {
-        let name = column_name.as_deref();
-        let bbox = self.geoparquet_meta.file_bbox(name)?;
+        let bbox = self.geoparquet_meta.file_bbox(column_name.as_deref())?;
         Ok(bbox.map(|b| b.to_vec()))
     }
 
+    /// Read the file into an Arrow Table, with each geometry column in its
+    /// native GeoArrow type. Filtering by `bbox` needs the covering metadata
+    /// that `writeGeoParquet` writes on its `generateCovering` option.
     #[wasm_bindgen]
-    pub async fn read(&self, options: JsValue) -> WasmResult<Table> {
+    pub async fn read(&self, bbox: Option<Vec<f64>>) -> WasmResult<Table> {
         let reader = ParquetObjectReader::new(self.store.clone(), self.path.clone());
-        let options: Option<JsParquetReaderOptions> = serde_wasm_bindgen::from_value(options)?;
-        let stream = GeoParquetRecordBatchStreamBuilder::new_with_metadata_and_options(
+        let mut builder = ParquetRecordBatchStreamBuilder::new_with_metadata(
             reader,
-            self.geoparquet_meta.clone(),
-            options.unwrap_or_default().into(),
-        )
-        .build()?;
-        let (batches, schema) = stream.read_table().await?;
-        Ok(Table::new(schema, batches))
-    }
-    #[wasm_bindgen]
-    pub async fn read_stream(
-        &self,
-        options: JsValue,
-    ) -> WasmResult<wasm_streams::readable::sys::ReadableStream> {
-        let reader = ParquetObjectReader::new(self.store.clone(), self.path.clone());
-        let options: Option<JsParquetReaderOptions> = serde_wasm_bindgen::from_value(options)?;
-        let stream = GeoParquetRecordBatchStreamBuilder::new_with_metadata_and_options(
-            reader,
-            self.geoparquet_meta.clone(),
-            options.unwrap_or_default().into(),
-        )
-        .build()?;
-
-        let out_stream = stream
-            .read_stream()
-            .map(|maybe_batch| {
-                let batch = maybe_batch.map_err(JsError::from)?;
-                Ok(RecordBatch::new(batch).into())
-            })
-            .boxed_local();
-        Ok(wasm_streams::ReadableStream::from_stream(out_stream).into_raw())
+            self.geoparquet_meta.arrow_metadata().clone(),
+        );
+        if let Some(rect) = bbox_rect(&bbox)? {
+            let geo_meta = self.geoparquet_meta.geo_metadata().clone();
+            builder = builder.with_intersecting_row_groups(rect, &geo_meta, None)?;
+            builder = builder.with_intersecting_row_filter(rect, &geo_meta, None)?;
+        }
+        let target_schema = self
+            .geoparquet_meta
+            .geoarrow_schema(true, CoordType::Interleaved)?;
+        let parquet_stream = builder.build()?;
+        let geo_stream =
+            GeoParquetRecordBatchStream::try_new(parquet_stream, target_schema.clone())?;
+        let batches: Vec<_> = geo_stream.try_collect::<Vec<_>>().await?;
+        Ok(Table::new(target_schema, batches))
     }
 }
 
+/// A remote GeoParquet dataset of many fragment files, read over HTTP
+/// byte-range requests into one Arrow Table
 #[wasm_bindgen]
 pub struct ParquetDataset {
     meta: GeoParquetDatasetMetadata,
+    /// Decoded once at `open`: a second pass through `Path::from` would encode
+    /// the `%` again and fetch the wrong URL.
+    paths: IndexMap<String, Path>,
     store: Arc<dyn ObjectStore>,
-}
-
-/// Create a reader per path with the given ObjectStore instance.
-async fn fetch_arrow_metadata_objects(
-    paths: Vec<String>,
-    store: Arc<dyn ObjectStore>,
-) -> Result<HashMap<String, ArrowReaderMetadata>, GeoArrowWasmError> {
-    let paths: Vec<object_store::path::Path> = paths.into_iter().map(|path| path.into()).collect();
-    let mut readers = paths
-        .iter()
-        .map(|path| ParquetObjectReader::new(store.clone(), path.clone()))
-        .collect::<Vec<_>>();
-    let parquet_meta_futures = readers
-        .iter_mut()
-        .map(|reader| ArrowReaderMetadata::load_async(reader, Default::default()));
-    let parquet_metas = futures::future::join_all(parquet_meta_futures)
-        .await
-        .into_iter()
-        .collect::<Result<Vec<_>, parquet::errors::ParquetError>>()?;
-
-    let mut hashmap: HashMap<String, ArrowReaderMetadata> = HashMap::new();
-    for (path, arrow_meta) in paths.iter().zip(parquet_metas) {
-        hashmap.insert(path.to_string(), arrow_meta);
-    }
-
-    Ok(hashmap)
-}
-
-impl ParquetDataset {
-    fn to_readers(
-        &self,
-        geo_options: GeoParquetReaderOptions,
-    ) -> Result<
-        Vec<GeoParquetRecordBatchStream<ParquetObjectReader>>,
-        geoarrow_array::error::GeoArrowError,
-    > {
-        self.meta
-            .to_stream_builders(
-                |path| ParquetObjectReader::new(self.store.clone(), path.into()),
-                geo_options,
-            )
-            .into_iter()
-            .map(|builder| builder.build())
-            .collect()
-    }
 }
 
 #[wasm_bindgen]
 impl ParquetDataset {
-    #[wasm_bindgen(constructor)]
-    pub async fn new(root_url: String, fragment_urls: Vec<String>) -> WasmResult<ParquetDataset> {
-        let store = Arc::new(HttpStore::new(Url::parse(&root_url)?));
-        let meta = fetch_arrow_metadata_objects(fragment_urls, store.clone()).await?;
-
+    /// Open a dataset at `root_url` from a list of fragment paths, each relative
+    /// to that root and encoded as it appears in a URL
+    #[wasm_bindgen(js_name = open)]
+    pub async fn open(root_url: String, fragment_paths: Vec<String>) -> WasmResult<ParquetDataset> {
+        let parsed_root = Url::parse(&root_url)?;
+        reject_unsupported_url_parts(&parsed_root)?;
+        let store: Arc<dyn ObjectStore> = Arc::new(HttpBuilder::new().with_url(root_url).build()?);
+        let mut paths: IndexMap<String, Path> = IndexMap::new();
+        for p in &fragment_paths {
+            paths.insert(p.clone(), Path::from_url_path(p)?);
+        }
+        let meta_futures = paths.values().map(|path| {
+            let store = store.clone();
+            let path = path.clone();
+            async move {
+                let mut reader = ParquetObjectReader::new(store, path);
+                ArrowReaderMetadata::load_async(&mut reader, Default::default()).await
+            }
+        });
+        let arrow_metas = join_all(meta_futures)
+            .await
+            .into_iter()
+            .collect::<Result<Vec<_>, _>>()?;
+        let mut metas: IndexMap<String, ArrowReaderMetadata> = IndexMap::new();
+        for (key, arrow_meta) in paths.keys().zip(arrow_metas) {
+            metas.insert(key.clone(), arrow_meta);
+        }
         Ok(Self {
-            meta: GeoParquetDatasetMetadata::from_files(meta)?,
+            meta: GeoParquetDatasetMetadata::from_files(metas)?,
+            paths,
             store,
         })
     }
 
-    /// The total number of rows across all files.
+    /// Note that a malformed footer that reports a negative count throws
     #[wasm_bindgen(getter, js_name = numRows)]
-    pub fn num_rows(&self) -> usize {
-        self.meta.num_rows()
+    pub fn num_rows(&self) -> WasmResult<usize> {
+        Ok(self.meta.num_rows()?)
     }
 
-    /// The total number of row groups across all files
     #[wasm_bindgen(getter, js_name = numRowGroups)]
     pub fn num_row_groups(&self) -> usize {
         self.meta.num_row_groups()
     }
 
+    /// Read every fragment into one Arrow Table under the unified schema of the
+    /// dataset
+    ///
+    /// `bbox` keeps rows fragment by fragment, as in [`ParquetFile::read`]
     #[wasm_bindgen]
-    pub async fn read(&self, options: JsValue) -> WasmResult<Table> {
-        let options: Option<JsParquetReaderOptions> = serde_wasm_bindgen::from_value(options)?;
-        let readers = self.to_readers(options.unwrap_or_default().into())?;
-        let output_schema = self
-            .meta
-            .resolved_schema(CoordType::default_interleaved())?;
+    pub async fn read(&self, bbox: Option<Vec<f64>>) -> WasmResult<Table> {
+        let target_schema = self.meta.geoarrow_schema(true, CoordType::Interleaved)?;
+        let rect = bbox_rect(&bbox)?;
+        let geo_meta = self.meta.geo_metadata().clone();
 
-        let request_futures = readers.into_iter().map(|reader| reader.read_table());
-        let tables = futures::future::join_all(request_futures)
-            .await
-            .into_iter()
-            .collect::<Result<Vec<_>, geoarrow_array::error::GeoArrowError>>()?;
+        let mut streams = Vec::with_capacity(self.meta.files().len());
+        for (key, arrow_meta) in self.meta.files() {
+            let path = self
+                .paths
+                .get(key)
+                .ok_or_else(|| JsError::new("internal: fragment path missing from path map"))?
+                .clone();
+            let reader = ParquetObjectReader::new(self.store.clone(), path);
+            let mut builder =
+                ParquetRecordBatchStreamBuilder::new_with_metadata(reader, arrow_meta.clone());
+            if let Some(rect) = rect {
+                builder = builder.with_intersecting_row_groups(rect, &geo_meta, None)?;
+                builder = builder.with_intersecting_row_filter(rect, &geo_meta, None)?;
+            }
+            let parquet_stream = builder.build()?;
+            let geo_stream =
+                GeoParquetRecordBatchStream::try_new(parquet_stream, target_schema.clone())?;
+            streams.push(geo_stream.try_collect::<Vec<_>>());
+        }
 
-        let mut all_batches = vec![];
-        tables.into_iter().for_each(|(batches, _schema)| {
-            all_batches.extend(batches);
-        });
-        let table = geoarrow::table::Table::try_new(all_batches, output_schema)?;
-        let (batches, schema) = table.into_inner();
-        Ok(Table::new(schema, batches))
+        let mut all_batches = Vec::new();
+        for batches in join_all(streams).await {
+            all_batches.extend(batches?);
+        }
+        Ok(Table::new(target_schema, all_batches))
     }
-
-    // TODO: reimplement this. Now that we have a vec of readers under the hood, we need to combine
-    // multiple streams into one.
-    //
-    // #[wasm_bindgen]
-    // pub fn read_stream(
-    //     &self,
-    //     options: JsValue,
-    // ) -> WasmResult<wasm_streams::readable::sys::ReadableStream> {
-    //     let options: Option<JsParquetReaderOptions> = serde_wasm_bindgen::from_value(options)?;
-    //     let stream = self.inner.read_stream(options.unwrap_or_default().into())?;
-    //     let out_stream = stream
-    //         .map(|maybe_batch| {
-    //             let batch = maybe_batch.map_err(JsError::from)?;
-    //             let (schema, batches) = batch.into_inner();
-    //             Ok(Table::new(schema, batches).into())
-    //         })
-    //         .boxed_local();
-    //     Ok(wasm_streams::ReadableStream::from_stream(out_stream).into_raw())
-    // }
 }
