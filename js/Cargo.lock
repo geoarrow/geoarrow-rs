@@ -942,6 +942,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "geoarrow-expr-geo"
+version = "0.8.0"
+dependencies = [
+ "arrow-array",
+ "arrow-buffer",
+ "geo",
+ "geo-traits",
+ "geoarrow-array",
+ "geoarrow-schema",
+]
+
+[[package]]
 name = "geoarrow-schema"
 version = "0.8.0"
 dependencies = [
@@ -958,6 +970,7 @@ version = "0.2.0-beta.5"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
+ "arrow-select",
  "arrow-wasm",
  "async-stream",
  "async-trait",
@@ -968,6 +981,7 @@ dependencies = [
  "geo-traits",
  "geoarrow-array",
  "geoarrow-cast",
+ "geoarrow-expr-geo",
  "geoarrow-schema",
  "geodesy",
  "geoparquet",

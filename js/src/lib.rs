@@ -1,3 +1,5 @@
+#[cfg(feature = "algorithm")]
+pub mod algorithm;
 pub mod cast;
 #[cfg(feature = "data")]
 pub mod data;

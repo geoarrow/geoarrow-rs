@@ -19,6 +19,9 @@ crate-type = ["cdylib", "rlib"]
 # to make debugging easier we'll include it as a default feature
 default = ["console_error_panic_hook"]
 
+# Include algorithm bindings backed by geoarrow-expr-geo (area, centroid, simplify, ...)
+algorithm = ["data", "dep:geoarrow-expr-geo"]
+
 # Include Data classes for contiguous GeoArrow memory (PointData, etc)
 data = []
 
@@ -81,6 +84,7 @@ wasm-bindgen-futures = "0.4.44"
 # code size when deploying.
 arrow-array = "59"
 arrow-buffer = "59"
+arrow-select = "59"
 arrow-wasm = { git = "https://github.com/kylebarron/arrow-wasm", rev = "ee163ba9cfa1c5d078e7625ac8bcd3cd1e6bda8e" }
 async-stream = { version = "0.3.5", optional = true }
 async-trait = { version = "0.1.77", optional = true }
@@ -91,6 +95,7 @@ geo = "0.33"
 geo-traits = "0.3"
 geoarrow-array = { path = "../rust/geoarrow-array" }
 geoarrow-cast = { path = "../rust/geoarrow-cast" }
+geoarrow-expr-geo = { path = "../rust/geoarrow-expr-geo", optional = true }
 geoarrow-schema = { path = "../rust/geoarrow-schema" }
 geodesy = { version = "0.12", optional = true, features = ["js"] }
 geoparquet = { path = "../rust/geoparquet", optional = true }
