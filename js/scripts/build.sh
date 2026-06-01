@@ -56,6 +56,10 @@ cp tmp_build/bundler/{package.json,LICENSE_APACHE,LICENSE_MIT,README.md} pkg/
 # Create minimal package.json in esm/ folder with type: module
 echo '{"type": "module"}' > pkg/esm/package.json
 
+# A package.json in node/ lets npm resolve a file: install. wasm-pack emits
+# CommonJS for the nodejs target, which is the default without a "type" field.
+echo '{"main": "index.js", "types": "index.d.ts"}' > pkg/node/package.json
+
 # Update files array in package.json using JQ
 # Set module field to bundler/arrow1.js
 # Set types field to bundler/arrow1.d.ts
