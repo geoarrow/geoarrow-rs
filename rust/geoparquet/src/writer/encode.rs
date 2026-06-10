@@ -3,6 +3,7 @@ use arrow_schema::{Field, Schema, SchemaRef};
 use geoarrow_array::GeoArrowArray;
 use geoarrow_array::array::from_arrow_array;
 use geoarrow_array::cast::{AsGeoArrowArray, to_wkb};
+use geoarrow_schema::GeoArrowType::{LargeWkb, LargeWkt};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, GeoArrowType};
 use parquet::file::metadata::KeyValue;
@@ -135,7 +136,10 @@ fn encode_column(
 
 /// Encode column as WKB
 fn encode_wkb_column(geo_arr: &dyn GeoArrowArray) -> GeoArrowResult<ArrayRef> {
-    Ok(to_wkb::<i32>(geo_arr)?.to_array_ref())
+    match geo_arr.data_type() {
+        LargeWkt(_) | LargeWkb(_) => Ok(to_wkb::<i64>(geo_arr)?.to_array_ref()),
+        _ => Ok(to_wkb::<i32>(geo_arr)?.to_array_ref()),
+    }
 }
 
 /// Encode column as GeoArrow.
