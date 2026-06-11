@@ -24,7 +24,7 @@ use crate::writer::options::{GeoParquetWriterEncoding, GeoParquetWriterOptions};
 // https://github.com/geoarrow/geoarrow-rs/pull/1159#issuecomment-2904610370
 const INFERRED_PRIMARY_COLUMN_NAMES: [&str; 2] = ["geometry", "geography"];
 
-#[derive(Copy, Clone, serde::Serialize, serde::Deserialize, Debug, PartialEq, Eq, Default)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
 /// The offset size to use when encoding Wkb
 pub enum WkbOffsetSize {
     /// Encode Wkb using i32 offset size
