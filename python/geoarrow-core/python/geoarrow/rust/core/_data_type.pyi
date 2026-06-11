@@ -106,7 +106,7 @@ def point(
         dimension: The dimension of the array.
 
     Keyword Args:
-        coord_type: The coordinate type of the array. Defaults to [`CoordType.SEPARATED`][geoarrow.rust.core.types.CoordType.SEPARATED].
+        coord_type: The coordinate type of the array. Defaults to [`CoordType.SEPARATED`][geoarrow.rust.core.enums.CoordType.SEPARATED].
         crs: the CRS of the type. Defaults to None.
         edges: the edge interpolation of the type. Defaults to None.
 
@@ -136,7 +136,7 @@ def linestring(
         dimension: The dimension of the array.
 
     Keyword Args:
-        coord_type: The coordinate type of the array. Defaults to [`CoordType.SEPARATED`][geoarrow.rust.core.types.CoordType.SEPARATED].
+        coord_type: The coordinate type of the array. Defaults to [`CoordType.SEPARATED`][geoarrow.rust.core.enums.CoordType.SEPARATED].
         crs: the CRS of the type. Defaults to None.
         edges: the edge interpolation of the type. Defaults to None.
     """
@@ -154,7 +154,7 @@ def polygon(
         dimension: The dimension of the array.
 
     Keyword Args:
-        coord_type: The coordinate type of the array. Defaults to [`CoordType.SEPARATED`][geoarrow.rust.core.types.CoordType.SEPARATED].
+        coord_type: The coordinate type of the array. Defaults to [`CoordType.SEPARATED`][geoarrow.rust.core.enums.CoordType.SEPARATED].
         crs: the CRS of the type. Defaults to None.
         edges: the edge interpolation of the type. Defaults to None.
     """
@@ -172,7 +172,7 @@ def multipoint(
         dimension: The dimension of the array.
 
     Keyword Args:
-        coord_type: The coordinate type of the array. Defaults to [`CoordType.SEPARATED`][geoarrow.rust.core.types.CoordType.SEPARATED].
+        coord_type: The coordinate type of the array. Defaults to [`CoordType.SEPARATED`][geoarrow.rust.core.enums.CoordType.SEPARATED].
         crs: the CRS of the type. Defaults to None.
         edges: the edge interpolation of the type. Defaults to None.
     """
@@ -190,7 +190,7 @@ def multilinestring(
         dimension: The dimension of the array.
 
     Keyword Args:
-        coord_type: The coordinate type of the array. Defaults to [`CoordType.SEPARATED`][geoarrow.rust.core.types.CoordType.SEPARATED].
+        coord_type: The coordinate type of the array. Defaults to [`CoordType.SEPARATED`][geoarrow.rust.core.enums.CoordType.SEPARATED].
         crs: the CRS of the type. Defaults to None.
         edges: the edge interpolation of the type. Defaults to None.
     """
@@ -208,7 +208,7 @@ def multipolygon(
         dimension: The dimension of the array.
 
     Keyword Args:
-        coord_type: The coordinate type of the array. Defaults to [`CoordType.SEPARATED`][geoarrow.rust.core.types.CoordType.SEPARATED].
+        coord_type: The coordinate type of the array. Defaults to [`CoordType.SEPARATED`][geoarrow.rust.core.enums.CoordType.SEPARATED].
         crs: the CRS of the type. Defaults to None.
         edges: the edge interpolation of the type. Defaults to None.
     """
@@ -226,7 +226,7 @@ def geometrycollection(
         dimension: The dimension of the array.
 
     Keyword Args:
-        coord_type: The coordinate type of the array. Defaults to [`CoordType.SEPARATED`][geoarrow.rust.core.types.CoordType.SEPARATED].
+        coord_type: The coordinate type of the array. Defaults to [`CoordType.SEPARATED`][geoarrow.rust.core.enums.CoordType.SEPARATED].
         crs: the CRS of the type. Defaults to None.
         edges: the edge interpolation of the type. Defaults to None.
     """
@@ -240,7 +240,7 @@ def geometry(
     """Create a new Arrow type for a GeoArrow Geometry array.
 
     Keyword Args:
-        coord_type: The coordinate type of the array. Defaults to [`CoordType.SEPARATED`][geoarrow.rust.core.types.CoordType.SEPARATED].
+        coord_type: The coordinate type of the array. Defaults to [`CoordType.SEPARATED`][geoarrow.rust.core.enums.CoordType.SEPARATED].
         crs: the CRS of the type. Defaults to None.
         edges: the edge interpolation of the type. Defaults to None.
     """
