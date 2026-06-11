@@ -113,7 +113,8 @@ extra_css:
 
 plugins:
   - search
-  - social
+  - social:
+      enabled: !ENV [CI, false]
   - mike:
       alias_type: "copy"
       canonical_version: "latest"
