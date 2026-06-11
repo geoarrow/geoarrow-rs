@@ -206,23 +206,32 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
-    needs: [linux, windows, macos]
+    strategy:
+      matrix:
+        include:
+          # The artifact names use the module (directory) name; the PyPI
+          # package names have an extra `-rust-`.
+          - module: geoarrow-core
+            package: geoarrow-rust-core
+          - module: geoarrow-compute
+            package: geoarrow-rust-compute
+    environment:
+      name: pypi-release
+      url: https://pypi.org/p/${{ matrix.package }}
     permissions:
-      # Used to upload release artifacts
-      contents: write
+      # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+    needs: [linux, windows, macos]
     steps:
       - uses: actions/download-artifact@v8
-      - name: Publish to PyPI
-        uses: PyO3/maturin-action@v1
-        env:
-          MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
         with:
-          command: upload
-          args: --non-interactive --skip-existing wheels-*/*
-      # - name: Upload to GitHub Release
-      #   uses: softprops/action-gh-release@v1
-      #   with:
-      #     files: |
-      #       wasm-wheels/*.whl
-      #     prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
+          pattern: wheels-*-${{ matrix.module }}
+          merge-multiple: true
+          path: dist
+      - uses: actions/setup-python@v6
+        with:
+          python-version: 3.13
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

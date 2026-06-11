@@ -218,17 +218,26 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    environment:
+      name: pypi-release
+      url: https://pypi.org/p/geoarrow-rust-io
+    permissions:
+      # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
     needs: [macos, windows, linux]
-    permissions:
-      # Used to upload release artifacts
-      contents: write
     steps:
+      # This workflow only builds one package, so all wheels-* artifacts
+      # belong to geoarrow-rust-io (the macos/windows artifact names don't
+      # include the module name).
       - uses: actions/download-artifact@v8
-      - name: Publish to PyPI
-        uses: PyO3/maturin-action@v1
-        env:
-          MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
         with:
-          command: upload
-          args: --non-interactive --skip-existing wheels-*/*
+          pattern: wheels-*
+          merge-multiple: true
+          path: dist
+      - uses: actions/setup-python@v6
+        with:
+          python-version: 3.13
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
