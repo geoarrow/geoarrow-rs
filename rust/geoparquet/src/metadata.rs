@@ -7,6 +7,7 @@ use std::fmt::Display;
 use std::str::FromStr;
 use std::sync::Arc;
 
+use crate::writer::WkbOffsetSize;
 use geo_traits::GeometryTrait;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{
@@ -730,6 +731,9 @@ pub struct GeoParquetColumnMetadata {
     /// Object containing bounding box column names to help accelerate spatial data retrieval
     #[serde(skip_serializing_if = "Option::is_none")]
     pub covering: Option<GeoParquetCovering>,
+
+    /// Offset size to use when encoding Wkb
+    pub offset_size: WkbOffsetSize,
 }
 
 impl GeoParquetColumnMetadata {
