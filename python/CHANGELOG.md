@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+## [0.6.3] - 2026-06-11
+
+### What's Changed
+
+* ci: add Dependabot for GitHub Actions version updates by @lhoupert in https://github.com/geoarrow/geoarrow-rs/pull/1432
+* ci(python): Create pyemscripten wheel for geoarrow-rust-core by @kylebarron in https://github.com/geoarrow/geoarrow-rs/pull/1448
+* ci(python): Python trusted publishing by @kylebarron in https://github.com/geoarrow/geoarrow-rs/pull/1450
+
+### New Contributors
+
+* @lhoupert made their first contribution in https://github.com/geoarrow/geoarrow-rs/pull/1432
+* @dependabot[bot] made their first contribution in https://github.com/geoarrow/geoarrow-rs/pull/1437
+
+**Full Changelog**: https://github.com/geoarrow/geoarrow-rs/compare/rust-v0.8.0...py-v0.6.3
+
 ## [0.6.2] - 2025-12-03
 
 ### What's Changed
