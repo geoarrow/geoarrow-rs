@@ -12,13 +12,23 @@ on:
   push:
     tags:
       - "py-v*"
+  # On pull requests, only the emscripten job runs (the others are gated with
+  # `if: github.event_name != 'pull_request'`). This catches regressions in
+  # the emscripten/Pyodide build, which is the most fragile target, without
+  # building every native wheel on every PR.
+  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   linux:
+    if: github.event_name != 'pull_request'
     runs-on: ${{ matrix.platform.runner }}
     strategy:
       matrix:
@@ -92,6 +102,7 @@ jobs:
   #         path: dist
 
   windows:
+    if: github.event_name != 'pull_request'
     runs-on: ${{ matrix.platform.runner }}
     strategy:
       matrix:
@@ -120,6 +131,7 @@ jobs:
           path: dist
 
   macos:
+    if: github.event_name != 'pull_request'
     runs-on: ${{ matrix.platform.runner }}
     strategy:
       matrix:
@@ -148,45 +160,104 @@ jobs:
           name: wheels-macos-${{ matrix.platform.target }}-${{ matrix.module }}
           path: dist
 
-  # emscripten:
-  #   runs-on: ${{ matrix.platform.runner }}
-  #   strategy:
-  #     matrix:
-  #       platform:
-  #         - runner: ubuntu-latest
-  #           target: wasm32-unknown-emscripten
-  #       module:
-  #         - geoarrow-core
-  #         - geoarrow-compute
-  #   steps:
-  #     - uses: actions/checkout@v6
-  #     - run: pip install pyodide-build
-  #     - name: Get Emscripten and Python version info
-  #       shell: bash
-  #       run: |
-  #         echo EMSCRIPTEN_VERSION=$(pyodide config get emscripten_version) >> $GITHUB_ENV
-  #         echo PYTHON_VERSION=$(pyodide config get python_version | cut -d '.' -f 1-2) >> $GITHUB_ENV
-  #         pip uninstall -y pyodide-build
-  #     - uses: mymindstorm/setup-emsdk@v14
-  #       with:
-  #         version: ${{ env.EMSCRIPTEN_VERSION }}
-  #         actions-cache-folder: emsdk-cache
-  #     - uses: actions/setup-python@v6
-  #       with:
-  #         python-version: ${{ env.PYTHON_VERSION }}
-  #     - run: pip install pyodide-build
-  #     - name: Build wheels
-  #       uses: PyO3/maturin-action@v1
-  #       with:
-  #         rust-toolchain: nightly
-  #         target: ${{ matrix.platform.target }}
-  #         args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -i 3.14 --no-default-features --manifest-path python/${{ matrix.module }}/Cargo.toml
-  #         sccache: "true"
-  #     - name: Upload wheels
-  #       uses: actions/upload-artifact@v7
-  #       with:
-  #         name: wasm-wheels-${{ matrix.module }}
-  #         path: dist
+  # PEP 783 emscripten wheels for Pyodide, currently only for geoarrow-core.
+  #
+  # The Rust toolchain, Emscripten version, rustflags, and platform tag are all
+  # defined by pyodide-build.
+  #
+  # Unlike the other jobs, this also runs on every pull request, to catch
+  # emscripten build regressions (e.g. a dependency update that doesn't
+  # compile or link for this target) before release time.
+  emscripten:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.13", "3.14"]
+        module:
+          - geoarrow-core
+        include:
+          # Pyodide's pinned toolchain for Python 3.13 (nightly-2025-02-01,
+          # rustc 1.86) is very old. We override with a newer nightly
+          - python-version: "3.13"
+            rust-toolchain-override: nightly-2026-06-01
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          version: "0.9.x"
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install pyodide-build
+        run: uv sync --only-group pyodide
+        working-directory: python
+
+      - name: Get pyodide config
+        id: pyodide-config
+        run: |
+          {
+            echo "rust-toolchain=$(uv run --no-sync pyodide config get rust_toolchain)"
+            echo "pyodide-abi-version=$(uv run --no-sync pyodide config get pyodide_abi_version)"
+            echo "rustflags=$(uv run --no-sync pyodide config get rustflags)"
+            echo "cflags=$(uv run --no-sync pyodide config get cflags)"
+          } >> "$GITHUB_OUTPUT"
+        working-directory: python
+
+      # Install Emscripten via the Pyodide cross-build environment rather
+      # than a stock emsdk: this pins the Emscripten version matching the
+      # target Pyodide ABI, and applies Pyodide's patches to Emscripten,
+      # several of which affect dynamic linking of Rust side modules.
+      # https://github.com/pyodide/pyodide/tree/main/emsdk/patches
+      # https://github.com/kylebarron/arro3/pull/502#discussion_r3392470467
+      - name: Install emsdk (Pyodide xbuildenv)
+        env:
+          PYODIDE_XBUILDENV_PATH: ${{ github.workspace }}/.pyodide-xbuildenv
+        run: |
+          uv run --no-sync pyodide xbuildenv install
+          uv run --no-sync pyodide xbuildenv install-emscripten
+          # shellcheck disable=SC1090
+          source "$PYODIDE_XBUILDENV_PATH/$(uv run --no-sync pyodide xbuildenv version)/emsdk/emsdk_env.sh"
+          {
+            echo "EMSDK=$EMSDK"
+            echo "EMSDK_NODE=$EMSDK_NODE"
+          } >> "$GITHUB_ENV"
+          {
+            echo "$EMSDK"
+            echo "$EMSDK/upstream/emscripten"
+            dirname "$EMSDK_NODE"
+          } >> "$GITHUB_PATH"
+        working-directory: python
+
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        env:
+          CARGO_TARGET_WASM32_UNKNOWN_EMSCRIPTEN_RUSTFLAGS: ${{ steps.pyodide-config.outputs.rustflags }}
+          CFLAGS_wasm32_unknown_emscripten: ${{ steps.pyodide-config.outputs.cflags }}
+          MATURIN_PYEMSCRIPTEN_PLATFORM_VERSION: ${{ steps.pyodide-config.outputs.pyodide-abi-version }}
+        with:
+          target: wasm32-unknown-emscripten
+          rust-toolchain: ${{ matrix.rust-toolchain-override || steps.pyodide-config.outputs.rust-toolchain }}
+          args: --release --out dist -i ${{ matrix.python-version }} --manifest-path python/${{ matrix.module }}/Cargo.toml
+          sccache: "true"
+
+      # PyPI rejects legacy emscripten_x_y_z tags; fail before upload if
+      # maturin didn't emit the PEP 783 pyemscripten tag.
+      - name: Verify platform tag
+        run: |
+          ls -lh dist/
+          if ! ls dist/*pyemscripten*.whl >/dev/null 2>&1; then
+            echo "No pyemscripten-tagged wheel found in dist/" >&2
+            exit 1
+          fi
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v7
+        with:
+          name: wheels-emscripten-py${{ matrix.python-version }}-${{ matrix.module }}
+          path: dist
 
   # sdist:
   #   runs-on: ubuntu-latest
@@ -207,7 +278,7 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
-    needs: [linux, windows, macos]
+    needs: [linux, windows, macos, emscripten]
     permissions:
       # Used to upload release artifacts
       contents: write
