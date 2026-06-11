@@ -7,7 +7,6 @@ use std::fmt::Display;
 use std::str::FromStr;
 use std::sync::Arc;
 
-use crate::writer::WkbOffsetSize;
 use geo_traits::GeometryTrait;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{
@@ -20,7 +19,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
-use crate::writer::GeoParquetWriterEncoding;
+use crate::writer::{GeoParquetWriterEncoding, WkbOffsetSize};
 
 /// The actual encoding of the geometry in the Parquet file.
 ///
