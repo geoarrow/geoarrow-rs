@@ -1066,7 +1066,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-rust-compute"
-version = "0.6.1"
+version = "0.6.3"
 dependencies = [
  "arrow",
  "arrow-array",
@@ -1080,7 +1080,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-rust-core"
-version = "0.6.1"
+version = "0.6.3"
 dependencies = [
  "arrow-array",
  "arrow-schema",
@@ -1094,7 +1094,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-rust-io"
-version = "0.6.1"
+version = "0.6.3"
 dependencies = [
  "arrow",
  "bytes",
