@@ -116,7 +116,16 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
-          python-version: 3.x
+          # Every interpreter passed to `-i` below must be installed: on
+          # Windows, maturin can't build for a missing interpreter without
+          # pyo3's generate-import-lib feature.
+          python-version: |
+            3.9
+            3.10
+            3.11
+            3.12
+            3.13
+            3.14
           architecture: ${{ matrix.platform.target }}
       - name: Build wheels
         uses: PyO3/maturin-action@v1
