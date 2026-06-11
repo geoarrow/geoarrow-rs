@@ -732,6 +732,9 @@ pub struct GeoParquetColumnMetadata {
     pub covering: Option<GeoParquetCovering>,
 
     /// Offset size to use when encoding Wkb
+    // Skip serde since this is not a field of the GeoParquet spec
+    // but it is used internally when determining how to encode the column
+    #[serde(skip)]
     pub offset_size: WkbOffsetSize,
 }
 
