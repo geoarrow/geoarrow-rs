@@ -49,47 +49,74 @@ uv run mike set-default latest --deploy-prefix python/ --push
 
 ## Emscripten Python wheels
 
-Install rust nightly and add wasm toolchain
+Emscripten wheels (PEP 783, for Pyodide) are currently built only for
+`geoarrow-rust-core`, once per Python version. The entire toolchain config
+(Rust toolchain, Emscripten version, ABI tag, rustflags) is defined by
+`pyodide-build` *running under that same Python version* — e.g. Python 3.13
+maps to ABI `2025_0`/Emscripten 4.0.9 while Python 3.14 maps to ABI
+`2026_0`/Emscripten 5.0.3. Use `uvx -p` to query the config for a given
+Python version without touching the project venv:
 
 ```bash
-rustup toolchain install nightly
-rustup target add --toolchain nightly wasm32-unknown-emscripten
+PYTHON_VERSION=3.14  # or 3.13
+# The `pyodide` executable lives in pyodide-cli; most subcommands (config,
+# xbuildenv) are plugins provided by pyodide-build, so both packages are
+# needed.
+pyodide_cmd() {
+    uvx -p "$PYTHON_VERSION" --from pyodide-cli --with pyodide-build pyodide "$@"
+}
+RUST_TOOLCHAIN=$(pyodide_cmd config get rust_toolchain)
+PYODIDE_ABI_VERSION=$(pyodide_cmd config get pyodide_abi_version)
+PYODIDE_RUSTFLAGS=$(pyodide_cmd config get rustflags)
+PYODIDE_CFLAGS=$(pyodide_cmd config get cflags)
+
+echo "RUST_TOOLCHAIN:     $RUST_TOOLCHAIN"
+echo "PYODIDE_ABI_VERSION: $PYODIDE_ABI_VERSION"
+echo "PYODIDE_RUSTFLAGS:  $PYODIDE_RUSTFLAGS"
+echo "PYODIDE_CFLAGS:     $PYODIDE_CFLAGS"
 ```
 
-Install maturin and pyodide-build
+Install the matching Rust toolchain and wasm target:
 
 ```bash
-pip install -U maturin
-pip install pyodide-build
+rustup toolchain install $RUST_TOOLCHAIN
+rustup target add --toolchain $RUST_TOOLCHAIN wasm32-unknown-emscripten
 ```
 
-Clone emsdk. I clone this into a specific path at `~/github/emscripten-core/emsdk` so that it can be shared across projects.
+Install Emscripten via the Pyodide cross-build environment rather than a
+stock emsdk. This pins the Emscripten version matching the target Pyodide ABI
+automatically, and applies [Pyodide's patches to
+Emscripten](https://github.com/pyodide/pyodide/tree/main/emsdk/patches) —
+several of which affect dynamic linking of Rust side modules:
 
 ```bash
-mkdir -p ~/github/emscripten-core/
-git clone https://github.com/emscripten-core/emsdk.git ~/github/emscripten-core/emsdk
-# Or, set this manually
-PYODIDE_EMSCRIPTEN_VERSION=$(pyodide config get emscripten_version)
-~/github/emscripten-core/emsdk/emsdk install ${PYODIDE_EMSCRIPTEN_VERSION}
-~/github/emscripten-core/emsdk/emsdk activate ${PYODIDE_EMSCRIPTEN_VERSION}
-source ~/github/emscripten-core/emsdk/emsdk_env.sh
+export PYODIDE_XBUILDENV_PATH="$HOME/.cache/pyodide-xbuildenv"
+pyodide_cmd xbuildenv install
+pyodide_cmd xbuildenv install-emscripten
+source "$PYODIDE_XBUILDENV_PATH/$(pyodide_cmd xbuildenv version)/emsdk/emsdk_env.sh"
 ```
 
-Build `geoarrow-rust-core` and `geoarrow-rust-io`:
+Build the wheel. Notes on the environment variables:
+
+- `MATURIN_PYEMSCRIPTEN_PLATFORM_VERSION` is required for the wheel to get the
+  PyPI-accepted `pyemscripten_*` platform tag instead of the legacy
+  `emscripten_x_y_z` tag PyPI rejects (this also needs a recent maturin, hence
+  `uvx maturin` rather than the project venv's maturin).
+- `CFLAGS_wasm32_unknown_emscripten` is needed for crates that compile C code:
+  Pyodide's cflags include `-fPIC`, without which the C objects can't be
+  linked into a `SIDE_MODULE`.
+- Always build with `--release`: debug builds are ~10x larger (full DWARF) and
+  slow.
 
 ```bash
-maturin build \
+RUSTUP_TOOLCHAIN=$RUST_TOOLCHAIN \
+CARGO_TARGET_WASM32_UNKNOWN_EMSCRIPTEN_RUSTFLAGS="$PYODIDE_RUSTFLAGS" \
+CFLAGS_wasm32_unknown_emscripten="$PYODIDE_CFLAGS" \
+MATURIN_PYEMSCRIPTEN_PLATFORM_VERSION=$PYODIDE_ABI_VERSION \
+    uvx maturin build \
     --release \
-    --no-default-features \
     -o dist \
     -m geoarrow-core/Cargo.toml \
     --target wasm32-unknown-emscripten \
-    -i python3.11
-maturin build \
-    --release \
-    --no-default-features \
-    -o dist \
-    -m geoarrow-io/Cargo.toml \
-    --target wasm32-unknown-emscripten \
-    -i python3.11
+    -i python$PYTHON_VERSION
 ```
