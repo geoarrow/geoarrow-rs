@@ -43,7 +43,7 @@ bytes = "1.10.0"
 chrono = { version = "0.4.41", default-features = false }
 flatgeobuf = { version = "5.0", default-features = false }
 futures = "0.3"
-geo = "0.31.0"
+geo = "0.33.1"
 geo-traits = "0.3.0"
 geo-types = "0.7.16"
 geoarrow-array = { path = "rust/geoarrow-array", version = "0.8.0" }
