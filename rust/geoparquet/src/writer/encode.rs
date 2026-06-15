@@ -139,8 +139,8 @@ fn encode_column(
 /// Since the input array is streamed, the offset must be known in advance
 fn encode_wkb_column(geo_arr: &dyn GeoArrowArray, large_offsets: bool) -> GeoArrowResult<ArrayRef> {
     Ok(match large_offsets {
-        true => to_wkb::<i32>(geo_arr)?.to_array_ref(),
-        false => to_wkb::<i64>(geo_arr)?.to_array_ref(),
+        false => to_wkb::<i32>(geo_arr)?.to_array_ref(),
+        true => to_wkb::<i64>(geo_arr)?.to_array_ref(),
     })
 }
 

@@ -633,7 +633,7 @@ mod tests {
         let column_to_properties = HashMap::from([(
             "big_geometry".to_string(),
             ColumnOptions {
-                large_offsets: true,
+                large_offsets: Some(true),
                 ..Default::default()
             },
         )]);
