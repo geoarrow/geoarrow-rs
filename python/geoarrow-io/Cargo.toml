@@ -59,7 +59,7 @@ pyo3-geoarrow = { workspace = true }
 pyo3-async-runtimes = { version = "0.28", features = [
     "tokio-runtime",
 ], optional = true }
-geo = "0.31"
+geo = "0.33"
 geo-traits = { workspace = true }
 geoarrow-array = { workspace = true }
 geoarrow-flatgeobuf = { workspace = true, features = ["object_store"] }
@@ -72,7 +72,3 @@ serde_json = { workspace = true }
 # ], optional = true }
 tokio = { version = "1.9", features = ["rt"], optional = true }
 url = "2.5"
-
-# Pin to fix strange pyodide compilation errors.
-# See https://github.com/geoarrow/geoarrow-rs/issues/868
-# cc = "1.1, <1.2"
