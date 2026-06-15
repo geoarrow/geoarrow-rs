@@ -50,6 +50,10 @@ pub(crate) struct ColumnInfo {
 
     /// This gets set in `create_output_schema`
     pub(crate) covering_field_idx: Option<usize>,
+
+    /// Whether or not to use large, i64 offsets when
+    /// writing the column as WKB
+    pub(crate) large_offsets: bool,
 }
 
 impl ColumnInfo {
@@ -60,6 +64,7 @@ impl ColumnInfo {
         metadata: &Metadata,
         crs_transform: Option<&dyn CrsTransform>,
         covering_name: Option<String>,
+        large_offsets: bool,
     ) -> GeoArrowResult<Self> {
         let encoding = GeoParquetColumnEncoding::try_new(writer_encoding, data_type)?;
         let geometry_types = get_geometry_types(data_type);
@@ -80,6 +85,7 @@ impl ColumnInfo {
             edges,
             covering_name,
             covering_field_idx: None,
+            large_offsets,
         })
     }
 
@@ -266,6 +272,7 @@ impl ColumnInfo {
             orientation: None,
             epoch: None,
             covering,
+            large_offsets: self.large_offsets,
         };
         (self.name, column_meta)
     }
@@ -349,6 +356,12 @@ impl GeoParquetMetadataBuilder {
                     None
                 };
 
+                let large_offsets = options
+                    .column_properties
+                    .get(&column_name)
+                    .map(|props| props.large_offsets)
+                    .unwrap_or_default();
+
                 let column_info = ColumnInfo::try_new(
                     column_name,
                     column_encoding,
@@ -356,6 +369,7 @@ impl GeoParquetMetadataBuilder {
                     geo_data_type.metadata(),
                     options.crs_transform.as_deref(),
                     covering_name,
+                    large_offsets,
                 )?;
 
                 columns.insert(col_idx, column_info);
@@ -543,12 +557,14 @@ fn create_covering_field(covering_name: &str) -> Field {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use arrow_schema::Schema;
     use geoarrow_schema::error::GeoArrowError;
     use geoarrow_schema::{Dimension, PointType};
 
     use super::GeoParquetMetadataBuilder;
-    use crate::writer::options::GeoParquetWriterOptions;
+    use crate::writer::options::{ColumnOptions, GeoParquetWriterOptions};
 
     #[test]
     fn primary_column_not_geometry() {
@@ -606,5 +622,40 @@ mod tests {
             .unwrap()
             .finish();
         assert_eq!(metadata.primary_column, "anything");
+    }
+
+    #[test]
+    fn specify_offset_by_column() {
+        let big_geom =
+            PointType::new(Dimension::XY, Default::default()).to_field("big_geometry", false);
+        let small_geom =
+            PointType::new(Dimension::XY, Default::default()).to_field("small_geometry", false);
+        let schema = Schema::new(vec![big_geom, small_geom]);
+        let column_to_properties = HashMap::from([(
+            "big_geometry".to_string(),
+            ColumnOptions {
+                large_offsets: true,
+                ..Default::default()
+            },
+        )]);
+        let options = GeoParquetWriterOptions {
+            column_properties: column_to_properties,
+            ..Default::default()
+        };
+        let metadata = GeoParquetMetadataBuilder::try_new(&schema, &options)
+            .unwrap()
+            .finish();
+        assert!(
+            metadata.columns.get("big_geometry").unwrap().large_offsets,
+            "A field with an offset specified in the options should use that offset"
+        );
+        assert!(
+            !metadata
+                .columns
+                .get("small_geometry")
+                .unwrap()
+                .large_offsets,
+            "A field without an offset specified in the options should use small offsets"
+        );
     }
 }

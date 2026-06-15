@@ -730,6 +730,13 @@ pub struct GeoParquetColumnMetadata {
     /// Object containing bounding box column names to help accelerate spatial data retrieval
     #[serde(skip_serializing_if = "Option::is_none")]
     pub covering: Option<GeoParquetCovering>,
+
+    /// Whether or not to use large i64 offsets or smaller i32 ones
+    /// when writing this column as WKB
+    // Skip serde since this is not a field of the GeoParquet spec
+    // but it is used internally when determining how to encode the column
+    #[serde(skip)]
+    pub large_offsets: bool,
 }
 
 impl GeoParquetColumnMetadata {

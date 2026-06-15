@@ -127,15 +127,21 @@ fn encode_column(
     let geo_arr = from_arrow_array(array, field)?;
     let array_bounds = total_bounds(geo_arr.as_ref())?;
     let encoded_array = match column_info.encoding {
-        GeoParquetColumnEncoding::WKB => encode_wkb_column(geo_arr.as_ref())?,
+        GeoParquetColumnEncoding::WKB => {
+            encode_wkb_column(geo_arr.as_ref(), column_info.large_offsets)?
+        }
         _ => encode_native_column(geo_arr.as_ref()),
     };
     Ok((encoded_array, array_bounds))
 }
 
 /// Encode column as WKB
-fn encode_wkb_column(geo_arr: &dyn GeoArrowArray) -> GeoArrowResult<ArrayRef> {
-    Ok(to_wkb::<i32>(geo_arr)?.to_array_ref())
+/// Since the input array is streamed, the offset must be known in advance
+fn encode_wkb_column(geo_arr: &dyn GeoArrowArray, large_offsets: bool) -> GeoArrowResult<ArrayRef> {
+    Ok(match large_offsets {
+        false => to_wkb::<i32>(geo_arr)?.to_array_ref(),
+        true => to_wkb::<i64>(geo_arr)?.to_array_ref(),
+    })
 }
 
 /// Encode column as GeoArrow.
