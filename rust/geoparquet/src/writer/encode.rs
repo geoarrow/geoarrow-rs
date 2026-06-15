@@ -9,8 +9,8 @@ use parquet::file::metadata::KeyValue;
 
 use crate::metadata::{GeoParquetColumnEncoding, GeoParquetMetadata};
 use crate::total_bounds::{BoundingRect, bounding_rect, total_bounds};
+use crate::writer::GeoParquetWriterOptions;
 use crate::writer::metadata::{ColumnInfo, GeoParquetMetadataBuilder};
-use crate::writer::{GeoParquetWriterOptions, WkbOffsetSize};
 
 /// An encoder for converting GeoArrow data (in an Arrow [`RecordBatch`]) into a format that can be
 /// written into the upstream [`parquet`] writer APIs.
@@ -128,7 +128,7 @@ fn encode_column(
     let array_bounds = total_bounds(geo_arr.as_ref())?;
     let encoded_array = match column_info.encoding {
         GeoParquetColumnEncoding::WKB => {
-            encode_wkb_column(geo_arr.as_ref(), column_info.offset_size)?
+            encode_wkb_column(geo_arr.as_ref(), column_info.large_offsets)?
         }
         _ => encode_native_column(geo_arr.as_ref()),
     };
@@ -137,13 +137,10 @@ fn encode_column(
 
 /// Encode column as WKB
 /// Since the input array is streamed, the offset must be known in advance
-fn encode_wkb_column(
-    geo_arr: &dyn GeoArrowArray,
-    offset_size: WkbOffsetSize,
-) -> GeoArrowResult<ArrayRef> {
-    Ok(match offset_size {
-        WkbOffsetSize::I32 => to_wkb::<i32>(geo_arr)?.to_array_ref(),
-        WkbOffsetSize::I64 => to_wkb::<i64>(geo_arr)?.to_array_ref(),
+fn encode_wkb_column(geo_arr: &dyn GeoArrowArray, large_offsets: bool) -> GeoArrowResult<ArrayRef> {
+    Ok(match large_offsets {
+        true => to_wkb::<i32>(geo_arr)?.to_array_ref(),
+        false => to_wkb::<i64>(geo_arr)?.to_array_ref(),
     })
 }
 

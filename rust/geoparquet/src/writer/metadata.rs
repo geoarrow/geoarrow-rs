@@ -18,21 +18,10 @@ use crate::metadata::{
     GeoParquetGeometryType, GeoParquetGeometryTypeAndDimension, GeoParquetMetadata,
 };
 use crate::total_bounds::BoundingRect;
-use crate::writer::WkbOffsetSize::I32;
 use crate::writer::options::{GeoParquetWriterEncoding, GeoParquetWriterOptions};
 
 // https://github.com/geoarrow/geoarrow-rs/pull/1159#issuecomment-2904610370
 const INFERRED_PRIMARY_COLUMN_NAMES: [&str; 2] = ["geometry", "geography"];
-
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
-/// The offset size to use when encoding Wkb
-pub enum WkbOffsetSize {
-    /// Encode Wkb using i32 offset size
-    #[default]
-    I32,
-    /// Encode Wkb using i64 offset size
-    I64,
-}
 
 /// Information for one geometry column being written to Parquet
 pub(crate) struct ColumnInfo {
@@ -62,8 +51,9 @@ pub(crate) struct ColumnInfo {
     /// This gets set in `create_output_schema`
     pub(crate) covering_field_idx: Option<usize>,
 
-    // The offset size for this column when writing as Wkb
-    pub offset_size: WkbOffsetSize,
+    /// Whether or not to use large, i64 offsets when
+    /// writing the column as WKB
+    pub(crate) large_offsets: bool,
 }
 
 impl ColumnInfo {
@@ -74,7 +64,7 @@ impl ColumnInfo {
         metadata: &Metadata,
         crs_transform: Option<&dyn CrsTransform>,
         covering_name: Option<String>,
-        offset_size: Option<WkbOffsetSize>,
+        large_offsets: bool,
     ) -> GeoArrowResult<Self> {
         let encoding = GeoParquetColumnEncoding::try_new(writer_encoding, data_type)?;
         let geometry_types = get_geometry_types(data_type);
@@ -95,10 +85,7 @@ impl ColumnInfo {
             edges,
             covering_name,
             covering_field_idx: None,
-            // If no offset_size is specified in the column info
-            // default to I32 since it is more efficient. Require
-            // opt in for larger offsets
-            offset_size: offset_size.unwrap_or(I32),
+            large_offsets,
         })
     }
 
@@ -285,7 +272,7 @@ impl ColumnInfo {
             orientation: None,
             epoch: None,
             covering,
-            offset_size: self.offset_size,
+            large_offsets: self.large_offsets,
         };
         (self.name, column_meta)
     }
@@ -369,10 +356,10 @@ impl GeoParquetMetadataBuilder {
                     None
                 };
 
-                let offset_size = options
+                let large_offsets = options
                     .column_properties
                     .get(&column_name)
-                    .and_then(|props| props.offset_size);
+                    .and_then(|props| props.large_offsets);
 
                 let column_info = ColumnInfo::try_new(
                     column_name,
@@ -381,7 +368,7 @@ impl GeoParquetMetadataBuilder {
                     geo_data_type.metadata(),
                     options.crs_transform.as_deref(),
                     covering_name,
-                    offset_size,
+                    large_offsets.unwrap_or_default(),
                 )?;
 
                 columns.insert(col_idx, column_info);
@@ -576,8 +563,6 @@ mod tests {
     use geoarrow_schema::{Dimension, PointType};
 
     use super::GeoParquetMetadataBuilder;
-    use crate::writer::WkbOffsetSize::I64;
-    use crate::writer::metadata::WkbOffsetSize::I32;
     use crate::writer::options::{ColumnOptions, GeoParquetWriterOptions};
 
     #[test]
@@ -648,7 +633,7 @@ mod tests {
         let column_to_properties = HashMap::from([(
             "big_geometry".to_string(),
             ColumnOptions {
-                offset_size: Some(I64),
+                large_offsets: true,
                 ..Default::default()
             },
         )]);
@@ -660,14 +645,18 @@ mod tests {
             .unwrap()
             .finish();
         assert_eq!(
-            metadata.columns.get("big_geometry").unwrap().offset_size,
-            I64,
+            metadata.columns.get("big_geometry").unwrap().large_offsets,
+            true,
             "A field with an offset specified in the options should use that offset"
         );
         assert_eq!(
-            metadata.columns.get("small_geometry").unwrap().offset_size,
-            I32,
-            "A field without an offset specified in the options should use the default offset of I32"
+            metadata
+                .columns
+                .get("small_geometry")
+                .unwrap()
+                .large_offsets,
+            false,
+            "A field without an offset specified in the options should use small offsets"
         );
     }
 }

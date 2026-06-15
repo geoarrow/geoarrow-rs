@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
-use crate::writer::{GeoParquetWriterEncoding, WkbOffsetSize};
+use crate::writer::GeoParquetWriterEncoding;
 
 /// The actual encoding of the geometry in the Parquet file.
 ///
@@ -731,11 +731,12 @@ pub struct GeoParquetColumnMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub covering: Option<GeoParquetCovering>,
 
-    /// Offset size to use when encoding Wkb
+    /// Whether or not to use large i64 offsets or smaller i32 ones
+    /// when writing this column as WKB
     // Skip serde since this is not a field of the GeoParquet spec
     // but it is used internally when determining how to encode the column
     #[serde(skip)]
-    pub offset_size: WkbOffsetSize,
+    pub large_offsets: bool,
 }
 
 impl GeoParquetColumnMetadata {

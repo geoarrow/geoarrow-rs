@@ -2,8 +2,6 @@ use std::collections::HashMap;
 
 use geoarrow_schema::crs::CrsTransform;
 
-use crate::writer::metadata::WkbOffsetSize;
-
 /// Allowed encodings when writing to GeoParquet
 #[derive(Copy, Clone, Default)]
 #[allow(clippy::upper_case_acronyms)]
@@ -28,7 +26,7 @@ pub(crate) struct ColumnOptions {
     pub(crate) encoding: Option<GeoParquetWriterEncoding>,
     pub(crate) generate_covering: Option<bool>,
     pub(crate) covering_name: Option<String>,
-    pub(crate) offset_size: Option<WkbOffsetSize>,
+    pub(crate) large_offsets: Option<bool>,
 }
 
 impl ColumnOptions {
