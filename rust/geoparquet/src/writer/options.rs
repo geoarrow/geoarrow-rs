@@ -26,7 +26,9 @@ pub(crate) struct ColumnOptions {
     pub(crate) encoding: Option<GeoParquetWriterEncoding>,
     pub(crate) generate_covering: Option<bool>,
     pub(crate) covering_name: Option<String>,
-    pub(crate) large_offsets: Option<bool>,
+    /// If true, use i64 offsets when writing the column
+    /// as WKB
+    pub(crate) large_offsets: bool,
 }
 
 impl ColumnOptions {

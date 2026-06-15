@@ -359,7 +359,8 @@ impl GeoParquetMetadataBuilder {
                 let large_offsets = options
                     .column_properties
                     .get(&column_name)
-                    .and_then(|props| props.large_offsets);
+                    .map(|props| props.large_offsets)
+                    .unwrap_or_default();
 
                 let column_info = ColumnInfo::try_new(
                     column_name,
@@ -368,7 +369,7 @@ impl GeoParquetMetadataBuilder {
                     geo_data_type.metadata(),
                     options.crs_transform.as_deref(),
                     covering_name,
-                    large_offsets.unwrap_or_default(),
+                    large_offsets,
                 )?;
 
                 columns.insert(col_idx, column_info);
@@ -633,7 +634,7 @@ mod tests {
         let column_to_properties = HashMap::from([(
             "big_geometry".to_string(),
             ColumnOptions {
-                large_offsets: Some(true),
+                large_offsets: true,
                 ..Default::default()
             },
         )]);
