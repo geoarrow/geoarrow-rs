@@ -644,18 +644,16 @@ mod tests {
         let metadata = GeoParquetMetadataBuilder::try_new(&schema, &options)
             .unwrap()
             .finish();
-        assert_eq!(
+        assert!(
             metadata.columns.get("big_geometry").unwrap().large_offsets,
-            true,
             "A field with an offset specified in the options should use that offset"
         );
-        assert_eq!(
-            metadata
+        assert!(
+            !metadata
                 .columns
                 .get("small_geometry")
                 .unwrap()
                 .large_offsets,
-            false,
             "A field without an offset specified in the options should use small offsets"
         );
     }
