@@ -9,6 +9,8 @@ description = "Rust implementation of GeoArrow"
 categories = { workspace = true }
 rust-version = { workspace = true }
 
+[features]
+geos-3_14 = ["geos/v3_14_0"]
 
 [dependencies]
 arrow-array = { workspace = true }

@@ -38,6 +38,16 @@ impl GEOSGeometry {
                 Self::GeometryCollection(GEOSGeometryCollection::new_unchecked(geom))
             }
             Ok(geos::GeometryTypes::LinearRing) => panic!("GEOS Linear ring not supported"),
+            #[cfg(feature = "geos-3_14")]
+            Ok(
+                geos::GeometryTypes::CircularString
+                | geos::GeometryTypes::CompoundCurve
+                | geos::GeometryTypes::CurvePolygon
+                | geos::GeometryTypes::MultiCurve
+                | geos::GeometryTypes::MultiSurface,
+            ) => {
+                panic!("GEOS curved geometry types are not supported")
+            }
             Err(err) => panic!("Failed to get GEOS geometry type: {err}"),
         }
     }

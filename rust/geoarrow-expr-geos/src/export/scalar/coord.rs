@@ -1,4 +1,4 @@
-use geo_traits::CoordTrait;
+use geo_traits::{CoordTrait, Dimensions};
 use geoarrow_array::array::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
 use geoarrow_schema::Dimension;
 use geos::CoordSeq;
@@ -59,8 +59,6 @@ fn interleaved_coords_to_geos(
 pub(crate) fn coord_to_geos(
     coord: &impl CoordTrait<T = f64>,
 ) -> std::result::Result<geos::CoordSeq, geos::Error> {
-    use geo_traits::Dimensions;
-
     match coord.dim() {
         Dimensions::Xy | Dimensions::Unknown(2) => {
             let mut coord_seq = CoordSeq::new(1, geos::CoordType::XY)?;
@@ -75,6 +73,23 @@ pub(crate) fn coord_to_geos(
             coord_seq.set_z(0, coord.nth(2).unwrap())?;
             Ok(coord_seq)
         }
+        #[cfg(feature = "geos-3_14")]
+        Dimensions::Xym => {
+            let mut coord_seq = CoordSeq::new(1, geos::CoordType::XYM)?;
+            coord_seq.set_x(0, coord.x())?;
+            coord_seq.set_y(0, coord.y())?;
+            coord_seq.set_m(0, coord.nth(2).unwrap())?;
+            Ok(coord_seq)
+        }
+        #[cfg(feature = "geos-3_14")]
+        Dimensions::Xyzm => {
+            let mut coord_seq = CoordSeq::new(1, geos::CoordType::XYZM)?;
+            coord_seq.set_x(0, coord.x())?;
+            coord_seq.set_y(0, coord.y())?;
+            coord_seq.set_z(0, coord.nth(2).unwrap())?;
+            coord_seq.set_m(0, coord.nth(3).unwrap())?;
+            Ok(coord_seq)
+        }
         _ => Err(geos::Error::GenericError(
             "Unexpected dimension".to_string(),
         )),
@@ -83,13 +98,15 @@ pub(crate) fn coord_to_geos(
 
 pub(crate) fn coords_to_geos<C: CoordTrait<T = f64>, I: ExactSizeIterator<Item = C>>(
     coords: I,
-    dim: geo_traits::Dimensions,
+    dim: Dimensions,
 ) -> std::result::Result<geos::CoordSeq, geos::Error> {
-    use geo_traits::Dimensions;
-
     let coord_type = match dim {
         Dimensions::Xy | Dimensions::Unknown(2) => geos::CoordType::XY,
         Dimensions::Xyz | Dimensions::Unknown(3) => geos::CoordType::XYZ,
+        #[cfg(feature = "geos-3_14")]
+        Dimensions::Xym => geos::CoordType::XYM,
+        #[cfg(feature = "geos-3_14")]
+        Dimensions::Xyzm => geos::CoordType::XYZM,
         _ => {
             return Err(geos::Error::GenericError(format!(
                 "Unsupported dimension for GEOS: {dim:?}"
@@ -104,6 +121,15 @@ pub(crate) fn coords_to_geos<C: CoordTrait<T = f64>, I: ExactSizeIterator<Item =
         match dim {
             Dimensions::Xyz | Dimensions::Unknown(3) => {
                 coord_seq.set_z(idx, coord.nth_or_panic(2))?;
+            }
+            #[cfg(feature = "geos-3_14")]
+            Dimensions::Xym => {
+                coord_seq.set_m(idx, coord.nth_or_panic(2))?;
+            }
+            #[cfg(feature = "geos-3_14")]
+            Dimensions::Xyzm => {
+                coord_seq.set_z(idx, coord.nth_or_panic(2))?;
+                coord_seq.set_m(idx, coord.nth_or_panic(3))?;
             }
             _ => {}
         }

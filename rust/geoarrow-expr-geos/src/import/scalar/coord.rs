@@ -17,8 +17,14 @@ impl CoordTrait for GEOSConstCoord {
         match n {
             0 => self.coords.get_x(self.geom_index).unwrap(),
             1 => self.coords.get_y(self.geom_index).unwrap(),
-            2 => self.coords.get_z(self.geom_index).unwrap(),
-            _ => panic!(),
+            2 => match self.dim {
+                #[cfg(feature = "geos-3_14")]
+                geo_traits::Dimensions::Xym => self.coords.get_m(self.geom_index).unwrap(),
+                _ => self.coords.get_z(self.geom_index).unwrap(),
+            },
+            #[cfg(feature = "geos-3_14")]
+            3 => self.coords.get_m(self.geom_index).unwrap(),
+            _ => panic!("Unexpected dimension count {n}"),
         }
     }
 
