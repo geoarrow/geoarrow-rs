@@ -10,6 +10,5 @@ platforms = ["osx-arm64", "linux-64"]
 
 [dependencies]
 libgdal = ">=3.8"
-geos = ">=3.12.1"
-protobuf = "4.23.4.*"
+geos = ">=3.14"
 proj = ">=9.3.1"

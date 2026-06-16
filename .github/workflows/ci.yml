@@ -56,7 +56,7 @@ jobs:
         run: cargo +nightly-2025-05-14 fmt -- --check --unstable-features --config imports_granularity=Module,group_imports=StdExternalCrate
 
   docs-no-warnings:
-    name: Lint and Test
+    name: Docs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -64,12 +64,17 @@ jobs:
           submodules: "recursive"
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-
-      # TODO: switch back to pixi environment
-      - name: Install GEOS
+      - uses: Swatinem/rust-cache@v2
+      - uses: prefix-dev/setup-pixi@v0.9.5
+        with:
+          activate-environment: true
+          cache: true
+          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+          manifest-path: build/pixi.toml
+      - name: Tweak environment to find GDAL
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libgeos-dev
+          echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/envs/default/lib/pkgconfig" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/envs/default/lib" >> "$GITHUB_ENV"
 
       # Note: in the future expand to all crates in the workspace
       - name: Test that docs build without warnings
