@@ -12,3 +12,4 @@ platforms = ["osx-arm64", "linux-64"]
 libgdal = ">=3.8"
 geos = ">=3.14"
 proj = ">=9.3.1"
+python = ">=3.11"
