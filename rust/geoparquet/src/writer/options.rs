@@ -115,6 +115,12 @@ impl GeoParquetWriterOptionsBuilder {
         self
     }
 
+    /// Use large offsets when writing as WKB for a specific geometry column.
+    pub fn set_large_offsets(mut self, col: String) -> Self {
+        self.get_mut_props(col).large_offsets = true;
+        self
+    }
+
     /// Finalizes the configuration and returns immutable writer options struct.
     pub fn build(self) -> GeoParquetWriterOptions {
         GeoParquetWriterOptions {
