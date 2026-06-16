@@ -56,7 +56,7 @@ geoarrow-test = { path = "rust/geoarrow-test", version = "0.8.0" }
 geohash = "0.13.1"
 geojson = "0.24"
 geoparquet = { path = "rust/geoparquet", version = "0.5" }
-geos = { version = "10", features = ["v3_10_0"] }
+geos = { version = "11", features = ["v3_10_0"] }
 geozero = "0.14"
 http-range-client = { version = "0.9", default-features = false }
 indexmap = "2.5.0"

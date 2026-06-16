@@ -18,3 +18,11 @@ pub use multipoint::GEOSMultiPoint;
 pub use multipolygon::GEOSMultiPolygon;
 pub use point::{GEOSConstPoint, GEOSPoint};
 pub use polygon::{GEOSConstPolygon, GEOSPolygon};
+
+/// Determine the [`geo_traits::Dimensions`] of a GEOS geometry.
+pub(crate) fn dimensions_from_geom(geom: &impl geos::Geom) -> geo_traits::Dimensions {
+        match geom.get_coordinate_dimension().unwrap() {
+            geos::CoordDimensions::TwoD => geo_traits::Dimensions::Xy,
+            geos::CoordDimensions::ThreeD => geo_traits::Dimensions::Xyz,
+        }
+}
