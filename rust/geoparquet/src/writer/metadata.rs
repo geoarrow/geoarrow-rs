@@ -533,8 +533,15 @@ fn create_output_field(column_info: &ColumnInfo, name: String, nullable: bool) -
     use GeoParquetColumnEncoding as Encoding;
 
     match column_info.encoding {
-        Encoding::WKB => Field::new(name, DataType::Binary, nullable)
-            .with_extension_type(WkbType::new(Default::default())),
+        Encoding::WKB => {
+            if column_info.large_offsets {
+                Field::new(name, DataType::LargeBinary, nullable)
+                    .with_extension_type(WkbType::new(Default::default()))
+            } else {
+                Field::new(name, DataType::Binary, nullable)
+                    .with_extension_type(WkbType::new(Default::default()))
+            }
+        }
         // A native encoding
         _ => {
             assert_eq!(column_info.geometry_types.len(), 1);
