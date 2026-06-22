@@ -49,7 +49,7 @@ jobs:
           - geoarrow-core
           - geoarrow-compute
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           python-version: 3.x
@@ -84,7 +84,7 @@ jobs:
   #         - geoarrow-core
   #         - geoarrow-compute
   #   steps:
-  #     - uses: actions/checkout@v6
+  #     - uses: actions/checkout@v7
   #     - uses: actions/setup-python@v6
   #       with:
   #         python-version: 3.x
@@ -113,7 +113,7 @@ jobs:
           - geoarrow-core
           - geoarrow-compute
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           # Every interpreter passed to `-i` below must be installed: on
@@ -153,7 +153,7 @@ jobs:
           - geoarrow-core
           - geoarrow-compute
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           python-version: 3.x
@@ -191,7 +191,7 @@ jobs:
           - python-version: "3.13"
             rust-toolchain-override: nightly-2026-06-01
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
@@ -271,7 +271,7 @@ jobs:
   # sdist:
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v6
+  #     - uses: actions/checkout@v7
   #     - name: Build sdist
   #       uses: PyO3/maturin-action@v1
   #       with:
