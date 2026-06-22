@@ -137,8 +137,10 @@ fn process_properties<P: PropertyProcessor>(
         }
         let name = field.name();
 
-        // Don't pass null properties to geozero
+        // Don't pass null properties to geozero, but still advance the index so
+        // subsequent columns keep the correct column index in the output.
         if array.is_null(within_batch_row_idx) {
+            property_idx += 1;
             continue;
         }
 
