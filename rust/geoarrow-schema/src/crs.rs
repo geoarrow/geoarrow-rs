@@ -193,12 +193,11 @@ pub trait CrsTransform: Debug {
     /// If the CRS is already stored as WKT, this will return that. Otherwise it will call
     /// [`Self::_convert_to_wkt`].
     fn extract_wkt(&self, crs: &Crs) -> GeoArrowResult<Option<String>> {
-        if let (Some(crs), Some(crs_type)) = (crs.crs_value(), crs.crs_type()) {
-            if crs_type == CrsType::Wkt2_2019 {
-                if let Value::String(inner) = crs {
-                    return Ok::<_, GeoArrowError>(Some(inner.clone()));
-                }
-            }
+        if let (Some(crs), Some(crs_type)) = (crs.crs_value(), crs.crs_type())
+            && crs_type == CrsType::Wkt2_2019
+            && let Value::String(inner) = crs
+        {
+            return Ok::<_, GeoArrowError>(Some(inner.clone()));
         }
 
         self._convert_to_wkt(crs)
