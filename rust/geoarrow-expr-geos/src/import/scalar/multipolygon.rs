@@ -13,7 +13,7 @@ impl GEOSMultiPolygon {
 
     #[allow(dead_code)]
     pub fn try_new(geom: geos::Geometry) -> GeoArrowResult<Self> {
-        if matches!(geom.geometry_type(), GeometryTypes::MultiPolygon) {
+        if matches!(geom.geometry_type(), Ok(GeometryTypes::MultiPolygon)) {
             Ok(Self(geom))
         } else {
             Err(GeoArrowError::IncorrectGeometryType(
@@ -23,11 +23,7 @@ impl GEOSMultiPolygon {
     }
 
     pub(crate) fn dimension(&self) -> geo_traits::Dimensions {
-        match self.0.get_coordinate_dimension().unwrap() {
-            geos::Dimensions::TwoD => geo_traits::Dimensions::Xy,
-            geos::Dimensions::ThreeD => geo_traits::Dimensions::Xyz,
-            geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
-        }
+        crate::import::scalar::dimensions_from_geom(&self.0)
     }
 }
 

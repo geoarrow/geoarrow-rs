@@ -8,6 +8,12 @@ use crate::export::scalar::multipolygon::to_geos_multi_polygon;
 use crate::export::scalar::point::to_geos_point;
 use crate::export::scalar::polygon::to_geos_polygon;
 
+/// Converts a geometry into a GEOS geometry.
+///
+/// # Errors
+///
+/// `Rect`, `Triangle`, and `Line` are unsupported by GEOS,
+/// and providing one as input will fail.
 pub fn to_geos_geometry(
     geometry: &impl GeometryTrait<T = f64>,
 ) -> std::result::Result<geos::Geometry, geos::Error> {
@@ -21,8 +27,14 @@ pub fn to_geos_geometry(
         MultiLineString(g) => to_geos_multi_line_string(g),
         MultiPolygon(g) => to_geos_multi_polygon(g),
         GeometryCollection(g) => to_geos_geometry_collection(g),
-        Rect(_) => panic!("Unsupported rect in conversion to GEOS"),
-        Triangle(_) => panic!("Unsupported triangle in conversion to GEOS"),
-        Line(_) => panic!("Unsupported Line in conversion to GEOS"),
+        Rect(_) => Err(geos::Error::ConversionError(
+            "unsupported rect in conversion to GEOS".to_string(),
+        )),
+        Triangle(_) => Err(geos::Error::ConversionError(
+            "unsupported Triangle in conversion to GEOS".to_string(),
+        )),
+        Line(_) => Err(geos::Error::ConversionError(
+            "unsupported Line in conversion to GEOS".to_string(),
+        )),
     }
 }

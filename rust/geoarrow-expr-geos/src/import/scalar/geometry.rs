@@ -20,25 +20,35 @@ pub enum GEOSGeometry {
 impl GEOSGeometry {
     pub fn new(geom: geos::Geometry) -> Self {
         match geom.geometry_type() {
-            geos::GeometryTypes::Point => Self::Point(GEOSPoint::new_unchecked(geom)),
-            geos::GeometryTypes::LineString => {
+            Ok(geos::GeometryTypes::Point) => Self::Point(GEOSPoint::new_unchecked(geom)),
+            Ok(geos::GeometryTypes::LineString) => {
                 Self::LineString(GEOSLineString::new_unchecked(geom))
             }
-            geos::GeometryTypes::Polygon => Self::Polygon(GEOSPolygon::new_unchecked(geom)),
-            geos::GeometryTypes::MultiPoint => {
+            Ok(geos::GeometryTypes::Polygon) => Self::Polygon(GEOSPolygon::new_unchecked(geom)),
+            Ok(geos::GeometryTypes::MultiPoint) => {
                 Self::MultiPoint(GEOSMultiPoint::new_unchecked(geom))
             }
-            geos::GeometryTypes::MultiLineString => {
+            Ok(geos::GeometryTypes::MultiLineString) => {
                 Self::MultiLineString(GEOSMultiLineString::new_unchecked(geom))
             }
-            geos::GeometryTypes::MultiPolygon => {
+            Ok(geos::GeometryTypes::MultiPolygon) => {
                 Self::MultiPolygon(GEOSMultiPolygon::new_unchecked(geom))
             }
-            geos::GeometryTypes::GeometryCollection => {
+            Ok(geos::GeometryTypes::GeometryCollection) => {
                 Self::GeometryCollection(GEOSGeometryCollection::new_unchecked(geom))
             }
-            geos::GeometryTypes::LinearRing => panic!("GEOS Linear ring not supported"),
-            geos::GeometryTypes::__Unknown(x) => panic!("Unknown geometry type {x}"),
+            Ok(geos::GeometryTypes::LinearRing) => panic!("GEOS Linear ring not supported"),
+            #[cfg(feature = "geos-3_14")]
+            Ok(
+                geos::GeometryTypes::CircularString
+                | geos::GeometryTypes::CompoundCurve
+                | geos::GeometryTypes::CurvePolygon
+                | geos::GeometryTypes::MultiCurve
+                | geos::GeometryTypes::MultiSurface,
+            ) => {
+                panic!("GEOS curved geometry types are not supported")
+            }
+            Err(err) => panic!("Failed to get GEOS geometry type: {err}"),
         }
     }
 }

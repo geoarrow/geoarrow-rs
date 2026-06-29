@@ -43,8 +43,19 @@ mod test {
 
     #[test]
     fn geos_round_trip() {
+        // M-dimension support requires GEOS 3.14 (the `geos-3_14` feature).
+        #[cfg(not(feature = "geos-3_14"))]
+        let dims = [Dimension::XY, Dimension::XYZ];
+        #[cfg(feature = "geos-3_14")]
+        let dims = [
+            Dimension::XY,
+            Dimension::XYZ,
+            Dimension::XYM,
+            Dimension::XYZM,
+        ];
+
         for coord_type in [CoordType::Interleaved, CoordType::Separated] {
-            for dim in [Dimension::XY, Dimension::XYZ] {
+            for dim in dims {
                 let arr = array(coord_type, dim);
 
                 let geos_geoms = arr
