@@ -81,9 +81,10 @@ pub fn construct_reader(
     // instance for them.
     #[cfg(feature = "async")]
     if let Ok(path_or_url) = file.extract::<PyBackedStr>()
-        && path_or_url.starts_with("http") {
-            return Ok(AnyFileReader::Async(default_http_store(&path_or_url)?));
-        }
+        && path_or_url.starts_with("http")
+    {
+        return Ok(AnyFileReader::Async(default_http_store(&path_or_url)?));
+    }
 
     Ok(AnyFileReader::Sync(file.extract()?))
 }
