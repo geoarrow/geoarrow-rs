@@ -93,7 +93,7 @@ geoarrow-cast = { path = "../rust/geoarrow-cast" }
 geoarrow-schema = { path = "../rust/geoarrow-schema" }
 geodesy = { version = "0.12", optional = true, features = ["js"] }
 geoparquet = { path = "../rust/geoparquet", optional = true }
-object_store = { version = "0.12", optional = true }
+object_store = { version = "0.13", optional = true }
 # Use released version when it supports object-store 0.12
 object-store-wasm = { git = "https://github.com/kylebarron/object-store-wasm", rev = "1b1c29c9915e1d099bdc19617ca59e9d80844478", optional = true, default-features = false, features = [
     "http",
