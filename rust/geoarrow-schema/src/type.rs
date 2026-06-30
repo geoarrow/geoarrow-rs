@@ -717,7 +717,7 @@ impl GeometryCollectionType {
     /// ];
     /// let type_ids = vec![1, 2, 3, 4, 5, 6];
     ///
-    /// let union_fields = UnionFields::new(type_ids, fields);
+    /// let union_fields = UnionFields::try_new(type_ids, fields).unwrap();
     /// let union_data_type = DataType::Union(union_fields, UnionMode::Dense);
     ///
     /// let geometries_field = Field::new("geometries", union_data_type, false).into();
