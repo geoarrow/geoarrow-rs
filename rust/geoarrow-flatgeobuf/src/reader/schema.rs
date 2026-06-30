@@ -114,10 +114,10 @@ impl FlatGeobufSchemaScanner {
                 .map_err(|err| GeoArrowError::External(Box::new(err)))?;
 
             num_features_processed += 1;
-            if let Some(max_scan_records) = max_scan_records {
-                if num_features_processed >= max_scan_records {
-                    return Ok(());
-                }
+            if let Some(max_scan_records) = max_scan_records
+                && num_features_processed >= max_scan_records
+            {
+                return Ok(());
             }
         }
         Ok(())

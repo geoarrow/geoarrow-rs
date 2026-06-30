@@ -80,10 +80,10 @@ pub fn construct_reader(
     // If the user's path is a "known" URL (i.e. http(s)) then construct an object store
     // instance for them.
     #[cfg(feature = "async")]
-    if let Ok(path_or_url) = file.extract::<PyBackedStr>() {
-        if path_or_url.starts_with("http") {
-            return Ok(AnyFileReader::Async(default_http_store(&path_or_url)?));
-        }
+    if let Ok(path_or_url) = file.extract::<PyBackedStr>()
+        && path_or_url.starts_with("http")
+    {
+        return Ok(AnyFileReader::Async(default_http_store(&path_or_url)?));
     }
 
     Ok(AnyFileReader::Sync(file.extract()?))

@@ -60,13 +60,13 @@ pub fn cast(
     // We want to error if the dimensions aren't compatible, but allow conversions to
     // `GeometryArray`, `WKB`, etc where the target array isn't parameterized by a specific
     // dimension.
-    if let (Some(from_dim), Some(to_dim)) = (array.data_type().dimension(), to_type.dimension()) {
-        if from_dim != to_dim {
-            return Err(ArrowError::CastError(format!(
-                "Cannot cast from {from_dim:?} to {to_dim:?}: incompatible dimensions",
-            ))
-            .into());
-        }
+    if let (Some(from_dim), Some(to_dim)) = (array.data_type().dimension(), to_type.dimension())
+        && from_dim != to_dim
+    {
+        return Err(ArrowError::CastError(format!(
+            "Cannot cast from {from_dim:?} to {to_dim:?}: incompatible dimensions",
+        ))
+        .into());
     }
 
     if array.data_type().metadata() != to_type.metadata() {

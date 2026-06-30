@@ -609,12 +609,12 @@ impl GeoParquetMetadata {
                 )));
             }
 
-            if let (Some(left_bbox), Some(right_bbox)) = (&left.bbox, &right.bbox) {
-                if left_bbox.len() != right_bbox.len() {
-                    return Err(GeoArrowError::GeoParquet(format!(
-                        "Different bbox dimensions for column {key}",
-                    )));
-                }
+            if let (Some(left_bbox), Some(right_bbox)) = (&left.bbox, &right.bbox)
+                && left_bbox.len() != right_bbox.len()
+            {
+                return Err(GeoArrowError::GeoParquet(format!(
+                    "Different bbox dimensions for column {key}",
+                )));
             }
 
             match (left.crs.as_ref(), right.crs.as_ref()) {

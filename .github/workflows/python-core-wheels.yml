@@ -186,10 +186,14 @@ jobs:
         module:
           - geoarrow-core
         include:
-          # Pyodide's pinned toolchain for Python 3.13 (nightly-2025-02-01,
-          # rustc 1.86) is very old. We override with a newer nightly
+          # Pyodide's pinned toolchain for Python 3.13 is (nightly-2025-02-01,
+          # rustc 1.86). It requires nightly, so we bump to a newer version.
           - python-version: "3.13"
             rust-toolchain-override: nightly-2026-06-01
+          # Pyodide's pinned toolchain for Python 3.14 is 1.93.0.
+          # The 3.14 toolchain can use stable, so we bump to our MSRV.
+          - python-version: "3.14"
+            rust-toolchain-override: 1.95
     steps:
       - uses: actions/checkout@v7
 

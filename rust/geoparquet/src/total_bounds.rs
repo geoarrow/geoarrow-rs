@@ -80,10 +80,10 @@ impl BoundingRect {
         if y < self.miny {
             self.miny = y;
         }
-        if let Some(z) = z {
-            if z < self.minz {
-                self.minz = z;
-            }
+        if let Some(z) = z
+            && z < self.minz
+        {
+            self.minz = z;
         }
 
         if x > self.maxx {
@@ -92,10 +92,10 @@ impl BoundingRect {
         if y > self.maxy {
             self.maxy = y;
         }
-        if let Some(z) = z {
-            if z > self.maxz {
-                self.maxz = z;
-            }
+        if let Some(z) = z
+            && z > self.maxz
+        {
+            self.maxz = z;
         }
     }
 
