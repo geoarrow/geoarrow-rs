@@ -663,9 +663,9 @@ dependencies = [
 
 [[package]]
 name = "earcut"
-version = "0.4.5"
+version = "0.4.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "88459a2a8e3a514b6e6de38cf3aaa9250a894cb098f74a932db77fcc8341b6d0"
+checksum = "9f03dd5350900133e14471c90d513eb5ba264004cd833adecab7dfa5fb5a2974"
 dependencies = [
  "num-traits",
 ]
@@ -875,8 +875,7 @@ dependencies = [
 [[package]]
 name = "geo"
 version = "0.33.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "30eb1fdc57c1e5cfd11826fe0caec4b9dc7901f3758263bb506228d88c8d9e9a"
+source = "git+https://github.com/georust/geo?rev=7b9c8417eec4b8a5763ca487fcb51c7d7cb1b177#7b9c8417eec4b8a5763ca487fcb51c7d7cb1b177"
 dependencies = [
  "earcut",
  "float_next_after",
@@ -2280,9 +2279,9 @@ checksum = "cbf4a6aa5f6d6888f39e980649f3ad6b666acdce1d78e95b8a2cb076e687ae30"
 
 [[package]]
 name = "rstar"
-version = "0.12.2"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "421400d13ccfd26dfa5858199c30a5d76f9c54e0dba7575273025b43c5175dbb"
+checksum = "5912b862fa5ffb462607bfd1e35036c458c537921f508c8235a83d5f3987edfe"
 dependencies = [
  "heapless",
  "num-traits",

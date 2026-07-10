@@ -144,3 +144,7 @@ lto = true
 unexpected_cfgs = { level = "warn", check-cfg = [
     'cfg(wasm_bindgen_unstable_test_coverage)',
 ] }
+
+# Pinned to include https://github.com/georust/geo/pull/1538; drop on geo 0.34. Repeats ../Cargo.toml's patch (js/ is outside the workspace).
+[patch.crates-io]
+geo = { git = "https://github.com/georust/geo", rev = "7b9c8417eec4b8a5763ca487fcb51c7d7cb1b177" }
