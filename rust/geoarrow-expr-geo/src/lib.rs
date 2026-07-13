@@ -6,6 +6,7 @@
 )]
 
 mod area;
+mod buffer;
 mod centroid;
 mod contains;
 mod convex_hull;
@@ -22,6 +23,7 @@ pub mod util;
 pub mod validation;
 
 pub use area::{signed_area, unsigned_area};
+pub use buffer::buffer;
 pub use centroid::centroid;
 pub use contains::contains;
 pub use convex_hull::convex_hull;
