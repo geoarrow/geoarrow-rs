@@ -6,6 +6,7 @@
 )]
 
 mod area;
+mod bool_ops;
 mod buffer;
 mod centroid;
 mod chamberlain_duquette_area;
@@ -27,6 +28,7 @@ pub mod util;
 pub mod validation;
 
 pub use area::{signed_area, unsigned_area};
+pub use bool_ops::{difference, intersection, union, xor};
 pub use buffer::buffer;
 pub use centroid::centroid;
 pub use chamberlain_duquette_area::{
