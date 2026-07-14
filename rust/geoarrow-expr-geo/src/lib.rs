@@ -13,6 +13,7 @@ mod buffer;
 mod centroid;
 mod chaikin_smoothing;
 mod chamberlain_duquette_area;
+mod concave_hull;
 mod contains;
 mod convex_hull;
 mod densify;
@@ -41,6 +42,7 @@ pub use chaikin_smoothing::chaikin_smoothing;
 pub use chamberlain_duquette_area::{
     chamberlain_duquette_signed_area, chamberlain_duquette_unsigned_area,
 };
+pub use concave_hull::concave_hull;
 pub use contains::contains;
 pub use convex_hull::convex_hull;
 pub use densify::densify;
