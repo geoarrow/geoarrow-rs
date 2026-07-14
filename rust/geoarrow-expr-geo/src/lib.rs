@@ -10,6 +10,7 @@ mod area;
 mod bool_ops;
 mod bounding_rect;
 mod buffer;
+mod center;
 mod centroid;
 mod chaikin_smoothing;
 mod chamberlain_duquette_area;
@@ -37,6 +38,7 @@ pub use area::{signed_area, unsigned_area};
 pub use bool_ops::{difference, intersection, union, xor};
 pub use bounding_rect::bounding_rect;
 pub use buffer::buffer;
+pub use center::center;
 pub use centroid::centroid;
 pub use chaikin_smoothing::chaikin_smoothing;
 pub use chamberlain_duquette_area::{

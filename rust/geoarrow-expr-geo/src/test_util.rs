@@ -1,10 +1,11 @@
 //! XYZM test data. Each coordinate is `[x, y, z, m]`. Each vertex has different Z and
 //! M values. A test can then identify the input coordinate for each output coordinate.
 
-use geo_traits::to_geo::ToGeoPolygon;
+use geo_traits::to_geo::{ToGeoPoint, ToGeoPolygon};
 use geo_traits::{Dimensions, LineStringTrait, PolygonTrait};
 use geoarrow_array::array::{
-    GeometryCollectionArray, LineStringArray, MultiLineStringArray, MultiPolygonArray, PolygonArray,
+    GeometryCollectionArray, LineStringArray, MultiLineStringArray, MultiPolygonArray, PointArray,
+    PolygonArray,
 };
 use geoarrow_array::builder::{
     GeometryBuilder, GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder,
@@ -179,6 +180,11 @@ pub(crate) fn geometry_array(geoms: Vec<Option<geo::Geometry>>) -> impl GeoArrow
 /// The `i`th value of a PolygonArray as a `geo` polygon.
 pub(crate) fn polygon_at(result: &PolygonArray, i: usize) -> geo::Polygon {
     result.iter().nth(i).unwrap().unwrap().unwrap().to_polygon()
+}
+
+/// The `i`th value of a PointArray as a `geo` point.
+pub(crate) fn point_at(result: &PointArray, i: usize) -> geo::Point {
+    result.iter().nth(i).unwrap().unwrap().unwrap().to_point()
 }
 
 /// Each row as a `geo` geometry, for a kernel whose output type follows the input.
