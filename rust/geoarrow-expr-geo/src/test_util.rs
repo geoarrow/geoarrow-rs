@@ -4,21 +4,23 @@
 use geo_traits::to_geo::ToGeoPolygon;
 use geo_traits::{Dimensions, LineStringTrait, PolygonTrait};
 use geoarrow_array::array::{
-    LineStringArray, MultiLineStringArray, MultiPolygonArray, PolygonArray,
+    GeometryCollectionArray, LineStringArray, MultiLineStringArray, MultiPolygonArray, PolygonArray,
 };
 use geoarrow_array::builder::{
-    GeometryBuilder, LineStringBuilder, MultiLineStringBuilder, MultiPolygonBuilder, PolygonBuilder,
+    GeometryBuilder, GeometryCollectionBuilder, LineStringBuilder, MultiLineStringBuilder,
+    MultiPolygonBuilder, PolygonBuilder,
 };
 use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, downcast_geoarrow_array};
 use geoarrow_schema::{
-    CoordType, Dimension, GeometryType, LineStringType, MultiLineStringType, MultiPolygonType,
-    PolygonType,
+    CoordType, Dimension, GeometryCollectionType, GeometryType, LineStringType,
+    MultiLineStringType, MultiPolygonType, PolygonType,
 };
 
 use crate::dim_geom::{
     DimMultiLineString, DimMultiPolygon, DimPolygon, DimPolygonParts, DimRing, all_coords,
     ordinates,
 };
+use crate::util::to_geo::geometry_to_geo;
 
 /// An almost straight line. Coordinate 1 is `0.1` from the straight line. Simplify
 /// removes coordinate 1 at `NEAR_COLLINEAR_EPS`.
@@ -133,6 +135,16 @@ pub(crate) fn xyzm_multipolygon_array(rows: &[&[PolygonRings<'_>]]) -> MultiPoly
     b.finish()
 }
 
+/// A one row collection array, for the kernels that must recurse into a
+/// collection because `geo` does not.
+pub(crate) fn geometry_collection_array(gc: &geo::GeometryCollection) -> GeometryCollectionArray {
+    let typ = GeometryCollectionType::new(Dimension::XY, Default::default())
+        .with_coord_type(CoordType::Interleaved);
+    let mut b = GeometryCollectionBuilder::new(typ);
+    b.push_geometry_collection(Some(gc)).unwrap();
+    b.finish()
+}
+
 /// Every coordinate of every present row, in row order.
 pub(crate) fn array_coords(array: &dyn GeoArrowArray) -> Vec<[f64; 4]> {
     downcast_geoarrow_array!(array, collect_coords)
@@ -167,4 +179,14 @@ pub(crate) fn geometry_array(geoms: Vec<Option<geo::Geometry>>) -> impl GeoArrow
 /// The `i`th value of a PolygonArray as a `geo` polygon.
 pub(crate) fn polygon_at(result: &PolygonArray, i: usize) -> geo::Polygon {
     result.iter().nth(i).unwrap().unwrap().unwrap().to_polygon()
+}
+
+/// Each row as a `geo` geometry, for a kernel whose output type follows the input.
+pub(crate) fn read_geoms<'a>(
+    array: &'a impl GeoArrowArrayAccessor<'a>,
+) -> Vec<Option<geo::Geometry>> {
+    array
+        .iter()
+        .map(|item| item.map(|geom| geometry_to_geo(&geom.unwrap()).unwrap()))
+        .collect()
 }

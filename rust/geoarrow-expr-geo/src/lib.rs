@@ -14,6 +14,7 @@ mod centroid;
 mod chamberlain_duquette_area;
 mod contains;
 mod convex_hull;
+mod densify;
 mod dim_geom;
 mod dimensions;
 mod distance;
@@ -40,6 +41,7 @@ pub use chamberlain_duquette_area::{
 };
 pub use contains::contains;
 pub use convex_hull::convex_hull;
+pub use densify::densify;
 pub use dimensions::{dimensions, is_empty};
 pub use distance::{euclidean_distance, frechet_distance, hausdorff_distance};
 pub use interior_point::interior_point;
