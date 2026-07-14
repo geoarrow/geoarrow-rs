@@ -11,6 +11,7 @@ mod bool_ops;
 mod bounding_rect;
 mod buffer;
 mod centroid;
+mod chaikin_smoothing;
 mod chamberlain_duquette_area;
 mod contains;
 mod convex_hull;
@@ -36,6 +37,7 @@ pub use bool_ops::{difference, intersection, union, xor};
 pub use bounding_rect::bounding_rect;
 pub use buffer::buffer;
 pub use centroid::centroid;
+pub use chaikin_smoothing::chaikin_smoothing;
 pub use chamberlain_duquette_area::{
     chamberlain_duquette_signed_area, chamberlain_duquette_unsigned_area,
 };
