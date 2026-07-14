@@ -3,8 +3,11 @@ use std::sync::Arc;
 use arrow_array::Float64Array;
 use arrow_array::builder::Float64Builder;
 use arrow_buffer::NullBuffer;
+use geoarrow_array::array::PolygonArray;
+use geoarrow_array::builder::PolygonBuilder;
 use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
+use geoarrow_schema::{CoordType, Dimension, PolygonType};
 
 use crate::util::to_geo::geometry_to_geo;
 
@@ -79,6 +82,28 @@ where
             }
             _ => builder.append_null(),
         }
+    }
+
+    Ok(builder.finish())
+}
+
+/// `geo` is XY only, thus a Z or M input ordinate does not reach the output. A
+/// `None` result gives a null row.
+pub(crate) fn map_to_polygon<'a, F: Fn(&geo::Geometry) -> Option<geo::Polygon>>(
+    array: &'a impl GeoArrowArrayAccessor<'a>,
+    coord_type: CoordType,
+    f: F,
+) -> GeoArrowResult<PolygonArray> {
+    let typ = PolygonType::new(Dimension::XY, array.data_type().metadata().clone())
+        .with_coord_type(coord_type);
+    let mut builder = PolygonBuilder::new(typ);
+
+    for item in array.iter() {
+        let polygon = match item {
+            Some(geom) => f(&geometry_to_geo(&geom?)?),
+            None => None,
+        };
+        builder.push_polygon(polygon.as_ref())?;
     }
 
     Ok(builder.finish())

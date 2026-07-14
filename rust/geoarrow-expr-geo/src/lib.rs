@@ -7,6 +7,7 @@
 
 mod area;
 mod bool_ops;
+mod bounding_rect;
 mod buffer;
 mod centroid;
 mod chamberlain_duquette_area;
@@ -29,6 +30,7 @@ pub mod validation;
 
 pub use area::{signed_area, unsigned_area};
 pub use bool_ops::{difference, intersection, union, xor};
+pub use bounding_rect::bounding_rect;
 pub use buffer::buffer;
 pub use centroid::centroid;
 pub use chamberlain_duquette_area::{
