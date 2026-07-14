@@ -34,7 +34,7 @@ pub use chamberlain_duquette_area::{
 pub use contains::contains;
 pub use convex_hull::convex_hull;
 pub use dimensions::{dimensions, is_empty};
-pub use distance::euclidean_distance;
+pub use distance::{euclidean_distance, frechet_distance, hausdorff_distance};
 pub use interior_point::interior_point;
 pub use intersects::intersects;
 pub use length::{euclidean_length, geodesic_length, haversine_length, rhumb_length};
