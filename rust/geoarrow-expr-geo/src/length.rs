@@ -1,34 +1,58 @@
 use arrow_array::Float64Array;
-use geo::{Euclidean, Length};
-use geo_traits::GeometryTrait;
+use geo::{Euclidean, Geodesic, Haversine, Length, Rhumb};
 use geo_traits::to_geo::{ToGeoLine, ToGeoLineString, ToGeoMultiLineString};
+use geo_traits::{GeometryCollectionTrait, GeometryTrait};
 use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, downcast_geoarrow_array};
 use geoarrow_schema::error::GeoArrowResult;
 
 /// Compute the euclidean length of linear geometries in a GeoArrowArray.
 ///
-/// Only LineString and MultiLineString geometries will have non-zero lengths.
-/// Other geometry types (including polygons) will return a length of 0.0.
+/// Only Line, LineString and MultiLineString geometries, and GeometryCollections
+/// of them, will have non-zero lengths. Other geometry types (including polygons)
+/// will return a length of 0.0.
 pub fn euclidean_length(array: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
-    downcast_geoarrow_array!(array, _length_impl)
+    downcast_geoarrow_array!(array, length_impl, &Euclidean)
 }
 
-pub fn _length_impl<'a>(array: &'a impl GeoArrowArrayAccessor<'a>) -> GeoArrowResult<Float64Array> {
+/// Compute the geodesic length, in meters, of linear geometries. Coordinates are
+/// interpreted as lon/lat degrees.
+pub fn geodesic_length(array: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
+    downcast_geoarrow_array!(array, length_impl, &Geodesic)
+}
+
+/// Compute the great-circle length, in meters, of linear geometries. Coordinates
+/// are interpreted as lon/lat degrees.
+pub fn haversine_length(array: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
+    downcast_geoarrow_array!(array, length_impl, &Haversine)
+}
+
+/// Compute the rhumb-line length, in meters, of linear geometries. Coordinates
+/// are interpreted as lon/lat degrees.
+pub fn rhumb_length(array: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
+    downcast_geoarrow_array!(array, length_impl, &Rhumb)
+}
+
+/// `geo`'s `Length` has no GeometryCollection impl, so a collection is summed
+/// member by member here rather than falling to the catch-all zero.
+fn geom_length<M: Length<f64>>(geom: &impl GeometryTrait<T = f64>, metric: &M) -> f64 {
+    use geo_traits::GeometryType::*;
+    match geom.as_type() {
+        Line(l) => metric.length(&l.to_line()),
+        LineString(ls) => metric.length(&ls.to_line_string()),
+        MultiLineString(mls) => metric.length(&mls.to_multi_line_string()),
+        GeometryCollection(gc) => gc.geometries().map(|g| geom_length(&g, metric)).sum(),
+        _ => 0.0,
+    }
+}
+
+fn length_impl<'a, M: Length<f64>>(
+    array: &'a impl GeoArrowArrayAccessor<'a>,
+    metric: &M,
+) -> GeoArrowResult<Float64Array> {
     let mut result = Float64Array::builder(array.len());
     for geom in array.iter() {
         if let Some(geom) = geom {
-            match geom?.as_type() {
-                geo_traits::GeometryType::Line(l) => {
-                    result.append_value(Euclidean.length(&l.to_line()))
-                }
-                geo_traits::GeometryType::LineString(ls) => {
-                    result.append_value(Euclidean.length(&ls.to_line_string()))
-                }
-                geo_traits::GeometryType::MultiLineString(mls) => {
-                    result.append_value(Euclidean.length(&mls.to_multi_line_string()))
-                }
-                _ => result.append_value(0.0),
-            }
+            result.append_value(geom_length(&geom?, metric));
         } else {
             result.append_null();
         }
@@ -39,7 +63,11 @@ pub fn _length_impl<'a>(array: &'a impl GeoArrowArrayAccessor<'a>) -> GeoArrowRe
 #[cfg(test)]
 mod test {
 
-    use geo::{Euclidean, Length, LineString, MultiLineString, Point};
+    use arrow_array::Array;
+    use geo::{
+        Euclidean, Geodesic, Geometry, GeometryCollection, Haversine, Length, LineString,
+        MultiLineString, Point, Rhumb,
+    };
     use geoarrow_array::array::PointArray;
     use geoarrow_array::builder::{
         LineStringBuilder, MultiLineStringBuilder, PointBuilder, WkbBuilder,
@@ -143,5 +171,49 @@ mod test {
         assert_eq!(2, result.len());
         assert_eq!(result.value(0), 0.0);
         assert_eq!(result.value(1), 0.0);
+    }
+
+    #[test]
+    fn metric_variants_linestring() {
+        let mut builder = LineStringBuilder::new(
+            geoarrow_schema::LineStringType::new(Dimension::XY, Default::default())
+                .with_coord_type(CoordType::Separated),
+        );
+        let ls = LineString::from(vec![(0.0, 0.0), (0.0, 1.0), (1.0, 1.0)]);
+        let _ = builder.push_geometry(Some(&ls));
+        let array = builder.finish();
+
+        let geodesic = geodesic_length(&array).unwrap();
+        let haversine = haversine_length(&array).unwrap();
+        let rhumb = rhumb_length(&array).unwrap();
+
+        assert_eq!(geodesic.value(0), Geodesic.length(&ls));
+        assert_eq!(haversine.value(0), Haversine.length(&ls));
+        assert_eq!(rhumb.value(0), Rhumb.length(&ls));
+
+        // The three metric lengths are ~222 km; euclidean is ~2.0 planar degrees.
+        // A metric that fell back to the planar computation fails here.
+        assert!(geodesic.value(0) > 100_000.0);
+        assert!(haversine.value(0) > 100_000.0);
+        assert!(rhumb.value(0) > 100_000.0);
+    }
+
+    #[test]
+    fn geometry_collection_sums_linear_members() {
+        let ls1 = LineString::from(vec![(0.0, 0.0), (3.0, 4.0)]);
+        let ls2 = LineString::from(vec![(0.0, 0.0), (0.0, 2.0)]);
+        let gc = Geometry::GeometryCollection(GeometryCollection::new_from(vec![
+            Geometry::LineString(ls1.clone()),
+            Geometry::Point(Point::new(9.0, 9.0)),
+            Geometry::LineString(ls2.clone()),
+        ]));
+        let array = crate::test_util::geometry_array(vec![Some(gc), None]);
+
+        let result = euclidean_length(&array).unwrap();
+        assert_eq!(
+            result.value(0),
+            Euclidean.length(&ls1) + Euclidean.length(&ls2)
+        );
+        assert!(result.is_null(1));
     }
 }

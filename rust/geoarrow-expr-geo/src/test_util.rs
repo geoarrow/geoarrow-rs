@@ -2,14 +2,16 @@
 //! M values. A test can then identify the input coordinate for each output coordinate.
 
 use geo_traits::{Dimensions, LineStringTrait, PolygonTrait};
+use geoarrow_array::GeoArrowArray;
 use geoarrow_array::array::{
     LineStringArray, MultiLineStringArray, MultiPolygonArray, PolygonArray,
 };
 use geoarrow_array::builder::{
-    LineStringBuilder, MultiLineStringBuilder, MultiPolygonBuilder, PolygonBuilder,
+    GeometryBuilder, LineStringBuilder, MultiLineStringBuilder, MultiPolygonBuilder, PolygonBuilder,
 };
 use geoarrow_schema::{
-    CoordType, Dimension, LineStringType, MultiLineStringType, MultiPolygonType, PolygonType,
+    CoordType, Dimension, GeometryType, LineStringType, MultiLineStringType, MultiPolygonType,
+    PolygonType,
 };
 
 use crate::dim_geom::{
@@ -136,4 +138,13 @@ pub(crate) fn polygon_coords(poly: &impl PolygonTrait<T = f64>) -> Vec<Vec<[f64;
         .chain(poly.interiors())
         .map(|ring| ring.coords().map(|c| ordinates(&c)).collect())
         .collect()
+}
+
+/// A heterogeneous array built from `geo` geometries, for the kernels that read
+/// through `geometry_to_geo` and do not care about the concrete array type.
+pub(crate) fn geometry_array(geoms: Vec<Option<geo::Geometry>>) -> impl GeoArrowArray {
+    let typ = GeometryType::new(Default::default()).with_coord_type(CoordType::Interleaved);
+    GeometryBuilder::from_nullable_geometries(&geoms, typ)
+        .unwrap()
+        .finish()
 }
