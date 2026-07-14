@@ -8,6 +8,7 @@
 mod area;
 mod buffer;
 mod centroid;
+mod chamberlain_duquette_area;
 mod contains;
 mod convex_hull;
 mod dim_geom;
@@ -27,6 +28,9 @@ pub mod validation;
 pub use area::{signed_area, unsigned_area};
 pub use buffer::buffer;
 pub use centroid::centroid;
+pub use chamberlain_duquette_area::{
+    chamberlain_duquette_signed_area, chamberlain_duquette_unsigned_area,
+};
 pub use contains::contains;
 pub use convex_hull::convex_hull;
 pub use dimensions::{dimensions, is_empty};
