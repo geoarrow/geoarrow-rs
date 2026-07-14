@@ -14,6 +14,7 @@ mod center;
 mod centroid;
 mod chaikin_smoothing;
 mod chamberlain_duquette_area;
+mod closest_point;
 mod concave_hull;
 mod contains;
 mod convex_hull;
@@ -44,6 +45,7 @@ pub use chaikin_smoothing::chaikin_smoothing;
 pub use chamberlain_duquette_area::{
     chamberlain_duquette_signed_area, chamberlain_duquette_unsigned_area,
 };
+pub use closest_point::closest_point;
 pub use concave_hull::concave_hull;
 pub use contains::contains;
 pub use convex_hull::convex_hull;

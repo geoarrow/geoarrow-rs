@@ -205,3 +205,28 @@ pub(crate) fn map_to_point<'a, F: Fn(&geo::Geometry) -> Option<geo::Point>>(
 
     Ok(builder.finish())
 }
+
+/// A null on either side, or a `None` result, gives a null row.
+pub(crate) fn map_pair_to_point<'a, F>(
+    left: &'a impl GeoArrowArrayAccessor<'a>,
+    right: &'a impl GeoArrowArrayAccessor<'a>,
+    coord_type: CoordType,
+    f: F,
+) -> GeoArrowResult<PointArray>
+where
+    F: Fn(&geo::Geometry, &geo::Geometry) -> Option<geo::Point>,
+{
+    let typ = PointType::new(Dimension::XY, left.data_type().metadata().clone())
+        .with_coord_type(coord_type);
+    let mut builder = PointBuilder::with_capacity(typ, left.len());
+
+    for (left, right) in left.iter().zip(right.iter()) {
+        let point = match (left, right) {
+            (Some(left), Some(right)) => f(&geometry_to_geo(&left?)?, &geometry_to_geo(&right?)?),
+            _ => None,
+        };
+        builder.push_point(point.as_ref());
+    }
+
+    Ok(builder.finish())
+}
