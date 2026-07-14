@@ -9,14 +9,15 @@ use geoarrow_array::array::{
 use geoarrow_array::builder::{
     GeometryBuilder, LineStringBuilder, MultiLineStringBuilder, MultiPolygonBuilder, PolygonBuilder,
 };
-use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor};
+use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, downcast_geoarrow_array};
 use geoarrow_schema::{
     CoordType, Dimension, GeometryType, LineStringType, MultiLineStringType, MultiPolygonType,
     PolygonType,
 };
 
 use crate::dim_geom::{
-    DimMultiLineString, DimMultiPolygon, DimPolygon, DimPolygonParts, DimRing, ordinates,
+    DimMultiLineString, DimMultiPolygon, DimPolygon, DimPolygonParts, DimRing, all_coords,
+    ordinates,
 };
 
 /// An almost straight line. Coordinate 1 is `0.1` from the straight line. Simplify
@@ -130,6 +131,19 @@ pub(crate) fn xyzm_multipolygon_array(rows: &[&[PolygonRings<'_>]]) -> MultiPoly
         .unwrap();
     }
     b.finish()
+}
+
+/// Every coordinate of every present row, in row order.
+pub(crate) fn array_coords(array: &dyn GeoArrowArray) -> Vec<[f64; 4]> {
+    downcast_geoarrow_array!(array, collect_coords)
+}
+
+fn collect_coords<'a>(array: &'a impl GeoArrowArrayAccessor<'a>) -> Vec<[f64; 4]> {
+    array
+        .iter()
+        .flatten()
+        .flat_map(|geom| all_coords(&geom.unwrap()))
+        .collect()
 }
 
 /// Exterior ring first, then the interiors. An empty polygon gives no rings.

@@ -5,6 +5,7 @@
     html_favicon_url = "https://github.com/geoarrow.png?size=32"
 )]
 
+mod affine;
 mod area;
 mod bool_ops;
 mod bounding_rect;
@@ -28,6 +29,7 @@ mod test_util;
 pub mod util;
 pub mod validation;
 
+pub use affine::{rotate, scale, skew, translate};
 pub use area::{signed_area, unsigned_area};
 pub use bool_ops::{difference, intersection, union, xor};
 pub use bounding_rect::bounding_rect;
