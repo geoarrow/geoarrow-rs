@@ -75,7 +75,7 @@ jobs:
             target: aarch64
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: 3.x
 
@@ -107,7 +107,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           # Every interpreter passed to `-i` below must be installed: on
           # Windows, maturin can't build for a missing interpreter without
@@ -152,7 +152,7 @@ jobs:
   #         - i686-unknown-linux-musl
   #   steps:
   #     - uses: actions/checkout@v7
-  #     - uses: actions/setup-python@v6
+  #     - uses: actions/setup-python@v7
   #       with:
   #         python-version: 3.x
   #         architecture: x64
@@ -195,7 +195,7 @@ jobs:
   #   steps:
   #     - uses: actions/checkout@v7
 
-  #     - uses: actions/setup-python@v6
+  #     - uses: actions/setup-python@v7
   #       with:
   #         python-version: 3.x
 
@@ -245,7 +245,7 @@ jobs:
           pattern: wheels-*
           merge-multiple: true
           path: dist
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: 3.13
 
