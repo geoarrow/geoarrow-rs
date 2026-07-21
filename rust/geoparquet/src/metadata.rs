@@ -74,6 +74,19 @@ impl GeoParquetColumnEncoding {
         };
         Ok(new_encoding)
     }
+
+    /// The geometry type a native encoding stores, or `None` for WKB.
+    pub(crate) fn native_geometry_type(&self) -> Option<GeoParquetGeometryType> {
+        match self {
+            Self::WKB => None,
+            Self::Point => Some(GeoParquetGeometryType::Point),
+            Self::LineString => Some(GeoParquetGeometryType::LineString),
+            Self::Polygon => Some(GeoParquetGeometryType::Polygon),
+            Self::MultiPoint => Some(GeoParquetGeometryType::MultiPoint),
+            Self::MultiLineString => Some(GeoParquetGeometryType::MultiLineString),
+            Self::MultiPolygon => Some(GeoParquetGeometryType::MultiPolygon),
+        }
+    }
 }
 
 impl Display for GeoParquetColumnEncoding {

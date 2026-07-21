@@ -13,12 +13,12 @@ use geoarrow_array::array::{
 use geoarrow_array::cast::from_wkb;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{
-    CoordType, GeoArrowType, GeometryType, LineStringType, Metadata, MultiLineStringType,
-    MultiPointType, MultiPolygonType, PointType, PolygonType, WkbType,
+    CoordType, Dimension, GeoArrowType, GeometryType, LineStringType, Metadata,
+    MultiLineStringType, MultiPointType, MultiPolygonType, PointType, PolygonType, WkbType,
 };
 
 use crate::metadata::{
-    GeoParquetColumnEncoding, GeoParquetColumnMetadata, GeoParquetGeometryTypeAndDimension,
+    GeoParquetColumnMetadata, GeoParquetGeometryType, GeoParquetGeometryTypeAndDimension,
     GeoParquetMetadata, infer_geo_data_type,
 };
 
@@ -63,26 +63,90 @@ fn infer_target_field(
 ) -> GeoArrowResult<FieldRef> {
     let metadata = Arc::new(Metadata::from(column_meta.clone()));
 
-    let target_geo_data_type: GeoArrowType = match column_meta.encoding {
-        GeoParquetColumnEncoding::WKB => {
-            if parse_to_native {
-                infer_target_wkb_type(&column_meta.geometry_types, coord_type, metadata)?
-            } else {
-                GeoArrowType::Wkb(WkbType::new(metadata))
-            }
-        }
-        // For native encodings there should only be one geometry type
-        _ => {
-            assert_eq!(column_meta.geometry_types.len(), 1);
-            let gpq_type = column_meta.geometry_types.iter().next().unwrap();
-            gpq_type.to_data_type(coord_type, metadata)
-        }
-    };
+    // For native encodings the encoding and layout, not `geometry_types`, are authoritative:
+    // the spec allows an empty list, and GeoPandas writes ["Polygon", "MultiPolygon"] for
+    // mixed data promoted to a multipolygon layout.
+    let target_geo_data_type: GeoArrowType =
+        if let Some(geometry_type) = column_meta.encoding.native_geometry_type() {
+            let dimension = native_dimension(existing_field.data_type(), geometry_type)?;
+            GeoParquetGeometryTypeAndDimension::new(geometry_type, dimension)
+                .to_data_type(coord_type, metadata)
+        } else if parse_to_native {
+            infer_target_wkb_type(&column_meta.geometry_types, coord_type, metadata)?
+        } else {
+            GeoArrowType::Wkb(WkbType::new(metadata))
+        };
 
     Ok(Arc::new(target_geo_data_type.to_field(
         existing_field.name(),
         existing_field.is_nullable(),
     )))
+}
+
+/// Derive the dimension of a native-encoded geometry column from its coordinate struct.
+///
+/// The reader binds coordinate buffers by position, so the Float64 fields must be x, y and
+/// optionally z and/or m, in that order; a reordered struct would silently swap axes if only
+/// the names were checked.
+fn native_dimension(
+    data_type: &DataType,
+    geometry_type: GeoParquetGeometryType,
+) -> GeoArrowResult<Dimension> {
+    let mut current = data_type;
+    for _ in 0..native_list_nesting_depth(geometry_type)? {
+        match current {
+            DataType::List(inner) | DataType::LargeList(inner) => current = inner.data_type(),
+            dt => {
+                return Err(GeoArrowError::GeoParquet(format!(
+                    "Invalid data type for native {geometry_type:?} encoding: expected a list, got {dt:?}"
+                )));
+            }
+        }
+    }
+
+    let DataType::Struct(fields) = current else {
+        return Err(GeoArrowError::GeoParquet(format!(
+            "Invalid data type for native {geometry_type:?} encoding: expected a coordinate struct, got {current:?}"
+        )));
+    };
+
+    let names: Vec<&str> = fields.iter().map(|f| f.name().as_str()).collect();
+    let dimension = match names.as_slice() {
+        ["x", "y"] => Dimension::XY,
+        ["x", "y", "z"] => Dimension::XYZ,
+        ["x", "y", "m"] => Dimension::XYM,
+        ["x", "y", "z", "m"] => Dimension::XYZM,
+        _ => {
+            return Err(GeoArrowError::GeoParquet(format!(
+                "Invalid coordinate struct for native encoding: expected fields x, y, z, m in that order, got {names:?}"
+            )));
+        }
+    };
+
+    for field in fields {
+        if field.data_type() != &DataType::Float64 {
+            return Err(GeoArrowError::GeoParquet(format!(
+                "Invalid coordinate struct for native encoding: field {} must be Float64, got {:?}",
+                field.name(),
+                field.data_type()
+            )));
+        }
+    }
+
+    Ok(dimension)
+}
+
+/// The list nesting depth of a native encoding's separated layout, above the coordinate struct.
+fn native_list_nesting_depth(geometry_type: GeoParquetGeometryType) -> GeoArrowResult<usize> {
+    match geometry_type {
+        GeoParquetGeometryType::Point => Ok(0),
+        GeoParquetGeometryType::LineString | GeoParquetGeometryType::MultiPoint => Ok(1),
+        GeoParquetGeometryType::Polygon | GeoParquetGeometryType::MultiLineString => Ok(2),
+        GeoParquetGeometryType::MultiPolygon => Ok(3),
+        GeoParquetGeometryType::GeometryCollection => Err(GeoArrowError::GeoParquet(
+            "GeometryCollection has no native GeoParquet encoding".to_string(),
+        )),
+    }
 }
 
 fn infer_target_wkb_type(
@@ -184,7 +248,9 @@ fn parse_array(
             GeoArrowType::MultiPoint(typ) => parse_multi_point_column(&array, typ),
             GeoArrowType::MultiLineString(typ) => parse_multi_line_string_column(&array, typ),
             GeoArrowType::MultiPolygon(typ) => parse_multi_polygon_column(&array, typ),
-            _ => unreachable!(),
+            _ => Err(GeoArrowError::GeoParquet(format!(
+                "Cannot parse native-encoded GeoParquet column to target type {target_type:?}",
+            ))),
         },
     }
 }
@@ -243,3 +309,95 @@ impl_parse_fn!(
     MultiPolygonArray,
     MultiPolygonType
 );
+
+#[cfg(test)]
+mod test {
+    use serde_json::json;
+
+    use super::*;
+
+    fn xy_struct() -> DataType {
+        DataType::Struct(
+            vec![
+                Field::new("x", DataType::Float64, false),
+                Field::new("y", DataType::Float64, false),
+            ]
+            .into(),
+        )
+    }
+
+    fn column_meta(encoding: &str, geometry_types: &[&str]) -> GeoParquetColumnMetadata {
+        serde_json::from_value(json!({
+            "encoding": encoding,
+            "geometry_types": geometry_types
+        }))
+        .unwrap()
+    }
+
+    #[test]
+    fn native_encoding_infers_type_and_dimension_from_layout() {
+        let meta = column_meta("point", &[]);
+        let xyz = DataType::Struct(
+            vec![
+                Field::new("x", DataType::Float64, false),
+                Field::new("y", DataType::Float64, false),
+                Field::new("z", DataType::Float64, false),
+            ]
+            .into(),
+        );
+        let field = Field::new("geometry", xyz, true);
+        let target = infer_target_field(&field, &meta, true, CoordType::Separated).unwrap();
+        let target_type = GeoArrowType::try_from(target.as_ref()).unwrap();
+        assert!(matches!(target_type, GeoArrowType::Point(t) if t.dimension() == Dimension::XYZ));
+    }
+
+    #[test]
+    fn native_encoding_overrides_geometry_types() {
+        let meta = column_meta("multipolygon", &["Polygon", "MultiPolygon"]);
+        let coords = DataType::List(Arc::new(Field::new(
+            "item",
+            DataType::List(Arc::new(Field::new(
+                "item",
+                DataType::List(Arc::new(Field::new("item", xy_struct(), false))),
+                false,
+            ))),
+            false,
+        )));
+        let field = Field::new("geometry", coords, true);
+        let target = infer_target_field(&field, &meta, true, CoordType::Separated).unwrap();
+        let target_type = GeoArrowType::try_from(target.as_ref()).unwrap();
+        assert!(matches!(target_type, GeoArrowType::MultiPolygon(_)));
+    }
+
+    #[test]
+    fn native_encoding_layout_error_paths() {
+        let point = column_meta("point", &["Point"]);
+        let target_err = |meta: &GeoParquetColumnMetadata, data_type: DataType| {
+            let field = Field::new("geometry", data_type, true);
+            infer_target_field(&field, meta, true, CoordType::Separated)
+                .unwrap_err()
+                .to_string()
+        };
+
+        let coords = |fields: &[(&str, DataType)]| {
+            DataType::Struct(
+                fields
+                    .iter()
+                    .map(|(name, dt)| Field::new(*name, dt.clone(), false))
+                    .collect(),
+            )
+        };
+
+        // A 'point'-encoded column wrapped in a list has the wrong nesting depth.
+        let listed = DataType::List(Arc::new(Field::new("item", xy_struct(), false)));
+        assert!(target_err(&point, listed).contains("expected a coordinate struct"));
+        let linestring = column_meta("linestring", &["LineString"]);
+        assert!(target_err(&linestring, xy_struct()).contains("expected a list"));
+
+        let yx = coords(&[("y", DataType::Float64), ("x", DataType::Float64)]);
+        assert!(target_err(&point, yx).contains("in that order"));
+
+        let f32s = coords(&[("x", DataType::Float32), ("y", DataType::Float32)]);
+        assert!(target_err(&point, f32s).contains("Float64"));
+    }
+}
