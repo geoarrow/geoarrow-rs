@@ -1035,6 +1035,7 @@ dependencies = [
  "arrow-buffer",
  "arrow-ord",
  "arrow-schema",
+ "bytes",
  "futures",
  "geo-traits",
  "geo-types",

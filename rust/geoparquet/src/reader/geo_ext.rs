@@ -176,3 +176,115 @@ impl<T> GeoParquetReaderBuilder for ArrowReaderBuilder<T> {
         Ok(self.with_row_groups(row_groups))
     }
 }
+
+#[cfg(test)]
+mod test {
+    use std::sync::Arc;
+
+    use arrow_array::cast::AsArray;
+    use arrow_array::types::Int64Type;
+    use arrow_array::{BinaryArray, Float64Array, Int64Array, RecordBatch, StructArray};
+    use arrow_schema::{DataType, Field, Fields, Schema};
+    use bytes::Bytes;
+    use geo_types::coord;
+    use parquet::arrow::ArrowWriter;
+    use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
+    use parquet::file::metadata::KeyValue;
+    use parquet::file::properties::WriterProperties;
+
+    use super::*;
+
+    fn wkb_point(x: f64, y: f64) -> Vec<u8> {
+        let mut buf = vec![0x01, 0x01, 0x00, 0x00, 0x00];
+        buf.extend_from_slice(&x.to_le_bytes());
+        buf.extend_from_slice(&y.to_le_bytes());
+        buf
+    }
+
+    /// The filter must read each bound from the field the covering names, not an implied
+    /// field order.
+    #[test]
+    fn bbox_row_filter_keeps_intersecting_rows() {
+        // Row i covers x in [10i, 10i + 1] and y in [10i + 100, 10i + 101].
+        let bbox_fields: Fields = vec![
+            Field::new("ymax", DataType::Float64, false),
+            Field::new("xmin", DataType::Float64, false),
+            Field::new("ymin", DataType::Float64, false),
+            Field::new("xmax", DataType::Float64, false),
+        ]
+        .into();
+        let child = |offset: f64| {
+            Arc::new(Float64Array::from_iter_values(
+                (0..4).map(|i| i as f64 * 10.0 + offset),
+            )) as _
+        };
+        let bbox = StructArray::new(
+            bbox_fields.clone(),
+            vec![child(101.0), child(0.0), child(100.0), child(1.0)],
+            None,
+        );
+        let geometry: BinaryArray = (0..4)
+            .map(|i| Some(wkb_point(i as f64 * 10.0 + 0.5, i as f64 * 10.0 + 100.5)))
+            .collect();
+        let ids = Int64Array::from_iter_values(0..4);
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("id", DataType::Int64, false),
+            Field::new("geometry", DataType::Binary, false),
+            Field::new("bbox", DataType::Struct(bbox_fields), false),
+        ]));
+        let batch = RecordBatch::try_new(
+            schema.clone(),
+            vec![Arc::new(ids), Arc::new(geometry), Arc::new(bbox)],
+        )
+        .unwrap();
+
+        let geo = serde_json::json!({
+            "version": "1.1.0",
+            "primary_column": "geometry",
+            "columns": {
+                "geometry": {
+                    "encoding": "WKB",
+                    "geometry_types": [],
+                    "covering": {
+                        "bbox": {
+                            "xmin": ["bbox", "xmin"],
+                            "ymin": ["bbox", "ymin"],
+                            "xmax": ["bbox", "xmax"],
+                            "ymax": ["bbox", "ymax"]
+                        }
+                    }
+                }
+            }
+        });
+        let props = WriterProperties::builder()
+            .set_key_value_metadata(Some(vec![KeyValue::new(
+                "geo".to_string(),
+                geo.to_string(),
+            )]))
+            .build();
+        let mut buf = Vec::new();
+        let mut writer = ArrowWriter::try_new(&mut buf, schema, Some(props)).unwrap();
+        writer.write(&batch).unwrap();
+        writer.close().unwrap();
+
+        let builder = ParquetRecordBatchReaderBuilder::try_new(Bytes::from(buf)).unwrap();
+        let geo_meta = builder.geoparquet_metadata().unwrap().unwrap();
+        let query = Rect::new(coord! { x: 8.0, y: 108.0 }, coord! { x: 21.0, y: 121.0 });
+        let reader = builder
+            .with_intersecting_row_filter(query, &geo_meta, None)
+            .unwrap()
+            .build()
+            .unwrap();
+        let kept: Vec<i64> = reader
+            .flat_map(|batch| {
+                let batch = batch.unwrap();
+                batch
+                    .column(0)
+                    .as_primitive::<Int64Type>()
+                    .values()
+                    .to_vec()
+            })
+            .collect();
+        assert_eq!(kept, vec![1, 2]);
+    }
+}

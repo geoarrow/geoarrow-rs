@@ -31,6 +31,7 @@ serde_json = { workspace = true }
 wkt = { workspace = true }
 
 [dev-dependencies]
+bytes = { workspace = true }
 parquet = { workspace = true, features = [
     "async",
     "brotli",

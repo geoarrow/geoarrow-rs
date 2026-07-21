@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::fmt::Debug;
 use std::sync::Arc;
 
@@ -7,6 +6,7 @@ use arrow_array::types::{Float32Type, Float64Type};
 use arrow_array::{Array, Float32Array, Float64Array, Scalar};
 use arrow_buffer::ScalarBuffer;
 use arrow_ord::cmp::{gt_eq, lt_eq};
+use arrow_schema::ArrowError;
 use geo_traits::{CoordTrait, RectTrait};
 use geo_types::{CoordNum, Rect, coord};
 use geoarrow_array::GeoArrowArrayAccessor;
@@ -60,6 +60,9 @@ impl<'a> ParquetBboxStatistics<'a> {
         parquet_schema: &SchemaDescriptor,
         bbox_covering: &'a GeoParquetBboxCovering,
     ) -> GeoArrowResult<Self> {
+        // No structural requirements here: the statistics-only consumers (row-group pruning
+        // and bounds) work with any resolvable paths, including spec-noncompliant flat
+        // columns. The row-filter path checks its stricter shape itself.
         let mut minx_col: Option<usize> = None;
         let mut miny_col: Option<usize> = None;
         let mut maxx_col: Option<usize> = None;
@@ -238,15 +241,15 @@ fn construct_native_predicate(
 
         // Perform bbox comparison
         // TODO: do this in one pass instead of four?
-        let minx_cmp = gt_eq(&xmax_col, &minx_scalar).unwrap();
-        let miny_cmp = gt_eq(&ymax_col, &miny_scalar).unwrap();
-        let maxx_cmp = lt_eq(&xmin_col, &maxx_scalar).unwrap();
-        let maxy_cmp = lt_eq(&ymin_col, &maxy_scalar).unwrap();
+        let minx_cmp = gt_eq(&xmax_col, &minx_scalar)?;
+        let miny_cmp = gt_eq(&ymax_col, &miny_scalar)?;
+        let maxx_cmp = lt_eq(&xmin_col, &maxx_scalar)?;
+        let maxy_cmp = lt_eq(&ymin_col, &maxy_scalar)?;
 
         // AND together the results
-        let first = arrow_arith::boolean::and(&minx_cmp, &miny_cmp).unwrap();
-        let second = arrow_arith::boolean::and(&first, &maxx_cmp).unwrap();
-        let third = arrow_arith::boolean::and(&second, &maxy_cmp).unwrap();
+        let first = arrow_arith::boolean::and(&minx_cmp, &miny_cmp)?;
+        let second = arrow_arith::boolean::and(&first, &maxx_cmp)?;
+        let third = arrow_arith::boolean::and(&second, &maxy_cmp)?;
 
         Ok(third)
     });
@@ -260,95 +263,90 @@ fn construct_bbox_columns_predicate(
     bbox_cols: ParquetBboxStatistics,
     bbox_query: Rect,
 ) -> GeoArrowResult<Box<dyn ArrowPredicate>> {
-    let mask = ProjectionMask::leaves(
-        parquet_schema,
-        [
-            bbox_cols.minx_col,
-            bbox_cols.miny_col,
-            bbox_cols.maxx_col,
-            bbox_cols.maxy_col,
-        ],
-    );
-
-    // The GeoParquet spec allows the bounding box columns to be either Double or Float data type.
-    // We need to know which type it is so that we can downcast the produced Arrow arrays to the
-    // correct type.
-    let mut column_types = HashSet::with_capacity(4);
-    column_types.insert(parquet_schema.column(bbox_cols.minx_col).physical_type());
-    column_types.insert(parquet_schema.column(bbox_cols.miny_col).physical_type());
-    column_types.insert(parquet_schema.column(bbox_cols.maxx_col).physical_type());
-    column_types.insert(parquet_schema.column(bbox_cols.maxy_col).physical_type());
-    if column_types.len() != 1 {
-        return Err(GeoArrowError::GeoParquet(format!(
-            "Expected one column type for GeoParquet bbox columns, got {column_types:?}",
-        )));
-    }
-
-    let column_type = column_types.drain().next().unwrap();
-    if !(matches!(column_type, parquet::basic::Type::FLOAT)
-        || matches!(column_type, parquet::basic::Type::DOUBLE))
+    // The predicate projects one root column and reads batch.column(0) as a struct of the
+    // projected leaves, so the covering must be a GeoParquet 1.1 bounding box column: one
+    // top-level struct, every path [column, field], four distinct fields.
+    let root = bbox_cols.minx_col_path.first();
+    if bbox_cols.miny_col_path.first() != root
+        || bbox_cols.maxx_col_path.first() != root
+        || bbox_cols.maxy_col_path.first() != root
     {
         return Err(GeoArrowError::GeoParquet(format!(
-            "Expected column type for GeoParquet bbox column to be FLOAT or DOUBLE, got {column_type:?}",
+            "GeoParquet bbox covering paths must share the same root column, got {:?}, {:?}, {:?}, {:?}",
+            bbox_cols.minx_col_path,
+            bbox_cols.miny_col_path,
+            bbox_cols.maxx_col_path,
+            bbox_cols.maxy_col_path
         )));
     }
 
-    // Note: the GeoParquet specification declares that these columns MUST be named xmin, ymin,
-    // xmax, ymax. But the Overture data does not yet comply with this, so we follow the user
-    // input.
-    let minx_struct_field_name = bbox_cols.minx_col_path.last().unwrap().clone();
-    let miny_struct_field_name = bbox_cols.miny_col_path.last().unwrap().clone();
-    let maxx_struct_field_name = bbox_cols.maxx_col_path.last().unwrap().clone();
-    let maxy_struct_field_name = bbox_cols.maxy_col_path.last().unwrap().clone();
+    for path in [
+        bbox_cols.minx_col_path,
+        bbox_cols.miny_col_path,
+        bbox_cols.maxx_col_path,
+        bbox_cols.maxy_col_path,
+    ] {
+        if path.len() != 2 {
+            return Err(GeoArrowError::GeoParquet(format!(
+                "Expected a GeoParquet bbox covering path of the form [column, field], got {path:?}",
+            )));
+        }
+    }
+
+    let leaf_columns = [
+        bbox_cols.minx_col,
+        bbox_cols.miny_col,
+        bbox_cols.maxx_col,
+        bbox_cols.maxy_col,
+    ];
+
+    // Legitimate leaf sharing (native encoding) routes to construct_native_predicate, so a
+    // duplicate leaf here means the covering maps one field onto two roles.
+    if (1..leaf_columns.len()).any(|i| leaf_columns[..i].contains(&leaf_columns[i])) {
+        return Err(GeoArrowError::GeoParquet(format!(
+            "GeoParquet bbox covering paths must name four distinct fields, got {:?}, {:?}, {:?}, {:?}",
+            bbox_cols.minx_col_path,
+            bbox_cols.miny_col_path,
+            bbox_cols.maxx_col_path,
+            bbox_cols.maxy_col_path
+        )));
+    }
+
+    // The GeoParquet spec allows the bounding box columns to be either Double or Float data type.
+    for column in leaf_columns {
+        let column_type = parquet_schema.column(column).physical_type();
+        if !matches!(
+            column_type,
+            parquet::basic::Type::FLOAT | parquet::basic::Type::DOUBLE
+        ) {
+            return Err(GeoArrowError::GeoParquet(format!(
+                "Expected column type for GeoParquet bbox column to be FLOAT or DOUBLE, got {column_type:?}",
+            )));
+        }
+    }
+
+    let mask = ProjectionMask::leaves(parquet_schema, leaf_columns);
+
+    // The projected batch is one struct column whose children are the projected leaves in
+    // parquet schema order, so each role's child index is the rank of its leaf index.
+    let [
+        xmin_struct_idx,
+        ymin_struct_idx,
+        xmax_struct_idx,
+        ymax_struct_idx,
+    ] = leaf_columns.map(|column| leaf_columns.iter().filter(|&&other| other < column).count());
 
     let predicate = ArrowPredicateFn::new(mask, move |batch| {
-        let struct_col = batch.column(0).as_struct();
+        let struct_col = batch.column(0).as_struct_opt().ok_or_else(|| {
+            ArrowError::ComputeError(
+                "GeoParquet bbox covering root column is not a struct".to_string(),
+            )
+        })?;
 
-        let struct_fields = struct_col.fields();
-        let (xmin_struct_idx, _) = struct_fields.find(&minx_struct_field_name).unwrap();
-        let (ymin_struct_idx, _) = struct_fields.find(&miny_struct_field_name).unwrap();
-        let (xmax_struct_idx, _) = struct_fields.find(&maxx_struct_field_name).unwrap();
-        let (ymax_struct_idx, _) = struct_fields.find(&maxy_struct_field_name).unwrap();
-
-        let (xmin_col, ymin_col, xmax_col, ymax_col) = match column_type {
-            parquet::basic::Type::FLOAT => {
-                let minx_col = struct_col
-                    .column(xmin_struct_idx)
-                    .as_primitive::<Float32Type>();
-                let miny_col = struct_col
-                    .column(ymin_struct_idx)
-                    .as_primitive::<Float32Type>();
-                let maxx_col = struct_col
-                    .column(xmax_struct_idx)
-                    .as_primitive::<Float32Type>();
-                let maxy_col = struct_col
-                    .column(ymax_struct_idx)
-                    .as_primitive::<Float32Type>();
-
-                (
-                    &upcast_float_array(minx_col),
-                    &upcast_float_array(miny_col),
-                    &upcast_float_array(maxx_col),
-                    &upcast_float_array(maxy_col),
-                )
-            }
-            parquet::basic::Type::DOUBLE => {
-                let minx_col = struct_col
-                    .column(xmin_struct_idx)
-                    .as_primitive::<Float64Type>();
-                let miny_col = struct_col
-                    .column(ymin_struct_idx)
-                    .as_primitive::<Float64Type>();
-                let maxx_col = struct_col
-                    .column(xmax_struct_idx)
-                    .as_primitive::<Float64Type>();
-                let maxy_col = struct_col
-                    .column(ymax_struct_idx)
-                    .as_primitive::<Float64Type>();
-                (minx_col, miny_col, maxx_col, maxy_col)
-            }
-            _ => unreachable!(),
-        };
+        let xmin_col = bbox_child_f64(struct_col.column(xmin_struct_idx))?;
+        let ymin_col = bbox_child_f64(struct_col.column(ymin_struct_idx))?;
+        let xmax_col = bbox_child_f64(struct_col.column(xmax_struct_idx))?;
+        let ymax_col = bbox_child_f64(struct_col.column(ymax_struct_idx))?;
 
         // Construct the bounding box from user input
         let minx_scalar = Scalar::new(Float64Array::from(vec![bbox_query.min().x()]));
@@ -358,20 +356,37 @@ fn construct_bbox_columns_predicate(
 
         // Perform bbox comparison
         // TODO: do this in one pass instead of four?
-        let minx_cmp = gt_eq(&xmax_col, &minx_scalar).unwrap();
-        let miny_cmp = gt_eq(&ymax_col, &miny_scalar).unwrap();
-        let maxx_cmp = lt_eq(&xmin_col, &maxx_scalar).unwrap();
-        let maxy_cmp = lt_eq(&ymin_col, &maxy_scalar).unwrap();
+        let minx_cmp = gt_eq(&xmax_col, &minx_scalar)?;
+        let miny_cmp = gt_eq(&ymax_col, &miny_scalar)?;
+        let maxx_cmp = lt_eq(&xmin_col, &maxx_scalar)?;
+        let maxy_cmp = lt_eq(&ymin_col, &maxy_scalar)?;
 
         // AND together the results
-        let first = arrow_arith::boolean::and(&minx_cmp, &miny_cmp).unwrap();
-        let second = arrow_arith::boolean::and(&first, &maxx_cmp).unwrap();
-        let third = arrow_arith::boolean::and(&second, &maxy_cmp).unwrap();
+        let first = arrow_arith::boolean::and(&minx_cmp, &miny_cmp)?;
+        let second = arrow_arith::boolean::and(&first, &maxx_cmp)?;
+        let third = arrow_arith::boolean::and(&second, &maxy_cmp)?;
 
         Ok(third)
     });
 
     Ok(Box::new(predicate))
+}
+
+/// Read a bbox struct child as Float64, upcasting Float32.
+///
+/// The decoded array type can differ from the parquet physical type (e.g. through an embedded
+/// `ARROW:schema` hint), so this must not assume the construction-time check still holds.
+fn bbox_child_f64(array: &Arc<dyn Array>) -> Result<Float64Array, ArrowError> {
+    if let Some(float64) = array.as_primitive_opt::<Float64Type>() {
+        Ok(float64.clone())
+    } else if let Some(float32) = array.as_primitive_opt::<Float32Type>() {
+        Ok(upcast_float_array(float32))
+    } else {
+        Err(ArrowError::ComputeError(format!(
+            "Expected GeoParquet bbox covering field to decode as Float32 or Float64, got {:?}",
+            array.data_type()
+        )))
+    }
 }
 
 /// Check whether two paths are equal
@@ -399,14 +414,21 @@ fn parse_statistics_f64(column_meta: &ColumnChunkMetaData) -> GeoArrowResult<(f6
             "No statistics for column {}",
             column_meta.column_path()
         )))?;
+    // Statistics can carry a null count and no minimum or maximum value.
+    let missing_min_max = || {
+        GeoArrowError::GeoParquet(format!(
+            "Statistics for column {} have no min/max values",
+            column_meta.column_path()
+        ))
+    };
     match stats {
         Statistics::Double(typed_stats) => Ok((
-            *typed_stats.min_opt().unwrap(),
-            *typed_stats.max_opt().unwrap(),
+            *typed_stats.min_opt().ok_or_else(missing_min_max)?,
+            *typed_stats.max_opt().ok_or_else(missing_min_max)?,
         )),
         Statistics::Float(typed_stats) => Ok((
-            *typed_stats.min_opt().unwrap() as f64,
-            *typed_stats.max_opt().unwrap() as f64,
+            *typed_stats.min_opt().ok_or_else(missing_min_max)? as f64,
+            *typed_stats.max_opt().ok_or_else(missing_min_max)? as f64,
         )),
         st => Err(GeoArrowError::GeoParquet(format!(
             "Unexpected statistics type: {st:?}",
@@ -433,4 +455,58 @@ fn rect_intersects<T: CoordNum>(a: &impl RectTrait<T = T>, b: &impl RectTrait<T 
     }
 
     true
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::test::schema_descr;
+
+    #[test]
+    fn statistics_without_min_max_error() {
+        let descr = schema_descr("message schema { required double x; }");
+        let column_meta = ColumnChunkMetaData::builder(descr.column(0))
+            .set_statistics(Statistics::double(None, None, None, Some(4), false))
+            .build()
+            .unwrap();
+        let err = parse_statistics_f64(&column_meta).unwrap_err();
+        assert!(err.to_string().contains("min/max"));
+    }
+
+    /// Nonstandard covering shapes resolve for the statistics-only consumers but are rejected
+    /// by the row-filter path.
+    #[test]
+    fn covering_shapes_gate_the_row_filter_only() {
+        let query = Rect::new(coord! { x: 0., y: 0. }, coord! { x: 1., y: 1. });
+        let cases = [
+            (
+                "message schema { required double a; required double b; required double c; required double d; }",
+                serde_json::json!({"xmin": ["a"], "ymin": ["b"], "xmax": ["c"], "ymax": ["d"]}),
+                "same root column",
+            ),
+            (
+                "message schema { required group bbox { required double xmin; required double ymin; required double xmax; required double ymax; } }",
+                serde_json::json!({
+                    "xmin": ["bbox", "xmin"], "ymin": ["bbox", "ymin"],
+                    "xmax": ["bbox", "xmin"], "ymax": ["bbox", "ymax"]
+                }),
+                "distinct",
+            ),
+            (
+                "message schema { required group props { required group bbox { required double xmin; required double ymin; required double xmax; required double ymax; } } }",
+                serde_json::json!({
+                    "xmin": ["props", "bbox", "xmin"], "ymin": ["props", "bbox", "ymin"],
+                    "xmax": ["props", "bbox", "xmax"], "ymax": ["props", "bbox", "ymax"]
+                }),
+                "[column, field]",
+            ),
+        ];
+        for (message_type, covering, expected) in cases {
+            let descr = schema_descr(message_type);
+            let covering: GeoParquetBboxCovering = serde_json::from_value(covering).unwrap();
+            let stats = ParquetBboxStatistics::try_new(&descr, &covering).unwrap();
+            let err = bbox_arrow_predicate(&descr, stats, query).err().unwrap();
+            assert!(err.to_string().contains(expected), "{expected}");
+        }
+    }
 }
