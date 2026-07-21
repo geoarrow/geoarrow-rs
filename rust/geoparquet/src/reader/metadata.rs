@@ -18,15 +18,14 @@ trait ArrowReaderMetadataExt {
     /// Access the [ArrowReaderMetadata] of this builder.
     fn reader_metadata(&self) -> &ArrowReaderMetadata;
 
-    /// The number of rows in this file.
-    fn num_rows(&self) -> usize {
-        self.reader_metadata()
-            .metadata()
-            .row_groups()
-            .iter()
-            .fold(0, |acc, row_group_meta| {
-                acc + usize::try_from(row_group_meta.num_rows()).unwrap()
-            })
+    /// The number of rows in this file, erroring on an invalid footer row count.
+    fn num_rows(&self) -> GeoArrowResult<usize> {
+        let num_rows = self.reader_metadata().metadata().file_metadata().num_rows();
+        usize::try_from(num_rows).map_err(|_| {
+            GeoArrowError::GeoParquet(format!(
+                "Parquet footer reports an invalid row count {num_rows}"
+            ))
+        })
     }
 
     /// The number of row groups in this file.
@@ -132,8 +131,8 @@ impl GeoParquetReaderMetadata {
         )
     }
 
-    /// The number of rows in this file.
-    pub fn num_rows(&self) -> usize {
+    /// The number of rows in this file, erroring on an invalid footer row count.
+    pub fn num_rows(&self) -> GeoArrowResult<usize> {
         self.meta.num_rows()
     }
 
@@ -160,7 +159,17 @@ impl GeoParquetReaderMetadata {
                 )))?;
         let geo_statistics =
             ParquetBboxStatistics::try_new(self.meta.parquet_schema(), &bbox_covering)?;
-        let row_group_meta = self.meta.metadata().row_group(row_group_idx);
+        let row_group_meta = self
+            .meta
+            .metadata()
+            .row_groups()
+            .get(row_group_idx)
+            .ok_or_else(|| {
+                GeoArrowError::GeoParquet(format!(
+                    "Row group index {row_group_idx} out of range: file has {} row groups",
+                    self.meta.metadata().num_row_groups()
+                ))
+            })?;
         Ok(Some(geo_statistics.get_bbox(row_group_meta)?))
     }
 
@@ -282,11 +291,15 @@ impl GeoParquetDatasetMetadata {
         &self.geo_meta
     }
 
-    /// The total number of rows across all files.
-    pub fn num_rows(&self) -> usize {
-        self.files
-            .values()
-            .fold(0, |acc, file| acc + file.num_rows())
+    /// The total number of rows across all files, erroring on an invalid or overflowing count.
+    pub fn num_rows(&self) -> GeoArrowResult<usize> {
+        self.files.values().try_fold(0usize, |acc, file| {
+            acc.checked_add(file.num_rows()?).ok_or_else(|| {
+                GeoArrowError::GeoParquet(
+                    "Total num_rows across dataset files overflows usize".to_string(),
+                )
+            })
+        })
     }
 
     /// The total number of row groups across all files
@@ -333,5 +346,36 @@ impl GeoParquetDatasetMetadata {
     pub fn crs(&self, column_name: Option<&str>) -> GeoArrowResult<Crs> {
         let geoarrow_meta = self.geoarrow_metadata(column_name)?;
         Ok(geoarrow_meta.crs().clone())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::test::arrow_meta;
+
+    #[test]
+    fn num_rows_with_negative_footer_count_errors() {
+        let meta = arrow_meta("message schema { required double x; }", -5, &[]);
+        let err = ArrowReaderMetadataExt::num_rows(&meta).unwrap_err();
+        assert!(err.to_string().contains("invalid row count"));
+    }
+
+    #[test]
+    fn row_group_bounds_with_out_of_range_index_errors() {
+        let arrow = arrow_meta(
+            "message schema { required group geom { required double x; required double y; } }",
+            0,
+            &[],
+        );
+        let geo_meta: GeoParquetMetadata = serde_json::from_value(serde_json::json!({
+            "version": "1.1.0",
+            "primary_column": "geom",
+            "columns": {"geom": {"encoding": "point", "geometry_types": ["Point"]}}
+        }))
+        .unwrap();
+        let meta = GeoParquetReaderMetadata::new(arrow, geo_meta);
+        let err = meta.row_group_bounds(0, None).unwrap_err();
+        assert!(err.to_string().contains("out of range"));
     }
 }
