@@ -10,6 +10,7 @@ mod buffer;
 mod centroid;
 mod contains;
 mod convex_hull;
+mod dim_geom;
 mod distance;
 mod interior_point;
 mod intersects;
