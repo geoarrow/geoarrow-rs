@@ -18,6 +18,8 @@ mod length;
 mod minimum_rotated_rect;
 mod relate;
 mod simplify;
+#[cfg(test)]
+mod test_util;
 pub mod util;
 pub mod validation;
 

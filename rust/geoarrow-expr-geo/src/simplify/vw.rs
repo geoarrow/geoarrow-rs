@@ -1,136 +1,74 @@
 use std::sync::Arc;
 
 use geo::SimplifyVw;
-use geo_traits::to_geo::{ToGeoLineString, ToGeoMultiLineString, ToGeoMultiPolygon, ToGeoPolygon};
-use geoarrow_array::array::{
-    LineStringArray, MultiLineStringArray, MultiPolygonArray, PolygonArray,
-};
-use geoarrow_array::builder::{
-    GeometryBuilder, LineStringBuilder, MultiLineStringBuilder, MultiPolygonBuilder, PolygonBuilder,
-};
-use geoarrow_array::cast::AsGeoArrowArray;
-use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow, downcast_geoarrow_array};
+use geoarrow_array::GeoArrowArray;
 use geoarrow_schema::error::GeoArrowResult;
-use geoarrow_schema::{GeoArrowType, GeometryType};
 
+use super::shared::simplify_with;
 use crate::util::copy_geoarrow_array_ref;
-use crate::util::to_geo::geometry_to_geo;
 
 pub fn simplify_vw(
     array: &dyn GeoArrowArray,
     epsilon: f64,
 ) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
-    use GeoArrowType::*;
-    match array.data_type() {
-        Point(_) | MultiPoint(_) | GeometryCollection(_) | Rect(_) => {
-            Ok(copy_geoarrow_array_ref(array))
-        }
-        LineString(_) => simplify_vw_linestring(array.as_line_string(), epsilon),
-        Polygon(_) => simplify_vw_polygon(array.as_polygon(), epsilon),
-        MultiLineString(_) => simplify_vw_multi_linestring(array.as_multi_line_string(), epsilon),
-        MultiPolygon(_) => simplify_vw_multi_polygon(array.as_multi_polygon(), epsilon),
-        _ => downcast_geoarrow_array!(array, simplify_vw_geometry_impl, epsilon),
+    // `geo`'s coordinate path guards on this, but the index path does not, because it
+    // removes triangles with zero area. A NaN epsilon continues to the algorithm.
+    if epsilon <= 0.0 {
+        return Ok(copy_geoarrow_array_ref(array));
     }
+    simplify_with(
+        array,
+        epsilon,
+        &|ring: &geo::LineString<f64>, eps: f64| ring.simplify_vw_idx(eps),
+        &|poly: &geo::Polygon<f64>, eps: f64| poly.simplify_vw_idx(eps),
+    )
 }
 
-fn simplify_vw_linestring(
-    array: &LineStringArray,
-    epsilon: f64,
-) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
-    let mut builder = LineStringBuilder::new(array.extension_type().clone());
+#[cfg(test)]
+mod test {
+    use geo_traits::LineStringTrait;
+    use geoarrow_array::GeoArrowArrayAccessor;
+    use geoarrow_array::cast::AsGeoArrowArray;
 
-    for item in array.iter() {
-        if let Some(geom) = item {
-            let geo_geom = geom?.to_line_string();
-            builder.push_line_string(Some(&geo_geom.simplify_vw(epsilon)))?;
-        } else {
-            builder.push_line_string(None::<&geo::LineString>.as_ref())?;
-        }
+    use super::*;
+    use crate::dim_geom::all_coords;
+    use crate::test_util::xyzm_linestring_array;
+
+    #[test]
+    fn zero_epsilon_keeps_collinear_coords() {
+        let coords: [[f64; 4]; 3] = [
+            [0.0, 0.0, 10.0, 100.0],
+            [1.0, 1.0, 11.0, 101.0],
+            [2.0, 2.0, 12.0, 102.0],
+        ];
+        let arr = xyzm_linestring_array(&[&coords]);
+        let result = simplify_vw(&arr, 0.0).unwrap();
+        let out = result.as_line_string();
+        assert_eq!(all_coords(&out.value(0).unwrap()), coords);
     }
 
-    Ok(Arc::new(builder.finish()))
-}
+    /// Both shoulders are within the RDP epsilon, but they bound a triangle large enough
+    /// for VW. RDP removes them and VW keeps them.
+    #[test]
+    fn uses_vw_not_rdp() {
+        let ls: [[f64; 4]; 5] = [
+            [0.0, 0.0, 10.0, 100.0],
+            [1.0, 0.6, 11.0, 101.0],
+            [5.0, 1.0, 12.0, 102.0],
+            [9.0, 0.6, 13.0, 103.0],
+            [10.0, 0.0, 14.0, 104.0],
+        ];
+        let arr = xyzm_linestring_array(&[&ls]);
 
-fn simplify_vw_polygon(
-    array: &PolygonArray,
-    epsilon: f64,
-) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
-    let mut builder = PolygonBuilder::new(array.extension_type().clone());
+        let rdp = crate::simplify::simplify(&arr, 0.8).unwrap();
+        assert_eq!(
+            rdp.as_line_string().value(0).unwrap().num_coords(),
+            3,
+            "RDP must remove both shoulders, or this test proves nothing"
+        );
 
-    for item in array.iter() {
-        if let Some(geom) = item {
-            let geo_geom = geom?.to_polygon();
-            builder.push_polygon(Some(&geo_geom.simplify_vw(epsilon)))?;
-        } else {
-            builder.push_polygon(None::<&geo::Polygon>.as_ref())?;
-        }
-    }
-
-    Ok(Arc::new(builder.finish()))
-}
-
-fn simplify_vw_multi_linestring(
-    array: &MultiLineStringArray,
-    epsilon: f64,
-) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
-    let mut builder = MultiLineStringBuilder::new(array.extension_type().clone());
-
-    for item in array.iter() {
-        if let Some(geom) = item {
-            let geo_geom = geom?.to_multi_line_string();
-            builder.push_multi_line_string(Some(&geo_geom.simplify_vw(epsilon)))?;
-        } else {
-            builder.push_multi_line_string(None::<&geo::MultiLineString>.as_ref())?;
-        }
-    }
-
-    Ok(Arc::new(builder.finish()))
-}
-
-fn simplify_vw_multi_polygon(
-    array: &MultiPolygonArray,
-    epsilon: f64,
-) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
-    let mut builder = MultiPolygonBuilder::new(array.extension_type().clone());
-
-    for item in array.iter() {
-        if let Some(geom) = item {
-            let geo_geom = geom?.to_multi_polygon();
-            builder.push_multi_polygon(Some(&geo_geom.simplify_vw(epsilon)))?;
-        } else {
-            builder.push_multi_polygon(None::<&geo::MultiPolygon>.as_ref())?;
-        }
-    }
-
-    Ok(Arc::new(builder.finish()))
-}
-
-fn simplify_vw_geometry_impl<'a>(
-    array: &'a impl GeoArrowArrayAccessor<'a>,
-    epsilon: f64,
-) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
-    let geom_typ = GeometryType::new(array.data_type().metadata().clone());
-    let mut builder = GeometryBuilder::new(geom_typ);
-
-    for item in array.iter() {
-        if let Some(geom) = item {
-            let geo_geom = geometry_to_geo(&geom?)?;
-            let simplified_geom = simplify_vw_geometry(&geo_geom, epsilon);
-            builder.push_geometry(Some(&simplified_geom))?;
-        } else {
-            builder.push_geometry(None::<&geo::Geometry>.as_ref())?;
-        }
-    }
-
-    Ok(Arc::new(builder.finish()))
-}
-
-fn simplify_vw_geometry(geom: &geo::Geometry, epsilon: f64) -> geo::Geometry {
-    match geom {
-        geo::Geometry::LineString(g) => geo::Geometry::LineString(g.simplify_vw(epsilon)),
-        geo::Geometry::Polygon(g) => geo::Geometry::Polygon(g.simplify_vw(epsilon)),
-        geo::Geometry::MultiLineString(g) => geo::Geometry::MultiLineString(g.simplify_vw(epsilon)),
-        geo::Geometry::MultiPolygon(g) => geo::Geometry::MultiPolygon(g.simplify_vw(epsilon)),
-        _ => geom.clone(),
+        let result = simplify_vw(&arr, 0.8).unwrap();
+        let out = result.as_line_string();
+        assert_eq!(all_coords(&out.value(0).unwrap()), ls);
     }
 }

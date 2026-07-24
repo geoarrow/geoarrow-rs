@@ -1,142 +1,102 @@
 use std::sync::Arc;
 
 use geo::SimplifyVwPreserve;
-use geo_traits::to_geo::{ToGeoLineString, ToGeoMultiLineString, ToGeoMultiPolygon, ToGeoPolygon};
-use geoarrow_array::array::{
-    LineStringArray, MultiLineStringArray, MultiPolygonArray, PolygonArray,
-};
-use geoarrow_array::builder::{
-    GeometryBuilder, LineStringBuilder, MultiLineStringBuilder, MultiPolygonBuilder, PolygonBuilder,
-};
-use geoarrow_array::cast::AsGeoArrowArray;
-use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, IntoArrow, downcast_geoarrow_array};
+use geoarrow_array::GeoArrowArray;
 use geoarrow_schema::error::GeoArrowResult;
-use geoarrow_schema::{GeoArrowType, GeometryType};
 
-use crate::util::copy_geoarrow_array_ref;
-use crate::util::to_geo::geometry_to_geo;
+use super::shared::simplify_with;
 
 pub fn simplify_vw_preserve(
     array: &dyn GeoArrowArray,
     epsilon: f64,
 ) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
-    use GeoArrowType::*;
-    match array.data_type() {
-        Point(_) | MultiPoint(_) | GeometryCollection(_) | Rect(_) => {
-            Ok(copy_geoarrow_array_ref(array))
-        }
-        LineString(_) => simplify_vw_preserve_linestring(array.as_line_string(), epsilon),
-        Polygon(_) => simplify_vw_preserve_polygon(array.as_polygon(), epsilon),
-        MultiLineString(_) => {
-            simplify_vw_preserve_multi_linestring(array.as_multi_line_string(), epsilon)
-        }
-        MultiPolygon(_) => simplify_vw_preserve_multi_polygon(array.as_multi_polygon(), epsilon),
-        _ => downcast_geoarrow_array!(array, simplify_vw_preserve_geometry_impl, epsilon),
-    }
+    // No epsilon guard, unlike `simplify_vw`: the vw-preserve index path in `geo`
+    // returns the input unchanged for an epsilon of zero or less.
+    simplify_with(
+        array,
+        epsilon,
+        &|ring: &geo::LineString<f64>, eps: f64| ring.simplify_vw_preserve_idx(eps),
+        &|poly: &geo::Polygon<f64>, eps: f64| poly.simplify_vw_preserve_idx(eps),
+    )
 }
 
-fn simplify_vw_preserve_linestring(
-    array: &LineStringArray,
-    epsilon: f64,
-) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
-    let mut builder = LineStringBuilder::new(array.extension_type().clone());
+#[cfg(test)]
+mod test {
+    use geo_traits::MultiPolygonTrait;
+    use geoarrow_array::GeoArrowArrayAccessor;
+    use geoarrow_array::cast::AsGeoArrowArray;
+    use geoarrow_schema::Dimension;
 
-    for item in array.iter() {
-        if let Some(geom) = item {
-            let geo_geom = geom?.to_line_string();
-            builder.push_line_string(Some(&geo_geom.simplify_vw_preserve(epsilon)))?;
-        } else {
-            builder.push_line_string(None::<&geo::LineString>.as_ref())?;
-        }
+    use super::*;
+    use crate::test_util::{
+        NOTCH_EPS, NOTCH_SQUARE, NOTCH_SQUARE_KEPT, PLAIN_SQUARE, polygon_coords,
+        xyzm_multipolygon_array, xyzm_polygon_array,
+    };
+
+    const HOLE_A: [[f64; 4]; 5] = [
+        [2.0, 2.0, 60.0, 600.0],
+        [4.0, 2.0, 61.0, 601.0],
+        [4.0, 4.0, 62.0, 602.0],
+        [2.0, 4.0, 63.0, 603.0],
+        [2.0, 2.0, 60.0, 600.0],
+    ];
+    const HOLE_B: [[f64; 4]; 5] = [
+        [6.0, 6.0, 70.0, 700.0],
+        [8.0, 6.0, 71.0, 701.0],
+        [8.0, 8.0, 72.0, 702.0],
+        [6.0, 8.0, 73.0, 703.0],
+        [6.0, 6.0, 70.0, 700.0],
+    ];
+
+    /// The closing coordinate must come from this row, not from the next one.
+    #[test]
+    fn open_ring_closes_on_its_own_first_coord() {
+        let open: [[f64; 4]; 4] = [
+            [0.0, 0.0, 10.0, 100.0],
+            [10.0, 0.0, 11.0, 101.0],
+            [10.0, 10.0, 12.0, 102.0],
+            [0.0, 10.0, 13.0, 103.0],
+        ];
+        let far: [[f64; 4]; 5] = [
+            [999.0, 999.0, 50.0, 500.0],
+            [1009.0, 999.0, 51.0, 501.0],
+            [1009.0, 1009.0, 52.0, 502.0],
+            [999.0, 1009.0, 53.0, 503.0],
+            [999.0, 999.0, 50.0, 500.0],
+        ];
+        let arr = xyzm_polygon_array(&[(&open, &[]), (&far, &[])]);
+        let result = simplify_vw_preserve(&arr, 1.0).unwrap();
+        let out = result.as_polygon();
+
+        let closed: [[f64; 4]; 5] = [open[0], open[1], open[2], open[3], open[0]];
+        assert_eq!(polygon_coords(&out.value(0).unwrap()), [closed]);
     }
 
-    Ok(Arc::new(builder.finish()))
-}
-
-fn simplify_vw_preserve_polygon(
-    array: &PolygonArray,
-    epsilon: f64,
-) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
-    let mut builder = PolygonBuilder::new(array.extension_type().clone());
-
-    for item in array.iter() {
-        if let Some(geom) = item {
-            let geo_geom = geom?.to_polygon();
-            builder.push_polygon(Some(&geo_geom.simplify_vw_preserve(epsilon)))?;
-        } else {
-            builder.push_polygon(None::<&geo::Polygon>.as_ref())?;
-        }
+    /// Two holes, so a transposition of the interior ring indices would fail the test.
+    #[test]
+    fn polygon_with_holes_maps_zm_of_kept_coords() {
+        let arr = xyzm_polygon_array(&[(&NOTCH_SQUARE, &[&HOLE_A, &HOLE_B])]);
+        let result = simplify_vw_preserve(&arr, NOTCH_EPS).unwrap();
+        let out = result.as_polygon();
+        assert_eq!(
+            polygon_coords(&out.value(0).unwrap()),
+            [&NOTCH_SQUARE_KEPT[..], &HOLE_A[..], &HOLE_B[..]]
+        );
     }
 
-    Ok(Arc::new(builder.finish()))
-}
+    #[test]
+    fn multipolygon_maps_zm_of_kept_coords() {
+        let arr = xyzm_multipolygon_array(&[&[(&NOTCH_SQUARE, &[]), (&PLAIN_SQUARE, &[])]]);
+        let result = simplify_vw_preserve(&arr, NOTCH_EPS).unwrap();
+        assert_eq!(result.data_type().dimension(), Some(Dimension::XYZM));
+        let out = result.as_multi_polygon();
+        let row0 = out.value(0).unwrap();
 
-fn simplify_vw_preserve_multi_linestring(
-    array: &MultiLineStringArray,
-    epsilon: f64,
-) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
-    let mut builder = MultiLineStringBuilder::new(array.extension_type().clone());
-
-    for item in array.iter() {
-        if let Some(geom) = item {
-            let geo_geom = geom?.to_multi_line_string();
-            builder.push_multi_line_string(Some(&geo_geom.simplify_vw_preserve(epsilon)))?;
-        } else {
-            builder.push_multi_line_string(None::<&geo::MultiLineString>.as_ref())?;
-        }
-    }
-
-    Ok(Arc::new(builder.finish()))
-}
-
-fn simplify_vw_preserve_multi_polygon(
-    array: &MultiPolygonArray,
-    epsilon: f64,
-) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
-    let mut builder = MultiPolygonBuilder::new(array.extension_type().clone());
-
-    for item in array.iter() {
-        if let Some(geom) = item {
-            let geo_geom = geom?.to_multi_polygon();
-            builder.push_multi_polygon(Some(&geo_geom.simplify_vw_preserve(epsilon)))?;
-        } else {
-            builder.push_multi_polygon(None::<&geo::MultiPolygon>.as_ref())?;
-        }
-    }
-
-    Ok(Arc::new(builder.finish()))
-}
-
-fn simplify_vw_preserve_geometry_impl<'a>(
-    array: &'a impl GeoArrowArrayAccessor<'a>,
-    epsilon: f64,
-) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
-    let geom_typ = GeometryType::new(array.data_type().metadata().clone());
-    let mut builder = GeometryBuilder::new(geom_typ);
-
-    for item in array.iter() {
-        if let Some(geom) = item {
-            let geo_geom = geometry_to_geo(&geom?)?;
-            let simplified_geom = simplify_vw_preserve_geometry(&geo_geom, &epsilon);
-            builder.push_geometry(Some(&simplified_geom))?;
-        } else {
-            builder.push_geometry(None::<&geo::Geometry>.as_ref())?;
-        }
-    }
-
-    Ok(Arc::new(builder.finish()))
-}
-
-fn simplify_vw_preserve_geometry(geom: &geo::Geometry, epsilon: &f64) -> geo::Geometry {
-    match geom {
-        geo::Geometry::LineString(g) => geo::Geometry::LineString(g.simplify_vw_preserve(*epsilon)),
-        geo::Geometry::Polygon(g) => geo::Geometry::Polygon(g.simplify_vw_preserve(*epsilon)),
-        geo::Geometry::MultiLineString(g) => {
-            geo::Geometry::MultiLineString(g.simplify_vw_preserve(*epsilon))
-        }
-        geo::Geometry::MultiPolygon(g) => {
-            geo::Geometry::MultiPolygon(g.simplify_vw_preserve(*epsilon))
-        }
-        _ => geom.clone(),
+        assert_eq!(row0.num_polygons(), 2);
+        assert_eq!(
+            polygon_coords(&row0.polygon(0).unwrap()),
+            [NOTCH_SQUARE_KEPT]
+        );
+        assert_eq!(polygon_coords(&row0.polygon(1).unwrap()), [PLAIN_SQUARE]);
     }
 }
