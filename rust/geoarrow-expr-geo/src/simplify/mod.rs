@@ -1,3 +1,6 @@
+mod vw;
+mod vw_preserve;
+
 use std::sync::Arc;
 
 use geo::Simplify;
@@ -15,6 +18,9 @@ use geoarrow_schema::{GeoArrowType, GeometryType};
 
 use crate::util::copy_geoarrow_array_ref;
 use crate::util::to_geo::geometry_to_geo;
+
+pub use vw::simplify_vw;
+pub use vw_preserve::simplify_vw_preserve;
 
 pub fn simplify(array: &dyn GeoArrowArray, epsilon: f64) -> GeoArrowResult<Arc<dyn GeoArrowArray>> {
     use GeoArrowType::*;

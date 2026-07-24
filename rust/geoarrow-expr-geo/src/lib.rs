@@ -18,8 +18,6 @@ mod length;
 mod minimum_rotated_rect;
 mod relate;
 mod simplify;
-mod simplify_vw;
-mod simplify_vw_preserve;
 pub mod util;
 pub mod validation;
 
@@ -34,6 +32,4 @@ pub use intersects::intersects;
 pub use length::euclidean_length;
 pub use minimum_rotated_rect::minimum_rotated_rect;
 pub use relate::relate_boolean;
-pub use simplify::simplify;
-pub use simplify_vw::simplify_vw;
-pub use simplify_vw_preserve::simplify_vw_preserve;
+pub use simplify::{simplify, simplify_vw, simplify_vw_preserve};
