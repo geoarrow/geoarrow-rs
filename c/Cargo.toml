@@ -1,0 +1,38 @@
+[package]
+name = "geoarrow-c-api"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+description = "C API for geoarrow-rs, over the Arrow C Data Interface"
+categories = { workspace = true }
+rust-version = { workspace = true }
+
+# The header parity test reads the js crate's sources, which a registry
+# package would not carry.
+publish = false
+
+[lib]
+name = "geoarrow_rs"
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+arrow-array = { workspace = true, features = ["ffi"] }
+arrow-data = { workspace = true, features = ["ffi"] }
+arrow-schema = { workspace = true, features = ["ffi"] }
+bytes = { workspace = true }
+geo = { workspace = true }
+geo-types = { workspace = true }
+geoarrow-array = { workspace = true }
+geoarrow-cast = { workspace = true }
+geoarrow-expr-geo = { workspace = true }
+geoarrow-schema = { workspace = true }
+geoparquet = { workspace = true }
+parquet = { workspace = true, features = ["arrow"] }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+arrow-buffer = { workspace = true }
+geo-traits = { workspace = true }
+geoarrow-array = { workspace = true, features = ["test-data"] }

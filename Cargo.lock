@@ -899,6 +899,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "geoarrow-c-api"
+version = "0.8.0"
+dependencies = [
+ "arrow-array",
+ "arrow-buffer",
+ "arrow-data",
+ "arrow-schema",
+ "bytes",
+ "geo",
+ "geo-traits",
+ "geo-types",
+ "geoarrow-array",
+ "geoarrow-cast",
+ "geoarrow-expr-geo",
+ "geoarrow-schema",
+ "geoparquet",
+ "parquet",
+ "serde_json",
+]
+
+[[package]]
 name = "geoarrow-cast"
 version = "0.8.0"
 dependencies = [
