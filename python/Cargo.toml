@@ -36,3 +36,8 @@ pyo3-arrow = "0.19"
 pyo3-geoarrow = { path = "../rust/pyo3-geoarrow" }
 serde_json = "1"
 thiserror = "1"
+
+# Pinned for georust/geo#1538 (XYZM index APIs, unreleased); drop on geo 0.34.
+# Duplicated from the root pin because python/ is a separate cargo workspace.
+[patch.crates-io]
+geo = { git = "https://github.com/georust/geo", rev = "7b9c8417eec4b8a5763ca487fcb51c7d7cb1b177" }

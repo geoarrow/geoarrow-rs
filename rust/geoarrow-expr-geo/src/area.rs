@@ -1,12 +1,10 @@
 use arrow_array::Float64Array;
-use arrow_array::builder::Float64Builder;
-use arrow_buffer::NullBuffer;
 use geo::Area;
 use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, downcast_geoarrow_array};
 use geoarrow_schema::GeoArrowType;
 use geoarrow_schema::error::GeoArrowResult;
 
-use crate::util::to_geo::geometry_to_geo;
+use crate::util::{map_to_f64, zeros};
 
 pub fn unsigned_area(array: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
     downcast_geoarrow_array!(array, _unsigned_area_impl)
@@ -16,20 +14,15 @@ pub fn signed_area(array: &dyn GeoArrowArray) -> GeoArrowResult<Float64Array> {
     downcast_geoarrow_array!(array, _signed_area_impl)
 }
 
-fn _zeros(len: usize, nulls: Option<NullBuffer>) -> Float64Array {
-    let values = vec![0.0f64; len];
-    Float64Array::new(values.into(), nulls)
-}
-
 fn _unsigned_area_impl<'a>(
     array: &'a impl GeoArrowArrayAccessor<'a>,
 ) -> GeoArrowResult<Float64Array> {
     use GeoArrowType::*;
     match array.data_type() {
         Point(_) | LineString(_) | MultiPoint(_) | MultiLineString(_) => {
-            Ok(_zeros(array.len(), array.logical_nulls()))
+            Ok(zeros(array.len(), array.logical_nulls()))
         }
-        _ => _area_impl(array, Area::unsigned_area),
+        _ => map_to_f64(array, Area::unsigned_area),
     }
 }
 
@@ -39,28 +32,10 @@ fn _signed_area_impl<'a>(
     use GeoArrowType::*;
     match array.data_type() {
         Point(_) | LineString(_) | MultiPoint(_) | MultiLineString(_) => {
-            Ok(_zeros(array.len(), array.logical_nulls()))
+            Ok(zeros(array.len(), array.logical_nulls()))
         }
-        _ => _area_impl(array, Area::signed_area),
+        _ => map_to_f64(array, Area::signed_area),
     }
-}
-
-fn _area_impl<'a, F: Fn(&geo::Geometry) -> f64>(
-    array: &'a impl GeoArrowArrayAccessor<'a>,
-    area_fn: F,
-) -> GeoArrowResult<Float64Array> {
-    let mut builder = Float64Builder::with_capacity(array.len());
-
-    for item in array.iter() {
-        if let Some(geom) = item {
-            let geo_geom = geometry_to_geo(&geom?)?;
-            builder.append_value(area_fn(&geo_geom));
-        } else {
-            builder.append_null();
-        }
-    }
-
-    Ok(builder.finish())
 }
 
 #[cfg(test)]
