@@ -526,14 +526,24 @@ impl GeoParquetMetadata {
         None
     }
 
-    /// Update a GeoParquetMetadata from another file's metadata
+    /// Merge another file's metadata into this one
     ///
-    /// This will expand the bounding box of each geometry column to include the bounding box
-    /// defined in the other file's GeoParquet metadata
+    /// Expands each column's bbox, unions its geometry types, and carries over columns only
+    /// `other` declares. Apart from the version string, which keeps the first-seen file's
+    /// value, the merged column metadata is the same in any file order.
     pub fn try_update(&mut self, other: &GeoParquetMetadata) -> GeoArrowResult<()> {
         self.try_compatible_with(other)?;
         for (column_name, column_meta) in self.columns.iter_mut() {
-            let other_column_meta = other.columns.get(column_name.as_str()).unwrap();
+            let Some(other_column_meta) = other.columns.get(column_name.as_str()) else {
+                continue;
+            };
+
+            // Writers (e.g. GeoPandas) record per-file geometry_types, so two files of one
+            // dataset legitimately differ; the dataset-level list is their union.
+            column_meta
+                .geometry_types
+                .extend(other_column_meta.geometry_types.iter().cloned());
+
             match (column_meta.bbox.as_mut(), &other_column_meta.bbox) {
                 (Some(bbox), Some(other_bbox)) => {
                     bbox.expand_to_include(other_bbox).map_err(|_| {
@@ -547,6 +557,15 @@ impl GeoParquetMetadata {
                 }
                 // If the RHS doesn't have a bbox, we don't need to update
                 (_, None) => {}
+            }
+        }
+
+        // Carry over columns declared by only one file; the dataset reader's Arrow schema
+        // check guarantees the column exists physically in every file.
+        for (column_name, other_column_meta) in other.columns.iter() {
+            if !self.columns.contains_key(column_name) {
+                self.columns
+                    .insert(column_name.clone(), other_column_meta.clone());
             }
         }
         Ok(())
@@ -572,24 +591,16 @@ impl GeoParquetMetadata {
             ));
         }
 
-        for key in self.columns.keys() {
-            let left = self.columns.get(key).unwrap();
-            let right = other
-                .columns
-                .get(key)
-                .ok_or(GeoArrowError::GeoParquet(format!(
-                    "Other GeoParquet metadata missing column {key}",
-                )))?;
+        // Columns declared by only one side, and differing geometry_types, merge in
+        // try_update instead of failing here.
+        for (key, left) in self.columns.iter() {
+            let Some(right) = other.columns.get(key) else {
+                continue;
+            };
 
             if left.encoding != right.encoding {
                 return Err(GeoArrowError::GeoParquet(format!(
                     "Different GeoParquet encodings for column {key}",
-                )));
-            }
-
-            if left.geometry_types != right.geometry_types {
-                return Err(GeoArrowError::GeoParquet(format!(
-                    "Different GeoParquet geometry types for column {key}",
                 )));
             }
 
@@ -965,6 +976,51 @@ mod test {
             GeoParquetBbox::Xyzm([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0])
         );
         assert_eq!(serde_json::to_value(&bbox).unwrap(), xyzm);
+    }
+
+    #[test]
+    fn try_update_is_order_independent() {
+        let meta_a: GeoParquetMetadata = serde_json::from_value(serde_json::json!({
+            "version": "1.1.0",
+            "primary_column": "geom",
+            "columns": {
+                "geom": {
+                    "encoding": "WKB",
+                    "geometry_types": ["MultiPolygon"],
+                    "bbox": [0.0, 0.0, 1.0, 1.0]
+                }
+            }
+        }))
+        .unwrap();
+        let meta_b: GeoParquetMetadata = serde_json::from_value(serde_json::json!({
+            "version": "1.1.0",
+            "primary_column": "geom",
+            "columns": {
+                "geom": {
+                    "encoding": "WKB",
+                    "geometry_types": ["Polygon", "MultiPolygon"],
+                    "bbox": [-1.0, 0.5, 2.0, 0.75]
+                },
+                "geom2": {"encoding": "WKB", "geometry_types": ["Point"]}
+            }
+        }))
+        .unwrap();
+
+        let mut ab = meta_a.clone();
+        ab.try_update(&meta_b).unwrap();
+        let mut ba = meta_b.clone();
+        ba.try_update(&meta_a).unwrap();
+
+        for merged in [&ab, &ba] {
+            let geom = &merged.columns["geom"];
+            assert_eq!(geom.geometry_types.len(), 2);
+            assert_eq!(geom.bbox, Some(GeoParquetBbox::Xy([-1.0, 0.0, 2.0, 1.0])));
+            assert!(merged.columns.contains_key("geom2"));
+        }
+        assert_eq!(
+            ab.columns["geom"].geometry_types,
+            ba.columns["geom"].geometry_types
+        );
     }
 
     #[test]
