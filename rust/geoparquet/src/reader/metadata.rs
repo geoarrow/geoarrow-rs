@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use arrow_schema::SchemaRef;
+use arrow_schema::{Schema, SchemaRef};
 use geoarrow_array::array::RectArray;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, Crs, Metadata};
@@ -249,13 +249,14 @@ impl GeoParquetDatasetMetadata {
             return Err(GeoArrowError::GeoParquet("No files provided".to_string()));
         }
 
-        let mut schema: Option<SchemaRef> = None;
+        let mut schema: Option<(SchemaRef, &str)> = None;
         let mut geo_meta: Option<GeoParquetMetadata> = None;
-        for meta in metas.values() {
-            if let Some(_prior_schema) = &schema {
-                // TODO: check that schemas are equivalent
-            } else {
-                schema = Some(meta.schema().clone());
+        for (path, meta) in metas.iter() {
+            match schema.as_mut() {
+                Some((merged, first_path)) => {
+                    *merged = merge_dataset_schemas(merged, first_path, meta.schema(), path)?;
+                }
+                None => schema = Some((meta.schema().clone(), path)),
             }
 
             if let Some(new_geo_meta) =
@@ -270,9 +271,10 @@ impl GeoParquetDatasetMetadata {
             }
         }
 
+        let (schema, _) = schema.unwrap();
         Ok(Self {
             files: metas,
-            schema: schema.unwrap(),
+            schema,
             geo_meta: geo_meta
                 .ok_or(GeoArrowError::GeoParquet(
                     "Expected GeoParquet dataset to have Geo metadata".to_string(),
@@ -349,6 +351,49 @@ impl GeoParquetDatasetMetadata {
     }
 }
 
+/// Check `schema` against the merged dataset schema and fold it in.
+///
+/// Field names and data types must match position by position. Nullability and field-level
+/// metadata legitimately differ between files of one dataset (a partition without nulls may
+/// be written non-nullable; writers differ in embedded `ARROW:schema` hints): nullability
+/// merges as "nullable in any file", field metadata keeps the first file's values.
+fn merge_dataset_schemas(
+    merged: &SchemaRef,
+    merged_path: &str,
+    schema: &SchemaRef,
+    path: &str,
+) -> GeoArrowResult<SchemaRef> {
+    if merged.fields().len() != schema.fields().len() {
+        return Err(GeoArrowError::GeoParquet(format!(
+            "Arrow schema of file {path} has {} columns but file {merged_path} has {}",
+            schema.fields().len(),
+            merged.fields().len()
+        )));
+    }
+
+    let mut fields = Vec::with_capacity(merged.fields().len());
+    for (merged_field, field) in merged.fields().iter().zip(schema.fields()) {
+        if merged_field.name() != field.name() || merged_field.data_type() != field.data_type() {
+            return Err(GeoArrowError::GeoParquet(format!(
+                "Arrow schema of file {path} does not match file {merged_path}: field {} ({}) vs field {} ({})",
+                field.name(),
+                field.data_type(),
+                merged_field.name(),
+                merged_field.data_type()
+            )));
+        }
+        if field.is_nullable() && !merged_field.is_nullable() {
+            fields.push(Arc::new(merged_field.as_ref().clone().with_nullable(true)));
+        } else {
+            fields.push(merged_field.clone());
+        }
+    }
+    Ok(Arc::new(Schema::new_with_metadata(
+        fields,
+        merged.metadata().clone(),
+    )))
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -359,6 +404,15 @@ mod test {
         let meta = arrow_meta("message schema { required double x; }", -5, &[]);
         let err = ArrowReaderMetadataExt::num_rows(&meta).unwrap_err();
         assert!(err.to_string().contains("invalid row count"));
+    }
+
+    #[test]
+    fn dataset_with_mismatched_schemas_errors() {
+        let a = arrow_meta("message schema { required double x; }", 0, &[]);
+        let b = arrow_meta("message schema { required int64 y; }", 0, &[]);
+        let metas = IndexMap::from([("a".to_string(), a), ("b".to_string(), b)]);
+        let err = GeoParquetDatasetMetadata::from_files(metas).err().unwrap();
+        assert!(err.to_string().contains("does not match"));
     }
 
     #[test]
@@ -377,5 +431,25 @@ mod test {
         let meta = GeoParquetReaderMetadata::new(arrow, geo_meta);
         let err = meta.row_group_bounds(0, None).unwrap_err();
         assert!(err.to_string().contains("out of range"));
+    }
+
+    #[test]
+    fn dataset_schemas_merge_over_benign_differences() {
+        use arrow_schema::{DataType, Field};
+
+        let merged: SchemaRef = Arc::new(Schema::new(vec![
+            Field::new("name", DataType::Utf8, false),
+            Field::new("geom", DataType::Binary, true),
+        ]));
+        // The other file marks `name` nullable and carries writer-specific field metadata.
+        let other: SchemaRef = Arc::new(Schema::new(vec![
+            Field::new("name", DataType::Utf8, true)
+                .with_metadata([("PARQUET:field_id".to_string(), "1".to_string())].into()),
+            Field::new("geom", DataType::Binary, true),
+        ]));
+
+        let result = merge_dataset_schemas(&merged, "a.parquet", &other, "b.parquet").unwrap();
+        assert!(result.field(0).is_nullable());
+        assert!(result.field(0).metadata().is_empty());
     }
 }
