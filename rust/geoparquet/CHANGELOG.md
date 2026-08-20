@@ -11,6 +11,7 @@
 - Dataset schemas are compared by field name and data type; nullability merges as "nullable in any file".
 - The dataset metadata merge is order-independent per column: `geometry_types` union, and columns declared by only some files carry over.
 - Covering shape checks moved to the row-filter path; row-group pruning and bounds work for flat top-level coverings.
+- New `GeoParquetVersion` enum: `GeoParquetWriterOptions` takes a target version (default 1.1). Native encodings and coverings require 1.1, M or ZM geometries 2.0. `GeoParquetMetadata::known_version` interprets the file's version string.
 
 ## 0.7.0 - 2026-01-04
 

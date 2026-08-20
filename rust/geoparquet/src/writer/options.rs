@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use geoarrow_schema::crs::CrsTransform;
 
+use crate::metadata::GeoParquetVersion;
+
 /// Allowed encodings when writing to GeoParquet
 #[derive(Copy, Clone, Default)]
 #[allow(clippy::upper_case_acronyms)]
@@ -50,6 +52,7 @@ impl ColumnOptions {
 pub struct GeoParquetWriterOptionsBuilder {
     /// Primary geometry column name.
     primary_column: Option<String>,
+    version: GeoParquetVersion,
     crs_transform: Option<Box<dyn CrsTransform>>,
     default_column_properties: ColumnOptions,
     column_properties: HashMap<String, ColumnOptions>,
@@ -103,6 +106,16 @@ impl GeoParquetWriterOptionsBuilder {
         self
     }
 
+    /// Set the GeoParquet specification version to write. The default is
+    /// [`GeoParquetVersion::V1_1`].
+    ///
+    /// The version constrains the other options: native encodings and coverings require 1.1,
+    /// and M or ZM geometries 2.0.
+    pub fn set_version(mut self, value: GeoParquetVersion) -> Self {
+        self.version = value;
+        self
+    }
+
     /// Set the default encoding for all geometry columns.
     pub fn set_encoding(mut self, value: GeoParquetWriterEncoding) -> Self {
         self.default_column_properties.set_encoding(value);
@@ -125,6 +138,7 @@ impl GeoParquetWriterOptionsBuilder {
     pub fn build(self) -> GeoParquetWriterOptions {
         GeoParquetWriterOptions {
             primary_column: self.primary_column,
+            version: self.version,
             crs_transform: self.crs_transform,
             default_column_properties: self.default_column_properties,
             column_properties: self.column_properties,
@@ -136,6 +150,7 @@ impl GeoParquetWriterOptionsBuilder {
 #[derive(Default)]
 pub struct GeoParquetWriterOptions {
     pub(crate) primary_column: Option<String>,
+    pub(crate) version: GeoParquetVersion,
     pub(crate) crs_transform: Option<Box<dyn CrsTransform>>,
     pub(crate) default_column_properties: ColumnOptions,
     pub(crate) column_properties: HashMap<String, ColumnOptions>,

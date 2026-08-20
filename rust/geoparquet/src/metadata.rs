@@ -526,6 +526,11 @@ impl GeoParquetMetadata {
         None
     }
 
+    /// The declared specification version, or `None` for unknown version strings.
+    pub fn known_version(&self) -> Option<GeoParquetVersion> {
+        GeoParquetVersion::from_metadata_string(&self.version)
+    }
+
     /// Merge another file's metadata into this one
     ///
     /// Expands each column's bbox, unions its geometry types, and carries over columns only
@@ -657,6 +662,66 @@ impl GeoParquetMetadata {
                     )))?;
             Ok((&self.primary_column, column_meta))
         }
+    }
+}
+
+/// A GeoParquet specification version with version-specific writer rules.
+///
+/// The reader does not gate on the version: it stays layout-driven, and an unknown version
+/// string reads like any other file.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
+pub enum GeoParquetVersion {
+    /// GeoParquet 1.0.0
+    V1_0,
+    /// GeoParquet 1.1.0
+    #[default]
+    V1_1,
+    /// GeoParquet 2.0.0
+    ///
+    /// The 2.0 specification is a release candidate. Writing 2.0 output is not implemented yet.
+    V2_0,
+}
+
+impl GeoParquetVersion {
+    /// The version string written to the `geo` metadata key.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::V1_0 => "1.0.0",
+            Self::V1_1 => "1.1.0",
+            Self::V2_0 => "2.0.0",
+        }
+    }
+
+    /// Interpret a file's version string, or `None` for unknown versions.
+    ///
+    /// Pre-release strings count as their release: `"1.0.0-beta.1"` is 1.0, `"2.0.0-rc.1"`
+    /// and the draft string `"2.0-dev"` are 2.0.
+    pub fn from_metadata_string(version: &str) -> Option<Self> {
+        match version {
+            v if v == "1.0.0" || v.starts_with("1.0.0-") => Some(Self::V1_0),
+            "1.1.0" => Some(Self::V1_1),
+            v if v == "2.0.0" || v.starts_with("2.0.0-") || v == "2.0-dev" => Some(Self::V2_0),
+            _ => None,
+        }
+    }
+
+    /// Native (GeoArrow) encodings exist only in GeoParquet 1.1; 1.0 and 2.0 are WKB-only.
+    pub fn supports_native_encoding(&self) -> bool {
+        matches!(self, Self::V1_1)
+    }
+
+    /// The bbox covering requires 1.1 or later.
+    ///
+    /// The covering is out of the 2.0 release candidate text, but the 1.1 form stays valid as
+    /// an extension and reinstatement is under discussion (opengeospatial/geoparquet#297).
+    /// This crate writes a covering into 2.0 output only on explicit request.
+    pub fn supports_covering(&self) -> bool {
+        matches!(self, Self::V1_1 | Self::V2_0)
+    }
+
+    /// M coordinates arrive with GeoParquet 2.0; 1.x forbids them.
+    pub fn supports_m_dimension(&self) -> bool {
+        matches!(self, Self::V2_0)
     }
 }
 
@@ -976,6 +1041,27 @@ mod test {
             GeoParquetBbox::Xyzm([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0])
         );
         assert_eq!(serde_json::to_value(&bbox).unwrap(), xyzm);
+    }
+
+    #[test]
+    fn version_strings_map_to_known_versions() {
+        use GeoParquetVersion::*;
+        for (string, expected) in [
+            ("1.0.0", Some(V1_0)),
+            ("1.0.0-beta.1", Some(V1_0)),
+            ("1.1.0", Some(V1_1)),
+            ("2.0.0", Some(V2_0)),
+            ("2.0.0-rc.1", Some(V2_0)),
+            ("2.0-dev", Some(V2_0)),
+            ("0.4.0", None),
+            ("3.0.0", None),
+        ] {
+            assert_eq!(
+                GeoParquetVersion::from_metadata_string(string),
+                expected,
+                "{string}"
+            );
+        }
     }
 
     #[test]
