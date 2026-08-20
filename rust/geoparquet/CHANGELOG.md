@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+- **Breaking:** the reader returns errors instead of panicking on malformed files; `num_rows` now returns `GeoArrowResult<usize>`.
+- Native-encoded columns take their geometry type from the encoding and layout, so an empty or inconsistent `geometry_types` list reads.
+- The reader validates the native coordinate struct: Float64 fields x, y, z, m in that order, at the encoding's nesting depth.
+- **Breaking:** the geo metadata `bbox` is a typed `GeoParquetBbox` (4, 6, or 8 elements), validated in deserialization.
+- Dataset schemas are compared by field name and data type; nullability merges as "nullable in any file".
+- The dataset metadata merge is order-independent per column: `geometry_types` union, and columns declared by only some files carry over.
+- Covering shape checks moved to the row-filter path; row-group pruning and bounds work for flat top-level coverings.
+
 ## 0.7.0 - 2026-01-04
 
 - chore: Bump to arrow 57 by @ddupg in https://github.com/geoarrow/geoarrow-rs/pull/1402
