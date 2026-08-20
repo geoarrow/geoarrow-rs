@@ -109,8 +109,11 @@ impl GeoParquetWriterOptionsBuilder {
     /// Set the GeoParquet specification version to write. The default is
     /// [`GeoParquetVersion::V1_1`].
     ///
-    /// The version constrains the other options: native encodings and coverings require 1.1,
-    /// and M or ZM geometries 2.0.
+    /// The version constrains the other options: native encodings require 1.1, coverings 1.1
+    /// or later, and M or ZM geometries 2.0.
+    ///
+    /// GeoParquet 2.0 is at release candidate 2.0.0-rc.1; 2.0 output can change until the
+    /// specification is final.
     pub fn set_version(mut self, value: GeoParquetVersion) -> Self {
         self.version = value;
         self

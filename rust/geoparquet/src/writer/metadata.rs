@@ -11,18 +11,18 @@ use geoarrow_array::cast::AsGeoArrowArray;
 use geoarrow_schema::crs::{CrsTransform, DefaultCrsTransform};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, Dimension, Edges, GeoArrowType, Metadata, WkbType};
+use parquet::arrow::ArrowSchemaConverter;
+use parquet::basic::{EdgeInterpolationAlgorithm, LogicalType};
+use parquet::schema::types::{SchemaDescriptor, Type as ParquetType};
 use serde_json::Value;
 
 use crate::metadata::{
     GeoParquetBbox, GeoParquetBboxCovering, GeoParquetColumnEncoding, GeoParquetColumnMetadata,
     GeoParquetCovering, GeoParquetGeometryType, GeoParquetGeometryTypeAndDimension,
-    GeoParquetMetadata, GeoParquetVersion,
+    GeoParquetMetadata, GeoParquetVersion, INFERRED_PRIMARY_COLUMN_NAMES,
 };
 use crate::total_bounds::BoundingRect;
 use crate::writer::options::{GeoParquetWriterEncoding, GeoParquetWriterOptions};
-
-// https://github.com/geoarrow/geoarrow-rs/pull/1159#issuecomment-2904610370
-const INFERRED_PRIMARY_COLUMN_NAMES: [&str; 2] = ["geometry", "geography"];
 
 /// Information for one geometry column being written to Parquet
 pub(crate) struct ColumnInfo {
@@ -336,12 +336,6 @@ impl GeoParquetMetadataBuilder {
         schema: &Schema,
         options: &GeoParquetWriterOptions,
     ) -> GeoArrowResult<Self> {
-        if matches!(options.version, GeoParquetVersion::V2_0) {
-            return Err(GeoArrowError::GeoParquet(
-                "GeoParquet 2.0 output is not implemented yet".to_string(),
-            ));
-        }
-
         let mut columns = HashMap::new();
 
         for (col_idx, field) in schema.fields().iter().enumerate() {
@@ -471,6 +465,61 @@ impl GeoParquetMetadataBuilder {
         }
     }
 
+    /// The Parquet schema for 2.0 output: geometry columns carry the GEOMETRY or GEOGRAPHY
+    /// logical type. Returns `None` for 1.x output, where the derived schema is correct.
+    pub(crate) fn target_parquet_schema(&self) -> GeoArrowResult<Option<SchemaDescriptor>> {
+        if !matches!(self.version, GeoParquetVersion::V2_0) {
+            return Ok(None);
+        }
+        let converted = ArrowSchemaConverter::new()
+            .convert(&self.output_schema)
+            .map_err(|err| GeoArrowError::GeoParquet(err.to_string()))?;
+
+        let columns_by_name: HashMap<&str, &ColumnInfo> = self
+            .columns
+            .values()
+            .map(|info| (info.name.as_str(), info))
+            .collect();
+
+        let fields = converted
+            .root_schema()
+            .get_fields()
+            .iter()
+            .map(|field| {
+                let Some(info) = columns_by_name.get(field.name()) else {
+                    return Ok(field.clone());
+                };
+                let crs = info
+                    .crs
+                    .as_ref()
+                    .map(serde_json::to_string)
+                    .transpose()
+                    .map_err(|err| GeoArrowError::GeoParquet(err.to_string()))?;
+                // 2.0 geometry columns are WKB in a BYTE_ARRAY leaf; the version rules
+                // rejected native encodings before this point.
+                let logical_type = match info.edges {
+                    None => LogicalType::geometry(crs),
+                    Some(edges) => LogicalType::geography(crs, Some(parquet_edge_algorithm(edges))),
+                };
+                let rebuilt = ParquetType::primitive_type_builder(
+                    field.name(),
+                    parquet::basic::Type::BYTE_ARRAY,
+                )
+                .with_repetition(field.get_basic_info().repetition())
+                .with_logical_type(Some(logical_type))
+                .build()
+                .map_err(|err| GeoArrowError::GeoParquet(err.to_string()))?;
+                Ok(Arc::new(rebuilt))
+            })
+            .collect::<GeoArrowResult<Vec<_>>>()?;
+
+        let root = ParquetType::group_type_builder(converted.root_schema().name())
+            .with_fields(fields)
+            .build()
+            .map_err(|err| GeoArrowError::GeoParquet(err.to_string()))?;
+        Ok(Some(SchemaDescriptor::new(Arc::new(root))))
+    }
+
     /// Consume this builder, converting into [GeoParquetMetadata].
     pub(crate) fn finish(self) -> GeoParquetMetadata {
         let mut columns = HashMap::with_capacity(self.columns.len());
@@ -484,6 +533,16 @@ impl GeoParquetMetadataBuilder {
             primary_column: self.primary_column,
             columns,
         }
+    }
+}
+
+fn parquet_edge_algorithm(edges: Edges) -> EdgeInterpolationAlgorithm {
+    match edges {
+        Edges::Spherical => EdgeInterpolationAlgorithm::SPHERICAL,
+        Edges::Vincenty => EdgeInterpolationAlgorithm::VINCENTY,
+        Edges::Thomas => EdgeInterpolationAlgorithm::THOMAS,
+        Edges::Andoyer => EdgeInterpolationAlgorithm::ANDOYER,
+        Edges::Karney => EdgeInterpolationAlgorithm::KARNEY,
     }
 }
 
@@ -657,21 +716,23 @@ mod tests {
     }
 
     #[test]
-    fn v1_0_rejects_native_encoding() {
+    fn v1_0_and_v2_0_reject_native_encoding() {
         let field = PointType::new(Dimension::XY, Default::default()).to_field("geometry", false);
         let schema = Schema::new(vec![field]);
-        let options = GeoParquetWriterOptions {
-            version: GeoParquetVersion::V1_0,
-            default_column_properties: ColumnOptions {
-                encoding: Some(GeoParquetWriterEncoding::GeoArrow),
+        for version in [GeoParquetVersion::V1_0, GeoParquetVersion::V2_0] {
+            let options = GeoParquetWriterOptions {
+                version,
+                default_column_properties: ColumnOptions {
+                    encoding: Some(GeoParquetWriterEncoding::GeoArrow),
+                    ..Default::default()
+                },
                 ..Default::default()
-            },
-            ..Default::default()
-        };
-        let err = GeoParquetMetadataBuilder::try_new(&schema, &options)
-            .err()
-            .unwrap();
-        assert!(err.to_string().contains("Native encodings require"));
+            };
+            let err = GeoParquetMetadataBuilder::try_new(&schema, &options)
+                .err()
+                .unwrap();
+            assert!(err.to_string().contains("Native encodings require"));
+        }
     }
 
     #[test]
@@ -707,17 +768,31 @@ mod tests {
     }
 
     #[test]
-    fn v2_0_output_is_gated() {
-        let field = PointType::new(Dimension::XY, Default::default()).to_field("geometry", false);
+    fn v2_0_writes_wkb_with_geometry_logical_type() {
+        use arrow_schema::{DataType, Field};
+        use geoarrow_schema::WkbType;
+        use parquet::basic::LogicalType;
+
+        let field = Field::new("geometry", DataType::Binary, false)
+            .with_extension_type(WkbType::new(Default::default()));
         let schema = Schema::new(vec![field]);
         let options = GeoParquetWriterOptions {
             version: GeoParquetVersion::V2_0,
             ..Default::default()
         };
-        let err = GeoParquetMetadataBuilder::try_new(&schema, &options)
-            .err()
-            .unwrap();
-        assert!(err.to_string().contains("not implemented"));
+        let builder = GeoParquetMetadataBuilder::try_new(&schema, &options).unwrap();
+        let parquet_schema = builder.target_parquet_schema().unwrap().unwrap();
+        let leaf = &parquet_schema.columns()[0];
+        assert!(matches!(
+            leaf.self_type().get_basic_info().logical_type_ref(),
+            Some(LogicalType::Geometry(_))
+        ));
+        let metadata = builder.finish();
+        assert_eq!(metadata.version, "2.0.0");
+        assert!(matches!(
+            metadata.columns["geometry"].encoding,
+            crate::metadata::GeoParquetColumnEncoding::WKB
+        ));
     }
 
     #[test]

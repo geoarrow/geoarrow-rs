@@ -11,7 +11,13 @@
 - Dataset schemas are compared by field name and data type; nullability merges as "nullable in any file".
 - The dataset metadata merge is order-independent per column: `geometry_types` union, and columns declared by only some files carry over.
 - Covering shape checks moved to the row-filter path; row-group pruning and bounds work for flat top-level coverings.
-- New `GeoParquetVersion` enum: `GeoParquetWriterOptions` takes a target version (default 1.1). Native encodings and coverings require 1.1, M or ZM geometries 2.0. `GeoParquetMetadata::known_version` interprets the file's version string.
+- New `GeoParquetVersion` enum: `GeoParquetWriterOptions` takes a target version (default 1.1). Native encodings require 1.1, coverings 1.1 or later, M or ZM geometries 2.0. `GeoParquetMetadata::known_version` interprets the file's version string.
+- GeoParquet 2.0 support targets 2.0.0-rc.1; the 2.0 reader and writer behavior can change until the specification is final.
+- The reader accepts files with GEOMETRY and GEOGRAPHY logical types and no `geo` key, as GeoParquet 2.0 expects, synthesizing metadata from the logical types: WKB, unknown geometry types, CRS from the `crs` property, edges from the GEOGRAPHY algorithm.
+- Row-group pruning and bounds fall back to the column's native geospatial statistics when no covering is declared.
+- The dataset merge no longer compares version strings, so datasets written across a specification transition read.
+- The `edges` metadata maps all five 2.0 edge algorithms and survives a missing CRS.
+- The writer emits GeoParquet 2.0 on request: WKB with the GEOMETRY or GEOGRAPHY logical type, via `GeoParquetRecordBatchEncoder::target_parquet_schema` and `ArrowWriterOptions::with_parquet_schema`. The parquet `geospatial` feature is enabled.
 
 ## 0.7.0 - 2026-01-04
 

@@ -6,7 +6,10 @@ use parquet::arrow::arrow_reader::{ArrowPredicate, ArrowReaderBuilder, RowFilter
 
 use crate::metadata::GeoParquetMetadata;
 use crate::reader::parse::infer_geoarrow_schema;
-use crate::reader::spatial_filter::{ParquetBboxStatistics, bbox_arrow_predicate, bbox_row_groups};
+use crate::reader::spatial_filter::{
+    ParquetBboxStatistics, bbox_arrow_predicate, bbox_row_groups, geometry_leaf_index,
+    native_bbox_row_groups,
+};
 
 /// A trait that extends the [`ArrowReaderBuilder`] with methods for reading GeoParquet files.
 ///
@@ -154,16 +157,14 @@ impl<T> GeoParquetReaderBuilder for ArrowReaderBuilder<T> {
         column_name: Option<&str>,
     ) -> GeoArrowResult<Vec<usize>> {
         let (column_name, column_meta) = geo_metadata.geometry_column(column_name)?;
-        let bbox_covering =
-            column_meta
-                .bbox_covering(column_name)
-                .ok_or(GeoArrowError::GeoParquet(format!(
-                    "No covering metadata found for column: {column_name}",
-                )))?;
-
-        let bbox_cols = ParquetBboxStatistics::try_new(self.parquet_schema(), &bbox_covering)?;
-
-        bbox_row_groups(self.metadata().row_groups(), &bbox_cols, bbox)
+        if let Some(bbox_covering) = column_meta.bbox_covering(column_name) {
+            let bbox_cols = ParquetBboxStatistics::try_new(self.parquet_schema(), &bbox_covering)?;
+            bbox_row_groups(self.metadata().row_groups(), &bbox_cols, bbox)
+        } else {
+            // Without a covering, fall back to the column's native geospatial statistics.
+            let leaf_idx = geometry_leaf_index(self.parquet_schema(), column_name)?;
+            native_bbox_row_groups(self.metadata().row_groups(), leaf_idx, bbox)
+        }
     }
 
     fn with_intersecting_row_groups(
@@ -199,6 +200,77 @@ mod test {
         buf.extend_from_slice(&x.to_le_bytes());
         buf.extend_from_slice(&y.to_le_bytes());
         buf
+    }
+
+    /// 2.0 round trip: the logical type survives, and pruning works from the native
+    /// statistics, because 2.0 output carries no covering by default.
+    #[test]
+    fn v2_roundtrip_prunes_from_native_statistics() {
+        use arrow_schema::extension::EXTENSION_TYPE_NAME_KEY;
+        use parquet::arrow::arrow_writer::ArrowWriterOptions;
+        use parquet::basic::LogicalType;
+
+        use crate::metadata::GeoParquetVersion;
+        use crate::writer::{GeoParquetRecordBatchEncoder, GeoParquetWriterOptions};
+
+        let field = Field::new("geometry", DataType::Binary, false).with_metadata(
+            std::collections::HashMap::from([(
+                EXTENSION_TYPE_NAME_KEY.to_string(),
+                "geoarrow.wkb".to_string(),
+            )]),
+        );
+        let schema = Arc::new(Schema::new(vec![field]));
+        let batch = RecordBatch::try_new(
+            schema.clone(),
+            vec![Arc::new(BinaryArray::from_iter_values([
+                wkb_point(1.0, 2.0),
+                wkb_point(3.0, 4.0),
+            ]))],
+        )
+        .unwrap();
+
+        let options = GeoParquetWriterOptions {
+            version: GeoParquetVersion::V2_0,
+            ..Default::default()
+        };
+        let mut encoder = GeoParquetRecordBatchEncoder::try_new(&schema, &options).unwrap();
+        let parquet_schema = encoder.target_parquet_schema().unwrap().unwrap();
+
+        let mut buf = Vec::new();
+        let writer_options = ArrowWriterOptions::new().with_parquet_schema(parquet_schema);
+        let mut writer =
+            ArrowWriter::try_new_with_options(&mut buf, encoder.target_schema(), writer_options)
+                .unwrap();
+        let encoded = encoder.encode_record_batch(&batch).unwrap();
+        writer.write(&encoded).unwrap();
+        writer.append_key_value_metadata(encoder.into_keyvalue().unwrap());
+        writer.close().unwrap();
+
+        let builder = ParquetRecordBatchReaderBuilder::try_new(Bytes::from(buf)).unwrap();
+        let geo_meta = builder.geoparquet_metadata().unwrap().unwrap();
+        assert_eq!(geo_meta.version, "2.0.0");
+        assert!(matches!(
+            builder.parquet_schema().columns()[0]
+                .self_type()
+                .get_basic_info()
+                .logical_type_ref(),
+            Some(LogicalType::Geometry(_))
+        ));
+
+        let hit = Rect::new(coord! { x: 0.0, y: 0.0 }, coord! { x: 10.0, y: 10.0 });
+        assert_eq!(
+            builder
+                .intersecting_row_groups(hit, &geo_meta, None)
+                .unwrap(),
+            vec![0]
+        );
+        let miss = Rect::new(coord! { x: 100.0, y: 100.0 }, coord! { x: 110.0, y: 110.0 });
+        assert!(
+            builder
+                .intersecting_row_groups(miss, &geo_meta, None)
+                .unwrap()
+                .is_empty()
+        );
     }
 
     /// The filter must read each bound from the field the covering names, not an implied

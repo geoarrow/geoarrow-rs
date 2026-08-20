@@ -11,7 +11,9 @@ use parquet::schema::types::SchemaDescriptor;
 
 use crate::metadata::GeoParquetMetadata;
 use crate::reader::parse::infer_geoarrow_schema;
-use crate::reader::spatial_filter::ParquetBboxStatistics;
+use crate::reader::spatial_filter::{
+    ParquetBboxStatistics, geometry_leaf_index, native_stats_bbox, native_stats_bboxes,
+};
 
 /// An extension trait to DRY some code across the file and dataset metadata.
 trait ArrowReaderMetadataExt {
@@ -73,14 +75,22 @@ impl GeoParquetReaderMetadata {
     }
 
     /// Construct a new [GeoParquetReaderMetadata] from [ArrowReaderMetadata]
+    ///
+    /// The geo metadata comes from the `geo` key, or, for a file without one, is synthesized
+    /// from GEOMETRY and GEOGRAPHY logical types in the Parquet schema.
     pub fn from_arrow_meta(meta: ArrowReaderMetadata) -> GeoArrowResult<Self> {
-        let geo_meta = if let Some(geo_meta) =
-            GeoParquetMetadata::from_parquet_meta(meta.metadata().file_metadata())
+        let file_metadata = meta.metadata().file_metadata();
+        let geo_meta = if let Some(geo_meta) = GeoParquetMetadata::from_parquet_meta(file_metadata)
         {
+            Arc::new(geo_meta?)
+        } else if let Some(geo_meta) = GeoParquetMetadata::from_logical_types(
+            meta.parquet_schema(),
+            file_metadata.key_value_metadata(),
+        ) {
             Arc::new(geo_meta?)
         } else {
             return Err(GeoArrowError::GeoParquet(
-                "No `geo` key in Parquet metadata".to_string(),
+                "No `geo` key in Parquet metadata and no geometry-typed columns".to_string(),
             ));
         };
         Ok(Self { meta, geo_meta })
@@ -151,14 +161,6 @@ impl GeoParquetReaderMetadata {
         column_name: Option<&str>,
     ) -> GeoArrowResult<Option<geo_types::Rect>> {
         let (column_name, column_meta) = self.geo_meta.geometry_column(column_name)?;
-        let bbox_covering =
-            column_meta
-                .bbox_covering(column_name)
-                .ok_or(GeoArrowError::GeoParquet(format!(
-                    "No covering metadata found for column: {column_name}",
-                )))?;
-        let geo_statistics =
-            ParquetBboxStatistics::try_new(self.meta.parquet_schema(), &bbox_covering)?;
         let row_group_meta = self
             .meta
             .metadata()
@@ -170,7 +172,15 @@ impl GeoParquetReaderMetadata {
                     self.meta.metadata().num_row_groups()
                 ))
             })?;
-        Ok(Some(geo_statistics.get_bbox(row_group_meta)?))
+        if let Some(bbox_covering) = column_meta.bbox_covering(column_name) {
+            let geo_statistics =
+                ParquetBboxStatistics::try_new(self.meta.parquet_schema(), &bbox_covering)?;
+            Ok(Some(geo_statistics.get_bbox(row_group_meta)?))
+        } else {
+            // Without a covering, fall back to the column's native geospatial statistics.
+            let leaf_idx = geometry_leaf_index(self.meta.parquet_schema(), column_name)?;
+            Ok(Some(native_stats_bbox(row_group_meta, leaf_idx)?))
+        }
     }
 
     /// Get the bounds of all row groups.
@@ -179,19 +189,21 @@ impl GeoParquetReaderMetadata {
     /// in the metadata.
     pub fn row_groups_bounds(&self, column_name: Option<&str>) -> GeoArrowResult<RectArray> {
         let (column_name, column_meta) = self.geo_meta.geometry_column(column_name)?;
-        let bbox_covering =
-            column_meta
-                .bbox_covering(column_name)
-                .ok_or(GeoArrowError::GeoParquet(format!(
-                    "No covering metadata found for column: {column_name}",
-                )))?;
-
-        let geo_statistics =
-            ParquetBboxStatistics::try_new(self.meta.parquet_schema(), &bbox_covering)?;
-        geo_statistics.get_bboxes(
-            self.meta.metadata().row_groups(),
-            Arc::new(column_meta.clone().into()),
-        )
+        if let Some(bbox_covering) = column_meta.bbox_covering(column_name) {
+            let geo_statistics =
+                ParquetBboxStatistics::try_new(self.meta.parquet_schema(), &bbox_covering)?;
+            geo_statistics.get_bboxes(
+                self.meta.metadata().row_groups(),
+                Arc::new(column_meta.clone().into()),
+            )
+        } else {
+            let leaf_idx = geometry_leaf_index(self.meta.parquet_schema(), column_name)?;
+            native_stats_bboxes(
+                self.meta.metadata().row_groups(),
+                leaf_idx,
+                Arc::new(column_meta.clone().into()),
+            )
+        }
     }
 
     /// Access the bounding box of the given column for the entire file
@@ -259,10 +271,16 @@ impl GeoParquetDatasetMetadata {
                 None => schema = Some((meta.schema().clone(), path)),
             }
 
-            if let Some(new_geo_meta) =
-                GeoParquetMetadata::from_parquet_meta(meta.metadata().file_metadata())
-            {
-                let new_geo_meta = new_geo_meta?;
+            let file_metadata = meta.metadata().file_metadata();
+            let new_geo_meta = match GeoParquetMetadata::from_parquet_meta(file_metadata) {
+                Some(geo) => Some(geo?),
+                None => GeoParquetMetadata::from_logical_types(
+                    meta.parquet_schema(),
+                    file_metadata.key_value_metadata(),
+                )
+                .transpose()?,
+            };
+            if let Some(new_geo_meta) = new_geo_meta {
                 if let Some(geo_meta) = geo_meta.as_mut() {
                     geo_meta.try_update(&new_geo_meta)?;
                 } else {
@@ -431,6 +449,62 @@ mod test {
         let meta = GeoParquetReaderMetadata::new(arrow, geo_meta);
         let err = meta.row_group_bounds(0, None).unwrap_err();
         assert!(err.to_string().contains("out of range"));
+    }
+
+    #[test]
+    fn row_group_bounds_from_native_geo_statistics() {
+        use parquet::basic::LogicalType;
+        use parquet::file::metadata::{
+            ColumnChunkMetaData, FileMetaData, ParquetMetaData, RowGroupMetaData,
+        };
+        use parquet::geospatial::bounding_box::BoundingBox;
+        use parquet::geospatial::statistics::GeospatialStatistics;
+
+        use crate::test::geometry_schema_descr;
+
+        let descr = geometry_schema_descr(LogicalType::geometry(None));
+        let geo_stats = GeospatialStatistics::new(Some(BoundingBox::new(1.0, 2.0, 3.0, 4.0)), None);
+        let geometry_column = ColumnChunkMetaData::builder(descr.column(0))
+            .set_geo_statistics(Box::new(geo_stats))
+            .build()
+            .unwrap();
+        let name_column = ColumnChunkMetaData::builder(descr.column(1))
+            .build()
+            .unwrap();
+        let row_group = RowGroupMetaData::builder(descr.clone())
+            .set_num_rows(10)
+            .set_column_metadata(vec![geometry_column, name_column])
+            .build()
+            .unwrap();
+        let file_meta = FileMetaData::new(1, 10, None, None, descr, None);
+        let parquet_meta = ParquetMetaData::new(file_meta, vec![row_group]);
+        let arrow =
+            ArrowReaderMetadata::try_new(Arc::new(parquet_meta), Default::default()).unwrap();
+
+        let meta = GeoParquetReaderMetadata::from_arrow_meta(arrow).unwrap();
+        let bounds = meta.row_group_bounds(0, None).unwrap().unwrap();
+        assert_eq!(
+            (
+                bounds.min().x,
+                bounds.max().x,
+                bounds.min().y,
+                bounds.max().y
+            ),
+            (1.0, 2.0, 3.0, 4.0)
+        );
+    }
+
+    #[test]
+    fn geo_less_file_with_geometry_logical_type_reads() {
+        use parquet::basic::LogicalType;
+
+        use crate::test::{arrow_meta_from_descr, geometry_schema_descr};
+
+        let descr = geometry_schema_descr(LogicalType::geometry(None));
+        let arrow = arrow_meta_from_descr(descr, 0, &[]);
+        let meta = GeoParquetReaderMetadata::from_arrow_meta(arrow).unwrap();
+        assert_eq!(meta.geo_metadata().primary_column, "geometry");
+        assert_eq!(meta.geo_metadata().version, "2.0.0");
     }
 
     #[test]

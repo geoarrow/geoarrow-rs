@@ -183,6 +183,80 @@ pub(crate) fn bbox_row_groups(
     Ok(intersects_row_groups_idxs)
 }
 
+/// Find the leaf column index of a top-level primitive geometry column.
+///
+/// A GeoParquet 2.0 geometry column is a top-level BYTE_ARRAY leaf, so its schema path is the
+/// bare column name.
+pub(crate) fn geometry_leaf_index(
+    parquet_schema: &SchemaDescriptor,
+    column_name: &str,
+) -> GeoArrowResult<usize> {
+    parquet_schema
+        .columns()
+        .iter()
+        .position(|column| {
+            let parts = column.path().parts();
+            parts.len() == 1 && parts[0] == column_name
+        })
+        .ok_or_else(|| {
+            GeoArrowError::GeoParquet(format!("No top-level primitive column named {column_name}"))
+        })
+}
+
+/// Bbox of one row group from the geometry column's native geospatial statistics
+/// (Parquet GEOMETRY/GEOGRAPHY logical types).
+pub(crate) fn native_stats_bbox(
+    rg_meta: &RowGroupMetaData,
+    leaf_idx: usize,
+) -> GeoArrowResult<Rect> {
+    let column = rg_meta.column(leaf_idx);
+    let stats = column.geo_statistics().ok_or_else(|| {
+        GeoArrowError::GeoParquet(format!(
+            "No geospatial statistics for column {}",
+            column.column_path()
+        ))
+    })?;
+    let bbox = stats.bounding_box().ok_or_else(|| {
+        GeoArrowError::GeoParquet(format!(
+            "Geospatial statistics for column {} have no bounding box",
+            column.column_path()
+        ))
+    })?;
+    Ok(Rect::new(
+        coord! { x: bbox.get_xmin(), y: bbox.get_ymin() },
+        coord! { x: bbox.get_xmax(), y: bbox.get_ymax() },
+    ))
+}
+
+/// The bboxes of a sequence of row groups from native geospatial statistics.
+pub(crate) fn native_stats_bboxes(
+    row_groups: &[RowGroupMetaData],
+    leaf_idx: usize,
+    metadata: Arc<Metadata>,
+) -> GeoArrowResult<RectArray> {
+    let rect_type = BoxType::new(Dimension::XY, metadata);
+    let mut builder = RectBuilder::with_capacity(rect_type, row_groups.len());
+    for rg_meta in row_groups.iter() {
+        builder.push_rect(Some(&native_stats_bbox(rg_meta, leaf_idx)?));
+    }
+    Ok(builder.finish())
+}
+
+/// Row groups whose native geospatial statistics intersect the query bbox.
+pub(crate) fn native_bbox_row_groups(
+    row_groups: &[RowGroupMetaData],
+    leaf_idx: usize,
+    bbox_query: Rect,
+) -> GeoArrowResult<Vec<usize>> {
+    let mut intersects_row_groups_idxs = vec![];
+    for (row_group_idx, rg_meta) in row_groups.iter().enumerate() {
+        if rect_intersects(&native_stats_bbox(rg_meta, leaf_idx)?, &bbox_query) {
+            intersects_row_groups_idxs.push(row_group_idx);
+        }
+    }
+    Ok(intersects_row_groups_idxs)
+}
+
 pub(crate) fn bbox_arrow_predicate(
     parquet_schema: &SchemaDescriptor,
     bbox_cols: ParquetBboxStatistics,
