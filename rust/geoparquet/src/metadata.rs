@@ -536,40 +536,11 @@ impl GeoParquetMetadata {
             let other_column_meta = other.columns.get(column_name.as_str()).unwrap();
             match (column_meta.bbox.as_mut(), &other_column_meta.bbox) {
                 (Some(bbox), Some(other_bbox)) => {
-                    assert_eq!(bbox.len(), other_bbox.len());
-                    if bbox.len() == 4 {
-                        if other_bbox[0] < bbox[0] {
-                            bbox[0] = other_bbox[0];
-                        }
-                        if other_bbox[1] < bbox[1] {
-                            bbox[1] = other_bbox[1];
-                        }
-                        if other_bbox[2] > bbox[2] {
-                            bbox[2] = other_bbox[2];
-                        }
-                        if other_bbox[3] > bbox[3] {
-                            bbox[3] = other_bbox[3];
-                        }
-                    } else if bbox.len() == 6 {
-                        if other_bbox[0] < bbox[0] {
-                            bbox[0] = other_bbox[0];
-                        }
-                        if other_bbox[1] < bbox[1] {
-                            bbox[1] = other_bbox[1];
-                        }
-                        if other_bbox[2] < bbox[2] {
-                            bbox[2] = other_bbox[2];
-                        }
-                        if other_bbox[3] > bbox[3] {
-                            bbox[3] = other_bbox[3];
-                        }
-                        if other_bbox[4] > bbox[4] {
-                            bbox[4] = other_bbox[4];
-                        }
-                        if other_bbox[5] > bbox[5] {
-                            bbox[5] = other_bbox[5];
-                        }
-                    }
+                    bbox.expand_to_include(other_bbox).map_err(|_| {
+                        GeoArrowError::GeoParquet(format!(
+                            "Different bbox dimensions for column {column_name}",
+                        ))
+                    })?;
                 }
                 (None, Some(other_bbox)) => {
                     column_meta.bbox = Some(other_bbox.clone());
@@ -623,7 +594,7 @@ impl GeoParquetMetadata {
             }
 
             if let (Some(left_bbox), Some(right_bbox)) = (&left.bbox, &right.bbox)
-                && left_bbox.len() != right_bbox.len()
+                && std::mem::discriminant(left_bbox) != std::mem::discriminant(right_bbox)
             {
                 return Err(GeoArrowError::GeoParquet(format!(
                     "Different bbox dimensions for column {key}",
@@ -678,6 +649,75 @@ impl GeoParquetMetadata {
     }
 }
 
+/// A geo metadata bounding box, in the spec's flat-array form.
+///
+/// A 6-element bbox is always XYZ: GeoParquet has no 6-element XYM form
+/// (opengeospatial/geoparquet#300). The 8-element XYZM form arrives with GeoParquet 2.0.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(try_from = "Vec<f64>", into = "Vec<f64>")]
+pub enum GeoParquetBbox {
+    /// `[xmin, ymin, xmax, ymax]`
+    Xy([f64; 4]),
+    /// `[xmin, ymin, zmin, xmax, ymax, zmax]`
+    Xyz([f64; 6]),
+    /// `[xmin, ymin, zmin, mmin, xmax, ymax, zmax, mmax]`
+    Xyzm([f64; 8]),
+}
+
+impl GeoParquetBbox {
+    /// The flat array: all minimums, then all maximums.
+    pub fn as_slice(&self) -> &[f64] {
+        match self {
+            Self::Xy(v) => v,
+            Self::Xyz(v) => v,
+            Self::Xyzm(v) => v,
+        }
+    }
+
+    /// Expand these bounds to also cover `other`.
+    ///
+    /// Errors if the two bboxes have different dimensions.
+    pub fn expand_to_include(&mut self, other: &GeoParquetBbox) -> GeoArrowResult<()> {
+        let (this, other) = match (self, other) {
+            (Self::Xy(a), Self::Xy(b)) => (a.as_mut_slice(), b.as_slice()),
+            (Self::Xyz(a), Self::Xyz(b)) => (a.as_mut_slice(), b.as_slice()),
+            (Self::Xyzm(a), Self::Xyzm(b)) => (a.as_mut_slice(), b.as_slice()),
+            _ => {
+                return Err(GeoArrowError::GeoParquet(
+                    "Different bbox dimensions".to_string(),
+                ));
+            }
+        };
+        let half = this.len() / 2;
+        for (bound, other_bound) in this[..half].iter_mut().zip(&other[..half]) {
+            *bound = bound.min(*other_bound);
+        }
+        for (bound, other_bound) in this[half..].iter_mut().zip(&other[half..]) {
+            *bound = bound.max(*other_bound);
+        }
+        Ok(())
+    }
+}
+
+impl TryFrom<Vec<f64>> for GeoParquetBbox {
+    type Error = String;
+
+    fn try_from(value: Vec<f64>) -> Result<Self, Self::Error> {
+        match value.len() {
+            4 => Ok(Self::Xy(value.try_into().unwrap())),
+            6 => Ok(Self::Xyz(value.try_into().unwrap())),
+            8 => Ok(Self::Xyzm(value.try_into().unwrap())),
+            len => Err(format!("Invalid bbox length {len}: expected 4, 6, or 8")),
+        }
+    }
+}
+
+impl From<GeoParquetBbox> for Vec<f64> {
+    fn from(value: GeoParquetBbox) -> Self {
+        value.as_slice().to_vec()
+    }
+}
+
 /// GeoParquet column metadata
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct GeoParquetColumnMetadata {
@@ -726,7 +766,7 @@ pub struct GeoParquetColumnMetadata {
 
     /// Bounding Box of the geometries in the file, formatted according to RFC 7946, section 5.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub bbox: Option<Vec<f64>>,
+    pub bbox: Option<GeoParquetBbox>,
 
     /// Coordinate epoch in case of a dynamic CRS, expressed as a decimal year.
     ///
@@ -882,6 +922,8 @@ pub(crate) fn infer_geo_data_type(
 
 #[cfg(test)]
 mod test {
+    use parquet::file::metadata::KeyValue;
+
     use super::*;
 
     // We want to ensure that extra keys in future GeoParquet versions do not break
@@ -901,5 +943,41 @@ mod test {
         );
 
         dbg!(&meta);
+    }
+
+    #[test]
+    fn bbox_serde_validates_length_and_round_trips() {
+        let err = serde_json::from_value::<GeoParquetMetadata>(serde_json::json!({
+            "version": "1.1.0",
+            "primary_column": "geom",
+            "columns": {
+                "geom": {"encoding": "WKB", "geometry_types": [], "bbox": [1.0, 2.0, 3.0]}
+            }
+        }))
+        .err()
+        .unwrap();
+        assert!(err.to_string().contains("bbox length"));
+
+        let xyzm = serde_json::json!([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
+        let bbox: GeoParquetBbox = serde_json::from_value(xyzm.clone()).unwrap();
+        assert_eq!(
+            bbox,
+            GeoParquetBbox::Xyzm([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0])
+        );
+        assert_eq!(serde_json::to_value(&bbox).unwrap(), xyzm);
+    }
+
+    #[test]
+    fn bbox_expand_to_include() {
+        let mut bbox = GeoParquetBbox::Xyz([0.0, 0.0, 0.0, 1.0, 1.0, 1.0]);
+        bbox.expand_to_include(&GeoParquetBbox::Xyz([-1.0, 0.5, -2.0, 0.5, 3.0, 4.0]))
+            .unwrap();
+        assert_eq!(bbox, GeoParquetBbox::Xyz([-1.0, 0.0, -2.0, 1.0, 3.0, 4.0]));
+
+        let err = bbox
+            .expand_to_include(&GeoParquetBbox::Xy([0.0, 0.0, 1.0, 1.0]))
+            .err()
+            .unwrap();
+        assert!(err.to_string().contains("bbox dimensions"));
     }
 }

@@ -205,7 +205,7 @@ impl GeoParquetReaderMetadata {
         column_name: Option<&'a str>,
     ) -> GeoArrowResult<Option<&'a [f64]>> {
         let (_, column_meta) = self.geo_meta.geometry_column(column_name)?;
-        Ok(column_meta.bbox.as_deref())
+        Ok(column_meta.bbox.as_ref().map(|bbox| bbox.as_slice()))
     }
 
     /// Access the GeoArrow [`Metadata`] from the provided geometry column.
@@ -335,7 +335,7 @@ impl GeoParquetDatasetMetadata {
         column_name: Option<&'a str>,
     ) -> GeoArrowResult<Option<&'a [f64]>> {
         let (_, column_meta) = self.geo_meta.geometry_column(column_name)?;
-        Ok(column_meta.bbox.as_deref())
+        Ok(column_meta.bbox.as_ref().map(|bbox| bbox.as_slice()))
     }
 
     /// Access the GeoArrow [`Metadata`] from the provided geometry column.

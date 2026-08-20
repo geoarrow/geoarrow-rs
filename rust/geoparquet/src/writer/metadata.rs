@@ -14,8 +14,9 @@ use geoarrow_schema::{CoordType, Dimension, Edges, GeoArrowType, Metadata, WkbTy
 use serde_json::Value;
 
 use crate::metadata::{
-    GeoParquetBboxCovering, GeoParquetColumnEncoding, GeoParquetColumnMetadata, GeoParquetCovering,
-    GeoParquetGeometryType, GeoParquetGeometryTypeAndDimension, GeoParquetMetadata,
+    GeoParquetBbox, GeoParquetBboxCovering, GeoParquetColumnEncoding, GeoParquetColumnMetadata,
+    GeoParquetCovering, GeoParquetGeometryType, GeoParquetGeometryTypeAndDimension,
+    GeoParquetMetadata,
 };
 use crate::total_bounds::BoundingRect;
 use crate::writer::options::{GeoParquetWriterEncoding, GeoParquetWriterOptions};
@@ -233,16 +234,21 @@ impl ColumnInfo {
         });
         let bbox = if let Some(bbox) = self.bbox {
             if let (Some(minz), Some(maxz)) = (bbox.minz(), bbox.maxz()) {
-                Some(vec![
+                Some(GeoParquetBbox::Xyz([
                     bbox.minx(),
                     bbox.miny(),
                     minz,
                     bbox.maxx(),
                     bbox.maxy(),
                     maxz,
-                ])
+                ]))
             } else {
-                Some(vec![bbox.minx(), bbox.miny(), bbox.maxx(), bbox.maxy()])
+                Some(GeoParquetBbox::Xy([
+                    bbox.minx(),
+                    bbox.miny(),
+                    bbox.maxx(),
+                    bbox.maxy(),
+                ]))
             }
         } else {
             None
