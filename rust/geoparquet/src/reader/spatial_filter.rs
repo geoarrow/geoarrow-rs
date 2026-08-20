@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use arrow_array::cast::AsArray;
 use arrow_array::types::{Float32Type, Float64Type};
-use arrow_array::{Array, Float32Array, Float64Array, Scalar};
+use arrow_array::{Array, BooleanArray, Float32Array, Float64Array, Scalar};
 use arrow_buffer::ScalarBuffer;
 use arrow_ord::cmp::{gt_eq, lt_eq};
 use arrow_schema::ArrowError;
@@ -204,6 +204,43 @@ fn upcast_float_array(array: &Float32Array) -> Float64Array {
     Float64Array::new(values, nulls)
 }
 
+/// The four query bounds as arrow scalars, built once per predicate instead of once per batch.
+struct BboxQueryScalars {
+    minx: Scalar<Float64Array>,
+    miny: Scalar<Float64Array>,
+    maxx: Scalar<Float64Array>,
+    maxy: Scalar<Float64Array>,
+}
+
+impl BboxQueryScalars {
+    fn new(bbox_query: &Rect) -> Self {
+        Self {
+            minx: Scalar::new(Float64Array::from(vec![bbox_query.min().x()])),
+            miny: Scalar::new(Float64Array::from(vec![bbox_query.min().y()])),
+            maxx: Scalar::new(Float64Array::from(vec![bbox_query.max().x()])),
+            maxy: Scalar::new(Float64Array::from(vec![bbox_query.max().y()])),
+        }
+    }
+
+    /// Mask of rows whose bounds intersect the query bounds.
+    // TODO: do this in one pass instead of four?
+    fn intersects_mask(
+        &self,
+        xmin_col: &Float64Array,
+        ymin_col: &Float64Array,
+        xmax_col: &Float64Array,
+        ymax_col: &Float64Array,
+    ) -> Result<BooleanArray, ArrowError> {
+        let minx_cmp = gt_eq(xmax_col, &self.minx)?;
+        let miny_cmp = gt_eq(ymax_col, &self.miny)?;
+        let maxx_cmp = lt_eq(xmin_col, &self.maxx)?;
+        let maxy_cmp = lt_eq(ymin_col, &self.maxy)?;
+        let first = arrow_arith::boolean::and(&minx_cmp, &miny_cmp)?;
+        let second = arrow_arith::boolean::and(&first, &maxx_cmp)?;
+        arrow_arith::boolean::and(&second, &maxy_cmp)
+    }
+}
+
 /// Construct an [ArrowPredicate] used for spatial filtering when the input is encoded as a native
 /// geometry.
 fn construct_native_predicate(
@@ -221,6 +258,7 @@ fn construct_native_predicate(
         ],
     );
 
+    let query_scalars = BboxQueryScalars::new(&bbox_query);
     let predicate = ArrowPredicateFn::new(mask, move |batch| {
         let array = batch.column(0);
         let field = batch.schema_ref().field(0);
@@ -233,25 +271,7 @@ fn construct_native_predicate(
         let xmax_col = Float64Array::new(rect_arr.upper().raw_buffers()[0].clone(), nulls.cloned());
         let ymax_col = Float64Array::new(rect_arr.upper().raw_buffers()[1].clone(), nulls.cloned());
 
-        // Construct the bounding box from user input
-        let minx_scalar = Scalar::new(Float64Array::from(vec![bbox_query.min().x()]));
-        let miny_scalar = Scalar::new(Float64Array::from(vec![bbox_query.min().y()]));
-        let maxx_scalar = Scalar::new(Float64Array::from(vec![bbox_query.max().x()]));
-        let maxy_scalar = Scalar::new(Float64Array::from(vec![bbox_query.max().y()]));
-
-        // Perform bbox comparison
-        // TODO: do this in one pass instead of four?
-        let minx_cmp = gt_eq(&xmax_col, &minx_scalar)?;
-        let miny_cmp = gt_eq(&ymax_col, &miny_scalar)?;
-        let maxx_cmp = lt_eq(&xmin_col, &maxx_scalar)?;
-        let maxy_cmp = lt_eq(&ymin_col, &maxy_scalar)?;
-
-        // AND together the results
-        let first = arrow_arith::boolean::and(&minx_cmp, &miny_cmp)?;
-        let second = arrow_arith::boolean::and(&first, &maxx_cmp)?;
-        let third = arrow_arith::boolean::and(&second, &maxy_cmp)?;
-
-        Ok(third)
+        query_scalars.intersects_mask(&xmin_col, &ymin_col, &xmax_col, &ymax_col)
     });
     Ok(Box::new(predicate))
 }
@@ -336,6 +356,7 @@ fn construct_bbox_columns_predicate(
         ymax_struct_idx,
     ] = leaf_columns.map(|column| leaf_columns.iter().filter(|&&other| other < column).count());
 
+    let query_scalars = BboxQueryScalars::new(&bbox_query);
     let predicate = ArrowPredicateFn::new(mask, move |batch| {
         let struct_col = batch.column(0).as_struct_opt().ok_or_else(|| {
             ArrowError::ComputeError(
@@ -348,25 +369,7 @@ fn construct_bbox_columns_predicate(
         let xmax_col = bbox_child_f64(struct_col.column(xmax_struct_idx))?;
         let ymax_col = bbox_child_f64(struct_col.column(ymax_struct_idx))?;
 
-        // Construct the bounding box from user input
-        let minx_scalar = Scalar::new(Float64Array::from(vec![bbox_query.min().x()]));
-        let miny_scalar = Scalar::new(Float64Array::from(vec![bbox_query.min().y()]));
-        let maxx_scalar = Scalar::new(Float64Array::from(vec![bbox_query.max().x()]));
-        let maxy_scalar = Scalar::new(Float64Array::from(vec![bbox_query.max().y()]));
-
-        // Perform bbox comparison
-        // TODO: do this in one pass instead of four?
-        let minx_cmp = gt_eq(&xmax_col, &minx_scalar)?;
-        let miny_cmp = gt_eq(&ymax_col, &miny_scalar)?;
-        let maxx_cmp = lt_eq(&xmin_col, &maxx_scalar)?;
-        let maxy_cmp = lt_eq(&ymin_col, &maxy_scalar)?;
-
-        // AND together the results
-        let first = arrow_arith::boolean::and(&minx_cmp, &miny_cmp)?;
-        let second = arrow_arith::boolean::and(&first, &maxx_cmp)?;
-        let third = arrow_arith::boolean::and(&second, &maxy_cmp)?;
-
-        Ok(third)
+        query_scalars.intersects_mask(&xmin_col, &ymin_col, &xmax_col, &ymax_col)
     });
 
     Ok(Box::new(predicate))
