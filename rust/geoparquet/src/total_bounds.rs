@@ -12,7 +12,7 @@ use geoarrow_array::array::RectArray;
 use geoarrow_array::builder::RectBuilder;
 use geoarrow_array::{GeoArrowArray, GeoArrowArrayAccessor, downcast_geoarrow_array};
 use geoarrow_schema::error::GeoArrowResult;
-use geoarrow_schema::{BoxType, Dimension, GeoArrowType};
+use geoarrow_schema::{BoxType, Dimension};
 
 #[derive(Debug, Clone, Copy)]
 pub struct BoundingRect {
@@ -295,26 +295,20 @@ pub(crate) fn bounding_rect(arr: &dyn GeoArrowArray) -> GeoArrowResult<RectArray
 
 /// The actual implementation of computing the bounding rect
 fn impl_array_accessor<'a>(arr: &'a impl GeoArrowArrayAccessor<'a>) -> GeoArrowResult<RectArray> {
-    match arr.data_type() {
-        // Note: the implementation in geodatafusion handles this
-        GeoArrowType::Rect(_) => unreachable!(),
-        _ => {
-            let mut builder = RectBuilder::with_capacity(
-                BoxType::new(Dimension::XY, arr.data_type().metadata().clone()),
-                arr.len(),
-            );
-            for item in arr.iter() {
-                if let Some(item) = item {
-                    let mut rect = BoundingRect::new();
-                    rect.add_geometry(&item?);
-                    builder.push_rect(Some(&rect));
-                } else {
-                    builder.push_null();
-                }
-            }
-            Ok(builder.finish())
+    let mut builder = RectBuilder::with_capacity(
+        BoxType::new(Dimension::XY, arr.data_type().metadata().clone()),
+        arr.len(),
+    );
+    for item in arr.iter() {
+        if let Some(item) = item {
+            let mut rect = BoundingRect::new();
+            rect.add_geometry(&item?);
+            builder.push_rect(Some(&rect));
+        } else {
+            builder.push_null();
         }
     }
+    Ok(builder.finish())
 }
 
 /// Get the total bounds (i.e. minx, miny, maxx, maxy) of the entire geoarrow array.
