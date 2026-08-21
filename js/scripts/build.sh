@@ -60,10 +60,23 @@ echo '{"type": "module"}' > pkg/esm/package.json
 # CommonJS for the nodejs target, which is the default without a "type" field.
 echo '{"main": "index.js", "types": "index.d.ts"}' > pkg/node/package.json
 
-# Update files array in package.json using JQ
-# Set module field to bundler/arrow1.js
-# Set types field to bundler/arrow1.d.ts
-jq ".files = [\"*\"] | .module=\"bundler/index.js\" | .types=\"bundler/index.d.ts\" | .name=\"$NAME\"" pkg/package.json > pkg/package.json.tmp
+# Root package.json: name, files, the legacy module/types fields, and
+# conditional exports (#422): node resolves the CommonJS build, everything else
+# the ESM build. Relative asset paths inside the package bypass the export map.
+jq --arg name "$NAME" '.files = ["*"]
+  | .module = "bundler/index.js"
+  | .types = "bundler/index.d.ts"
+  | .name = $name
+  | .exports = {
+      ".": {
+        "node": {"types": "./node/index.d.ts", "default": "./node/index.js"},
+        "types": "./esm/index.d.ts",
+        "default": "./esm/index.js"
+      },
+      "./bundler": {"types": "./bundler/index.d.ts", "default": "./bundler/index.js"},
+      "./esm": {"types": "./esm/index.d.ts", "default": "./esm/index.js"},
+      "./node": {"types": "./node/index.d.ts", "default": "./node/index.js"}
+    }' pkg/package.json > pkg/package.json.tmp
 
 # Overwrite existing package.json file
 mv pkg/package.json.tmp pkg/package.json
