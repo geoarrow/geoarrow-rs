@@ -11,17 +11,18 @@ use geoarrow_array::cast::AsGeoArrowArray;
 use geoarrow_schema::crs::{CrsTransform, DefaultCrsTransform};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, Dimension, Edges, GeoArrowType, Metadata, WkbType};
+use parquet::arrow::ArrowSchemaConverter;
+use parquet::basic::{EdgeInterpolationAlgorithm, LogicalType};
+use parquet::schema::types::{SchemaDescriptor, Type as ParquetType};
 use serde_json::Value;
 
 use crate::metadata::{
-    GeoParquetBboxCovering, GeoParquetColumnEncoding, GeoParquetColumnMetadata, GeoParquetCovering,
-    GeoParquetGeometryType, GeoParquetGeometryTypeAndDimension, GeoParquetMetadata,
+    GeoParquetBbox, GeoParquetBboxCovering, GeoParquetColumnEncoding, GeoParquetColumnMetadata,
+    GeoParquetCovering, GeoParquetGeometryType, GeoParquetGeometryTypeAndDimension,
+    GeoParquetMetadata, GeoParquetVersion, INFERRED_PRIMARY_COLUMN_NAMES,
 };
 use crate::total_bounds::BoundingRect;
 use crate::writer::options::{GeoParquetWriterEncoding, GeoParquetWriterOptions};
-
-// https://github.com/geoarrow/geoarrow-rs/pull/1159#issuecomment-2904610370
-const INFERRED_PRIMARY_COLUMN_NAMES: [&str; 2] = ["geometry", "geography"];
 
 /// Information for one geometry column being written to Parquet
 pub(crate) struct ColumnInfo {
@@ -54,9 +55,13 @@ pub(crate) struct ColumnInfo {
     /// Whether or not to use large, i64 offsets when
     /// writing the column as WKB
     pub(crate) large_offsets: bool,
+
+    /// The target GeoParquet version, which constrains encodings and dimensions.
+    pub(crate) version: GeoParquetVersion,
 }
 
 impl ColumnInfo {
+    #[allow(clippy::too_many_arguments)]
     pub(crate) fn try_new(
         name: String,
         writer_encoding: GeoParquetWriterEncoding,
@@ -65,9 +70,19 @@ impl ColumnInfo {
         crs_transform: Option<&dyn CrsTransform>,
         covering_name: Option<String>,
         large_offsets: bool,
+        version: GeoParquetVersion,
     ) -> GeoArrowResult<Self> {
         let encoding = GeoParquetColumnEncoding::try_new(writer_encoding, data_type)?;
+        if !version.supports_native_encoding() && !matches!(encoding, GeoParquetColumnEncoding::WKB)
+        {
+            return Err(GeoArrowError::GeoParquet(format!(
+                "Native encodings require GeoParquet 1.1, not {}",
+                version.as_str()
+            )));
+        }
+
         let geometry_types = get_geometry_types(data_type);
+        check_m_dimension(version, &geometry_types)?;
 
         let crs = if let Some(crs_transform) = crs_transform {
             crs_transform.extract_projjson(metadata.crs())?
@@ -86,6 +101,7 @@ impl ColumnInfo {
             covering_name,
             covering_field_idx: None,
             large_offsets,
+            version,
         })
     }
 
@@ -222,6 +238,10 @@ impl ColumnInfo {
             _ => {}
         };
 
+        // Columns without a statically-known dimension (WKB, Geometry) can surface M
+        // geometries only here, during encoding.
+        check_m_dimension(self.version, &self.geometry_types)?;
+
         Ok(())
     }
 
@@ -233,16 +253,21 @@ impl ColumnInfo {
         });
         let bbox = if let Some(bbox) = self.bbox {
             if let (Some(minz), Some(maxz)) = (bbox.minz(), bbox.maxz()) {
-                Some(vec![
+                Some(GeoParquetBbox::Xyz([
                     bbox.minx(),
                     bbox.miny(),
                     minz,
                     bbox.maxx(),
                     bbox.maxy(),
                     maxz,
-                ])
+                ]))
             } else {
-                Some(vec![bbox.minx(), bbox.miny(), bbox.maxx(), bbox.maxy()])
+                Some(GeoParquetBbox::Xy([
+                    bbox.minx(),
+                    bbox.miny(),
+                    bbox.maxx(),
+                    bbox.maxy(),
+                ]))
             }
         } else {
             None
@@ -302,6 +327,7 @@ fn wkt_dim_to_geoarrow_dim(wkt_dim: wkt::types::Dimension) -> Dimension {
 pub(crate) struct GeoParquetMetadataBuilder {
     pub(crate) output_schema: SchemaRef,
     pub(crate) primary_column: String,
+    pub(crate) version: GeoParquetVersion,
     pub(crate) columns: HashMap<usize, ColumnInfo>,
 }
 
@@ -338,6 +364,13 @@ impl GeoParquetMetadataBuilder {
                     )
                     .unwrap_or(false);
 
+                if generate_covering && !options.version.supports_covering() {
+                    return Err(GeoArrowError::GeoParquet(format!(
+                        "A bbox covering requires GeoParquet 1.1 or later, not {}",
+                        options.version.as_str()
+                    )));
+                }
+
                 let covering_name = if generate_covering {
                     let covering_name = options
                         .column_properties
@@ -370,6 +403,7 @@ impl GeoParquetMetadataBuilder {
                     options.crs_transform.as_deref(),
                     covering_name,
                     large_offsets,
+                    options.version,
                 )?;
 
                 columns.insert(col_idx, column_info);
@@ -415,6 +449,7 @@ impl GeoParquetMetadataBuilder {
         let output_schema = create_output_schema(schema, &mut columns);
         Ok(Self {
             primary_column,
+            version: options.version,
             columns,
             output_schema,
         })
@@ -430,6 +465,61 @@ impl GeoParquetMetadataBuilder {
         }
     }
 
+    /// The Parquet schema for 2.0 output: geometry columns carry the GEOMETRY or GEOGRAPHY
+    /// logical type. Returns `None` for 1.x output, where the derived schema is correct.
+    pub(crate) fn target_parquet_schema(&self) -> GeoArrowResult<Option<SchemaDescriptor>> {
+        if !matches!(self.version, GeoParquetVersion::V2_0) {
+            return Ok(None);
+        }
+        let converted = ArrowSchemaConverter::new()
+            .convert(&self.output_schema)
+            .map_err(|err| GeoArrowError::GeoParquet(err.to_string()))?;
+
+        let columns_by_name: HashMap<&str, &ColumnInfo> = self
+            .columns
+            .values()
+            .map(|info| (info.name.as_str(), info))
+            .collect();
+
+        let fields = converted
+            .root_schema()
+            .get_fields()
+            .iter()
+            .map(|field| {
+                let Some(info) = columns_by_name.get(field.name()) else {
+                    return Ok(field.clone());
+                };
+                let crs = info
+                    .crs
+                    .as_ref()
+                    .map(serde_json::to_string)
+                    .transpose()
+                    .map_err(|err| GeoArrowError::GeoParquet(err.to_string()))?;
+                // 2.0 geometry columns are WKB in a BYTE_ARRAY leaf; the version rules
+                // rejected native encodings before this point.
+                let logical_type = match info.edges {
+                    None => LogicalType::geometry(crs),
+                    Some(edges) => LogicalType::geography(crs, Some(parquet_edge_algorithm(edges))),
+                };
+                let rebuilt = ParquetType::primitive_type_builder(
+                    field.name(),
+                    parquet::basic::Type::BYTE_ARRAY,
+                )
+                .with_repetition(field.get_basic_info().repetition())
+                .with_logical_type(Some(logical_type))
+                .build()
+                .map_err(|err| GeoArrowError::GeoParquet(err.to_string()))?;
+                Ok(Arc::new(rebuilt))
+            })
+            .collect::<GeoArrowResult<Vec<_>>>()?;
+
+        let root = ParquetType::group_type_builder(converted.root_schema().name())
+            .with_fields(fields)
+            .build()
+            .map_err(|err| GeoArrowError::GeoParquet(err.to_string()))?;
+        Ok(Some(SchemaDescriptor::new(Arc::new(root))))
+    }
+
     /// Consume this builder, converting into [GeoParquetMetadata].
     pub(crate) fn finish(self) -> GeoParquetMetadata {
         let mut columns = HashMap::with_capacity(self.columns.len());
@@ -439,11 +529,41 @@ impl GeoParquetMetadataBuilder {
         }
 
         GeoParquetMetadata {
-            version: "1.1.0".to_string(),
+            version: self.version.as_str().to_string(),
             primary_column: self.primary_column,
             columns,
         }
     }
+}
+
+fn parquet_edge_algorithm(edges: Edges) -> EdgeInterpolationAlgorithm {
+    match edges {
+        Edges::Spherical => EdgeInterpolationAlgorithm::SPHERICAL,
+        Edges::Vincenty => EdgeInterpolationAlgorithm::VINCENTY,
+        Edges::Thomas => EdgeInterpolationAlgorithm::THOMAS,
+        Edges::Andoyer => EdgeInterpolationAlgorithm::ANDOYER,
+        Edges::Karney => EdgeInterpolationAlgorithm::KARNEY,
+    }
+}
+
+/// Reject geometry types whose dimension carries M when the target version forbids it.
+fn check_m_dimension(
+    version: GeoParquetVersion,
+    geometry_types: &HashSet<GeoParquetGeometryTypeAndDimension>,
+) -> GeoArrowResult<()> {
+    if version.supports_m_dimension() {
+        return Ok(());
+    }
+    if let Some(geometry_type) = geometry_types
+        .iter()
+        .find(|gtd| matches!(gtd.dimension(), Dimension::XYM | Dimension::XYZM))
+    {
+        return Err(GeoArrowError::GeoParquet(format!(
+            "{geometry_type:?} requires GeoParquet 2.0, not {}",
+            version.as_str()
+        )));
+    }
+    Ok(())
 }
 
 pub(crate) fn get_geometry_types(
@@ -571,7 +691,109 @@ mod tests {
     use geoarrow_schema::{Dimension, PointType};
 
     use super::GeoParquetMetadataBuilder;
-    use crate::writer::options::{ColumnOptions, GeoParquetWriterOptions};
+    use crate::metadata::GeoParquetVersion;
+    use crate::writer::options::{
+        ColumnOptions, GeoParquetWriterEncoding, GeoParquetWriterOptions,
+    };
+
+    #[test]
+    fn version_string_follows_writer_option() {
+        let field = PointType::new(Dimension::XY, Default::default()).to_field("geometry", false);
+        let schema = Schema::new(vec![field]);
+        for (version, expected) in [
+            (GeoParquetVersion::V1_0, "1.0.0"),
+            (GeoParquetVersion::V1_1, "1.1.0"),
+        ] {
+            let options = GeoParquetWriterOptions {
+                version,
+                ..Default::default()
+            };
+            let metadata = GeoParquetMetadataBuilder::try_new(&schema, &options)
+                .unwrap()
+                .finish();
+            assert_eq!(metadata.version, expected);
+        }
+    }
+
+    #[test]
+    fn v1_0_and_v2_0_reject_native_encoding() {
+        let field = PointType::new(Dimension::XY, Default::default()).to_field("geometry", false);
+        let schema = Schema::new(vec![field]);
+        for version in [GeoParquetVersion::V1_0, GeoParquetVersion::V2_0] {
+            let options = GeoParquetWriterOptions {
+                version,
+                default_column_properties: ColumnOptions {
+                    encoding: Some(GeoParquetWriterEncoding::GeoArrow),
+                    ..Default::default()
+                },
+                ..Default::default()
+            };
+            let err = GeoParquetMetadataBuilder::try_new(&schema, &options)
+                .err()
+                .unwrap();
+            assert!(err.to_string().contains("Native encodings require"));
+        }
+    }
+
+    #[test]
+    fn v1_0_rejects_covering() {
+        let field = PointType::new(Dimension::XY, Default::default()).to_field("geometry", false);
+        let schema = Schema::new(vec![field]);
+        let options = GeoParquetWriterOptions {
+            version: GeoParquetVersion::V1_0,
+            default_column_properties: ColumnOptions {
+                generate_covering: Some(true),
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let err = GeoParquetMetadataBuilder::try_new(&schema, &options)
+            .err()
+            .unwrap();
+        assert!(
+            err.to_string()
+                .contains("covering requires GeoParquet 1.1 or later")
+        );
+    }
+
+    #[test]
+    fn v1_x_rejects_m_dimension_data() {
+        let field = PointType::new(Dimension::XYM, Default::default()).to_field("geometry", false);
+        let schema = Schema::new(vec![field]);
+        let options = GeoParquetWriterOptions::default();
+        let err = GeoParquetMetadataBuilder::try_new(&schema, &options)
+            .err()
+            .unwrap();
+        assert!(err.to_string().contains("GeoParquet 2.0"));
+    }
+
+    #[test]
+    fn v2_0_writes_wkb_with_geometry_logical_type() {
+        use arrow_schema::{DataType, Field};
+        use geoarrow_schema::WkbType;
+        use parquet::basic::LogicalType;
+
+        let field = Field::new("geometry", DataType::Binary, false)
+            .with_extension_type(WkbType::new(Default::default()));
+        let schema = Schema::new(vec![field]);
+        let options = GeoParquetWriterOptions {
+            version: GeoParquetVersion::V2_0,
+            ..Default::default()
+        };
+        let builder = GeoParquetMetadataBuilder::try_new(&schema, &options).unwrap();
+        let parquet_schema = builder.target_parquet_schema().unwrap().unwrap();
+        let leaf = &parquet_schema.columns()[0];
+        assert!(matches!(
+            leaf.self_type().get_basic_info().logical_type_ref(),
+            Some(LogicalType::Geometry(_))
+        ));
+        let metadata = builder.finish();
+        assert_eq!(metadata.version, "2.0.0");
+        assert!(matches!(
+            metadata.columns["geometry"].encoding,
+            crate::metadata::GeoParquetColumnEncoding::WKB
+        ));
+    }
 
     #[test]
     fn primary_column_not_geometry() {
