@@ -24,13 +24,14 @@ geo-types = { workspace = true }
 geoarrow-array = { workspace = true }
 geoarrow-schema = { workspace = true }
 indexmap = { workspace = true }
-parquet = { workspace = true, features = ["arrow"] }
+parquet = { workspace = true, features = ["arrow", "geospatial"] }
 serde = { workspace = true, features = ["derive"] }
 serde_with = { workspace = true }
 serde_json = { workspace = true }
 wkt = { workspace = true }
 
 [dev-dependencies]
+bytes = { workspace = true }
 parquet = { workspace = true, features = [
     "async",
     "brotli",

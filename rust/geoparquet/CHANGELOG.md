@@ -4,6 +4,21 @@
 
 ## Unreleased
 
+- **Breaking:** the reader returns errors instead of panicking on malformed files; `num_rows` now returns `GeoArrowResult<usize>`.
+- Native-encoded columns take their geometry type from the encoding and layout, so an empty or inconsistent `geometry_types` list reads.
+- The reader validates the native coordinate struct: Float64 fields x, y, z, m in that order, at the encoding's nesting depth.
+- **Breaking:** the geo metadata `bbox` is a typed `GeoParquetBbox` (4, 6, or 8 elements), validated in deserialization.
+- Dataset schemas are compared by field name and data type; nullability merges as "nullable in any file".
+- The dataset metadata merge is order-independent per column: `geometry_types` union, and columns declared by only some files carry over.
+- Covering shape checks moved to the row-filter path; row-group pruning and bounds work for flat top-level coverings.
+- New `GeoParquetVersion` enum: `GeoParquetWriterOptions` takes a target version (default 1.1). Native encodings require 1.1, coverings 1.1 or later, M or ZM geometries 2.0. `GeoParquetMetadata::known_version` interprets the file's version string.
+- GeoParquet 2.0 support targets 2.0.0-rc.1; the 2.0 reader and writer behavior can change until the specification is final.
+- The reader accepts files with GEOMETRY and GEOGRAPHY logical types and no `geo` key, as GeoParquet 2.0 expects, synthesizing metadata from the logical types: WKB, unknown geometry types, CRS from the `crs` property, edges from the GEOGRAPHY algorithm.
+- Row-group pruning and bounds fall back to the column's native geospatial statistics when no covering is declared.
+- The dataset merge no longer compares version strings, so datasets written across a specification transition read.
+- The `edges` metadata maps all five 2.0 edge algorithms and survives a missing CRS.
+- The writer emits GeoParquet 2.0 on request: WKB with the GEOMETRY or GEOGRAPHY logical type, via `GeoParquetRecordBatchEncoder::target_parquet_schema` and `ArrowWriterOptions::with_parquet_schema`. The parquet `geospatial` feature is enabled.
+
 ## 0.7.0 - 2026-01-04
 
 - chore: Bump to arrow 57 by @ddupg in https://github.com/geoarrow/geoarrow-rs/pull/1402

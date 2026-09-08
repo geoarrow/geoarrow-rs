@@ -14,12 +14,17 @@ use geoarrow_schema::{
     LineStringType, Metadata, MultiLineStringType, MultiPointType, MultiPolygonType, PointType,
     PolygonType,
 };
-use parquet::file::metadata::FileMetaData;
+use parquet::basic::{EdgeInterpolationAlgorithm, LogicalType};
+use parquet::file::metadata::{FileMetaData, KeyValue};
+use parquet::schema::types::SchemaDescriptor;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
 use crate::writer::GeoParquetWriterEncoding;
+
+// https://github.com/geoarrow/geoarrow-rs/pull/1159#issuecomment-2904610370
+pub(crate) const INFERRED_PRIMARY_COLUMN_NAMES: [&str; 2] = ["geometry", "geography"];
 
 /// The actual encoding of the geometry in the Parquet file.
 ///
@@ -73,6 +78,19 @@ impl GeoParquetColumnEncoding {
             },
         };
         Ok(new_encoding)
+    }
+
+    /// The geometry type a native encoding stores, or `None` for WKB.
+    pub(crate) fn native_geometry_type(&self) -> Option<GeoParquetGeometryType> {
+        match self {
+            Self::WKB => None,
+            Self::Point => Some(GeoParquetGeometryType::Point),
+            Self::LineString => Some(GeoParquetGeometryType::LineString),
+            Self::Polygon => Some(GeoParquetGeometryType::Polygon),
+            Self::MultiPoint => Some(GeoParquetGeometryType::MultiPoint),
+            Self::MultiLineString => Some(GeoParquetGeometryType::MultiLineString),
+            Self::MultiPolygon => Some(GeoParquetGeometryType::MultiPolygon),
+        }
     }
 }
 
@@ -513,56 +531,109 @@ impl GeoParquetMetadata {
         None
     }
 
-    /// Update a GeoParquetMetadata from another file's metadata
+    /// The declared specification version, or `None` for unknown version strings.
+    pub fn known_version(&self) -> Option<GeoParquetVersion> {
+        GeoParquetVersion::from_metadata_string(&self.version)
+    }
+
+    /// Synthesize metadata from the Parquet GEOMETRY and GEOGRAPHY logical types.
     ///
-    /// This will expand the bounding box of each geometry column to include the bounding box
-    /// defined in the other file's GeoParquet metadata
+    /// GeoParquet 2.0 expects readers to read files that carry only these types and no `geo`
+    /// key. Each top-level geometry-typed column becomes a WKB column with unknown geometry
+    /// types. Returns `None` when no such column exists.
+    ///
+    /// GeoParquet 2.0 is at release candidate 2.0.0-rc.1; this behavior can change until the
+    /// specification is final.
+    pub fn from_logical_types(
+        parquet_schema: &SchemaDescriptor,
+        key_value_metadata: Option<&Vec<KeyValue>>,
+    ) -> Option<GeoArrowResult<Self>> {
+        let mut columns: HashMap<String, GeoParquetColumnMetadata> = HashMap::new();
+        for field in parquet_schema.root_schema().get_fields() {
+            let Some(logical_type) = field.get_basic_info().logical_type_ref() else {
+                continue;
+            };
+            let (crs, edges) = match logical_type {
+                LogicalType::Geometry(geometry) => (geometry.crs.clone(), None),
+                LogicalType::Geography(geography) => {
+                    let edges = match geography.algorithm().map(edges_name_for_algorithm) {
+                        Some(Ok(name)) => Some(name),
+                        Some(Err(err)) => return Some(Err(err)),
+                        None => None,
+                    };
+                    (geography.crs.clone(), edges)
+                }
+                _ => continue,
+            };
+            let column = match synthesized_column(crs.as_deref(), edges, key_value_metadata) {
+                Ok(column) => column,
+                Err(err) => return Some(Err(err)),
+            };
+            columns.insert(field.name().to_string(), column);
+        }
+
+        if columns.is_empty() {
+            return None;
+        }
+
+        let primary_column = INFERRED_PRIMARY_COLUMN_NAMES
+            .iter()
+            .find(|name| columns.contains_key(**name))
+            .map(|name| name.to_string())
+            .unwrap_or_else(|| {
+                let mut names: Vec<&String> = columns.keys().collect();
+                names.sort();
+                names[0].clone()
+            });
+
+        Some(Ok(Self {
+            // Files carrying the geospatial logical types belong to the 2.0 ecosystem.
+            version: GeoParquetVersion::V2_0.as_str().to_string(),
+            primary_column,
+            columns,
+        }))
+    }
+
+    /// Merge another file's metadata into this one
+    ///
+    /// Expands each column's bbox, unions its geometry types, and carries over columns only
+    /// `other` declares. Apart from the version string, which keeps the first-seen file's
+    /// value, the merged column metadata is the same in any file order.
     pub fn try_update(&mut self, other: &GeoParquetMetadata) -> GeoArrowResult<()> {
         self.try_compatible_with(other)?;
         for (column_name, column_meta) in self.columns.iter_mut() {
-            let other_column_meta = other.columns.get(column_name.as_str()).unwrap();
+            let Some(other_column_meta) = other.columns.get(column_name.as_str()) else {
+                continue;
+            };
+
+            // Writers (e.g. GeoPandas) record per-file geometry_types, so two files of one
+            // dataset legitimately differ; the dataset-level list is their union.
+            column_meta
+                .geometry_types
+                .extend(other_column_meta.geometry_types.iter().cloned());
+
             match (column_meta.bbox.as_mut(), &other_column_meta.bbox) {
                 (Some(bbox), Some(other_bbox)) => {
-                    assert_eq!(bbox.len(), other_bbox.len());
-                    if bbox.len() == 4 {
-                        if other_bbox[0] < bbox[0] {
-                            bbox[0] = other_bbox[0];
-                        }
-                        if other_bbox[1] < bbox[1] {
-                            bbox[1] = other_bbox[1];
-                        }
-                        if other_bbox[2] > bbox[2] {
-                            bbox[2] = other_bbox[2];
-                        }
-                        if other_bbox[3] > bbox[3] {
-                            bbox[3] = other_bbox[3];
-                        }
-                    } else if bbox.len() == 6 {
-                        if other_bbox[0] < bbox[0] {
-                            bbox[0] = other_bbox[0];
-                        }
-                        if other_bbox[1] < bbox[1] {
-                            bbox[1] = other_bbox[1];
-                        }
-                        if other_bbox[2] < bbox[2] {
-                            bbox[2] = other_bbox[2];
-                        }
-                        if other_bbox[3] > bbox[3] {
-                            bbox[3] = other_bbox[3];
-                        }
-                        if other_bbox[4] > bbox[4] {
-                            bbox[4] = other_bbox[4];
-                        }
-                        if other_bbox[5] > bbox[5] {
-                            bbox[5] = other_bbox[5];
-                        }
-                    }
+                    bbox.expand_to_include(other_bbox).map_err(|_| {
+                        GeoArrowError::GeoParquet(format!(
+                            "Different bbox dimensions for column {column_name}",
+                        ))
+                    })?;
                 }
                 (None, Some(other_bbox)) => {
                     column_meta.bbox = Some(other_bbox.clone());
                 }
                 // If the RHS doesn't have a bbox, we don't need to update
                 (_, None) => {}
+            }
+        }
+
+        // Carry over columns declared by only one file; the dataset reader's Arrow schema
+        // check guarantees the column exists physically in every file.
+        for (column_name, other_column_meta) in other.columns.iter() {
+            if !self.columns.contains_key(column_name) {
+                self.columns
+                    .insert(column_name.clone(), other_column_meta.clone());
             }
         }
         Ok(())
@@ -576,26 +647,21 @@ impl GeoParquetMetadata {
 
     /// Assert that this metadata is compatible with another metadata instance, erroring if not
     pub fn try_compatible_with(&self, other: &GeoParquetMetadata) -> GeoArrowResult<()> {
-        if self.version.as_str() != other.version.as_str() {
-            return Err(GeoArrowError::GeoParquet(
-                "Different GeoParquet versions".to_string(),
-            ));
-        }
-
+        // The version string is deliberately not compared: a dataset written across a spec
+        // transition (1.1 files next to 2.0 files) merges on the per-column metadata, and the
+        // merged result keeps the first-seen version string.
         if self.primary_column.as_str() != other.primary_column.as_str() {
             return Err(GeoArrowError::GeoParquet(
                 "Different GeoParquet primary columns".to_string(),
             ));
         }
 
-        for key in self.columns.keys() {
-            let left = self.columns.get(key).unwrap();
-            let right = other
-                .columns
-                .get(key)
-                .ok_or(GeoArrowError::GeoParquet(format!(
-                    "Other GeoParquet metadata missing column {key}",
-                )))?;
+        // Columns declared by only one side, and differing geometry_types, merge in
+        // try_update instead of failing here.
+        for (key, left) in self.columns.iter() {
+            let Some(right) = other.columns.get(key) else {
+                continue;
+            };
 
             if left.encoding != right.encoding {
                 return Err(GeoArrowError::GeoParquet(format!(
@@ -603,14 +669,8 @@ impl GeoParquetMetadata {
                 )));
             }
 
-            if left.geometry_types != right.geometry_types {
-                return Err(GeoArrowError::GeoParquet(format!(
-                    "Different GeoParquet geometry types for column {key}",
-                )));
-            }
-
             if let (Some(left_bbox), Some(right_bbox)) = (&left.bbox, &right.bbox)
-                && left_bbox.len() != right_bbox.len()
+                && std::mem::discriminant(left_bbox) != std::mem::discriminant(right_bbox)
             {
                 return Err(GeoArrowError::GeoParquet(format!(
                     "Different bbox dimensions for column {key}",
@@ -665,6 +725,136 @@ impl GeoParquetMetadata {
     }
 }
 
+/// A GeoParquet specification version with version-specific writer rules.
+///
+/// The reader does not gate on the version: it stays layout-driven, and an unknown version
+/// string reads like any other file.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
+pub enum GeoParquetVersion {
+    /// GeoParquet 1.0.0
+    V1_0,
+    /// GeoParquet 1.1.0
+    #[default]
+    V1_1,
+    /// GeoParquet 2.0.0
+    ///
+    /// The 2.0 specification is at release candidate 2.0.0-rc.1; this crate's 2.0 behavior can
+    /// change until it is final.
+    V2_0,
+}
+
+impl GeoParquetVersion {
+    /// The version string written to the `geo` metadata key.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::V1_0 => "1.0.0",
+            Self::V1_1 => "1.1.0",
+            Self::V2_0 => "2.0.0",
+        }
+    }
+
+    /// Interpret a file's version string, or `None` for unknown versions.
+    ///
+    /// Pre-release strings count as their release: `"1.0.0-beta.1"` is 1.0, `"2.0.0-rc.1"`
+    /// and the draft string `"2.0-dev"` are 2.0.
+    pub fn from_metadata_string(version: &str) -> Option<Self> {
+        match version {
+            v if v == "1.0.0" || v.starts_with("1.0.0-") => Some(Self::V1_0),
+            "1.1.0" => Some(Self::V1_1),
+            v if v == "2.0.0" || v.starts_with("2.0.0-") || v == "2.0-dev" => Some(Self::V2_0),
+            _ => None,
+        }
+    }
+
+    /// Native (GeoArrow) encodings exist only in GeoParquet 1.1; 1.0 and 2.0 are WKB-only.
+    pub fn supports_native_encoding(&self) -> bool {
+        matches!(self, Self::V1_1)
+    }
+
+    /// The bbox covering requires 1.1 or later.
+    ///
+    /// The covering is out of the 2.0 release candidate text, but the 1.1 form stays valid as
+    /// an extension and reinstatement is under discussion (opengeospatial/geoparquet#297).
+    /// This crate writes a covering into 2.0 output only on explicit request.
+    pub fn supports_covering(&self) -> bool {
+        matches!(self, Self::V1_1 | Self::V2_0)
+    }
+
+    /// M coordinates arrive with GeoParquet 2.0; 1.x forbids them.
+    pub fn supports_m_dimension(&self) -> bool {
+        matches!(self, Self::V2_0)
+    }
+}
+
+/// A geo metadata bounding box, in the spec's flat-array form.
+///
+/// A 6-element bbox is always XYZ: GeoParquet has no 6-element XYM form
+/// (opengeospatial/geoparquet#300). The 8-element XYZM form arrives with GeoParquet 2.0.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(try_from = "Vec<f64>", into = "Vec<f64>")]
+pub enum GeoParquetBbox {
+    /// `[xmin, ymin, xmax, ymax]`
+    Xy([f64; 4]),
+    /// `[xmin, ymin, zmin, xmax, ymax, zmax]`
+    Xyz([f64; 6]),
+    /// `[xmin, ymin, zmin, mmin, xmax, ymax, zmax, mmax]`
+    Xyzm([f64; 8]),
+}
+
+impl GeoParquetBbox {
+    /// The flat array: all minimums, then all maximums.
+    pub fn as_slice(&self) -> &[f64] {
+        match self {
+            Self::Xy(v) => v,
+            Self::Xyz(v) => v,
+            Self::Xyzm(v) => v,
+        }
+    }
+
+    /// Expand these bounds to also cover `other`.
+    ///
+    /// Errors if the two bboxes have different dimensions.
+    pub fn expand_to_include(&mut self, other: &GeoParquetBbox) -> GeoArrowResult<()> {
+        let (this, other) = match (self, other) {
+            (Self::Xy(a), Self::Xy(b)) => (a.as_mut_slice(), b.as_slice()),
+            (Self::Xyz(a), Self::Xyz(b)) => (a.as_mut_slice(), b.as_slice()),
+            (Self::Xyzm(a), Self::Xyzm(b)) => (a.as_mut_slice(), b.as_slice()),
+            _ => {
+                return Err(GeoArrowError::GeoParquet(
+                    "Different bbox dimensions".to_string(),
+                ));
+            }
+        };
+        let half = this.len() / 2;
+        for (bound, other_bound) in this[..half].iter_mut().zip(&other[..half]) {
+            *bound = bound.min(*other_bound);
+        }
+        for (bound, other_bound) in this[half..].iter_mut().zip(&other[half..]) {
+            *bound = bound.max(*other_bound);
+        }
+        Ok(())
+    }
+}
+
+impl TryFrom<Vec<f64>> for GeoParquetBbox {
+    type Error = String;
+
+    fn try_from(value: Vec<f64>) -> Result<Self, Self::Error> {
+        match value.len() {
+            4 => Ok(Self::Xy(value.try_into().unwrap())),
+            6 => Ok(Self::Xyz(value.try_into().unwrap())),
+            8 => Ok(Self::Xyzm(value.try_into().unwrap())),
+            len => Err(format!("Invalid bbox length {len}: expected 4, 6, or 8")),
+        }
+    }
+}
+
+impl From<GeoParquetBbox> for Vec<f64> {
+    fn from(value: GeoParquetBbox) -> Self {
+        value.as_slice().to_vec()
+    }
+}
+
 /// GeoParquet column metadata
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct GeoParquetColumnMetadata {
@@ -713,7 +903,7 @@ pub struct GeoParquetColumnMetadata {
 
     /// Bounding Box of the geometries in the file, formatted according to RFC 7946, section 5.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub bbox: Option<Vec<f64>>,
+    pub bbox: Option<GeoParquetBbox>,
 
     /// Coordinate epoch in case of a dynamic CRS, expressed as a decimal year.
     ///
@@ -760,21 +950,102 @@ impl GeoParquetColumnMetadata {
 
 impl From<GeoParquetColumnMetadata> for Metadata {
     fn from(value: GeoParquetColumnMetadata) -> Self {
-        let edges = if let Some(edges) = value.edges {
-            if edges.as_str() == "spherical" {
-                Some(Edges::Spherical)
-            } else {
-                None
-            }
-        } else {
-            None
+        let edges = value.edges.as_deref().and_then(edges_from_name);
+        let crs = match value.crs {
+            // A JSON string appears only in metadata synthesized from the Parquet logical
+            // types, where it carries an authority code.
+            Some(Value::String(authority_code)) => Crs::from_authority_code(authority_code),
+            Some(projjson) => Crs::from_projjson(projjson),
+            None => Crs::default(),
         };
-        if let Some(crs) = value.crs {
-            Metadata::new(Crs::from_projjson(crs), edges)
-        } else {
-            Metadata::default()
-        }
+        Metadata::new(crs, edges)
     }
+}
+
+/// The `geo` metadata `edges` names, aligned with the Parquet edge interpolation algorithms.
+fn edges_from_name(name: &str) -> Option<Edges> {
+    match name {
+        "spherical" => Some(Edges::Spherical),
+        "vincenty" => Some(Edges::Vincenty),
+        "thomas" => Some(Edges::Thomas),
+        "andoyer" => Some(Edges::Andoyer),
+        "karney" => Some(Edges::Karney),
+        _ => None,
+    }
+}
+
+fn edges_name_for_algorithm(algorithm: EdgeInterpolationAlgorithm) -> GeoArrowResult<&'static str> {
+    match algorithm {
+        EdgeInterpolationAlgorithm::SPHERICAL => Ok("spherical"),
+        EdgeInterpolationAlgorithm::VINCENTY => Ok("vincenty"),
+        EdgeInterpolationAlgorithm::THOMAS => Ok("thomas"),
+        EdgeInterpolationAlgorithm::ANDOYER => Ok("andoyer"),
+        EdgeInterpolationAlgorithm::KARNEY => Ok("karney"),
+        // Reading an unknown algorithm as planar would silently change geometry semantics.
+        other => Err(GeoArrowError::GeoParquet(format!(
+            "Unknown edge interpolation algorithm: {other:?}"
+        ))),
+    }
+}
+
+fn synthesized_column(
+    crs: Option<&str>,
+    edges: Option<&str>,
+    key_value_metadata: Option<&Vec<KeyValue>>,
+) -> GeoArrowResult<GeoParquetColumnMetadata> {
+    let mut column = serde_json::json!({
+        "encoding": "WKB",
+        // The empty list explicitly signals that the geometry types are not known.
+        "geometry_types": [],
+    });
+    if let Some(crs_value) = parquet_crs_to_geo_crs(crs, key_value_metadata)? {
+        column["crs"] = crs_value;
+    }
+    if let Some(edges) = edges {
+        column["edges"] = Value::String(edges.to_string());
+    }
+    serde_json::from_value(column).map_err(|err| GeoArrowError::GeoParquet(err.to_string()))
+}
+
+/// Interpret the Parquet logical-type `crs` property.
+///
+/// Four forms: inline PROJJSON, `projjson:<key>` naming a file metadata key that holds
+/// PROJJSON, `srid:<identifier>`, and `<authority>:<code>`. An `srid:` identifier is not
+/// resolvable without a CRS database and maps to no CRS; an authority code stays a JSON
+/// string for the [`Metadata`] conversion.
+fn parquet_crs_to_geo_crs(
+    crs: Option<&str>,
+    key_value_metadata: Option<&Vec<KeyValue>>,
+) -> GeoArrowResult<Option<Value>> {
+    // An absent crs property means OGC:CRS84, which is also the `geo` metadata default.
+    let Some(crs) = crs else { return Ok(None) };
+    let crs = crs.trim();
+    if crs.starts_with('{') {
+        let value = serde_json::from_str(crs).map_err(|err| {
+            GeoArrowError::GeoParquet(format!("Invalid PROJJSON in Parquet crs property: {err}"))
+        })?;
+        return Ok(Some(value));
+    }
+    if let Some(key) = crs.strip_prefix("projjson:") {
+        let value = key_value_metadata
+            .and_then(|kvs| kvs.iter().find(|kv| kv.key == key))
+            .and_then(|kv| kv.value.as_deref())
+            .ok_or_else(|| {
+                GeoArrowError::GeoParquet(format!(
+                    "Parquet crs property references missing file metadata key {key}"
+                ))
+            })?;
+        let value = serde_json::from_str(value).map_err(|err| {
+            GeoArrowError::GeoParquet(format!(
+                "Invalid PROJJSON under file metadata key {key}: {err}"
+            ))
+        })?;
+        return Ok(Some(value));
+    }
+    if crs.strip_prefix("srid:").is_some() {
+        return Ok(None);
+    }
+    Ok(Some(Value::String(crs.to_string())))
 }
 
 // TODO: deduplicate with `resolve_types` in `downcast.rs`
@@ -869,6 +1140,8 @@ pub(crate) fn infer_geo_data_type(
 
 #[cfg(test)]
 mod test {
+    use parquet::file::metadata::KeyValue;
+
     use super::*;
 
     // We want to ensure that extra keys in future GeoParquet versions do not break
@@ -888,5 +1161,155 @@ mod test {
         );
 
         dbg!(&meta);
+    }
+
+    #[test]
+    fn bbox_serde_validates_length_and_round_trips() {
+        let err = serde_json::from_value::<GeoParquetMetadata>(serde_json::json!({
+            "version": "1.1.0",
+            "primary_column": "geom",
+            "columns": {
+                "geom": {"encoding": "WKB", "geometry_types": [], "bbox": [1.0, 2.0, 3.0]}
+            }
+        }))
+        .err()
+        .unwrap();
+        assert!(err.to_string().contains("bbox length"));
+
+        let xyzm = serde_json::json!([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
+        let bbox: GeoParquetBbox = serde_json::from_value(xyzm.clone()).unwrap();
+        assert_eq!(
+            bbox,
+            GeoParquetBbox::Xyzm([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0])
+        );
+        assert_eq!(serde_json::to_value(&bbox).unwrap(), xyzm);
+    }
+
+    #[test]
+    fn logical_types_synthesize_geo_metadata() {
+        let descr = crate::test::geometry_schema_descr(LogicalType::geography(
+            Some("EPSG:32633".to_string()),
+            Some(EdgeInterpolationAlgorithm::KARNEY),
+        ));
+        let meta = GeoParquetMetadata::from_logical_types(&descr, None)
+            .unwrap()
+            .unwrap();
+        assert_eq!(meta.version, "2.0.0");
+        assert_eq!(meta.primary_column, "geometry");
+        let column = &meta.columns["geometry"];
+        assert!(matches!(column.encoding, GeoParquetColumnEncoding::WKB));
+        assert!(column.geometry_types.is_empty());
+        assert_eq!(column.edges.as_deref(), Some("karney"));
+
+        let geoarrow_meta = Metadata::from(column.clone());
+        assert_eq!(geoarrow_meta.edges(), Some(Edges::Karney));
+        assert_eq!(
+            geoarrow_meta.crs(),
+            &Crs::from_authority_code("EPSG:32633".to_string())
+        );
+
+        let descr = crate::test::schema_descr("message schema { required binary name; }");
+        assert!(GeoParquetMetadata::from_logical_types(&descr, None).is_none());
+    }
+
+    #[test]
+    fn parquet_crs_property_forms() {
+        let inline = parquet_crs_to_geo_crs(Some(r#"{"type": "GeographicCRS"}"#), None).unwrap();
+        assert_eq!(inline, Some(serde_json::json!({"type": "GeographicCRS"})));
+
+        let kv = vec![KeyValue::new(
+            "my_crs".to_string(),
+            r#"{"a": 1}"#.to_string(),
+        )];
+        let referenced = parquet_crs_to_geo_crs(Some("projjson:my_crs"), Some(&kv)).unwrap();
+        assert_eq!(referenced, Some(serde_json::json!({"a": 1})));
+        assert!(parquet_crs_to_geo_crs(Some("projjson:absent"), Some(&kv)).is_err());
+
+        assert_eq!(parquet_crs_to_geo_crs(Some("srid:0"), None).unwrap(), None);
+        assert_eq!(parquet_crs_to_geo_crs(None, None).unwrap(), None);
+        assert_eq!(
+            parquet_crs_to_geo_crs(Some("EPSG:4326"), None).unwrap(),
+            Some(Value::String("EPSG:4326".to_string()))
+        );
+    }
+
+    #[test]
+    fn version_strings_map_to_known_versions() {
+        use GeoParquetVersion::*;
+        for (string, expected) in [
+            ("1.0.0", Some(V1_0)),
+            ("1.0.0-beta.1", Some(V1_0)),
+            ("1.1.0", Some(V1_1)),
+            ("2.0.0", Some(V2_0)),
+            ("2.0.0-rc.1", Some(V2_0)),
+            ("2.0-dev", Some(V2_0)),
+            ("0.4.0", None),
+            ("3.0.0", None),
+        ] {
+            assert_eq!(
+                GeoParquetVersion::from_metadata_string(string),
+                expected,
+                "{string}"
+            );
+        }
+    }
+
+    #[test]
+    fn try_update_is_order_independent() {
+        let meta_a: GeoParquetMetadata = serde_json::from_value(serde_json::json!({
+            "version": "1.1.0",
+            "primary_column": "geom",
+            "columns": {
+                "geom": {
+                    "encoding": "WKB",
+                    "geometry_types": ["MultiPolygon"],
+                    "bbox": [0.0, 0.0, 1.0, 1.0]
+                }
+            }
+        }))
+        .unwrap();
+        let meta_b: GeoParquetMetadata = serde_json::from_value(serde_json::json!({
+            "version": "1.1.0",
+            "primary_column": "geom",
+            "columns": {
+                "geom": {
+                    "encoding": "WKB",
+                    "geometry_types": ["Polygon", "MultiPolygon"],
+                    "bbox": [-1.0, 0.5, 2.0, 0.75]
+                },
+                "geom2": {"encoding": "WKB", "geometry_types": ["Point"]}
+            }
+        }))
+        .unwrap();
+
+        let mut ab = meta_a.clone();
+        ab.try_update(&meta_b).unwrap();
+        let mut ba = meta_b.clone();
+        ba.try_update(&meta_a).unwrap();
+
+        for merged in [&ab, &ba] {
+            let geom = &merged.columns["geom"];
+            assert_eq!(geom.geometry_types.len(), 2);
+            assert_eq!(geom.bbox, Some(GeoParquetBbox::Xy([-1.0, 0.0, 2.0, 1.0])));
+            assert!(merged.columns.contains_key("geom2"));
+        }
+        assert_eq!(
+            ab.columns["geom"].geometry_types,
+            ba.columns["geom"].geometry_types
+        );
+    }
+
+    #[test]
+    fn bbox_expand_to_include() {
+        let mut bbox = GeoParquetBbox::Xyz([0.0, 0.0, 0.0, 1.0, 1.0, 1.0]);
+        bbox.expand_to_include(&GeoParquetBbox::Xyz([-1.0, 0.5, -2.0, 0.5, 3.0, 4.0]))
+            .unwrap();
+        assert_eq!(bbox, GeoParquetBbox::Xyz([-1.0, 0.0, -2.0, 1.0, 3.0, 4.0]));
+
+        let err = bbox
+            .expand_to_include(&GeoParquetBbox::Xy([0.0, 0.0, 1.0, 1.0]))
+            .err()
+            .unwrap();
+        assert!(err.to_string().contains("bbox dimensions"));
     }
 }

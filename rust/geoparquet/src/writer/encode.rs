@@ -6,6 +6,7 @@ use geoarrow_array::cast::{AsGeoArrowArray, to_wkb};
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, GeoArrowType};
 use parquet::file::metadata::KeyValue;
+use parquet::schema::types::SchemaDescriptor;
 
 use crate::metadata::{GeoParquetColumnEncoding, GeoParquetMetadata};
 use crate::total_bounds::{BoundingRect, bounding_rect, total_bounds};
@@ -39,6 +40,19 @@ impl GeoParquetRecordBatchEncoder {
     /// [`Self::encode_record_batch`].
     pub fn target_schema(&self) -> SchemaRef {
         self.metadata_builder.output_schema.clone()
+    }
+
+    /// The Parquet schema override for GeoParquet 2.0 output, or `None` for 1.x output.
+    ///
+    /// For 2.0, geometry columns carry the GEOMETRY or GEOGRAPHY logical type, which the
+    /// upstream writer cannot derive from the Arrow schema. Pass the returned schema through
+    /// [`ArrowWriterOptions::with_parquet_schema`][parquet::arrow::arrow_writer::ArrowWriterOptions::with_parquet_schema];
+    /// the writer then also records native geospatial statistics.
+    ///
+    /// GeoParquet 2.0 is at release candidate 2.0.0-rc.1; 2.0 output can change until the
+    /// specification is final.
+    pub fn target_parquet_schema(&self) -> GeoArrowResult<Option<SchemaDescriptor>> {
+        self.metadata_builder.target_parquet_schema()
     }
 
     /// Encode a record batch into a GeoParquet-compatible format.

@@ -6,7 +6,10 @@ use parquet::arrow::arrow_reader::{ArrowPredicate, ArrowReaderBuilder, RowFilter
 
 use crate::metadata::GeoParquetMetadata;
 use crate::reader::parse::infer_geoarrow_schema;
-use crate::reader::spatial_filter::{ParquetBboxStatistics, bbox_arrow_predicate, bbox_row_groups};
+use crate::reader::spatial_filter::{
+    ParquetBboxStatistics, bbox_arrow_predicate, bbox_row_groups, geometry_leaf_index,
+    native_bbox_row_groups,
+};
 
 /// A trait that extends the [`ArrowReaderBuilder`] with methods for reading GeoParquet files.
 ///
@@ -154,16 +157,14 @@ impl<T> GeoParquetReaderBuilder for ArrowReaderBuilder<T> {
         column_name: Option<&str>,
     ) -> GeoArrowResult<Vec<usize>> {
         let (column_name, column_meta) = geo_metadata.geometry_column(column_name)?;
-        let bbox_covering =
-            column_meta
-                .bbox_covering(column_name)
-                .ok_or(GeoArrowError::GeoParquet(format!(
-                    "No covering metadata found for column: {column_name}",
-                )))?;
-
-        let bbox_cols = ParquetBboxStatistics::try_new(self.parquet_schema(), &bbox_covering)?;
-
-        bbox_row_groups(self.metadata().row_groups(), &bbox_cols, bbox)
+        if let Some(bbox_covering) = column_meta.bbox_covering(column_name) {
+            let bbox_cols = ParquetBboxStatistics::try_new(self.parquet_schema(), &bbox_covering)?;
+            bbox_row_groups(self.metadata().row_groups(), &bbox_cols, bbox)
+        } else {
+            // Without a covering, fall back to the column's native geospatial statistics.
+            let leaf_idx = geometry_leaf_index(self.parquet_schema(), column_name)?;
+            native_bbox_row_groups(self.metadata().row_groups(), leaf_idx, bbox)
+        }
     }
 
     fn with_intersecting_row_groups(
@@ -174,5 +175,188 @@ impl<T> GeoParquetReaderBuilder for ArrowReaderBuilder<T> {
     ) -> GeoArrowResult<Self> {
         let row_groups = self.intersecting_row_groups(bbox, geo_metadata, column_name)?;
         Ok(self.with_row_groups(row_groups))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::sync::Arc;
+
+    use arrow_array::cast::AsArray;
+    use arrow_array::types::Int64Type;
+    use arrow_array::{BinaryArray, Float64Array, Int64Array, RecordBatch, StructArray};
+    use arrow_schema::{DataType, Field, Fields, Schema};
+    use bytes::Bytes;
+    use geo_types::coord;
+    use parquet::arrow::ArrowWriter;
+    use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
+    use parquet::file::metadata::KeyValue;
+    use parquet::file::properties::WriterProperties;
+
+    use super::*;
+
+    fn wkb_point(x: f64, y: f64) -> Vec<u8> {
+        let mut buf = vec![0x01, 0x01, 0x00, 0x00, 0x00];
+        buf.extend_from_slice(&x.to_le_bytes());
+        buf.extend_from_slice(&y.to_le_bytes());
+        buf
+    }
+
+    /// 2.0 round trip: the logical type survives, and pruning works from the native
+    /// statistics, because 2.0 output carries no covering by default.
+    #[test]
+    fn v2_roundtrip_prunes_from_native_statistics() {
+        use arrow_schema::extension::EXTENSION_TYPE_NAME_KEY;
+        use parquet::arrow::arrow_writer::ArrowWriterOptions;
+        use parquet::basic::LogicalType;
+
+        use crate::metadata::GeoParquetVersion;
+        use crate::writer::{GeoParquetRecordBatchEncoder, GeoParquetWriterOptions};
+
+        let field = Field::new("geometry", DataType::Binary, false).with_metadata(
+            std::collections::HashMap::from([(
+                EXTENSION_TYPE_NAME_KEY.to_string(),
+                "geoarrow.wkb".to_string(),
+            )]),
+        );
+        let schema = Arc::new(Schema::new(vec![field]));
+        let batch = RecordBatch::try_new(
+            schema.clone(),
+            vec![Arc::new(BinaryArray::from_iter_values([
+                wkb_point(1.0, 2.0),
+                wkb_point(3.0, 4.0),
+            ]))],
+        )
+        .unwrap();
+
+        let options = GeoParquetWriterOptions {
+            version: GeoParquetVersion::V2_0,
+            ..Default::default()
+        };
+        let mut encoder = GeoParquetRecordBatchEncoder::try_new(&schema, &options).unwrap();
+        let parquet_schema = encoder.target_parquet_schema().unwrap().unwrap();
+
+        let mut buf = Vec::new();
+        let writer_options = ArrowWriterOptions::new().with_parquet_schema(parquet_schema);
+        let mut writer =
+            ArrowWriter::try_new_with_options(&mut buf, encoder.target_schema(), writer_options)
+                .unwrap();
+        let encoded = encoder.encode_record_batch(&batch).unwrap();
+        writer.write(&encoded).unwrap();
+        writer.append_key_value_metadata(encoder.into_keyvalue().unwrap());
+        writer.close().unwrap();
+
+        let builder = ParquetRecordBatchReaderBuilder::try_new(Bytes::from(buf)).unwrap();
+        let geo_meta = builder.geoparquet_metadata().unwrap().unwrap();
+        assert_eq!(geo_meta.version, "2.0.0");
+        assert!(matches!(
+            builder.parquet_schema().columns()[0]
+                .self_type()
+                .get_basic_info()
+                .logical_type_ref(),
+            Some(LogicalType::Geometry(_))
+        ));
+
+        let hit = Rect::new(coord! { x: 0.0, y: 0.0 }, coord! { x: 10.0, y: 10.0 });
+        assert_eq!(
+            builder
+                .intersecting_row_groups(hit, &geo_meta, None)
+                .unwrap(),
+            vec![0]
+        );
+        let miss = Rect::new(coord! { x: 100.0, y: 100.0 }, coord! { x: 110.0, y: 110.0 });
+        assert!(
+            builder
+                .intersecting_row_groups(miss, &geo_meta, None)
+                .unwrap()
+                .is_empty()
+        );
+    }
+
+    /// The filter must read each bound from the field the covering names, not an implied
+    /// field order.
+    #[test]
+    fn bbox_row_filter_keeps_intersecting_rows() {
+        // Row i covers x in [10i, 10i + 1] and y in [10i + 100, 10i + 101].
+        let bbox_fields: Fields = vec![
+            Field::new("ymax", DataType::Float64, false),
+            Field::new("xmin", DataType::Float64, false),
+            Field::new("ymin", DataType::Float64, false),
+            Field::new("xmax", DataType::Float64, false),
+        ]
+        .into();
+        let child = |offset: f64| {
+            Arc::new(Float64Array::from_iter_values(
+                (0..4).map(|i| i as f64 * 10.0 + offset),
+            )) as _
+        };
+        let bbox = StructArray::new(
+            bbox_fields.clone(),
+            vec![child(101.0), child(0.0), child(100.0), child(1.0)],
+            None,
+        );
+        let geometry: BinaryArray = (0..4)
+            .map(|i| Some(wkb_point(i as f64 * 10.0 + 0.5, i as f64 * 10.0 + 100.5)))
+            .collect();
+        let ids = Int64Array::from_iter_values(0..4);
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("id", DataType::Int64, false),
+            Field::new("geometry", DataType::Binary, false),
+            Field::new("bbox", DataType::Struct(bbox_fields), false),
+        ]));
+        let batch = RecordBatch::try_new(
+            schema.clone(),
+            vec![Arc::new(ids), Arc::new(geometry), Arc::new(bbox)],
+        )
+        .unwrap();
+
+        let geo = serde_json::json!({
+            "version": "1.1.0",
+            "primary_column": "geometry",
+            "columns": {
+                "geometry": {
+                    "encoding": "WKB",
+                    "geometry_types": [],
+                    "covering": {
+                        "bbox": {
+                            "xmin": ["bbox", "xmin"],
+                            "ymin": ["bbox", "ymin"],
+                            "xmax": ["bbox", "xmax"],
+                            "ymax": ["bbox", "ymax"]
+                        }
+                    }
+                }
+            }
+        });
+        let props = WriterProperties::builder()
+            .set_key_value_metadata(Some(vec![KeyValue::new(
+                "geo".to_string(),
+                geo.to_string(),
+            )]))
+            .build();
+        let mut buf = Vec::new();
+        let mut writer = ArrowWriter::try_new(&mut buf, schema, Some(props)).unwrap();
+        writer.write(&batch).unwrap();
+        writer.close().unwrap();
+
+        let builder = ParquetRecordBatchReaderBuilder::try_new(Bytes::from(buf)).unwrap();
+        let geo_meta = builder.geoparquet_metadata().unwrap().unwrap();
+        let query = Rect::new(coord! { x: 8.0, y: 108.0 }, coord! { x: 21.0, y: 121.0 });
+        let reader = builder
+            .with_intersecting_row_filter(query, &geo_meta, None)
+            .unwrap()
+            .build()
+            .unwrap();
+        let kept: Vec<i64> = reader
+            .flat_map(|batch| {
+                let batch = batch.unwrap();
+                batch
+                    .column(0)
+                    .as_primitive::<Int64Type>()
+                    .values()
+                    .to_vec()
+            })
+            .collect();
+        assert_eq!(kept, vec![1, 2]);
     }
 }
