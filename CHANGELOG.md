@@ -1,5 +1,47 @@
 # Changelog
 
+## 0.9.0 - 2025-09-11
+
+### What's Changed
+
+* ci: add Dependabot for GitHub Actions version updates by @lhoupert in https://github.com/geoarrow/geoarrow-rs/pull/1432
+* chore(deps): bump astral-sh/setup-uv from 6 to 7 by @dependabot[bot] in https://github.com/geoarrow/geoarrow-rs/pull/1437
+* chore(deps): bump actions/setup-python from 4 to 6 by @dependabot[bot] in https://github.com/geoarrow/geoarrow-rs/pull/1436
+* chore(deps): bump actions/setup-node from 2 to 6 by @dependabot[bot] in https://github.com/geoarrow/geoarrow-rs/pull/1435
+* chore(deps): bump actions/download-artifact from 4 to 8 by @dependabot[bot] in https://github.com/geoarrow/geoarrow-rs/pull/1434
+* chore(deps): bump the minor-and-patch group with 2 updates by @dependabot[bot] in https://github.com/geoarrow/geoarrow-rs/pull/1433
+* chore(deps): bump actions/checkout from 4 to 6 by @dependabot[bot] in https://github.com/geoarrow/geoarrow-rs/pull/1440
+* chore(deps): bump actions/upload-artifact from 4 to 7 by @dependabot[bot] in https://github.com/geoarrow/geoarrow-rs/pull/1439
+* chore(deps): bump mymindstorm/setup-emsdk from 14 to 15 by @dependabot[bot] in https://github.com/geoarrow/geoarrow-rs/pull/1438
+* chore(deps): bump mymindstorm/setup-emsdk from 15 to 16 by @dependabot[bot] in https://github.com/geoarrow/geoarrow-rs/pull/1441
+* chore: Update `geo` to 0.33 by @logankaser in https://github.com/geoarrow/geoarrow-rs/pull/1454
+* fix: support encoding wkb column as i64 by @C-Loftus in https://github.com/geoarrow/geoarrow-rs/pull/1447
+* chore(deps): bump prefix-dev/setup-pixi from 0.9.5 to 0.9.6 in the minor-and-patch group across 1 directory by @dependabot[bot] in https://github.com/geoarrow/geoarrow-rs/pull/1444
+* fix: Add a public setter method for `large_offsets` in the options builder by @C-Loftus in https://github.com/geoarrow/geoarrow-rs/pull/1456
+* fix: Support `DataType::LargeBinary` in `create_output_field` by @C-Loftus in https://github.com/geoarrow/geoarrow-rs/pull/1457
+* fix: flatgeobuf writer incorrectly writing batches where all values are null in an array by @ttomasz in https://github.com/geoarrow/geoarrow-rs/pull/1442
+* chore(deps): bump actions/checkout from 6 to 7 by @dependabot[bot] in https://github.com/geoarrow/geoarrow-rs/pull/1458
+* feat: ToGeos impl by @ianthetechie in https://github.com/geoarrow/geoarrow-rs/pull/1455
+* chore: Rust 1.95 cleanup by @ianthetechie in https://github.com/geoarrow/geoarrow-rs/pull/1459
+* chore(deps): bump prefix-dev/setup-pixi from 0.9.5 to 0.10.0 in the minor-and-patch group by @dependabot[bot] in https://github.com/geoarrow/geoarrow-rs/pull/1460
+* chore: update arrow to v59 by @gadomski in https://github.com/geoarrow/geoarrow-rs/pull/1461
+* feat(expr-geo): add buffer kernel (geo::Buffer) by @willcohen in https://github.com/geoarrow/geoarrow-rs/pull/1463
+* chore(deps): bump actions/setup-node from 6 to 7 by @dependabot[bot] in https://github.com/geoarrow/geoarrow-rs/pull/1465
+* chore(deps): bump actions/setup-python from 6 to 7 by @dependabot[bot] in https://github.com/geoarrow/geoarrow-rs/pull/1464
+* chore(deps): bump prefix-dev/setup-pixi from 0.10.0 to 0.10.1 in the minor-and-patch group by @dependabot[bot] in https://github.com/geoarrow/geoarrow-rs/pull/1469
+* chore(deps): bump prefix-dev/setup-pixi from 0.10.1 to 0.10.2 in the minor-and-patch group by @dependabot[bot] in https://github.com/geoarrow/geoarrow-rs/pull/1475
+
+### New Contributors
+
+* @lhoupert made their first contribution in https://github.com/geoarrow/geoarrow-rs/pull/1432
+* @dependabot[bot] made their first contribution in https://github.com/geoarrow/geoarrow-rs/pull/1437
+* @logankaser made their first contribution in https://github.com/geoarrow/geoarrow-rs/pull/1454
+* @ttomasz made their first contribution in https://github.com/geoarrow/geoarrow-rs/pull/1442
+* @willcohen made their first contribution in https://github.com/geoarrow/geoarrow-rs/pull/1463
+
+**Full Changelog**: https://github.com/geoarrow/geoarrow-rs/compare/rust-v0.8.0...rust-v0.9.0
+
+
 ## 0.8.0 - 2025-07-08
 
 ## What's Changed
