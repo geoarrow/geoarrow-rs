@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use arrow_schema::SchemaRef;
+use arrow_schema::{Schema, SchemaRef};
 use geoarrow_array::array::RectArray;
 use geoarrow_schema::error::{GeoArrowError, GeoArrowResult};
 use geoarrow_schema::{CoordType, Crs, Metadata};
@@ -11,22 +11,23 @@ use parquet::schema::types::SchemaDescriptor;
 
 use crate::metadata::GeoParquetMetadata;
 use crate::reader::parse::infer_geoarrow_schema;
-use crate::reader::spatial_filter::ParquetBboxStatistics;
+use crate::reader::spatial_filter::{
+    ParquetBboxStatistics, geometry_leaf_index, native_stats_bbox, native_stats_bboxes,
+};
 
 /// An extension trait to DRY some code across the file and dataset metadata.
 trait ArrowReaderMetadataExt {
     /// Access the [ArrowReaderMetadata] of this builder.
     fn reader_metadata(&self) -> &ArrowReaderMetadata;
 
-    /// The number of rows in this file.
-    fn num_rows(&self) -> usize {
-        self.reader_metadata()
-            .metadata()
-            .row_groups()
-            .iter()
-            .fold(0, |acc, row_group_meta| {
-                acc + usize::try_from(row_group_meta.num_rows()).unwrap()
-            })
+    /// The number of rows in this file, erroring on an invalid footer row count.
+    fn num_rows(&self) -> GeoArrowResult<usize> {
+        let num_rows = self.reader_metadata().metadata().file_metadata().num_rows();
+        usize::try_from(num_rows).map_err(|_| {
+            GeoArrowError::GeoParquet(format!(
+                "Parquet footer reports an invalid row count {num_rows}"
+            ))
+        })
     }
 
     /// The number of row groups in this file.
@@ -74,14 +75,22 @@ impl GeoParquetReaderMetadata {
     }
 
     /// Construct a new [GeoParquetReaderMetadata] from [ArrowReaderMetadata]
+    ///
+    /// The geo metadata comes from the `geo` key, or, for a file without one, is synthesized
+    /// from GEOMETRY and GEOGRAPHY logical types in the Parquet schema.
     pub fn from_arrow_meta(meta: ArrowReaderMetadata) -> GeoArrowResult<Self> {
-        let geo_meta = if let Some(geo_meta) =
-            GeoParquetMetadata::from_parquet_meta(meta.metadata().file_metadata())
+        let file_metadata = meta.metadata().file_metadata();
+        let geo_meta = if let Some(geo_meta) = GeoParquetMetadata::from_parquet_meta(file_metadata)
         {
+            Arc::new(geo_meta?)
+        } else if let Some(geo_meta) = GeoParquetMetadata::from_logical_types(
+            meta.parquet_schema(),
+            file_metadata.key_value_metadata(),
+        ) {
             Arc::new(geo_meta?)
         } else {
             return Err(GeoArrowError::GeoParquet(
-                "No `geo` key in Parquet metadata".to_string(),
+                "No `geo` key in Parquet metadata and no geometry-typed columns".to_string(),
             ));
         };
         Ok(Self { meta, geo_meta })
@@ -132,8 +141,8 @@ impl GeoParquetReaderMetadata {
         )
     }
 
-    /// The number of rows in this file.
-    pub fn num_rows(&self) -> usize {
+    /// The number of rows in this file, erroring on an invalid footer row count.
+    pub fn num_rows(&self) -> GeoArrowResult<usize> {
         self.meta.num_rows()
     }
 
@@ -152,16 +161,26 @@ impl GeoParquetReaderMetadata {
         column_name: Option<&str>,
     ) -> GeoArrowResult<Option<geo_types::Rect>> {
         let (column_name, column_meta) = self.geo_meta.geometry_column(column_name)?;
-        let bbox_covering =
-            column_meta
-                .bbox_covering(column_name)
-                .ok_or(GeoArrowError::GeoParquet(format!(
-                    "No covering metadata found for column: {column_name}",
-                )))?;
-        let geo_statistics =
-            ParquetBboxStatistics::try_new(self.meta.parquet_schema(), &bbox_covering)?;
-        let row_group_meta = self.meta.metadata().row_group(row_group_idx);
-        Ok(Some(geo_statistics.get_bbox(row_group_meta)?))
+        let row_group_meta = self
+            .meta
+            .metadata()
+            .row_groups()
+            .get(row_group_idx)
+            .ok_or_else(|| {
+                GeoArrowError::GeoParquet(format!(
+                    "Row group index {row_group_idx} out of range: file has {} row groups",
+                    self.meta.metadata().num_row_groups()
+                ))
+            })?;
+        if let Some(bbox_covering) = column_meta.bbox_covering(column_name) {
+            let geo_statistics =
+                ParquetBboxStatistics::try_new(self.meta.parquet_schema(), &bbox_covering)?;
+            Ok(Some(geo_statistics.get_bbox(row_group_meta)?))
+        } else {
+            // Without a covering, fall back to the column's native geospatial statistics.
+            let leaf_idx = geometry_leaf_index(self.meta.parquet_schema(), column_name)?;
+            Ok(Some(native_stats_bbox(row_group_meta, leaf_idx)?))
+        }
     }
 
     /// Get the bounds of all row groups.
@@ -170,19 +189,21 @@ impl GeoParquetReaderMetadata {
     /// in the metadata.
     pub fn row_groups_bounds(&self, column_name: Option<&str>) -> GeoArrowResult<RectArray> {
         let (column_name, column_meta) = self.geo_meta.geometry_column(column_name)?;
-        let bbox_covering =
-            column_meta
-                .bbox_covering(column_name)
-                .ok_or(GeoArrowError::GeoParquet(format!(
-                    "No covering metadata found for column: {column_name}",
-                )))?;
-
-        let geo_statistics =
-            ParquetBboxStatistics::try_new(self.meta.parquet_schema(), &bbox_covering)?;
-        geo_statistics.get_bboxes(
-            self.meta.metadata().row_groups(),
-            Arc::new(column_meta.clone().into()),
-        )
+        if let Some(bbox_covering) = column_meta.bbox_covering(column_name) {
+            let geo_statistics =
+                ParquetBboxStatistics::try_new(self.meta.parquet_schema(), &bbox_covering)?;
+            geo_statistics.get_bboxes(
+                self.meta.metadata().row_groups(),
+                Arc::new(column_meta.clone().into()),
+            )
+        } else {
+            let leaf_idx = geometry_leaf_index(self.meta.parquet_schema(), column_name)?;
+            native_stats_bboxes(
+                self.meta.metadata().row_groups(),
+                leaf_idx,
+                Arc::new(column_meta.clone().into()),
+            )
+        }
     }
 
     /// Access the bounding box of the given column for the entire file
@@ -196,7 +217,7 @@ impl GeoParquetReaderMetadata {
         column_name: Option<&'a str>,
     ) -> GeoArrowResult<Option<&'a [f64]>> {
         let (_, column_meta) = self.geo_meta.geometry_column(column_name)?;
-        Ok(column_meta.bbox.as_deref())
+        Ok(column_meta.bbox.as_ref().map(|bbox| bbox.as_slice()))
     }
 
     /// Access the GeoArrow [`Metadata`] from the provided geometry column.
@@ -240,19 +261,26 @@ impl GeoParquetDatasetMetadata {
             return Err(GeoArrowError::GeoParquet("No files provided".to_string()));
         }
 
-        let mut schema: Option<SchemaRef> = None;
+        let mut schema: Option<(SchemaRef, &str)> = None;
         let mut geo_meta: Option<GeoParquetMetadata> = None;
-        for meta in metas.values() {
-            if let Some(_prior_schema) = &schema {
-                // TODO: check that schemas are equivalent
-            } else {
-                schema = Some(meta.schema().clone());
+        for (path, meta) in metas.iter() {
+            match schema.as_mut() {
+                Some((merged, first_path)) => {
+                    *merged = merge_dataset_schemas(merged, first_path, meta.schema(), path)?;
+                }
+                None => schema = Some((meta.schema().clone(), path)),
             }
 
-            if let Some(new_geo_meta) =
-                GeoParquetMetadata::from_parquet_meta(meta.metadata().file_metadata())
-            {
-                let new_geo_meta = new_geo_meta?;
+            let file_metadata = meta.metadata().file_metadata();
+            let new_geo_meta = match GeoParquetMetadata::from_parquet_meta(file_metadata) {
+                Some(geo) => Some(geo?),
+                None => GeoParquetMetadata::from_logical_types(
+                    meta.parquet_schema(),
+                    file_metadata.key_value_metadata(),
+                )
+                .transpose()?,
+            };
+            if let Some(new_geo_meta) = new_geo_meta {
                 if let Some(geo_meta) = geo_meta.as_mut() {
                     geo_meta.try_update(&new_geo_meta)?;
                 } else {
@@ -261,9 +289,10 @@ impl GeoParquetDatasetMetadata {
             }
         }
 
+        let (schema, _) = schema.unwrap();
         Ok(Self {
             files: metas,
-            schema: schema.unwrap(),
+            schema,
             geo_meta: geo_meta
                 .ok_or(GeoArrowError::GeoParquet(
                     "Expected GeoParquet dataset to have Geo metadata".to_string(),
@@ -282,11 +311,15 @@ impl GeoParquetDatasetMetadata {
         &self.geo_meta
     }
 
-    /// The total number of rows across all files.
-    pub fn num_rows(&self) -> usize {
-        self.files
-            .values()
-            .fold(0, |acc, file| acc + file.num_rows())
+    /// The total number of rows across all files, erroring on an invalid or overflowing count.
+    pub fn num_rows(&self) -> GeoArrowResult<usize> {
+        self.files.values().try_fold(0usize, |acc, file| {
+            acc.checked_add(file.num_rows()?).ok_or_else(|| {
+                GeoArrowError::GeoParquet(
+                    "Total num_rows across dataset files overflows usize".to_string(),
+                )
+            })
+        })
     }
 
     /// The total number of row groups across all files
@@ -320,7 +353,7 @@ impl GeoParquetDatasetMetadata {
         column_name: Option<&'a str>,
     ) -> GeoArrowResult<Option<&'a [f64]>> {
         let (_, column_meta) = self.geo_meta.geometry_column(column_name)?;
-        Ok(column_meta.bbox.as_deref())
+        Ok(column_meta.bbox.as_ref().map(|bbox| bbox.as_slice()))
     }
 
     /// Access the GeoArrow [`Metadata`] from the provided geometry column.
@@ -333,5 +366,164 @@ impl GeoParquetDatasetMetadata {
     pub fn crs(&self, column_name: Option<&str>) -> GeoArrowResult<Crs> {
         let geoarrow_meta = self.geoarrow_metadata(column_name)?;
         Ok(geoarrow_meta.crs().clone())
+    }
+}
+
+/// Check `schema` against the merged dataset schema and fold it in.
+///
+/// Field names and data types must match position by position. Nullability and field-level
+/// metadata legitimately differ between files of one dataset (a partition without nulls may
+/// be written non-nullable; writers differ in embedded `ARROW:schema` hints): nullability
+/// merges as "nullable in any file", field metadata keeps the first file's values.
+fn merge_dataset_schemas(
+    merged: &SchemaRef,
+    merged_path: &str,
+    schema: &SchemaRef,
+    path: &str,
+) -> GeoArrowResult<SchemaRef> {
+    if merged.fields().len() != schema.fields().len() {
+        return Err(GeoArrowError::GeoParquet(format!(
+            "Arrow schema of file {path} has {} columns but file {merged_path} has {}",
+            schema.fields().len(),
+            merged.fields().len()
+        )));
+    }
+
+    let mut fields = Vec::with_capacity(merged.fields().len());
+    for (merged_field, field) in merged.fields().iter().zip(schema.fields()) {
+        if merged_field.name() != field.name() || merged_field.data_type() != field.data_type() {
+            return Err(GeoArrowError::GeoParquet(format!(
+                "Arrow schema of file {path} does not match file {merged_path}: field {} ({}) vs field {} ({})",
+                field.name(),
+                field.data_type(),
+                merged_field.name(),
+                merged_field.data_type()
+            )));
+        }
+        if field.is_nullable() && !merged_field.is_nullable() {
+            fields.push(Arc::new(merged_field.as_ref().clone().with_nullable(true)));
+        } else {
+            fields.push(merged_field.clone());
+        }
+    }
+    Ok(Arc::new(Schema::new_with_metadata(
+        fields,
+        merged.metadata().clone(),
+    )))
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::test::arrow_meta;
+
+    #[test]
+    fn num_rows_with_negative_footer_count_errors() {
+        let meta = arrow_meta("message schema { required double x; }", -5, &[]);
+        let err = ArrowReaderMetadataExt::num_rows(&meta).unwrap_err();
+        assert!(err.to_string().contains("invalid row count"));
+    }
+
+    #[test]
+    fn dataset_with_mismatched_schemas_errors() {
+        let a = arrow_meta("message schema { required double x; }", 0, &[]);
+        let b = arrow_meta("message schema { required int64 y; }", 0, &[]);
+        let metas = IndexMap::from([("a".to_string(), a), ("b".to_string(), b)]);
+        let err = GeoParquetDatasetMetadata::from_files(metas).err().unwrap();
+        assert!(err.to_string().contains("does not match"));
+    }
+
+    #[test]
+    fn row_group_bounds_with_out_of_range_index_errors() {
+        let arrow = arrow_meta(
+            "message schema { required group geom { required double x; required double y; } }",
+            0,
+            &[],
+        );
+        let geo_meta: GeoParquetMetadata = serde_json::from_value(serde_json::json!({
+            "version": "1.1.0",
+            "primary_column": "geom",
+            "columns": {"geom": {"encoding": "point", "geometry_types": ["Point"]}}
+        }))
+        .unwrap();
+        let meta = GeoParquetReaderMetadata::new(arrow, geo_meta);
+        let err = meta.row_group_bounds(0, None).unwrap_err();
+        assert!(err.to_string().contains("out of range"));
+    }
+
+    #[test]
+    fn row_group_bounds_from_native_geo_statistics() {
+        use parquet::basic::LogicalType;
+        use parquet::file::metadata::{
+            ColumnChunkMetaData, FileMetaData, ParquetMetaData, RowGroupMetaData,
+        };
+        use parquet::geospatial::bounding_box::BoundingBox;
+        use parquet::geospatial::statistics::GeospatialStatistics;
+
+        use crate::test::geometry_schema_descr;
+
+        let descr = geometry_schema_descr(LogicalType::geometry(None));
+        let geo_stats = GeospatialStatistics::new(Some(BoundingBox::new(1.0, 2.0, 3.0, 4.0)), None);
+        let geometry_column = ColumnChunkMetaData::builder(descr.column(0))
+            .set_geo_statistics(Box::new(geo_stats))
+            .build()
+            .unwrap();
+        let name_column = ColumnChunkMetaData::builder(descr.column(1))
+            .build()
+            .unwrap();
+        let row_group = RowGroupMetaData::builder(descr.clone())
+            .set_num_rows(10)
+            .set_column_metadata(vec![geometry_column, name_column])
+            .build()
+            .unwrap();
+        let file_meta = FileMetaData::new(1, 10, None, None, descr, None);
+        let parquet_meta = ParquetMetaData::new(file_meta, vec![row_group]);
+        let arrow =
+            ArrowReaderMetadata::try_new(Arc::new(parquet_meta), Default::default()).unwrap();
+
+        let meta = GeoParquetReaderMetadata::from_arrow_meta(arrow).unwrap();
+        let bounds = meta.row_group_bounds(0, None).unwrap().unwrap();
+        assert_eq!(
+            (
+                bounds.min().x,
+                bounds.max().x,
+                bounds.min().y,
+                bounds.max().y
+            ),
+            (1.0, 2.0, 3.0, 4.0)
+        );
+    }
+
+    #[test]
+    fn geo_less_file_with_geometry_logical_type_reads() {
+        use parquet::basic::LogicalType;
+
+        use crate::test::{arrow_meta_from_descr, geometry_schema_descr};
+
+        let descr = geometry_schema_descr(LogicalType::geometry(None));
+        let arrow = arrow_meta_from_descr(descr, 0, &[]);
+        let meta = GeoParquetReaderMetadata::from_arrow_meta(arrow).unwrap();
+        assert_eq!(meta.geo_metadata().primary_column, "geometry");
+        assert_eq!(meta.geo_metadata().version, "2.0.0");
+    }
+
+    #[test]
+    fn dataset_schemas_merge_over_benign_differences() {
+        use arrow_schema::{DataType, Field};
+
+        let merged: SchemaRef = Arc::new(Schema::new(vec![
+            Field::new("name", DataType::Utf8, false),
+            Field::new("geom", DataType::Binary, true),
+        ]));
+        // The other file marks `name` nullable and carries writer-specific field metadata.
+        let other: SchemaRef = Arc::new(Schema::new(vec![
+            Field::new("name", DataType::Utf8, true)
+                .with_metadata([("PARQUET:field_id".to_string(), "1".to_string())].into()),
+            Field::new("geom", DataType::Binary, true),
+        ]));
+
+        let result = merge_dataset_schemas(&merged, "a.parquet", &other, "b.parquet").unwrap();
+        assert!(result.field(0).is_nullable());
+        assert!(result.field(0).metadata().is_empty());
     }
 }

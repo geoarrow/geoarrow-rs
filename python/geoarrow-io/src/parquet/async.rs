@@ -12,6 +12,7 @@ use futures::TryStreamExt;
 use geo_traits::CoordTrait;
 use geoarrow_array::GeoArrowArray;
 use geoarrow_schema::error::GeoArrowError;
+use geoparquet::metadata::GeoParquetMetadata;
 use geoparquet::reader::{
     GeoParquetDatasetMetadata, GeoParquetReaderBuilder, GeoParquetReaderMetadata,
     GeoParquetRecordBatchStream,
@@ -162,8 +163,8 @@ impl GeoParquetFile {
     }
 
     #[getter]
-    fn num_rows(&self) -> usize {
-        self.geoparquet_meta.num_rows()
+    fn num_rows(&self) -> PyGeoArrowResult<usize> {
+        Ok(self.geoparquet_meta.num_rows()?)
     }
 
     #[getter]
@@ -382,6 +383,24 @@ pub struct GeoParquetDataset {
 }
 
 impl GeoParquetDataset {
+    /// Per-file reader metadata for one fragment of this dataset.
+    ///
+    /// A file without a `geo` key is a valid dataset member and gets the dataset's merged geo
+    /// metadata; the dataset schema check guarantees it carries the same columns.
+    // TODO: cache the parsed per-file metadata at open instead of re-parsing per call
+    fn file_reader_meta(
+        &self,
+        meta: &ArrowReaderMetadata,
+    ) -> PyGeoArrowResult<GeoParquetReaderMetadata> {
+        match GeoParquetMetadata::from_parquet_meta(meta.metadata().file_metadata()) {
+            Some(geo_meta) => Ok(GeoParquetReaderMetadata::new(meta.clone(), geo_meta?)),
+            None => Ok(GeoParquetReaderMetadata::new(
+                meta.clone(),
+                self.meta.geo_metadata().as_ref().clone(),
+            )),
+        }
+    }
+
     fn to_readers(
         &self,
         options: PyGeoParquetReadOptions,
@@ -392,8 +411,7 @@ impl GeoParquetDataset {
             .files()
             .iter()
             .map(|(path, meta)| {
-                // TODO: don't re-parse GeoParquet metadata
-                let geoparquet_meta = GeoParquetReaderMetadata::from_arrow_meta(meta.clone())?;
+                let geoparquet_meta = self.file_reader_meta(meta)?;
                 construct_file_stream(
                     path.clone().into(),
                     geoparquet_meta,
@@ -497,8 +515,8 @@ impl GeoParquetDataset {
     }
 
     #[getter]
-    fn num_rows(&self) -> usize {
-        self.meta.num_rows()
+    fn num_rows(&self) -> PyGeoArrowResult<usize> {
+        Ok(self.meta.num_rows()?)
     }
 
     #[getter]
@@ -527,7 +545,7 @@ impl GeoParquetDataset {
         if let Some(meta) = self.meta.files().get(path) {
             Ok(GeoParquetFile {
                 path: path.into(),
-                geoparquet_meta: GeoParquetReaderMetadata::from_arrow_meta(meta.clone()).unwrap(),
+                geoparquet_meta: self.file_reader_meta(meta)?,
                 store: self.store.clone(),
             })
         } else {
@@ -536,14 +554,16 @@ impl GeoParquetDataset {
     }
 
     #[getter]
-    fn fragments(&self) -> Vec<GeoParquetFile> {
+    fn fragments(&self) -> PyGeoArrowResult<Vec<GeoParquetFile>> {
         self.meta
             .files()
             .iter()
-            .map(|(path, meta)| GeoParquetFile {
-                path: path.clone().into(),
-                geoparquet_meta: GeoParquetReaderMetadata::from_arrow_meta(meta.clone()).unwrap(),
-                store: self.store.clone(),
+            .map(|(path, meta)| {
+                Ok(GeoParquetFile {
+                    path: path.clone().into(),
+                    geoparquet_meta: self.file_reader_meta(meta)?,
+                    store: self.store.clone(),
+                })
             })
             .collect()
     }

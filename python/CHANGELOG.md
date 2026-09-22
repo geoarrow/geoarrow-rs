@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- `GeoParquetDataset.fragments` and dataset reads accept files without a `geo` key, using the dataset's merged geo metadata.
+- Errors from malformed GeoParquet files raise Python exceptions instead of panics.
+
 ## [0.6.3] - 2026-06-11
 
 ### What's Changed
