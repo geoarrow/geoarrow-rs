@@ -27,16 +27,16 @@ categories = ["science::geo"]
 
 [workspace.dependencies]
 approx = "0.5.1"
-arrow-arith = "59"
-arrow-array = "59"
-arrow-buffer = "59"
-arrow-cast = "59"
-arrow-csv = "59"
-arrow-data = "59"
-arrow-ipc = "59"
-arrow-json = "59"
-arrow-ord = "59"
-arrow-schema = "59"
+arrow-arith = "60"
+arrow-array = "60"
+arrow-buffer = "60"
+arrow-cast = "60"
+arrow-csv = "60"
+arrow-data = "60"
+arrow-ipc = "60"
+arrow-json = "60"
+arrow-ord = "60"
+arrow-schema = "60"
 async-stream = "0.3"
 async-trait = "0.1"
 bytes = "1.10.0"
@@ -62,8 +62,8 @@ http-range-client = { version = "0.9", default-features = false }
 indexmap = "2.5.0"
 num-traits = "0.2.19"
 numpy = "0.29"
-object_store = "0.13"
-parquet = { version = "59", default-features = false }
+object_store = "0.14"
+parquet = { version = "60", default-features = false }
 pyo3 = "0.29"
 pyo3-arrow = "0.19"
 pyo3-geoarrow = { path = "rust/pyo3-geoarrow" }

@@ -48,14 +48,14 @@ pub(super) fn check(
         ));
     }
 
-    if *ring_offsets.last() as usize != coords.len() {
+    if ring_offsets.last() as usize != coords.len() {
         return Err(GeoArrowError::InvalidGeoArrow(
             "largest ring offset must match coords length".to_string(),
         ));
     }
 
     // Offset can be smaller than length if sliced
-    if *geom_offsets.last() as usize > ring_offsets.len_proxy() {
+    if geom_offsets.last() as usize > ring_offsets.len_proxy() {
         return Err(GeoArrowError::InvalidGeoArrow(
             "largest geometry offset must not be longer than ring offsets length".to_string(),
         ));
@@ -146,8 +146,8 @@ impl MultiLineStringArray {
     /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> MultiLineStringCapacity {
         MultiLineStringCapacity::new(
-            *self.ring_offsets.last() as usize,
-            *self.geom_offsets.last() as usize,
+            self.ring_offsets.last() as usize,
+            self.geom_offsets.last() as usize,
             self.len(),
         )
     }

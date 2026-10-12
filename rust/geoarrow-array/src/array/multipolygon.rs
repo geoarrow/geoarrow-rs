@@ -53,19 +53,19 @@ pub(super) fn check(
     }
 
     // Offset can be smaller than coords length if sliced
-    if *ring_offsets.last() as usize != coords.len() {
+    if ring_offsets.last() as usize != coords.len() {
         return Err(GeoArrowError::InvalidGeoArrow(
             "largest ring offset must match coords length".to_string(),
         ));
     }
 
-    if *polygon_offsets.last() as usize != ring_offsets.len_proxy() {
+    if polygon_offsets.last() as usize != ring_offsets.len_proxy() {
         return Err(GeoArrowError::InvalidGeoArrow(
             "largest polygon offset must match ring offsets length".to_string(),
         ));
     }
 
-    if *geom_offsets.last() as usize > polygon_offsets.len_proxy() {
+    if geom_offsets.last() as usize > polygon_offsets.len_proxy() {
         return Err(GeoArrowError::InvalidGeoArrow(
             "largest geometry offset must not be longer than polygon offsets length".to_string(),
         ));
@@ -181,9 +181,9 @@ impl MultiPolygonArray {
     /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> MultiPolygonCapacity {
         MultiPolygonCapacity::new(
-            *self.ring_offsets.last() as usize,
-            *self.polygon_offsets.last() as usize,
-            *self.geom_offsets.last() as usize,
+            self.ring_offsets.last() as usize,
+            self.polygon_offsets.last() as usize,
+            self.geom_offsets.last() as usize,
             self.len(),
         )
     }
