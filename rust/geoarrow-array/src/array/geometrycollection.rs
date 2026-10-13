@@ -62,7 +62,7 @@ impl GeometryCollectionArray {
     pub fn buffer_lengths(&self) -> GeometryCollectionCapacity {
         GeometryCollectionCapacity::new(
             self.array.buffer_lengths(),
-            *self.geom_offsets.last() as usize,
+            self.geom_offsets.last() as usize,
         )
     }
 
