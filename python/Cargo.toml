@@ -20,11 +20,11 @@ arrow-buffer = "59"
 arrow-schema = "59"
 flatgeobuf = { version = "5.0", default-features = false }
 geo-traits = "0.3"
-geoarrow-array = { path = "../rust/geoarrow-array" }
-geoarrow-cast = { path = "../rust/geoarrow-cast" }
-geoarrow-flatgeobuf = { path = "../rust/geoarrow-flatgeobuf" }
-geoarrow-schema = { path = "../rust/geoarrow-schema" }
-geoparquet = { path = "../rust/geoparquet" }
+geoarrow-array = { git = "https://github.com/geoarrow/geoarrow-rs", rev = "02985efd113aa5d5678a9eecbed1551a00bbc7f4" }
+geoarrow-cast = { git = "https://github.com/geoarrow/geoarrow-rs", rev = "02985efd113aa5d5678a9eecbed1551a00bbc7f4" }
+geoarrow-flatgeobuf = { git = "https://github.com/geoarrow/geoarrow-rs", rev = "02985efd113aa5d5678a9eecbed1551a00bbc7f4" }
+geoarrow-schema = { git = "https://github.com/geoarrow/geoarrow-rs", rev = "02985efd113aa5d5678a9eecbed1551a00bbc7f4" }
+geoparquet = { git = "https://github.com/geoarrow/geoarrow-rs", rev = "02985efd113aa5d5678a9eecbed1551a00bbc7f4" }
 geozero = "0.14"
 http-range-client = { version = "0.9.0", default-features = false }
 indexmap = "2.5.0"
@@ -33,6 +33,6 @@ object_store = "0.13"
 parquet = "59"
 pyo3 = { version = "0.29", features = ["hashbrown", "serde", "anyhow"] }
 pyo3-arrow = "0.19"
-pyo3-geoarrow = { path = "../rust/pyo3-geoarrow" }
+pyo3-geoarrow = { git = "https://github.com/geoarrow/geoarrow-rs", rev = "02985efd113aa5d5678a9eecbed1551a00bbc7f4" }
 serde_json = "1"
 thiserror = "1"

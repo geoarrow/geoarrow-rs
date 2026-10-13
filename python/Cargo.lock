@@ -989,7 +989,8 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-array"
-version = "0.8.0"
+version = "0.9.0"
+source = "git+https://github.com/geoarrow/geoarrow-rs?rev=02985efd113aa5d5678a9eecbed1551a00bbc7f4#02985efd113aa5d5678a9eecbed1551a00bbc7f4"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
@@ -1005,7 +1006,8 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-cast"
-version = "0.8.0"
+version = "0.9.0"
+source = "git+https://github.com/geoarrow/geoarrow-rs?rev=02985efd113aa5d5678a9eecbed1551a00bbc7f4#02985efd113aa5d5678a9eecbed1551a00bbc7f4"
 dependencies = [
  "arrow-schema",
  "geo-traits",
@@ -1016,7 +1018,8 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-expr-geo"
-version = "0.8.0"
+version = "0.9.0"
+source = "git+https://github.com/geoarrow/geoarrow-rs?rev=02985efd113aa5d5678a9eecbed1551a00bbc7f4#02985efd113aa5d5678a9eecbed1551a00bbc7f4"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
@@ -1028,7 +1031,8 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-flatgeobuf"
-version = "0.8.0"
+version = "0.9.0"
+source = "git+https://github.com/geoarrow/geoarrow-rs?rev=02985efd113aa5d5678a9eecbed1551a00bbc7f4#02985efd113aa5d5678a9eecbed1551a00bbc7f4"
 dependencies = [
  "arrow-array",
  "arrow-cast",
@@ -1107,7 +1111,8 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-schema"
-version = "0.8.0"
+version = "0.9.0"
+source = "git+https://github.com/geoarrow/geoarrow-rs?rev=02985efd113aa5d5678a9eecbed1551a00bbc7f4#02985efd113aa5d5678a9eecbed1551a00bbc7f4"
 dependencies = [
  "arrow-schema",
  "geo-traits",
@@ -1140,7 +1145,8 @@ dependencies = [
 
 [[package]]
 name = "geoparquet"
-version = "0.8.0"
+version = "0.9.0"
+source = "git+https://github.com/geoarrow/geoarrow-rs?rev=02985efd113aa5d5678a9eecbed1551a00bbc7f4#02985efd113aa5d5678a9eecbed1551a00bbc7f4"
 dependencies = [
  "arrow-arith",
  "arrow-array",
@@ -2308,7 +2314,8 @@ dependencies = [
 
 [[package]]
 name = "pyo3-geoarrow"
-version = "0.8.0"
+version = "0.9.0"
+source = "git+https://github.com/geoarrow/geoarrow-rs?rev=02985efd113aa5d5678a9eecbed1551a00bbc7f4#02985efd113aa5d5678a9eecbed1551a00bbc7f4"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
