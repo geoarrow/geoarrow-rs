@@ -11,9 +11,9 @@ members = [
     "rust/geoarrow-schema",
     "rust/geoarrow-test",
     "rust/geoparquet",
-    "rust/pyo3-geoarrow",
 ]
-exclude = ["js"]
+# TODO: re-add rust/pyo3-geoarrow to members when pyo3-arrow supports arrow 60.
+exclude = ["js", "rust/pyo3-geoarrow"]
 resolver = "2"
 
 [workspace.package]
