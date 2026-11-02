@@ -60,7 +60,8 @@ jobs:
 
   test-python:
     name: Build and test Python
-    runs-on: ubuntu-latest
+    # setup-python has no 3.9 build for ubuntu-latest (26.04).
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: true
       matrix:
