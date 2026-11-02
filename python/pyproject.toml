@@ -5,7 +5,7 @@ requires-python = ">=3.9"
 dependencies = []
 
 [dependency-groups]
-pyodide = ["pyodide-build>=0.35.0 ; python_version >= '3.12'"]
+pyodide = ["pyodide-build>=0.39.3 ; python_version >= '3.12'"]
 
 [tool.uv]
 dev-dependencies = [
