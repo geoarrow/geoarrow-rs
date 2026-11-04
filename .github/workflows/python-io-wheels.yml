@@ -44,7 +44,7 @@ jobs:
 
       - name: Install Python versions
         # pyo3 0.28 requires PyPy >= 3.11
-        run: uv python install 3.9 3.10 3.11 3.12 3.13 pypy3.11
+        run: uv python install 3.11 3.12 3.13 3.14 pypy3.11
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
@@ -52,7 +52,7 @@ jobs:
           target: ${{ matrix.platform.target }}
           # As of Nov 2024, it was necessary to manually specify -i 3.13 to get
           # maturin to find the executable. --find-interpreter did not find it.
-          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -i 3.14 -i pypy3.11 --manifest-path python/${{ matrix.module }}/Cargo.toml
+          args: --release --out dist -i 3.11 -i 3.12 -i 3.13 -i 3.14 -i pypy3.11 --manifest-path python/${{ matrix.module }}/Cargo.toml
           sccache: "true"
           manylinux: ${{ matrix.platform.manylinux }}
 
@@ -85,7 +85,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -i 3.14 -m python/geoarrow-io/Cargo.toml
+          args: --release --out dist -i 3.11 -i 3.12 -i 3.13 -i 3.14 -m python/geoarrow-io/Cargo.toml
           sccache: "true"
 
       - name: Install built wheel - ${{ matrix.platform.target }}
@@ -113,8 +113,6 @@ jobs:
           # Windows, maturin can't build for a missing interpreter without
           # pyo3's generate-import-lib feature.
           python-version: |
-            3.9
-            3.10
             3.11
             3.12
             3.13
@@ -127,7 +125,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -i 3.14 -m python/geoarrow-io/Cargo.toml
+          args: --release --out dist -i 3.11 -i 3.12 -i 3.13 -i 3.14 -m python/geoarrow-io/Cargo.toml
 
       - name: Install built wheel
         run: |
@@ -162,7 +160,7 @@ jobs:
   #       with:
   #         target: ${{ matrix.target }}
   #         manylinux: musllinux_1_2
-  #         args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -i 3.14 -m python/geoarrow-io/Cargo.toml
+  #         args: --release --out dist -i 3.11 -i 3.12 -i 3.13 -i 3.14 -m python/geoarrow-io/Cargo.toml
 
   #     - name: Install built wheel
   #       if: matrix.target == 'x86_64-unknown-linux-musl'
@@ -204,7 +202,7 @@ jobs:
   #       with:
   #         target: ${{ matrix.platform.target }}
   #         manylinux: musllinux_1_2
-  #         args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -i 3.14 -m python/geoarrow-io/Cargo.toml
+  #         args: --release --out dist -i 3.11 -i 3.12 -i 3.13 -i 3.14 -m python/geoarrow-io/Cargo.toml
 
   #     - uses: uraimo/run-on-arch-action@v2.5.1
   #       name: Install built wheel

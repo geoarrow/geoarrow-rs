@@ -57,7 +57,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -i 3.14 --manifest-path python/${{ matrix.module }}/Cargo.toml
+          args: --release --out dist -i 3.11 -i 3.12 -i 3.13 -i 3.14 --manifest-path python/${{ matrix.module }}/Cargo.toml
           sccache: "true"
           manylinux: auto
       - name: Upload wheels
@@ -92,7 +92,7 @@ jobs:
   #       uses: PyO3/maturin-action@v1
   #       with:
   #         target: ${{ matrix.platform.target }}
-  #         args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -i 3.14 --manifest-path python/${{ matrix.module }}/Cargo.toml
+  #         args: --release --out dist -i 3.11 -i 3.12 -i 3.13 -i 3.14 --manifest-path python/${{ matrix.module }}/Cargo.toml
   #         sccache: "true"
   #         manylinux: musllinux_1_2
   #     - name: Upload wheels
@@ -120,8 +120,6 @@ jobs:
           # Windows, maturin can't build for a missing interpreter without
           # pyo3's generate-import-lib feature.
           python-version: |
-            3.9
-            3.10
             3.11
             3.12
             3.13
@@ -131,7 +129,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -i 3.14 --manifest-path python/${{ matrix.module }}/Cargo.toml
+          args: --release --out dist -i 3.11 -i 3.12 -i 3.13 -i 3.14 --manifest-path python/${{ matrix.module }}/Cargo.toml
           sccache: "true"
       - name: Upload wheels
         uses: actions/upload-artifact@v7
@@ -161,7 +159,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist -i 3.9 -i 3.10 -i 3.11 -i 3.12 -i 3.13 -i 3.14 --manifest-path python/${{ matrix.module }}/Cargo.toml
+          args: --release --out dist -i 3.11 -i 3.12 -i 3.13 -i 3.14 --manifest-path python/${{ matrix.module }}/Cargo.toml
           sccache: "true"
       - name: Upload wheels
         uses: actions/upload-artifact@v7
