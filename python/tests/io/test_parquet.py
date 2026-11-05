@@ -22,7 +22,9 @@ async def test_parquet_file():
     store = HTTPStore.from_url(
         "https://raw.githubusercontent.com/opengeospatial/geoparquet/v1.0.0/examples"
     )
-    file = await GeoParquetFile.open_async("example.parquet", store=store)
+    # raw.githubusercontent.com rejects suffix ranges (501); a known size gives bounded ranges.
+    meta = await store.head_async("example.parquet")
+    file = await GeoParquetFile.open_async(meta, store=store)
     assert file.crs() == CRS.from_authority("OGC", "CRS84")
     assert file.num_rows == 5
     assert (
