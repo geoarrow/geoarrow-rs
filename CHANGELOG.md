@@ -1,6 +1,21 @@
 # Changelog
 
-## 0.9.0 - 2025-09-11
+## 0.10.0 - 2026-11-05
+
+Upgrades to arrow and parquet 60 and object_store 0.14. `pyo3-geoarrow` now uses pyo3 0.30 and pyo3-arrow 0.21.
+
+### What's Changed
+
+* chore: bump arrow and parquet to 60 by @dcherian in https://github.com/geoarrow/geoarrow-rs/pull/1478
+
+### New Contributors
+
+* @dcherian made their first contribution in https://github.com/geoarrow/geoarrow-rs/pull/1478
+
+**Full Changelog**: https://github.com/geoarrow/geoarrow-rs/compare/rust-v0.9.0...rust-v0.10.0
+
+
+## 0.9.0 - 2026-09-11
 
 ### What's Changed
 
@@ -42,7 +57,7 @@
 **Full Changelog**: https://github.com/geoarrow/geoarrow-rs/compare/rust-v0.8.0...rust-v0.9.0
 
 
-## 0.8.0 - 2025-07-08
+## 0.8.0 - 2026-03-27
 
 ## What's Changed
 
