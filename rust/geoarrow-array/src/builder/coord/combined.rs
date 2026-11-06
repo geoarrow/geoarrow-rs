@@ -1,5 +1,3 @@
-use core::f64;
-
 use geo_traits::{CoordTrait, PointTrait};
 use geoarrow_schema::error::GeoArrowResult;
 use geoarrow_schema::{CoordType, Dimension};

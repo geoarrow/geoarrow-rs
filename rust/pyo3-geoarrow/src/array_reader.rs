@@ -1,5 +1,6 @@
 use std::sync::{Arc, Mutex};
 
+use arrow_array::{ArrayIterator, ArrayReader};
 use geoarrow_array::array::from_arrow_array;
 use geoarrow_array::{GeoArrowArrayIterator, GeoArrowArrayReader};
 use geoarrow_schema::GeoArrowType;
@@ -10,7 +11,7 @@ use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyTuple, PyType};
 use pyo3_arrow::PyArrayReader;
 use pyo3_arrow::error::PyArrowResult;
-use pyo3_arrow::ffi::{ArrayIterator, ArrayReader, to_schema_pycapsule, to_stream_pycapsule};
+use pyo3_arrow::ffi::{to_schema_pycapsule, to_stream_pycapsule};
 use pyo3_arrow::input::AnyArray;
 
 use crate::data_type::PyGeoType;
@@ -267,7 +268,7 @@ impl<'py> FromPyObject<'_, 'py> for PyGeoArrayReader {
 fn array_reader_to_geoarrow_array_reader(
     reader: Box<dyn ArrayReader + Send>,
 ) -> PyGeoArrowResult<Box<dyn GeoArrowArrayReader + Send>> {
-    let field = reader.field();
+    let field = reader.field().clone();
     let data_type = GeoArrowType::try_from(field.as_ref())?;
     let iter = reader
         .into_iter()

@@ -10,7 +10,7 @@ pub(crate) fn offsets_buffer_i32_to_i64(offsets: &OffsetBuffer<i32>) -> OffsetBu
 pub(crate) fn offsets_buffer_i64_to_i32(
     offsets: &OffsetBuffer<i64>,
 ) -> GeoArrowResult<OffsetBuffer<i32>> {
-    i32::try_from(*offsets.last()).map_err(|_| GeoArrowError::Overflow)?;
+    i32::try_from(offsets.last()).map_err(|_| GeoArrowError::Overflow)?;
 
     let i32_offsets = offsets.iter().map(|x| *x as i32).collect::<Vec<_>>();
     Ok(unsafe { OffsetBuffer::new_unchecked(i32_offsets.into()) })
@@ -25,9 +25,6 @@ pub(crate) trait OffsetBufferUtils<O: OffsetSizeTrait> {
     /// # Panic
     /// This function panics iff `index >= self.len_proxy()`
     fn start_end(&self, index: usize) -> (usize, usize);
-
-    /// Returns the last offset.
-    fn last(&self) -> &O;
 }
 
 impl<O: OffsetSizeTrait> OffsetBufferUtils<O> for OffsetBuffer<O> {
@@ -48,12 +45,6 @@ impl<O: OffsetSizeTrait> OffsetBufferUtils<O> for OffsetBuffer<O> {
         let start = self[index].to_usize().unwrap();
         let end = self[index + 1].to_usize().unwrap();
         (start, end)
-    }
-
-    /// Returns the last offset.
-    #[inline]
-    fn last(&self) -> &O {
-        self.as_ref().last().unwrap()
     }
 }
 

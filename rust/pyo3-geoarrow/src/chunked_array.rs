@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use arrow_array::ArrayIterator;
 use arrow_schema::ArrowError;
 use geoarrow_array::GeoArrowArray;
 use geoarrow_array::array::from_arrow_array;
@@ -12,7 +13,7 @@ use pyo3::exceptions::{PyIndexError, PyTypeError};
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyTuple, PyType};
-use pyo3_arrow::ffi::{ArrayIterator, to_stream_pycapsule};
+use pyo3_arrow::ffi::to_stream_pycapsule;
 use pyo3_arrow::input::AnyArray;
 use pyo3_arrow::{PyArrayReader, PyChunkedArray};
 

@@ -21,6 +21,8 @@ use pyo3_arrow::input::AnyRecordBatch;
 use pyo3_arrow::{PyRecordBatch, PyTable};
 use pyo3_geoarrow::{PyCoordType, PyprojCRSTransform};
 
+// TODO: replace the deprecated `ParquetObjectReader` (apache/arrow-rs#10308).
+#[allow(deprecated)]
 #[pyfunction]
 #[pyo3(signature = (path, *, store=None, batch_size=None, parse_to_native=true, coord_type=None))]
 pub fn read_parquet(

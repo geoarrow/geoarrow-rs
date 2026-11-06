@@ -50,10 +50,7 @@ impl<O: OffsetSizeTrait> GenericWkbArray<O> {
 
     /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> WkbCapacity {
-        WkbCapacity::new(
-            self.array.offsets().last().unwrap().to_usize().unwrap(),
-            self.len(),
-        )
+        WkbCapacity::new(self.array.offsets().last().to_usize().unwrap(), self.len())
     }
 
     /// The number of bytes occupied by this array.

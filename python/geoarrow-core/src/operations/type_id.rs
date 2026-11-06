@@ -3,6 +3,7 @@ use std::sync::Arc;
 use arrow_schema::{ArrowError, DataType, Field};
 use pyo3::prelude::*;
 
+use arrow_array::ArrayIterator;
 use arrow_array::builder::Int8Builder;
 use arrow_array::{ArrayRef, Int8Array};
 use geo_traits::{GeometryTrait, GeometryType};
@@ -11,7 +12,6 @@ use geoarrow_schema::error::GeoArrowResult;
 use geoarrow_schema::{Dimension, GeoArrowType};
 use pyo3::IntoPyObjectExt;
 use pyo3_arrow::export::{Arro3Array, Arro3ArrayReader};
-use pyo3_arrow::ffi::ArrayIterator;
 use pyo3_arrow::{PyArray, PyArrayReader};
 use pyo3_geoarrow::PyGeoArrowResult;
 use pyo3_geoarrow::input::AnyGeoArray;

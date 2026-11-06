@@ -1,3 +1,6 @@
+// TODO: replace the deprecated `ParquetObjectReader` (apache/arrow-rs#10308).
+#![allow(deprecated)]
+
 use std::sync::Arc;
 
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};

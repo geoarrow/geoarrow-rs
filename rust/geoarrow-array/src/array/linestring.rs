@@ -45,7 +45,7 @@ pub(super) fn check(
     }
 
     // Offset can be smaller than coords length if sliced
-    if *geom_offsets.last() as usize > coords.len() {
+    if geom_offsets.last() as usize > coords.len() {
         return Err(GeoArrowError::InvalidGeoArrow(
             "largest geometry offset must not be longer than coords length".to_string(),
         ));
@@ -112,7 +112,7 @@ impl LineStringArray {
 
     /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> LineStringCapacity {
-        LineStringCapacity::new(*self.geom_offsets.last() as usize, self.len())
+        LineStringCapacity::new(self.geom_offsets.last() as usize, self.len())
     }
 
     /// The number of bytes occupied by this array.
