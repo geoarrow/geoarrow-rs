@@ -53,8 +53,7 @@ parquet = { workspace = true, features = [
 ] }
 pyo3 = { workspace = true }
 pyo3-arrow = { workspace = true }
-# https://github.com/omerbenamram/pyo3-file/pull/32
-pyo3-file = { git = "https://github.com/omerbenamram/pyo3-file", rev = "1df3a3b4d40e19dd82fe26c408c4f0222d38371f" }
+pyo3-file = "0.18"
 pyo3-geoarrow = { workspace = true }
 pyo3-async-runtimes = { version = "0.30", features = [
     "tokio-runtime",
