@@ -41,7 +41,7 @@ async-stream = "0.3"
 async-trait = "0.1"
 bytes = "1.10.0"
 chrono = { version = "0.4.41", default-features = false }
-flatgeobuf = { version = "5.0", default-features = false }
+flatgeobuf = { version = "6.0.1", default-features = false }
 futures = "0.3"
 geo = "0.33.1"
 geo-traits = "0.3.0"
@@ -57,7 +57,7 @@ geohash = "0.13.1"
 geojson = "0.24"
 geoparquet = { path = "rust/geoparquet", version = "0.5" }
 geos = { version = "11", features = ["v3_10_0"] }
-geozero = "0.14"
+geozero = "0.15.1"
 http-range-client = { version = "0.9", default-features = false }
 indexmap = "2.5.0"
 num-traits = "0.2.19"

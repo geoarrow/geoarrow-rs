@@ -870,9 +870,9 @@ dependencies = [
 
 [[package]]
 name = "flatgeobuf"
-version = "5.0.0"
+version = "6.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "210d03c7a55ea4ac28441993a373326fffd9a1592280584b4e45216863f764ec"
+checksum = "440aaa920020917f3d52b61d82f871d945d9707cbec6c33a5c55a2d85b385121"
 dependencies = [
  "byteorder",
  "bytes",
@@ -1102,7 +1102,7 @@ dependencies = [
  "geozero",
  "num-traits",
  "wkb",
- "wkt 0.14.0",
+ "wkt",
 ]
 
 [[package]]
@@ -1113,7 +1113,7 @@ dependencies = [
  "geo-traits",
  "geoarrow-array",
  "geoarrow-schema",
- "wkt 0.14.0",
+ "wkt",
 ]
 
 [[package]]
@@ -1259,21 +1259,21 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with",
- "wkt 0.14.0",
+ "wkt",
 ]
 
 [[package]]
 name = "geozero"
-version = "0.14.0"
+version = "0.15.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5f28f34864745eb2f123c990c6ffd92c1584bd39439b3f27ff2a0f4ea5b309b"
+checksum = "db5eda63aa99ac06160fd53328ed75c34f14e3196d3f56a3649e247ed796e54b"
 dependencies = [
  "geo-types",
  "geojson",
  "log",
  "serde_json",
- "thiserror 1.0.69",
- "wkt 0.11.1",
+ "thiserror 2.0.18",
+ "wkt",
 ]
 
 [[package]]
@@ -4228,18 +4228,6 @@ dependencies = [
  "byteorder",
  "geo-traits",
  "num_enum",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "wkt"
-version = "0.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "54f7f1ff4ea4c18936d6cd26a6fd24f0003af37e951a8e0e8b9e9a2d0bd0a46d"
-dependencies = [
- "geo-types",
- "log",
- "num-traits",
  "thiserror 1.0.69",
 ]
 
